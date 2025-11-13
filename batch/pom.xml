@@ -256,33 +256,34 @@
                                 <goals>
                                     <goal>process-aot</goal>
                                 </goals>
+                                <!-- Explicitly run in process-classes phase -->
+                                <phase>process-classes</phase>
                             </execution>
                         </executions>
                     </plugin>
 
-                    <!-- Copy AOT classes immediately after process-aot, before native-image build -->
+                    <!-- Copy AOT-generated classes to main output directory -->
+                    <!-- This runs AFTER process-aot (process-classes) and BEFORE native-image (package) -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
                                 <id>copy-aot-classes</id>
                                 <phase>prepare-package</phase>
                                 <goals>
-                                    <goal>run</goal>
+                                    <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <target>
-                                        <echo message="[AOT] Copying classes from ${project.build.directory}/spring-aot/main/classes"/>
-                                        <echo message="[AOT] Target directory: ${project.build.outputDirectory}"/>
-                                        <copy todir="${project.build.outputDirectory}" overwrite="true" failonerror="false" verbose="true">
-                                            <fileset dir="${project.build.directory}/spring-aot/main/classes" erroronmissingdir="false">
-                                                <include name="**/*.class"/>
-                                            </fileset>
-                                        </copy>
-                                        <echo message="[AOT] Copy completed"/>
-                                    </target>
+                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}/spring-aot/main/classes</directory>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                    <overwrite>true</overwrite>
                                 </configuration>
                             </execution>
                         </executions>
