@@ -245,10 +245,32 @@
             </properties>
             <build>
                 <plugins>
-                    <!-- GraalVM Native Image plugin - without AOT processing -->
+                    <!-- Spring Boot Maven Plugin for AOT processing -->
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring-boot.version}</version>
+                        <executions>
+                            <execution>
+                                <id>process-aot</id>
+                                <goals>
+                                    <goal>process-aot</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- GraalVM Native Image Plugin -->
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
                         <artifactId>native-maven-plugin</artifactId>
+                        <configuration>
+                            <!-- Include AOT-generated classes in classpath -->
+                            <classpath>
+                                <param>${project.build.outputDirectory}</param>
+                                <param>${project.build.directory}/spring-aot/main/classes</param>
+                            </classpath>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>build-native</id>
@@ -258,12 +280,6 @@
                                 <phase>package</phase>
                             </execution>
                         </executions>
-                        <configuration>
-                            <!-- Disable AOT mode to avoid AotInitializerNotFoundException -->
-                            <buildArgs>
-                                <buildArg>-Dspring.aot.enabled=false</buildArg>
-                            </buildArgs>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
