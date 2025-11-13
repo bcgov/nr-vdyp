@@ -38,15 +38,7 @@ RUN find . -type f -name "mvnw" -exec sed -i 's/\r$//' {} \; && \
 RUN ./buildtools/mvnw clean install -N --batch-mode && \
     cd buildtools && ./mvnw clean install --batch-mode -DskipTests && cd .. && \
     cd lib && ./mvnw clean install --batch-mode -DskipTests && cd .. && \
-    cd ${CONTEXT} && \
-    ./mvnw clean package --batch-mode -DskipTests -Pnative && \
-    echo "Checking for AOT classes..." && \
-    if [ -d "target/spring-aot/main/classes" ]; then \
-        echo "Copying AOT classes to target/classes..." && \
-        cp -rv target/spring-aot/main/classes/* target/classes/ || true ; \
-    fi && \
-    echo "Rebuilding Native Image with AOT classes..." && \
-    ./mvnw -Pnative native:compile --batch-mode -DskipTests
+    cd ${CONTEXT} && ./mvnw clean package --batch-mode -DskipTests -Pnative
 
 # ===========================
 # Stage 2: Runtime Stage (Minimal Container)

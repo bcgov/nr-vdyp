@@ -260,7 +260,35 @@
                         </executions>
                     </plugin>
 
-                    <!-- GraalVM Native Image Plugin -->
+                    <!-- Copy AOT classes immediately after process-aot, before native-image build -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>copy-aot-classes</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <echo message="[AOT] Copying classes from ${project.build.directory}/spring-aot/main/classes"/>
+                                        <echo message="[AOT] Target directory: ${project.build.outputDirectory}"/>
+                                        <copy todir="${project.build.outputDirectory}" overwrite="true" failonerror="false" verbose="true">
+                                            <fileset dir="${project.build.directory}/spring-aot/main/classes" erroronmissingdir="false">
+                                                <include name="**/*.class"/>
+                                            </fileset>
+                                        </copy>
+                                        <echo message="[AOT] Copy completed"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- GraalVM Native Image Plugin - runs AFTER antrun plugin -->
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
                         <artifactId>native-maven-plugin</artifactId>
