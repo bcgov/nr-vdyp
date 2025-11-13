@@ -21,7 +21,7 @@
   <!-- Show AOT initialization details -->
   <logger name="org.springframework.boot.SpringApplication" level="DEBUG" />
 
-  <root level="INFO">
+  <root level="DEBUG">
     <appender-ref ref="CONSOLE" />
   </root>
 </configuration>

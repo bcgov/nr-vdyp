@@ -274,6 +274,42 @@
                         </executions>
                     </plugin>
 
+                    <!-- Add AOT-generated sources and classes to the build -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.6.0</version>
+                        <executions>
+                            <execution>
+                                <id>add-aot-source</id>
+                                <phase>process-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.build.directory}/spring-aot/main/sources</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>add-aot-classes</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>add-resource</goal>
+                                </goals>
+                                <configuration>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}/spring-aot/main/classes</directory>
+                                            <targetPath>${project.build.outputDirectory}</targetPath>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
                     <!-- GraalVM Native Maven Plugin - matching spring-boot-starter-parent config -->
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
