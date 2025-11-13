@@ -273,13 +273,30 @@
                                 <phase>package</phase>
                             </execution>
                         </executions>
-                        <configuration>
-                            <!-- Include both regular classes and AOT-generated classes -->
-                            <classpath>
-                                <param>${project.build.outputDirectory}</param>
-                                <param>${project.build.directory}/spring-aot/main/classes</param>
-                            </classpath>
-                        </configuration>
+                    </plugin>
+
+                    <!-- Add AOT-generated classes to the build output -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-aot-classes</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}/spring-aot/main/classes</directory>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
