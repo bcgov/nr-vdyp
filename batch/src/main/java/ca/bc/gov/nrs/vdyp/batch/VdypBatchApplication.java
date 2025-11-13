@@ -20,6 +20,10 @@ public class VdypBatchApplication {
 		// This ensures VdypComponent uses correct values regardless of classpath order
 		overrideVdypProperties();
 
+		// Native Image automatically enables AOT, but we don't have AOT classes generated
+		// This prevents "AotInitializerNotFoundException"
+		System.setProperty("spring.aot.enabled", "false");
+
 		SpringApplication.run(VdypBatchApplication.class, args);
 	}
 
