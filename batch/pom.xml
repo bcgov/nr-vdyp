@@ -273,25 +273,45 @@
                                 <phase>package</phase>
                             </execution>
                         </executions>
+                        <configuration>
+                            <!-- Include AOT-generated classes in Native Image build -->
+                            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                            <buildArgs>
+                                <buildArg>-cp</buildArg>
+                                <buildArg>${project.build.directory}/spring-aot/main/classes</buildArg>
+                            </buildArgs>
+                        </configuration>
                     </plugin>
 
-                    <!-- Add AOT-generated classes to the build output -->
+                    <!-- Add AOT-generated source directory to build -->
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>3.3.1</version>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.5.0</version>
                         <executions>
                             <execution>
-                                <id>copy-aot-classes</id>
-                                <phase>process-classes</phase>
+                                <id>add-aot-source</id>
+                                <phase>prepare-package</phase>
                                 <goals>
-                                    <goal>copy-resources</goal>
+                                    <goal>add-source</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                                    <sources>
+                                        <source>${project.build.directory}/spring-aot/main/sources</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>add-aot-classes</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>add-resource</goal>
+                                </goals>
+                                <configuration>
                                     <resources>
                                         <resource>
                                             <directory>${project.build.directory}/spring-aot/main/classes</directory>
+                                            <targetPath>${project.build.outputDirectory}</targetPath>
                                         </resource>
                                     </resources>
                                 </configuration>
