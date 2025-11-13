@@ -294,7 +294,7 @@
                             </execution>
                             <execution>
                                 <id>add-aot-classes</id>
-                                <phase>process-classes</phase>
+                                <phase>prepare-package</phase>
                                 <goals>
                                     <goal>add-resource</goal>
                                 </goals>
