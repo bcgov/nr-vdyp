@@ -270,41 +270,109 @@
                                 <goals>
                                     <goal>process-aot</goal>
                                 </goals>
+                                <phase>prepare-package</phase>
                             </execution>
                         </executions>
                     </plugin>
 
-                    <!-- Add AOT-generated sources and classes to the build -->
+                    <!-- Verify AOT classes are generated -->
                     <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <version>3.6.0</version>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
                         <executions>
                             <execution>
-                                <id>add-aot-source</id>
-                                <phase>process-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/spring-aot/main/sources</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>add-aot-classes</id>
+                                <id>verify-aot-generation</id>
                                 <phase>prepare-package</phase>
                                 <goals>
-                                    <goal>add-resource</goal>
+                                    <goal>run</goal>
                                 </goals>
                                 <configuration>
+                                    <target>
+                                        <echo message="========================================"/>
+                                        <echo message="Verifying AOT class generation..."/>
+                                        <echo message="========================================"/>
+                                        <echo message="Checking: ${project.build.directory}/spring-aot/main/classes"/>
+                                        <available file="${project.build.directory}/spring-aot/main/classes" type="dir" property="aot.dir.exists"/>
+                                        <fail unless="aot.dir.exists" message="ERROR: AOT directory not found at ${project.build.directory}/spring-aot/main/classes"/>
+                                        <echo message=">>> AOT directory exists"/>
+
+                                        <echo message="Listing AOT classes:"/>
+                                        <exec executable="find" osfamily="unix" failonerror="false">
+                                            <arg value="${project.build.directory}/spring-aot/main/classes"/>
+                                            <arg value="-name"/>
+                                            <arg value="*ApplicationContextInitializer.class"/>
+                                        </exec>
+                                        <exec executable="cmd" osfamily="windows" failonerror="false">
+                                            <arg value="/c"/>
+                                            <arg value="dir"/>
+                                            <arg value="/s"/>
+                                            <arg value="/b"/>
+                                            <arg value="${project.build.directory}\spring-aot\main\classes\*ApplicationContextInitializer.class"/>
+                                        </exec>
+
+                                        <echo message="Checking target/classes for AOT initializer:"/>
+                                        <available file="${project.build.outputDirectory}/ca/bc/gov/nrs/vdyp/batch/VdypBatchApplication__ApplicationContextInitializer.class" type="file" property="aot.initializer.copied"/>
+                                        <echo message="AOT Initializer copied to target/classes: ${aot.initializer.copied}"/>
+                                        <echo message="========================================"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Copy AOT classes to target/classes using maven-resources-plugin -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-aot-classes</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                                     <resources>
                                         <resource>
                                             <directory>${project.build.directory}/spring-aot/main/classes</directory>
-                                            <targetPath>${project.build.outputDirectory}</targetPath>
+                                            <filtering>false</filtering>
                                         </resource>
                                     </resources>
+                                    <overwrite>true</overwrite>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Verify AOT classes after copy -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>verify-aot-copy</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <echo message="========================================"/>
+                                        <echo message="POST-COPY VERIFICATION"/>
+                                        <echo message="========================================"/>
+                                        <echo message="Checking if AOT Initializer exists in target/classes:"/>
+                                        <available file="${project.build.outputDirectory}/ca/bc/gov/nrs/vdyp/batch/VdypBatchApplication__ApplicationContextInitializer.class" type="file" property="aot.finalcheck"/>
+                                        <condition property="aot.status" value=">>> SUCCESS" else=">>> MISSING">
+                                            <isset property="aot.finalcheck"/>
+                                        </condition>
+                                        <echo message="Status: ${aot.status}"/>
+                                        <fail unless="aot.finalcheck" message="FATAL ERROR: AOT Initializer class not found in target/classes after copy!"/>
+                                        <echo message="========================================"/>
+                                    </target>
                                 </configuration>
                             </execution>
                         </executions>
