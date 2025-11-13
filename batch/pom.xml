@@ -275,14 +275,15 @@
                         </executions>
                     </plugin>
 
-                    <!-- Verify AOT classes are generated -->
+                    <!-- AOT Processing: Verify, Copy, and Final Check -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-antrun-plugin</artifactId>
                         <version>3.1.0</version>
                         <executions>
+                            <!-- Step 1: Verify AOT classes are generated -->
                             <execution>
-                                <id>verify-aot-generation</id>
+                                <id>aot-step1-verify-generation</id>
                                 <phase>prepare-package</phase>
                                 <goals>
                                     <goal>run</goal>
@@ -290,14 +291,16 @@
                                 <configuration>
                                     <target>
                                         <echo message="========================================"/>
-                                        <echo message="Verifying AOT class generation..."/>
+                                        <echo message="STEP 1: Verifying AOT class generation..."/>
                                         <echo message="========================================"/>
                                         <echo message="Checking: ${project.build.directory}/spring-aot/main/classes"/>
+
                                         <available file="${project.build.directory}/spring-aot/main/classes" type="dir" property="aot.dir.exists"/>
                                         <fail unless="aot.dir.exists" message="ERROR: AOT directory not found at ${project.build.directory}/spring-aot/main/classes"/>
-                                        <echo message=">>> AOT directory exists"/>
 
-                                        <echo message="Listing AOT classes:"/>
+                                        <echo message="AOT directory exists"/>
+
+                                        <echo message="Listing AOT Initializer classes:"/>
                                         <exec executable="find" osfamily="unix" failonerror="false">
                                             <arg value="${project.build.directory}/spring-aot/main/classes"/>
                                             <arg value="-name"/>
@@ -311,50 +314,14 @@
                                             <arg value="${project.build.directory}\spring-aot\main\classes\*ApplicationContextInitializer.class"/>
                                         </exec>
 
-                                        <echo message="Checking target/classes for AOT initializer:"/>
-                                        <available file="${project.build.outputDirectory}/ca/bc/gov/nrs/vdyp/batch/VdypBatchApplication__ApplicationContextInitializer.class" type="file" property="aot.initializer.copied"/>
-                                        <echo message="AOT Initializer copied to target/classes: ${aot.initializer.copied}"/>
                                         <echo message="========================================"/>
                                     </target>
                                 </configuration>
                             </execution>
-                        </executions>
-                    </plugin>
 
-                    <!-- Copy AOT classes to target/classes using maven-resources-plugin -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>3.3.1</version>
-                        <executions>
+                            <!-- Step 2: Copy AOT classes to target/classes -->
                             <execution>
-                                <id>copy-aot-classes</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.build.directory}/spring-aot/main/classes</directory>
-                                            <filtering>false</filtering>
-                                        </resource>
-                                    </resources>
-                                    <overwrite>true</overwrite>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- Verify AOT classes after copy -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <version>3.1.0</version>
-                        <executions>
-                            <execution>
-                                <id>verify-aot-copy</id>
+                                <id>aot-step2-copy-classes</id>
                                 <phase>prepare-package</phase>
                                 <goals>
                                     <goal>run</goal>
@@ -362,15 +329,48 @@
                                 <configuration>
                                     <target>
                                         <echo message="========================================"/>
-                                        <echo message="POST-COPY VERIFICATION"/>
+                                        <echo message="STEP 2: COPYING AOT CLASSES"/>
                                         <echo message="========================================"/>
-                                        <echo message="Checking if AOT Initializer exists in target/classes:"/>
+                                        <echo message="From: ${project.build.directory}/spring-aot/main/classes"/>
+                                        <echo message="To: ${project.build.outputDirectory}"/>
+
+                                        <copy todir="${project.build.outputDirectory}" overwrite="true" verbose="true">
+                                            <fileset dir="${project.build.directory}/spring-aot/main/classes">
+                                                <include name="**/*"/>
+                                            </fileset>
+                                        </copy>
+
+                                        <echo message="Copy completed."/>
+                                        <echo message="========================================"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+
+                            <!-- Step 3: Final verification before Native Image build -->
+                            <execution>
+                                <id>aot-step3-final-verification</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <echo message="========================================"/>
+                                        <echo message="STEP 3: FINAL AOT VERIFICATION"/>
+                                        <echo message="========================================"/>
+                                        <echo message="Checking: ${project.build.outputDirectory}/ca/bc/gov/nrs/vdyp/batch/VdypBatchApplication__ApplicationContextInitializer.class"/>
+
                                         <available file="${project.build.outputDirectory}/ca/bc/gov/nrs/vdyp/batch/VdypBatchApplication__ApplicationContextInitializer.class" type="file" property="aot.finalcheck"/>
-                                        <condition property="aot.status" value=">>> SUCCESS" else=">>> MISSING">
+
+                                        <condition property="aot.status" value="SUCCESS" else="MISSING">
                                             <isset property="aot.finalcheck"/>
                                         </condition>
-                                        <echo message="Status: ${aot.status}"/>
-                                        <fail unless="aot.finalcheck" message="FATAL ERROR: AOT Initializer class not found in target/classes after copy!"/>
+
+                                        <echo message="Result: ${aot.status}"/>
+
+                                        <fail unless="aot.finalcheck" message="FATAL: AOT Initializer not found in target/classes! Check logs above."/>
+
+                                        <echo message="AOT configuration is correct. Native Image build can proceed."/>
                                         <echo message="========================================"/>
                                     </target>
                                 </configuration>
