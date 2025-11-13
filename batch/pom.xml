@@ -274,7 +274,11 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                            <!-- Include both regular classes and AOT-generated classes -->
+                            <classpath>
+                                <param>${project.build.outputDirectory}</param>
+                                <param>${project.build.directory}/spring-aot/main/classes</param>
+                            </classpath>
                         </configuration>
                     </plugin>
                 </plugins>
