@@ -245,52 +245,7 @@
             </properties>
             <build>
                 <plugins>
-                    <!-- Spring Boot AOT plugin for Native Image support -->
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-                        <version>${spring-boot.version}</version>
-                        <executions>
-                            <execution>
-                                <id>process-aot</id>
-                                <goals>
-                                    <goal>process-aot</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <!-- Ensure AOT classes are added to the main output directory -->
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                        </configuration>
-                    </plugin>
-
-                    <!-- Copy AOT-generated classes to target/classes before native-image build -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>3.3.1</version>
-                        <executions>
-                            <execution>
-                                <id>copy-aot-classes</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                                    <overwrite>true</overwrite>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.build.directory}/spring-aot/main/classes</directory>
-                                            <filtering>false</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- GraalVM Native Image plugin -->
+                    <!-- GraalVM Native Image plugin - without AOT processing -->
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
                         <artifactId>native-maven-plugin</artifactId>
@@ -303,6 +258,12 @@
                                 <phase>package</phase>
                             </execution>
                         </executions>
+                        <configuration>
+                            <!-- Disable AOT mode to avoid AotInitializerNotFoundException -->
+                            <buildArgs>
+                                <buildArg>-Dspring.aot.enabled=false</buildArg>
+                            </buildArgs>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
