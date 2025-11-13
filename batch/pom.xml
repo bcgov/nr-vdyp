@@ -258,6 +258,32 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <!-- Ensure AOT classes are added to the main output directory -->
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Compile AOT-generated sources -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.11.0</version>
+                        <executions>
+                            <execution>
+                                <id>compile-aot</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <compileSourceRoots>
+                                        <compileSourceRoot>${project.build.directory}/spring-aot/main/sources</compileSourceRoot>
+                                    </compileSourceRoots>
+                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
 
                     <!-- GraalVM Native Image plugin -->
@@ -271,50 +297,6 @@
                                     <goal>compile-no-fork</goal>
                                 </goals>
                                 <phase>package</phase>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <!-- Include AOT-generated classes in Native Image build -->
-                            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
-                            <buildArgs>
-                                <buildArg>-cp</buildArg>
-                                <buildArg>${project.build.directory}/spring-aot/main/classes</buildArg>
-                            </buildArgs>
-                        </configuration>
-                    </plugin>
-
-                    <!-- Add AOT-generated source directory to build -->
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <version>3.5.0</version>
-                        <executions>
-                            <execution>
-                                <id>add-aot-source</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/spring-aot/main/sources</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>add-aot-classes</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>add-resource</goal>
-                                </goals>
-                                <configuration>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.build.directory}/spring-aot/main/classes</directory>
-                                            <targetPath>${project.build.outputDirectory}</targetPath>
-                                        </resource>
-                                    </resources>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
