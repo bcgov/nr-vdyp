@@ -437,7 +437,6 @@ public class YieldTable implements Closeable {
 				if (context.getParams()
 						.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)
 						&& !rowContext.isPolygonTable()) {
-
 					var layerSp0sByPercent = layer.getSp0sByPercent();
 					if (layerSp0sByPercent.size() > 1) {
 						var secondarySp0 = layerSp0sByPercent.get(1);
