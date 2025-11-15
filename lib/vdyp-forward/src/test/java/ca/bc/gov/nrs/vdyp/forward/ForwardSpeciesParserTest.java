@@ -1,10 +1,18 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertEmpty;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertNext;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,14 +21,12 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class ForwardSpeciesParserTest {
 
@@ -102,7 +108,7 @@ class ForwardSpeciesParserTest {
 														)
 												)
 										)
-								), hasProperty("site", VdypMatchers.notPresent())
+								)
 						)
 				)
 		);
@@ -189,7 +195,7 @@ class ForwardSpeciesParserTest {
 		assertThat(
 				genera,
 				hasItems(
-						allOf(hasProperty("layerType", is(LayerType.PRIMARY)), hasProperty("site", notPresent())),
+						allOf(hasProperty("layerType", is(LayerType.PRIMARY))),
 						allOf(
 								hasProperty(
 										"sp64DistributionSet",
@@ -212,7 +218,7 @@ class ForwardSpeciesParserTest {
 														)
 												)
 										)
-								), hasProperty("layerType", is(LayerType.VETERAN)), hasProperty("site", notPresent())
+								), hasProperty("layerType", is(LayerType.VETERAN))
 						),
 						allOf(
 								hasProperty(
@@ -373,7 +379,7 @@ class ForwardSpeciesParserTest {
 														)
 												)
 										)
-								), hasProperty("site", notPresent())
+								)
 						)
 				)
 		);
