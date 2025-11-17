@@ -192,8 +192,7 @@ class NativeImageConfigurationTest {
 	@Test
 	void testConfigurationAnnotations_ConfigurationPresent() {
 		assertNotNull(
-				NativeImageConfiguration.class
-						.getAnnotation(Configuration.class),
+				NativeImageConfiguration.class.getAnnotation(Configuration.class),
 				"@Configuration annotation should be present"
 		);
 	}
@@ -201,24 +200,21 @@ class NativeImageConfigurationTest {
 	@Test
 	void testConfigurationAnnotations_ImportRuntimeHintsPresent() {
 		assertNotNull(
-				NativeImageConfiguration.class
-						.getAnnotation(ImportRuntimeHints.class),
+				NativeImageConfiguration.class.getAnnotation(ImportRuntimeHints.class),
 				"@ImportRuntimeHints annotation should be present"
 		);
 	}
 
 	@Test
 	void testConfigurationAnnotations_ProxyBeanMethodsDisabled() {
-		var configAnnotation = NativeImageConfiguration.class
-				.getAnnotation(Configuration.class);
+		var configAnnotation = NativeImageConfiguration.class.getAnnotation(Configuration.class);
 		assertNotNull(configAnnotation);
 		assertFalse(configAnnotation.proxyBeanMethods(), "proxyBeanMethods should be false");
 	}
 
 	@Test
 	void testConfigurationAnnotations_ImportsCorrectRuntimeHints() {
-		var importAnnotation = NativeImageConfiguration.class
-				.getAnnotation(ImportRuntimeHints.class);
+		var importAnnotation = NativeImageConfiguration.class.getAnnotation(ImportRuntimeHints.class);
 		assertNotNull(importAnnotation);
 
 		Class<?>[] value = importAnnotation.value();
