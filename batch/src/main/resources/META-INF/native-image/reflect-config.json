@@ -185,6 +185,62 @@
     "allDeclaredConstructors": true
   },
   {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$ExecutionOption",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$OutputFormat",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$DebugOption",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$AgeYearRangeCombinationKind",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$MetadataToOutputDirective",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationParameter",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.FilterParameters",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
     "name": "org.springframework.web.multipart.MultipartFile",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,

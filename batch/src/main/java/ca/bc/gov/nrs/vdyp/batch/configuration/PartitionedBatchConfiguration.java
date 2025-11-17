@@ -299,9 +299,11 @@ public class PartitionedBatchConfiguration {
 
 	@Bean
 	@StepScope
-	public VdypChunkProjectionWriter
-			partitionWriter(VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector) {
-		return new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector);
+	public VdypChunkProjectionWriter partitionWriter(
+			VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector,
+			com.fasterxml.jackson.databind.ObjectMapper objectMapper
+	) {
+		return new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector, objectMapper);
 	}
 
 	/**
