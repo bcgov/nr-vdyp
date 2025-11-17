@@ -165,7 +165,7 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 	static final Pattern VOLUME_604_AFFECTED = Pattern.compile("PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(
-			BASE_804_AFFECTED, BASE_604_AFFECTED, VOLUME_604_AFFECTED
+			BASE_804_AFFECTED/* , BASE_604_AFFECTED, VOLUME_604_AFFECTED */
 	).asMatchPredicate();
 
 }
