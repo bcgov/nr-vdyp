@@ -425,4 +425,12 @@ class ForwardSpeciesParserTest {
 		assertEmpty(stream);
 	}
 
+	@Test
+	void testSpeciesBuilder() {
+		var species = new VdypSpecies.Builder().isPrimary(true).build();
+
+		assertThat(species.getIsPrimary(), is(true));
+		species.setIsPrimary(false);
+		assertThat(species.getIsPrimary(), is(false));
+	}
 }
