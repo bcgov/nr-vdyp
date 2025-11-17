@@ -232,7 +232,7 @@ class BatchRetryPolicyTest {
 
 	@Test
 	void testBackoffDelay_NotAppliedWhenCannotRetry() {
-		BatchRetryPolicy policyWithBackoff = new BatchRetryPolicy(3, 100);
+		BatchRetryPolicy policyWithBackoff = new BatchRetryPolicy(3, 1000);
 		RuntimeException exception = new RuntimeException("Non-retryable");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
@@ -242,7 +242,7 @@ class BatchRetryPolicyTest {
 		long endTime = System.currentTimeMillis();
 
 		assertFalse(result);
-		assertTrue(endTime - startTime < 50); // Should not apply backoff
+		assertTrue(endTime - startTime < 100); // Should not apply backoff
 	}
 
 	@Test
