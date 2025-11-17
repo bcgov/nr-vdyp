@@ -1,8 +1,14 @@
 package ca.bc.gov.nrs.vdyp.model;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isPolyId;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anEmptyMap;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
@@ -244,4 +250,16 @@ class VdypSpeciesTest {
 		assertThat(siteResult, hasProperty("siteIndex", present(is(5.5f))));
 	}
 
+	@Test
+	void testSpeciesBuilder() {
+		var species = new VdypSpecies.Builder().isPrimary(true) //
+				.polygonIdentifier("01002 S000002 00     1970") //
+				.layerType(LayerType.PRIMARY) //
+				.genus("P", 1) //
+				.build();
+
+		assertThat(species.getIsPrimary(), is(true));
+		species.setIsPrimary(false);
+		assertThat(species.getIsPrimary(), is(false));
+	}
 }

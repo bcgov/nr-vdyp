@@ -425,16 +425,4 @@ class ForwardSpeciesParserTest {
 		assertEmpty(stream);
 	}
 
-	@Test
-	void testSpeciesBuilder() {
-		var species = new VdypSpecies.Builder().isPrimary(true) //
-				.polygonIdentifier("01002 S000002 00     1970") //
-				.layerType(LayerType.PRIMARY) //
-				.genus("P", 1) //
-				.build();
-
-		assertThat(species.getIsPrimary(), is(true));
-		species.setIsPrimary(false);
-		assertThat(species.getIsPrimary(), is(false));
-	}
 }
