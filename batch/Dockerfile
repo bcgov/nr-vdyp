@@ -63,8 +63,9 @@ ARG CONTEXT="batch"
 # Native Maven Plugin creates vdyp-batch executable (no .jar extension)
 COPY --from=build /project/${CONTEXT}/target/vdyp-batch /app/vdyp-batch
 
-# Set ownership and permissions
-RUN chown -R 1001:0 /app && \
+# Create work directory for batch processing
+RUN mkdir -p /app/work && \
+    chown -R 1001:0 /app && \
     chmod +x /app/vdyp-batch && \
     chmod -R g=u /app
 
@@ -73,6 +74,9 @@ USER 1001
 
 # Expose port 8081 (Spring Boot batch service port)
 EXPOSE 8081
+
+# Set batch root directory to writable location
+ENV BATCH_ROOT_DIRECTORY=/app/work
 
 # Run the native executable
 # - Native image doesn't need JVM, runs as standalone binary
