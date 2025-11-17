@@ -51,7 +51,8 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 		);
 		readerControlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
-				new VdypSpeciesParser().map(speciesFileLocation.toString(), absolutePathFileResolver, readerControlMap)
+				new VdypSpeciesParser().reportSIHeight()
+						.map(speciesFileLocation.toString(), absolutePathFileResolver, readerControlMap)
 		);
 		readerControlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
@@ -64,13 +65,13 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 		try {
 			ForwardDataStreamReader reader = new ForwardDataStreamReader(readerControlMap);
 
-			var vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
+			var vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */, true);
 			while (vdypPolygon.isPresent()
 					&& expectedPolygonIdentifier.getBase().equals(vdypPolygon.get().getPolygonIdentifier().getBase())) {
 
 				projectionResultsByYear.put(vdypPolygon.get().getPolygonIdentifier().getYear(), vdypPolygon.get());
 
-				vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
+				vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */, true);
 			}
 
 			if (projectionResultsByYear.size() == 0) {
