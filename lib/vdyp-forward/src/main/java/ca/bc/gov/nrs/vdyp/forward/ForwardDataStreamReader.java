@@ -99,8 +99,7 @@ public class ForwardDataStreamReader {
 		return readNextPolygon(true);
 	}
 
-	public Optional<VdypPolygon> readNextPolygon(boolean doRunPostCreateAdjustments)
-			throws ProcessingException {
+	public Optional<VdypPolygon> readNextPolygon(boolean doRunPostCreateAdjustments) throws ProcessingException {
 
 		// Advance all the streams until the definition for the polygon is found.
 
