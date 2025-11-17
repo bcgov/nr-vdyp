@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.forward;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertEmpty;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertNext;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -112,6 +113,43 @@ class ForwardSpeciesParserTest {
 						)
 				)
 		);
+
+		assertEmpty(stream);
+	}
+
+	@Test
+	void testParseOneGenusOverrideDH() throws Exception {
+
+		var parser = new VdypSpeciesParser().reportSIHeight();
+
+		Map<String, Object> controlMap = new HashMap<>();
+
+		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), "test.dat");
+		TestUtils.populateControlMapGenusReal(controlMap);
+
+		var fileResolver = TestUtils.fileResolverContext(
+				"test.dat",
+				TestUtils.makeInputStream(
+						"01002 S000002 00     1970 P 15 L  L  100.0     0.0     0.0     0.0 14.63 100.0  20.0  12.0  -9.0 0 14",
+						"01002 S000001 00     1970"
+				)
+		);
+
+		parser.modify(controlMap, fileResolver);
+
+		var parserFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name());
+
+		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
+
+		@SuppressWarnings("unchecked")
+		var stream = ((StreamingParserFactory<Collection<VdypSpecies>>) parserFactory).get();
+
+		assertThat(stream, instanceOf(StreamingParser.class));
+
+		var genera = assertNext(stream);
+
+		// check for the Site Index Hieght to have overriden the passed in height
+		assertThat(genera.stream().findFirst().get().getSite().get().getHeight().get(), closeTo(6.9948f));
 
 		assertEmpty(stream);
 	}
