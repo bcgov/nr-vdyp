@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.util;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 public final class BatchUtils {
 
@@ -18,6 +19,10 @@ public final class BatchUtils {
 
 	public static String createJobTimestamp() {
 		return dateTimeFormatterForFilenames.format(LocalDateTime.now());
+	}
+
+	public static String createJobGuid() {
+		return UUID.randomUUID().toString();
 	}
 
 	/**

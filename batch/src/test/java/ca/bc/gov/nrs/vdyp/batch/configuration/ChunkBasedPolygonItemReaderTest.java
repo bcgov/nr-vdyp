@@ -29,16 +29,20 @@ class ChunkBasedPolygonItemReaderTest {
 	private ChunkBasedPolygonItemReader reader;
 	private ExecutionContext executionContext;
 
+	private static final String JOB_GUID = "7c26643a-50cb-497e-a539-afac6966ecea";
+
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
-		reader = new ChunkBasedPolygonItemReader("test-partition", metricsCollector, 123L, 2);
+		reader = new ChunkBasedPolygonItemReader("test-partition", metricsCollector, 123L, JOB_GUID, 2);
 		executionContext = new ExecutionContext();
 	}
 
 	@Test
 	void testConstructor() {
-		ChunkBasedPolygonItemReader reader1 = new ChunkBasedPolygonItemReader(null, metricsCollector, 123L, 0);
+		ChunkBasedPolygonItemReader reader1 = new ChunkBasedPolygonItemReader(
+				null, metricsCollector, 123L, JOB_GUID, 0
+		);
 		// Constructor should handle null partitionName and ensure minimum chunk size
 		assertNotNull(reader1);
 	}
@@ -231,7 +235,9 @@ class ChunkBasedPolygonItemReaderTest {
 	@Test
 	void testRecordSkipMetrics() throws Exception {
 		// Test with null metricsCollector
-		ChunkBasedPolygonItemReader readerWithoutMetrics = new ChunkBasedPolygonItemReader("test", null, 123L, 2);
+		ChunkBasedPolygonItemReader readerWithoutMetrics = new ChunkBasedPolygonItemReader(
+				"test", null, 123L, JOB_GUID, 2
+		);
 
 		Path partitionDir = tempDir.resolve("input-test");
 		Files.createDirectories(partitionDir);
@@ -252,7 +258,7 @@ class ChunkBasedPolygonItemReaderTest {
 
 	@Test
 	void testRecordSkipMetricsWithInvalidFeatureId() throws Exception {
-		doNothing().when(metricsCollector).recordSkip(anyLong(), any(), any(), any(), anyString(), any());
+		doNothing().when(metricsCollector).recordSkip(anyLong(), any(), any(), any(), any(), anyString(), any());
 
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);

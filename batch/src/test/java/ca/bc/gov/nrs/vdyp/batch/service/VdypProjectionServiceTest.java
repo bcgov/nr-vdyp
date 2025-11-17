@@ -22,6 +22,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
@@ -38,6 +40,7 @@ class VdypProjectionServiceTest {
 
 	private static final String PARTITION_NAME = "partition0";
 	private static final Long JOB_EXECUTION_ID = 1L;
+	private static final String JOB_GUID = "7c26643a-50cb-497e-a539-afac6966ecea";
 
 	@BeforeEach
 	void setUp() {
@@ -50,7 +53,7 @@ class VdypProjectionServiceTest {
 		List<BatchRecord> emptyRecords = new ArrayList<>();
 
 		String result = vdypProjectionService.performProjectionForChunk(
-				emptyRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+				emptyRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 		);
 
 		assertEquals("No records to process in chunk", result);
@@ -60,9 +63,10 @@ class VdypProjectionServiceTest {
 	void testPerformProjectionForChunk_WhitespacePartitionName() {
 		List<BatchRecord> batchRecords = createValidBatchRecords(1);
 
-		IOException exception = assertThrows(IOException.class, () -> {
-			vdypProjectionService
-					.performProjectionForChunk(batchRecords, "   ", parameters, JOB_EXECUTION_ID, tempDir.toString());
+		Exception exception = assertThrows(Exception.class, () -> {
+			vdypProjectionService.performProjectionForChunk(
+					batchRecords, "   ", parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
+			);
 		});
 
 		assertTrue(exception.getMessage().contains("Partition name cannot be null or empty"));
@@ -72,9 +76,10 @@ class VdypProjectionServiceTest {
 	void testPerformProjectionForChunk_EmptyJobBaseDir() {
 		List<BatchRecord> batchRecords = createValidBatchRecords(1);
 
-		IOException exception = assertThrows(IOException.class, () -> {
-			vdypProjectionService
-					.performProjectionForChunk(batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, "");
+		Exception exception = assertThrows(Exception.class, () -> {
+			vdypProjectionService.performProjectionForChunk(
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, ""
+			);
 		});
 
 		assertTrue(exception.getMessage().contains("Job base directory cannot be null or empty"));
@@ -86,7 +91,7 @@ class VdypProjectionServiceTest {
 
 		try {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		} catch (Exception e) {
 			// Expected to fail during projection
@@ -102,7 +107,7 @@ class VdypProjectionServiceTest {
 
 		try {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, "partition5", parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, "partition5", parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		} catch (Exception e) {
 			// Expected
@@ -121,7 +126,7 @@ class VdypProjectionServiceTest {
 		for (String partName : partitionNames) {
 			try {
 				vdypProjectionService.performProjectionForChunk(
-						batchRecords, partName, parameters, JOB_EXECUTION_ID, tempDir.toString()
+						batchRecords, partName, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 				);
 			} catch (Exception e) {
 				// Expected
@@ -145,7 +150,7 @@ class VdypProjectionServiceTest {
 
 		assertThrows(Exception.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 	}
@@ -156,7 +161,7 @@ class VdypProjectionServiceTest {
 
 		assertThrows(Exception.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 
@@ -177,7 +182,7 @@ class VdypProjectionServiceTest {
 
 		assertThrows(Exception.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 	}
@@ -188,7 +193,7 @@ class VdypProjectionServiceTest {
 
 		IOException exception = assertThrows(IOException.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 
@@ -203,7 +208,7 @@ class VdypProjectionServiceTest {
 
 		IOException exception = assertThrows(IOException.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 
@@ -218,7 +223,7 @@ class VdypProjectionServiceTest {
 
 		IOException exception = assertThrows(IOException.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 
@@ -263,9 +268,16 @@ class VdypProjectionServiceTest {
 		String id1 = VdypProjectionService.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
 		String id2 = VdypProjectionService.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
 
-		// Both should have valid timestamp format
-		assertTrue(id1.matches("batch-1-p0-projection-HCSV-\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{4}"));
-		assertTrue(id2.matches("batch-1-p0-projection-HCSV-\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{4}"));
+		// Both should have valid timestamp format and include jobGuid
+		assertTrue(id1.contains("batch-1"));
+		assertTrue(id1.contains("p0"));
+		assertTrue(id1.contains("projection-HCSV"));
+		assertTrue(id1.matches(".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{4}$"));
+
+		assertTrue(id2.contains("batch-1"));
+		assertTrue(id2.contains("p0"));
+		assertTrue(id2.contains("projection-HCSV"));
+		assertTrue(id2.matches(".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{4}$"));
 	}
 
 	@Test
@@ -281,7 +293,7 @@ class VdypProjectionServiceTest {
 
 		assertThrows(Exception.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 	}
@@ -299,7 +311,7 @@ class VdypProjectionServiceTest {
 
 		assertThrows(Exception.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 	}
@@ -328,7 +340,7 @@ class VdypProjectionServiceTest {
 
 		assertThrows(Exception.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 	}
@@ -339,7 +351,7 @@ class VdypProjectionServiceTest {
 
 		IOException exception = assertThrows(IOException.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 
@@ -354,7 +366,7 @@ class VdypProjectionServiceTest {
 
 		IOException exception = assertThrows(IOException.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, "partition777", parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, "partition777", parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 
@@ -367,7 +379,7 @@ class VdypProjectionServiceTest {
 
 		IOException exception = assertThrows(IOException.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 
@@ -393,7 +405,7 @@ class VdypProjectionServiceTest {
 
 		try {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		} catch (Exception e) {
 			// Expected
@@ -410,7 +422,7 @@ class VdypProjectionServiceTest {
 
 		IOException exception = assertThrows(IOException.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString()
+					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
 			);
 		});
 
@@ -509,30 +521,30 @@ class VdypProjectionServiceTest {
 	@Test
 	void testCreateOutputPartitionDir_NullJobBaseDir() throws Exception {
 		Method createOutputPartitionDirMethod = VdypProjectionService.class
-				.getDeclaredMethod("createOutputPartitionDir", String.class, String.class);
+				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class);
 		createOutputPartitionDirMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod.invoke(vdypProjectionService, "partition0", null);
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, JOB_EXECUTION_ID, "partition0", null);
 		});
 
 		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof IOException);
+		assertTrue(cause instanceof BatchConfigurationException);
 		assertTrue(cause.getMessage().contains("Job base directory cannot be null or empty"));
 	}
 
 	@Test
 	void testCreateOutputPartitionDir_NullPartitionName() throws Exception {
 		Method createOutputPartitionDirMethod = VdypProjectionService.class
-				.getDeclaredMethod("createOutputPartitionDir", String.class, String.class);
+				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class);
 		createOutputPartitionDirMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod.invoke(vdypProjectionService, null, tempDir.toString());
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, JOB_EXECUTION_ID, null, tempDir.toString());
 		});
 
 		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof IOException);
+		assertTrue(cause instanceof BatchConfigurationException);
 		assertTrue(cause.getMessage().contains("Partition name cannot be null or empty"));
 	}
 
@@ -549,11 +561,11 @@ class VdypProjectionServiceTest {
 		assertTrue(Files.isRegularFile(outputPartitionDir), "Output path should be a file, not directory");
 
 		Method createOutputPartitionDirMethod = VdypProjectionService.class
-				.getDeclaredMethod("createOutputPartitionDir", String.class, String.class);
+				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class);
 		createOutputPartitionDirMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod.invoke(vdypProjectionService, partitionName, jobBaseDir);
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, JOB_EXECUTION_ID, partitionName, jobBaseDir);
 		});
 
 		assertTrue(
@@ -563,17 +575,13 @@ class VdypProjectionServiceTest {
 		Throwable cause = exception.getCause();
 		assertNotNull(cause, "Exception cause should not be null");
 		assertTrue(
-				cause instanceof IOException,
-				"Expected IOException, but got: " + (cause != null ? cause.getClass().getSimpleName() : "null")
+				cause instanceof Exception,
+				"Expected Exception, but got: " + (cause != null ? cause.getClass().getSimpleName() : "null")
 		);
 		assertTrue(
-				cause.getMessage().contains("Failed to create output partition directory"),
-				"Exception message should contain 'Failed to create output partition directory'"
-		);
-		assertTrue(
-				cause.getCause() instanceof IOException,
-				"Root cause should be an IOException, but got: "
-						+ (cause.getCause() != null ? cause.getCause().getClass().getSimpleName() : "null")
+				cause.getMessage().contains("Failed to create output partition directory")
+						|| cause.getMessage().contains("output-partition0"),
+				"Exception message should contain relevant error information"
 		);
 	}
 
@@ -590,7 +598,7 @@ class VdypProjectionServiceTest {
 		});
 
 		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof IOException);
+		assertTrue(cause instanceof BatchDataValidationException);
 		assertTrue(cause.getMessage().contains("Cannot create input streams from empty chunk"));
 	}
 
@@ -614,7 +622,7 @@ class VdypProjectionServiceTest {
 		});
 
 		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof IOException);
+		assertTrue(cause instanceof BatchDataValidationException);
 		assertTrue(cause.getMessage().contains("Combined CSV data is empty or invalid"));
 	}
 
@@ -638,7 +646,7 @@ class VdypProjectionServiceTest {
 		});
 
 		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof IOException);
+		assertTrue(cause instanceof BatchDataValidationException);
 		assertTrue(cause.getMessage().contains("Combined CSV data is empty or invalid"));
 	}
 

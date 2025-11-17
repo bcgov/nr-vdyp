@@ -12,16 +12,15 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 
-import java.io.IOException;
-
 public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, BatchRecord> {
 
 	private static final Logger logger = LoggerFactory.getLogger(VdypProjectionProcessor.class);
 
-	private final BatchRetryPolicy retryPolicy;
 	private final BatchMetricsCollector metricsCollector;
 
 	// Partition context information
+	private Long jobExecutionId;
+	private String jobGuid;
 	private String partitionName = BatchConstants.Common.UNKNOWN;
 
 	// Validation thresholds
@@ -34,8 +33,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	@Value("${batch.validation.max-polygon-id-length:50}")
 	private int maxPolygonIdLength;
 
-	public VdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
-		this.retryPolicy = retryPolicy;
+	public VdypProjectionProcessor(BatchMetricsCollector metricsCollector) {
 		this.metricsCollector = metricsCollector;
 	}
 
@@ -44,31 +42,34 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	 */
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
-		Long jobExecutionId = stepExecution.getJobExecutionId();
+		this.jobExecutionId = stepExecution.getJobExecutionId();
+		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 		this.partitionName = stepExecution.getExecutionContext()
 				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 
 		if (metricsCollector != null) {
-			metricsCollector.initializePartitionMetrics(jobExecutionId, partitionName);
+			metricsCollector.initializePartitionMetrics(jobExecutionId, jobGuid, partitionName);
 		}
 
-		logger.info("[{}] VDYP Projection Processor initialized for job {}", partitionName, jobExecutionId);
+		logger.info(
+				"[GUID: {}, Partition: {}] VDYP Projection Processor initialized for job {}", jobGuid, partitionName,
+				jobExecutionId
+		);
 	}
 
 	@Override
-	public BatchRecord process(@NonNull BatchRecord batchRecord) throws IOException, IllegalArgumentException {
+	public BatchRecord process(@NonNull BatchRecord batchRecord) throws IllegalArgumentException {
 		String featureId = batchRecord.getFeatureId();
-
-		if (retryPolicy != null && featureId != null) {
-			retryPolicy.registerRecord((long) featureId.hashCode(), batchRecord);
-		}
 
 		// Basic validation only - projection happens in ItemWriter for chunk processing
 		if (featureId == null || featureId.trim().isEmpty()) {
 			throw new IllegalArgumentException("FEATURE_ID is null or empty");
 		}
 
-		logger.debug("[{}] Prepared record for chunk processing: FEATURE_ID {}", partitionName, featureId);
+		logger.debug(
+				"[GUID: {}, EXEID: {} Partition: {}] Prepared record for chunk processing: FEATURE_ID {}", jobGuid,
+				jobExecutionId, partitionName, featureId
+		);
 
 		return batchRecord;
 	}

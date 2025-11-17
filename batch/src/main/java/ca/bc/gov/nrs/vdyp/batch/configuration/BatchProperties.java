@@ -48,6 +48,8 @@ public class BatchProperties {
 		private String inputFolderNamePrefix;
 		private String outputFolderNamePrefix;
 		private String namePrefix;
+		private Integer minValidFileSize;
+		private boolean interimDirsCleanupEnabled = true;
 
 		public Integer getDefaultPartitionSize() {
 			return defaultPartitionSize;
@@ -95,6 +97,22 @@ public class BatchProperties {
 
 		public void setNamePrefix(String namePrefix) {
 			this.namePrefix = namePrefix;
+		}
+
+		public Integer getMinValidFileSize() {
+			return minValidFileSize;
+		}
+
+		public void setMinValidFileSize(Integer minValidFileSize) {
+			this.minValidFileSize = minValidFileSize;
+		}
+
+		public boolean getInterimDirsCleanupEnabled() {
+			return interimDirsCleanupEnabled;
+		}
+
+		public void setInterimDirsCleanupEnabled(boolean interimDirsCleanupEnabled) {
+			this.interimDirsCleanupEnabled = interimDirsCleanupEnabled;
 		}
 	}
 

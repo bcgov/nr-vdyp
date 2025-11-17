@@ -22,34 +22,32 @@ public class BatchMetricsCollector {
 
 	private final Map<Long, BatchMetrics> jobMetricsMap = new ConcurrentHashMap<>();
 
-	/**
-	 * Initialize metrics for a new job execution.
-	 *
-	 * @param jobExecutionId The job execution ID
-	 *
-	 * @return The initialized BatchMetrics instance
-	 */
-	public BatchMetrics initializeMetrics(Long jobExecutionId) {
+	public BatchMetrics initializeMetrics(Long jobExecutionId, String jobGuid) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
+		}
+		if (jobGuid == null || jobGuid.isBlank()) {
+			throw new BatchException("Job GUID cannot be null or blank");
 		}
 
 		try {
-			BatchMetrics metrics = new BatchMetrics(jobExecutionId);
+			BatchMetrics metrics = new BatchMetrics(jobExecutionId, jobGuid);
 			jobMetricsMap.put(jobExecutionId, metrics);
-			logger.debug("Initialized metrics for job execution ID: {}", jobExecutionId);
+			logger.debug("[GUID: {}] Initialized metrics for job execution ID: {}", jobGuid, jobExecutionId);
 			return metrics;
 		} catch (Exception e) {
-			throw new BatchException("Failed to initialize metrics for job execution ID: " + jobExecutionId, e);
+			throw new BatchException(
+					"Failed to initialize metrics for job execution ID: " + jobExecutionId + ", GUID: " + jobGuid, e
+			);
 		}
 	}
 
-	/**
-	 * Initialize partition-specific metrics.
-	 */
-	public void initializePartitionMetrics(Long jobExecutionId, String partitionName) {
+	public void initializePartitionMetrics(Long jobExecutionId, String jobGuid, String partitionName) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
+		}
+		if (jobGuid == null || jobGuid.isBlank()) {
+			throw new BatchException("Job GUID cannot be null or blank");
 		}
 		if (partitionName == null || partitionName.isBlank()) {
 			throw new BatchException("Partition name cannot be null or blank");
@@ -64,24 +62,30 @@ public class BatchMetricsCollector {
 			BatchMetrics.PartitionMetrics partitionMetrics = new BatchMetrics.PartitionMetrics(partitionName);
 			partitionMetrics.setStartTime(LocalDateTime.now());
 			metrics.getPartitionMetrics().put(partitionName, partitionMetrics);
-			logger.info("[{}] Initialized partition metrics for job {}", partitionName, jobExecutionId);
+
+			logger.info(
+					"[{}] [GUID: {}] Initialized partition metrics for job execution ID: {}", partitionName, jobGuid,
+					jobExecutionId
+			);
 		} catch (BatchException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new BatchException(
 					"Failed to initialize partition metrics for partition: " + partitionName + " in job: "
-							+ jobExecutionId,
+							+ jobExecutionId + ", GUID: " + jobGuid,
 					e
 			);
 		}
 	}
 
-	/**
-	 * Complete partition-specific metrics.
-	 */
-	public void completePartitionMetrics(Long jobExecutionId, String partitionName, long writeCount, String exitCode) {
+	public void completePartitionMetrics(
+			Long jobExecutionId, String jobGuid, String partitionName, long writeCount, String exitCode
+	) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
+		}
+		if (jobGuid == null || jobGuid.isBlank()) {
+			throw new BatchException("Job GUID cannot be null or blank");
 		}
 		if (partitionName == null || partitionName.isBlank()) {
 			throw new BatchException("Partition name cannot be null or blank");
@@ -103,27 +107,29 @@ public class BatchMetricsCollector {
 			partitionMetrics.setEndTime(LocalDateTime.now());
 			partitionMetrics.setRecordsWritten(writeCount);
 			partitionMetrics.setExitCode(exitCode);
+
 			logger.info(
-					"[{}] Completed partition metrics for job {}, written: {}, exitCode: {}", partitionName,
-					jobExecutionId, writeCount, exitCode
+					"[{}] [GUID: {}] Completed partition metrics for job execution ID: {}, written: {}, exitCode: {}",
+					partitionName, jobGuid, jobExecutionId, writeCount, exitCode
 			);
 		} catch (BatchException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new BatchException(
 					"Failed to complete partition metrics for partition: " + partitionName + " in job: "
-							+ jobExecutionId,
+							+ jobExecutionId + ", GUID: " + jobGuid,
 					e
 			);
 		}
 	}
 
-	/**
-	 * Finalize job metrics with totals.
-	 */
-	public void finalizeJobMetrics(Long jobExecutionId, String status, long totalRead, long totalWritten) {
+	public void
+			finalizeJobMetrics(Long jobExecutionId, String jobGuid, String status, long totalRead, long totalWritten) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
+		}
+		if (jobGuid == null || jobGuid.isBlank()) {
+			throw new BatchException("Job GUID cannot be null or blank");
 		}
 
 		try {
@@ -137,9 +143,10 @@ public class BatchMetricsCollector {
 			metrics.setTotalRecordsRead(totalRead);
 			metrics.setTotalRecordsWritten(totalWritten);
 			metrics.setTotalRecordsProcessed(totalWritten);
+
 			logger.info(
-					"Finalized job {} metrics: status={}, read={}, written={}", jobExecutionId, status, totalRead,
-					totalWritten
+					"[GUID: {}] Finalized job execution ID: {} metrics: status={}, read={}, written={}", jobGuid,
+					jobExecutionId, status, totalRead, totalWritten
 			);
 		} catch (BatchException e) {
 			throw e;
@@ -148,15 +155,15 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	/**
-	 * Record a retry attempt.
-	 */
 	public void recordRetryAttempt(
-			Long jobExecutionId, Long recordId, BatchRecord batchRecord, int attemptNumber, Throwable error,
-			boolean successful, String partitionName
+			Long jobExecutionId, String jobGuid, int attemptNumber, Throwable error, boolean successful,
+			String partitionName
 	) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
+		}
+		if (jobGuid == null || jobGuid.isBlank()) {
+			throw new BatchException("Job GUID cannot be null or blank");
 		}
 
 		try {
@@ -179,29 +186,35 @@ public class BatchMetricsCollector {
 			String errorMessage = error != null ? error.getMessage() : "No error message";
 
 			BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
-					recordId, batchRecord != null ? batchRecord.toString() : "null", attemptNumber, errorType,
-					errorMessage, successful, partitionName
+					attemptNumber, errorType, errorMessage, successful, partitionName
 			);
 
-			synchronized (metrics.getRetryDetails()) {
-				metrics.getRetryDetails().add(retryDetail);
-			}
+			metrics.getRetryDetails().add(retryDetail);
+
+			logger.debug(
+					"[GUID: {}, Partition: {}] Recorded retry attempt #{} for job execution ID: {}, successful: {}, error: {}",
+					jobGuid, partitionName, attemptNumber, jobExecutionId, successful, errorType
+			);
 		} catch (BatchException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new BatchException("Failed to record retry attempt for job execution ID: " + jobExecutionId, e);
+			throw new BatchException(
+					"Failed to record retry attempt for job execution ID: " + jobExecutionId + ", [GUID: " + jobGuid
+							+ "]",
+					e
+			);
 		}
 	}
 
-	/**
-	 * Record a skip event.
-	 */
 	public void recordSkip(
-			Long jobExecutionId, Long recordId, BatchRecord batchRecord, Throwable error, String partitionName,
-			Long lineNumber
+			Long jobExecutionId, String jobGuid, Long recordId, BatchRecord batchRecord, Throwable error,
+			String partitionName, Long lineNumber
 	) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
+		}
+		if (jobGuid == null || jobGuid.isBlank()) {
+			throw new BatchException("Job GUID cannot be null or blank");
 		}
 
 		try {
@@ -225,9 +238,12 @@ public class BatchMetricsCollector {
 					recordId, recordData, errorType, errorMessage, partitionName, lineNumber
 			);
 
-			synchronized (metrics.getSkipDetails()) {
-				metrics.getSkipDetails().add(skipDetail);
-			}
+			metrics.getSkipDetails().add(skipDetail);
+
+			logger.warn(
+					"[GUID: {}, Partition: {}] Recorded skip for job execution ID: {}, line: {}, recordId: {}, error: {}",
+					jobGuid, partitionName, jobExecutionId, lineNumber, recordId, errorType
+			);
 		} catch (BatchException e) {
 			throw e;
 		} catch (Exception e) {
@@ -235,9 +251,6 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	/**
-	 * Clean up old metrics to prevent memory leaks.
-	 */
 	public void cleanupOldMetrics(int keepCount) {
 		if (keepCount < 0) {
 			throw new BatchException("Keep count must be non-negative, got: " + keepCount);
@@ -255,13 +268,6 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	/**
-	 * Get metrics for a specific job execution.
-	 *
-	 * @param jobExecutionId The job execution ID
-	 *
-	 * @return BatchMetrics instance or null if not found
-	 */
 	public BatchMetrics getJobMetrics(Long jobExecutionId) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");

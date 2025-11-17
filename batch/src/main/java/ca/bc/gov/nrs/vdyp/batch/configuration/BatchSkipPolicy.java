@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.ProjectionNullPointerException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -21,9 +22,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private final long maxSkipCount;
 	private Long jobExecutionId;
+	private String jobGuid;
 	private String partitionName;
-
-	// Constants moved to BatchConstants.Common
 
 	private final BatchMetricsCollector metricsCollector;
 
@@ -38,6 +38,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
+		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 		this.partitionName = stepExecution.getExecutionContext()
 				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 	}
@@ -87,6 +88,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private ExecutionContext getCurrentExecutionContext() {
 		Long currentJobExecutionId = jobExecutionId;
+		String currentJobGuid = jobGuid;
 		String currentPartitionName = partitionName;
 
 		try {
@@ -94,17 +96,22 @@ public class BatchSkipPolicy implements SkipPolicy {
 			if (stepContext != null) {
 				StepExecution currentStepExecution = stepContext.getStepExecution();
 				currentJobExecutionId = updateJobExecutionId(currentStepExecution);
+				currentJobGuid = updateJobGuid(currentStepExecution);
 				currentPartitionName = updatePartitionName(currentStepExecution);
 			}
 		} catch (Exception e) {
 			logger.warn("[VDYP Skip Policy] Warning: Could not access step context: {}", e.getMessage());
 		}
 
-		return new ExecutionContext(currentJobExecutionId, currentPartitionName);
+		return new ExecutionContext(currentJobExecutionId, currentJobGuid, currentPartitionName);
 	}
 
 	private Long updateJobExecutionId(StepExecution stepExecution) {
 		return stepExecution.getJobExecutionId();
+	}
+
+	private String updateJobGuid(StepExecution stepExecution) {
+		return stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 	}
 
 	private String updatePartitionName(StepExecution stepExecution) {
@@ -117,8 +124,9 @@ public class BatchSkipPolicy implements SkipPolicy {
 	private void recordSkipMetrics(SkipContext skipContext, ExecutionContext executionContext) {
 		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
 			metricsCollector.recordSkip(
-					executionContext.currentJobExecutionId, skipContext.recordId, skipContext.batchRecord,
-					skipContext.throwable, executionContext.currentPartitionName, skipContext.lineNumber
+					executionContext.currentJobExecutionId, executionContext.currentJobGuid, skipContext.recordId,
+					skipContext.batchRecord, skipContext.throwable, executionContext.currentPartitionName,
+					skipContext.lineNumber
 			);
 		}
 	}
@@ -152,10 +160,12 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private static class ExecutionContext {
 		final Long currentJobExecutionId;
+		final String currentJobGuid;
 		final String currentPartitionName;
 
-		ExecutionContext(Long jobExecutionId, String partitionName) {
+		ExecutionContext(Long jobExecutionId, String jobGuid, String partitionName) {
 			this.currentJobExecutionId = jobExecutionId;
+			this.currentJobGuid = jobGuid;
 			this.currentPartitionName = partitionName;
 		}
 	}
@@ -164,28 +174,58 @@ public class BatchSkipPolicy implements SkipPolicy {
 	 * Determine if an exception type should allow the record to be skipped.
 	 */
 	private boolean isSkippableException(Throwable t) {
-		// Data parsing and format errors - always skippable
-		if (t instanceof FlatFileParseException || t instanceof BindException || t instanceof NumberFormatException
-				|| t instanceof IllegalArgumentException) {
+		return isParseOrValidationException(t) || t instanceof NullPointerException || isSkippableIOException(t)
+				|| isDataQualityRuntimeException(t);
+	}
+
+	/**
+	 * Check if exception is a parsing or validation error (always skippable).
+	 */
+	private boolean isParseOrValidationException(Throwable t) {
+		return t instanceof FlatFileParseException || t instanceof BindException || t instanceof NumberFormatException
+				|| t instanceof IllegalArgumentException;
+	}
+
+	/**
+	 * Check if IOException wraps NPE or indicates data quality issues (skippable).
+	 */
+	private boolean isSkippableIOException(Throwable t) {
+		if (! (t instanceof java.io.IOException)) {
+			return false;
+		}
+
+		if (t instanceof ProjectionNullPointerException) {
 			return true;
 		}
 
-		// Null pointer exceptions for missing data - skippable
-		if (t instanceof NullPointerException) {
+		String message = t.getMessage() != null ? t.getMessage().toLowerCase() : "";
+
+		if (containsDataQualityKeywords(message)) {
 			return true;
 		}
 
-		// Runtime exceptions that indicate data quality issues - skippable
-		if (t instanceof RuntimeException) {
-			String message = t.getMessage() != null ? t.getMessage().toLowerCase() : "";
+		// Fallback: Check if IOException has NPE as root cause
+		return t.getCause() instanceof NullPointerException;
+	}
 
-			// Skip if error message indicates data quality issues
-			return message.contains("invalid") || message.contains("malformed") || message.contains("corrupt")
-					|| message.contains("missing") || message.contains("empty") || message.contains("format");
+	/**
+	 * Check if RuntimeException message indicates data quality issues (skippable).
+	 */
+	private boolean isDataQualityRuntimeException(Throwable t) {
+		if (! (t instanceof RuntimeException)) {
+			return false;
 		}
 
-		// All other exceptions should be retried, not skipped
-		return false;
+		String message = t.getMessage() != null ? t.getMessage().toLowerCase() : "";
+		return containsDataQualityKeywords(message) || message.contains("format");
+	}
+
+	/**
+	 * Check if message contains common data quality issue keywords.
+	 */
+	private boolean containsDataQualityKeywords(String message) {
+		return message.contains("invalid") || message.contains("malformed") || message.contains("corrupt")
+				|| message.contains("missing") || message.contains("empty");
 	}
 
 	/**
