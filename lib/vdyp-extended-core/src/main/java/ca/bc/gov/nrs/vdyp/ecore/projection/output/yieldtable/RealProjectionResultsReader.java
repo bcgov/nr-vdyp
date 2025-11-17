@@ -65,13 +65,13 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 		try {
 			ForwardDataStreamReader reader = new ForwardDataStreamReader(readerControlMap);
 
-			var vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */, true);
+			var vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
 			while (vdypPolygon.isPresent()
 					&& expectedPolygonIdentifier.getBase().equals(vdypPolygon.get().getPolygonIdentifier().getBase())) {
 
 				projectionResultsByYear.put(vdypPolygon.get().getPolygonIdentifier().getYear(), vdypPolygon.get());
 
-				vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */, true);
+				vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
 			}
 
 			if (projectionResultsByYear.size() == 0) {
