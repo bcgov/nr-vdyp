@@ -131,9 +131,8 @@ class Hcsv_Vdyp7_Comparison_Test {
 		var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
 
 		// FIXME VDYP-604 stop ignoring columns once fixed
-		ResultYieldTable.compareWithTolerance(
-				vdyp7YieldTable, vdyp8YieldTable, 0.02, IGNORE_COLUMNS_EXCEPT_LH.asMatchPredicate()
-		);
+		ResultYieldTable
+				.compareWithTolerance(vdyp7YieldTable, vdyp8YieldTable, 0.02, IGNORE_COLUMNS.asMatchPredicate());
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
@@ -173,10 +172,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
 	// PRJ_SCND_HT was included in IGNORE_COLUMNS_EXCEPT_LH due to VDYP-804 and is
 	// unrelated to VDYP-604.
-	static final Pattern IGNORE_COLUMNS = Pattern
-			.compile("PRJ_TPH|PRJ_LOREY_HT|PRJ_DIAMETER|PRJ_BA|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
-	static final Pattern IGNORE_COLUMNS_EXCEPT_LH = Pattern
-			.compile("PRJ_TPH|PRJ_DIAMETER|PRJ_BA|PRJ_SCND_HT|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
+	static final Pattern IGNORE_COLUMNS = Pattern.compile("PRJ_SCND_HT|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 	@Test
 	void test755() throws IOException, ResourceParseException {
@@ -289,6 +285,72 @@ class Hcsv_Vdyp7_Comparison_Test {
 															"PRJ_TPH",
 															VdypMatchers
 																	.parseAs(closeTo(397.13f, 0.02f), ValueParser.FLOAT)
+													)
+											)
+									)
+							)
+					)
+			);
+		}
+	}
+
+	@Test
+	void test604() throws IOException, ResourceParseException {
+
+		logger.info("Starting test604");
+
+		Map<String, List<String>> paramMap = new HashMap<>();
+		var parameters = new Parameters();
+		try (
+				InputStream paramStream = MainTest.class.getResourceAsStream("vdyp-604/input/parms.txt");
+				InputStreamReader reader = new InputStreamReader(paramStream);
+				BufferedReader bufReader = new BufferedReader(reader); var lines = bufReader.lines();
+		) {
+			ParamsReader.parseParameters(paramMap, lines);
+			ParamsReader.parseParameters(parameters, paramMap);
+		}
+
+		// Included to generate JSON text of parameters as needed
+		// ObjectMapper mapper = new ObjectMapper();
+		// String serializedParametersText = mapper.writeValueAsString(parameters);
+
+		try (
+				InputStream polyStream = MainTest.class.getResourceAsStream("vdyp-604/input/VDYP7_INPUT_POLY.csv");
+				InputStream layerStream = MainTest.class.getResourceAsStream("vdyp-604/input/VDYP7_INPUT_LAYER.csv");
+		) {
+
+			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
+					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
+					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
+					.post("/projection/hcsv?trialRun=false") //
+					.then().statusCode(201) //
+					.and().contentType("application/octet-stream") //
+					.and().header("content-disposition", Matchers.startsWith("attachment;filename=\"vdyp-output-")) //
+					.extract().body().asInputStream();
+
+			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
+			ZipEntry entry1 = zipFile.getNextEntry();
+			assertEquals("YieldTable.csv", entry1.getName());
+			String vdyp8YieldTableContent = new String(testHelper.readZipEntry(zipFile, entry1));
+			assertThat(vdyp8YieldTableContent, not(emptyString()));
+
+			var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
+
+			assertThat(
+					vdyp8YieldTable,
+					(Matcher) hasSpecificEntry(
+							"17585871",
+							hasSpecificEntry(
+									"1",
+									hasSpecificEntry(
+											"2103",
+											Matchers.allOf(
+													hasSpecificEntry(
+															"PRJ_BA",
+															VdypMatchers.parseAs(
+																	closeTo(28.392712f, 0.02f), ValueParser.FLOAT
+															)
 													)
 											)
 									)

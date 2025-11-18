@@ -1045,6 +1045,7 @@ class YieldTableTest {
 		var result = yieldTable.getYields(2020, UtilizationClassSet._7_5, species, species);
 		assertThat(result, recordHasProperty("basalArea75cm", Matchers.closeTo(14.9620, 0.014)));
 		assertThat(result, recordHasProperty("basalArea125cm", Matchers.closeTo(12.7926, 0.012)));
+		assertThat(result, recordHasProperty("basalArea", Matchers.closeTo(14.9620, 0.014)));
 		assertThat(result, recordHasProperty("diameter", Matchers.closeTo(17.3141, 0.017)));
 	}
 
@@ -1087,6 +1088,7 @@ class YieldTableTest {
 		var result = yieldTable.getYields(2020, UtilizationClassSet._12_5, species, species);
 		assertThat(result, recordHasProperty("basalArea75cm", Matchers.closeTo(14.9620, 0.014)));
 		assertThat(result, recordHasProperty("basalArea125cm", Matchers.closeTo(12.7926, 0.012)));
+		assertThat(result, recordHasProperty("basalArea", Matchers.closeTo(12.7926, 0.012)));
 		assertThat(result, recordHasProperty("diameter", Matchers.closeTo(21.1947, 0.021)));
 	}
 
