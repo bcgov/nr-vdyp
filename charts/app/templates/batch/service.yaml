@@ -10,7 +10,7 @@ spec:
   type: {{ .Values.batch.service.type }}
   ports:
     - port: {{ .Values.batch.service.port }}
-      targetPort: http
+      targetPort: 8081
       protocol: TCP
       name: http
   selector:
