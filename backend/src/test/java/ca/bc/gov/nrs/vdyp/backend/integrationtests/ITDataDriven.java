@@ -136,7 +136,6 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 			expectedYieldTable = new ResultYieldTable(reader);
 		}
 
-		// FIXME VDYP-604 Remove the predicate to ignore columns affected by VDYP-604 once it is fixed
 		ResultYieldTable.compareWithTolerance(expectedYieldTable, actualYieldTable, 0.02, IGNORE_COLUMNS);
 	}
 
@@ -157,15 +156,11 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 				.compile(Arrays.stream(patterns).map(p -> "(?:" + p.toString() + ")").collect(Collectors.joining("|")));
 	}
 
-	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
-	// PRJ_SCND_HT was included in IGNORE_COLUMNS_EXCEPT_LH due to VDYP-804 and is
-	// unrelated to VDYP-604.
+	// FIXME Workaround for VDYP-804
 	static final Pattern BASE_804_AFFECTED = Pattern.compile("PRJ_SCND_HT");
-	static final Pattern BASE_604_AFFECTED = Pattern.compile("PRJ_BA");
-	static final Pattern VOLUME_604_AFFECTED = Pattern.compile("PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(
-			BASE_804_AFFECTED/* , BASE_604_AFFECTED, VOLUME_604_AFFECTED */
+			BASE_804_AFFECTED
 	).asMatchPredicate();
 
 }

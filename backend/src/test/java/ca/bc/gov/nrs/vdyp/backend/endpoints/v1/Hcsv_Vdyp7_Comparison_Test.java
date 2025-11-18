@@ -131,9 +131,8 @@ class Hcsv_Vdyp7_Comparison_Test {
 		var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
 
 		// FIXME VDYP-604 stop ignoring columns once fixed
-		ResultYieldTable.compareWithTolerance(
-				vdyp7YieldTable, vdyp8YieldTable, 0.02, IGNORE_COLUMNS.asMatchPredicate()
-		);
+		ResultYieldTable
+				.compareWithTolerance(vdyp7YieldTable, vdyp8YieldTable, 0.02, IGNORE_COLUMNS.asMatchPredicate());
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
@@ -173,8 +172,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
 	// PRJ_SCND_HT was included in IGNORE_COLUMNS_EXCEPT_LH due to VDYP-804 and is
 	// unrelated to VDYP-604.
-	static final Pattern IGNORE_COLUMNS = Pattern
-			.compile("PRJ_SCND_HT|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
+	static final Pattern IGNORE_COLUMNS = Pattern.compile("PRJ_SCND_HT|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 	@Test
 	void test755() throws IOException, ResourceParseException {
