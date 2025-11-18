@@ -35,6 +35,9 @@
         "pattern": "\\QMETA-INF/native-image/reflect-config.json\\E"
       },
       {
+        "pattern": "\\QMETA-INF/native-image/proxy-config.json\\E"
+      },			
+      {
         "pattern": "\\QMETA-INF/native-image/jni-config.json\\E"
       },
       {
