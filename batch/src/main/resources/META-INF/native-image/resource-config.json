@@ -53,6 +53,9 @@
         "pattern": "\\Qca/bc/gov/nrs/vdyp/ecore/.*\\E"
       },
       {
+        "pattern": "\\QExecutionFolderTemplate.zip\\E"
+      },
+      {
         "pattern": "\\Qorg/h2/util/.*\\E"
       },
       {
