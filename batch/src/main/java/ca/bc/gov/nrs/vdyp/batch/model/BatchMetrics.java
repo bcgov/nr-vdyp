@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,11 +15,15 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class BatchMetrics {
 
-	private Long jobExecutionId;
-	private String jobGuid;
-	private LocalDateTime startTime;
-	private LocalDateTime endTime;
+	// MDJ: These variables should be final. The first constructor (that
+	// leaves jobGuid null) should be removed, as there should never be a case where 
+	// there is no job guid. Remove the setters for these variables.
+	private final Long jobExecutionId;
+	private final String jobGuid;
+	private final LocalDateTime startTime;
+
 	private String status;
+	private LocalDateTime endTime;
 
 	// Retry metrics - thread-safe counters and lock-free queue
 	private final AtomicInteger totalRetryAttempts = new AtomicInteger(0);
@@ -40,18 +45,16 @@ public class BatchMetrics {
 	private final AtomicLong totalRecordsWritten = new AtomicLong(0);
 	private double averageProcessingTime = 0.0;
 
-	public BatchMetrics() {
-	}
-
-	public BatchMetrics(Long jobExecutionId) {
+	public BatchMetrics(Long jobExecutionId, String jobGuid) {
 		this.jobExecutionId = jobExecutionId;
+		this.jobGuid = jobGuid;
 		this.startTime = LocalDateTime.now();
 		this.status = "STARTING";
 	}
 
-	public BatchMetrics(Long jobExecutionId, String jobGuid) {
+	public BatchMetrics(Long jobExecutionId) {
 		this.jobExecutionId = jobExecutionId;
-		this.jobGuid = jobGuid;
+		this.jobGuid = UUID.randomUUID().toString();
 		this.startTime = LocalDateTime.now();
 		this.status = "STARTING";
 	}
@@ -89,13 +92,14 @@ public class BatchMetrics {
 	 * Partition-level metrics
 	 */
 	public static class PartitionMetrics {
-		private String partitionName;
+		private final String partitionName;
+		private final LocalDateTime startTime;
+
 		private long recordsProcessed = 0;
 		private long recordsRead = 0;
 		private long recordsWritten = 0;
 		private int retryCount = 0;
 		private int skipCount = 0;
-		private LocalDateTime startTime;
 		private LocalDateTime endTime;
 		private String exitCode;
 
@@ -106,10 +110,6 @@ public class BatchMetrics {
 
 		public String getPartitionName() {
 			return partitionName;
-		}
-
-		public void setPartitionName(String partitionName) {
-			this.partitionName = partitionName;
 		}
 
 		public long getRecordsProcessed() {
@@ -156,10 +156,6 @@ public class BatchMetrics {
 			return startTime;
 		}
 
-		public void setStartTime(LocalDateTime startTime) {
-			this.startTime = startTime;
-		}
-
 		public LocalDateTime getEndTime() {
 			return endTime;
 		}
@@ -181,24 +177,12 @@ public class BatchMetrics {
 		return jobExecutionId;
 	}
 
-	public void setJobExecutionId(Long jobExecutionId) {
-		this.jobExecutionId = jobExecutionId;
-	}
-
 	public String getJobGuid() {
 		return jobGuid;
 	}
 
-	public void setJobGuid(String jobGuid) {
-		this.jobGuid = jobGuid;
-	}
-
 	public LocalDateTime getStartTime() {
 		return startTime;
-	}
-
-	public void setStartTime(LocalDateTime startTime) {
-		this.startTime = startTime;
 	}
 
 	public LocalDateTime getEndTime() {

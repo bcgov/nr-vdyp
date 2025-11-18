@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.batch.model;
 
 import java.util.List;
 
+// MDJ: Like BatchMetrics, this class is not implemented correctly. Its one use in the code is in ChunkBasedPolygonReader, 
+// which creates a instance and then calls six set methods. 
 public class BatchRecord {
 
 	private String featureId; // business key

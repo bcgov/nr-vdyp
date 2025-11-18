@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
+// MDJ: Why a RuntimeException? Is this ALWAYS unrecoverable? 
 public class BatchConfigurationException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;

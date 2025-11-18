@@ -64,8 +64,10 @@ public class BatchController {
 	private String batchRootDirectory;
 
 	@Value("${batch.partition.default-partition-size}")
-	private Integer defaultParitionSize;
+	private Integer defaultPartitionSize;
 
+	// MDJ: Please include comments about how and when this class is instantiated. Currently it's used
+	// only in the test code.
 	public BatchController(
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
 			BatchMetricsCollector metricsCollector, StreamingCsvPartitioner csvPartitioner, JobOperator jobOperator
@@ -95,6 +97,7 @@ public class BatchController {
 
 			Map<String, Object> response = new HashMap<>();
 
+			// MDJ: How can this class be instantiated without a partitionedJob?
 			if (partitionedJob != null) {
 				JobExecution jobExecution = executeJob(polygonFile, layerFile, partitionSize, projectionParametersJson);
 				buildSuccessResponse(response, jobExecution);
@@ -116,12 +119,19 @@ public class BatchController {
 	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable String jobGuid) {
 		Map<String, Object> response = new HashMap<>();
 		Long executionId = null;
+		// MDJ: Unnecessary and actually harmful to sanitize this.
 		String sanitizedGuid = BatchUtils.sanitizeForLogging(jobGuid);
 
 		try {
+
+			// MDJ: Calls to logger.isXXXEnabled() are unnecessary when the block contains nothing
+			// other than logger calls and the parameters require no computation. You would only
+			// make this call if there was some expensive computation being done to prepare the
+			// logger call.
 			if (logger.isInfoEnabled()) {
 				logger.info("Attempting to stop job with GUID: {}", sanitizedGuid);
 			}
+
 			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
 			executionId = jobExecution.getId();
 
@@ -216,60 +226,22 @@ public class BatchController {
 	public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable String jobGuid) {
 		Map<String, Object> response = new HashMap<>();
 
+		JobExecution jobExecution;
+		Long executionId;
+
 		try {
 			if (logger.isInfoEnabled()) {
+				// MDJ: No need to sanitize.
 				logger.info("Getting status for job with GUID: {}", BatchUtils.sanitizeForLogging(jobGuid));
 			}
 
-			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
-			Long executionId = jobExecution.getId();
+			jobExecution = findJobExecutionByGuid(jobGuid);
+			executionId = jobExecution.getId();
 
 			if (logger.isInfoEnabled()) {
-				logger.info(
-						"[GUID: {}] Found JobExecution ID: {}", BatchUtils.sanitizeForLogging(jobGuid), executionId
-				);
+				// MDJ: No need to sanitize.
+				logger.info("[GUID: {}] Found JobExecution ID: {}", BatchUtils.sanitizeForLogging(jobGuid), executionId);
 			}
-
-			boolean isRunning = jobExecution.getStatus().isRunning();
-
-			// Count total partitions and completed partitions
-			long totalPartitions = jobExecution.getStepExecutions().stream()
-					.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:")).count();
-
-			long completedPartitions = jobExecution.getStepExecutions().stream()
-					.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:"))
-					.filter(
-							stepExecution -> stepExecution.getStatus().isUnsuccessful()
-									|| stepExecution.getStatus() == org.springframework.batch.core.BatchStatus.COMPLETED
-					).count();
-
-			response.put(BatchConstants.Job.GUID, jobGuid);
-			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
-			response.put(BatchConstants.Job.NAME, jobExecution.getJobInstance().getJobName());
-			response.put(BatchConstants.Job.STATUS, jobExecution.getStatus().toString());
-			response.put("isRunning", isRunning);
-			response.put("totalPartitions", totalPartitions);
-			response.put("completedPartitions", completedPartitions);
-
-			if (jobExecution.getStartTime() != null) {
-				response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime());
-			}
-			if (jobExecution.getEndTime() != null) {
-				response.put("endTime", jobExecution.getEndTime());
-			}
-
-			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
-
-			if (logger.isInfoEnabled()) {
-				logger.info(
-						"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}",
-						BatchUtils.sanitizeForLogging(jobGuid), jobExecution.getStatus(), isRunning, totalPartitions,
-						completedPartitions
-				);
-			}
-
-			return ResponseEntity.ok(response);
-
 		} catch (NoSuchJobExecutionException e) {
 			response.put(BatchConstants.Job.GUID, jobGuid);
 			response.put(BatchConstants.Job.ERROR, "Job execution not found");
@@ -297,6 +269,49 @@ public class BatchController {
 			);
 			return ResponseEntity.internalServerError().body(response);
 		}
+
+		boolean isRunning = jobExecution.getStatus().isRunning();
+
+		// Count total partitions and completed partitions
+
+		long totalPartitions = jobExecution.getStepExecutions().stream()
+				.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:")).count();
+
+		long completedPartitions = jobExecution.getStepExecutions().stream()
+				.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:"))
+				.filter(
+						stepExecution -> stepExecution.getStatus().isUnsuccessful()
+								|| stepExecution.getStatus() == org.springframework.batch.core.BatchStatus.COMPLETED
+				).count();
+
+		response.put(BatchConstants.Job.GUID, jobGuid);
+		response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+		response.put(BatchConstants.Job.NAME, jobExecution.getJobInstance().getJobName());
+		response.put(BatchConstants.Job.STATUS, jobExecution.getStatus().toString());
+		// MDJ: Why are these not BatchConstants?
+		response.put("isRunning", isRunning);
+		response.put("totalPartitions", totalPartitions);
+		response.put("completedPartitions", completedPartitions);
+
+		if (jobExecution.getStartTime() != null) {
+			response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime());
+		}
+		if (jobExecution.getEndTime() != null) {
+			// MDJ: Why is this not a BatchConstant?
+			response.put("endTime", jobExecution.getEndTime());
+		}
+
+		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+		if (logger.isInfoEnabled()) {
+			logger.info(
+					"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}",
+					BatchUtils.sanitizeForLogging(jobGuid), jobExecution.getStatus(), isRunning, totalPartitions,
+					completedPartitions
+			);
+		}
+
+		return ResponseEntity.ok(response);
 	}
 
 	@GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -333,6 +348,7 @@ public class BatchController {
 		}
 	}
 
+	// MDJ: Remove exceptions not thrown from "throws" declaration
 	private JobExecution executeJob(
 			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, String projectionParametersJson
 	) throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException,
@@ -359,18 +375,28 @@ public class BatchController {
 
 			String jobGuid = BatchUtils.createJobGuid();
 			String jobTimestamp = BatchUtils.createJobTimestamp();
+			// MDJ: Why does a guid need sanitizing? It just uses these characters: 0-9 A-F and '-'. Plus,
+			// it's a mistake to do this, as it makes searching the log for a given job harder. REMOVE
+			// sanitizedGuid and its uses.
 			String sanitizedGuid = BatchUtils.sanitizeForLogging(jobGuid);
 
+			// MDJ: using a time stamp as a job identifier (which is what jobBaseFolderName is) is a
+			// mistake, since multiple jobs -could- have the same time stamp (especially when it is down
+			// only to the second.) Use the job's GUID instead of, or in addition to, the jobTimestamp
+			// to GUARANTEE that the folder name is unique.
 			String jobBaseFolderName = BatchUtils
 					.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobTimestamp);
 			Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
 			Files.createDirectories(jobBaseDir);
+			// MDJ: Why are low level details like this being logged at "info" level? We want to avoid
+			// making the production log files (normally set to log at info level and above) too large
+			// as this makes them difficult to transfer, read, etc.
 			logger.info("Created job base directory: {} (GUID: {})", jobBaseDir, sanitizedGuid);
 
-			Integer actualPartitionSize = partitionSize != null ? partitionSize : defaultParitionSize;
+			Integer actualPartitionSize = partitionSize != null ? partitionSize : defaultPartitionSize;
 			logger.info(
 					"[GUID: {}] Actual using {} partitions (requested: {}, from properties: {})", sanitizedGuid,
-					actualPartitionSize, partitionSize, defaultParitionSize
+					actualPartitionSize, partitionSize, defaultPartitionSize
 			);
 
 			// Partition CSV files using streaming approach BEFORE starting the job
@@ -471,6 +497,11 @@ public class BatchController {
 		List<String> jobNames = jobExplorer.getJobNames();
 
 		for (String jobName : jobNames) {
+			// MDJ: Do not use a hard-coded constant like this - very bad practice. Instead, call
+			// getJobInstanceCount(jobName) to find the total number of job instances of jobName and
+			// iterate in chunks of some number (such as 1000) until either the execution has been
+			// found or all instances of jobName have been checked.
+
 			List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, 0, 1000);
 
 			for (JobInstance jobInstance : jobInstances) {

@@ -10,6 +10,8 @@ public final class BatchUtils {
 		//
 	}
 
+	// MDJ: Normally this would be private, and all uses of it would be isolated in this
+	// class.
 	public static final DateTimeFormatter dateTimeFormatterForFilenames = DateTimeFormatter
 			.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 
@@ -25,6 +27,7 @@ public final class BatchUtils {
 		return UUID.randomUUID().toString();
 	}
 
+	// MDJ: Why is this even needed? Don't you want to log the actual filename? 
 	/**
 	 * Sanitizes provided filename for safe logging Removes control characters, line breaks, and limits length.
 	 */

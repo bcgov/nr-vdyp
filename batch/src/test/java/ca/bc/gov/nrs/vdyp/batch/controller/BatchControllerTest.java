@@ -81,7 +81,7 @@ class BatchControllerTest {
 		// Use system temp directory for cross-platform compatibility
 		String tempDir = System.getProperty("java.io.tmpdir");
 		ReflectionTestUtils.setField(batchController, "batchRootDirectory", tempDir);
-		ReflectionTestUtils.setField(batchController, "defaultParitionSize", 4);
+		ReflectionTestUtils.setField(batchController, "defaultPartitionSize", 4);
 	}
 
 	@Test
@@ -167,7 +167,7 @@ class BatchControllerTest {
 		);
 
 		ReflectionTestUtils.setField(controllerWithNullJob, "batchRootDirectory", "/tmp/batch");
-		ReflectionTestUtils.setField(controllerWithNullJob, "defaultParitionSize", 4);
+		ReflectionTestUtils.setField(controllerWithNullJob, "defaultPartitionSize", 4);
 
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
