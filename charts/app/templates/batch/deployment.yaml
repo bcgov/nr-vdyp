@@ -52,7 +52,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /vdyp-batch/actuator/health
-              port: http
+              port: 8081
               scheme: HTTP
             initialDelaySeconds: 120
             periodSeconds: 10
