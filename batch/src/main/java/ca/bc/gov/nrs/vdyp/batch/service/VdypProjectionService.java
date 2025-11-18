@@ -68,7 +68,7 @@ public class VdypProjectionService {
 	 * @param batchRecords Collection of BatchRecords to process together
 	 *
 	 * @return Projection result summary for the entire chunk
-	 * @throws IOException      for transient I/O errors that may be retried
+	 * @throws IOException for transient I/O errors that may be retried
 	 */
 	public String performProjectionForChunk(
 			List<BatchRecord> batchRecords, String partitionName, Parameters projectionParameters, Long jobExecutionId,
