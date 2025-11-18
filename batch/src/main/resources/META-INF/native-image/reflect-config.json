@@ -241,6 +241,210 @@
     "allPublicFields": true
   },
   {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.StandYieldMessageKind",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.ProgressFrequency",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationClassSet",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.MessagesInner",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.ParameterDetailsMessage",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.util.Calendar",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "java.util.Calendar[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.util.Date",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "java.util.Date[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.math.BigDecimal",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "java.math.BigDecimal[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.math.BigInteger",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "java.math.BigInteger[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.lang.String[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.lang.Boolean[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.lang.Byte[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.lang.Character[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.lang.Short[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.lang.Integer[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.lang.Long[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.lang.Float[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.lang.Double[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.sql.Date",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "java.sql.Date[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.sql.Time",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "java.sql.Time[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "java.sql.Timestamp",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "java.sql.Timestamp[]",
+    "unsafeAllocated": true
+  },
+  {
     "name": "org.springframework.web.multipart.MultipartFile",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
@@ -307,6 +511,256 @@
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonReportingInfo",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.SpeciesReportingInfo",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessageList",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.SpeciesSelectionCriteria",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.CfsEcoZoneCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.LayerSummarizationModeCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.NonVegetationTypeCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.OtherVegetationTypeCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.PolygonProcessingStateCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.SilviculturalBaseCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.SpeciesProjectionTypeCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.Vdyp7LayerTypeCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.DCSVYieldTableRecordBean",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.PLOTSYYieldTableRecordBean",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.TextYieldTableRowValuesBean",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.CSVYieldTableRowValuesBean",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.EntityVolumeDetails",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.EntityGrowthDetails",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.CfsBiomassVolumeDetails",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.LayerYields",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTableRowContext",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTableSpeciesDetails",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTableRowBean",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.UnsupportedYieldTableRecordBean",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
     "unsafeAllocated": true
   },
   {
@@ -716,5 +1170,218 @@
     "allPublicConstructors": true,
     "allDeclaredMethods": true,
     "allPublicMethods": true
-  }	
+  },
+  {
+    "name": "com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToNull",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToDefault",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.NAEmptyOrBlankStringsToNull",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean$HcsvPolygonRecordBeanValidator",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean$HcsvLayerRecordBeanValidator",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLineFilter",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.BeanValidatorHelper",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.CsvToBean",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.CsvToBeanBuilder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.BeanVerifier",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.HeaderColumnNameMappingStrategy",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.ColumnPositionMappingStrategy",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.MappingStrategy",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.CsvBindByName",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.CsvBindByPosition",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.processor.PreAssignmentProcessor",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.processor.StringProcessor",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.exceptionhandler.CsvExceptionHandler",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.exceptions.CsvConstraintViolationException",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.CSVReader",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.CSVReaderBuilder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.CSVParser",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.CSVParserBuilder",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.opencsv.bean.exceptionhandler.ExceptionHandlerQueue",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.CsvStreamIterator",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.InventoryStandardCode",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean$OtherVegCoverDetails",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean$NonVegCoverDetails",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean$SpeciesDetails",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  }
 ]

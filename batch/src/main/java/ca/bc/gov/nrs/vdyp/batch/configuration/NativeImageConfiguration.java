@@ -31,8 +31,11 @@ public class NativeImageConfiguration {
 			// Register H2 Database classes
 			registerH2DatabaseClasses(hints);
 
-			// Register VDYP model classes
-			registerVdypModelClasses(hints);
+			// Register VDYP Extended Core classes
+			registerVdypEcoreModelClasses(hints);
+			registerVdypEcoreProjectionClasses(hints);
+			registerVdypEcoreInputClasses(hints);
+			registerVdypEcoreOutputClasses(hints);
 
 			// Register Jackson classes for JSON serialization/deserialization
 			registerJacksonClasses(hints);
@@ -172,82 +175,193 @@ public class NativeImageConfiguration {
 			}
 		}
 
-		private void registerVdypModelClasses(RuntimeHints hints) {
-			// VDYP model classes for reflection (serialization, etc.)
+		/**
+		 * Register VDYP Extended Core model classes (ca.bc.gov.nrs.vdyp.ecore.model.v1.*)
+		 */
+		private void registerVdypEcoreModelClasses(RuntimeHints hints) {
 			try {
-				hints.reflection().registerType(
-						Class.forName("ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon"),
-						hint -> hint.withMembers(
-								MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
-								MemberCategory.DECLARED_FIELDS
-						)
-				);
+				// API model classes
+				String[] modelClasses = { "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.FilterParameters",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationParameter",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationClassSet",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.ParameterDetailsMessage",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.MessagesInner",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage" };
 
-				hints.reflection().registerType(
-						Class.forName("ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer"),
-						hint -> hint.withMembers(
-								MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
-								MemberCategory.DECLARED_FIELDS
-						)
-				);
+				for (String className : modelClasses) {
+					hints.reflection().registerType(
+							Class.forName(className),
+							hint -> hint.withMembers(
+									MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
+									MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS,
+									MemberCategory.PUBLIC_FIELDS
+							)
+					);
+				}
 
-				Class<?> parametersClass = Class.forName("ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters");
-				hints.reflection().registerType(
-						parametersClass,
-						hint -> hint.withMembers(
-								MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
-								MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS,
-								MemberCategory.PUBLIC_FIELDS
-						)
-				);
+				// Parameters nested enums
+				String[] parameterEnums = { "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$ExecutionOption",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$OutputFormat",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$DebugOption",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$AgeYearRangeCombinationKind",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$MetadataToOutputDirective" };
 
-				Class<?> executionOptionClass = Class
-						.forName("ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$ExecutionOption");
-				hints.reflection().registerType(
-						executionOptionClass,
-						hint -> hint.withMembers(
-								MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
-								MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.PUBLIC_FIELDS
-						)
-				);
+				for (String className : parameterEnums) {
+					hints.reflection().registerType(
+							Class.forName(className),
+							hint -> hint.withMembers(
+									MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
+									MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.PUBLIC_FIELDS
+							)
+					);
+				}
 
-				Class<?> outputFormatClass = Class.forName("ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$OutputFormat");
-				hints.reflection().registerType(
-						outputFormatClass,
-						hint -> hint.withMembers(
-								MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
-								MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.PUBLIC_FIELDS
-						)
-				);
+				// Other enums
+				String[] otherEnums = { "ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.StandYieldMessageKind",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.ProgressFrequency",
+						"ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind" };
 
-				Class<?> debugOptionClass = Class.forName("ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$DebugOption");
-				hints.reflection().registerType(
-						debugOptionClass,
-						hint -> hint.withMembers(
-								MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
-								MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.PUBLIC_FIELDS
-						)
-				);
+				for (String className : otherEnums) {
+					hints.reflection().registerType(
+							Class.forName(className),
+							hint -> hint.withMembers(
+									MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
+									MemberCategory.PUBLIC_FIELDS
+							)
+					);
+				}
 
-				Class<?> ageYearRangeClass = Class
-						.forName("ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$AgeYearRangeCombinationKind");
-				hints.reflection().registerType(
-						ageYearRangeClass,
-						hint -> hint.withMembers(
-								MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
-								MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.PUBLIC_FIELDS
-						)
-				);
+			} catch (ClassNotFoundException e) {
+				// Classes not found, skip registration
+			}
+		}
 
-				Class<?> metadataDirectiveClass = Class
-						.forName("ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters$MetadataToOutputDirective");
-				hints.reflection().registerType(
-						metadataDirectiveClass,
-						hint -> hint.withMembers(
-								MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
-								MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.PUBLIC_FIELDS
-						)
-				);
+		/**
+		 * Register VDYP Extended Core projection classes (ca.bc.gov.nrs.vdyp.ecore.projection.*)
+		 */
+		private void registerVdypEcoreProjectionClasses(RuntimeHints hints) {
+			try {
+				// Core projection model classes
+				String[] projectionModelClasses = { "ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.Species",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.SiteSpecies",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.History",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerAdjustments",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.ProjectionParameters",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonReportingInfo",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.SpeciesReportingInfo",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessageList" };
+
+				for (String className : projectionModelClasses) {
+					hints.reflection().registerType(
+							Class.forName(className),
+							hint -> hint.withMembers(
+									MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
+									MemberCategory.DECLARED_FIELDS, MemberCategory.PUBLIC_FIELDS
+							)
+					);
+				}
+
+				// Projection model enumerations
+				String[] projectionEnums = { "ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.CfsEcoZoneCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.LayerSummarizationModeCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.NonVegetationTypeCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.OtherVegetationTypeCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.PolygonProcessingStateCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.SilviculturalBaseCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.SpeciesProjectionTypeCode",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.Vdyp7LayerTypeCode" };
+
+				for (String className : projectionEnums) {
+					hints.reflection().registerType(
+							Class.forName(className),
+							hint -> hint.withMembers(
+									MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
+									MemberCategory.PUBLIC_FIELDS
+							)
+					);
+				}
+
+			} catch (ClassNotFoundException e) {
+				// Classes not found, skip registration
+			}
+		}
+
+		/**
+		 * Register VDYP Extended Core input classes (ca.bc.gov.nrs.vdyp.ecore.projection.input.*)
+		 */
+		private void registerVdypEcoreInputClasses(RuntimeHints hints) {
+			try {
+				// OpenCSV bean classes - need unsafeAllocated for instantiation
+				String[] csvBeanClasses = { "ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean" };
+
+				for (String className : csvBeanClasses) {
+					Class<?> clazz = Class.forName(className);
+					hints.reflection().registerType(
+							clazz,
+							hint -> hint.withMembers(
+									MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
+									MemberCategory.DECLARED_FIELDS, MemberCategory.PUBLIC_FIELDS
+							)
+					);
+					// Also register inner classes for record beans
+					for (Class<?> innerClass : clazz.getDeclaredClasses()) {
+						hints.reflection().registerType(
+								innerClass,
+								hint -> hint.withMembers(
+										MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
+										MemberCategory.DECLARED_FIELDS, MemberCategory.PUBLIC_FIELDS
+								)
+						);
+					}
+				}
+
+			} catch (ClassNotFoundException e) {
+				// Classes not found, skip registration
+			}
+		}
+
+		/**
+		 * Register VDYP Extended Core output classes (ca.bc.gov.nrs.vdyp.ecore.projection.output.*)
+		 */
+		private void registerVdypEcoreOutputClasses(RuntimeHints hints) {
+			try {
+				// Yield table output bean classes
+				String[] yieldTableBeanClasses = {
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.DCSVYieldTableRecordBean",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.PLOTSYYieldTableRecordBean",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.TextYieldTableRowValuesBean",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.CSVYieldTableRowValuesBean",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.EntityVolumeDetails",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.EntityGrowthDetails",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.CfsBiomassVolumeDetails",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.LayerYields",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTableRowContext",
+						"ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTableSpeciesDetails" };
+
+				for (String className : yieldTableBeanClasses) {
+					hints.reflection().registerType(
+							Class.forName(className),
+							hint -> hint.withMembers(
+									MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS,
+									MemberCategory.DECLARED_FIELDS, MemberCategory.PUBLIC_FIELDS
+							)
+					);
+				}
 
 			} catch (ClassNotFoundException e) {
 				// Classes not found, skip registration
