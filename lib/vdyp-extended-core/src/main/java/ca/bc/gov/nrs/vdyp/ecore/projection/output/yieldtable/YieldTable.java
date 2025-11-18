@@ -804,7 +804,8 @@ public class YieldTable implements Closeable {
 
 		double diameter = layerYields.diameter();
 		double treesPerHectare = layerYields.treesPerHectare();
-		double basalArea = layerYields.basalArea125cm();
+		double basalArea = layerYields.basalArea(); // VDYP7 uses fBasalArea125, but populates that property with the
+													// sum for the selected utilization classes, not the 12.5+ classes
 		double dominantHeight = layerYields.dominantHeight();
 
 		var measurementYear = layer.getPolygon().getReferenceYear();
@@ -1441,7 +1442,7 @@ public class YieldTable implements Closeable {
 
 			layerYields = new LayerYields(
 					false, false /* not dominant */, null, calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-					0.0, 0.0, 0.0, 0.0, 0.0, 0
+					0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
 			);
 		}
 
@@ -1507,8 +1508,8 @@ public class YieldTable implements Closeable {
 		return new LayerYields(
 				true, isDominantSpecies, projectedSp0.getGenus(), calendarYear, totalAge, dominantHeight, loreyHeight,
 				siteIndex, diameter, treesPerHectare, wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay,
-				cuVolumeLessDecayWastage, cuVolumeLessDecayWastageBreakage, basalArea75cmPlus, basalArea125cmPlus,
-				reportedStandPercent, siteCurve
+				cuVolumeLessDecayWastage, cuVolumeLessDecayWastageBreakage, basalArea, basalArea75cmPlus,
+				basalArea125cmPlus, reportedStandPercent, siteCurve
 		);
 	}
 

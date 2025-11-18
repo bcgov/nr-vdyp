@@ -57,10 +57,13 @@ public record LayerYields(
 		/** Close utilization volume, less decay, wastage and breakage, of the stand at this layer. */
 		double cuVolumeLessDecayWastageBreakage,
 
+		/** The Basal Area of the stand at this layer. */
+		double basalArea,
+
 		/** The Basal Area at Utilization Level 7.5cm+. */
 		double basalArea75cm,
 
-		/** The Basal Area at Utilization Level 7.5cm+. */
+		/** The Basal Area at Utilization Level 12.5cm+. */
 		double basalArea125cm,
 
 		/**
