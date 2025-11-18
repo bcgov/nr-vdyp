@@ -43,6 +43,8 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
@@ -100,6 +102,9 @@ class PartitionedBatchConfigurationTest {
 
 	@Mock
 	private VdypProjectionService vdypProjectionService;
+
+	@Mock
+	private ObjectMapper objectMapper;
 
 	@TempDir
 	Path tempDir;
@@ -320,7 +325,8 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testPartitionWriter() {
-		VdypChunkProjectionWriter result = configuration.partitionWriter(vdypProjectionService, metricsCollector);
+		VdypChunkProjectionWriter result = configuration
+				.partitionWriter(vdypProjectionService, metricsCollector, objectMapper);
 
 		assertNotNull(result);
 	}

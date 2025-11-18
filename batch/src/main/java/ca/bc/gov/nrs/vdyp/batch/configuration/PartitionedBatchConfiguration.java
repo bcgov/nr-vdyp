@@ -35,6 +35,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
@@ -301,7 +303,7 @@ public class PartitionedBatchConfiguration {
 	@StepScope
 	public VdypChunkProjectionWriter partitionWriter(
 			VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector,
-			com.fasterxml.jackson.databind.ObjectMapper objectMapper
+			ObjectMapper objectMapper
 	) {
 		return new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector, objectMapper);
 	}
