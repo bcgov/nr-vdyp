@@ -259,7 +259,5 @@ class VdypSpeciesTest {
 				.build();
 
 		assertThat(species.getIsPrimary(), is(true));
-		species.setIsPrimary(false);
-		assertThat(species.getIsPrimary(), is(false));
 	}
 }

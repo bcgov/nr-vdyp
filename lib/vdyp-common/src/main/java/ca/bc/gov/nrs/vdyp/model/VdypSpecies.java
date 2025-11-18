@@ -27,7 +27,7 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 	private Optional<Integer> volumeGroup;
 	private Optional<Integer> decayGroup;
 	private Optional<Integer> breakageGroup;
-	private Optional<Boolean> isPrimary;
+	private final Optional<Boolean> isPrimary;
 
 	// Compatibility Variables
 
@@ -127,10 +127,6 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 
 	public boolean getIsPrimary() {
 		return isPrimary.orElse(false);
-	}
-
-	public void setIsPrimary(boolean isPrimary) {
-		this.isPrimary = Optional.of(isPrimary);
 	}
 
 	@Override
