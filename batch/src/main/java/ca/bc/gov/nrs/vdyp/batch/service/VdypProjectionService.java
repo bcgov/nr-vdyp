@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,6 +68,7 @@ public class VdypProjectionService {
 	 * @param batchRecords Collection of BatchRecords to process together
 	 *
 	 * @return Projection result summary for the entire chunk
+	 * @throws IOException      for transient I/O errors that may be retried
 	 */
 	public String performProjectionForChunk(
 			List<BatchRecord> batchRecords, String partitionName, Parameters projectionParameters, Long jobExecutionId,
@@ -102,6 +104,8 @@ public class VdypProjectionService {
 						"[GUID: {}, EXEID: {}] Running HCSV projection {} for chunk of {} records in partition {}",
 						jobGuid, jobExecutionId, batchProjectionId, batchRecords.size(), partitionName
 				);
+
+				logInputStreamDiagnostics(inputStreams, batchRecords.size(), partitionName);
 
 				// Run the projection on the combined chunk data
 				runner.run(inputStreams);
@@ -249,15 +253,15 @@ public class VdypProjectionService {
 		layerCsv.append("\n");
 
 		// Create input streams
-		inputStreams.put(
-				ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(polygonCsv.toString().getBytes())
-		);
-		inputStreams
-				.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(layerCsv.toString().getBytes()));
+		byte[] polygonBytes = polygonCsv.toString().getBytes(StandardCharsets.UTF_8);
+		byte[] layerBytes = layerCsv.toString().getBytes(StandardCharsets.UTF_8);
+
+		inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(polygonBytes));
+		inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(layerBytes));
 
 		logger.debug(
-				"Created combined input streams from raw CSV data for chunk of {} records (Polygon: {} bytes, Layers: {} bytes)",
-				batchRecords.size(), polygonCsv.length(), layerCsv.length()
+				"Created combined input streams from raw CSV data for chunk of {} records (Polygon: {} chars -> {} bytes, Layers: {} chars -> {} bytes)",
+				batchRecords.size(), polygonCsv.length(), polygonBytes.length, layerCsv.length(), layerBytes.length
 		);
 
 		return inputStreams;
@@ -320,9 +324,17 @@ public class VdypProjectionService {
 
 		var yieldTables = runner.getContext().getYieldTables();
 		if (yieldTables == null || yieldTables.isEmpty()) {
-			logger.debug("No yield tables to store for projection {}", projectionId);
+			logger.warn(
+					"WARNING: No yield tables returned from extended-core for projection {} ({} input records)",
+					projectionId, batchRecords.size()
+			);
 			return;
 		}
+
+		logger.trace(
+				"Extended-core returned {} yield table(s) for projection {} ({} input records)", yieldTables.size(),
+				projectionId, batchRecords.size()
+		);
 
 		for (YieldTable yieldTable : yieldTables) {
 			storeYieldTable(yieldTable, partitionDir, projectionId, batchRecords);
@@ -350,8 +362,21 @@ public class VdypProjectionService {
 				logger.warn("Skipping yield table with null stream: {}", prefixedFileName);
 				return;
 			}
-			Files.copy(yieldTableStream, yieldTablePath, StandardCopyOption.REPLACE_EXISTING);
-			logger.trace("Stored chunk yield table: {} for {} records", prefixedFileName, batchRecords.size());
+
+			// Copy stream and track actual bytes written
+			long bytesWritten = Files.copy(yieldTableStream, yieldTablePath, StandardCopyOption.REPLACE_EXISTING);
+
+			if (bytesWritten == 0) {
+				logger.warn(
+						"WARNING: Yield table file created but is EMPTY: {} (0 bytes written, {} input records)",
+						prefixedFileName, batchRecords.size()
+				);
+			} else {
+				logger.trace(
+						"Stored yield table: {} ({} bytes written from extended-core for {} input records)",
+						prefixedFileName, bytesWritten, batchRecords.size()
+				);
+			}
 		} catch (IOException e) {
 			throw BatchIOException.handleFileCopyFailure(yieldTablePath, e, "Failed to store yield table", logger);
 		}
@@ -394,8 +419,21 @@ public class VdypProjectionService {
 
 		try (InputStream progressStream = runner.getProgressStream()) {
 			if (progressStream != null) {
-				Files.copy(progressStream, progressLogPath, StandardCopyOption.REPLACE_EXISTING);
-				logger.trace("Stored chunk progress log: {} for {} records", progressLogFileName, batchRecords.size());
+				long bytesWritten = Files.copy(progressStream, progressLogPath, StandardCopyOption.REPLACE_EXISTING);
+
+				if (bytesWritten == 0) {
+					logger.warn(
+							"WARNING: Progress log created but is EMPTY: {} (0 bytes, {} input records)",
+							progressLogFileName, batchRecords.size()
+					);
+				} else {
+					logger.trace(
+							"Stored progress log: {} ({} bytes from extended-core for {} input records)",
+							progressLogFileName, bytesWritten, batchRecords.size()
+					);
+
+					logProgressLogPreview(progressLogPath);
+				}
 			} else {
 				logger.warn("Progress stream is null, skipping progress log: {}", progressLogFileName);
 			}
@@ -412,8 +450,21 @@ public class VdypProjectionService {
 
 		try (InputStream errorStream = runner.getErrorStream()) {
 			if (errorStream != null) {
-				Files.copy(errorStream, errorLogPath, StandardCopyOption.REPLACE_EXISTING);
-				logger.trace("Stored chunk error log: {} for {} records", errorLogFileName, batchRecords.size());
+				long bytesWritten = Files.copy(errorStream, errorLogPath, StandardCopyOption.REPLACE_EXISTING);
+
+				if (bytesWritten == 0) {
+					logger.trace(
+							"Error log created (empty - no errors): {} for {} input records", errorLogFileName,
+							batchRecords.size()
+					);
+				} else {
+					logger.warn(
+							"WARNING: Error log contains data: {} ({} bytes from extended-core for {} input records)",
+							errorLogFileName, bytesWritten, batchRecords.size()
+					);
+
+					logErrorLogContent(errorLogPath);
+				}
 			} else {
 				logger.warn("Error stream is null, skipping error log: {}", errorLogFileName);
 			}
@@ -435,6 +486,87 @@ public class VdypProjectionService {
 		} catch (IOException e) {
 			throw BatchIOException
 					.handleFileWriteFailure(debugLogPath, e, "Failed to create debug log placeholder", logger);
+		}
+	}
+
+	/**
+	 * Logs diagnostic information about input streams before they are consumed by the projection runner. This helps
+	 * diagnose issues with GraalVM Native Image stream processing.
+	 */
+	private void
+			logInputStreamDiagnostics(Map<String, InputStream> inputStreams, int recordCount, String partitionName) {
+		if (!logger.isTraceEnabled()) {
+			return;
+		}
+
+		logger.trace("=== Input Stream Diagnostics for partition {} ({} records) ===", partitionName, recordCount);
+
+		for (var entry : inputStreams.entrySet()) {
+			String streamName = entry.getKey();
+			InputStream stream = entry.getValue();
+
+			if (stream == null) {
+				logger.trace("  {}: NULL STREAM", streamName);
+				continue;
+			}
+
+			try {
+				// For ByteArrayInputStream, we can check available bytes
+				if (stream instanceof ByteArrayInputStream) {
+					int available = stream.available();
+					logger.trace("  {}: ByteArrayInputStream with {} bytes available", streamName, available);
+
+					// Read first 200 characters to verify stream is readable
+					stream.mark(500);
+					byte[] sample = new byte[Math.min(200, available)];
+					int bytesRead = stream.read(sample);
+					stream.reset();
+
+					if (bytesRead > 0) {
+						String preview = new String(sample, 0, bytesRead).replace("\n", "\\n").replace("\r", "\\r");
+						logger.trace("  {}: First {} bytes preview: {}", streamName, bytesRead, preview);
+					} else {
+						logger.trace("  {}: WARNING - No bytes could be read from stream!", streamName);
+					}
+				} else {
+					logger.trace("  {}: {} (type: {})", streamName, stream, stream.getClass().getName());
+				}
+			} catch (IOException e) {
+				logger.trace("  {}: ERROR reading stream diagnostics: {}", streamName, e.getMessage());
+			}
+		}
+
+		logger.trace("=== End Input Stream Diagnostics ===");
+	}
+
+	/**
+	 * Logs error log content for diagnostics
+	 */
+	private void logErrorLogContent(Path errorLogPath) {
+		if (logger.isTraceEnabled()) {
+			try {
+				String errorContent = Files.readString(errorLogPath);
+				logger.trace("Error log content:\n{}", errorContent);
+			} catch (Exception e) {
+				logger.trace("Could not read error log for preview: {}", e.getMessage());
+			}
+		}
+	}
+
+	/**
+	 * Logs progress log content preview for diagnostics
+	 */
+	private void logProgressLogPreview(Path progressLogPath) {
+		if (logger.isTraceEnabled()) {
+			try {
+				String progressContent = Files.readString(progressLogPath);
+				logger.trace(
+						"Progress log content preview (first 500 chars):\n{}",
+						progressContent.substring(0, Math.min(500, progressContent.length()))
+				);
+			} catch (Exception e) {
+				logger.trace("Could not read progress log for preview: {}", e.getMessage());
+			}
 		}
 	}
 }

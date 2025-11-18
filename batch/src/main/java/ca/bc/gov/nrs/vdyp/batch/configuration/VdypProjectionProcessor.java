@@ -66,7 +66,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 			throw new IllegalArgumentException("FEATURE_ID is null or empty");
 		}
 
-		logger.debug(
+		logger.trace(
 				"[GUID: {}, EXEID: {} Partition: {}] Prepared record for chunk processing: FEATURE_ID {}", jobGuid,
 				jobExecutionId, partitionName, featureId
 		);
