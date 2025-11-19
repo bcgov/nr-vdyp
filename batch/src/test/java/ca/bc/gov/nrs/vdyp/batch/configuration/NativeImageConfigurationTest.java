@@ -3,11 +3,16 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.TypeReference;
@@ -48,145 +53,107 @@ class NativeImageConfigurationTest {
 		assertDoesNotThrow(() -> vdypRuntimeHints.registerHints(hints, null));
 	}
 
-	@Test
-	void testRegisterSpringBatchClasses_JdbcJobInstanceDao() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		vdypRuntimeHints.registerHints(hints, classLoader);
-
-		Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection().onType(JdbcJobInstanceDao.class);
-		assertTrue(predicate.test(hints), "JdbcJobInstanceDao should be registered for reflection");
-	}
-
-	@Test
-	void testRegisterSpringBatchClasses_JdbcJobExecutionDao() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		vdypRuntimeHints.registerHints(hints, classLoader);
-
-		Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection().onType(JdbcJobExecutionDao.class);
-		assertTrue(predicate.test(hints), "JdbcJobExecutionDao should be registered for reflection");
-	}
-
-	@Test
-	void testRegisterSpringBatchClasses_WithPublicConstructors() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		vdypRuntimeHints.registerHints(hints, classLoader);
-
-		Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection().onType(JdbcJobInstanceDao.class)
-				.withMemberCategory(MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS);
-		assertTrue(predicate.test(hints), "JdbcJobInstanceDao public constructors should be accessible");
-	}
-
-	@Test
-	void testRegisterSpringBatchClasses_WithPublicMethods() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		vdypRuntimeHints.registerHints(hints, classLoader);
-
-		Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection().onType(JdbcJobInstanceDao.class)
-				.withMemberCategory(MemberCategory.INVOKE_PUBLIC_METHODS);
-		assertTrue(predicate.test(hints), "JdbcJobInstanceDao public methods should be accessible");
-	}
-
-	@Test
-	void testRegisterSpringBatchClasses_WithDeclaredFields() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		vdypRuntimeHints.registerHints(hints, classLoader);
-
-		Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection().onType(JdbcJobInstanceDao.class)
-				.withMemberCategory(MemberCategory.DECLARED_FIELDS);
-		assertTrue(predicate.test(hints), "JdbcJobInstanceDao declared fields should be accessible");
-	}
-
-	@Test
-	void testRegisterH2DatabaseClasses_H2DriverRegistered() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		vdypRuntimeHints.registerHints(hints, classLoader);
-
-		try {
-			Class.forName("org.h2.Driver");
-			Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection()
-					.onType(TypeReference.of("org.h2.Driver"));
-			assertTrue(predicate.test(hints), "H2 Driver should be registered for reflection");
-		} catch (ClassNotFoundException e) {
-			// H2 not on classpath, skip verification
-		}
-	}
-
-	@Test
-	void testRegisterVdypModelClasses_PolygonClass() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		vdypRuntimeHints.registerHints(hints, classLoader);
-
-		try {
-			Class.forName("ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon");
-			Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection()
-					.onType(TypeReference.of("ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon"));
-			assertTrue(predicate.test(hints), "Polygon class should be registered for reflection");
-		} catch (ClassNotFoundException e) {
-			// VDYP model class not on classpath, skip verification
-		}
-	}
-
-	@Test
-	void testRegisterVdypModelClasses_LayerClass() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		vdypRuntimeHints.registerHints(hints, classLoader);
-
-		try {
-			Class.forName("ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer");
-			Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection()
-					.onType(TypeReference.of("ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer"));
-			assertTrue(predicate.test(hints), "Layer class should be registered for reflection");
-		} catch (ClassNotFoundException e) {
-			// VDYP model class not on classpath, skip verification
-		}
-	}
-
-	@Test
-	void testRegisterClassIfExists_HandlesClassNotFoundException() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		assertDoesNotThrow(() -> vdypRuntimeHints.registerHints(hints, classLoader));
-	}
-
-	@Test
-	void testRegisterSpringBootClasses_OptionalClassesHandled() {
-		RuntimeHints hints = new RuntimeHints();
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-		assertDoesNotThrow(() -> vdypRuntimeHints.registerHints(hints, classLoader));
-
-		assertTrue(
-				RuntimeHintsPredicates.reflection().onType(JdbcJobInstanceDao.class).test(hints),
-				"Core Spring Batch classes should be registered"
+	private static Stream<Arguments> springBatchClassTestParameters() {
+		return Stream.of(
+				Arguments.of(JdbcJobInstanceDao.class, null, "JdbcJobInstanceDao should be registered for reflection"),
+				Arguments
+						.of(JdbcJobExecutionDao.class, null, "JdbcJobExecutionDao should be registered for reflection"),
+				Arguments.of(
+						JdbcJobInstanceDao.class, MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+						"JdbcJobInstanceDao public constructors should be accessible"
+				),
+				Arguments.of(
+						JdbcJobInstanceDao.class, MemberCategory.INVOKE_PUBLIC_METHODS,
+						"JdbcJobInstanceDao public methods should be accessible"
+				),
+				Arguments.of(
+						JdbcJobInstanceDao.class, MemberCategory.DECLARED_FIELDS,
+						"JdbcJobInstanceDao declared fields should be accessible"
+				)
 		);
 	}
 
-	@Test
-	void testRegisterHints_MultipleInvocations() {
+	@ParameterizedTest
+	@MethodSource("springBatchClassTestParameters")
+	void testRegisterSpringBatchClasses(Class<?> targetClass, MemberCategory memberCategory, String message) {
 		RuntimeHints hints = new RuntimeHints();
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-		assertDoesNotThrow(() -> {
-			vdypRuntimeHints.registerHints(hints, classLoader);
-			vdypRuntimeHints.registerHints(hints, classLoader);
-		});
+		vdypRuntimeHints.registerHints(hints, classLoader);
+
+		Predicate<RuntimeHints> predicate = memberCategory == null
+				? RuntimeHintsPredicates.reflection().onType(targetClass)
+				: RuntimeHintsPredicates.reflection().onType(targetClass).withMemberCategory(memberCategory);
+
+		assertTrue(predicate.test(hints), message);
+	}
+
+	private static Stream<Arguments> optionalClassTestParameters() {
+		return Stream.of(
+				Arguments.of("org.h2.Driver", "H2 Driver should be registered for reflection"),
+				Arguments.of(
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon",
+						"Polygon class should be registered for reflection"
+				),
+				Arguments.of(
+						"ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer",
+						"Layer class should be registered for reflection"
+				)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("optionalClassTestParameters")
+	void testRegisterOptionalClasses(String className, String message) {
+		RuntimeHints hints = new RuntimeHints();
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+		vdypRuntimeHints.registerHints(hints, classLoader);
+
+		try {
+			Class.forName(className);
+			Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection().onType(TypeReference.of(className));
+			assertTrue(predicate.test(hints), message);
+		} catch (ClassNotFoundException e) {
+			//
+		}
+	}
+
+	private static Stream<Arguments> registerHintsRobustnessTestParameters() {
+		return Stream.of(
+				Arguments.of(
+						"testRegisterClassIfExists_HandlesClassNotFoundException", false,
+						"Core classes should be registered even when optional classes are missing"
+				),
+				Arguments.of(
+						"testRegisterSpringBootClasses_OptionalClassesHandled", false,
+						"Core Spring Batch classes should be registered"
+				),
+				Arguments.of(
+						"testRegisterHints_MultipleInvocations", true,
+						"Multiple invocations should not cause exceptions"
+				)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("registerHintsRobustnessTestParameters")
+	void testRegisterHintsRobustness(String testName, boolean multipleInvocations, String verificationMessage) {
+		RuntimeHints hints = new RuntimeHints();
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+		if (multipleInvocations) {
+			assertDoesNotThrow(() -> {
+				vdypRuntimeHints.registerHints(hints, classLoader);
+				vdypRuntimeHints.registerHints(hints, classLoader);
+			});
+		} else {
+			assertDoesNotThrow(() -> vdypRuntimeHints.registerHints(hints, classLoader));
+			assertTrue(
+					RuntimeHintsPredicates.reflection().onType(JdbcJobInstanceDao.class).test(hints),
+					verificationMessage
+			);
+		}
 	}
 
 	@Test
@@ -220,8 +187,8 @@ class NativeImageConfigurationTest {
 		Class<?>[] value = importAnnotation.value();
 		assertNotNull(value);
 		assertTrue(value.length > 0, "ImportRuntimeHints should reference at least one class");
-		assertTrue(
-				value[0] == NativeImageConfiguration.VdypRuntimeHints.class,
+		assertSame(
+				NativeImageConfiguration.VdypRuntimeHints.class, value[0],
 				"ImportRuntimeHints should reference VdypRuntimeHints.class"
 		);
 	}
@@ -295,6 +262,15 @@ class NativeImageConfigurationTest {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
 		assertDoesNotThrow(() -> vdypRuntimeHints.registerHints(hints, classLoader));
+
+		try {
+			Class.forName("org.h2.Driver");
+			Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection()
+					.onType(TypeReference.of("org.h2.Driver"));
+			assertTrue(predicate.test(hints), "H2 Driver should be registered when available");
+		} catch (ClassNotFoundException e) {
+			//
+		}
 	}
 
 	@Test
@@ -303,6 +279,15 @@ class NativeImageConfigurationTest {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
 		assertDoesNotThrow(() -> vdypRuntimeHints.registerHints(hints, classLoader));
+
+		try {
+			Class.forName("ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon");
+			Predicate<RuntimeHints> predicate = RuntimeHintsPredicates.reflection()
+					.onType(TypeReference.of("ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon"));
+			assertTrue(predicate.test(hints), "VDYP Polygon class should be registered when available");
+		} catch (ClassNotFoundException e) {
+			//
+		}
 	}
 
 	@Test
@@ -311,5 +296,10 @@ class NativeImageConfigurationTest {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
 		assertDoesNotThrow(() -> vdypRuntimeHints.registerHints(hints, classLoader));
+
+		assertTrue(
+				RuntimeHintsPredicates.reflection().onType(JdbcJobInstanceDao.class).test(hints),
+				"Spring Batch core classes should always be registered"
+		);
 	}
 }
