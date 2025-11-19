@@ -45,6 +45,8 @@ spec:
               value: info
             - name: SPRING_PROFILES_ACTIVE
               value: {{ .Values.batch.env.SPRING_PROFILES_ACTIVE | quote }}
+            - name: SERVER_PORT
+              value: "8081"
           ports:
             - name: http
               containerPort: {{ .Values.batch.service.targetPort }}
