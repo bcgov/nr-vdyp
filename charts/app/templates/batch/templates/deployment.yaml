@@ -73,11 +73,11 @@ spec:
             timeoutSeconds: 10
           resources:
             limits:
-              cpu: 1000m
-              memory: 1Gi
-            requests:
               cpu: 250m
               memory: 512Mi
+            requests:
+              cpu: 50m
+              memory: 256Mi
       {{- with .Values.batch.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
