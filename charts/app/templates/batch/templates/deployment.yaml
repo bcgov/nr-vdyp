@@ -73,10 +73,10 @@ spec:
             timeoutSeconds: 10
           resources:
             limits:
-              cpu: 250m
+              cpu: 500m
               memory: 512Mi
             requests:
-              cpu: 50m
+              cpu: 250m
               memory: 256Mi
       {{- with .Values.batch.nodeSelector }}
       nodeSelector:
