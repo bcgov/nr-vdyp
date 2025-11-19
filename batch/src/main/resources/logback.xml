@@ -17,7 +17,7 @@
 
   <!-- Application loggers -->
   <logger name="ca.bc.gov.nrs.vdyp.batch" level="DEBUG" />
-  <logger name="ca.bc.gov.nrs.vdyp" level="DEBUG" />
+  <logger name="ca.bc.gov.nrs.vdyp" level="OFF" />
 
   <!-- Spring Boot and Spring Framework -->
   <logger name="org.springframework.boot" level="WARN" />
