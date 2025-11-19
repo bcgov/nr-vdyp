@@ -64,8 +64,6 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 	@BeforeEach
 	void setup() {
-		var socketTimeout = RestAssured.config().getHttpClientConfig().params().get("http.socket.timeout");
-		var connectionTimeout = RestAssured.config().getHttpClientConfig().params().get("http.connection.timeout");
 		RestAssured.config = RestAssuredConfig.config().httpClient(
 				HttpClientConfig.httpClientConfig().setParam("http.socket.timeout", 24 * 60 * 60 * 1000)
 						.setParam("http.connection.timeout", 24 * 60 * 60 * 1000)
@@ -120,7 +118,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
-		String vdyp8YieldTableContent = new String(testHelper.readZipEntry(zipFile, entry1));
+		String vdyp8YieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry1));
 		assertThat(vdyp8YieldTableContent, not(emptyString()));
 
 		var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
@@ -136,23 +134,23 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
-		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));
+		String entry2Content = new String(TestHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry2Content.contains("starting projection (type HCSV)"));
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
-		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry2));
+		String entry3Content = new String(TestHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry3Content.length() == 0);
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
-		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry2));
+		String entry4Content = new String(TestHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry4Content.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 
 		ZipEntry projectionResultsEntry;
 		var outputSeen = false;
 		while ( (projectionResultsEntry = zipFile.getNextEntry()) != null) {
-			String entryContent = new String(testHelper.readZipEntry(zipFile, projectionResultsEntry));
+			String entryContent = new String(TestHelper.readZipEntry(zipFile, projectionResultsEntry));
 
 			if (projectionResultsEntry.getName().endsWith("ForwardCompatibility")) {
 				Assert.assertTrue(entryContent.length() == 0);
@@ -214,7 +212,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 			ZipEntry entry1 = zipFile.getNextEntry();
 			assertEquals("YieldTable.csv", entry1.getName());
-			String vdyp8YieldTableContent = new String(testHelper.readZipEntry(zipFile, entry1));
+			String vdyp8YieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry1));
 			assertThat(vdyp8YieldTableContent, not(emptyString()));
 
 			var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
@@ -262,14 +260,14 @@ class Hcsv_Vdyp7_Comparison_Test {
 			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 			ZipEntry entry1 = zipFile.getNextEntry();
 			assertEquals("YieldTable.csv", entry1.getName());
-			String vdyp8YieldTableContent = new String(testHelper.readZipEntry(zipFile, entry1));
+			String vdyp8YieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry1));
 			assertThat(vdyp8YieldTableContent, not(emptyString()));
 
 			var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
 
 			assertThat(
 					vdyp8YieldTable,
-					(Matcher) hasSpecificEntry(
+					(Matcher<? super ResultYieldTable>) hasSpecificEntry(
 							"1816115",
 							hasSpecificEntry(
 									"1",
@@ -332,14 +330,14 @@ class Hcsv_Vdyp7_Comparison_Test {
 			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 			ZipEntry entry1 = zipFile.getNextEntry();
 			assertEquals("YieldTable.csv", entry1.getName());
-			String vdyp8YieldTableContent = new String(testHelper.readZipEntry(zipFile, entry1));
+			String vdyp8YieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry1));
 			assertThat(vdyp8YieldTableContent, not(emptyString()));
 
 			var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
 
 			assertThat(
 					vdyp8YieldTable,
-					(Matcher) hasSpecificEntry(
+					(Matcher<? super ResultYieldTable>) hasSpecificEntry(
 							"17585871",
 							hasSpecificEntry(
 									"1",

@@ -80,7 +80,6 @@ public class SiteCurveAgeMaximumParser
 	};
 
 	@Override
-	@SuppressWarnings("serial")
 	public Map<Integer, SiteCurveAgeMaximum> defaultResult() {
 		return new HashMap<>() {
 			@Override

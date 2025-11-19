@@ -21,7 +21,7 @@ public class BaseHttpProjectionRequestTest {
 
 		ZipEntry entry;
 		while ( (entry = zipFile.getNextEntry()) != null) {
-			entryMapByName.put(entry.getName(), new String(testHelper.readZipEntry(zipFile, entry)));
+			entryMapByName.put(entry.getName(), new String(TestHelper.readZipEntry(zipFile, entry)));
 		}
 
 		return entryMapByName;
