@@ -51,7 +51,8 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 		);
 		readerControlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
-				new VdypSpeciesParser().map(speciesFileLocation.toString(), absolutePathFileResolver, readerControlMap)
+				new VdypSpeciesParser().reportSIHeight()
+						.map(speciesFileLocation.toString(), absolutePathFileResolver, readerControlMap)
 		);
 		readerControlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
