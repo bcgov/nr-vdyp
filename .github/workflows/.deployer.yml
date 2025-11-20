@@ -40,7 +40,7 @@ on:
       ### Usually a bad idea / not recommended
       timeout-minutes:
         description: 'Timeout minutes'
-        default: 15
+        default: 10
         required: false
         type: number
       values:
