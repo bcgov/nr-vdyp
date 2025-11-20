@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -341,15 +343,14 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		var polygon = reader.readNextPolygon().orElseThrow();
 
-		// Since the change to ignore site information for all but non-primary species, there is
-		// no way to successfully estimate age for a primary species from the non-primary species.
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-		assertThrows(
-				ProcessingException.class,
-				() -> fpe.processPolygon(
-						polygon, ForwardProcessingEngine.ExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX
-				)
-		);
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX);
+		assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesDominantHeight(), is(35.312016f));
+		assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesSiteIndex(), is(34.0f));
+		assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesTotalAge(), is(15.0f));
+		assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesAgeAtBreastHeight(), is(14.0f));
+		assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesAgeToBreastHeight(), is(1.0f));
+
 	}
 
 	@Test

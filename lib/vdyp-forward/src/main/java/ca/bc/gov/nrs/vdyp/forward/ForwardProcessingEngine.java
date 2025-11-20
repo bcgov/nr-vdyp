@@ -1,6 +1,9 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.*;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 
 import java.io.IOException;
@@ -579,11 +582,11 @@ public class ForwardProcessingEngine {
 				float spDhStart = bank.dominantHeights[i];
 				float spYtbh = bank.yearsToBreastHeight[i];
 				float spYabhEnd = bank.yearsAtBreastHeight[i];
-
+				int spSiteCurveNumber = lps.getSiteCurveNumber(i); // INXSCV(I, 1)
 				if (!Float.isNaN(spSiStart) && !Float.isNaN(spDhStart) && !Float.isNaN(spYtbh)
 						&& !Float.isNaN(spYabhEnd)) {
 
-					float dhGrowth = calculateDominantHeightDelta(spDhStart, pspSiteCurveNumber, spSiStart, spYtbh);
+					float dhGrowth = calculateDominantHeightDelta(spDhStart, spSiteCurveNumber, spSiStart, spYtbh);
 					bank.dominantHeights[i] += dhGrowth;
 				} else {
 					bank.dominantHeights[i] = Float.NaN;

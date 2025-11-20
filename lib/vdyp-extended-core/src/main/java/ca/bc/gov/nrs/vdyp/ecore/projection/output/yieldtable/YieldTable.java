@@ -437,7 +437,6 @@ public class YieldTable implements Closeable {
 				if (context.getParams()
 						.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)
 						&& !rowContext.isPolygonTable()) {
-
 					var layerSp0sByPercent = layer.getSp0sByPercent();
 					if (layerSp0sByPercent.size() > 1) {
 						var secondarySp0 = layerSp0sByPercent.get(1);
@@ -1466,9 +1465,9 @@ public class YieldTable implements Closeable {
 		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
 		double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
 		int siteCurve = Vdyp7Constants.EMPTY_INT;
-		boolean isDominantSpecies = projectedSp0.getSite().isPresent();
+		boolean isDominantSpecies = projectedSp0.getIsPrimary();
 
-		if (isDominantSpecies) {
+		if (projectedSp0.getSite().isPresent()) {
 			var site = projectedSp0.getSite().get();
 
 			totalAge = site.getAgeTotal().map(v -> v.doubleValue()).orElse(null);

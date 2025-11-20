@@ -1,10 +1,19 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertEmpty;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertNext;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,14 +22,12 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class ForwardSpeciesParserTest {
 
@@ -102,10 +109,47 @@ class ForwardSpeciesParserTest {
 														)
 												)
 										)
-								), hasProperty("site", VdypMatchers.notPresent())
+								)
 						)
 				)
 		);
+
+		assertEmpty(stream);
+	}
+
+	@Test
+	void testParseOneGenusOverrideDH() throws Exception {
+
+		var parser = new VdypSpeciesParser().reportSIHeight();
+
+		Map<String, Object> controlMap = new HashMap<>();
+
+		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), "test.dat");
+		TestUtils.populateControlMapGenusReal(controlMap);
+
+		var fileResolver = TestUtils.fileResolverContext(
+				"test.dat",
+				TestUtils.makeInputStream(
+						"01002 S000002 00     1970 P 15 L  L  100.0     0.0     0.0     0.0 14.63 100.0  20.0  12.0  -9.0 0 14",
+						"01002 S000001 00     1970"
+				)
+		);
+
+		parser.modify(controlMap, fileResolver);
+
+		var parserFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name());
+
+		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
+
+		@SuppressWarnings("unchecked")
+		var stream = ((StreamingParserFactory<Collection<VdypSpecies>>) parserFactory).get();
+
+		assertThat(stream, instanceOf(StreamingParser.class));
+
+		var genera = assertNext(stream);
+
+		// check for the Site Index Hieght to have overriden the passed in height
+		assertThat(genera.stream().findFirst().get().getSite().get().getHeight().get(), closeTo(6.9948f));
 
 		assertEmpty(stream);
 	}
@@ -189,7 +233,7 @@ class ForwardSpeciesParserTest {
 		assertThat(
 				genera,
 				hasItems(
-						allOf(hasProperty("layerType", is(LayerType.PRIMARY)), hasProperty("site", notPresent())),
+						allOf(hasProperty("layerType", is(LayerType.PRIMARY))),
 						allOf(
 								hasProperty(
 										"sp64DistributionSet",
@@ -212,7 +256,7 @@ class ForwardSpeciesParserTest {
 														)
 												)
 										)
-								), hasProperty("layerType", is(LayerType.VETERAN)), hasProperty("site", notPresent())
+								), hasProperty("layerType", is(LayerType.VETERAN))
 						),
 						allOf(
 								hasProperty(
@@ -373,7 +417,7 @@ class ForwardSpeciesParserTest {
 														)
 												)
 										)
-								), hasProperty("site", notPresent())
+								)
 						)
 				)
 		);

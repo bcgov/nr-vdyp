@@ -17,9 +17,9 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser.VdypPolygonStreamingParser;
 import ca.bc.gov.nrs.vdyp.forward.model.ControlVariable;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
+import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser.VdypPolygonStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
@@ -244,7 +244,7 @@ public class ForwardDataStreamReader {
 	private static VdypSpecies getPrimarySpecies(VdypPolygon polygon, Collection<VdypSpecies> speciesList)
 			throws ProcessingException {
 
-		var primarySpecies = speciesList.stream().filter(s -> s.getSite().isPresent()).toList();
+		var primarySpecies = speciesList.stream().filter(s -> s.getIsPrimary()).toList();
 		if (primarySpecies.size() == 0) {
 			throw new ProcessingException(
 					MessageFormat.format(
