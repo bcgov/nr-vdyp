@@ -251,6 +251,7 @@ public class VdypProjectionService {
 		layerCsv.append("\n");
 
 		// Create input streams
+		// FIXME See VDYP-833 Comment
 		byte[] polygonBytes = polygonCsv.toString().getBytes(StandardCharsets.UTF_8);
 		byte[] layerBytes = layerCsv.toString().getBytes(StandardCharsets.UTF_8);
 
