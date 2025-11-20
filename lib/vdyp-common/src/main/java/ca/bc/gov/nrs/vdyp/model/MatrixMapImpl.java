@@ -168,6 +168,7 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 		return result;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

@@ -213,9 +213,6 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		}
 
 		public void printRow() throws YieldTableGenerationException {
-			String lastFormat = "";
-			int index = 0;
-			Object data = null;
 			try {
 				int numColumns = columns.size();
 				for (int j = 0; j < numColumns; j++) {

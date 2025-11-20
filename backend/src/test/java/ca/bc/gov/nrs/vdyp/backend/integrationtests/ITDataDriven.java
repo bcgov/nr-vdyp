@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -136,7 +135,7 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 			expectedYieldTable = new ResultYieldTable(reader);
 		}
 
-		ResultYieldTable.compareWithTolerance(expectedYieldTable, actualYieldTable, 0.02, IGNORE_COLUMNS);
+		ResultYieldTable.compareWithTolerance(expectedYieldTable, actualYieldTable, 0.01, IGNORE_COLUMNS);
 	}
 
 	/**
@@ -159,8 +158,6 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 	// FIXME Workaround for VDYP-804
 	static final Pattern BASE_804_AFFECTED = Pattern.compile("PRJ_SCND_HT");
 
-	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(
-			BASE_804_AFFECTED
-	).asMatchPredicate();
+	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_804_AFFECTED).asMatchPredicate();
 
 }

@@ -85,27 +85,27 @@ class ProjectionResponseZipFileTests {
 		ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
-		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
+		String entry1Content = new String(TestHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() > 0);
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
-		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));
+		String entry2Content = new String(TestHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry2Content.contains("starting projection (type HCSV)"));
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
-		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry3));
+		String entry3Content = new String(TestHelper.readZipEntry(zipFile, entry3));
 		assertTrue(entry3Content.length() == 0);
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
-		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry2));
+		String entry4Content = new String(TestHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry4Content.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 
 		ZipEntry entry = zipFile.getNextEntry();
 		while (entry != null) {
-			var contents = testHelper.readZipEntry(zipFile, entry);
+			var contents = TestHelper.readZipEntry(zipFile, entry);
 			logger.info("Saw projection file " + entry + " containing " + contents.length + " bytes");
 
 			entry = zipFile.getNextEntry();
@@ -155,7 +155,7 @@ class ProjectionResponseZipFileTests {
 		ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
-		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
+		String entry1Content = new String(TestHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() > 0);
 
 		Assert.assertNull(zipFile.getNextEntry());
