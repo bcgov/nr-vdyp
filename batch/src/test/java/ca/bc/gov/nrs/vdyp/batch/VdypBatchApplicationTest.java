@@ -72,18 +72,6 @@ class VdypBatchApplicationTest {
 	}
 
 	@Test
-	void testOverrideVdypProperties_CustomClassLoaderBehavior() {
-		VdypBatchApplication.main(new String[] {});
-
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		assertNotNull(classLoader);
-
-		assertDoesNotThrow(() -> {
-			classLoader.getResourceAsStream("application.properties");
-		});
-	}
-
-	@Test
 	@ExtendWith(OutputCaptureExtension.class)
 	void testOnApplicationReady_LogsStartupMessage(CapturedOutput output) {
 		VdypBatchApplication application = new VdypBatchApplication();

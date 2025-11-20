@@ -35,6 +35,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
@@ -139,7 +141,7 @@ public class PartitionedBatchConfiguration {
 			BatchRetryPolicy retryPolicy, BatchSkipPolicy skipPolicy, PlatformTransactionManager transactionManager,
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
 			VdypProjectionService vdypProjectionService, ItemStreamReader<BatchRecord> partitionReader,
-			VdypChunkProjectionWriter partitionWriter
+			VdypChunkProjectionWriter partitionWriter, VdypProjectionProcessor vdypProjectionProcessor
 	) {
 
 		int chunkSize = Math.max(batchProperties.getReader().getDefaultChunkSize(), 1);
@@ -147,7 +149,7 @@ public class PartitionedBatchConfiguration {
 
 		return new StepBuilder("workerStep", jobRepository)
 				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager).reader(partitionReader)
-				.processor(vdypProjectionProcessor(metricsCollector)).writer(partitionWriter).listener(partitionWriter)
+				.processor(vdypProjectionProcessor).writer(partitionWriter).listener(partitionWriter)
 				.listener(retryPolicy).listener(skipPolicy).faultTolerant().retryPolicy(retryPolicy)
 				.skipPolicy(skipPolicy).listener(new StepExecutionListener() {
 					@Override
@@ -299,9 +301,11 @@ public class PartitionedBatchConfiguration {
 
 	@Bean
 	@StepScope
-	public VdypChunkProjectionWriter
-			partitionWriter(VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector) {
-		return new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector);
+	public VdypChunkProjectionWriter partitionWriter(
+			VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector,
+			ObjectMapper objectMapper
+	) {
+		return new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector, objectMapper);
 	}
 
 	/**

@@ -32,7 +32,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 
 	private final VdypProjectionService vdypProjectionService;
 	private final BatchMetricsCollector metricsCollector;
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper;
 
 	// Step execution context
 	private String partitionName = BatchConstants.Common.UNKNOWN;
@@ -42,10 +42,12 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	private String jobBaseDir;
 
 	public VdypChunkProjectionWriter(
-			VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector
+			VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector,
+			ObjectMapper objectMapper
 	) {
 		this.vdypProjectionService = vdypProjectionService;
 		this.metricsCollector = metricsCollector;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override

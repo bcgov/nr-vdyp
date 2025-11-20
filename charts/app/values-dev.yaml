@@ -223,9 +223,33 @@ coms:
     BASICAUTH_USERNAME: ~
     BASICAUTH_PASSWORD: ~
 
-  batch:
+#-- the batch processing component
+batch:
+  #-- enable or disable batch
+  enabled: true
+  #-- the deployment strategy, can be "Recreate" or "RollingUpdate"
+  deploymentStrategy: RollingUpdate
+  #-- autoscaling for the component. it is optional and is an object.
+  autoscaling:
+    #-- enable or disable autoscaling.
+    enabled: false
+  #-- replica count - batch processing usually runs single instance
+  replicaCount: 1
+  #-- pod security context
+  podSecurityContext: {}
+  #-- container security context
+  securityContext: {}
+  #-- the service for the component. for inter namespace communication, use the service name as the hostname.
+  service:
+    #-- the type of the service. it can be ClusterIP, NodePort, LoadBalancer, ExternalName. ClusterIP is the default and is recommended.
+    type: ClusterIP
+    port: 80 # this is the service port, where it will be exposed internal to the namespace.
+    targetPort: 8081 # this is container port where app listens on
+  #-- route configuration for external access (dev only for debugging)
+  route:
     enabled: true
-    env:
-      BATCH_DB_USER: ~
-      BATCH_DB_DATABASE: ~
+  env:
+    SPRING_PROFILES_ACTIVE: "dev"
+    BATCH_DB_USER: ~
+    BATCH_DB_DATABASE: ~
 

@@ -11,6 +11,8 @@
     <name>Variable Density Yield Project - Batch</name>
     <properties>
         <spring-boot.version>3.5.5</spring-boot.version>
+        <!-- Default: enable Spring Boot repackaging (JVM mode) -->
+        <skipSpringBootRepackage>false</skipSpringBootRepackage>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -160,6 +162,8 @@
                     <mainClass>ca.bc.gov.nrs.vdyp.batch.VdypBatchApplication</mainClass>
                     <addResources>true</addResources>
                     <fork>true</fork>
+                    <!-- Skip repackaging when building native image -->
+                    <skip>${skipSpringBootRepackage}</skip>
                 </configuration>
                 <executions>
                     <execution>
@@ -231,4 +235,111 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Native profile matching spring-boot-starter-parent configuration -->
+        <profile>
+            <id>native</id>
+            <properties>
+                <!-- Disable Spring Boot repackaging for native builds -->
+                <skipSpringBootRepackage>true</skipSpringBootRepackage>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- Maven JAR Plugin - Add Spring Boot Native manifest entry -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <archive>
+                                <manifestEntries>
+                                    <Spring-Boot-Native-Processed>true</Spring-Boot-Native-Processed>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Spring Boot Maven Plugin - AOT processing -->
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring-boot.version}</version>
+                        <executions>
+                            <execution>
+                                <id>process-aot</id>
+                                <goals>
+                                    <goal>process-aot</goal>
+                                </goals>
+                                <phase>prepare-package</phase>
+                                <configuration>
+                                    <skip>false</skip>
+                                    <mainClass>ca.bc.gov.nrs.vdyp.batch.VdypBatchApplication</mainClass>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Copy AOT classes BEFORE jar packaging -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>copy-aot-classes</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <echo message="Copying AOT classes from ${project.build.directory}/spring-aot/main/classes to ${project.build.outputDirectory}"/>
+                                        <copy todir="${project.build.outputDirectory}" overwrite="true" failonerror="false" verbose="true">
+                                            <fileset dir="${project.build.directory}/spring-aot/main/classes" erroronmissingdir="false">
+                                                <include name="**/*"/>
+                                            </fileset>
+                                        </copy>
+                                        <echo message="AOT classes copied successfully"/>
+                                        <echo message="Checking for ApplicationContextInitializer class..."/>
+                                        <available file="${project.build.outputDirectory}/ca/bc/gov/nrs/vdyp/batch/VdypBatchApplication__ApplicationContextInitializer.class"
+                                                   property="aot.class.present"/>
+                                        <echo message="AOT ApplicationContextInitializer class exists: ${aot.class.present}"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- GraalVM Native Maven Plugin - matching spring-boot-starter-parent config -->
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <configuration>
+                            <!-- Use main output directory for classes -->
+                            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                            <requiredVersion>22.3</requiredVersion>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>add-reachability-metadata</id>
+                                <goals>
+                                    <goal>add-reachability-metadata</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <configuration>
+                                    <skip>${skipNativeBuild}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

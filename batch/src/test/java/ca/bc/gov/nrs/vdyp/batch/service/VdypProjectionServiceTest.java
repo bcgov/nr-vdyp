@@ -712,6 +712,202 @@ class VdypProjectionServiceTest {
 		);
 	}
 
+	@Test
+	void testHandleChunkProjectionFailure_WithSingleRecord() throws Exception {
+		Method handleChunkProjectionFailureMethod = VdypProjectionService.class
+				.getDeclaredMethod("handleChunkProjectionFailure", List.class, String.class, Exception.class);
+		handleChunkProjectionFailureMethod.setAccessible(true);
+
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+		Exception cause = new RuntimeException("Test exception");
+
+		IOException result = (IOException) handleChunkProjectionFailureMethod
+				.invoke(vdypProjectionService, batchRecords, PARTITION_NAME, cause);
+
+		assertNotNull(result);
+		assertTrue(result.getMessage().contains("1 records"));
+		assertTrue(result.getMessage().contains(PARTITION_NAME));
+		assertTrue(result.getMessage().contains("100000000"));
+	}
+
+	@Test
+	void testHandleChunkProjectionFailure_WithExactly5Records() throws Exception {
+		Method handleChunkProjectionFailureMethod = VdypProjectionService.class
+				.getDeclaredMethod("handleChunkProjectionFailure", List.class, String.class, Exception.class);
+		handleChunkProjectionFailureMethod.setAccessible(true);
+
+		List<BatchRecord> batchRecords = createValidBatchRecords(5);
+		Exception cause = new RuntimeException("Test exception");
+
+		IOException result = (IOException) handleChunkProjectionFailureMethod
+				.invoke(vdypProjectionService, batchRecords, PARTITION_NAME, cause);
+
+		assertNotNull(result);
+		assertTrue(result.getMessage().contains("5 records"));
+		assertFalse(result.getMessage().contains("and 0 more"));
+	}
+
+	@Test
+	void testHandleChunkProjectionFailure_WithMoreThan5Records() throws Exception {
+		Method handleChunkProjectionFailureMethod = VdypProjectionService.class
+				.getDeclaredMethod("handleChunkProjectionFailure", List.class, String.class, Exception.class);
+		handleChunkProjectionFailureMethod.setAccessible(true);
+
+		List<BatchRecord> batchRecords = createValidBatchRecords(8);
+		Exception cause = new RuntimeException("Test exception with details");
+
+		IOException result = (IOException) handleChunkProjectionFailureMethod
+				.invoke(vdypProjectionService, batchRecords, PARTITION_NAME, cause);
+
+		assertNotNull(result);
+		assertTrue(result.getMessage().contains("8 records"));
+		assertTrue(result.getMessage().contains("and 3 more"));
+	}
+
+	@Test
+	void testHandleChunkProjectionFailure_WithNullExceptionMessage() throws Exception {
+		Method handleChunkProjectionFailureMethod = VdypProjectionService.class
+				.getDeclaredMethod("handleChunkProjectionFailure", List.class, String.class, Exception.class);
+		handleChunkProjectionFailureMethod.setAccessible(true);
+
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+		Exception cause = new RuntimeException((String) null);
+
+		IOException result = (IOException) handleChunkProjectionFailureMethod
+				.invoke(vdypProjectionService, batchRecords, PARTITION_NAME, cause);
+
+		assertNotNull(result);
+		assertTrue(result.getMessage().contains("No error message available"));
+	}
+
+	@Test
+	void testCreateCombinedInputStreamsFromRawData_ValidMultipleRecords() throws Exception {
+		Method createCombinedInputStreamsFromRawDataMethod = VdypProjectionService.class
+				.getDeclaredMethod("createCombinedInputStreamsFromRawData", List.class);
+		createCombinedInputStreamsFromRawDataMethod.setAccessible(true);
+
+		List<BatchRecord> batchRecords = createValidBatchRecords(3);
+
+		@SuppressWarnings("unchecked")
+		java.util.Map<String, java.io.InputStream> result = (java.util.Map<String, java.io.InputStream>) createCombinedInputStreamsFromRawDataMethod
+				.invoke(vdypProjectionService, batchRecords);
+
+		assertNotNull(result);
+		assertEquals(2, result.size());
+		assertNotNull(result.get("HCSV-Polygon"));
+		assertNotNull(result.get("HCSV-Layers"));
+
+		java.io.InputStream polygonStream = result.get("HCSV-Polygon");
+		assertNotNull(polygonStream);
+		assertTrue(polygonStream.available() > 0);
+
+		java.io.InputStream layerStream = result.get("HCSV-Layers");
+		assertNotNull(layerStream);
+		assertTrue(layerStream.available() > 0);
+	}
+
+	@Test
+	void testCreateCombinedInputStreamsFromRawData_WithMultipleLayers() throws Exception {
+		Method createCombinedInputStreamsFromRawDataMethod = VdypProjectionService.class
+				.getDeclaredMethod("createCombinedInputStreamsFromRawData", List.class);
+		createCombinedInputStreamsFromRawDataMethod.setAccessible(true);
+
+		List<BatchRecord> batchRecords = new ArrayList<>();
+		BatchRecord batchRecord = new BatchRecord();
+		batchRecord.setFeatureId("123456789");
+		batchRecord.setPolygonHeader("FEATURE_ID,MAP_ID");
+		batchRecord.setRawPolygonData("123456789,MAP1");
+		batchRecord.setLayerHeader("FEATURE_ID,LAYER");
+		batchRecord.setRawLayerData(List.of("123456789,P", "123456789,S", "123456789,V"));
+		batchRecords.add(batchRecord);
+
+		@SuppressWarnings("unchecked")
+		java.util.Map<String, java.io.InputStream> result = (java.util.Map<String, java.io.InputStream>) createCombinedInputStreamsFromRawDataMethod
+				.invoke(vdypProjectionService, batchRecords);
+
+		assertNotNull(result);
+		assertEquals(2, result.size());
+		assertNotNull(result.get("HCSV-Polygon"));
+		assertNotNull(result.get("HCSV-Layers"));
+	}
+
+	@Test
+	void testStoreYieldTable_WithNullStream() throws Exception {
+		Method storeYieldTableMethod = VdypProjectionService.class.getDeclaredMethod(
+				"storeYieldTable", ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable.class, Path.class,
+				String.class, List.class
+		);
+		storeYieldTableMethod.setAccessible(true);
+
+		YieldTable yieldTable = mock(YieldTable.class);
+		OutputFormat mockOutputFormat = mock(OutputFormat.class);
+		when(yieldTable.getOutputFormat()).thenReturn(mockOutputFormat);
+		when(mockOutputFormat.getYieldTableFileName()).thenReturn("testYieldTable.csv");
+		when(yieldTable.getAsStream()).thenReturn(null);
+
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+		String projectionId = "test-projection";
+
+		assertDoesNotThrow(() -> {
+			storeYieldTableMethod.invoke(vdypProjectionService, yieldTable, tempDir, projectionId, batchRecords);
+		});
+	}
+
+	@Test
+	void testStoreYieldTable_WithEmptyStream() throws Exception {
+		Method storeYieldTableMethod = VdypProjectionService.class.getDeclaredMethod(
+				"storeYieldTable", ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable.class, Path.class,
+				String.class, List.class
+		);
+		storeYieldTableMethod.setAccessible(true);
+
+		YieldTable yieldTable = mock(YieldTable.class);
+		OutputFormat mockOutputFormat = mock(OutputFormat.class);
+		when(yieldTable.getOutputFormat()).thenReturn(mockOutputFormat);
+		when(mockOutputFormat.getYieldTableFileName()).thenReturn("emptyYieldTable.csv");
+		when(yieldTable.getAsStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+		String projectionId = "test-projection";
+
+		assertDoesNotThrow(() -> {
+			storeYieldTableMethod.invoke(vdypProjectionService, yieldTable, tempDir, projectionId, batchRecords);
+		});
+
+		Path yieldTablePath = tempDir.resolve(String.format("YieldTables_%s_emptyYieldTable.csv", projectionId));
+		assertTrue(Files.exists(yieldTablePath));
+		assertEquals(0, Files.size(yieldTablePath));
+	}
+
+	@Test
+	void testStoreYieldTable_WithValidData() throws Exception {
+		Method storeYieldTableMethod = VdypProjectionService.class.getDeclaredMethod(
+				"storeYieldTable", ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable.class, Path.class,
+				String.class, List.class
+		);
+		storeYieldTableMethod.setAccessible(true);
+
+		String testData = "FEATURE_ID,VOLUME\n123456789,100.5\n";
+		YieldTable yieldTable = mock(YieldTable.class);
+		OutputFormat mockOutputFormat = mock(OutputFormat.class);
+		when(yieldTable.getOutputFormat()).thenReturn(mockOutputFormat);
+		when(mockOutputFormat.getYieldTableFileName()).thenReturn("validYieldTable.csv");
+		when(yieldTable.getAsStream()).thenReturn(new ByteArrayInputStream(testData.getBytes()));
+
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+		String projectionId = "test-projection-valid";
+
+		assertDoesNotThrow(() -> {
+			storeYieldTableMethod.invoke(vdypProjectionService, yieldTable, tempDir, projectionId, batchRecords);
+		});
+
+		Path yieldTablePath = tempDir.resolve(String.format("YieldTables_%s_validYieldTable.csv", projectionId));
+		assertTrue(Files.exists(yieldTablePath));
+		assertTrue(Files.size(yieldTablePath) > 0);
+		String content = Files.readString(yieldTablePath);
+		assertEquals(testData, content);
+	}
+
 	private List<BatchRecord> createValidBatchRecords(int count) {
 		List<BatchRecord> records = new ArrayList<>();
 		String[] featureIds = { "100000000", "200000000", "300000000", "400000000", "500000000", "600000000",

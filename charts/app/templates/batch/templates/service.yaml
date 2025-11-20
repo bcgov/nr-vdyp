@@ -1,0 +1,18 @@
+{{- if .Values.batch.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "batch.fullname" . }}
+  labels:
+    {{- include "batch.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.batch.service.type }}
+  ports:
+    - port: {{ .Values.batch.service.port }}
+      targetPort: 8081
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "batch.selectorLabels" . | nindent 4 }}
+{{- end }}

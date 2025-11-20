@@ -33,6 +33,8 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
@@ -65,11 +67,21 @@ class VdypChunkProjectionWriterTest {
 	@Mock
 	private JobParameters jobParameters;
 
+	@Mock
+	private ObjectMapper objectMapper;
+
 	private VdypChunkProjectionWriter writer;
+	private Parameters mockParameters;
 
 	@BeforeEach
-	void setUp() {
-		writer = new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector);
+	void setUp() throws Exception {
+		// Create a mock Parameters object to be returned by ObjectMapper
+		mockParameters = mock(Parameters.class);
+
+		// Configure ObjectMapper to return the mock Parameters when reading the valid JSON
+		when(objectMapper.readValue(VALID_PARAMETERS_JSON, Parameters.class)).thenReturn(mockParameters);
+
+		writer = new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector, objectMapper);
 	}
 
 	@Test

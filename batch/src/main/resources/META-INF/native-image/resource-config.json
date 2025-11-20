@@ -35,6 +35,9 @@
         "pattern": "\\QMETA-INF/native-image/reflect-config.json\\E"
       },
       {
+        "pattern": "\\QMETA-INF/native-image/proxy-config.json\\E"
+      },			
+      {
         "pattern": "\\QMETA-INF/native-image/jni-config.json\\E"
       },
       {
@@ -42,6 +45,21 @@
       },
       {
         "pattern": "\\Qca/bc/gov/nrs/vdyp/batch/.*\\E"
+      },
+      {
+        "pattern": "\\Qtemplate/coe/.*\\.dat\\E"
+      },
+      {
+        "pattern": "\\Qca/bc/gov/nrs/vdyp/ecore/.*\\E"
+      },
+      {
+        "pattern": "\\QExecutionFolderTemplate.zip\\E"
+      },
+      {
+        "pattern": "\\Qorg/h2/util/.*\\E"
+      },
+      {
+        "pattern": "\\Qorg/springframework/batch/core/.*\\E"
       }
     ]
   },

@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,9 +8,13 @@ import org.slf4j.Logger;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 
 /**
- * Handling for NPE from ProjectionRunner.run() - ex) when polygon object is null due to data quality issues
+ * Handling for NPE from ProjectionRunner.run() - ex) when polygon object is null due to data quality issues or resource
+ * loading failures (e.g., ExecutionFolderTemplate.zip not found in GraalVM native image).
+ *
+ * Changed from IOException to RuntimeException to prevent retry attempts, as these errors are typically not transient
+ * and cannot be resolved by retrying. Skip policy will handle these exceptions.
  */
-public class ProjectionNullPointerException extends IOException {
+public class ProjectionNullPointerException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 

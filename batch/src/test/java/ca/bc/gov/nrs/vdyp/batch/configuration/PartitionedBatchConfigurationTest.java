@@ -43,6 +43,8 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
@@ -100,6 +102,9 @@ class PartitionedBatchConfigurationTest {
 
 	@Mock
 	private VdypProjectionService vdypProjectionService;
+
+	@Mock
+	private ObjectMapper objectMapper;
 
 	@TempDir
 	Path tempDir;
@@ -199,10 +204,11 @@ class PartitionedBatchConfigurationTest {
 		@SuppressWarnings("unchecked")
 		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
 
 		Step result = configuration.workerStep(
 				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
-				itemReader, partitionWriter
+				itemReader, partitionWriter, projectionProcessor
 		);
 
 		assertNotNull(result);
@@ -306,10 +312,11 @@ class PartitionedBatchConfigurationTest {
 		ItemStreamReader<BatchRecord> itemReader = mock(
 				ItemStreamReader.class);
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
 
 		Step result = configuration.workerStep(
 				retryPolicy, skipPolicy, transactionManager, metricsCollector,
-				batchProperties, vdypProjectionService, itemReader, partitionWriter);
+				batchProperties, vdypProjectionService, itemReader, partitionWriter, projectionProcessor);
 
 		assertNotNull(result);
 		assertEquals("workerStep", result.getName());
@@ -318,7 +325,8 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testPartitionWriter() {
-		VdypChunkProjectionWriter result = configuration.partitionWriter(vdypProjectionService, metricsCollector);
+		VdypChunkProjectionWriter result = configuration
+				.partitionWriter(vdypProjectionService, metricsCollector, objectMapper);
 
 		assertNotNull(result);
 	}
@@ -510,10 +518,11 @@ class PartitionedBatchConfigurationTest {
 		@SuppressWarnings("unchecked")
 		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
 
 		Step workerStep = configuration.workerStep(
 				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
-				itemReader, partitionWriter
+				itemReader, partitionWriter, projectionProcessor
 		);
 
 		StepExecution stepExecution = mock(StepExecution.class);
@@ -534,10 +543,11 @@ class PartitionedBatchConfigurationTest {
 		@SuppressWarnings("unchecked")
 		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
 
 		Step workerStep = configuration.workerStep(
 				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
-				itemReader, partitionWriter
+				itemReader, partitionWriter, projectionProcessor
 		);
 
 		StepExecution stepExecution = mock(StepExecution.class);
@@ -577,10 +587,11 @@ class PartitionedBatchConfigurationTest {
 		@SuppressWarnings("unchecked")
 		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
 
 		Step result = configuration.workerStep(
 				retryPolicy, skipPolicy, transactionManager, metricsCollector,
-				batchProperties, vdypProjectionService, itemReader, partitionWriter);
+				batchProperties, vdypProjectionService, itemReader, partitionWriter, projectionProcessor);
 
 		assertNotNull(result);
 		assertEquals("workerStep", result.getName());
@@ -596,10 +607,11 @@ class PartitionedBatchConfigurationTest {
 		@SuppressWarnings("unchecked")
 		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
 
 		Step result = configuration.workerStep(
 				retryPolicy, skipPolicy, transactionManager, metricsCollector,
-				batchProperties, vdypProjectionService, itemReader, partitionWriter);
+				batchProperties, vdypProjectionService, itemReader, partitionWriter, projectionProcessor);
 
 		assertNotNull(result);
 		assertEquals("workerStep", result.getName());
@@ -1000,10 +1012,11 @@ class PartitionedBatchConfigurationTest {
 		@SuppressWarnings("unchecked")
 		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
 
 		Step workerStep = configuration.workerStep(
 				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
-				itemReader, partitionWriter
+				itemReader, partitionWriter, projectionProcessor
 		);
 
 		StepExecution stepExecution = mock(StepExecution.class);
@@ -1029,10 +1042,11 @@ class PartitionedBatchConfigurationTest {
 		@SuppressWarnings("unchecked")
 		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
 
 		Step workerStep = configuration.workerStep(
 				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
-				itemReader, partitionWriter
+				itemReader, partitionWriter, projectionProcessor
 		);
 
 		StepExecution stepExecution = mock(StepExecution.class);
