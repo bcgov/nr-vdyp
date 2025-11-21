@@ -10,9 +10,7 @@ public final class BatchUtils {
 		//
 	}
 
-	// MDJ: Normally this would be private, and all uses of it would be isolated in this
-	// class.	
-	public static final DateTimeFormatter dateTimeFormatterForFilenames = DateTimeFormatter
+	private static final DateTimeFormatter dateTimeFormatterForFilenames = DateTimeFormatter
 			.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 
 	public static String createJobFolderName(String prefix, String timestamp) {
@@ -45,5 +43,22 @@ public final class BatchUtils {
 	 */
 	public static String buildOutputPartitionFolderName(String partitionName) {
 		return BatchConstants.Partition.OUTPUT_PREFIX + "-" + partitionName;
+	}
+
+	/**
+	 * Builds a unique batch projection ID for VDYP projection operations.
+	 *
+	 * @param jobExecutionId the job execution ID
+	 * @param partitionName the partition name
+	 * @param projectionKind the projection request kind
+	 * @return the batch projection ID (e.g., "batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933")
+	 */
+	public static String buildBatchProjectionId(Long jobExecutionId, String partitionName, Object projectionKind) {
+		StringBuilder sb = new StringBuilder("batch-");
+		sb.append(jobExecutionId).append("-");
+		sb.append(partitionName).append("-");
+		sb.append("projection-").append(projectionKind).append("-");
+		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now()));
+		return sb.toString();
 	}
 }

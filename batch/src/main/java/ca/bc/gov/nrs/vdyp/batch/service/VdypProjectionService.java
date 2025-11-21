@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,18 +49,6 @@ public class VdypProjectionService {
 		PolygonProjectionRunner.initializeSiteIndexCurves();
 	}
 
-	// MDJ: This should be moved to BatchUtils
-	// ex) batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933
-	public static String
-			buildBatchProjectionId(Long jobExecutionId, String partitionName, ProjectionRequestKind projectionKind) {
-		StringBuilder sb = new StringBuilder("batch-");
-		sb.append(jobExecutionId).append("-");
-		sb.append(partitionName).append("-");
-		sb.append("projection-").append(projectionKind).append("-");
-		sb.append(BatchUtils.dateTimeFormatterForFilenames.format(LocalDateTime.now()));
-		return sb.toString();
-	}
-
 	/**
 	 * Performs VDYP projection for multiple BatchRecords in a chunk. This method processes a collection of complete
 	 * polygons by creating combined input streams and running a single projection operation.
@@ -91,7 +78,7 @@ public class VdypProjectionService {
 			// Create combined input streams from all BatchRecords in the chunk
 			inputStreams = createCombinedInputStreamsFromChunk(batchRecords);
 
-			String batchProjectionId = buildBatchProjectionId(
+			String batchProjectionId = BatchUtils.buildBatchProjectionId(
 					jobExecutionId, partitionName, ProjectionRequestKind.HCSV
 			);
 

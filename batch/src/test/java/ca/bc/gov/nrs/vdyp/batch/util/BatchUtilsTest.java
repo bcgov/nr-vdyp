@@ -36,8 +36,8 @@ class BatchUtilsTest {
 		// Verify format: yyyy_MM_dd_HH_mm_ss_SSSS
 		assertTrue(timestamp.matches("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{4}"));
 
-		// Verify it can be parsed back
-		DateTimeFormatter formatter = BatchUtils.dateTimeFormatterForFilenames;
+		// Verify it can be parsed back using the expected format
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 		assertDoesNotThrow(() -> LocalDateTime.parse(timestamp, formatter));
 	}
 
@@ -55,7 +55,8 @@ class BatchUtilsTest {
 
 	@Test
 	void testDateTimeFormatterForFilenames() {
-		DateTimeFormatter formatter = BatchUtils.dateTimeFormatterForFilenames;
+		// Test that createJobTimestamp produces the expected format
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 
 		assertNotNull(formatter);
 
@@ -64,11 +65,15 @@ class BatchUtilsTest {
 		String formatted = formatter.format(testDate);
 
 		assertEquals("2024_01_15_10_30_45_1234", formatted);
+
+		// Verify createJobTimestamp produces parseable output
+		String timestamp = BatchUtils.createJobTimestamp();
+		assertDoesNotThrow(() -> LocalDateTime.parse(timestamp, formatter));
 	}
 
 	@Test
 	void testDateTimeFormatterForFilenames_ParseAndFormat() {
-		DateTimeFormatter formatter = BatchUtils.dateTimeFormatterForFilenames;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 		String timestamp = "2024_12_31_23_59_59_9999";
 
 		LocalDateTime parsed = LocalDateTime.parse(timestamp, formatter);
