@@ -31,7 +31,7 @@ class PartitionedJobExecutionListenerTest {
 	private BatchProperties batchProperties;
 
 	@Mock
-	private BatchProperties.Partition partition;
+	private BatchProperties.PartitionProperties partition;
 
 	@Mock
 	private JobExecution jobExecution;

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
@@ -233,7 +234,7 @@ class VdypProjectionServiceTest {
 
 	@Test
 	void testBuildBatchProjectionId_HCSV() {
-		String projectionId = VdypProjectionService
+		String projectionId = BatchUtils
 				.buildBatchProjectionId(JOB_EXECUTION_ID, PARTITION_NAME, ProjectionRequestKind.HCSV);
 
 		assertNotNull(projectionId);
@@ -245,7 +246,7 @@ class VdypProjectionServiceTest {
 
 	@Test
 	void testBuildBatchProjectionId_DCSV() {
-		String projectionId = VdypProjectionService
+		String projectionId = BatchUtils
 				.buildBatchProjectionId(123L, "partition99", ProjectionRequestKind.DCSV);
 
 		assertTrue(projectionId.contains("batch-123"));
@@ -255,7 +256,7 @@ class VdypProjectionServiceTest {
 
 	@Test
 	void testBuildBatchProjectionId_SCSV() {
-		String projectionId = VdypProjectionService
+		String projectionId = BatchUtils
 				.buildBatchProjectionId(456L, "partition10", ProjectionRequestKind.SCSV);
 
 		assertTrue(projectionId.contains("batch-456"));
@@ -265,8 +266,8 @@ class VdypProjectionServiceTest {
 
 	@Test
 	void testBuildBatchProjectionId_TimestampFormat() {
-		String id1 = VdypProjectionService.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
-		String id2 = VdypProjectionService.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
+		String id1 = BatchUtils.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
+		String id2 = BatchUtils.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
 
 		// Both should have valid timestamp format and include jobGuid
 		assertTrue(id1.contains("batch-1"));
@@ -392,7 +393,7 @@ class VdypProjectionServiceTest {
 		long[] jobIds = { 1L, 100L, 9999L, Long.MAX_VALUE };
 
 		for (long jobId : jobIds) {
-			String projectionId = VdypProjectionService
+			String projectionId = BatchUtils
 					.buildBatchProjectionId(jobId, PARTITION_NAME, ProjectionRequestKind.HCSV);
 
 			assertTrue(projectionId.contains("batch-" + jobId));

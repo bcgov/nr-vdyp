@@ -45,7 +45,7 @@ class DynamicPartitionHandlerTest {
 	private BatchProperties batchProperties;
 
 	@Mock
-	private BatchProperties.Partition partition;
+	private BatchProperties.PartitionProperties partition;
 
 	@Mock
 	private StepExecutionSplitter stepSplitter;
