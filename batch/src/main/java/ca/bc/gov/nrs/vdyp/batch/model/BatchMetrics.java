@@ -13,10 +13,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * Batch job execution metrics and detailed error information for batch processing.
  */
 public class BatchMetrics {
-
-	// MDJ: These variables should be final. The first constructor (that
-	// leaves jobGuid null) should be removed, as there should never be a case where 
-	// there is no job guid. Remove the setters for these variables.
 	private final Long jobExecutionId;
 	private final String jobGuid;
 	private final LocalDateTime startTime;
