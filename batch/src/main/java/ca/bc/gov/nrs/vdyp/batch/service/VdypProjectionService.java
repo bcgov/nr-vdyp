@@ -50,6 +50,7 @@ public class VdypProjectionService {
 		PolygonProjectionRunner.initializeSiteIndexCurves();
 	}
 
+	// MDJ: This should be moved to BatchUtils
 	// ex) batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933
 	public static String
 			buildBatchProjectionId(Long jobExecutionId, String partitionName, ProjectionRequestKind projectionKind) {
@@ -126,11 +127,16 @@ public class VdypProjectionService {
 			}
 
 		} catch (NullPointerException npe) {
+			// MDJ: If you're going to catch and rethrow RuntimeExceptions (after having added some context, as
+			// you're doing in handleProjectionNullPointer) why are you catching only NullPointerException?			
 			throw ProjectionNullPointerException
 					.handleProjectionNullPointer(npe, batchRecords, jobExecutionId, jobGuid, partitionName, logger);
 		} catch (AbstractProjectionRequestException e) {
+			// MDJ: It's bad practice to convert a specific exception type into a more general one (such as IOException).			
 			throw handleChunkProjectionFailure(batchRecords, partitionName, e);
 		} catch (IOException e) {
+			// MDJ: It's bad practice to throw general exceptions out of an application-specific interface. Instead,
+			// you should use an exception class specific to the interface.			
 			throw e;
 		} catch (Exception e) {
 			throw BatchException.handleProjectionFailure(

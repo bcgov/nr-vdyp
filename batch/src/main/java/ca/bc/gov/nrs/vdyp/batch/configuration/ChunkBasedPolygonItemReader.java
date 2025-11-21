@@ -107,6 +107,8 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 				throw new ItemStreamException("jobBaseDir not found or empty in ExecutionContext");
 			}
 
+			// MDJ: The calculation of the input and output folder names should be in common code, since
+			// the calculation is shared between this code and VdypProjectionService.
 			partitionDir = Paths.get(jobBaseDir, BatchConstants.Partition.INPUT_PREFIX + "-" + partitionName);
 			if (!Files.exists(partitionDir)) {
 				throw new ItemStreamException("Partition directory does not exist: " + partitionDir);

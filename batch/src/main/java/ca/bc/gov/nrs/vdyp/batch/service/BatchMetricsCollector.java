@@ -1,15 +1,19 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics.PartitionMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 
 /**
@@ -20,21 +24,45 @@ public class BatchMetricsCollector {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchMetricsCollector.class);
 
-	private final Map<Long, BatchMetrics> jobMetricsMap = new ConcurrentHashMap<>();
+	// MDJ: The "Concurrent" classes (e.g. ConcurrentHashMap) have only a very limited use, since
+	// very often there are a number of actions that must be synchronized, not just, for example,
+	// an insertion into such a map. See the code changes below.
+	private final Map<Long, BatchMetrics> jobMetricsMap = new HashMap<>();
+	// MDJ: Record job metrics by arrival time so the map doesn't have to be sorted over and 
+	// over again.
+	private final List<Long> jobMetricsByArrivalTime = new LinkedList<>();
+	private final Object lock = new Object();
 
 	public BatchMetrics initializeMetrics(Long jobExecutionId, String jobGuid) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
 		}
+		// MDJ: Use StringUtils.isBlank
 		if (jobGuid == null || jobGuid.isBlank()) {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
 
 		try {
-			BatchMetrics metrics = new BatchMetrics(jobExecutionId, jobGuid);
-			jobMetricsMap.put(jobExecutionId, metrics);
-			logger.debug("[GUID: {}] Initialized metrics for job execution ID: {}", jobGuid, jobExecutionId);
-			return metrics;
+			// MDJ: Should you also check that jobMetricsMap doesn't already have an entry
+			// for jobExecutionId?
+			
+			// BatchMetrics metrics = new BatchMetrics(jobExecutionId, jobGuid);
+			// jobMetricsMap.put(jobExecutionId, metrics);
+			// logger.debug("[GUID: {}] Initialized metrics for job execution ID: {}", jobGuid, jobExecutionId);
+			// return metrics;
+			
+			synchronized(lock) {
+				if (jobMetricsMap.containsKey(jobExecutionId)) {
+ 					throw new BatchException("job metrics already exists for " + jobExecutionId + ", GUID: " + jobGuid);
+				}
+				
+				BatchMetrics metrics = new BatchMetrics(jobExecutionId, jobGuid);
+				jobMetricsMap.put(jobExecutionId, metrics);
+				jobMetricsByArrivalTime.add(jobExecutionId);
+				
+				logger.debug("[GUID: {}] Initialized metrics for job execution ID: {}", jobGuid, jobExecutionId);
+				return metrics;
+			}
 		} catch (Exception e) {
 			throw new BatchException(
 					"Failed to initialize metrics for job execution ID: " + jobExecutionId + ", GUID: " + jobGuid, e
@@ -46,22 +74,20 @@ public class BatchMetricsCollector {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
 		}
-		if (jobGuid == null || jobGuid.isBlank()) {
+		if (StringUtils.isBlank(jobGuid)) {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
-		if (partitionName == null || partitionName.isBlank()) {
+		if (StringUtils.isBlank(partitionName)) {
 			throw new BatchException("Partition name cannot be null or blank");
 		}
 
 		try {
-			BatchMetrics metrics = getJobMetrics(jobExecutionId);
-			if (metrics == null) {
-				throw new BatchException("No metrics found for job execution ID: " + jobExecutionId);
+			synchronized (lock) {
+				BatchMetrics metrics = getJobMetrics(jobExecutionId);
+			
+				BatchMetrics.PartitionMetrics partitionMetrics = new BatchMetrics.PartitionMetrics(partitionName);
+				metrics.getPartitionMetrics().put(partitionName, partitionMetrics);			
 			}
-
-			BatchMetrics.PartitionMetrics partitionMetrics = new BatchMetrics.PartitionMetrics(partitionName);
-			partitionMetrics.setStartTime(LocalDateTime.now());
-			metrics.getPartitionMetrics().put(partitionName, partitionMetrics);
 
 			logger.info(
 					"[{}] [GUID: {}] Initialized partition metrics for job execution ID: {}", partitionName, jobGuid,
@@ -84,29 +110,19 @@ public class BatchMetricsCollector {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
 		}
-		if (jobGuid == null || jobGuid.isBlank()) {
+		if (StringUtils.isBlank(jobGuid)) {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
-		if (partitionName == null || partitionName.isBlank()) {
+		if (StringUtils.isBlank(partitionName)) {
 			throw new BatchException("Partition name cannot be null or blank");
 		}
 
 		try {
-			BatchMetrics metrics = getJobMetrics(jobExecutionId);
-			if (metrics == null) {
-				throw new BatchException("No metrics found for job execution ID: " + jobExecutionId);
-			}
-
-			BatchMetrics.PartitionMetrics partitionMetrics = metrics.getPartitionMetrics().get(partitionName);
-			if (partitionMetrics == null) {
-				throw new BatchException(
-						"No partition metrics found for partition: " + partitionName + " in job: " + jobExecutionId
-				);
-			}
+			var partitionMetrics = getPartitionMetrics(jobExecutionId, partitionName);
 
 			partitionMetrics.setEndTime(LocalDateTime.now());
 			partitionMetrics.setRecordsWritten(writeCount);
-			partitionMetrics.setExitCode(exitCode);
+			partitionMetrics.setExitCode(exitCode);			
 
 			logger.info(
 					"[{}] [GUID: {}] Completed partition metrics for job execution ID: {}, written: {}, exitCode: {}",
@@ -128,15 +144,12 @@ public class BatchMetricsCollector {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
 		}
-		if (jobGuid == null || jobGuid.isBlank()) {
+		if (StringUtils.isBlank(jobGuid)) {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
 
 		try {
 			BatchMetrics metrics = getJobMetrics(jobExecutionId);
-			if (metrics == null) {
-				throw new BatchException("No metrics found for job execution ID: " + jobExecutionId);
-			}
 
 			metrics.setEndTime(LocalDateTime.now());
 			metrics.setStatus(status);
@@ -162,35 +175,46 @@ public class BatchMetricsCollector {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
 		}
-		if (jobGuid == null || jobGuid.isBlank()) {
+		if (StringUtils.isBlank(jobGuid)) {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
 
+		// MDJ: Can partitionName be null?
+
+		// MDJ: Is it -ever- the case that error would be null? That is, that an operation would be
+		// retried without an error occurring OR an error occurring but it not being known? It would
+		// be good to -require- that error not be null. In any case, "Unknown" is accurate only in
+		// the latter case (unknown error). In the former case, "No error" is better.
+
 		try {
-			BatchMetrics metrics = getJobMetrics(jobExecutionId);
-			if (metrics == null) {
-				throw new BatchException("No metrics found for job execution ID: " + jobExecutionId);
+			String errorType = "Unknown";
+			
+			synchronized (lock) {
+				BatchMetrics metrics = getJobMetrics(jobExecutionId);
+			
+				metrics.incrementRetryAttempts();
+				if (successful) {
+					metrics.incrementSuccessfulRetries();
+				} else {
+					metrics.incrementFailedRetries();
+				}
+
+				// Create retry detail
+				String errorMessage = "No error message";
+				if (error != null) {
+					errorType = error.getClass().getSimpleName();
+					if (error.getMessage() != null) {
+						errorMessage = error.getMessage();
+					}
+				}
+				
+				BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
+						attemptNumber, errorType, errorMessage, successful, partitionName
+						);
+				
+				metrics.getRetryDetails().add(retryDetail);
 			}
-
-			// Thread-safe increment operations
-			metrics.incrementRetryAttempts();
-
-			if (successful) {
-				metrics.incrementSuccessfulRetries();
-			} else {
-				metrics.incrementFailedRetries();
-			}
-
-			// Create retry detail
-			String errorType = error != null ? error.getClass().getSimpleName() : "Unknown";
-			String errorMessage = error != null ? error.getMessage() : "No error message";
-
-			BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
-					attemptNumber, errorType, errorMessage, successful, partitionName
-			);
-
-			metrics.getRetryDetails().add(retryDetail);
-
+			
 			logger.debug(
 					"[GUID: {}, Partition: {}] Recorded retry attempt #{} for job execution ID: {}, successful: {}, error: {}",
 					jobGuid, partitionName, attemptNumber, jobExecutionId, successful, errorType
@@ -213,33 +237,48 @@ public class BatchMetricsCollector {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
 		}
-		if (jobGuid == null || jobGuid.isBlank()) {
+		if (StringUtils.isBlank(jobGuid)) {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
+		
+		// MDJ: Can batchRecord be null? recordId? partitionName? If so, this is very odd. In general,
+		// require parameters not be null (using @NotNull to indicate this) unless it the interface
+		// explicitly allows it. This will make the code much tighter and easier to understand.
 
+		// MDJ: Is it -ever- the case that error would be null? That is, that an operation would be
+		// retried without an error occurring OR an error occurring but it not being known? It would
+		// be good to -require- that error not be null. In any case, "Unknown" is accurate only in
+		// the latter case (unknown error). In the former case, "No error" is better.
 		try {
-			BatchMetrics metrics = getJobMetrics(jobExecutionId);
-			if (metrics == null) {
-				throw new BatchException("No metrics found for job execution ID: " + jobExecutionId);
+			String errorType = "Unknown";
+
+			synchronized (lock) {
+				BatchMetrics metrics = getJobMetrics(jobExecutionId);
+	
+				metrics.incrementSkips();
+	
+				String errorMessage = "No error message";
+				
+				// Count skip reasons
+				if (error != null) {
+					errorType = error.getClass().getSimpleName();
+					metrics.getSkipReasonCount().merge(errorType, 1, Integer::sum);
+
+					if (error.getMessage() != null) {
+						errorMessage = error.getMessage();
+					}
+				}
+	
+				// Create skip detail
+				String recordData = batchRecord != null ? batchRecord.toString() : "null";
+	
+				BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
+						recordId, recordData, errorType, errorMessage, partitionName, lineNumber
+				);
+	
+				metrics.getSkipDetails().add(skipDetail);
 			}
-
-			// Thread-safe increment operation
-			metrics.incrementSkips();
-
-			// Count skip reasons
-			String errorType = error != null ? error.getClass().getSimpleName() : "Unknown";
-			metrics.getSkipReasonCount().merge(errorType, 1, Integer::sum);
-
-			// Create skip detail
-			String errorMessage = error != null ? error.getMessage() : "No error message";
-			String recordData = batchRecord != null ? batchRecord.toString() : "null";
-
-			BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
-					recordId, recordData, errorType, errorMessage, partitionName, lineNumber
-			);
-
-			metrics.getSkipDetails().add(skipDetail);
-
+			
 			logger.warn(
 					"[GUID: {}, Partition: {}] Recorded skip for job execution ID: {}, line: {}, recordId: {}, error: {}",
 					jobGuid, partitionName, jobExecutionId, lineNumber, recordId, errorType
@@ -257,21 +296,73 @@ public class BatchMetricsCollector {
 		}
 
 		try {
-			if (jobMetricsMap.size() > keepCount) {
-				// Remove oldest entries, keeping only the most recent ones
-				jobMetricsMap.entrySet().stream().sorted(Map.Entry.<Long, BatchMetrics>comparingByKey().reversed())
-						.skip(keepCount).map(Map.Entry::getKey).forEach(jobMetricsMap::remove);
-				logger.debug("Cleaned up old metrics, kept {} most recent entries", keepCount);
+			synchronized (lock) {
+				int nItemsToRemove = jobMetricsMap.size() - keepCount;
+				for (int i = 0; i < nItemsToRemove; i++) {
+					Long jobExecutionId = jobMetricsByArrivalTime.remove(0);
+					
+					var jobMetrics = jobMetricsMap.remove(jobExecutionId);
+					assert jobMetrics != null;
+				}				
+				
+				assert jobMetricsMap.size() == jobMetricsByArrivalTime.size();
+
+				logger.debug("Cleaned up old metrics, removed {} least recent entries", nItemsToRemove);
 			}
+			
+//			if (jobMetricsMap.size() > keepCount) {
+//				// Remove oldest entries, keeping only the most recent ones
+//				jobMetricsMap.entrySet().stream().sorted(Map.Entry.<Long, BatchMetrics>comparingByKey().reversed())
+//						.skip(keepCount).map(Map.Entry::getKey).forEach(jobMetricsMap::remove);
+//				logger.debug("Cleaned up old metrics, kept {} most recent entries", keepCount);
+//			}
 		} catch (Exception e) {
 			throw new BatchException("Failed to cleanup old metrics", e);
 		}
 	}
 
+	public boolean isJobMetricsPresent(Long jobExecutionId) {
+		if (jobExecutionId == null) {
+			throw new BatchException("jobExecutionId cannot be null");
+		}
+		synchronized (lock) {
+			var metrics = jobMetricsMap.get(jobExecutionId);
+			return metrics != null;
+		}
+	}
+	
+	/**
+	 * Return the BatchMetrics for the given jobExecutionId.
+	 * @param jobExecutionId
+	 * @return as described
+	 * @throws BatchException if jobExecutionId is null or no BatchMetrics instance exists for the given jobExecutionId.
+	 */
 	public BatchMetrics getJobMetrics(Long jobExecutionId) {
 		if (jobExecutionId == null) {
-			throw new BatchException("Job execution ID cannot be null");
+			throw new BatchException("jobExecutionId cannot be null");
 		}
-		return jobMetricsMap.get(jobExecutionId);
+		synchronized (lock) {
+			var metrics = jobMetricsMap.get(jobExecutionId);
+			if (metrics == null) {
+				throw new BatchException("No metrics found for job execution ID: " + jobExecutionId);
+			}
+			return metrics;
+		}
+	}
+	
+	private PartitionMetrics getPartitionMetrics(Long jobExecutionId, String partitionName) {
+		if (StringUtils.isBlank(partitionName)) {
+			throw new BatchException("partitionName cannot be blank or null");
+		}
+		synchronized (lock) {
+			var batchMetrics = getJobMetrics(jobExecutionId);
+			var partitionMetrics = batchMetrics.getPartitionMetrics().get(partitionName);
+			if (partitionMetrics == null) {
+				throw new BatchException(
+						"Partition metrics not found for partition " + partitionName +  " of job " + jobExecutionId
+				);
+			}
+			return partitionMetrics;
+		}
 	}
 }

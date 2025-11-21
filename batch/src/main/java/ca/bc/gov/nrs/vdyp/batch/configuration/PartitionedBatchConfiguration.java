@@ -203,8 +203,11 @@ public class PartitionedBatchConfiguration {
 			PartitionedJobExecutionListener jobExecutionListener, Step masterStep, Step postProcessingStep,
 			PlatformTransactionManager transactionManager
 	) {
-		return new JobBuilder("VdypPartitionedJob", jobRepository).incrementer(new RunIdIncrementer()).start(masterStep)
-				.next(postProcessingStep).listener(new JobExecutionListener() {
+		return new JobBuilder("VdypPartitionedJob", jobRepository) //
+				.incrementer(new RunIdIncrementer()) //
+				.start(masterStep) //
+				.next(postProcessingStep) //
+				.listener(new JobExecutionListener() {
 					@Override
 					public void beforeJob(@NonNull JobExecution jobExecution) {
 						// Initialize job metrics
@@ -326,12 +329,13 @@ public class PartitionedBatchConfiguration {
 	@StepScope
 	public Tasklet resultAggregationTasklet() {
 		return (contribution, chunkContext) -> {
-			Long jobExecutionId = chunkContext.getStepContext().getStepExecution().getJobExecutionId();
-			String jobGuid = chunkContext.getStepContext().getStepExecution().getJobExecution().getJobParameters()
+			var stepExecution = chunkContext.getStepContext().getStepExecution();
+			Long jobExecutionId = stepExecution.getJobExecutionId();
+			String jobGuid = stepExecution.getJobExecution().getJobParameters()
 					.getString(BatchConstants.Job.GUID);
 			logger.info("[GUID: {}] Starting result aggregation for job execution: {}", jobGuid, jobExecutionId);
 			try {
-				JobExecution jobExecution = chunkContext.getStepContext().getStepExecution().getJobExecution();
+				JobExecution jobExecution = stepExecution.getJobExecution();
 
 				String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
 				String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
@@ -339,7 +343,7 @@ public class PartitionedBatchConfiguration {
 				Path consolidatedZip = resultAggregationService
 						.aggregateResultsFromJobDir(jobExecutionId, jobGuid, jobBaseDir, jobTimestamp);
 
-				chunkContext.getStepContext().getStepExecution().getExecutionContext()
+				stepExecution.getExecutionContext()
 						.putString("consolidatedOutputPath", consolidatedZip.toString());
 
 				logger.info(

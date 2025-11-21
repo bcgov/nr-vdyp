@@ -21,6 +21,8 @@ import java.util.Map;
  */
 public class BatchRetryPolicy extends SimpleRetryPolicy {
 
+	private static final long serialVersionUID = 430066847026367457L;
+
 	private static final Logger logger = LoggerFactory.getLogger(BatchRetryPolicy.class);
 
 	private final long backOffPeriod;

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "batch")
 public class BatchProperties {
 
+	// MDJ: Suggest these nested classes be suffixed with "Properties" for clarity.
 	private Job job = new Job();
 	private Partition partition = new Partition();
 	private ThreadPool threadPool = new ThreadPool();
