@@ -88,18 +88,17 @@ public class BatchController {
 	)
 	public ResponseEntity<Map<String, Object>> startBatchJobWithFiles(
 			@RequestParam("polygonFile") MultipartFile polygonFile, @RequestParam("layerFile") MultipartFile layerFile,
-			@RequestParam(value = "partitionSize", required = false) Integer partitionSize,
 			@RequestParam("parameters") String projectionParametersJson
 	) {
 
 		try {
-			logRequestDetails(polygonFile, layerFile, partitionSize, projectionParametersJson);
+			logRequestDetails(polygonFile, layerFile, projectionParametersJson);
 
 			Map<String, Object> response = new HashMap<>();
 
 			// MDJ: How can this class be instantiated without a partitionedJob?
 			if (partitionedJob != null) {
-				JobExecution jobExecution = executeJob(polygonFile, layerFile, partitionSize, projectionParametersJson);
+				JobExecution jobExecution = executeJob(polygonFile, layerFile, projectionParametersJson);
 				buildSuccessResponse(response, jobExecution);
 			} else {
 				buildJobNotAvailableResponse(response);
@@ -329,7 +328,7 @@ public class BatchController {
 	}
 
 	private void logRequestDetails(
-			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, String parametersJson
+			MultipartFile polygonFile, MultipartFile layerFile, String parametersJson
 	) {
 		if (logger.isInfoEnabled()) {
 			logger.info("=== VDYP Batch Job Request ===");
@@ -341,14 +340,14 @@ public class BatchController {
 					"Layer file: {} ({} bytes)", BatchUtils.sanitizeForLogging(layerFile.getOriginalFilename()),
 					layerFile.getSize()
 			);
-			logger.info("Partition size: {}", partitionSize);
+			logger.info("Partition size: {}", defaultPartitionSize);
 			logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
 		}
 	}
 
 	// MDJ: Remove exceptions not thrown from "throws" declaration
 	private JobExecution executeJob(
-			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, String projectionParametersJson
+			MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson
 	) throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException,
 			JobParametersInvalidException, ProjectionRequestValidationException {
 
@@ -391,31 +390,30 @@ public class BatchController {
 			// as this makes them difficult to transfer, read, etc.
 			logger.info("Created job base directory: {} (GUID: {})", jobBaseDir, sanitizedGuid);
 
-			Integer actualPartitionSize = partitionSize != null ? partitionSize : defaultPartitionSize;
 			logger.info(
-					"[GUID: {}] Actual using {} partitions (requested: {}, from properties: {})", sanitizedGuid,
-					actualPartitionSize, partitionSize, defaultPartitionSize
+					"[GUID: {}] Using {} partitions", sanitizedGuid,
+					defaultPartitionSize
 			);
 
 			// Partition CSV files using streaming approach BEFORE starting the job
 			logger.info("[GUID: {}] Starting CSV partitioning...", sanitizedGuid);
 			int featureIdToPartitionSize = csvPartitioner
-					.partitionCsvFiles(polygonFile, layerFile, actualPartitionSize, jobBaseDir);
+					.partitionCsvFiles(polygonFile, layerFile, defaultPartitionSize, jobBaseDir);
 
 			logger.info(
 					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}",
-					sanitizedGuid, actualPartitionSize, featureIdToPartitionSize
+					sanitizedGuid, defaultPartitionSize, featureIdToPartitionSize
 			);
 
 			// Now start the job with the partition directory included in parameters
 			JobParameters jobParameters = buildJobParameters(
-					projectionParametersJson, actualPartitionSize, jobGuid, jobTimestamp, jobBaseDir.toString()
+					projectionParametersJson, defaultPartitionSize, jobGuid, jobTimestamp, jobBaseDir.toString()
 			);
 			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
 
 			logger.info(
 					"[GUID: {}] Started job! Execution ID: {}, Directory: {}, Partitions: {}", sanitizedGuid,
-					jobExecution.getId(), jobBaseDir, actualPartitionSize
+					jobExecution.getId(), jobBaseDir, defaultPartitionSize
 			);
 
 			return jobExecution;

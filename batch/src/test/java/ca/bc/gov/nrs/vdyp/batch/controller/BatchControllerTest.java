@@ -121,7 +121,7 @@ class BatchControllerTest {
 		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "{}");
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
@@ -139,7 +139,7 @@ class BatchControllerTest {
 				.thenThrow(new RuntimeException("Empty file or invalid CSV data"));
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "{}");
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(400, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("validationMessages"));
@@ -153,7 +153,7 @@ class BatchControllerTest {
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", "data".getBytes());
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, null);
+				.startBatchJobWithFiles(polygonFile, layerFile, null);
 
 		assertEquals(400, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("error"));
@@ -177,7 +177,7 @@ class BatchControllerTest {
 		);
 
 		ResponseEntity<Map<String, Object>> response = controllerWithNullJob
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "{}");
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
 		assertEquals("VDYP Batch job not available", response.getBody().get("message"));
@@ -194,7 +194,7 @@ class BatchControllerTest {
 		);
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "   ");
+				.startBatchJobWithFiles(polygonFile, layerFile, "   ");
 
 		assertEquals(400, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("validationMessages"));
@@ -222,9 +222,9 @@ class BatchControllerTest {
 		when(jobParameters.getString("jobGuid")).thenReturn("test-guid");
 		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
 
-		// Call without partition size to use default
+		// Always uses default partition size from configuration
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, null, "{}");
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
@@ -253,7 +253,7 @@ class BatchControllerTest {
 		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "{}");
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("startTime"));
