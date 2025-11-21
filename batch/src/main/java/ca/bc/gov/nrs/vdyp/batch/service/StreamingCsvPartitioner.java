@@ -104,12 +104,11 @@ public class StreamingCsvPartitioner {
 			partitionSizes[i] = (i < remainder) ? chunkSize + 1 : chunkSize;
 		}
 
-		if (logger.isInfoEnabled()) {
-			logger.info(
-					"Total FEATURE_IDs: {}, Partition size: {}, Base chunk size: {}, Remainder: {}, Partition sizes: {}",
-					totalFeatureIds, partitionSize, chunkSize, remainder, Arrays.toString(partitionSizes)
-			);
-		}
+		logger.info(
+				"Total FEATURE_IDs: {}, Partition size: {}, Base chunk size: {}, Remainder: {}, Partition sizes: {}",
+				totalFeatureIds, partitionSize, chunkSize, remainder, Arrays.toString(partitionSizes)
+		);
+
 		return partitionSizes;
 	}
 

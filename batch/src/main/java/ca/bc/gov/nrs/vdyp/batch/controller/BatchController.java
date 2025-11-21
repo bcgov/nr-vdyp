@@ -120,19 +120,12 @@ public class BatchController {
 		Long executionId = null;
 
 		try {
-			if (logger.isInfoEnabled()) {
-				logger.info("Attempting to stop job with GUID: {}", jobGuid);
-			}
+			logger.info("Attempting to stop job with GUID: {}", jobGuid);
+
 			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
 			executionId = jobExecution.getId();
 
-			// MDJ: Calls to logger.isXXXEnabled() are unnecessary when the block contains nothing
-			// other than logger calls and the parameters require no computation. You would only
-			// make this call if there was some expensive computation being done to prepare the
-			// logger call.
-			if (logger.isInfoEnabled()) {
-				logger.info("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
-			}
+			logger.info("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
 
 			// Stop the job execution - this sends a stop signal to the running job
 			boolean stopped = jobOperator.stop(executionId);
@@ -147,12 +140,10 @@ public class BatchController {
 				);
 				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-				if (logger.isInfoEnabled()) {
-					logger.info(
-							"[GUID: {}] Stop request sent successfully for JobExecution ID: {}", jobGuid,
-							executionId
-					);
-				}
+				logger.info(
+						"[GUID: {}] Stop request sent successfully for JobExecution ID: {}", jobGuid,
+						executionId
+				);
 
 				return ResponseEntity.ok(response);
 			} else {
@@ -162,12 +153,11 @@ public class BatchController {
 				response.put(BatchConstants.Job.MESSAGE, "Job execution could not be stopped. It may not be running.");
 				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-				if (logger.isWarnEnabled()) {
-					logger.warn(
+				logger.warn(
 							"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", jobGuid,
 							executionId
-					);
-				}
+				);
+
 				return ResponseEntity.badRequest().body(response);
 			}
 
@@ -225,16 +215,12 @@ public class BatchController {
 		Long executionId;
 
 		try {
-			if (logger.isInfoEnabled()) {
-				logger.info("Getting status for job with GUID: {}", jobGuid);
-			}
+			logger.info("Getting status for job with GUID: {}", jobGuid);
 
 			jobExecution = findJobExecutionByGuid(jobGuid);
 			executionId = jobExecution.getId();
 
-			if (logger.isInfoEnabled()) {
-				logger.info("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
-			}
+			logger.info("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
 		} catch (NoSuchJobExecutionException e) {
 			response.put(BatchConstants.Job.GUID, jobGuid);
 			response.put(BatchConstants.Job.ERROR, "Job execution not found");
@@ -296,13 +282,11 @@ public class BatchController {
 
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-		if (logger.isInfoEnabled()) {
-			logger.info(
-					"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}",
-					jobGuid, jobExecution.getStatus(), isRunning, totalPartitions,
-					completedPartitions
-			);
-		}
+		logger.info(
+				"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}",
+				jobGuid, jobExecution.getStatus(), isRunning, totalPartitions,
+				completedPartitions
+		);
 
 		return ResponseEntity.ok(response);
 	}
@@ -326,19 +310,17 @@ public class BatchController {
 	private void logRequestDetails(
 			MultipartFile polygonFile, MultipartFile layerFile, String parametersJson
 	) {
-		if (logger.isInfoEnabled()) {
-			logger.info("=== VDYP Batch Job Request ===");
-			logger.info(
-					"Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(),
-					polygonFile.getSize()
-			);
-			logger.info(
-					"Layer file: {} ({} bytes)", layerFile.getOriginalFilename(),
-					layerFile.getSize()
-			);
-			logger.info("Partition size: {}", defaultPartitionSize);
-			logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
-		}
+		logger.info("=== VDYP Batch Job Request ===");
+		logger.info(
+				"Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(),
+				polygonFile.getSize()
+		);
+		logger.info(
+				"Layer file: {} ({} bytes)", layerFile.getOriginalFilename(),
+				layerFile.getSize()
+		);
+		logger.info("Partition size: {}", defaultPartitionSize);
+		logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
 	}
 
 	// MDJ: Remove exceptions not thrown from "throws" declaration
