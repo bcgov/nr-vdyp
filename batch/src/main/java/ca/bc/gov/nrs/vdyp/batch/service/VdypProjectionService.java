@@ -166,12 +166,8 @@ public class VdypProjectionService {
 
 		Path jobBasePath = Paths.get(jobBaseDir);
 
-		// Convert input-partition name to output-partition name
-		// inputPartitionName format: "input-partition0" -> "output-partition0"
-		String inputPartitionName = BatchConstants.Partition.INPUT_PREFIX + "-" + partitionName;
-		String outputPartitionName = inputPartitionName.replace(
-				BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX, BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX
-		);
+		String inputPartitionName = BatchUtils.buildInputPartitionFolderName(partitionName);
+		String outputPartitionName = BatchUtils.buildOutputPartitionFolderName(partitionName);
 
 		Path outputPartitionDir = jobBasePath.resolve(outputPartitionName);
 

@@ -26,4 +26,24 @@ public final class BatchUtils {
 	public static String createJobGuid() {
 		return UUID.randomUUID().toString();
 	}
+
+	/**
+	 * Builds the input partition folder name.
+	 *
+	 * @param partitionName the partition name (e.g., "partition0")
+	 * @return the input partition folder name (e.g., "input-partition0")
+	 */
+	public static String buildInputPartitionFolderName(String partitionName) {
+		return BatchConstants.Partition.INPUT_PREFIX + "-" + partitionName;
+	}
+
+	/**
+	 * Builds the output partition folder name.
+	 *
+	 * @param partitionName the partition name (e.g., "partition0")
+	 * @return the output partition folder name (e.g., "output-partition0")
+	 */
+	public static String buildOutputPartitionFolderName(String partitionName) {
+		return BatchConstants.Partition.OUTPUT_PREFIX + "-" + partitionName;
+	}
 }

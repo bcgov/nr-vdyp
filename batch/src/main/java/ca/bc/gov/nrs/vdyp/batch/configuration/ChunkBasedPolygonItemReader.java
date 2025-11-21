@@ -26,7 +26,7 @@ import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
-
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 /**
  * ItemReader that processes polygon in chunks to handle large datasets
  */
@@ -107,9 +107,8 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 				throw new ItemStreamException("jobBaseDir not found or empty in ExecutionContext");
 			}
 
-			// MDJ: The calculation of the input and output folder names should be in common code, since
-			// the calculation is shared between this code and VdypProjectionService.
-			partitionDir = Paths.get(jobBaseDir, BatchConstants.Partition.INPUT_PREFIX + "-" + partitionName);
+			String inputPartitionFolderName = BatchUtils.buildInputPartitionFolderName(partitionName);
+			partitionDir = Paths.get(jobBaseDir, inputPartitionFolderName);
 			if (!Files.exists(partitionDir)) {
 				throw new ItemStreamException("Partition directory does not exist: " + partitionDir);
 			}

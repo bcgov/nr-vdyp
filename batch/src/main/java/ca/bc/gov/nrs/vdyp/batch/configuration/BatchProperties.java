@@ -11,17 +11,16 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "batch")
 public class BatchProperties {
 
-	// MDJ: Suggest these nested classes be suffixed with "Properties" for clarity.
-	private Job job = new Job();
-	private Partition partition = new Partition();
-	private ThreadPool threadPool = new ThreadPool();
-	private Validation validation = new Validation();
-	private Retry retry = new Retry();
-	private Skip skip = new Skip();
-	private Reader reader = new Reader();
+	private JobProperties job = new JobProperties();
+	private PartitionProperties partition = new PartitionProperties();
+	private ThreadPoolProperties threadPool = new ThreadPoolProperties();
+	private ValidationProperties validation = new ValidationProperties();
+	private RetryProperties retry = new RetryProperties();
+	private SkipProperties skip = new SkipProperties();
+	private ReaderProperties reader = new ReaderProperties();
 	private String rootDirectory;
 
-	public static class Job {
+	public static class JobProperties {
 		private boolean autoCreate = true;
 		private String baseFolderPrefix;
 
@@ -42,7 +41,7 @@ public class BatchProperties {
 		}
 	}
 
-	public static class Partition {
+	public static class PartitionProperties {
 		private Integer defaultPartitionSize;
 		private String inputPolygonFileName;
 		private String inputLayerFileName;
@@ -117,7 +116,7 @@ public class BatchProperties {
 		}
 	}
 
-	public static class Retry {
+	public static class RetryProperties {
 		private int maxAttempts;
 		private int backoffPeriod;
 
@@ -138,7 +137,7 @@ public class BatchProperties {
 		}
 	}
 
-	public static class ThreadPool {
+	public static class ThreadPoolProperties {
 		private int corePoolSize;
 		private int maxPoolSizeMultiplier;
 		private String threadNamePrefix;
@@ -168,7 +167,7 @@ public class BatchProperties {
 		}
 	}
 
-	public static class Validation {
+	public static class ValidationProperties {
 		private int maxDataLength;
 		private int minPolygonIdLength;
 		private int maxPolygonIdLength;
@@ -198,7 +197,7 @@ public class BatchProperties {
 		}
 	}
 
-	public static class Skip {
+	public static class SkipProperties {
 		private int maxCount;
 
 		public int getMaxCount() {
@@ -210,7 +209,7 @@ public class BatchProperties {
 		}
 	}
 
-	public static class Reader {
+	public static class ReaderProperties {
 		private Integer defaultChunkSize;
 
 		public Integer getDefaultChunkSize() {
@@ -222,59 +221,59 @@ public class BatchProperties {
 		}
 	}
 
-	public Job getJob() {
+	public JobProperties getJob() {
 		return job;
 	}
 
-	public void setJob(Job job) {
+	public void setJob(JobProperties job) {
 		this.job = job;
 	}
 
-	public Partition getPartition() {
+	public PartitionProperties getPartition() {
 		return partition;
 	}
 
-	public void setPartition(Partition partition) {
+	public void setPartition(PartitionProperties partition) {
 		this.partition = partition;
 	}
 
-	public Retry getRetry() {
+	public RetryProperties getRetry() {
 		return retry;
 	}
 
-	public void setRetry(Retry retry) {
+	public void setRetry(RetryProperties retry) {
 		this.retry = retry;
 	}
 
-	public ThreadPool getThreadPool() {
+	public ThreadPoolProperties getThreadPool() {
 		return threadPool;
 	}
 
-	public void setThreadPool(ThreadPool threadPool) {
+	public void setThreadPool(ThreadPoolProperties threadPool) {
 		this.threadPool = threadPool;
 	}
 
-	public Validation getValidation() {
+	public ValidationProperties getValidation() {
 		return validation;
 	}
 
-	public void setValidation(Validation validation) {
+	public void setValidation(ValidationProperties validation) {
 		this.validation = validation;
 	}
 
-	public Skip getSkip() {
+	public SkipProperties getSkip() {
 		return skip;
 	}
 
-	public void setSkip(Skip skip) {
+	public void setSkip(SkipProperties skip) {
 		this.skip = skip;
 	}
 
-	public Reader getReader() {
+	public ReaderProperties getReader() {
 		return reader;
 	}
 
-	public void setReader(Reader reader) {
+	public void setReader(ReaderProperties reader) {
 		this.reader = reader;
 	}
 
