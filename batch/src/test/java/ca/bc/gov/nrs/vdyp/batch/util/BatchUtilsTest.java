@@ -54,68 +54,6 @@ class BatchUtilsTest {
 	}
 
 	@Test
-	void testSanitizeForLogging_Null() {
-		String result = BatchUtils.sanitizeForLogging(null);
-
-		assertEquals("null", result);
-	}
-
-	@Test
-	void testSanitizeForLogging_LongFilename() {
-		// Create a filename longer than 100 characters
-		String filename = "a".repeat(150);
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals(100, result.length());
-		assertTrue(result.endsWith("..."));
-		assertEquals("a".repeat(97) + "...", result);
-	}
-
-	@Test
-	void testSanitizeForLogging_ExactlyAtLimit() {
-		String filename = "a".repeat(100);
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals(100, result.length());
-		assertFalse(result.endsWith("..."));
-		assertEquals(filename, result);
-	}
-
-	@Test
-	void testSanitizeForLogging_JustOverLimit() {
-		String filename = "a".repeat(101);
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals(100, result.length());
-		assertTrue(result.endsWith("..."));
-		assertEquals("a".repeat(97) + "...", result);
-	}
-
-	@Test
-	void testSanitizeForLogging_MixedControlAndValid() {
-		String filename = "test\u0000\u001ffile.csv";
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals("testfile.csv", result);
-	}
-
-	@Test
-	void testSanitizeForLogging_LongFilenameWithControlChars() {
-		// Create a long filename with control characters
-		String filename = "test\u0000" + "a".repeat(150) + "\u001f.csv";
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals(100, result.length());
-		assertTrue(result.endsWith("..."));
-		assertTrue(result.startsWith("test"));
-	}
-
-	@Test
 	void testDateTimeFormatterForFilenames() {
 		DateTimeFormatter formatter = BatchUtils.dateTimeFormatterForFilenames;
 

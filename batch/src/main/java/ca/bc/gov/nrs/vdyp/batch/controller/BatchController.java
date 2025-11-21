@@ -118,12 +118,10 @@ public class BatchController {
 	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable String jobGuid) {
 		Map<String, Object> response = new HashMap<>();
 		Long executionId = null;
-		// MDJ: Unnecessary and actually harmful to sanitize this.
-		String sanitizedGuid = BatchUtils.sanitizeForLogging(jobGuid);
 
 		try {
 			if (logger.isInfoEnabled()) {
-				logger.info("Attempting to stop job with GUID: {}", sanitizedGuid);
+				logger.info("Attempting to stop job with GUID: {}", jobGuid);
 			}
 			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
 			executionId = jobExecution.getId();
@@ -133,7 +131,7 @@ public class BatchController {
 			// make this call if there was some expensive computation being done to prepare the
 			// logger call.
 			if (logger.isInfoEnabled()) {
-				logger.info("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", sanitizedGuid, executionId);
+				logger.info("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
 			}
 
 			// Stop the job execution - this sends a stop signal to the running job
@@ -151,7 +149,7 @@ public class BatchController {
 
 				if (logger.isInfoEnabled()) {
 					logger.info(
-							"[GUID: {}] Stop request sent successfully for JobExecution ID: {}", sanitizedGuid,
+							"[GUID: {}] Stop request sent successfully for JobExecution ID: {}", jobGuid,
 							executionId
 					);
 				}
@@ -166,7 +164,7 @@ public class BatchController {
 
 				if (logger.isWarnEnabled()) {
 					logger.warn(
-							"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", sanitizedGuid,
+							"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", jobGuid,
 							executionId
 					);
 				}
@@ -185,7 +183,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.info("[GUID: {}] Job is already stopping or stopped", sanitizedGuid);
+			logger.info("[GUID: {}] Job is already stopping or stopped", jobGuid);
 			// Return 202 Accepted - the stop request was already accepted and is being processed
 			return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
 
@@ -198,7 +196,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error("Job execution not found with GUID: {}", sanitizedGuid);
+			logger.error("Job execution not found with GUID: {}", jobGuid);
 			return ResponseEntity.status(404).body(response);
 
 		} catch (Exception e) {
@@ -214,7 +212,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error("[GUID: {}] Error stopping job execution: {}", sanitizedGuid, e.getMessage(), e);
+			logger.error("[GUID: {}] Error stopping job execution: {}", jobGuid, e.getMessage(), e);
 			return ResponseEntity.internalServerError().body(response);
 		}
 	}
@@ -228,16 +226,14 @@ public class BatchController {
 
 		try {
 			if (logger.isInfoEnabled()) {
-				// MDJ: No need to sanitize.
-				logger.info("Getting status for job with GUID: {}", BatchUtils.sanitizeForLogging(jobGuid));
+				logger.info("Getting status for job with GUID: {}", jobGuid);
 			}
 
 			jobExecution = findJobExecutionByGuid(jobGuid);
 			executionId = jobExecution.getId();
 
 			if (logger.isInfoEnabled()) {
-				// MDJ: No need to sanitize.
-				logger.info("[GUID: {}] Found JobExecution ID: {}", BatchUtils.sanitizeForLogging(jobGuid), executionId);
+				logger.info("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
 			}
 		} catch (NoSuchJobExecutionException e) {
 			response.put(BatchConstants.Job.GUID, jobGuid);
@@ -248,7 +244,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error("Job execution not found with GUID: {}", BatchUtils.sanitizeForLogging(jobGuid));
+			logger.error("Job execution not found with GUID: {}", jobGuid);
 			return ResponseEntity.status(404).body(response);
 
 		} catch (Exception e) {
@@ -262,7 +258,7 @@ public class BatchController {
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
 			logger.error(
-					"[GUID: {}] Error getting job status: {}", BatchUtils.sanitizeForLogging(jobGuid), e.getMessage(), e
+					"[GUID: {}] Error getting job status: {}", jobGuid, e.getMessage(), e
 			);
 			return ResponseEntity.internalServerError().body(response);
 		}
@@ -303,7 +299,7 @@ public class BatchController {
 		if (logger.isInfoEnabled()) {
 			logger.info(
 					"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}",
-					BatchUtils.sanitizeForLogging(jobGuid), jobExecution.getStatus(), isRunning, totalPartitions,
+					jobGuid, jobExecution.getStatus(), isRunning, totalPartitions,
 					completedPartitions
 			);
 		}
@@ -333,11 +329,11 @@ public class BatchController {
 		if (logger.isInfoEnabled()) {
 			logger.info("=== VDYP Batch Job Request ===");
 			logger.info(
-					"Polygon file: {} ({} bytes)", BatchUtils.sanitizeForLogging(polygonFile.getOriginalFilename()),
+					"Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(),
 					polygonFile.getSize()
 			);
 			logger.info(
-					"Layer file: {} ({} bytes)", BatchUtils.sanitizeForLogging(layerFile.getOriginalFilename()),
+					"Layer file: {} ({} bytes)", layerFile.getOriginalFilename(),
 					layerFile.getSize()
 			);
 			logger.info("Partition size: {}", defaultPartitionSize);
@@ -372,10 +368,6 @@ public class BatchController {
 
 			String jobGuid = BatchUtils.createJobGuid();
 			String jobTimestamp = BatchUtils.createJobTimestamp();
-			// MDJ: Why does a guid need sanitizing? It just uses these characters: 0-9 A-F and '-'. Plus,
-			// it's a mistake to do this, as it makes searching the log for a given job harder. REMOVE
-			// sanitizedGuid and its uses.
-			String sanitizedGuid = BatchUtils.sanitizeForLogging(jobGuid);
 
 			// MDJ: using a time stamp as a job identifier (which is what jobBaseFolderName is) is a
 			// mistake, since multiple jobs -could- have the same time stamp (especially when it is down
@@ -388,21 +380,21 @@ public class BatchController {
 			// MDJ: Why are low level details like this being logged at "info" level? We want to avoid
 			// making the production log files (normally set to log at info level and above) too large
 			// as this makes them difficult to transfer, read, etc.
-			logger.info("Created job base directory: {} (GUID: {})", jobBaseDir, sanitizedGuid);
+			logger.info("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
 
 			logger.info(
-					"[GUID: {}] Using {} partitions", sanitizedGuid,
+					"[GUID: {}] Using {} partitions", jobGuid,
 					defaultPartitionSize
 			);
 
 			// Partition CSV files using streaming approach BEFORE starting the job
-			logger.info("[GUID: {}] Starting CSV partitioning...", sanitizedGuid);
+			logger.info("[GUID: {}] Starting CSV partitioning...", jobGuid);
 			int featureIdToPartitionSize = csvPartitioner
 					.partitionCsvFiles(polygonFile, layerFile, defaultPartitionSize, jobBaseDir);
 
 			logger.info(
 					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}",
-					sanitizedGuid, defaultPartitionSize, featureIdToPartitionSize
+					jobGuid, defaultPartitionSize, featureIdToPartitionSize
 			);
 
 			// Now start the job with the partition directory included in parameters
@@ -412,7 +404,7 @@ public class BatchController {
 			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
 
 			logger.info(
-					"[GUID: {}] Started job! Execution ID: {}, Directory: {}, Partitions: {}", sanitizedGuid,
+					"[GUID: {}] Started job! Execution ID: {}, Directory: {}, Partitions: {}", jobGuid,
 					jobExecution.getId(), jobBaseDir, defaultPartitionSize
 			);
 

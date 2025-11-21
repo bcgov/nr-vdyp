@@ -26,22 +26,4 @@ public final class BatchUtils {
 	public static String createJobGuid() {
 		return UUID.randomUUID().toString();
 	}
-
-	// MDJ: Why is this even needed? Don't you want to log the actual filename? 
-	/**
-	 * Sanitizes provided filename for safe logging Removes control characters, line breaks, and limits length.
-	 */
-	public static String sanitizeForLogging(String filename) {
-		if (filename == null) {
-			return "null";
-		}
-
-		String sanitized = filename.replaceAll("[\\x00-\\x1f\\x7f-\\x9f]", "").trim();
-
-		if (sanitized.length() > 100) {
-			sanitized = sanitized.substring(0, 97) + "...";
-		}
-
-		return sanitized.isEmpty() ? "empty" : sanitized;
-	}
 }
