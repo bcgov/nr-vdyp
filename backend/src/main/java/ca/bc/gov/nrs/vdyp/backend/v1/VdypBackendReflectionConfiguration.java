@@ -1,13 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.v1;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.xml.bind.annotation.adapters.XmlAdapter;
-
-import org.glassfish.jersey.internal.OsgiRegistry;
-import org.glassfish.jersey.internal.inject.InstanceBinding;
-import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.osgi.framework.SynchronousBundleListener;
-
 import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToDefault;
 import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToNull;
 
@@ -34,14 +26,12 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.PLOTSYYieldTableRec
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.TextYieldTableRowValuesBean;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.UnsupportedYieldTableRecordBean;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 @RegisterForReflection(
 		targets = { XmlAdapter.class, //
 				ContainerRequestContext.class, //
-				OsgiRegistry.class, //
-				SynchronousBundleListener.class, //
-				InstanceBinding.class, //
-				LocalizationMessages.class, //
 				ConvertEmptyOrBlankStringsToNull.class, //
 				ConvertEmptyOrBlankStringsToDefault.class, //
 				VdypApiResource.class, //

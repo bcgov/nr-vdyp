@@ -76,6 +76,8 @@ backend:
     minAvailable: 1 # the minimum number of pods that must be available during the disruption budget.
   env:
     QUARKUS_OIDC_AUTH_SERVER_URL: ~
+    VDYP_DB_SECRET_NAME: crunchy-postgres-test-pguser-app-vdyp
+    VDYP_PROXY_DB_SECRET_NAME: crunchy-postgres-test-pguser-proxy-vdyp-rest
 
 frontend:
   fullnameOverride: "vdyp-ui-test"

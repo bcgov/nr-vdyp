@@ -48,11 +48,6 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.crunchy.pguserSecretName }}
                   key: host
-            - name: VDYP_DB_PROXY_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: vdyp-liquibase-#{ENV}#-pguser-vdyp-proxy-password
-                  key: password
           command: ["/bin/sh","-c"]
           args:
             - |
