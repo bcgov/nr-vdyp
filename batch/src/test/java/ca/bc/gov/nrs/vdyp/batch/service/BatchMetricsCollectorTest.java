@@ -35,7 +35,7 @@ class BatchMetricsCollectorTest {
 	@BeforeEach
 	void setUp() {
 		try {
-			batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+			batchMetricsCollector.getJobMetrics(JOB_GUID);
 			// Remove all existing metrics...
 		} catch (BatchException e) {
 			// expected
@@ -51,7 +51,7 @@ class BatchMetricsCollectorTest {
 		assertEquals("STARTING", metrics.getStatus());
 		assertNotNull(metrics.getStartTime());
 
-		BatchMetrics retrievedMetrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics retrievedMetrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertSame(metrics, retrievedMetrics);
 	}
 
@@ -60,7 +60,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, PARTITION_NAME);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertNotNull(metrics);
 
 		BatchMetrics.PartitionMetrics partitionMetrics = metrics.getPartitionMetrics().get(PARTITION_NAME);
@@ -78,7 +78,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector
 				.completePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, PARTITION_NAME, writeCount, EXIT_CODE);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		BatchMetrics.PartitionMetrics partitionMetrics = metrics.getPartitionMetrics().get(PARTITION_NAME);
 
 		assertNotNull(partitionMetrics.getEndTime());
@@ -94,7 +94,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 		batchMetricsCollector.finalizeJobMetrics(JOB_EXECUTION_ID, JOB_GUID, "COMPLETED", totalRead, totalWritten);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertNotNull(metrics.getEndTime());
 		assertEquals("COMPLETED", metrics.getStatus());
 		assertEquals(totalRead, metrics.getTotalRecordsRead());
@@ -111,7 +111,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector
 				.recordRetryAttempt(JOB_EXECUTION_ID, JOB_GUID, attemptNumber, error, true, PARTITION_NAME);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(1, metrics.getTotalRetryAttempts());
 		assertEquals(1, metrics.getSuccessfulRetries());
 		assertEquals(0, metrics.getFailedRetries());
@@ -139,7 +139,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector
 				.recordSkip(JOB_EXECUTION_ID, JOB_GUID, recordId, batchRecord, error, PARTITION_NAME, lineNumber);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(1, metrics.getTotalSkips());
 		assertEquals(1, metrics.getSkipReasonCount().get("IllegalStateException"));
 
@@ -158,30 +158,34 @@ class BatchMetricsCollectorTest {
 		Long jobId2 = 2L;
 		Long jobId3 = 3L;
 		Long jobId4 = 4L;
+		String guid1 = "guid-1";
+		String guid2 = "guid-2";
+		String guid3 = "guid-3";
+		String guid4 = "guid-4";
 
-		batchMetricsCollector.initializeMetrics(jobId1, JOB_GUID);
-		batchMetricsCollector.initializeMetrics(jobId2, JOB_GUID);
-		batchMetricsCollector.initializeMetrics(jobId3, JOB_GUID);
-		batchMetricsCollector.initializeMetrics(jobId4, JOB_GUID);
+		batchMetricsCollector.initializeMetrics(jobId1, guid1);
+		batchMetricsCollector.initializeMetrics(jobId2, guid2);
+		batchMetricsCollector.initializeMetrics(jobId3, guid3);
+		batchMetricsCollector.initializeMetrics(jobId4, guid4);
 
 		// Verify all metrics are initialized
-		assertNotNull(batchMetricsCollector.getJobMetrics(jobId1));
-		assertNotNull(batchMetricsCollector.getJobMetrics(jobId2));
-		assertNotNull(batchMetricsCollector.getJobMetrics(jobId3));
-		assertNotNull(batchMetricsCollector.getJobMetrics(jobId4));
+		assertNotNull(batchMetricsCollector.getJobMetrics(guid1));
+		assertNotNull(batchMetricsCollector.getJobMetrics(guid2));
+		assertNotNull(batchMetricsCollector.getJobMetrics(guid3));
+		assertNotNull(batchMetricsCollector.getJobMetrics(guid4));
 
 		batchMetricsCollector.cleanupOldMetrics(2);
 
-		// After cleanup, only the 2 most recent (highest ID) should remain
-		assertFalse(batchMetricsCollector.isJobMetricsPresent(jobId1));
-		assertFalse(batchMetricsCollector.isJobMetricsPresent(jobId2));
-		assertTrue(batchMetricsCollector.isJobMetricsPresent(jobId3));
-		assertTrue(batchMetricsCollector.isJobMetricsPresent(jobId4));
+		// After cleanup, only the 2 most recent (by arrival time) should remain
+		assertFalse(batchMetricsCollector.isJobMetricsPresent(guid1));
+		assertFalse(batchMetricsCollector.isJobMetricsPresent(guid2));
+		assertTrue(batchMetricsCollector.isJobMetricsPresent(guid3));
+		assertTrue(batchMetricsCollector.isJobMetricsPresent(guid4));
 	}
 
 	@Test
 	void testGetJobMetrics_NotFound() {
-		assertFalse(batchMetricsCollector.isJobMetricsPresent(999L));
+		assertFalse(batchMetricsCollector.isJobMetricsPresent("non-existent-guid"));
 	}
 
 	@Test
@@ -192,7 +196,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, PARTITION_NAME);
 		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, partition2);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(2, metrics.getPartitionMetrics().size());
 	}
 
@@ -242,12 +246,14 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testInitializePartitionMetrics_NoMetricsFound() {
+		String nonExistentGuid = "non-existent-guid-for-partition";
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.initializePartitionMetrics(999L, JOB_GUID, PARTITION_NAME)
+				() -> batchMetricsCollector
+						.initializePartitionMetrics(JOB_EXECUTION_ID, nonExistentGuid, PARTITION_NAME)
 		);
 
-		assertTrue(exception.getMessage().contains("No metrics found for job execution ID"));
+		assertTrue(exception.getMessage().contains("No metrics found for job"));
 	}
 
 	@ParameterizedTest
@@ -287,12 +293,14 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testCompletePartitionMetrics_NoMetricsFound() {
+		String nonExistentGuid = "non-existent-guid-for-complete";
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.completePartitionMetrics(999L, JOB_GUID, PARTITION_NAME, 100L, EXIT_CODE)
+				() -> batchMetricsCollector
+						.completePartitionMetrics(JOB_EXECUTION_ID, nonExistentGuid, PARTITION_NAME, 100L, EXIT_CODE)
 		);
 
-		assertTrue(exception.getMessage().contains("No metrics found for job execution ID"));
+		assertTrue(exception.getMessage().contains("No metrics found for job"));
 	}
 
 	@Test
@@ -320,12 +328,14 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testFinalizeJobMetrics_NoMetricsFound() {
+		String nonExistentGuid = "non-existent-guid-for-finalize";
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.finalizeJobMetrics(999L, JOB_GUID, "COMPLETED", 100L, 95L)
+				() -> batchMetricsCollector
+						.finalizeJobMetrics(JOB_EXECUTION_ID, nonExistentGuid, "COMPLETED", 100L, 95L)
 		);
 
-		assertTrue(exception.getMessage().contains("No metrics found for job execution ID"));
+		assertTrue(exception.getMessage().contains("No metrics found for job"));
 	}
 
 	@Test
@@ -333,7 +343,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 		batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, JOB_GUID, 1, null, false, PARTITION_NAME);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(1, metrics.getTotalRetryAttempts());
 		assertEquals(0, metrics.getSuccessfulRetries());
 		assertEquals(1, metrics.getFailedRetries());
@@ -355,7 +365,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, recordId, batchRecord, null, PARTITION_NAME, 15L);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(1, metrics.getTotalSkips());
 
 		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().peek();
@@ -373,7 +383,7 @@ class BatchMetricsCollectorTest {
 				JOB_EXECUTION_ID, JOB_GUID, recordId, null, new RuntimeException("test"), PARTITION_NAME, 15L
 		);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(1, metrics.getTotalSkips());
 
 		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().peek();
@@ -390,33 +400,39 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testCleanupOldMetrics_ZeroKeepCount() {
-		batchMetricsCollector.initializeMetrics(1L, JOB_GUID);
-		batchMetricsCollector.initializeMetrics(2L, JOB_GUID);
+		String guid1 = "cleanup-zero-guid-1";
+		String guid2 = "cleanup-zero-guid-2";
+		batchMetricsCollector.initializeMetrics(1L, guid1);
+		batchMetricsCollector.initializeMetrics(2L, guid2);
 
 		batchMetricsCollector.cleanupOldMetrics(0);
 
 		// All metrics should be removed
-		assertFalse(batchMetricsCollector.isJobMetricsPresent(1L));
-		assertFalse(batchMetricsCollector.isJobMetricsPresent(2L));
+		assertFalse(batchMetricsCollector.isJobMetricsPresent(guid1));
+		assertFalse(batchMetricsCollector.isJobMetricsPresent(guid2));
 	}
 
 	@Test
 	void testCleanupOldMetrics_KeepCountGreaterThanSize() {
-		batchMetricsCollector.initializeMetrics(1L, JOB_GUID);
-		batchMetricsCollector.initializeMetrics(2L, JOB_GUID);
+		String guid1 = "cleanup-keep-guid-1";
+		String guid2 = "cleanup-keep-guid-2";
+		batchMetricsCollector.initializeMetrics(1L, guid1);
+		batchMetricsCollector.initializeMetrics(2L, guid2);
 
 		batchMetricsCollector.cleanupOldMetrics(10);
 
 		// All metrics should remain
-		assertTrue(batchMetricsCollector.isJobMetricsPresent(1L));
-		assertTrue(batchMetricsCollector.isJobMetricsPresent(2L));
+		assertTrue(batchMetricsCollector.isJobMetricsPresent(guid1));
+		assertTrue(batchMetricsCollector.isJobMetricsPresent(guid2));
 	}
 
 	@Test
-	void testGetJobMetrics_NullJobExecutionId() {
-		Exception exception = assertThrows(BatchException.class, () -> batchMetricsCollector.getJobMetrics(null));
+	void testGetJobMetrics_NullJobGuid() {
+		Exception exception = assertThrows(
+				BatchException.class, () -> batchMetricsCollector.getJobMetrics((String) null)
+		);
 
-		assertTrue(exception.getMessage().contains("jobExecutionId cannot be null"));
+		assertTrue(exception.getMessage().contains("jobGuid cannot be null or blank"));
 	}
 
 	@Test
@@ -428,7 +444,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector
 				.recordRetryAttempt(JOB_EXECUTION_ID, JOB_GUID, attemptNumber, error, false, PARTITION_NAME);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(1, metrics.getTotalRetryAttempts());
 		assertEquals(0, metrics.getSuccessfulRetries());
 		assertEquals(1, metrics.getFailedRetries());
@@ -467,7 +483,7 @@ class BatchMetricsCollectorTest {
 				JOB_EXECUTION_ID, JOB_GUID, 3L, record3, new RuntimeException("Error 3"), PARTITION_NAME, 30L
 		);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(3, metrics.getTotalSkips());
 		assertEquals(2, metrics.getSkipReasonCount().get("RuntimeException"));
 		assertEquals(1, metrics.getSkipReasonCount().get("IllegalStateException"));
@@ -1009,7 +1025,7 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testRecordSkip_WithNoMetricsFound_ThrowsException() {
-		Long nonExistentJobId = 999L;
+		String nonExistentGuid = "non-existent-guid-999";
 		Long recordId = 12345L;
 		BatchRecord batchRecord = new BatchRecord(
 				"123456789", "123456789,MAP1", List.of("123456789,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
@@ -1019,11 +1035,12 @@ class BatchMetricsCollectorTest {
 
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector
-						.recordSkip(nonExistentJobId, JOB_GUID, recordId, batchRecord, error, PARTITION_NAME, 10L)
+				() -> batchMetricsCollector.recordSkip(
+						JOB_EXECUTION_ID, nonExistentGuid, recordId, batchRecord, error, PARTITION_NAME, 10L
+				)
 		);
 
-		assertTrue(exception.getMessage().contains("No metrics found for job execution ID: " + nonExistentJobId));
+		assertTrue(exception.getMessage().contains("No metrics found for job"));
 	}
 
 	@Test
@@ -1040,16 +1057,16 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testRecordRetryAttempt_WithNoMetricsFound_ThrowsException() {
-		Long nonExistentJobId = 999L;
+		String nonExistentGuid = "non-existent-guid-999";
 		Throwable error = new RuntimeException("Test error");
 
 		Exception exception = assertThrows(
 				BatchException.class,
 				() -> batchMetricsCollector
-						.recordRetryAttempt(nonExistentJobId, JOB_GUID, 1, error, true, PARTITION_NAME)
+						.recordRetryAttempt(JOB_EXECUTION_ID, nonExistentGuid, 1, error, true, PARTITION_NAME)
 		);
 
-		assertTrue(exception.getMessage().contains("No metrics found for job execution ID: " + nonExistentJobId));
+		assertTrue(exception.getMessage().contains("No metrics found for job"));
 	}
 
 	@Test
@@ -1131,13 +1148,13 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testCleanupOldMetrics_ExceptionHandling() {
 		for (long i = 1; i <= 100; i++) {
-			batchMetricsCollector.initializeMetrics(i, JOB_GUID);
+			batchMetricsCollector.initializeMetrics(i, "guid-" + i);
 		}
 
 		assertDoesNotThrow(() -> batchMetricsCollector.cleanupOldMetrics(10));
 
-		assertFalse(batchMetricsCollector.isJobMetricsPresent(1L));
-		assertNotNull(batchMetricsCollector.getJobMetrics(100L));
+		assertFalse(batchMetricsCollector.isJobMetricsPresent("guid-1"));
+		assertNotNull(batchMetricsCollector.getJobMetrics("guid-100"));
 	}
 
 	@Test
@@ -1147,15 +1164,18 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testCleanupOldMetrics_WithExactKeepCount() {
-		batchMetricsCollector.initializeMetrics(1L, JOB_GUID);
-		batchMetricsCollector.initializeMetrics(2L, JOB_GUID);
-		batchMetricsCollector.initializeMetrics(3L, JOB_GUID);
+		String guid1 = "exact-keep-guid-1";
+		String guid2 = "exact-keep-guid-2";
+		String guid3 = "exact-keep-guid-3";
+		batchMetricsCollector.initializeMetrics(1L, guid1);
+		batchMetricsCollector.initializeMetrics(2L, guid2);
+		batchMetricsCollector.initializeMetrics(3L, guid3);
 
 		assertDoesNotThrow(() -> batchMetricsCollector.cleanupOldMetrics(3));
 
-		assertNotNull(batchMetricsCollector.getJobMetrics(1L));
-		assertNotNull(batchMetricsCollector.getJobMetrics(2L));
-		assertNotNull(batchMetricsCollector.getJobMetrics(3L));
+		assertNotNull(batchMetricsCollector.getJobMetrics(guid1));
+		assertNotNull(batchMetricsCollector.getJobMetrics(guid2));
+		assertNotNull(batchMetricsCollector.getJobMetrics(guid3));
 	}
 
 	@ParameterizedTest
@@ -1312,19 +1332,22 @@ class BatchMetricsCollectorTest {
 		Long jobId1 = 101L;
 		Long jobId2 = 102L;
 		Long jobId3 = 103L;
+		String guid1 = "status-test-guid-101";
+		String guid2 = "status-test-guid-102";
+		String guid3 = "status-test-guid-103";
 
-		batchMetricsCollector.initializeMetrics(jobId1, JOB_GUID);
-		batchMetricsCollector.finalizeJobMetrics(jobId1, JOB_GUID, "COMPLETED", 100L, 100L);
+		batchMetricsCollector.initializeMetrics(jobId1, guid1);
+		batchMetricsCollector.finalizeJobMetrics(jobId1, guid1, "COMPLETED", 100L, 100L);
 
-		batchMetricsCollector.initializeMetrics(jobId2, JOB_GUID);
-		batchMetricsCollector.finalizeJobMetrics(jobId2, JOB_GUID, "FAILED", 100L, 50L);
+		batchMetricsCollector.initializeMetrics(jobId2, guid2);
+		batchMetricsCollector.finalizeJobMetrics(jobId2, guid2, "FAILED", 100L, 50L);
 
-		batchMetricsCollector.initializeMetrics(jobId3, JOB_GUID);
-		batchMetricsCollector.finalizeJobMetrics(jobId3, JOB_GUID, "STOPPED", 50L, 0L);
+		batchMetricsCollector.initializeMetrics(jobId3, guid3);
+		batchMetricsCollector.finalizeJobMetrics(jobId3, guid3, "STOPPED", 50L, 0L);
 
-		assertEquals("COMPLETED", batchMetricsCollector.getJobMetrics(jobId1).getStatus());
-		assertEquals("FAILED", batchMetricsCollector.getJobMetrics(jobId2).getStatus());
-		assertEquals("STOPPED", batchMetricsCollector.getJobMetrics(jobId3).getStatus());
+		assertEquals("COMPLETED", batchMetricsCollector.getJobMetrics(guid1).getStatus());
+		assertEquals("FAILED", batchMetricsCollector.getJobMetrics(guid2).getStatus());
+		assertEquals("STOPPED", batchMetricsCollector.getJobMetrics(guid3).getStatus());
 	}
 
 	@Test
@@ -1337,7 +1360,7 @@ class BatchMetricsCollectorTest {
 			batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, JOB_GUID, i, error, successful, PARTITION_NAME);
 		}
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(5, metrics.getTotalRetryAttempts());
 		assertEquals(2, metrics.getSuccessfulRetries());
 		assertEquals(3, metrics.getFailedRetries());
@@ -1359,7 +1382,7 @@ class BatchMetricsCollectorTest {
 			);
 		}
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(10, metrics.getTotalSkips());
 		assertEquals(10, metrics.getSkipReasonCount().get("RuntimeException"));
 		assertEquals(10, metrics.getSkipDetails().size());
@@ -1376,7 +1399,7 @@ class BatchMetricsCollectorTest {
 					.completePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, partitionName, (long) (i * 100), "COMPLETED");
 		}
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(5, metrics.getPartitionMetrics().size());
 
 		for (int i = 0; i < 5; i++) {
@@ -1390,11 +1413,12 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testCleanupOldMetrics_WithSingleEntry() {
-		batchMetricsCollector.initializeMetrics(1L, JOB_GUID);
+		String guid = "single-entry-guid";
+		batchMetricsCollector.initializeMetrics(1L, guid);
 
 		batchMetricsCollector.cleanupOldMetrics(1);
 
-		assertNotNull(batchMetricsCollector.getJobMetrics(1L));
+		assertNotNull(batchMetricsCollector.getJobMetrics(guid));
 	}
 
 	@Test
@@ -1437,7 +1461,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, PARTITION_NAME);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		BatchMetrics.PartitionMetrics pm = metrics.getPartitionMetrics().get(PARTITION_NAME);
 
 		assertNotNull(pm.getStartTime());
@@ -1453,7 +1477,7 @@ class BatchMetricsCollectorTest {
 	void testFinalizeJobMetrics_UpdatesTimestamp() {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertNotNull(metrics.getStartTime());
 		assertNull(metrics.getEndTime());
 
@@ -1470,7 +1494,7 @@ class BatchMetricsCollectorTest {
 	void testBatchMetrics_GetJobGuid() {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 
 		assertEquals(JOB_GUID, metrics.getJobGuid());
 	}
@@ -1483,7 +1507,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, JOB_GUID, 1, testException, true, PARTITION_NAME);
 		batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, JOB_GUID, 2, testException, false, PARTITION_NAME);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		var retryDetailsList = metrics.getRetryDetailsList();
 
 		assertNotNull(retryDetailsList);
@@ -1514,7 +1538,7 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, 1L, record1, testException, PARTITION_NAME, 10L);
 		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, 2L, record2, testException, PARTITION_NAME, 20L);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		var skipDetailsList = metrics.getSkipDetailsList();
 
 		assertNotNull(skipDetailsList);

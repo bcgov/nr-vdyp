@@ -38,7 +38,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
@@ -282,10 +281,10 @@ public class PartitionedBatchConfiguration {
 	public ItemStreamReader<BatchRecord> partitionReader(
 			BatchMetricsCollector metricsCollector,
 			@Value("#{stepExecutionContext['partitionName']}") String partitionName,
-			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId, BatchProperties batchProperties
+			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId,
+			@Value("#{jobParameters['" + BatchConstants.Job.GUID + "']}") String jobGuid,
+			BatchProperties batchProperties
 	) {
-		BatchMetrics metrics = metricsCollector.getJobMetrics(jobExecutionId);
-		String jobGuid = metrics.getJobGuid();
 		logger.info(
 				"[GUID: {}, Execution ID: {}, Partition: {}] Using ChunkBasedPolygonItemReader with chunk size: {}",
 				jobGuid, jobExecutionId, partitionName, batchProperties.getReader().getDefaultChunkSize()

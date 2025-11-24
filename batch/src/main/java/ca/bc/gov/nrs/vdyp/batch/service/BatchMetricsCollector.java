@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -24,10 +23,9 @@ public class BatchMetricsCollector {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchMetricsCollector.class);
 
-	private final Map<Long, BatchMetrics> jobMetricsMap = new HashMap<>();
-	// MDJ: Record job metrics by arrival time so the map doesn't have to be sorted over and
-	// over again.
-	private final List<Long> jobMetricsByArrivalTime = new LinkedList<>();
+	// Use job GUID as the key for job metrics, recorded by arrival time
+	private final Map<String, BatchMetrics> jobMetricsMap = new HashMap<>();
+	private final LinkedList<String> jobMetricsByArrivalTime = new LinkedList<>();
 	private final Object lock = new Object();
 
 	public BatchMetrics initializeMetrics(Long jobExecutionId, String jobGuid) {
@@ -40,22 +38,16 @@ public class BatchMetricsCollector {
 		}
 
 		try {
-			// MDJ: Should you also check that jobMetricsMap doesn't already have an entry
-			// for jobExecutionId?
-
-			// BatchMetrics metrics = new BatchMetrics(jobExecutionId, jobGuid);
-			// jobMetricsMap.put(jobExecutionId, metrics);
-			// logger.debug("[GUID: {}] Initialized metrics for job execution ID: {}", jobGuid, jobExecutionId);
-			// return metrics;
-
 			synchronized (lock) {
-				if (jobMetricsMap.containsKey(jobExecutionId)) {
-					throw new BatchException("job metrics already exists for " + jobExecutionId + ", GUID: " + jobGuid);
+				if (jobMetricsMap.containsKey(jobGuid)) {
+					throw new BatchException(
+							"job metrics already exists for GUID: " + jobGuid + ", job execution ID: " + jobExecutionId
+					);
 				}
 
 				BatchMetrics metrics = new BatchMetrics(jobExecutionId, jobGuid);
-				jobMetricsMap.put(jobExecutionId, metrics);
-				jobMetricsByArrivalTime.add(jobExecutionId);
+				jobMetricsMap.put(jobGuid, metrics);
+				jobMetricsByArrivalTime.add(jobGuid);
 
 				logger.debug("[GUID: {}] Initialized metrics for job execution ID: {}", jobGuid, jobExecutionId);
 				return metrics;
@@ -80,7 +72,7 @@ public class BatchMetricsCollector {
 
 		try {
 			synchronized (lock) {
-				BatchMetrics metrics = getJobMetrics(jobExecutionId);
+				BatchMetrics metrics = getJobMetrics(jobGuid);
 
 				BatchMetrics.PartitionMetrics partitionMetrics = new BatchMetrics.PartitionMetrics(partitionName);
 				metrics.getPartitionMetrics().put(partitionName, partitionMetrics);
@@ -115,7 +107,7 @@ public class BatchMetricsCollector {
 		}
 
 		try {
-			var partitionMetrics = getPartitionMetrics(jobExecutionId, partitionName);
+			var partitionMetrics = getPartitionMetrics(jobGuid, partitionName);
 
 			partitionMetrics.setEndTime(LocalDateTime.now());
 			partitionMetrics.setRecordsWritten(writeCount);
@@ -146,7 +138,7 @@ public class BatchMetricsCollector {
 		}
 
 		try {
-			BatchMetrics metrics = getJobMetrics(jobExecutionId);
+			BatchMetrics metrics = getJobMetrics(jobGuid);
 
 			metrics.setEndTime(LocalDateTime.now());
 			metrics.setStatus(status);
@@ -187,7 +179,7 @@ public class BatchMetricsCollector {
 			String errorType = "Unknown";
 
 			synchronized (lock) {
-				BatchMetrics metrics = getJobMetrics(jobExecutionId);
+				BatchMetrics metrics = getJobMetrics(jobGuid);
 
 				metrics.incrementRetryAttempts();
 				if (successful) {
@@ -250,7 +242,7 @@ public class BatchMetricsCollector {
 			String errorType = "Unknown";
 
 			synchronized (lock) {
-				BatchMetrics metrics = getJobMetrics(jobExecutionId);
+				BatchMetrics metrics = getJobMetrics(jobGuid);
 
 				metrics.incrementSkips();
 
@@ -296,9 +288,9 @@ public class BatchMetricsCollector {
 			synchronized (lock) {
 				int nItemsToRemove = jobMetricsMap.size() - keepCount;
 				for (int i = 0; i < nItemsToRemove; i++) {
-					Long jobExecutionId = jobMetricsByArrivalTime.remove(0);
+					String jobGuid = jobMetricsByArrivalTime.removeFirst();
 
-					var jobMetrics = jobMetricsMap.remove(jobExecutionId);
+					var jobMetrics = jobMetricsMap.remove(jobGuid);
 					assert jobMetrics != null;
 				}
 
@@ -306,58 +298,51 @@ public class BatchMetricsCollector {
 
 				logger.debug("Cleaned up old metrics, removed {} least recent entries", nItemsToRemove);
 			}
-
-//			if (jobMetricsMap.size() > keepCount) {
-//				// Remove oldest entries, keeping only the most recent ones
-//				jobMetricsMap.entrySet().stream().sorted(Map.Entry.<Long, BatchMetrics>comparingByKey().reversed())
-//						.skip(keepCount).map(Map.Entry::getKey).forEach(jobMetricsMap::remove);
-//				logger.debug("Cleaned up old metrics, kept {} most recent entries", keepCount);
-//			}
 		} catch (Exception e) {
 			throw new BatchException("Failed to cleanup old metrics", e);
 		}
 	}
 
-	public boolean isJobMetricsPresent(Long jobExecutionId) {
-		if (jobExecutionId == null) {
-			throw new BatchException("jobExecutionId cannot be null");
+	public boolean isJobMetricsPresent(String jobGuid) {
+		if (StringUtils.isBlank(jobGuid)) {
+			throw new BatchException("jobGuid cannot be null or blank");
 		}
 		synchronized (lock) {
-			var metrics = jobMetricsMap.get(jobExecutionId);
+			var metrics = jobMetricsMap.get(jobGuid);
 			return metrics != null;
 		}
 	}
 
 	/**
-	 * Return the BatchMetrics for the given jobExecutionId.
+	 * Return the BatchMetrics for the given jobGuid.
 	 *
-	 * @param jobExecutionId
+	 * @param jobGuid
 	 * @return as described
-	 * @throws BatchException if jobExecutionId is null or no BatchMetrics instance exists for the given jobExecutionId.
+	 * @throws BatchException if jobGuid is null/blank or no BatchMetrics instance exists for the given jobGuid.
 	 */
-	public BatchMetrics getJobMetrics(Long jobExecutionId) {
-		if (jobExecutionId == null) {
-			throw new BatchException("jobExecutionId cannot be null");
+	public BatchMetrics getJobMetrics(String jobGuid) {
+		if (StringUtils.isBlank(jobGuid)) {
+			throw new BatchException("jobGuid cannot be null or blank");
 		}
 		synchronized (lock) {
-			var metrics = jobMetricsMap.get(jobExecutionId);
+			var metrics = jobMetricsMap.get(jobGuid);
 			if (metrics == null) {
-				throw new BatchException("No metrics found for job execution ID: " + jobExecutionId);
+				throw new BatchException("No metrics found for job GUID: " + jobGuid);
 			}
 			return metrics;
 		}
 	}
 
-	private PartitionMetrics getPartitionMetrics(Long jobExecutionId, String partitionName) {
+	private PartitionMetrics getPartitionMetrics(String jobGuid, String partitionName) {
 		if (StringUtils.isBlank(partitionName)) {
 			throw new BatchException("partitionName cannot be blank or null");
 		}
 		synchronized (lock) {
-			var batchMetrics = getJobMetrics(jobExecutionId);
+			var batchMetrics = getJobMetrics(jobGuid);
 			var partitionMetrics = batchMetrics.getPartitionMetrics().get(partitionName);
 			if (partitionMetrics == null) {
 				throw new BatchException(
-						"Partition metrics not found for partition " + partitionName + " of job " + jobExecutionId
+						"Partition metrics not found for partition " + partitionName + " of job GUID: " + jobGuid
 				);
 			}
 			return partitionMetrics;

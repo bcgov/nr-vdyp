@@ -46,7 +46,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
@@ -230,12 +229,9 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testPartitionReader() {
-		BatchMetrics mockMetrics = mock(BatchMetrics.class);
-		when(mockMetrics.getJobGuid()).thenReturn(TEST_JOB_GUID);
-		when(metricsCollector.getJobMetrics(TEST_JOB_EXECUTION_ID)).thenReturn(mockMetrics);
-
-		ItemStreamReader<BatchRecord> result = configuration
-				.partitionReader(metricsCollector, TEST_PARTITION_NAME, TEST_JOB_EXECUTION_ID, batchProperties);
+		ItemStreamReader<BatchRecord> result = configuration.partitionReader(
+				metricsCollector, TEST_PARTITION_NAME, TEST_JOB_EXECUTION_ID, TEST_JOB_GUID, batchProperties
+		);
 
 		assertNotNull(result);
 		verify(reader, atLeastOnce()).getDefaultChunkSize();
