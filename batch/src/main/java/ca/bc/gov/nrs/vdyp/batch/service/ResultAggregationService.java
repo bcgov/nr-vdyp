@@ -74,7 +74,7 @@ public class ResultAggregationService {
 		List<Path> partitionOutputDirs = findPartitionOutputDirectories(jobBasePath);
 		logger.debug("Found {} partition output directories to aggregate", partitionOutputDirs.size());
 
-		// Create final ZIP file using same timestamp as job base directory
+		// Create final ZIP file
 		String finalZipFileName = String.format("vdyp-output-%s.zip", jobTimestamp);
 		Path finalZipPath = jobBasePath.resolve(finalZipFileName);
 

@@ -24,9 +24,6 @@ public class BatchMetricsCollector {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchMetricsCollector.class);
 
-	// MDJ: The "Concurrent" classes (e.g. ConcurrentHashMap) have only a very limited use, since
-	// very often there are a number of actions that must be synchronized, not just, for example,
-	// an insertion into such a map. See the code changes below.
 	private final Map<Long, BatchMetrics> jobMetricsMap = new HashMap<>();
 	// MDJ: Record job metrics by arrival time so the map doesn't have to be sorted over and
 	// over again.
