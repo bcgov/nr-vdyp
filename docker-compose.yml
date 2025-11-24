@@ -101,6 +101,8 @@ services:
       - "8080:8080"
     env_file:
       - backend/.env.vdypBackend
+    volumes:
+      - ./logs:/work/logs
     deploy:
       resources:
         limits:
