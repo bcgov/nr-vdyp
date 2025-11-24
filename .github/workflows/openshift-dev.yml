@@ -43,8 +43,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  analyzes:
+    if: github.event_name != 'workflow_dispatch'
+    name: Analyzes
+    uses: ./.github/workflows/maven.yml
+
   # https://github.com/bcgov-nr/action-builder-ghcr
   builds:
+    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    needs: [analyzes]
     name: Builds
     runs-on: ubuntu-22.04
     outputs:
