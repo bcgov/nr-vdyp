@@ -1,20 +1,23 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.ProjectionNullPointerException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
+import org.springframework.batch.core.scope.context.StepSynchronizationManager;
 import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.lang.NonNull;
 import org.springframework.validation.BindException;
-import org.springframework.batch.core.scope.context.StepSynchronizationManager;
-import java.util.concurrent.ConcurrentHashMap;
+
+import ca.bc.gov.nrs.vdyp.batch.exception.ProjectionNullPointerException;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 public class BatchSkipPolicy implements SkipPolicy {
 
@@ -264,9 +267,10 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 			// Fallback: create a basic record with the extracted recordId as featureId for
 			// tracking
-			BatchRecord batchRecord = new BatchRecord();
-			batchRecord.setFeatureId(String.valueOf(recordId));
-			return batchRecord;
+			return new BatchRecord(
+					String.valueOf(recordId), "", Collections.emptyList(), null, null,
+					partitionName != null ? partitionName : BatchConstants.Common.UNKNOWN
+			);
 		}
 		return null;
 	}

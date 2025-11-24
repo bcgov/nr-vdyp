@@ -331,8 +331,7 @@ public class PartitionedBatchConfiguration {
 		return (contribution, chunkContext) -> {
 			var stepExecution = chunkContext.getStepContext().getStepExecution();
 			Long jobExecutionId = stepExecution.getJobExecutionId();
-			String jobGuid = stepExecution.getJobExecution().getJobParameters()
-					.getString(BatchConstants.Job.GUID);
+			String jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 			logger.info("[GUID: {}] Starting result aggregation for job execution: {}", jobGuid, jobExecutionId);
 			try {
 				JobExecution jobExecution = stepExecution.getJobExecution();
@@ -343,8 +342,7 @@ public class PartitionedBatchConfiguration {
 				Path consolidatedZip = resultAggregationService
 						.aggregateResultsFromJobDir(jobExecutionId, jobGuid, jobBaseDir, jobTimestamp);
 
-				stepExecution.getExecutionContext()
-						.putString("consolidatedOutputPath", consolidatedZip.toString());
+				stepExecution.getExecutionContext().putString("consolidatedOutputPath", consolidatedZip.toString());
 
 				logger.info(
 						"[GUID: {}] Result aggregation completed successfully for job execution: {}. Consolidated output: {}",

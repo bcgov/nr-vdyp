@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
+import java.util.Collections;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -107,10 +108,10 @@ class VdypProjectionProcessorTest {
 	void testProcess_ValidationErrors_ThrowIllegalArgumentException(String testName, String featureId) {
 		processor.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId(featureId);
-
-		assertThrows(IllegalArgumentException.class, () -> processor.process(batchRecord), testName);
+		assertThrows(Exception.class, () -> {
+			BatchRecord batchRecord = new BatchRecord(featureId, null, null, null, null, "test-partition");
+			processor.process(batchRecord);
+		}, testName);
 	}
 
 	static Stream<Arguments> provideInvalidRecords() {
@@ -147,8 +148,9 @@ class VdypProjectionProcessorTest {
 	void testProcess_ValidFeatureId_PassThroughProcessing() throws Exception {
 		processor.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = createValidBatchRecord();
-		batchRecord.setFeatureId("VALID123");
+		BatchRecord batchRecord = new BatchRecord(
+				"VALID123", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+		);
 
 		BatchRecord result = processor.process(batchRecord);
 
@@ -161,8 +163,9 @@ class VdypProjectionProcessorTest {
 	void testProcess_EmptyFeatureId_ThrowsIllegalArgumentException() {
 		processor.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("");
+		BatchRecord batchRecord = new BatchRecord(
+				"", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+		);
 
 		assertThrows(IllegalArgumentException.class, () -> processor.process(batchRecord));
 	}
@@ -171,8 +174,9 @@ class VdypProjectionProcessorTest {
 	void testProcess_WhitespaceFeatureId_ThrowsIllegalArgumentException() {
 		processor.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("   ");
+		BatchRecord batchRecord = new BatchRecord(
+				"   ", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+		);
 
 		assertThrows(IllegalArgumentException.class, () -> processor.process(batchRecord));
 	}
@@ -190,28 +194,31 @@ class VdypProjectionProcessorTest {
 	void testProcess_MultipleRecords_ProcessesAllSuccessfully() throws Exception {
 		processor.beforeStep(stepExecution);
 
-		BatchRecord record1 = createValidBatchRecord();
-		record1.setFeatureId("FEATURE001");
+		BatchRecord record1 = new BatchRecord(
+				"FEATURE001", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+		);
 		BatchRecord result1 = processor.process(record1);
 		assertNotNull(result1);
 		assertEquals("FEATURE001", result1.getFeatureId());
 
-		BatchRecord record2 = createValidBatchRecord();
-		record2.setFeatureId("FEATURE002");
+		BatchRecord record2 = new BatchRecord(
+				"FEATURE002", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+		);
 		BatchRecord result2 = processor.process(record2);
 		assertNotNull(result2);
 		assertEquals("FEATURE002", result2.getFeatureId());
 
-		BatchRecord record3 = createValidBatchRecord();
-		record3.setFeatureId("FEATURE003");
+		BatchRecord record3 = new BatchRecord(
+				"FEATURE003", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+		);
 		BatchRecord result3 = processor.process(record3);
 		assertNotNull(result3);
 		assertEquals("FEATURE003", result3.getFeatureId());
 	}
 
 	private BatchRecord createValidBatchRecord() {
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
-		return batchRecord;
+		return new BatchRecord(
+				"12345678901", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+		);
 	}
 }

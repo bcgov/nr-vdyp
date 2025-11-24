@@ -380,13 +380,9 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	private BatchRecord createBatchRecord(String polygonLine, String featureId) {
 		List<String> layerLines = currentChunkLayers.getOrDefault(featureId, new ArrayList<>());
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId(featureId);
-		batchRecord.setRawPolygonData(polygonLine);
-		batchRecord.setRawLayerData(layerLines);
-		batchRecord.setPolygonHeader(polygonHeader);
-		batchRecord.setLayerHeader(layerHeader);
-		batchRecord.setPartitionName(partitionName);
+		BatchRecord batchRecord = new BatchRecord(
+				featureId, polygonLine, layerLines, polygonHeader, layerHeader, partitionName
+		);
 
 		processedCount++;
 		logger.debug(

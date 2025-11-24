@@ -21,6 +21,7 @@ import org.springframework.validation.BindException;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.scope.context.StepSynchronizationManager;
 
+import java.util.Collections;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -143,8 +144,9 @@ class BatchSkipPolicyTest {
 
 	@Test
 	void testCacheRecordData_DoesNotThrow() {
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1145678901");
+		BatchRecord batchRecord = new BatchRecord(
+				"1145678901", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+		);
 
 		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(1145678901L, batchRecord, "test-thread"));
 	}
@@ -204,13 +206,17 @@ class BatchSkipPolicyTest {
 	void testCacheRecordData_WithNullValues_Handles() {
 		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, null, "thread1"));
 		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(1345678904L, null, "thread1"));
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, new BatchRecord(), "thread1"));
+		BatchRecord batchRecord = new BatchRecord(
+				"1345678904", "1345678904,MAP1", java.util.Collections.emptyList(), null, null, "test-partition"
+		);
+		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, batchRecord, "thread1"));
 	}
 
 	@Test
 	void testCacheRecordData_AndRetrieval_WorksCorrectly() throws SkipLimitExceededException {
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1445678905");
+		BatchRecord batchRecord = new BatchRecord(
+				"1445678905", "1345678904,MAP1", java.util.Collections.emptyList(), null, null, "test-partition"
+		);
 
 		// Cache the record
 		BatchSkipPolicy.cacheRecordData(1445678905L, batchRecord, Thread.currentThread().getName());
@@ -316,8 +322,9 @@ class BatchSkipPolicyTest {
 
 	@Test
 	void testExtractRecord_WithCachedRecord_ReturnsCachedData() throws SkipLimitExceededException {
-		BatchRecord cachedRecord = new BatchRecord();
-		cachedRecord.setFeatureId("1545678906");
+		BatchRecord cachedRecord = new BatchRecord(
+				"1545678906", "1345678904,MAP1", java.util.Collections.emptyList(), null, null, "test-partition"
+		);
 
 		BatchSkipPolicy.cacheRecordData(1545678906L, cachedRecord, Thread.currentThread().getName());
 

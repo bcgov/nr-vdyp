@@ -128,8 +128,10 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordSkip() {
 		Long recordId = 456L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("98765432109");
+		BatchRecord batchRecord = new BatchRecord(
+				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		Throwable error = new IllegalStateException("Invalid state");
 		Long lineNumber = 15L;
 
@@ -345,8 +347,10 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordSkip_NullError() {
 		Long recordId = 456L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("98765432109");
+		BatchRecord batchRecord = new BatchRecord(
+				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, recordId, batchRecord, null, PARTITION_NAME, 15L);
@@ -439,20 +443,26 @@ class BatchMetricsCollectorTest {
 	void testRecordSkip_MultipleSkipsWithDifferentErrors() {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
-		BatchRecord record1 = new BatchRecord();
-		record1.setFeatureId("111111111");
+		BatchRecord record1 = new BatchRecord(
+				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		batchMetricsCollector.recordSkip(
 				JOB_EXECUTION_ID, JOB_GUID, 1L, record1, new RuntimeException("Error 1"), PARTITION_NAME, 10L
 		);
 
-		BatchRecord record2 = new BatchRecord();
-		record2.setFeatureId("222222222");
+		BatchRecord record2 = new BatchRecord(
+				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		batchMetricsCollector.recordSkip(
 				JOB_EXECUTION_ID, JOB_GUID, 2L, record2, new IllegalStateException("Error 2"), PARTITION_NAME, 20L
 		);
 
-		BatchRecord record3 = new BatchRecord();
-		record3.setFeatureId("333333333");
+		BatchRecord record3 = new BatchRecord(
+				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		batchMetricsCollector.recordSkip(
 				JOB_EXECUTION_ID, JOB_GUID, 3L, record3, new RuntimeException("Error 3"), PARTITION_NAME, 30L
 		);
@@ -982,8 +992,10 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordSkip_WithNullJobExecutionId_ThrowsException() {
 		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
+		BatchRecord batchRecord = new BatchRecord(
+				"12345678901", "12345678901,MAP1", List.of("12345678901,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		Throwable error = new RuntimeException("Test error");
 
 		Exception exception = assertThrows(
@@ -999,8 +1011,10 @@ class BatchMetricsCollectorTest {
 	void testRecordSkip_WithNoMetricsFound_ThrowsException() {
 		Long nonExistentJobId = 999L;
 		Long recordId = 12345L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
+		BatchRecord batchRecord = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("123456789,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		Throwable error = new RuntimeException("Test error");
 
 		Exception exception = assertThrows(
@@ -1098,8 +1112,10 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
 		Long recordId = Long.MAX_VALUE;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
+		BatchRecord batchRecord = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 
 		String longMessage = "Skip error: " + "x".repeat(100000);
 		Throwable error = new IllegalStateException(longMessage);
@@ -1246,8 +1262,10 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordSkip_NullJobGuid() {
 		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
+		BatchRecord batchRecord = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		Throwable error = new RuntimeException("Test error");
 
 		Exception exception = assertThrows(
@@ -1262,8 +1280,10 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordSkip_BlankJobGuid() {
 		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
+		BatchRecord batchRecord = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		Throwable error = new RuntimeException("Test error");
 
 		Exception exception = assertThrows(
@@ -1329,8 +1349,10 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
 		for (int i = 1; i <= 10; i++) {
-			BatchRecord batchRecord = new BatchRecord();
-			batchRecord.setFeatureId("FEATURE-" + i);
+			BatchRecord batchRecord = new BatchRecord(
+					"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+					PARTITION_NAME
+			);
 			Throwable error = new RuntimeException("Skip error " + i);
 			batchMetricsCollector.recordSkip(
 					JOB_EXECUTION_ID, JOB_GUID, (long) i, batchRecord, error, PARTITION_NAME, (long) (i * 10)
@@ -1477,13 +1499,15 @@ class BatchMetricsCollectorTest {
 	void testBatchMetrics_GetSkipDetailsList() {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
-		BatchRecord record1 = new BatchRecord();
-		record1.setFeatureId("feature-1");
-		record1.setRawPolygonData("test data 1");
+		BatchRecord record1 = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 
-		BatchRecord record2 = new BatchRecord();
-		record2.setFeatureId("feature-2");
-		record2.setRawPolygonData("test data 2");
+		BatchRecord record2 = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 
 		Exception testException = new RuntimeException("Test skip error");
 
