@@ -12,17 +12,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
-import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -35,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.batch.core.JobInstance;
 
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner;
@@ -66,8 +63,12 @@ public class BatchController {
 	@Value("${batch.partition.default-partition-size}")
 	private Integer defaultPartitionSize;
 
-	// MDJ: Please include comments about how and when this class is instantiated. Currently it's used
-	// only in the test code.
+	@Value("${batch.partition.job-search-chunk-size}")
+	private int jobSearchChunkSize;
+
+	// This class is instantiated by Spring's dependency injection container during application startup.
+	// As a @RestController, Spring automatically creates a singleton instance and injects the required dependencies.
+	// It's available at runtime for handling HTTP requests to /api/batch endpoints, not just in tests.
 	public BatchController(
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
 			BatchMetricsCollector metricsCollector, StreamingCsvPartitioner csvPartitioner, JobOperator jobOperator
@@ -96,13 +97,8 @@ public class BatchController {
 
 			Map<String, Object> response = new HashMap<>();
 
-			// MDJ: How can this class be instantiated without a partitionedJob?
-			if (partitionedJob != null) {
-				JobExecution jobExecution = executeJob(polygonFile, layerFile, projectionParametersJson);
-				buildSuccessResponse(response, jobExecution);
-			} else {
-				buildJobNotAvailableResponse(response);
-			}
+			JobExecution jobExecution = executeJob(polygonFile, layerFile, projectionParametersJson);
+			buildSuccessResponse(response, jobExecution);
 
 			return ResponseEntity.ok(response);
 
@@ -261,17 +257,15 @@ public class BatchController {
 		response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 		response.put(BatchConstants.Job.NAME, jobExecution.getJobInstance().getJobName());
 		response.put(BatchConstants.Job.STATUS, jobExecution.getStatus().toString());
-		// MDJ: Why are these not BatchConstants?
-		response.put("isRunning", isRunning);
-		response.put("totalPartitions", totalPartitions);
-		response.put("completedPartitions", completedPartitions);
+		response.put(BatchConstants.Job.IS_RUNNING, isRunning);
+		response.put(BatchConstants.Job.TOTAL_PARTITIONS, totalPartitions);
+		response.put(BatchConstants.Job.COMPLETED_PARTITIONS, completedPartitions);
 
 		if (jobExecution.getStartTime() != null) {
 			response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime());
 		}
 		if (jobExecution.getEndTime() != null) {
-			// MDJ: Why is this not a BatchConstant?
-			response.put("endTime", jobExecution.getEndTime());
+			response.put(BatchConstants.Job.END_TIME, jobExecution.getEndTime());
 		}
 
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
@@ -308,10 +302,8 @@ public class BatchController {
 		logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
 	}
 
-	// MDJ: Remove exceptions not thrown from "throws" declaration
 	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson)
-			throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException,
-			JobParametersInvalidException, ProjectionRequestValidationException {
+			throws ProjectionRequestValidationException {
 
 		if (projectionParametersJson == null || projectionParametersJson.trim().isEmpty()) {
 			throw new ProjectionRequestValidationException(
@@ -422,12 +414,6 @@ public class BatchController {
 		response.put(BatchConstants.Job.MESSAGE, "VDYP Batch job started successfully");
 	}
 
-	private void buildJobNotAvailableResponse(Map<String, Object> response) {
-		response.put(BatchConstants.Job.MESSAGE, "VDYP Batch job not available");
-		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
-		response.put(BatchConstants.Job.STATUS, "JOB_NOT_AVAILABLE");
-	}
-
 	private Map<String, Object> createValidationErrorResponse(ProjectionRequestValidationException e) {
 		Map<String, Object> errorResponse = new HashMap<>();
 		errorResponse.put("validationMessages", e.getValidationMessages());
@@ -448,25 +434,55 @@ public class BatchController {
 		List<String> jobNames = jobExplorer.getJobNames();
 
 		for (String jobName : jobNames) {
-			// MDJ: Do not use a hard-coded constant like this - very bad practice. Instead, call
-			// getJobInstanceCount(jobName) to find the total number of job instances of jobName and
-			// iterate in chunks of some number (such as 1000) until either the execution has been
-			// found or all instances of jobName have been checked.
-
-			List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, 0, 1000);
-
-			for (JobInstance jobInstance : jobInstances) {
-				List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
-
-				for (JobExecution execution : jobExecutions) {
-					String executionGuid = execution.getJobParameters().getString(BatchConstants.Job.GUID);
-					if (jobGuid.equals(executionGuid)) {
-						return execution;
-					}
-				}
+			JobExecution execution = searchJobExecutionsByName(jobName, jobGuid);
+			if (execution != null) {
+				return execution;
 			}
 		}
 
 		throw new NoSuchJobExecutionException("No job execution found with GUID: " + jobGuid);
+	}
+
+	private JobExecution searchJobExecutionsByName(String jobName, String jobGuid) {
+		try {
+			long totalInstances = jobExplorer.getJobInstanceCount(jobName);
+
+			for (long start = 0; start < totalInstances; start += jobSearchChunkSize) {
+				JobExecution execution = searchJobExecutionsInChunk(jobName, jobGuid, start);
+				if (execution != null) {
+					return execution;
+				}
+			}
+		} catch (NoSuchJobException e) {
+			logger.error("Job {} not found while searching for GUID {}: {}", jobName, jobGuid, e.getMessage());
+		}
+
+		return null;
+	}
+
+	private JobExecution searchJobExecutionsInChunk(String jobName, String jobGuid, long start) {
+		List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, (int) start, jobSearchChunkSize);
+
+		for (JobInstance jobInstance : jobInstances) {
+			JobExecution execution = findMatchingExecution(jobInstance, jobGuid);
+			if (execution != null) {
+				return execution;
+			}
+		}
+
+		return null;
+	}
+
+	private JobExecution findMatchingExecution(JobInstance jobInstance, String jobGuid) {
+		List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
+
+		for (JobExecution execution : jobExecutions) {
+			String executionGuid = execution.getJobParameters().getString(BatchConstants.Job.GUID);
+			if (jobGuid.equals(executionGuid)) {
+				return execution;
+			}
+		}
+
+		return null;
 	}
 }
