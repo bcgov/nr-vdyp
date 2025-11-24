@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
-// MDJ: Why does this class exist? The handleIOException method returns (not throws - why?) an IOException, 
+// MDJ: Why does this class exist? The handleIOException method returns (not throws - why?) an IOException,
 // not a BatchIOException. This class does not seem to be used elsewhere except in unit tests.
 public class BatchIOException extends IOException {
 

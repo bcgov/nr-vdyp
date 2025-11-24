@@ -140,10 +140,7 @@ public class BatchController {
 				);
 				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-				logger.info(
-						"[GUID: {}] Stop request sent successfully for JobExecution ID: {}", jobGuid,
-						executionId
-				);
+				logger.info("[GUID: {}] Stop request sent successfully for JobExecution ID: {}", jobGuid, executionId);
 
 				return ResponseEntity.ok(response);
 			} else {
@@ -154,8 +151,7 @@ public class BatchController {
 				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
 				logger.warn(
-							"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", jobGuid,
-							executionId
+						"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", jobGuid, executionId
 				);
 
 				return ResponseEntity.badRequest().body(response);
@@ -243,9 +239,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error(
-					"[GUID: {}] Error getting job status: {}", jobGuid, e.getMessage(), e
-			);
+			logger.error("[GUID: {}] Error getting job status: {}", jobGuid, e.getMessage(), e);
 			return ResponseEntity.internalServerError().body(response);
 		}
 
@@ -283,9 +277,8 @@ public class BatchController {
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
 		logger.info(
-				"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}",
-				jobGuid, jobExecution.getStatus(), isRunning, totalPartitions,
-				completedPartitions
+				"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}", jobGuid,
+				jobExecution.getStatus(), isRunning, totalPartitions, completedPartitions
 		);
 
 		return ResponseEntity.ok(response);
@@ -307,26 +300,17 @@ public class BatchController {
 		return ResponseEntity.ok(response);
 	}
 
-	private void logRequestDetails(
-			MultipartFile polygonFile, MultipartFile layerFile, String parametersJson
-	) {
+	private void logRequestDetails(MultipartFile polygonFile, MultipartFile layerFile, String parametersJson) {
 		logger.info("=== VDYP Batch Job Request ===");
-		logger.info(
-				"Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(),
-				polygonFile.getSize()
-		);
-		logger.info(
-				"Layer file: {} ({} bytes)", layerFile.getOriginalFilename(),
-				layerFile.getSize()
-		);
+		logger.info("Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(), polygonFile.getSize());
+		logger.info("Layer file: {} ({} bytes)", layerFile.getOriginalFilename(), layerFile.getSize());
 		logger.info("Partition size: {}", defaultPartitionSize);
 		logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
 	}
 
 	// MDJ: Remove exceptions not thrown from "throws" declaration
-	private JobExecution executeJob(
-			MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson
-	) throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException,
+	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson)
+			throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException,
 			JobParametersInvalidException, ProjectionRequestValidationException {
 
 		if (projectionParametersJson == null || projectionParametersJson.trim().isEmpty()) {
@@ -364,10 +348,7 @@ public class BatchController {
 			// as this makes them difficult to transfer, read, etc.
 			logger.info("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
 
-			logger.info(
-					"[GUID: {}] Using {} partitions", jobGuid,
-					defaultPartitionSize
-			);
+			logger.info("[GUID: {}] Using {} partitions", jobGuid, defaultPartitionSize);
 
 			// Partition CSV files using streaming approach BEFORE starting the job
 			logger.info("[GUID: {}] Starting CSV partitioning...", jobGuid);
@@ -375,8 +356,8 @@ public class BatchController {
 					.partitionCsvFiles(polygonFile, layerFile, defaultPartitionSize, jobBaseDir);
 
 			logger.info(
-					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}",
-					jobGuid, defaultPartitionSize, featureIdToPartitionSize
+					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}", jobGuid,
+					defaultPartitionSize, featureIdToPartitionSize
 			);
 
 			// Now start the job with the partition directory included in parameters

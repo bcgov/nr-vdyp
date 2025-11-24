@@ -49,7 +49,7 @@ public final class BatchUtils {
 	 * Builds a unique batch projection ID for VDYP projection operations.
 	 *
 	 * @param jobExecutionId the job execution ID
-	 * @param partitionName the partition name
+	 * @param partitionName  the partition name
 	 * @param projectionKind the projection request kind
 	 * @return the batch projection ID (e.g., "batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933")
 	 */
