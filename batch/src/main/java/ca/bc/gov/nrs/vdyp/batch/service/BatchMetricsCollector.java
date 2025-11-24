@@ -32,8 +32,8 @@ public class BatchMetricsCollector {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
 		}
-		// MDJ: Use StringUtils.isBlank
-		if (jobGuid == null || jobGuid.isBlank()) {
+
+		if (StringUtils.isBlank(jobGuid)) {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
 
