@@ -89,7 +89,7 @@ public class BatchMetricsCollector {
 				metrics.getPartitionMetrics().put(partitionName, partitionMetrics);
 			}
 
-			logger.info(
+			logger.debug(
 					"[{}] [GUID: {}] Initialized partition metrics for job execution ID: {}", partitionName, jobGuid,
 					jobExecutionId
 			);
@@ -124,7 +124,7 @@ public class BatchMetricsCollector {
 			partitionMetrics.setRecordsWritten(writeCount);
 			partitionMetrics.setExitCode(exitCode);
 
-			logger.info(
+			logger.debug(
 					"[{}] [GUID: {}] Completed partition metrics for job execution ID: {}, written: {}, exitCode: {}",
 					partitionName, jobGuid, jobExecutionId, writeCount, exitCode
 			);

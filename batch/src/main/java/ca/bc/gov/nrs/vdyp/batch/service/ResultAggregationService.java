@@ -68,11 +68,11 @@ public class ResultAggregationService {
 			throw new BatchConfigurationException("Job base path is not a directory: " + jobBaseDir);
 		}
 
-		logger.info("Using job base directory: {}", jobBasePath);
+		logger.debug("Using job base directory: {}", jobBasePath);
 
 		// Collect all partition output directories from job-specific directory
 		List<Path> partitionOutputDirs = findPartitionOutputDirectories(jobBasePath);
-		logger.info("Found {} partition output directories to aggregate", partitionOutputDirs.size());
+		logger.debug("Found {} partition output directories to aggregate", partitionOutputDirs.size());
 
 		// Create final ZIP file using same timestamp as job base directory
 		String finalZipFileName = String.format("vdyp-output-%s.zip", jobTimestamp);
@@ -100,7 +100,7 @@ public class ResultAggregationService {
 	private List<Path> findPartitionOutputDirectories(Path jobBasePath) throws IOException {
 		List<Path> partitionDirs = new ArrayList<>();
 
-		logger.info("Searching for partition output directories in: {}", jobBasePath);
+		logger.debug("Searching for partition output directories in: {}", jobBasePath);
 
 		// List all items in base directory for debugging
 		try (Stream<Path> allItems = Files.list(jobBasePath)) {
@@ -120,7 +120,7 @@ public class ResultAggregationService {
 			}).forEach(partitionDirs::add);
 		}
 
-		logger.info(
+		logger.debug(
 				"Found {} partition directories: {}", partitionDirs.size(),
 				partitionDirs.stream().map(p -> p.getFileName().toString()).toList()
 		);
@@ -137,7 +137,7 @@ public class ResultAggregationService {
 	 * Aggregates yield tables from all partitions, merging tables of the same type.
 	 */
 	private void aggregateYieldTables(List<Path> partitionOutputDirs, ZipOutputStream zipOut) throws IOException {
-		logger.info("Aggregating yield tables from {} partitions", partitionOutputDirs.size());
+		logger.debug("Aggregating yield tables from {} partitions", partitionOutputDirs.size());
 
 		Map<String, List<Path>> yieldTablesByType = new HashMap<>();
 
@@ -159,7 +159,7 @@ public class ResultAggregationService {
 			}
 		}
 
-		logger.info("Aggregated {} different types of yield tables", yieldTablesByType.size());
+		logger.debug("Aggregated {} different types of yield tables", yieldTablesByType.size());
 	}
 
 	/**
@@ -545,7 +545,7 @@ public class ResultAggregationService {
 	 * Aggregates log files from all partitions.
 	 */
 	private void aggregateLogs(List<Path> partitionDirs, ZipOutputStream zipOut) throws IOException {
-		logger.info("Aggregating log files from {} partitions", partitionDirs.size());
+		logger.debug("Aggregating log files from {} partitions", partitionDirs.size());
 
 		Map<String, List<Path>> logsByType = new HashMap<>();
 
@@ -563,7 +563,7 @@ public class ResultAggregationService {
 			}
 		}
 
-		logger.info("Aggregated {} different types of log files", logsByType.size());
+		logger.debug("Aggregated {} different types of log files", logsByType.size());
 	}
 
 	/**
@@ -663,7 +663,7 @@ public class ResultAggregationService {
 			zipOut.closeEntry();
 		}
 
-		logger.info("Created empty result ZIP: {}", zipPath);
+		logger.debug("Created empty result ZIP: {}", zipPath);
 		return zipPath;
 	}
 
@@ -672,7 +672,7 @@ public class ResultAggregationService {
 	 * output-partition directories and their contents.
 	 */
 	public void cleanupPartitionDirectories(Path jobBasePath) throws IOException {
-		logger.info("Starting cleanup of partition directories in: {}", jobBasePath);
+		logger.debug("Starting cleanup of partition directories in: {}", jobBasePath);
 
 		if (!Files.exists(jobBasePath) || !Files.isDirectory(jobBasePath)) {
 			logger.warn("Job base directory does not exist or is not a directory: {}", jobBasePath);
@@ -701,7 +701,7 @@ public class ResultAggregationService {
 			}
 		}
 
-		logger.info("Cleanup completed. Deleted {} partition directories", deletedDirs);
+		logger.debug("Cleanup completed. Deleted {} partition directories", deletedDirs);
 	}
 
 	/**
@@ -729,7 +729,7 @@ public class ResultAggregationService {
 	 * cleanup of interim files.
 	 */
 	public boolean validateConsolidatedZip(Path zipPath) {
-		logger.info("Validating consolidated ZIP file: {}", zipPath);
+		logger.debug("Validating consolidated ZIP file: {}", zipPath);
 
 		// Check if file exists
 		if (!Files.exists(zipPath)) {

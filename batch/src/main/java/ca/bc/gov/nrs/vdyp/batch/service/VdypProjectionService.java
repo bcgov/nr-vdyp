@@ -62,7 +62,7 @@ public class VdypProjectionService {
 			List<BatchRecord> batchRecords, String partitionName, Parameters projectionParameters, Long jobExecutionId,
 			String jobGuid, String jobBaseDir
 	) throws IOException {
-		logger.info(
+		logger.debug(
 				"[GUID: {}, EXEID: {}] Starting VDYP projection for chunk of {} records in partition {}", jobGuid,
 				jobExecutionId, batchRecords.size(), partitionName
 		);
@@ -87,7 +87,7 @@ public class VdypProjectionService {
 					)
 			) {
 
-				logger.info(
+				logger.debug(
 						"[GUID: {}, EXEID: {}] Running HCSV projection {} for chunk of {} records in partition {}",
 						jobGuid, jobExecutionId, batchProjectionId, batchRecords.size(), partitionName
 				);
@@ -103,7 +103,7 @@ public class VdypProjectionService {
 						batchRecords.size(), partitionName
 				);
 
-				logger.info(
+				logger.debug(
 						"[GUID: {}, EXEID: {}] VDYP chunk projection completed for {} records in partition {}. Intermediate results stored",
 						jobGuid, jobExecutionId, batchRecords.size(), partitionName
 				);
@@ -170,7 +170,7 @@ public class VdypProjectionService {
 			);
 		}
 
-		logger.info(
+		logger.debug(
 				"[EXEID: {}] Created output partition directory: {} for input partition: {} within job folder: {}",
 				jobExecutionId, outputPartitionName, inputPartitionName, jobBasePath.getFileName()
 		);

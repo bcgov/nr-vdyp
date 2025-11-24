@@ -93,6 +93,7 @@ public class StreamingCsvPartitioner {
 	 *
 	 * @return array where index = partition number, value = number of records for that partition
 	 */
+	@SuppressWarnings("java:S2629")
 	private int[] calculatePartitionSizes(int totalFeatureIds, int partitionSize) {
 		int[] partitionSizes = new int[partitionSize];
 		int chunkSize = totalFeatureIds / partitionSize;
@@ -104,7 +105,7 @@ public class StreamingCsvPartitioner {
 			partitionSizes[i] = (i < remainder) ? chunkSize + 1 : chunkSize;
 		}
 
-		logger.info(
+		logger.debug(
 				"Total FEATURE_IDs: {}, Partition size: {}, Base chunk size: {}, Remainder: {}, Partition sizes: {}",
 				totalFeatureIds, partitionSize, chunkSize, remainder, Arrays.toString(partitionSizes)
 		);
@@ -140,7 +141,7 @@ public class StreamingCsvPartitioner {
 			}
 		}
 
-		logger.info("Processed and partitioned {} FEATURE_IDs", featureIdToPartition.size());
+		logger.debug("Processed and partitioned {} FEATURE_IDs", featureIdToPartition.size());
 		return featureIdToPartition;
 	}
 

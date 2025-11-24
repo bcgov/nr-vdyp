@@ -31,6 +31,7 @@ import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -82,6 +83,7 @@ class BatchControllerTest {
 		String tempDir = System.getProperty("java.io.tmpdir");
 		ReflectionTestUtils.setField(batchController, "batchRootDirectory", tempDir);
 		ReflectionTestUtils.setField(batchController, "defaultPartitionSize", 4);
+		ReflectionTestUtils.setField(batchController, "jobSearchChunkSize", 1000);
 	}
 
 	@Test
@@ -160,14 +162,16 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsJobNotAvailable() {
+	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsBadRequest() throws Exception {
 		// Create controller with null job
 		BatchController controllerWithNullJob = new BatchController(
 				jobLauncher, null, jobExplorer, metricsCollector, csvPartitioner, jobOperator
 		);
 
-		ReflectionTestUtils.setField(controllerWithNullJob, "batchRootDirectory", "/tmp/batch");
+		String tempDir = System.getProperty("java.io.tmpdir");
+		ReflectionTestUtils.setField(controllerWithNullJob, "batchRootDirectory", tempDir);
 		ReflectionTestUtils.setField(controllerWithNullJob, "defaultPartitionSize", 4);
+		ReflectionTestUtils.setField(controllerWithNullJob, "jobSearchChunkSize", 1000);
 
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
@@ -176,12 +180,15 @@ class BatchControllerTest {
 				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
 		);
 
+		// Mock partitioner to return grid size
+		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any())).thenReturn(4);
+
 		ResponseEntity<Map<String, Object>> response = controllerWithNullJob
 				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
-		assertEquals(200, response.getStatusCode().value());
-		assertEquals("VDYP Batch job not available", response.getBody().get("message"));
-		assertEquals("JOB_NOT_AVAILABLE", response.getBody().get("status"));
+		// With null partitionedJob, the jobLauncher.run() will fail, resulting in a validation error
+		assertEquals(400, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("validationMessages"));
 	}
 
 	@Test
@@ -267,6 +274,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -291,6 +299,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -313,6 +322,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -329,11 +339,12 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStopBatchJob_WithNonExistentJobGuid_ReturnsNotFound() {
+	void testStopBatchJob_WithNonExistentJobGuid_ReturnsNotFound() throws NoSuchJobException {
 		String jobGuid = "non-existent-guid";
 
 		// Mock no job found
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -352,6 +363,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -368,7 +380,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithValidJobGuid_ReturnsStatus() {
+	void testGetJobStatus_WithValidJobGuid_ReturnsStatus() throws NoSuchJobException {
 		String jobGuid = "test-job-guid";
 		Long executionId = 123L;
 
@@ -389,6 +401,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(realInstance));
 		when(jobExplorer.getJobExecutions(realInstance)).thenReturn(Arrays.asList(realExecution));
 
@@ -404,11 +417,12 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithCompletedJob_ReturnsNotRunning() {
+	void testGetJobStatus_WithCompletedJob_ReturnsNotRunning() throws NoSuchJobException {
 		String jobGuid = "test-job-guid";
 		Long executionId = 123L;
 
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -429,7 +443,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithFailedPartitions_CountsAsFailed() {
+	void testGetJobStatus_WithFailedPartitions_CountsAsFailed() throws NoSuchJobException {
 		String jobGuid = "test-job-guid";
 		Long executionId = 123L;
 
@@ -450,6 +464,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(realInstance));
 		when(jobExplorer.getJobExecutions(realInstance)).thenReturn(Arrays.asList(realExecution));
 
@@ -461,11 +476,12 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithNonExistentJobGuid_ReturnsNotFound() {
+	void testGetJobStatus_WithNonExistentJobGuid_ReturnsNotFound() throws NoSuchJobException {
 		String jobGuid = "non-existent-guid";
 
 		// Mock no job found
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -504,7 +520,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithMultipleJobInstances_FindsCorrectOne() {
+	void testGetJobStatus_WithMultipleJobInstances_FindsCorrectOne() throws NoSuchJobException {
 		String jobGuid = "test-job-guid";
 		Long executionId = 123L;
 
@@ -524,6 +540,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution across multiple instances
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(2L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(instance1, instance2));
 
 		// First instance doesn't have matching GUID

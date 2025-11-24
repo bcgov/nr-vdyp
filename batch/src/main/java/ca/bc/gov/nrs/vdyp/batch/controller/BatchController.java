@@ -116,12 +116,12 @@ public class BatchController {
 		Long executionId = null;
 
 		try {
-			logger.info("Attempting to stop job with GUID: {}", jobGuid);
+			logger.debug("Attempting to stop job with GUID: {}", jobGuid);
 
 			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
 			executionId = jobExecution.getId();
 
-			logger.info("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
+			logger.debug("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
 
 			// Stop the job execution - this sends a stop signal to the running job
 			boolean stopped = jobOperator.stop(executionId);
@@ -165,7 +165,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.info("[GUID: {}] Job is already stopping or stopped", jobGuid);
+			logger.debug("[GUID: {}] Job is already stopping or stopped", jobGuid);
 			// Return 202 Accepted - the stop request was already accepted and is being processed
 			return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
 
@@ -207,12 +207,12 @@ public class BatchController {
 		Long executionId;
 
 		try {
-			logger.info("Getting status for job with GUID: {}", jobGuid);
+			logger.debug("Getting status for job with GUID: {}", jobGuid);
 
 			jobExecution = findJobExecutionByGuid(jobGuid);
 			executionId = jobExecution.getId();
 
-			logger.info("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
+			logger.debug("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
 		} catch (NoSuchJobExecutionException e) {
 			response.put(BatchConstants.Job.GUID, jobGuid);
 			response.put(BatchConstants.Job.ERROR, "Job execution not found");
@@ -270,7 +270,7 @@ public class BatchController {
 
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-		logger.info(
+		logger.debug(
 				"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}", jobGuid,
 				jobExecution.getStatus(), isRunning, totalPartitions, completedPartitions
 		);
@@ -295,11 +295,11 @@ public class BatchController {
 	}
 
 	private void logRequestDetails(MultipartFile polygonFile, MultipartFile layerFile, String parametersJson) {
-		logger.info("=== VDYP Batch Job Request ===");
-		logger.info("Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(), polygonFile.getSize());
-		logger.info("Layer file: {} ({} bytes)", layerFile.getOriginalFilename(), layerFile.getSize());
-		logger.info("Partition size: {}", defaultPartitionSize);
-		logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
+		logger.debug("=== VDYP Batch Job Request ===");
+		logger.debug("Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(), polygonFile.getSize());
+		logger.debug("Layer file: {} ({} bytes)", layerFile.getOriginalFilename(), layerFile.getSize());
+		logger.debug("Partition size: {}", defaultPartitionSize);
+		logger.debug("Parameters provided: {}", parametersJson != null ? "yes" : "no");
 	}
 
 	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson)
@@ -321,7 +321,7 @@ public class BatchController {
 
 			if (!Files.exists(batchRootDir)) {
 				Files.createDirectories(batchRootDir);
-				logger.info("Created batch root directory: {}", batchRootDir);
+				logger.debug("Created batch root directory: {}", batchRootDir);
 			}
 
 			String jobGuid = BatchUtils.createJobGuid();
@@ -335,19 +335,16 @@ public class BatchController {
 					.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobTimestamp);
 			Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
 			Files.createDirectories(jobBaseDir);
-			// MDJ: Why are low level details like this being logged at "info" level? We want to avoid
-			// making the production log files (normally set to log at info level and above) too large
-			// as this makes them difficult to transfer, read, etc.
-			logger.info("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
+			logger.debug("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
 
-			logger.info("[GUID: {}] Using {} partitions", jobGuid, defaultPartitionSize);
+			logger.debug("[GUID: {}] Using {} partitions", jobGuid, defaultPartitionSize);
 
 			// Partition CSV files using streaming approach BEFORE starting the job
-			logger.info("[GUID: {}] Starting CSV partitioning...", jobGuid);
+			logger.debug("[GUID: {}] Starting CSV partitioning...", jobGuid);
 			int featureIdToPartitionSize = csvPartitioner
 					.partitionCsvFiles(polygonFile, layerFile, defaultPartitionSize, jobBaseDir);
 
-			logger.info(
+			logger.debug(
 					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}", jobGuid,
 					defaultPartitionSize, featureIdToPartitionSize
 			);
@@ -359,8 +356,8 @@ public class BatchController {
 			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
 
 			logger.info(
-					"[GUID: {}] Started job! Execution ID: {}, Directory: {}, Partitions: {}", jobGuid,
-					jobExecution.getId(), jobBaseDir, defaultPartitionSize
+					"[GUID: {}] Batch job started - Execution ID: {}, Partitions: {}", jobGuid, jobExecution.getId(),
+					defaultPartitionSize
 			);
 
 			return jobExecution;

@@ -171,14 +171,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 					Long recordIdHash = batchRecord.getFeatureId() != null
 							? (long) batchRecord.getFeatureId().hashCode() : 0L;
 
-					if (success) {
-						// Record successful processing
-						logger.trace(
-								"[GUID: {}, EXEID: {}, Partition: {}] Recording successful processing for FEATURE_ID: {}",
-								jobGuid, jobExecutionId, actualPartitionName, batchRecord.getFeatureId()
-						);
-					} else {
-						// Record processing failure
+					if (!success) {
 						metricsCollector.recordSkip(
 								jobExecutionId, jobGuid, recordIdHash, batchRecord, error, actualPartitionName, null
 						);

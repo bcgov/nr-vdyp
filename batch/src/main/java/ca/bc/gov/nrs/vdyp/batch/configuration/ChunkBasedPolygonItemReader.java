@@ -96,7 +96,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 
 	@Override
 	public void open(@NonNull ExecutionContext executionContext) throws ItemStreamException {
-		logger.info(
+		logger.debug(
 				"[GUID: {}, EXEID: {}, Partition: {}] Opening ChunkBasedPolygonItemReader with chunk size: {}", jobGuid,
 				jobExecutionId, partitionName, chunkSize
 		);
@@ -114,7 +114,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 				throw new ItemStreamException("Partition directory does not exist: " + partitionDir);
 			}
 
-			logger.info(
+			logger.debug(
 					"[GUID: {}, EXEID: {}, Partition: {}] Reading from partition directory: {}", jobGuid,
 					jobExecutionId, partitionName, partitionDir
 			);
@@ -122,7 +122,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 			initializeReaders();
 
 			readerOpened = true;
-			logger.info(
+			logger.debug(
 					"[GUID: {}, EXEID: {}, Partition: {}] ChunkBasedPolygonItemReader opened successfully", jobGuid,
 					jobExecutionId, partitionName
 			);
@@ -185,7 +185,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 			layerHeader = ""; // Empty header for missing layer file
 		}
 
-		logger.info(
+		logger.debug(
 				"[GUID: {}, EXEID: {}, Partition: {}] Initialized readers - Polygon header: present, Layer header present: {}",
 				jobGuid, jobExecutionId, partitionName, layerHeader != null
 		);
@@ -349,7 +349,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	 */
 	private boolean ensureChunkAvailable() throws IOException {
 		if ( (chunkIterator == null || !chunkIterator.hasNext()) && !loadNextChunk()) {
-			logger.info(
+			logger.debug(
 					"[GUID: {}, EXEID: {}, Partition: {}] No more chunks to process - returning null", jobGuid,
 					jobExecutionId, partitionName
 			);
