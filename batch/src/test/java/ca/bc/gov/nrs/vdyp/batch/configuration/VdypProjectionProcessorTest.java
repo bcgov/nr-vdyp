@@ -68,7 +68,7 @@ class VdypProjectionProcessorTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString("jobGuid")).thenReturn(JOB_GUID);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn("test-partition");
+		when(executionContext.getString("partitionName")).thenReturn("test-partition");
 		when(executionContext.getLong("startLine", 0)).thenReturn(1L);
 		when(executionContext.getLong("endLine", 0)).thenReturn(100L);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
@@ -88,7 +88,7 @@ class VdypProjectionProcessorTest {
 		verify(jobExecution).getJobParameters();
 		verify(jobParameters).getString("jobGuid");
 		verify(stepExecution).getExecutionContext();
-		verify(executionContext).getString("partitionName", "unknown");
+		verify(executionContext).getString("partitionName");
 		verify(metricsCollector).initializePartitionMetrics(1L, JOB_GUID, "test-partition");
 	}
 
@@ -140,7 +140,7 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		verify(stepExecution).getJobExecutionId();
-		verify(executionContext).getString("partitionName", "unknown");
+		verify(executionContext).getString("partitionName");
 		// No metrics collector calls should be made when metricsCollector is null
 	}
 
@@ -187,7 +187,7 @@ class VdypProjectionProcessorTest {
 
 		verify(stepExecution).getJobExecutionId();
 		verify(stepExecution).getExecutionContext();
-		verify(executionContext).getString("partitionName", "unknown");
+		verify(executionContext).getString("partitionName");
 	}
 
 	@Test

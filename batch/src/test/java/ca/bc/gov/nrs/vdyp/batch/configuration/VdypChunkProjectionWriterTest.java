@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -99,7 +98,7 @@ class VdypChunkProjectionWriterTest {
 		when(jobExecution.getJobParameters()).thenReturn(params);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(stepExecution.getJobParameters()).thenReturn(params);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn(TEST_PARTITION_NAME);
+		when(executionContext.getString("partitionName")).thenReturn(TEST_PARTITION_NAME);
 
 		assertDoesNotThrow(() -> writer.beforeStep(stepExecution));
 
@@ -119,14 +118,13 @@ class VdypChunkProjectionWriterTest {
 		when(jobExecution.getJobParameters()).thenReturn(params);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(stepExecution.getJobParameters()).thenReturn(params);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn(TEST_PARTITION_NAME);
+		when(executionContext.getString("partitionName")).thenReturn(TEST_PARTITION_NAME);
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
 			writer.beforeStep(stepExecution);
 		});
 
-		// Error message contains partition name
-		assertTrue(exception.getMessage().contains(TEST_PARTITION_NAME));
+		assertTrue(exception.getMessage().contains(TEST_JOB_GUID));
 	}
 
 	@Test
@@ -139,14 +137,13 @@ class VdypChunkProjectionWriterTest {
 		when(jobExecution.getJobParameters()).thenReturn(params);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(stepExecution.getJobParameters()).thenReturn(params);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn(TEST_PARTITION_NAME);
+		when(executionContext.getString("partitionName")).thenReturn(TEST_PARTITION_NAME);
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
 			writer.beforeStep(stepExecution);
 		});
 
-		// Error message contains partition name
-		assertTrue(exception.getMessage().contains(TEST_PARTITION_NAME));
+		assertTrue(exception.getMessage().contains(TEST_JOB_GUID));
 	}
 
 	@Test
@@ -205,7 +202,7 @@ class VdypChunkProjectionWriterTest {
 		verify(vdypProjectionService).performProjectionForChunk(any(), any(), any(), any(), any(), any());
 		verify(metricsCollector).recordSkip(
 				eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyLong(), any(BatchRecord.class), eq(testException),
-				eq(TEST_PARTITION_NAME), isNull()
+				eq(TEST_PARTITION_NAME), any()
 		);
 	}
 
@@ -251,7 +248,7 @@ class VdypChunkProjectionWriterTest {
 		when(jobExecution.getJobParameters()).thenReturn(params);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(stepExecution.getJobParameters()).thenReturn(params);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn(TEST_PARTITION_NAME);
+		when(executionContext.getString("partitionName")).thenReturn(TEST_PARTITION_NAME);
 
 		writer.beforeStep(stepExecution);
 	}

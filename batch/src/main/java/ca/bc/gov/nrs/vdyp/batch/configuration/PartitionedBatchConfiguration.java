@@ -154,7 +154,7 @@ public class PartitionedBatchConfiguration {
 					@Override
 					public void beforeStep(@NonNull StepExecution stepExecution) {
 						String partitionName = stepExecution.getExecutionContext()
-								.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+								.getString(BatchConstants.Partition.NAME);
 
 						Long jobExecutionId = stepExecution.getJobExecutionId();
 						String jobGuid = stepExecution.getJobExecution().getJobParameters()
@@ -171,7 +171,7 @@ public class PartitionedBatchConfiguration {
 					@Override
 					public ExitStatus afterStep(@NonNull StepExecution stepExecution) {
 						String partitionName = stepExecution.getExecutionContext()
-								.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+								.getString(BatchConstants.Partition.NAME);
 						Long jobExecutionId = stepExecution.getJobExecutionId();
 						String jobGuid = stepExecution.getJobExecution().getJobParameters()
 								.getString(BatchConstants.Job.GUID);

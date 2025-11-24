@@ -147,9 +147,6 @@ public class VdypProjectionService {
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
 			throw new BatchConfigurationException("Job base directory cannot be null or empty");
 		}
-		if (partitionName == null || partitionName.trim().isEmpty()) {
-			throw new BatchConfigurationException("Partition name cannot be null or empty");
-		}
 
 		Path jobBasePath = Paths.get(jobBaseDir);
 

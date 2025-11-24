@@ -42,8 +42,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
-		this.partitionName = stepExecution.getExecutionContext()
-				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
 	}
 
 	@Override
@@ -118,8 +117,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 	}
 
 	private String updatePartitionName(StepExecution stepExecution) {
-		String retrievedPartitionName = stepExecution.getExecutionContext()
-				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+		String retrievedPartitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
 		partitionName = retrievedPartitionName;
 		return retrievedPartitionName;
 	}
@@ -267,10 +265,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 			// Fallback: create a basic record with the extracted recordId as featureId for
 			// tracking
-			return new BatchRecord(
-					String.valueOf(recordId), "", Collections.emptyList(), null, null,
-					partitionName != null ? partitionName : BatchConstants.Common.UNKNOWN
-			);
+			return new BatchRecord(String.valueOf(recordId), "", Collections.emptyList(), null, null, partitionName);
 		}
 		return null;
 	}

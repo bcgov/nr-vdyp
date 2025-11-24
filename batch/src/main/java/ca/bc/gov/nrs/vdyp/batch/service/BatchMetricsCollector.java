@@ -66,9 +66,6 @@ public class BatchMetricsCollector {
 		if (StringUtils.isBlank(jobGuid)) {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
-		if (StringUtils.isBlank(partitionName)) {
-			throw new BatchException("Partition name cannot be null or blank");
-		}
 
 		try {
 			synchronized (lock) {
@@ -101,9 +98,6 @@ public class BatchMetricsCollector {
 		}
 		if (StringUtils.isBlank(jobGuid)) {
 			throw new BatchException("Job GUID cannot be null or blank");
-		}
-		if (StringUtils.isBlank(partitionName)) {
-			throw new BatchException("Partition name cannot be null or blank");
 		}
 
 		try {
@@ -167,8 +161,6 @@ public class BatchMetricsCollector {
 		if (StringUtils.isBlank(jobGuid)) {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
-
-		// MDJ: Can partitionName be null?
 
 		// MDJ: Is it -ever- the case that error would be null? That is, that an operation would be
 		// retried without an error occurring OR an error occurring but it not being known? It would
@@ -334,9 +326,6 @@ public class BatchMetricsCollector {
 	}
 
 	private PartitionMetrics getPartitionMetrics(String jobGuid, String partitionName) {
-		if (StringUtils.isBlank(partitionName)) {
-			throw new BatchException("partitionName cannot be blank or null");
-		}
 		synchronized (lock) {
 			var batchMetrics = getJobMetrics(jobGuid);
 			var partitionMetrics = batchMetrics.getPartitionMetrics().get(partitionName);

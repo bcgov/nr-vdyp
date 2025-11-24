@@ -63,7 +63,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 			String partitionName, BatchMetricsCollector metricsCollector, Long jobExecutionId, String jobGuid,
 			int chunkSize
 	) {
-		this.partitionName = partitionName != null ? partitionName : BatchConstants.Common.UNKNOWN;
+		this.partitionName = partitionName;
 		this.metricsCollector = metricsCollector;
 		this.jobExecutionId = jobExecutionId;
 		this.jobGuid = jobGuid;

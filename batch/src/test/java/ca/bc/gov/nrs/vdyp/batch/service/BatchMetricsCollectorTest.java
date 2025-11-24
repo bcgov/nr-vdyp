@@ -209,39 +209,16 @@ class BatchMetricsCollectorTest {
 		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
 	}
 
-	@ParameterizedTest
-	@CsvSource(
-		{ "true, false, false, false, Job execution ID cannot be null",
-				"false, true, false, false, Partition name cannot be null or blank",
-				"false, false, true, false, Partition name cannot be null or blank",
-				"false, false, false, true, Partition name cannot be null or blank" }
-	)
-	void testInitializePartitionMetrics_InvalidParameters(
-			boolean useNullJobId, boolean useNullPartition, boolean useBlankPartition, boolean useEmptyPartition,
-			String expectedMessage
-	) {
-		if (!useNullJobId) {
-			batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-		}
-
-		Long jobId = useNullJobId ? null : JOB_EXECUTION_ID;
-		String partitionName;
-		if (useNullPartition) {
-			partitionName = null;
-		} else if (useBlankPartition) {
-			partitionName = "   ";
-		} else if (useEmptyPartition) {
-			partitionName = "";
-		} else {
-			partitionName = PARTITION_NAME;
-		}
+	@Test
+	void testInitializePartitionMetrics_NullJobExecutionId() {
+		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.initializePartitionMetrics(jobId, JOB_GUID, partitionName)
+				() -> batchMetricsCollector.initializePartitionMetrics(null, JOB_GUID, PARTITION_NAME)
 		);
 
-		assertTrue(exception.getMessage().contains(expectedMessage));
+		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
 	}
 
 	@Test
@@ -256,39 +233,16 @@ class BatchMetricsCollectorTest {
 		assertTrue(exception.getMessage().contains("No metrics found for job"));
 	}
 
-	@ParameterizedTest
-	@CsvSource(
-		{ "true, false, false, false, Job execution ID cannot be null",
-				"false, true, false, false, Partition name cannot be null or blank",
-				"false, false, true, false, Partition name cannot be null or blank",
-				"false, false, false, true, Partition name cannot be null or blank" }
-	)
-	void testCompletePartitionMetrics_InvalidParameters(
-			boolean useNullJobId, boolean useNullPartition, boolean useBlankPartition, boolean useEmptyPartition,
-			String expectedMessage
-	) {
-		if (!useNullJobId) {
-			batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-		}
-
-		Long jobId = useNullJobId ? null : JOB_EXECUTION_ID;
-		String partitionName;
-		if (useNullPartition) {
-			partitionName = null;
-		} else if (useBlankPartition) {
-			partitionName = "  ";
-		} else if (useEmptyPartition) {
-			partitionName = "";
-		} else {
-			partitionName = PARTITION_NAME;
-		}
+	@Test
+	void testCompletePartitionMetrics_NullJobExecutionId() {
+		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.completePartitionMetrics(jobId, JOB_GUID, partitionName, 100L, EXIT_CODE)
+				() -> batchMetricsCollector.completePartitionMetrics(null, JOB_GUID, PARTITION_NAME, 100L, EXIT_CODE)
 		);
 
-		assertTrue(exception.getMessage().contains(expectedMessage));
+		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
 	}
 
 	@Test

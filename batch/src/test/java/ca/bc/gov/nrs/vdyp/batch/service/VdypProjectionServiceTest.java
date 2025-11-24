@@ -61,19 +61,6 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testPerformProjectionForChunk_WhitespacePartitionName() {
-		List<BatchRecord> batchRecords = createValidBatchRecords(1);
-
-		Exception exception = assertThrows(Exception.class, () -> {
-			vdypProjectionService.performProjectionForChunk(
-					batchRecords, "   ", parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
-			);
-		});
-
-		assertTrue(exception.getMessage().contains("Partition name cannot be null or empty"));
-	}
-
-	@Test
 	void testPerformProjectionForChunk_EmptyJobBaseDir() {
 		List<BatchRecord> batchRecords = createValidBatchRecords(1);
 
@@ -509,21 +496,6 @@ class VdypProjectionServiceTest {
 		Throwable cause = exception.getCause();
 		assertTrue(cause instanceof BatchConfigurationException);
 		assertTrue(cause.getMessage().contains("Job base directory cannot be null or empty"));
-	}
-
-	@Test
-	void testCreateOutputPartitionDir_NullPartitionName() throws Exception {
-		Method createOutputPartitionDirMethod = VdypProjectionService.class
-				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class);
-		createOutputPartitionDirMethod.setAccessible(true);
-
-		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod.invoke(vdypProjectionService, JOB_EXECUTION_ID, null, tempDir.toString());
-		});
-
-		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof BatchConfigurationException);
-		assertTrue(cause.getMessage().contains("Partition name cannot be null or empty"));
 	}
 
 	@Test

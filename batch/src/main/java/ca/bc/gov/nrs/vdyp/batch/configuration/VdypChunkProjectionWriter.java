@@ -35,7 +35,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	private final ObjectMapper objectMapper;
 
 	// Step execution context
-	private String partitionName = BatchConstants.Common.UNKNOWN;
+	private String partitionName;
 	private Long jobExecutionId;
 	private String jobGuid;
 	private Parameters projectionParameters;
@@ -54,8 +54,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
-		this.partitionName = stepExecution.getExecutionContext()
-				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
 		this.jobBaseDir = stepExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 
 		logger.info(

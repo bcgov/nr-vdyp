@@ -21,7 +21,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	// Partition context information
 	private Long jobExecutionId;
 	private String jobGuid;
-	private String partitionName = BatchConstants.Common.UNKNOWN;
+	private String partitionName;
 
 	// Validation thresholds
 	@Value("${batch.validation.max-data-length:50000}")
@@ -44,8 +44,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
-		this.partitionName = stepExecution.getExecutionContext()
-				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
 
 		if (metricsCollector != null) {
 			metricsCollector.initializePartitionMetrics(jobExecutionId, jobGuid, partitionName);

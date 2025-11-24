@@ -40,8 +40,7 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
-		this.partitionName = stepExecution.getExecutionContext()
-				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
 	}
 
 	private static Map<Class<? extends Throwable>, Boolean> createRetryableExceptions() {
@@ -83,7 +82,7 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 		} catch (Exception e) {
 			logger.debug("Could not access current step context, using stored partition name: {}", e.getMessage());
 		}
-		return partitionName != null ? partitionName : BatchConstants.Common.UNKNOWN;
+		return partitionName;
 	}
 
 	private void logRetryAttempt(Throwable throwable, int attemptCount, String currentPartitionName) {

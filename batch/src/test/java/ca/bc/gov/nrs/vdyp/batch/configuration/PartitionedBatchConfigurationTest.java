@@ -1002,36 +1002,6 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testWorkerStep_beforeStep_withUnknownPartitionName() {
-		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
-		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
-		@SuppressWarnings("unchecked")
-		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
-		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
-		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
-
-		Step workerStep = configuration.workerStep(
-				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
-				itemReader, partitionWriter, projectionProcessor
-		);
-
-		StepExecution stepExecution = mock(StepExecution.class);
-		ExecutionContext executionContext = mock(ExecutionContext.class);
-		JobExecution jobExecution = mock(JobExecution.class);
-		JobParameters jobParameters = mock(JobParameters.class);
-
-		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString(eq("partitionName"), anyString())).thenReturn("UNKNOWN");
-		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
-		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
-
-		assertNotNull(workerStep);
-		assertEquals("workerStep", workerStep.getName());
-	}
-
-	@Test
 	void testWorkerStep_afterStep_withFailedStatus() {
 		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
 		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
