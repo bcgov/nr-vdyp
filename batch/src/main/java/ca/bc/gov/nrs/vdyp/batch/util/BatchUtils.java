@@ -13,8 +13,8 @@ public final class BatchUtils {
 	private static final DateTimeFormatter dateTimeFormatterForFilenames = DateTimeFormatter
 			.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 
-	public static String createJobFolderName(String prefix, String timestamp) {
-		return String.format("%s-%s", prefix, timestamp);
+	public static String createJobFolderName(String prefix, String guid) {
+		return String.format("%s-%s", prefix, guid);
 	}
 
 	public static String createJobTimestamp() {

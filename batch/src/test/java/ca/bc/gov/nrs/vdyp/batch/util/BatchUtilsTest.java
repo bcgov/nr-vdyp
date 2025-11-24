@@ -11,21 +11,34 @@ class BatchUtilsTest {
 	@Test
 	void testCreateJobFolderName_WithEmptyPrefix() {
 		String prefix = "";
-		String timestamp = "2024_01_15_10_30_45_1234";
+		String guid = "123e4567-e89b-12d3-a456-426614174000";
 
-		String result = BatchUtils.createJobFolderName(prefix, timestamp);
+		String result = BatchUtils.createJobFolderName(prefix, guid);
 
-		assertEquals("-2024_01_15_10_30_45_1234", result);
+		assertEquals("-123e4567-e89b-12d3-a456-426614174000", result);
 	}
 
 	@Test
-	void testCreateJobFolderName_WithEmptyTimestamp() {
+	void testCreateJobFolderName_WithEmptyGuid() {
 		String prefix = "vdyp-batch";
-		String timestamp = "";
+		String guid = "";
 
-		String result = BatchUtils.createJobFolderName(prefix, timestamp);
+		String result = BatchUtils.createJobFolderName(prefix, guid);
 
 		assertEquals("vdyp-batch-", result);
+	}
+
+	@Test
+	void testCreateJobFolderName_Complete() {
+		String prefix = "job";
+		String guid = "123e4567-e89b-12d3-a456-426614174000";
+
+		String result = BatchUtils.createJobFolderName(prefix, guid);
+
+		assertEquals("job-123e4567-e89b-12d3-a456-426614174000", result);
+		// Verify format includes both components
+		assertTrue(result.contains(prefix));
+		assertTrue(result.contains(guid));
 	}
 
 	@Test

@@ -327,12 +327,7 @@ public class BatchController {
 			String jobGuid = BatchUtils.createJobGuid();
 			String jobTimestamp = BatchUtils.createJobTimestamp();
 
-			// MDJ: using a time stamp as a job identifier (which is what jobBaseFolderName is) is a
-			// mistake, since multiple jobs -could- have the same time stamp (especially when it is down
-			// only to the second.) Use the job's GUID instead of, or in addition to, the jobTimestamp
-			// to GUARANTEE that the folder name is unique.
-			String jobBaseFolderName = BatchUtils
-					.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobTimestamp);
+			String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobGuid);
 			Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
 			Files.createDirectories(jobBaseDir);
 			logger.debug("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
