@@ -17,7 +17,6 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.forward.parsers.ForwardControlVariableParser;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonDescriptionParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
@@ -72,6 +71,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ResourceControlMapModifier;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.VdypPolygonDescriptionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 
 /**
