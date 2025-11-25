@@ -1,17 +1,23 @@
 package ca.bc.gov.nrs.vdyp.batch.model;
 
 import java.util.List;
-import java.util.Objects;
+
+import io.micrometer.common.lang.Nullable;
+import jakarta.validation.constraints.NotNull;
 
 public class BatchRecord {
 
+	@NotNull
 	private final String featureId; // business key
-
+	@NotNull
 	private final String rawPolygonData;
+	@NotNull
 	private final List<String> rawLayerData;
+	@Nullable
 	private final String polygonHeader;
+	@Nullable
 	private final String layerHeader;
-
+	@NotNull
 	private final String partitionName;
 
 	/**
@@ -20,21 +26,20 @@ public class BatchRecord {
 	 * @param featureId      the unique feature identifier
 	 * @param rawPolygonData the raw polygon CSV data
 	 * @param rawLayerData   the list of raw layer CSV data lines
-	 * @param polygonHeader  the polygon CSV header (may be null)
-	 * @param layerHeader    the layer CSV header (may be null)
+	 * @param polygonHeader  the polygon CSV header
+	 * @param layerHeader    the layer CSV header
 	 * @param partitionName  the partition name
-	 * @throws NullPointerException if featureId, rawPolygonData, rawLayerData, or partitionName is null
 	 */
 	public BatchRecord(
-			String featureId, String rawPolygonData, List<String> rawLayerData, String polygonHeader,
-			String layerHeader, String partitionName
+			@NotNull String featureId, @NotNull String rawPolygonData, @NotNull List<String> rawLayerData,
+			@Nullable String polygonHeader, @Nullable String layerHeader, @NotNull String partitionName
 	) {
-		this.featureId = Objects.requireNonNull(featureId, "featureId must not be null");
-		this.rawPolygonData = Objects.requireNonNull(rawPolygonData, "rawPolygonData must not be null");
-		this.rawLayerData = Objects.requireNonNull(rawLayerData, "rawLayerData must not be null");
+		this.featureId = featureId;
+		this.rawPolygonData = rawPolygonData;
+		this.rawLayerData = rawLayerData;
 		this.polygonHeader = polygonHeader;
 		this.layerHeader = layerHeader;
-		this.partitionName = Objects.requireNonNull(partitionName, "partitionName must not be null");
+		this.partitionName = partitionName;
 	}
 
 	public String getFeatureId() {

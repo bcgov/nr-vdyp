@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import jakarta.validation.constraints.NotNull;
+
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics.PartitionMetrics;
@@ -152,7 +154,7 @@ public class BatchMetricsCollector {
 	}
 
 	public void recordRetryAttempt(
-			Long jobExecutionId, String jobGuid, int attemptNumber, Throwable error, boolean successful,
+			Long jobExecutionId, String jobGuid, int attemptNumber, @NotNull Throwable error, boolean successful,
 			String partitionName
 	) {
 		if (jobExecutionId == null) {
@@ -162,13 +164,9 @@ public class BatchMetricsCollector {
 			throw new BatchException("Job GUID cannot be null or blank");
 		}
 
-		// MDJ: Is it -ever- the case that error would be null? That is, that an operation would be
-		// retried without an error occurring OR an error occurring but it not being known? It would
-		// be good to -require- that error not be null. In any case, "Unknown" is accurate only in
-		// the latter case (unknown error). In the former case, "No error" is better.
-
 		try {
-			String errorType = "Unknown";
+			String errorType = error.getClass().getSimpleName();
+			String errorMessage = error.getMessage() != null ? error.getMessage() : "No error message";
 
 			synchronized (lock) {
 				BatchMetrics metrics = getJobMetrics(jobGuid);
@@ -181,14 +179,6 @@ public class BatchMetricsCollector {
 				}
 
 				// Create retry detail
-				String errorMessage = "No error message";
-				if (error != null) {
-					errorType = error.getClass().getSimpleName();
-					if (error.getMessage() != null) {
-						errorMessage = error.getMessage();
-					}
-				}
-
 				BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
 						attemptNumber, errorType, errorMessage, successful, partitionName
 				);
@@ -212,7 +202,7 @@ public class BatchMetricsCollector {
 	}
 
 	public void recordSkip(
-			Long jobExecutionId, String jobGuid, Long recordId, BatchRecord batchRecord, Throwable error,
+			Long jobExecutionId, String jobGuid, Long recordId, BatchRecord batchRecord, @NotNull Throwable error,
 			String partitionName, Long lineNumber
 	) {
 		if (jobExecutionId == null) {
@@ -226,29 +216,17 @@ public class BatchMetricsCollector {
 		// require parameters not be null (using @NotNull to indicate this) unless it the interface
 		// explicitly allows it. This will make the code much tighter and easier to understand.
 
-		// MDJ: Is it -ever- the case that error would be null? That is, that an operation would be
-		// retried without an error occurring OR an error occurring but it not being known? It would
-		// be good to -require- that error not be null. In any case, "Unknown" is accurate only in
-		// the latter case (unknown error). In the former case, "No error" is better.
 		try {
-			String errorType = "Unknown";
+			String errorType = error.getClass().getSimpleName();
+			String errorMessage = error.getMessage() != null ? error.getMessage() : "No error message";
 
 			synchronized (lock) {
 				BatchMetrics metrics = getJobMetrics(jobGuid);
 
 				metrics.incrementSkips();
 
-				String errorMessage = "No error message";
-
 				// Count skip reasons
-				if (error != null) {
-					errorType = error.getClass().getSimpleName();
-					metrics.getSkipReasonCount().merge(errorType, 1, Integer::sum);
-
-					if (error.getMessage() != null) {
-						errorMessage = error.getMessage();
-					}
-				}
+				metrics.getSkipReasonCount().merge(errorType, 1, Integer::sum);
 
 				// Create skip detail
 				String recordData = batchRecord != null ? batchRecord.toString() : "null";

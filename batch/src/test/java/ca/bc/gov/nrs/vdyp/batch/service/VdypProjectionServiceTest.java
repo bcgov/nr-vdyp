@@ -126,15 +126,6 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testPerformProjectionForChunk_NullRawLayerData_ThrowsNullPointerException() {
-		assertThrows(NullPointerException.class, () -> {
-			new BatchRecord(
-					"123456789", "123456789,MAP1", null, "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER", PARTITION_NAME
-			);
-		});
-	}
-
-	@Test
 	void testPerformProjectionForChunk_MultipleRecordsCombination() {
 		List<BatchRecord> batchRecords = createValidBatchRecords(3);
 
@@ -550,22 +541,6 @@ class VdypProjectionServiceTest {
 		Throwable cause = exception.getCause();
 		assertTrue(cause instanceof BatchDataValidationException);
 		assertTrue(cause.getMessage().contains("Cannot create input streams from empty chunk"));
-	}
-
-	@Test
-	void testCreateCombinedInputStreamsFromRawData_NullRawPolygonData_ThrowsNullPointerException() {
-		// Test that BatchRecord constructor enforces non-null rawPolygonData
-		assertThrows(NullPointerException.class, () -> {
-			new BatchRecord("123456789", null, List.of("123456789,P"), null, "FEATURE_ID,LAYER", PARTITION_NAME);
-		});
-	}
-
-	@Test
-	void testCreateCombinedInputStreamsFromRawData_NullRawLayerData_ThrowsNullPointerException() {
-		// Test that BatchRecord constructor enforces non-null rawLayerData
-		assertThrows(NullPointerException.class, () -> {
-			new BatchRecord("123456789", "123456789,MAP1", null, "FEATURE_ID,MAP_ID", null, PARTITION_NAME);
-		});
 	}
 
 	@Test

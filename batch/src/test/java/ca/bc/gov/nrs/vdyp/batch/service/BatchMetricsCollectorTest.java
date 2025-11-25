@@ -295,17 +295,14 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordRetryAttempt_NullError() {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-		batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, JOB_GUID, 1, null, false, PARTITION_NAME);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
-		assertEquals(1, metrics.getTotalRetryAttempts());
-		assertEquals(0, metrics.getSuccessfulRetries());
-		assertEquals(1, metrics.getFailedRetries());
+		Exception exception = assertThrows(
+				Exception.class,
+				() -> batchMetricsCollector
+						.recordRetryAttempt(JOB_EXECUTION_ID, JOB_GUID, 1, null, false, PARTITION_NAME)
+		);
 
-		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().peek();
-		assertNotNull(retryDetail);
-		assertEquals("Unknown", retryDetail.errorType());
-		assertEquals("No error message", retryDetail.errorMessage());
+		assertNotNull(exception);
 	}
 
 	@Test
@@ -317,15 +314,14 @@ class BatchMetricsCollectorTest {
 		);
 
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, recordId, batchRecord, null, PARTITION_NAME, 15L);
 
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
-		assertEquals(1, metrics.getTotalSkips());
+		Exception exception = assertThrows(
+				Exception.class,
+				() -> batchMetricsCollector
+						.recordSkip(JOB_EXECUTION_ID, JOB_GUID, recordId, batchRecord, null, PARTITION_NAME, 15L)
+		);
 
-		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().peek();
-		assertNotNull(skipDetail);
-		assertEquals("Unknown", skipDetail.errorType());
-		assertEquals("No error message", skipDetail.errorMessage());
+		assertNotNull(exception);
 	}
 
 	@Test
