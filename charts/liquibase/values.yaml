@@ -15,7 +15,7 @@ crunchy:
 
 liquibase:
   defaultSchema: "#{VDYP_ADMIN_USER}#"   # quote in changelog when needed
-  logLevel: info
+  logLevel: debug
   command: "update"           # or "status", "updateSql" for dry-run
   extraArgs: []               # e.g., ["--rollback-on-error=true"]
 
