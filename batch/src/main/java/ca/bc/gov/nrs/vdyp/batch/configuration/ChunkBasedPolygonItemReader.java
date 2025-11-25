@@ -27,7 +27,6 @@ import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
-import jakarta.validation.constraints.NotNull;
 
 /**
  * ItemReader that processes polygon in chunks to handle large datasets
@@ -36,12 +35,12 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 
 	private static final Logger logger = LoggerFactory.getLogger(ChunkBasedPolygonItemReader.class);
 
-	@NotNull
+	@NonNull
 	private final String partitionName;
 	private final BatchMetricsCollector metricsCollector;
-	@NotNull
+	@NonNull
 	private final Long jobExecutionId;
-	@NotNull
+	@NonNull
 	private final String jobGuid;
 	private final int chunkSize;
 

@@ -7,13 +7,13 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics.PartitionMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import jakarta.validation.constraints.NotNull;
 
 /**
  * Service for collecting and managing batch job metrics.
@@ -28,7 +28,7 @@ public class BatchMetricsCollector {
 	private final LinkedList<String> jobMetricsByArrivalTime = new LinkedList<>();
 	private final Object lock = new Object();
 
-	public BatchMetrics initializeMetrics(@NotNull Long jobExecutionId, @NotNull String jobGuid) {
+	public BatchMetrics initializeMetrics(@NonNull Long jobExecutionId, @NonNull String jobGuid) {
 		try {
 			synchronized (lock) {
 				if (jobMetricsMap.containsKey(jobGuid)) {
@@ -52,7 +52,7 @@ public class BatchMetricsCollector {
 	}
 
 	public void initializePartitionMetrics(
-			@NotNull Long jobExecutionId, @NotNull String jobGuid, @NotNull String partitionName
+			@NonNull Long jobExecutionId, @NonNull String jobGuid, @NonNull String partitionName
 	) {
 		try {
 			synchronized (lock) {
@@ -78,7 +78,7 @@ public class BatchMetricsCollector {
 	}
 
 	public void completePartitionMetrics(
-			@NotNull Long jobExecutionId, @NotNull String jobGuid, @NotNull String partitionName, long writeCount,
+			@NonNull Long jobExecutionId, @NonNull String jobGuid, @NonNull String partitionName, long writeCount,
 			String exitCode
 	) {
 		try {
@@ -104,7 +104,7 @@ public class BatchMetricsCollector {
 	}
 
 	public void finalizeJobMetrics(
-			@NotNull Long jobExecutionId, @NotNull String jobGuid, String status, long totalRead, long totalWritten
+			@NonNull Long jobExecutionId, @NonNull String jobGuid, String status, long totalRead, long totalWritten
 	) {
 		try {
 			BatchMetrics metrics = getJobMetrics(jobGuid);
@@ -127,7 +127,7 @@ public class BatchMetricsCollector {
 	}
 
 	public void recordRetryAttempt(
-			@NotNull Long jobExecutionId, @NotNull String jobGuid, int attemptNumber, @NotNull Throwable error,
+			@NonNull Long jobExecutionId, @NonNull String jobGuid, int attemptNumber, @NonNull Throwable error,
 			boolean successful, String partitionName
 	) {
 		try {
@@ -168,8 +168,8 @@ public class BatchMetricsCollector {
 	}
 
 	public void recordSkip(
-			@NotNull Long jobExecutionId, @NotNull String jobGuid, Long recordId, @NotNull BatchRecord batchRecord,
-			@NotNull Throwable error, @NotNull String partitionName, Long lineNumber
+			@NonNull Long jobExecutionId, @NonNull String jobGuid, Long recordId, @NonNull BatchRecord batchRecord,
+			@NonNull Throwable error, @NonNull String partitionName, Long lineNumber
 	) {
 		try {
 			String errorType = error.getClass().getSimpleName();
@@ -228,14 +228,14 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	public boolean isJobMetricsPresent(@NotNull String jobGuid) {
+	public boolean isJobMetricsPresent(@NonNull String jobGuid) {
 		synchronized (lock) {
 			var metrics = jobMetricsMap.get(jobGuid);
 			return metrics != null;
 		}
 	}
 
-	public BatchMetrics getJobMetrics(@NotNull String jobGuid) {
+	public BatchMetrics getJobMetrics(@NonNull String jobGuid) {
 		synchronized (lock) {
 			var metrics = jobMetricsMap.get(jobGuid);
 			if (metrics == null) {
@@ -245,7 +245,7 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	private PartitionMetrics getPartitionMetrics(@NotNull String jobGuid, @NotNull String partitionName) {
+	private PartitionMetrics getPartitionMetrics(@NonNull String jobGuid, @NonNull String partitionName) {
 		synchronized (lock) {
 			var batchMetrics = getJobMetrics(jobGuid);
 			var partitionMetrics = batchMetrics.getPartitionMetrics().get(partitionName);

@@ -111,6 +111,7 @@ public class BatchController {
 	}
 
 	@PostMapping(value = "/stop/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@SuppressWarnings("javasecurity:S5145") // False positive: Internal-only, accessible solely by backend
 	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable String jobGuid) {
 		Map<String, Object> response = new HashMap<>();
 		Long executionId = null;

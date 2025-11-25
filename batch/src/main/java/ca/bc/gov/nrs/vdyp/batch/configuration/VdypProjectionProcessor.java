@@ -19,8 +19,11 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	private final BatchMetricsCollector metricsCollector;
 
 	// Partition context information
+	@NonNull
 	private Long jobExecutionId;
+	@NonNull
 	private String jobGuid;
+	@NonNull
 	private String partitionName;
 
 	// Validation thresholds
