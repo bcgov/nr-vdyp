@@ -5,8 +5,6 @@ import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
@@ -34,12 +32,8 @@ class BatchMetricsCollectorTest {
 
 	@BeforeEach
 	void setUp() {
-		try {
-			batchMetricsCollector.getJobMetrics(JOB_GUID);
-			// Remove all existing metrics...
-		} catch (BatchException e) {
-			// expected
-		}
+		// Clean up any existing metrics from previous tests
+		batchMetricsCollector.cleanupOldMetrics(0);
 	}
 
 	@Test
@@ -82,7 +76,7 @@ class BatchMetricsCollectorTest {
 		BatchMetrics.PartitionMetrics partitionMetrics = metrics.getPartitionMetrics().get(PARTITION_NAME);
 
 		assertNotNull(partitionMetrics.getEndTime());
-		assertEquals((int) writeCount, partitionMetrics.getRecordsWritten());
+		assertEquals(writeCount, partitionMetrics.getRecordsWritten());
 		assertEquals(EXIT_CODE, partitionMetrics.getExitCode());
 	}
 
@@ -201,27 +195,6 @@ class BatchMetricsCollectorTest {
 	}
 
 	@Test
-	void testInitializeMetrics_NullJobExecutionId() {
-		Exception exception = assertThrows(
-				BatchException.class, () -> batchMetricsCollector.initializeMetrics(null, JOB_GUID)
-		);
-
-		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
-	}
-
-	@Test
-	void testInitializePartitionMetrics_NullJobExecutionId() {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.initializePartitionMetrics(null, JOB_GUID, PARTITION_NAME)
-		);
-
-		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
-	}
-
-	@Test
 	void testInitializePartitionMetrics_NoMetricsFound() {
 		String nonExistentGuid = "non-existent-guid-for-partition";
 		Exception exception = assertThrows(
@@ -231,18 +204,6 @@ class BatchMetricsCollectorTest {
 		);
 
 		assertTrue(exception.getMessage().contains("No metrics found for job"));
-	}
-
-	@Test
-	void testCompletePartitionMetrics_NullJobExecutionId() {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.completePartitionMetrics(null, JOB_GUID, PARTITION_NAME, 100L, EXIT_CODE)
-		);
-
-		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
 	}
 
 	@Test
@@ -268,16 +229,6 @@ class BatchMetricsCollectorTest {
 		);
 
 		assertTrue(exception.getMessage().contains("Partition metrics not found for partition"));
-	}
-
-	@Test
-	void testFinalizeJobMetrics_NullJobExecutionId() {
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.finalizeJobMetrics(null, JOB_GUID, "COMPLETED", 100L, 95L)
-		);
-
-		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
 	}
 
 	@Test
@@ -325,23 +276,6 @@ class BatchMetricsCollectorTest {
 	}
 
 	@Test
-	void testRecordSkip_NullBatchRecord() {
-		Long recordId = 456L;
-
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-		batchMetricsCollector.recordSkip(
-				JOB_EXECUTION_ID, JOB_GUID, recordId, null, new RuntimeException("test"), PARTITION_NAME, 15L
-		);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
-		assertEquals(1, metrics.getTotalSkips());
-
-		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().peek();
-		assertNotNull(skipDetail);
-		assertEquals("null", skipDetail.recordData());
-	}
-
-	@Test
 	void testCleanupOldMetrics_NegativeKeepCount() {
 		Exception exception = assertThrows(BatchException.class, () -> batchMetricsCollector.cleanupOldMetrics(-1));
 
@@ -374,15 +308,6 @@ class BatchMetricsCollectorTest {
 		// All metrics should remain
 		assertTrue(batchMetricsCollector.isJobMetricsPresent(guid1));
 		assertTrue(batchMetricsCollector.isJobMetricsPresent(guid2));
-	}
-
-	@Test
-	void testGetJobMetrics_NullJobGuid() {
-		Exception exception = assertThrows(
-				BatchException.class, () -> batchMetricsCollector.getJobMetrics((String) null)
-		);
-
-		assertTrue(exception.getMessage().contains("jobGuid cannot be null or blank"));
 	}
 
 	@Test
@@ -956,24 +881,6 @@ class BatchMetricsCollectorTest {
 	}
 
 	@Test
-	void testRecordSkip_WithNullJobExecutionId_ThrowsException() {
-		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord(
-				"12345678901", "12345678901,MAP1", List.of("12345678901,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
-		Throwable error = new RuntimeException("Test error");
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector
-						.recordSkip(null, JOB_GUID, recordId, batchRecord, error, PARTITION_NAME, 10L)
-		);
-
-		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
-	}
-
-	@Test
 	void testRecordSkip_WithNoMetricsFound_ThrowsException() {
 		String nonExistentGuid = "non-existent-guid-999";
 		Long recordId = 12345L;
@@ -991,18 +898,6 @@ class BatchMetricsCollectorTest {
 		);
 
 		assertTrue(exception.getMessage().contains("No metrics found for job"));
-	}
-
-	@Test
-	void testRecordRetryAttempt_WithNullJobExecutionId_ThrowsException() {
-		Throwable error = new RuntimeException("Test error");
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.recordRetryAttempt(null, JOB_GUID, 1, error, true, PARTITION_NAME)
-		);
-
-		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
 	}
 
 	@Test
@@ -1126,143 +1021,6 @@ class BatchMetricsCollectorTest {
 		assertNotNull(batchMetricsCollector.getJobMetrics(guid1));
 		assertNotNull(batchMetricsCollector.getJobMetrics(guid2));
 		assertNotNull(batchMetricsCollector.getJobMetrics(guid3));
-	}
-
-	@ParameterizedTest
-	@CsvSource(
-		{ "null, Job GUID cannot be null or blank", "'   ', Job GUID cannot be null or blank",
-				"'', Job GUID cannot be null or blank" }
-	)
-	void testInitializeMetrics_InvalidJobGuid(String jobGuid, String expectedMessage) {
-		String actualJobGuid = "null".equals(jobGuid) ? null : jobGuid;
-
-		Exception exception = assertThrows(
-				BatchException.class, () -> batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, actualJobGuid)
-		);
-
-		assertTrue(exception.getMessage().contains(expectedMessage));
-	}
-
-	@Test
-	void testInitializePartitionMetrics_NullJobGuid() {
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, null, PARTITION_NAME)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testInitializePartitionMetrics_BlankJobGuid() {
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, "  ", PARTITION_NAME)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testCompletePartitionMetrics_NullJobGuid() {
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector
-						.completePartitionMetrics(JOB_EXECUTION_ID, null, PARTITION_NAME, 100L, EXIT_CODE)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testCompletePartitionMetrics_BlankJobGuid() {
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector
-						.completePartitionMetrics(JOB_EXECUTION_ID, "  ", PARTITION_NAME, 100L, EXIT_CODE)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testFinalizeJobMetrics_NullJobGuid() {
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.finalizeJobMetrics(JOB_EXECUTION_ID, null, "COMPLETED", 100L, 95L)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testFinalizeJobMetrics_BlankJobGuid() {
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.finalizeJobMetrics(JOB_EXECUTION_ID, "  ", "COMPLETED", 100L, 95L)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testRecordRetryAttempt_NullJobGuid() {
-		Throwable error = new RuntimeException("Test error");
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, null, 1, error, true, PARTITION_NAME)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testRecordRetryAttempt_BlankJobGuid() {
-		Throwable error = new RuntimeException("Test error");
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, "  ", 1, error, true, PARTITION_NAME)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testRecordSkip_NullJobGuid() {
-		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord(
-				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
-		Throwable error = new RuntimeException("Test error");
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector
-						.recordSkip(JOB_EXECUTION_ID, null, recordId, batchRecord, error, PARTITION_NAME, 10L)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testRecordSkip_BlankJobGuid() {
-		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord(
-				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
-		Throwable error = new RuntimeException("Test error");
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector
-						.recordSkip(JOB_EXECUTION_ID, "  ", recordId, batchRecord, error, PARTITION_NAME, 10L)
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
 	}
 
 	@Test

@@ -5,17 +5,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import jakarta.validation.constraints.NotNull;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics.PartitionMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Service for collecting and managing batch job metrics.
@@ -30,15 +28,7 @@ public class BatchMetricsCollector {
 	private final LinkedList<String> jobMetricsByArrivalTime = new LinkedList<>();
 	private final Object lock = new Object();
 
-	public BatchMetrics initializeMetrics(Long jobExecutionId, String jobGuid) {
-		if (jobExecutionId == null) {
-			throw new BatchException("Job execution ID cannot be null");
-		}
-
-		if (StringUtils.isBlank(jobGuid)) {
-			throw new BatchException("Job GUID cannot be null or blank");
-		}
-
+	public BatchMetrics initializeMetrics(@NotNull Long jobExecutionId, @NotNull String jobGuid) {
 		try {
 			synchronized (lock) {
 				if (jobMetricsMap.containsKey(jobGuid)) {
@@ -61,14 +51,9 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	public void initializePartitionMetrics(Long jobExecutionId, String jobGuid, String partitionName) {
-		if (jobExecutionId == null) {
-			throw new BatchException("Job execution ID cannot be null");
-		}
-		if (StringUtils.isBlank(jobGuid)) {
-			throw new BatchException("Job GUID cannot be null or blank");
-		}
-
+	public void initializePartitionMetrics(
+			@NotNull Long jobExecutionId, @NotNull String jobGuid, @NotNull String partitionName
+	) {
 		try {
 			synchronized (lock) {
 				BatchMetrics metrics = getJobMetrics(jobGuid);
@@ -93,15 +78,9 @@ public class BatchMetricsCollector {
 	}
 
 	public void completePartitionMetrics(
-			Long jobExecutionId, String jobGuid, String partitionName, long writeCount, String exitCode
+			@NotNull Long jobExecutionId, @NotNull String jobGuid, @NotNull String partitionName, long writeCount,
+			String exitCode
 	) {
-		if (jobExecutionId == null) {
-			throw new BatchException("Job execution ID cannot be null");
-		}
-		if (StringUtils.isBlank(jobGuid)) {
-			throw new BatchException("Job GUID cannot be null or blank");
-		}
-
 		try {
 			var partitionMetrics = getPartitionMetrics(jobGuid, partitionName);
 
@@ -124,15 +103,9 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	public void
-			finalizeJobMetrics(Long jobExecutionId, String jobGuid, String status, long totalRead, long totalWritten) {
-		if (jobExecutionId == null) {
-			throw new BatchException("Job execution ID cannot be null");
-		}
-		if (StringUtils.isBlank(jobGuid)) {
-			throw new BatchException("Job GUID cannot be null or blank");
-		}
-
+	public void finalizeJobMetrics(
+			@NotNull Long jobExecutionId, @NotNull String jobGuid, String status, long totalRead, long totalWritten
+	) {
 		try {
 			BatchMetrics metrics = getJobMetrics(jobGuid);
 
@@ -154,16 +127,9 @@ public class BatchMetricsCollector {
 	}
 
 	public void recordRetryAttempt(
-			Long jobExecutionId, String jobGuid, int attemptNumber, @NotNull Throwable error, boolean successful,
-			String partitionName
+			@NotNull Long jobExecutionId, @NotNull String jobGuid, int attemptNumber, @NotNull Throwable error,
+			boolean successful, String partitionName
 	) {
-		if (jobExecutionId == null) {
-			throw new BatchException("Job execution ID cannot be null");
-		}
-		if (StringUtils.isBlank(jobGuid)) {
-			throw new BatchException("Job GUID cannot be null or blank");
-		}
-
 		try {
 			String errorType = error.getClass().getSimpleName();
 			String errorMessage = error.getMessage() != null ? error.getMessage() : "No error message";
@@ -202,20 +168,9 @@ public class BatchMetricsCollector {
 	}
 
 	public void recordSkip(
-			Long jobExecutionId, String jobGuid, Long recordId, BatchRecord batchRecord, @NotNull Throwable error,
-			String partitionName, Long lineNumber
+			@NotNull Long jobExecutionId, @NotNull String jobGuid, Long recordId, @NotNull BatchRecord batchRecord,
+			@NotNull Throwable error, @NotNull String partitionName, Long lineNumber
 	) {
-		if (jobExecutionId == null) {
-			throw new BatchException("Job execution ID cannot be null");
-		}
-		if (StringUtils.isBlank(jobGuid)) {
-			throw new BatchException("Job GUID cannot be null or blank");
-		}
-
-		// MDJ: Can batchRecord be null? recordId? partitionName? If so, this is very odd. In general,
-		// require parameters not be null (using @NotNull to indicate this) unless it the interface
-		// explicitly allows it. This will make the code much tighter and easier to understand.
-
 		try {
 			String errorType = error.getClass().getSimpleName();
 			String errorMessage = error.getMessage() != null ? error.getMessage() : "No error message";
@@ -229,7 +184,7 @@ public class BatchMetricsCollector {
 				metrics.getSkipReasonCount().merge(errorType, 1, Integer::sum);
 
 				// Create skip detail
-				String recordData = batchRecord != null ? batchRecord.toString() : "null";
+				String recordData = batchRecord.toString();
 
 				BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
 						recordId, recordData, errorType, errorMessage, partitionName, lineNumber
@@ -273,27 +228,14 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	public boolean isJobMetricsPresent(String jobGuid) {
-		if (StringUtils.isBlank(jobGuid)) {
-			throw new BatchException("jobGuid cannot be null or blank");
-		}
+	public boolean isJobMetricsPresent(@NotNull String jobGuid) {
 		synchronized (lock) {
 			var metrics = jobMetricsMap.get(jobGuid);
 			return metrics != null;
 		}
 	}
 
-	/**
-	 * Return the BatchMetrics for the given jobGuid.
-	 *
-	 * @param jobGuid
-	 * @return as described
-	 * @throws BatchException if jobGuid is null/blank or no BatchMetrics instance exists for the given jobGuid.
-	 */
-	public BatchMetrics getJobMetrics(String jobGuid) {
-		if (StringUtils.isBlank(jobGuid)) {
-			throw new BatchException("jobGuid cannot be null or blank");
-		}
+	public BatchMetrics getJobMetrics(@NotNull String jobGuid) {
 		synchronized (lock) {
 			var metrics = jobMetricsMap.get(jobGuid);
 			if (metrics == null) {
@@ -303,7 +245,7 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	private PartitionMetrics getPartitionMetrics(String jobGuid, String partitionName) {
+	private PartitionMetrics getPartitionMetrics(@NotNull String jobGuid, @NotNull String partitionName) {
 		synchronized (lock) {
 			var batchMetrics = getJobMetrics(jobGuid);
 			var partitionMetrics = batchMetrics.getPartitionMetrics().get(partitionName);
