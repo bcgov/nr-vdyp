@@ -19,11 +19,8 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	private final BatchMetricsCollector metricsCollector;
 
 	// Partition context information
-	@NonNull
 	private Long jobExecutionId;
-	@NonNull
 	private String jobGuid;
-	@NonNull
 	private String partitionName;
 
 	// Validation thresholds
@@ -44,6 +41,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	 * Initialize processor with step execution context.
 	 */
 	@BeforeStep
+	@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch context
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
