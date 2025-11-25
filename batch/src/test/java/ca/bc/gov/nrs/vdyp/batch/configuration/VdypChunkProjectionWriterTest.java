@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -201,8 +200,7 @@ class VdypChunkProjectionWriterTest {
 		assertEquals(testException, thrownException);
 		verify(vdypProjectionService).performProjectionForChunk(any(), any(), any(), any(), any(), any());
 		verify(metricsCollector).recordSkip(
-				eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyLong(), any(BatchRecord.class), eq(testException),
-				eq(TEST_PARTITION_NAME), any()
+				eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), any(), eq(testException), eq(TEST_PARTITION_NAME)
 		);
 	}
 

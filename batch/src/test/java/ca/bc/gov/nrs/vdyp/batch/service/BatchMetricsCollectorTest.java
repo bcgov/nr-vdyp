@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -121,17 +120,10 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testRecordSkip() {
-		Long recordId = 456L;
-		BatchRecord batchRecord = new BatchRecord(
-				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
 		Throwable error = new IllegalStateException("Invalid state");
-		Long lineNumber = 15L;
 
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-		batchMetricsCollector
-				.recordSkip(JOB_EXECUTION_ID, JOB_GUID, recordId, batchRecord, error, PARTITION_NAME, lineNumber);
+		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, "98765432109", error, PARTITION_NAME);
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(1, metrics.getTotalSkips());
@@ -140,10 +132,9 @@ class BatchMetricsCollectorTest {
 		assertEquals(1, metrics.getSkipDetails().size());
 		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().peek();
 		assertNotNull(skipDetail);
-		assertEquals(recordId, skipDetail.recordId());
+		assertEquals("98765432109", skipDetail.featureId());
 		assertEquals("IllegalStateException", skipDetail.errorType());
 		assertEquals("Invalid state", skipDetail.errorMessage());
-		assertEquals(lineNumber, skipDetail.lineNumber());
 	}
 
 	@Test
@@ -258,18 +249,11 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testRecordSkip_NullError() {
-		Long recordId = 456L;
-		BatchRecord batchRecord = new BatchRecord(
-				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
-
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
 		Exception exception = assertThrows(
 				Exception.class,
-				() -> batchMetricsCollector
-						.recordSkip(JOB_EXECUTION_ID, JOB_GUID, recordId, batchRecord, null, PARTITION_NAME, 15L)
+				() -> batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, "98765432109", null, PARTITION_NAME)
 		);
 
 		assertNotNull(exception);
@@ -334,29 +318,15 @@ class BatchMetricsCollectorTest {
 	void testRecordSkip_MultipleSkipsWithDifferentErrors() {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
-		BatchRecord record1 = new BatchRecord(
-				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
+		batchMetricsCollector
+				.recordSkip(JOB_EXECUTION_ID, JOB_GUID, "98765432101", new RuntimeException("Error 1"), PARTITION_NAME);
+
 		batchMetricsCollector.recordSkip(
-				JOB_EXECUTION_ID, JOB_GUID, 1L, record1, new RuntimeException("Error 1"), PARTITION_NAME, 10L
+				JOB_EXECUTION_ID, JOB_GUID, "98765432102", new IllegalStateException("Error 2"), PARTITION_NAME
 		);
 
-		BatchRecord record2 = new BatchRecord(
-				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
-		batchMetricsCollector.recordSkip(
-				JOB_EXECUTION_ID, JOB_GUID, 2L, record2, new IllegalStateException("Error 2"), PARTITION_NAME, 20L
-		);
-
-		BatchRecord record3 = new BatchRecord(
-				"98765432109", "98765432109,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
-		batchMetricsCollector.recordSkip(
-				JOB_EXECUTION_ID, JOB_GUID, 3L, record3, new RuntimeException("Error 3"), PARTITION_NAME, 30L
-		);
+		batchMetricsCollector
+				.recordSkip(JOB_EXECUTION_ID, JOB_GUID, "98765432103", new RuntimeException("Error 3"), PARTITION_NAME);
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		assertEquals(3, metrics.getTotalSkips());
@@ -601,25 +571,19 @@ class BatchMetricsCollectorTest {
 		BatchMetrics metrics = new BatchMetrics(999L, JOB_GUID);
 
 		List<BatchMetrics.SkipDetail> skipDetails = new ArrayList<>();
+		skipDetails.add(new BatchMetrics.SkipDetail("skip-data1", "RuntimeException", "Skip error 1", "partition-1"));
 		skipDetails.add(
-				new BatchMetrics.SkipDetail(1L, "skip-data1", "RuntimeException", "Skip error 1", "partition-1", 10L)
-		);
-		skipDetails.add(
-				new BatchMetrics.SkipDetail(
-						2L, "skip-data2", "IllegalArgumentException", "Skip error 2", "partition-2", 20L
-				)
+				new BatchMetrics.SkipDetail("skip-data2", "IllegalArgumentException", "Skip error 2", "partition-2")
 		);
 
 		metrics.setSkipDetails(skipDetails);
 
 		assertEquals(2, metrics.getSkipDetails().size());
 		List<BatchMetrics.SkipDetail> detailsList = new ArrayList<>(metrics.getSkipDetails());
-		assertEquals(1L, detailsList.get(0).recordId());
-		assertEquals("skip-data1", detailsList.get(0).recordData());
+		assertEquals("skip-data1", detailsList.get(0).featureId());
 		assertEquals("RuntimeException", detailsList.get(0).errorType());
 		assertEquals("Skip error 1", detailsList.get(0).errorMessage());
 		assertEquals("partition-1", detailsList.get(0).partitionName());
-		assertEquals(10L, detailsList.get(0).lineNumber());
 
 		metrics.setSkipDetails(null);
 		assertTrue(metrics.getSkipDetails().isEmpty());
@@ -713,7 +677,7 @@ class BatchMetricsCollectorTest {
 	}
 
 	@Test
-	void testBatchMetrics_RetryDetail_WithTimestamp() {
+	void testBatchMetrics_RetryDetail() {
 		LocalDateTime timestamp = LocalDateTime.now();
 		BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
 				2, "TestException", "Test error message", timestamp, true, "partition-test"
@@ -728,48 +692,17 @@ class BatchMetricsCollectorTest {
 	}
 
 	@Test
-	void testBatchMetrics_RetryDetail_WithoutTimestamp() {
-		BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
-				3, "AnotherException", "Another error", false, "partition-2"
-		);
-
-		assertEquals(3, retryDetail.attemptNumber());
-		assertEquals("AnotherException", retryDetail.errorType());
-		assertEquals("Another error", retryDetail.errorMessage());
-		assertNotNull(retryDetail.timestamp());
-		assertFalse(retryDetail.successful());
-		assertEquals("partition-2", retryDetail.partitionName());
-	}
-
-	@Test
-	void testBatchMetrics_SkipDetail_WithTimestamp() {
+	void testBatchMetrics_SkipDetail() {
 		LocalDateTime timestamp = LocalDateTime.now();
 		BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
-				789L, "skip-data", "SkipException", "Skip error message", timestamp, "partition-skip", 100L
+				"123456789", "TestSkipException", "Test skip error", timestamp, "partition-3"
 		);
 
-		assertEquals(789L, skipDetail.recordId());
-		assertEquals("skip-data", skipDetail.recordData());
-		assertEquals("SkipException", skipDetail.errorType());
-		assertEquals("Skip error message", skipDetail.errorMessage());
-		assertEquals(timestamp, skipDetail.timestamp());
-		assertEquals("partition-skip", skipDetail.partitionName());
-		assertEquals(100L, skipDetail.lineNumber());
-	}
-
-	@Test
-	void testBatchMetrics_SkipDetail_WithoutTimestamp() {
-		BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
-				999L, "data-999", "TestSkipException", "Test skip error", "partition-3", 200L
-		);
-
-		assertEquals(999L, skipDetail.recordId());
-		assertEquals("data-999", skipDetail.recordData());
+		assertEquals("123456789", skipDetail.featureId());
 		assertEquals("TestSkipException", skipDetail.errorType());
 		assertEquals("Test skip error", skipDetail.errorMessage());
 		assertNotNull(skipDetail.timestamp());
 		assertEquals("partition-3", skipDetail.partitionName());
-		assertEquals(200L, skipDetail.lineNumber());
 	}
 
 	@Test
@@ -883,18 +816,12 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordSkip_WithNoMetricsFound_ThrowsException() {
 		String nonExistentGuid = "non-existent-guid-999";
-		Long recordId = 12345L;
-		BatchRecord batchRecord = new BatchRecord(
-				"123456789", "123456789,MAP1", List.of("123456789,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
 		Throwable error = new RuntimeException("Test error");
 
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.recordSkip(
-						JOB_EXECUTION_ID, nonExistentGuid, recordId, batchRecord, error, PARTITION_NAME, 10L
-				)
+				() -> batchMetricsCollector
+						.recordSkip(JOB_EXECUTION_ID, nonExistentGuid, "123456789", error, PARTITION_NAME)
 		);
 
 		assertTrue(exception.getMessage().contains("No metrics found for job"));
@@ -973,20 +900,11 @@ class BatchMetricsCollectorTest {
 	void testRecordSkip_ExceptionHandling() {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
-		Long recordId = Long.MAX_VALUE;
-		BatchRecord batchRecord = new BatchRecord(
-				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
-
 		String longMessage = "Skip error: " + "x".repeat(100000);
 		Throwable error = new IllegalStateException(longMessage);
-		Long lineNumber = Long.MAX_VALUE;
 
 		assertDoesNotThrow(
-				() -> batchMetricsCollector.recordSkip(
-						JOB_EXECUTION_ID, JOB_GUID, recordId, batchRecord, error, PARTITION_NAME, lineNumber
-				)
+				() -> batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, "123456789", error, PARTITION_NAME)
 		);
 	}
 
@@ -1080,14 +998,8 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
 		for (int i = 1; i <= 10; i++) {
-			BatchRecord batchRecord = new BatchRecord(
-					"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-					PARTITION_NAME
-			);
 			Throwable error = new RuntimeException("Skip error " + i);
-			batchMetricsCollector.recordSkip(
-					JOB_EXECUTION_ID, JOB_GUID, (long) i, batchRecord, error, PARTITION_NAME, (long) (i * 10)
-			);
+			batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, "123456789", error, PARTITION_NAME);
 		}
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
@@ -1231,20 +1143,10 @@ class BatchMetricsCollectorTest {
 	void testBatchMetrics_GetSkipDetailsList() {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
-		BatchRecord record1 = new BatchRecord(
-				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
-
-		BatchRecord record2 = new BatchRecord(
-				"123456789", "123456789,MAP1", List.of("98765432109,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
-				PARTITION_NAME
-		);
-
 		Exception testException = new RuntimeException("Test skip error");
 
-		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, 1L, record1, testException, PARTITION_NAME, 10L);
-		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, 2L, record2, testException, PARTITION_NAME, 20L);
+		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, "123456789", testException, PARTITION_NAME);
+		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, JOB_GUID, "98765432109", testException, PARTITION_NAME);
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
 		var skipDetailsList = metrics.getSkipDetailsList();

@@ -65,14 +65,10 @@ public class BatchMetrics {
 	 * Skip detail information
 	 */
 	public static record SkipDetail(
-			Long recordId, String recordData, String errorType, String errorMessage, LocalDateTime timestamp,
-			String partitionName, Long lineNumber
+			String featureId, String errorType, String errorMessage, LocalDateTime timestamp, String partitionName
 	) {
-		public SkipDetail(
-				Long recordId, String recordData, String errorType, String errorMessage, String partitionName,
-				Long lineNumber
-		) {
-			this(recordId, recordData, errorType, errorMessage, LocalDateTime.now(), partitionName, lineNumber);
+		public SkipDetail(String featureId, String errorType, String errorMessage, String partitionName) {
+			this(featureId, errorType, errorMessage, LocalDateTime.now(), partitionName);
 		}
 	}
 

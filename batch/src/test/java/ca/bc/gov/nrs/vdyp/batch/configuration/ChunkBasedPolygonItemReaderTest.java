@@ -258,7 +258,7 @@ class ChunkBasedPolygonItemReaderTest {
 
 	@Test
 	void testRecordSkipMetricsWithInvalidFeatureId() throws Exception {
-		doNothing().when(metricsCollector).recordSkip(anyLong(), any(), any(), any(), any(), anyString(), any());
+		doNothing().when(metricsCollector).recordSkip(anyLong(), any(), any(), any(), anyString());
 
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);

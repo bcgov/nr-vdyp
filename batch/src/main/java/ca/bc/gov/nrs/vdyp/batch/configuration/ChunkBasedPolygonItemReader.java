@@ -417,12 +417,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	 */
 	private void recordSkipMetrics(String featureId, Exception e) {
 		if (metricsCollector != null && jobExecutionId != null) {
-			try {
-				Long featureIdLong = featureId != null ? Long.parseLong(featureId) : null;
-				metricsCollector.recordSkip(jobExecutionId, jobGuid, featureIdLong, null, e, partitionName, null);
-			} catch (NumberFormatException nfe) {
-				metricsCollector.recordSkip(jobExecutionId, jobGuid, null, null, e, partitionName, null);
-			}
+			metricsCollector.recordSkip(jobExecutionId, jobGuid, featureId, e, partitionName);
 		}
 	}
 

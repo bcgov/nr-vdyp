@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,6 @@ import org.springframework.validation.BindException;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.scope.context.StepSynchronizationManager;
 
-import java.util.Collections;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -143,15 +141,6 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testCacheRecordData_DoesNotThrow() {
-		BatchRecord batchRecord = new BatchRecord(
-				"1145678901", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
-		);
-
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(1145678901L, batchRecord, "test-thread"));
-	}
-
-	@Test
 	void testConstructor_WithValidParameters() {
 		BatchSkipPolicy policy = new BatchSkipPolicy(10L, metricsCollector);
 
@@ -204,33 +193,6 @@ class BatchSkipPolicyTest {
 	@Test
 	void testFlatFileParseException_WithLineNumber_ExtractsCorrectly() throws SkipLimitExceededException {
 		FlatFileParseException exception = new FlatFileParseException("Parse error at line 5", "invalid,data,line", 5);
-
-		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
-
-		assertTrue(result);
-	}
-
-	@Test
-	void testCacheRecordData_WithNullValues_Handles() {
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, null, "thread1"));
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(1345678904L, null, "thread1"));
-		BatchRecord batchRecord = new BatchRecord(
-				"1345678904", "1345678904,MAP1", java.util.Collections.emptyList(), null, null, "test-partition"
-		);
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, batchRecord, "thread1"));
-	}
-
-	@Test
-	void testCacheRecordData_AndRetrieval_WorksCorrectly() throws SkipLimitExceededException {
-		BatchRecord batchRecord = new BatchRecord(
-				"1445678905", "1345678904,MAP1", java.util.Collections.emptyList(), null, null, "test-partition"
-		);
-
-		// Cache the record
-		BatchSkipPolicy.cacheRecordData(1445678905L, batchRecord, Thread.currentThread().getName());
-
-		// Create an exception with Feature ID that should retrieve the cached record
-		RuntimeException exception = new RuntimeException("Error processing Feature ID 1445678905 - invalid format");
 
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
 
@@ -324,29 +286,6 @@ class BatchSkipPolicyTest {
 		FlatFileParseException exception = new FlatFileParseException("Parse error", "data", 20);
 
 		boolean result = policyWithNullMetrics.shouldSkip(exception, 1);
-
-		assertTrue(result);
-	}
-
-	@Test
-	void testExtractRecord_WithCachedRecord_ReturnsCachedData() throws SkipLimitExceededException {
-		when(stepExecution.getJobExecutionId()).thenReturn(1L);
-		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
-		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString("partitionName")).thenReturn("test-partition");
-		batchSkipPolicy.beforeStep(stepExecution);
-
-		BatchRecord cachedRecord = new BatchRecord(
-				"1545678906", "1345678904,MAP1", java.util.Collections.emptyList(), null, null, "test-partition"
-		);
-
-		BatchSkipPolicy.cacheRecordData(1545678906L, cachedRecord, Thread.currentThread().getName());
-
-		RuntimeException exception = new RuntimeException("Error processing Feature ID 1545678906 - invalid format");
-
-		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
 
 		assertTrue(result);
 	}

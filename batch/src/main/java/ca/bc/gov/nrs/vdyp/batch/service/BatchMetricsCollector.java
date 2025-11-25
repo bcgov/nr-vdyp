@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics.PartitionMetrics;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 
 /**
  * Service for collecting and managing batch job metrics.
@@ -168,8 +167,8 @@ public class BatchMetricsCollector {
 	}
 
 	public void recordSkip(
-			@NonNull Long jobExecutionId, @NonNull String jobGuid, Long recordId, @NonNull BatchRecord batchRecord,
-			@NonNull Throwable error, @NonNull String partitionName, Long lineNumber
+			@NonNull Long jobExecutionId, @NonNull String jobGuid, String featureId, @NonNull Throwable error,
+			@NonNull String partitionName
 	) {
 		try {
 			String errorType = error.getClass().getSimpleName();
@@ -184,18 +183,16 @@ public class BatchMetricsCollector {
 				metrics.getSkipReasonCount().merge(errorType, 1, Integer::sum);
 
 				// Create skip detail
-				String recordData = batchRecord.toString();
-
 				BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
-						recordId, recordData, errorType, errorMessage, partitionName, lineNumber
+						featureId, errorType, errorMessage, partitionName
 				);
 
 				metrics.getSkipDetails().add(skipDetail);
 			}
 
 			logger.warn(
-					"[GUID: {}, Partition: {}] Recorded skip for job execution ID: {}, line: {}, recordId: {}, error: {}",
-					jobGuid, partitionName, jobExecutionId, lineNumber, recordId, errorType
+					"[GUID: {}, Partition: {}] Recorded skip for job execution ID: {}, featureId: {}, error: {}",
+					jobGuid, partitionName, jobExecutionId, featureId, errorType
 			);
 		} catch (BatchException e) {
 			throw e;

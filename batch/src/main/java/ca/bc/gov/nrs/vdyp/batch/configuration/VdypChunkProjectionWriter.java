@@ -167,13 +167,10 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 		if (metricsCollector != null && jobExecutionId != null && jobGuid != null) {
 			for (BatchRecord batchRecord : batchRecords) {
 				try {
-					Long recordIdHash = batchRecord.getFeatureId() != null
-							? (long) batchRecord.getFeatureId().hashCode() : 0L;
+					String featureId = batchRecord.getFeatureId() != null ? batchRecord.getFeatureId() : null;
 
 					if (!success) {
-						metricsCollector.recordSkip(
-								jobExecutionId, jobGuid, recordIdHash, batchRecord, error, actualPartitionName, null
-						);
+						metricsCollector.recordSkip(jobExecutionId, jobGuid, featureId, error, actualPartitionName);
 					}
 				} catch (Exception metricsException) {
 					logger.warn(

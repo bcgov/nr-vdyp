@@ -1,8 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import java.util.Collections;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
@@ -15,7 +12,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.validation.BindException;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.ProjectionNullPointerException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -29,9 +25,6 @@ public class BatchSkipPolicy implements SkipPolicy {
 	private String partitionName;
 
 	private final BatchMetricsCollector metricsCollector;
-
-	// Thread-safe storage for record data before skip processing
-	private static final ConcurrentHashMap<String, BatchRecord> recordDataCache = new ConcurrentHashMap<>();
 
 	public BatchSkipPolicy(long maxSkipCount, BatchMetricsCollector metricsCollector) {
 		this.maxSkipCount = maxSkipCount;
@@ -50,7 +43,11 @@ public class BatchSkipPolicy implements SkipPolicy {
 		validateSkipLimit(skipCount, t);
 
 		boolean shouldSkip = isSkippableException(t);
-		logSkipDecision(t, shouldSkip, skipCount);
+
+		logger.info(
+				"[VDYP Skip Policy] Exception: {}, Skippable: {}, Current Skipped count: {}",
+				t.getClass().getSimpleName(), shouldSkip, skipCount
+		);
 
 		if (shouldSkip) {
 			processSkippableException(t);
@@ -65,13 +62,6 @@ public class BatchSkipPolicy implements SkipPolicy {
 		}
 	}
 
-	private void logSkipDecision(Throwable t, boolean shouldSkip, long skipCount) {
-		logger.info(
-				"[VDYP Skip Policy] Exception: {}, Skippable: {}, Current Skipped count: {}",
-				t.getClass().getSimpleName(), shouldSkip, skipCount
-		);
-	}
-
 	private void processSkippableException(Throwable t) {
 		SkipContext skipContext = createSkipContext(t);
 		ExecutionContext executionContext = getCurrentExecutionContext();
@@ -81,11 +71,9 @@ public class BatchSkipPolicy implements SkipPolicy {
 	}
 
 	private SkipContext createSkipContext(Throwable t) {
-		Long recordId = extractRecordId(t);
-		BatchRecord batchRecord = extractRecord(t);
-		Long lineNumber = extractLineNumber(t);
+		String featureId = extractFeatureId(t);
 
-		return new SkipContext(recordId, batchRecord, lineNumber, t);
+		return new SkipContext(featureId, t);
 	}
 
 	private ExecutionContext getCurrentExecutionContext() {
@@ -97,8 +85,9 @@ public class BatchSkipPolicy implements SkipPolicy {
 			var stepContext = StepSynchronizationManager.getContext();
 			if (stepContext != null) {
 				StepExecution currentStepExecution = stepContext.getStepExecution();
-				currentJobExecutionId = updateJobExecutionId(currentStepExecution);
-				currentJobGuid = updateJobGuid(currentStepExecution);
+				currentJobExecutionId = currentStepExecution.getJobExecutionId();
+				currentJobGuid = currentStepExecution.getJobExecution().getJobParameters()
+						.getString(BatchConstants.Job.GUID);
 				currentPartitionName = updatePartitionName(currentStepExecution);
 			}
 		} catch (Exception e) {
@@ -106,14 +95,6 @@ public class BatchSkipPolicy implements SkipPolicy {
 		}
 
 		return new ExecutionContext(currentJobExecutionId, currentJobGuid, currentPartitionName);
-	}
-
-	private Long updateJobExecutionId(StepExecution stepExecution) {
-		return stepExecution.getJobExecutionId();
-	}
-
-	private String updateJobGuid(StepExecution stepExecution) {
-		return stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 	}
 
 	private String updatePartitionName(StepExecution stepExecution) {
@@ -125,9 +106,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 	private void recordSkipMetrics(SkipContext skipContext, ExecutionContext executionContext) {
 		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
 			metricsCollector.recordSkip(
-					executionContext.currentJobExecutionId, executionContext.currentJobGuid, skipContext.recordId,
-					skipContext.batchRecord, skipContext.throwable, executionContext.currentPartitionName,
-					skipContext.lineNumber
+					executionContext.currentJobExecutionId, executionContext.currentJobGuid, skipContext.featureId,
+					skipContext.throwable, executionContext.currentPartitionName
 			);
 		}
 	}
@@ -146,15 +126,11 @@ public class BatchSkipPolicy implements SkipPolicy {
 	}
 
 	private static class SkipContext {
-		final Long recordId;
-		final BatchRecord batchRecord;
-		final Long lineNumber;
+		final String featureId;
 		final Throwable throwable;
 
-		SkipContext(Long recordId, BatchRecord batchRecord, Long lineNumber, Throwable throwable) {
-			this.recordId = recordId;
-			this.batchRecord = batchRecord;
-			this.lineNumber = lineNumber;
+		SkipContext(String featureId, Throwable throwable) {
+			this.featureId = featureId;
 			this.throwable = throwable;
 		}
 	}
@@ -229,10 +205,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 				|| message.contains("missing") || message.contains("empty");
 	}
 
-	/**
-	 * Extract record ID from exception message for tracking.
-	 */
-	private Long extractRecordId(Throwable t) {
+	private String extractFeatureId(Throwable t) {
 		// MDJ: This is very fragile and must be changed. The way to do this is to
 		// add a getRecordId method to BatchException, and change the type of the
 		// parameter to BatchException. See the section in the accompanying document
@@ -241,69 +214,10 @@ public class BatchSkipPolicy implements SkipPolicy {
 			try {
 				String message = t.getMessage();
 				int idIndex = message.indexOf("ID ") + 3;
-				String idStr = message.substring(idIndex).split("\\D")[0];
-				return Long.parseLong(idStr);
+				return message.substring(idIndex).split("\\D")[0];
 			} catch (Exception e) {
 				// Unable to extract ID
 			}
-		}
-		return null;
-	}
-
-	/**
-	 * Extract record data from exception context.
-	 */
-	private BatchRecord extractRecord(Throwable t) {
-		Long recordId = extractRecordId(t);
-		if (recordId != null) {
-			// Try to get cached record data first
-			String threadName = Thread.currentThread().getName();
-			BatchRecord cachedRecord = getCachedRecordData(recordId, threadName);
-			if (cachedRecord != null) {
-				return cachedRecord;
-			}
-
-			// Fallback: create a basic record with the extracted recordId as featureId for
-			// tracking
-			return new BatchRecord(String.valueOf(recordId), "", Collections.emptyList(), null, null, partitionName);
-		}
-		return null;
-	}
-
-	/**
-	 * Extract line number from file parsing exceptions.
-	 */
-	private Long extractLineNumber(Throwable t) {
-		if (t instanceof FlatFileParseException) {
-			return (long) ((FlatFileParseException) t).getLineNumber();
-		}
-
-		// For other exceptions, estimate line number based on record ID
-		Long recordId = extractRecordId(t);
-		if (recordId != null && recordId > 0) {
-			return recordId + 1;
-		}
-
-		return null;
-	}
-
-	/**
-	 * Store record data before skip processing for later retrieval.
-	 */
-	public static void cacheRecordData(Long recordId, BatchRecord batchRecord, String threadName) {
-		if (recordId != null && batchRecord != null) {
-			String key = recordId + "_" + threadName;
-			recordDataCache.put(key, batchRecord);
-		}
-	}
-
-	/**
-	 * Retrieve cached record data for skip processing.
-	 */
-	private static BatchRecord getCachedRecordData(Long recordId, String threadName) {
-		if (recordId != null && threadName != null) {
-			String key = recordId + "_" + threadName;
-			return recordDataCache.remove(key); // Remove after retrieval to prevent memory leaks
 		}
 		return null;
 	}
