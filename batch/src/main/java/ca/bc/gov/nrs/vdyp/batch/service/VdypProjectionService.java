@@ -113,17 +113,14 @@ public class VdypProjectionService {
 			}
 
 		} catch (NullPointerException npe) {
-			// MDJ: If you're going to catch and rethrow RuntimeExceptions (after having added some context, as
-			// you're doing in handleProjectionNullPointer) why are you catching only NullPointerException?
+			// FIXME VDYP-839
 			throw ProjectionNullPointerException
 					.handleProjectionNullPointer(npe, batchRecords, jobExecutionId, jobGuid, partitionName, logger);
 		} catch (AbstractProjectionRequestException e) {
-			// MDJ: It's bad practice to convert a specific exception type into a more general one (such as
-			// IOException).
+			// FIXME VDYP-839
 			throw handleChunkProjectionFailure(batchRecords, partitionName, e);
 		} catch (IOException e) {
-			// MDJ: It's bad practice to throw general exceptions out of an application-specific interface. Instead,
-			// you should use an exception class specific to the interface.
+			// FIXME VDYP-839
 			throw e;
 		} catch (Exception e) {
 			throw BatchException.handleProjectionFailure(

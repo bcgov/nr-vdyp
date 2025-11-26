@@ -206,10 +206,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 	}
 
 	private String extractFeatureId(Throwable t) {
-		// MDJ: This is very fragile and must be changed. The way to do this is to
-		// add a getRecordId method to BatchException, and change the type of the
-		// parameter to BatchException. See the section in the accompanying document
-		// on Exception Handling Strategy.
+		// FIXME VDYP-839
 		if (t.getMessage() != null && t.getMessage().contains("ID ")) {
 			try {
 				String message = t.getMessage();
