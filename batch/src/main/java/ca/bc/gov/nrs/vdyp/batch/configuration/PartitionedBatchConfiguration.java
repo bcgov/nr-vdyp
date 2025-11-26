@@ -152,7 +152,8 @@ public class PartitionedBatchConfiguration {
 				.listener(retryPolicy).listener(skipPolicy).faultTolerant().retryPolicy(retryPolicy)
 				.skipPolicy(skipPolicy).listener(new StepExecutionListener() {
 					@Override
-					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch context
+					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch
+													// context
 					public void beforeStep(@NonNull StepExecution stepExecution) {
 						String partitionName = stepExecution.getExecutionContext()
 								.getString(BatchConstants.Partition.NAME);
@@ -170,7 +171,8 @@ public class PartitionedBatchConfiguration {
 					}
 
 					@Override
-					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch context
+					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch
+													// context
 					public ExitStatus afterStep(@NonNull StepExecution stepExecution) {
 						String partitionName = stepExecution.getExecutionContext()
 								.getString(BatchConstants.Partition.NAME);
@@ -210,7 +212,8 @@ public class PartitionedBatchConfiguration {
 				.next(postProcessingStep) //
 				.listener(new JobExecutionListener() {
 					@Override
-					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch context
+					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch
+													// context
 					public void beforeJob(@NonNull JobExecution jobExecution) {
 						// Initialize job metrics
 						String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
@@ -223,7 +226,8 @@ public class PartitionedBatchConfiguration {
 					}
 
 					@Override
-					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch context
+					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch
+													// context
 					public void afterJob(@NonNull JobExecution jobExecution) {
 						String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 

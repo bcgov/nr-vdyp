@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,15 +112,14 @@ public class BatchController {
 	}
 
 	@PostMapping(value = "/stop/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-	@SuppressWarnings("javasecurity:S5145") // False positive: Internal-only, accessible solely by backend
-	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable String jobGuid) {
+	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable UUID jobGuid) {
 		Map<String, Object> response = new HashMap<>();
 		Long executionId = null;
 
 		try {
 			logger.debug("Attempting to stop job with GUID: {}", jobGuid);
 
-			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
+			JobExecution jobExecution = findJobExecutionByGuid(jobGuid.toString());
 			executionId = jobExecution.getId();
 
 			logger.debug("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
@@ -201,7 +201,7 @@ public class BatchController {
 	}
 
 	@GetMapping(value = "/status/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable String jobGuid) {
+	public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable UUID jobGuid) {
 		Map<String, Object> response = new HashMap<>();
 
 		JobExecution jobExecution;
@@ -210,7 +210,7 @@ public class BatchController {
 		try {
 			logger.debug("Getting status for job with GUID: {}", jobGuid);
 
-			jobExecution = findJobExecutionByGuid(jobGuid);
+			jobExecution = findJobExecutionByGuid(jobGuid.toString());
 			executionId = jobExecution.getId();
 
 			logger.debug("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);

@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -269,7 +270,7 @@ class BatchControllerTest {
 
 	@Test
 	void testStopBatchJob_WithValidJobGuid_StopsJob() throws Exception {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Mock finding job execution
@@ -278,7 +279,7 @@ class BatchControllerTest {
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 
 		// Mock stopping the job
@@ -294,7 +295,7 @@ class BatchControllerTest {
 
 	@Test
 	void testStopBatchJob_WhenStopFails_ReturnsBadRequest() throws Exception {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Mock finding job execution
@@ -303,7 +304,7 @@ class BatchControllerTest {
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 
 		// Mock stopping fails
@@ -317,7 +318,7 @@ class BatchControllerTest {
 
 	@Test
 	void testStopBatchJob_WhenJobAlreadyStopping_ReturnsAccepted() throws Exception {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Mock finding job execution
@@ -326,7 +327,7 @@ class BatchControllerTest {
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 
 		// Mock job execution not running exception
@@ -340,7 +341,7 @@ class BatchControllerTest {
 
 	@Test
 	void testStopBatchJob_WithNonExistentJobGuid_ReturnsNotFound() throws NoSuchJobException {
-		String jobGuid = "non-existent-guid";
+		UUID jobGuid = UUID.randomUUID();
 
 		// Mock no job found
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
@@ -358,7 +359,7 @@ class BatchControllerTest {
 
 	@Test
 	void testStopBatchJob_WhenUnexpectedError_ReturnsInternalServerError() throws Exception {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Mock finding job execution
@@ -367,7 +368,7 @@ class BatchControllerTest {
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 
 		// Mock unexpected exception
@@ -381,12 +382,12 @@ class BatchControllerTest {
 
 	@Test
 	void testGetJobStatus_WithValidJobGuid_ReturnsStatus() throws NoSuchJobException {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Create real job execution with instance and params using builder
 		JobInstance realInstance = new JobInstance(1L, "testJob");
-		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
 				.toJobParameters();
 		JobExecution realExecution = new JobExecution(realInstance, executionId, realParams);
 		realExecution.setStatus(BatchStatus.STARTED);
@@ -418,7 +419,7 @@ class BatchControllerTest {
 
 	@Test
 	void testGetJobStatus_WithCompletedJob_ReturnsNotRunning() throws NoSuchJobException {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
@@ -426,7 +427,7 @@ class BatchControllerTest {
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
 		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
@@ -444,12 +445,12 @@ class BatchControllerTest {
 
 	@Test
 	void testGetJobStatus_WithFailedPartitions_CountsAsFailed() throws NoSuchJobException {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Create real job execution with instance and params using builder
 		JobInstance realInstance = new JobInstance(1L, "testJob");
-		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
 				.toJobParameters();
 		JobExecution realExecution = new JobExecution(realInstance, executionId, realParams);
 		realExecution.setStatus(BatchStatus.FAILED);
@@ -477,7 +478,7 @@ class BatchControllerTest {
 
 	@Test
 	void testGetJobStatus_WithNonExistentJobGuid_ReturnsNotFound() throws NoSuchJobException {
-		String jobGuid = "non-existent-guid";
+		UUID jobGuid = UUID.randomUUID();
 
 		// Mock no job found
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
@@ -495,7 +496,7 @@ class BatchControllerTest {
 
 	@Test
 	void testGetJobStatus_WhenUnexpectedError_ReturnsInternalServerError() {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 
 		// Mock unexpected exception
 		when(jobExplorer.getJobNames()).thenThrow(new RuntimeException("Database error"));
@@ -508,7 +509,7 @@ class BatchControllerTest {
 
 	@Test
 	void testGetJobStatus_WithEmptyJobNames_ReturnsNotFound() {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 
 		// Mock empty job names
 		when(jobExplorer.getJobNames()).thenReturn(Collections.emptyList());
@@ -521,7 +522,7 @@ class BatchControllerTest {
 
 	@Test
 	void testGetJobStatus_WithMultipleJobInstances_FindsCorrectOne() throws NoSuchJobException {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		JobInstance instance1 = new JobInstance(1L, "testJob");
@@ -530,7 +531,7 @@ class BatchControllerTest {
 		// Create real JobParameters using builder
 		JobParameters params1 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "wrong-guid")
 				.toJobParameters();
-		JobParameters params2 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+		JobParameters params2 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
 				.toJobParameters();
 
 		JobExecution execution1 = new JobExecution(instance1, 1L, params1);
