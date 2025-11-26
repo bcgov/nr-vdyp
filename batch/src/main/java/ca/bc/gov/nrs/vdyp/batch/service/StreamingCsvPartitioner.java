@@ -8,7 +8,6 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -93,7 +92,6 @@ public class StreamingCsvPartitioner {
 	 *
 	 * @return array where index = partition number, value = number of records for that partition
 	 */
-	@SuppressWarnings("java:S2629")
 	private int[] calculatePartitionSizes(int totalFeatureIds, int partitionSize) {
 		int[] partitionSizes = new int[partitionSize];
 		int chunkSize = totalFeatureIds / partitionSize;
@@ -107,7 +105,7 @@ public class StreamingCsvPartitioner {
 
 		logger.debug(
 				"Total FEATURE_IDs: {}, Partition size: {}, Base chunk size: {}, Remainder: {}, Partition sizes: {}",
-				totalFeatureIds, partitionSize, chunkSize, remainder, Arrays.toString(partitionSizes)
+				totalFeatureIds, partitionSize, chunkSize, remainder, partitionSizes
 		);
 
 		return partitionSizes;
