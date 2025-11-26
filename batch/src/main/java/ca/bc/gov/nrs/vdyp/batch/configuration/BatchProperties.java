@@ -43,6 +43,7 @@ public class BatchProperties {
 
 	public static class PartitionProperties {
 		private Integer defaultPartitionSize;
+		private Integer jobSearchChunkSize;
 		private String inputPolygonFileName;
 		private String inputLayerFileName;
 		private String inputFolderNamePrefix;
@@ -57,6 +58,14 @@ public class BatchProperties {
 
 		public void setDefaultPartitionSize(Integer defaultPartitionSize) {
 			this.defaultPartitionSize = defaultPartitionSize;
+		}
+
+		public Integer getJobSearchChunkSize() {
+			return jobSearchChunkSize;
+		}
+
+		public void setJobSearchChunkSize(Integer jobSearchChunkSize) {
+			this.jobSearchChunkSize = jobSearchChunkSize;
 		}
 
 		public String getInputPolygonFileName() {
