@@ -35,7 +35,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	private final ObjectMapper objectMapper;
 
 	// Step execution context
-	private String partitionName = BatchConstants.Common.UNKNOWN;
+	private String partitionName;
 	private Long jobExecutionId;
 	private String jobGuid;
 	private Parameters projectionParameters;
@@ -54,8 +54,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
-		this.partitionName = stepExecution.getExecutionContext()
-				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
 		this.jobBaseDir = stepExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 
 		logger.info(
@@ -168,20 +167,10 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 		if (metricsCollector != null && jobExecutionId != null && jobGuid != null) {
 			for (BatchRecord batchRecord : batchRecords) {
 				try {
-					Long recordIdHash = batchRecord.getFeatureId() != null
-							? (long) batchRecord.getFeatureId().hashCode() : 0L;
+					String featureId = batchRecord.getFeatureId() != null ? batchRecord.getFeatureId() : null;
 
-					if (success) {
-						// Record successful processing
-						logger.trace(
-								"[GUID: {}, EXEID: {}, Partition: {}] Recording successful processing for FEATURE_ID: {}",
-								jobGuid, jobExecutionId, actualPartitionName, batchRecord.getFeatureId()
-						);
-					} else {
-						// Record processing failure
-						metricsCollector.recordSkip(
-								jobExecutionId, jobGuid, recordIdHash, batchRecord, error, actualPartitionName, null
-						);
+					if (!success) {
+						metricsCollector.recordSkip(jobExecutionId, jobGuid, featureId, error, actualPartitionName);
 					}
 				} catch (Exception metricsException) {
 					logger.warn(

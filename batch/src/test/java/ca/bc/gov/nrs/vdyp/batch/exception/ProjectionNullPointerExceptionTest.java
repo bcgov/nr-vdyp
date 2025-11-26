@@ -271,8 +271,9 @@ class ProjectionNullPointerExceptionTest {
 	private List<BatchRecord> createBatchRecords(List<String> featureIds) {
 		List<BatchRecord> batchRecords = new ArrayList<>();
 		for (String featureId : featureIds) {
-			BatchRecord batchRecord = new BatchRecord();
-			batchRecord.setFeatureId(featureId);
+			BatchRecord batchRecord = new BatchRecord(
+					featureId, featureId + ",MAP1", Collections.emptyList(), null, null, partitionName
+			);
 			batchRecords.add(batchRecord);
 		}
 		return batchRecords;

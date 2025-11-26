@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -81,7 +83,8 @@ class BatchControllerTest {
 		// Use system temp directory for cross-platform compatibility
 		String tempDir = System.getProperty("java.io.tmpdir");
 		ReflectionTestUtils.setField(batchController, "batchRootDirectory", tempDir);
-		ReflectionTestUtils.setField(batchController, "defaultParitionSize", 4);
+		ReflectionTestUtils.setField(batchController, "defaultPartitionSize", 4);
+		ReflectionTestUtils.setField(batchController, "jobSearchChunkSize", 1000);
 	}
 
 	@Test
@@ -121,7 +124,7 @@ class BatchControllerTest {
 		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "{}");
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
@@ -139,7 +142,7 @@ class BatchControllerTest {
 				.thenThrow(new RuntimeException("Empty file or invalid CSV data"));
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "{}");
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(400, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("validationMessages"));
@@ -153,21 +156,23 @@ class BatchControllerTest {
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", "data".getBytes());
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, null);
+				.startBatchJobWithFiles(polygonFile, layerFile, null);
 
 		assertEquals(400, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("error"));
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsJobNotAvailable() {
+	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsBadRequest() throws Exception {
 		// Create controller with null job
 		BatchController controllerWithNullJob = new BatchController(
 				jobLauncher, null, jobExplorer, metricsCollector, csvPartitioner, jobOperator
 		);
 
-		ReflectionTestUtils.setField(controllerWithNullJob, "batchRootDirectory", "/tmp/batch");
-		ReflectionTestUtils.setField(controllerWithNullJob, "defaultParitionSize", 4);
+		String tempDir = System.getProperty("java.io.tmpdir");
+		ReflectionTestUtils.setField(controllerWithNullJob, "batchRootDirectory", tempDir);
+		ReflectionTestUtils.setField(controllerWithNullJob, "defaultPartitionSize", 4);
+		ReflectionTestUtils.setField(controllerWithNullJob, "jobSearchChunkSize", 1000);
 
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
@@ -176,12 +181,15 @@ class BatchControllerTest {
 				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
 		);
 
-		ResponseEntity<Map<String, Object>> response = controllerWithNullJob
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "{}");
+		// Mock partitioner to return grid size
+		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any())).thenReturn(4);
 
-		assertEquals(200, response.getStatusCode().value());
-		assertEquals("VDYP Batch job not available", response.getBody().get("message"));
-		assertEquals("JOB_NOT_AVAILABLE", response.getBody().get("status"));
+		ResponseEntity<Map<String, Object>> response = controllerWithNullJob
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
+
+		// With null partitionedJob, the jobLauncher.run() will fail, resulting in a validation error
+		assertEquals(400, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("validationMessages"));
 	}
 
 	@Test
@@ -194,7 +202,7 @@ class BatchControllerTest {
 		);
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "   ");
+				.startBatchJobWithFiles(polygonFile, layerFile, "   ");
 
 		assertEquals(400, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("validationMessages"));
@@ -222,9 +230,9 @@ class BatchControllerTest {
 		when(jobParameters.getString("jobGuid")).thenReturn("test-guid");
 		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
 
-		// Call without partition size to use default
+		// Always uses default partition size from configuration
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, null, "{}");
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
@@ -253,7 +261,7 @@ class BatchControllerTest {
 		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
 
 		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, 4, "{}");
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("startTime"));
@@ -262,15 +270,16 @@ class BatchControllerTest {
 
 	@Test
 	void testStopBatchJob_WithValidJobGuid_StopsJob() throws Exception {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 
 		// Mock stopping the job
@@ -286,15 +295,16 @@ class BatchControllerTest {
 
 	@Test
 	void testStopBatchJob_WhenStopFails_ReturnsBadRequest() throws Exception {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 
 		// Mock stopping fails
@@ -308,15 +318,16 @@ class BatchControllerTest {
 
 	@Test
 	void testStopBatchJob_WhenJobAlreadyStopping_ReturnsAccepted() throws Exception {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 
 		// Mock job execution not running exception
@@ -329,11 +340,12 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStopBatchJob_WithNonExistentJobGuid_ReturnsNotFound() {
-		String jobGuid = "non-existent-guid";
+	void testStopBatchJob_WithNonExistentJobGuid_ReturnsNotFound() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
 
 		// Mock no job found
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -347,15 +359,16 @@ class BatchControllerTest {
 
 	@Test
 	void testStopBatchJob_WhenUnexpectedError_ReturnsInternalServerError() throws Exception {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 
 		// Mock unexpected exception
@@ -368,13 +381,13 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithValidJobGuid_ReturnsStatus() {
-		String jobGuid = "test-job-guid";
+	void testGetJobStatus_WithValidJobGuid_ReturnsStatus() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Create real job execution with instance and params using builder
 		JobInstance realInstance = new JobInstance(1L, "testJob");
-		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
 				.toJobParameters();
 		JobExecution realExecution = new JobExecution(realInstance, executionId, realParams);
 		realExecution.setStatus(BatchStatus.STARTED);
@@ -389,6 +402,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(realInstance));
 		when(jobExplorer.getJobExecutions(realInstance)).thenReturn(Arrays.asList(realExecution));
 
@@ -404,15 +418,16 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithCompletedJob_ReturnsNotRunning() {
-		String jobGuid = "test-job-guid";
+	void testGetJobStatus_WithCompletedJob_ReturnsNotRunning() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
 		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
 		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
@@ -429,13 +444,13 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithFailedPartitions_CountsAsFailed() {
-		String jobGuid = "test-job-guid";
+	void testGetJobStatus_WithFailedPartitions_CountsAsFailed() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		// Create real job execution with instance and params using builder
 		JobInstance realInstance = new JobInstance(1L, "testJob");
-		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
 				.toJobParameters();
 		JobExecution realExecution = new JobExecution(realInstance, executionId, realParams);
 		realExecution.setStatus(BatchStatus.FAILED);
@@ -450,6 +465,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(realInstance));
 		when(jobExplorer.getJobExecutions(realInstance)).thenReturn(Arrays.asList(realExecution));
 
@@ -461,11 +477,12 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithNonExistentJobGuid_ReturnsNotFound() {
-		String jobGuid = "non-existent-guid";
+	void testGetJobStatus_WithNonExistentJobGuid_ReturnsNotFound() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
 
 		// Mock no job found
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -479,7 +496,7 @@ class BatchControllerTest {
 
 	@Test
 	void testGetJobStatus_WhenUnexpectedError_ReturnsInternalServerError() {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 
 		// Mock unexpected exception
 		when(jobExplorer.getJobNames()).thenThrow(new RuntimeException("Database error"));
@@ -492,7 +509,7 @@ class BatchControllerTest {
 
 	@Test
 	void testGetJobStatus_WithEmptyJobNames_ReturnsNotFound() {
-		String jobGuid = "test-job-guid";
+		UUID jobGuid = UUID.randomUUID();
 
 		// Mock empty job names
 		when(jobExplorer.getJobNames()).thenReturn(Collections.emptyList());
@@ -504,8 +521,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetJobStatus_WithMultipleJobInstances_FindsCorrectOne() {
-		String jobGuid = "test-job-guid";
+	void testGetJobStatus_WithMultipleJobInstances_FindsCorrectOne() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
 		JobInstance instance1 = new JobInstance(1L, "testJob");
@@ -514,7 +531,7 @@ class BatchControllerTest {
 		// Create real JobParameters using builder
 		JobParameters params1 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "wrong-guid")
 				.toJobParameters();
-		JobParameters params2 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+		JobParameters params2 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
 				.toJobParameters();
 
 		JobExecution execution1 = new JobExecution(instance1, 1L, params1);
@@ -524,6 +541,7 @@ class BatchControllerTest {
 
 		// Mock finding job execution across multiple instances
 		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(2L);
 		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(instance1, instance2));
 
 		// First instance doesn't have matching GUID

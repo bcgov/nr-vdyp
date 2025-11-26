@@ -7,7 +7,10 @@ import org.slf4j.Logger;
 
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
+// FIXME VDYP-839
 public class BatchIOException extends IOException {
+
+	private static final long serialVersionUID = 2563311795099971052L;
 
 	public BatchIOException(String message) {
 		super(message);
