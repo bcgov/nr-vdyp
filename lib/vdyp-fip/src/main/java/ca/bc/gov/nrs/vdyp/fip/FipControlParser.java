@@ -101,9 +101,6 @@ public class FipControlParser extends StartApplicationControlParser<FipDebugSett
 		// RD_E198
 		applyModifiers(map, additionalModifiers, fileResolver);
 
-		// Debug switches (normally zero)
-		// TODO
-
 	}
 
 	@Override
