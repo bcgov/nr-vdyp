@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.fip.model.FipDebugSettings;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -27,7 +29,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class FipControlParser extends StartApplicationControlParser {
+public class FipControlParser extends StartApplicationControlParser<FipDebugSettings> {
 	private static final Logger log = LoggerFactory.getLogger(FipControlParser.class);
 
 	public FipControlParser() {
@@ -131,6 +133,17 @@ public class FipControlParser extends StartApplicationControlParser {
 				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES), //
 				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL)
 		);
+	}
+
+	@Override
+	protected DebugSettingsParser<FipDebugSettings> getDebugSettingsParser() {
+		return new DebugSettingsParser<FipDebugSettings>() {
+
+			@Override
+			protected FipDebugSettings build(Integer[] debugSettingsValues) {
+				return new FipDebugSettings(debugSettingsValues);
+			}
+		};
 	}
 
 }

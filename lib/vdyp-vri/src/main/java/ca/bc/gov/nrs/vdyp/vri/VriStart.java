@@ -84,12 +84,14 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
+import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSpecies;
 
-public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> implements Closeable {
+public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite, VriDebugSettings>
+		implements Closeable {
 
 	private static final String SPECIAL_PROCESSING_LOG_TEMPLATE = "Doing special processing for mode {}";
 	static final float FRACTION_AVAILABLE_N = 0.85f; // PCTFLAND_N;
@@ -1185,7 +1187,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	@Override
-	protected BaseControlParser getControlFileParser() {
+	protected BaseControlParser<VriDebugSettings> getControlFileParser() {
 		return new VriControlParser();
 	}
 

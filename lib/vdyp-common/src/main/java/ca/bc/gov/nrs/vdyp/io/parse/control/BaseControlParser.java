@@ -17,8 +17,9 @@ import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
-public abstract class BaseControlParser {
+public abstract class BaseControlParser<S extends DebugSettings<?>> {
 
 	private static final Logger logger = LoggerFactory.getLogger(BaseControlParser.class);
 
@@ -66,8 +67,10 @@ public abstract class BaseControlParser {
 
 		controlParser.record(ControlKey.MINIMA, minimaParser());
 
-		controlParser.record(ControlKey.DEBUG_SWITCHES, new DebugSettingsParser()); // IPSJF155
+		controlParser.record(ControlKey.DEBUG_SWITCHES, getDebugSettingsParser()); // IPSJF155
 	}
+
+	protected abstract DebugSettingsParser<S> getDebugSettingsParser();
 
 	protected abstract ValueParser<Map<String, Float>> minimaParser();
 

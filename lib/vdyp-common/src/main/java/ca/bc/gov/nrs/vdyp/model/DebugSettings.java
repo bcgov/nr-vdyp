@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.model;
 
-import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Stores the debug flag values provided in key 199 of the control files.
@@ -20,12 +21,30 @@ import java.util.Arrays;
  * <p>
  * See IPSJF155, appendix IX, details.
  */
-public class DebugSettings {
+public class DebugSettings<V extends Enum<V> & DebugSettings.Vars> {
+
+	private static final Logger logger = LoggerFactory.getLogger(DebugSettings.class);
+
+	public static interface Vars {
+		@SuppressWarnings("unchecked")
+		default int getSettingNumber() {
+			return ((Enum<? extends Vars>) this).ordinal() + 1;
+		}
+	}
 
 	public static final int MAX_DEBUG_SETTINGS = 25;
 	private static final int DEFAULT_DEBUG_SETTING = 0;
 
-	final int[] settings;
+	private final int[] settings;
+
+	private void validateSettingNumber(int settingNumber) {
+		if (settingNumber < 1 || settingNumber > MAX_DEBUG_SETTINGS) {
+			throw new IllegalArgumentException(
+					"Debug setting number " + settingNumber + " is out of range -" + " must be between 1 and "
+							+ MAX_DEBUG_SETTINGS
+			);
+		}
+	}
 
 	/**
 	 * Create a DebugSettings instance from the given values. If <code>settings</code> is null, this is equivalent to
@@ -72,20 +91,55 @@ public class DebugSettings {
 	 * @return as described.
 	 */
 	public int getValue(int settingNumber) {
-		if (settingNumber < 1 || settingNumber > MAX_DEBUG_SETTINGS) {
-			throw new IllegalArgumentException(
-					"Debug setting number " + settingNumber + " is out of range -" + " must be between 1 and "
-							+ MAX_DEBUG_SETTINGS
-			);
-		}
+		validateSettingNumber(settingNumber);
 
 		return settings[settingNumber - 1];
 	}
 
 	/**
-	 * @return a copy of the values array, useful when the debug settings need to be modified.
+	 * Return the value of the debug variable for specified setting.
+	 *
+	 * @param settingNumber the number of the debug variable whose value is to be returned.
+	 * @return as described.
 	 */
-	public int[] getValues() {
-		return Arrays.copyOf(settings, settings.length);
+	public int getValue(V setting) {
+		return getValue(setting.getSettingNumber());
 	}
+
+	/**
+	 * For testing purposes sometimes it's useful to change the value of a debug setting. It is not expected that this
+	 * method would be used for any other purpose.
+	 *
+	 * @param settingNumber the variable to change
+	 * @param value         the new value the variable is to have
+	 */
+	public void setValue(int settingNumber, int value) {
+		logger.atWarn().addArgument(settingNumber).addArgument(getValue(settingNumber)).addArgument(value)
+				.setMessage("Changing debug setting {} from {} to {}.  This should only happen when debugging/testing.")
+				.log();
+		doSetValue(settingNumber, value);
+	}
+
+	/**
+	 * For testing purposes sometimes it's useful to change the value of a debug setting. It is not expected that this
+	 * method would be used for any other purpose.
+	 *
+	 * @param setting the variable to change
+	 * @param value   the new value the variable is to have
+	 */
+	public void setValue(V setting, int value) {
+		logger.atWarn().addArgument(setting).addArgument(setting.getSettingNumber()).addArgument(getValue(setting))
+				.addArgument(value)
+				.setMessage(
+						"Changing debug setting {}({}) from {} to {}.  This should only happen when debugging/testing."
+				).log();
+		doSetValue(setting.getSettingNumber(), value);
+
+	}
+
+	private void doSetValue(int settingNumber, int value) {
+		validateSettingNumber(settingNumber);
+		this.settings[settingNumber - 1] = value;
+	}
+
 }

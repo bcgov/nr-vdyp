@@ -89,11 +89,11 @@ import ca.bc.gov.nrs.vdyp.model.DebugSettings;
  * <li>15: Same as option 1, condition on total age (primary) < 30.
  * </ul>
  */
-public class ForwardDebugSettings {
+public class ForwardDebugSettings extends DebugSettings<ForwardDebugSettings.Vars> {
 
 	public static final int MAX_FILL_INDEX_SETTINGS_INDEX = DebugSettings.MAX_DEBUG_SETTINGS;
 
-	public enum Vars {
+	public enum Vars implements DebugSettings.Vars {
 		/**
 		 * <li>Value 0: Full species dynamics. Not recommended.
 		 * <li>Value 1: No species dynamics. Species percents in TPH and BA are constant.
@@ -144,33 +144,8 @@ public class ForwardDebugSettings {
 
 	private DebugSettings debugSettings;
 
-	public ForwardDebugSettings(DebugSettings debugSettings) {
-		this.debugSettings = debugSettings;
-	}
-
-	public int getValue(Vars v) {
-		return debugSettings.getValue(v.settingNumber);
-	}
-
-	/**
-	 * For testing purposes sometimes it's useful to change the value of a debug setting. It is not expected that this
-	 * method would be used for any other purpose.
-	 *
-	 * @param v     the variable to change
-	 * @param value the new value the variable is to have
-	 */
-	public void setValue(Vars v, int value) {
-
-		int[] currentSettings = debugSettings.getValues();
-		Integer[] updatedSettings = new Integer[currentSettings.length];
-		for (int i = 0; i < currentSettings.length; i++) {
-			if (i == v.settingNumber - 1) {
-				updatedSettings[i] = value;
-			} else {
-				updatedSettings[i] = currentSettings[i];
-			}
-		}
-		debugSettings = new DebugSettings(updatedSettings);
+	public ForwardDebugSettings(Integer[] settings) {
+		super(settings);
 	}
 
 	public Integer[] getFillInValues() {

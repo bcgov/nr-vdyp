@@ -57,6 +57,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.exceptions.YearsToBreastHeightLowException;
+import ca.bc.gov.nrs.vdyp.fip.model.FipDebugSettings;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
@@ -85,7 +86,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 
-public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> {
+public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite, FipDebugSettings> {
 
 	public static final Comparator<FipSpecies> PERCENT_GENUS_DESCENDING = Utils
 			.compareUsing(FipSpecies::getPercentGenus).reversed();
@@ -1050,7 +1051,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	}
 
 	@Override
-	protected BaseControlParser getControlFileParser() {
+	protected BaseControlParser<FipDebugSettings> getControlFileParser() {
 		return new FipControlParser();
 	}
 

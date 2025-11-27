@@ -90,7 +90,7 @@ import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
  * @param <S> input species class
  * @param <I> input site class
  */
-public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite>
+public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, D extends DebugSettings<?>>
 		extends VdypApplication implements Closeable {
 
 	private static final Logger log = LoggerFactory.getLogger(VdypStartApplication.class);
@@ -119,13 +119,13 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		map.put("Y", 9);
 	});
 
-	private Optional<DebugSettings> debugModes = Optional.empty();
+	private Optional<D> debugModes = Optional.empty();
 
-	public DebugSettings getDebugModes() {
+	public D getDebugModes() {
 		return debugModes.orElseThrow(() -> new IllegalStateException("Can not get debug modes before initialization"));
 	}
 
-	public void setDebugModes(DebugSettings newDebugModes) {
+	public void setDebugModes(D newDebugModes) {
 		debugModes = Optional.of(newDebugModes);
 	}
 
@@ -241,7 +241,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return new VdypOutputWriter(controlMap, resolver);
 	}
 
-	protected abstract BaseControlParser getControlFileParser();
+	protected abstract BaseControlParser<D> getControlFileParser();
 
 	void closeVriWriter() {
 		if (vriWriter != null) {
@@ -253,10 +253,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected void setControlMap(Map<String, Object> controlMap) {
 		this.controlMap = controlMap;
 		this.estimationMethods = new EstimationMethods(new ResolvedControlMapImpl(controlMap));
-		this.debugModes = Optional.of(
-				Utils.parsedControl(controlMap, ControlKey.DEBUG_SWITCHES, DebugSettings.class)
-						.orElse(new DebugSettings())
-		);
+		this.debugModes = Utils.parsedControl(controlMap, ControlKey.DEBUG_SWITCHES, DebugSettings.class);
 	}
 
 	protected <T> StreamingParser<T> getStreamingParser(ControlKey key) throws ProcessingException {
