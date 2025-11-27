@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.parsers.ForwardControlVariableParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
@@ -31,6 +32,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.BySpeciesDqCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.CloseUtilVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.CompVarAdjustmentsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ComponentSizeParser;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DefaultEquationNumberParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DqGrowthEmpiricalLimitsParser;
@@ -79,7 +81,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
  *
  * @author Michael Junkin, Vivid Solutions
  */
-public class ForwardControlParser extends BaseControlParser {
+public class ForwardControlParser extends BaseControlParser<ForwardDebugSettings> {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardControlParser.class);
 
@@ -366,5 +368,17 @@ public class ForwardControlParser extends BaseControlParser {
 		// b
 		map.keySet().stream().filter(k -> !ControlKey.isControlKey(k))
 				.forEach(k -> logger.warn("{} was present in the configuration file but no parser was registered", k));
+	}
+
+	@Override
+	protected DebugSettingsParser<ForwardDebugSettings> getDebugSettingsParser() {
+		return new DebugSettingsParser<>() {
+
+			@Override
+			protected ForwardDebugSettings build(Integer[] debugSettingsValues) {
+				return new ForwardDebugSettings(debugSettingsValues);
+			}
+
+		};
 	}
 }

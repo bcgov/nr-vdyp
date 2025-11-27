@@ -140,9 +140,13 @@ public class ForwardDebugSettings extends DebugSettings<ForwardDebugSettings.Var
 		Vars(int settingNumber) {
 			this.settingNumber = settingNumber;
 		}
-	}
 
-	private DebugSettings debugSettings;
+		@Override
+		public int getSettingNumber() {
+			return this.settingNumber;
+		}
+
+	}
 
 	public ForwardDebugSettings(Integer[] settings) {
 		super(settings);
@@ -154,7 +158,7 @@ public class ForwardDebugSettings extends DebugSettings<ForwardDebugSettings.Var
 
 		int settingValue;
 		int index = 11;
-		while (index <= MAX_FILL_INDEX_SETTINGS_INDEX && (settingValue = debugSettings.getValue(index++)) != 0) {
+		while (index <= MAX_FILL_INDEX_SETTINGS_INDEX && (settingValue = getValue(index++)) != 0) {
 			result.add(settingValue);
 		}
 

@@ -6,14 +6,12 @@ import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
-import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
 class ForwardDebugSettingsTest {
 
 	@Test
 	void testNoSpecialActions() {
-		DebugSettings ds = new DebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-		ForwardDebugSettings fs = new ForwardDebugSettings(ds);
+		ForwardDebugSettings fs = new ForwardDebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
 		MatcherAssert.assertThat(fs.getValue(ForwardDebugSettings.Vars.SPECIES_DYNAMICS_1), is(1));
 		MatcherAssert.assertThat(fs.getValue(ForwardDebugSettings.Vars.MAX_BREAST_HEIGHT_AGE_2), is(2));
@@ -30,19 +28,17 @@ class ForwardDebugSettingsTest {
 
 	@Test
 	void testOneSpecialAction() {
-		DebugSettings ds = new DebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 0 });
-		ForwardDebugSettings fs = new ForwardDebugSettings(ds);
+		ForwardDebugSettings fs = new ForwardDebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 0 });
 
 		MatcherAssert.assertThat(fs.getFillInValues(), is(new Integer[] { 12 }));
 	}
 
 	@Test
 	void testAllSpecialActions() {
-		DebugSettings ds = new DebugSettings(
+		ForwardDebugSettings fs = new ForwardDebugSettings(
 				new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 						111, 112, 113, 114 }
 		);
-		ForwardDebugSettings fs = new ForwardDebugSettings(ds);
 
 		MatcherAssert.assertThat(
 				fs.getFillInValues(),
@@ -52,10 +48,9 @@ class ForwardDebugSettingsTest {
 
 	@Test
 	void testAllSomeActions() {
-		DebugSettings ds = new DebugSettings(
+		ForwardDebugSettings fs = new ForwardDebugSettings(
 				new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 101, 102, 103, 104, 105, 106, 107 }
 		);
-		ForwardDebugSettings fs = new ForwardDebugSettings(ds);
 
 		MatcherAssert.assertThat(fs.getFillInValues(), is(new Integer[] { 100, 101, 102, 103, 104, 105, 106, 107 }));
 	}
