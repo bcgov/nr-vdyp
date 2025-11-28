@@ -36,7 +36,7 @@ spec:
             - name: ENV_DB_DBNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.crunchy.adminSecretName }}
+                  name: {{ .Values.crunchy.pguserSecretName }}
                   key: dbname
             - name: ENV_DB_PORT
               valueFrom:
