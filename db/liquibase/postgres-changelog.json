@@ -52,6 +52,9 @@
           }
         ],
         "rollback": [
+          {
+            "sql": "REVOKE USAGE ON SCHEMA \"app-vdyp\" FROM app_vdyp_rest_proxy"
+          }
         ]
       }
     }
