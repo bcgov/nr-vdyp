@@ -51,6 +51,9 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 	public void beforeInsert() {
 		setCreateDate(LocalDate.now());
 		setCreateUser(currentUser());
+		setUpdateDate(LocalDate.now());
+		setUpdateUser(currentUser());
+		incrementRevisionCount();
 	}
 
 	@PreUpdate

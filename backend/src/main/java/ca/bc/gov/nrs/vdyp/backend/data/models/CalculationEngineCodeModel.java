@@ -1,16 +1,19 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 import lombok.Data;
 
 @Data
-public class CalculationEngineCodeModel {
+public class CalculationEngineCodeModel extends CodeTableModel {
 	private String calculationEngineCode;
-	private String description;
-	private BigDecimal displayOrder;
-	private Date effectiveDate;
-	private Date expiryDate;
+
+	@Override
+	public String getCode() {
+		return calculationEngineCode;
+	}
+
+	@Override
+	public void setCode(String code) {
+		this.calculationEngineCode = code;
+	}
 
 }

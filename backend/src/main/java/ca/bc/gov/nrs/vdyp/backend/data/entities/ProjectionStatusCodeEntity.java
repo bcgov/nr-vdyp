@@ -15,4 +15,12 @@ public class ProjectionStatusCodeEntity extends CodeTableEntity {
 	@Id
 	@Column(name = "projection_status_code", length = 10, nullable = false)
 	private String projectionStatusCode;
+
+	public String getCode() {
+		return projectionStatusCode;
+	}
+
+	public void setCode(String code) {
+		this.projectionStatusCode = code;
+	}
 }
