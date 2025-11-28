@@ -4,7 +4,9 @@ import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
+import jakarta.enterprise.context.ApplicationScoped;
 
+@ApplicationScoped
 public class VDYPUserResourceAssembler {
 
 	UserTypeCodeResourceAssembler utra;
