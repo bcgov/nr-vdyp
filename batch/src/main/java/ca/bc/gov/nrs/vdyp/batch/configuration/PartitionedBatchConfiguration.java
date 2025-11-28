@@ -38,7 +38,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
@@ -153,9 +152,11 @@ public class PartitionedBatchConfiguration {
 				.listener(retryPolicy).listener(skipPolicy).faultTolerant().retryPolicy(retryPolicy)
 				.skipPolicy(skipPolicy).listener(new StepExecutionListener() {
 					@Override
+					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch
+													// context
 					public void beforeStep(@NonNull StepExecution stepExecution) {
 						String partitionName = stepExecution.getExecutionContext()
-								.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+								.getString(BatchConstants.Partition.NAME);
 
 						Long jobExecutionId = stepExecution.getJobExecutionId();
 						String jobGuid = stepExecution.getJobExecution().getJobParameters()
@@ -170,9 +171,11 @@ public class PartitionedBatchConfiguration {
 					}
 
 					@Override
+					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch
+													// context
 					public ExitStatus afterStep(@NonNull StepExecution stepExecution) {
 						String partitionName = stepExecution.getExecutionContext()
-								.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+								.getString(BatchConstants.Partition.NAME);
 						Long jobExecutionId = stepExecution.getJobExecutionId();
 						String jobGuid = stepExecution.getJobExecution().getJobParameters()
 								.getString(BatchConstants.Job.GUID);
@@ -203,9 +206,14 @@ public class PartitionedBatchConfiguration {
 			PartitionedJobExecutionListener jobExecutionListener, Step masterStep, Step postProcessingStep,
 			PlatformTransactionManager transactionManager
 	) {
-		return new JobBuilder("VdypPartitionedJob", jobRepository).incrementer(new RunIdIncrementer()).start(masterStep)
-				.next(postProcessingStep).listener(new JobExecutionListener() {
+		return new JobBuilder("VdypPartitionedJob", jobRepository) //
+				.incrementer(new RunIdIncrementer()) //
+				.start(masterStep) //
+				.next(postProcessingStep) //
+				.listener(new JobExecutionListener() {
 					@Override
+					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch
+													// context
 					public void beforeJob(@NonNull JobExecution jobExecution) {
 						// Initialize job metrics
 						String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
@@ -218,6 +226,8 @@ public class PartitionedBatchConfiguration {
 					}
 
 					@Override
+					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch
+													// context
 					public void afterJob(@NonNull JobExecution jobExecution) {
 						String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 
@@ -279,10 +289,10 @@ public class PartitionedBatchConfiguration {
 	public ItemStreamReader<BatchRecord> partitionReader(
 			BatchMetricsCollector metricsCollector,
 			@Value("#{stepExecutionContext['partitionName']}") String partitionName,
-			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId, BatchProperties batchProperties
+			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId,
+			@Value("#{jobParameters['" + BatchConstants.Job.GUID + "']}") String jobGuid,
+			BatchProperties batchProperties
 	) {
-		BatchMetrics metrics = metricsCollector.getJobMetrics(jobExecutionId);
-		String jobGuid = metrics.getJobGuid();
 		logger.info(
 				"[GUID: {}, Execution ID: {}, Partition: {}] Using ChunkBasedPolygonItemReader with chunk size: {}",
 				jobGuid, jobExecutionId, partitionName, batchProperties.getReader().getDefaultChunkSize()
@@ -326,12 +336,12 @@ public class PartitionedBatchConfiguration {
 	@StepScope
 	public Tasklet resultAggregationTasklet() {
 		return (contribution, chunkContext) -> {
-			Long jobExecutionId = chunkContext.getStepContext().getStepExecution().getJobExecutionId();
-			String jobGuid = chunkContext.getStepContext().getStepExecution().getJobExecution().getJobParameters()
-					.getString(BatchConstants.Job.GUID);
+			var stepExecution = chunkContext.getStepContext().getStepExecution();
+			Long jobExecutionId = stepExecution.getJobExecutionId();
+			String jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 			logger.info("[GUID: {}] Starting result aggregation for job execution: {}", jobGuid, jobExecutionId);
 			try {
-				JobExecution jobExecution = chunkContext.getStepContext().getStepExecution().getJobExecution();
+				JobExecution jobExecution = stepExecution.getJobExecution();
 
 				String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
 				String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
@@ -339,8 +349,7 @@ public class PartitionedBatchConfiguration {
 				Path consolidatedZip = resultAggregationService
 						.aggregateResultsFromJobDir(jobExecutionId, jobGuid, jobBaseDir, jobTimestamp);
 
-				chunkContext.getStepContext().getStepExecution().getExecutionContext()
-						.putString("consolidatedOutputPath", consolidatedZip.toString());
+				stepExecution.getExecutionContext().putString("consolidatedOutputPath", consolidatedZip.toString());
 
 				logger.info(
 						"[GUID: {}] Result aggregation completed successfully for job execution: {}. Consolidated output: {}",

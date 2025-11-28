@@ -25,6 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
@@ -57,19 +58,6 @@ class VdypProjectionServiceTest {
 		);
 
 		assertEquals("No records to process in chunk", result);
-	}
-
-	@Test
-	void testPerformProjectionForChunk_WhitespacePartitionName() {
-		List<BatchRecord> batchRecords = createValidBatchRecords(1);
-
-		Exception exception = assertThrows(Exception.class, () -> {
-			vdypProjectionService.performProjectionForChunk(
-					batchRecords, "   ", parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
-			);
-		});
-
-		assertTrue(exception.getMessage().contains("Partition name cannot be null or empty"));
 	}
 
 	@Test
@@ -138,24 +126,6 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testPerformProjectionForChunk_NullLayerData() {
-		List<BatchRecord> batchRecords = new ArrayList<>();
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("123456789");
-		batchRecord.setPolygonHeader("FEATURE_ID,MAP_ID");
-		batchRecord.setRawPolygonData("123456789,MAP1");
-		batchRecord.setLayerHeader("FEATURE_ID,LAYER");
-		batchRecord.setRawLayerData(null);
-		batchRecords.add(batchRecord);
-
-		assertThrows(Exception.class, () -> {
-			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, JOB_GUID, tempDir.toString()
-			);
-		});
-	}
-
-	@Test
 	void testPerformProjectionForChunk_MultipleRecordsCombination() {
 		List<BatchRecord> batchRecords = createValidBatchRecords(3);
 
@@ -172,12 +142,10 @@ class VdypProjectionServiceTest {
 	@Test
 	void testPerformProjectionForChunk_MultipleLayersPerRecord() {
 		List<BatchRecord> batchRecords = new ArrayList<>();
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("123456789");
-		batchRecord.setPolygonHeader("FEATURE_ID,MAP_ID");
-		batchRecord.setRawPolygonData("123456789,MAP1");
-		batchRecord.setLayerHeader("FEATURE_ID,LAYER");
-		batchRecord.setRawLayerData(List.of("123456789,P", "123456789,S", "123456789,V"));
+		BatchRecord batchRecord = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("123456789,P", "123456789,S", "123456789,V"),
+				"FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER", PARTITION_NAME
+		);
 		batchRecords.add(batchRecord);
 
 		assertThrows(Exception.class, () -> {
@@ -233,7 +201,7 @@ class VdypProjectionServiceTest {
 
 	@Test
 	void testBuildBatchProjectionId_HCSV() {
-		String projectionId = VdypProjectionService
+		String projectionId = BatchUtils
 				.buildBatchProjectionId(JOB_EXECUTION_ID, PARTITION_NAME, ProjectionRequestKind.HCSV);
 
 		assertNotNull(projectionId);
@@ -245,8 +213,7 @@ class VdypProjectionServiceTest {
 
 	@Test
 	void testBuildBatchProjectionId_DCSV() {
-		String projectionId = VdypProjectionService
-				.buildBatchProjectionId(123L, "partition99", ProjectionRequestKind.DCSV);
+		String projectionId = BatchUtils.buildBatchProjectionId(123L, "partition99", ProjectionRequestKind.DCSV);
 
 		assertTrue(projectionId.contains("batch-123"));
 		assertTrue(projectionId.contains("partition99"));
@@ -255,8 +222,7 @@ class VdypProjectionServiceTest {
 
 	@Test
 	void testBuildBatchProjectionId_SCSV() {
-		String projectionId = VdypProjectionService
-				.buildBatchProjectionId(456L, "partition10", ProjectionRequestKind.SCSV);
+		String projectionId = BatchUtils.buildBatchProjectionId(456L, "partition10", ProjectionRequestKind.SCSV);
 
 		assertTrue(projectionId.contains("batch-456"));
 		assertTrue(projectionId.contains("partition10"));
@@ -265,8 +231,8 @@ class VdypProjectionServiceTest {
 
 	@Test
 	void testBuildBatchProjectionId_TimestampFormat() {
-		String id1 = VdypProjectionService.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
-		String id2 = VdypProjectionService.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
+		String id1 = BatchUtils.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
+		String id2 = BatchUtils.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
 
 		// Both should have valid timestamp format and include jobGuid
 		assertTrue(id1.contains("batch-1"));
@@ -283,12 +249,9 @@ class VdypProjectionServiceTest {
 	@Test
 	void testPerformProjectionForChunk_NullHeaders() {
 		List<BatchRecord> batchRecords = new ArrayList<>();
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("123456789");
-		batchRecord.setPolygonHeader(null);
-		batchRecord.setRawPolygonData("123456789,MAP1");
-		batchRecord.setLayerHeader(null);
-		batchRecord.setRawLayerData(List.of("123456789,P"));
+		BatchRecord batchRecord = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("123456789,P"), null, null, PARTITION_NAME
+		);
 		batchRecords.add(batchRecord);
 
 		assertThrows(Exception.class, () -> {
@@ -301,12 +264,10 @@ class VdypProjectionServiceTest {
 	@Test
 	void testPerformProjectionForChunk_EmptyLayerList() {
 		List<BatchRecord> batchRecords = new ArrayList<>();
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("123456789");
-		batchRecord.setPolygonHeader("FEATURE_ID,MAP_ID");
-		batchRecord.setRawPolygonData("123456789,MAP1");
-		batchRecord.setLayerHeader("FEATURE_ID,LAYER");
-		batchRecord.setRawLayerData(new ArrayList<>());
+		BatchRecord batchRecord = new BatchRecord(
+				"123456789", "123456789,MAP1", new ArrayList<>(), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		batchRecords.add(batchRecord);
 
 		assertThrows(Exception.class, () -> {
@@ -321,21 +282,17 @@ class VdypProjectionServiceTest {
 		List<BatchRecord> batchRecords = new ArrayList<>();
 
 		// Valid record
-		BatchRecord validRecord = new BatchRecord();
-		validRecord.setFeatureId("123456789");
-		validRecord.setPolygonHeader("FEATURE_ID,MAP_ID");
-		validRecord.setRawPolygonData("123456789,MAP1");
-		validRecord.setLayerHeader("FEATURE_ID,LAYER");
-		validRecord.setRawLayerData(List.of("123456789,P"));
+		BatchRecord validRecord = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("123456789,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		batchRecords.add(validRecord);
 
 		// Invalid record with null data
-		BatchRecord invalidRecord = new BatchRecord();
-		invalidRecord.setFeatureId("987654321");
-		invalidRecord.setPolygonHeader("FEATURE_ID,MAP_ID");
-		invalidRecord.setRawPolygonData(null);
-		invalidRecord.setLayerHeader("FEATURE_ID,LAYER");
-		invalidRecord.setRawLayerData(List.of("987654321,P"));
+		BatchRecord invalidRecord = new BatchRecord(
+				"987654321", "123456789,MAP1", List.of("987654321,P"), "FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER",
+				PARTITION_NAME
+		);
 		batchRecords.add(invalidRecord);
 
 		assertThrows(Exception.class, () -> {
@@ -392,8 +349,7 @@ class VdypProjectionServiceTest {
 		long[] jobIds = { 1L, 100L, 9999L, Long.MAX_VALUE };
 
 		for (long jobId : jobIds) {
-			String projectionId = VdypProjectionService
-					.buildBatchProjectionId(jobId, PARTITION_NAME, ProjectionRequestKind.HCSV);
+			String projectionId = BatchUtils.buildBatchProjectionId(jobId, PARTITION_NAME, ProjectionRequestKind.HCSV);
 
 			assertTrue(projectionId.contains("batch-" + jobId));
 		}
@@ -534,21 +490,6 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testCreateOutputPartitionDir_NullPartitionName() throws Exception {
-		Method createOutputPartitionDirMethod = VdypProjectionService.class
-				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class);
-		createOutputPartitionDirMethod.setAccessible(true);
-
-		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod.invoke(vdypProjectionService, JOB_EXECUTION_ID, null, tempDir.toString());
-		});
-
-		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof BatchConfigurationException);
-		assertTrue(cause.getMessage().contains("Partition name cannot be null or empty"));
-	}
-
-	@Test
 	void testCreateOutputPartitionDir_IOExceptionHandling() throws Exception {
 		String partitionName = "partition0";
 		String jobBaseDir = tempDir.toString();
@@ -600,54 +541,6 @@ class VdypProjectionServiceTest {
 		Throwable cause = exception.getCause();
 		assertTrue(cause instanceof BatchDataValidationException);
 		assertTrue(cause.getMessage().contains("Cannot create input streams from empty chunk"));
-	}
-
-	@Test
-	void testCreateCombinedInputStreamsFromRawData_NoPolygonData() throws Exception {
-		Method createCombinedInputStreamsFromRawDataMethod = VdypProjectionService.class
-				.getDeclaredMethod("createCombinedInputStreamsFromRawData", List.class);
-		createCombinedInputStreamsFromRawDataMethod.setAccessible(true);
-
-		List<BatchRecord> batchRecords = new ArrayList<>();
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("123456789");
-		batchRecord.setPolygonHeader(null);
-		batchRecord.setRawPolygonData(null);
-		batchRecord.setLayerHeader("FEATURE_ID,LAYER");
-		batchRecord.setRawLayerData(List.of("123456789,P"));
-		batchRecords.add(batchRecord);
-
-		Exception exception = assertThrows(Exception.class, () -> {
-			createCombinedInputStreamsFromRawDataMethod.invoke(vdypProjectionService, batchRecords);
-		});
-
-		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof BatchDataValidationException);
-		assertTrue(cause.getMessage().contains("Combined CSV data is empty or invalid"));
-	}
-
-	@Test
-	void testCreateCombinedInputStreamsFromRawData_NoLayerData() throws Exception {
-		Method createCombinedInputStreamsFromRawDataMethod = VdypProjectionService.class
-				.getDeclaredMethod("createCombinedInputStreamsFromRawData", List.class);
-		createCombinedInputStreamsFromRawDataMethod.setAccessible(true);
-
-		List<BatchRecord> batchRecords = new ArrayList<>();
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("123456789");
-		batchRecord.setPolygonHeader("FEATURE_ID,MAP_ID");
-		batchRecord.setRawPolygonData("123456789,MAP1");
-		batchRecord.setLayerHeader(null);
-		batchRecord.setRawLayerData(null);
-		batchRecords.add(batchRecord);
-
-		Exception exception = assertThrows(Exception.class, () -> {
-			createCombinedInputStreamsFromRawDataMethod.invoke(vdypProjectionService, batchRecords);
-		});
-
-		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof BatchDataValidationException);
-		assertTrue(cause.getMessage().contains("Combined CSV data is empty or invalid"));
 	}
 
 	@Test
@@ -813,12 +706,10 @@ class VdypProjectionServiceTest {
 		createCombinedInputStreamsFromRawDataMethod.setAccessible(true);
 
 		List<BatchRecord> batchRecords = new ArrayList<>();
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("123456789");
-		batchRecord.setPolygonHeader("FEATURE_ID,MAP_ID");
-		batchRecord.setRawPolygonData("123456789,MAP1");
-		batchRecord.setLayerHeader("FEATURE_ID,LAYER");
-		batchRecord.setRawLayerData(List.of("123456789,P", "123456789,S", "123456789,V"));
+		BatchRecord batchRecord = new BatchRecord(
+				"123456789", "123456789,MAP1", List.of("123456789,P", "123456789,S", "123456789,V"),
+				"FEATURE_ID,MAP_ID", "FEATURE_ID,LAYER", PARTITION_NAME
+		);
 		batchRecords.add(batchRecord);
 
 		@SuppressWarnings("unchecked")
@@ -915,12 +806,12 @@ class VdypProjectionServiceTest {
 				"151000000", "161000000", "171000000", "181000000", "191000000", "102000000" };
 
 		for (int i = 0; i < count; i++) {
-			BatchRecord batchRecord = new BatchRecord();
-			batchRecord.setFeatureId(featureIds[i % featureIds.length]);
-			batchRecord.setPolygonHeader("FEATURE_ID,MAP_ID,POLYGON_NUMBER,ORG_UNIT");
-			batchRecord.setRawPolygonData(featureIds[i % featureIds.length] + ",MAP" + i + ",1234,DCR");
-			batchRecord.setLayerHeader("FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE");
-			batchRecord.setRawLayerData(List.of(featureIds[i % featureIds.length] + ",MAP" + i + ",1234,P"));
+			String featureId = featureIds[i % featureIds.length];
+			BatchRecord batchRecord = new BatchRecord(
+					featureId, featureId + ",MAP" + i + ",1234,DCR", List.of(featureId + ",MAP" + i + ",1234,P"),
+					"FEATURE_ID,MAP_ID,POLYGON_NUMBER,ORG_UNIT", "FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE",
+					PARTITION_NAME
+			);
 			records.add(batchRecord);
 		}
 

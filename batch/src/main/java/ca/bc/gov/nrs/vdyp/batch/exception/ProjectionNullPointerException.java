@@ -16,7 +16,7 @@ import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
  */
 public class ProjectionNullPointerException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 3104617883593359188L;
 
 	private final String jobGuid;
 	private final Long jobExecutionId;

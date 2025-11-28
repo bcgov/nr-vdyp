@@ -10,11 +10,11 @@ public final class BatchUtils {
 		//
 	}
 
-	public static final DateTimeFormatter dateTimeFormatterForFilenames = DateTimeFormatter
+	private static final DateTimeFormatter dateTimeFormatterForFilenames = DateTimeFormatter
 			.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 
-	public static String createJobFolderName(String prefix, String timestamp) {
-		return String.format("%s-%s", prefix, timestamp);
+	public static String createJobFolderName(String prefix, String guid) {
+		return String.format("%s-%s", prefix, guid);
 	}
 
 	public static String createJobTimestamp() {
@@ -26,19 +26,39 @@ public final class BatchUtils {
 	}
 
 	/**
-	 * Sanitizes provided filename for safe logging Removes control characters, line breaks, and limits length.
+	 * Builds the input partition folder name.
+	 *
+	 * @param partitionName the partition name (e.g., "partition0")
+	 * @return the input partition folder name (e.g., "input-partition0")
 	 */
-	public static String sanitizeForLogging(String filename) {
-		if (filename == null) {
-			return "null";
-		}
+	public static String buildInputPartitionFolderName(String partitionName) {
+		return BatchConstants.Partition.INPUT_PREFIX + "-" + partitionName;
+	}
 
-		String sanitized = filename.replaceAll("[\\x00-\\x1f\\x7f-\\x9f]", "").trim();
+	/**
+	 * Builds the output partition folder name.
+	 *
+	 * @param partitionName the partition name (e.g., "partition0")
+	 * @return the output partition folder name (e.g., "output-partition0")
+	 */
+	public static String buildOutputPartitionFolderName(String partitionName) {
+		return BatchConstants.Partition.OUTPUT_PREFIX + "-" + partitionName;
+	}
 
-		if (sanitized.length() > 100) {
-			sanitized = sanitized.substring(0, 97) + "...";
-		}
-
-		return sanitized.isEmpty() ? "empty" : sanitized;
+	/**
+	 * Builds a unique batch projection ID for VDYP projection operations.
+	 *
+	 * @param jobExecutionId the job execution ID
+	 * @param partitionName  the partition name
+	 * @param projectionKind the projection request kind
+	 * @return the batch projection ID (e.g., "batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933")
+	 */
+	public static String buildBatchProjectionId(Long jobExecutionId, String partitionName, Object projectionKind) {
+		StringBuilder sb = new StringBuilder("batch-");
+		sb.append(jobExecutionId).append("-");
+		sb.append(partitionName).append("-");
+		sb.append("projection-").append(projectionKind).append("-");
+		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now()));
+		return sb.toString();
 	}
 }
