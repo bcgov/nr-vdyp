@@ -16,4 +16,11 @@ public class CalculationEngineCodeEntity extends CodeTableEntity {
 	@Column(name = "calculation_engine_code", length = 10, nullable = false)
 	private String calculationEngineCode;
 
+	public String getCode() {
+		return calculationEngineCode;
+	}
+
+	public void setCode(String code) {
+		this.calculationEngineCode = code;
+	}
 }

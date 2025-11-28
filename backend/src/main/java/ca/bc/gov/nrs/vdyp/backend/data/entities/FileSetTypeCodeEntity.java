@@ -15,4 +15,12 @@ public class FileSetTypeCodeEntity extends CodeTableEntity {
 	@Id
 	@Column(name = "file_set_type_code", length = 10, nullable = false)
 	private String fileSetTypeCode;
+
+	public String getCode() {
+		return fileSetTypeCode;
+	}
+
+	public void setCode(String code) {
+		this.fileSetTypeCode = code;
+	}
 }

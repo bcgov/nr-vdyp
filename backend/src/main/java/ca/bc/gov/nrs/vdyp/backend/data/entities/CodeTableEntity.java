@@ -13,6 +13,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public abstract class CodeTableEntity extends AuditableEntity {
+
+	public abstract String getCode();
+
+	public abstract void setCode(String code);
+
 	@Column(name = "description", length = 100, nullable = false)
 	private String description;
 

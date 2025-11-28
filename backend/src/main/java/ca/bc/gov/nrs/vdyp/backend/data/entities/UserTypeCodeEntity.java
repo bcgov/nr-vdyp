@@ -15,4 +15,12 @@ public class UserTypeCodeEntity extends CodeTableEntity {
 	@Id
 	@Column(name = "user_type_code", length = 10, nullable = false)
 	private String userTypeCode;
+
+	public String getCode() {
+		return userTypeCode;
+	}
+
+	public void setCode(String code) {
+		this.userTypeCode = code;
+	}
 }
