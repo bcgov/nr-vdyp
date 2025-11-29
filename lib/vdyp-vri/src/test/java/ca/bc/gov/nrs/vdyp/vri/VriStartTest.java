@@ -4580,7 +4580,7 @@ class VriStartTest {
 
 			control.replay();
 
-			app.debugModeExpandRootSearchWindow(Optional.of(50), minDq, maxDq, func);
+			app.debugModeExpandRootSearchWindow(Optional.of(0.50f), minDq, maxDq, func);
 
 			control.verify();
 
@@ -4620,7 +4620,7 @@ class VriStartTest {
 
 			control.replay();
 
-			app.debugModeExpandRootSearchWindow(Optional.of(50), minDq, maxDq, func);
+			app.debugModeExpandRootSearchWindow(Optional.of(0.50f), minDq, maxDq, func);
 
 			control.verify();
 

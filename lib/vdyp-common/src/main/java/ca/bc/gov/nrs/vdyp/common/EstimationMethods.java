@@ -829,13 +829,11 @@ public class EstimationMethods {
 		 * to do this:
 		 */
 
-		// 		if (fullOccupancy) {
-		//     		upperBoundsBaseArea *= EMPOC;
-		// 		}
+		// if (fullOccupancy) {
+		// upperBoundsBaseArea *= EMPOC;
+		// }
 
-		float ageToUse = maxBreastHeightAge
-				.map(max -> Math.min(breastHeightAge, max))
-				.orElse(breastHeightAge);
+		float ageToUse = maxBreastHeightAge.map(max -> Math.min(breastHeightAge, max)).orElse(breastHeightAge);
 
 		if (ageToUse <= 0f) {
 			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageToUse), Optional.of(0f));
@@ -891,9 +889,7 @@ public class EstimationMethods {
 			return 7.6f;
 		}
 
-		float ageUse = maxBreastHeightAge
-				.map(max -> Math.min(breastHeightAge, max))
-				.orElse(breastHeightAge);
+		float ageUse = maxBreastHeightAge.map(max -> Math.min(breastHeightAge, max)).orElse(breastHeightAge);
 
 		if (ageUse <= 0f) {
 			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageUse), Optional.of(0f));
