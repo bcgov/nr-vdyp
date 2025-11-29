@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.forward.parsers.ForwardControlVariableParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 
 class VdypForwardControlVariablesParserTest {
 

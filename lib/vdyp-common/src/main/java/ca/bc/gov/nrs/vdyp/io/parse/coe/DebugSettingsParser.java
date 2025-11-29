@@ -10,12 +10,12 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
-public class DebugSettingsParser implements ValueParser<DebugSettings> {
+public abstract class DebugSettingsParser<S extends DebugSettings> implements ValueParser<S> {
 
 	private static final Logger logger = LoggerFactory.getLogger(DebugSettingsParser.class);
 
 	@Override
-	public DebugSettings parse(String string) throws ValueParseException {
+	public S parse(String string) throws ValueParseException {
 
 		if (string == null) {
 			throw new ValueParseException(null, "VdypDebugSettingsParser: supplied string is null");
@@ -50,6 +50,8 @@ public class DebugSettingsParser implements ValueParser<DebugSettings> {
 			);
 		}
 
-		return new DebugSettings(debugSettingsValues.stream().toArray(Integer[]::new));
+		return build(debugSettingsValues.stream().toArray(Integer[]::new));
 	}
+
+	protected abstract S build(Integer[] debugSettingsValues);
 }

@@ -12,7 +12,7 @@ public class ApplicationTestUtils {
 	 * @param app
 	 * @param controlMap
 	 */
-	public static void setControlMap(VdypStartApplication<?, ?, ?, ?> app, Map<String, Object> controlMap) {
+	public static void setControlMap(VdypStartApplication<?, ?, ?, ?, ?> app, Map<String, Object> controlMap) {
 		app.setControlMap(controlMap);
 	}
 }

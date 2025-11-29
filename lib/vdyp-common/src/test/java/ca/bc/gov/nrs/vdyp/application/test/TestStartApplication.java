@@ -13,6 +13,7 @@ import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
@@ -20,7 +21,8 @@ import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
-public class TestStartApplication extends VdypStartApplication<TestPolygon, TestLayer, TestSpecies, TestSite> {
+public class TestStartApplication
+		extends VdypStartApplication<TestPolygon, TestLayer, TestSpecies, TestSite, TestDebugSettings> {
 
 	boolean realInit;
 
@@ -47,8 +49,8 @@ public class TestStartApplication extends VdypStartApplication<TestPolygon, Test
 	}
 
 	@Override
-	protected NonFipControlParser getControlFileParser() {
-		return new NonFipControlParser() {
+	protected NonFipControlParser<TestDebugSettings> getControlFileParser() {
+		return new NonFipControlParser<TestDebugSettings>() {
 
 			@Override
 			protected List<ControlMapValueReplacer<Object, String>> inputFileParsers() {
@@ -63,6 +65,17 @@ public class TestStartApplication extends VdypStartApplication<TestPolygon, Test
 			@Override
 			protected VdypApplicationIdentifier getProgramId() {
 				return VdypApplicationIdentifier.VRI_START;
+			}
+
+			@Override
+			protected DebugSettingsParser<TestDebugSettings> getDebugSettingsParser() {
+				return new DebugSettingsParser<TestDebugSettings>() {
+
+					@Override
+					protected TestDebugSettings build(Integer[] debugSettingsValues) {
+						return new TestDebugSettings(debugSettingsValues);
+					}
+				};
 			}
 
 		};

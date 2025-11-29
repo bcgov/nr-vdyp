@@ -15,7 +15,7 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
@@ -118,7 +118,7 @@ class Grow5SpeciesBaDqTphTest {
 		float baChangeRate = 0.00775236264f;
 		float tphChangeRate = 0.987927794f;
 
-		fpe.fps.fcm.getDebugSettings().setValue(Vars.SPECIES_DYNAMICS_1, 1);
+		fpe.fps.fcm.getDebugSettings().setValue(ForwardDebugSettings.SPECIES_DYNAMICS, 1);
 
 		fpe.growUsingNoSpeciesDynamics(baChangeRate, tphChangeRate);
 
@@ -157,7 +157,7 @@ class Grow5SpeciesBaDqTphTest {
 		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
 		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
-		fpe.fps.fcm.getDebugSettings().setValue(Vars.SPECIES_DYNAMICS_1, 0);
+		fpe.fps.fcm.getDebugSettings().setValue(ForwardDebugSettings.SPECIES_DYNAMICS, 0);
 
 		float baStart = 45.3864441f;
 		float baDelta = 0.351852179f;

@@ -17,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.LineParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.VdypPolygonDescriptionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.AbstractStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.GroupingStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;

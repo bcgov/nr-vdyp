@@ -41,6 +41,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
@@ -54,6 +55,7 @@ class ParsersTogetherTest {
 
 	@BeforeEach
 	void setUp() throws IOException, ResourceParseException {
+
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "DUMMY3");
@@ -81,6 +83,7 @@ class ParsersTogetherTest {
 				new EquationModifierParser().parse(TestUtils.class, "coe/GMODBA1.DAT", controlMap)
 		);
 		TestUtils.populateControlMapBecReal(controlMap);
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class));
 	}
 
 	@AfterEach
@@ -97,7 +100,7 @@ class ParsersTogetherTest {
 
 		mockControl.replay();
 
-		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0));
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class, 0));
 		app.init(resolver, controlMap);
 
 		var polyStream = new MockStreamingParser<VriPolygon>();
@@ -167,7 +170,7 @@ class ParsersTogetherTest {
 
 		mockControl.replay();
 
-		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0));
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class, 0));
 		app.init(resolver, controlMap);
 
 		var polyStream = new MockStreamingParser<VriPolygon>();
@@ -237,7 +240,7 @@ class ParsersTogetherTest {
 
 		mockControl.replay();
 
-		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0));
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class, 0));
 		app.init(resolver, controlMap);
 
 		var polyStream = new MockStreamingParser<VriPolygon>();
@@ -752,7 +755,7 @@ class ParsersTogetherTest {
 		final var layerType = LayerType.VETERAN;
 
 		mockControl.replay();
-		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0));
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class, 0));
 
 		app.init(resolver, controlMap);
 
@@ -842,7 +845,7 @@ class ParsersTogetherTest {
 
 		mockControl.replay();
 
-		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0));
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class, 0));
 		app.init(resolver, controlMap);
 
 		var polyStream = new MockStreamingParser<VriPolygon>();
@@ -908,7 +911,7 @@ class ParsersTogetherTest {
 
 		mockControl.replay();
 
-		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0));
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class, 0));
 		app.init(resolver, controlMap);
 
 		var polyStream = new MockStreamingParser<VriPolygon>();
@@ -1000,7 +1003,7 @@ class ParsersTogetherTest {
 
 		mockControl.replay();
 
-		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0));
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class, 0));
 		app.init(resolver, controlMap);
 
 		var polyStream = new MockStreamingParser<VriPolygon>();
@@ -1092,7 +1095,7 @@ class ParsersTogetherTest {
 
 		mockControl.replay();
 
-		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0));
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class, 0));
 		app.init(resolver, controlMap);
 
 		var polyStream = new MockStreamingParser<VriPolygon>();
@@ -1175,7 +1178,7 @@ class ParsersTogetherTest {
 
 		mockControl.replay();
 
-		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0));
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(VriDebugSettings.class, 0));
 		app.init(resolver, controlMap);
 
 		var polyStream = new MockStreamingParser<VriPolygon>();

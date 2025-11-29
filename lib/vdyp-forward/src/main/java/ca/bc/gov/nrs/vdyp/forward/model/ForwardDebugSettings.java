@@ -1,6 +1,10 @@
 package ca.bc.gov.nrs.vdyp.forward.model;
 
 import java.util.ArrayList;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
@@ -89,88 +93,41 @@ import ca.bc.gov.nrs.vdyp.model.DebugSettings;
  * <li>15: Same as option 1, condition on total age (primary) < 30.
  * </ul>
  */
-public class ForwardDebugSettings {
+public class ForwardDebugSettings extends DebugSettings {
+
+	private static final Logger logger = LoggerFactory.getLogger(ForwardDebugSettings.class);
 
 	public static final int MAX_FILL_INDEX_SETTINGS_INDEX = DebugSettings.MAX_DEBUG_SETTINGS;
 
-	public enum Vars {
-		/**
-		 * <li>Value 0: Full species dynamics. Not recommended.
-		 * <li>Value 1: No species dynamics. Species percents in TPH and BA are constant.
-		 * <li>Value 2: Limited dynamics. Percents by BA are constant, but TPH %’s vary.
-		 */
-		SPECIES_DYNAMICS_1(1),
-		/**
-		 * <li>Value 0: No upper age for application of BA and DQ yield equations.
-		 * <li>Value n: Maximum BH age for application of BA and DQ yields is 100 * n (years).
-		 */
-		MAX_BREAST_HEIGHT_AGE_2(2),
-		/**
-		 * <li>Value 0: BA growth comes from fiat model (approach to yield eqn’s).
-		 * <li>Value 1: BA growth from empirical model (older ages suspect).
-		 * <li>Value 2: Mixed fiat & empirical model. (See SEQ111 and IPSJF162).
-		 */
-		BASAL_AREA_GROWTH_MODEL_3(3),
-		/**
-		 * <li>Value 0: Will default to (2). Controls upper bounds in some models.
-		 * <li>Value 1: Limits from SEQ108 on control file, categorized by GRPBA1.
-		 * <li>Value 2: Limits from SEQ043 on control file, Coast Interior & Leading species.
-		 */
-		PER_SPECIES_AND_REGION_MAX_BREAST_HEIGHT_4(4),
-		/** Messaging Level */
-		MESSAGING_LEVEL_5(5),
-		/**
-		 * <li>Value 0: DQ growth comes from fiat model (approach to yield eqn’s).
-		 * <li>Value 1: DQ growth from empirical model (older ages suspect).
-		 * <li>Value 2: Mixed fiat & empirical model. (See SEQ117 and IPSJF178).
-		 */
-		DQ_GROWTH_MODEL_6(6),
-		/**
-		 * <li>Value 0: Normal changes in Lorey height (HL), all species.
-		 * <li>Value 1: Force change to zero for nonprimary species if change in HD is zero.
-		 * <li>Value 2: Force change to zero for all species if change in HD is zero. (option 2 precludes changes in
-		 * primary sp HL due solely to change in TPH).
-		 */
-		LOREY_HEIGHT_CHANGE_STRATEGY_8(8),
-		/** Limit BA if DQ has been limited */
-		DO_LIMIT_BA_WHEN_DQ_LIMITED_9(9);
+	public static final int SPECIES_DYNAMICS = 1;
+	public static final int MAX_BREAST_HEIGHT_AGE = 2;
+	public static final int BA_GROWTH_MODEL = 3;
+	public static final int DQ_GROWTH_MODEL = 6;
+	public static final int LOREY_HEIGHT_CHANGE_STRATEGY = 8;
+	public static final int DO_LIMIT_BA_WHEN_DQ_LIMITED = 9;
 
-		public final int settingNumber;
+	public static final float MAX_BREAST_HEIGHT_AGE_MULTIPLIER = 100f;
 
-		Vars(int settingNumber) {
-			this.settingNumber = settingNumber;
+	public ForwardDebugSettings(Integer[] settings) {
+		super(settings);
+	}
+
+	@Override
+	protected Object process(int settingNumber, int value) {
+		switch (settingNumber) {
+		case SPECIES_DYNAMICS:
+			return SpeciesDynamics.fromIndex(value);
+		case MAX_BREAST_HEIGHT_AGE:
+			return Optional.of(value).filter(x -> x > 0).map(x -> x * MAX_BREAST_HEIGHT_AGE_MULTIPLIER);
+		case BA_GROWTH_MODEL, DQ_GROWTH_MODEL:
+			return GrowthModel.fromIndex(value);
+		case LOREY_HEIGHT_CHANGE_STRATEGY:
+			return LoreyHeightChangeStrategy.fromIndex(value);
+		case DO_LIMIT_BA_WHEN_DQ_LIMITED:
+			return value != 0;
+		default:
+			return super.process(settingNumber, value);
 		}
-	}
-
-	private DebugSettings debugSettings;
-
-	public ForwardDebugSettings(DebugSettings debugSettings) {
-		this.debugSettings = debugSettings;
-	}
-
-	public int getValue(Vars v) {
-		return debugSettings.getValue(v.settingNumber);
-	}
-
-	/**
-	 * For testing purposes sometimes it's useful to change the value of a debug setting. It is not expected that this
-	 * method would be used for any other purpose.
-	 *
-	 * @param v     the variable to change
-	 * @param value the new value the variable is to have
-	 */
-	public void setValue(Vars v, int value) {
-
-		int[] currentSettings = debugSettings.getValues();
-		Integer[] updatedSettings = new Integer[currentSettings.length];
-		for (int i = 0; i < currentSettings.length; i++) {
-			if (i == v.settingNumber - 1) {
-				updatedSettings[i] = value;
-			} else {
-				updatedSettings[i] = currentSettings[i];
-			}
-		}
-		debugSettings = new DebugSettings(updatedSettings);
 	}
 
 	public Integer[] getFillInValues() {
@@ -179,10 +136,153 @@ public class ForwardDebugSettings {
 
 		int settingValue;
 		int index = 11;
-		while (index <= MAX_FILL_INDEX_SETTINGS_INDEX && (settingValue = debugSettings.getValue(index++)) != 0) {
+		while (index <= MAX_FILL_INDEX_SETTINGS_INDEX && (settingValue = getValue(index++)) != 0) {
 			result.add(settingValue);
 		}
 
 		return result.toArray(Integer[]::new);
 	}
+
+	/**
+	 * Species dynamics mode
+	 */
+	public enum SpeciesDynamics {
+		/**
+		 * Full species dynamics. Not recommended.
+		 */
+		FULL,
+		/**
+		 * No species dynamics. Species percents in TPH and BA are constant.
+		 */
+		NONE,
+		/**
+		 * Limited dynamics. Percents by BA are constant, but TPH %’s vary.
+		 */
+		PARTIAL;
+
+		public static SpeciesDynamics fromIndex(int value) {
+			switch (value) {
+			case 0:
+				return SpeciesDynamics.FULL;
+			case 1:
+				return SpeciesDynamics.NONE;
+			case 2:
+				return SpeciesDynamics.PARTIAL;
+			default:
+				return logDefaultForUnknown(logger, "upper bounds mode", value, SpeciesDynamics.FULL);
+			}
+
+		}
+	}
+
+	/**
+	 * Get the species dynamics mode
+	 */
+	public SpeciesDynamics getSpeciesDynamics() {
+		return (SpeciesDynamics) getProcessedValue(SPECIES_DYNAMICS);
+	}
+
+	/**
+	 * Get the maximum breast height age if there is a limit.
+	 */
+	@SuppressWarnings("unchecked")
+	public Optional<Float> getMaxBreastHeightAge() {
+		return (Optional<Float>) getProcessedValue(MAX_BREAST_HEIGHT_AGE);
+	}
+
+	/**
+	 * What type of growth model to use
+	 */
+	public enum GrowthModel {
+		/**
+		 * Growth comes from fiat model (approach to yield eqn’s).
+		 */
+		FIAT,
+		/**
+		 * Growth from empirical model (older ages suspect).
+		 */
+		EMPERICAL,
+		/**
+		 * Mixed fiat & empirical model. (See SEQ111 (BA) or SEQ117 (DQ) and IPSJF162 (BA) or IPSJF178 (DQ)).
+		 */
+		MIXED;
+
+		public static GrowthModel fromIndex(int value) {
+			switch (value) {
+			case 0:
+				return GrowthModel.FIAT;
+			case 1:
+				return GrowthModel.EMPERICAL;
+			case 2:
+				return GrowthModel.MIXED;
+			default:
+				return logDefaultForUnknown(logger, "growth model", value, GrowthModel.FIAT);
+			}
+
+		}
+	}
+
+	/**
+	 * The growth model for basal area
+	 */
+	public GrowthModel getBasalAreaGrowthModel() {
+		return (GrowthModel) getProcessedValue(BA_GROWTH_MODEL);
+	}
+
+	/**
+	 * The growth model for quadratic mean diameter
+	 */
+	public GrowthModel getQuadraticMeanDiameterGrowthModel() {
+		return (GrowthModel) getProcessedValue(DQ_GROWTH_MODEL);
+	}
+
+	/**
+	 * Change strategy for lorey height
+	 */
+	public enum LoreyHeightChangeStrategy {
+		/**
+		 * Normal changes in Lorey height (HL), all species.
+		 */
+		NORMAL,
+		/**
+		 * Force change to zero for nonprimary species if change in HD is zero.
+		 */
+		ZERO_NONPRIMARY,
+		/**
+		 * Force change to zero for all species if change in HD is zero. (option 2 precludes changes in primary sp HL
+		 * due solely to change in TPH).
+		 */
+		ZERO_ALL;
+
+		public static LoreyHeightChangeStrategy fromIndex(int value) {
+			switch (value) {
+			case 0:
+				return LoreyHeightChangeStrategy.NORMAL;
+			case 1:
+				return LoreyHeightChangeStrategy.ZERO_NONPRIMARY;
+			case 2:
+				return LoreyHeightChangeStrategy.ZERO_ALL;
+			default:
+				return logDefaultForUnknown(
+						logger, "lorey height change strategy", value, LoreyHeightChangeStrategy.NORMAL
+				);
+			}
+
+		}
+	}
+
+	/**
+	 * Change strategy for lorey height
+	 */
+	public LoreyHeightChangeStrategy getLoreyHeightChangeStrategy() {
+		return (LoreyHeightChangeStrategy) getProcessedValue(LOREY_HEIGHT_CHANGE_STRATEGY);
+	}
+
+	/**
+	 * Should basal area be limited when quadratic main diameter is limited.
+	 */
+	public boolean getDoLimitBaWhenDqLimited() {
+		return (Boolean) getProcessedValue(DO_LIMIT_BA_WHEN_DQ_LIMITED);
+	}
+
 }

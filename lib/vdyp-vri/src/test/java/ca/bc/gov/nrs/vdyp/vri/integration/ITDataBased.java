@@ -11,17 +11,12 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.integration_tests.IntermediateDataBasedIntegrationTest;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
-import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
-import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
-import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
-import ca.bc.gov.nrs.vdyp.vri.model.VriSpecies;
 
 class ITDataBased extends IntermediateDataBasedIntegrationTest {
 
@@ -50,7 +45,7 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile).filter(Files::exists)
 				.map(Object::toString).toArray(String[]::new);
 
-		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
+		try (var app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
 

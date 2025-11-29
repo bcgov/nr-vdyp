@@ -22,6 +22,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.SpeciesDynamics;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
@@ -295,7 +296,9 @@ class ForwardProcessingEngineTest {
 			em.replay();
 
 			// Dynamics mode 2, Partial
-			fpe.growSpecies(lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, 2);
+			fpe.growSpecies(
+					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+			);
 
 			em.verify();
 		}
@@ -336,7 +339,9 @@ class ForwardProcessingEngineTest {
 			em.replay();
 
 			// Dynamics mode 2, Partial
-			fpe.growSpecies(lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, 2);
+			fpe.growSpecies(
+					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+			);
 
 			em.verify();
 		}
@@ -383,7 +388,9 @@ class ForwardProcessingEngineTest {
 			em.replay();
 
 			// Dynamics mode 2, Partial
-			fpe.growSpecies(lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, 2);
+			fpe.growSpecies(
+					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+			);
 
 			em.verify();
 		}
@@ -430,7 +437,9 @@ class ForwardProcessingEngineTest {
 			em.replay();
 
 			// Dynamics mode 2, Partial
-			fpe.growSpecies(lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, 2);
+			fpe.growSpecies(
+					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+			);
 
 			em.verify();
 		}
@@ -462,7 +471,9 @@ class ForwardProcessingEngineTest {
 			em.replay();
 
 			// Dynamics mode 1, None
-			fpe.growSpecies(lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, 1);
+			fpe.growSpecies(
+					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.NONE
+			);
 
 			em.verify();
 		}
@@ -496,7 +507,9 @@ class ForwardProcessingEngineTest {
 			em.replay();
 
 			// Dynamics mode 0, full
-			fpe.growSpecies(lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, 0);
+			fpe.growSpecies(
+					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.FULL
+			);
 
 			em.verify();
 		}

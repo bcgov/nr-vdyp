@@ -17,7 +17,6 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
-import ca.bc.gov.nrs.vdyp.forward.model.ControlVariable;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser.VdypPolygonStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -32,6 +31,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilization;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 
 public class ForwardDataStreamReader {
 

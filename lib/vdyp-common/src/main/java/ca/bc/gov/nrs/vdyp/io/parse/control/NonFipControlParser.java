@@ -16,8 +16,9 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.QuadraticMeanDiameterYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
-public abstract class NonFipControlParser extends StartApplicationControlParser {
+public abstract class NonFipControlParser<S extends DebugSettings> extends StartApplicationControlParser<S> {
 
 	private static final Logger log = LoggerFactory.getLogger(NonFipControlParser.class);
 

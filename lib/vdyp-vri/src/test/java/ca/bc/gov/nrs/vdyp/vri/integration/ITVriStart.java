@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
-import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -28,10 +27,6 @@ import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
-import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
-import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
-import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
-import ca.bc.gov.nrs.vdyp.vri.model.VriSpecies;
 import ca.bc.gov.nrs.vdyp.vri.test.VriTestUtils;
 
 class ITVriStart {
@@ -116,7 +111,7 @@ class ITVriStart {
 	@Disabled
 	@Test
 	void noControlFile() {
-		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
+		try (var app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
@@ -126,7 +121,7 @@ class ITVriStart {
 
 	@Test
 	void controlFileDoesntExist() {
-		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
+		try (var app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
@@ -268,7 +263,7 @@ class ITVriStart {
 
 	@Test
 	void controlFile() throws IOException, ResourceParseException, ProcessingException {
-		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
+		try (var app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
 

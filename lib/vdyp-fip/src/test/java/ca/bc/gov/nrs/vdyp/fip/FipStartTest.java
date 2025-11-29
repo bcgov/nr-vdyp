@@ -43,6 +43,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.exceptions.YearsToBreastHeightLowException;
+import ca.bc.gov.nrs.vdyp.fip.model.FipDebugSettings;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary.PrimaryBuilder;
@@ -3586,7 +3587,7 @@ class FipStartTest {
 			List<Collection<FipSpecies>> species, TestConsumer<FipStart> test
 	) throws Exception {
 
-		VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();
+		VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite, FipDebugSettings> app = new FipStart();
 
 		Map<String, Object> controlMap = new HashMap<>();
 
@@ -3719,7 +3720,8 @@ class FipStartTest {
 	@FunctionalInterface
 	private static interface TestConsumer<T> {
 		public void accept(
-				VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> unit, Map<String, Object> controlMap
+				VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite, FipDebugSettings> unit,
+				Map<String, Object> controlMap
 		) throws Exception;
 	}
 }

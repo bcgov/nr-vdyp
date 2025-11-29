@@ -4,6 +4,7 @@ import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
 
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 
 /**
  * Control Variable values
