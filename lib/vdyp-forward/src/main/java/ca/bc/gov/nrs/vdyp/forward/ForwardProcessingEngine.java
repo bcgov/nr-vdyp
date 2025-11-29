@@ -38,7 +38,9 @@ import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.GrowthModel;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.LoreyHeightChangeStrategy;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.SpeciesDynamics;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
@@ -289,7 +291,7 @@ public class ForwardProcessingEngine {
 										// parallel debugging.
 
 			boolean doRecalculateGroupsPriorToOutput = fps.fcm.getDebugSettings()
-					.getValue(ForwardDebugSettings.Vars.SPECIES_DYNAMICS_1) != 1 && plps.getNSpecies() > 1;
+					.getSpeciesDynamics() != SpeciesDynamics.PARTIAL && plps.getNSpecies() > 1;
 
 			boolean doRecalculateGroups = fps.fcm.getForwardControlVariables()
 					.getControlVariable(ControlVariable.UPDATE_DURING_GROWTH_6) >= 1;
@@ -412,9 +414,8 @@ public class ForwardProcessingEngine {
 		if (ExecutionStep.GROW_3_LAYER_DQDELTA.eq(lastStepInclusive))
 			return;
 
-		int debugSetting9Value = fps.fcm.getDebugSettings()
-				.getValue(ForwardDebugSettings.Vars.DO_LIMIT_BA_WHEN_DQ_LIMITED_9);
-		if (debugSetting9Value == 1 && wasDqGrowthLimitApplied.get() /* is true */) {
+		boolean doLimitBaWhenDqLimited = fps.fcm.getDebugSettings().getDoLimitBaWhenDqLimited();
+		if (doLimitBaWhenDqLimited && wasDqGrowthLimitApplied.get() /* is true */) {
 			// Limit BA growth if DQ hit limit.
 			float dqEnd = dqStart + dqDelta;
 			float baEndMax = baStart * (dqEnd * dqEnd) / (dqStart * dqStart);
@@ -446,7 +447,7 @@ public class ForwardProcessingEngine {
 		// and trees-per-hectare, using one of several options: "full species dynamics",
 		// "partial species dynamics" or "no species dynamics."
 
-		int debugSetting1Value = fps.fcm.getDebugSettings().getValue(ForwardDebugSettings.Vars.SPECIES_DYNAMICS_1);
+		SpeciesDynamics debugSetting1Value = fps.fcm.getDebugSettings().getSpeciesDynamics();
 
 		growSpecies(
 				lps, currentYear, lastStepInclusive, bank, Change.delta(dhStart, dhDelta),
@@ -626,10 +627,10 @@ public class ForwardProcessingEngine {
 	void growSpecies(
 			LayerProcessingState lps, int currentYear, ExecutionStep lastStepInclusive, Bank bank,
 			Change dominantHeight, Change quadMeanDiameter, Change basalArea, Change tph, float lhStart,
-			float pspLhStart, float pspTphStart, int debugSetting1Value
+			float pspLhStart, float pspTphStart, SpeciesDynamics debugSetting1Value
 	) throws ProcessingException {
 		boolean wasSolutionFound = false;
-		if (debugSetting1Value == 2) {
+		if (debugSetting1Value == SpeciesDynamics.PARTIAL) {
 			// (5a) This is the PARTIAL SPECIES DYNAMICS section.
 
 			// (5a1) Begin by updating HL for all species (UC All only), as well
@@ -687,7 +688,7 @@ public class ForwardProcessingEngine {
 			// Calculate the basal area, trees-per-hectare and quad-mean-diameter for all
 			// species in the polygon (UC All)
 
-			if (debugSetting1Value == 1 || bank.getNSpecies() == 1
+			if (debugSetting1Value == SpeciesDynamics.NONE || bank.getNSpecies() == 1
 					|| (basalArea.delta() == 0.0 || quadMeanDiameter.delta() == 0.0)) {
 
 				// (5b) This is the NO SPECIES DYNAMICS section
@@ -1694,13 +1695,12 @@ public class ForwardProcessingEngine {
 
 		float pspLhEnd = 1.3f + (pspLhEndEstimate - 1.3f) * primaryF;
 
-		int debugSetting8Value = fps.fcm.getDebugSettings()
-				.getValue(ForwardDebugSettings.Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8);
+		var lhChangeStrategy = fps.fcm.getDebugSettings().getLoreyHeightChangeStrategy();
 
 		int primarySpeciesIndex = fps.getPrimaryLayerProcessingState().getPrimarySpeciesIndex();
-		if (debugSetting8Value != 2 || dhStart != dhEnd) {
+		if (lhChangeStrategy != LoreyHeightChangeStrategy.ZERO_ALL || dhStart != dhEnd) {
 			bank.loreyHeights[primarySpeciesIndex][UC_ALL_INDEX] = pspLhEnd;
-		} else if (debugSetting8Value == 2) {
+		} else if (lhChangeStrategy == LoreyHeightChangeStrategy.ZERO_ALL) {
 			pspLhEnd = bank.loreyHeights[primarySpeciesIndex][UC_ALL_INDEX];
 		}
 
@@ -1708,7 +1708,7 @@ public class ForwardProcessingEngine {
 
 		for (int i : lps.getIndices()) {
 			if (i != primarySpeciesIndex && bank.basalAreas[i][UC_ALL_INDEX] > 0.0f) {
-				if (! (dhEnd == dhStart && debugSetting8Value >= 1)) {
+				if (! (dhEnd == dhStart && lhChangeStrategy != LoreyHeightChangeStrategy.NORMAL)) {
 					float spLhEstimate1 = estimateNonPrimarySpeciesLoreyHeight(i, dhStart, pspLhStart);
 					float spLhEstimate2 = estimateNonPrimarySpeciesLoreyHeight(i, dhEnd, pspLhEnd);
 
@@ -1828,7 +1828,7 @@ public class ForwardProcessingEngine {
 		float dqUpperBound = growQuadraticMeanDiameterUpperBound();
 		float dqLimit = Math.max(dqUpperBound, dqStart);
 
-		int debugVariable2Value = fps.fcm.getDebugSettings().getValue(Vars.MAX_BREAST_HEIGHT_AGE_2);
+		int debugVariable2Value = fps.fcm.getDebugSettings().getValue(ForwardDebugSettings.MAX_BREAST_HEIGHT_AGE);
 
 		float dqYieldStart = fps.estimators.estimateQuadMeanDiameterYield(
 				coefficientsWeightedBySpeciesAndDecayBec, debugVariable2Value, dhStart, pspYabhStart, veteranBaStart,
@@ -1844,12 +1844,12 @@ public class ForwardProcessingEngine {
 
 		float dqYieldGrowth = dqYieldEnd - dqYieldStart;
 
-		int debugSetting6Value = fps.fcm.getDebugSettings().getValue(ForwardDebugSettings.Vars.DQ_GROWTH_MODEL_6);
+		var dqGrowthModel = fps.fcm.getDebugSettings().getQuadraticMeanDiameterGrowthModel();
 
 		var growthFiatDetails = fps.fcm.getQuadMeanDiameterGrowthFiatDetails().get(becZone.getRegion());
 
 		Optional<Float> dqGrowthFiat = Optional.empty();
-		if (debugSetting6Value != 1) {
+		if (dqGrowthModel != GrowthModel.EMPERICAL) {
 			var convergenceCoefficient = growthFiatDetails.calculateCoefficient(pspYabhStart);
 
 			float adjust = -convergenceCoefficient * (dqStart - dqYieldStart);
@@ -1857,7 +1857,7 @@ public class ForwardProcessingEngine {
 		}
 
 		Optional<Float> dqGrowthEmpirical = Optional.empty();
-		if (debugSetting6Value != 0) {
+		if (dqGrowthModel != GrowthModel.FIAT) {
 			dqGrowthEmpirical = Optional.of(
 					calculateQuadMeanDiameterGrowthEmpirical(
 							pspYabhStart, dhStart, baStart, dqStart, dhDelta, dqYieldStart, dqYieldEnd
@@ -1867,16 +1867,16 @@ public class ForwardProcessingEngine {
 
 		float dqGrowth;
 
-		switch (debugSetting6Value) {
-		case 0:
+		switch (dqGrowthModel) {
+		case FIAT:
 			dqGrowth = dqGrowthFiat.orElseThrow();
 			break;
 
-		case 1:
+		case EMPERICAL:
 			dqGrowth = dqGrowthEmpirical.orElseThrow();
 			break;
 
-		case 2: {
+		case MIXED: {
 			float empiricalProportion = 1.0f;
 			if (pspYabhStart >= growthFiatDetails.getMixedCoefficient(1)) {
 				empiricalProportion = 0.0f;
@@ -1892,7 +1892,7 @@ public class ForwardProcessingEngine {
 		}
 
 		default:
-			throw new IllegalStateException("debugSetting6Value of " + debugSetting6Value + " is not supported");
+			throw new IllegalStateException("debugSetting6Value of " + dqGrowthModel + " is not supported");
 		}
 
 		if (dqStart + dqGrowth < 7.6f) {
@@ -2034,7 +2034,7 @@ public class ForwardProcessingEngine {
 		var baUpperBound = growBasalAreaUpperBound();
 
 		boolean isFullOccupancy = true;
-		int debugSetting2Value = fps.fcm.getDebugSettings().getValue(Vars.MAX_BREAST_HEIGHT_AGE_2);
+		int debugSetting2Value = fps.fcm.getDebugSettings().getValue(ForwardDebugSettings.MAX_BREAST_HEIGHT_AGE);
 
 		float baYieldStart = fps.estimators.estimateBaseAreaYield(
 				estimateBasalAreaYieldCoefficients, debugSetting2Value, pspDhStart, pspYabhStart, veteranLayerBaStart,
@@ -2065,9 +2065,9 @@ public class ForwardProcessingEngine {
 			baGrowth = Math.min(baYieldStart / pspYabhStart, Math.min(0.5f, baGrowth));
 		}
 
-		int debugSetting3Value = debugSettings.getValue(ForwardDebugSettings.Vars.BASAL_AREA_GROWTH_MODEL_3);
+		var baGrowthModel = debugSettings.getBasalAreaGrowthModel();
 
-		if (debugSetting3Value >= 1) {
+		if (baGrowthModel != GrowthModel.FIAT) {
 			float baGrowthFiatModel = baGrowth;
 
 			float baGrowthEmpiricalModel = calculateBasalAreaGrowthEmpirical(
@@ -2076,7 +2076,7 @@ public class ForwardProcessingEngine {
 
 			baGrowth = baGrowthEmpiricalModel;
 
-			if (debugSetting3Value == 2) {
+			if (baGrowthModel == GrowthModel.MIXED) {
 				float c = 1.0f;
 				if (pspYabhStart >= growthFaitDetails.getMixedCoefficient(1)) {
 					c = 0.0f;
@@ -2192,17 +2192,18 @@ public class ForwardProcessingEngine {
 
 		LayerProcessingState lps = fps.getPrimaryLayerProcessingState();
 
-		int debugSetting4Value = fps.fcm.getDebugSettings()
-				.getValue(ForwardDebugSettings.Vars.PER_SPECIES_AND_REGION_MAX_BREAST_HEIGHT_4);
-		if (debugSetting4Value > 0) {
+		switch (fps.fcm.getDebugSettings().getUpperBoundsMode()) {
+		case MODE_1:
+			var primarySpeciesGroupNumber = lps.getPrimarySpeciesGroupNumber();
+			return fps.fcm.getUpperBounds().get(primarySpeciesGroupNumber).getCoe(UpperBoundsParser.BA_INDEX);
+		case MODE_2:
+		default:
 			var upperBoundsCoefficients = fps.fcm.getUpperBoundsCoefficients();
 			Region region = lps.getBecZone().getRegion();
 			int primarySpeciesIndex = lps.getPrimarySpeciesIndex();
 			return upperBoundsCoefficients.get(region, lps.getBank().speciesNames[primarySpeciesIndex], 1);
-		} else {
-			var primarySpeciesGroupNumber = lps.getPrimarySpeciesGroupNumber();
-			return fps.fcm.getUpperBounds().get(primarySpeciesGroupNumber).getCoe(UpperBoundsParser.BA_INDEX);
 		}
+
 	}
 
 	/**
@@ -2212,18 +2213,18 @@ public class ForwardProcessingEngine {
 
 		LayerProcessingState lps = fps.getPrimaryLayerProcessingState();
 
-		int debugSetting4Value = fps.fcm.getDebugSettings()
-				.getValue(ForwardDebugSettings.Vars.PER_SPECIES_AND_REGION_MAX_BREAST_HEIGHT_4);
-		if (debugSetting4Value > 0) {
-
+		switch (fps.fcm.getDebugSettings().getUpperBoundsMode()) {
+		case MODE_1:
+			var primarySpeciesGroupNumber = fps.getPrimaryLayerProcessingState().getPrimarySpeciesGroupNumber();
+			return fps.fcm.getUpperBounds().get(primarySpeciesGroupNumber).getCoe(UpperBoundsParser.DQ_INDEX);
+		case MODE_2:
+		default:
 			var upperBoundsCoefficients = fps.fcm.getUpperBoundsCoefficients();
 			Region region = lps.getBecZone().getRegion();
 			int primarySpeciesIndex = lps.getPrimarySpeciesIndex();
 			return upperBoundsCoefficients.get(region, lps.getBank().speciesNames[primarySpeciesIndex], 2);
-		} else {
-			var primarySpeciesGroupNumber = fps.getPrimaryLayerProcessingState().getPrimarySpeciesGroupNumber();
-			return fps.fcm.getUpperBounds().get(primarySpeciesGroupNumber).getCoe(UpperBoundsParser.DQ_INDEX);
 		}
+
 	}
 
 	/**

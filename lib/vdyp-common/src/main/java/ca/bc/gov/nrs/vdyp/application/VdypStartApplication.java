@@ -90,7 +90,7 @@ import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
  * @param <S> input species class
  * @param <I> input site class
  */
-public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, D extends DebugSettings<?>>
+public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, D extends DebugSettings>
 		extends VdypApplication implements Closeable {
 
 	private static final Logger log = LoggerFactory.getLogger(VdypStartApplication.class);

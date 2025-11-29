@@ -720,7 +720,7 @@ public class TestUtils {
 	 * @param value
 	 * @return
 	 */
-	public static <T extends DebugSettings<?>> T debugSettingsSingle(Class<T> debugClass, int index, int value) {
+	public static <T extends DebugSettings> T debugSettingsSingle(Class<T> debugClass, int index, int value) {
 		var arr = new Integer[DebugSettings.MAX_DEBUG_SETTINGS];
 		Arrays.fill(arr, 0);
 		arr[index - 1] = value;
@@ -739,7 +739,7 @@ public class TestUtils {
 	 * @param values
 	 * @return
 	 */
-	public static <T extends DebugSettings<?>> T debugSettings(Class<T> debugClass, int... values) {
+	public static <T extends DebugSettings> T debugSettings(Class<T> debugClass, int... values) {
 		Integer[] arr = Arrays.stream(values).mapToObj(i -> (Integer) i).toArray(Integer[]::new);
 		try {
 			return debugClass.getConstructor(Integer[].class).newInstance(new Object[] { arr });

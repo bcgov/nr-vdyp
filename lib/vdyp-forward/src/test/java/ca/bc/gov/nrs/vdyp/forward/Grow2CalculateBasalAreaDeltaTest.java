@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
@@ -103,7 +103,7 @@ class Grow2CalculateBasalAreaDeltaTest {
 		float ba = 45.3864441f;
 		float hdDelta = 0.173380271f;
 
-		fpe.fps.fcm.getDebugSettings().setValue(Vars.BASAL_AREA_GROWTH_MODEL_3, 0);
+		fpe.fps.fcm.getDebugSettings().setValue(ForwardDebugSettings.BA_GROWTH_MODEL, 0);
 
 		float gba = fpe.calculateBasalAreaDelta(yabh, hd, ba, Optional.empty(), hdDelta);
 

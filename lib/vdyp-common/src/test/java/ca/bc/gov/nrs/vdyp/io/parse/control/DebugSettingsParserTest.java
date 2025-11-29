@@ -133,9 +133,8 @@ public class DebugSettingsParserTest {
 
 	// " 0 0 0 0 0 0 0 050 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0"
 
-	public static <V extends Enum<V> & DebugSettings.Vars> Matcher<DebugSettings<V>>
-			debugFlag(int i, Matcher<Integer> valueMatcher) {
-		return (Matcher<DebugSettings<V>>) new TypeSafeDiagnosingMatcher<DebugSettings<V>>() {
+	public static Matcher<DebugSettings> debugFlag(int i, Matcher<Integer> valueMatcher) {
+		return (Matcher<DebugSettings>) new TypeSafeDiagnosingMatcher<DebugSettings>() {
 
 			@Override
 			public void describeTo(Description description) {
@@ -144,7 +143,7 @@ public class DebugSettingsParserTest {
 			}
 
 			@Override
-			protected boolean matchesSafely(DebugSettings<V> item, Description mismatchDescription) {
+			protected boolean matchesSafely(DebugSettings item, Description mismatchDescription) {
 				int value = item.getValue(i);
 				if (!valueMatcher.matches(value)) {
 					valueMatcher.describeMismatch(value, mismatchDescription);

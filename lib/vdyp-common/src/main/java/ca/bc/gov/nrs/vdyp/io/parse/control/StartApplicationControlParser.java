@@ -44,7 +44,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeNetDecayWasteParser;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
-public abstract class StartApplicationControlParser<S extends DebugSettings<?>> extends BaseControlParser<S> {
+public abstract class StartApplicationControlParser<S extends DebugSettings> extends BaseControlParser<S> {
 
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(StartApplicationControlParser.class);

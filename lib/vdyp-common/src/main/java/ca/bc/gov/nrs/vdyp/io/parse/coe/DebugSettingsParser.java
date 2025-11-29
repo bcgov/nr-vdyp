@@ -10,7 +10,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
-public abstract class DebugSettingsParser<S extends DebugSettings<?>> implements ValueParser<S> {
+public abstract class DebugSettingsParser<S extends DebugSettings> implements ValueParser<S> {
 
 	private static final Logger logger = LoggerFactory.getLogger(DebugSettingsParser.class);
 

@@ -19,7 +19,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
-public abstract class BaseControlParser<S extends DebugSettings<?>> {
+public abstract class BaseControlParser<S extends DebugSettings> {
 
 	private static final Logger logger = LoggerFactory.getLogger(BaseControlParser.class);
 
