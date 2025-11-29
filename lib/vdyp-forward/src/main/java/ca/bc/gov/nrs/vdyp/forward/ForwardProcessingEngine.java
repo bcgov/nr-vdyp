@@ -1828,10 +1828,10 @@ public class ForwardProcessingEngine {
 		float dqUpperBound = growQuadraticMeanDiameterUpperBound();
 		float dqLimit = Math.max(dqUpperBound, dqStart);
 
-		int debugVariable2Value = fps.fcm.getDebugSettings().getValue(ForwardDebugSettings.MAX_BREAST_HEIGHT_AGE);
+		Optional<Float> maxBreastHeightAge = fps.fcm.getDebugSettings().getMaxBreastHeightAge();
 
 		float dqYieldStart = fps.estimators.estimateQuadMeanDiameterYield(
-				coefficientsWeightedBySpeciesAndDecayBec, debugVariable2Value, dhStart, pspYabhStart, veteranBaStart,
+				coefficientsWeightedBySpeciesAndDecayBec, maxBreastHeightAge, dhStart, pspYabhStart, veteranBaStart,
 				dqLimit
 		);
 
@@ -1839,7 +1839,7 @@ public class ForwardProcessingEngine {
 		float pspYabhEnd = pspYabhStart + 1.0f;
 
 		float dqYieldEnd = fps.estimators.estimateQuadMeanDiameterYield(
-				coefficientsWeightedBySpeciesAndDecayBec, debugVariable2Value, dhEnd, pspYabhEnd, veteranBaEnd, dqLimit
+				coefficientsWeightedBySpeciesAndDecayBec, maxBreastHeightAge, dhEnd, pspYabhEnd, veteranBaEnd, dqLimit
 		);
 
 		float dqYieldGrowth = dqYieldEnd - dqYieldStart;
@@ -2034,10 +2034,10 @@ public class ForwardProcessingEngine {
 		var baUpperBound = growBasalAreaUpperBound();
 
 		boolean isFullOccupancy = true;
-		int debugSetting2Value = fps.fcm.getDebugSettings().getValue(ForwardDebugSettings.MAX_BREAST_HEIGHT_AGE);
+		Optional<Float> maxBreastHeightAge = fps.fcm.getDebugSettings().getMaxBreastHeightAge();
 
 		float baYieldStart = fps.estimators.estimateBaseAreaYield(
-				estimateBasalAreaYieldCoefficients, debugSetting2Value, pspDhStart, pspYabhStart, veteranLayerBaStart,
+				estimateBasalAreaYieldCoefficients, maxBreastHeightAge, pspDhStart, pspYabhStart, veteranLayerBaStart,
 				isFullOccupancy, baUpperBound
 		);
 
@@ -2045,7 +2045,7 @@ public class ForwardProcessingEngine {
 		float pspYabhEnd = pspYabhStart + 1.0f;
 
 		float baYieldEnd = fps.estimators.estimateBaseAreaYield(
-				estimateBasalAreaYieldCoefficients, debugSetting2Value, pspDhEnd, pspYabhEnd, veteranLayerBaStart,
+				estimateBasalAreaYieldCoefficients, maxBreastHeightAge, pspDhEnd, pspYabhEnd, veteranLayerBaStart,
 				isFullOccupancy, baUpperBound
 		);
 

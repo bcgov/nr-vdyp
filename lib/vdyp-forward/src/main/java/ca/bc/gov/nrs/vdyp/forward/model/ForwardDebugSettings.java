@@ -106,7 +106,7 @@ public class ForwardDebugSettings extends DebugSettings {
 	public static final int LOREY_HEIGHT_CHANGE_STRATEGY = 8;
 	public static final int DO_LIMIT_BA_WHEN_DQ_LIMITED = 9;
 
-	public static final int MAX_BREAST_HEIGHT_AGE_MULTIPLIER = 100;
+	public static final float MAX_BREAST_HEIGHT_AGE_MULTIPLIER = 100f;
 
 	public ForwardDebugSettings(Integer[] settings) {
 		super(settings);
@@ -186,8 +186,8 @@ public class ForwardDebugSettings extends DebugSettings {
 	 * Get the maximum breast height age if there is a limit.
 	 */
 	@SuppressWarnings("unchecked")
-	public Optional<Integer> getMaxBreastHeightAge() {
-		return (Optional<Integer>) getProcessedValue(MAX_BREAST_HEIGHT_AGE);
+	public Optional<Float> getMaxBreastHeightAge() {
+		return (Optional<Float>) getProcessedValue(MAX_BREAST_HEIGHT_AGE);
 	}
 
 	/**

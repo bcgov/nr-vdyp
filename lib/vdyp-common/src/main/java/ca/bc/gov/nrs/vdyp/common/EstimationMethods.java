@@ -802,7 +802,7 @@ public class EstimationMethods {
 	 * EMP106 - estimate basal area yield for the primary layer (from IPSJF160.doc)
 	 *
 	 * @param estimateBasalAreaYieldCoefficients estimate basal area yield coefficients
-	 * @param debugSetting2Value                 the value of debug setting 2
+	 * @param maxBreastHeightAge                 the value of debug setting 2
 	 * @param dominantHeight                     dominant height (m)
 	 * @param breastHeightAge                    breast height age (years)
 	 * @param veteranBaseArea                    basal area of overstory (>= 0)
@@ -813,7 +813,7 @@ public class EstimationMethods {
 	 * @throws StandProcessingException
 	 */
 	public float estimateBaseAreaYield(
-			Coefficients estimateBasalAreaYieldCoefficients, int debugSetting2Value, float dominantHeight,
+			Coefficients estimateBasalAreaYieldCoefficients, Optional<Float> maxBreastHeightAge, float dominantHeight,
 			float breastHeightAge, Optional<Float> veteranBasalArea, boolean fullOccupancy, float upperBoundBasalArea
 	) throws StandProcessingException {
 
@@ -829,15 +829,13 @@ public class EstimationMethods {
 		 * to do this:
 		 */
 
-// 		if (fullOccupancy) {
-//     		upperBoundsBaseArea *= EMPOC;
-// 		}
+		// 		if (fullOccupancy) {
+		//     		upperBoundsBaseArea *= EMPOC;
+		// 		}
 
-		float ageToUse = breastHeightAge;
-
-		if (debugSetting2Value > 0) {
-			ageToUse = Math.min(ageToUse, debugSetting2Value * 100f);
-		}
+		float ageToUse = maxBreastHeightAge
+				.map(max -> Math.min(breastHeightAge, max))
+				.orElse(breastHeightAge);
 
 		if (ageToUse <= 0f) {
 			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageToUse), Optional.of(0f));
@@ -885,7 +883,7 @@ public class EstimationMethods {
 	 * @throws StandProcessingException in the event of a processing error
 	 */
 	public float estimateQuadMeanDiameterYield(
-			Coefficients coefficients, int debugVariable2Value, float dominantHeight, float breastHeightAge,
+			Coefficients coefficients, Optional<Float> maxBreastHeightAge, float dominantHeight, float breastHeightAge,
 			Optional<Float> veteranBaseArea, float upperBoundQuadMeanDiameter
 	) throws StandProcessingException {
 
@@ -893,10 +891,9 @@ public class EstimationMethods {
 			return 7.6f;
 		}
 
-		float ageUse = breastHeightAge;
-		if (debugVariable2Value > 0) {
-			ageUse = Math.min(ageUse, debugVariable2Value * 100.0f);
-		}
+		float ageUse = maxBreastHeightAge
+				.map(max -> Math.min(breastHeightAge, max))
+				.orElse(breastHeightAge);
 
 		if (ageUse <= 0f) {
 			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageUse), Optional.of(0f));

@@ -68,6 +68,7 @@ import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings.SpeciesGroupPreference;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -324,16 +325,18 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		};
 
 		final Comparator<BaseVdypSpecies<?>> comparatorToUse;
-		switch (this.getDebugModes().getValue(22)) {
-		case 0:
+
+		final var speciesGroupPreferenceMode = this.getDebugModes().getSpeciesGroupPreference();
+		switch (speciesGroupPreferenceMode) {
+		case DEFAULT:
 			comparatorToUse = percentGenusDescending;
 			break;
-		case 1:
+		case USE_PREFERRED_WITHIN_TOLERANCE:
 			comparatorToUse = percentGenusDescendingFudged;
 			break;
 		default:
 			throw new IllegalStateException(
-					MessageFormat.format("Debug flag 22 value of {0} is unknown", this.getDebugModes().getValue(22))
+					MessageFormat.format("Debug flag 22 value of {0} is unknown", speciesGroupPreferenceMode)
 			);
 		}
 
