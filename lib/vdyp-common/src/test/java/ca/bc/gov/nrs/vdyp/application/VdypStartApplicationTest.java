@@ -952,6 +952,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
+		@Disabled("Interpreting the values of the debug settings has moved into the DebugSettings object")
 		void testDebug22Unknown() throws Exception {
 
 			var mockControl = EasyMock.createControl();
