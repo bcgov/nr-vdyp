@@ -65,6 +65,32 @@ class DebugSettingsTest {
 		}
 	}
 
+	@Test
+	void testSetValue() {
+		DebugSettings ds = new DebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+		ds.setValue(3, 42);
+		for (int i = 0; i < 10; i++) {
+			if (i + 1 == 3) {
+				assertThat(ds.getValue(i + 1), is(42));
+			} else {
+				assertThat(ds.getValue(i + 1), is(i + 1));
+			}
+		}
+
+	}
+
+	@Test
+	void testSetOutOfBounds() {
+		DebugSettings ds = new DebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+		assertThrows(IllegalArgumentException.class, () -> ds.setValue(0, 42));
+		assertThrows(IllegalArgumentException.class, () -> ds.setValue(-1, 42));
+		assertThrows(IllegalArgumentException.class, () -> ds.setValue(DebugSettings.MAX_DEBUG_SETTINGS + 1, 42));
+		for (int i = 0; i < 10; i++) {
+			assertThat(ds.getValue(i + 1), is(i + 1));
+		}
+
+	}
+
 	public static List<Arguments> speciesGroupPreferences() {
 		return List.of(
 				Arguments.of(0, SpeciesGroupPreference.DEFAULT),
