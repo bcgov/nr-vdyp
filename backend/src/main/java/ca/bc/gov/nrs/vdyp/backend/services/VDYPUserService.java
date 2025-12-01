@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.codehaus.plexus.util.StringUtils;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,21 +18,23 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.VDYPUserRepository;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class VDYPUserService {
-	@Inject
-	private UserTypeCodeLookup userTypeLookup;
 
 	private final static Logger logger = LoggerFactory.getLogger(VDYPUserService.class);
 	private final VDYPUserRepository userRepository;
 	private final VDYPUserResourceAssembler assembler;
+	private final UserTypeCodeLookup userTypeLookup;
 
-	public VDYPUserService(VDYPUserRepository userRepository, VDYPUserResourceAssembler assembler) {
+	public VDYPUserService(
+			VDYPUserRepository userRepository, VDYPUserResourceAssembler assembler, UserTypeCodeLookup userTypeLookup
+	) {
 		this.userRepository = userRepository;
 		this.assembler = assembler;
+		this.userTypeLookup = userTypeLookup;
+
 	}
 
 	public List<VDYPUserModel> getAllUsers() {
@@ -39,32 +42,37 @@ public class VDYPUserService {
 	}
 
 	@Transactional
-	public VDYPUserModel createUser(VDYPUserModel requestedUser, boolean checkExists) {
-		if (checkExists) {
-			logger.debug("Checking for user with oidcId {}", requestedUser.getOidcGUID());
-			userRepository.findByOIDC(requestedUser.getOidcGUID()).ifPresent(existing -> {
-				throw new IllegalArgumentException("User already exists");
-			});
+	public VDYPUserModel createUser(VDYPUserModel requestedUser) {
+		// Confirm the requested User can be safely created
+		if (StringUtils.isBlank(requestedUser.getOidcGUID())) {
+			throw new IllegalArgumentException("Invalid User Business Identifier");
 		}
-		logger.debug("Getting entity for user oidcId {}", requestedUser.getOidcGUID());
+
+		logger.debug("Checking for user with oidcId {}", requestedUser.getOidcGUID());
+		userRepository.findByOIDC(requestedUser.getOidcGUID()).ifPresent(existing -> {
+			throw new IllegalArgumentException("User already exists");
+		});
+
 		VDYPUserEntity entity = assembler.toEntity(requestedUser);
-		logger.debug("Entity oidc oidcId {} and the persisting", entity.getOidcGUID());
 		userRepository.persist(entity);
 		return assembler.toModel(entity);
 	}
 
 	public VDYPUserModel getUserById(UUID userId) {
 		VDYPUserEntity entity = userRepository.findById(userId);
-		if (entity == null) {
-			throw new IllegalArgumentException("User could not be found");
-		}
 		return assembler.toModel(entity);
 	}
 
-	@Transactional
 	/**
 	 * Ensure that a Security Claim has been provided
+	 * <p>
+	 * 
+	 * @param identity the SecurityIdentity containing claims for the api
+	 *
+	 * @return A VDYPUserModel reprenting the user if they exist or null if there was an issue or the user could not be
+	 *         created
 	 */
+	@Transactional
 	public VDYPUserModel ensureVDYPUserFromSecurityIdentity(SecurityIdentity identity) {
 		if (identity == null || identity.isAnonymous()) {
 			return null;
@@ -90,7 +98,7 @@ public class VDYPUserService {
 						firstName, lastName, newUser.getUserTypeCode().getCode()
 				);
 
-				return createUser(newUser, false);
+				return createUser(newUser);
 			}
 			return assembler.toModel(userOption.get());
 		} else {
