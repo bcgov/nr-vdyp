@@ -1574,9 +1574,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			return lastFs[0];
 		};
 
-		debugModeExpandRootSearchWindow(
-				getDebugModes().getExpandDiameterForTPHRecovery(), minDq, maxDq, errorFunc
-		);
+		debugModeExpandRootSearchWindow(getDebugModes().getExpandDiameterForTPHRecovery(), minDq, maxDq, errorFunc);
 
 		try {
 			double x = doSolve(min, max, errorFunc);

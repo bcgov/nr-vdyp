@@ -1700,7 +1700,7 @@ public class ForwardProcessingEngine {
 		int primarySpeciesIndex = fps.getPrimaryLayerProcessingState().getPrimarySpeciesIndex();
 		if (lhChangeStrategy != LoreyHeightChangeStrategy.ZERO_ALL || dhStart != dhEnd) {
 			bank.loreyHeights[primarySpeciesIndex][UC_ALL_INDEX] = pspLhEnd;
-		} else if (lhChangeStrategy == LoreyHeightChangeStrategy.ZERO_ALL) {
+		} else {
 			pspLhEnd = bank.loreyHeights[primarySpeciesIndex][UC_ALL_INDEX];
 		}
 
