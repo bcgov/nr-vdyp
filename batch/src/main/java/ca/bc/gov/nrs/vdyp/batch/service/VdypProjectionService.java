@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,17 +49,6 @@ public class VdypProjectionService {
 		PolygonProjectionRunner.initializeSiteIndexCurves();
 	}
 
-	// ex) batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933
-	public static String
-			buildBatchProjectionId(Long jobExecutionId, String partitionName, ProjectionRequestKind projectionKind) {
-		StringBuilder sb = new StringBuilder("batch-");
-		sb.append(jobExecutionId).append("-");
-		sb.append(partitionName).append("-");
-		sb.append("projection-").append(projectionKind).append("-");
-		sb.append(BatchUtils.dateTimeFormatterForFilenames.format(LocalDateTime.now()));
-		return sb.toString();
-	}
-
 	/**
 	 * Performs VDYP projection for multiple BatchRecords in a chunk. This method processes a collection of complete
 	 * polygons by creating combined input streams and running a single projection operation.
@@ -74,7 +62,7 @@ public class VdypProjectionService {
 			List<BatchRecord> batchRecords, String partitionName, Parameters projectionParameters, Long jobExecutionId,
 			String jobGuid, String jobBaseDir
 	) throws IOException {
-		logger.info(
+		logger.debug(
 				"[GUID: {}, EXEID: {}] Starting VDYP projection for chunk of {} records in partition {}", jobGuid,
 				jobExecutionId, batchRecords.size(), partitionName
 		);
@@ -90,9 +78,8 @@ public class VdypProjectionService {
 			// Create combined input streams from all BatchRecords in the chunk
 			inputStreams = createCombinedInputStreamsFromChunk(batchRecords);
 
-			String batchProjectionId = buildBatchProjectionId(
-					jobExecutionId, partitionName, ProjectionRequestKind.HCSV
-			);
+			String batchProjectionId = BatchUtils
+					.buildBatchProjectionId(jobExecutionId, partitionName, ProjectionRequestKind.HCSV);
 
 			try (
 					ProjectionRunner runner = new ProjectionRunner(
@@ -100,7 +87,7 @@ public class VdypProjectionService {
 					)
 			) {
 
-				logger.info(
+				logger.debug(
 						"[GUID: {}, EXEID: {}] Running HCSV projection {} for chunk of {} records in partition {}",
 						jobGuid, jobExecutionId, batchProjectionId, batchRecords.size(), partitionName
 				);
@@ -116,7 +103,7 @@ public class VdypProjectionService {
 						batchRecords.size(), partitionName
 				);
 
-				logger.info(
+				logger.debug(
 						"[GUID: {}, EXEID: {}] VDYP chunk projection completed for {} records in partition {}. Intermediate results stored",
 						jobGuid, jobExecutionId, batchRecords.size(), partitionName
 				);
@@ -126,11 +113,14 @@ public class VdypProjectionService {
 			}
 
 		} catch (NullPointerException npe) {
+			// FIXME VDYP-839
 			throw ProjectionNullPointerException
 					.handleProjectionNullPointer(npe, batchRecords, jobExecutionId, jobGuid, partitionName, logger);
 		} catch (AbstractProjectionRequestException e) {
+			// FIXME VDYP-839
 			throw handleChunkProjectionFailure(batchRecords, partitionName, e);
 		} catch (IOException e) {
+			// FIXME VDYP-839
 			throw e;
 		} catch (Exception e) {
 			throw BatchException.handleProjectionFailure(
@@ -154,18 +144,11 @@ public class VdypProjectionService {
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
 			throw new BatchConfigurationException("Job base directory cannot be null or empty");
 		}
-		if (partitionName == null || partitionName.trim().isEmpty()) {
-			throw new BatchConfigurationException("Partition name cannot be null or empty");
-		}
 
 		Path jobBasePath = Paths.get(jobBaseDir);
 
-		// Convert input-partition name to output-partition name
-		// inputPartitionName format: "input-partition0" -> "output-partition0"
-		String inputPartitionName = BatchConstants.Partition.INPUT_PREFIX + "-" + partitionName;
-		String outputPartitionName = inputPartitionName.replace(
-				BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX, BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX
-		);
+		String inputPartitionName = BatchUtils.buildInputPartitionFolderName(partitionName);
+		String outputPartitionName = BatchUtils.buildOutputPartitionFolderName(partitionName);
 
 		Path outputPartitionDir = jobBasePath.resolve(outputPartitionName);
 
@@ -181,7 +164,7 @@ public class VdypProjectionService {
 			);
 		}
 
-		logger.info(
+		logger.debug(
 				"[EXEID: {}] Created output partition directory: {} for input partition: {} within job folder: {}",
 				jobExecutionId, outputPartitionName, inputPartitionName, jobBasePath.getFileName()
 		);

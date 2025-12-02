@@ -13,70 +13,46 @@
             "defaultValue": true
         },
         {
-            "name": "batch.job.base-folder-prefix",
-            "type": "java.lang.String",
-            "description": "Prefix for batch job base folder names",
-            "defaultValue": "vdyp-job"
-        },
-        {
             "name": "batch.partition.default-partition-size",
             "type": "java.lang.Integer",
             "description": "Default number of partitions for parallel VDYP projection processing",
-            "defaultValue": 4
+            "defaultValue": 12
         },
         {
             "name": "batch.partition.min-valid-file-size",
             "type": "java.lang.Integer",
-            "description": "Minimum valid file size",
+            "description": "Minimum valid file size in bytes",
             "defaultValue": 1024
-        },				
-        {
-            "name": "batch.partition.input-polygon-file-name",
-            "type": "java.lang.String",
-            "description": "Name of the polygon input CSV file in partition directories",
-            "defaultValue": "partition_polygon.csv"
         },
         {
-            "name": "batch.partition.input-layer-file-name",
-            "type": "java.lang.String",
-            "description": "Name of the layer input CSV file in partition directories",
-            "defaultValue": "partition_layer.csv"
+            "name": "batch.partition.interim-dirs-cleanup-enabled",
+            "type": "java.lang.Boolean",
+            "description": "Enable cleanup of interim partition directories after job completion",
+            "defaultValue": false
         },
         {
-            "name": "batch.partition.input-folder-name-prefix",
-            "type": "java.lang.String",
-            "description": "Prefix for partition input folder names",
-            "defaultValue": "input-partition"
-        },
-        {
-            "name": "batch.partition.output-folder-name-prefix",
-            "type": "java.lang.String",
-            "description": "Prefix for partition output folder names",
-            "defaultValue": "output-partition"
-        },
-        {
-            "name": "batch.partition.name-prefix",
-            "type": "java.lang.String",
-            "description": "Prefix for partition step names",
-            "defaultValue": "partition"
+            "name": "batch.partition.job-search-chunk-size",
+            "type": "java.lang.Integer",
+            "description": "Chunk size for job execution search queries in Spring Batch JobRepository",
+            "defaultValue": 1000
         },
         {
             "name": "batch.reader.default-chunk-size",
             "type": "java.lang.Integer",
             "description": "Default number of FEATURE_IDs processed per chunk in ChunkBasedPolygonItemReader",
-            "defaultValue": 10
+            "defaultValue": 150
         },
         {
             "name": "batch.thread-pool.core-pool-size",
             "type": "java.lang.Integer",
             "description": "Core pool size for batch partition processing thread pool",
-            "defaultValue": 4
+            "defaultValue": 12
         },
         {
             "name": "batch.thread-pool.max-pool-size-multiplier",
             "type": "java.lang.Integer",
             "description": "Multiplier for maximum thread pool size (max = core-pool-size * multiplier)",
-            "defaultValue": 2
+            "defaultValue": 1
         },
         {
             "name": "batch.thread-pool.thread-name-prefix",
@@ -100,7 +76,7 @@
             "name": "batch.skip.max-count",
             "type": "java.lang.Integer",
             "description": "Maximum number of VDYP forest records that can be skipped due to errors",
-            "defaultValue": 2000
+            "defaultValue": 50000
         },
         {
             "name": "batch.validation.max-data-length",

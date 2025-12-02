@@ -23,6 +23,11 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             # Pull credentials from the PGO-created secret
+            - name: ENV_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.crunchy.adminSecretName }}
+                  key: user
             - name: ENV_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -59,12 +64,13 @@ spec:
                 fi
                 sleep 2
               done
-              
               echo "Running Liquibase {{ .Values.liquibase.command }}..."
               liquibase \
                 --changelog-file=postgres-changelog.json \
                 --log-level={{ .Values.liquibase.logLevel }} \
-                --url="${ENV_DB_URI}" \
+                --url="jdbc:postgresql://${ENV_DB_HOST}:${ENV_DB_PORT}/${ENV_DB_DBNAME}" \
+                --username="${ENV_DB_USER}" \
+                --password="${ENV_DB_PASSWORD}" \
                 {{- range .Values.liquibase.extraArgs }}
                 {{ . }} \
                 {{- end }}

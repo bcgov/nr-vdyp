@@ -11,21 +11,34 @@ class BatchUtilsTest {
 	@Test
 	void testCreateJobFolderName_WithEmptyPrefix() {
 		String prefix = "";
-		String timestamp = "2024_01_15_10_30_45_1234";
+		String guid = "123e4567-e89b-12d3-a456-426614174000";
 
-		String result = BatchUtils.createJobFolderName(prefix, timestamp);
+		String result = BatchUtils.createJobFolderName(prefix, guid);
 
-		assertEquals("-2024_01_15_10_30_45_1234", result);
+		assertEquals("-123e4567-e89b-12d3-a456-426614174000", result);
 	}
 
 	@Test
-	void testCreateJobFolderName_WithEmptyTimestamp() {
+	void testCreateJobFolderName_WithEmptyGuid() {
 		String prefix = "vdyp-batch";
-		String timestamp = "";
+		String guid = "";
 
-		String result = BatchUtils.createJobFolderName(prefix, timestamp);
+		String result = BatchUtils.createJobFolderName(prefix, guid);
 
 		assertEquals("vdyp-batch-", result);
+	}
+
+	@Test
+	void testCreateJobFolderName_Complete() {
+		String prefix = "job";
+		String guid = "123e4567-e89b-12d3-a456-426614174000";
+
+		String result = BatchUtils.createJobFolderName(prefix, guid);
+
+		assertEquals("job-123e4567-e89b-12d3-a456-426614174000", result);
+		// Verify format includes both components
+		assertTrue(result.contains(prefix));
+		assertTrue(result.contains(guid));
 	}
 
 	@Test
@@ -36,8 +49,8 @@ class BatchUtilsTest {
 		// Verify format: yyyy_MM_dd_HH_mm_ss_SSSS
 		assertTrue(timestamp.matches("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{4}"));
 
-		// Verify it can be parsed back
-		DateTimeFormatter formatter = BatchUtils.dateTimeFormatterForFilenames;
+		// Verify it can be parsed back using the expected format
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 		assertDoesNotThrow(() -> LocalDateTime.parse(timestamp, formatter));
 	}
 
@@ -54,70 +67,9 @@ class BatchUtilsTest {
 	}
 
 	@Test
-	void testSanitizeForLogging_Null() {
-		String result = BatchUtils.sanitizeForLogging(null);
-
-		assertEquals("null", result);
-	}
-
-	@Test
-	void testSanitizeForLogging_LongFilename() {
-		// Create a filename longer than 100 characters
-		String filename = "a".repeat(150);
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals(100, result.length());
-		assertTrue(result.endsWith("..."));
-		assertEquals("a".repeat(97) + "...", result);
-	}
-
-	@Test
-	void testSanitizeForLogging_ExactlyAtLimit() {
-		String filename = "a".repeat(100);
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals(100, result.length());
-		assertFalse(result.endsWith("..."));
-		assertEquals(filename, result);
-	}
-
-	@Test
-	void testSanitizeForLogging_JustOverLimit() {
-		String filename = "a".repeat(101);
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals(100, result.length());
-		assertTrue(result.endsWith("..."));
-		assertEquals("a".repeat(97) + "...", result);
-	}
-
-	@Test
-	void testSanitizeForLogging_MixedControlAndValid() {
-		String filename = "test\u0000\u001ffile.csv";
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals("testfile.csv", result);
-	}
-
-	@Test
-	void testSanitizeForLogging_LongFilenameWithControlChars() {
-		// Create a long filename with control characters
-		String filename = "test\u0000" + "a".repeat(150) + "\u001f.csv";
-
-		String result = BatchUtils.sanitizeForLogging(filename);
-
-		assertEquals(100, result.length());
-		assertTrue(result.endsWith("..."));
-		assertTrue(result.startsWith("test"));
-	}
-
-	@Test
 	void testDateTimeFormatterForFilenames() {
-		DateTimeFormatter formatter = BatchUtils.dateTimeFormatterForFilenames;
+		// Test that createJobTimestamp produces the expected format
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 
 		assertNotNull(formatter);
 
@@ -126,11 +78,15 @@ class BatchUtilsTest {
 		String formatted = formatter.format(testDate);
 
 		assertEquals("2024_01_15_10_30_45_1234", formatted);
+
+		// Verify createJobTimestamp produces parseable output
+		String timestamp = BatchUtils.createJobTimestamp();
+		assertDoesNotThrow(() -> LocalDateTime.parse(timestamp, formatter));
 	}
 
 	@Test
 	void testDateTimeFormatterForFilenames_ParseAndFormat() {
-		DateTimeFormatter formatter = BatchUtils.dateTimeFormatterForFilenames;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 		String timestamp = "2024_12_31_23_59_59_9999";
 
 		LocalDateTime parsed = LocalDateTime.parse(timestamp, formatter);

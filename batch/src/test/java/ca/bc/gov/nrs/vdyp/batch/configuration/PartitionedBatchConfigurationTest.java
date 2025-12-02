@@ -46,7 +46,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
@@ -77,19 +76,19 @@ class PartitionedBatchConfigurationTest {
 	private BatchProperties batchProperties;
 
 	@Mock
-	private BatchProperties.Retry retry;
+	private BatchProperties.RetryProperties retry;
 
 	@Mock
-	private BatchProperties.Skip skip;
+	private BatchProperties.SkipProperties skip;
 
 	@Mock
-	private BatchProperties.ThreadPool threadPool;
+	private BatchProperties.ThreadPoolProperties threadPool;
 
 	@Mock
-	private BatchProperties.Partition partition;
+	private BatchProperties.PartitionProperties partition;
 
 	@Mock
-	private BatchProperties.Reader reader;
+	private BatchProperties.ReaderProperties reader;
 
 	@Mock
 	private PlatformTransactionManager transactionManager;
@@ -230,12 +229,9 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testPartitionReader() {
-		BatchMetrics mockMetrics = mock(BatchMetrics.class);
-		when(mockMetrics.getJobGuid()).thenReturn(TEST_JOB_GUID);
-		when(metricsCollector.getJobMetrics(TEST_JOB_EXECUTION_ID)).thenReturn(mockMetrics);
-
-		ItemStreamReader<BatchRecord> result = configuration
-				.partitionReader(metricsCollector, TEST_PARTITION_NAME, TEST_JOB_EXECUTION_ID, batchProperties);
+		ItemStreamReader<BatchRecord> result = configuration.partitionReader(
+				metricsCollector, TEST_PARTITION_NAME, TEST_JOB_EXECUTION_ID, TEST_JOB_GUID, batchProperties
+		);
 
 		assertNotNull(result);
 		verify(reader, atLeastOnce()).getDefaultChunkSize();
@@ -634,7 +630,7 @@ class PartitionedBatchConfigurationTest {
 	@Test
 	void testBatchProperties_JobConfiguration() {
 		BatchProperties props = new BatchProperties();
-		BatchProperties.Job job = props.getJob();
+		BatchProperties.JobProperties job = props.getJob();
 
 		assertTrue(job.isAutoCreate());
 
@@ -667,7 +663,7 @@ class PartitionedBatchConfigurationTest {
 	@Test
 	void testBatchProperties_ValidationConfiguration() {
 		BatchProperties props = new BatchProperties();
-		BatchProperties.Validation validation = props.getValidation();
+		BatchProperties.ValidationProperties validation = props.getValidation();
 
 		validation.setMaxDataLength(10000);
 		assertEquals(10000, validation.getMaxDataLength());
@@ -703,37 +699,37 @@ class PartitionedBatchConfigurationTest {
 	void testBatchProperties_SettersAndGetters() {
 		BatchProperties props = new BatchProperties();
 
-		BatchProperties.Job newJob = new BatchProperties.Job();
+		BatchProperties.JobProperties newJob = new BatchProperties.JobProperties();
 		newJob.setAutoCreate(false);
 		props.setJob(newJob);
 		assertFalse(props.getJob().isAutoCreate());
 
-		BatchProperties.Partition newPartition = new BatchProperties.Partition();
+		BatchProperties.PartitionProperties newPartition = new BatchProperties.PartitionProperties();
 		newPartition.setDefaultPartitionSize(200);
 		props.setPartition(newPartition);
 		assertEquals(200, props.getPartition().getDefaultPartitionSize());
 
-		BatchProperties.Retry newRetry = new BatchProperties.Retry();
+		BatchProperties.RetryProperties newRetry = new BatchProperties.RetryProperties();
 		newRetry.setMaxAttempts(5);
 		props.setRetry(newRetry);
 		assertEquals(5, props.getRetry().getMaxAttempts());
 
-		BatchProperties.ThreadPool newThreadPool = new BatchProperties.ThreadPool();
+		BatchProperties.ThreadPoolProperties newThreadPool = new BatchProperties.ThreadPoolProperties();
 		newThreadPool.setCorePoolSize(8);
 		props.setThreadPool(newThreadPool);
 		assertEquals(8, props.getThreadPool().getCorePoolSize());
 
-		BatchProperties.Validation newValidation = new BatchProperties.Validation();
+		BatchProperties.ValidationProperties newValidation = new BatchProperties.ValidationProperties();
 		newValidation.setMaxDataLength(20000);
 		props.setValidation(newValidation);
 		assertEquals(20000, props.getValidation().getMaxDataLength());
 
-		BatchProperties.Skip newSkip = new BatchProperties.Skip();
+		BatchProperties.SkipProperties newSkip = new BatchProperties.SkipProperties();
 		newSkip.setMaxCount(50);
 		props.setSkip(newSkip);
 		assertEquals(50, props.getSkip().getMaxCount());
 
-		BatchProperties.Reader newReader = new BatchProperties.Reader();
+		BatchProperties.ReaderProperties newReader = new BatchProperties.ReaderProperties();
 		newReader.setDefaultChunkSize(75);
 		props.setReader(newReader);
 		assertEquals(75, props.getReader().getDefaultChunkSize());
@@ -1006,36 +1002,6 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testWorkerStep_beforeStep_withUnknownPartitionName() {
-		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
-		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
-		@SuppressWarnings("unchecked")
-		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
-		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
-		VdypProjectionProcessor projectionProcessor = mock(VdypProjectionProcessor.class);
-
-		Step workerStep = configuration.workerStep(
-				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
-				itemReader, partitionWriter, projectionProcessor
-		);
-
-		StepExecution stepExecution = mock(StepExecution.class);
-		ExecutionContext executionContext = mock(ExecutionContext.class);
-		JobExecution jobExecution = mock(JobExecution.class);
-		JobParameters jobParameters = mock(JobParameters.class);
-
-		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString(eq("partitionName"), anyString())).thenReturn("UNKNOWN");
-		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
-		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
-
-		assertNotNull(workerStep);
-		assertEquals("workerStep", workerStep.getName());
-	}
-
-	@Test
 	void testWorkerStep_afterStep_withFailedStatus() {
 		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
 		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
@@ -1073,7 +1039,7 @@ class PartitionedBatchConfigurationTest {
 	@Test
 	void testBatchProperties_PartitionConfiguration() {
 		BatchProperties props = new BatchProperties();
-		BatchProperties.Partition partitionConfig = props.getPartition();
+		BatchProperties.PartitionProperties partitionConfig = props.getPartition();
 
 		partitionConfig.setInterimDirsCleanupEnabled(true);
 		assertTrue(partitionConfig.getInterimDirsCleanupEnabled());

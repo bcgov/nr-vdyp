@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -132,21 +131,13 @@ class BatchSkipPolicyTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn("partition1");
+		when(executionContext.getString("partitionName")).thenReturn("partition1");
 
 		batchSkipPolicy.beforeStep(stepExecution);
 
 		verify(stepExecution).getJobExecutionId();
 		verify(stepExecution).getJobExecution();
-		verify(executionContext).getString("partitionName", "unknown");
-	}
-
-	@Test
-	void testCacheRecordData_DoesNotThrow() {
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1145678901");
-
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(1145678901L, batchRecord, "test-thread"));
+		verify(executionContext).getString("partitionName");
 	}
 
 	@Test
@@ -161,6 +152,14 @@ class BatchSkipPolicyTest {
 	void testFeatureIdExtraction_VariousScenarios_Handles(
 			String testName, RuntimeException exception, boolean expectedSkippable
 	) throws SkipLimitExceededException {
+		when(stepExecution.getJobExecutionId()).thenReturn(1L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString("partitionName")).thenReturn("test-partition");
+		batchSkipPolicy.beforeStep(stepExecution);
+
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
 
 		assertEquals(expectedSkippable, result, testName);
@@ -201,29 +200,6 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testCacheRecordData_WithNullValues_Handles() {
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, null, "thread1"));
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(1345678904L, null, "thread1"));
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, new BatchRecord(), "thread1"));
-	}
-
-	@Test
-	void testCacheRecordData_AndRetrieval_WorksCorrectly() throws SkipLimitExceededException {
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1445678905");
-
-		// Cache the record
-		BatchSkipPolicy.cacheRecordData(1445678905L, batchRecord, Thread.currentThread().getName());
-
-		// Create an exception with Feature ID that should retrieve the cached record
-		RuntimeException exception = new RuntimeException("Error processing Feature ID 1445678905 - invalid format");
-
-		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
-
-		assertTrue(result);
-	}
-
-	@Test
 	void testBuildErrorMessage_WithFlatFileParseException_IncludesLineAndInput() throws SkipLimitExceededException {
 		FlatFileParseException exception = new FlatFileParseException("Parse failed", "bad,data,row", 10);
 
@@ -240,7 +216,7 @@ class BatchSkipPolicyTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn("test-partition");
+		when(executionContext.getString("partitionName")).thenReturn("test-partition");
 
 		batchSkipPolicy.beforeStep(stepExecution);
 
@@ -268,7 +244,7 @@ class BatchSkipPolicyTest {
 			when(currentJobExecution.getJobParameters()).thenReturn(currentJobParameters);
 			when(currentJobParameters.getString("jobGuid")).thenReturn("dynamic-job-guid");
 			when(currentStepExecution.getExecutionContext()).thenReturn(currentExecutionContext);
-			when(currentExecutionContext.getString("partitionName", "unknown")).thenReturn("dynamic-partition");
+			when(currentExecutionContext.getString("partitionName")).thenReturn("dynamic-partition");
 
 			FlatFileParseException exception = new FlatFileParseException("Error", "bad data", 5);
 
@@ -303,7 +279,7 @@ class BatchSkipPolicyTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn("null-metrics-partition");
+		when(executionContext.getString("partitionName")).thenReturn("null-metrics-partition");
 
 		policyWithNullMetrics.beforeStep(stepExecution);
 
@@ -315,21 +291,15 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testExtractRecord_WithCachedRecord_ReturnsCachedData() throws SkipLimitExceededException {
-		BatchRecord cachedRecord = new BatchRecord();
-		cachedRecord.setFeatureId("1545678906");
-
-		BatchSkipPolicy.cacheRecordData(1545678906L, cachedRecord, Thread.currentThread().getName());
-
-		RuntimeException exception = new RuntimeException("Error processing Feature ID 1545678906 - invalid format");
-
-		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
-
-		assertTrue(result);
-	}
-
-	@Test
 	void testExtractRecord_WithoutCachedRecord_CreatesBasicRecord() throws SkipLimitExceededException {
+		when(stepExecution.getJobExecutionId()).thenReturn(1L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString("partitionName")).thenReturn("test-partition");
+		batchSkipPolicy.beforeStep(stepExecution);
+
 		RuntimeException exception = new RuntimeException("Error processing Feature ID 1645678907 - malformed data");
 
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
