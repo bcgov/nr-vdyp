@@ -4,9 +4,11 @@ import java.util.List;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
+import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 
 /**
  * Parser for VRI control files
@@ -14,7 +16,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class VriControlParser extends NonFipControlParser {
+public class VriControlParser extends NonFipControlParser<VriDebugSettings> {
 
 	public VriControlParser() {
 
@@ -47,5 +49,17 @@ public class VriControlParser extends NonFipControlParser {
 				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES), //
 				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL)
 		);
+	}
+
+	@Override
+	protected DebugSettingsParser<VriDebugSettings> getDebugSettingsParser() {
+		return new DebugSettingsParser<VriDebugSettings>() {
+
+			@Override
+			protected VriDebugSettings build(Integer[] debugSettingsValues) {
+				return new VriDebugSettings(debugSettingsValues);
+			}
+
+		};
 	}
 }

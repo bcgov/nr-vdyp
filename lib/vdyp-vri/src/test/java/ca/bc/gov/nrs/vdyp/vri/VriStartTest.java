@@ -51,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.QuadraticMeanDiameterYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.SiteCurveParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperCoefficientParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
@@ -67,6 +68,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
+import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
@@ -82,6 +84,7 @@ class VriStartTest {
 	ByteArrayOutputStream utilOut;
 
 	private MockFileResolver dummyInput() {
+
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "DUMMY3");
@@ -1035,7 +1038,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 2));
+				app.setDebugModes(TestUtils.debugSettingsSingle(VriDebugSettings.class, 1, 2));
 
 				assertThrows(
 						FatalProcessingException.class,
@@ -1108,7 +1111,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
+				app.setDebugModes(TestUtils.debugSettingsSingle(VriDebugSettings.class, 1, 0));
 
 				var result = app.findRootForQuadMeanDiameterFractionalError(
 						x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
@@ -1186,7 +1189,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 2));
+				app.setDebugModes(TestUtils.debugSettingsSingle(VriDebugSettings.class, 1, 2));
 
 				assertThrows(
 						FatalProcessingException.class,
@@ -1252,7 +1255,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
+				app.setDebugModes(TestUtils.debugSettingsSingle(VriDebugSettings.class, 1, 0));
 
 				var result = app.findRootForQuadMeanDiameterFractionalError(
 						x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
@@ -1328,7 +1331,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
+				app.setDebugModes(TestUtils.debugSettingsSingle(VriDebugSettings.class, 1, 0));
 
 				assertThrows(
 						FatalProcessingException.class,
@@ -1683,6 +1686,9 @@ class VriStartTest {
 
 	@Nested
 	class Process {
+
+		BaseControlParser<?> controlParser = new VriControlParser();
+
 		@ParameterizedTest
 		@EnumSource(value = PolygonMode.class, names = { "START", "YOUNG", "BATC", "BATN" })
 		void testDontSkip(PolygonMode mode) throws Exception {
@@ -1756,7 +1762,10 @@ class VriStartTest {
 			EasyMock.expectLastCall().once();
 
 			// 1 and 9 set to 0
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0, 0, 0, 0, 0, 0, 0, 0, 0));
+			controlMap.put(
+					ControlKey.DEBUG_SWITCHES.name(),
+					TestUtils.debugSettings(VriDebugSettings.class, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+			);
 
 			control.replay();
 
@@ -1808,7 +1817,7 @@ class VriStartTest {
 		void testProcessEmpty() throws Exception {
 			var control = EasyMock.createControl();
 
-			VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = EasyMock
+			VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite, VriDebugSettings> app = EasyMock
 					.createMockBuilder(VriStart.class)//
 					.addMockedMethod("getVriWriter") //
 					.addMockedMethod("checkPolygon") //
@@ -1963,7 +1972,7 @@ class VriStartTest {
 		@Test
 		void testProcessPrimary() throws Exception {
 
-			controlMap = TestUtils.loadControlMap();
+			controlMap = TestUtils.loadControlMap(controlParser);
 
 			VriStart app = new VriStart();
 
@@ -2175,7 +2184,7 @@ class VriStartTest {
 		@Test
 		void testProcessPrimaryWithOffsetAges() throws Exception {
 
-			controlMap = TestUtils.loadControlMap();
+			controlMap = TestUtils.loadControlMap(controlParser);
 
 			VriStart app = new VriStart();
 
@@ -2380,7 +2389,7 @@ class VriStartTest {
 		@Test
 		void testProcessVeteran() throws Exception {
 
-			controlMap = TestUtils.loadControlMap();
+			controlMap = TestUtils.loadControlMap(controlParser);
 
 			VriStart app = new VriStart();
 
@@ -2632,7 +2641,7 @@ class VriStartTest {
 		@Test
 		void testProcessVeteranBadTphTotal() throws Exception {
 
-			controlMap = TestUtils.loadControlMap();
+			controlMap = TestUtils.loadControlMap(controlParser);
 
 			VriStart app = new VriStart();
 
@@ -4571,7 +4580,7 @@ class VriStartTest {
 
 			control.replay();
 
-			app.debugModeExpandRootSearchWindow(Optional.of(50), minDq, maxDq, func);
+			app.debugModeExpandRootSearchWindow(Optional.of(0.50f), minDq, maxDq, func);
 
 			control.verify();
 
@@ -4611,7 +4620,7 @@ class VriStartTest {
 
 			control.replay();
 
-			app.debugModeExpandRootSearchWindow(Optional.of(50), minDq, maxDq, func);
+			app.debugModeExpandRootSearchWindow(Optional.of(0.50f), minDq, maxDq, func);
 
 			control.verify();
 

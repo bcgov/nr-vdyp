@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward.model;
+package ca.bc.gov.nrs.vdyp.model.projection;
 
 public enum ControlVariable {
 	/**

@@ -11,7 +11,6 @@ import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompVarAdjustments;
-import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.GrowthFiatDetails;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
@@ -44,7 +43,7 @@ public class ForwardResolvedControlMapImpl extends CachingResolvedControlMapImpl
 
 		super(controlMap);
 
-		this.debugSettings = get(ControlKey.DEBUG_SWITCHES, DebugSettings.class).map(m -> new ForwardDebugSettings(m));
+		this.debugSettings = get(ControlKey.DEBUG_SWITCHES, ForwardDebugSettings.class);
 		this.forwardControlVariables = get(ControlKey.VTROL, ForwardControlVariables.class);
 		this.siteCurveMap = get(ControlKey.SITE_CURVE_NUMBERS, MatrixMap2.class);
 		this.compVarAdjustments = get(ControlKey.PARAM_ADJUSTMENTS, CompVarAdjustments.class);
