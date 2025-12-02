@@ -80,14 +80,18 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testOpenWithEmptyPolygonFile() throws IOException {
+	void testOpenWithEmptyPolygonFile() throws Exception {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 		Files.createFile(partitionDir.resolve("polygons.csv")); // Empty file
 		executionContext.putString("jobBaseDir", tempDir.toString());
 
-		ItemStreamException exception = assertThrows(ItemStreamException.class, () -> reader.open(executionContext));
-		assertTrue(exception.getMessage().contains("Polygon file is empty or has no header"));
+		reader.open(executionContext);
+
+		BatchRecord batchRecord = reader.read();
+		assertNull(batchRecord, "Empty polygon file should return null on read");
+
+		reader.close();
 	}
 
 	@Test

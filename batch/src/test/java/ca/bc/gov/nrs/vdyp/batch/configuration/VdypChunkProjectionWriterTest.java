@@ -34,7 +34,6 @@ import org.springframework.batch.item.ExecutionContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 
@@ -49,9 +48,6 @@ class VdypChunkProjectionWriterTest {
 
 	@Mock
 	private VdypProjectionService vdypProjectionService;
-
-	@Mock
-	private BatchMetricsCollector metricsCollector;
 
 	@Mock
 	private StepExecution stepExecution;
@@ -79,7 +75,7 @@ class VdypChunkProjectionWriterTest {
 		// Configure ObjectMapper to return the mock Parameters when reading the valid JSON
 		when(objectMapper.readValue(VALID_PARAMETERS_JSON, Parameters.class)).thenReturn(mockParameters);
 
-		writer = new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector, objectMapper);
+		writer = new VdypChunkProjectionWriter(vdypProjectionService, objectMapper);
 	}
 
 	@Test
@@ -108,10 +104,12 @@ class VdypChunkProjectionWriterTest {
 	}
 
 	@Test
-	void testBeforeStep_missingParameters_throwsException() {
+	void testBeforeStep_missingParameters_throwsException() throws Exception {
 		JobParameters params = new JobParametersBuilder().addString("jobGuid", TEST_JOB_GUID)
 				.addString("jobBaseDir", "/tmp/test").toJobParameters();
 
+		when(objectMapper.readValue((String) null, Parameters.class)).thenReturn(null);
+
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobParameters()).thenReturn(params);
@@ -123,13 +121,15 @@ class VdypChunkProjectionWriterTest {
 			writer.beforeStep(stepExecution);
 		});
 
-		assertTrue(exception.getMessage().contains(TEST_JOB_GUID));
+		assertTrue(exception.getMessage().contains("Deserialized projection parameters are null"));
 	}
 
 	@Test
-	void testBeforeStep_emptyParameters_throwsException() {
+	void testBeforeStep_emptyParameters_throwsException() throws Exception {
 		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", "")
 				.addString("jobGuid", TEST_JOB_GUID).addString("jobBaseDir", "/tmp/test").toJobParameters();
+
+		when(objectMapper.readValue("", Parameters.class)).thenReturn(null);
 
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
@@ -142,7 +142,7 @@ class VdypChunkProjectionWriterTest {
 			writer.beforeStep(stepExecution);
 		});
 
-		assertTrue(exception.getMessage().contains(TEST_JOB_GUID));
+		assertTrue(exception.getMessage().contains("Deserialized projection parameters are null"));
 	}
 
 	@Test
@@ -199,9 +199,6 @@ class VdypChunkProjectionWriterTest {
 
 		assertEquals(testException, thrownException);
 		verify(vdypProjectionService).performProjectionForChunk(any(), any(), any(), any(), any(), any());
-		verify(metricsCollector).recordSkip(
-				eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), any(), eq(testException), eq(TEST_PARTITION_NAME)
-		);
 	}
 
 	@Test

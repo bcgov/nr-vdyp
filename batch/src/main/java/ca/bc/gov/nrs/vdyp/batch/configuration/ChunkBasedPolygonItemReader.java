@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.io.FileNotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +22,8 @@ import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.lang.NonNull;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataReadException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -48,8 +49,6 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	private Path partitionDir;
 	private BufferedReader polygonReader;
 	private BufferedReader layerReader;
-	private String polygonHeader;
-	private String layerHeader;
 
 	// Chunk processing state
 	private List<String> currentChunk;
@@ -63,8 +62,8 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	private int skippedCount = 0;
 
 	public ChunkBasedPolygonItemReader(
-			String partitionName, BatchMetricsCollector metricsCollector, Long jobExecutionId, String jobGuid,
-			int chunkSize
+			@NonNull String partitionName, BatchMetricsCollector metricsCollector, @NonNull Long jobExecutionId,
+			@NonNull String jobGuid, @NonNull int chunkSize
 	) {
 		this.partitionName = partitionName;
 		this.metricsCollector = metricsCollector;
@@ -73,18 +72,26 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 		this.chunkSize = Math.max(chunkSize, 1);
 	}
 
+	/**
+	 * Reads the next BatchRecord from the input partition data.
+	 *
+	 * @return The next BatchRecord to process, or null when all data has been read. Note: Returning null signals
+	 *         end-of-data to Spring Batch framework - this is the standard contract.
+	 * @throws Exception Required by Spring Batch ItemReader interface contract.
+	 */
 	@Override
 	public BatchRecord read() throws Exception {
 		if (!readerOpened) {
+			// it's a framework lifecycle violation
 			throw new IllegalStateException("Reader not opened. Call open() first.");
 		}
 
 		if (!ensureChunkAvailable()) {
-			return null; // End of data
+			return null; // End of data - signals Spring Batch that reading is complete
 		}
 
 		String polygonLine = chunkIterator.next();
-		logger.debug(
+		logger.trace(
 				"[GUID: {}, Execution ID: {}, Partition: {}] Processing polygon line from chunk: {}", jobGuid,
 				jobExecutionId, partitionName,
 				polygonLine.length() > 100 ? polygonLine.substring(0, 100) + "..." : polygonLine
@@ -92,11 +99,16 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 
 		try {
 			return processPolygonLine(polygonLine);
+		} catch (BatchException e) {
+			throw e;
 		} catch (Exception e) {
 			return handlePolygonProcessingException(polygonLine, e);
 		}
 	}
 
+	/**
+	 * @throws ItemStreamException Required by Spring Batch ItemStreamReader interface contract.
+	 */
 	@Override
 	public void open(@NonNull ExecutionContext executionContext) throws ItemStreamException {
 		logger.debug(
@@ -108,12 +120,14 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 			// Get partition directory from job parameters
 			String jobBaseDir = executionContext.getString(BatchConstants.Job.BASE_DIR);
 			if (jobBaseDir.trim().isEmpty()) {
+				// Framework contract
 				throw new ItemStreamException("jobBaseDir not found or empty in ExecutionContext");
 			}
 
 			String inputPartitionFolderName = BatchUtils.buildInputPartitionFolderName(partitionName);
 			partitionDir = Paths.get(jobBaseDir, inputPartitionFolderName);
 			if (!Files.exists(partitionDir)) {
+				// Framework contract
 				throw new ItemStreamException("Partition directory does not exist: " + partitionDir);
 			}
 
@@ -131,18 +145,26 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 			);
 
 		} catch (ItemStreamException ise) {
+			// framework contract
 			throw ise;
 		} catch (Exception e) {
+			// Wrap all other exceptions in ItemStreamException (framework contract)
 			throw handleReaderInitializationFailure(e, "Failed to initialize ChunkBasedPolygonItemReader");
 		}
 	}
 
+	/**
+	 * @throws ItemStreamException Required by Spring Batch ItemStreamReader interface contract.
+	 */
 	@Override
 	public void update(@NonNull ExecutionContext executionContext) throws ItemStreamException {
 		executionContext.putInt(partitionName + ".processed", processedCount);
 		executionContext.putInt(partitionName + ".skipped", skippedCount);
 	}
 
+	/**
+	 * @throws ItemStreamException Required by Spring Batch ItemStreamReader interface contract.
+	 */
 	@Override
 	public void close() throws ItemStreamException {
 		logger.info(
@@ -161,37 +183,40 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	/**
 	 * Initialize BufferedReaders for polygon and layer files.
 	 */
-	private void initializeReaders() throws IOException {
+	private void initializeReaders() throws BatchDataReadException {
 		Path polygonFile = partitionDir.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
 		Path layerFile = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
 
 		if (!Files.exists(polygonFile)) {
-			throw new BatchConfigurationException("Polygon file not found: " + polygonFile);
-		}
-
-		// Initialize polygon reader and read header
-		polygonReader = new BufferedReader(new FileReader(polygonFile.toFile()));
-		polygonHeader = polygonReader.readLine();
-		if (polygonHeader == null) {
-			throw new BatchDataValidationException("Polygon file is empty or has no header");
-		}
-
-		// Initialize layer reader and read header (if file exists)
-		if (Files.exists(layerFile)) {
-			layerReader = new BufferedReader(new FileReader(layerFile.toFile()));
-			layerHeader = layerReader.readLine();
-		} else {
-			logger.warn(
-					"[GUID: {}, EXEID: {}, Partition: {}] Layer file does not exist: {}", jobGuid, jobExecutionId,
-					partitionName, layerFile
+			FileNotFoundException fileNotFound = new FileNotFoundException("Polygon file not found: " + polygonFile);
+			throw BatchDataReadException.handleDataReadFailure(
+					fileNotFound, "Polygon file not found", jobGuid, jobExecutionId, partitionName, logger
 			);
-			layerHeader = ""; // Empty header for missing layer file
 		}
 
-		logger.debug(
-				"[GUID: {}, EXEID: {}, Partition: {}] Initialized readers - Polygon header: present, Layer header present: {}",
-				jobGuid, jobExecutionId, partitionName, layerHeader != null
-		);
+		try {
+			// Initialize polygon reader
+			polygonReader = new BufferedReader(new FileReader(polygonFile.toFile()));
+
+			// Initialize layer reader (if file exists)
+			if (Files.exists(layerFile)) {
+				layerReader = new BufferedReader(new FileReader(layerFile.toFile()));
+			} else {
+				logger.warn(
+						"[GUID: {}, EXEID: {}, Partition: {}] Layer file does not exist: {}", jobGuid, jobExecutionId,
+						partitionName, layerFile
+				);
+			}
+
+			logger.debug(
+					"[GUID: {}, EXEID: {}, Partition: {}] Initialized readers - Polygon reader: ready, Layer reader: {}",
+					jobGuid, jobExecutionId, partitionName, layerReader != null ? "ready" : "not available"
+			);
+		} catch (IOException e) {
+			throw BatchDataReadException.handleDataReadFailure(
+					e, "Failed to open partition input files", jobGuid, jobExecutionId, partitionName, logger
+			);
+		}
 	}
 
 	/**
@@ -199,73 +224,92 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	 *
 	 * @return true if chunk was loaded, false if no more data
 	 */
-	private boolean loadNextChunk() throws IOException {
-		clearChunkData();
+	private boolean loadNextChunk() throws BatchDataReadException {
+		try {
+			clearChunkData();
 
-		currentChunk = new ArrayList<>();
-		currentChunkFeatureIds = new HashSet<>();
-		currentChunkLayers = new HashMap<>();
+			currentChunk = new ArrayList<>();
+			currentChunkFeatureIds = new HashSet<>();
+			currentChunkLayers = new HashMap<>();
 
-		// Read polygon lines for current chunk
-		String line;
-		int linesInChunk = 0;
-		while (linesInChunk < chunkSize && (line = polygonReader.readLine()) != null) {
-			if (!line.trim().isEmpty()) {
-				currentChunk.add(line);
-				String featureId = extractFeatureIdFromLine(line);
-				if (featureId != null) {
-					currentChunkFeatureIds.add(featureId);
+			// Read polygon lines for current chunk (skip header lines)
+			String line;
+			int linesInChunk = 0;
+			while (linesInChunk < chunkSize && (line = polygonReader.readLine()) != null) {
+				if (!line.trim().isEmpty()) {
+					// Skip header lines
+					if (BatchUtils.isHeaderLine(line)) {
+						logger.trace(
+								"[GUID: {}, EXEID: {}, Partition: {}] Skipped header line in polygon file", jobGuid,
+								jobExecutionId, partitionName
+						);
+						continue;
+					}
+
+					currentChunk.add(line);
+					String featureId = extractFeatureIdFromLine(line);
+					if (featureId != null) {
+						currentChunkFeatureIds.add(featureId);
+					}
+					linesInChunk++;
 				}
-				linesInChunk++;
 			}
-		}
 
-		if (currentChunk.isEmpty()) {
+			if (currentChunk.isEmpty()) {
+				logger.debug(
+						"[GUID: {}, EXEID: {}, Partition: {}] No more polygon to load", jobGuid, jobExecutionId,
+						partitionName
+				);
+				return false;
+			}
+
+			// Load associated layers for current chunk's FEATURE_IDs
+			loadLayersForCurrentChunk();
+
+			// Initialize chunk iterator
+			chunkIterator = currentChunk.iterator();
+
 			logger.debug(
-					"[GUID: {}, EXEID: {}, Partition: {}] No more polygon to load", jobGuid, jobExecutionId,
-					partitionName
+					"[GUID: {}, EXEID: {}, Partition: {}] Loaded chunk with {} polygons and {} unique FEATURE_IDs",
+					jobGuid, jobExecutionId, partitionName, currentChunk.size(), currentChunkFeatureIds.size()
 			);
-			return false;
+
+			return true;
+		} catch (IOException e) {
+			throw BatchDataReadException.handleDataReadFailure(
+					e, "Failed to read chunk from partition files", jobGuid, jobExecutionId, partitionName, logger
+			);
 		}
-
-		// Load associated layers for current chunk's FEATURE_IDs
-		loadLayersForCurrentChunk();
-
-		// Initialize chunk iterator
-		chunkIterator = currentChunk.iterator();
-
-		logger.debug(
-				"[GUID: {}, EXEID: {}, Partition: {}] Loaded chunk with {} polygons and {} unique FEATURE_IDs", jobGuid,
-				jobExecutionId, partitionName, currentChunk.size(), currentChunkFeatureIds.size()
-		);
-
-		return true;
 	}
 
 	/**
 	 * Load layers associated with FEATURE_IDs in current chunk.
+	 *
+	 * @throws IOException caller (loadNextChunk) wraps in BatchDataReadException
 	 */
 	private void loadLayersForCurrentChunk() throws IOException {
 		if (layerReader == null || currentChunkFeatureIds.isEmpty()) {
 			return;
 		}
 
-		// Reset layer reader to beginning (after header)
+		// Reset layer reader to beginning
 		layerReader.close();
 
 		Path layerFile = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
 		layerReader = new BufferedReader(new FileReader(layerFile.toFile()));
-		String header = layerReader.readLine(); // Skip header
-		if (header == null) {
-			logger.warn(
-					"[GUID: {}, EXEID: {}, Partition: {}] Layer file has no header", jobGuid, jobExecutionId,
-					partitionName
-			);
-		}
 
 		String line;
 		while ( (line = layerReader.readLine()) != null) {
 			if (!line.trim().isEmpty()) {
+				// Skip header lines
+				if (BatchUtils.isHeaderLine(line)) {
+					logger.trace(
+							"[GUID: {}, EXEID: {}, Partition: {}] Skipped header line in layer file", jobGuid,
+							jobExecutionId, partitionName
+					);
+					continue;
+				}
+
 				String featureId = extractFeatureIdFromLine(line);
 				if (featureId != null && currentChunkFeatureIds.contains(featureId)) {
 					currentChunkLayers.computeIfAbsent(featureId, k -> new ArrayList<>()).add(line);
@@ -296,7 +340,11 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	}
 
 	/**
-	 * Extract FEATURE_ID from CSV line
+	 * Extract FEATURE_ID from CSV line.
+	 *
+	 * @param line The CSV line to parse
+	 * @return The FEATURE_ID as a String, or null if the line is null or empty. Callers MUST check for null before
+	 *         using the returned value.
 	 */
 	private String extractFeatureIdFromLine(String line) {
 		if (line == null || line.trim().isEmpty()) {
@@ -350,7 +398,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	/**
 	 * Ensure chunk is available for reading. Load new chunk if needed.
 	 */
-	private boolean ensureChunkAvailable() throws IOException {
+	private boolean ensureChunkAvailable() throws BatchDataReadException {
 		if ( (chunkIterator == null || !chunkIterator.hasNext()) && !loadNextChunk()) {
 			logger.debug(
 					"[GUID: {}, EXEID: {}, Partition: {}] No more chunks to process - returning null", jobGuid,
@@ -363,6 +411,8 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 
 	/**
 	 * Process a polygon line and create BatchRecord.
+	 *
+	 * @throws Exception Can recursively call read() which declares Exception per framework contract
 	 */
 	private BatchRecord processPolygonLine(String polygonLine) throws Exception {
 		String featureId = extractFeatureIdFromLine(polygonLine);
@@ -384,12 +434,10 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	private BatchRecord createBatchRecord(String polygonLine, String featureId) {
 		List<String> layerLines = currentChunkLayers.getOrDefault(featureId, new ArrayList<>());
 
-		BatchRecord batchRecord = new BatchRecord(
-				featureId, polygonLine, layerLines, polygonHeader, layerHeader, partitionName
-		);
+		BatchRecord batchRecord = new BatchRecord(featureId, polygonLine, layerLines, partitionName);
 
 		processedCount++;
-		logger.debug(
+		logger.trace(
 				"[GUID: {}, EXEID: {} Partition: {}] Created BatchRecord for FEATURE_ID: {} with {} layers", jobGuid,
 				jobExecutionId, partitionName, featureId, layerLines.size()
 		);
@@ -399,6 +447,8 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 
 	/**
 	 * Handle exceptions during polygon processing.
+	 *
+	 * @throws Exception Can recursively call read() which declares Exception per framework contract
 	 */
 	private BatchRecord handlePolygonProcessingException(String polygonLine, Exception e) throws Exception {
 		String featureId = extractFeatureIdFromLine(polygonLine);
@@ -409,13 +459,13 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 
 		recordSkipMetrics(featureId, e);
 		skippedCount++;
-		return read(); // Try next
+		return read(); // Try next - may throw Exception
 	}
 
 	/**
 	 * Record skip metrics for failed polygon processing.
 	 */
-	private void recordSkipMetrics(String featureId, Exception e) {
+	private void recordSkipMetrics(String featureId, Exception e) throws BatchException {
 		if (metricsCollector != null && jobExecutionId != null) {
 			metricsCollector.recordSkip(jobExecutionId, jobGuid, featureId, e, partitionName);
 		}
@@ -427,7 +477,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	private void performReaderCleanupAfterFailure() {
 		try {
 			close();
-		} catch (Exception cleanupException) {
+		} catch (ItemStreamException cleanupException) {
 			logger.warn(
 					"[GUID: {}, EXEID: {}, Paritition: {}] Failed to cleanup after initialization failure for job execution: {}",
 					jobGuid, jobExecutionId, partitionName, jobExecutionId, cleanupException

@@ -33,7 +33,16 @@
     "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchException"
   },
   {
-    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException"
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException"
+  },
+	{
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException"
+  },
+	{
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsExceptionTest"
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException"
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException"

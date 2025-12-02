@@ -111,7 +111,7 @@ class BatchControllerTest {
 		);
 
 		// Mock partitioner to return grid size
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any())).thenReturn(4);
+		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
 
 		// Mock job execution
 		when(jobExecution.getId()).thenReturn(1L);
@@ -138,7 +138,7 @@ class BatchControllerTest {
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", "data".getBytes());
 
 		// Mock partitioner to throw exception
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any()))
+		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any()))
 				.thenThrow(new RuntimeException("Empty file or invalid CSV data"));
 
 		ResponseEntity<Map<String, Object>> response = batchController
@@ -182,7 +182,7 @@ class BatchControllerTest {
 		);
 
 		// Mock partitioner to return grid size
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any())).thenReturn(4);
+		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
 
 		ResponseEntity<Map<String, Object>> response = controllerWithNullJob
 				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
@@ -218,7 +218,7 @@ class BatchControllerTest {
 		);
 
 		// Mock partitioner to return grid size
-		when(csvPartitioner.partitionCsvFiles(any(), any(), eq(4), any())).thenReturn(4);
+		when(csvPartitioner.partitionCsvFiles(any(), any(), eq(4), any(), any())).thenReturn(4);
 
 		// Mock job execution
 		when(jobExecution.getId()).thenReturn(1L);
@@ -248,7 +248,7 @@ class BatchControllerTest {
 		);
 
 		// Mock partitioner
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any())).thenReturn(4);
+		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
 
 		// Mock job execution with null start time
 		when(jobExecution.getId()).thenReturn(1L);

@@ -137,7 +137,25 @@
     "allDeclaredConstructors": true
   },
   {
-    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException",
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+	{
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+	{
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsExceptionTest",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },	
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true

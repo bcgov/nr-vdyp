@@ -321,8 +321,7 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testPartitionWriter() {
-		VdypChunkProjectionWriter result = configuration
-				.partitionWriter(vdypProjectionService, metricsCollector, objectMapper);
+		VdypChunkProjectionWriter result = configuration.partitionWriter(vdypProjectionService, objectMapper);
 
 		assertNotNull(result);
 	}
@@ -426,11 +425,16 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
+		ResultAggregationException testException = ResultAggregationException.handleResultAggregationFailure(
+				new IOException("Test IO error"), "I/O operation failed during result aggregation", TEST_JOB_GUID,
+				TEST_JOB_EXECUTION_ID, org.slf4j.LoggerFactory.getLogger(getClass())
+		);
+
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
 				)
-		).thenThrow(new IOException("Test IO error"));
+		).thenThrow(testException);
 
 		Exception exception = Assertions
 				.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
@@ -460,11 +464,16 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
+		ResultAggregationException testException = ResultAggregationException.handleResultAggregationFailure(
+				new RuntimeException("Test runtime error"), "Unexpected error during result aggregation", TEST_JOB_GUID,
+				TEST_JOB_EXECUTION_ID, org.slf4j.LoggerFactory.getLogger(getClass())
+		);
+
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
 				)
-		).thenThrow(new RuntimeException("Test runtime error"));
+		).thenThrow(testException);
 
 		Exception exception = Assertions
 				.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
@@ -494,11 +503,16 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
+		ResultAggregationException testException = ResultAggregationException.handleResultAggregationFailure(
+				new RuntimeException((String) null), "Unexpected error during result aggregation", TEST_JOB_GUID,
+				TEST_JOB_EXECUTION_ID, org.slf4j.LoggerFactory.getLogger(getClass())
+		);
+
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
 				)
-		).thenThrow(new RuntimeException((String) null));
+		).thenThrow(testException);
 
 		Exception exception = Assertions
 				.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
@@ -1069,10 +1083,16 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(null);
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
+		ResultAggregationException testException = ResultAggregationException.handleResultAggregationFailure(
+				new NullPointerException("jobBaseDir cannot be null"),
+				"Failed to aggregate results with null jobBaseDir", TEST_JOB_GUID, TEST_JOB_EXECUTION_ID,
+				org.slf4j.LoggerFactory.getLogger(getClass())
+		);
+
 		when(
 				resultAggregationService
 						.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), eq(null), anyString())
-		).thenThrow(new NullPointerException("jobBaseDir cannot be null"));
+		).thenThrow(testException);
 
 		Assertions.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
 	}

@@ -15,8 +15,9 @@ import org.springframework.lang.NonNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
@@ -31,27 +32,34 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	private static final Logger logger = LoggerFactory.getLogger(VdypChunkProjectionWriter.class);
 
 	private final VdypProjectionService vdypProjectionService;
-	private final BatchMetricsCollector metricsCollector;
 	private final ObjectMapper objectMapper;
 
-	// Step execution context
+	// Step execution context fields - initialized once in beforeStep() and never modified thereafter.
+	// Note: These fields cannot be made final due to Spring Batch's StepExecutionListener contract,
+	// which requires initialization after construction. They represent the step's immutable identity
+	// and configuration once set.
 	private String partitionName;
 	private Long jobExecutionId;
 	private String jobGuid;
 	private Parameters projectionParameters;
 	private String jobBaseDir;
 
-	public VdypChunkProjectionWriter(
-			VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector,
-			ObjectMapper objectMapper
-	) {
+	// Protects against multiple beforeStep() calls
+	private boolean initialized = false;
+
+	public VdypChunkProjectionWriter(VdypProjectionService vdypProjectionService, ObjectMapper objectMapper) {
 		this.vdypProjectionService = vdypProjectionService;
-		this.metricsCollector = metricsCollector;
 		this.objectMapper = objectMapper;
 	}
 
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
+		if (initialized) {
+			throw new IllegalStateException(
+					"VdypChunkProjectionWriter already initialized. beforeStep() should only be called once."
+			);
+		}
+
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
@@ -81,18 +89,19 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 				);
 			} else {
 				logger.error(
-						"[GUID: {}, EXEID: {}, Partition: {}] Projection parameters deserialized to null from JSON: {}",
-						jobGuid, jobExecutionId, partitionName, projectionParametersJson
+						"[GUID: {}, EXEID: {}, Partition: {}] Deserialized projection parameters are null", jobGuid,
+						jobExecutionId, partitionName
 				);
+
+				// StepExecutionListener.beforeStep() interface does not support checked exceptions.
 				throw new IllegalStateException("Deserialized projection parameters are null");
 			}
+
+			// Mark as initialized to prevent subsequent calls
+			this.initialized = true;
 		} catch (JsonProcessingException jsonException) {
 			throw handleParameterDeserializationFailure(
 					projectionParametersJson, jsonException, "JSON parsing failed during parameter deserialization"
-			);
-		} catch (Exception generalException) {
-			throw handleParameterDeserializationFailure(
-					projectionParametersJson, generalException, "Unexpected error during parameter deserialization"
 			);
 		}
 	}
@@ -107,13 +116,19 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	}
 
 	@Override
-	public void write(@NonNull Chunk<? extends BatchRecord> chunk) throws Exception {
+	public void write(@NonNull Chunk<? extends BatchRecord> chunk)
+			throws BatchResultStorageException, BatchProjectionException {
 		if (chunk.isEmpty()) {
 			logger.debug(
 					"[GUID: {}, EXEID: {}, Partition: {}] Empty chunk received, skipping", this.jobGuid,
 					this.jobExecutionId, this.partitionName
 			);
 			return;
+		}
+
+		// Validate that projection parameters were initialized in beforeStep()
+		if (this.projectionParameters == null) {
+			throw new IllegalStateException("VDYP projection parameters are null. Ensure beforeStep() was called.");
 		}
 
 		List<BatchRecord> batchRecords = chunk.getItems().stream().collect(Collectors.toList());
@@ -123,72 +138,20 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 				this.jobGuid, this.jobExecutionId, this.partitionName, batchRecords.size()
 		);
 
-		try {
-			// Validate projection parameters before processing
-			if (projectionParameters == null) {
-				throw new IllegalStateException(
-						"VDYP projection parameters are null. Cannot perform chunk projection."
-				);
-			}
+		// Perform chunk-based projection
+		String chunkResult = vdypProjectionService.performProjectionForChunk(
+				batchRecords, this.partitionName, this.projectionParameters, this.jobExecutionId, this.jobGuid,
+				this.jobBaseDir
+		);
 
-			// Perform chunk-based projection
-			String chunkResult = vdypProjectionService.performProjectionForChunk(
-					batchRecords, this.partitionName, this.projectionParameters, this.jobExecutionId, this.jobGuid,
-					this.jobBaseDir
-			);
-
-			// Record metrics for successful chunk processing
-			recordChunkMetrics(batchRecords, this.partitionName, true, null);
-
-			logger.info(
-					"[GUID: {}, EXEID: {}, Partition: {}] Successfully processed chunk of {} records. Result: {}",
-					this.jobGuid, this.jobExecutionId, this.partitionName, batchRecords.size(), chunkResult
-			);
-
-		} catch (RuntimeException runtimeException) {
-			throw handleChunkProcessingFailure(
-					batchRecords, this.jobGuid, this.jobExecutionId, this.partitionName, runtimeException,
-					"Runtime error during chunk processing"
-			);
-		} catch (Exception generalException) {
-			throw handleChunkProcessingFailure(
-					batchRecords, this.jobGuid, this.jobExecutionId, this.partitionName, generalException,
-					"Unexpected error during chunk processing"
-			);
-		}
+		logger.info(
+				"[GUID: {}, EXEID: {}, Partition: {}] Successfully processed chunk of {} records. Result: {}",
+				this.jobGuid, this.jobExecutionId, this.partitionName, batchRecords.size(), chunkResult
+		);
 	}
 
-	/**
-	 * Records metrics for chunk processing results.
-	 */
-	private void recordChunkMetrics(
-			List<BatchRecord> batchRecords, String actualPartitionName, boolean success, Exception error
-	) {
-		if (metricsCollector != null && jobExecutionId != null && jobGuid != null) {
-			for (BatchRecord batchRecord : batchRecords) {
-				try {
-					String featureId = batchRecord.getFeatureId() != null ? batchRecord.getFeatureId() : null;
-
-					if (!success) {
-						metricsCollector.recordSkip(jobExecutionId, jobGuid, featureId, error, actualPartitionName);
-					}
-				} catch (Exception metricsException) {
-					logger.warn(
-							"[GUID: {}, EXEID: {}, Partition: {}] Failed to record metrics for FEATURE_ID: {} - {}",
-							jobGuid, jobExecutionId, actualPartitionName, batchRecord.getFeatureId(),
-							metricsException.getMessage()
-					);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Handles parameter deserialization failures by logging and creating appropriate exception.
-	 */
 	private IllegalStateException
 			handleParameterDeserializationFailure(String parametersJson, Exception cause, String errorDescription) {
-		// Create enhanced contextual message
 		String contextualMessage = String.format(
 				"[GUID: %s, EXEID: %d, Partition: %s] %s. JSON length: %d, Exception type: %s, Root cause: %s", jobGuid,
 				jobExecutionId, partitionName, errorDescription, parametersJson != null ? parametersJson.length() : 0,
@@ -200,33 +163,5 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 		logger.error(contextualMessage, cause);
 
 		return new IllegalStateException(contextualMessage, cause);
-	}
-
-	/**
-	 * Handles chunk processing failures by logging, recording metrics, and creating appropriate exception.
-	 */
-	private RuntimeException handleChunkProcessingFailure(
-			java.util.List<BatchRecord> batchRecords, String jobGuid, Long jobExecutionId, String actualPartitionName,
-			Exception cause, String errorDescription
-	) {
-		// Create enhanced contextual message
-		String contextualMessage = String.format(
-				"[GUID: %s, EXEID: %d, Partition: %s] %s. Chunk size: %d, Exception type: %s, Root cause: %s", jobGuid,
-				jobExecutionId, actualPartitionName, errorDescription, batchRecords.size(),
-				cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE
-		);
-
-		// Log the failure with full context
-		logger.error(contextualMessage, cause);
-
-		// Record metrics for failed chunk processing
-		recordChunkMetrics(batchRecords, actualPartitionName, false, cause);
-
-		if (cause instanceof RuntimeException runtimeException) {
-			return runtimeException;
-		} else {
-			return new RuntimeException(contextualMessage, cause);
-		}
 	}
 }

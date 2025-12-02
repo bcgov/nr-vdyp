@@ -2,19 +2,16 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.stream.Stream;
 import java.util.Collections;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -23,8 +20,8 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
-import org.springframework.test.util.ReflectionTestUtils;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 
@@ -55,11 +52,6 @@ class VdypProjectionProcessorTest {
 	void setUp() {
 		processor = new VdypProjectionProcessor(metricsCollector);
 
-		// Set validation thresholds using reflection
-		ReflectionTestUtils.setField(processor, "maxDataLength", 50000);
-		ReflectionTestUtils.setField(processor, "minPolygonIdLength", 1);
-		ReflectionTestUtils.setField(processor, "maxPolygonIdLength", 50);
-
 		setupStepExecution();
 	}
 
@@ -80,7 +72,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testBeforeStep_InitializesProcessor() {
+	void testBeforeStep_InitializesProcessor() throws BatchException {
 		processor.beforeStep(stepExecution);
 
 		verify(stepExecution).getJobExecutionId();
@@ -103,17 +95,6 @@ class VdypProjectionProcessorTest {
 		assertEquals(batchRecord, result); // Pass-through processing
 	}
 
-	@ParameterizedTest
-	@MethodSource("provideInvalidRecords")
-	void testProcess_ValidationErrors_ThrowIllegalArgumentException(String testName, String featureId) {
-		processor.beforeStep(stepExecution);
-
-		assertThrows(Exception.class, () -> {
-			BatchRecord batchRecord = new BatchRecord(featureId, null, null, null, null, "test-partition");
-			processor.process(batchRecord);
-		}, testName);
-	}
-
 	static Stream<Arguments> provideInvalidRecords() {
 		return Stream.of(Arguments.of("Missing Feature ID", (String) null), Arguments.of("Empty Feature ID", "   "));
 	}
@@ -121,9 +102,6 @@ class VdypProjectionProcessorTest {
 	@Test
 	void testProcess_NullMetricsCollector_ProcessesSuccessfully() throws Exception {
 		processor = new VdypProjectionProcessor(null);
-		ReflectionTestUtils.setField(processor, "maxDataLength", 50000);
-		ReflectionTestUtils.setField(processor, "minPolygonIdLength", 1);
-		ReflectionTestUtils.setField(processor, "maxPolygonIdLength", 50);
 		processor.beforeStep(stepExecution);
 
 		BatchRecord batchRecord = createValidBatchRecord();
@@ -134,7 +112,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testBeforeStep_WithNullMetricsCollector_DoesNotThrowException() {
+	void testBeforeStep_WithNullMetricsCollector_DoesNotThrowException() throws BatchException {
 		processor = new VdypProjectionProcessor(null);
 
 		processor.beforeStep(stepExecution);
@@ -149,7 +127,7 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		BatchRecord batchRecord = new BatchRecord(
-				"VALID123", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+				"VALID123", "12345678901,MAP1", Collections.emptyList(), "test-partition"
 		);
 
 		BatchRecord result = processor.process(batchRecord);
@@ -160,29 +138,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_EmptyFeatureId_ThrowsIllegalArgumentException() {
-		processor.beforeStep(stepExecution);
-
-		BatchRecord batchRecord = new BatchRecord(
-				"", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
-		);
-
-		assertThrows(IllegalArgumentException.class, () -> processor.process(batchRecord));
-	}
-
-	@Test
-	void testProcess_WhitespaceFeatureId_ThrowsIllegalArgumentException() {
-		processor.beforeStep(stepExecution);
-
-		BatchRecord batchRecord = new BatchRecord(
-				"   ", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
-		);
-
-		assertThrows(IllegalArgumentException.class, () -> processor.process(batchRecord));
-	}
-
-	@Test
-	void testBeforeStep_LogsPartitionInformation() {
+	void testBeforeStep_LogsPartitionInformation() throws BatchException {
 		processor.beforeStep(stepExecution);
 
 		verify(stepExecution).getJobExecutionId();
@@ -195,21 +151,21 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		BatchRecord record1 = new BatchRecord(
-				"FEATURE001", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+				"FEATURE001", "12345678901,MAP1", Collections.emptyList(), "test-partition"
 		);
 		BatchRecord result1 = processor.process(record1);
 		assertNotNull(result1);
 		assertEquals("FEATURE001", result1.getFeatureId());
 
 		BatchRecord record2 = new BatchRecord(
-				"FEATURE002", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+				"FEATURE002", "12345678901,MAP1", Collections.emptyList(), "test-partition"
 		);
 		BatchRecord result2 = processor.process(record2);
 		assertNotNull(result2);
 		assertEquals("FEATURE002", result2.getFeatureId());
 
 		BatchRecord record3 = new BatchRecord(
-				"FEATURE003", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
+				"FEATURE003", "12345678901,MAP1", Collections.emptyList(), "test-partition"
 		);
 		BatchRecord result3 = processor.process(record3);
 		assertNotNull(result3);
@@ -217,8 +173,6 @@ class VdypProjectionProcessorTest {
 	}
 
 	private BatchRecord createValidBatchRecord() {
-		return new BatchRecord(
-				"12345678901", "12345678901,MAP1", Collections.emptyList(), null, null, "test-partition"
-		);
+		return new BatchRecord("12345678901", "12345678901,MAP1", Collections.emptyList(), "test-partition");
 	}
 }

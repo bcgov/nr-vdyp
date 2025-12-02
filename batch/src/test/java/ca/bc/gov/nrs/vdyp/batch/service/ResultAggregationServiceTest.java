@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,11 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,7 +58,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_Success() throws IOException {
+	void testAggregateResults_Success() throws Exception {
 		setupPartitionDirectories();
 
 		Path resultZip = resultAggregationService
@@ -81,18 +76,18 @@ class ResultAggregationServiceTest {
 		Path nonExistentDir = tempDir.resolve("non-existent");
 		String nonExistentPath = nonExistentDir.toString();
 
-		BatchConfigurationException exception = assertThrows(
-				BatchConfigurationException.class, () -> aggregateResultsFromJobDir(nonExistentPath)
+		ResultAggregationException exception = assertThrows(
+				ResultAggregationException.class, () -> aggregateResultsFromJobDir(nonExistentPath)
 		);
 
 		assertTrue(
-				exception.getMessage().contains("Base output directory does not exist")
+				exception.getMessage().contains("Job base directory does not exist")
 						|| exception.getMessage().contains("does not exist")
 		);
 	}
 
 	@Test
-	void testAggregateResults_NoPartitionDirectories() throws IOException {
+	void testAggregateResults_NoPartitionDirectories() throws Exception {
 		// Create base directory but no partition directories
 		Path baseDir = tempDir.resolve("empty-base");
 		Files.createDirectories(baseDir);
@@ -108,7 +103,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_MultiplePartitions() throws IOException {
+	void testAggregateResults_MultiplePartitions() throws Exception {
 		setupMultiplePartitionDirectories();
 
 		Path resultZip = resultAggregationService
@@ -121,7 +116,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_YieldTableMerging() throws IOException {
+	void testAggregateResults_YieldTableMerging() throws Exception {
 		// Setup two partitions with different yield tables
 		Path partition1 = tempDir.resolve("output-partition-0");
 		Path partition2 = tempDir.resolve("output-partition-1");
@@ -149,7 +144,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_LogAggregation() throws IOException {
+	void testAggregateResults_LogAggregation() throws Exception {
 		// Test aggregation of different log types
 		Path partition1 = tempDir.resolve("output-partition-0");
 		Path partition2 = tempDir.resolve("output-partition-1");
@@ -169,7 +164,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_EmptyYieldTable() throws IOException {
+	void testAggregateResults_EmptyYieldTable() throws Exception {
 		// Test with empty yield table file
 		Path partitionDir = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partitionDir);
@@ -185,7 +180,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_InsufficientColumns() throws IOException {
+	void testAggregateResults_InsufficientColumns() throws Exception {
 		// Test yield table with insufficient columns
 		Path partitionDir = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partitionDir);
@@ -205,7 +200,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_MixedFileTypes() throws IOException {
+	void testAggregateResults_MixedFileTypes() throws Exception {
 		// Setup partition with various file types
 		Path partitionDir = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partitionDir);
@@ -390,61 +385,20 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_NullJobTimestamp() {
-		String tempDirPath = tempDir.toString();
-		IllegalArgumentException exception = assertThrows(
-				IllegalArgumentException.class,
-				() -> resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDirPath, null)
-		);
-		assertTrue(exception.getMessage().contains("Job timestamp cannot be null"));
-	}
-
-	@Test
-	void testAggregateResults_EmptyJobTimestamp() {
-		String tempDirPath = tempDir.toString();
-		IllegalArgumentException exception = assertThrows(
-				IllegalArgumentException.class,
-				() -> resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDirPath, " ")
-		);
-		assertTrue(exception.getMessage().contains("Job timestamp cannot be null"));
-	}
-
-	@Test
-	void testAggregateResults_NullJobBaseDir() {
-		IllegalArgumentException exception = assertThrows(
-				IllegalArgumentException.class,
-				() -> resultAggregationService
-						.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, null, JOB_TIMESTAMP)
-		);
-
-		assertTrue(exception.getMessage().contains("Job base directory cannot be null"));
-	}
-
-	@Test
-	void testAggregateResults_EmptyJobBaseDir() {
-		IllegalArgumentException exception = assertThrows(
-				IllegalArgumentException.class,
-				() -> resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, "", JOB_TIMESTAMP)
-		);
-
-		assertTrue(exception.getMessage().contains("Job base directory cannot be null"));
-	}
-
-	@Test
-	void testAggregateResults_NonDirectoryPath() throws IOException {
+	void testAggregateResults_NonDirectoryPath() throws Exception {
 		// Create a file instead of directory
 		Path filePath = tempDir.resolve("not-a-directory.txt");
 		Files.writeString(filePath, "test");
 		String filePathString = filePath.toString();
 
-		BatchConfigurationException exception = assertThrows(
-				BatchConfigurationException.class, () -> aggregateResultsFromJobDir(filePathString)
+		ResultAggregationException exception = assertThrows(
+				ResultAggregationException.class, () -> aggregateResultsFromJobDir(filePathString)
 		);
 
 		assertTrue(exception.getMessage().contains("not a directory"));
 	}
 
-	private Path aggregateResultsFromJobDir(String directoryPath) throws IOException {
+	private Path aggregateResultsFromJobDir(String directoryPath) throws Exception {
 		return resultAggregationService
 				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, directoryPath, JOB_TIMESTAMP);
 	}
@@ -459,7 +413,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testValidateConsolidatedZip_EmptyZip() throws IOException {
+	void testValidateConsolidatedZip_EmptyZip() throws Exception {
 		// Create empty ZIP file
 		Path emptyZip = tempDir.resolve("empty.zip");
 		Files.writeString(emptyZip, "");
@@ -470,7 +424,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testValidateConsolidatedZip_MissingYieldTable() throws IOException {
+	void testValidateConsolidatedZip_MissingYieldTable() throws Exception {
 		// Create ZIP without YieldTable.csv
 		Path partition = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partition);
@@ -485,7 +439,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testCleanupPartitionDirectories_Success() throws IOException {
+	void testCleanupPartitionDirectories_Success() throws Exception {
 		// Setup input and output partition directories
 		Path inputPartition = tempDir.resolve("input-partition0");
 		Path outputPartition = tempDir.resolve("output-partition0");
@@ -512,7 +466,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testCleanupPartitionDirectories_FilePath() throws IOException {
+	void testCleanupPartitionDirectories_FilePath() throws Exception {
 		// Create a file instead of directory
 		Path filePath = tempDir.resolve("file.txt");
 		Files.writeString(filePath, "content");
@@ -522,7 +476,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testCleanupPartitionDirectories_NestedStructure() throws IOException {
+	void testCleanupPartitionDirectories_NestedStructure() throws Exception {
 		// Create nested directory structure
 		Path inputPartition = tempDir.resolve("input-partition0");
 		Path nestedDir = inputPartition.resolve("nested");
@@ -535,7 +489,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testCleanupPartitionDirectories_OnlyPartitionDirs() throws IOException {
+	void testCleanupPartitionDirectories_OnlyPartitionDirs() throws Exception {
 		// Create partition directories and non-partition directories
 		Path inputPartition = tempDir.resolve("input-partition0");
 		Path outputPartition = tempDir.resolve("output-partition0");
@@ -557,7 +511,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_WithHeaderOnlyYieldTable() throws IOException {
+	void testAggregateResults_WithHeaderOnlyYieldTable() throws Exception {
 		Path partition = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partition);
 
@@ -573,7 +527,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_YieldTableWithSameFeatureIdDifferentLayers() throws IOException {
+	void testAggregateResults_YieldTableWithSameFeatureIdDifferentLayers() throws Exception {
 		Path partition = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partition);
 
@@ -596,7 +550,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_GeneralLogType() throws IOException {
+	void testAggregateResults_GeneralLogType() throws Exception {
 		Path partition = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partition);
 
@@ -619,7 +573,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testFindPartitionDirectories_WithDirectMatchPattern() throws IOException {
+	void testFindPartitionDirectories_WithDirectMatchPattern() throws Exception {
 		// Create directories with exact prefix match
 		Path partition1 = tempDir.resolve("output-partition0");
 		Path partition2 = tempDir.resolve("output-partition-10");
@@ -637,7 +591,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_WithNonExistentYieldTable() throws IOException {
+	void testAggregateResults_WithNonExistentYieldTable() throws Exception {
 		Path partition = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partition);
 
@@ -655,7 +609,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_WithUnreadableYieldTable() throws IOException {
+	void testAggregateResults_WithUnreadableYieldTable() throws Exception {
 		Path partition = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partition);
 
@@ -677,7 +631,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_WithNullPartitionDirectory() throws IOException {
+	void testAggregateResults_WithNullPartitionDirectory() throws Exception {
 		// Create a partition with null directory scenario
 		Path partition = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partition);
@@ -692,7 +646,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_WithEmptyLines() throws IOException {
+	void testAggregateResults_WithEmptyLines() throws Exception {
 		Path partition = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partition);
 
@@ -714,7 +668,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_WithHeaderKeywordVariations() throws IOException {
+	void testAggregateResults_WithHeaderKeywordVariations() throws Exception {
 		Path partition = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partition);
 
@@ -738,7 +692,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testMergeLogs_WithPartialFailures() throws IOException {
+	void testMergeLogs_WithPartialFailures() throws Exception {
 		Path partition1 = tempDir.resolve("output-partition-0");
 		Path partition2 = tempDir.resolve("output-partition-1");
 		Files.createDirectories(partition1);
@@ -771,271 +725,6 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testBatchIOException_MessageConstructor() {
-		String message = "Test error message";
-		BatchIOException exception = new BatchIOException(message);
-
-		assertEquals(message, exception.getMessage());
-		assertNull(exception.getCause());
-	}
-
-	@Test
-	void testBatchIOException_MessageAndCauseConstructor() {
-		String message = "Test error message";
-		IOException cause = new IOException("Original cause");
-		BatchIOException exception = new BatchIOException(message, cause);
-
-		assertEquals(message, exception.getMessage());
-		assertEquals(cause, exception.getCause());
-	}
-
-	@Test
-	void testBatchIOException_CauseConstructor() {
-		IOException cause = new IOException("Original cause");
-		BatchIOException exception = new BatchIOException(cause);
-
-		assertEquals(cause, exception.getCause());
-		assertTrue(exception.getMessage().contains("Original cause"));
-	}
-
-	@Test
-	void testBatchIOException_HandleIOException_WithContext() {
-		Logger logger = LoggerFactory.getLogger(ResultAggregationServiceTest.class);
-		IOException cause = new IOException("Original error");
-		String errorDescription = "Failed to process file";
-		String context = "test-file.csv";
-
-		IOException result = BatchIOException.handleIOException(context, cause, errorDescription, logger);
-
-		assertNotNull(result);
-		assertTrue(result.getMessage().contains(errorDescription));
-		assertTrue(result.getMessage().contains(context));
-		assertTrue(result.getMessage().contains("IOException"));
-		assertTrue(result.getMessage().contains("Original error"));
-		assertEquals(cause, result.getCause());
-	}
-
-	@Test
-	void testBatchIOException_HandleIOException_WithNullContext() {
-		Logger logger = LoggerFactory.getLogger(ResultAggregationServiceTest.class);
-		IOException cause = new IOException("Original error");
-		String errorDescription = "Failed to process file";
-
-		IOException result = BatchIOException.handleIOException(null, cause, errorDescription, logger);
-
-		assertNotNull(result);
-		assertTrue(result.getMessage().contains(errorDescription));
-		assertFalse(result.getMessage().contains("null"));
-		assertTrue(result.getMessage().contains("IOException"));
-		assertTrue(result.getMessage().contains("Original error"));
-	}
-
-	@Test
-	void testBatchIOException_HandleIOException_WithNullCauseMessage() {
-		Logger logger = LoggerFactory.getLogger(ResultAggregationServiceTest.class);
-		IOException cause = new IOException((String) null);
-		String errorDescription = "Failed to process file";
-		String context = "test-file.csv";
-
-		IOException result = BatchIOException.handleIOException(context, cause, errorDescription, logger);
-
-		assertNotNull(result);
-		assertTrue(result.getMessage().contains(errorDescription));
-		assertTrue(result.getMessage().contains("No error message available"));
-	}
-
-	@Test
-	void testBatchIOException_HandleDirectoryWalkFailure() {
-		Logger logger = LoggerFactory.getLogger(ResultAggregationServiceTest.class);
-		Path directory = tempDir.resolve("test-directory");
-		IOException cause = new IOException("Directory walk failed");
-		String errorDescription = "Failed to walk directory";
-
-		IOException result = BatchIOException.handleDirectoryWalkFailure(directory, cause, errorDescription, logger);
-
-		assertNotNull(result);
-		assertTrue(result.getMessage().contains(errorDescription));
-		assertTrue(result.getMessage().contains(directory.toString()));
-		assertTrue(result.getMessage().contains("Directory walk failed"));
-		assertEquals(cause, result.getCause());
-	}
-
-	@Test
-	void testBatchIOException_HandleFileReadFailure() {
-		Logger logger = LoggerFactory.getLogger(ResultAggregationServiceTest.class);
-		Path filePath = tempDir.resolve("test-file.csv");
-		IOException cause = new IOException("Read failed");
-		String errorDescription = "Failed to read file";
-
-		IOException result = BatchIOException.handleFileReadFailure(filePath, cause, errorDescription, logger);
-
-		assertNotNull(result);
-		assertTrue(result.getMessage().contains(errorDescription));
-		assertTrue(result.getMessage().contains(filePath.toString()));
-		assertTrue(result.getMessage().contains("Read failed"));
-		assertEquals(cause, result.getCause());
-	}
-
-	@Test
-	void testBatchIOException_HandleFileWriteFailure() {
-		Logger logger = LoggerFactory.getLogger(ResultAggregationServiceTest.class);
-		Path filePath = tempDir.resolve("test-file.csv");
-		IOException cause = new IOException("Write failed");
-		String errorDescription = "Failed to write file";
-
-		IOException result = BatchIOException.handleFileWriteFailure(filePath, cause, errorDescription, logger);
-
-		assertNotNull(result);
-		assertTrue(result.getMessage().contains(errorDescription));
-		assertTrue(result.getMessage().contains(filePath.toString()));
-		assertTrue(result.getMessage().contains("Write failed"));
-		assertEquals(cause, result.getCause());
-	}
-
-	@Test
-	void testBatchIOException_HandleFileCopyFailure() {
-		Logger logger = LoggerFactory.getLogger(ResultAggregationServiceTest.class);
-		Path filePath = tempDir.resolve("test-file.csv");
-		IOException cause = new IOException("Copy failed");
-		String errorDescription = "Failed to copy file";
-
-		IOException result = BatchIOException.handleFileCopyFailure(filePath, cause, errorDescription, logger);
-
-		assertNotNull(result);
-		assertTrue(result.getMessage().contains(errorDescription));
-		assertTrue(result.getMessage().contains(filePath.toString()));
-		assertTrue(result.getMessage().contains("Copy failed"));
-		assertEquals(cause, result.getCause());
-	}
-
-	@Test
-	void testBatchIOException_HandleStreamFailure() {
-		Logger logger = LoggerFactory.getLogger(ResultAggregationServiceTest.class);
-		String streamName = "input-stream";
-		IOException cause = new IOException("Stream error");
-		String errorDescription = "Failed to process stream";
-
-		IOException result = BatchIOException.handleStreamFailure(streamName, cause, errorDescription, logger);
-
-		assertNotNull(result);
-		assertTrue(result.getMessage().contains(errorDescription));
-		assertTrue(result.getMessage().contains(streamName));
-		assertTrue(result.getMessage().contains("Stream error"));
-		assertEquals(cause, result.getCause());
-	}
-
-	@Test
-	void testResultAggregationException_MessageConstructor() {
-		String message = "Failed to aggregate results";
-		ResultAggregationException exception = new ResultAggregationException(message);
-
-		assertEquals(message, exception.getMessage());
-		assertNull(exception.getCause());
-	}
-
-	@Test
-	void testResultAggregationException_MessageAndCauseConstructor() {
-		String message = "Failed to aggregate results";
-		Throwable cause = new IOException("Original IO error");
-		ResultAggregationException exception = new ResultAggregationException(message, cause);
-
-		assertEquals(message, exception.getMessage());
-		assertEquals(cause, exception.getCause());
-	}
-
-	@Test
-	void testResultAggregationException_CauseConstructor() {
-		Throwable cause = new IOException("Original IO error");
-		ResultAggregationException exception = new ResultAggregationException(cause);
-
-		assertEquals(cause, exception.getCause());
-		assertTrue(exception.getMessage().contains("Original IO error"));
-	}
-
-	@Test
-	void testResultAggregationException_ExtendsRuntimeException() {
-		ResultAggregationException exception = new ResultAggregationException("Test");
-
-		assertTrue(exception instanceof RuntimeException);
-		assertTrue(exception instanceof ca.bc.gov.nrs.vdyp.batch.exception.BatchException);
-	}
-
-	@Test
-	void testResultAggregationException_WithDifferentCauseTypes() {
-		IOException ioCause = new IOException("IO error during aggregation");
-		ResultAggregationException exception1 = new ResultAggregationException("Aggregation failed", ioCause);
-		assertEquals(ioCause, exception1.getCause());
-
-		RuntimeException runtimeCause = new RuntimeException("Runtime error during aggregation");
-		ResultAggregationException exception2 = new ResultAggregationException("Aggregation failed", runtimeCause);
-		assertEquals(runtimeCause, exception2.getCause());
-
-		IllegalStateException stateCause = new IllegalStateException("Invalid state during aggregation");
-		ResultAggregationException exception3 = new ResultAggregationException("Aggregation failed", stateCause);
-		assertEquals(stateCause, exception3.getCause());
-	}
-
-	@Test
-	void testResultAggregationException_MessageContainsDetails() {
-		String detailedMessage = "Failed to aggregate results from partition-5 with 100 records";
-		ResultAggregationException exception = new ResultAggregationException(detailedMessage);
-
-		assertTrue(exception.getMessage().contains("partition-5"));
-		assertTrue(exception.getMessage().contains("100 records"));
-	}
-
-	@Test
-	void testResultAggregationException_NestedCauses() {
-		IOException rootCause = new IOException("Disk full");
-		RuntimeException intermediateCause = new RuntimeException("Processing failed", rootCause);
-		ResultAggregationException exception = new ResultAggregationException("Aggregation failed", intermediateCause);
-
-		assertEquals(intermediateCause, exception.getCause());
-		assertEquals(rootCause, exception.getCause().getCause());
-	}
-
-	@Test
-	void testResultAggregationException_NullMessage() {
-		ResultAggregationException exception = new ResultAggregationException((String) null);
-
-		assertNull(exception.getMessage());
-		assertNull(exception.getCause());
-	}
-
-	@Test
-	void testResultAggregationException_EmptyMessage() {
-		String emptyMessage = "";
-		ResultAggregationException exception = new ResultAggregationException(emptyMessage);
-
-		assertEquals(emptyMessage, exception.getMessage());
-		assertNull(exception.getCause());
-	}
-
-	@Test
-	void testResultAggregationException_ThrowAndCatch() {
-		String message = "Test aggregation failure";
-
-		assertThrows(ResultAggregationException.class, () -> {
-			throw new ResultAggregationException(message);
-		});
-
-		try {
-			throw new ResultAggregationException(message);
-		} catch (ResultAggregationException e) {
-			assertEquals(message, e.getMessage());
-		}
-	}
-
-	@Test
-	void testResultAggregationException_CauseWithNullMessage() {
-		IOException cause = new IOException((String) null);
-		ResultAggregationException exception = new ResultAggregationException(cause);
-
-		assertEquals(cause, exception.getCause());
-		assertNotNull(exception.getMessage());
-	}
-
-	@Test
 	void testCollectYieldTablesFromPartition_IOException() throws Exception {
 		Path partitionDir = tempDir.resolve("output-partition-0");
 		Files.createDirectories(partitionDir);
@@ -1046,14 +735,16 @@ class ResultAggregationServiceTest {
 
 			Map<String, List<Path>> yieldTablesByType = new HashMap<>();
 
-			Method collectYieldTablesMethod = ResultAggregationService.class
-					.getDeclaredMethod("collectYieldTablesFromPartition", Path.class, Map.class);
+			Method collectYieldTablesMethod = ResultAggregationService.class.getDeclaredMethod(
+					"collectYieldTablesFromPartition", Path.class, Map.class, Long.class, String.class
+			);
 			collectYieldTablesMethod.setAccessible(true);
 
 			Exception exception = assertThrows(
 					Exception.class,
-					() -> collectYieldTablesMethod.invoke(resultAggregationService, partitionDir, yieldTablesByType),
-					"Expected Exception when Files.walk fails"
+					() -> collectYieldTablesMethod.invoke(
+							resultAggregationService, partitionDir, yieldTablesByType, JOB_EXECUTION_ID, JOB_GUID
+					), "Expected Exception when Files.walk fails"
 			);
 
 			Throwable actualException = exception.getCause();
@@ -1066,10 +757,6 @@ class ResultAggregationServiceTest {
 					"Exception message should contain error description"
 			);
 			assertTrue(
-					exceptionMessage.contains(partitionDir.toString()),
-					"Exception message should contain directory path"
-			);
-			assertTrue(
 					exceptionMessage.contains("Mocked directory walk failure"),
 					"Exception message should contain cause message"
 			);
@@ -1080,7 +767,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_FirstPartitionEmptyYieldTable_HeaderRecovery() throws IOException {
+	void testAggregateResults_FirstPartitionEmptyYieldTable_HeaderRecovery() throws Exception {
 		// Scenario: First partition has empty yield table (projection failed)
 		// Second partition has valid yield table with header
 		// Expected: Header should be recovered from second partition
@@ -1117,7 +804,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_AllPartitionsEmptyYieldTable_NoHeaderRecovery() throws IOException {
+	void testAggregateResults_AllPartitionsEmptyYieldTable_NoHeaderRecovery() throws Exception {
 		// Scenario: All partitions have empty yield tables (all projections failed)
 		// Expected: Final YieldTable.csv will have no header (no valid header to recover)
 
@@ -1142,7 +829,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_FirstPartitionNoHeader_SecondPartitionWithHeader() throws IOException {
+	void testAggregateResults_FirstPartitionNoHeader_SecondPartitionWithHeader() throws Exception {
 		// Scenario: First partition has data but no header (unusual case)
 		// Second partition has header and data
 		// Expected: Header from second partition should be recovered
@@ -1184,7 +871,7 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_SmallInvalidFile_NotUsedForHeaderRecovery() throws IOException {
+	void testAggregateResults_SmallInvalidFile_NotUsedForHeaderRecovery() throws Exception {
 		// Scenario: First partition has small empty file (< 1 KB)
 		// Second partition has large valid file with header
 		// Expected: Small file should be ignored, header recovered from larger file
