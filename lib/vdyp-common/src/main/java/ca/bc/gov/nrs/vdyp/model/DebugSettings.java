@@ -230,8 +230,8 @@ public class DebugSettings {
 	 */
 	public Math77MessagesLevel getMath77MessagesLevel() {
 
-		// The same across all apps except FIPStart which uses value 9.
-		// TODO confirm FIPStart really uses 9 rather than 5 and that this is not just a typo
+		// The same across all apps. Some config files for FIPStart have comments saying it's 9 but they seem to be
+		// wrong.
 		return (Math77MessagesLevel) getProcessedValue(MATH77_MESSAGE_LEVEL);
 	}
 

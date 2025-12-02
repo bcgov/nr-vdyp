@@ -12,7 +12,6 @@ public class FipDebugSettings extends DebugSettings {
 
 	public static final int NO_BA_LIMIT = 1;
 	public static final int NO_DQ_LIMIT = 2;
-	public static final int MATH77_MESSAGE_LEVEL = 9;
 
 	public FipDebugSettings(Integer[] debugSettingsValues) {
 		super(debugSettingsValues);
@@ -21,10 +20,6 @@ public class FipDebugSettings extends DebugSettings {
 	@Override
 	protected Object process(int settingNumber, int value) {
 		switch (settingNumber) {
-		case MATH77_MESSAGE_LEVEL:
-			return Math77MessagesLevel.fromIndex(value);
-		case DebugSettings.MATH77_MESSAGE_LEVEL:
-			return value;
 		case NO_BA_LIMIT, NO_DQ_LIMIT:
 			return value != 0;
 		default:
@@ -35,20 +30,15 @@ public class FipDebugSettings extends DebugSettings {
 	/**
 	 * Disable limit on basal area
 	 */
-	boolean getNoBasalAreaLimit() {
+	public boolean getNoBasalAreaLimit() {
 		return (Boolean) this.getProcessedValue(NO_BA_LIMIT);
 	}
 
 	/**
 	 * Disable limit on quadratic mean diameter
 	 */
-	boolean getNoQuadraticMeanDiameterLimit() {
+	public boolean getNoQuadraticMeanDiameterLimit() {
 		return (Boolean) this.getProcessedValue(NO_DQ_LIMIT);
-	}
-
-	@Override
-	public Math77MessagesLevel getMath77MessagesLevel() {
-		return (Math77MessagesLevel) getProcessedValue(MATH77_MESSAGE_LEVEL);
 	}
 
 }
