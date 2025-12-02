@@ -296,6 +296,11 @@
 			<artifactId>quarkus-junit5-mockito</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>9.11.0</version>
+		</dependency>
   </dependencies>
   <build>
     <pluginManagement>
