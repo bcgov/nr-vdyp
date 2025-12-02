@@ -66,7 +66,7 @@ public class VDYPUserService {
 	/**
 	 * Ensure that a Security Claim has been provided
 	 * <p>
-	 * 
+	 *
 	 * @param identity the SecurityIdentity containing claims for the api
 	 *
 	 * @return A VDYPUserModel reprenting the user if they exist or null if there was an issue or the user could not be

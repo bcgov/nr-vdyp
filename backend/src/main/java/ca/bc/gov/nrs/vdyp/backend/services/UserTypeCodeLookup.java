@@ -10,19 +10,18 @@ import ca.bc.gov.nrs.vdyp.backend.data.assemblers.UserTypeCodeResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.UserTypeCodeRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class UserTypeCodeLookup extends AbstractCodeTableLookup<UserTypeCodeModel> {
 
-	@Inject
 	UserTypeCodeRepository repository;
-	@Inject
 	UserTypeCodeResourceAssembler assembler;
 
 	private Map<String, String> mapExternalRolesToUserTypeCodes;
 
-	public UserTypeCodeLookup() {
+	public UserTypeCodeLookup(UserTypeCodeRepository repository, UserTypeCodeResourceAssembler assembler) {
+		this.repository = repository;
+		this.assembler = assembler;
 		ensureExternalRoleMap();
 	}
 
