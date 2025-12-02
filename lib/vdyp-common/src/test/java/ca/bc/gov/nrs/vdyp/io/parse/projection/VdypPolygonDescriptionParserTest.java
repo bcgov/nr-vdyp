@@ -13,7 +13,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class VdypPolygonDescriptionParserTest {
+class VdypPolygonDescriptionParserTest {
 
 	@Test
 	void testParse() throws ResourceParseException {
