@@ -93,7 +93,7 @@ public class Grow4CalculateLoreyHeightEstimatesTest {
 		float pspTphEnd = 287.107788f;
 		float pspLhStart = 33.7439995f;
 
-		fpe.fps.fcm.getDebugSettings().setValue(ForwardDebugSettings.Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8, 2);
+		fpe.fps.fcm.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 2);
 
 		fpe.growLoreyHeights(lps, dhStart, dhEnd, pspTphStart, pspTphEnd, pspLhStart);
 

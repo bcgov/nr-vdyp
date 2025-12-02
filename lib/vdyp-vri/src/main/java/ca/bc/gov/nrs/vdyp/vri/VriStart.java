@@ -84,12 +84,14 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
+import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSpecies;
 
-public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> implements Closeable {
+public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite, VriDebugSettings>
+		implements Closeable {
 
 	private static final String SPECIAL_PROCESSING_LOG_TEMPLATE = "Doing special processing for mode {}";
 	static final float FRACTION_AVAILABLE_N = 0.85f; // PCTFLAND_N;
@@ -797,7 +799,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final float quadMeanDiameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea, treesPerHectare);
 		boolean lowDq = false;
 		if (quadMeanDiameter < VETERAN_MIN_DQ) {
-			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugModes().getValue(1) == 2) {
+			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugModes().getMode1ErrorsFatal()) {
 				throw new FatalProcessingException(
 						MessageFormat.format(MINIMUM_DIAMETER_FAIL_MESSAGE, quadMeanDiameter, VETERAN_MIN_DQ)
 				);
@@ -1185,7 +1187,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	@Override
-	protected BaseControlParser getControlFileParser() {
+	protected BaseControlParser<VriDebugSettings> getControlFileParser() {
 		return new VriControlParser();
 	}
 
@@ -1572,9 +1574,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			return lastFs[0];
 		};
 
-		debugModeExpandRootSearchWindow(
-				Optional.of(getDebugModes().getValue(9)).filter(x -> x > 0), minDq, maxDq, errorFunc
-		);
+		debugModeExpandRootSearchWindow(getDebugModes().getExpandDiameterForTPHRecovery(), minDq, maxDq, errorFunc);
 
 		try {
 			double x = doSolve(min, max, errorFunc);
@@ -1615,10 +1615,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	void debugModeExpandRootSearchWindow(
-			Optional<Integer> percentage, Map<String, Float> minDq, Map<String, Float> maxDq,
+			Optional<Float> recoveryFactor, Map<String, Float> minDq, Map<String, Float> maxDq,
 			UnivariateFunction errorFunc
 	) {
-		percentage.map(p -> (float) p / 100f).ifPresent(p -> {
+		recoveryFactor.ifPresent(p -> {
 			final double f1 = errorFunc.value(-10f);
 			final double f2 = errorFunc.value(10f);
 			final float base = 7.5f;
@@ -1676,7 +1676,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			throws FatalProcessingException {
 		// Only do this in VRIStart
 
-		if (getDebugModes().getValue(1) == 2) {
+		if (getDebugModes().getMode1ErrorsFatal()) {
 			throw new FatalProcessingException("Could not find solution for quadratic mean diameter", ex);
 		}
 
