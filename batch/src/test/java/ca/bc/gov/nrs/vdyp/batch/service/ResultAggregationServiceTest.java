@@ -1034,11 +1034,17 @@ class ResultAggregationServiceTest {
 			mockedFiles.when(() -> Files.walk(Mockito.eq(partition)))
 					.thenThrow(new IOException("Mocked IO failure during walk"));
 
-			Path resultZip = resultAggregationService
-					.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+			ResultAggregationException exception = assertThrows(
+					ResultAggregationException.class,
+					() -> resultAggregationService
+							.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP)
+			);
 
-			assertNotNull(resultZip);
-			assertTrue(Files.exists(resultZip));
+			assertTrue(
+					exception.getMessage().contains("Error walking directory tree for yield tables"),
+					"Exception message should indicate error walking directory tree"
+			);
+			assertTrue(exception.getCause() instanceof IOException, "Cause should be IOException");
 		}
 	}
 
@@ -1054,11 +1060,17 @@ class ResultAggregationServiceTest {
 			mockedFiles.when(() -> Files.lines(Mockito.any(Path.class), Mockito.eq(StandardCharsets.UTF_8)))
 					.thenThrow(new IOException("Mocked IO failure reading file for header"));
 
-			Path resultZip = resultAggregationService
-					.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+			ResultAggregationException exception = assertThrows(
+					ResultAggregationException.class,
+					() -> resultAggregationService
+							.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP)
+			);
 
-			assertNotNull(resultZip);
-			assertTrue(Files.exists(resultZip));
+			assertTrue(
+					exception.getMessage().contains("Error reading yield table file"),
+					"Exception message should indicate error reading yield table file"
+			);
+			assertTrue(exception.getCause() instanceof IOException, "Cause should be IOException");
 		}
 	}
 
