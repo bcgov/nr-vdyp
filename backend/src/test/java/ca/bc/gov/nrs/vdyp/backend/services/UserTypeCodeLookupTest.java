@@ -107,7 +107,7 @@ public class UserTypeCodeLookupTest {
 	@ParameterizedTest
 	@MethodSource("normalizeString")
 	void test_normalize(String string, String normalizedString) {
-		assertThat(string).isEqualTo(normalizedString);
+		assertThat(lookup.normalize(string)).isEqualTo(normalizedString);
 	}
 
 }
