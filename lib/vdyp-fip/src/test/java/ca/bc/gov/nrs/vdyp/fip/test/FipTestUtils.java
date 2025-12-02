@@ -10,7 +10,6 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.fip.FipControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class FipTestUtils {
@@ -30,7 +29,7 @@ public class FipTestUtils {
 	 * Load the control map from resources in the test package using the full control map parser.
 	 */
 	public static Map<String, Object> loadControlMap() {
-		BaseControlParser parser = new FipControlParser();
+		var parser = new FipControlParser();
 		try {
 			return TestUtils.loadControlMap(parser, TestUtils.class, "FIPSTART.CTR");
 		} catch (IOException | ResourceParseException ex) {

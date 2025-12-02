@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -36,11 +37,13 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.application.test.TestDebugSettings;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.CloseUtilVolumeParser;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UtilComponentWSVolumeParser;
@@ -469,7 +472,7 @@ public class TestUtils {
 		assumeTrue(matcher.matches(actual));
 	}
 
-	public static Map<String, Object> loadControlMap(BaseControlParser parser, Class<?> klazz, String resourceName)
+	public static Map<String, Object> loadControlMap(BaseControlParser<?> parser, Class<?> klazz, String resourceName)
 			throws IOException, ResourceParseException {
 		try (var is = klazz.getResourceAsStream(resourceName)) {
 
@@ -478,11 +481,18 @@ public class TestUtils {
 	}
 
 	public static Map<String, Object> loadControlMap() {
-		return loadControlMap(Path.of("VRISTART.CTR"));
+		return loadControlMap(startAppControlParser());
 	}
 
 	public static Map<String, Object> loadControlMap(Path controlMapPath) {
-		BaseControlParser parser = new TestNonFipControlParser();
+		return loadControlMap(startAppControlParser(), controlMapPath);
+	}
+
+	public static Map<String, Object> loadControlMap(BaseControlParser<?> parser) {
+		return loadControlMap(parser, Path.of("VRISTART.CTR"));
+	}
+
+	public static Map<String, Object> loadControlMap(BaseControlParser<?> parser, Path controlMapPath) {
 		try {
 			return TestUtils.loadControlMap(parser, TestUtils.class, controlMapPath.toString());
 		} catch (IOException | ResourceParseException ex) {
@@ -495,11 +505,11 @@ public class TestUtils {
 		return new PolygonIdentifier(name, year);
 	}
 
-	public static StartApplicationControlParser startAppControlParser() {
+	public static StartApplicationControlParser<?> startAppControlParser() {
 		return new TestNonFipControlParser();
 	}
 
-	static private class TestNonFipControlParser extends NonFipControlParser {
+	private static class TestNonFipControlParser extends NonFipControlParser<TestDebugSettings> {
 
 		public TestNonFipControlParser() {
 			initialize();
@@ -518,6 +528,18 @@ public class TestUtils {
 		@Override
 		protected VdypApplicationIdentifier getProgramId() {
 			return VdypApplicationIdentifier.VRI_START;
+		}
+
+		@Override
+		protected DebugSettingsParser<TestDebugSettings> getDebugSettingsParser() {
+			return new DebugSettingsParser<TestDebugSettings>() {
+
+				@Override
+				protected TestDebugSettings build(Integer[] debugSettingsValues) {
+					return new TestDebugSettings(debugSettingsValues);
+				}
+
+			};
 		}
 	}
 
@@ -698,11 +720,17 @@ public class TestUtils {
 	 * @param value
 	 * @return
 	 */
-	public static DebugSettings debugSettingsSingle(int index, int value) {
+	public static <T extends DebugSettings> T debugSettingsSingle(Class<T> debugClass, int index, int value) {
 		var arr = new Integer[DebugSettings.MAX_DEBUG_SETTINGS];
 		Arrays.fill(arr, 0);
 		arr[index - 1] = value;
-		return new DebugSettings(arr);
+
+		try {
+			return debugClass.getConstructor(Integer[].class).newInstance(new Object[] { arr });
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			throw new IllegalStateException("Could not create mock DebugSettings of type " + debugClass.getName(), e);
+		}
 	}
 
 	/**
@@ -711,9 +739,14 @@ public class TestUtils {
 	 * @param values
 	 * @return
 	 */
-	public static DebugSettings debugSettings(int... values) {
+	public static <T extends DebugSettings> T debugSettings(Class<T> debugClass, int... values) {
 		Integer[] arr = Arrays.stream(values).mapToObj(i -> (Integer) i).toArray(Integer[]::new);
-		return new DebugSettings(arr);
+		try {
+			return debugClass.getConstructor(Integer[].class).newInstance(new Object[] { arr });
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			throw new IllegalStateException("Could not create mock DebugSettings of type " + debugClass.getName(), e);
+		}
 	}
 
 	/**

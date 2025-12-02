@@ -61,6 +61,7 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -737,7 +738,7 @@ class VdypStartApplicationTest {
 
 			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
 
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 0));
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(DebugSettings.class, 22, 0));
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 
@@ -775,7 +776,7 @@ class VdypStartApplicationTest {
 
 			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
 
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 0));
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(DebugSettings.class, 22, 0));
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 
@@ -812,7 +813,7 @@ class VdypStartApplicationTest {
 
 			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
 
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 0));
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(DebugSettings.class, 22, 0));
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 
@@ -850,7 +851,7 @@ class VdypStartApplicationTest {
 
 			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
 
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 1));
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(DebugSettings.class, 22, 1));
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 
@@ -888,7 +889,7 @@ class VdypStartApplicationTest {
 
 			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
 
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 1));
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(DebugSettings.class, 22, 1));
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 
@@ -925,7 +926,7 @@ class VdypStartApplicationTest {
 
 			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
 
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 1));
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(DebugSettings.class, 22, 1));
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 
@@ -951,6 +952,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
+		@Disabled("Interpreting the values of the debug settings has moved into the DebugSettings object")
 		void testDebug22Unknown() throws Exception {
 
 			var mockControl = EasyMock.createControl();
@@ -958,7 +960,7 @@ class VdypStartApplicationTest {
 			BaseVdypSpecies spec1 = mockSpecies(mockControl, "H", 50.0005f);
 			BaseVdypSpecies spec2 = mockSpecies(mockControl, "B", 49.9995f);
 
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 2));
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(DebugSettings.class, 22, 2));
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 

@@ -11,13 +11,8 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
-import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
-import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
-import ca.bc.gov.nrs.vdyp.fip.model.FipSite;
-import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
 import ca.bc.gov.nrs.vdyp.integration_tests.IntermediateDataBasedIntegrationTest;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -49,7 +44,7 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile).filter(Files::exists)
 				.map(Object::toString).toArray(String[]::new);
 
-		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();) {
+		try (var app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
 

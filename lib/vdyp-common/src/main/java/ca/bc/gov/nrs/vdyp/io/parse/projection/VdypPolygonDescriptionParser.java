@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward.parsers;
+package ca.bc.gov.nrs.vdyp.io.parse.projection;
 
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -53,7 +53,7 @@ public class VdypPolygonDescriptionParser implements ControlMapValueReplacer<Obj
 			var lineParser = new LineParser() {
 				@Override
 				public boolean isStopLine(String line) {
-					return line.substring(0, Math.min(25, line.length())).trim().length() == 0;
+					return line.substring(0, Math.min(25, line.length())).isBlank();
 				}
 			}.value(25, DESCRIPTION, ValueParser.STRING_UNSTRIPPED);
 
