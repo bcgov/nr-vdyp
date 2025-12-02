@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataReadException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import org.junit.jupiter.api.BeforeEach;
@@ -298,15 +299,187 @@ class ChunkBasedPolygonItemReaderTest {
 		reader.close();
 	}
 
+	@Test
+	void testReadRethrowsBatchException() throws Exception {
+		Path partitionDir = tempDir.resolve("input-test-partition");
+		Files.createDirectories(partitionDir);
+
+		String polygonContent = "FEATURE_ID,DATA\n123,data1\n";
+		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
+
+		executionContext.putString("jobBaseDir", tempDir.toString());
+
+		BatchDataReadException testException = BatchDataReadException.handleDataReadFailure(
+				new IOException("Test IO failure"), "Test data read failure", JOB_GUID, 123L, "test-partition",
+				org.slf4j.LoggerFactory.getLogger(ChunkBasedPolygonItemReaderTest.class)
+		);
+
+		ChunkBasedPolygonItemReader spyReader = spy(reader);
+		doThrow(testException).when(spyReader).read();
+
+		assertThrows(BatchDataReadException.class, spyReader::read);
+	}
+
+	@Test
+	void testHandlePolygonProcessingException() throws Exception {
+		Path partitionDir = tempDir.resolve("input-test-partition");
+		Files.createDirectories(partitionDir);
+
+		String polygonContent = "FEATURE_ID,DATA\n123,data1\n456,data2\n";
+		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
+
+		executionContext.putString("jobBaseDir", tempDir.toString());
+
+		reader.open(executionContext);
+
+		BatchRecord record1 = reader.read();
+		assertNotNull(record1);
+		assertEquals("123", record1.getFeatureId());
+
+		reader.close();
+	}
+
+	@Test
+	void testIOExceptionDuringReaderInitialization() throws Exception {
+		Path partitionDir = tempDir.resolve("input-test-partition");
+		Files.createDirectories(partitionDir);
+
+		Path polygonFile = partitionDir.resolve("polygons.csv");
+		Files.write(polygonFile, "FEATURE_ID,DATA\n123,data1\n".getBytes());
+
+		executionContext.putString("jobBaseDir", tempDir.toString());
+
+		assertTrue(Files.exists(polygonFile));
+	}
+
+	@Test
+	void testIOExceptionDuringCloseReader() throws Exception {
+		Path partitionDir = tempDir.resolve("input-test-partition");
+		Files.createDirectories(partitionDir);
+
+		String polygonContent = "FEATURE_ID,DATA\n123,data1\n";
+		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
+
+		executionContext.putString("jobBaseDir", tempDir.toString());
+
+		reader.open(executionContext);
+
+		BatchRecord batchRecord = reader.read();
+		assertNotNull(batchRecord);
+
+		assertDoesNotThrow(() -> reader.close());
+	}
+
+	@Test
+	void testHandleReaderInitializationFailureWithItemStreamException() throws Exception {
+		Path partitionDir = tempDir.resolve("input-test-partition");
+		Files.createDirectories(partitionDir);
+
+		executionContext.putString("jobBaseDir", tempDir.toString());
+
+		ItemStreamException exception = assertThrows(ItemStreamException.class, () -> reader.open(executionContext));
+		assertTrue(exception.getMessage().contains("Polygon file not found"));
+
+		assertNotNull(exception.getCause());
+		assertTrue(
+				exception.getCause() instanceof BatchDataReadException
+						|| exception.getMessage().contains("Polygon file not found")
+		);
+	}
+
+	@Test
+	void testRecordSkipMetricsWithMetricsCollector() throws Exception {
+		doNothing().when(metricsCollector).recordSkip(anyLong(), anyString(), anyString(), any(), anyString());
+
+		Path partitionDir = tempDir.resolve("input-test-partition");
+		Files.createDirectories(partitionDir);
+
+		String polygonContent = "FEATURE_ID,DATA\n ,data1\n456,data2\n";
+		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
+
+		executionContext.putString("jobBaseDir", tempDir.toString());
+
+		reader.open(executionContext);
+
+		BatchRecord batchRecord = reader.read();
+		assertNotNull(batchRecord);
+		assertEquals("456", batchRecord.getFeatureId());
+
+		ExecutionContext updateContext = new ExecutionContext();
+		reader.update(updateContext);
+		assertEquals(1, updateContext.getInt("test-partition.skipped"));
+
+		reader.close();
+	}
+
+	@Test
+	void testPerformReaderCleanupAfterFailure() throws Exception {
+		Path partitionDir = tempDir.resolve("input-test-partition");
+		Files.createDirectories(partitionDir);
+
+		executionContext.putString("jobBaseDir", tempDir.toString());
+
+		assertThrows(ItemStreamException.class, () -> reader.open(executionContext));
+
+		assertThrows(IllegalStateException.class, () -> reader.read());
+	}
+
+	@Test
+	void testExtractFeatureIdFromNullOrEmptyLine() throws Exception {
+		Path partitionDir = tempDir.resolve("input-test-partition");
+		Files.createDirectories(partitionDir);
+
+		String polygonContent = "FEATURE_ID,DATA\n\n   \n123,data1\n";
+		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
+
+		executionContext.putString("jobBaseDir", tempDir.toString());
+
+		reader.open(executionContext);
+
+		BatchRecord batchRecord = reader.read();
+		assertNotNull(batchRecord);
+		assertEquals("123", batchRecord.getFeatureId());
+
+		reader.close();
+	}
+
+	@Test
+	void testLoadNextChunkWithMultipleChunks() throws Exception {
+		Path partitionDir = tempDir.resolve("input-test-partition");
+		Files.createDirectories(partitionDir);
+
+		String polygonContent = "FEATURE_ID,DATA\n123,data1\n456,data2\n789,data3\n";
+		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
+
+		executionContext.putString("jobBaseDir", tempDir.toString());
+
+		reader.open(executionContext);
+
+		BatchRecord record1 = reader.read();
+		assertNotNull(record1);
+		assertEquals("123", record1.getFeatureId());
+
+		BatchRecord record2 = reader.read();
+		assertNotNull(record2);
+		assertEquals("456", record2.getFeatureId());
+
+		BatchRecord record3 = reader.read();
+		assertNotNull(record3);
+		assertEquals("789", record3.getFeatureId());
+
+		BatchRecord record4 = reader.read();
+		assertNull(record4);
+
+		reader.close();
+	}
+
 	private void setupValidTestFiles() throws IOException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
-		// Create polygon file
 		String polygonContent = "FEATURE_ID,DATA\n123,data1\n456,data2\n789,data3\n";
 		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
 
-		// Create layer file
 		String layerContent = "FEATURE_ID,LAYER_DATA\n123,layer1\n456,layer2\n";
 		Files.write(partitionDir.resolve("layers.csv"), layerContent.getBytes());
 

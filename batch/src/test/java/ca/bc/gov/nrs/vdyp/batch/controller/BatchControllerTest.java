@@ -556,4 +556,108 @@ class BatchControllerTest {
 		assertEquals(jobGuid, response.getBody().get(BatchConstants.Job.GUID));
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
 	}
+
+	@Test
+	void testStartBatchJobWithFiles_WithNullPolygonFile_ReturnsInternalServerError() {
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
+		);
+
+		ResponseEntity<Map<String, Object>> response = batchController.startBatchJobWithFiles(null, layerFile, "{}");
+
+		assertEquals(500, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("error"));
+	}
+
+	@Test
+	void testStartBatchJobWithFiles_WithEmptyPolygonFile_ReturnsBadRequest() {
+		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", new byte[0]);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
+		);
+
+		ResponseEntity<Map<String, Object>> response = batchController
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
+
+		assertEquals(400, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("validationMessages"));
+	}
+
+	@Test
+	void testStartBatchJobWithFiles_WithPolygonFileOnlyWhitespace_ReturnsBadRequest() {
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", "   \n  \n\t\t\n".getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
+		);
+
+		ResponseEntity<Map<String, Object>> response = batchController
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
+
+		assertEquals(400, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("validationMessages"));
+	}
+
+	@Test
+	void testStartBatchJobWithFiles_WithNullLayerFile_ReturnsInternalServerError() {
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
+		);
+
+		ResponseEntity<Map<String, Object>> response = batchController.startBatchJobWithFiles(polygonFile, null, "{}");
+
+		assertEquals(500, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("error"));
+	}
+
+	@Test
+	void testStartBatchJobWithFiles_WithEmptyLayerFile_ReturnsBadRequest() {
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", new byte[0]);
+
+		ResponseEntity<Map<String, Object>> response = batchController
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
+
+		assertEquals(400, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("validationMessages"));
+	}
+
+	@Test
+	void testStartBatchJobWithFiles_WithLayerFileOnlyWhitespace_ReturnsBadRequest() {
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", "   \n  \n\t\t\n".getBytes()
+		);
+
+		ResponseEntity<Map<String, Object>> response = batchController
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
+
+		assertEquals(400, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("validationMessages"));
+	}
+
+	@Test
+	void testStartBatchJobWithFiles_WithJobLauncherException_ReturnsInternalServerError() throws Exception {
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
+		);
+
+		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
+
+		when(jobLauncher.run(any(), any())).thenThrow(new IllegalStateException("Job launcher failed"));
+
+		ResponseEntity<Map<String, Object>> response = batchController
+				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
+
+		assertEquals(400, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("validationMessages"));
+	}
 }

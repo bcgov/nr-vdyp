@@ -830,4 +830,95 @@ class StreamingCsvPartitionerTest {
 		long lineCount = content.lines().count();
 		assertEquals(2, lineCount); // header + 1 data line
 	}
+
+	@Test
+	void testCountTotalFeatureIds_IOException() {
+		MockMultipartFile faultyPolygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		) {
+			@Override
+			public java.io.InputStream getInputStream() throws IOException {
+				throw new IOException("Simulated I/O error while reading polygon file");
+			}
+		};
+
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
+
+		BatchPartitionException exception = assertThrows(
+				BatchPartitionException.class,
+				() -> streamingCsvPartitioner.partitionCsvFiles(faultyPolygonFile, layerFile, 2, tempDir, TEST_JOB_GUID)
+		);
+
+		assertTrue(
+				exception.getMessage().contains("Failed to read polygon file while counting FEATURE_IDs"),
+				"Exception message should indicate failure during counting"
+		);
+		assertNotNull(exception.getCause(), "Exception should have a cause");
+		assertTrue(exception.getCause() instanceof IOException, "Cause should be IOException");
+	}
+
+	@Test
+	void testPartitionPolygonFile_IOException() {
+		MockMultipartFile faultyPolygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		) {
+			private int callCount = 0;
+
+			@Override
+			public java.io.InputStream getInputStream() throws IOException {
+				callCount++;
+				// First call succeeds (for counting), second call fails (for partitioning)
+				if (callCount > 1) {
+					throw new IOException("Simulated I/O error during polygon file partitioning");
+				}
+				return super.getInputStream();
+			}
+		};
+
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
+
+		BatchPartitionException exception = assertThrows(
+				BatchPartitionException.class,
+				() -> streamingCsvPartitioner.partitionCsvFiles(faultyPolygonFile, layerFile, 2, tempDir, TEST_JOB_GUID)
+		);
+
+		assertTrue(
+				exception.getMessage().contains("Failed to partition polygon file"),
+				"Exception message should indicate failure during polygon partitioning"
+		);
+		assertNotNull(exception.getCause(), "Exception should have a cause");
+		assertTrue(exception.getCause() instanceof IOException, "Cause should be IOException");
+	}
+
+	@Test
+	void testPartitionLayerFile_IOException() {
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+
+		MockMultipartFile faultyLayerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		) {
+			@Override
+			public java.io.InputStream getInputStream() throws IOException {
+				throw new IOException("Simulated I/O error while reading layer file");
+			}
+		};
+
+		BatchPartitionException exception = assertThrows(
+				BatchPartitionException.class,
+				() -> streamingCsvPartitioner.partitionCsvFiles(polygonFile, faultyLayerFile, 2, tempDir, TEST_JOB_GUID)
+		);
+
+		assertTrue(
+				exception.getMessage().contains("Failed to partition layer file"),
+				"Exception message should indicate failure during layer partitioning"
+		);
+		assertNotNull(exception.getCause(), "Exception should have a cause");
+		assertTrue(exception.getCause() instanceof IOException, "Cause should be IOException");
+	}
 }

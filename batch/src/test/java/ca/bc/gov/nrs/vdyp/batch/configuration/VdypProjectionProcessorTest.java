@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -170,6 +171,16 @@ class VdypProjectionProcessorTest {
 		BatchRecord result3 = processor.process(record3);
 		assertNotNull(result3);
 		assertEquals("FEATURE003", result3.getFeatureId());
+	}
+
+	@Test
+	void testBeforeStep_CalledTwice_ThrowsIllegalStateException() throws BatchException {
+		processor.beforeStep(stepExecution);
+
+		assertThrows(
+				IllegalStateException.class, () -> processor.beforeStep(stepExecution),
+				"VdypProjectionProcessor already initialized. beforeStep() should only be called once."
+		);
 	}
 
 	private BatchRecord createValidBatchRecord() {

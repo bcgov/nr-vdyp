@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -904,5 +905,272 @@ class ResultAggregationServiceTest {
 		// Should contain header from valid partition
 		assertTrue(yieldTableContent.contains("TABLE_NUM"), "Should contain header");
 		assertTrue(yieldTableContent.contains("333333333"), "Should contain data");
+	}
+
+	@Test
+	void testAggregateResults_IOException_FindingPartitionDirectories() {
+		try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+			mockedFiles.when(() -> Files.list(Mockito.any()))
+					.thenThrow(new IOException("Mocked IO failure when listing directories"));
+
+			ResultAggregationException exception = assertThrows(
+					ResultAggregationException.class,
+					() -> resultAggregationService
+							.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP)
+			);
+
+			assertTrue(
+					exception.getMessage().contains("Failed to find partition output directories"),
+					"Exception should indicate failure to find partition directories"
+			);
+			assertTrue(exception.getCause() instanceof IOException, "Cause should be IOException");
+		}
+	}
+
+	@Test
+	void testAggregateResults_IOException_CreatingEmptyResultZip() throws Exception {
+		Path baseDir = tempDir.resolve("empty-base");
+		Files.createDirectories(baseDir);
+
+		String finalZipFileName = String.format("vdyp-output-%s.zip", JOB_TIMESTAMP);
+		Path conflictingDir = baseDir.resolve(finalZipFileName);
+		Files.createDirectories(conflictingDir); // This will cause IOException when trying to create ZIP file
+
+		ResultAggregationException exception = assertThrows(
+				ResultAggregationException.class,
+				() -> resultAggregationService
+						.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, baseDir.toString(), JOB_TIMESTAMP)
+		);
+
+		assertTrue(
+				exception.getMessage().contains("Failed to create empty result ZIP"),
+				"Exception should indicate failure to create empty result ZIP"
+		);
+		assertTrue(exception.getCause() instanceof IOException, "Cause should be IOException");
+	}
+
+	@Test
+	void testAggregateResults_IOException_CreatingConsolidatedZip() throws Exception {
+		Path partitionDir = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partitionDir);
+		Files.writeString(partitionDir.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		String finalZipFileName = String.format("vdyp-output-%s.zip", JOB_TIMESTAMP);
+		Path conflictingDir = tempDir.resolve(finalZipFileName);
+		Files.createDirectories(conflictingDir);
+
+		ResultAggregationException exception = assertThrows(
+				ResultAggregationException.class,
+				() -> resultAggregationService
+						.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP)
+		);
+
+		assertTrue(
+				exception.getMessage().contains("Failed to create consolidated ZIP file"),
+				"Exception should indicate failure to create consolidated ZIP file"
+		);
+		assertTrue(exception.getCause() instanceof IOException, "Cause should be IOException");
+	}
+
+	@Test
+	void testProcessYieldTableFile_IOException() throws Exception {
+		Path partitionDir = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partitionDir);
+
+		Path yieldTablePath = partitionDir.resolve("YieldTable.csv");
+		Files.writeString(yieldTablePath, YIELD_TABLE_CONTENT);
+
+		try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+			mockedFiles.when(() -> Files.lines(Mockito.eq(yieldTablePath), Mockito.any()))
+					.thenThrow(new IOException("Mocked IO failure reading file"));
+
+			ResultAggregationException exception = assertThrows(
+					ResultAggregationException.class,
+					() -> resultAggregationService
+							.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP)
+			);
+
+			assertTrue(
+					exception.getMessage().contains("Error reading yield table file"),
+					"Exception should indicate error reading yield table file"
+			);
+		}
+	}
+
+	@Test
+	void testProcessYieldTableResult_NoValidHeaderFound() throws Exception {
+		Path partition0 = tempDir.resolve("output-partition-0");
+		Path partition1 = tempDir.resolve("output-partition-1");
+		Files.createDirectories(partition0);
+		Files.createDirectories(partition1);
+
+		String dataOnly1 = "1,111111111,FD,P,FD,100.0,40\n";
+		String dataOnly2 = "2,222222222,CW,P,CW,90.0,45\n";
+		Files.writeString(partition0.resolve("YieldTable.csv"), dataOnly1);
+		Files.writeString(partition1.resolve("YieldTable.csv"), dataOnly2);
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+
+		String yieldTableContent = getZipEntryContent(resultZip, "YieldTable.csv");
+		assertNotNull(yieldTableContent, "YieldTable.csv should exist");
+
+		assertTrue(yieldTableContent.contains("111111111"), "Should contain first partition data");
+		assertTrue(yieldTableContent.contains("222222222"), "Should contain second partition data");
+	}
+
+	@Test
+	void testSearchForValidHeader_IOException() throws Exception {
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+
+		String dataOnly = "1,123456789,FD,P,FD,100.0,50\n";
+		Files.writeString(partition.resolve("YieldTable.csv"), dataOnly);
+
+		try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+			mockedFiles.when(() -> Files.walk(Mockito.eq(partition)))
+					.thenThrow(new IOException("Mocked IO failure during walk"));
+
+			Path resultZip = resultAggregationService
+					.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+			assertNotNull(resultZip);
+			assertTrue(Files.exists(resultZip));
+		}
+	}
+
+	@Test
+	void testExtractHeaderFromFile_IOException() throws Exception {
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+
+		String dataOnly = "1,123456789,FD,P,FD,100.0,50\n";
+		Files.writeString(partition.resolve("YieldTable.csv"), dataOnly);
+
+		try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+			mockedFiles.when(() -> Files.lines(Mockito.any(Path.class), Mockito.eq(StandardCharsets.UTF_8)))
+					.thenThrow(new IOException("Mocked IO failure reading file for header"));
+
+			Path resultZip = resultAggregationService
+					.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+			assertNotNull(resultZip);
+			assertTrue(Files.exists(resultZip));
+		}
+	}
+
+	@Test
+	void testCollectLogFilesFromPartition_IOException() throws Exception {
+		Path partitionDir = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partitionDir);
+		Files.writeString(partitionDir.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+		Files.writeString(partitionDir.resolve("error.log"), ERROR_LOG_CONTENT);
+
+		try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+			mockedFiles.when(() -> Files.walk(Mockito.eq(partitionDir))).thenCallRealMethod()
+					.thenThrow(new IOException("Mocked IO failure walking for logs")); // Second call fails
+
+			ResultAggregationException exception = assertThrows(
+					ResultAggregationException.class,
+					() -> resultAggregationService
+							.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP)
+			);
+
+			assertTrue(
+					exception.getMessage().contains("Error walking directory tree for log files"),
+					"Exception should indicate error walking directory for log files"
+			);
+		}
+	}
+
+	@Test
+	void testAggregateLogs_IOException() throws Exception {
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+		Files.writeString(partition.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		Path invalidLog = partition.resolve("error.log");
+		Files.createDirectories(invalidLog); // Directory instead of file
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+	}
+
+	@Test
+	void testValidateConsolidatedZip_IOException() throws Exception {
+		Path zipPath = tempDir.resolve("test.zip");
+		Files.writeString(zipPath, "dummy content");
+
+		try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+			mockedFiles.when(() -> Files.size(zipPath)).thenThrow(new IOException("Mocked IO failure getting size"));
+
+			boolean isValid = resultAggregationService.validateConsolidatedZip(zipPath);
+
+			assertFalse(isValid, "Should return false when IOException occurs getting file size");
+		}
+	}
+
+	@Test
+	void testValidateConsolidatedZip_ZipException() throws Exception {
+		Path invalidZip = tempDir.resolve("invalid.zip");
+		Files.writeString(invalidZip, "This is not a valid ZIP file");
+
+		boolean isValid = resultAggregationService.validateConsolidatedZip(invalidZip);
+
+		assertFalse(isValid, "Should return false for corrupted ZIP file");
+	}
+
+	@Test
+	void testValidateConsolidatedZip_IOException_OpeningZip() throws Exception {
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+		Files.writeString(partition.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+		if (resultZip.toFile().setReadable(false)) {
+			boolean isValid = resultAggregationService.validateConsolidatedZip(resultZip);
+
+			assertFalse(isValid, "Should return false when IOException occurs opening ZIP");
+
+			resultZip.toFile().setReadable(true);
+		}
+	}
+
+	@Test
+	void testCleanupPartitionDirectories_IOException_ListingDirectories() {
+		try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+			mockedFiles.when(() -> Files.list(tempDir)).thenThrow(new IOException("Mocked IO failure listing dirs"));
+
+			assertDoesNotThrow(() -> resultAggregationService.cleanupPartitionDirectories(tempDir));
+		}
+	}
+
+	@Test
+	void testSearchForValidHeaderInPartitions_FileSizeGetFailure() throws Exception {
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+
+		String dataOnly = "1,123456789,FD,P,FD,100.0,50\n";
+		Path yieldTablePath = partition.resolve("YieldTable.csv");
+		Files.writeString(yieldTablePath, dataOnly);
+
+		try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+			mockedFiles.when(() -> Files.size(yieldTablePath))
+					.thenThrow(new IOException("Mocked IO failure getting file size"));
+
+			Path resultZip = resultAggregationService
+					.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+			assertNotNull(resultZip);
+			assertTrue(Files.exists(resultZip));
+		}
 	}
 }

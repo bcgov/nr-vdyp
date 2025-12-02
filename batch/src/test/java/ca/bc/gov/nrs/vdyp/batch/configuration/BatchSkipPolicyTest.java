@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,7 @@ import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.file.FlatFileParseException;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
@@ -194,6 +196,34 @@ class BatchSkipPolicyTest {
 
 		BatchRecord batchRecord = createValidBatchRecord();
 		BatchProjectionException exception = BatchProjectionException.handleProjectionFailure(new RuntimeException("malformed data"), List.of(batchRecord), TEST_JOB_GUID, 1L, "test-partition", logger);
+
+		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
+
+		assertTrue(result);
+	}
+
+	@Test
+	void testShouldSkip_MetricsCollectorThrowsBatchException_CatchesAndLogs() throws Exception {
+		when(stepExecution.getJobExecutionId()).thenReturn(500L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString("partitionName")).thenReturn("metrics-error-partition");
+
+		batchSkipPolicy.beforeStep(stepExecution);
+
+		BatchRecord batchRecord = createValidBatchRecord();
+		BatchProjectionException exception = BatchProjectionException.handleProjectionFailure(
+				new FlatFileParseException("Parse error", "invalid,data", 10), List.of(batchRecord), TEST_JOB_GUID,
+				500L, "metrics-error-partition", logger
+		);
+
+		var metricsException = BatchMetricsException
+				.handleMetricsFailure("Failed to record metrics", TEST_JOB_GUID, 500L, logger);
+
+		org.mockito.Mockito.doThrow(metricsException).when(metricsCollector)
+				.recordSkip(500L, TEST_JOB_GUID, batchRecord.getFeatureId(), exception, "metrics-error-partition");
 
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
 
