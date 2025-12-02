@@ -54,6 +54,17 @@ class BatchMetricsCollectorTest {
 	}
 
 	@Test
+	void testInitializeMetrics_DuplicateJobGuid_ThrowsException() throws BatchException {
+		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
+
+		BatchException exception = assertThrows(
+				BatchException.class, () -> batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID + 1, JOB_GUID)
+		);
+
+		assertTrue(exception.getMessage().contains("Job metrics already exists"));
+	}
+
+	@Test
 	void testInitializePartitionMetrics() throws BatchException {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, PARTITION_NAME);

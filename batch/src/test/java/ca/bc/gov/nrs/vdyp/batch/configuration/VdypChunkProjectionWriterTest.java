@@ -31,6 +31,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
@@ -232,6 +233,57 @@ class VdypChunkProjectionWriterTest {
 				eq(records), eq(TEST_PARTITION_NAME), any(Parameters.class), eq(TEST_JOB_EXECUTION_ID),
 				eq(TEST_JOB_GUID), any()
 		);
+	}
+
+	@Test
+	void testBeforeStep_calledTwice_throwsIllegalStateException() {
+		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", VALID_PARAMETERS_JSON)
+				.addString("jobGuid", TEST_JOB_GUID).addString("jobBaseDir", "/tmp/test").toJobParameters();
+
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(params);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(stepExecution.getJobParameters()).thenReturn(params);
+		when(executionContext.getString("partitionName")).thenReturn(TEST_PARTITION_NAME);
+
+		assertDoesNotThrow(() -> writer.beforeStep(stepExecution));
+
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			writer.beforeStep(stepExecution);
+		});
+
+		assertTrue(exception.getMessage().contains("already initialized"));
+		assertTrue(exception.getMessage().contains("beforeStep() should only be called once"));
+	}
+
+	@Test
+	void testBeforeStep_jsonProcessingException_throwsIllegalStateException() throws Exception {
+		String invalidJson = "{invalid json}";
+		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", invalidJson)
+				.addString("jobGuid", TEST_JOB_GUID).addString("jobBaseDir", "/tmp/test").toJobParameters();
+
+		when(objectMapper.readValue(invalidJson, Parameters.class))
+				.thenThrow(new JsonProcessingException("Unexpected character") {
+				});
+
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(params);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(stepExecution.getJobParameters()).thenReturn(params);
+		when(executionContext.getString("partitionName")).thenReturn(TEST_PARTITION_NAME);
+
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			writer.beforeStep(stepExecution);
+		});
+
+		assertTrue(exception.getMessage().contains("JSON parsing failed during parameter deserialization"));
+		assertTrue(exception.getMessage().contains(TEST_JOB_GUID));
+		assertTrue(exception.getMessage().contains(TEST_PARTITION_NAME));
+		assertTrue(exception.getMessage().contains("JSON length:"));
+		assertTrue(exception.getMessage().contains("Exception type:"));
+		assertNotNull(exception.getCause());
 	}
 
 	private void setupWriterWithValidParameters() {

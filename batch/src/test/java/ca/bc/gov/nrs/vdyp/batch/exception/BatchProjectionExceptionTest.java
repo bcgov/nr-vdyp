@@ -40,6 +40,14 @@ class BatchProjectionExceptionTest {
 		assertTrue(exception.getMessage().contains("NullPointerException"));
 		assertTrue(exception.getMessage().contains("3 records"));
 		assertEquals("FEATURE-0", exception.getFeatureId(), "Should use first feature ID as record ID");
+
+		assertEquals(partitionName, exception.getPartitionName());
+		assertEquals(3, exception.getRecordCount());
+		assertNotNull(exception.getFeatureIds());
+		assertEquals(3, exception.getFeatureIds().size());
+		assertEquals("FEATURE-0", exception.getFeatureIds().get(0));
+		assertEquals("FEATURE-1", exception.getFeatureIds().get(1));
+		assertEquals("FEATURE-2", exception.getFeatureIds().get(2));
 	}
 
 	@Test
@@ -142,6 +150,24 @@ class BatchProjectionExceptionTest {
 		assertTrue(message.contains("FEATURE-B"));
 		assertTrue(message.contains("FEATURE-C"));
 		assertEquals("FEATURE-A", exception.getFeatureId());
+	}
+
+	@Test
+	void testProjectionContext_GetterMethods() {
+		String partitionName = "test-partition";
+		int recordCount = 5;
+		List<String> featureIds = Arrays.asList("FEATURE-1", "FEATURE-2", "FEATURE-3", "FEATURE-4", "FEATURE-5");
+
+		BatchProjectionException.ProjectionContext context = new BatchProjectionException.ProjectionContext(
+				partitionName, recordCount, featureIds
+		);
+
+		assertEquals(partitionName, context.getPartitionName());
+		assertEquals(recordCount, context.getRecordCount());
+		assertNotNull(context.getFeatureIds());
+		assertEquals(5, context.getFeatureIds().size());
+		assertEquals("FEATURE-1", context.getFeatureIds().get(0));
+		assertEquals("FEATURE-5", context.getFeatureIds().get(4));
 	}
 
 	private List<BatchRecord> createTestBatchRecords(int count) {
