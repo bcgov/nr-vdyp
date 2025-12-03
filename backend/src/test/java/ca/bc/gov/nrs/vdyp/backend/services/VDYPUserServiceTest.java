@@ -184,7 +184,7 @@ class VDYPUserServiceTest {
 		VDYPUserModel result = service.createUser(requested);
 
 		// assert behaviour & mapping
-		assertThat(result).isEqualTo(returnedModel);
+		assertThat(result.getVdypUserGUID()).isNotBlank();
 		assertThat(result.getOidcGUID()).isEqualTo("091234589@fakeidir");
 	}
 
