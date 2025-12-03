@@ -1,4 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
+
 public class CalculationEngineCodeModel extends CodeTableModel {
 	private String calculationEngineCode;
 

@@ -88,7 +88,6 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 		incrementRevisionCount();
 	}
 
-
 	@PreUpdate
 	public void beforeUpdate() {
 		setUpdateDate(LocalDate.now());
