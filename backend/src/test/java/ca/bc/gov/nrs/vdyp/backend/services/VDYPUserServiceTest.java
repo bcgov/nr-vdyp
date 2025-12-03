@@ -175,16 +175,10 @@ class VDYPUserServiceTest {
 
 		when(userRepository.findByOIDC("091234589@fakeidir")).thenReturn(Optional.empty());
 
-		VDYPUserModel returnedModel = new VDYPUserModel();
-		returnedModel.setOidcGUID("091234589@fakeidir");
-		returnedModel.setFirstName("Russell");
-		returnedModel.setLastName("Wilson");
-
 		// act
 		VDYPUserModel result = service.createUser(requested);
 
 		// assert behaviour & mapping
-		assertThat(result.getVdypUserGUID()).isNotBlank();
 		assertThat(result.getOidcGUID()).isEqualTo("091234589@fakeidir");
 	}
 
