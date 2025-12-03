@@ -21,7 +21,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.UserTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.UserTypeCodeRepository;
 
-public class UserTypeCodeLookupTest {
+class UserTypeCodeLookupTest {
 	UserTypeCodeRepository repository;
 
 	UserTypeCodeResourceAssembler assembler;

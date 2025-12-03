@@ -22,7 +22,7 @@ import jakarta.transaction.Transactional;
 @ApplicationScoped
 public class VDYPUserService {
 
-	private final static Logger logger = LoggerFactory.getLogger(VDYPUserService.class);
+	private static final Logger logger = LoggerFactory.getLogger(VDYPUserService.class);
 	private final VDYPUserRepository userRepository;
 	private final VDYPUserResourceAssembler assembler;
 	private final UserTypeCodeLookup userTypeLookup;
