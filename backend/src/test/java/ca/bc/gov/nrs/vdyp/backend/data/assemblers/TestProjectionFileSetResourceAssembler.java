@@ -74,12 +74,14 @@ class TestProjectionFileSetResourceAssembler {
 		public ProjectionFileSetEntity buildEntity() {
 			ProjectionFileSetEntity data = new ProjectionFileSetEntity();
 			data.setProjectionFileSetGUID(fileMappingUUID);
+			data.setFileSetName(fileSetName);
 			return data;
 		}
 
 		public ProjectionFileSetModel buildModel() {
 			ProjectionFileSetModel data = new ProjectionFileSetModel();
 			data.setProjectionFileSetGUID(fileMappingUUID == null ? null : fileMappingUUID.toString());
+			data.setFileSetName(fileSetName);
 			return data;
 		}
 	}

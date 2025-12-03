@@ -98,9 +98,13 @@ class VDYPUserServiceTest {
 		when(jwt.getName()).thenReturn("1234567890@fakeid");
 
 		VDYPUserEntity entity = new VDYPUserEntity();
+		UUID internalID = UUID.randomUUID();
+		entity.setVdypUserGUID(internalID);
 		when(userRepository.findByOIDC("1234567890@fakeid")).thenReturn(Optional.of(entity));
 
 		VDYPUserModel result = service.ensureVDYPUserFromSecurityIdentity(identity);
+
+		assertThat(result.getVdypUserGUID()).isEqualTo(internalID.toString());
 
 		verify(userRepository).findByOIDC("1234567890@fakeid");
 		verifyNoInteractions(userTypeLookup);

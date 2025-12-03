@@ -55,11 +55,8 @@ public class VDYPUserModel {
 			return true;
 		if (obj == null)
 			return false;
-		if (obj instanceof VDYPUserModel model) {
-			if (model.vdypUserGUID == this.vdypUserGUID)
-				return true;
-		}
-		return false;
+		return obj instanceof VDYPUserModel model && model.vdypUserGUID != null
+				&& model.vdypUserGUID.equals(this.vdypUserGUID);
 	}
 
 	@Override

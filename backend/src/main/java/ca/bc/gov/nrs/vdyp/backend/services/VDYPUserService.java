@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.codehaus.plexus.util.StringUtils;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -38,7 +37,7 @@ public class VDYPUserService {
 	}
 
 	public List<VDYPUserModel> getAllUsers() {
-		return userRepository.listAll().stream().map(assembler::toModel).collect(Collectors.toList());
+		return userRepository.listAll().stream().map(assembler::toModel).toList();
 	}
 
 	@Transactional

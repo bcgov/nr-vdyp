@@ -44,9 +44,6 @@ public class UserTypeCodeLookupTest {
 		user.setCode("USER");
 		user.setDisplayOrder(BigDecimal.TEN);
 
-		// when(repository.findById("ADMIN")).thenReturn(admin);
-		// when(repository.findById("SUPERUSER")).thenReturn(superUser);
-		// when(repository.findById("USER")).thenReturn(user);
 		when(repository.listAll()).thenReturn(List.of(admin, superUser, user));
 		lookup = new UserTypeCodeLookup(repository, assembler);
 		lookup.init();
