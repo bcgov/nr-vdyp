@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
@@ -13,8 +12,6 @@ public abstract class CodeTableModel {
 
 	private String description;
 	private BigDecimal displayOrder;
-	private LocalDate effectiveDate;
-	private LocalDate expiryDate;
 
 	public String getDescription() {
 		return description;
@@ -24,28 +21,12 @@ public abstract class CodeTableModel {
 		return displayOrder;
 	}
 
-	public LocalDate getEffectiveDate() {
-		return effectiveDate;
-	}
-
-	public LocalDate getExpiryDate() {
-		return expiryDate;
-	}
-
 	public void setDescription(String description) {
 		this.description = description;
 	}
 
 	public void setDisplayOrder(BigDecimal displayOrder) {
 		this.displayOrder = displayOrder;
-	}
-
-	public void setEffectiveDate(LocalDate effectiveDate) {
-		this.effectiveDate = effectiveDate;
-	}
-
-	public void setExpiryDate(LocalDate expiryDate) {
-		this.expiryDate = expiryDate;
 	}
 
 	@Override
