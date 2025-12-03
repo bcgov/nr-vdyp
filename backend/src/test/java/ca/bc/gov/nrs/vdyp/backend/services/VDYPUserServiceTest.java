@@ -46,7 +46,6 @@ class VDYPUserServiceTest {
 	@Mock
 	JsonWebToken jwt;
 
-	// We want to override createUser to keep tests pure
 	VDYPUserService service;
 
 	@BeforeEach
@@ -57,7 +56,6 @@ class VDYPUserServiceTest {
 		};
 	}
 
-	// 1) identity == null => null
 	@Test
 	void ensureVDYPUserFromSecurityIdentity_returnsNull_whenIdentityIsNull() {
 		VDYPUserModel result = service.ensureVDYPUserFromSecurityIdentity(null);
@@ -66,7 +64,6 @@ class VDYPUserServiceTest {
 		verifyNoInteractions(userRepository, userTypeLookup);
 	}
 
-	// 2) identity is anonymous => null
 	@Test
 	void ensureVDYPUserFromSecurityIdentity_returnsNull_whenIdentityIsAnonymous() {
 		when(identity.isAnonymous()).thenReturn(true);
@@ -77,7 +74,6 @@ class VDYPUserServiceTest {
 		verifyNoInteractions(userRepository, userTypeLookup);
 	}
 
-	// 3) principal is NOT a JsonWebToken => null
 	@Test
 	void ensureVDYPUserFromSecurityIdentity_returnsNull_whenPrincipalNotJwt() {
 		when(identity.isAnonymous()).thenReturn(false);
@@ -90,7 +86,6 @@ class VDYPUserServiceTest {
 		verifyNoInteractions(userRepository, userTypeLookup);
 	}
 
-	// 4) existing user path: repository returns entity, assembler called
 	@Test
 	void ensureVDYPUserFromSecurityIdentity_returnsExistingUser_whenFoundByOidc() {
 		when(identity.isAnonymous()).thenReturn(false);
@@ -110,7 +105,6 @@ class VDYPUserServiceTest {
 		verifyNoInteractions(userTypeLookup);
 	}
 
-	// 5) NEW user path: repository empty, roles used, userTypeLookup used, createUser called
 	@Test
 	void ensureVDYPUserFromSecurityIdentity_createsNewUser_whenNotFoundByOidc() {
 		// identity + jwt basics
