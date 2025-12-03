@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
+import java.util.Objects;
+
 public class VDYPUserModel {
 	private String vdypUserGUID;
 	private String oidcGUID;
@@ -58,5 +60,10 @@ public class VDYPUserModel {
 				return true;
 		}
 		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(vdypUserGUID);
 	}
 }
