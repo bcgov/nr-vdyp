@@ -17,7 +17,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
-import lombok.Builder;
 
 class TestProjectionResourceAssembler {
 	@Test
@@ -42,8 +41,8 @@ class TestProjectionResourceAssembler {
 			String parameters, OffsetDateTime startDate, OffsetDateTime endDate
 	) {
 		ProjectionTestData data = ProjectionTestData.builder().projectionId(projectionId).ownerId(ownerId)
-				.polygonFileSetId(polygonFileSetId).layerFileSetId(layerFileSetId).restulFileSetId(resultFileSetId)
-				.parameters(parameters).startDate(startDate).endDate(endDate).build();
+				.polygonFileSetId(polygonFileSetId).layerFileSetId(layerFileSetId).resultFileSetId(resultFileSetId)
+				.parameters(parameters).startDate(startDate).endDate(endDate);
 
 		ProjectionModel model = data.buildModel();
 		ProjectionEntity entity = data.buildEntity();
@@ -60,8 +59,8 @@ class TestProjectionResourceAssembler {
 			String parameters, OffsetDateTime startDate, OffsetDateTime endDate
 	) {
 		ProjectionTestData data = ProjectionTestData.builder().projectionId(projectionId).ownerId(ownerId)
-				.polygonFileSetId(polygonFileSetId).layerFileSetId(layerFileSetId).restulFileSetId(resultFileSetId)
-				.parameters(parameters).startDate(startDate).endDate(endDate).build();
+				.polygonFileSetId(polygonFileSetId).layerFileSetId(layerFileSetId).resultFileSetId(resultFileSetId)
+				.parameters(parameters).startDate(startDate).endDate(endDate);
 		ProjectionModel model = data.buildModel();
 		ProjectionEntity entity = data.buildEntity();
 		ProjectionResourceAssembler assembler = new ProjectionResourceAssembler();
@@ -70,17 +69,60 @@ class TestProjectionResourceAssembler {
 
 	}
 
-	@Builder
 	private static final class ProjectionTestData {
 		private UUID projectionId;
 		private UUID ownerId;
 		private UUID polygonFileSetId;
 		private UUID layerFileSetId;
-		private UUID restulFileSetId;
+		private UUID resultFileSetId;
 
 		private String parameters;
 		private OffsetDateTime startDate;
 		private OffsetDateTime endDate;
+
+		public static TestProjectionResourceAssembler.ProjectionTestData builder() {
+			return new TestProjectionResourceAssembler.ProjectionTestData();
+		}
+
+		public TestProjectionResourceAssembler.ProjectionTestData projectionId(UUID projectionId) {
+			this.projectionId = projectionId;
+			return this;
+		}
+
+		public TestProjectionResourceAssembler.ProjectionTestData ownerId(UUID ownerId) {
+			this.ownerId = ownerId;
+			return this;
+		}
+
+		public TestProjectionResourceAssembler.ProjectionTestData polygonFileSetId(UUID polygonFileSetId) {
+			this.polygonFileSetId = polygonFileSetId;
+			return this;
+		}
+
+		public TestProjectionResourceAssembler.ProjectionTestData layerFileSetId(UUID layerFileSetId) {
+			this.layerFileSetId = layerFileSetId;
+			return this;
+		}
+
+		public TestProjectionResourceAssembler.ProjectionTestData resultFileSetId(UUID resultFileSetId) {
+			this.resultFileSetId = resultFileSetId;
+			return this;
+		}
+
+		public TestProjectionResourceAssembler.ProjectionTestData parameters(String parameters) {
+			this.parameters = parameters;
+			return this;
+		}
+
+		public TestProjectionResourceAssembler.ProjectionTestData startDate(OffsetDateTime startDate) {
+			this.startDate = startDate;
+			return this;
+		}
+
+		public TestProjectionResourceAssembler.ProjectionTestData endDate(OffsetDateTime endDate) {
+			this.endDate = endDate;
+			return this;
+		}
 
 		public ProjectionEntity buildEntity() {
 			ProjectionEntity data = new ProjectionEntity();
@@ -90,7 +132,7 @@ class TestProjectionResourceAssembler {
 				ownerUser.setVdypUserGUID(ownerId);
 				data.setOwnerUser(ownerUser);
 			}
-			var fileSets = new UUID[] { polygonFileSetId, layerFileSetId, restulFileSetId };
+			var fileSets = new UUID[] { polygonFileSetId, layerFileSetId, resultFileSetId };
 			for (int i = 0; i < fileSets.length; i++) {
 				UUID fileSetId = fileSets[i];
 				if (fileSetId != null) {
@@ -117,7 +159,7 @@ class TestProjectionResourceAssembler {
 				ownerUser.setVdypUserGUID(ownerId.toString());
 				data.setOwnerUser(ownerUser);
 			}
-			var fileSets = new UUID[] { polygonFileSetId, layerFileSetId, restulFileSetId };
+			var fileSets = new UUID[] { polygonFileSetId, layerFileSetId, resultFileSetId };
 			for (int i = 0; i < fileSets.length; i++) {
 				UUID fileSetId = fileSets[i];
 				if (fileSetId != null) {

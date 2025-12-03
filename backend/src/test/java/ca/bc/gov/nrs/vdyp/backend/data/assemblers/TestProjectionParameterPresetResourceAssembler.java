@@ -14,7 +14,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionParameterPresetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionParameterPresetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
-import lombok.Builder;
 
 class TestProjectionParameterPresetResourceAssembler {
 	@Test
@@ -31,8 +30,7 @@ class TestProjectionParameterPresetResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testEntityToModel(UUID presetId, UUID ownerId, String presetName, String parametersJSON) {
 		TestProjectionParameterPresetResourceAssembler.ProjectionParameterPresetTestData data = ProjectionParameterPresetTestData
-				.builder().presetId(presetId).ownerId(ownerId).presetName(presetName).parametersJSON(parametersJSON)
-				.build();
+				.builder().presetId(presetId).ownerId(ownerId).presetName(presetName).parametersJSON(parametersJSON);
 
 		ProjectionParameterPresetModel model = data.buildModel();
 		ProjectionParameterPresetEntity entity = data.buildEntity();
@@ -46,8 +44,7 @@ class TestProjectionParameterPresetResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testModelToEntity(UUID presetId, UUID ownerId, String presetName, String parametersJSON) {
 		TestProjectionParameterPresetResourceAssembler.ProjectionParameterPresetTestData data = ProjectionParameterPresetTestData
-				.builder().presetId(presetId).ownerId(ownerId).presetName(presetName).parametersJSON(parametersJSON)
-				.build();
+				.builder().presetId(presetId).ownerId(ownerId).presetName(presetName).parametersJSON(parametersJSON);
 
 		ProjectionParameterPresetModel model = data.buildModel();
 		ProjectionParameterPresetEntity entity = data.buildEntity();
@@ -57,12 +54,38 @@ class TestProjectionParameterPresetResourceAssembler {
 
 	}
 
-	@Builder
 	private static final class ProjectionParameterPresetTestData {
 		private UUID presetId;
 		private UUID ownerId;
 		private String presetName;
 		private String parametersJSON;
+
+		public static TestProjectionParameterPresetResourceAssembler.ProjectionParameterPresetTestData builder() {
+			return new TestProjectionParameterPresetResourceAssembler.ProjectionParameterPresetTestData();
+		}
+
+		public TestProjectionParameterPresetResourceAssembler.ProjectionParameterPresetTestData
+				presetId(UUID presetId) {
+			this.presetId = presetId;
+			return this;
+		}
+
+		public TestProjectionParameterPresetResourceAssembler.ProjectionParameterPresetTestData ownerId(UUID ownerId) {
+			this.ownerId = ownerId;
+			return this;
+		}
+
+		public TestProjectionParameterPresetResourceAssembler.ProjectionParameterPresetTestData
+				presetName(String presetName) {
+			this.presetName = presetName;
+			return this;
+		}
+
+		public TestProjectionParameterPresetResourceAssembler.ProjectionParameterPresetTestData
+				parametersJSON(String parametersJSON) {
+			this.parametersJSON = parametersJSON;
+			return this;
+		}
 
 		public ProjectionParameterPresetEntity buildEntity() {
 			ProjectionParameterPresetEntity data = new ProjectionParameterPresetEntity();

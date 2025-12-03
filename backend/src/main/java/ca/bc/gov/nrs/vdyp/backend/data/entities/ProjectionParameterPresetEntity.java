@@ -13,13 +13,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Table(name = "projection_param_preset")
-@Getter
-@Setter
 public class ProjectionParameterPresetEntity extends AuditableEntity {
 	@Id
 	@NotNull
@@ -38,4 +34,35 @@ public class ProjectionParameterPresetEntity extends AuditableEntity {
 	@Column(name = "projection_parameters_json", length = 4000)
 	private String presetParameters;
 
+	public UUID getProjectionParameterPresetGUID() {
+		return projectionParameterPresetGUID;
+	}
+
+	public VDYPUserEntity getOwnerUser() {
+		return ownerUser;
+	}
+
+	public String getPresetName() {
+		return presetName;
+	}
+
+	public String getPresetParameters() {
+		return presetParameters;
+	}
+
+	public void setProjectionParameterPresetGUID(UUID projectionParameterPresetGUID) {
+		this.projectionParameterPresetGUID = projectionParameterPresetGUID;
+	}
+
+	public void setOwnerUser(VDYPUserEntity ownerUser) {
+		this.ownerUser = ownerUser;
+	}
+
+	public void setPresetName(String presetName) {
+		this.presetName = presetName;
+	}
+
+	public void setPresetParameters(String presetParameters) {
+		this.presetParameters = presetParameters;
+	}
 }

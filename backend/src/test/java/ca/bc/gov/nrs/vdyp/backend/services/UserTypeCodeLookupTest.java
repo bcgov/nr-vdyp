@@ -37,11 +37,11 @@ public class UserTypeCodeLookupTest {
 		repository = Mockito.mock(UserTypeCodeRepository.class);
 		assembler = new UserTypeCodeResourceAssembler();
 
-		admin.setUserTypeCode("ADMIN");
+		admin.setCode("ADMIN");
 		admin.setDisplayOrder(BigDecimal.ZERO);
-		superUser.setUserTypeCode("SUPERUSER");
+		superUser.setCode("SUPERUSER");
 		superUser.setDisplayOrder(BigDecimal.ONE);
-		user.setUserTypeCode("USER");
+		user.setCode("USER");
 		user.setDisplayOrder(BigDecimal.TEN);
 
 		// when(repository.findById("ADMIN")).thenReturn(admin);
@@ -76,7 +76,7 @@ public class UserTypeCodeLookupTest {
 	void test_getUserTypeCodeFromExternalRoles_NoRoles(Set<String> userRoles, String expectedTypeCode) {
 		UserTypeCodeModel type = lookup.getUserTypeCodeFromExternalRoles(userRoles);
 
-		assertThat(type.getUserTypeCode()).isEqualTo(expectedTypeCode);
+		assertThat(type.getCode()).isEqualTo(expectedTypeCode);
 	}
 
 	@Test

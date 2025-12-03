@@ -6,12 +6,8 @@ import java.time.LocalDate;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
 
 @MappedSuperclass
-@Getter
-@Setter
 public abstract class CodeTableEntity extends AuditableEntity {
 
 	public abstract String getCode();
@@ -32,4 +28,35 @@ public abstract class CodeTableEntity extends AuditableEntity {
 	@Column(name = "expiry_date")
 	private LocalDate expiryDate;
 
+	public String getDescription() {
+		return description;
+	}
+
+	public BigDecimal getDisplayOrder() {
+		return displayOrder;
+	}
+
+	public LocalDate getEffectiveDate() {
+		return effectiveDate;
+	}
+
+	public LocalDate getExpiryDate() {
+		return expiryDate;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public void setDisplayOrder(BigDecimal displayOrder) {
+		this.displayOrder = displayOrder;
+	}
+
+	public void setEffectiveDate(LocalDate effectiveDate) {
+		this.effectiveDate = effectiveDate;
+	}
+
+	public void setExpiryDate(LocalDate expiryDate) {
+		this.expiryDate = expiryDate;
+	}
 }

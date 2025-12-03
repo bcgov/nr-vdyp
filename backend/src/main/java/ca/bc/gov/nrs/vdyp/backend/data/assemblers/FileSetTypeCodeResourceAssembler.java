@@ -13,7 +13,7 @@ public class FileSetTypeCodeResourceAssembler {
 		}
 
 		FileSetTypeCodeEntity entity = new FileSetTypeCodeEntity();
-		entity.setFileSetTypeCode(model.getFileSetTypeCode());
+		entity.setCode(model.getCode());
 		entity.setDescription(model.getDescription());
 		entity.setDisplayOrder(model.getDisplayOrder());
 		return entity;
@@ -24,7 +24,7 @@ public class FileSetTypeCodeResourceAssembler {
 			return null;
 		}
 		FileSetTypeCodeModel model = new FileSetTypeCodeModel();
-		model.setFileSetTypeCode(entity.getFileSetTypeCode());
+		model.setCode(entity.getCode());
 		model.setDescription(entity.getDescription());
 		model.setDisplayOrder(entity.getDisplayOrder());
 		return model;

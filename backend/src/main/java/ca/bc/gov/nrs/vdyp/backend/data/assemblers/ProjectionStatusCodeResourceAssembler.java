@@ -10,7 +10,7 @@ public class ProjectionStatusCodeResourceAssembler {
 		}
 
 		ProjectionStatusCodeEntity entity = new ProjectionStatusCodeEntity();
-		entity.setProjectionStatusCode(model.getProjectionStatusCode());
+		entity.setCode(model.getCode());
 		entity.setDescription(model.getDescription());
 		entity.setDisplayOrder(model.getDisplayOrder());
 		return entity;
@@ -21,7 +21,7 @@ public class ProjectionStatusCodeResourceAssembler {
 			return null;
 		}
 		ProjectionStatusCodeModel model = new ProjectionStatusCodeModel();
-		model.setProjectionStatusCode(entity.getProjectionStatusCode());
+		model.setCode(entity.getCode());
 		model.setDescription(entity.getDescription());
 		model.setDisplayOrder(entity.getDisplayOrder());
 		return model;

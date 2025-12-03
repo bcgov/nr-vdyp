@@ -9,12 +9,8 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
 
 @MappedSuperclass
-@Getter
-@Setter
 public abstract class AuditableEntity extends PanacheEntityBase {
 	@NotNull
 	@Column(name = "revision_count", length = 64, nullable = false)
@@ -47,6 +43,42 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 		this.revisionCount = this.revisionCount.add(BigDecimal.ONE);
 	}
 
+	public BigDecimal getRevisionCount() {
+		return revisionCount;
+	}
+
+	public String getCreateUser() {
+		return createUser;
+	}
+
+	public LocalDate getCreateDate() {
+		return createDate;
+	}
+
+	public String getUpdateUser() {
+		return updateUser;
+	}
+
+	public LocalDate getUpdateDate() {
+		return updateDate;
+	}
+
+	private void setCreateDate(LocalDate date) {
+		this.createDate = date;
+	}
+
+	private void setCreateUser(String user) {
+		this.createUser = user;
+	}
+
+	private void setUpdateDate(LocalDate date) {
+		this.updateDate = date;
+	}
+
+	private void setUpdateUser(String user) {
+		this.updateUser = user;
+	}
+
 	@PrePersist
 	public void beforeInsert() {
 		setCreateDate(LocalDate.now());
@@ -56,10 +88,12 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 		incrementRevisionCount();
 	}
 
+
 	@PreUpdate
 	public void beforeUpdate() {
 		setUpdateDate(LocalDate.now());
 		setUpdateUser(currentUser());
 		incrementRevisionCount();
 	}
+
 }

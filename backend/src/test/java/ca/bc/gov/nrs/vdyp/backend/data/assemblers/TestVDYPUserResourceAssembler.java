@@ -14,7 +14,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.UserTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
-import lombok.Builder;
 
 class TestVDYPUserResourceAssembler {
 	@Test
@@ -31,7 +30,7 @@ class TestVDYPUserResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testEntityToModel(UUID userId, String oidcId, String userTypeCode, String firstName, String lastName) {
 		VDYPUserTestData data = VDYPUserTestData.builder().userId(userId).oidcId(oidcId).userTypeCode(userTypeCode)
-				.firstName(firstName).lastName(lastName).build();
+				.firstName(firstName).lastName(lastName);
 
 		VDYPUserModel model = data.buildModel();
 		VDYPUserEntity entity = data.buildEntity();
@@ -45,7 +44,7 @@ class TestVDYPUserResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testModelToEntity(UUID userId, String oidcId, String userTypeCode, String firstName, String lastName) {
 		VDYPUserTestData data = VDYPUserTestData.builder().userId(userId).oidcId(oidcId).userTypeCode(userTypeCode)
-				.firstName(firstName).lastName(lastName).build();
+				.firstName(firstName).lastName(lastName);
 
 		VDYPUserModel model = data.buildModel();
 		VDYPUserEntity entity = data.buildEntity();
@@ -55,7 +54,6 @@ class TestVDYPUserResourceAssembler {
 
 	}
 
-	@Builder
 	private static final class VDYPUserTestData {
 		private UUID userId;
 		private String oidcId;
@@ -63,13 +61,42 @@ class TestVDYPUserResourceAssembler {
 		private String firstName;
 		private String lastName;
 
+		public static TestVDYPUserResourceAssembler.VDYPUserTestData builder() {
+			return new TestVDYPUserResourceAssembler.VDYPUserTestData();
+		}
+
+		public TestVDYPUserResourceAssembler.VDYPUserTestData userId(UUID userId) {
+			this.userId = userId;
+			return this;
+		}
+
+		public TestVDYPUserResourceAssembler.VDYPUserTestData oidcId(String oidcId) {
+			this.oidcId = oidcId;
+			return this;
+		}
+
+		public TestVDYPUserResourceAssembler.VDYPUserTestData userTypeCode(String userTypeCode) {
+			this.userTypeCode = userTypeCode;
+			return this;
+		}
+
+		public TestVDYPUserResourceAssembler.VDYPUserTestData firstName(String firstName) {
+			this.firstName = firstName;
+			return this;
+		}
+
+		public TestVDYPUserResourceAssembler.VDYPUserTestData lastName(String lastName) {
+			this.lastName = lastName;
+			return this;
+		}
+
 		public VDYPUserEntity buildEntity() {
 			VDYPUserEntity data = new VDYPUserEntity();
 			data.setVdypUserGUID(userId);
 			data.setOidcGUID(oidcId);
 			if (userTypeCode != null) {
 				UserTypeCodeEntity codeData = new UserTypeCodeEntity();
-				codeData.setUserTypeCode(userTypeCode);
+				codeData.setCode(userTypeCode);
 				data.setUserTypeCode(codeData);
 			}
 			data.setFirstName(firstName);
@@ -84,7 +111,7 @@ class TestVDYPUserResourceAssembler {
 			data.setOidcGUID(oidcId);
 			if (userTypeCode != null) {
 				UserTypeCodeModel codeData = new UserTypeCodeModel();
-				codeData.setUserTypeCode(userTypeCode);
+				codeData.setCode(userTypeCode);
 				data.setUserTypeCode(codeData);
 			}
 			data.setFirstName(firstName);

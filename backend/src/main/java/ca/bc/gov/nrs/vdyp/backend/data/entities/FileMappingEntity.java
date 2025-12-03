@@ -12,13 +12,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Table(name = "file_mapping")
-@Getter
-@Setter
 public class FileMappingEntity extends AuditableEntity {
 	@Id
 	@NotNull
@@ -35,4 +31,27 @@ public class FileMappingEntity extends AuditableEntity {
 	@Column(name = "coms_object_guid", nullable = false, updatable = true, length = 36)
 	private UUID comsObjectGUID;
 
+	public UUID getFileMappingGUID() {
+		return fileMappingGUID;
+	}
+
+	public ProjectionFileSetEntity getProjectionFileSet() {
+		return projectionFileSet;
+	}
+
+	public UUID getComsObjectGUID() {
+		return comsObjectGUID;
+	}
+
+	public void setFileMappingGUID(UUID fileMappingGUID) {
+		this.fileMappingGUID = fileMappingGUID;
+	}
+
+	public void setProjectionFileSet(ProjectionFileSetEntity projectionFileSet) {
+		this.projectionFileSet = projectionFileSet;
+	}
+
+	public void setComsObjectGUID(UUID comsObjectGUID) {
+		this.comsObjectGUID = comsObjectGUID;
+	}
 }

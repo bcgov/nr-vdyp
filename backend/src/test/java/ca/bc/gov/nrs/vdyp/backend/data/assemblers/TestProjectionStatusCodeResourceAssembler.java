@@ -85,7 +85,7 @@ class TestProjectionStatusCodeResourceAssembler {
 
 		public ProjectionStatusCodeEntity buildEntity() {
 			ProjectionStatusCodeEntity data = new ProjectionStatusCodeEntity();
-			data.setProjectionStatusCode(code);
+			data.setCode(code);
 			data.setDescription(description);
 			data.setDisplayOrder(displayOrder);
 			return data;
@@ -93,7 +93,7 @@ class TestProjectionStatusCodeResourceAssembler {
 
 		public ProjectionStatusCodeModel buildModel() {
 			ProjectionStatusCodeModel data = new ProjectionStatusCodeModel();
-			data.setProjectionStatusCode(code);
+			data.setCode(code);
 			data.setDescription(description);
 			data.setDisplayOrder(displayOrder);
 			return data;

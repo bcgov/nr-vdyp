@@ -207,10 +207,9 @@ class VDYPUserServiceTest {
 		UUID exists = UUID.randomUUID();
 		VDYPUserEntity entity = new VDYPUserEntity();
 		entity.setVdypUserGUID(exists);
-		VDYPUserModel returned = new VDYPUserModel();
-		returned.setVdypUserGUID(exists.toString());
+
 		when(userRepository.findById(exists)).thenReturn(entity);
-		assertThat(service.getUserById(exists)).isEqualTo( (returned));
+		assertThat(service.getUserById(exists).getVdypUserGUID()).isEqualTo( (exists.toString()));
 	}
 
 	@Test

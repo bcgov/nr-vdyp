@@ -83,7 +83,7 @@ class TestFileSetTypeCodeResourceAssembler {
 
 		public FileSetTypeCodeEntity buildEntity() {
 			FileSetTypeCodeEntity data = new FileSetTypeCodeEntity();
-			data.setFileSetTypeCode(code);
+			data.setCode(code);
 			data.setDescription(description);
 			data.setDisplayOrder(displayOrder);
 			return data;
@@ -91,7 +91,7 @@ class TestFileSetTypeCodeResourceAssembler {
 
 		public FileSetTypeCodeModel buildModel() {
 			FileSetTypeCodeModel data = new FileSetTypeCodeModel();
-			data.setFileSetTypeCode(code);
+			data.setCode(code);
 			data.setDescription(description);
 			data.setDisplayOrder(displayOrder);
 			return data;

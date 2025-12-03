@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
-import lombok.Builder;
 
 class TestProjectionFileSetResourceAssembler {
 
@@ -30,7 +29,7 @@ class TestProjectionFileSetResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testEntityToModel(UUID fileMapping, String fileSetName) {
 		ProjectionFileSetTestData data = ProjectionFileSetTestData.builder().fileMappingUUID(fileMapping)
-				.fileSetName(fileSetName).build();
+				.fileSetName(fileSetName);
 
 		ProjectionFileSetModel model = data.buildModel();
 		ProjectionFileSetEntity entity = data.buildEntity();
@@ -44,7 +43,7 @@ class TestProjectionFileSetResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testModelToEntity(UUID fileMapping, String fileSetName) {
 		ProjectionFileSetTestData data = ProjectionFileSetTestData.builder().fileMappingUUID(fileMapping)
-				.fileSetName(fileSetName).build();
+				.fileSetName(fileSetName);
 
 		ProjectionFileSetModel model = data.buildModel();
 		ProjectionFileSetEntity entity = data.buildEntity();
@@ -54,10 +53,23 @@ class TestProjectionFileSetResourceAssembler {
 
 	}
 
-	@Builder
 	private static final class ProjectionFileSetTestData {
 		private UUID fileMappingUUID = null;
 		private String fileSetName = null;
+
+		public static TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData builder() {
+			return new TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData();
+		}
+
+		public TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData fileMappingUUID(UUID fileMappingUUID) {
+			this.fileMappingUUID = fileMappingUUID;
+			return this;
+		}
+
+		public TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData fileSetName(String fileSetName) {
+			this.fileSetName = fileSetName;
+			return this;
+		}
 
 		public ProjectionFileSetEntity buildEntity() {
 			ProjectionFileSetEntity data = new ProjectionFileSetEntity();
