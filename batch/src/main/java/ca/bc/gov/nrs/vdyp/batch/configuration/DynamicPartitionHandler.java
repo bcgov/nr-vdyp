@@ -50,15 +50,15 @@ public class DynamicPartitionHandler implements PartitionHandler {
 			actualGridSize = batchProperties.getPartition().getDefaultPartitionSize();
 		}
 
-		logger.info("VDYP FEATURE_ID-based partitioning: Using {} partitions", actualGridSize);
+		logger.info("Starting VDYP FEATURE_ID-based parallel processing with {} partitions", actualGridSize);
 
 		// Set partition base directory for uploaded CSV files
 		String jobBaseDir = jobParameters.getString(BatchConstants.Job.BASE_DIR);
 		if (jobBaseDir != null) {
 			dynamicPartitioner.setJobBaseDir(jobBaseDir);
-			logger.info("[VDYP Uploaded File Partition Handler] Using partition base directory: {}", jobBaseDir);
+			logger.debug("Using partition base directory: {}", jobBaseDir);
 		} else {
-			logger.warn("[VDYP Uploaded File Partition Handler] No partition base directory found in job parameters");
+			logger.warn("No partition base directory found in job parameters");
 		}
 
 		// Create and configure TaskExecutorPartitionHandler with dynamic grid size
@@ -66,8 +66,6 @@ public class DynamicPartitionHandler implements PartitionHandler {
 		handler.setTaskExecutor(taskExecutor);
 		handler.setStep(workerStep);
 		handler.setGridSize(actualGridSize);
-
-		logger.info("[VDYP Partition Handler] Starting parallel VDYP processing with {} partitions", actualGridSize);
 
 		// Delegate to the configured handler
 		return handler.handle(stepSplitter, masterStepExecution);

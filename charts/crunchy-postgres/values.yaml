@@ -39,8 +39,8 @@ instances:
 
 pgBackRest:
   image: # it's not necessary to specify an image as the images specified in the Crunchy Postgres Operator will be pulled by default
-  retentionFull: "14" # Ideally a larger number such as 30 backups/days
-  retentionDifferential: "30"
+  retentionFull: "2" # Ideally a larger number such as 30 backups/days
+  retentionDifferential: "5"
 
   # If retention-full-type set to 'count' then the oldest backups will expire when the number of backups reach the number defined in retention
   # If retention-full-type set to 'time' then the number defined in retention will take that many days worth of full backups before expiration
@@ -48,7 +48,7 @@ pgBackRest:
 
   #How many backups worth of WAL files to keep, and what type of backup to count for expiring WAL files
   retentionArchiveType: diff
-  retentionArchiveCount: "7"
+  retentionArchiveCount: "2"
   timeout: "600"
   s3UriStyle: path
 
@@ -58,11 +58,11 @@ pgBackRest:
     schedules:
       full: 0 8 * * 0
       differential: 0 8 * * 1-6
-      incremental: 0 0,4,12,16,20 * * *
+      incremental: 0 0,12 * * *
     schedulesOffset:
       full: 0 10 * * 0
       differential: 0 10 * * 1-6
-      incremental: 0 2,6,14,18,22 * * *
+      incremental: 0 2,14 * * *
     volume:
       accessModes: "ReadWriteOnce"
       storageClassName: netapp-file-backup

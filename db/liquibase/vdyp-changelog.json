@@ -7,8 +7,12 @@
       "changeSet": {
         "id": "01_00_00_00",
         "author": "pminter",
-        "tagDatabase": { "tag" : "version_01_00_00_00" },
         "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_00_00"
+            }
+          },
           {
             "sqlFile": {
               "dbms": "postgresql",
@@ -109,6 +113,57 @@
             { "sql": "DROP TABLE \"app-vdyp\".vdyp_user" },
             { "sql": "DROP TABLE \"app-vdyp\".user_type_code" },
             { "sql": "DROP TABLE \"app-vdyp\".file_set_type_code" }
+        ]
+      }
+    },
+     {
+      "changeSet": {
+        "id": "01_00_00_01",
+        "author": "pminter",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_00_01"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/01/dml/app-vdyp.calculation_engine_code.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/01/dml/app-vdyp.file_set_type_code.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/01/dml/app-vdyp.projection_status_code.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/01/dml/app-vdyp.user_type_code.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+            { "sql": "DELETE FROM \"app-vdyp\".calculation_engine_code" },
+            { "sql": "DELETE FROM \"app-vdyp\".file_set_type_code" },
+            { "sql": "DELETE FROM \"app-vdyp\".projection_status_code" },
+            { "sql": "DELETE FROM \"app-vdyp\".user_type_code" }
         ]
       }
     }

@@ -29,7 +29,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
 @Path("/api/v8/projection")
-@io.swagger.annotations.Api(description = "the projection API")
+@Tag(name = "Projection API", description = "the projection API")
 @RegisterForReflection
 public class ProjectionEndpoint implements Endpoint {
 

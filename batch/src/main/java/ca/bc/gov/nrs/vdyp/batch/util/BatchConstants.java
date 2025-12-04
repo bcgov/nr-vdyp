@@ -10,9 +10,13 @@ public final class BatchConstants {
 		public static final String MESSAGE = "message";
 		public static final String ERROR = "error";
 		public static final String START_TIME = "startTime";
+		public static final String END_TIME = "endTime";
 		public static final String TIMESTAMP = "jobTimestamp";
 		public static final String BASE_DIR = "jobBaseDir";
 		public static final String BASE_FOLDER_PREFIX = "vdyp-batch";
+		public static final String IS_RUNNING = "isRunning";
+		public static final String TOTAL_PARTITIONS = "totalPartitions";
+		public static final String COMPLETED_PARTITIONS = "completedPartitions";
 
 		private Job() {
 		}
