@@ -63,9 +63,8 @@ public abstract class BaseDataBasedIntegrationTest {
 						.addClassLoader(BaseDataBasedIntegrationTest.class.getClassLoader())
 						.acceptPaths("ca/bc/gov/nrs/vdyp/integration_tests").scan()
 		) {
-			var externalTestPath = Optional.ofNullable(System.getProperty("integration_tests.external.path")).map(
-					Path::of
-			);
+			var externalTestPath = Optional.ofNullable(System.getProperty("integration_tests.external.path"))
+					.map(Path::of);
 
 			externalTestPath.ifPresentOrElse(path -> {
 				// An external source of integration tests has been specified, use that
