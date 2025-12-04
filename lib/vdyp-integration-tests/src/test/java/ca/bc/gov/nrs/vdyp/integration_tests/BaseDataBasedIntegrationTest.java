@@ -63,22 +63,49 @@ public abstract class BaseDataBasedIntegrationTest {
 						.addClassLoader(BaseDataBasedIntegrationTest.class.getClassLoader())
 						.acceptPaths("ca/bc/gov/nrs/vdyp/integration_tests").scan()
 		) {
-			for (var resource : scan.getResourcesMatchingWildcard("ca/bc/gov/nrs/vdyp/integration_tests/**")) {
+			var externalTestPath = Optional.ofNullable(System.getProperty("integration_tests.external.path")).map(
+					Path::of
+			);
 
-				var localPath = resource.getPath().substring("ca/bc/gov/nrs/vdyp/integration_tests/".length());
-
-				if (resource.getPath().endsWith("class"))
-					continue;
-
-				final Path dest = testDataDir.resolve(localPath);
-
-				Files.createDirectories(dest.getParent());
-
-				System.err.printf("Copying %s to %s", resource.getPath(), dest).println();
-				try (var is = resource.open()) {
-					Files.copy(is, dest);
+			externalTestPath.ifPresentOrElse(path -> {
+				// An external source of integration tests has been specified, use that
+				try (Stream<Path> stream = Files.walk(path)) {
+					stream.forEach(subpath -> {
+						try {
+							Files.copy(subpath, testDataDir.resolve(path.relativize(subpath)));
+						} catch (IOException ex) {
+							throw new IllegalStateException(
+									"Failure copying integration test data from file system", ex
+							);
+						}
+					});
+				} catch (IOException ex) {
+					throw new IllegalStateException("Failure copying integration test data from file system", ex);
 				}
-			}
+			}, () -> {
+				// No external source of integration tests so use the standard ones on the classpath
+				for (var resource : scan.getResourcesMatchingWildcard("ca/bc/gov/nrs/vdyp/integration_tests/**")) {
+
+					var localPath = resource.getPath().substring("ca/bc/gov/nrs/vdyp/integration_tests/".length());
+
+					if (resource.getPath().endsWith("class"))
+						continue;
+
+					final Path dest = testDataDir.resolve(localPath);
+
+					try {
+						Files.createDirectories(dest.getParent());
+
+						System.err.printf("Copying %s to %s", resource.getPath(), dest).println();
+						try (var is = resource.open()) {
+							Files.copy(is, dest);
+						}
+					} catch (IOException ex) {
+						throw new IllegalStateException("Failure copying integration test data from classpath", ex);
+					}
+				}
+			});
+
 		}
 
 	}
