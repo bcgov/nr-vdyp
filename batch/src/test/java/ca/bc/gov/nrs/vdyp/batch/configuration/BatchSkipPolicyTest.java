@@ -93,7 +93,7 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testShouldSkip_ProcessesSkippableExceptionPath_WithMetrics() throws SkipLimitExceededException {
+	void testShouldSkip_WithSkippableBatchProjectionException_ReturnsTrue() throws SkipLimitExceededException {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -112,7 +112,7 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testShouldSkip_WithStepSynchronizationManager_UpdatesContext() throws SkipLimitExceededException {
+	void testShouldSkip_WithDynamicStepContext_ReturnsTrue() throws SkipLimitExceededException {
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution currentStepExecution = mock(StepExecution.class);
 		ExecutionContext currentExecutionContext = mock(ExecutionContext.class);
@@ -145,7 +145,7 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testShouldSkip_WithStepSynchronizationManagerException_Handles() throws SkipLimitExceededException {
+	void testShouldSkip_WhenStepSynchronizationManagerThrows_StillReturnsTrue() throws SkipLimitExceededException {
 		try (MockedStatic<StepSynchronizationManager> mockedManager = mockStatic(StepSynchronizationManager.class)) {
 			mockedManager.when(StepSynchronizationManager::getContext).thenThrow(new RuntimeException("Context error"));
 
@@ -162,7 +162,7 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testShouldSkip_WithNullMetricsCollector_DoesNotFail() throws SkipLimitExceededException {
+	void testShouldSkip_WithNullMetricsCollector_ReturnsTrue() throws SkipLimitExceededException {
 		BatchSkipPolicy policyWithNullMetrics = new BatchSkipPolicy(5L, null);
 		when(stepExecution.getJobExecutionId()).thenReturn(300L);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
@@ -203,7 +203,7 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testShouldSkip_MetricsCollectorThrowsBatchException_CatchesAndLogs() throws Exception {
+	void testShouldSkip_MetricsCollectorThrowsBatchException_CatchesAndLogs() throws BatchMetricsException {
 		when(stepExecution.getJobExecutionId()).thenReturn(500L);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);

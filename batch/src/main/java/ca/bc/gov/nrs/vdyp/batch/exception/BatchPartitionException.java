@@ -11,8 +11,8 @@ public class BatchPartitionException extends BatchException {
 
 	private static final long serialVersionUID = -5813242906871352881L;
 
-	private BatchPartitionException(String message, Throwable cause, String jobGuid) {
-		super(message, cause, jobGuid, null, null, false, false);
+	private BatchPartitionException(String message, Throwable cause) {
+		super(message, cause, null, false, false);
 	}
 
 	public static BatchPartitionException
@@ -26,7 +26,7 @@ public class BatchPartitionException extends BatchException {
 		);
 
 		logger.error(contextualMessage, cause);
-		return new BatchPartitionException(contextualMessage, cause, jobGuid);
+		return new BatchPartitionException(contextualMessage, cause);
 	}
 
 	public static BatchPartitionException
@@ -34,6 +34,6 @@ public class BatchPartitionException extends BatchException {
 		String contextualMessage = String.format("[GUID: %s] %s", jobGuid, errorDescription);
 
 		logger.error(contextualMessage);
-		return new BatchPartitionException(contextualMessage, null, jobGuid);
+		return new BatchPartitionException(contextualMessage, null);
 	}
 }

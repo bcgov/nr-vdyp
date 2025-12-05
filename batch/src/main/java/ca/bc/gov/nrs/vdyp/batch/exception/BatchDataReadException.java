@@ -11,10 +11,8 @@ public class BatchDataReadException extends BatchException {
 
 	private static final long serialVersionUID = 2894671293847561234L;
 
-	private BatchDataReadException(
-			String message, Throwable cause, String jobGuid, Long jobExecutionId, String featureId
-	) {
-		super(message, cause, jobGuid, jobExecutionId, featureId, false, false);
+	private BatchDataReadException(String message, Throwable cause, String featureId) {
+		super(message, cause, featureId, false, true);
 	}
 
 	public static BatchDataReadException handleDataReadFailure(
@@ -33,7 +31,7 @@ public class BatchDataReadException extends BatchException {
 		);
 
 		logger.error(contextualMessage, cause);
-		return new BatchDataReadException(contextualMessage, cause, jobGuid, jobExecutionId, featureId);
+		return new BatchDataReadException(contextualMessage, cause, featureId);
 	}
 
 	public static BatchDataReadException handleDataReadFailure(

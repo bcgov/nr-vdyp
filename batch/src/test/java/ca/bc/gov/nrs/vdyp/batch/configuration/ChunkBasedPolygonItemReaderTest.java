@@ -1,31 +1,30 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataReadException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockitoAnnotations;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemStreamException;
+
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataReadException;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 
 class ChunkBasedPolygonItemReaderTest {
 
 	@TempDir
 	Path tempDir;
-
-	@Mock
-	private BatchMetricsCollector metricsCollector;
 
 	private ChunkBasedPolygonItemReader reader;
 	private ExecutionContext executionContext;
@@ -35,23 +34,20 @@ class ChunkBasedPolygonItemReaderTest {
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
-		reader = new ChunkBasedPolygonItemReader("test-partition", metricsCollector, 123L, JOB_GUID, 2);
+		reader = new ChunkBasedPolygonItemReader("test-partition", 123L, JOB_GUID, 2);
 		executionContext = new ExecutionContext();
 	}
 
 	@Test
 	void testConstructor() {
-		ChunkBasedPolygonItemReader reader1 = new ChunkBasedPolygonItemReader(
-				null, metricsCollector, 123L, JOB_GUID, 0
-		);
-		// Constructor should handle null partitionName and ensure minimum chunk size
+		ChunkBasedPolygonItemReader reader1 = new ChunkBasedPolygonItemReader(null, 123L, JOB_GUID, 0);
 		assertNotNull(reader1);
 	}
 
 	@Test
 	void testReadWithoutOpen() {
-		Exception exception = assertThrows(IllegalStateException.class, () -> reader.read());
-		assertEquals("Reader not opened. Call open() first.", exception.getMessage());
+		BatchDataReadException exception = assertThrows(BatchDataReadException.class, () -> reader.read());
+		assertTrue(exception.getMessage().contains("Reader not opened. Call open() first."));
 	}
 
 	@Test
@@ -81,7 +77,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testOpenWithEmptyPolygonFile() throws Exception {
+	void testOpenWithEmptyPolygonFile() throws IOException, BatchDataReadException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 		Files.createFile(partitionDir.resolve("polygons.csv")); // Empty file
@@ -96,7 +92,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testSuccessfulOpenAndRead() throws Exception {
+	void testSuccessfulOpenAndRead() throws IOException, BatchDataReadException {
 		setupValidTestFiles();
 
 		reader.open(executionContext);
@@ -130,33 +126,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testReadWithEmptyFeatureId() throws Exception {
-		Path partitionDir = tempDir.resolve("input-test-partition");
-		Files.createDirectories(partitionDir);
-
-		// Create polygon file with empty FEATURE_ID (leading whitespace to simulate
-		// empty field)
-		String polygonContent = "FEATURE_ID,DATA\n   ,data1\n456,data2\n";
-		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
-
-		// Create layer file
-		String layerContent = "FEATURE_ID,LAYER_DATA\n456,layer1\n";
-		Files.write(partitionDir.resolve("layers.csv"), layerContent.getBytes());
-
-		executionContext.putString("jobBaseDir", tempDir.toString());
-
-		reader.open(executionContext);
-
-		// Should skip empty FEATURE_ID and return the second record
-		BatchRecord batchRecord = reader.read();
-		assertNotNull(batchRecord);
-		assertEquals("456", batchRecord.getFeatureId());
-
-		reader.close();
-	}
-
-	@Test
-	void testReadWithNoLayerFile() throws Exception {
+	void testReadWithNoLayerFile() throws IOException, BatchDataReadException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
@@ -177,7 +147,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testReadWithLayerFileButNoHeader() throws Exception {
+	void testReadWithLayerFileButNoHeader() throws IOException, BatchDataReadException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
@@ -200,49 +170,24 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testUpdate() throws Exception {
+	void testClose() throws IOException, BatchDataReadException {
 		setupValidTestFiles();
 		reader.open(executionContext);
 
-		// Read some records to increase processed count
-		reader.read();
-		reader.read();
-
-		ExecutionContext updateContext = new ExecutionContext();
-		reader.update(updateContext);
-
-		assertEquals(2, updateContext.getInt("test-partition.processed"));
-		assertEquals(0, updateContext.getInt("test-partition.skipped"));
-
-		reader.close();
-	}
-
-	@Test
-	void testClose() throws Exception {
-		setupValidTestFiles();
-		reader.open(executionContext);
-
-		// Read one record to ensure reader is active
 		BatchRecord batchRecord = reader.read();
 		assertNotNull(batchRecord);
 
-		// Should not throw exception
 		assertDoesNotThrow(() -> reader.close());
 
-		// Should be able to call close multiple times without exception
 		assertDoesNotThrow(() -> reader.close());
 
-		// After closing, reader should not be able to read anymore
-		Exception exception = assertThrows(IllegalStateException.class, () -> reader.read());
-		assertEquals("Reader not opened. Call open() first.", exception.getMessage());
+		BatchDataReadException exception = assertThrows(BatchDataReadException.class, () -> reader.read());
+		assertTrue(exception.getMessage().contains("Reader not opened. Call open() first."));
 	}
 
 	@Test
-	void testRecordSkipMetrics() throws Exception {
-		// Test with null metricsCollector
-		ChunkBasedPolygonItemReader readerWithoutMetrics = new ChunkBasedPolygonItemReader(
-				"test", null, 123L, JOB_GUID, 2
-		);
+	void testRecordSkipMetrics() throws IOException, BatchDataReadException {
+		ChunkBasedPolygonItemReader readerWithoutMetrics = new ChunkBasedPolygonItemReader("test", 123L, JOB_GUID, 2);
 
 		Path partitionDir = tempDir.resolve("input-test");
 		Files.createDirectories(partitionDir);
@@ -262,32 +207,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testRecordSkipMetricsWithInvalidFeatureId() throws Exception {
-		doNothing().when(metricsCollector).recordSkip(anyLong(), any(), any(), any(), anyString());
-
-		Path partitionDir = tempDir.resolve("input-test-partition");
-		Files.createDirectories(partitionDir);
-
-		// Create polygon file with non-numeric FEATURE_ID that can still be processed
-		// as a valid record
-		String polygonContent = "FEATURE_ID,DATA\nabc,data1\n";
-		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
-
-		executionContext.putString("jobBaseDir", tempDir.toString());
-
-		reader.open(executionContext);
-
-		// Should return record even with non-numeric FEATURE_ID (it's still a valid
-		// string)
-		BatchRecord batchRecord = reader.read();
-		assertNotNull(batchRecord);
-		assertEquals("abc", batchRecord.getFeatureId());
-
-		reader.close();
-	}
-
-	@Test
-	void testExtractFeatureIdFromLine() throws Exception {
+	void testExtractFeatureIdFromLine() throws IOException, BatchDataReadException {
 		setupValidTestFiles();
 		reader.open(executionContext);
 
@@ -300,28 +220,27 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testReadRethrowsBatchException() throws Exception {
+	void testReadRethrowsBatchException() throws IOException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
-		String polygonContent = "FEATURE_ID,DATA\n123,data1\n";
+		String polygonContent = "FEATURE_ID,DATA\n  ,invalid_empty_featureId\n";
 		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
 
 		executionContext.putString("jobBaseDir", tempDir.toString());
+		reader.open(executionContext);
 
-		BatchDataReadException testException = BatchDataReadException.handleDataReadFailure(
-				new IOException("Test IO failure"), "Test data read failure", JOB_GUID, 123L, "test-partition",
-				org.slf4j.LoggerFactory.getLogger(ChunkBasedPolygonItemReaderTest.class)
-		);
+		BatchDataReadException exception = assertThrows(BatchDataReadException.class, () -> reader.read());
 
-		ChunkBasedPolygonItemReader spyReader = spy(reader);
-		doThrow(testException).when(spyReader).read();
+		assertTrue(exception.getMessage().contains("Failed to read data from partition"));
+		assertNotNull(exception.getCause());
+		assertTrue(exception.getCause() instanceof IllegalArgumentException);
 
-		assertThrows(BatchDataReadException.class, spyReader::read);
+		reader.close();
 	}
 
 	@Test
-	void testHandlePolygonProcessingException() throws Exception {
+	void testReadPolygonRecordSuccessfully() throws IOException, BatchDataReadException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
@@ -340,7 +259,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testIOExceptionDuringReaderInitialization() throws Exception {
+	void testSetupCreatesPolygonFile() throws IOException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
@@ -353,7 +272,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testIOExceptionDuringCloseReader() throws Exception {
+	void testClose_DoesNotThrowException() throws IOException, BatchDataReadException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
@@ -371,7 +290,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testHandleReaderInitializationFailureWithItemStreamException() throws Exception {
+	void testOpenThrowsItemStreamExceptionWhenPolygonFileMissing() throws IOException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
@@ -388,32 +307,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testRecordSkipMetricsWithMetricsCollector() throws Exception {
-		doNothing().when(metricsCollector).recordSkip(anyLong(), anyString(), anyString(), any(), anyString());
-
-		Path partitionDir = tempDir.resolve("input-test-partition");
-		Files.createDirectories(partitionDir);
-
-		String polygonContent = "FEATURE_ID,DATA\n ,data1\n456,data2\n";
-		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
-
-		executionContext.putString("jobBaseDir", tempDir.toString());
-
-		reader.open(executionContext);
-
-		BatchRecord batchRecord = reader.read();
-		assertNotNull(batchRecord);
-		assertEquals("456", batchRecord.getFeatureId());
-
-		ExecutionContext updateContext = new ExecutionContext();
-		reader.update(updateContext);
-		assertEquals(1, updateContext.getInt("test-partition.skipped"));
-
-		reader.close();
-	}
-
-	@Test
-	void testPerformReaderCleanupAfterFailure() throws Exception {
+	void testReadThrowsExceptionAfterOpenFailure() throws IOException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
@@ -421,11 +315,11 @@ class ChunkBasedPolygonItemReaderTest {
 
 		assertThrows(ItemStreamException.class, () -> reader.open(executionContext));
 
-		assertThrows(IllegalStateException.class, () -> reader.read());
+		assertThrows(BatchDataReadException.class, () -> reader.read());
 	}
 
 	@Test
-	void testExtractFeatureIdFromNullOrEmptyLine() throws Exception {
+	void testReadSkipsEmptyLinesAndReadsValidRecord() throws IOException, BatchDataReadException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
@@ -444,7 +338,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	@Test
-	void testLoadNextChunkWithMultipleChunks() throws Exception {
+	void testReadMultipleRecordsAndReturnsNullAtEnd() throws IOException, BatchDataReadException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 

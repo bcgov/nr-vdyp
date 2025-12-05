@@ -107,7 +107,7 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testCanRetry_WithRetryableException() throws Exception {
+	void testCanRetry_WithRetryableException() throws BatchException {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -280,7 +280,7 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testRecordRetryAttempt_WithMetricsCollector() throws Exception {
+	void testRecordRetryAttempt_WithMetricsCollector() throws BatchException {
 		when(stepExecution.getJobExecutionId()).thenReturn(999L);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -303,7 +303,7 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testGetCurrentExecutionContext_WithValidStepContext() throws Exception {
+	void testGetCurrentExecutionContext_WithValidStepContext() throws BatchException {
 		try (MockedStatic<StepSynchronizationManager> mockedStatic = mockStatic(StepSynchronizationManager.class)) {
 			StepContext stepContext = mock(StepContext.class);
 			StepExecution currentStepExecution = mock(StepExecution.class);
@@ -338,7 +338,7 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testGetCurrentExecutionContext_WithNullStepContext() throws Exception {
+	void testGetCurrentExecutionContext_WithNullStepContext() throws BatchException {
 		try (MockedStatic<StepSynchronizationManager> mockedStatic = mockStatic(StepSynchronizationManager.class)) {
 			when(stepExecution.getJobExecutionId()).thenReturn(100L);
 			when(stepExecution.getJobExecution()).thenReturn(jobExecution);
@@ -544,7 +544,7 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testGetCurrentPartitionName_WithNoStepContext() throws Exception {
+	void testGetCurrentPartitionName_WithNoStepContext() throws BatchException {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);

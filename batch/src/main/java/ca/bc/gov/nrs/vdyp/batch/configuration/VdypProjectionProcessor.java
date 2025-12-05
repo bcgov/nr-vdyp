@@ -7,7 +7,8 @@ import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.lang.NonNull;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -36,10 +37,13 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	 */
 	@BeforeStep
 	@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch context
-	public void beforeStep(StepExecution stepExecution) throws BatchException {
+	public void beforeStep(StepExecution stepExecution) throws BatchConfigurationException, BatchMetricsException {
 		if (initialized) {
-			throw new IllegalStateException(
-					"VdypProjectionProcessor already initialized. beforeStep() should only be called once."
+			throw BatchConfigurationException.handleConfigurationFailure(
+					new IllegalStateException("Multiple initialization attempts"),
+					"VdypProjectionProcessor already initialized. beforeStep() should only be called once",
+					stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID),
+					stepExecution.getJobExecutionId(), logger
 			);
 		}
 

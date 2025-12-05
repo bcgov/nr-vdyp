@@ -62,7 +62,7 @@ public class VdypProjectionService {
 
 		Map<String, InputStream> inputStreams = null;
 		try {
-			Path outputPartitionDir = createOutputPartitionDir(jobGuid, jobExecutionId, partitionName, jobBaseDir);
+			Path outputPartitionDir = createOutputPartitionDir(partitionName, jobBaseDir);
 
 			// Create combined input streams from all BatchRecords in the chunk
 			inputStreams = createCombinedInputStreamsFromChunk(batchRecords);
@@ -85,9 +85,7 @@ public class VdypProjectionService {
 				runner.run(inputStreams);
 
 				// Store intermediate results for all records in chunk
-				storeChunkIntermediateResults(
-						runner, outputPartitionDir, batchProjectionId, batchRecords, jobGuid, jobExecutionId
-				);
+				storeChunkIntermediateResults(runner, outputPartitionDir, batchProjectionId, batchRecords);
 
 				String result = String.format(
 						"Chunk projection completed for %d records in partition %s. Results stored",
@@ -103,8 +101,10 @@ public class VdypProjectionService {
 
 			}
 
-		} catch (BatchResultStorageException e) {
-			throw e;
+		} catch (IOException e) {
+			throw BatchResultStorageException.handleResultStorageFailure(
+					e, "Failed to store projection results", jobGuid, jobExecutionId, logger
+			);
 		} catch (Exception e) {
 			// All other exceptions from extended-core - wrap as BatchProjectionException with full context
 			throw BatchProjectionException
@@ -119,38 +119,25 @@ public class VdypProjectionService {
 	}
 
 	/**
-	 * Creates a partition-specific output directory within the existing job-specific parent folder. Only logs when
-	 * directory is actually created (not when it already exists).
+	 * Creates a partition-specific output directory within the existing job-specific parent folder.
 	 *
-	 * @throws BatchResultStorageException if directory creation fails
+	 * @throws IOException if directory creation fails
 	 */
-	private Path createOutputPartitionDir(String jobGuid, Long jobExecutionId, String partitionName, String jobBaseDir)
-			throws BatchResultStorageException {
+	private Path createOutputPartitionDir(String partitionName, String jobBaseDir) throws IOException {
 		Path jobBasePath = Paths.get(jobBaseDir);
-
-		String inputPartitionName = BatchUtils.buildInputPartitionFolderName(partitionName);
 		String outputPartitionName = BatchUtils.buildOutputPartitionFolderName(partitionName);
-
 		Path outputPartitionDir = jobBasePath.resolve(outputPartitionName);
 
-		try {
-			// Check if directory already exists before creating
-			boolean alreadyExists = Files.exists(outputPartitionDir);
+		// Check if directory already exists before creating
+		boolean alreadyExists = Files.exists(outputPartitionDir);
+		Files.createDirectories(outputPartitionDir);
 
-			Files.createDirectories(outputPartitionDir);
-
-			// Only log when directory is actually created (first chunk of partition)
-			if (!alreadyExists) {
-				logger.debug(
-						"[GUID: {}, EXEID: {}] Created output partition directory: {} for input partition: {} within job folder: {}",
-						jobGuid, jobExecutionId, outputPartitionName, inputPartitionName, jobBasePath.getFileName()
-				);
-			}
-		} catch (IOException e) {
-			throw BatchResultStorageException.handleResultStorageFailure(
-					outputPartitionDir, e,
-					"Failed to create output partition directory (job folder: " + jobBasePath + ")", jobGuid,
-					jobExecutionId, logger
+		// Only log when directory is actually created (first chunk of partition)
+		if (!alreadyExists) {
+			String inputPartitionName = BatchUtils.buildInputPartitionFolderName(partitionName);
+			logger.debug(
+					"Created output partition directory: {} for input partition: {} within job folder: {}",
+					outputPartitionName, inputPartitionName, jobBasePath.getFileName()
 			);
 		}
 
@@ -200,20 +187,19 @@ public class VdypProjectionService {
 	/**
 	 * Stores intermediate results for all records in a chunk.
 	 *
-	 * @throws BatchResultStorageException if result storage fails
+	 * @throws IOException if result storage fails
 	 */
 	private void storeChunkIntermediateResults(
-			ProjectionRunner runner, Path partitionOutputDir, String projectionId, List<BatchRecord> batchRecords,
-			String jobGuid, Long jobExecutionId
-	) throws BatchResultStorageException {
+			ProjectionRunner runner, Path partitionOutputDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 
 		logger.debug(
 				"Storing intermediate results for chunk projection {} ({} records)", projectionId, batchRecords.size()
 		);
 
-		storeChunkYieldTables(runner, partitionOutputDir, projectionId, batchRecords, jobGuid, jobExecutionId);
+		storeChunkYieldTables(runner, partitionOutputDir, projectionId, batchRecords);
 
-		storeChunkLogs(runner, partitionOutputDir, projectionId, batchRecords, jobGuid, jobExecutionId);
+		storeChunkLogs(runner, partitionOutputDir, projectionId, batchRecords);
 
 		logger.debug(
 				"Successfully stored intermediate results for chunk projection {} ({} records) in {}", projectionId,
@@ -224,12 +210,11 @@ public class VdypProjectionService {
 	/**
 	 * Stores yield tables from chunk projection.
 	 *
-	 * @throws BatchResultStorageException if yield table storage fails
+	 * @throws IOException if yield table storage fails
 	 */
 	private void storeChunkYieldTables(
-			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords,
-			String jobGuid, Long jobExecutionId
-	) throws BatchResultStorageException {
+			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		if (runner == null || runner.getContext() == null) {
 			logger.warn("Cannot store yield tables: ProjectionRunner or context is null");
 			return;
@@ -250,19 +235,18 @@ public class VdypProjectionService {
 		);
 
 		for (YieldTable yieldTable : yieldTables) {
-			storeYieldTable(yieldTable, partitionDir, projectionId, batchRecords, jobGuid, jobExecutionId);
+			storeYieldTable(yieldTable, partitionDir, projectionId, batchRecords);
 		}
 	}
 
 	/**
 	 * Stores a single yield table file.
 	 *
-	 * @throws BatchResultStorageException if file copy fails
+	 * @throws IOException if file copy fails
 	 */
 	private void storeYieldTable(
-			YieldTable yieldTable, Path partitionDir, String projectionId, List<BatchRecord> batchRecords,
-			String jobGuid, Long jobExecutionId
-	) throws BatchResultStorageException {
+			YieldTable yieldTable, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		if (yieldTable == null) {
 			logger.warn("Skipping null yield table in projection {}", projectionId);
 			return;
@@ -293,22 +277,17 @@ public class VdypProjectionService {
 						prefixedFileName, bytesWritten, batchRecords.size()
 				);
 			}
-		} catch (IOException e) {
-			throw BatchResultStorageException.handleResultStorageFailure(
-					yieldTablePath, e, "Failed to store yield table", jobGuid, jobExecutionId, logger
-			);
 		}
 	}
 
 	/**
 	 * Stores log files from chunk projection.
 	 *
-	 * @throws BatchResultStorageException if log file storage fails
+	 * @throws IOException if log file storage fails
 	 */
 	private void storeChunkLogs(
-			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords,
-			String jobGuid, Long jobExecutionId
-	) throws BatchResultStorageException {
+			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		if (runner == null || runner.getContext() == null || runner.getContext().getParams() == null) {
 			logger.warn("Cannot store logs: ProjectionRunner, context, or params is null");
 			return;
@@ -318,24 +297,23 @@ public class VdypProjectionService {
 
 		// Store progress log if enabled
 		if (params.containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {
-			storeProgressLog(runner, partitionDir, projectionId, batchRecords, jobGuid, jobExecutionId);
+			storeProgressLog(runner, partitionDir, projectionId, batchRecords);
 		}
 
 		// Store error log if enabled
 		if (params.containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
-			storeErrorLog(runner, partitionDir, projectionId, batchRecords, jobGuid, jobExecutionId);
+			storeErrorLog(runner, partitionDir, projectionId, batchRecords);
 		}
 
 		// Store debug log if enabled
 		if (params.containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
-			storeDebugLog(partitionDir, projectionId, batchRecords, jobGuid, jobExecutionId);
+			storeDebugLog(partitionDir, projectionId, batchRecords);
 		}
 	}
 
 	private void storeProgressLog(
-			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords,
-			String jobGuid, Long jobExecutionId
-	) throws BatchResultStorageException {
+			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		String progressLogFileName = String.format("YieldTables_%s_ProgressLog.txt", projectionId);
 		Path progressLogPath = partitionDir.resolve(progressLogFileName);
 
@@ -357,17 +335,12 @@ public class VdypProjectionService {
 			} else {
 				logger.warn("Progress stream is null, skipping progress log: {}", progressLogFileName);
 			}
-		} catch (IOException e) {
-			throw BatchResultStorageException.handleResultStorageFailure(
-					progressLogPath, e, "Failed to store progress log", jobGuid, jobExecutionId, logger
-			);
 		}
 	}
 
 	private void storeErrorLog(
-			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords,
-			String jobGuid, Long jobExecutionId
-	) throws BatchResultStorageException {
+			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		String errorLogFileName = String.format("YieldTables_%s_ErrorLog.txt", projectionId);
 		Path errorLogPath = partitionDir.resolve(errorLogFileName);
 
@@ -389,28 +362,15 @@ public class VdypProjectionService {
 			} else {
 				logger.warn("Error stream is null, skipping error log: {}", errorLogFileName);
 			}
-		} catch (IOException e) {
-			throw BatchResultStorageException.handleResultStorageFailure(
-					errorLogPath, e, "Failed to store error log", jobGuid, jobExecutionId, logger
-			);
 		}
 	}
 
-	private void storeDebugLog(
-			Path partitionDir, String projectionId, List<BatchRecord> batchRecords, String jobGuid, Long jobExecutionId
-	) throws BatchResultStorageException {
+	private void storeDebugLog(Path partitionDir, String projectionId, List<BatchRecord> batchRecords)
+			throws IOException {
 		String debugLogFileName = String.format("YieldTables_%s_DebugLog.txt", projectionId);
 		Path debugLogPath = partitionDir.resolve(debugLogFileName);
 
-		try {
-			Files.write(debugLogPath, new byte[0], StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-			logger.trace(
-					"Created chunk debug log placeholder: {} for {} records", debugLogFileName, batchRecords.size()
-			);
-		} catch (IOException e) {
-			throw BatchResultStorageException.handleResultStorageFailure(
-					debugLogPath, e, "Failed to create debug log placeholder", jobGuid, jobExecutionId, logger
-			);
-		}
+		Files.write(debugLogPath, new byte[0], StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+		logger.trace("Created chunk debug log placeholder: {} for {} records", debugLogFileName, batchRecords.size());
 	}
 }

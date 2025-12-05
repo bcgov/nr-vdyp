@@ -12,34 +12,15 @@ public class BatchException extends Exception {
 
 	private static final long serialVersionUID = -2197452160716581586L;
 
-	private final String jobGuid;
-	private final Long jobExecutionId;
 	private final String featureId;
 	private final boolean retryable;
 	private final boolean skippable;
 
-	public BatchException(
-			String message, Throwable cause, String jobGuid, Long jobExecutionId, String featureId, boolean retryable,
-			boolean skippable
-	) {
+	public BatchException(String message, Throwable cause, String featureId, boolean retryable, boolean skippable) {
 		super(message, cause);
-		this.jobGuid = jobGuid;
-		this.jobExecutionId = jobExecutionId;
 		this.featureId = featureId;
 		this.retryable = retryable;
 		this.skippable = skippable;
-	}
-
-	public BatchException(String message) {
-		this(message, null, null, null, null, false, false);
-	}
-
-	public String getJobGuid() {
-		return jobGuid;
-	}
-
-	public Long getJobExecutionId() {
-		return jobExecutionId;
 	}
 
 	public String getFeatureId() {

@@ -37,9 +37,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -51,11 +52,11 @@ public class PartitionedBatchConfiguration {
 	private final JobRepository jobRepository;
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
-	private final ResultAggregationService resultAggregationService;
+	private final BatchResultAggregationService resultAggregationService;
 
 	public PartitionedBatchConfiguration(
 			JobRepository jobRepository, BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			ResultAggregationService resultAggregationService
+			BatchResultAggregationService resultAggregationService
 	) {
 		this.jobRepository = jobRepository;
 		this.metricsCollector = metricsCollector;
@@ -189,7 +190,7 @@ public class PartitionedBatchConfiguration {
 									jobExecutionId, jobGuid, partitionName, stepExecution.getWriteCount(),
 									stepExecution.getExitStatus().getExitCode()
 							);
-						} catch (BatchException e) {
+						} catch (BatchMetricsException e) {
 							logger.error("Failed to complete partition metrics: {}", e.getMessage());
 						}
 
@@ -226,7 +227,7 @@ public class PartitionedBatchConfiguration {
 						String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 						try {
 							metricsCollector.initializeMetrics(jobExecution.getId(), jobGuid);
-						} catch (BatchException e) {
+						} catch (BatchMetricsException e) {
 							logger.error("Failed to initialize job metrics: {}", e.getMessage());
 						}
 						logger.info(
@@ -262,7 +263,7 @@ public class PartitionedBatchConfiguration {
 									jobExecution.getId(), jobGuid, jobExecution.getStatus().toString(), totalRead,
 									totalWritten
 							);
-						} catch (BatchException e) {
+						} catch (BatchMetricsException e) {
 							logger.error("Failed to finalize job metrics: {}", e.getMessage());
 						}
 
@@ -291,7 +292,7 @@ public class PartitionedBatchConfiguration {
 
 						try {
 							metricsCollector.cleanupOldMetrics(20);
-						} catch (BatchException e) {
+						} catch (BatchMetricsException e) {
 							logger.error("Failed to cleanup old metrics: {}", e.getMessage());
 						}
 
@@ -306,7 +307,6 @@ public class PartitionedBatchConfiguration {
 	@Bean
 	@StepScope
 	public ItemStreamReader<BatchRecord> partitionReader(
-			BatchMetricsCollector metricsCollector,
 			@Value("#{stepExecutionContext['partitionName']}") String partitionName,
 			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId,
 			@Value("#{jobParameters['" + BatchConstants.Job.GUID + "']}") String jobGuid,
@@ -317,8 +317,7 @@ public class PartitionedBatchConfiguration {
 				jobGuid, jobExecutionId, partitionName, batchProperties.getReader().getDefaultChunkSize()
 		);
 		return new ChunkBasedPolygonItemReader(
-				partitionName, metricsCollector, jobExecutionId, jobGuid,
-				batchProperties.getReader().getDefaultChunkSize()
+				partitionName, jobExecutionId, jobGuid, batchProperties.getReader().getDefaultChunkSize()
 		);
 	}
 

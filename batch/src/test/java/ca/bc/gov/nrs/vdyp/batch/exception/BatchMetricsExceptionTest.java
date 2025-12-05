@@ -26,8 +26,6 @@ class BatchMetricsExceptionTest {
 		assertThat(exception, is(notNullValue()));
 		assertThat(exception.getMessage(), containsString("[GUID: test-guid-123, EXEID: 456]"));
 		assertThat(exception.getMessage(), containsString("Metrics error: Job metrics already exists"));
-		assertThat(exception.getJobGuid(), is(jobGuid));
-		assertThat(exception.getJobExecutionId(), is(jobExecutionId));
 		assertThat(exception.getFeatureId(), is(nullValue()));
 		assertThat(exception.isRetryable(), is(false));
 		assertThat(exception.isSkippable(), is(false));
@@ -44,8 +42,6 @@ class BatchMetricsExceptionTest {
 		assertThat(exception, is(notNullValue()));
 		assertThat(exception.getMessage(), containsString("[GUID: test-guid-789]"));
 		assertThat(exception.getMessage(), containsString("Metrics error: No metrics found"));
-		assertThat(exception.getJobGuid(), is(jobGuid));
-		assertThat(exception.getJobExecutionId(), is(nullValue()));
 		assertThat(exception.getFeatureId(), is(nullValue()));
 		assertThat(exception.isRetryable(), is(false));
 		assertThat(exception.isSkippable(), is(false));
@@ -59,8 +55,6 @@ class BatchMetricsExceptionTest {
 
 		assertThat(exception, is(notNullValue()));
 		assertThat(exception.getMessage(), is("Metrics error: Keep count must be non-negative, got: -1"));
-		assertThat(exception.getJobGuid(), is(nullValue()));
-		assertThat(exception.getJobExecutionId(), is(nullValue()));
 		assertThat(exception.getFeatureId(), is(nullValue()));
 		assertThat(exception.isRetryable(), is(false));
 		assertThat(exception.isSkippable(), is(false));
@@ -102,8 +96,6 @@ class BatchMetricsExceptionTest {
 
 		assertThat(exception.getMessage(), containsString("[GUID: test-guid-abc, EXEID: 789]"));
 		assertThat(exception.getMessage(), containsString("Partition metrics not found for partition partition-1"));
-		assertThat(exception.getJobGuid(), is(jobGuid));
-		assertThat(exception.getJobExecutionId(), is(jobExecutionId));
 	}
 
 	@Test
@@ -116,8 +108,6 @@ class BatchMetricsExceptionTest {
 				.handleMetricsFailure(errorDescription, jobGuid, jobExecutionId, logger);
 
 		assertThat(exception.getMessage(), containsString("Job metrics already exists"));
-		assertThat(exception.getJobGuid(), is(jobGuid));
-		assertThat(exception.getJobExecutionId(), is(jobExecutionId));
 	}
 
 	@Test
@@ -128,8 +118,6 @@ class BatchMetricsExceptionTest {
 		BatchMetricsException exception = BatchMetricsException.handleMetricsFailure(errorDescription, logger);
 
 		assertThat(exception.getMessage(), containsString("Keep count must be non-negative, got: -1"));
-		assertThat(exception.getJobGuid(), is(nullValue()));
-		assertThat(exception.getJobExecutionId(), is(nullValue()));
 	}
 
 	@Test

@@ -30,7 +30,6 @@ class BatchPartitionExceptionTest {
 		assertThat(exception.getCause(), is(sameInstance(cause)));
 		assertThat(exception.isRetryable(), is(false));
 		assertThat(exception.isSkippable(), is(false));
-		assertThat(exception.getJobExecutionId(), is(nullValue()));
 		assertThat(exception.getFeatureId(), is(nullValue()));
 	}
 

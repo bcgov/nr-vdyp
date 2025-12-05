@@ -14,30 +14,8 @@ public class BatchProjectionException extends BatchException {
 
 	private static final long serialVersionUID = 3104617883593359188L;
 
-	private final String partitionName;
-	private final int recordCount;
-	private final List<String> featureIds;
-
-	private BatchProjectionException(
-			String message, Throwable cause, String jobGuid, Long jobExecutionId, String featureId,
-			ProjectionContext context
-	) {
-		super(message, cause, jobGuid, jobExecutionId, featureId, false, true);
-		this.partitionName = context.partitionName;
-		this.recordCount = context.recordCount;
-		this.featureIds = context.featureIds;
-	}
-
-	public String getPartitionName() {
-		return partitionName;
-	}
-
-	public int getRecordCount() {
-		return recordCount;
-	}
-
-	public List<String> getFeatureIds() {
-		return featureIds;
+	private BatchProjectionException(String message, Throwable cause, String featureId) {
+		super(message, cause, featureId, false, true);
 	}
 
 	public static BatchProjectionException handleProjectionFailure(
@@ -62,33 +40,6 @@ public class BatchProjectionException extends BatchException {
 		// Use first feature ID for skip tracking
 		String firstFeatureId = !featureIds.isEmpty() ? featureIds.get(0) : null;
 
-		ProjectionContext context = new ProjectionContext(partitionName, batchRecords.size(), featureIds);
-
-		return new BatchProjectionException(contextualMessage, cause, jobGuid, jobExecutionId, firstFeatureId, context);
-	}
-
-	public static class ProjectionContext {
-
-		private final String partitionName;
-		private final int recordCount;
-		private final List<String> featureIds;
-
-		public ProjectionContext(String partitionName, int recordCount, List<String> featureIds) {
-			this.partitionName = partitionName;
-			this.recordCount = recordCount;
-			this.featureIds = featureIds;
-		}
-
-		public String getPartitionName() {
-			return partitionName;
-		}
-
-		public int getRecordCount() {
-			return recordCount;
-		}
-
-		public List<String> getFeatureIds() {
-			return featureIds;
-		}
+		return new BatchProjectionException(contextualMessage, cause, firstFeatureId);
 	}
 }

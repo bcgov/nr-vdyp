@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -45,10 +46,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
 
 @ExtendWith(MockitoExtension.class)
@@ -97,7 +98,7 @@ class PartitionedBatchConfigurationTest {
 	private PartitionedJobExecutionListener jobExecutionListener;
 
 	@Mock
-	private ResultAggregationService resultAggregationService;
+	private BatchResultAggregationService resultAggregationService;
 
 	@Mock
 	private VdypProjectionService vdypProjectionService;
@@ -229,9 +230,8 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testPartitionReader() {
-		ItemStreamReader<BatchRecord> result = configuration.partitionReader(
-				metricsCollector, TEST_PARTITION_NAME, TEST_JOB_EXECUTION_ID, TEST_JOB_GUID, batchProperties
-		);
+		ItemStreamReader<BatchRecord> result = configuration
+				.partitionReader(TEST_PARTITION_NAME, TEST_JOB_EXECUTION_ID, TEST_JOB_GUID, batchProperties);
 
 		assertNotNull(result);
 		verify(reader, atLeastOnce()).getDefaultChunkSize();
@@ -260,7 +260,8 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testResultAggregationTasklet_successfulExecution() throws Exception {
+	void testResultAggregationTasklet_successfulExecution() throws Exception //
+	{
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
 		StepContribution contribution = mock(StepContribution.class);
@@ -327,7 +328,9 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testResultAggregationTasklet_withValidation() throws Exception {
+	void testResultAggregationTasklet_withValidation()
+	throws Exception  //
+	{
 		when(partition.getInterimDirsCleanupEnabled()).thenReturn(true);
 
 		Tasklet tasklet = configuration.resultAggregationTasklet();
@@ -364,7 +367,9 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testResultAggregationTasklet_validationFailed() throws Exception {
+	void testResultAggregationTasklet_validationFailed()
+	throws Exception //
+	 {
 		when(partition.getInterimDirsCleanupEnabled()).thenReturn(true);
 
 		Tasklet tasklet = configuration.resultAggregationTasklet();
@@ -405,46 +410,7 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testResultAggregationTasklet_ioException() throws Exception {
-		Tasklet tasklet = configuration.resultAggregationTasklet();
-
-		StepContribution contribution = mock(StepContribution.class);
-		ChunkContext chunkContext = mock(ChunkContext.class);
-		StepContext stepContext = mock(StepContext.class);
-		StepExecution stepExecution = mock(StepExecution.class);
-		JobExecution jobExecution = mock(JobExecution.class);
-		org.springframework.batch.core.JobParameters jobParameters = mock(JobParameters.class);
-
-		when(chunkContext.getStepContext()).thenReturn(stepContext);
-		when(stepContext.getStepExecution()).thenReturn(stepExecution);
-		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
-		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
-		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
-		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
-		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
-
-		ResultAggregationException testException = ResultAggregationException.handleResultAggregationFailure(
-				new IOException("Test IO error"), "I/O operation failed during result aggregation", TEST_JOB_GUID,
-				TEST_JOB_EXECUTION_ID, org.slf4j.LoggerFactory.getLogger(getClass())
-		);
-
-		when(
-				resultAggregationService.aggregateResultsFromJobDir(
-						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
-				)
-		).thenThrow(testException);
-
-		Exception exception = Assertions
-				.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
-
-		Assertions.assertTrue(exception.getMessage().contains("I/O operation failed"));
-		Assertions.assertTrue(exception.getMessage().contains("Test IO error"));
-	}
-
-	@Test
-	void testResultAggregationTasklet_generalException() throws Exception {
+	void testResultAggregationTasklet_ioException() throws BatchResultAggregationException {
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
 		StepContribution contribution = mock(StepContribution.class);
@@ -464,9 +430,52 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		ResultAggregationException testException = ResultAggregationException.handleResultAggregationFailure(
+		IOException ioException = new IOException("Test IO error");
+		BatchResultAggregationException wrappedException = BatchResultAggregationException
+				.handleResultAggregationFailure(
+						ioException, "I/O operation failed during result aggregation", TEST_JOB_GUID,
+						TEST_JOB_EXECUTION_ID, LoggerFactory.getLogger(getClass())
+				);
+
+		when(
+				resultAggregationService.aggregateResultsFromJobDir(
+						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
+				)
+		).thenThrow(wrappedException);
+
+		BatchResultAggregationException exception = Assertions
+				.assertThrows(BatchResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
+
+		Assertions.assertTrue(exception.getMessage().contains("I/O operation failed"));
+		Assertions.assertNotNull(exception.getCause());
+		Assertions.assertTrue(exception.getCause() instanceof IOException);
+		Assertions.assertTrue(exception.getCause().getMessage().contains("Test IO error"));
+	}
+
+	@Test
+	void testResultAggregationTasklet_batchException() throws BatchResultAggregationException {
+		Tasklet tasklet = configuration.resultAggregationTasklet();
+
+		StepContribution contribution = mock(StepContribution.class);
+		ChunkContext chunkContext = mock(ChunkContext.class);
+		StepContext stepContext = mock(StepContext.class);
+		StepExecution stepExecution = mock(StepExecution.class);
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
+
+		when(chunkContext.getStepContext()).thenReturn(stepContext);
+		when(stepContext.getStepExecution()).thenReturn(stepExecution);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
+		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+
+		BatchResultAggregationException testException = BatchResultAggregationException.handleResultAggregationFailure(
 				new RuntimeException("Test runtime error"), "Unexpected error during result aggregation", TEST_JOB_GUID,
-				TEST_JOB_EXECUTION_ID, org.slf4j.LoggerFactory.getLogger(getClass())
+				TEST_JOB_EXECUTION_ID, LoggerFactory.getLogger(getClass())
 		);
 
 		when(
@@ -475,15 +484,15 @@ class PartitionedBatchConfigurationTest {
 				)
 		).thenThrow(testException);
 
-		Exception exception = Assertions
-				.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
+		BatchResultAggregationException exception = Assertions
+				.assertThrows(BatchResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
 
 		Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
 		Assertions.assertTrue(exception.getMessage().contains("Test runtime error"));
 	}
 
 	@Test
-	void testResultAggregationTasklet_exceptionWithNullMessage() throws Exception {
+	void testResultAggregationTasklet_exceptionWithNullMessage() throws BatchResultAggregationException {
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
 		StepContribution contribution = mock(StepContribution.class);
@@ -503,9 +512,9 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		ResultAggregationException testException = ResultAggregationException.handleResultAggregationFailure(
+		BatchResultAggregationException testException = BatchResultAggregationException.handleResultAggregationFailure(
 				new RuntimeException((String) null), "Unexpected error during result aggregation", TEST_JOB_GUID,
-				TEST_JOB_EXECUTION_ID, org.slf4j.LoggerFactory.getLogger(getClass())
+				TEST_JOB_EXECUTION_ID, LoggerFactory.getLogger(getClass())
 		);
 
 		when(
@@ -514,8 +523,8 @@ class PartitionedBatchConfigurationTest {
 				)
 		).thenThrow(testException);
 
-		Exception exception = Assertions
-				.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
+		BatchResultAggregationException exception = Assertions
+				.assertThrows(BatchResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
 
 		Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
 		Assertions.assertNotNull(exception.getMessage());
@@ -830,7 +839,8 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testAsyncJobLauncher() throws Exception {
+	void testAsyncJobLauncher() throws Exception //
+	{
 		TaskExecutor taskExecutor = mock(TaskExecutor.class);
 
 		org.springframework.batch.core.launch.JobLauncher result = configuration.asyncJobLauncher(taskExecutor);
@@ -840,7 +850,9 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testResultAggregationTasklet_cleanupDisabled() throws Exception {
+	void testResultAggregationTasklet_cleanupDisabled()
+	throws Exception  //
+	{
 		when(partition.getInterimDirsCleanupEnabled()).thenReturn(false);
 
 		Tasklet tasklet = configuration.resultAggregationTasklet();
@@ -1063,7 +1075,7 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testResultAggregationTasklet_withNullJobBaseDirParameter() throws Exception {
+	void testResultAggregationTasklet_withNullJobBaseDirParameter() throws BatchResultAggregationException {
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
 		StepContribution contribution = mock(StepContribution.class);
@@ -1083,7 +1095,7 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(null);
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		ResultAggregationException testException = ResultAggregationException.handleResultAggregationFailure(
+		BatchResultAggregationException testException = BatchResultAggregationException.handleResultAggregationFailure(
 				new NullPointerException("jobBaseDir cannot be null"),
 				"Failed to aggregate results with null jobBaseDir", TEST_JOB_GUID, TEST_JOB_EXECUTION_ID,
 				org.slf4j.LoggerFactory.getLogger(getClass())
@@ -1094,6 +1106,7 @@ class PartitionedBatchConfigurationTest {
 						.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), eq(null), anyString())
 		).thenThrow(testException);
 
-		Assertions.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
+		Assertions
+				.assertThrows(BatchResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
 	}
 }

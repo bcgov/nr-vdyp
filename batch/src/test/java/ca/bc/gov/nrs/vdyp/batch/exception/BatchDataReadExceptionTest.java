@@ -34,10 +34,8 @@ class BatchDataReadExceptionTest {
 
 		assertThat(exception.getCause(), is(instanceOf(IOException.class)));
 		assertThat(exception.getCause(), is(equalTo(cause)));
-		assertThat(exception.getJobExecutionId(), is(equalTo(TEST_JOB_EXECUTION_ID)));
-		assertThat(exception.getJobGuid(), is(equalTo(TEST_JOB_GUID)));
 		assertThat(exception.isRetryable(), is(false));
-		assertThat(exception.isSkippable(), is(false));
+		assertThat(exception.isSkippable(), is(true));
 	}
 
 	@Test
@@ -58,10 +56,9 @@ class BatchDataReadExceptionTest {
 		assertThat(exception.getMessage(), containsString("IOException"));
 		assertThat(exception.getMessage(), containsString("Unexpected end of file"));
 		assertThat(exception.getCause(), is(equalTo(cause)));
-		assertThat(exception.getJobExecutionId(), is(equalTo(TEST_JOB_EXECUTION_ID)));
 		assertThat(exception.getFeatureId(), is(equalTo(TEST_FEATURE_ID)));
 		assertThat(exception.isRetryable(), is(false));
-		assertThat(exception.isSkippable(), is(false));
+		assertThat(exception.isSkippable(), is(true));
 	}
 
 	@Test

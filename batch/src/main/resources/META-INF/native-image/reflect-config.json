@@ -131,13 +131,25 @@
     "allDeclaredConstructors": true
   },
   {
-    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchException",
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
   },
   {
-    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException",
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchDataReadException",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },	
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchException",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+	{
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
@@ -148,20 +160,20 @@
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
   },
-	{
-    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsExceptionTest",
-    "allDeclaredFields": true,
-    "allDeclaredMethods": true,
-    "allDeclaredConstructors": true
-  },	
   {
-    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException",
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
   },
   {
-    "name": "ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException",
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
@@ -179,7 +191,7 @@
     "allDeclaredConstructors": true
   },
   {
-    "name": "ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService",
+    "name": "ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true

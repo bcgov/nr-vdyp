@@ -18,17 +18,17 @@ import org.slf4j.Logger;
 
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
-class ResultAggregationExceptionTest {
+class BatchResultAggregationExceptionTest {
 
 	@Test
 	void testHandleResultAggregationFailure_WithValidParameters() {
 		Logger mockLogger = mock(Logger.class);
 		Long jobExecutionId = 12345L;
 		String jobGuid = "test-guid-001";
-		Exception cause = new IOException("Failed to write aggregated results");
+		IOException cause = new IOException("Failed to write aggregated results");
 		String errorDescription = "Failed to aggregate partition results";
 
-		ResultAggregationException exception = ResultAggregationException
+		BatchResultAggregationException exception = BatchResultAggregationException
 				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
 
 		assertNotNull(exception);
@@ -47,10 +47,10 @@ class ResultAggregationExceptionTest {
 		Logger mockLogger = mock(Logger.class);
 		Long jobExecutionId = 67890L;
 		String jobGuid = "test-guid-002";
-		Exception cause = new RuntimeException((String) null);
+		RuntimeException cause = new RuntimeException((String) null);
 		String errorDescription = "Aggregation failed without message";
 
-		ResultAggregationException exception = ResultAggregationException
+		BatchResultAggregationException exception = BatchResultAggregationException
 				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
 
 		assertNotNull(exception);
@@ -67,10 +67,10 @@ class ResultAggregationExceptionTest {
 		Logger mockLogger = mock(Logger.class);
 		Long jobExecutionId = 11111L;
 		String jobGuid = "guid-12345";
-		Exception cause = new IllegalStateException("Invalid state");
+		IllegalStateException cause = new IllegalStateException("Invalid state");
 		String errorDescription = "Result merge failed";
 
-		ResultAggregationException exception = ResultAggregationException
+		BatchResultAggregationException exception = BatchResultAggregationException
 				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
 
 		String expectedPattern = String.format(
@@ -87,10 +87,10 @@ class ResultAggregationExceptionTest {
 		Logger mockLogger = mock(Logger.class);
 		Long jobExecutionId = 33333L;
 		String jobGuid = "guid-33333";
-		Exception cause = new IOException("I/O error");
+		IOException cause = new IOException("I/O error");
 		String errorDescription = "Failed to merge results";
 
-		ResultAggregationException exception = ResultAggregationException
+		BatchResultAggregationException exception = BatchResultAggregationException
 				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
 
 		assertFalse(exception.isSkippable(), "ResultAggregationException should not be skippable");
@@ -101,10 +101,10 @@ class ResultAggregationExceptionTest {
 		Logger mockLogger = mock(Logger.class);
 		Long jobExecutionId = 44444L;
 		String jobGuid = "guid-44444";
-		Exception cause = new IOException("I/O error");
+		IOException cause = new IOException("I/O error");
 		String errorDescription = "Aggregation error";
 
-		ResultAggregationException exception = ResultAggregationException
+		BatchResultAggregationException exception = BatchResultAggregationException
 				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
 
 		assertNull(
@@ -118,10 +118,10 @@ class ResultAggregationExceptionTest {
 		Logger mockLogger = mock(Logger.class);
 		Long jobExecutionId = 55555L;
 		String jobGuid = "guid-55555";
-		Exception cause = new RuntimeException("Test");
+		RuntimeException cause = new RuntimeException("Test");
 		String errorDescription = "Test aggregation error";
 
-		ResultAggregationException exception = ResultAggregationException
+		BatchResultAggregationException exception = BatchResultAggregationException
 				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
 
 		assertTrue(exception instanceof BatchException);
@@ -133,11 +133,11 @@ class ResultAggregationExceptionTest {
 		Logger mockLogger = mock(Logger.class);
 		Long jobExecutionId = 66666L;
 		String jobGuid = "guid-66666";
-		Throwable rootCause = new IllegalArgumentException("Root cause");
-		Exception intermediateCause = new RuntimeException("Intermediate cause", rootCause);
+		IllegalArgumentException rootCause = new IllegalArgumentException("Root cause");
+		RuntimeException intermediateCause = new RuntimeException("Intermediate cause", rootCause);
 		String errorDescription = "Aggregation failed with chained exceptions";
 
-		ResultAggregationException exception = ResultAggregationException.handleResultAggregationFailure(
+		BatchResultAggregationException exception = BatchResultAggregationException.handleResultAggregationFailure(
 				intermediateCause, errorDescription, jobGuid, jobExecutionId, mockLogger
 		);
 
@@ -151,10 +151,10 @@ class ResultAggregationExceptionTest {
 		Logger mockLogger = mock(Logger.class);
 		Long jobExecutionId = 77777L;
 		String jobGuid = "guid-77777";
-		Exception cause = new IOException("I/O failure");
+		IOException cause = new IOException("I/O failure");
 		String errorDescription = "";
 
-		ResultAggregationException exception = ResultAggregationException
+		BatchResultAggregationException exception = BatchResultAggregationException
 				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
 
 		assertNotNull(exception);
@@ -170,34 +170,19 @@ class ResultAggregationExceptionTest {
 		String jobGuid = "guid-88888";
 		String errorDescription = "Test different exception types";
 
-		Exception ioException = new IOException("IO error");
-		ResultAggregationException result1 = ResultAggregationException
+		IOException ioException = new IOException("IO error");
+		BatchResultAggregationException result1 = BatchResultAggregationException
 				.handleResultAggregationFailure(ioException, errorDescription, jobGuid, jobExecutionId, mockLogger);
 		assertTrue(result1.getMessage().contains("IOException"));
 
-		Exception npeException = new NullPointerException("NPE error");
-		ResultAggregationException result2 = ResultAggregationException
+		NullPointerException npeException = new NullPointerException("NPE error");
+		BatchResultAggregationException result2 = BatchResultAggregationException
 				.handleResultAggregationFailure(npeException, errorDescription, jobGuid, jobExecutionId, mockLogger);
 		assertTrue(result2.getMessage().contains("NullPointerException"));
 
-		Exception iseException = new IllegalStateException("State error");
-		ResultAggregationException result3 = ResultAggregationException
+		IllegalStateException iseException = new IllegalStateException("State error");
+		BatchResultAggregationException result3 = BatchResultAggregationException
 				.handleResultAggregationFailure(iseException, errorDescription, jobGuid, jobExecutionId, mockLogger);
 		assertTrue(result3.getMessage().contains("IllegalStateException"));
-	}
-
-	@Test
-	void testSerialVersionUID() {
-		Logger mockLogger = mock(Logger.class);
-		Long jobExecutionId = 99999L;
-		String jobGuid = "guid-99999";
-		Exception cause = new RuntimeException("Test");
-		String errorDescription = "Test serialization";
-
-		ResultAggregationException exception = ResultAggregationException
-				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
-
-		assertNotNull(exception);
-		assertTrue(exception instanceof java.io.Serializable);
 	}
 }

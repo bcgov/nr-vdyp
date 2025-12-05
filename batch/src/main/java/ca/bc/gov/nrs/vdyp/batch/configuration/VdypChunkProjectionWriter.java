@@ -15,6 +15,7 @@ import org.springframework.lang.NonNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
@@ -55,9 +56,13 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
 		if (initialized) {
-			throw new IllegalStateException(
-					"VdypChunkProjectionWriter already initialized. beforeStep() should only be called once."
+			// StepExecutionListener.beforeStep() interface does not support checked exceptions.
+			// Wrap as RuntimeException to maintain interface contract
+			BatchConfigurationException configException = BatchConfigurationException.handleConfigurationFailure(
+					new IllegalStateException("VdypChunkProjectionWriter already initialized"),
+					"beforeStep() called multiple times - should only be called once", "N/A", 0L, logger
 			);
+			throw new IllegalStateException(configException.getMessage(), configException);
 		}
 
 		this.jobExecutionId = stepExecution.getJobExecutionId();
@@ -94,15 +99,23 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 				);
 
 				// StepExecutionListener.beforeStep() interface does not support checked exceptions.
-				throw new IllegalStateException("Deserialized projection parameters are null");
+				// Wrap as RuntimeException to maintain interface contract
+				BatchConfigurationException configException = BatchConfigurationException.handleConfigurationFailure(
+						new IllegalStateException("Deserialized projection parameters are null"),
+						"Parameter deserialization resulted in null", jobGuid, jobExecutionId, logger
+				);
+				throw new IllegalStateException(configException.getMessage(), configException);
 			}
 
 			// Mark as initialized to prevent subsequent calls
 			this.initialized = true;
-		} catch (JsonProcessingException jsonException) {
-			throw handleParameterDeserializationFailure(
-					projectionParametersJson, jsonException, "JSON parsing failed during parameter deserialization"
+		} catch (JsonProcessingException jpe) {
+			// StepExecutionListener.beforeStep() does not support checked exceptions
+			// Wrap BatchConfigurationException as RuntimeException to maintain interface contract
+			BatchConfigurationException configException = BatchConfigurationException.handleConfigurationFailure(
+					jpe, "JSON parsing failed during parameter deserialization", jobGuid, jobExecutionId, logger
 			);
+			throw new IllegalStateException(configException.getMessage(), configException);
 		}
 	}
 
@@ -117,7 +130,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 
 	@Override
 	public void write(@NonNull Chunk<? extends BatchRecord> chunk)
-			throws BatchResultStorageException, BatchProjectionException {
+			throws BatchResultStorageException, BatchProjectionException, BatchConfigurationException {
 		if (chunk.isEmpty()) {
 			logger.debug(
 					"[GUID: {}, EXEID: {}, Partition: {}] Empty chunk received, skipping", this.jobGuid,
@@ -128,7 +141,11 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 
 		// Validate that projection parameters were initialized in beforeStep()
 		if (this.projectionParameters == null) {
-			throw new IllegalStateException("VDYP projection parameters are null. Ensure beforeStep() was called.");
+			throw BatchConfigurationException.handleConfigurationFailure(
+					new IllegalStateException("VDYP projection parameters are null"),
+					"Projection parameters not initialized - beforeStep() was not called or failed", this.jobGuid,
+					this.jobExecutionId, logger
+			);
 		}
 
 		List<BatchRecord> batchRecords = chunk.getItems().stream().collect(Collectors.toList());
@@ -148,20 +165,5 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 				"[GUID: {}, EXEID: {}, Partition: {}] Successfully processed chunk of {} records. Result: {}",
 				this.jobGuid, this.jobExecutionId, this.partitionName, batchRecords.size(), chunkResult
 		);
-	}
-
-	private IllegalStateException
-			handleParameterDeserializationFailure(String parametersJson, Exception cause, String errorDescription) {
-		String contextualMessage = String.format(
-				"[GUID: %s, EXEID: %d, Partition: %s] %s. JSON length: %d, Exception type: %s, Root cause: %s", jobGuid,
-				jobExecutionId, partitionName, errorDescription, parametersJson != null ? parametersJson.length() : 0,
-				cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE
-		);
-
-		// Log the failure with full context
-		logger.error(contextualMessage, cause);
-
-		return new IllegalStateException(contextualMessage, cause);
 	}
 }

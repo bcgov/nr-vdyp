@@ -5,17 +5,17 @@ import org.slf4j.Logger;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
- * Exception thrown when result aggregation fails.
+ * Exception thrown when batch configuration or initialization operations fail.
  */
-public class ResultAggregationException extends BatchException {
+public class BatchConfigurationException extends BatchException {
 
-	private static final long serialVersionUID = -4895498760794332393L;
+	private static final long serialVersionUID = 1234567890123456789L;
 
-	private ResultAggregationException(String message, Throwable cause, String jobGuid, Long jobExecutionId) {
-		super(message, cause, jobGuid, jobExecutionId, null, true, false);
+	private BatchConfigurationException(String message, Throwable cause) {
+		super(message, cause, null, false, false);
 	}
 
-	public static ResultAggregationException handleResultAggregationFailure(
+	public static BatchConfigurationException handleConfigurationFailure(
 			Exception cause, String errorDescription, String jobGuid, Long jobExecutionId, Logger logger
 	) {
 		String rootCause = cause.getMessage() != null ? cause.getMessage()
@@ -28,6 +28,6 @@ public class ResultAggregationException extends BatchException {
 		);
 
 		logger.error(contextualMessage, cause);
-		return new ResultAggregationException(contextualMessage, cause, jobGuid, jobExecutionId);
+		return new BatchConfigurationException(contextualMessage, cause);
 	}
 }

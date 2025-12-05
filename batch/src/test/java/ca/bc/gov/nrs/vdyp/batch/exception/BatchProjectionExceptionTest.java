@@ -40,14 +40,6 @@ class BatchProjectionExceptionTest {
 		assertTrue(exception.getMessage().contains("NullPointerException"));
 		assertTrue(exception.getMessage().contains("3 records"));
 		assertEquals("FEATURE-0", exception.getFeatureId(), "Should use first feature ID as record ID");
-
-		assertEquals(partitionName, exception.getPartitionName());
-		assertEquals(3, exception.getRecordCount());
-		assertNotNull(exception.getFeatureIds());
-		assertEquals(3, exception.getFeatureIds().size());
-		assertEquals("FEATURE-0", exception.getFeatureIds().get(0));
-		assertEquals("FEATURE-1", exception.getFeatureIds().get(1));
-		assertEquals("FEATURE-2", exception.getFeatureIds().get(2));
 	}
 
 	@Test
@@ -70,7 +62,7 @@ class BatchProjectionExceptionTest {
 
 	@Test
 	void testHandleProjectionFailure_WithExceptionWithoutMessage() {
-		Exception cause = new Exception((String) null);
+		RuntimeException cause = new RuntimeException((String) null);
 		List<BatchRecord> batchRecords = createTestBatchRecords(1);
 		String jobGuid = "job-guid-789";
 		Long jobExecutionId = 700L;
@@ -86,7 +78,7 @@ class BatchProjectionExceptionTest {
 
 	@Test
 	void testHandleProjectionFailure_WithMoreThanFiveFeatureIds() {
-		Exception cause = new Exception("Test error");
+		RuntimeException cause = new RuntimeException("Test error");
 		List<BatchRecord> batchRecords = createTestBatchRecords(10);
 		String jobGuid = "job-guid-multi";
 		Long jobExecutionId = 800L;
@@ -103,7 +95,7 @@ class BatchProjectionExceptionTest {
 
 	@Test
 	void testHandleProjectionFailure_WithExactlyFiveFeatureIds() {
-		Exception cause = new Exception("Test error");
+		RuntimeException cause = new RuntimeException("Test error");
 		List<BatchRecord> batchRecords = createTestBatchRecords(5);
 		String jobGuid = "job-guid-five";
 		Long jobExecutionId = 900L;
@@ -119,7 +111,7 @@ class BatchProjectionExceptionTest {
 
 	@Test
 	void testHandleProjectionFailure_WithEmptyBatchRecords() {
-		Exception cause = new Exception("Empty batch");
+		RuntimeException cause = new RuntimeException("Empty batch");
 		List<BatchRecord> batchRecords = Collections.emptyList();
 		String jobGuid = "job-guid-empty";
 		Long jobExecutionId = 1000L;
@@ -135,7 +127,7 @@ class BatchProjectionExceptionTest {
 
 	@Test
 	void testHandleProjectionFailure_FeatureIdsExtraction() {
-		Exception cause = new Exception("Test");
+		RuntimeException cause = new RuntimeException("Test");
 		List<BatchRecord> batchRecords = Arrays
 				.asList(createBatchRecord("FEATURE-A"), createBatchRecord("FEATURE-B"), createBatchRecord("FEATURE-C"));
 		String jobGuid = "guid-ids";
@@ -150,24 +142,6 @@ class BatchProjectionExceptionTest {
 		assertTrue(message.contains("FEATURE-B"));
 		assertTrue(message.contains("FEATURE-C"));
 		assertEquals("FEATURE-A", exception.getFeatureId());
-	}
-
-	@Test
-	void testProjectionContext_GetterMethods() {
-		String partitionName = "test-partition";
-		int recordCount = 5;
-		List<String> featureIds = Arrays.asList("FEATURE-1", "FEATURE-2", "FEATURE-3", "FEATURE-4", "FEATURE-5");
-
-		BatchProjectionException.ProjectionContext context = new BatchProjectionException.ProjectionContext(
-				partitionName, recordCount, featureIds
-		);
-
-		assertEquals(partitionName, context.getPartitionName());
-		assertEquals(recordCount, context.getRecordCount());
-		assertNotNull(context.getFeatureIds());
-		assertEquals(5, context.getFeatureIds().size());
-		assertEquals("FEATURE-1", context.getFeatureIds().get(0));
-		assertEquals("FEATURE-5", context.getFeatureIds().get(4));
 	}
 
 	private List<BatchRecord> createTestBatchRecords(int count) {

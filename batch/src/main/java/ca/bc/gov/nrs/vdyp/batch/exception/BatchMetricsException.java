@@ -9,8 +9,8 @@ public class BatchMetricsException extends BatchException {
 
 	private static final long serialVersionUID = -8234567890123456789L;
 
-	private BatchMetricsException(String message, String jobGuid, Long jobExecutionId) {
-		super(message, null, jobGuid, jobExecutionId, null, false, false);
+	private BatchMetricsException(String message) {
+		super(message, null, null, false, false);
 	}
 
 	public static BatchMetricsException
@@ -19,20 +19,20 @@ public class BatchMetricsException extends BatchException {
 				.format("[GUID: %s, EXEID: %d] Metrics error: %s", jobGuid, jobExecutionId, errorDescription);
 
 		logger.error(contextualMessage);
-		return new BatchMetricsException(contextualMessage, jobGuid, jobExecutionId);
+		return new BatchMetricsException(contextualMessage);
 	}
 
 	public static BatchMetricsException handleMetricsFailure(String errorDescription, String jobGuid, Logger logger) {
 		String contextualMessage = String.format("[GUID: %s] Metrics error: %s", jobGuid, errorDescription);
 
 		logger.error(contextualMessage);
-		return new BatchMetricsException(contextualMessage, jobGuid, null);
+		return new BatchMetricsException(contextualMessage);
 	}
 
 	public static BatchMetricsException handleMetricsFailure(String errorDescription, Logger logger) {
 		String contextualMessage = String.format("Metrics error: %s", errorDescription);
 
 		logger.error(contextualMessage);
-		return new BatchMetricsException(contextualMessage, null, null);
+		return new BatchMetricsException(contextualMessage);
 	}
 }

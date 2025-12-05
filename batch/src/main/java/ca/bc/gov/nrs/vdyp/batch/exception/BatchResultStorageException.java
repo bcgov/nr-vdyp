@@ -13,15 +13,13 @@ public class BatchResultStorageException extends BatchException {
 
 	private static final long serialVersionUID = 2563311795099971052L;
 
-	private BatchResultStorageException(
-			String message, IOException cause, String jobGuid, Long jobExecutionId, String featureId
-	) {
-		super(message, cause, jobGuid, jobExecutionId, featureId, true, true);
+	private BatchResultStorageException(String message, IOException cause, String featureId) {
+		super(message, cause, featureId, true, true);
 	}
 
 	public static BatchResultStorageException handleResultStorageFailure(
-			Object context, IOException cause, String errorDescription, String jobGuid, Long jobExecutionId,
-			String featureId, Logger logger
+			IOException cause, String errorDescription, String jobGuid, Long jobExecutionId, String featureId,
+			Logger logger
 	) {
 		String rootCause = cause.getMessage() != null ? cause.getMessage()
 				: BatchConstants.ErrorMessage.NO_ERROR_MESSAGE;
@@ -29,24 +27,18 @@ public class BatchResultStorageException extends BatchException {
 
 		String featureContext = featureId != null ? String.format(", Record: %s", featureId) : "";
 
-		String contextualMessage = context != null
-				? String.format(
-						"[GUID: %s, EXEID: %d%s] %s: %s. Exception type: %s, Root cause: %s", jobGuid, jobExecutionId,
-						featureContext, errorDescription, context, exceptionType, rootCause
-				)
-				: String.format(
-						"[GUID: %s, EXEID: %d%s] %s. Exception type: %s, Root cause: %s", jobGuid, jobExecutionId,
-						featureContext, errorDescription, exceptionType, rootCause
-				);
+		String contextualMessage = String.format(
+				"[GUID: %s, EXEID: %d%s] %s. Exception type: %s, Root cause: %s", jobGuid, jobExecutionId,
+				featureContext, errorDescription, exceptionType, rootCause
+		);
 
 		logger.error(contextualMessage, cause);
-		return new BatchResultStorageException(contextualMessage, cause, jobGuid, jobExecutionId, featureId);
+		return new BatchResultStorageException(contextualMessage, cause, featureId);
 	}
 
 	public static BatchResultStorageException handleResultStorageFailure(
-			Object context, IOException cause, String errorDescription, String jobGuid, Long jobExecutionId,
-			Logger logger
+			IOException cause, String errorDescription, String jobGuid, Long jobExecutionId, Logger logger
 	) {
-		return handleResultStorageFailure(context, cause, errorDescription, jobGuid, jobExecutionId, null, logger);
+		return handleResultStorageFailure(cause, errorDescription, jobGuid, jobExecutionId, null, logger);
 	}
 }

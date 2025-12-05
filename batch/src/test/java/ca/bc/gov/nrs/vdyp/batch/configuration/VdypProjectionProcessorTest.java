@@ -22,6 +22,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
@@ -86,7 +87,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_ValidRecord_ReturnsProcessedRecord() throws Exception {
+	void testProcess_ValidRecord_ReturnsProcessedRecord() throws BatchException {
 		processor.beforeStep(stepExecution);
 
 		BatchRecord batchRecord = createValidBatchRecord();
@@ -101,7 +102,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_NullMetricsCollector_ProcessesSuccessfully() throws Exception {
+	void testProcess_NullMetricsCollector_ProcessesSuccessfully() throws BatchException {
 		processor = new VdypProjectionProcessor(null);
 		processor.beforeStep(stepExecution);
 
@@ -124,7 +125,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_ValidFeatureId_PassThroughProcessing() throws Exception {
+	void testProcess_WithValidFeatureId_ReturnsRecordUnchanged() throws BatchException {
 		processor.beforeStep(stepExecution);
 
 		BatchRecord batchRecord = new BatchRecord(
@@ -148,7 +149,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_MultipleRecords_ProcessesAllSuccessfully() throws Exception {
+	void testProcess_MultipleRecords_ProcessesAllSuccessfully() throws BatchException {
 		processor.beforeStep(stepExecution);
 
 		BatchRecord record1 = new BatchRecord(
@@ -174,11 +175,11 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testBeforeStep_CalledTwice_ThrowsIllegalStateException() throws BatchException {
+	void testBeforeStep_CalledTwice_ThrowsException() throws BatchException {
 		processor.beforeStep(stepExecution);
 
 		assertThrows(
-				IllegalStateException.class, () -> processor.beforeStep(stepExecution),
+				BatchConfigurationException.class, () -> processor.beforeStep(stepExecution),
 				"VdypProjectionProcessor already initialized. beforeStep() should only be called once."
 		);
 	}

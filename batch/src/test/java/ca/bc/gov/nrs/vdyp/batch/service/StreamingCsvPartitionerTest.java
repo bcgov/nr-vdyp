@@ -11,9 +11,11 @@ import org.springframework.mock.web.MockMultipartFile;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -625,7 +627,7 @@ class StreamingCsvPartitionerTest {
 		);
 
 		assertThrows(
-				Exception.class,
+				NegativeArraySizeException.class,
 				() -> streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, -1, tempDir, TEST_JOB_GUID)
 		);
 	}
@@ -646,7 +648,8 @@ class StreamingCsvPartitionerTest {
 	}
 
 	@Test
-	void testExtractFeatureId_NullCsvLine() throws Exception {
+	void testExtractFeatureId_NullCsvLine()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		Method extractFeatureIdMethod = StreamingCsvPartitioner.class
 				.getDeclaredMethod("extractFeatureId", String.class);
 		extractFeatureIdMethod.setAccessible(true);
@@ -657,7 +660,8 @@ class StreamingCsvPartitionerTest {
 	}
 
 	@Test
-	void testExtractFeatureId_WhitespaceCsvLine() throws Exception {
+	void testExtractFeatureId_WhitespaceCsvLine()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		Method extractFeatureIdMethod = StreamingCsvPartitioner.class
 				.getDeclaredMethod("extractFeatureId", String.class);
 		extractFeatureIdMethod.setAccessible(true);
@@ -668,7 +672,8 @@ class StreamingCsvPartitionerTest {
 	}
 
 	@Test
-	void testExtractFeatureId_TabsAndSpaces() throws Exception {
+	void testExtractFeatureId_TabsAndSpaces()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		Method extractFeatureIdMethod = StreamingCsvPartitioner.class
 				.getDeclaredMethod("extractFeatureId", String.class);
 		extractFeatureIdMethod.setAccessible(true);
@@ -679,13 +684,13 @@ class StreamingCsvPartitionerTest {
 	}
 
 	@Test
-	void testCreatePartitionWriters_NullBaseDir() throws Exception {
+	void testCreatePartitionWriters_NullBaseDir() throws NoSuchMethodException {
 		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
 				"createPartitionWriters", Path.class, String.class, String.class, Integer.class, String.class
 		);
 		createPartitionWritersMethod.setAccessible(true);
 
-		Exception exception = assertThrows(Exception.class, () -> {
+		InvocationTargetException exception = assertThrows(InvocationTargetException.class, () -> {
 			createPartitionWritersMethod.invoke(streamingCsvPartitioner, null, "test.csv", "HEADER", 2, TEST_JOB_GUID);
 		});
 
@@ -694,13 +699,13 @@ class StreamingCsvPartitionerTest {
 	}
 
 	@Test
-	void testCreatePartitionWriters_EmptyFilename() throws Exception {
+	void testCreatePartitionWriters_EmptyFilename() throws NoSuchMethodException {
 		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
 				"createPartitionWriters", Path.class, String.class, String.class, Integer.class, String.class
 		);
 		createPartitionWritersMethod.setAccessible(true);
 
-		Exception exception = assertThrows(Exception.class, () -> {
+		InvocationTargetException exception = assertThrows(InvocationTargetException.class, () -> {
 			createPartitionWritersMethod.invoke(streamingCsvPartitioner, tempDir, "", "HEADER", 2, TEST_JOB_GUID);
 		});
 
@@ -709,7 +714,7 @@ class StreamingCsvPartitionerTest {
 	}
 
 	@Test
-	void testCreatePartitionWriters_NullHeader() throws Exception {
+	void testCreatePartitionWriters_NullHeader() throws NoSuchMethodException {
 		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
 				"createPartitionWriters", Path.class, String.class, String.class, Integer.class, String.class
 		);
@@ -721,13 +726,13 @@ class StreamingCsvPartitionerTest {
 	}
 
 	@Test
-	void testCreatePartitionWriters_NullPartitionSize() throws Exception {
+	void testCreatePartitionWriters_NullPartitionSize() throws NoSuchMethodException {
 		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
 				"createPartitionWriters", Path.class, String.class, String.class, Integer.class, String.class
 		);
 		createPartitionWritersMethod.setAccessible(true);
 
-		Exception exception = assertThrows(Exception.class, () -> {
+		InvocationTargetException exception = assertThrows(InvocationTargetException.class, () -> {
 			createPartitionWritersMethod
 					.invoke(streamingCsvPartitioner, tempDir, "test.csv", "HEADER", null, TEST_JOB_GUID);
 		});
@@ -737,7 +742,7 @@ class StreamingCsvPartitionerTest {
 	}
 
 	@Test
-	void testCreatePartitionWriters_ZeroPartitionSize() throws Exception {
+	void testCreatePartitionWriters_ZeroPartitionSize() throws NoSuchMethodException {
 		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
 				"createPartitionWriters", Path.class, String.class, String.class, Integer.class, String.class
 		);
@@ -750,7 +755,7 @@ class StreamingCsvPartitionerTest {
 	}
 
 	@Test
-	void testCreatePartitionWriters_NegativePartitionSize() throws Exception {
+	void testCreatePartitionWriters_NegativePartitionSize() throws NoSuchMethodException {
 		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
 				"createPartitionWriters", Path.class, String.class, String.class, Integer.class, String.class
 		);
@@ -837,7 +842,7 @@ class StreamingCsvPartitionerTest {
 				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
 		) {
 			@Override
-			public java.io.InputStream getInputStream() throws IOException {
+			public InputStream getInputStream() throws IOException {
 				throw new IOException("Simulated I/O error while reading polygon file");
 			}
 		};

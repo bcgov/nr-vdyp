@@ -27,16 +27,22 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
+import org.springframework.batch.core.launch.NoSuchJobExecutionException;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -102,7 +108,9 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithValidInput_CallsPartitioner() throws Exception {
+	void testStartBatchJobWithFiles_WithValidInput_ReturnsSuccessResponse()
+			throws BatchPartitionException, JobExecutionAlreadyRunningException, JobRestartException,
+			JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
 		);
@@ -131,7 +139,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithPartitionerException_ReturnsBadRequest() throws Exception {
+	void testStartBatchJobWithFiles_WithPartitionerException_ReturnsBadRequest() throws BatchPartitionException {
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "data".getBytes()
 		);
@@ -163,7 +171,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsBadRequest() throws Exception {
+	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsBadRequest() throws BatchPartitionException {
 		// Create controller with null job
 		BatchController controllerWithNullJob = new BatchController(
 				jobLauncher, null, jobExplorer, metricsCollector, csvPartitioner, jobOperator
@@ -209,7 +217,9 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithDefaultPartitionSize_UsesDefault() throws Exception {
+	void testStartBatchJobWithFiles_UsesConfiguredDefaultPartitionSize()
+			throws BatchPartitionException, JobExecutionAlreadyRunningException, JobRestartException,
+			JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
 		);
@@ -239,7 +249,9 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithNullStartTime_UsesCurrentTime() throws Exception {
+	void testStartBatchJobWithFiles_WithNullStartTime_UsesCurrentTime()
+			throws BatchPartitionException, JobExecutionAlreadyRunningException, JobRestartException,
+			JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
 		);
@@ -269,7 +281,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStopBatchJob_WithValidJobGuid_StopsJob() throws Exception {
+	void testStopBatchJob_WithValidJobGuid_StopsJob()
+			throws NoSuchJobException, NoSuchJobExecutionException, JobExecutionNotRunningException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
@@ -294,7 +307,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStopBatchJob_WhenStopFails_ReturnsBadRequest() throws Exception {
+	void testStopBatchJob_WhenStopFails_ReturnsBadRequest()
+			throws NoSuchJobException, NoSuchJobExecutionException, JobExecutionNotRunningException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
@@ -317,7 +331,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStopBatchJob_WhenJobAlreadyStopping_ReturnsAccepted() throws Exception {
+	void testStopBatchJob_WhenJobAlreadyStopping_ReturnsAccepted()
+			throws NoSuchJobException, NoSuchJobExecutionException, JobExecutionNotRunningException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
@@ -358,7 +373,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStopBatchJob_WhenUnexpectedError_ReturnsInternalServerError() throws Exception {
+	void testStopBatchJob_WhenUnexpectedError_ReturnsInternalServerError()
+			throws NoSuchJobException, NoSuchJobExecutionException, JobExecutionNotRunningException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
@@ -642,7 +658,9 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithJobLauncherException_ReturnsInternalServerError() throws Exception {
+	void testStartBatchJobWithFiles_WithJobLauncherException_ReturnsInternalServerError()
+			throws BatchPartitionException, JobExecutionAlreadyRunningException, JobRestartException,
+			JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
 		);
