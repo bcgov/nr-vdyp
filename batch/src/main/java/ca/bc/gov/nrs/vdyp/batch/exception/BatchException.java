@@ -1,48 +1,37 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
-import org.slf4j.Logger;
-
-import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
-
-// FIXME VDYP-839
-public class BatchException extends RuntimeException {
+/**
+ * Base checked exception for all batch processing operations.
+ *
+ * Exception Handling Strategy: - All checked exceptions from external components are wrapped as BatchException
+ * subclasses - RuntimeExceptions are wrapped as BatchException only if they represent recoverable errors - Retryability
+ * and skippability are determined at exception creation time, not at handling time - FeatureId and job execution
+ * context are captured for traceability
+ */
+public class BatchException extends Exception {
 
 	private static final long serialVersionUID = -2197452160716581586L;
 
-	public BatchException(String message) {
-		super(message);
-	}
+	private final String featureId;
+	private final boolean retryable;
+	private final boolean skippable;
 
-	public BatchException(String message, Throwable cause) {
+	public BatchException(String message, Throwable cause, String featureId, boolean retryable, boolean skippable) {
 		super(message, cause);
+		this.featureId = featureId;
+		this.retryable = retryable;
+		this.skippable = skippable;
 	}
 
-	public BatchException(Throwable cause) {
-		super(cause);
+	public String getFeatureId() {
+		return featureId;
 	}
 
-	public static BatchException
-			handleException(Object context, Exception cause, String errorDescription, Logger logger) {
-		String rootCause = cause.getMessage() != null ? cause.getMessage()
-				: BatchConstants.ErrorMessage.NO_ERROR_MESSAGE;
-		String exceptionType = cause.getClass().getSimpleName();
-
-		String contextualMessage = context != null ? String.format(
-				"%s: %s. Exception type: %s, Root cause: %s", errorDescription, context, exceptionType, rootCause
-		) : String.format("%s. Exception type: %s, Root cause: %s", errorDescription, exceptionType, rootCause);
-
-		logger.error(contextualMessage, cause);
-		return new BatchException(contextualMessage, cause);
+	public boolean isRetryable() {
+		return retryable;
 	}
 
-	public static BatchException handleProjectionFailure(
-			String jobGuid, Long jobExecutionId, String partitionName, int recordCount, Exception cause,
-			String errorDescription, Logger logger
-	) {
-		String context = String.format(
-				"jobGuid=%s, jobExecutionId=%d, partition=%s, records=%d", jobGuid, jobExecutionId, partitionName,
-				recordCount
-		);
-		return handleException(context, cause, errorDescription, logger);
+	public boolean isSkippable() {
+		return skippable;
 	}
 }

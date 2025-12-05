@@ -1,16 +1,17 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
+
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, BatchRecord> {
 
@@ -18,20 +19,14 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 	private final BatchMetricsCollector metricsCollector;
 
-	// Partition context information
+	// Partition context information - initialized once in beforeStep() and never modified thereafter.
+	// Note: These fields cannot be made final due to Spring Batch's @BeforeStep contract.
 	private Long jobExecutionId;
 	private String jobGuid;
 	private String partitionName;
 
-	// Validation thresholds
-	@Value("${batch.validation.max-data-length:50000}")
-	private int maxDataLength;
-
-	@Value("${batch.validation.min-polygon-id-length:1}")
-	private int minPolygonIdLength;
-
-	@Value("${batch.validation.max-polygon-id-length:50}")
-	private int maxPolygonIdLength;
+	// Protects against multiple beforeStep() calls
+	private boolean initialized = false;
 
 	public VdypProjectionProcessor(BatchMetricsCollector metricsCollector) {
 		this.metricsCollector = metricsCollector;
@@ -42,7 +37,16 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	 */
 	@BeforeStep
 	@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch context
-	public void beforeStep(StepExecution stepExecution) {
+	public void beforeStep(StepExecution stepExecution) throws BatchConfigurationException, BatchMetricsException {
+		if (initialized) {
+			throw BatchConfigurationException.handleConfigurationFailure(
+					new IllegalStateException("Multiple initialization attempts"),
+					"VdypProjectionProcessor already initialized. beforeStep() should only be called once",
+					stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID),
+					stepExecution.getJobExecutionId(), logger
+			);
+		}
+
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
@@ -55,20 +59,16 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 				"[GUID: {}, Partition: {}] VDYP Projection Processor initialized for job {}", jobGuid, partitionName,
 				jobExecutionId
 		);
+
+		// Mark as initialized to prevent subsequent calls
+		this.initialized = true;
 	}
 
 	@Override
-	public BatchRecord process(@NonNull BatchRecord batchRecord) throws IllegalArgumentException {
-		String featureId = batchRecord.getFeatureId();
-
-		// Basic validation only - projection happens in ItemWriter for chunk processing
-		if (featureId == null || featureId.trim().isEmpty()) {
-			throw new IllegalArgumentException("FEATURE_ID is null or empty");
-		}
-
+	public BatchRecord process(@NonNull BatchRecord batchRecord) {
 		logger.trace(
 				"[GUID: {}, EXEID: {} Partition: {}] Prepared record for chunk processing: FEATURE_ID {}", jobGuid,
-				jobExecutionId, partitionName, featureId
+				jobExecutionId, partitionName, batchRecord.getFeatureId()
 		);
 
 		return batchRecord;

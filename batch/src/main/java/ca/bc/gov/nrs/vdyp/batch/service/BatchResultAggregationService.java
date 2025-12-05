@@ -20,21 +20,21 @@ import java.util.zip.ZipOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 /**
  * Service responsible for aggregating VDYP projection results from all partitions into a single consolidated output ZIP
  * file.
  */
 @Service
-public class ResultAggregationService {
+public class BatchResultAggregationService {
 
-	private static final Logger logger = LoggerFactory.getLogger(ResultAggregationService.class);
+	private static final Logger logger = LoggerFactory.getLogger(BatchResultAggregationService.class);
 
 	@Value("${batch.partition.min-valid-file-size}")
 	private int minValidFileSize;
@@ -44,54 +44,54 @@ public class ResultAggregationService {
 	 *
 	 * @return Path to the consolidated ZIP file
 	 */
-	public Path aggregateResultsFromJobDir(Long jobExecutionId, String jobGuid, String jobBaseDir, String jobTimestamp)
-			throws IOException {
+	public Path aggregateResultsFromJobDir(
+			@NonNull Long jobExecutionId, @NonNull String jobGuid, @NonNull String jobBaseDir,
+			@NonNull String jobTimestamp
+	) throws BatchResultAggregationException {
 		logger.info(
 				"[GUID: {}] Starting result aggregation for job execution: {} from job directory: {}", jobGuid,
 				jobExecutionId, jobBaseDir
 		);
 
-		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
-			throw new IllegalArgumentException("Job base directory cannot be null or empty");
+		try {
+			Path jobBasePath = Paths.get(jobBaseDir);
+			if (!Files.exists(jobBasePath)) {
+				throw new IOException("Directory does not exist: " + jobBaseDir);
+			}
+
+			if (!Files.isDirectory(jobBasePath)) {
+				throw new IOException("Path is not a directory: " + jobBaseDir);
+			}
+
+			logger.debug("Using job base directory: {}", jobBasePath);
+
+			// Collect all partition output directories from job-specific directory
+			List<Path> partitionOutputDirs = findPartitionOutputDirectories(jobBasePath);
+			logger.debug("Found {} partition output directories to aggregate", partitionOutputDirs.size());
+
+			// Create final ZIP file
+			String finalZipFileName = String.format("vdyp-output-%s.zip", jobTimestamp);
+			Path finalZipPath = jobBasePath.resolve(finalZipFileName);
+
+			if (partitionOutputDirs.isEmpty()) {
+				logger.warn("No partition output directories found for aggregation");
+				return createEmptyResultZip(finalZipPath);
+			}
+
+			// Aggregate results
+			try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(finalZipPath))) {
+				aggregateYieldTables(partitionOutputDirs, zipOut);
+				aggregateLogs(partitionOutputDirs, zipOut);
+
+				logger.info("Successfully created consolidated ZIP file: {}", finalZipPath);
+			}
+
+			return finalZipPath;
+
+		} catch (IOException e) {
+			throw BatchResultAggregationException
+					.handleResultAggregationFailure(e, "Failed to aggregate results", jobGuid, jobExecutionId, logger);
 		}
-
-		if (jobTimestamp == null || jobTimestamp.trim().isEmpty()) {
-			throw new IllegalArgumentException("Job timestamp cannot be null or empty");
-		}
-
-		Path jobBasePath = Paths.get(jobBaseDir);
-		if (!Files.exists(jobBasePath)) {
-			throw new BatchConfigurationException("Job base directory does not exist: " + jobBaseDir);
-		}
-
-		if (!Files.isDirectory(jobBasePath)) {
-			throw new BatchConfigurationException("Job base path is not a directory: " + jobBaseDir);
-		}
-
-		logger.debug("Using job base directory: {}", jobBasePath);
-
-		// Collect all partition output directories from job-specific directory
-		List<Path> partitionOutputDirs = findPartitionOutputDirectories(jobBasePath);
-		logger.debug("Found {} partition output directories to aggregate", partitionOutputDirs.size());
-
-		// Create final ZIP file
-		String finalZipFileName = String.format("vdyp-output-%s.zip", jobTimestamp);
-		Path finalZipPath = jobBasePath.resolve(finalZipFileName);
-
-		if (partitionOutputDirs.isEmpty()) {
-			logger.warn("No partition output directories found for aggregation");
-			return createEmptyResultZip(finalZipPath);
-		}
-
-		// Aggregate results
-		try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(finalZipPath))) {
-			aggregateYieldTables(partitionOutputDirs, zipOut);
-			aggregateLogs(partitionOutputDirs, zipOut);
-
-			logger.info("Successfully created consolidated ZIP file: {}", finalZipPath);
-		}
-
-		return finalZipPath;
 	}
 
 	/**
@@ -135,6 +135,8 @@ public class ResultAggregationService {
 
 	/**
 	 * Aggregates yield tables from all partitions, merging tables of the same type.
+	 *
+	 * @throws IOException if aggregation fails
 	 */
 	private void aggregateYieldTables(List<Path> partitionOutputDirs, ZipOutputStream zipOut) throws IOException {
 		logger.debug("Aggregating yield tables from {} partitions", partitionOutputDirs.size());
@@ -164,6 +166,8 @@ public class ResultAggregationService {
 
 	/**
 	 * Collects yield table files from a partition output directory.
+	 *
+	 * @throws IOException if directory walking fails
 	 */
 	private void collectYieldTablesFromPartition(Path partitionOutputDir, Map<String, List<Path>> yieldTablesByType)
 			throws IOException {
@@ -175,10 +179,6 @@ public class ResultAggregationService {
 			files.filter(Files::isRegularFile).filter(file -> isYieldTableFile(file.getFileName().toString())).forEach(
 					file -> yieldTablesByType
 							.computeIfAbsent(BatchConstants.File.YIELD_TABLE_TYPE, k -> new ArrayList<>()).add(file)
-			);
-		} catch (IOException e) {
-			throw BatchIOException.handleDirectoryWalkFailure(
-					partitionOutputDir, e, "Error walking directory tree for yield tables", logger
 			);
 		}
 	}
@@ -194,6 +194,8 @@ public class ResultAggregationService {
 	/**
 	 * Merges multiple yield tables of the same type into a single file in the ZIP. Assigns TABLE_NUM based on
 	 * polygon/layer combinations.
+	 *
+	 * @throws IOException if merging fails
 	 */
 	private void mergeYieldTables(List<Path> tablePaths, ZipOutputStream zipOut, List<Path> partitionOutputDirs)
 			throws IOException {
@@ -241,6 +243,8 @@ public class ResultAggregationService {
 
 	/**
 	 * Processes a single yield table file and writes its content to the ZIP output stream.
+	 *
+	 * @throws IOException if file reading fails
 	 */
 	private ProcessYieldTableResult processYieldTableFile(
 			Path tablePath, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner, boolean isFirstFile
@@ -270,9 +274,8 @@ public class ResultAggregationService {
 			}
 
 			processRemainingLines(lineIterator, zipOut, tableNumberAssigner);
-		} catch (IOException e) {
-			throw BatchIOException.handleFileReadFailure(tablePath, e, "Error reading yield table file", logger);
 		}
+
 		// Return updated isFirstFile status (false only if we actually processed content)
 		return new ProcessYieldTableResult(updatedIsFirstFile, capturedHeader);
 	}
@@ -283,7 +286,7 @@ public class ResultAggregationService {
 	private ProcessFirstLineResult processFirstLine(
 			String firstLine, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner, boolean isFirstFile
 	) throws IOException {
-		if (isHeaderLine(firstLine)) {
+		if (BatchUtils.isHeaderLine(firstLine)) {
 			if (isFirstFile) {
 				writeLineToZip(firstLine, zipOut);
 			}
@@ -325,10 +328,14 @@ public class ResultAggregationService {
 	}
 
 	/**
-	 * Searches partition directories for a valid yield table header. Return immediately when first valid header is
+	 * Searches partition directories for a valid yield table header. Returns immediately when first valid header is
 	 * found.
+	 *
+	 * @param partitionOutputDirs List of partition output directories to search
+	 * @return The first valid header found, or null if no valid header exists in any partition directory. Callers MUST
+	 *         check for null before using the returned value.
 	 */
-	private String searchForValidHeaderInPartitions(List<Path> partitionOutputDirs) throws IOException {
+	private String searchForValidHeaderInPartitions(List<Path> partitionOutputDirs) {
 		logger.debug("Searching for valid header with min file size: {} bytes", minValidFileSize);
 
 		for (Path partitionDir : partitionOutputDirs) {
@@ -367,15 +374,19 @@ public class ResultAggregationService {
 
 	/**
 	 * Extracts header from a yield table file if it exists and is valid.
+	 *
+	 * @param filePath Path to the yield table file
+	 * @return The header line if found and valid, or null if the file cannot be read or contains no valid header.
+	 *         Callers MUST check for null before using the returned value.
 	 */
 	private String extractHeaderFromFile(Path filePath) {
 		try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
 			String firstLine = lines.findFirst().orElse(null);
-			if (firstLine != null && isHeaderLine(firstLine)) {
+			if (firstLine != null && BatchUtils.isHeaderLine(firstLine)) {
 				return firstLine;
 			}
 		} catch (IOException e) {
-			logger.debug("Failed to read file for header extraction: {}", filePath, e);
+			logger.error("Failed to read file for header extraction: {}", filePath, e);
 		}
 		return null;
 	}
@@ -430,7 +441,8 @@ public class ResultAggregationService {
 		 * Assigns TABLE_NUM based on polygon/layer combination.
 		 *
 		 * @param line The CSV line to process
-		 * @return The processed line with correct TABLE_NUM, or null if line should be skipped
+		 * @return The processed line with correct TABLE_NUM, or null if line should be skipped (e.g., empty line, or
+		 *         missing FEATURE_ID). Callers MUST check for null before using the returned value.
 		 */
 		public String assignTableNumber(String line) {
 			if (line == null || line.trim().isEmpty()) {
@@ -492,7 +504,7 @@ public class ResultAggregationService {
 				}
 
 				int assigned = nextTableNum++;
-				logger.debug(
+				logger.trace(
 						"Assigned TABLE_NUM {} to polygon/layer combination: FEATURE_ID={}, LAYER_ID={}", assigned,
 						featureId, layerId
 				);
@@ -508,20 +520,6 @@ public class ResultAggregationService {
 		public int getUniqueCount() {
 			return polygonLayerTableNumbers.size();
 		}
-	}
-
-	/**
-	 * Determines if a line is a header line.
-	 */
-	private boolean isHeaderLine(String line) {
-		if (line == null || line.trim().isEmpty()) {
-			return true; // Treat empty lines as headers (skip them)
-		}
-
-		String upperLine = line.toUpperCase();
-		// check if it starts with header keywords
-		return upperLine.startsWith("TABLE") || upperLine.startsWith("FEATURE") || upperLine.startsWith("POLYGON")
-				|| upperLine.contains("LAYER_ID") || upperLine.contains("SPECIES_CODE");
 	}
 
 	/**
@@ -543,15 +541,20 @@ public class ResultAggregationService {
 
 	/**
 	 * Aggregates log files from all partitions.
+	 *
+	 * @throws IOException if aggregation fails
 	 */
 	private void aggregateLogs(List<Path> partitionDirs, ZipOutputStream zipOut) throws IOException {
 		logger.debug("Aggregating log files from {} partitions", partitionDirs.size());
 
 		Map<String, List<Path>> logsByType = new HashMap<>();
 
-		// Filter valid directories first, then collect log files
-		partitionDirs.stream().filter(this::isValidPartitionDirectory)
-				.forEach(partitionDir -> collectLogFilesFromPartition(partitionDir, logsByType));
+		// Collect log files from each valid partition directory
+		for (Path partitionDir : partitionDirs) {
+			if (isValidPartitionDirectory(partitionDir)) {
+				collectLogFilesFromPartition(partitionDir, logsByType);
+			}
+		}
 
 		// Merge and add to ZIP
 		for (Map.Entry<String, List<Path>> entry : logsByType.entrySet()) {
@@ -568,18 +571,17 @@ public class ResultAggregationService {
 
 	/**
 	 * Collects log files from a single partition directory.
+	 *
+	 * @throws IOException if directory walking fails
 	 */
-	private void collectLogFilesFromPartition(Path partitionDir, Map<String, List<Path>> logsByType) {
+	private void collectLogFilesFromPartition(Path partitionDir, Map<String, List<Path>> logsByType)
+			throws IOException {
 		try (Stream<Path> files = Files.walk(partitionDir)) {
 			files.filter(Files::isRegularFile).filter(file -> isLogFile(file.getFileName().toString()))
 					.forEach(file -> {
 						String logType = extractLogType(file.getFileName().toString());
 						logsByType.computeIfAbsent(logType, k -> new ArrayList<>()).add(file);
 					});
-		} catch (IOException e) {
-			IOException wrappedException = BatchIOException
-					.handleDirectoryWalkFailure(partitionDir, e, "Error walking directory tree for log files", logger);
-			throw new BatchException("Failed to collect log files from partition", wrappedException);
 		}
 	}
 
@@ -671,7 +673,7 @@ public class ResultAggregationService {
 	 * Cleans up interim partition directories after successful zip creation. Deletes input-partition and
 	 * output-partition directories and their contents.
 	 */
-	public void cleanupPartitionDirectories(Path jobBasePath) throws IOException {
+	public void cleanupPartitionDirectories(Path jobBasePath) {
 		logger.debug("Starting cleanup of partition directories in: {}", jobBasePath);
 
 		if (!Files.exists(jobBasePath) || !Files.isDirectory(jobBasePath)) {
@@ -690,18 +692,33 @@ public class ResultAggregationService {
 			}).toList();
 
 			for (Path partitionDir : partitionDirs) {
-				try {
-					deleteDirectoryRecursively(partitionDir);
+				if (deletePartitionDirectory(partitionDir)) {
 					deletedDirs++;
-					logger.debug("Deleted partition directory: {}", partitionDir.getFileName());
-				} catch (IOException e) {
-					logger.error("Failed to delete partition directory: {} - {}", partitionDir, e.getMessage(), e);
-					// Continue with other directories even if one fails
 				}
 			}
+		} catch (IOException e) {
+			logger.error("Failed to list partition directories for cleanup: {}", jobBasePath, e);
 		}
 
 		logger.debug("Cleanup completed. Deleted {} partition directories", deletedDirs);
+	}
+
+	/**
+	 * Deletes a single partition directory and its contents.
+	 *
+	 * @param partitionDir The partition directory to delete
+	 * @return true if deletion was successful, false otherwise
+	 */
+	private boolean deletePartitionDirectory(Path partitionDir) {
+		try {
+			deleteDirectoryRecursively(partitionDir);
+			logger.debug("Deleted partition directory: {}", partitionDir.getFileName());
+			return true;
+		} catch (IOException e) {
+			logger.error("Failed to delete partition directory: {} - {}", partitionDir, e.getMessage(), e);
+			// Continue with other directories even if one fails
+			return false;
+		}
 	}
 
 	/**
