@@ -1,8 +1,6 @@
 name: Deploy Using Maven and Helm
 permissions:
   contents: read
-  deployments: write  # needed by .deeployer
-
 on:
   workflow_call:
     inputs:
