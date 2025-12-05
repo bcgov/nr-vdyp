@@ -84,6 +84,7 @@ public class VDYPUserService {
 			if (userOption.isEmpty()) {
 				String firstName = jwt.getClaim("given_name");
 				String lastName = jwt.getClaim("family_name");
+				// FIXME VDYP-847 Record email and Display Name to our system
 
 				VDYPUserModel newUser = new VDYPUserModel();
 				newUser.setOidcGUID(oidcId);

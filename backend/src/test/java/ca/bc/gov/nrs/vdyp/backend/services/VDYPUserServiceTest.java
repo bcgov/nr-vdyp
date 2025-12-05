@@ -189,8 +189,10 @@ class VDYPUserServiceTest {
 
 		when(userRepository.listAll()).thenReturn(Stream.of(entity1, entity2).toList());
 		List<VDYPUserModel> users = service.getAllUsers();
-		assertThat(users).hasSizeGreaterThanOrEqualTo(2).hasSizeLessThanOrEqualTo(2);
-		assertThat(users).hasOnlyElementsOfType(VDYPUserModel.class);
+		assertThat(users) //
+				.hasSizeGreaterThanOrEqualTo(2) //
+				.hasSizeLessThanOrEqualTo(2) //
+				.hasOnlyElementsOfType(VDYPUserModel.class);
 	}
 
 	@Test
