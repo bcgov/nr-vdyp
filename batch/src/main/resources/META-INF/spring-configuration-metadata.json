@@ -58,7 +58,7 @@
             "name": "batch.thread-pool.thread-name-prefix",
             "type": "java.lang.String",
             "description": "Prefix for batch processing thread names",
-            "defaultValue": "vdyp-batch-partition-"
+            "defaultValue": "vdyp-batch-thread-"
         },
         {
             "name": "batch.retry.max-attempts",
@@ -77,24 +77,6 @@
             "type": "java.lang.Integer",
             "description": "Maximum number of VDYP forest records that can be skipped due to errors",
             "defaultValue": 50000
-        },
-        {
-            "name": "batch.validation.max-data-length",
-            "type": "java.lang.Integer",
-            "description": "Maximum allowed length for VDYP input data fields",
-            "defaultValue": 50000
-        },
-        {
-            "name": "batch.validation.min-polygon-id-length",
-            "type": "java.lang.Integer",
-            "description": "Minimum allowed length for polygon FEATURE_ID",
-            "defaultValue": 1
-        },
-        {
-            "name": "batch.validation.max-polygon-id-length",
-            "type": "java.lang.Integer",
-            "description": "Maximum allowed length for polygon FEATURE_ID",
-            "defaultValue": 50
         }
     ]
 }

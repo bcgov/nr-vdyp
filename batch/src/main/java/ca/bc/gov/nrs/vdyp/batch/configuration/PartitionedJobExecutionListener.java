@@ -11,7 +11,8 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 import java.time.LocalDateTime;
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Job execution listener for partitioned VDYP batch job.
@@ -21,20 +22,16 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 
 	private static final Logger logger = LoggerFactory.getLogger(PartitionedJobExecutionListener.class);
 
-	private final BatchProperties batchProperties;
-
 	// Thread safety for afterJob execution - using job execution ID as key
-	private final ConcurrentHashMap<Long, Boolean> jobCompletionTracker = new ConcurrentHashMap<>();
+	private final Map<Long, Boolean> jobCompletionTracker = new HashMap<>();
 	private final Object lock = new Object();
-
-	public PartitionedJobExecutionListener(BatchProperties batchProperties) {
-		this.batchProperties = batchProperties;
-	}
 
 	@Override
 	public void beforeJob(@NonNull JobExecution jobExecution) {
 		// Initialize tracking for this job execution
-		jobCompletionTracker.put(jobExecution.getId(), false);
+		synchronized (lock) {
+			jobCompletionTracker.put(jobExecution.getId(), false);
+		}
 
 		String separator = "============================================================";
 		logger.info(separator);
@@ -43,19 +40,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		Long partitionSize = jobExecution.getJobParameters().getLong(BatchConstants.Partition.SIZE);
 		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 
-		int actualPartitionSize;
-		if (partitionSize != null) {
-			actualPartitionSize = partitionSize.intValue();
-		} else if (batchProperties.getPartition().getDefaultPartitionSize() > 0) {
-			actualPartitionSize = batchProperties.getPartition().getDefaultPartitionSize();
-		} else {
-			throw new IllegalStateException(
-					"batch.partition.default-partition-size must be configured in application.properties"
-			);
-		}
-
-		logger.info("VDYP Grid Size: {}", actualPartitionSize);
-		logger.info("Expected Partitions: {}", actualPartitionSize);
+		logger.info("VDYP Grid Size: {}", partitionSize);
 		logger.info("Job Execution ID: {}", jobExecution.getId());
 		logger.info("Job GUID: {}", jobGuid);
 		logger.info(separator);
@@ -66,22 +51,14 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		Long jobExecutionId = jobExecution.getId();
 		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 
-		// Check if this specific job execution has already been processed
-		Boolean alreadyProcessed = jobCompletionTracker.get(jobExecutionId);
-		if (alreadyProcessed == null || alreadyProcessed) {
-			logger.info(
-					"[GUID: {}] VDYP Job {} already processed or not tracked, skipping afterJob processing", jobGuid,
-					jobExecutionId
-			);
-			return;
-		}
-
 		// Use synchronization to ensure only one thread processes this job completion
 		synchronized (lock) {
-			// Double-check after acquiring lock
-			if (Boolean.TRUE.equals(jobCompletionTracker.get(jobExecutionId))) {
+			// Check if this specific job execution has already been processed
+			Boolean alreadyProcessed = jobCompletionTracker.get(jobExecutionId);
+			if (alreadyProcessed == null || alreadyProcessed) {
 				logger.info(
-						"[GUID: {}] VDYP Job {} already processed by another thread, skipping", jobGuid, jobExecutionId
+						"[GUID: {}] VDYP Job {} already processed or not tracked, skipping afterJob processing",
+						jobGuid, jobExecutionId
 				);
 				return;
 			}
@@ -110,15 +87,16 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 			}
 
 			logger.info(separator);
-		}
 
-		cleanupOldJobTracker(jobExecutionId);
+			cleanupOldJobTracker(jobExecutionId);
+		}
 	}
 
 	/**
 	 * Cleans up old job execution tracking to prevent memory leaks.
 	 */
 	private void cleanupOldJobTracker(Long currentJobId) {
+		// Already inside synchronized block when called
 		if (jobCompletionTracker.size() > 10) {
 			jobCompletionTracker.entrySet().removeIf(entry -> entry.getKey() < currentJobId - 5);
 		}

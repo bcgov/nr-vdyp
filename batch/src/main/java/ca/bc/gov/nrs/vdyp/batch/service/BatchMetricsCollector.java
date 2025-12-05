@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -10,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics.PartitionMetrics;
 
@@ -27,201 +26,144 @@ public class BatchMetricsCollector {
 	private final LinkedList<String> jobMetricsByArrivalTime = new LinkedList<>();
 	private final Object lock = new Object();
 
-	public BatchMetrics initializeMetrics(@NonNull Long jobExecutionId, @NonNull String jobGuid) {
-		try {
-			synchronized (lock) {
-				if (jobMetricsMap.containsKey(jobGuid)) {
-					throw new BatchException(
-							"job metrics already exists for GUID: " + jobGuid + ", job execution ID: " + jobExecutionId
-					);
-				}
-
-				BatchMetrics metrics = new BatchMetrics(jobExecutionId, jobGuid);
-				jobMetricsMap.put(jobGuid, metrics);
-				jobMetricsByArrivalTime.add(jobGuid);
-
-				logger.debug("[GUID: {}] Initialized metrics for job execution ID: {}", jobGuid, jobExecutionId);
-				return metrics;
+	public BatchMetrics initializeMetrics(@NonNull Long jobExecutionId, @NonNull String jobGuid)
+			throws BatchMetricsException {
+		synchronized (lock) {
+			if (jobMetricsMap.containsKey(jobGuid)) {
+				throw BatchMetricsException
+						.handleMetricsFailure("Job metrics already exists", jobGuid, jobExecutionId, logger);
 			}
-		} catch (Exception e) {
-			throw new BatchException(
-					"Failed to initialize metrics for job execution ID: " + jobExecutionId + ", GUID: " + jobGuid, e
-			);
+
+			BatchMetrics metrics = new BatchMetrics(jobExecutionId, jobGuid);
+			jobMetricsMap.put(jobGuid, metrics);
+			jobMetricsByArrivalTime.add(jobGuid);
+
+			logger.debug("[GUID: {}, EXEID: {}] Initialized metrics", jobGuid, jobExecutionId);
+			return metrics;
 		}
 	}
 
 	public void initializePartitionMetrics(
 			@NonNull Long jobExecutionId, @NonNull String jobGuid, @NonNull String partitionName
-	) {
-		try {
-			synchronized (lock) {
-				BatchMetrics metrics = getJobMetrics(jobGuid);
+	) throws BatchMetricsException {
+		synchronized (lock) {
+			BatchMetrics metrics = getJobMetrics(jobGuid);
 
-				BatchMetrics.PartitionMetrics partitionMetrics = new BatchMetrics.PartitionMetrics(partitionName);
-				metrics.getPartitionMetrics().put(partitionName, partitionMetrics);
-			}
-
-			logger.debug(
-					"[{}] [GUID: {}] Initialized partition metrics for job execution ID: {}", partitionName, jobGuid,
-					jobExecutionId
-			);
-		} catch (BatchException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new BatchException(
-					"Failed to initialize partition metrics for partition: " + partitionName + " in job: "
-							+ jobExecutionId + ", GUID: " + jobGuid,
-					e
-			);
+			BatchMetrics.PartitionMetrics partitionMetrics = new BatchMetrics.PartitionMetrics(partitionName);
+			metrics.getPartitionMetrics().put(partitionName, partitionMetrics);
 		}
+
+		logger.debug(
+				"[GUID: {}, EXEID: {}, Partition: {}] Initialized partition metrics", jobGuid, jobExecutionId,
+				partitionName
+		);
 	}
 
 	public void completePartitionMetrics(
 			@NonNull Long jobExecutionId, @NonNull String jobGuid, @NonNull String partitionName, long writeCount,
 			String exitCode
-	) {
-		try {
-			var partitionMetrics = getPartitionMetrics(jobGuid, partitionName);
+	) throws BatchMetricsException {
+		var partitionMetrics = getPartitionMetrics(jobGuid, partitionName);
 
-			partitionMetrics.setEndTime(LocalDateTime.now());
-			partitionMetrics.setRecordsWritten(writeCount);
-			partitionMetrics.setExitCode(exitCode);
+		partitionMetrics.complete(writeCount, exitCode);
 
-			logger.debug(
-					"[{}] [GUID: {}] Completed partition metrics for job execution ID: {}, written: {}, exitCode: {}",
-					partitionName, jobGuid, jobExecutionId, writeCount, exitCode
-			);
-		} catch (BatchException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new BatchException(
-					"Failed to complete partition metrics for partition: " + partitionName + " in job: "
-							+ jobExecutionId + ", GUID: " + jobGuid,
-					e
-			);
-		}
+		logger.debug(
+				"[GUID: {}, EXEID: {}, Partition: {}] Completed partition metrics, written: {}, exitCode: {}", jobGuid,
+				jobExecutionId, partitionName, writeCount, exitCode
+		);
 	}
 
 	public void finalizeJobMetrics(
 			@NonNull Long jobExecutionId, @NonNull String jobGuid, String status, long totalRead, long totalWritten
-	) {
-		try {
-			BatchMetrics metrics = getJobMetrics(jobGuid);
+	) throws BatchMetricsException {
+		BatchMetrics metrics = getJobMetrics(jobGuid);
 
-			metrics.setEndTime(LocalDateTime.now());
-			metrics.setStatus(status);
-			metrics.setTotalRecordsRead(totalRead);
-			metrics.setTotalRecordsWritten(totalWritten);
-			metrics.setTotalRecordsProcessed(totalWritten);
+		metrics.finalizeJob(status, totalRead, totalWritten);
 
-			logger.info(
-					"[GUID: {}] Finalized job execution ID: {} metrics: status={}, read={}, written={}", jobGuid,
-					jobExecutionId, status, totalRead, totalWritten
-			);
-		} catch (BatchException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new BatchException("Failed to finalize job metrics for job execution ID: " + jobExecutionId, e);
-		}
+		logger.info(
+				"[GUID: {}, EXEID: {}] Finalized metrics: status={}, read={}, written={}", jobGuid, jobExecutionId,
+				status, totalRead, totalWritten
+		);
 	}
 
 	public void recordRetryAttempt(
 			@NonNull Long jobExecutionId, @NonNull String jobGuid, int attemptNumber, @NonNull Throwable error,
 			boolean successful, String partitionName
-	) {
-		try {
-			String errorType = error.getClass().getSimpleName();
-			String errorMessage = error.getMessage() != null ? error.getMessage() : "No error message";
+	) throws BatchMetricsException {
+		String errorType = error.getClass().getSimpleName();
+		String errorMessage = error.getMessage() != null ? error.getMessage() : "No error message";
 
-			synchronized (lock) {
-				BatchMetrics metrics = getJobMetrics(jobGuid);
+		synchronized (lock) {
+			BatchMetrics metrics = getJobMetrics(jobGuid);
 
-				metrics.incrementRetryAttempts();
-				if (successful) {
-					metrics.incrementSuccessfulRetries();
-				} else {
-					metrics.incrementFailedRetries();
-				}
-
-				// Create retry detail
-				BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
-						attemptNumber, errorType, errorMessage, successful, partitionName
-				);
-
-				metrics.getRetryDetails().add(retryDetail);
+			metrics.incrementRetryAttempts();
+			if (successful) {
+				metrics.incrementSuccessfulRetries();
+			} else {
+				metrics.incrementFailedRetries();
 			}
 
-			logger.debug(
-					"[GUID: {}, Partition: {}] Recorded retry attempt #{} for job execution ID: {}, successful: {}, error: {}",
-					jobGuid, partitionName, attemptNumber, jobExecutionId, successful, errorType
+			// Create retry detail
+			BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
+					attemptNumber, errorType, errorMessage, successful, partitionName
 			);
-		} catch (BatchException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new BatchException(
-					"Failed to record retry attempt for job execution ID: " + jobExecutionId + ", [GUID: " + jobGuid
-							+ "]",
-					e
-			);
+
+			metrics.getRetryDetails().add(retryDetail);
 		}
+
+		logger.debug(
+				"[GUID: {}, Partition: {}] Recorded retry attempt #{} for job execution ID: {}, successful: {}, error: {}",
+				jobGuid, partitionName, attemptNumber, jobExecutionId, successful, errorType
+		);
 	}
 
 	public void recordSkip(
 			@NonNull Long jobExecutionId, @NonNull String jobGuid, String featureId, @NonNull Throwable error,
 			@NonNull String partitionName
-	) {
-		try {
-			String errorType = error.getClass().getSimpleName();
-			String errorMessage = error.getMessage() != null ? error.getMessage() : "No error message";
+	) throws BatchMetricsException {
+		String errorType = error.getClass().getSimpleName();
+		String errorMessage = error.getMessage() != null ? error.getMessage() : "No error message";
 
-			synchronized (lock) {
-				BatchMetrics metrics = getJobMetrics(jobGuid);
+		synchronized (lock) {
+			BatchMetrics metrics = getJobMetrics(jobGuid);
 
-				metrics.incrementSkips();
+			metrics.incrementSkips();
 
-				// Count skip reasons
-				metrics.getSkipReasonCount().merge(errorType, 1, Integer::sum);
+			// Count skip reasons
+			metrics.getSkipReasonCount().merge(errorType, 1, Integer::sum);
 
-				// Create skip detail
-				BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
-						featureId, errorType, errorMessage, partitionName
-				);
-
-				metrics.getSkipDetails().add(skipDetail);
-			}
-
-			logger.warn(
-					"[GUID: {}, Partition: {}] Recorded skip for job execution ID: {}, featureId: {}, error: {}",
-					jobGuid, partitionName, jobExecutionId, featureId, errorType
+			// Create skip detail
+			BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
+					featureId, errorType, errorMessage, partitionName
 			);
-		} catch (BatchException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new BatchException("Failed to record skip event for job execution ID: " + jobExecutionId, e);
+
+			metrics.getSkipDetails().add(skipDetail);
 		}
+
+		logger.warn(
+				"[GUID: {}, Partition: {}] Recorded skip for job execution ID: {}, featureId: {}, error: {}", jobGuid,
+				partitionName, jobExecutionId, featureId, errorType
+		);
 	}
 
-	public void cleanupOldMetrics(int keepCount) {
+	public void cleanupOldMetrics(int keepCount) throws BatchMetricsException {
 		if (keepCount < 0) {
-			throw new BatchException("Keep count must be non-negative, got: " + keepCount);
+			throw BatchMetricsException
+					.handleMetricsFailure("Keep count must be non-negative, got: " + keepCount, logger);
 		}
 
-		try {
-			synchronized (lock) {
-				int nItemsToRemove = jobMetricsMap.size() - keepCount;
-				for (int i = 0; i < nItemsToRemove; i++) {
-					String jobGuid = jobMetricsByArrivalTime.removeFirst();
+		synchronized (lock) {
+			int nItemsToRemove = jobMetricsMap.size() - keepCount;
+			for (int i = 0; i < nItemsToRemove; i++) {
+				String jobGuid = jobMetricsByArrivalTime.removeFirst();
 
-					var jobMetrics = jobMetricsMap.remove(jobGuid);
-					assert jobMetrics != null;
-				}
-
-				assert jobMetricsMap.size() == jobMetricsByArrivalTime.size();
-
-				logger.debug("Cleaned up old metrics, removed {} least recent entries", nItemsToRemove);
+				var jobMetrics = jobMetricsMap.remove(jobGuid);
+				assert jobMetrics != null;
 			}
-		} catch (Exception e) {
-			throw new BatchException("Failed to cleanup old metrics", e);
+
+			assert jobMetricsMap.size() == jobMetricsByArrivalTime.size();
+
+			logger.debug("Cleaned up old metrics, removed {} least recent entries", nItemsToRemove);
 		}
 	}
 
@@ -232,23 +174,25 @@ public class BatchMetricsCollector {
 		}
 	}
 
-	public BatchMetrics getJobMetrics(@NonNull String jobGuid) {
+	public BatchMetrics getJobMetrics(@NonNull String jobGuid) throws BatchMetricsException {
 		synchronized (lock) {
 			var metrics = jobMetricsMap.get(jobGuid);
 			if (metrics == null) {
-				throw new BatchException("No metrics found for job GUID: " + jobGuid);
+				throw BatchMetricsException.handleMetricsFailure("No metrics found", jobGuid, logger);
 			}
 			return metrics;
 		}
 	}
 
-	private PartitionMetrics getPartitionMetrics(@NonNull String jobGuid, @NonNull String partitionName) {
+	private PartitionMetrics getPartitionMetrics(@NonNull String jobGuid, @NonNull String partitionName)
+			throws BatchMetricsException {
 		synchronized (lock) {
 			var batchMetrics = getJobMetrics(jobGuid);
 			var partitionMetrics = batchMetrics.getPartitionMetrics().get(partitionName);
 			if (partitionMetrics == null) {
-				throw new BatchException(
-						"Partition metrics not found for partition " + partitionName + " of job GUID: " + jobGuid
+				throw BatchMetricsException.handleMetricsFailure(
+						"Partition metrics not found for partition " + partitionName, jobGuid,
+						batchMetrics.getJobExecutionId(), logger
 				);
 			}
 			return partitionMetrics;

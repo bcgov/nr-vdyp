@@ -3,35 +3,26 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+
 import java.time.LocalDateTime;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PartitionedJobExecutionListenerTest {
-
-	@Mock
-	private BatchProperties batchProperties;
-
-	@Mock
-	private BatchProperties.PartitionProperties partition;
 
 	@Mock
 	private JobExecution jobExecution;
@@ -39,14 +30,11 @@ class PartitionedJobExecutionListenerTest {
 	@Mock
 	private JobInstance jobInstance;
 
-	@TempDir
-	Path tempDir;
-
 	private PartitionedJobExecutionListener listener;
 
 	@BeforeEach
 	void setUp() {
-		listener = new PartitionedJobExecutionListener(batchProperties);
+		listener = new PartitionedJobExecutionListener();
 	}
 
 	@Test
@@ -56,8 +44,8 @@ class PartitionedJobExecutionListenerTest {
 
 	@Test
 	void testBeforeJob_WithJobParameters() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong("partitionSize", 4L).addLong("chunkSize", 100L)
-				.toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addLong(BatchConstants.Partition.SIZE, 4L)
+				.addString(BatchConstants.Job.GUID, "test-guid-123").toJobParameters();
 
 		when(jobExecution.getId()).thenReturn(1L);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
@@ -69,47 +57,32 @@ class PartitionedJobExecutionListenerTest {
 	}
 
 	@Test
-	void testBeforeJob_WithoutJobParameters_UsesBatchProperties() {
-		JobParameters jobParameters = new JobParametersBuilder().toJobParameters();
-		when(jobExecution.getId()).thenReturn(1L);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(batchProperties.getPartition()).thenReturn(partition);
-		when(partition.getDefaultPartitionSize()).thenReturn(4);
+	void testBeforeJob_WithoutPartitionSize() {
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "test-guid-456")
+				.toJobParameters();
 
+		when(jobExecution.getId()).thenReturn(2L);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+
+		// Should not throw even without partition size
 		assertDoesNotThrow(() -> listener.beforeJob(jobExecution));
 
-		verify(partition, atLeastOnce()).getDefaultPartitionSize();
-	}
-
-	@Test
-	void testBeforeJob_MissingGridSize_ThrowsException() {
-		JobParameters jobParameters = new JobParametersBuilder().toJobParameters();
-		when(jobExecution.getId()).thenReturn(1L);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(batchProperties.getPartition()).thenReturn(partition);
-		when(partition.getDefaultPartitionSize()).thenReturn(0);
-
-		// 0 partition size when no job parameter is provided throws exception
-		assertThrows(IllegalStateException.class, () -> listener.beforeJob(jobExecution));
-	}
-
-	@Test
-	void testBeforeJob_ValidPartitionSize_Success() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong("partitionSize", 4L).toJobParameters();
-		when(jobExecution.getId()).thenReturn(1L);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(batchProperties.getPartition()).thenReturn(partition);
-		when(partition.getDefaultPartitionSize()).thenReturn(4);
-
-		// Should succeed since partitionSize is provided
-		assertDoesNotThrow(() -> listener.beforeJob(jobExecution));
 		verify(jobExecution, atLeastOnce()).getId();
 	}
 
 	@Test
 	void testAfterJob_FirstTime() {
-		setupAfterJobMocks();
-		setupJobExecutionBasicMocks();
+		Long jobId = 1L;
+		String jobGuid = "guid-001";
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(5));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
 
 		// Call beforeJob first to initialize tracking
 		listener.beforeJob(jobExecution);
@@ -122,8 +95,14 @@ class PartitionedJobExecutionListenerTest {
 
 	@Test
 	void testAfterJob_AlreadyProcessed_SkipsProcessing() {
-		setupAfterJobMocks();
-		setupJobExecutionBasicMocks();
+		Long jobId = 2L;
+		String jobGuid = "guid-002";
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 
 		// Call beforeJob to initialize tracking
 		listener.beforeJob(jobExecution);
@@ -137,94 +116,129 @@ class PartitionedJobExecutionListenerTest {
 	}
 
 	@Test
-	void testAfterJob_WithMergePartitionFiles() throws IOException {
-		setupAfterJobMocksWithFileOperations();
-		setupJobExecutionBasicMocks();
-		createTestPartitionFiles();
+	void testAfterJob_WithDuration() {
+		Long jobId = 3L;
+		String jobGuid = "guid-003";
+
+		LocalDateTime startTime = LocalDateTime.now().minusMinutes(5);
+		LocalDateTime endTime = LocalDateTime.now();
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
+		when(jobExecution.getStartTime()).thenReturn(startTime);
+		when(jobExecution.getEndTime()).thenReturn(endTime);
 
 		listener.beforeJob(jobExecution);
 
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
 
-		verify(jobExecution, atLeastOnce()).getId();
+		verify(jobExecution, atLeastOnce()).getStartTime();
+		verify(jobExecution, atLeastOnce()).getEndTime();
 	}
 
 	@Test
-	void testAfterJob_WithNullDirectory_Handles() {
-		setupAfterJobMocks();
-		setupJobExecutionBasicMocks();
-		// Test with null directory path
-		when(batchProperties.getRootDirectory()).thenReturn(null);
+	void testAfterJob_WithMissingTimeInformation() {
+		Long jobId = 4L;
+		String jobGuid = "guid-004";
 
-		listener.beforeJob(jobExecution);
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.toJobParameters();
 
-		// Should not throw during afterJob processing
-		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
-	}
-
-	@Test
-	void testAfterJob_WithValidDirectory_Success() {
-		setupAfterJobMocks();
-		setupJobExecutionBasicMocks();
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
+		when(jobExecution.getStartTime()).thenReturn(null);
+		when(jobExecution.getEndTime()).thenReturn(null);
 
 		listener.beforeJob(jobExecution);
 
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
-		// afterJob doesn't directly call getRootDirectory
-		verify(jobExecution, atLeastOnce()).getId();
+
+		verify(jobExecution, atLeastOnce()).getStartTime();
+		verify(jobExecution, atLeastOnce()).getEndTime();
 	}
 
 	@Test
-	void testAfterJob_WithNullOutputDirectory_UsesTempDirectory() {
-		setupAfterJobMocks();
-		setupJobExecutionBasicMocks();
+	void testAfterJob_NotTracked_SkipsProcessing() {
+		Long jobId = 5L;
+		String jobGuid = "guid-005";
 
-		JobParameters jobParameters = new JobParametersBuilder().addLong("partitionSize", 2L).toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 
-		// No output directory specified
-		when(batchProperties.getRootDirectory()).thenReturn(null);
-
-		listener.beforeJob(jobExecution);
-
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+
+		verify(jobExecution, atLeastOnce()).getId();
 	}
 
-	private void setupJobExecutionBasicMocks() {
-		when(jobExecution.getId()).thenReturn(1L);
-		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
-		when(jobInstance.getJobName()).thenReturn("testJob");
+	@Test
+	void testBeforeJob_MultipleJobs() {
+		JobExecution job1 = mock(JobExecution.class);
+		JobExecution job2 = mock(JobExecution.class);
+
+		JobParameters params1 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "guid-multi-1")
+				.toJobParameters();
+		JobParameters params2 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "guid-multi-2")
+				.toJobParameters();
+
+		when(job1.getId()).thenReturn(10L);
+		when(job1.getJobParameters()).thenReturn(params1);
+		when(job2.getId()).thenReturn(20L);
+		when(job2.getJobParameters()).thenReturn(params2);
+
+		assertDoesNotThrow(() -> listener.beforeJob(job1));
+		assertDoesNotThrow(() -> listener.beforeJob(job2));
+
+		verify(job1, atLeastOnce()).getId();
+		verify(job2, atLeastOnce()).getId();
+	}
+
+	@Test
+	void testAfterJob_WithCompletedStatus() {
+		Long jobId = 6L;
+		String jobGuid = "guid-006";
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
-		when(jobExecution.getExitStatus()).thenReturn(ExitStatus.COMPLETED);
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(5));
 		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+
+		listener.beforeJob(jobExecution);
+
+		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+
+		verify(jobExecution, atLeastOnce()).getStatus();
 	}
 
-	private void setupAfterJobMocks() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong("partitionSize", 2L)
-				.addString("outputFilePath", tempDir.toString()).toJobParameters();
+	@Test
+	void testAfterJob_WithFailedStatus() {
+		Long jobId = 7L;
+		String jobGuid = "guid-007";
 
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(batchProperties.getPartition()).thenReturn(partition);
-		when(batchProperties.getRootDirectory()).thenReturn(tempDir.toString());
-	}
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.FAILED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(5));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
 
-	private void setupAfterJobMocksWithFileOperations() throws IOException {
-		setupAfterJobMocks();
+		listener.beforeJob(jobExecution);
 
-		// Ensure output directory exists
-		Files.createDirectories(tempDir);
-	}
+		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
 
-	private void createTestPartitionFiles() throws IOException {
-		String header = "id,data,polygonId,layerId,status";
-
-		// Create partition file 0
-		Path partition0 = tempDir.resolve("test_partition0.csv");
-		Files.write(partition0, (header + "\n1,data1,poly1,layer1,PROCESSED\n").getBytes());
-
-		// Create partition file 1
-		Path partition1 = tempDir.resolve("test_partition1.csv");
-		Files.write(partition1, (header + "\n2,data2,poly2,layer2,PROCESSED\n").getBytes());
+		verify(jobExecution, atLeastOnce()).getStatus();
 	}
 }

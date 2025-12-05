@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -73,7 +74,11 @@ public class BatchMetrics {
 	}
 
 	/**
-	 * Partition-level metrics
+	 * Partition-level metrics with controlled state transitions.
+	 *
+	 * This class enforces proper lifecycle management: 1. Partition starts with initial state (name, startTime) 2.
+	 * Statistics can be updated during execution (records, retries, skips) 3. Partition completes with final state
+	 * (endTime, exitCode) set atomically 4. After completion, no further modifications are allowed
 	 */
 	public static class PartitionMetrics {
 		private final String partitionName;
@@ -100,60 +105,74 @@ public class BatchMetrics {
 			return recordsProcessed;
 		}
 
-		public void setRecordsProcessed(long recordsProcessed) {
-			this.recordsProcessed = recordsProcessed;
-		}
-
 		public long getRecordsRead() {
 			return recordsRead;
-		}
-
-		public void setRecordsRead(long recordsRead) {
-			this.recordsRead = recordsRead;
 		}
 
 		public long getRecordsWritten() {
 			return recordsWritten;
 		}
 
-		public void setRecordsWritten(long recordsWritten) {
-			this.recordsWritten = recordsWritten;
-		}
-
 		public int getRetryCount() {
 			return retryCount;
-		}
-
-		public void setRetryCount(int retryCount) {
-			this.retryCount = retryCount;
 		}
 
 		public int getSkipCount() {
 			return skipCount;
 		}
 
-		public void setSkipCount(int skipCount) {
-			this.skipCount = skipCount;
-		}
-
 		public LocalDateTime getStartTime() {
 			return startTime;
 		}
 
+		/**
+		 * Gets the partition end time.
+		 *
+		 * @return The end time, or null if the partition has not completed yet. Callers MUST check for null before
+		 *         using the returned value.
+		 */
 		public LocalDateTime getEndTime() {
 			return endTime;
 		}
 
-		public void setEndTime(LocalDateTime endTime) {
-			this.endTime = endTime;
-		}
-
+		/**
+		 * Gets the partition exit code.
+		 *
+		 * @return The exit code, or null if the partition has not completed yet. Callers MUST check for null before
+		 *         using the returned value.
+		 */
 		public String getExitCode() {
 			return exitCode;
 		}
 
-		public void setExitCode(String exitCode) {
+		/**
+		 * Records that partition work is complete. Sets endTime and exitCode together atomically to ensure consistency.
+		 *
+		 * @param recordsWritten The final count of records written
+		 * @param exitCode       The partition exit code (e.g., "COMPLETED", "FAILED")
+		 * @throws IllegalStateException if partition is already completed
+		 */
+		public void complete(long recordsWritten, String exitCode) {
+			if (this.endTime != null) {
+				throw new IllegalStateException("Partition " + partitionName + " already completed at " + this.endTime);
+			}
+			this.recordsWritten = recordsWritten;
+			this.endTime = LocalDateTime.now();
 			this.exitCode = exitCode;
+		}
+
+		/**
+		 * Increments the retry count for this partition.
+		 */
+		public void incrementRetryCount() {
+			this.retryCount++;
+		}
+
+		/**
+		 * Increments the skip count for this partition.
+		 */
+		public void incrementSkipCount() {
+			this.skipCount++;
 		}
 	}
 
@@ -169,28 +188,44 @@ public class BatchMetrics {
 		return startTime;
 	}
 
+	/**
+	 * Gets the job end time.
+	 *
+	 * @return The end time, or null if the job has not completed yet. Callers MUST check for null before using the
+	 *         returned value.
+	 */
 	public LocalDateTime getEndTime() {
 		return endTime;
-	}
-
-	public void setEndTime(LocalDateTime endTime) {
-		this.endTime = endTime;
 	}
 
 	public String getStatus() {
 		return status;
 	}
 
-	public void setStatus(String status) {
+	/**
+	 * Finalize job execution with end time, status, and final record counts. Sets all completion-related fields
+	 * together atomically to ensure consistency.
+	 *
+	 * @param status              The final job status (e.g., "COMPLETED", "FAILED")
+	 * @param totalRecordsRead    The final count of records read
+	 * @param totalRecordsWritten The final count of records written
+	 * @throws IllegalStateException if job is already finalized
+	 */
+	public void finalizeJob(String status, long totalRecordsRead, long totalRecordsWritten) {
+		if (this.endTime != null) {
+			throw new IllegalStateException(
+					"Job " + jobGuid + " already finalized at " + this.endTime + " with status " + this.status
+			);
+		}
+		this.endTime = LocalDateTime.now();
 		this.status = status;
+		this.totalRecordsRead.set(totalRecordsRead);
+		this.totalRecordsWritten.set(totalRecordsWritten);
+		this.totalRecordsProcessed.set(totalRecordsWritten);
 	}
 
 	public int getTotalRetryAttempts() {
 		return totalRetryAttempts.get();
-	}
-
-	public void setTotalRetryAttempts(int totalRetryAttempts) {
-		this.totalRetryAttempts.set(totalRetryAttempts);
 	}
 
 	public int incrementRetryAttempts() {
@@ -201,20 +236,12 @@ public class BatchMetrics {
 		return successfulRetries.get();
 	}
 
-	public void setSuccessfulRetries(int successfulRetries) {
-		this.successfulRetries.set(successfulRetries);
-	}
-
 	public int incrementSuccessfulRetries() {
 		return successfulRetries.incrementAndGet();
 	}
 
 	public int getFailedRetries() {
 		return failedRetries.get();
-	}
-
-	public void setFailedRetries(int failedRetries) {
-		this.failedRetries.set(failedRetries);
 	}
 
 	public int incrementFailedRetries() {
@@ -225,26 +252,15 @@ public class BatchMetrics {
 		return retryDetails;
 	}
 
-	public void setRetryDetails(List<RetryDetail> retryDetails) {
-		this.retryDetails.clear();
-		if (retryDetails != null) {
-			this.retryDetails.addAll(retryDetails);
-		}
-	}
-
 	/**
 	 * Get retry details as a list for JSON serialization compatibility.
 	 */
 	public List<RetryDetail> getRetryDetailsList() {
-		return new java.util.ArrayList<>(retryDetails);
+		return new ArrayList<>(retryDetails);
 	}
 
 	public int getTotalSkips() {
 		return totalSkips.get();
-	}
-
-	public void setTotalSkips(int totalSkips) {
-		this.totalSkips.set(totalSkips);
 	}
 
 	public int incrementSkips() {
@@ -255,22 +271,8 @@ public class BatchMetrics {
 		return skipReasonCount;
 	}
 
-	public void setSkipReasonCount(Map<String, Integer> skipReasonCount) {
-		this.skipReasonCount.clear();
-		if (skipReasonCount != null) {
-			this.skipReasonCount.putAll(skipReasonCount);
-		}
-	}
-
 	public Queue<SkipDetail> getSkipDetails() {
 		return skipDetails;
-	}
-
-	public void setSkipDetails(List<SkipDetail> skipDetails) {
-		this.skipDetails.clear();
-		if (skipDetails != null) {
-			this.skipDetails.addAll(skipDetails);
-		}
 	}
 
 	/**
@@ -284,35 +286,16 @@ public class BatchMetrics {
 		return partitionMetrics;
 	}
 
-	public void setPartitionMetrics(Map<String, PartitionMetrics> partitionMetrics) {
-		this.partitionMetrics.clear();
-		if (partitionMetrics != null) {
-			this.partitionMetrics.putAll(partitionMetrics);
-		}
-	}
-
 	public long getTotalRecordsProcessed() {
 		return totalRecordsProcessed.get();
-	}
-
-	public void setTotalRecordsProcessed(long totalRecordsProcessed) {
-		this.totalRecordsProcessed.set(totalRecordsProcessed);
 	}
 
 	public long getTotalRecordsRead() {
 		return totalRecordsRead.get();
 	}
 
-	public void setTotalRecordsRead(long totalRecordsRead) {
-		this.totalRecordsRead.set(totalRecordsRead);
-	}
-
 	public long getTotalRecordsWritten() {
 		return totalRecordsWritten.get();
-	}
-
-	public void setTotalRecordsWritten(long totalRecordsWritten) {
-		this.totalRecordsWritten.set(totalRecordsWritten);
 	}
 
 	public double getAverageProcessingTime() {
