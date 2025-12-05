@@ -10,13 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Table(name = "projection_file_set")
-@Getter
-@Setter
 public class ProjectionFileSetEntity extends AuditableEntity {
 	@Id
 	@GeneratedValue
@@ -30,4 +26,27 @@ public class ProjectionFileSetEntity extends AuditableEntity {
 	@Column(name = "file_set_name", length = 4000)
 	private String fileSetName;
 
+	public UUID getProjectionFileSetGUID() {
+		return projectionFileSetGUID;
+	}
+
+	public FileSetTypeCodeEntity getFileSetTypeCode() {
+		return fileSetTypeCode;
+	}
+
+	public String getFileSetName() {
+		return fileSetName;
+	}
+
+	public void setProjectionFileSetGUID(UUID projectionFileSetGUID) {
+		this.projectionFileSetGUID = projectionFileSetGUID;
+	}
+
+	public void setFileSetTypeCode(FileSetTypeCodeEntity fileSetTypeCode) {
+		this.fileSetTypeCode = fileSetTypeCode;
+	}
+
+	public void setFileSetName(String fileSetName) {
+		this.fileSetName = fileSetName;
+	}
 }

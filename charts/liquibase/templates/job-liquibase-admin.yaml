@@ -41,7 +41,7 @@ spec:
             - name: ENV_DB_DBNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.crunchy.adminSecretName }}
+                  name: {{ .Values.crunchy.pguserSecretName }}
                   key: dbname
             - name: ENV_DB_PORT
               valueFrom:
@@ -68,9 +68,7 @@ spec:
               liquibase \
                 --changelog-file=postgres-changelog.json \
                 --log-level={{ .Values.liquibase.logLevel }} \
-                --url="jdbc:postgresql://${ENV_DB_HOST}:${ENV_DB_PORT}/${ENV_DB_DBNAME}" \
-                --username="${ENV_DB_USER}" \
-                --password="${ENV_DB_PASSWORD}" \
+                --url="jdbc:postgresql://${ENV_DB_HOST}:${ENV_DB_PORT}/${ENV_DB_DBNAME}?user=${ENV_DB_USER}&password=${ENV_DB_PASSWORD}" \
                 {{- range .Values.liquibase.extraArgs }}
                 {{ . }} \
                 {{- end }}

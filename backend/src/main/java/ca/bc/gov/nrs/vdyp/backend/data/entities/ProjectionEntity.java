@@ -13,13 +13,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Table(name = "projection")
-@Getter
-@Setter
 public class ProjectionEntity extends AuditableEntity {
 	@Id
 	@GeneratedValue
@@ -58,4 +54,83 @@ public class ProjectionEntity extends AuditableEntity {
 	@JoinColumn(name = "projection_status_code", referencedColumnName = "projection_status_code")
 	private ProjectionStatusCodeEntity projectionStatusCode;
 
+	public UUID getProjectionGUID() {
+		return projectionGUID;
+	}
+
+	public VDYPUserEntity getOwnerUser() {
+		return ownerUser;
+	}
+
+	public ProjectionFileSetEntity getPolygonFileSet() {
+		return polygonFileSet;
+	}
+
+	public ProjectionFileSetEntity getLayerFileSet() {
+		return layerFileSet;
+	}
+
+	public ProjectionFileSetEntity getResultFileSet() {
+		return resultFileSet;
+	}
+
+	public String getProjectionParameters() {
+		return projectionParameters;
+	}
+
+	public OffsetDateTime getStartDate() {
+		return startDate;
+	}
+
+	public OffsetDateTime getEndDate() {
+		return endDate;
+	}
+
+	public CalculationEngineCodeEntity getCalculationEngineCode() {
+		return calculationEngineCode;
+	}
+
+	public ProjectionStatusCodeEntity getProjectionStatusCode() {
+		return projectionStatusCode;
+	}
+
+	public void setProjectionGUID(UUID projectionGUID) {
+		this.projectionGUID = projectionGUID;
+	}
+
+	public void setOwnerUser(VDYPUserEntity ownerUser) {
+		this.ownerUser = ownerUser;
+	}
+
+	public void setPolygonFileSet(ProjectionFileSetEntity polygonFileSet) {
+		this.polygonFileSet = polygonFileSet;
+	}
+
+	public void setLayerFileSet(ProjectionFileSetEntity layerFileSet) {
+		this.layerFileSet = layerFileSet;
+	}
+
+	public void setResultFileSet(ProjectionFileSetEntity resultFileSet) {
+		this.resultFileSet = resultFileSet;
+	}
+
+	public void setProjectionParameters(String projectionParameters) {
+		this.projectionParameters = projectionParameters;
+	}
+
+	public void setStartDate(OffsetDateTime startDate) {
+		this.startDate = startDate;
+	}
+
+	public void setEndDate(OffsetDateTime endDate) {
+		this.endDate = endDate;
+	}
+
+	public void setCalculationEngineCode(CalculationEngineCodeEntity calculationEngineCode) {
+		this.calculationEngineCode = calculationEngineCode;
+	}
+
+	public void setProjectionStatusCode(ProjectionStatusCodeEntity projectionStatusCode) {
+		this.projectionStatusCode = projectionStatusCode;
+	}
 }

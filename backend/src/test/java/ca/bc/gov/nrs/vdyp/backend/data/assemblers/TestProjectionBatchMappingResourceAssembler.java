@@ -14,7 +14,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
-import lombok.Builder;
 
 class TestProjectionBatchMappingResourceAssembler {
 	@Test
@@ -41,8 +40,7 @@ class TestProjectionBatchMappingResourceAssembler {
 		TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData data = ProjectionBatchMappingTestData
 				.builder().projectionBatchMappingUUID(projectionBatchId).batchJobUUID(batchJobId)
 				.projectionUUID(projectionId).partitionCount(partitionCount)
-				.completedPartitionCount(completedPartitionCount).warningCount(warningCount).errorCount(errorCount)
-				.build();
+				.completedPartitionCount(completedPartitionCount).warningCount(warningCount).errorCount(errorCount);
 
 		ProjectionBatchMappingModel model = data.buildModel();
 		ProjectionBatchMappingEntity entity = data.buildEntity();
@@ -61,8 +59,7 @@ class TestProjectionBatchMappingResourceAssembler {
 		TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData data = ProjectionBatchMappingTestData
 				.builder().projectionBatchMappingUUID(projectionBatchId).batchJobUUID(batchJobId)
 				.projectionUUID(projectionId).partitionCount(partitionCount)
-				.completedPartitionCount(completedPartitionCount).warningCount(warningCount).errorCount(errorCount)
-				.build();
+				.completedPartitionCount(completedPartitionCount).warningCount(warningCount).errorCount(errorCount);
 
 		ProjectionBatchMappingModel model = data.buildModel();
 		ProjectionBatchMappingEntity entity = data.buildEntity();
@@ -72,7 +69,6 @@ class TestProjectionBatchMappingResourceAssembler {
 
 	}
 
-	@Builder
 	private static final class ProjectionBatchMappingTestData {
 		private UUID projectionBatchMappingUUID = null;
 		private UUID batchJobUUID = null;
@@ -81,6 +77,52 @@ class TestProjectionBatchMappingResourceAssembler {
 		private Integer completedPartitionCount;
 		private Integer warningCount;
 		private Integer errorCount;
+
+		public static TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData builder() {
+			return new TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData();
+		}
+
+		public TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData
+				projectionBatchMappingUUID(UUID projectionBatchMappingUUID) {
+			this.projectionBatchMappingUUID = projectionBatchMappingUUID;
+			return this;
+		}
+
+		public TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData
+				batchJobUUID(UUID batchJobUUID) {
+			this.batchJobUUID = batchJobUUID;
+			return this;
+		}
+
+		public TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData
+				projectionUUID(UUID projectionUUID) {
+			this.projectionUUID = projectionUUID;
+			return this;
+		}
+
+		public TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData
+				partitionCount(Integer partitionCount) {
+			this.partitionCount = partitionCount;
+			return this;
+		}
+
+		public TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData
+				completedPartitionCount(Integer completedPartitionCount) {
+			this.completedPartitionCount = completedPartitionCount;
+			return this;
+		}
+
+		public TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData
+				warningCount(Integer warningCount) {
+			this.warningCount = warningCount;
+			return this;
+		}
+
+		public TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData
+				errorCount(Integer errorCount) {
+			this.errorCount = errorCount;
+			return this;
+		}
 
 		public ProjectionBatchMappingEntity buildEntity() {
 			ProjectionBatchMappingEntity data = new ProjectionBatchMappingEntity();

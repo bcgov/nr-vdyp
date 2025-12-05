@@ -10,7 +10,7 @@ public class CalculationEngineResourceAssembler {
 		}
 
 		CalculationEngineCodeEntity entity = new CalculationEngineCodeEntity();
-		entity.setCalculationEngineCode(model.getCalculationEngineCode());
+		entity.setCode(model.getCode());
 		entity.setDescription(model.getDescription());
 		entity.setDisplayOrder(model.getDisplayOrder());
 		return entity;
@@ -21,7 +21,7 @@ public class CalculationEngineResourceAssembler {
 			return null;
 		}
 		CalculationEngineCodeModel model = new CalculationEngineCodeModel();
-		model.setCalculationEngineCode(entity.getCalculationEngineCode());
+		model.setCode(entity.getCode());
 		model.setDescription(entity.getDescription());
 		model.setDisplayOrder(entity.getDisplayOrder());
 		return model;

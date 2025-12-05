@@ -14,7 +14,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.FileMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
-import lombok.Builder;
 
 class TestFileMappingResourceAssembler {
 	@Test
@@ -36,7 +35,7 @@ class TestFileMappingResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testEntityToModel(UUID fileMapping, UUID comsObjectId, UUID projectionFileSetUUID) {
 		FileMappingTestData data = FileMappingTestData.builder().fileMappingUUID(fileMapping)
-				.comsObjectUUID(comsObjectId).projectionFileSetUUID(projectionFileSetUUID).build();
+				.comsObjectUUID(comsObjectId).projectionFileSetUUID(projectionFileSetUUID);
 
 		FileMappingModel model = data.buildModel();
 		FileMappingEntity entity = data.buildEntity();
@@ -50,7 +49,7 @@ class TestFileMappingResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testModelToEntity(UUID fileMapping, UUID comsObjectId, UUID projectionFileSetUUID) {
 		FileMappingTestData data = FileMappingTestData.builder().fileMappingUUID(fileMapping)
-				.comsObjectUUID(comsObjectId).projectionFileSetUUID(projectionFileSetUUID).build();
+				.comsObjectUUID(comsObjectId).projectionFileSetUUID(projectionFileSetUUID);
 
 		FileMappingModel model = data.buildModel();
 		FileMappingEntity entity = data.buildEntity();
@@ -60,11 +59,29 @@ class TestFileMappingResourceAssembler {
 
 	}
 
-	@Builder
 	private static final class FileMappingTestData {
 		private UUID fileMappingUUID = null;
 		private UUID comsObjectUUID = null;
 		private UUID projectionFileSetUUID = null;
+
+		public static TestFileMappingResourceAssembler.FileMappingTestData builder() {
+			return new TestFileMappingResourceAssembler.FileMappingTestData();
+		}
+
+		public TestFileMappingResourceAssembler.FileMappingTestData fileMappingUUID(UUID fileMappingUUID) {
+			this.fileMappingUUID = fileMappingUUID;
+			return this;
+		}
+
+		public TestFileMappingResourceAssembler.FileMappingTestData comsObjectUUID(UUID comsObjectUUID) {
+			this.comsObjectUUID = comsObjectUUID;
+			return this;
+		}
+
+		public TestFileMappingResourceAssembler.FileMappingTestData projectionFileSetUUID(UUID projectionFileSetUUID) {
+			this.projectionFileSetUUID = projectionFileSetUUID;
+			return this;
+		}
 
 		public FileMappingEntity buildEntity() {
 			FileMappingEntity data = new FileMappingEntity();

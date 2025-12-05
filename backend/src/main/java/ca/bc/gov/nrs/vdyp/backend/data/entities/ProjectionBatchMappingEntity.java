@@ -11,13 +11,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Table(name = "projection_batch_mapping")
-@Getter
-@Setter
 public class ProjectionBatchMappingEntity extends AuditableEntity {
 
 	@Id
@@ -42,4 +38,59 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 	@Column(name = "warning_count")
 	private Integer warningCount;
 
+	public UUID getProjectionBatchMappingGUID() {
+		return projectionBatchMappingGUID;
+	}
+
+	public UUID getBatchJobGUID() {
+		return batchJobGUID;
+	}
+
+	public ProjectionEntity getProjection() {
+		return projection;
+	}
+
+	public Integer getPartitionCount() {
+		return partitionCount;
+	}
+
+	public Integer getCompletedPartitionCount() {
+		return completedPartitionCount;
+	}
+
+	public Integer getErrorCount() {
+		return errorCount;
+	}
+
+	public Integer getWarningCount() {
+		return warningCount;
+	}
+
+	public void setProjectionBatchMappingGUID(UUID projectionBatchMappingGUID) {
+		this.projectionBatchMappingGUID = projectionBatchMappingGUID;
+	}
+
+	public void setBatchJobGUID(UUID batchJobGUID) {
+		this.batchJobGUID = batchJobGUID;
+	}
+
+	public void setProjection(ProjectionEntity projection) {
+		this.projection = projection;
+	}
+
+	public void setPartitionCount(Integer partitionCount) {
+		this.partitionCount = partitionCount;
+	}
+
+	public void setCompletedPartitionCount(Integer completedPartitionCount) {
+		this.completedPartitionCount = completedPartitionCount;
+	}
+
+	public void setErrorCount(Integer errorCount) {
+		this.errorCount = errorCount;
+	}
+
+	public void setWarningCount(Integer warningCount) {
+		this.warningCount = warningCount;
+	}
 }

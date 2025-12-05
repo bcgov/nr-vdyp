@@ -83,7 +83,7 @@ class TestUserTypeCodeResourceAssembler {
 
 		public UserTypeCodeEntity buildEntity() {
 			UserTypeCodeEntity data = new UserTypeCodeEntity();
-			data.setUserTypeCode(code);
+			data.setCode(code);
 			data.setDescription(description);
 			data.setDisplayOrder(displayOrder);
 			return data;
@@ -91,7 +91,7 @@ class TestUserTypeCodeResourceAssembler {
 
 		public UserTypeCodeModel buildModel() {
 			UserTypeCodeModel data = new UserTypeCodeModel();
-			data.setUserTypeCode(code);
+			data.setCode(code);
 			data.setDescription(description);
 			data.setDisplayOrder(displayOrder);
 			return data;

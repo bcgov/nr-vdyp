@@ -1,15 +1,20 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
-import lombok.Data;
-
-@Data
-public class ProjectionStatusCodeModel {
+/**
+ * Model layer object to represent a Projection Status. Equality and hashCode are filly defined in the parent class
+ * {@link CodeTableModel}. (explicitly calling the abstract getCode() method for the sake of comparison
+ */
+@SuppressWarnings("squid:S2160")
+public class ProjectionStatusCodeModel extends CodeTableModel {
 	private String projectionStatusCode;
-	private String description;
-	private BigDecimal displayOrder;
-	private Date effectiveDate;
-	private Date expiryDate;
+
+	@Override
+	public String getCode() {
+		return projectionStatusCode;
+	}
+
+	@Override
+	public void setCode(String code) {
+		this.projectionStatusCode = code;
+	}
 }

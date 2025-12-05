@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.CalculationEngineCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
-import lombok.Builder;
 
 class TestCalculationEngineResourceAssembler {
 	@Test
@@ -34,7 +33,7 @@ class TestCalculationEngineResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testEntityToModel(String code, String description, BigDecimal displayOrder) {
 		CalculationEngineTestData data = CalculationEngineTestData.builder().code(code).description(description)
-				.displayOrder(displayOrder).build();
+				.displayOrder(displayOrder);
 
 		CalculationEngineCodeModel model = data.buildModel();
 		CalculationEngineCodeEntity entity = data.buildEntity();
@@ -48,7 +47,7 @@ class TestCalculationEngineResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testModelToEntity(String code, String description, BigDecimal displayOrder) {
 		CalculationEngineTestData data = CalculationEngineTestData.builder().code(code).description(description)
-				.displayOrder(displayOrder).build();
+				.displayOrder(displayOrder);
 
 		CalculationEngineCodeModel model = data.buildModel();
 		CalculationEngineCodeEntity entity = data.buildEntity();
@@ -58,15 +57,33 @@ class TestCalculationEngineResourceAssembler {
 
 	}
 
-	@Builder
 	static final class CalculationEngineTestData {
 		private String code = null;
 		private String description;
 		private BigDecimal displayOrder;
 
+		public static TestCalculationEngineResourceAssembler.CalculationEngineTestData builder() {
+			return new TestCalculationEngineResourceAssembler.CalculationEngineTestData();
+		}
+
+		public TestCalculationEngineResourceAssembler.CalculationEngineTestData code(String code) {
+			this.code = code;
+			return this;
+		}
+
+		public TestCalculationEngineResourceAssembler.CalculationEngineTestData description(String description) {
+			this.description = description;
+			return this;
+		}
+
+		public TestCalculationEngineResourceAssembler.CalculationEngineTestData displayOrder(BigDecimal displayOrder) {
+			this.displayOrder = displayOrder;
+			return this;
+		}
+
 		public CalculationEngineCodeEntity buildEntity() {
 			CalculationEngineCodeEntity data = new CalculationEngineCodeEntity();
-			data.setCalculationEngineCode(code);
+			data.setCode(code);
 			data.setDescription(description);
 			data.setDisplayOrder(displayOrder);
 			return data;
@@ -74,7 +91,7 @@ class TestCalculationEngineResourceAssembler {
 
 		public CalculationEngineCodeModel buildModel() {
 			CalculationEngineCodeModel data = new CalculationEngineCodeModel();
-			data.setCalculationEngineCode(code);
+			data.setCode(code);
 			data.setDescription(description);
 			data.setDisplayOrder(displayOrder);
 			return data;
