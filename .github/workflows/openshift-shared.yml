@@ -1,8 +1,7 @@
 name: Deploy Using Maven and Helm
 permissions:
   contents: read
-  packages: write
-  
+
 on:
   workflow_call:
     inputs:

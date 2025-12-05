@@ -1,7 +1,6 @@
 name: Build and Deploy to Openshift Dev When PR
 permissions:
   contents: read
-  packages: write
 
 on:
   workflow_dispatch:
