@@ -223,6 +223,35 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_01_01",
+        "author": "pminter",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_01_01"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_01/01/ddl/tables/app-vdyp.projection.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection\" RENAME COLUMN \"report_description\" TO \"description\""
+          },
+          {
+            "sql": "COMMENT ON COLUMN \"app-vdyp\".\"projection\".\"description\" IS 'Description is a short description of the projection to help differentiate.'"
+          }
+        ]
+      }
     }
    ] 
 }
