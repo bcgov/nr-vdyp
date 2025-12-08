@@ -24,8 +24,8 @@ public class ProjectionBatchMappingResourceAssembler {
 		);
 		entity.setBatchJobGUID(model.getBatchJobGUID() == null ? null : UUID.fromString(model.getBatchJobGUID()));
 		entity.setProjection(model.getProjection() == null ? null : pra.toEntity(model.getProjection()));
-		entity.setPartitionCount(model.getPartitionCount());
-		entity.setCompletedPartitionCount(model.getCompletedPartitionCount());
+		entity.setPolygonCount(model.getPolygonCount());
+		entity.setCompletedPolygonCount(model.getCompletedPolygonCount());
 		entity.setWarningCount(model.getWarningCount());
 		entity.setErrorCount(model.getErrorCount());
 		return entity;
@@ -43,8 +43,8 @@ public class ProjectionBatchMappingResourceAssembler {
 		);
 		model.setBatchJobGUID(entity.getBatchJobGUID() == null ? null : entity.getBatchJobGUID().toString());
 		model.setProjection(entity.getProjection() == null ? null : pra.toModel(entity.getProjection()));
-		model.setPartitionCount(entity.getPartitionCount());
-		model.setCompletedPartitionCount(entity.getCompletedPartitionCount());
+		model.setPolygonCount(entity.getPolygonCount());
+		model.setCompletedPolygonCount(entity.getCompletedPolygonCount());
 		model.setWarningCount(entity.getWarningCount());
 		model.setErrorCount(entity.getErrorCount());
 		return model;
