@@ -71,7 +71,10 @@ public abstract class BaseDataBasedIntegrationTest {
 				try (Stream<Path> stream = Files.walk(path)) {
 					stream.forEach(subpath -> {
 						try {
-							Files.copy(subpath, testDataDir.resolve(path.relativize(subpath)));
+							if (!path.equals(subpath)) {
+								final Path dest = testDataDir.resolve(path.relativize(subpath));
+								Files.copy(subpath, dest);
+							}
 						} catch (IOException ex) {
 							throw new IllegalStateException(
 									"Failure copying integration test data from file system", ex
