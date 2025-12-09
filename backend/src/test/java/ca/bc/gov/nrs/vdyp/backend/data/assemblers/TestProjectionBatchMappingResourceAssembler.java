@@ -133,8 +133,8 @@ class TestProjectionBatchMappingResourceAssembler {
 				projection.setProjectionGUID(projectionUUID);
 				data.setProjection(projection);
 			}
-			data.setPartitionCount(partitionCount);
-			data.setCompletedPartitionCount(completedPartitionCount);
+			data.setPolygonCount(partitionCount);
+			data.setCompletedPolygonCount(completedPartitionCount);
 			data.setWarningCount(warningCount);
 			data.setErrorCount(errorCount);
 			return data;
@@ -152,8 +152,8 @@ class TestProjectionBatchMappingResourceAssembler {
 				projection.setProjectionGUID(projectionUUID.toString());
 				data.setProjection(projection);
 			}
-			data.setPartitionCount(partitionCount);
-			data.setCompletedPartitionCount(completedPartitionCount);
+			data.setPolygonCount(partitionCount);
+			data.setCompletedPolygonCount(completedPartitionCount);
 			data.setWarningCount(warningCount);
 			data.setErrorCount(errorCount);
 			return data;
