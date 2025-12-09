@@ -56,7 +56,7 @@ public abstract class BaseDataBasedIntegrationTest {
 	 * @throws IOException
 	 */
 	@BeforeAll
-	protected static void initTestData() throws IOException {
+	protected static void initTestData() {
 
 		try (
 				var scan = new ClassGraph().verbose()
