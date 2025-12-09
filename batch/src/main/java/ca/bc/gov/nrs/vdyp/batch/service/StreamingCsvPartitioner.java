@@ -16,8 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
+import io.micrometer.common.lang.NonNull;
 
 /**
  * Streaming CSV partitioner that partitions CSV files by FEATURE_ID. Creates separate CSV files for each partition
@@ -28,62 +30,71 @@ public class StreamingCsvPartitioner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StreamingCsvPartitioner.class);
 
+	/**
+	 * Partitions polygon and layer CSV files by FEATURE_ID into separate partition files.
+	 *
+	 * @param polygonFile   The polygon CSV file to partition
+	 * @param layerFile     The layer CSV file to partition
+	 * @param partitionSize The number of partitions to create
+	 * @param jobBaseDir    The base directory for the job
+	 * @param jobGuid
+	 * @return The total number of unique FEATURE_IDs processed
+	 * @throws BatchPartitionException if partitioning fails (I/O errors or validation failures)
+	 */
 	public int partitionCsvFiles(
-			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, Path jobBaseDir
-	) throws IOException {
-
-		validateParameters(polygonFile, layerFile, partitionSize, jobBaseDir);
-
-		int totalFeatureIds = countTotalFeatureIds(polygonFile);
+			@NonNull MultipartFile polygonFile, @NonNull MultipartFile layerFile, @NonNull Integer partitionSize,
+			@NonNull Path jobBaseDir, @NonNull String jobGuid
+	) throws BatchPartitionException {
+		int totalFeatureIds = countTotalFeatureIds(polygonFile, jobGuid);
 		int[] partitionSizes = calculatePartitionSizes(totalFeatureIds, partitionSize);
 
 		Map<Long, Integer> featureIdToPartition = partitionPolygonFile(
-				polygonFile, partitionSize, partitionSizes, jobBaseDir
+				polygonFile, partitionSize, partitionSizes, jobBaseDir, jobGuid
 		);
 
-		partitionLayerFile(layerFile, partitionSize, jobBaseDir, featureIdToPartition);
+		partitionLayerFile(layerFile, partitionSize, jobBaseDir, featureIdToPartition, jobGuid);
 
 		return featureIdToPartition.size();
 	}
 
-	private void validateParameters(
-			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, Path jobBaseDir
-	) {
-		if (polygonFile == null) {
-			throw new IllegalArgumentException("Polygon file cannot be null");
-		}
-		if (layerFile == null) {
-			throw new IllegalArgumentException("Layer file cannot be null");
-		}
-		if (partitionSize == null) {
-			throw new IllegalArgumentException("Partition size cannot be null");
-		}
-		if (partitionSize <= 0) {
-			throw new IllegalArgumentException("Partition size must be positive, got: " + partitionSize);
-		}
-		if (jobBaseDir == null) {
-			throw new IllegalArgumentException("Job base directory cannot be null");
-		}
-	}
-
-	private int countTotalFeatureIds(MultipartFile polygonFile) throws IOException {
+	/**
+	 * Count total FEATURE_IDs in polygon file, skipping header lines if present.
+	 *
+	 * @return The number of valid FEATURE_IDs found
+	 * @throws BatchPartitionException if file cannot be read or contains no valid FEATURE_IDs
+	 */
+	private int countTotalFeatureIds(MultipartFile polygonFile, String jobGuid) throws BatchPartitionException {
 		int count = 0;
 		try (
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8)
 				)
 		) {
-			String header = reader.readLine(); // Skip header
-			if (header == null) {
-				return 0;
-			}
 			String line;
 			while ( (line = reader.readLine()) != null) {
+				// Skip header lines
+				if (BatchUtils.isHeaderLine(line)) {
+					logger.trace("Skipped header line in polygon file");
+					continue;
+				}
+
 				if (extractFeatureId(line) != null) {
 					count++;
 				}
 			}
+		} catch (IOException e) {
+			throw BatchPartitionException.handlePartitionFailure(
+					e, "Failed to read polygon file while counting FEATURE_IDs", jobGuid, logger
+			);
 		}
+
+		if (count == 0) {
+			throw BatchPartitionException.handlePartitionFailure(
+					"Polygon file contains no valid FEATURE_IDs. Please provide a CSV file with at least one valid polygon record.",
+					jobGuid, logger
+			);
+		}
+
 		return count;
 	}
 
@@ -111,9 +122,17 @@ public class StreamingCsvPartitioner {
 		return partitionSizes;
 	}
 
-	private Map<Long, Integer>
-			partitionPolygonFile(MultipartFile polygonFile, int partitionSize, int[] partitionSizes, Path jobBaseDir)
-					throws IOException {
+	/**
+	 * Partition polygon file by FEATURE_ID. Headers are optional - if present, they are detected and written to
+	 * partition files. If not present, partition files will contain only data lines.
+	 *
+	 * @param partitionSizes Array of record counts for each partition
+	 * @return Map of FEATURE_ID to partition number
+	 * @throws BatchPartitionException if file I/O fails
+	 */
+	private Map<Long, Integer> partitionPolygonFile(
+			MultipartFile polygonFile, int partitionSize, int[] partitionSizes, Path jobBaseDir, String jobGuid
+	) throws BatchPartitionException {
 
 		Map<Long, Integer> featureIdToPartition = new HashMap<>();
 
@@ -123,20 +142,36 @@ public class StreamingCsvPartitioner {
 				)
 		) {
 
-			String header = reader.readLine();
-			if (header == null) {
-				throw new BatchDataValidationException("Polygon CSV file is empty or has no header");
+			// Read first line and check if it's a header (headers are optional)
+			String firstLine = reader.readLine();
+			String headerLine = null;
+
+			if (firstLine != null && BatchUtils.isHeaderLine(firstLine)) {
+				headerLine = firstLine;
+				logger.trace("Found header in polygon file");
 			}
 
 			Map<Integer, PrintWriter> writers = createPartitionWriters(
-					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, header, partitionSize
+					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, headerLine, partitionSize, jobGuid
 			);
 
 			try {
+				// If first line was not a header, it's a data line - process it
+				if (firstLine != null && !BatchUtils.isHeaderLine(firstLine)) {
+					Long featureId = extractFeatureId(firstLine);
+					if (featureId != null) {
+						featureIdToPartition.put(featureId, 0);
+						writers.get(0).println(firstLine);
+					}
+				}
+
 				processPolygonRecords(reader, writers, featureIdToPartition, partitionSizes);
 			} finally {
 				closeWriters(writers);
 			}
+		} catch (IOException e) {
+			throw BatchPartitionException
+					.handlePartitionFailure(e, "Failed to partition polygon file", jobGuid, logger);
 		}
 
 		logger.debug("Processed and partitioned {} FEATURE_IDs", featureIdToPartition.size());
@@ -145,6 +180,12 @@ public class StreamingCsvPartitioner {
 
 	/**
 	 * Reads exact number of records for each partition in sequence.
+	 *
+	 * @param reader               The BufferedReader for the polygon file
+	 * @param writers              Map of partition number to PrintWriter
+	 * @param featureIdToPartition Map to populate with FEATURE_ID to partition mappings
+	 * @param partitionSizes       Array of record counts for each partition
+	 * @throws IOException if reading from the file fails (wrapped at component boundary by caller)
 	 */
 	@SuppressWarnings("javasecurity:S5131") // False positive: CSV file writing to internal storage, not HTTP response
 	private void processPolygonRecords(
@@ -178,9 +219,17 @@ public class StreamingCsvPartitioner {
 		}
 	}
 
+	/**
+	 * Partition layer file by FEATURE_ID. Headers are optional - if present, they are detected and written to partition
+	 * files. If not present, partition files will contain only data lines.
+	 *
+	 * @param featureIdToPartition Map of FEATURE_ID to partition number from polygon partitioning
+	 * @throws BatchPartitionException if file I/O fails
+	 */
 	private void partitionLayerFile(
-			MultipartFile layerFile, int partitionSize, Path jobBaseDir, Map<Long, Integer> featureIdToPartition
-	) throws IOException {
+			MultipartFile layerFile, int partitionSize, Path jobBaseDir, Map<Long, Integer> featureIdToPartition,
+			String jobGuid
+	) throws BatchPartitionException {
 
 		try (
 				BufferedReader reader = new BufferedReader(
@@ -188,28 +237,50 @@ public class StreamingCsvPartitioner {
 				)
 		) {
 
-			String header = reader.readLine();
-			if (header == null) {
-				throw new BatchDataValidationException("Layer CSV file is empty or has no header");
+			// Read first line and check if it's a header (headers are optional)
+			String firstLine = reader.readLine();
+			String headerLine = null;
+
+			if (firstLine != null && BatchUtils.isHeaderLine(firstLine)) {
+				headerLine = firstLine;
+				logger.trace("Found header in layer file");
 			}
 
 			Map<Integer, PrintWriter> writers = createPartitionWriters(
-					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, header, partitionSize
+					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, headerLine, partitionSize, jobGuid
 			);
 
 			try {
+				// If first line was not a header, it's a data line - process it
+				if (firstLine != null && !BatchUtils.isHeaderLine(firstLine)) {
+					Long featureId = extractFeatureId(firstLine);
+					if (featureId != null && featureIdToPartition.containsKey(featureId)) {
+						int partition = featureIdToPartition.get(featureId);
+						writers.get(partition).println(firstLine);
+					}
+				}
+
 				processLayerRecords(reader, writers, featureIdToPartition);
 			} finally {
 				closeWriters(writers);
 			}
+		} catch (IOException e) {
+			throw BatchPartitionException.handlePartitionFailure(e, "Failed to partition layer file", jobGuid, logger);
 		}
 	}
 
+	/**
+	 * Processes layer file records and writes them to appropriate partition files.
+	 *
+	 * @param reader               The BufferedReader for the layer file
+	 * @param writers              Map of partition number to PrintWriter
+	 * @param featureIdToPartition Map of FEATURE_ID to partition number
+	 * @throws IOException if reading from the file fails (wrapped at component boundary by caller)
+	 */
 	@SuppressWarnings("javasecurity:S5131") // False positive: CSV file writing to internal storage, not HTTP response
 	private void processLayerRecords(
 			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<Long, Integer> featureIdToPartition
 	) throws IOException {
-
 		String line;
 		while ( (line = reader.readLine()) != null) {
 			Long featureId = extractFeatureId(line);
@@ -222,6 +293,10 @@ public class StreamingCsvPartitioner {
 
 	/**
 	 * Extract FEATURE_ID from the first field of a CSV line.
+	 *
+	 * @param csvLine The CSV line to parse
+	 * @return The FEATURE_ID as a Long, or null if the line is null/empty or cannot be parsed. Callers MUST check for
+	 *         null before using the returned value.
 	 */
 	private Long extractFeatureId(String csvLine) {
 		if (csvLine == null || csvLine.trim().isEmpty()) {
@@ -239,48 +314,45 @@ public class StreamingCsvPartitioner {
 				return Long.parseLong(featureIdStr);
 			}
 		} catch (NumberFormatException e) {
-			logger.debug("Could not parse FEATURE_ID from line: {}", csvLine);
+			logger.error("Could not parse FEATURE_ID from line: {}", csvLine);
 			return null;
 		}
 	}
 
 	/**
 	 * Create PrintWriters for each partition.
+	 *
+	 * @param header Optional header line (null if no header)
+	 * @return Map of partition number to PrintWriter
+	 * @throws BatchPartitionException if directory creation or file writing fails
 	 */
-	private Map<Integer, PrintWriter>
-			createPartitionWriters(Path baseDir, String filename, String header, Integer partitionSize)
-					throws IOException {
-
-		if (baseDir == null) {
-			throw new IllegalArgumentException("Base directory cannot be null");
-		}
-		if (filename == null || filename.isBlank()) {
-			throw new IllegalArgumentException("Filename cannot be null or blank");
-		}
-		if (header == null) {
-			throw new IllegalArgumentException("Header cannot be null");
-		}
-		if (partitionSize == null || partitionSize <= 0) {
-			throw new IllegalArgumentException("Partition size must be positive, got: " + partitionSize);
-		}
-
+	private Map<Integer, PrintWriter> createPartitionWriters(
+			Path jobBaseDir, String filename, String header, Integer partitionSize, String jobGuid
+	) throws BatchPartitionException {
 		Map<Integer, PrintWriter> writers = new HashMap<>();
 
 		try {
 			for (int i = 0; i < partitionSize; i++) {
-				Path partitionDir = baseDir.resolve(BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX + i);
+				Path partitionDir = jobBaseDir.resolve(BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX + i);
 				Files.createDirectories(partitionDir);
 
 				Path csvFile = partitionDir.resolve(filename);
 				BufferedWriter bufferedWriter = Files.newBufferedWriter(csvFile, StandardCharsets.UTF_8);
 				PrintWriter writer = new PrintWriter(bufferedWriter, false);
-				writer.println(header); // Write header first
+
+				// Write header only if present (headers are optional in input file)
+				if (header != null) {
+					writer.println(header);
+				}
+
 				writers.put(i, writer);
 			}
 			return writers;
 		} catch (IOException e) {
 			closeWriters(writers);
-			throw e;
+			throw BatchPartitionException.handlePartitionFailure(
+					e, "Failed to create partition writers for file '" + filename + "'", jobGuid, logger
+			);
 		}
 	}
 
@@ -294,7 +366,7 @@ public class StreamingCsvPartitioner {
 					writer.flush();
 					writer.close();
 				} catch (Exception e) {
-					logger.warn("Error closing writer", e);
+					logger.error("Error closing writer", e);
 				}
 			}
 		}

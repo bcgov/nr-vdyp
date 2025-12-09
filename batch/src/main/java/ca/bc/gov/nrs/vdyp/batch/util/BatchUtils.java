@@ -61,4 +61,18 @@ public final class BatchUtils {
 		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now()));
 		return sb.toString();
 	}
+
+	/**
+	 * Determines if a line is a header line.
+	 */
+	public static boolean isHeaderLine(String line) {
+		if (line == null || line.trim().isEmpty()) {
+			return true; // Treat empty lines as headers (skip them)
+		}
+
+		String upperLine = line.toUpperCase();
+		// check if it starts with header keywords
+		return upperLine.startsWith("FEATURE") || upperLine.startsWith("TABLE") || upperLine.startsWith("POLYGON")
+				|| upperLine.contains("LAYER_ID") || upperLine.contains("SPECIES_CODE");
+	}
 }

@@ -31,10 +31,12 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 
@@ -49,9 +51,6 @@ class VdypChunkProjectionWriterTest {
 
 	@Mock
 	private VdypProjectionService vdypProjectionService;
-
-	@Mock
-	private BatchMetricsCollector metricsCollector;
 
 	@Mock
 	private StepExecution stepExecution;
@@ -72,14 +71,14 @@ class VdypChunkProjectionWriterTest {
 	private Parameters mockParameters;
 
 	@BeforeEach
-	void setUp() throws Exception {
+	void setUp() throws JsonProcessingException {
 		// Create a mock Parameters object to be returned by ObjectMapper
 		mockParameters = mock(Parameters.class);
 
 		// Configure ObjectMapper to return the mock Parameters when reading the valid JSON
 		when(objectMapper.readValue(VALID_PARAMETERS_JSON, Parameters.class)).thenReturn(mockParameters);
 
-		writer = new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector, objectMapper);
+		writer = new VdypChunkProjectionWriter(vdypProjectionService, objectMapper);
 	}
 
 	@Test
@@ -108,10 +107,12 @@ class VdypChunkProjectionWriterTest {
 	}
 
 	@Test
-	void testBeforeStep_missingParameters_throwsException() {
+	void testBeforeStep_missingParameters_throwsException() throws JsonProcessingException {
 		JobParameters params = new JobParametersBuilder().addString("jobGuid", TEST_JOB_GUID)
 				.addString("jobBaseDir", "/tmp/test").toJobParameters();
 
+		when(objectMapper.readValue((String) null, Parameters.class)).thenReturn(null);
+
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobParameters()).thenReturn(params);
@@ -123,13 +124,15 @@ class VdypChunkProjectionWriterTest {
 			writer.beforeStep(stepExecution);
 		});
 
-		assertTrue(exception.getMessage().contains(TEST_JOB_GUID));
+		assertTrue(exception.getMessage().contains("Deserialized projection parameters are null"));
 	}
 
 	@Test
-	void testBeforeStep_emptyParameters_throwsException() {
+	void testBeforeStep_emptyParameters_throwsException() throws JsonProcessingException {
 		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", "")
 				.addString("jobGuid", TEST_JOB_GUID).addString("jobBaseDir", "/tmp/test").toJobParameters();
+
+		when(objectMapper.readValue("", Parameters.class)).thenReturn(null);
 
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
@@ -142,7 +145,7 @@ class VdypChunkProjectionWriterTest {
 			writer.beforeStep(stepExecution);
 		});
 
-		assertTrue(exception.getMessage().contains(TEST_JOB_GUID));
+		assertTrue(exception.getMessage().contains("Deserialized projection parameters are null"));
 	}
 
 	@Test
@@ -157,7 +160,7 @@ class VdypChunkProjectionWriterTest {
 	}
 
 	@Test
-	void testWrite_emptyChunk() throws Exception {
+	void testWrite_emptyChunk() throws BatchException {
 		setupWriterWithValidParameters();
 		Chunk<BatchRecord> emptyChunk = new Chunk<>();
 
@@ -167,7 +170,7 @@ class VdypChunkProjectionWriterTest {
 	}
 
 	@Test
-	void testWrite_successfulProcessing() throws Exception {
+	void testWrite_successfulProcessing() throws BatchException {
 		setupWriterWithValidParameters();
 		List<BatchRecord> records = Arrays.asList(createMockBatchRecord("feature1"), createMockBatchRecord("feature2"));
 		Chunk<BatchRecord> chunk = new Chunk<>(records);
@@ -184,24 +187,21 @@ class VdypChunkProjectionWriterTest {
 	}
 
 	@Test
-	void testWrite_failedProcessing_rethrowsException() throws Exception {
+	void testWrite_WhenProjectionServiceThrows_PropagatesException() throws BatchException {
 		setupWriterWithValidParameters();
 		List<BatchRecord> records = Arrays.asList(createMockBatchRecord("feature1"));
 		Chunk<BatchRecord> chunk = new Chunk<>(records);
 
-		Exception testException = new RuntimeException("Test projection failure");
+		RuntimeException testException = new RuntimeException("Test projection failure");
 		when(vdypProjectionService.performProjectionForChunk(any(), any(), any(), any(), any(), any()))
 				.thenThrow(testException);
 
-		Exception thrownException = assertThrows(RuntimeException.class, () -> {
+		RuntimeException thrownException = assertThrows(RuntimeException.class, () -> {
 			writer.write(chunk);
 		});
 
 		assertEquals(testException, thrownException);
 		verify(vdypProjectionService).performProjectionForChunk(any(), any(), any(), any(), any(), any());
-		verify(metricsCollector).recordSkip(
-				eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), any(), eq(testException), eq(TEST_PARTITION_NAME)
-		);
 	}
 
 	@Test
@@ -209,7 +209,7 @@ class VdypChunkProjectionWriterTest {
 		List<BatchRecord> records = Arrays.asList(createMockBatchRecord("feature1"));
 		Chunk<BatchRecord> chunk = new Chunk<>(records);
 
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+		BatchConfigurationException exception = assertThrows(BatchConfigurationException.class, () -> {
 			writer.write(chunk);
 		});
 
@@ -217,7 +217,7 @@ class VdypChunkProjectionWriterTest {
 	}
 
 	@Test
-	void testWrite_usesRecordPartitionName() throws Exception {
+	void testWrite_usesRecordPartitionName() throws BatchException {
 		setupWriterWithValidParameters();
 		BatchRecord recordWithPartition = createMockBatchRecord("feature1");
 		// Record partition name is null, so it uses the step partition name (TEST_PARTITION_NAME)
@@ -235,6 +235,55 @@ class VdypChunkProjectionWriterTest {
 				eq(records), eq(TEST_PARTITION_NAME), any(Parameters.class), eq(TEST_JOB_EXECUTION_ID),
 				eq(TEST_JOB_GUID), any()
 		);
+	}
+
+	@Test
+	void testBeforeStep_calledTwice_throwsIllegalStateException() {
+		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", VALID_PARAMETERS_JSON)
+				.addString("jobGuid", TEST_JOB_GUID).addString("jobBaseDir", "/tmp/test").toJobParameters();
+
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(params);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(stepExecution.getJobParameters()).thenReturn(params);
+		when(executionContext.getString("partitionName")).thenReturn(TEST_PARTITION_NAME);
+
+		assertDoesNotThrow(() -> writer.beforeStep(stepExecution));
+
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			writer.beforeStep(stepExecution);
+		});
+
+		assertTrue(exception.getMessage().contains("already initialized"));
+		assertTrue(exception.getMessage().contains("beforeStep() called multiple times"));
+	}
+
+	@Test
+	void testBeforeStep_jsonProcessingException_throwsIllegalStateException() throws JsonProcessingException {
+		String invalidJson = "{invalid json}";
+		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", invalidJson)
+				.addString("jobGuid", TEST_JOB_GUID).addString("jobBaseDir", "/tmp/test").toJobParameters();
+
+		when(objectMapper.readValue(invalidJson, Parameters.class))
+				.thenThrow(new JsonProcessingException("Unexpected character") {
+				});
+
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(params);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(stepExecution.getJobParameters()).thenReturn(params);
+		when(executionContext.getString("partitionName")).thenReturn(TEST_PARTITION_NAME);
+
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			writer.beforeStep(stepExecution);
+		});
+
+		assertTrue(exception.getMessage().contains("JSON parsing failed during parameter deserialization"));
+		assertTrue(exception.getMessage().contains(TEST_JOB_GUID));
+		assertTrue(exception.getMessage().contains("Exception type:"));
+		assertNotNull(exception.getCause());
 	}
 
 	private void setupWriterWithValidParameters() {

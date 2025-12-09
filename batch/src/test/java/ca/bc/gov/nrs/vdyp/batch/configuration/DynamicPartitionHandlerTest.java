@@ -182,7 +182,7 @@ class DynamicPartitionHandlerTest {
 
 	@ParameterizedTest
 	@MethodSource("providePartitionBaseDirValidationCases")
-	void testHandle_partitionBaseDirValidation(String jobBaseDir, boolean shouldThrow, String testDescription) {
+	void testHandle_partitionBaseDirValidation(String jobBaseDir, String testDescription) {
 		JobParametersBuilder builder = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L);
 
 		if (jobBaseDir != null) {
@@ -193,28 +193,22 @@ class DynamicPartitionHandlerTest {
 
 		setupBasicMocks(jobParameters);
 
-		if (shouldThrow) {
-			assertThrows(Exception.class, () -> {
-				dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
-			}, testDescription);
-		} else {
-			assertDoesNotThrow(() -> {
-				dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
-			}, testDescription);
+		assertDoesNotThrow(() -> {
+			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
+		}, testDescription);
 
-			// Verify setJobBaseDir was called only if jobBaseDir was provided
-			if (jobBaseDir != null && !jobBaseDir.isEmpty()) {
-				verify(dynamicPartitioner).setJobBaseDir(jobBaseDir);
-			}
+		// Verify setJobBaseDir was called only if jobBaseDir was provided
+		if (jobBaseDir != null && !jobBaseDir.isEmpty()) {
+			verify(dynamicPartitioner).setJobBaseDir(jobBaseDir);
 		}
 	}
 
 	static Stream<Arguments> providePartitionBaseDirValidationCases() {
 		return Stream.of(
-				Arguments.of("/tmp/test1", false, "Valid job base directory should succeed"),
-				Arguments.of("/tmp/test2", false, "Valid job base directory should succeed"),
-				Arguments.of(null, false, "Null job base directory should still succeed"),
-				Arguments.of("", false, "Empty job base directory should still succeed")
+				Arguments.of("/tmp/test1", "Valid job base directory should succeed"),
+				Arguments.of("/tmp/test2", "Valid job base directory should succeed"),
+				Arguments.of(null, "Null job base directory should still succeed"),
+				Arguments.of("", "Empty job base directory should still succeed")
 		);
 	}
 

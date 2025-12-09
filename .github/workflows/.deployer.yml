@@ -64,7 +64,8 @@ on:
         required: true
       VITE_API_URL:
         required: true
-
+permissions:
+  contents: read        # for actions/checkout
 jobs:
   deployer:
     name: Helm

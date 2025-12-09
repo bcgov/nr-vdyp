@@ -4,8 +4,8 @@ public class ProjectionBatchMappingModel {
 	private String projectionBatchMappingGUID;
 	private String batchJobGUID;
 	private ProjectionModel projection;
-	private Integer partitionCount;
-	private Integer completedPartitionCount;
+	private Integer polygonCount;
+	private Integer completedPolygonCount;
 	private Integer errorCount;
 	private Integer warningCount;
 
@@ -21,12 +21,12 @@ public class ProjectionBatchMappingModel {
 		return projection;
 	}
 
-	public Integer getPartitionCount() {
-		return partitionCount;
+	public Integer getPolygonCount() {
+		return polygonCount;
 	}
 
-	public Integer getCompletedPartitionCount() {
-		return completedPartitionCount;
+	public Integer getCompletedPolygonCount() {
+		return completedPolygonCount;
 	}
 
 	public Integer getErrorCount() {
@@ -49,12 +49,12 @@ public class ProjectionBatchMappingModel {
 		this.projection = projection;
 	}
 
-	public void setPartitionCount(Integer partitionCount) {
-		this.partitionCount = partitionCount;
+	public void setPolygonCount(Integer polygonCount) {
+		this.polygonCount = polygonCount;
 	}
 
-	public void setCompletedPartitionCount(Integer completedPartitionCount) {
-		this.completedPartitionCount = completedPartitionCount;
+	public void setCompletedPolygonCount(Integer completedPolygonCount) {
+		this.completedPolygonCount = completedPolygonCount;
 	}
 
 	public void setErrorCount(Integer errorCount) {

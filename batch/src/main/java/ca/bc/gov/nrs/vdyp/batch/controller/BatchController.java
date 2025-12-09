@@ -1,5 +1,9 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -299,23 +304,15 @@ public class BatchController {
 		logger.debug("=== VDYP Batch Job Request ===");
 		logger.debug("Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(), polygonFile.getSize());
 		logger.debug("Layer file: {} ({} bytes)", layerFile.getOriginalFilename(), layerFile.getSize());
-		logger.debug("Partition size: {}", defaultPartitionSize);
-		logger.debug("Parameters provided: {}", parametersJson != null ? "yes" : "no");
+		logger.debug(
+				"Parameters provided: {}", (parametersJson != null && !parametersJson.trim().isEmpty()) ? "yes" : "no"
+		);
 	}
 
 	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson)
 			throws ProjectionRequestValidationException {
 
-		if (projectionParametersJson == null || projectionParametersJson.trim().isEmpty()) {
-			throw new ProjectionRequestValidationException(
-					List.of(
-							new ValidationMessage(
-									ValidationMessageKind.GENERIC,
-									"VDYP projection parameters are required but not provided in the request"
-							)
-					)
-			);
-		}
+		validateProjectionParameters(polygonFile, layerFile, projectionParametersJson);
 
 		try {
 			Path batchRootDir = Paths.get(batchRootDirectory);
@@ -338,7 +335,7 @@ public class BatchController {
 			// Partition CSV files using streaming approach BEFORE starting the job
 			logger.debug("[GUID: {}] Starting CSV partitioning...", jobGuid);
 			int featureIdToPartitionSize = csvPartitioner
-					.partitionCsvFiles(polygonFile, layerFile, defaultPartitionSize, jobBaseDir);
+					.partitionCsvFiles(polygonFile, layerFile, defaultPartitionSize, jobBaseDir, jobGuid);
 
 			logger.debug(
 					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}", jobGuid,
@@ -358,6 +355,11 @@ public class BatchController {
 
 			return jobExecution;
 
+		} catch (BatchPartitionException e) {
+			throw new ProjectionRequestValidationException(
+					List.of(new ValidationMessage(ValidationMessageKind.GENERIC, e.getMessage()))
+			);
+
 		} catch (Exception e) {
 			logger.error("Failed to process uploaded CSV files", e);
 
@@ -369,6 +371,123 @@ public class BatchController {
 							new ValidationMessage(
 									ValidationMessageKind.GENERIC,
 									"Failed to process uploaded CSV files: " + errorMessage
+							)
+					)
+			);
+		}
+	}
+
+	/**
+	 * Validates that projection parameters are provided and not empty.
+	 */
+	private void validateProjectionParameters(
+			MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson
+	) throws ProjectionRequestValidationException {
+
+		if (projectionParametersJson == null || projectionParametersJson.trim().isEmpty()) {
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									"VDYP projection parameters are required but not provided in the request"
+							)
+					)
+			);
+		}
+
+		// Validate polygon file
+		if (polygonFile == null || polygonFile.isEmpty()) {
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									"Polygon file is required but not provided in the request"
+							)
+					)
+			);
+		}
+
+		if (polygonFile.getSize() == 0) {
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									"Polygon file is empty. Please provide a valid CSV file with polygon data"
+							)
+					)
+			);
+		}
+
+		validateFileHasContent(polygonFile, "Polygon");
+
+		// Validate layer file
+		if (layerFile == null || layerFile.isEmpty()) {
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									"Layer file is required but not provided in the request"
+							)
+					)
+			);
+		}
+
+		if (layerFile.getSize() == 0) {
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									"Layer file is empty. Please provide a valid CSV file with layer data"
+							)
+					)
+			);
+		}
+
+		validateFileHasContent(layerFile, "Layer");
+	}
+
+	/**
+	 * Validates that a file contains actual data (not just whitespace/empty lines). Does NOT parse the file, only
+	 * checks if there is any non-whitespace content.
+	 *
+	 * @param file     The multipart file to validate
+	 * @param fileType The type of file (e.g., "Polygon", "Layer") for error messages
+	 * @throws ProjectionRequestValidationException if file contains only whitespace/empty lines
+	 */
+	private void validateFileHasContent(MultipartFile file, String fileType)
+			throws ProjectionRequestValidationException {
+
+		try (
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)
+				)
+		) {
+			String line;
+			while ( (line = reader.readLine()) != null) {
+				// Check if line has any non-whitespace content
+				if (!line.trim().isEmpty()) {
+					// Found at least one line with content - file is valid
+					return;
+				}
+			}
+
+			// If we reach here, file contains only empty lines/whitespace
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									fileType + " file contains only empty lines or whitespace. "
+											+ "Please provide a valid CSV file with " + fileType.toLowerCase() + " data"
+							)
+					)
+			);
+
+		} catch (IOException e) {
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									"Failed to read " + fileType.toLowerCase() + " file: " + e.getMessage()
 							)
 					)
 			);
@@ -436,6 +555,14 @@ public class BatchController {
 		throw new NoSuchJobExecutionException("No job execution found with GUID: " + jobGuid);
 	}
 
+	/**
+	 * Searches for a job execution by job name and GUID.
+	 *
+	 * @param jobName The name of the job to search
+	 * @param jobGuid The GUID to match
+	 * @return The JobExecution if found, or null if not found in this job name. Callers MUST check for null before
+	 *         using the returned value.
+	 */
 	private JobExecution searchJobExecutionsByName(String jobName, String jobGuid) {
 		try {
 			long totalInstances = jobExplorer.getJobInstanceCount(jobName);
@@ -453,6 +580,15 @@ public class BatchController {
 		return null;
 	}
 
+	/**
+	 * Searches for a job execution within a chunk of job instances.
+	 *
+	 * @param jobName The name of the job
+	 * @param jobGuid The GUID to match
+	 * @param start   The starting index for the chunk
+	 * @return The JobExecution if found in this chunk, or null if not found. Callers MUST check for null before using
+	 *         the returned value.
+	 */
 	private JobExecution searchJobExecutionsInChunk(String jobName, String jobGuid, long start) {
 		List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, (int) start, jobSearchChunkSize);
 
@@ -466,6 +602,14 @@ public class BatchController {
 		return null;
 	}
 
+	/**
+	 * Finds a job execution matching the given GUID within a job instance.
+	 *
+	 * @param jobInstance The job instance to search
+	 * @param jobGuid     The GUID to match
+	 * @return The JobExecution if found, or null if no execution in this instance matches the GUID. Callers MUST check
+	 *         for null before using the returned value.
+	 */
 	private JobExecution findMatchingExecution(JobInstance jobInstance, String jobGuid) {
 		List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
 

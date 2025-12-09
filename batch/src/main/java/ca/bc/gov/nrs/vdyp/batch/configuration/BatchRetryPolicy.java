@@ -1,23 +1,23 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
-import org.springframework.dao.TransientDataAccessException;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.batch.core.scope.context.StepSynchronizationManager;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * Retry doesn't track individual records because it is designed for transient errors (network failures, DB timeouts,
- * temporary I/O issues) and transient errors are not associated with specific data records.
+ * Retry policy for batch processing operations.
+ *
+ * Retry Strategy: Retry doesn't track individual records because it is designed for transient errors. Use
+ * BatchException to determine retryability at exception creation time. The BatchRetryPolicy determines whether to retry
+ * solely based on BatchException.isRetryable(). All exceptions must be wrapped in a BatchException; if they are not,
+ * the operation will not be retried.
  */
 public class BatchRetryPolicy extends SimpleRetryPolicy {
 
@@ -26,16 +26,25 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	private static final Logger logger = LoggerFactory.getLogger(BatchRetryPolicy.class);
 
 	private final long backOffPeriod;
+	private final transient BatchMetricsCollector metricsCollector;
+
+	// Step execution context - initialized once in beforeStep() and never modified thereafter.
+	// Note: These fields cannot be made final due to Spring Batch's @BeforeStep contract.
+	// Each worker step gets its own instance via @StepScope, so beforeStep() is called only once per instance.
 	private Long jobExecutionId;
 	private String jobGuid;
 	private String partitionName;
-	private transient BatchMetricsCollector metricsCollector;
 
-	public BatchRetryPolicy(int maxAttempts, long backOffPeriod) {
-		super(maxAttempts, createRetryableExceptions());
+	public BatchRetryPolicy(int maxAttempts, long backOffPeriod, BatchMetricsCollector metricsCollector) {
+		super(maxAttempts);
 		this.backOffPeriod = backOffPeriod;
+		this.metricsCollector = metricsCollector;
 	}
 
+	/**
+	 * Automatically invoked by Spring Batch before step execution to initialize context. Called once per step instance
+	 * (@StepScope ensures separate instances for each worker).
+	 */
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
@@ -43,28 +52,58 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
 	}
 
-	private static Map<Class<? extends Throwable>, Boolean> createRetryableExceptions() {
-		Map<Class<? extends Throwable>, Boolean> retryableExceptions = new HashMap<>();
-		retryableExceptions.put(IOException.class, true);
-		retryableExceptions.put(TransientDataAccessException.class, true);
-		return retryableExceptions;
-	}
-
 	@Override
 	public boolean canRetry(RetryContext context) {
-		boolean canRetry = super.canRetry(context);
 		Throwable lastThrowable = context.getLastThrowable();
 
-		if (lastThrowable != null) {
-			int attemptCount = context.getRetryCount();
-			String currentPartitionName = getCurrentPartitionName();
+		if (lastThrowable == null) {
+			return false;
+		}
 
-			if (canRetry) {
-				logRetryAttempt(lastThrowable, attemptCount, currentPartitionName);
-				recordRetryMetric(lastThrowable, attemptCount, false, currentPartitionName);
-			} else {
-				logMaxAttemptsReached(lastThrowable, attemptCount, currentPartitionName);
-			}
+		if (lastThrowable instanceof BatchException batchException) {
+			return handleBatchExceptionRetry(context, batchException);
+		}
+
+		// Non-BatchException: not retryable
+		logger.warn(
+				"[{}] Non-BatchException encountered: {} - {}. Not retryable.", getCurrentPartitionName(),
+				lastThrowable.getClass().getSimpleName(), lastThrowable.getMessage()
+		);
+		return false;
+	}
+
+	/**
+	 * Handles retry logic for BatchException using isRetryable() flag.
+	 */
+	private boolean handleBatchExceptionRetry(RetryContext context, BatchException batchException) {
+		boolean isRetryable = batchException.isRetryable();
+		boolean canRetryByCount = context.getRetryCount() < getMaxAttempts();
+		boolean canRetry = isRetryable && canRetryByCount;
+
+		int attemptCount = context.getRetryCount();
+		String currentPartitionName = getCurrentPartitionName();
+
+		if (canRetry) {
+			logger.warn(
+					"[{}] VDYP Retry attempt {} of {} due to transient error: {} - {}", currentPartitionName,
+					attemptCount, getMaxAttempts(), batchException.getClass().getSimpleName(),
+					batchException.getMessage()
+			);
+
+			recordRetryMetricSafely(batchException, attemptCount, false, currentPartitionName);
+		} else if (isRetryable) {
+			// Retryable but max attempts reached
+			logger.error(
+					"[{}] Max retry attempts ({}) reached for transient error: {} - {}. Will be skipped.",
+					currentPartitionName, attemptCount, batchException.getClass().getSimpleName(),
+					batchException.getMessage()
+			);
+		} else {
+			// Not retryable at all
+			logger.info(
+					"[{}] Exception is not retryable: {} - {}", currentPartitionName,
+					batchException.getClass().getSimpleName(), batchException.getMessage()
+			);
 		}
 
 		applyBackoffDelay(canRetry);
@@ -72,39 +111,28 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	}
 
 	private String getCurrentPartitionName() {
-		try {
-			var stepContext = StepSynchronizationManager.getContext();
-			if (stepContext != null) {
-				StepExecution currentStepExecution = stepContext.getStepExecution();
-				return currentStepExecution.getExecutionContext()
-						.getString(BatchConstants.Partition.NAME, partitionName);
-			}
-		} catch (Exception e) {
-			logger.debug("Could not access current step context, using stored partition name: {}", e.getMessage());
+		var stepContext = StepSynchronizationManager.getContext();
+		if (stepContext != null) {
+			StepExecution currentStepExecution = stepContext.getStepExecution();
+			return currentStepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME, partitionName);
 		}
 		return partitionName;
 	}
 
-	private void logRetryAttempt(Throwable throwable, int attemptCount, String currentPartitionName) {
-		logger.warn(
-				"[{}] VDYP Retry attempt {} of {} due to transient error: {} - {}", currentPartitionName, attemptCount,
-				getMaxAttempts(), throwable.getClass().getSimpleName(), throwable.getMessage()
-		);
-	}
-
-	private void logMaxAttemptsReached(Throwable throwable, int attemptCount, String currentPartitionName) {
-		logger.error(
-				"[{}] Max retry attempts ({}) reached for transient error: {} - {}. Will be skipped.",
-				currentPartitionName, attemptCount, throwable.getClass().getSimpleName(), throwable.getMessage()
-		);
-	}
-
-	private void
-			recordRetryMetric(Throwable throwable, int attemptCount, boolean successful, String currentPartitionName) {
+	/**
+	 * Records retry metric, catching any BatchException to prevent metrics failures from affecting retry logic.
+	 */
+	private void recordRetryMetricSafely(
+			Throwable throwable, int attemptCount, boolean successful, String currentPartitionName
+	) {
 		if (metricsCollector != null && jobExecutionId != null && jobGuid != null) {
-			metricsCollector.recordRetryAttempt(
-					jobExecutionId, jobGuid, attemptCount, throwable, successful, currentPartitionName
-			);
+			try {
+				metricsCollector.recordRetryAttempt(
+						jobExecutionId, jobGuid, attemptCount, throwable, successful, currentPartitionName
+				);
+			} catch (BatchException e) {
+				logger.warn("Failed to record retry metric: {}", e.getMessage());
+			}
 		}
 	}
 
@@ -118,9 +146,5 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 				logger.warn("Backoff delay interrupted", e);
 			}
 		}
-	}
-
-	public void setMetricsCollector(BatchMetricsCollector metricsCollector) {
-		this.metricsCollector = metricsCollector;
 	}
 }
