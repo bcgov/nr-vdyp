@@ -10,6 +10,7 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -17,10 +18,12 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationExc
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
@@ -35,6 +38,9 @@ public class ProjectionEndpoint implements Endpoint {
 
 	@Inject
 	private ProjectionService projectionService;
+
+	@Inject
+	CurrentVDYPUser currentUser;
 
 	@jakarta.ws.rs.POST
 	@Path("/dcsv")
@@ -147,6 +153,16 @@ public class ProjectionEndpoint implements Endpoint {
 		} catch (PolygonExecutionException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
 		}
+	}
+
+	@GET
+	@Authenticated
+	@Path("/me")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(name = "Get Projection List", description = "Get all projections for the current user.")
+	public Response getAuthenticatedUserProjections() {
+		var projections = projectionService.getAllProjectionsForUser(currentUser.getUserId());
+		return Response.ok(projections).status(Response.Status.OK).build();
 	}
 
 	private static ObjectMapper mapper = new ObjectMapper();
