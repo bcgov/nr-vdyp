@@ -45,6 +45,10 @@ public class ProjectionEntity extends AuditableEntity {
 	private OffsetDateTime startDate;
 	@Column(name = "end_date")
 	private OffsetDateTime endDate;
+	@Column(name = "report_title")
+	private String reportTitle;
+	@Column(name = "report_description")
+	private String reportDescription;
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "calculation_engine_code", referencedColumnName = "calculation_engine_code")
@@ -53,6 +57,7 @@ public class ProjectionEntity extends AuditableEntity {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "projection_status_code", referencedColumnName = "projection_status_code")
 	private ProjectionStatusCodeEntity projectionStatusCode;
+
 
 	public UUID getProjectionGUID() {
 		return projectionGUID;
@@ -94,6 +99,14 @@ public class ProjectionEntity extends AuditableEntity {
 		return projectionStatusCode;
 	}
 
+	public String getReportTitle() {
+		return reportTitle;
+	}
+
+	public String getReportDescription() {
+		return reportDescription;
+	}
+
 	public void setProjectionGUID(UUID projectionGUID) {
 		this.projectionGUID = projectionGUID;
 	}
@@ -132,5 +145,13 @@ public class ProjectionEntity extends AuditableEntity {
 
 	public void setProjectionStatusCode(ProjectionStatusCodeEntity projectionStatusCode) {
 		this.projectionStatusCode = projectionStatusCode;
+	}
+
+	public void setReportTitle(String reportTitle) {
+		this.reportTitle = reportTitle;
+	}
+
+	public void setReportDescription(String reportDescription) {
+		this.reportDescription = reportDescription;
 	}
 }
