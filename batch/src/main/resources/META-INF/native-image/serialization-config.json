@@ -1,0 +1,36 @@
+{
+  "types":[
+    {
+      "name":"ca.bc.gov.nrs.vdyp.batch.configuration.BatchRetryPolicy$$SpringCGLIB$$0",
+      "customTargetConstructorClass":"java.lang.Object"
+    },
+    {
+      "name":"ca.bc.gov.nrs.vdyp.batch.configuration.BatchSkipPolicy$$SpringCGLIB$$0",
+      "customTargetConstructorClass":"java.lang.Object"
+    },
+    {
+      "name":"ca.bc.gov.nrs.vdyp.batch.configuration.BatchItemWriter$$SpringCGLIB$$0",
+      "customTargetConstructorClass":"java.lang.Object"
+    },
+    {
+      "name":"ca.bc.gov.nrs.vdyp.batch.configuration.BatchItemProcessor$$SpringCGLIB$$0",
+      "customTargetConstructorClass":"java.lang.Object"
+    },
+    {
+      "name":"java.lang.Long"
+    },
+    {
+      "name":"java.lang.Number"
+    },
+    {
+      "name":"java.lang.String"
+    },
+    {
+      "name":"java.util.HashMap"
+    }
+  ],
+  "lambdaCapturingTypes":[
+  ],
+  "proxies":[
+  ]
+}

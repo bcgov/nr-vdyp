@@ -41,7 +41,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
@@ -56,7 +56,7 @@ public class BatchController {
 
 	private final JobLauncher jobLauncher;
 	private final Job partitionedJob;
-	private final StreamingCsvPartitioner csvPartitioner;
+	private final BatchInputPartitioner csvPartitioner;
 	private final JobOperator jobOperator;
 
 	private final JobExplorer jobExplorer;
@@ -77,7 +77,7 @@ public class BatchController {
 	// It's available at runtime for handling HTTP requests to /api/batch endpoints, not just in tests.
 	public BatchController(
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, StreamingCsvPartitioner csvPartitioner, JobOperator jobOperator
+			BatchMetricsCollector metricsCollector, BatchInputPartitioner csvPartitioner, JobOperator jobOperator
 	) {
 		this.jobLauncher = jobLauncher;
 		this.partitionedJob = partitionedJob;

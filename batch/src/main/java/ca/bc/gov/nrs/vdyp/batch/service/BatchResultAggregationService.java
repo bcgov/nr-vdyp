@@ -125,62 +125,118 @@ public class BatchResultAggregationService {
 				partitionDirs.stream().map(p -> p.getFileName().toString()).toList()
 		);
 
-		// Sort partition directories by name to ensure consistent processing order.
+		// Sort partition directories by partition number (NOT alphabetically by name).
 		// This is critical for TABLE_NUM assignment in yield tables,
 		// as TABLE_NUM is assigned sequentially based on the order in which
 		// polygon/layer combinations are encountered during partition aggregation.
-		partitionDirs.sort(Comparator.comparing(path -> path.getFileName().toString()));
+		//
+		// IMPORTANT: Must sort by numeric partition number, not string comparison:
+		// - Correct: partition0, partition1, partition2, ..., partition10, partition11
+		// - Wrong: partition0, partition1, partition10, partition11, partition2, ... (alphabetical)
+		partitionDirs.sort(Comparator.comparingInt(this::extractPartitionNumber));
+
+		logger.debug(
+				"Sorted partition directories by number: {}",
+				partitionDirs.stream().map(p -> String.format("%s(%d)", p.getFileName(), extractPartitionNumber(p)))
+						.toList()
+		);
+
 		return partitionDirs;
 	}
 
 	/**
+	 * Extracts the partition number from a partition directory path.
+	 *
+	 * Examples: - "output-partition0" -> 0 - "output-partition11" -> 11 - "input-partition5" -> 5
+	 *
+	 * @param partitionPath Path to partition directory
+	 * @return Partition number, or Integer.MAX_VALUE if extraction fails (will sort to end)
+	 */
+	private int extractPartitionNumber(Path partitionPath) {
+		String dirName = partitionPath.getFileName().toString();
+
+		// Remove "output-partition" or "input-partition" prefix
+		String numberPart = dirName.replace(BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX, "")
+				.replace(BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX, "");
+
+		try {
+			return Integer.parseInt(numberPart);
+		} catch (NumberFormatException e) {
+			logger.warn("Failed to extract partition number from directory name: {}", dirName);
+			return Integer.MAX_VALUE; // Sort invalid partitions to end
+		}
+	}
+
+	/**
 	 * Aggregates yield tables from all partitions, merging tables of the same type.
+	 *
+	 * Ensures correct data ordering by: 1. Processing partitions in ascending order (partition0, partition1, ...) 2.
+	 * Within each partition, processing files in chronological order based on filename timestamp
+	 *
+	 * This preserves the original input file order since: - Input files are sorted by FEATURE_ID - Partitioning
+	 * maintains FEATURE_ID order across partitions - Each partition processes its data in order - Aggregation
+	 * reconstructs the original sequence
 	 *
 	 * @throws IOException if aggregation fails
 	 */
 	private void aggregateYieldTables(List<Path> partitionOutputDirs, ZipOutputStream zipOut) throws IOException {
 		logger.debug("Aggregating yield tables from {} partitions", partitionOutputDirs.size());
 
-		Map<String, List<Path>> yieldTablesByType = new HashMap<>();
+		List<Path> allYieldTablePaths = new ArrayList<>();
 
-		// Collect all yield tables by type
+		// Collect all yield tables from partitions (already sorted by partition number)
+		// CRITICAL: Process partitions in order and collect files sequentially to maintain order
 		for (Path partitionOutputDir : partitionOutputDirs) {
-			collectYieldTablesFromPartition(partitionOutputDir, yieldTablesByType);
+			List<Path> partitionYieldTables = collectYieldTablesFromPartition(partitionOutputDir);
+
+			// Sort files within this partition by filename (contains timestamp)
+			// Example: YieldTables_batch-1-partition0-projection-HCSV-2025_12_08_21_35_00_3599_YieldTable.csv
+			partitionYieldTables.sort(Comparator.comparing(path -> path.getFileName().toString()));
+
+			// Add files from this partition in order - DO NOT sort the final list
+			allYieldTablePaths.addAll(partitionYieldTables);
+
+			logger.trace(
+					"Added {} yield table files from partition {} (total so far: {})", partitionYieldTables.size(),
+					partitionOutputDir.getFileName(), allYieldTablePaths.size()
+			);
 		}
 
-		if (yieldTablesByType.isEmpty()) {
+		if (allYieldTablePaths.isEmpty()) {
 			logger.warn("No yield tables found in any partition directory");
+			return;
 		}
 
-		// Merge and add to ZIP
-		for (Map.Entry<String, List<Path>> entry : yieldTablesByType.entrySet()) {
-			List<Path> tablePaths = entry.getValue();
+		logger.debug(
+				"Collected {} yield table files in correct order: ppartition0 through partitionN sequentially",
+				allYieldTablePaths.size()
+		);
 
-			if (!tablePaths.isEmpty()) {
-				mergeYieldTables(tablePaths, zipOut, partitionOutputDirs);
-			}
-		}
+		// Merge all yield tables in the correct order (DO NOT re-sort here)
+		mergeYieldTables(allYieldTablePaths, zipOut, partitionOutputDirs);
 
-		logger.debug("Aggregated {} different types of yield tables", yieldTablesByType.size());
+		logger.debug("Aggregated {} yield table files in order", allYieldTablePaths.size());
 	}
 
 	/**
 	 * Collects yield table files from a partition output directory.
 	 *
+	 * @return List of yield table file paths from this partition
 	 * @throws IOException if directory walking fails
 	 */
-	private void collectYieldTablesFromPartition(Path partitionOutputDir, Map<String, List<Path>> yieldTablesByType)
-			throws IOException {
+	private List<Path> collectYieldTablesFromPartition(Path partitionOutputDir) throws IOException {
+		List<Path> yieldTables = new ArrayList<>();
+
 		if (!isValidPartitionDirectory(partitionOutputDir)) {
-			return;
+			return yieldTables;
 		}
 
 		try (Stream<Path> files = Files.walk(partitionOutputDir)) {
-			files.filter(Files::isRegularFile).filter(file -> isYieldTableFile(file.getFileName().toString())).forEach(
-					file -> yieldTablesByType
-							.computeIfAbsent(BatchConstants.File.YIELD_TABLE_TYPE, k -> new ArrayList<>()).add(file)
-			);
+			files.filter(Files::isRegularFile).filter(file -> isYieldTableFile(file.getFileName().toString()))
+					.forEach(yieldTables::add);
 		}
+
+		return yieldTables;
 	}
 
 	/**
@@ -542,6 +598,12 @@ public class BatchResultAggregationService {
 	/**
 	 * Aggregates log files from all partitions.
 	 *
+	 * Ensures correct data ordering by: 1. Processing partitions in ascending order (partition0, partition1, ...) 2.
+	 * Within each partition, processing files in chronological order based on filename timestamp
+	 *
+	 * This maintains consistency with yield table aggregation and preserves the original processing sequence from the
+	 * input files.
+	 *
 	 * @throws IOException if aggregation fails
 	 */
 	private void aggregateLogs(List<Path> partitionDirs, ZipOutputStream zipOut) throws IOException {
@@ -549,14 +611,35 @@ public class BatchResultAggregationService {
 
 		Map<String, List<Path>> logsByType = new HashMap<>();
 
-		// Collect log files from each valid partition directory
+		// Collect log files from each partition (already sorted by partition number)
+		// CRITICAL: Process partitions in order and maintain sequence to preserve original data order
 		for (Path partitionDir : partitionDirs) {
 			if (isValidPartitionDirectory(partitionDir)) {
-				collectLogFilesFromPartition(partitionDir, logsByType);
+				List<Path> partitionLogs = collectLogFilesFromPartition(partitionDir);
+
+				// Sort files within this partition by filename (contains timestamp)
+				partitionLogs.sort(Comparator.comparing(path -> path.getFileName().toString()));
+
+				// Group by log type while maintaining partition order
+				for (Path logPath : partitionLogs) {
+					String logType = extractLogType(logPath.getFileName().toString());
+					logsByType.computeIfAbsent(logType, k -> new ArrayList<>()).add(logPath);
+				}
+
+				logger.trace(
+						"Added {} log files from partition {} (grouped by type)", partitionLogs.size(),
+						partitionDir.getFileName()
+				);
 			}
 		}
 
-		// Merge and add to ZIP
+		logger.debug(
+				"Collected log files in correct order: partition0 through partitionN sequentially (grouped by {} types)",
+				logsByType.size()
+		);
+
+		// Merge and add to ZIP (files are already in correct order: partition order + timestamp order)
+		// DO NOT re-sort here - order is already correct from partition iteration
 		for (Map.Entry<String, List<Path>> entry : logsByType.entrySet()) {
 			String logType = entry.getKey();
 			List<Path> logPaths = entry.getValue();
@@ -566,23 +649,24 @@ public class BatchResultAggregationService {
 			}
 		}
 
-		logger.debug("Aggregated {} different types of log files", logsByType.size());
+		logger.debug("Aggregated {} different types of log files in order", logsByType.size());
 	}
 
 	/**
 	 * Collects log files from a single partition directory.
 	 *
+	 * @return List of log file paths from this partition
 	 * @throws IOException if directory walking fails
 	 */
-	private void collectLogFilesFromPartition(Path partitionDir, Map<String, List<Path>> logsByType)
-			throws IOException {
+	private List<Path> collectLogFilesFromPartition(Path partitionDir) throws IOException {
+		List<Path> logFiles = new ArrayList<>();
+
 		try (Stream<Path> files = Files.walk(partitionDir)) {
 			files.filter(Files::isRegularFile).filter(file -> isLogFile(file.getFileName().toString()))
-					.forEach(file -> {
-						String logType = extractLogType(file.getFileName().toString());
-						logsByType.computeIfAbsent(logType, k -> new ArrayList<>()).add(file);
-					});
+					.forEach(logFiles::add);
 		}
+
+		return logFiles;
 	}
 
 	/**

@@ -21,7 +21,7 @@
     "name": "org.springframework.batch.core.StepExecution"
   },
   {
-    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchRecord"
+    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata"
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics"
@@ -34,16 +34,16 @@
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchDataReadException"
-  },	
+  },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchException"
   },
-	{
+  {
     "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException"
   },
-	{
+  {
     "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException"
-  },	
+  },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException"
   },
@@ -61,5 +61,31 @@
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters"
+  },
+  {
+    "name":"[Lcom.sun.management.internal.DiagnosticCommandArgumentInfo;"
+  },
+  {
+    "name":"[Lcom.sun.management.internal.DiagnosticCommandInfo;"
+  },
+  {
+    "name":"com.sun.management.internal.DiagnosticCommandArgumentInfo",
+    "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String","boolean","boolean","boolean","int"] }]
+  },
+  {
+    "name":"com.sun.management.internal.DiagnosticCommandInfo",
+    "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","boolean","java.util.List"] }]
+  },
+  {
+    "name":"java.lang.Boolean",
+    "methods":[{"name":"getBoolean","parameterTypes":["java.lang.String"] }]
+  },
+  {
+    "name":"java.util.Arrays",
+    "methods":[{"name":"asList","parameterTypes":["java.lang.Object[]"] }]
+  },
+  {
+    "name":"sun.management.VMManagementImpl",
+    "fields":[{"name":"compTimeMonitoringSupport"}, {"name":"currentThreadCpuTimeSupport"}, {"name":"objectMonitorUsageSupport"}, {"name":"otherThreadCpuTimeSupport"}, {"name":"remoteDiagnosticCommandsSupport"}, {"name":"synchronizerUsageSupport"}, {"name":"threadAllocatedMemorySupport"}, {"name":"threadContentionMonitoringSupport"}]
   }
 ]

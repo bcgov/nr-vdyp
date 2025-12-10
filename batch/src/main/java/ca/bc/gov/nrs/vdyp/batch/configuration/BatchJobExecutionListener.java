@@ -18,9 +18,9 @@ import java.util.Map;
  * Job execution listener for partitioned VDYP batch job.
  */
 @Component
-public class PartitionedJobExecutionListener implements JobExecutionListener {
+public class BatchJobExecutionListener implements JobExecutionListener {
 
-	private static final Logger logger = LoggerFactory.getLogger(PartitionedJobExecutionListener.class);
+	private static final Logger logger = LoggerFactory.getLogger(BatchJobExecutionListener.class);
 
 	// Thread safety for afterJob execution - using job execution ID as key
 	private final Map<Long, Boolean> jobCompletionTracker = new HashMap<>();

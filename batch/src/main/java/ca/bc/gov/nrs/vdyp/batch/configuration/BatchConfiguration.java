@@ -38,23 +38,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
-import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
+/**
+ * Central configuration class for the VDYP batch processing system.
+ */
 @Configuration
-public class PartitionedBatchConfiguration {
+public class BatchConfiguration {
 
-	private static final Logger logger = LoggerFactory.getLogger(PartitionedBatchConfiguration.class);
+	private static final Logger logger = LoggerFactory.getLogger(BatchConfiguration.class);
 
 	private final JobRepository jobRepository;
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
 	private final BatchResultAggregationService resultAggregationService;
 
-	public PartitionedBatchConfiguration(
+	public BatchConfiguration(
 			JobRepository jobRepository, BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
 			BatchResultAggregationService resultAggregationService
 	) {
@@ -139,16 +142,20 @@ public class PartitionedBatchConfiguration {
 	public Step workerStep(
 			BatchRetryPolicy retryPolicy, BatchSkipPolicy skipPolicy, PlatformTransactionManager transactionManager,
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			VdypProjectionService vdypProjectionService, ItemStreamReader<BatchRecord> partitionReader,
-			VdypChunkProjectionWriter partitionWriter, VdypProjectionProcessor vdypProjectionProcessor
+			BatchProjectionService batchProjectionService, ItemStreamReader<BatchChunkMetadata> partitionReader,
+			BatchItemWriter partitionWriter, BatchItemProcessor batchItemProcessor
 	) {
 
-		int chunkSize = Math.max(batchProperties.getReader().getDefaultChunkSize(), 1);
-		logger.info("Worker step configured with chunk size: {}", chunkSize);
+		// Spring Batch chunk size must be 1 because each BatchChunkMetadata represents a chunk of records
+		int stepChunkSize = 1;
+		logger.info(
+				"Worker step configured with Spring Batch chunk size: {} (each metadata item contains {} records)",
+				stepChunkSize, batchProperties.getReader().getDefaultChunkSize()
+		);
 
 		return new StepBuilder("workerStep", jobRepository)
-				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager).reader(partitionReader)
-				.processor(vdypProjectionProcessor).writer(partitionWriter).listener(partitionWriter)
+				.<BatchChunkMetadata, BatchChunkMetadata>chunk(stepChunkSize, transactionManager)
+				.reader(partitionReader).processor(batchItemProcessor).writer(partitionWriter).listener(partitionWriter)
 				.listener(retryPolicy).listener(skipPolicy).faultTolerant().retryPolicy(retryPolicy)
 				.skipPolicy(skipPolicy).listener(new StepExecutionListener() {
 					@Override
@@ -211,7 +218,7 @@ public class PartitionedBatchConfiguration {
 	@Bean
 	@ConditionalOnProperty(name = "batch.job.auto-create", havingValue = "true", matchIfMissing = false)
 	public Job partitionedJob(
-			PartitionedJobExecutionListener jobExecutionListener, Step masterStep, Step postProcessingStep,
+			BatchJobExecutionListener jobExecutionListener, Step masterStep, Step postProcessingStep,
 			PlatformTransactionManager transactionManager
 	) {
 		return new JobBuilder("VdypPartitionedJob", jobRepository) //
@@ -306,32 +313,31 @@ public class PartitionedBatchConfiguration {
 
 	@Bean
 	@StepScope
-	public ItemStreamReader<BatchRecord> partitionReader(
+	public ItemStreamReader<BatchChunkMetadata> partitionReader(
 			@Value("#{stepExecutionContext['partitionName']}") String partitionName,
 			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId,
 			@Value("#{jobParameters['" + BatchConstants.Job.GUID + "']}") String jobGuid,
 			BatchProperties batchProperties
 	) {
 		logger.info(
-				"[GUID: {}, Execution ID: {}, Partition: {}] Using ChunkBasedPolygonItemReader with chunk size: {}",
-				jobGuid, jobExecutionId, partitionName, batchProperties.getReader().getDefaultChunkSize()
+				"[GUID: {}, Execution ID: {}, Partition: {}] Using BatchItemReader with chunk size: {}", jobGuid,
+				jobExecutionId, partitionName, batchProperties.getReader().getDefaultChunkSize()
 		);
-		return new ChunkBasedPolygonItemReader(
+		return new BatchItemReader(
 				partitionName, jobExecutionId, jobGuid, batchProperties.getReader().getDefaultChunkSize()
 		);
 	}
 
 	@Bean
 	@StepScope
-	public VdypProjectionProcessor vdypProjectionProcessor(BatchMetricsCollector metricsCollector) {
-		return new VdypProjectionProcessor(metricsCollector);
+	public BatchItemProcessor batchItemProcessor(BatchMetricsCollector metricsCollector) {
+		return new BatchItemProcessor(metricsCollector);
 	}
 
 	@Bean
 	@StepScope
-	public VdypChunkProjectionWriter
-			partitionWriter(VdypProjectionService vdypProjectionService, ObjectMapper objectMapper) {
-		return new VdypChunkProjectionWriter(vdypProjectionService, objectMapper);
+	public BatchItemWriter partitionWriter(BatchProjectionService batchProjectionService, ObjectMapper objectMapper) {
+		return new BatchItemWriter(batchProjectionService, objectMapper);
 	}
 
 	/**

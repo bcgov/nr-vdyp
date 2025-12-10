@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class PartitionedJobExecutionListenerTest {
+class BatchJobExecutionListenerTest {
 
 	@Mock
 	private JobExecution jobExecution;
@@ -30,20 +30,15 @@ class PartitionedJobExecutionListenerTest {
 	@Mock
 	private JobInstance jobInstance;
 
-	private PartitionedJobExecutionListener listener;
+	private BatchJobExecutionListener listener;
 
 	@BeforeEach
 	void setUp() {
-		listener = new PartitionedJobExecutionListener();
+		listener = new BatchJobExecutionListener();
 	}
 
 	@Test
-	void testConstructor() {
-		assertNotNull(listener);
-	}
-
-	@Test
-	void testBeforeJob_WithJobParameters() {
+	void testBeforeJob_InitializesTracking() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(BatchConstants.Partition.SIZE, 4L)
 				.addString(BatchConstants.Job.GUID, "test-guid-123").toJobParameters();
 
@@ -57,21 +52,7 @@ class PartitionedJobExecutionListenerTest {
 	}
 
 	@Test
-	void testBeforeJob_WithoutPartitionSize() {
-		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "test-guid-456")
-				.toJobParameters();
-
-		when(jobExecution.getId()).thenReturn(2L);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-
-		// Should not throw even without partition size
-		assertDoesNotThrow(() -> listener.beforeJob(jobExecution));
-
-		verify(jobExecution, atLeastOnce()).getId();
-	}
-
-	@Test
-	void testAfterJob_FirstTime() {
+	void testAfterJob_WithValidJobExecution() {
 		Long jobId = 1L;
 		String jobGuid = "guid-001";
 
@@ -91,6 +72,8 @@ class PartitionedJobExecutionListenerTest {
 
 		verify(jobExecution, atLeastOnce()).getId();
 		verify(jobExecution, atLeastOnce()).getStatus();
+		verify(jobExecution, atLeastOnce()).getStartTime();
+		verify(jobExecution, atLeastOnce()).getEndTime();
 	}
 
 	@Test
@@ -113,31 +96,6 @@ class PartitionedJobExecutionListenerTest {
 
 		// Should still work without throwing exceptions
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
-	}
-
-	@Test
-	void testAfterJob_WithDuration() {
-		Long jobId = 3L;
-		String jobGuid = "guid-003";
-
-		LocalDateTime startTime = LocalDateTime.now().minusMinutes(5);
-		LocalDateTime endTime = LocalDateTime.now();
-
-		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
-				.toJobParameters();
-
-		when(jobExecution.getId()).thenReturn(jobId);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
-		when(jobExecution.getStartTime()).thenReturn(startTime);
-		when(jobExecution.getEndTime()).thenReturn(endTime);
-
-		listener.beforeJob(jobExecution);
-
-		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
-
-		verify(jobExecution, atLeastOnce()).getStartTime();
-		verify(jobExecution, atLeastOnce()).getEndTime();
 	}
 
 	@Test
@@ -179,66 +137,33 @@ class PartitionedJobExecutionListenerTest {
 	}
 
 	@Test
-	void testBeforeJob_MultipleJobs() {
-		JobExecution job1 = mock(JobExecution.class);
-		JobExecution job2 = mock(JobExecution.class);
+	void testAfterJob_CleansUpOldJobTracker() {
+		// Create and process 12 jobs to trigger cleanup (cleanup happens when size > 10)
+		for (long i = 1; i <= 12; i++) {
+			JobExecution jobExec = mock(JobExecution.class);
+			JobParameters jobParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "guid-" + i)
+					.toJobParameters();
 
-		JobParameters params1 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "guid-multi-1")
-				.toJobParameters();
-		JobParameters params2 = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "guid-multi-2")
-				.toJobParameters();
+			when(jobExec.getId()).thenReturn(i);
+			when(jobExec.getJobParameters()).thenReturn(jobParams);
+			when(jobExec.getStatus()).thenReturn(BatchStatus.COMPLETED);
+			when(jobExec.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(5));
+			when(jobExec.getEndTime()).thenReturn(LocalDateTime.now());
 
-		when(job1.getId()).thenReturn(10L);
-		when(job1.getJobParameters()).thenReturn(params1);
-		when(job2.getId()).thenReturn(20L);
-		when(job2.getJobParameters()).thenReturn(params2);
+			listener.beforeJob(jobExec);
+			listener.afterJob(jobExec);
+		}
 
-		assertDoesNotThrow(() -> listener.beforeJob(job1));
-		assertDoesNotThrow(() -> listener.beforeJob(job2));
+		// Verify cleanup logic was executed (no exception thrown)
+		assertDoesNotThrow(() -> {
+			JobExecution finalJob = mock(JobExecution.class);
+			JobParameters finalParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "guid-final")
+					.toJobParameters();
 
-		verify(job1, atLeastOnce()).getId();
-		verify(job2, atLeastOnce()).getId();
-	}
+			when(finalJob.getId()).thenReturn(13L);
+			when(finalJob.getJobParameters()).thenReturn(finalParams);
 
-	@Test
-	void testAfterJob_WithCompletedStatus() {
-		Long jobId = 6L;
-		String jobGuid = "guid-006";
-
-		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
-				.toJobParameters();
-
-		when(jobExecution.getId()).thenReturn(jobId);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(5));
-		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
-
-		listener.beforeJob(jobExecution);
-
-		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
-
-		verify(jobExecution, atLeastOnce()).getStatus();
-	}
-
-	@Test
-	void testAfterJob_WithFailedStatus() {
-		Long jobId = 7L;
-		String jobGuid = "guid-007";
-
-		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
-				.toJobParameters();
-
-		when(jobExecution.getId()).thenReturn(jobId);
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobExecution.getStatus()).thenReturn(BatchStatus.FAILED);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(5));
-		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
-
-		listener.beforeJob(jobExecution);
-
-		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
-
-		verify(jobExecution, atLeastOnce()).getStatus();
+			listener.beforeJob(finalJob);
+		});
 	}
 }

@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -15,7 +14,7 @@ class BatchMetricsExceptionTest {
 	private static final Logger logger = LoggerFactory.getLogger(BatchMetricsExceptionTest.class);
 
 	@Test
-	void testHandleMetricsFailureWithFullContext() {
+	void testHandleMetricsFailure_WithJobGuidAndExecutionId() {
 		String jobGuid = "test-guid-123";
 		Long jobExecutionId = 456L;
 		String errorDescription = "Job metrics already exists";
@@ -24,8 +23,10 @@ class BatchMetricsExceptionTest {
 				.handleMetricsFailure(errorDescription, jobGuid, jobExecutionId, logger);
 
 		assertThat(exception, is(notNullValue()));
-		assertThat(exception.getMessage(), containsString("[GUID: test-guid-123, EXEID: 456]"));
-		assertThat(exception.getMessage(), containsString("Metrics error: Job metrics already exists"));
+		assertThat(
+				exception.getMessage(),
+				is("[GUID: test-guid-123, EXEID: 456] Metrics error: Job metrics already exists")
+		);
 		assertThat(exception.getFeatureId(), is(nullValue()));
 		assertThat(exception.isRetryable(), is(false));
 		assertThat(exception.isSkippable(), is(false));
@@ -33,22 +34,22 @@ class BatchMetricsExceptionTest {
 	}
 
 	@Test
-	void testHandleMetricsFailureWithoutJobExecutionId() {
+	void testHandleMetricsFailure_WithJobGuidOnly() {
 		String jobGuid = "test-guid-789";
 		String errorDescription = "No metrics found";
 
 		BatchMetricsException exception = BatchMetricsException.handleMetricsFailure(errorDescription, jobGuid, logger);
 
 		assertThat(exception, is(notNullValue()));
-		assertThat(exception.getMessage(), containsString("[GUID: test-guid-789]"));
-		assertThat(exception.getMessage(), containsString("Metrics error: No metrics found"));
+		assertThat(exception.getMessage(), is("[GUID: test-guid-789] Metrics error: No metrics found"));
 		assertThat(exception.getFeatureId(), is(nullValue()));
 		assertThat(exception.isRetryable(), is(false));
 		assertThat(exception.isSkippable(), is(false));
+		assertThat(exception.getCause(), is(nullValue()));
 	}
 
 	@Test
-	void testHandleMetricsFailureWithoutJobContext() {
+	void testHandleMetricsFailure_WithoutJobContext() {
 		String errorDescription = "Keep count must be non-negative, got: -1";
 
 		BatchMetricsException exception = BatchMetricsException.handleMetricsFailure(errorDescription, logger);
@@ -58,91 +59,6 @@ class BatchMetricsExceptionTest {
 		assertThat(exception.getFeatureId(), is(nullValue()));
 		assertThat(exception.isRetryable(), is(false));
 		assertThat(exception.isSkippable(), is(false));
-	}
-
-	@Test
-	void testExceptionIsNotRetryable() {
-		BatchMetricsException exception = BatchMetricsException
-				.handleMetricsFailure("Test error", "guid-123", 456L, logger);
-
-		assertThat(exception.isRetryable(), is(false));
-	}
-
-	@Test
-	void testExceptionIsNotSkippable() {
-		BatchMetricsException exception = BatchMetricsException
-				.handleMetricsFailure("Test error", "guid-123", 456L, logger);
-
-		assertThat(exception.isSkippable(), is(false));
-	}
-
-	@Test
-	void testExceptionHasNoCause() {
-		BatchMetricsException exception = BatchMetricsException
-				.handleMetricsFailure("Test error", "guid-123", 456L, logger);
-
 		assertThat(exception.getCause(), is(nullValue()));
-	}
-
-	@Test
-	void testPartitionMetricsNotFound() {
-		String jobGuid = "test-guid-abc";
-		Long jobExecutionId = 789L;
-		String partitionName = "partition-1";
-		String errorDescription = "Partition metrics not found for partition " + partitionName;
-
-		BatchMetricsException exception = BatchMetricsException
-				.handleMetricsFailure(errorDescription, jobGuid, jobExecutionId, logger);
-
-		assertThat(exception.getMessage(), containsString("[GUID: test-guid-abc, EXEID: 789]"));
-		assertThat(exception.getMessage(), containsString("Partition metrics not found for partition partition-1"));
-	}
-
-	@Test
-	void testDuplicateJobMetricsError() {
-		String jobGuid = "duplicate-guid";
-		Long jobExecutionId = 999L;
-		String errorDescription = "Job metrics already exists";
-
-		BatchMetricsException exception = BatchMetricsException
-				.handleMetricsFailure(errorDescription, jobGuid, jobExecutionId, logger);
-
-		assertThat(exception.getMessage(), containsString("Job metrics already exists"));
-	}
-
-	@Test
-	void testInvalidParameterError() {
-		int invalidValue = -1;
-		String errorDescription = "Keep count must be non-negative, got: " + invalidValue;
-
-		BatchMetricsException exception = BatchMetricsException.handleMetricsFailure(errorDescription, logger);
-
-		assertThat(exception.getMessage(), containsString("Keep count must be non-negative, got: -1"));
-	}
-
-	@Test
-	void testMessageFormatWithFullContext() {
-		BatchMetricsException exception = BatchMetricsException
-				.handleMetricsFailure("Test message", "guid-123", 456L, logger);
-
-		String expectedMessage = "[GUID: guid-123, EXEID: 456] Metrics error: Test message";
-		assertThat(exception.getMessage(), is(expectedMessage));
-	}
-
-	@Test
-	void testMessageFormatWithoutExecutionId() {
-		BatchMetricsException exception = BatchMetricsException
-				.handleMetricsFailure("Test message", "guid-123", logger);
-
-		String expectedMessage = "[GUID: guid-123] Metrics error: Test message";
-		assertThat(exception.getMessage(), is(expectedMessage));
-	}
-
-	@Test
-	void testMessageFormatWithoutJobContext() {
-		BatchMetricsException exception = BatchMetricsException.handleMetricsFailure("Test message", logger);
-
-		String expectedMessage = "Metrics error: Test message";
-		assertThat(exception.getMessage(), is(expectedMessage));
 	}
 }

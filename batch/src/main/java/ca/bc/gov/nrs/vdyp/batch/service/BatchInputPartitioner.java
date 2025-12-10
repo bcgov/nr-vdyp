@@ -24,11 +24,16 @@ import io.micrometer.common.lang.NonNull;
 /**
  * Streaming CSV partitioner that partitions CSV files by FEATURE_ID. Creates separate CSV files for each partition
  * containing only the data for that partition's assigned FEATURE_IDs.
+ *
+ * Assumptions: Both input polygon/layer files must be sorted by FEATURE_ID
+ *
+ * Partitioning Guarantees: - Each partition's layer file contains ONLY layers for FEATURE_IDs present in that
+ * partition's polygon file - Partitioned layer files maintain FEATURE_ID sort order from the original input layer file
  */
 @Component
-public class StreamingCsvPartitioner {
+public class BatchInputPartitioner {
 
-	private static final Logger logger = LoggerFactory.getLogger(StreamingCsvPartitioner.class);
+	private static final Logger logger = LoggerFactory.getLogger(BatchInputPartitioner.class);
 
 	/**
 	 * Partitions polygon and layer CSV files by FEATURE_ID into separate partition files.
@@ -48,7 +53,7 @@ public class StreamingCsvPartitioner {
 		int totalFeatureIds = countTotalFeatureIds(polygonFile, jobGuid);
 		int[] partitionSizes = calculatePartitionSizes(totalFeatureIds, partitionSize);
 
-		Map<Long, Integer> featureIdToPartition = partitionPolygonFile(
+		Map<String, Integer> featureIdToPartition = partitionPolygonFile(
 				polygonFile, partitionSize, partitionSizes, jobBaseDir, jobGuid
 		);
 
@@ -78,7 +83,7 @@ public class StreamingCsvPartitioner {
 					continue;
 				}
 
-				if (extractFeatureId(line) != null) {
+				if (BatchUtils.extractFeatureId(line) != null) {
 					count++;
 				}
 			}
@@ -130,11 +135,11 @@ public class StreamingCsvPartitioner {
 	 * @return Map of FEATURE_ID to partition number
 	 * @throws BatchPartitionException if file I/O fails
 	 */
-	private Map<Long, Integer> partitionPolygonFile(
+	private Map<String, Integer> partitionPolygonFile(
 			MultipartFile polygonFile, int partitionSize, int[] partitionSizes, Path jobBaseDir, String jobGuid
 	) throws BatchPartitionException {
 
-		Map<Long, Integer> featureIdToPartition = new HashMap<>();
+		Map<String, Integer> featureIdToPartition = new HashMap<>();
 
 		try (
 				BufferedReader reader = new BufferedReader(
@@ -158,7 +163,7 @@ public class StreamingCsvPartitioner {
 			try {
 				// If first line was not a header, it's a data line - process it
 				if (firstLine != null && !BatchUtils.isHeaderLine(firstLine)) {
-					Long featureId = extractFeatureId(firstLine);
+					String featureId = BatchUtils.extractFeatureId(firstLine);
 					if (featureId != null) {
 						featureIdToPartition.put(featureId, 0);
 						writers.get(0).println(firstLine);
@@ -189,7 +194,7 @@ public class StreamingCsvPartitioner {
 	 */
 	@SuppressWarnings("javasecurity:S5131") // False positive: CSV file writing to internal storage, not HTTP response
 	private void processPolygonRecords(
-			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<Long, Integer> featureIdToPartition,
+			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<String, Integer> featureIdToPartition,
 			int[] partitionSizes
 	) throws IOException {
 
@@ -198,7 +203,7 @@ public class StreamingCsvPartitioner {
 		int recordsInCurrentPartition = 0;
 
 		while ( (line = reader.readLine()) != null) {
-			Long featureId = extractFeatureId(line);
+			String featureId = BatchUtils.extractFeatureId(line);
 			if (featureId != null) {
 				// Write to current partition
 				featureIdToPartition.put(featureId, currentPartition);
@@ -227,7 +232,7 @@ public class StreamingCsvPartitioner {
 	 * @throws BatchPartitionException if file I/O fails
 	 */
 	private void partitionLayerFile(
-			MultipartFile layerFile, int partitionSize, Path jobBaseDir, Map<Long, Integer> featureIdToPartition,
+			MultipartFile layerFile, int partitionSize, Path jobBaseDir, Map<String, Integer> featureIdToPartition,
 			String jobGuid
 	) throws BatchPartitionException {
 
@@ -253,7 +258,7 @@ public class StreamingCsvPartitioner {
 			try {
 				// If first line was not a header, it's a data line - process it
 				if (firstLine != null && !BatchUtils.isHeaderLine(firstLine)) {
-					Long featureId = extractFeatureId(firstLine);
+					String featureId = BatchUtils.extractFeatureId(firstLine);
 					if (featureId != null && featureIdToPartition.containsKey(featureId)) {
 						int partition = featureIdToPartition.get(featureId);
 						writers.get(partition).println(firstLine);
@@ -279,43 +284,15 @@ public class StreamingCsvPartitioner {
 	 */
 	@SuppressWarnings("javasecurity:S5131") // False positive: CSV file writing to internal storage, not HTTP response
 	private void processLayerRecords(
-			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<Long, Integer> featureIdToPartition
+			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<String, Integer> featureIdToPartition
 	) throws IOException {
 		String line;
 		while ( (line = reader.readLine()) != null) {
-			Long featureId = extractFeatureId(line);
+			String featureId = BatchUtils.extractFeatureId(line);
 			if (featureId != null && featureIdToPartition.containsKey(featureId)) {
 				int partition = featureIdToPartition.get(featureId);
 				writers.get(partition).println(line);
 			}
-		}
-	}
-
-	/**
-	 * Extract FEATURE_ID from the first field of a CSV line.
-	 *
-	 * @param csvLine The CSV line to parse
-	 * @return The FEATURE_ID as a Long, or null if the line is null/empty or cannot be parsed. Callers MUST check for
-	 *         null before using the returned value.
-	 */
-	private Long extractFeatureId(String csvLine) {
-		if (csvLine == null || csvLine.trim().isEmpty()) {
-			return null;
-		}
-
-		try {
-			int commaIndex = csvLine.indexOf(',');
-			if (commaIndex == -1) {
-				// No comma found, entire line might be the FEATURE_ID
-				return Long.parseLong(csvLine.trim());
-			} else {
-				// Extract first field before comma
-				String featureIdStr = csvLine.substring(0, commaIndex).trim();
-				return Long.parseLong(featureIdStr);
-			}
-		} catch (NumberFormatException e) {
-			logger.error("Could not parse FEATURE_ID from line: {}", csvLine);
-			return null;
 		}
 	}
 
