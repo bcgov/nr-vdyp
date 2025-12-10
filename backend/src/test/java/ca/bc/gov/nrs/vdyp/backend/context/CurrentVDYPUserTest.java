@@ -26,11 +26,11 @@ public class CurrentVDYPUserTest {
 	}
 
 	@Test
-	void getUserId_returnsuserIdOfCurrentSuer() {
+	void getUserId_returnsUserIdOfCurrentUser() {
 		UUID currentId = UUID.randomUUID();
 
 		VDYPUserModel currentUser = new VDYPUserModel();
-		currentUser.setVdypUserGUID(currentUser.toString());
+		currentUser.setVdypUserGUID(currentId.toString());
 
 		currentVDYPUser.setUser(currentUser);
 
