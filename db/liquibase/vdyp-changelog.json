@@ -252,6 +252,43 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_02_00",
+        "author": "pminter",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_02_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_02/00/ddl/tables/app-vdyp.projection_file_set.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_02/00/ddl/tables/app-vdyp.projection_param_preset.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection\" ADD CONSTRAINT \"prjctn_uk\" UNIQUE (\"layer_projection_file_set_guid\",\"polygon_projection_file_set_guid\",\"vdyp_user_guid\",\"result_projection_file_set_guid\")"
+          },
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection_param_preset\" ADD CONSTRAINT \"prjprmpr_uk\" UNIQUE (\"vdyp_user_guid\")"
+          }
+        ]
+      }
     }
    ] 
 }

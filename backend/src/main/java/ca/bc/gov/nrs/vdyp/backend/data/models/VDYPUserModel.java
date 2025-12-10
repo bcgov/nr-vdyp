@@ -2,6 +2,9 @@ package ca.bc.gov.nrs.vdyp.backend.data.models;
 
 import java.util.Objects;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class VDYPUserModel {
 	private String vdypUserGUID;
 	private String oidcGUID;

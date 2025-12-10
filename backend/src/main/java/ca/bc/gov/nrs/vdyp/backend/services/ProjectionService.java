@@ -13,8 +13,11 @@ import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -26,6 +29,9 @@ import org.slf4j.MDC;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
+import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
+import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionRepository;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -44,14 +50,21 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.SecurityContext;
 
-@ApplicationScoped
 /**
  * Implements the projection endpoints. These methods return Responses rather than Response objects because these
  * responses are not JSON objects and contain no links.
  */
+@ApplicationScoped
 public class ProjectionService {
 
 	public static final Logger logger = LoggerFactory.getLogger(ProjectionService.class);
+	private final ProjectionResourceAssembler assembler;
+	private final ProjectionRepository repository;
+
+	public ProjectionService(ProjectionResourceAssembler assembler, ProjectionRepository repository) {
+		this.assembler = assembler;
+		this.repository = repository;
+	}
 
 	static {
 		// FIXME Would be better if we moved the stateful parts of the SINDEX library to an instanced singleton.
@@ -261,4 +274,12 @@ public class ProjectionService {
 		zipOut.write(entry);
 		zipOut.closeEntry();
 	}
+
+	public List<ProjectionModel> getAllProjectionsForUser(String vdypUserId) {
+		if (vdypUserId == null)
+			return Collections.emptyList();
+		UUID vdypUserGuid = UUID.fromString(vdypUserId);
+		return repository.findByOwner(vdypUserGuid).stream().map(assembler::toModel).toList();
+	}
+
 }

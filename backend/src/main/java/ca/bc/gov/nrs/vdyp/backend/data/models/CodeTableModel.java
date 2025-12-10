@@ -5,6 +5,9 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public abstract class CodeTableModel {
 	public abstract String getCode();
 

@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class ProjectionBatchMappingModel {
 	private String projectionBatchMappingGUID;
 	private String batchJobGUID;

@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.filters;
 
 import org.jboss.resteasy.reactive.server.ServerRequestFilter;
 
+import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.services.VDYPUserService;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.Priority;
@@ -19,9 +20,12 @@ public class OidcUserSyncFilter {
 
 	VDYPUserService userService;
 
-	public OidcUserSyncFilter(SecurityIdentity identity, VDYPUserService userService) {
+	CurrentVDYPUser currentUser;
+
+	public OidcUserSyncFilter(SecurityIdentity identity, VDYPUserService userService, CurrentVDYPUser currentUser) {
 		this.identity = identity;
 		this.userService = userService;
+		this.currentUser = currentUser;
 	}
 
 	@ServerRequestFilter
@@ -31,6 +35,8 @@ public class OidcUserSyncFilter {
 		}
 
 		// This will get or create the VDYPUser for this token
-		userService.ensureVDYPUserFromSecurityIdentity(identity);
+		var vdypUser = userService.ensureVDYPUserFromSecurityIdentity(identity);
+		// set it for the request context
+		currentUser.setUser(vdypUser);
 	}
 }
