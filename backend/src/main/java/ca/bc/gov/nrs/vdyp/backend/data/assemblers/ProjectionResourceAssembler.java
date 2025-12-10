@@ -4,7 +4,9 @@ import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
+import jakarta.enterprise.context.ApplicationScoped;
 
+@ApplicationScoped
 public class ProjectionResourceAssembler {
 
 	ProjectionFileSetResourceAssembler pfsra;
@@ -34,6 +36,8 @@ public class ProjectionResourceAssembler {
 		entity.setStartDate(model.getStartDate());
 		entity.setEndDate(model.getEndDate());
 		entity.setOwnerUser(vura.toEntity(model.getOwnerUser()));
+		entity.setReportDescription(model.getReportDescription());
+		entity.setReportTitle(model.getReportTitle());
 		return entity;
 	}
 
@@ -53,6 +57,9 @@ public class ProjectionResourceAssembler {
 		model.setEndDate(entity.getEndDate());
 		model.setOwnerUser(vura.toModel(entity.getOwnerUser()));
 		model.setProjectionStatusCode(pscra.toModel(entity.getProjectionStatusCode()));
+		model.setLastUpdatedDate(entity.getUpdateDate());
+		model.setReportTitle(entity.getReportTitle());
+		model.setReportDescription(entity.getReportDescription());
 		return model;
 	}
 
