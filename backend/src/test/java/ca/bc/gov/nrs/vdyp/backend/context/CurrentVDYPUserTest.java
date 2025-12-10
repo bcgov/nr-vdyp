@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 
-public class CurrentVDYPUserTest {
+class CurrentVDYPUserTest {
 	CurrentVDYPUser currentVDYPUser;
 
 	@BeforeEach
