@@ -13,6 +13,7 @@ import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -275,6 +276,8 @@ public class ProjectionService {
 	}
 
 	public List<ProjectionModel> getAllProjectionsForUser(String vdypUserId) {
+		if (vdypUserId == null)
+			return Collections.emptyList();
 		UUID vdypUserGuid = UUID.fromString(vdypUserId);
 		return repository.findByOwner(vdypUserGuid).stream().map(assembler::toModel).toList();
 	}

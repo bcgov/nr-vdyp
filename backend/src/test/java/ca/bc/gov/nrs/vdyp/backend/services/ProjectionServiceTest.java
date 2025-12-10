@@ -38,13 +38,16 @@ class ProjectionServiceTest {
 	}
 
 	@Test
-	void getAllProjectionsForUser_throwsException_Null() {
-		assertThrows(IllegalArgumentException.class, () -> service.getAllProjectionsForUser(null));
+	void getAllProjectionsForUser_throwsException_ForInvalidGUID() {
+		assertThrows(IllegalArgumentException.class, () -> service.getAllProjectionsForUser("INVALIDGUID"));
 	}
 
 	@Test
-	void getAllProjectionsForUser_throwsException_ForInvalidGUID() {
-		assertThrows(IllegalArgumentException.class, () -> service.getAllProjectionsForUser("INVALIDGUID"));
+	void getAllProjectionsForUser_returnsEmpty_ForNull() {
+		List<ProjectionModel> results = service.getAllProjectionsForUser(null);
+
+		assertNotNull(results);
+		assertTrue(results.isEmpty());
 	}
 
 	@Test

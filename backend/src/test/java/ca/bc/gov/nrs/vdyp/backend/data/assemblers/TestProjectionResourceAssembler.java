@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.data.assemblers;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -29,7 +30,8 @@ class TestProjectionResourceAssembler {
 		return Stream.of(
 				Arguments.of(
 						UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-						"{\"testParam\":\"testVValue\"}", OffsetDateTime.now(), OffsetDateTime.now()
+						"{\"testParam\":\"testVValue\"}", OffsetDateTime.now(), OffsetDateTime.now(), "Title",
+						"Description"
 				)
 		);
 	}
@@ -38,29 +40,32 @@ class TestProjectionResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testEntityToModel(
 			UUID projectionId, UUID ownerId, UUID polygonFileSetId, UUID layerFileSetId, UUID resultFileSetId,
-			String parameters, OffsetDateTime startDate, OffsetDateTime endDate
+			String parameters, OffsetDateTime startDate, OffsetDateTime endDate, String title, String description
 	) {
 		ProjectionTestData data = ProjectionTestData.builder().projectionId(projectionId).ownerId(ownerId)
 				.polygonFileSetId(polygonFileSetId).layerFileSetId(layerFileSetId).resultFileSetId(resultFileSetId)
-				.parameters(parameters).startDate(startDate).endDate(endDate);
+				.parameters(parameters).startDate(startDate).endDate(endDate).reportTitle(title)
+				.reportDescription(description);
 
 		ProjectionModel model = data.buildModel();
 		ProjectionEntity entity = data.buildEntity();
+
 		ProjectionResourceAssembler assembler = new ProjectionResourceAssembler();
 		ProjectionModel assembledModel = assembler.toModel(entity);
 		assertThat(assembledModel).usingRecursiveComparison().isEqualTo(model);
-
+		assertThat(assembledModel.getExpiryDate()).isEqualTo(LocalDate.now().plusDays(30));
 	}
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
 	void testModelToEntity(
 			UUID projectionId, UUID ownerId, UUID polygonFileSetId, UUID layerFileSetId, UUID resultFileSetId,
-			String parameters, OffsetDateTime startDate, OffsetDateTime endDate
+			String parameters, OffsetDateTime startDate, OffsetDateTime endDate, String title, String description
 	) {
 		ProjectionTestData data = ProjectionTestData.builder().projectionId(projectionId).ownerId(ownerId)
 				.polygonFileSetId(polygonFileSetId).layerFileSetId(layerFileSetId).resultFileSetId(resultFileSetId)
-				.parameters(parameters).startDate(startDate).endDate(endDate);
+				.parameters(parameters).startDate(startDate).endDate(endDate).reportTitle(title)
+				.reportDescription(description);
 		ProjectionModel model = data.buildModel();
 		ProjectionEntity entity = data.buildEntity();
 		ProjectionResourceAssembler assembler = new ProjectionResourceAssembler();
@@ -79,6 +84,8 @@ class TestProjectionResourceAssembler {
 		private String parameters;
 		private OffsetDateTime startDate;
 		private OffsetDateTime endDate;
+		private String reportTitle;
+		private String reportDescription;
 
 		public static TestProjectionResourceAssembler.ProjectionTestData builder() {
 			return new TestProjectionResourceAssembler.ProjectionTestData();
@@ -124,6 +131,16 @@ class TestProjectionResourceAssembler {
 			return this;
 		}
 
+		public TestProjectionResourceAssembler.ProjectionTestData reportTitle(String reportTitle) {
+			this.reportTitle = reportTitle;
+			return this;
+		}
+
+		public TestProjectionResourceAssembler.ProjectionTestData reportDescription(String reportDescription) {
+			this.reportDescription = reportDescription;
+			return this;
+		}
+
 		public ProjectionEntity buildEntity() {
 			ProjectionEntity data = new ProjectionEntity();
 			data.setProjectionGUID(projectionId);
@@ -148,6 +165,8 @@ class TestProjectionResourceAssembler {
 			data.setProjectionParameters(parameters);
 			data.setStartDate(startDate);
 			data.setEndDate(endDate);
+			data.setReportTitle(reportTitle);
+			data.setReportDescription(reportDescription);
 			return data;
 		}
 
@@ -175,6 +194,8 @@ class TestProjectionResourceAssembler {
 			data.setProjectionParameters(parameters);
 			data.setStartDate(startDate);
 			data.setEndDate(endDate);
+			data.setReportTitle(reportTitle);
+			data.setReportDescription(reportDescription);
 			return data;
 		}
 	}

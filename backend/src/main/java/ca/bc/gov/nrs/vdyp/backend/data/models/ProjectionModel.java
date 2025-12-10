@@ -68,7 +68,8 @@ public class ProjectionModel {
 	}
 
 	public LocalDate getExpiryDate() {
-		return lastUpdatedDate.plusDays(DAYS_UNTIL_EXPIRY);
+		LocalDate updateDate = lastUpdatedDate == null ? LocalDate.now() : lastUpdatedDate;
+		return updateDate.plusDays(DAYS_UNTIL_EXPIRY);
 	}
 
 	public String getReportTitle() {
