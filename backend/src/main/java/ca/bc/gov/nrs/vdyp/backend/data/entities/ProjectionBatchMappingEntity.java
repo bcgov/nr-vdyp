@@ -29,10 +29,10 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 	@JoinColumn(name = "projection_guid", referencedColumnName = "projection_guid")
 	private ProjectionEntity projection;
 
-	@Column(name = "partition_count")
-	private Integer partitionCount;
-	@Column(name = "completed_partition_count")
-	private Integer completedPartitionCount;
+	@Column(name = "polygon_count")
+	private Integer polygonCount;
+	@Column(name = "completed_polygon_count")
+	private Integer completedPolygonCount;
 	@Column(name = "error_count")
 	private Integer errorCount;
 	@Column(name = "warning_count")
@@ -50,12 +50,12 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 		return projection;
 	}
 
-	public Integer getPartitionCount() {
-		return partitionCount;
+	public Integer getPolygonCount() {
+		return polygonCount;
 	}
 
-	public Integer getCompletedPartitionCount() {
-		return completedPartitionCount;
+	public Integer getCompletedPolygonCount() {
+		return completedPolygonCount;
 	}
 
 	public Integer getErrorCount() {
@@ -78,12 +78,12 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 		this.projection = projection;
 	}
 
-	public void setPartitionCount(Integer partitionCount) {
-		this.partitionCount = partitionCount;
+	public void setPolygonCount(Integer polygonCount) {
+		this.polygonCount = polygonCount;
 	}
 
-	public void setCompletedPartitionCount(Integer completedPartitionCount) {
-		this.completedPartitionCount = completedPartitionCount;
+	public void setCompletedPolygonCount(Integer completedPolygonCount) {
+		this.completedPolygonCount = completedPolygonCount;
 	}
 
 	public void setErrorCount(Integer errorCount) {

@@ -116,7 +116,7 @@
         ]
       }
     },
-     {
+    {
       "changeSet": {
         "id": "01_00_00_01",
         "author": "pminter",
@@ -160,10 +160,96 @@
           }
         ],
         "rollback": [
-            { "sql": "DELETE FROM \"app-vdyp\".calculation_engine_code" },
-            { "sql": "DELETE FROM \"app-vdyp\".file_set_type_code" },
-            { "sql": "DELETE FROM \"app-vdyp\".projection_status_code" },
-            { "sql": "DELETE FROM \"app-vdyp\".user_type_code" }
+          {
+            "sql": "DELETE FROM \"app-vdyp\".calculation_engine_code"
+          },
+          {
+            "sql": "DELETE FROM \"app-vdyp\".file_set_type_code"
+          },
+          {
+            "sql": "DELETE FROM \"app-vdyp\".projection_status_code"
+          },
+          {
+            "sql": "DELETE FROM \"app-vdyp\".user_type_code"
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_01_00",
+        "author": "pminter",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_01_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_01/00/ddl/tables/app-vdyp.projection.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_01/00/ddl/tables/app-vdyp.projection_batch_mapping.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection\" DROP COLUMN \"report_title\""
+          },
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection\" DROP COLUMN \"description\""
+          },
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection_batch_mapping\" RENAME COLUMN \"polygon_count\" TO \"partition_count\""
+          },
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection_batch_mapping\" RENAME COLUMN \"completed_polygon_count\" TO \"completed_partition_count\""
+          },
+          {
+            "sql": "COMMENT ON COLUMN \"app-vdyp\".\"projection_batch_mapping\".\"partition_count\" IS 'Partition Count is the number of partitions that the batch job has created for the mapped projection'"
+          },
+          {
+            "sql": "COMMENT ON COLUMN \"app-vdyp\".\"projection_batch_mapping\".\"completed_partition_count\" IS 'Completed Partition Count is the number of partitions the batch system is reporting as completed '"
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_01_01",
+        "author": "pminter",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_01_01"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_01/01/ddl/tables/app-vdyp.projection.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection\" RENAME COLUMN \"report_description\" TO \"description\""
+          },
+          {
+            "sql": "COMMENT ON COLUMN \"app-vdyp\".\"projection\".\"description\" IS 'Description is a short description of the projection to help differentiate.'"
+          }
         ]
       }
     }
