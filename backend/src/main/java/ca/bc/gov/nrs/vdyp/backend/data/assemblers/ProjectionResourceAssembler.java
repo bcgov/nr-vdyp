@@ -33,6 +33,7 @@ public class ProjectionResourceAssembler {
 		entity.setLayerFileSet(pfsra.toEntity(model.getLayerFileSet()));
 		entity.setResultFileSet(pfsra.toEntity(model.getResultFileSet()));
 		entity.setCalculationEngineCode(cera.toEntity(model.getCalculationEngineCode()));
+		entity.setProjectionStatusCode(pscra.toEntity(model.getProjectionStatusCode()));
 		entity.setStartDate(model.getStartDate());
 		entity.setEndDate(model.getEndDate());
 		entity.setOwnerUser(vura.toEntity(model.getOwnerUser()));
@@ -53,6 +54,7 @@ public class ProjectionResourceAssembler {
 		model.setLayerFileSet(pfsra.toModel(entity.getLayerFileSet()));
 		model.setResultFileSet(pfsra.toModel(entity.getResultFileSet()));
 		model.setCalculationEngineCode(cera.toModel(entity.getCalculationEngineCode()));
+		model.setProjectionStatusCode(pscra.toModel(entity.getProjectionStatusCode()));
 		model.setStartDate(entity.getStartDate());
 		model.setEndDate(entity.getEndDate());
 		model.setOwnerUser(vura.toModel(entity.getOwnerUser()));
