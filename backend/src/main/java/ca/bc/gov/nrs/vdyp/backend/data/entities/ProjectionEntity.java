@@ -58,7 +58,6 @@ public class ProjectionEntity extends AuditableEntity {
 	@JoinColumn(name = "projection_status_code", referencedColumnName = "projection_status_code")
 	private ProjectionStatusCodeEntity projectionStatusCode;
 
-
 	public UUID getProjectionGUID() {
 		return projectionGUID;
 	}
