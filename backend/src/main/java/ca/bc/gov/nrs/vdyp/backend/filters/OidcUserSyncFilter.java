@@ -7,7 +7,6 @@ import ca.bc.gov.nrs.vdyp.backend.services.VDYPUserService;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.ext.Provider;
@@ -21,12 +20,12 @@ public class OidcUserSyncFilter {
 
 	VDYPUserService userService;
 
-	@Inject
 	CurrentVDYPUser currentUser;
 
-	public OidcUserSyncFilter(SecurityIdentity identity, VDYPUserService userService) {
+	public OidcUserSyncFilter(SecurityIdentity identity, VDYPUserService userService, CurrentVDYPUser currentUser) {
 		this.identity = identity;
 		this.userService = userService;
+		this.currentUser = currentUser;
 	}
 
 	@ServerRequestFilter

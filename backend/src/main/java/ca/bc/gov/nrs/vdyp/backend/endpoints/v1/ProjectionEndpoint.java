@@ -19,7 +19,6 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.quarkus.security.Authenticated;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
@@ -36,11 +35,14 @@ import jakarta.ws.rs.core.Response.Status;
 @RegisterForReflection
 public class ProjectionEndpoint implements Endpoint {
 
-	@Inject
-	private ProjectionService projectionService;
+	private final ProjectionService projectionService;
 
-	@Inject
-	CurrentVDYPUser currentUser;
+	private final CurrentVDYPUser currentUser;
+
+	public ProjectionEndpoint(ProjectionService service, CurrentVDYPUser currentUser) {
+		this.projectionService = service;
+		this.currentUser = currentUser;
+	}
 
 	@jakarta.ws.rs.POST
 	@Path("/dcsv")
