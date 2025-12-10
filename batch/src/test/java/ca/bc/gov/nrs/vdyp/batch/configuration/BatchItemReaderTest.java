@@ -205,6 +205,18 @@ class BatchItemReaderTest {
 		assertThrows(BatchDataReadException.class, () -> reader.read());
 	}
 
+	@Test
+	void testBatchChunkMetadata_ToString() {
+		BatchChunkMetadata metadata = new BatchChunkMetadata("partition-1", "/path/to/job", 10, 5);
+		String result = metadata.toString();
+
+		assertNotNull(result);
+		assertTrue(result.contains("partitionName='partition-1'"));
+		assertTrue(result.contains("jobBaseDir='/path/to/job'"));
+		assertTrue(result.contains("startIndex=10"));
+		assertTrue(result.contains("recordCount=5"));
+	}
+
 	private void setupValidTestFiles() throws IOException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);

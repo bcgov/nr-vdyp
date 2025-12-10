@@ -805,4 +805,69 @@ class BatchResultAggregationServiceTest {
 
 		assertFalse(isValid, "Should return false for corrupted ZIP file");
 	}
+
+	@Test
+	void testExtractPartitionNumber_InvalidNumber() throws BatchResultAggregationException, IOException {
+		Path partitionInvalid = tempDir.resolve("output-partitionABC");
+		Path partitionValid = tempDir.resolve("output-partition0");
+		Files.createDirectories(partitionInvalid);
+		Files.createDirectories(partitionValid);
+
+		Files.writeString(partitionValid.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+	}
+
+	@Test
+	void testSearchForValidHeaderInPartitions_InvalidPartitionDirectory()
+			throws BatchResultAggregationException, IOException {
+		Path partition0 = tempDir.resolve("output-partition0");
+		Files.createDirectories(partition0);
+
+		Files.writeString(partition0.resolve("YieldTable.csv"), "");
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+	}
+
+	@Test
+	void testSearchForValidHeaderInPartitions_FileSizeCheckIOException()
+			throws BatchResultAggregationException, IOException {
+		Path partition = tempDir.resolve("output-partition0");
+		Files.createDirectories(partition);
+
+		String validYieldTable = """
+				TABLE_NUM,FEATURE_ID,SPECIES_1,LAYER_ID,GENUS,SP0_PERCENTAGE,TOTAL_AGE
+				1,123456789,FD,P,FD,100.0,50
+				""";
+		Files.writeString(partition.resolve("YieldTable.csv"), validYieldTable);
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+	}
+
+	@Test
+	void testExtractHeaderFromFile_InvalidHeaderLine() throws IOException, BatchResultAggregationException {
+		Path partition = tempDir.resolve("output-partition0");
+		Files.createDirectories(partition);
+
+		String dataOnly = "1,123456789,FD,P,FD,100.0,50\n";
+		Files.writeString(partition.resolve("YieldTable.csv"), dataOnly);
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+	}
 }

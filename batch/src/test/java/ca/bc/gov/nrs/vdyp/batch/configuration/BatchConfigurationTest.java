@@ -492,4 +492,96 @@ class BatchConfigurationTest {
 		Assertions
 				.assertThrows(BatchResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
 	}
+
+	@Test
+	void testAsyncJobLauncher() throws Exception //
+	{
+		TaskExecutor taskExecutor = mock(TaskExecutor.class);
+
+		var jobLauncher = configuration.asyncJobLauncher(taskExecutor);
+
+		assertNotNull(jobLauncher);
+	}
+
+	@Test
+	void testRetryPolicy() {
+		var retryPolicy = configuration.retryPolicy();
+
+		assertNotNull(retryPolicy);
+		verify(retry).getMaxAttempts();
+		verify(retry).getBackoffPeriod();
+	}
+
+	@Test
+	void testSkipPolicy() {
+		var skipPolicy = configuration.skipPolicy();
+
+		assertNotNull(skipPolicy);
+		verify(skip).getMaxCount();
+	}
+
+	@Test
+	void testTaskExecutor() {
+		var taskExecutor = configuration.taskExecutor();
+
+		assertNotNull(taskExecutor);
+		verify(threadPool).getCorePoolSize();
+		verify(threadPool).getMaxPoolSizeMultiplier();
+		verify(threadPool).getThreadNamePrefix();
+	}
+
+	@Test
+	void testDynamicPartitioner() {
+		var partitioner = configuration.dynamicPartitioner();
+
+		assertNotNull(partitioner);
+	}
+
+	@Test
+	void testDynamicPartitionHandler() {
+		TaskExecutor taskExecutor = mock(TaskExecutor.class);
+		Step workerStep = mock(Step.class);
+		DynamicPartitioner dynamicPartitioner = mock(DynamicPartitioner.class);
+
+		var handler = configuration
+				.dynamicPartitionHandler(taskExecutor, workerStep, dynamicPartitioner, batchProperties);
+
+		assertNotNull(handler);
+	}
+
+	@Test
+	void testPartitionReader() {
+		var partitionReader = configuration
+				.partitionReader("partition-1", TEST_JOB_EXECUTION_ID, TEST_JOB_GUID, batchProperties);
+
+		assertNotNull(partitionReader);
+		verify(reader, org.mockito.Mockito.times(2)).getDefaultChunkSize();
+	}
+
+	@Test
+	void testBatchItemProcessor() {
+		var processor = configuration.batchItemProcessor(metricsCollector);
+
+		assertNotNull(processor);
+	}
+
+	@Test
+	void testPartitionWriter() {
+		var writer = configuration.partitionWriter(batchProjectionService, objectMapper);
+
+		assertNotNull(writer);
+	}
+
+	@Test
+	void testPartitionedJob_Configuration() {
+		Step masterStep = mock(Step.class);
+		Step postProcessingStep = mock(Step.class);
+
+		Job job = configuration
+				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+
+		assertNotNull(job);
+		assertEquals("VdypPartitionedJob", job.getName());
+	}
+
 }

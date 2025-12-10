@@ -420,4 +420,157 @@ class BatchInputPartitionerTest {
 		assertNotNull(exception.getCause(), "Exception should have a cause");
 		assertTrue(exception.getCause() instanceof IOException, "Cause should be IOException");
 	}
+
+	@Test
+	void testPartitionCsvFiles_PolygonFileWithoutHeader() throws BatchPartitionException, IOException {
+		String polygonNoHeader = """
+				123456789,082G055,1234,DCR
+				987654321,082G055,5678,DCR
+				111222333,082G055,9999,DCR
+				""";
+
+		String layerWithHeader = """
+				FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE
+				123456789,082G055,1234,P
+				987654321,082G055,5678,P
+				111222333,082G055,9999,P
+				""";
+
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonNoHeader.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", layerWithHeader.getBytes()
+		);
+
+		int totalFeatureIds = batchInputPartitioner
+				.partitionCsvFiles(polygonFile, layerFile, 2, tempDir, TEST_JOB_GUID);
+
+		assertEquals(3, totalFeatureIds);
+
+		Path partition0Polygon = tempDir.resolve("input-partition0").resolve("polygons.csv");
+		assertTrue(Files.exists(partition0Polygon));
+
+		String partition0Content = Files.readString(partition0Polygon);
+		assertTrue(partition0Content.contains("123456789"), "First data line should be in partition 0");
+	}
+
+	@Test
+	void testPartitionCsvFiles_LayerFileWithoutHeader() throws BatchPartitionException, IOException {
+		String polygonWithHeader = """
+				FEATURE_ID,MAP_ID,POLYGON_NUMBER,ORG_UNIT
+				123456789,082G055,1234,DCR
+				987654321,082G055,5678,DCR
+				111222333,082G055,9999,DCR
+				""";
+
+		String layerNoHeader = """
+				123456789,082G055,1234,P
+				987654321,082G055,5678,P
+				111222333,082G055,9999,P
+				""";
+
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonWithHeader.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", layerNoHeader.getBytes()
+		);
+
+		int totalFeatureIds = batchInputPartitioner
+				.partitionCsvFiles(polygonFile, layerFile, 2, tempDir, TEST_JOB_GUID);
+
+		assertEquals(3, totalFeatureIds);
+
+		Path partition0Layer = tempDir.resolve("input-partition0").resolve("layers.csv");
+		assertTrue(Files.exists(partition0Layer));
+
+		String partition0Content = Files.readString(partition0Layer);
+		assertTrue(partition0Content.contains("123456789"), "First data line should be in partition 0");
+	}
+
+	@Test
+	void testPartitionCsvFiles_BothFilesWithoutHeaders() throws BatchPartitionException, IOException {
+		String polygonNoHeader = """
+				123456789,082G055,1234,DCR
+				987654321,082G055,5678,DCR
+				""";
+
+		String layerNoHeader = """
+				123456789,082G055,1234,P
+				987654321,082G055,5678,P
+				""";
+
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonNoHeader.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", layerNoHeader.getBytes()
+		);
+
+		int totalFeatureIds = batchInputPartitioner
+				.partitionCsvFiles(polygonFile, layerFile, 2, tempDir, TEST_JOB_GUID);
+
+		assertEquals(2, totalFeatureIds);
+
+		Path partition0Polygon = tempDir.resolve("input-partition0").resolve("polygons.csv");
+		Path partition0Layer = tempDir.resolve("input-partition0").resolve("layers.csv");
+
+		assertTrue(Files.exists(partition0Polygon));
+		assertTrue(Files.exists(partition0Layer));
+
+		String polygonContent = Files.readString(partition0Polygon);
+		String layerContent = Files.readString(partition0Layer);
+
+		assertTrue(polygonContent.contains("123456789"), "First polygon data line should be processed");
+		assertTrue(layerContent.contains("123456789"), "First layer data line should be processed");
+	}
+
+	@Test
+	void testCreatePartitionWriters_IOException() throws IOException {
+		Path conflictingFile = tempDir.resolve("input-partition0");
+		Files.createFile(conflictingFile);
+
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
+
+		BatchPartitionException exception = assertThrows(
+				BatchPartitionException.class,
+				() -> batchInputPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, tempDir, TEST_JOB_GUID)
+		);
+
+		assertTrue(
+				exception.getMessage().contains("Failed to create partition writers"),
+				"Exception message should indicate failure creating partition writers"
+		);
+		assertNotNull(exception.getCause(), "Exception should have a cause");
+	}
+
+	@Test
+	void testCloseWriters_ExceptionHandling() throws BatchPartitionException, IOException {
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
+
+		int totalFeatureIds = batchInputPartitioner
+				.partitionCsvFiles(polygonFile, layerFile, 2, tempDir, TEST_JOB_GUID);
+
+		assertEquals(4, totalFeatureIds);
+
+		assertTrue(Files.exists(tempDir.resolve("input-partition0").resolve("polygons.csv")));
+		assertTrue(Files.exists(tempDir.resolve("input-partition0").resolve("layers.csv")));
+		assertTrue(Files.exists(tempDir.resolve("input-partition1").resolve("polygons.csv")));
+		assertTrue(Files.exists(tempDir.resolve("input-partition1").resolve("layers.csv")));
+
+		String content = Files.readString(tempDir.resolve("input-partition0").resolve("polygons.csv"));
+		assertNotNull(content);
+		assertFalse(content.isEmpty());
+	}
 }

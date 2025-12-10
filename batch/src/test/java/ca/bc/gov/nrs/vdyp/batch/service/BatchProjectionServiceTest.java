@@ -1,10 +1,17 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -19,6 +26,8 @@ import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
+import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 
 class BatchProjectionServiceTest {
 
@@ -127,5 +136,112 @@ class BatchProjectionServiceTest {
 
 		return java.util.stream.IntStream.range(0, count).mapToObj(i -> featureIds[i % featureIds.length] + ",P")
 				.toList();
+	}
+
+	@Test
+	void testStoreYieldTable_WithNullYieldTable() throws IOException, NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Path outputDir = tempDir.resolve("output");
+		Files.createDirectories(outputDir);
+
+		Method method = BatchProjectionService.class
+				.getDeclaredMethod("storeYieldTable", YieldTable.class, Path.class, String.class, int.class);
+		method.setAccessible(true);
+
+		method.invoke(batchProjectionService, null, outputDir, "projection1", 10);
+
+		Path unexpectedFile = outputDir.resolve("YieldTables_projection1_test_yield_table.txt");
+		assertTrue(!Files.exists(unexpectedFile), "No file should be created for null YieldTable");
+	}
+
+	@Test
+	void testStoreYieldTable_WithNullStream() throws IOException, NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Path outputDir = tempDir.resolve("output");
+		Files.createDirectories(outputDir);
+
+		YieldTable mockYieldTable = mock(YieldTable.class);
+		OutputFormat mockOutputFormat = mock(OutputFormat.class);
+
+		when(mockYieldTable.getOutputFormat()).thenReturn(mockOutputFormat);
+		when(mockOutputFormat.getYieldTableFileName()).thenReturn("test_yield_table.txt");
+		when(mockYieldTable.getAsStream()).thenReturn(null);
+
+		Method method = BatchProjectionService.class
+				.getDeclaredMethod("storeYieldTable", YieldTable.class, Path.class, String.class, int.class);
+		method.setAccessible(true);
+
+		method.invoke(batchProjectionService, mockYieldTable, outputDir, "projection1", 10);
+
+		Path unexpectedFile = outputDir.resolve("YieldTables_projection1_test_yield_table.txt");
+		assertTrue(!Files.exists(unexpectedFile), "No file should be created for null stream");
+	}
+
+	@Test
+	void testStoreYieldTable_WithValidNonEmptyStream() throws IOException, NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Path outputDir = tempDir.resolve("output");
+		Files.createDirectories(outputDir);
+
+		YieldTable mockYieldTable = mock(YieldTable.class);
+		OutputFormat mockOutputFormat = mock(OutputFormat.class);
+		byte[] testData = "test yield table data".getBytes();
+		InputStream testStream = new ByteArrayInputStream(testData);
+
+		when(mockYieldTable.getOutputFormat()).thenReturn(mockOutputFormat);
+		when(mockOutputFormat.getYieldTableFileName()).thenReturn("test_yield_table.txt");
+		when(mockYieldTable.getAsStream()).thenReturn(testStream);
+
+		Method method = BatchProjectionService.class
+				.getDeclaredMethod("storeYieldTable", YieldTable.class, Path.class, String.class, int.class);
+		method.setAccessible(true);
+
+		method.invoke(batchProjectionService, mockYieldTable, outputDir, "projection1", 10);
+
+		Path expectedFile = outputDir.resolve("YieldTables_projection1_test_yield_table.txt");
+		assertTrue(Files.exists(expectedFile));
+		assertTrue(Files.size(expectedFile) > 0);
+	}
+
+	@Test
+	void testStoreYieldTable_WithEmptyStream() throws IOException, NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Path outputDir = tempDir.resolve("output");
+		Files.createDirectories(outputDir);
+
+		YieldTable mockYieldTable = mock(YieldTable.class);
+		OutputFormat mockOutputFormat = mock(OutputFormat.class);
+		InputStream emptyStream = new ByteArrayInputStream(new byte[0]);
+
+		when(mockYieldTable.getOutputFormat()).thenReturn(mockOutputFormat);
+		when(mockOutputFormat.getYieldTableFileName()).thenReturn("empty_table.txt");
+		when(mockYieldTable.getAsStream()).thenReturn(emptyStream);
+
+		Method method = BatchProjectionService.class
+				.getDeclaredMethod("storeYieldTable", YieldTable.class, Path.class, String.class, int.class);
+		method.setAccessible(true);
+
+		method.invoke(batchProjectionService, mockYieldTable, outputDir, "projection1", 5);
+
+		Path expectedFile = outputDir.resolve("YieldTables_projection1_empty_table.txt");
+		assertTrue(Files.exists(expectedFile));
+		assertEquals(0L, Files.size(expectedFile));
+	}
+
+	@Test
+	void testStoreDebugLog() throws IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
+		Path outputDir = tempDir.resolve("output");
+		Files.createDirectories(outputDir);
+
+		Method method = BatchProjectionService.class
+				.getDeclaredMethod("storeDebugLog", Path.class, String.class, int.class);
+		method.setAccessible(true);
+
+		method.invoke(batchProjectionService, outputDir, "projection1", 10);
+
+		Path debugLogFile = outputDir.resolve("YieldTables_projection1_DebugLog.txt");
+		assertTrue(Files.exists(debugLogFile));
+		assertEquals(0L, Files.size(debugLogFile));
 	}
 }
