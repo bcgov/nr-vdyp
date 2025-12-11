@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -30,8 +31,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionRepository;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -280,6 +285,89 @@ public class ProjectionService {
 			return Collections.emptyList();
 		UUID vdypUserGuid = UUID.fromString(vdypUserId);
 		return repository.findByOwner(vdypUserGuid).stream().map(assembler::toModel).toList();
+	}
+
+	public ProjectionModel createNewProjection(VDYPUserModel actingUser, String parameters) {
+		// extract the report Title and description from the parameters
+		// leave report title in for processing, remove description
+
+		// Create the 3 File Sets for the projection Polygon, Layer and Result
+
+		// Set the Status to Draft
+
+		// Set the calculation Engine Code to VDYP8
+
+		// Start Date and End Date should be null as they are about running the projection
+		return null;
+	}
+
+	public ProjectionEntity getProjectionEntity(UUID projectionGuid) throws ProjectionServiceException {
+		Optional<ProjectionEntity> entity = repository.findByIdOptional(projectionGuid);
+		if (entity.isEmpty()) {
+			// Handle Projection does not exist
+			throw new ProjectionServiceException("Projection does not exist. ", projectionGuid);
+		}
+		return entity.get();
+	}
+
+	public enum ProjectionAction {
+		CREATE, READ, UPDATE, DELETE
+	}
+
+	public void checkUserCanPerformAction(ProjectionEntity entity, VDYPUserModel actingUser, ProjectionAction action)
+			throws ProjectionServiceException {
+		switch (action) {
+		case READ:
+		case UPDATE:
+		case DELETE:
+			UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());
+			if (!entity.getOwnerUser().getVdypUserGUID().equals(vdypUserGuid)) {
+				throw new ProjectionServiceException(
+						"User cannot perform requested action () on projeciton", entity.getProjectionGUID(),
+						vdypUserGuid
+				);
+			}
+		}
+	}
+
+	public void checkProjectionStatusPermitsAction(ProjectionStatusCodeEntity status, ProjectionAction action)
+			throws ProjectionServiceException {
+		switch (action) {
+		case UPDATE:
+		case DELETE:
+
+		}
+	}
+
+	public ProjectionModel getProjectionByID(UUID projectionGUID, VDYPUserModel actingUser)
+			throws ProjectionServiceException {
+		ProjectionEntity entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
+		return assembler.toModel(entity);
+	}
+
+	public ProjectionModel editProjectionParameters(UUID projectionGUID, VDYPUserModel actingUser, String parameters)
+			throws ProjectionServiceException {
+		ProjectionEntity entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE);
+		checkProjectionStatusPermitsAction(entity.getProjectionStatusCode(), ProjectionAction.UPDATE);
+
+		// Update the parameters of import
+
+		repository.persist(entity);
+		return assembler.toModel(entity);
+	}
+
+	public boolean deleteProjection(UUID projectionGUID, VDYPUserModel actingUser) throws ProjectionServiceException {
+		ProjectionEntity entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE);
+		checkProjectionStatusPermitsAction(entity.getProjectionStatusCode(), ProjectionAction.UPDATE);
+		// Remove the Projection and
+		// Related Data:
+		// Delete File Sets / Delete COMS Objects
+		// Delete Batch Mapping if it exists
+
+		return true;
 	}
 
 }
