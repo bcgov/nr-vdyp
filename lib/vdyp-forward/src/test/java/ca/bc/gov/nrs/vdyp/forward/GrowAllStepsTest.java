@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.IOException;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -58,6 +59,11 @@ class GrowAllStepsTest {
 
 		ResolvedControlMap resolvedMap = new ResolvedControlMapImpl(vdyp7OutputControlMap);
 		comparisonDataStreamReader = new ForwardDataStreamReader(resolvedMap);
+	}
+
+	@AfterEach
+	void afterTest() throws ProcessingException {
+		forwardDataStreamReader.close();
 	}
 
 	private class WorkCompletedException extends Exception {

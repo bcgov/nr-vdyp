@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.vri.integration;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,10 +10,8 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.integration_tests.IntermediateDataBasedIntegrationTest;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
 
@@ -22,7 +19,7 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 
 	@ParameterizedTest
 	@MethodSource("testNameAndLayerProvider")
-	void testVriStart(String test, String layer) throws IOException, ResourceParseException, ProcessingException {
+	void testVriStart(String test, String layer) throws Exception {
 		State inputState = State.VriInput;
 		State outputState = State.ForwardInput;
 

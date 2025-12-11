@@ -11,7 +11,9 @@ import org.opentest4j.AssertionFailedError;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
+import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingState;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
@@ -22,6 +24,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -289,4 +292,19 @@ public class ForwardTestUtils {
 
 		return sum;
 	}
+
+	/**
+	 * Create a ForwardDataStreamReader using the given control map and try to read the first polygon from the
+	 * configured input
+	 *
+	 * @param resolvedControlMap
+	 * @return
+	 * @throws ProcessingException
+	 */
+	public static VdypPolygon readFirstPolygon(Map<String, Object> controlMap) throws ProcessingException {
+		try (ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);) {
+			return reader.readNextPolygon().orElseThrow(() -> new AssertionError("No polygons defined"));
+		}
+	}
+
 }

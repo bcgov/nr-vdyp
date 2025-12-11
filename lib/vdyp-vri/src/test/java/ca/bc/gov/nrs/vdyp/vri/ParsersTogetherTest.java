@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,12 +29,10 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
-import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DefaultEquationNumberParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -54,7 +51,7 @@ class ParsersTogetherTest {
 	IMocksControl mockControl = EasyMock.createControl();
 
 	@BeforeEach
-	void setUp() throws IOException, ResourceParseException {
+	void setUp() throws Exception {
 
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
@@ -92,7 +89,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testPrimaryOnly() throws IOException, ProcessingException, ResourceParseException {
+	void testPrimaryOnly() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -162,7 +159,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testAddsSpecies() throws IOException, ProcessingException, ResourceParseException {
+	void testAddsSpecies() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -232,7 +229,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testVeteranOnly() throws IOException, ProcessingException, ResourceParseException {
+	void testVeteranOnly() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -301,7 +298,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testMissingSite() throws IOException {
+	void testMissingSite() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -353,7 +350,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testMissingSpecies() throws IOException {
+	void testMissingSpecies() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -405,7 +402,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testSpeciesForWrongPolygon() throws IOException {
+	void testSpeciesForWrongPolygon() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -466,7 +463,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testSpeciesForWrongLayer() throws IOException {
+	void testSpeciesForWrongLayer() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -528,7 +525,7 @@ class ParsersTogetherTest {
 
 	@Disabled("I don't think this error can actually happen as other errors will happen first")
 	@Test
-	void testLayerForWrongPoly() throws IOException {
+	void testLayerForWrongPoly() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -589,7 +586,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testMissingLayer() throws IOException {
+	void testMissingLayer() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -633,7 +630,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testCrownClosureLow() throws IOException {
+	void testCrownClosureLow() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -687,7 +684,7 @@ class ParsersTogetherTest {
 
 	@Disabled("Error shouldn't be possible due to prior checks")
 	@Test
-	void testBadSpeciesForITG() throws IOException {
+	void testBadSpeciesForITG() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -748,7 +745,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testApplyPercentAvailableToPrimaryLayer() throws IOException, ProcessingException, ResourceParseException {
+	void testApplyPercentAvailableToPrimaryLayer() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -837,7 +834,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testPrimaryWithSmallComputedDiameter() throws IOException, ProcessingException, ResourceParseException {
+	void testPrimaryWithSmallComputedDiameter() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -903,7 +900,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testFindsPrimaryGenusAndITG() throws IOException, ProcessingException, ResourceParseException {
+	void testFindsPrimaryGenusAndITG() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -995,7 +992,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testFindsGRPBA1() throws IOException, ProcessingException, ResourceParseException {
+	void testFindsGRPBA1() throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -1087,7 +1084,7 @@ class ParsersTogetherTest {
 	void testDefaultBaAndTphForVeteran(
 			Float vetBaseArea, Float vetTreesPerHectare, float vetCrownClosure, Float primeBaseArea,
 			float expectedBaseArea, float expectedTreesPerHectare
-	) throws IOException, ProcessingException, ResourceParseException {
+	) throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -1170,7 +1167,7 @@ class ParsersTogetherTest {
 		}
 	)
 	void testDefaultBaAndTphForVeteranWhenZeroCrownClosure(Float vetBaseArea, Float vetTreesPerHectare)
-			throws IOException {
+			throws Exception {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);

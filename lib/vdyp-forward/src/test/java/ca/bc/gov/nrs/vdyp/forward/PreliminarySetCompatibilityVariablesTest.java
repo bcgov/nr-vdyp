@@ -12,8 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
 class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessingEngineTest {
 
@@ -24,8 +26,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 	/** SET_COMPATIBILITY_VARIABLES */
 	void testSetCompatibilityVariables() throws ProcessingException {
 
-		var reader = new ForwardDataStreamReader(controlMap);
-		var polygon = reader.readNextPolygon().orElseThrow();
+		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.SET_COMPATIBILITY_VARIABLES);

@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common;
 
+import java.io.Closeable;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -191,14 +191,77 @@ public class Utils {
 		};
 	}
 
-	public static void close(OutputStream os) {
+	/**
+	 * Close a Closeable if it is not null and log any IOException it throws
+	 *
+	 * @param os
+	 */
+	public static void close(Closeable os) {
 		if (os != null) {
 			try {
 				os.close();
 			} catch (IOException e) {
-				logger.error("Failed to close OutputStream", e);
+				logger.error("Failed to close resource", e);
 			}
 		}
+	}
+
+	/**
+	 * Close an AutoCloseable if it is not null and add any exception it throws to the provided list
+	 *
+	 * @param <X> Type of exception, the AutoCloseable is assumed to throw this when closing
+	 * @param os
+	 */
+	public static <X extends Exception> void close(
+			final List<X> exceptions, final AutoCloseable os, final Optional<Logger> specificLogger, final String name
+	) {
+		close(exceptions, Optional.ofNullable(os), specificLogger, name);
+	}
+
+	/**
+	 * Close an AutoCloseable if it is present and add any exception it throws to the provided list
+	 *
+	 * @param <X>            Type of exception, the AutoCloseable is assumed to throw this when closing
+	 * @param exceptions     List of exceptions to add to
+	 * @param toCloseOpt     The object to close
+	 * @param specificLogger A Logger to log an error message to when there is an error.
+	 */
+	@SuppressWarnings("unchecked")
+	public static <X extends Exception> void close(
+			final List<X> exceptions, final Optional<? extends AutoCloseable> toCloseOpt,
+			final Optional<Logger> specificLogger, final String name
+	) {
+		toCloseOpt.ifPresent(toClose -> {
+			try {
+				specificLogger.ifPresent(l -> l.atInfo().addArgument(name).setMessage("Closing {}").log());
+				toClose.close();
+			} catch (Exception e) {
+				specificLogger.ifPresent(
+						l -> l.atError().setCause(e).addArgument(name).setMessage("Failed to close {}").log()
+				);
+				exceptions.add((X) e);
+			}
+		});
+	}
+
+	/**
+	 * If the list is not empty, add all other exception to the last one in the list as suppressed exceptions and
+	 * returns it.
+	 *
+	 * @param <X>
+	 *
+	 * @param os
+	 */
+	public static <X extends Exception> Optional<X> aggregateExceptionsAsSupressed(final List<X> exceptions) {
+		if (exceptions.isEmpty()) {
+			return Optional.empty();
+		}
+		var it = exceptions.listIterator();
+		X exception = it.previous();
+		while (it.hasPrevious()) {
+			exception.addSuppressed(it.previous());
+		}
+		return Optional.of(exception);
 	}
 
 	/**
@@ -584,4 +647,83 @@ public class Utils {
 	public static double computeInFeet(double value, DoubleUnaryOperator operation) {
 		return operation.applyAsDouble(value / METRES_PER_FOOT) * METRES_PER_FOOT;
 	}
+
+	/**
+	 * Throw the exception contained in the optional if there is one. This exists to make it easier to handle checked
+	 * exceptions inside of lambdas as an alternative to using subclasses of RuntimeExceptions as wrappers.
+	 */
+	public static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {
+		if (opt.isPresent()) {
+			throw opt.get();
+		}
+	}
+
+	@FunctionalInterface
+	public static interface ExceptionalFunction<T, R, X extends Exception> {
+		/**
+		 * Applies this function to the given argument.
+		 *
+		 * @param t the function argument
+		 * @return the function result
+		 * @throws an exception
+		 */
+		R apply(T t) throws X;
+	}
+
+	@FunctionalInterface
+	public static interface ExceptionalConsumer<T, X extends Exception> {
+		void accept(T t) throws X;
+	}
+
+	/**
+	 * Optional.map with exception handling for a single unchecked exception
+	 *
+	 * @param <T>
+	 * @param <X>
+	 * @param opt
+	 * @param consumer
+	 * @throws X
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T, R, X extends Exception> Optional<R> map(Optional<T> opt, ExceptionalFunction<T, R, X> function)
+			throws X {
+		if (opt.isEmpty()) {
+			return Optional.empty();
+		}
+		try {
+			return Optional.of(function.apply(opt.get()));
+		} catch (Exception e) {
+			if (e instanceof RuntimeException re) {
+				throw re;
+			} else {
+				throw (X) e;
+			}
+		}
+	}
+
+	/**
+	 * Optional.ifPresent with exception handling for a single unchecked exception
+	 *
+	 * @param <T>
+	 * @param <X>
+	 * @param opt
+	 * @param consumer
+	 * @throws X
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T, X extends Exception> void ifPresent(Optional<T> opt, ExceptionalConsumer<T, X> consumer)
+			throws X {
+		if (opt.isPresent()) {
+			try {
+				consumer.accept(opt.get());
+			} catch (Exception e) {
+				if (e instanceof RuntimeException re) {
+					throw re;
+				} else {
+					throw (X) e;
+				}
+			}
+		}
+	}
+
 }

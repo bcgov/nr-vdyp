@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.forward;
 import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -86,18 +85,19 @@ class ForwardProcessorCheckpointGenerationTest {
 		);
 		controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
-		var reader = new ForwardDataStreamReader(controlMap);
-		Optional<VdypPolygon> polygon = reader.readNextPolygon();
-		var polygonName = polygon.orElseThrow().getPolygonIdentifier().getBase();
+		try (var reader = new ForwardDataStreamReader(controlMap);) {
+			Optional<VdypPolygon> polygon = reader.readNextPolygon();
+			var polygonName = polygon.orElseThrow().getPolygonIdentifier().getBase();
 
-		int count = 0;
-		var nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
-		var year = nextPolygonIdentifier.getYear();
-		while (nextPolygonIdentifier.getYear() == year && nextPolygonIdentifier.getBase().equals(polygonName)) {
-			count += 1;
-			nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
+			int count = 0;
+			var nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
+			var year = nextPolygonIdentifier.getYear();
+			while (nextPolygonIdentifier.getYear() == year && nextPolygonIdentifier.getBase().equals(polygonName)) {
+				count += 1;
+				nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
+			}
+
+			assert (count == 14);
 		}
-
-		assert (count == 14);
 	}
 }

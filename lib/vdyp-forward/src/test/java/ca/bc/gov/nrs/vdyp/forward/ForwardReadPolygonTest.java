@@ -46,18 +46,19 @@ class ForwardReadPolygonTest {
 			var polygonDescriptionStream = ((StreamingParserFactory<PolygonIdentifier>) polygonDescriptionStreamFactory)
 					.get();
 
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
 			// Fetch the next polygon to process.
 			List<VdypPolygon> polygons = new ArrayList<>();
 
-			while (polygonDescriptionStream.hasNext()) {
+			try (ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);) {
 
-				var polygon = reader.readNextPolygon();
-				if (polygon.isPresent()) {
-					polygons.add(polygon.get());
-				} else {
-					break;
+				while (polygonDescriptionStream.hasNext()) {
+
+					var polygon = reader.readNextPolygon();
+					if (polygon.isPresent()) {
+						polygons.add(polygon.get());
+					} else {
+						break;
+					}
 				}
 			}
 
@@ -110,18 +111,18 @@ class ForwardReadPolygonTest {
 			var polygonDescriptionStream = ((StreamingParserFactory<PolygonIdentifier>) polygonDescriptionStreamFactory)
 					.get();
 
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
 			// Fetch the next polygon to process.
 			List<VdypPolygon> polygons = new ArrayList<>();
 
-			while (polygonDescriptionStream.hasNext()) {
+			try (ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);) {
+				while (polygonDescriptionStream.hasNext()) {
 
-				var polygon = reader.readNextPolygon();
-				if (polygon.isPresent()) {
-					polygons.add(polygon.get());
-				} else {
-					break;
+					var polygon = reader.readNextPolygon();
+					if (polygon.isPresent()) {
+						polygons.add(polygon.get());
+					} else {
+						break;
+					}
 				}
 			}
 
@@ -170,18 +171,19 @@ class ForwardReadPolygonTest {
 			var polygonDescriptionStream = ((StreamingParserFactory<PolygonIdentifier>) polygonDescriptionStreamFactory)
 					.get();
 
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
 			// Fetch the next polygon to process.
 			List<VdypPolygon> polygons = new ArrayList<>();
 
-			while (polygonDescriptionStream.hasNext()) {
+			try (ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);) {
 
-				var polygon = reader.readNextPolygon();
-				if (polygon.isPresent()) {
-					polygons.add(polygon.get());
-				} else {
-					break;
+				while (polygonDescriptionStream.hasNext()) {
+
+					var polygon = reader.readNextPolygon();
+					if (polygon.isPresent()) {
+						polygons.add(polygon.get());
+					} else {
+						break;
+					}
 				}
 			}
 
