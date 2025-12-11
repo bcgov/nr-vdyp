@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.api.v1.utils;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -10,10 +13,14 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 
-public class FileHelperTest {
+class FileHelperTest {
+
+	@TempDir
+	protected static Path temp;
 
 	@Test
 	void testGetStubResourceFile() {
@@ -29,7 +36,7 @@ public class FileHelperTest {
 
 	@Test
 	void testGetAndDeleteFile() throws IOException {
-		Path tempFilePath = Files.createTempFile("pre_", "_post");
+		Path tempFilePath = Files.createFile(temp.resolve("tempfile"));
 
 		InputStream is1 = FileHelper.getForReading(tempFilePath);
 		assertNotNull(is1);
@@ -39,5 +46,7 @@ public class FileHelperTest {
 		assertThrows(NoSuchFileException.class, () -> FileHelper.getForReading(tempFilePath));
 
 		assertThrows(IllegalStateException.class, () -> FileHelper.delete(tempFilePath));
+
+		assertThat(tempFilePath, not(exists()));
 	}
 }
