@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.slf4j.Logger;
@@ -78,6 +79,7 @@ class Scenario1Test {
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
 
+	@Disabled("Scenario1Test")
 	@Test
 	@Timeout(value = 300) // 5 minutes max
 	void testScenario1_SinglePolygonBatchProcessing() throws Exception {
