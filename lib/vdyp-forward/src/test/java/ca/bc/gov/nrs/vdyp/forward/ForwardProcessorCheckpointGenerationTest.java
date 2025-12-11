@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,9 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ForwardProcessorCheckpointGenerationTest {
 
+	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
+	protected static Path vdyp8OutputPath;
+
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessorCheckpointGenerationTest.class);
 
@@ -46,9 +51,6 @@ class ForwardProcessorCheckpointGenerationTest {
 		ForwardProcessor fp = new ForwardProcessor();
 
 		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
-
-		Path vdyp8OutputPath = Path.of(System.getenv().get("HOME"), "tmp", "vdyp-deltas", "vdyp8");
-		Files.createDirectories(vdyp8OutputPath);
 
 		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
