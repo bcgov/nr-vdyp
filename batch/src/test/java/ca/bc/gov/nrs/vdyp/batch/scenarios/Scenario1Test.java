@@ -79,7 +79,6 @@ class Scenario1Test {
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
 
-	@Disabled("Scenario1Test")
 	@Test
 	@Timeout(value = 300) // 5 minutes max
 	void testScenario1_SinglePolygonBatchProcessing() throws Exception {
