@@ -94,4 +94,20 @@ class BatchUtilsTest {
 
 		assertEquals(timestamp, reformatted);
 	}
+
+	@Test
+	void testIsHeaderLine_NullLine() {
+		assertTrue(BatchUtils.isHeaderLine(null));
+	}
+
+	@Test
+	void testIsHeaderLine_ContainsLayerId() {
+		assertTrue(BatchUtils.isHeaderLine("DATA,LAYER_ID,MORE"));
+		assertTrue(BatchUtils.isHeaderLine("SOME_LAYER_ID_FIELD"));
+	}
+
+	@Test
+	void testExtractFeatureId_NullLine() {
+		assertNull(BatchUtils.extractFeatureId(null));
+	}
 }
