@@ -813,7 +813,7 @@ class VriStartTest {
 		@Nested
 		class ExpandIntervalOfRootFinder {
 			@Test
-			void testNoChange() {
+			void testNoChange() throws Exception {
 
 				UnivariateFunction errorFunc = x -> x;
 
@@ -830,7 +830,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testSimpleChange() {
+			void testSimpleChange() throws Exception {
 
 				UnivariateFunction errorFunc = x -> x;
 
@@ -852,7 +852,7 @@ class VriStartTest {
 
 			@ParameterizedTest
 			@CsvSource({ "1, 1", "-1, 1", "1, -1", "-1, -1" })
-			void testDifficultChange(float a, float b) {
+			void testDifficultChange(float a, float b) throws Exception {
 
 				UnivariateFunction errorFunc = x -> a * (Math.exp(b * x) - 0.000001);
 
@@ -874,7 +874,7 @@ class VriStartTest {
 
 			@ParameterizedTest
 			@ValueSource(floats = { 1, -1, 20, -20 })
-			void testTwoRoots(float a) {
+			void testTwoRoots(float a) throws Exception {
 
 				UnivariateFunction errorFunc = x -> a * (x * x - 0.5);
 
@@ -896,7 +896,7 @@ class VriStartTest {
 
 			@ParameterizedTest
 			@CsvSource({ "1, 1", "-1, 1", "1, -1", "-1, -1" })
-			void testImpossible(float a, float b) {
+			void testImpossible(float a, float b) throws Exception {
 
 				UnivariateFunction errorFunc = x -> a * (Math.exp(b * x) + 1);
 
@@ -4517,7 +4517,7 @@ class VriStartTest {
 	@Nested
 	class DebugModeExpandRootSerchWindow {
 		@Test
-		void testNoDebug() throws IOException {
+		void testNoDebug() throws Exception {
 			var control = EasyMock.createControl();
 
 			// 1 and 9 set to 0
@@ -4555,7 +4555,7 @@ class VriStartTest {
 		}
 
 		@Test
-		void testDebug50PercentGoodWindow() throws IOException {
+		void testDebug50PercentGoodWindow() throws Exception {
 			var control = EasyMock.createControl();
 
 			// 1 and 9 set to 0
@@ -4595,7 +4595,7 @@ class VriStartTest {
 		}
 
 		@Test
-		void testDebug50PercentBadWindow() throws IOException {
+		void testDebug50PercentBadWindow() throws Exception {
 			var control = EasyMock.createControl();
 
 			// 1 and 9 set to 0
@@ -4636,7 +4636,7 @@ class VriStartTest {
 	}
 
 	@Test
-	void testModifyPrimaryLayerBuildLowDQ() throws IOException {
+	void testModifyPrimaryLayerBuildLowDQ() throws Exception {
 		var control = EasyMock.createControl();
 
 		VriStart app = new VriStart();

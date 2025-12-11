@@ -6,6 +6,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.io.IOException;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -45,6 +46,11 @@ class Grow7QuadMeanDiameterTest {
 		polygonDescriptionStream = polygonDescriptionStreamFactory.get();
 
 		forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
+	}
+
+	@AfterEach
+	void afterTest() throws ProcessingException {
+		forwardDataStreamReader.close();
 	}
 
 	@Test

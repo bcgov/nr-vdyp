@@ -5,6 +5,8 @@ import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -33,7 +35,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypUtilization;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 
-public class ForwardDataStreamReader {
+public class ForwardDataStreamReader implements AutoCloseable {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardDataStreamReader.class);
 
@@ -353,5 +355,20 @@ public class ForwardDataStreamReader {
 		public int hashCode() {
 			return layerType.hashCode() * 17 + speciesIndex.hashCode();
 		}
+	}
+
+	@Override
+	public void close() throws ProcessingException {
+		List<IOException> exceptions = new LinkedList<>();
+
+		Utils.close(exceptions, polygonStream, Optional.empty(), "polygon stream");
+		Utils.close(exceptions, layerSpeciesStream, Optional.empty(), "layer+species stream");
+		Utils.close(exceptions, speciesUtilizationStream, Optional.empty(), "species utilization stream");
+		Utils.close(exceptions, polygonDescriptionStream, Optional.empty(), "polygon description stream");
+
+		Utils.throwIfPresent(
+				Utils.aggregateExceptionsAsSupressed(exceptions)
+						.map(cause -> new ProcessingException("Failure while closing resources", cause))
+		);
 	}
 }

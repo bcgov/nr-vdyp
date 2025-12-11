@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -161,24 +160,27 @@ class ForwardProcessorEndToEndTest {
 		vdyp7ControlMap
 				.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
-		var vdyp8Reader = new ForwardDataStreamReader(vdyp8ControlMap);
-		var vdyp7Reader = new ForwardDataStreamReader(vdyp7ControlMap);
+		try (
+				var vdyp8Reader = new ForwardDataStreamReader(vdyp8ControlMap);
+				var vdyp7Reader = new ForwardDataStreamReader(vdyp7ControlMap);
+		) {
 
-		Optional<VdypPolygon> optPolygon8 = vdyp8Reader.readNextPolygon();
-		Optional<VdypPolygon> optPolygon7 = vdyp7Reader.readNextPolygon();
+			Optional<VdypPolygon> optPolygon8 = vdyp8Reader.readNextPolygon();
+			Optional<VdypPolygon> optPolygon7 = vdyp7Reader.readNextPolygon();
 
-		while (optPolygon8.isPresent()) {
-			var polygon8 = optPolygon8.orElseThrow();
-			var polygon7 = optPolygon7.orElseThrow();
-			assertEquals(polygon7.getPolygonIdentifier(), polygon8.getPolygonIdentifier());
+			while (optPolygon8.isPresent()) {
+				var polygon8 = optPolygon8.orElseThrow();
+				var polygon7 = optPolygon7.orElseThrow();
+				assertEquals(polygon7.getPolygonIdentifier(), polygon8.getPolygonIdentifier());
 
-			compare(polygon7, polygon8);
+				compare(polygon7, polygon8);
 
-			optPolygon8 = vdyp8Reader.readNextPolygon();
-			optPolygon7 = vdyp7Reader.readNextPolygon();
+				optPolygon8 = vdyp8Reader.readNextPolygon();
+				optPolygon7 = vdyp7Reader.readNextPolygon();
+			}
+
+			assertTrue(optPolygon7.isEmpty());
 		}
-
-		assertTrue(optPolygon7.isEmpty());
 
 		assertTrue(nEquals >= 30012);
 		assertTrue(nWithin1Percent >= 58695);

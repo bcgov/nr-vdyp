@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import java.io.IOException;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
-public class Grow4CalculateLoreyHeightEstimatesTest {
+class Grow4CalculateLoreyHeightEstimatesTest {
 
 	protected static final Logger logger = LoggerFactory.getLogger(Grow4CalculateLoreyHeightEstimatesTest.class);
 
@@ -46,6 +47,11 @@ public class Grow4CalculateLoreyHeightEstimatesTest {
 		polygonDescriptionStream = polygonDescriptionStreamFactory.get();
 
 		forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
+	}
+
+	@AfterEach
+	void afterTest() throws ProcessingException {
+		forwardDataStreamReader.close();
 	}
 
 	@Test
