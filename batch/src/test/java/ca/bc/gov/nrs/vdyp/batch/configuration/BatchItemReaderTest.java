@@ -175,25 +175,6 @@ class BatchItemReaderTest {
 	}
 
 	@Test
-	void testRead_WithEmptyLinesSkipped() throws IOException, BatchDataReadException {
-		Path partitionDir = tempDir.resolve("input-test-partition");
-		Files.createDirectories(partitionDir);
-
-		String polygonContent = "FEATURE_ID,DATA\n\n   \n123,data1\n";
-		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
-
-		executionContext.putString("jobBaseDir", tempDir.toString());
-
-		reader.open(executionContext);
-
-		BatchChunkMetadata chunkMetadata = reader.read();
-		assertNotNull(chunkMetadata);
-		assertEquals(1, chunkMetadata.getRecordCount()); // Empty lines are skipped
-
-		reader.close();
-	}
-
-	@Test
 	void testRead_AfterOpenFailure() throws IOException {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);

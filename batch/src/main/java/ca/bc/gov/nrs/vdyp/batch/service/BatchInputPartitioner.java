@@ -76,14 +76,16 @@ public class BatchInputPartitioner {
 				)
 		) {
 			String line;
-			while ( (line = reader.readLine()) != null) {
-				// Skip header lines
-				if (BatchUtils.isHeaderLine(line)) {
-					logger.trace("Skipped header line in polygon file");
-					continue;
-				}
+			// Skip first line if it's a header
+			String firstLine = reader.readLine();
+			if (firstLine != null && !firstLine.trim().isEmpty() && !BatchUtils.isHeaderLine(firstLine)
+					&& BatchUtils.extractFeatureId(firstLine) != null) {
+				count++;
+			}
 
-				if (BatchUtils.extractFeatureId(line) != null) {
+			// Count remaining data lines (no need to check for headers anymore)
+			while ( (line = reader.readLine()) != null) {
+				if (!line.trim().isEmpty() && BatchUtils.extractFeatureId(line) != null) {
 					count++;
 				}
 			}

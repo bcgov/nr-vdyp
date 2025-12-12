@@ -188,9 +188,15 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 		int count = 0;
 		try (BufferedReader reader = new BufferedReader(new FileReader(polygonFile.toFile()))) {
 			String line;
-			while ( (line = reader.readLine()) != null) {
-				// Skip header lines and empty lines
-				if (!line.trim().isEmpty() && !BatchUtils.isHeaderLine(line)) {
+			// Skip first line if it's a header
+			String firstLine = reader.readLine();
+			if (firstLine != null && !firstLine.trim().isEmpty() && !BatchUtils.isHeaderLine(firstLine)) {
+				count++;
+			}
+
+			// Count the rest of the file (no need to check for headers anymore)
+			while ( (line = reader.readLine()) != null && !line.trim().isEmpty()) {
+				if (!line.trim().isEmpty()) {
 					count++;
 				}
 			}

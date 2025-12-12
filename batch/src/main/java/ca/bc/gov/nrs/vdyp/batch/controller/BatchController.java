@@ -463,15 +463,22 @@ public class BatchController {
 				)
 		) {
 			String line;
+			// Skip first line if it's a header
+			String firstLine = reader.readLine();
+			if (firstLine != null && !firstLine.trim().isEmpty() && !BatchUtils.isHeaderLine(firstLine)) {
+				// First line is valid data - file is valid
+				return;
+			}
+
+			// Check remaining lines for valid data
 			while ( (line = reader.readLine()) != null) {
-				// Check if line has any non-whitespace content
 				if (!line.trim().isEmpty()) {
-					// Found at least one line with content - file is valid
+					// Found at least one data line with content - file is valid
 					return;
 				}
 			}
 
-			// If we reach here, file contains only empty lines/whitespace
+			// If we reach here, file contains only empty lines/whitespace/headers
 			throw new ProjectionRequestValidationException(
 					List.of(
 							new ValidationMessage(

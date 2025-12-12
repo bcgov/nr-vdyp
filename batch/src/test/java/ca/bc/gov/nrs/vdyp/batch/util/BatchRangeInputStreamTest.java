@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
@@ -32,7 +33,6 @@ class BatchRangeInputStreamTest {
 				""";
 		Files.write(polygonFile, content.getBytes(StandardCharsets.UTF_8));
 
-		// Read records 1-2 (startIndex=1, recordCount=2)
 		try (BatchRangeInputStream stream = BatchRangeInputStream.create(polygonFile, 1, 2)) {
 			String result = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
 

@@ -58,18 +58,30 @@ public class BatchRangeInputStream extends InputStream {
 				)
 		) {
 			String line;
-			int currentIndex = 0;
+			int currentIndex = 0; // Physical line index (including empty lines, excluding header)
 			int recordsRead = 0;
 
+			// Read and skip first line if it's a header
+			String firstLine = reader.readLine();
+			boolean firstLineIsHeader = firstLine != null && BatchUtils.isHeaderLine(firstLine);
+
+			if (!firstLineIsHeader && firstLine != null && !firstLine.trim().isEmpty()) {
+				// First line is data, process it if in range
+				if (currentIndex >= startIndex) {
+					content.append(firstLine).append("\n");
+					recordsRead++;
+				}
+				currentIndex++; // Increment only for data lines
+			}
+
+			// Process remaining data lines (no need to check for headers anymore)
 			while ( (line = reader.readLine()) != null && recordsRead < recordCount) {
-				// Process only non-header lines within the desired range
-				if (!BatchUtils.isHeaderLine(line)) {
+				if (!line.trim().isEmpty()) {
 					if (currentIndex >= startIndex) {
-						// Collect lines in the desired range
 						content.append(line).append("\n");
 						recordsRead++;
 					}
-					currentIndex++;
+					currentIndex++; // Increment for all non-empty lines
 				}
 			}
 		}
@@ -138,11 +150,28 @@ public class BatchRangeInputStream extends InputStream {
 				)
 		) {
 			String line;
-			int currentIndex = 0;
+			int currentIndex = 0; // Physical line index (including empty lines, excluding header)
 			int recordsRead = 0;
 
+			// Read and skip first line if it's a header
+			String firstLine = reader.readLine();
+			boolean firstLineIsHeader = firstLine != null && BatchUtils.isHeaderLine(firstLine);
+
+			if (!firstLineIsHeader && firstLine != null && !firstLine.trim().isEmpty()) {
+				// First line is data, process it if in range
+				if (currentIndex >= startIndex) {
+					String featureId = BatchUtils.extractFeatureId(firstLine);
+					if (featureId != null) {
+						featureIds.add(featureId);
+						recordsRead++;
+					}
+				}
+				currentIndex++; // Increment only for data lines
+			}
+
+			// Process remaining data lines (no need to check for headers anymore)
 			while ( (line = reader.readLine()) != null && recordsRead < recordCount) {
-				if (!BatchUtils.isHeaderLine(line)) {
+				if (!line.trim().isEmpty()) {
 					if (currentIndex >= startIndex) {
 						String featureId = BatchUtils.extractFeatureId(line);
 						if (featureId != null) {
@@ -150,7 +179,7 @@ public class BatchRangeInputStream extends InputStream {
 							recordsRead++;
 						}
 					}
-					currentIndex++;
+					currentIndex++; // Increment for all non-empty lines
 				}
 			}
 		}
@@ -175,37 +204,74 @@ public class BatchRangeInputStream extends InputStream {
 
 		// Track which FEATURE_IDs we've finished processing (for sorted file optimization)
 		Set<String> remainingFeatureIds = new HashSet<>(featureIds);
-		String lastSeenFeatureId = null;
+		LayerReadingState state = new LayerReadingState();
 
 		try (
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(Files.newInputStream(layerFilePath), StandardCharsets.UTF_8)
 				)
 		) {
+			// Skip first line if it's a header
+			String firstLine = reader.readLine();
+			processFirstLayerLine(firstLine, featureIds, content, state);
+
+			// Process remaining data lines (no need to check for headers anymore)
 			String line;
-			boolean shouldContinueReading = true;
-
-			while ( (line = reader.readLine()) != null && shouldContinueReading) {
-				// Process only data lines with valid FEATURE_IDs (skip headers and invalid lines)
-				if (!BatchUtils.isHeaderLine(line)) {
-					String featureId = BatchUtils.extractFeatureId(line);
-					if (featureId != null) {
-						// Check if this is a FEATURE_ID we're looking for
-						if (featureIds.contains(featureId)) {
-							content.append(line).append("\n");
-							lastSeenFeatureId = featureId;
-						} else if (lastSeenFeatureId != null && !featureId.equals(lastSeenFeatureId)) {
-							// We've moved past a FEATURE_ID we were tracking
-							remainingFeatureIds.remove(lastSeenFeatureId);
-							lastSeenFeatureId = null;
-
-							// Optimization: If file is sorted and we've processed all FEATURE_IDs, stop reading
-							shouldContinueReading = !remainingFeatureIds.isEmpty();
-						}
-					}
+			while ( (line = reader.readLine()) != null && state.shouldContinueReading) {
+				if (!line.trim().isEmpty()) {
+					processLayerLine(line, featureIds, content, remainingFeatureIds, state);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Process the first line of the layer file.
+	 */
+	private static void processFirstLayerLine(
+			String firstLine, Set<String> featureIds, StringBuilder content, LayerReadingState state
+	) {
+		if (firstLine != null && !firstLine.trim().isEmpty() && !BatchUtils.isHeaderLine(firstLine)) {
+			String featureId = BatchUtils.extractFeatureId(firstLine);
+			if (featureId != null && featureIds.contains(featureId)) {
+				content.append(firstLine).append("\n");
+				state.lastSeenFeatureId = featureId;
+			}
+		}
+	}
+
+	/**
+	 * Process a single layer line and update state accordingly.
+	 */
+	private static void processLayerLine(
+			String line, Set<String> featureIds, StringBuilder content, Set<String> remainingFeatureIds,
+			LayerReadingState state
+	) {
+		String featureId = BatchUtils.extractFeatureId(line);
+		if (featureId == null) {
+			return;
+		}
+
+		if (featureIds.contains(featureId)) {
+			// Found a matching FEATURE_ID
+			content.append(line).append("\n");
+			state.lastSeenFeatureId = featureId;
+		} else if (state.lastSeenFeatureId != null && !featureId.equals(state.lastSeenFeatureId)) {
+			// We've moved past a FEATURE_ID we were tracking
+			remainingFeatureIds.remove(state.lastSeenFeatureId);
+			state.lastSeenFeatureId = null;
+
+			// Optimization: If file is sorted and we've processed all FEATURE_IDs, stop reading
+			state.shouldContinueReading = !remainingFeatureIds.isEmpty();
+		}
+	}
+
+	/**
+	 * Helper class to track state while reading layer records.
+	 */
+	private static class LayerReadingState {
+		String lastSeenFeatureId = null;
+		boolean shouldContinueReading = true;
 	}
 
 	@Override
