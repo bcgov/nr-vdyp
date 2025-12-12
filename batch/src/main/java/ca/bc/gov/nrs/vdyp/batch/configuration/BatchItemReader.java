@@ -184,23 +184,9 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 			throw new FileNotFoundException("Polygon file not found: " + polygonFile);
 		}
 
-		int count = 0;
-		boolean headerChecked = false;
-
+		int count;
 		try (BufferedReader reader = Files.newBufferedReader(polygonFile)) {
-			String line;
-			while ( (line = reader.readLine()) != null) {
-				// Skip blank lines and optionally skip header (only checked once)
-				boolean shouldSkip = line.isBlank() || (!headerChecked && BatchUtils.isHeaderLine(line));
-
-				if (!headerChecked && !line.isBlank()) {
-					headerChecked = true;
-				}
-
-				if (!shouldSkip) {
-					count++;
-				}
-			}
+			count = BatchUtils.countDataRecords(reader);
 		}
 
 		logger.debug(

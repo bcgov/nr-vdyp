@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.batch.util;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import java.io.IOException;
+import java.io.BufferedReader;
 
 public final class BatchUtils {
 
@@ -96,5 +98,33 @@ public final class BatchUtils {
 			// Extract first field before comma
 			return csvLine.substring(0, commaIndex).trim();
 		}
+	}
+
+	/**
+	 * Counts the total number of data records in a CSV file, skipping blank lines and header lines.
+	 *
+	 * @param reader The BufferedReader to read from
+	 * @return The number of data records (excluding headers and blank lines)
+	 * @throws IOException if reading fails
+	 */
+	public static int countDataRecords(BufferedReader reader) throws IOException {
+		int count = 0;
+		boolean headerChecked = false;
+
+		String line;
+		while ( (line = reader.readLine()) != null) {
+			// Skip blank lines and optionally skip header (only checked once)
+			boolean shouldSkip = line.isBlank() || (!headerChecked && isHeaderLine(line));
+
+			if (!headerChecked && !line.isBlank()) {
+				headerChecked = true;
+			}
+
+			if (!shouldSkip) {
+				count++;
+			}
+		}
+
+		return count;
 	}
 }

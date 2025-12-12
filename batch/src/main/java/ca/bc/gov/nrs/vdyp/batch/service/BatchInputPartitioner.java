@@ -69,27 +69,14 @@ public class BatchInputPartitioner {
 	 * @throws BatchPartitionException if file cannot be read or contains no valid FEATURE_IDs
 	 */
 	private int countTotalFeatureIds(MultipartFile polygonFile, String jobGuid) throws BatchPartitionException {
-		int count = 0;
-		boolean headerChecked = false;
+		int count;
 
 		try (
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8)
 				)
 		) {
-			String line;
-			while ( (line = reader.readLine()) != null) {
-				// Skip blank lines and optionally skip header (only checked once)
-				boolean shouldSkip = line.isBlank() || (!headerChecked && BatchUtils.isHeaderLine(line));
-
-				if (!headerChecked && !line.isBlank()) {
-					headerChecked = true;
-				}
-
-				if (!shouldSkip && BatchUtils.extractFeatureId(line) != null) {
-					count++;
-				}
-			}
+			count = BatchUtils.countDataRecords(reader);
 		} catch (IOException e) {
 			throw BatchPartitionException.handlePartitionFailure(
 					e, "Failed to read polygon file while counting FEATURE_IDs", jobGuid, logger
