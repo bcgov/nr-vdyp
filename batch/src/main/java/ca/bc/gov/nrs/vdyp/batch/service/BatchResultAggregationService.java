@@ -279,10 +279,10 @@ public class BatchResultAggregationService {
 		logger.debug("Header written status: {}", headerWritten);
 		if (!headerWritten) {
 			// No header written during processing - try to recover header from partition files
-			logger.info("No header was written during processing. Attempting header recovery from partitions.");
+			logger.trace("No header was written during processing. Attempting header recovery from partitions.");
 			String recoveredHeader = searchForValidHeaderInPartitions(partitionOutputDirs);
 			if (recoveredHeader != null) {
-				logger.info("Recovered header from partition directories and writing to YieldTable.csv");
+				logger.trace("Recovered header from partition directories and writing to YieldTable.csv");
 				writeLineToZip(recoveredHeader, zipOut);
 			} else {
 				logger.warn("No valid header found in any partition directory. YieldTable.csv will have no header.");
@@ -412,7 +412,7 @@ public class BatchResultAggregationService {
 						}).map(file -> {
 							String extractedHeader = extractHeaderFromFile(file);
 							if (extractedHeader != null) {
-								logger.info("Found valid header in file: {}", file.getFileName());
+								logger.trace("Found valid header in file: {}", file.getFileName());
 							}
 							return extractedHeader;
 						}).filter(h -> h != null).findFirst().orElse(null);

@@ -26,7 +26,7 @@ public class DynamicPartitioner implements Partitioner {
 	public Map<String, ExecutionContext> partition(int partitionSize) {
 		Map<String, ExecutionContext> partitions = new HashMap<>();
 
-		logger.info("Creating {} execution contexts for VDYP partitions", partitionSize);
+		logger.trace("Creating {} execution contexts for VDYP partitions", partitionSize);
 
 		// Create execution contexts for existing partition directories
 		for (int i = 0; i < partitionSize; i++) {

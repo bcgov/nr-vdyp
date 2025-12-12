@@ -148,7 +148,7 @@ public class BatchConfiguration {
 
 		// Spring Batch chunk size must be 1 because each BatchChunkMetadata represents a chunk of records
 		int stepChunkSize = 1;
-		logger.info(
+		logger.trace(
 				"Worker step configured with Spring Batch chunk size: {} (each metadata item contains {} records)",
 				stepChunkSize, batchProperties.getReader().getDefaultChunkSize()
 		);
@@ -175,7 +175,7 @@ public class BatchConfiguration {
 							logger.error("Failed to initialize partition metrics: {}", e.getMessage());
 						}
 
-						logger.info(
+						logger.trace(
 								"[{}] [GUID: {}] VDYP Worker step starting for job execution ID: {}", partitionName,
 								jobGuid, jobExecutionId
 						);
@@ -201,7 +201,7 @@ public class BatchConfiguration {
 							logger.error("Failed to complete partition metrics: {}", e.getMessage());
 						}
 
-						logger.info(
+						logger.trace(
 								"[{}] [GUID: {}] VDYP Worker step completed for job execution ID: {}. Read: {}, Written: {}, Skipped: {}",
 								partitionName, jobGuid, jobExecutionId, stepExecution.getReadCount(),
 								stepExecution.getWriteCount(), stepExecution.getSkipCount()
@@ -319,7 +319,7 @@ public class BatchConfiguration {
 			@Value("#{jobParameters['" + BatchConstants.Job.GUID + "']}") String jobGuid,
 			BatchProperties batchProperties
 	) {
-		logger.info(
+		logger.trace(
 				"[GUID: {}, Execution ID: {}, Partition: {}] Using BatchItemReader with chunk size: {}", jobGuid,
 				jobExecutionId, partitionName, batchProperties.getReader().getDefaultChunkSize()
 		);

@@ -65,7 +65,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 
 		String partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
 
-		logger.info(
+		logger.trace(
 				"[GUID: {}, EXEID: {}, Partition: {}] BatchItemWriter.beforeStep() called", jobGuid, jobExecutionId,
 				partitionName
 		);
@@ -75,7 +75,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 
 		try {
 			this.projectionParameters = objectMapper.readValue(projectionParametersJson, Parameters.class);
-			logger.info(
+			logger.trace(
 					"[GUID: {}, EXEID: {}, Partition: {}] BatchItemWriter initialized with projection parameters. Parameters null: {}",
 					jobGuid, jobExecutionId, partitionName, this.projectionParameters == null
 			);
@@ -145,7 +145,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 		BatchChunkMetadata chunkMetadata = chunk.getItems().get(0);
 		String partitionName = chunkMetadata.getPartitionName();
 
-		logger.info(
+		logger.trace(
 				"[GUID: {}, EXEID: {}, Partition: {}] Processing chunk metadata (startIndex={}, recordCount={}) using BatchProjectionService",
 				this.jobGuid, this.jobExecutionId, partitionName, chunkMetadata.getStartIndex(),
 				chunkMetadata.getRecordCount()
@@ -155,7 +155,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 		String chunkResult = batchProjectionService
 				.performProjectionForChunk(chunkMetadata, this.projectionParameters, this.jobExecutionId, this.jobGuid);
 
-		logger.info(
+		logger.trace(
 				"[GUID: {}, EXEID: {}, Partition: {}] Successfully processed chunk of {} records. Result: {}",
 				this.jobGuid, this.jobExecutionId, partitionName, chunkMetadata.getRecordCount(), chunkResult
 		);

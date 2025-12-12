@@ -55,7 +55,7 @@ public class BatchItemProcessor implements ItemProcessor<BatchChunkMetadata, Bat
 			metricsCollector.initializePartitionMetrics(jobExecutionId, jobGuid, partitionName);
 		}
 
-		logger.info(
+		logger.trace(
 				"[GUID: {}, Partition: {}] VDYP Projection Processor initialized for job {}", jobGuid, partitionName,
 				jobExecutionId
 		);
