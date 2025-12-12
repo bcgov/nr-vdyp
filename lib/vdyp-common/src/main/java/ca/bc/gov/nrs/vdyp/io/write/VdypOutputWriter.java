@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -467,7 +468,7 @@ public class VdypOutputWriter implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		List<IOException> exceptions = new LinkedList<>();
+		Deque<IOException> exceptions = new LinkedList<>();
 		Utils.close(exceptions, polygonFile, Optional.empty(), "polygon file");
 		Utils.close(exceptions, speciesFile, Optional.empty(), "species file");
 		Utils.close(exceptions, utilizationFile, Optional.empty(), "utilization file");

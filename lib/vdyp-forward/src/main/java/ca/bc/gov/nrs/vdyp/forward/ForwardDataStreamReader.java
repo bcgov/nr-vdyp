@@ -3,10 +3,10 @@ package ca.bc.gov.nrs.vdyp.forward;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -359,7 +359,7 @@ public class ForwardDataStreamReader implements AutoCloseable {
 
 	@Override
 	public void close() throws ProcessingException {
-		List<IOException> exceptions = new LinkedList<>();
+		Deque<IOException> exceptions = new LinkedList<>();
 
 		Utils.close(exceptions, polygonStream, Optional.empty(), "polygon stream");
 		Utils.close(exceptions, layerSpeciesStream, Optional.empty(), "layer+species stream");

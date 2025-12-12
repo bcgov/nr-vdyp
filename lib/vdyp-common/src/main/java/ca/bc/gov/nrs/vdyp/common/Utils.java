@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -213,7 +214,7 @@ public class Utils {
 	 * @param os
 	 */
 	public static <X extends Exception> void close(
-			final List<X> exceptions, final AutoCloseable os, final Optional<Logger> specificLogger, final String name
+			final Deque<X> exceptions, final AutoCloseable os, final Optional<Logger> specificLogger, final String name
 	) {
 		close(exceptions, Optional.ofNullable(os), specificLogger, name);
 	}
@@ -228,7 +229,7 @@ public class Utils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <X extends Exception> void close(
-			final List<X> exceptions, final Optional<? extends AutoCloseable> toCloseOpt,
+			final Deque<X> exceptions, final Optional<? extends AutoCloseable> toCloseOpt,
 			final Optional<Logger> specificLogger, final String name
 	) {
 		toCloseOpt.ifPresent(toClose -> {
@@ -252,14 +253,14 @@ public class Utils {
 	 *
 	 * @param os
 	 */
-	public static <X extends Exception> Optional<X> aggregateExceptionsAsSupressed(final List<X> exceptions) {
+	public static <X extends Exception> Optional<X> aggregateExceptionsAsSupressed(final Deque<X> exceptions) {
 		if (exceptions.isEmpty()) {
 			return Optional.empty();
 		}
-		var it = exceptions.listIterator();
-		X exception = it.previous();
-		while (it.hasPrevious()) {
-			exception.addSuppressed(it.previous());
+		var it = exceptions.descendingIterator();
+		X exception = it.next();
+		while (it.hasNext()) {
+			exception.addSuppressed(it.next());
 		}
 		return Optional.of(exception);
 	}
