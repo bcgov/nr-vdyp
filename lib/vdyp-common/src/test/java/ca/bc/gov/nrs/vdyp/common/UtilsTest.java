@@ -1,12 +1,14 @@
 package ca.bc.gov.nrs.vdyp.common;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.suppresses;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -334,4 +337,97 @@ class UtilsTest {
 
 	}
 
+	@Nested
+	class Exceptions {
+		@Nested
+		class OptionalHelpers {
+			@Nested
+			class Map {
+				@Test
+				void empty() {
+					var result = Utils.map(Optional.empty(), (x) -> {
+						fail("Should not be called");
+						return null;
+					});
+					assertThat(result, notPresent());
+				}
+
+				@Test
+				void success() {
+					var result = Utils.map(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						return "output";
+					});
+					assertThat(result, present(is("output")));
+				}
+
+				@Test
+				void checkedException() {
+					assertThrows(IOException.class, () -> Utils.map(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						throw new IOException();
+					}));
+
+				}
+
+				@Test
+				void uncheckedException() {
+					assertThrows(IllegalStateException.class, () -> Utils.map(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						throw new IllegalStateException();
+					}));
+
+				}
+			}
+
+			@Nested
+			class IfPresent {
+				@Test
+				void empty() {
+					Utils.ifPresent(Optional.empty(), (x) -> {
+						fail("Should not be called");
+					});
+				}
+
+				@Test
+				void success() {
+					AtomicInteger calls = new AtomicInteger();
+					Utils.ifPresent(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						calls.incrementAndGet();
+					});
+
+					assertThat("should be called once", calls.get(), is(1));
+				}
+
+				@Test
+				void checkedException() {
+					AtomicInteger calls = new AtomicInteger();
+
+					assertThrows(IOException.class, () -> Utils.ifPresent(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						calls.incrementAndGet();
+						throw new IOException();
+					}));
+
+					assertThat("should be called once", calls.get(), is(1));
+
+				}
+
+				@Test
+				void uncheckedException() {
+					AtomicInteger calls = new AtomicInteger();
+
+					assertThrows(IllegalStateException.class, () -> Utils.ifPresent(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						calls.incrementAndGet();
+						throw new IllegalStateException();
+					}));
+
+					assertThat("should be called once", calls.get(), is(1));
+
+				}
+			}
+		}
+	}
 }
