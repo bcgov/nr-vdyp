@@ -52,31 +52,21 @@ public class BatchRangeInputStream extends InputStream {
 
 		StringBuilder content = new StringBuilder();
 
-		try (
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(Files.newInputStream(filePath), StandardCharsets.UTF_8)
-				)
-		) {
+		try (BufferedReader reader = Files.newBufferedReader(filePath)) {
 			String line;
 			int currentIndex = 0; // Physical line index (including empty lines, excluding header)
 			int recordsRead = 0;
+			boolean headerChecked = false;
 
-			// Read and skip first line if it's a header
-			String firstLine = reader.readLine();
-			boolean firstLineIsHeader = firstLine != null && BatchUtils.isHeaderLine(firstLine);
-
-			if (!firstLineIsHeader && firstLine != null && !firstLine.trim().isEmpty()) {
-				// First line is data, process it if in range
-				if (currentIndex >= startIndex) {
-					content.append(firstLine).append("\n");
-					recordsRead++;
-				}
-				currentIndex++; // Increment only for data lines
-			}
-
-			// Process remaining data lines (no need to check for headers anymore)
 			while ( (line = reader.readLine()) != null && recordsRead < recordCount) {
-				if (!line.trim().isEmpty()) {
+				// Skip blank lines and optionally skip header (only checked once)
+				boolean shouldSkip = line.isBlank() || (!headerChecked && BatchUtils.isHeaderLine(line));
+
+				if (!headerChecked && !line.isBlank()) {
+					headerChecked = true;
+				}
+
+				if (!shouldSkip) {
 					if (currentIndex >= startIndex) {
 						content.append(line).append("\n");
 						recordsRead++;
@@ -143,48 +133,71 @@ public class BatchRangeInputStream extends InputStream {
 	private static Set<String> extractFeatureIdsFromPolygonRange(Path polygonFilePath, int startIndex, int recordCount)
 			throws IOException {
 		Set<String> featureIds = new HashSet<>();
+		RangeExtractionState state = new RangeExtractionState(startIndex, recordCount);
 
-		try (
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(Files.newInputStream(polygonFilePath), StandardCharsets.UTF_8)
-				)
-		) {
+		try (BufferedReader reader = Files.newBufferedReader(polygonFilePath)) {
 			String line;
-			int currentIndex = 0; // Physical line index (including empty lines, excluding header)
-			int recordsRead = 0;
-
-			// Read and skip first line if it's a header
-			String firstLine = reader.readLine();
-			boolean firstLineIsHeader = firstLine != null && BatchUtils.isHeaderLine(firstLine);
-
-			if (!firstLineIsHeader && firstLine != null && !firstLine.trim().isEmpty()) {
-				// First line is data, process it if in range
-				if (currentIndex >= startIndex) {
-					String featureId = BatchUtils.extractFeatureId(firstLine);
-					if (featureId != null) {
-						featureIds.add(featureId);
-						recordsRead++;
-					}
+			while ( (line = reader.readLine()) != null && !state.isComplete()) {
+				if (shouldSkipLineForRange(line, state)) {
+					continue;
 				}
-				currentIndex++; // Increment only for data lines
-			}
 
-			// Process remaining data lines (no need to check for headers anymore)
-			while ( (line = reader.readLine()) != null && recordsRead < recordCount) {
-				if (!line.trim().isEmpty()) {
-					if (currentIndex >= startIndex) {
-						String featureId = BatchUtils.extractFeatureId(line);
-						if (featureId != null) {
-							featureIds.add(featureId);
-							recordsRead++;
-						}
-					}
-					currentIndex++; // Increment for all non-empty lines
-				}
+				processFeatureIdLine(line, state, featureIds);
 			}
 		}
 
 		return featureIds;
+	}
+
+	/**
+	 * Determines if a line should be skipped during range extraction.
+	 */
+	private static boolean shouldSkipLineForRange(String line, RangeExtractionState state) {
+		boolean shouldSkip = line.isBlank() || (!state.headerChecked && BatchUtils.isHeaderLine(line));
+
+		if (!state.headerChecked && !line.isBlank()) {
+			state.headerChecked = true;
+		}
+
+		return shouldSkip;
+	}
+
+	/**
+	 * Processes a line to extract feature ID if within range.
+	 */
+	private static void processFeatureIdLine(String line, RangeExtractionState state, Set<String> featureIds) {
+		if (state.isInRange()) {
+			String featureId = BatchUtils.extractFeatureId(line);
+			if (featureId != null) {
+				featureIds.add(featureId);
+				state.recordsRead++;
+			}
+		}
+		state.currentIndex++;
+	}
+
+	/**
+	 * Helper class to track range extraction state.
+	 */
+	private static class RangeExtractionState {
+		final int startIndex;
+		final int recordCount;
+		int currentIndex = 0;
+		int recordsRead = 0;
+		boolean headerChecked = false;
+
+		RangeExtractionState(int startIndex, int recordCount) {
+			this.startIndex = startIndex;
+			this.recordCount = recordCount;
+		}
+
+		boolean isInRange() {
+			return currentIndex >= startIndex;
+		}
+
+		boolean isComplete() {
+			return recordsRead >= recordCount;
+		}
 	}
 
 	/**
@@ -231,7 +244,7 @@ public class BatchRangeInputStream extends InputStream {
 	private static void processFirstLayerLine(
 			String firstLine, Set<String> featureIds, StringBuilder content, LayerReadingState state
 	) {
-		if (firstLine != null && !firstLine.trim().isEmpty() && !BatchUtils.isHeaderLine(firstLine)) {
+		if (firstLine != null && !firstLine.isBlank() && !BatchUtils.isHeaderLine(firstLine)) {
 			String featureId = BatchUtils.extractFeatureId(firstLine);
 			if (featureId != null && featureIds.contains(featureId)) {
 				content.append(firstLine).append("\n");

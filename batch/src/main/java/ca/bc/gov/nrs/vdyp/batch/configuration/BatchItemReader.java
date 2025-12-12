@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -186,17 +185,19 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 		}
 
 		int count = 0;
-		try (BufferedReader reader = new BufferedReader(new FileReader(polygonFile.toFile()))) {
-			String line;
-			// Skip first line if it's a header
-			String firstLine = reader.readLine();
-			if (firstLine != null && !firstLine.trim().isEmpty() && !BatchUtils.isHeaderLine(firstLine)) {
-				count++;
-			}
+		boolean headerChecked = false;
 
-			// Count the rest of the file (no need to check for headers anymore)
+		try (BufferedReader reader = Files.newBufferedReader(polygonFile)) {
+			String line;
 			while ( (line = reader.readLine()) != null) {
-				if (!line.trim().isEmpty()) {
+				// Skip blank lines and optionally skip header (only checked once)
+				boolean shouldSkip = line.isBlank() || (!headerChecked && BatchUtils.isHeaderLine(line));
+
+				if (!headerChecked && !line.isBlank()) {
+					headerChecked = true;
+				}
+
+				if (!shouldSkip) {
 					count++;
 				}
 			}

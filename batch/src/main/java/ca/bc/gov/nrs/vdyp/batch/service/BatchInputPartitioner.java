@@ -70,22 +70,23 @@ public class BatchInputPartitioner {
 	 */
 	private int countTotalFeatureIds(MultipartFile polygonFile, String jobGuid) throws BatchPartitionException {
 		int count = 0;
+		boolean headerChecked = false;
+
 		try (
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8)
 				)
 		) {
 			String line;
-			// Skip first line if it's a header
-			String firstLine = reader.readLine();
-			if (firstLine != null && !firstLine.trim().isEmpty() && !BatchUtils.isHeaderLine(firstLine)
-					&& BatchUtils.extractFeatureId(firstLine) != null) {
-				count++;
-			}
-
-			// Count remaining data lines (no need to check for headers anymore)
 			while ( (line = reader.readLine()) != null) {
-				if (!line.trim().isEmpty() && BatchUtils.extractFeatureId(line) != null) {
+				// Skip blank lines and optionally skip header (only checked once)
+				boolean shouldSkip = line.isBlank() || (!headerChecked && BatchUtils.isHeaderLine(line));
+
+				if (!headerChecked && !line.isBlank()) {
+					headerChecked = true;
+				}
+
+				if (!shouldSkip && BatchUtils.extractFeatureId(line) != null) {
 					count++;
 				}
 			}
@@ -103,6 +104,38 @@ public class BatchInputPartitioner {
 		}
 
 		return count;
+	}
+
+	/**
+	 * Detects and returns the header line from a CSV file, if present.
+	 *
+	 * @param file    The file to check for a header
+	 * @param jobGuid The job GUID for error reporting
+	 * @return The header line if found, or null if no header exists. Callers MUST check for null.
+	 * @throws BatchPartitionException if file cannot be read
+	 */
+	private String detectHeader(MultipartFile file, String jobGuid) throws BatchPartitionException {
+		try (
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)
+				)
+		) {
+			String line;
+			while ( (line = reader.readLine()) != null) {
+				if (!line.isBlank()) {
+					if (BatchUtils.isHeaderLine(line)) {
+						logger.trace("Found header line");
+						return line;
+					}
+					// First non-blank line is not a header
+					return null;
+				}
+			}
+		} catch (IOException e) {
+			throw BatchPartitionException
+					.handlePartitionFailure(e, "Failed to read file for header detection", jobGuid, logger);
+		}
+		return null;
 	}
 
 	/**
@@ -150,35 +183,18 @@ public class BatchInputPartitioner {
 		// FIXME: VDYP-869
 		Map<String, Integer> featureIdToPartition = new HashMap<>();
 
+		String headerLine = detectHeader(polygonFile, jobGuid);
+
 		try (
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8)
 				)
 		) {
-
-			// Read first line and check if it's a header (headers are optional)
-			String firstLine = reader.readLine();
-			String headerLine = null;
-
-			if (firstLine != null && BatchUtils.isHeaderLine(firstLine)) {
-				headerLine = firstLine;
-				logger.trace("Found header in polygon file");
-			}
-
 			Map<Integer, PrintWriter> writers = createPartitionWriters(
 					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, headerLine, numPartitions, jobGuid
 			);
 
 			try {
-				// If first line was not a header, it's a data line - process it
-				if (firstLine != null && !BatchUtils.isHeaderLine(firstLine)) {
-					String featureId = BatchUtils.extractFeatureId(firstLine);
-					if (featureId != null) {
-						featureIdToPartition.put(featureId, 0);
-						writers.get(0).println(firstLine);
-					}
-				}
-
 				processPolygonRecords(reader, writers, featureIdToPartition, featuresPerPartition);
 			} finally {
 				closeWriters(writers);
@@ -206,29 +222,71 @@ public class BatchInputPartitioner {
 			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<String, Integer> featureIdToPartition,
 			int[] featuresPerPartition
 	) throws IOException {
+		PartitionState state = new PartitionState(featuresPerPartition);
 
 		String line;
-		int currentPartition = 0;
-		int recordsInCurrentPartition = 0;
-
 		while ( (line = reader.readLine()) != null) {
+			if (shouldSkipLine(line, state)) {
+				continue;
+			}
+
 			String featureId = BatchUtils.extractFeatureId(line);
 			if (featureId != null) {
-				// Write to current partition
-				featureIdToPartition.put(featureId, currentPartition);
-				writers.get(currentPartition).println(line);
-				recordsInCurrentPartition++;
+				writeToPartition(line, featureId, state, writers, featureIdToPartition, featuresPerPartition);
+			}
+		}
+	}
 
-				// Check if current partition is full, move to next
-				if (recordsInCurrentPartition >= featuresPerPartition[currentPartition]) {
-					currentPartition++;
-					recordsInCurrentPartition = 0;
+	/**
+	 * Determines if a line should be skipped (blank or header).
+	 */
+	private boolean shouldSkipLine(String line, PartitionState state) {
+		boolean shouldSkip = line.isBlank() || (!state.headerChecked && BatchUtils.isHeaderLine(line));
 
-					// Safety check: don't exceed partition bounds
-					if (currentPartition >= featuresPerPartition.length) {
-						currentPartition = featuresPerPartition.length - 1;
-					}
-				}
+		if (!state.headerChecked && !line.isBlank()) {
+			state.headerChecked = true;
+		}
+
+		return shouldSkip;
+	}
+
+	/**
+	 * Writes a record to the appropriate partition and updates state.
+	 */
+	@SuppressWarnings("javasecurity:S5131") // False positive: CSV file writing to internal storage, not HTTP response
+	private void writeToPartition(
+			String line, String featureId, PartitionState state, Map<Integer, PrintWriter> writers,
+			Map<String, Integer> featureIdToPartition, int[] featuresPerPartition
+	) {
+		featureIdToPartition.put(featureId, state.currentPartition);
+		writers.get(state.currentPartition).println(line);
+		state.recordsInCurrentPartition++;
+
+		// Check if current partition is full, move to next
+		if (state.recordsInCurrentPartition >= featuresPerPartition[state.currentPartition]) {
+			state.moveToNextPartition(featuresPerPartition.length);
+		}
+	}
+
+	/**
+	 * Helper class to track partition processing state.
+	 */
+	private static class PartitionState {
+		int currentPartition = 0;
+		int recordsInCurrentPartition = 0;
+		boolean headerChecked = false;
+
+		PartitionState(int[] featuresPerPartition) {
+			// Constructor for potential future initialization
+		}
+
+		void moveToNextPartition(int maxPartitions) {
+			currentPartition++;
+			recordsInCurrentPartition = 0;
+
+			// Safety check: don't exceed partition bounds
+			if (currentPartition >= maxPartitions) {
+				currentPartition = maxPartitions - 1;
 			}
 		}
 	}
@@ -245,35 +303,18 @@ public class BatchInputPartitioner {
 			String jobGuid
 	) throws BatchPartitionException {
 
+		String headerLine = detectHeader(layerFile, jobGuid);
+
 		try (
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(layerFile.getInputStream(), StandardCharsets.UTF_8)
 				)
 		) {
-
-			// Read first line and check if it's a header (headers are optional)
-			String firstLine = reader.readLine();
-			String headerLine = null;
-
-			if (firstLine != null && BatchUtils.isHeaderLine(firstLine)) {
-				headerLine = firstLine;
-				logger.trace("Found header in layer file");
-			}
-
 			Map<Integer, PrintWriter> writers = createPartitionWriters(
 					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, headerLine, numPartitions, jobGuid
 			);
 
 			try {
-				// If first line was not a header, it's a data line - process it
-				if (firstLine != null && !BatchUtils.isHeaderLine(firstLine)) {
-					String featureId = BatchUtils.extractFeatureId(firstLine);
-					if (featureId != null && featureIdToPartition.containsKey(featureId)) {
-						int partition = featureIdToPartition.get(featureId);
-						writers.get(partition).println(firstLine);
-					}
-				}
-
 				processLayerRecords(reader, writers, featureIdToPartition);
 			} finally {
 				closeWriters(writers);
@@ -296,7 +337,20 @@ public class BatchInputPartitioner {
 			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<String, Integer> featureIdToPartition
 	) throws IOException {
 		String line;
+		boolean headerChecked = false;
+
 		while ( (line = reader.readLine()) != null) {
+			// Skip blank lines and optionally skip header (only checked once)
+			boolean shouldSkip = line.isBlank() || (!headerChecked && BatchUtils.isHeaderLine(line));
+
+			if (!headerChecked && !line.isBlank()) {
+				headerChecked = true;
+			}
+
+			if (shouldSkip) {
+				continue;
+			}
+
 			String featureId = BatchUtils.extractFeatureId(line);
 			if (featureId != null && featureIdToPartition.containsKey(featureId)) {
 				int partition = featureIdToPartition.get(featureId);

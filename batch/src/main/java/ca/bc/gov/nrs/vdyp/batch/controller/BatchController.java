@@ -463,16 +463,17 @@ public class BatchController {
 				)
 		) {
 			String line;
-			// Skip first line if it's a header
-			String firstLine = reader.readLine();
-			if (firstLine != null && !firstLine.trim().isEmpty() && !BatchUtils.isHeaderLine(firstLine)) {
-				// First line is valid data - file is valid
-				return;
-			}
+			boolean headerChecked = false;
 
-			// Check remaining lines for valid data
 			while ( (line = reader.readLine()) != null) {
-				if (!line.trim().isEmpty()) {
+				// Skip blank lines and optionally skip header (only checked once)
+				boolean shouldSkip = line.isBlank() || (!headerChecked && BatchUtils.isHeaderLine(line));
+
+				if (!headerChecked && !line.isBlank()) {
+					headerChecked = true;
+				}
+
+				if (!shouldSkip) {
 					// Found at least one data line with content - file is valid
 					return;
 				}
