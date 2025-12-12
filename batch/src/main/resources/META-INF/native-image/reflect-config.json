@@ -1646,7 +1646,7 @@
     "allDeclaredFields":true,
     "queryAllDeclaredMethods":true,
     "queryAllDeclaredConstructors":true,
-    "methods":[{"name":"setDefaultPartitionSize","parameterTypes":["java.lang.Integer"] }, {"name":"setInterimDirsCleanupEnabled","parameterTypes":["boolean"] }, {"name":"setJobSearchChunkSize","parameterTypes":["java.lang.Integer"] }, {"name":"setMinValidFileSize","parameterTypes":["java.lang.Integer"] }]
+    "methods":[{"name":"setDefaultNumberOfPartitions","parameterTypes":["java.lang.Integer"] }, {"name":"setInterimDirsCleanupEnabled","parameterTypes":["boolean"] }, {"name":"setJobSearchChunkSize","parameterTypes":["java.lang.Integer"] }, {"name":"setMinValidFileSize","parameterTypes":["java.lang.Integer"] }]
   },
   {
     "name":"ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties$ReaderProperties",

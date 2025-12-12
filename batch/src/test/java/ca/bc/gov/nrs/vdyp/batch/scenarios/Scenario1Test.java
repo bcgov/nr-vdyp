@@ -54,7 +54,7 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 @AutoConfigureMockMvc
 @TestPropertySource(
 		properties = { "batch.root-directory=${java.io.tmpdir}/vdyp-batch-test",
-				"batch.partition.default-partition-size=2" }
+				"batch.partition.default-number-of-partitions=2" }
 )
 class Scenario1Test {
 

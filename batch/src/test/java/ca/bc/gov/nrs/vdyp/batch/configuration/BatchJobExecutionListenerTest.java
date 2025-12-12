@@ -39,7 +39,7 @@ class BatchJobExecutionListenerTest {
 
 	@Test
 	void testBeforeJob_InitializesTracking() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(BatchConstants.Partition.SIZE, 4L)
+		JobParameters jobParameters = new JobParametersBuilder().addLong(BatchConstants.Partition.NUMBER, 4L)
 				.addString(BatchConstants.Job.GUID, "test-guid-123").toJobParameters();
 
 		when(jobExecution.getId()).thenReturn(1L);

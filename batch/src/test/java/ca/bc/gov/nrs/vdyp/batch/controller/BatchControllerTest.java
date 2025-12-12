@@ -87,7 +87,7 @@ class BatchControllerTest {
 		// Use system temp directory for cross-platform compatibility
 		String tempDir = System.getProperty("java.io.tmpdir");
 		ReflectionTestUtils.setField(batchController, "batchRootDirectory", tempDir);
-		ReflectionTestUtils.setField(batchController, "defaultPartitionSize", 4);
+		ReflectionTestUtils.setField(batchController, "defaultNumPartitions", 4);
 		ReflectionTestUtils.setField(batchController, "jobSearchChunkSize", 1000);
 	}
 

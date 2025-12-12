@@ -28,7 +28,7 @@ public final class BatchConstants {
 		public static final String PREFIX = "partition";
 		public static final String INPUT_FOLDER_NAME_PREFIX = INPUT_PREFIX + "-" + PREFIX;
 		public static final String OUTPUT_FOLDER_NAME_PREFIX = OUTPUT_PREFIX + "-" + PREFIX;
-		public static final String SIZE = "partitionSize";
+		public static final String NUMBER = "numberOfPartitions";
 		public static final String NAME = "partitionName";
 		public static final String INPUT_POLYGON_FILE_NAME = "polygons.csv";
 		public static final String INPUT_LAYER_FILE_NAME = "layers.csv";

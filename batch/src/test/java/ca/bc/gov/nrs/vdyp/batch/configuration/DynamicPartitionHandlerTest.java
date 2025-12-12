@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DynamicPartitionHandlerTest {
 
-	private static final String PARTITION_SIZE_PARAM = "partitionSize";
+	private static final String NUMBER_OF_PARTITIONS_PARAM = "numberOfPartitions";
 	private static final String TEST_JOB_BASE_DIR = "/tmp/test";
 	private static final int DEFAULT_GRID_SIZE = 4;
 
@@ -68,8 +68,8 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_WithPartitionSizeAndJobBaseDir() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 4L)
+	void testHandle_WithNumPartitionsAndJobBaseDir() {
+		JobParameters jobParameters = new JobParametersBuilder().addLong(NUMBER_OF_PARTITIONS_PARAM, 4L)
 				.addString("jobBaseDir", TEST_JOB_BASE_DIR).toJobParameters();
 
 		setupBasicMocks(jobParameters);
@@ -80,24 +80,25 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_WithNullPartitionSize() {
+	void testHandle_WithNullNumPartitions() {
 		JobParameters jobParameters = new JobParametersBuilder().toJobParameters();
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartition()).thenReturn(partition);
-		when(partition.getDefaultPartitionSize()).thenReturn(DEFAULT_GRID_SIZE);
+		when(partition.getDefaultNumberOfPartitions()).thenReturn(DEFAULT_GRID_SIZE);
 
 		assertDoesNotThrow(() -> {
 			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 		});
 
 		verify(batchProperties, atLeastOnce()).getPartition();
-		verify(partition, atLeastOnce()).getDefaultPartitionSize();
+		verify(partition, atLeastOnce()).getDefaultNumberOfPartitions();
 	}
 
 	@Test
 	void testHandle_WithNullJobBaseDir() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L).toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addLong(NUMBER_OF_PARTITIONS_PARAM, 2L)
+				.toJobParameters();
 
 		setupBasicMocks(jobParameters);
 
@@ -110,7 +111,7 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_WithEmptyJobBaseDir() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
+		JobParameters jobParameters = new JobParametersBuilder().addLong(NUMBER_OF_PARTITIONS_PARAM, 2L)
 				.addString("jobBaseDir", "").toJobParameters();
 
 		setupBasicMocks(jobParameters);
@@ -123,8 +124,9 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_WithZeroPartitionSize() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 0L).toJobParameters();
+	void testHandle_WithZeroNumPartitions() {
+		JobParameters jobParameters = new JobParametersBuilder().addLong(NUMBER_OF_PARTITIONS_PARAM, 0L)
+				.toJobParameters();
 
 		setupBasicMocks(jobParameters);
 
@@ -134,8 +136,9 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_WithNegativePartitionSize() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, -1L).toJobParameters();
+	void testHandle_WithNegativeNumPartitions() {
+		JobParameters jobParameters = new JobParametersBuilder().addLong(NUMBER_OF_PARTITIONS_PARAM, -1L)
+				.toJobParameters();
 
 		setupBasicMocks(jobParameters);
 

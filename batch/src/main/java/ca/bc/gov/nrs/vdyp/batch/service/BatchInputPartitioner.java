@@ -38,26 +38,26 @@ public class BatchInputPartitioner {
 	/**
 	 * Partitions polygon and layer CSV files by FEATURE_ID into separate partition files.
 	 *
-	 * @param polygonFile   The polygon CSV file to partition
-	 * @param layerFile     The layer CSV file to partition
-	 * @param partitionSize The number of partitions to create
-	 * @param jobBaseDir    The base directory for the job
+	 * @param polygonFile  The polygon CSV file to partition
+	 * @param layerFile    The layer CSV file to partition
+	 * @param numPartition The number of partitions to create
+	 * @param jobBaseDir   The base directory for the job
 	 * @param jobGuid
 	 * @return The total number of unique FEATURE_IDs processed
 	 * @throws BatchPartitionException if partitioning fails (I/O errors or validation failures)
 	 */
 	public int partitionCsvFiles(
-			@NonNull MultipartFile polygonFile, @NonNull MultipartFile layerFile, @NonNull Integer partitionSize,
+			@NonNull MultipartFile polygonFile, @NonNull MultipartFile layerFile, @NonNull Integer numPartitions,
 			@NonNull Path jobBaseDir, @NonNull String jobGuid
 	) throws BatchPartitionException {
 		int totalFeatureIds = countTotalFeatureIds(polygonFile, jobGuid);
-		int[] partitionSizes = calculatePartitionSizes(totalFeatureIds, partitionSize);
+		int[] featuresPerPartition = calculateFeaturesPerPartition(totalFeatureIds, numPartitions);
 
 		Map<String, Integer> featureIdToPartition = partitionPolygonFile(
-				polygonFile, partitionSize, partitionSizes, jobBaseDir, jobGuid
+				polygonFile, numPartitions, featuresPerPartition, jobBaseDir, jobGuid
 		);
 
-		partitionLayerFile(layerFile, partitionSize, jobBaseDir, featureIdToPartition, jobGuid);
+		partitionLayerFile(layerFile, numPartitions, jobBaseDir, featureIdToPartition, jobGuid);
 
 		return featureIdToPartition.size();
 	}
@@ -106,39 +106,45 @@ public class BatchInputPartitioner {
 	}
 
 	/**
-	 * Calculate partition sizes for balanced distribution.
+	 * Calculate number of features per partition for balanced distribution.
 	 *
-	 * @return array where index = partition number, value = number of records for that partition
+	 * @param totalFeatureIds Total number of features to distribute
+	 * @param numPartitions   Number of partitions to create
+	 * @return array where index = partition number, value = number of features for that partition
 	 */
-	private int[] calculatePartitionSizes(int totalFeatureIds, int partitionSize) {
-		int[] partitionSizes = new int[partitionSize];
-		int chunkSize = totalFeatureIds / partitionSize;
-		int remainder = totalFeatureIds % partitionSize;
+	private int[] calculateFeaturesPerPartition(int totalFeatureIds, int numPartitions) {
+		int[] featuresPerPartition = new int[numPartitions];
+		int baseFeatureCount = totalFeatureIds / numPartitions;
+		int extraFeatures = totalFeatureIds % numPartitions;
 
-		// First 'remainder' partitions get chunkSize + 1
-		// Remaining partitions get chunkSize
-		for (int i = 0; i < partitionSize; i++) {
-			partitionSizes[i] = (i < remainder) ? chunkSize + 1 : chunkSize;
+		// First 'extraFeatures' partitions get baseFeatureCount + 1
+		// Remaining partitions get baseFeatureCount
+		for (int i = 0; i < numPartitions; i++) {
+			featuresPerPartition[i] = (i < extraFeatures) ? baseFeatureCount + 1 : baseFeatureCount;
 		}
 
 		logger.debug(
-				"Total FEATURE_IDs: {}, Partition size: {}, Base chunk size: {}, Remainder: {}, Partition sizes: {}",
-				totalFeatureIds, partitionSize, chunkSize, remainder, partitionSizes
+				"Distributing {} features across {} partitions: base count = {}, extra features = {}, distribution = {}",
+				totalFeatureIds, numPartitions, baseFeatureCount, extraFeatures, featuresPerPartition
 		);
 
-		return partitionSizes;
+		return featuresPerPartition;
 	}
 
 	/**
 	 * Partition polygon file by FEATURE_ID. Headers are optional - if present, they are detected and written to
 	 * partition files. If not present, partition files will contain only data lines.
 	 *
-	 * @param partitionSizes Array of record counts for each partition
+	 * @param polygonFile          The polygon CSV file to partition
+	 * @param numPartitions        The number of partitions to create
+	 * @param featuresPerPartition Array of feature counts for each partition (determines distribution)
+	 * @param jobBaseDir           The base directory for the job
+	 * @param jobGuid              The unique identifier for the job
 	 * @return Map of FEATURE_ID to partition number
 	 * @throws BatchPartitionException if file I/O fails
 	 */
 	private Map<String, Integer> partitionPolygonFile(
-			MultipartFile polygonFile, int partitionSize, int[] partitionSizes, Path jobBaseDir, String jobGuid
+			MultipartFile polygonFile, int numPartitions, int[] featuresPerPartition, Path jobBaseDir, String jobGuid
 	) throws BatchPartitionException {
 
 		Map<String, Integer> featureIdToPartition = new HashMap<>();
@@ -159,7 +165,7 @@ public class BatchInputPartitioner {
 			}
 
 			Map<Integer, PrintWriter> writers = createPartitionWriters(
-					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, headerLine, partitionSize, jobGuid
+					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, headerLine, numPartitions, jobGuid
 			);
 
 			try {
@@ -172,7 +178,7 @@ public class BatchInputPartitioner {
 					}
 				}
 
-				processPolygonRecords(reader, writers, featureIdToPartition, partitionSizes);
+				processPolygonRecords(reader, writers, featureIdToPartition, featuresPerPartition);
 			} finally {
 				closeWriters(writers);
 			}
@@ -191,13 +197,13 @@ public class BatchInputPartitioner {
 	 * @param reader               The BufferedReader for the polygon file
 	 * @param writers              Map of partition number to PrintWriter
 	 * @param featureIdToPartition Map to populate with FEATURE_ID to partition mappings
-	 * @param partitionSizes       Array of record counts for each partition
+	 * @param featuresPerPartition Array of feature counts for each partition
 	 * @throws IOException if reading from the file fails (wrapped at component boundary by caller)
 	 */
 	@SuppressWarnings("javasecurity:S5131") // False positive: CSV file writing to internal storage, not HTTP response
 	private void processPolygonRecords(
 			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<String, Integer> featureIdToPartition,
-			int[] partitionSizes
+			int[] featuresPerPartition
 	) throws IOException {
 
 		String line;
@@ -213,13 +219,13 @@ public class BatchInputPartitioner {
 				recordsInCurrentPartition++;
 
 				// Check if current partition is full, move to next
-				if (recordsInCurrentPartition >= partitionSizes[currentPartition]) {
+				if (recordsInCurrentPartition >= featuresPerPartition[currentPartition]) {
 					currentPartition++;
 					recordsInCurrentPartition = 0;
 
 					// Safety check: don't exceed partition bounds
-					if (currentPartition >= partitionSizes.length) {
-						currentPartition = partitionSizes.length - 1;
+					if (currentPartition >= featuresPerPartition.length) {
+						currentPartition = featuresPerPartition.length - 1;
 					}
 				}
 			}
@@ -234,7 +240,7 @@ public class BatchInputPartitioner {
 	 * @throws BatchPartitionException if file I/O fails
 	 */
 	private void partitionLayerFile(
-			MultipartFile layerFile, int partitionSize, Path jobBaseDir, Map<String, Integer> featureIdToPartition,
+			MultipartFile layerFile, int numPartitions, Path jobBaseDir, Map<String, Integer> featureIdToPartition,
 			String jobGuid
 	) throws BatchPartitionException {
 
@@ -254,7 +260,7 @@ public class BatchInputPartitioner {
 			}
 
 			Map<Integer, PrintWriter> writers = createPartitionWriters(
-					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, headerLine, partitionSize, jobGuid
+					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, headerLine, numPartitions, jobGuid
 			);
 
 			try {
@@ -306,12 +312,12 @@ public class BatchInputPartitioner {
 	 * @throws BatchPartitionException if directory creation or file writing fails
 	 */
 	private Map<Integer, PrintWriter> createPartitionWriters(
-			Path jobBaseDir, String filename, String header, Integer partitionSize, String jobGuid
+			Path jobBaseDir, String filename, String header, Integer numPartitions, String jobGuid
 	) throws BatchPartitionException {
 		Map<Integer, PrintWriter> writers = new HashMap<>();
 
 		try {
-			for (int i = 0; i < partitionSize; i++) {
+			for (int i = 0; i < numPartitions; i++) {
 				Path partitionDir = jobBaseDir.resolve(BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX + i);
 				Files.createDirectories(partitionDir);
 

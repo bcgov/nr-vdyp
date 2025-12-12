@@ -37,10 +37,10 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 		logger.info(separator);
 		logger.info("VDYP PARTITIONED JOB STARTING");
 
-		Long partitionSize = jobExecution.getJobParameters().getLong(BatchConstants.Partition.SIZE);
+		Long numPartitions = jobExecution.getJobParameters().getLong(BatchConstants.Partition.NUMBER);
 		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 
-		logger.info("VDYP Grid Size: {}", partitionSize);
+		logger.info("VDYP Number of Partitions: {}", numPartitions);
 		logger.info("Job Execution ID: {}", jobExecution.getId());
 		logger.info("Job GUID: {}", jobGuid);
 		logger.info(separator);

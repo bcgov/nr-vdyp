@@ -41,16 +41,16 @@ public class DynamicPartitionHandler implements PartitionHandler {
 					throws Exception {
 
 		JobParameters jobParameters = masterStepExecution.getJobExecution().getJobParameters();
-		Long partitionSize = jobParameters.getLong(BatchConstants.Partition.SIZE);
+		Long numPartitions = jobParameters.getLong(BatchConstants.Partition.NUMBER);
 
-		int actualGridSize;
-		if (partitionSize != null) {
-			actualGridSize = partitionSize.intValue();
+		int actualNumPartitions;
+		if (numPartitions != null) {
+			actualNumPartitions = numPartitions.intValue();
 		} else {
-			actualGridSize = batchProperties.getPartition().getDefaultPartitionSize();
+			actualNumPartitions = batchProperties.getPartition().getDefaultNumberOfPartitions();
 		}
 
-		logger.info("Starting VDYP FEATURE_ID-based parallel processing with {} partitions", actualGridSize);
+		logger.info("Starting VDYP FEATURE_ID-based parallel processing with {} partitions", actualNumPartitions);
 
 		// Set partition base directory for uploaded CSV files
 		String jobBaseDir = jobParameters.getString(BatchConstants.Job.BASE_DIR);
@@ -65,7 +65,7 @@ public class DynamicPartitionHandler implements PartitionHandler {
 		TaskExecutorPartitionHandler handler = new TaskExecutorPartitionHandler();
 		handler.setTaskExecutor(taskExecutor);
 		handler.setStep(workerStep);
-		handler.setGridSize(actualGridSize);
+		handler.setGridSize(actualNumPartitions);
 
 		// Delegate to the configured handler
 		return handler.handle(stepSplitter, masterStepExecution);
