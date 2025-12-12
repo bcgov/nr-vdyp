@@ -287,17 +287,26 @@ public class ProjectionService {
 		return repository.findByOwner(vdypUserGuid).stream().map(assembler::toModel).toList();
 	}
 
-	public ProjectionModel createNewProjection(VDYPUserModel actingUser, String parameters) {
-		// extract the report Title and description from the parameters
-		// leave report title in for processing, remove description
+	public ProjectionModel createNewProjection(VDYPUserModel actingUser, Parameters params)
+			throws ProjectionServiceException {
+		try {
+			// extract the report Title and description from the parameters
+			// leave report title in for processing, remove description
+			String reportTitle = params.getReportTitle();
+			String reportDescription = params.getReportTitle(); // TODO update params to be bale to read a description
 
-		// Create the 3 File Sets for the projection Polygon, Layer and Result
+			String saveParams = jsonObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
+			// Create the 3 File Sets for the projection Polygon, Layer and Result
+            ProjectionFileSetService
 
-		// Set the Status to Draft
+			// Set the Status to Draft
 
-		// Set the calculation Engine Code to VDYP8
+			// Set the calculation Engine Code to VDYP8
 
-		// Start Date and End Date should be null as they are about running the projection
+			// Start Date and End Date should be null as they are about running the projection
+		} catch (JsonProcessingException e) {
+			throw new ProjectionServiceException("Invalid parameter JSON", e);
+		}
 		return null;
 	}
 
@@ -334,7 +343,9 @@ public class ProjectionService {
 			throws ProjectionServiceException {
 		switch (action) {
 		case UPDATE:
+			// TODO check againsdt some specific states throw ProjectionServiceException if htere is an issue
 		case DELETE:
+			// TODO check againsdt some specific states throw ProjectionServiceException if htere is an issue
 
 		}
 	}
@@ -362,7 +373,7 @@ public class ProjectionService {
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(entity.getProjectionStatusCode(), ProjectionAction.UPDATE);
-		// Remove the Projection and
+		// TODO Remove the Projection and
 		// Related Data:
 		// Delete File Sets / Delete COMS Objects
 		// Delete Batch Mapping if it exists
