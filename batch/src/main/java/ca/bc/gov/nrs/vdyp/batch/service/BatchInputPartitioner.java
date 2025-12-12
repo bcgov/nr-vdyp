@@ -147,6 +147,7 @@ public class BatchInputPartitioner {
 			MultipartFile polygonFile, int numPartitions, int[] featuresPerPartition, Path jobBaseDir, String jobGuid
 	) throws BatchPartitionException {
 
+		// FIXME: VDYP-869
 		Map<String, Integer> featureIdToPartition = new HashMap<>();
 
 		try (
