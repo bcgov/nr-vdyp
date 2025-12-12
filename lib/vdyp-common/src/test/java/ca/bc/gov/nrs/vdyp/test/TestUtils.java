@@ -468,6 +468,12 @@ public class TestUtils {
 		};
 	}
 
+	public static void assumeThat(
+			String message, java.lang.Object actual, @SuppressWarnings("rawtypes") org.hamcrest.Matcher matcher
+	) {
+		assumeTrue(matcher.matches(actual), message);
+	}
+
 	public static void assumeThat(java.lang.Object actual, @SuppressWarnings("rawtypes") org.hamcrest.Matcher matcher) {
 		assumeTrue(matcher.matches(actual));
 	}

@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.vdyp.forward.integration;
 
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,8 +33,8 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 		Path dataDir = testDir.resolve(inputState.dir).resolve(layer);
 		Path expectedDir = testDir.resolve(outputState.dir).resolve(layer);
 
-		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
-		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
+		assumeThat("No input data", dataDir, exists());
+		assumeThat("No expected output data", expectedDir, exists());
 
 		doSkip(testDir, "testVdypForward");
 

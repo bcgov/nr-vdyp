@@ -1,12 +1,14 @@
 package ca.bc.gov.nrs.vdyp.fip.integration;
 
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -27,8 +29,8 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 		Path dataDir = testDir.resolve(inputState.dir).resolve(layer);
 		Path expectedDir = testDir.resolve(outputState.dir).resolve(layer);
 
-		Assumptions.assumeTrue(Files.exists(dataDir), "No input data: " + dataDir);
-		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data" + expectedDir);
+		assumeThat("No input data", dataDir, exists());
+		assumeThat("No expected output data", expectedDir, exists());
 
 		doSkip(testDir, "testFipStart");
 
