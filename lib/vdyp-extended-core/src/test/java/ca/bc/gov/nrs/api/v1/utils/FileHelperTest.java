@@ -23,23 +23,26 @@ class FileHelperTest {
 	protected static Path temp;
 
 	@Test
-	void testGetStubResourceFile() {
-		InputStream is = FileHelper.getStubResourceFile("Output_Log.txt");
-		assertNotNull(is);
+	void testGetStubResourceFile() throws IOException {
+		try (InputStream is = FileHelper.getStubResourceFile("Output_Log.txt");) {
+			assertNotNull(is);
+		}
 	}
 
 	@Test
-	void testGetTestResourceFile() {
-		InputStream is = FileHelper.getTestResourceFile(FileHelper.HCSV, FileHelper.COMMON, "Output_Log.txt");
-		assertNotNull(is);
+	void testGetTestResourceFile() throws IOException {
+		try (InputStream is = FileHelper.getTestResourceFile(FileHelper.HCSV, FileHelper.COMMON, "Output_Log.txt");) {
+			assertNotNull(is);
+		}
 	}
 
 	@Test
 	void testGetAndDeleteFile() throws IOException {
 		Path tempFilePath = Files.createFile(temp.resolve("tempfile"));
 
-		InputStream is1 = FileHelper.getForReading(tempFilePath);
-		assertNotNull(is1);
+		try (InputStream is1 = FileHelper.getForReading(tempFilePath);) {
+			assertNotNull(is1);
+		}
 
 		FileHelper.delete(tempFilePath);
 
