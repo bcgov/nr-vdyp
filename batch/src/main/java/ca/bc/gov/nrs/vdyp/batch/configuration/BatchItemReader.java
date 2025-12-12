@@ -195,7 +195,7 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 			}
 
 			// Count the rest of the file (no need to check for headers anymore)
-			while ( (line = reader.readLine()) != null && !line.trim().isEmpty()) {
+			while ( (line = reader.readLine()) != null) {
 				if (!line.trim().isEmpty()) {
 					count++;
 				}
