@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -465,10 +467,12 @@ public class VdypOutputWriter implements Closeable {
 	}
 
 	@Override
-	public void close() {
-		Utils.close(polygonFile);
-		Utils.close(speciesFile);
-		Utils.close(utilizationFile);
-		compatibilityVariablesFile.ifPresent(x -> Utils.close(x));
+	public void close() throws IOException {
+		Deque<IOException> exceptions = new LinkedList<>();
+		Utils.close(exceptions, polygonFile, Optional.empty(), "polygon file");
+		Utils.close(exceptions, speciesFile, Optional.empty(), "species file");
+		Utils.close(exceptions, utilizationFile, Optional.empty(), "utilization file");
+		Utils.close(exceptions, compatibilityVariablesFile, Optional.empty(), "compatibility variables file");
+		Utils.throwIfPresent(Utils.aggregateExceptionsAsSupressed(exceptions));
 	}
 }

@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.integrationtests;
 
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
 import static io.restassured.RestAssured.given;
 
 import java.io.IOException;
@@ -16,7 +18,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -75,8 +76,8 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 		Path dataDir = testDir.resolve("input");
 		Path expectedDir = testDir.resolve("output");
 
-		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
-		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
+		assumeThat("No input data", dataDir, exists());
+		assumeThat("No expected output data", expectedDir, exists());
 
 		doSkip(testDir, "testEndToEnd");
 

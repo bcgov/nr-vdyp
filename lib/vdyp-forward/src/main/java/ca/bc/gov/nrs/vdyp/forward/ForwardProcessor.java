@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -152,47 +153,41 @@ public class ForwardProcessor {
 
 		if (vdypPassSet.contains(ForwardPass.PASS_3)) {
 
-			Optional<VdypOutputWriter> outputWriter = Optional.empty();
+			try {
+				var outputWriter = Utils.map(outputFileResolver, ofr -> new VdypOutputWriter(controlMap, ofr));
+				var fpe = new ForwardProcessingEngine(controlMap, outputWriter);
 
-			if (outputFileResolver.isPresent()) {
-				try {
-					outputWriter = Optional.of(new VdypOutputWriter(controlMap, outputFileResolver.get()));
-				} catch (IOException e) {
-					throw new ProcessingException(e);
+				try (var forwardDataStreamReader = new ForwardDataStreamReader(fpe.fps.fcm);) {
+					// Fetch the next polygon to process.
+					int nPolygonsProcessed = 0;
+					while (true) {
+
+						if (nPolygonsProcessed == maxPoly) {
+							logger.info(
+									"Prematurely terminating polygon processing since MAX_POLY ({}) polygons have been processed",
+									maxPoly
+							);
+						}
+
+						var polygonHolder = forwardDataStreamReader.readNextPolygon();
+						if (polygonHolder.isEmpty()) {
+							break;
+						}
+
+						var polygon = polygonHolder.get();
+
+						if (polygonFilter.test(polygon)) {
+							fpe.processPolygon(polygon);
+							nPolygonsProcessed += 1;
+						}
+					}
+				} finally {
+					Utils.ifPresent(outputWriter, VdypOutputWriter::close);
 				}
+			} catch (IOException e) {
+				throw new ProcessingException(e);
 			}
 
-			var fpe = new ForwardProcessingEngine(controlMap, outputWriter);
-
-			var forwardDataStreamReader = new ForwardDataStreamReader(fpe.fps.fcm);
-
-			// Fetch the next polygon to process.
-			int nPolygonsProcessed = 0;
-			while (true) {
-
-				if (nPolygonsProcessed == maxPoly) {
-					logger.info(
-							"Prematurely terminating polygon processing since MAX_POLY ({}) polygons have been processed",
-							maxPoly
-					);
-				}
-
-				var polygonHolder = forwardDataStreamReader.readNextPolygon();
-				if (polygonHolder.isEmpty()) {
-					break;
-				}
-
-				var polygon = polygonHolder.get();
-
-				if (polygonFilter.test(polygon)) {
-					fpe.processPolygon(polygon);
-					nPolygonsProcessed += 1;
-				}
-			}
-
-			outputWriter.ifPresent(ow -> {
-				ow.close();
-			});
 		}
 	}
 }

@@ -11,7 +11,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.VdypApplication;
+import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
@@ -46,16 +46,14 @@ public class RealComponentRunner implements ComponentRunner {
 			throws PolygonExecutionException {
 
 		try (var fipStartApplication = new FipStart()) {
-			try {
-				Path controlFilePath = Path.of(
-						state.getExecutionFolder().toString(), projectionTypeCode.toString(),
-						Vdyp7Constants.FIP_START_CONTROL_FILE_NAME
-				);
-				fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
-				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
-			} catch (Throwable t) {
-				throwInterpretedException(fipStartApplication, polygon, projectionTypeCode, state, t);
-			}
+			Path controlFilePath = Path.of(
+					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
+					Vdyp7Constants.FIP_START_CONTROL_FILE_NAME
+			);
+			fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
+			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
+		} catch (Throwable t) {
+			throwInterpretedException(VdypApplicationIdentifier.FIP_START, polygon, projectionTypeCode, state, t);
 		}
 	}
 
@@ -63,16 +61,16 @@ public class RealComponentRunner implements ComponentRunner {
 	public void runVriStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
 		try (var vriStartApplication = new VriStart()) {
-			try {
-				Path controlFilePath = Path.of(
-						state.getExecutionFolder().toString(), projectionTypeCode.toString(),
-						Vdyp7Constants.VRI_START_CONTROL_FILE_NAME
-				);
-				vriStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
-				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
-			} catch (Throwable t) {
-				throwInterpretedException(vriStartApplication, polygon, projectionTypeCode, state, t);
-			}
+
+			Path controlFilePath = Path.of(
+					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
+					Vdyp7Constants.VRI_START_CONTROL_FILE_NAME
+			);
+			vriStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
+			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
+
+		} catch (Throwable t) {
+			throwInterpretedException(VdypApplicationIdentifier.VRI_START, polygon, projectionTypeCode, state, t);
 		}
 	}
 
@@ -130,20 +128,19 @@ public class RealComponentRunner implements ComponentRunner {
 			throws PolygonExecutionException {
 
 		try (var forwardApplication = new VdypForwardApplication()) {
-			try {
-				Path controlFilePath = Path.of(
-						state.getExecutionFolder().toString(), projectionTypeCode.toString(),
-						Vdyp7Constants.FORWARD_CONTROL_FILE_NAME
-				);
+			Path controlFilePath = Path.of(
+					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
+					Vdyp7Constants.FORWARD_CONTROL_FILE_NAME
+			);
 
-				Optional<Path> inputDir = Optional.empty();
-				Optional<Path> outputDir = Optional.empty();
-				forwardApplication.doMain(inputDir, outputDir, controlFilePath.toAbsolutePath().toString());
+			Optional<Path> inputDir = Optional.empty();
+			Optional<Path> outputDir = Optional.empty();
+			forwardApplication.doMain(inputDir, outputDir, controlFilePath.toAbsolutePath().toString());
 
-				state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, Optional.empty());
-			} catch (Throwable t) {
-				throwInterpretedException(forwardApplication, polygon, projectionTypeCode, state, t);
-			}
+			state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, Optional.empty());
+
+		} catch (Throwable t) {
+			throwInterpretedException(VdypApplicationIdentifier.VDYP_FORWARD, polygon, projectionTypeCode, state, t);
 		}
 	}
 
@@ -306,16 +303,16 @@ public class RealComponentRunner implements ComponentRunner {
 	}
 
 	private void throwInterpretedException(
-			VdypApplication app, Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state,
-			Throwable e
+			VdypApplicationIdentifier appId, Polygon polygon, ProjectionTypeCode projectionTypeCode,
+			PolygonProjectionState state, Throwable e
 	) throws PolygonExecutionException {
 		if (e instanceof VdypApplicationException && e.getCause() != null) {
-			state.setProcessingResults(ProjectionStageCode.of(app), projectionTypeCode, Optional.of(e.getCause()));
+			state.setProcessingResults(ProjectionStageCode.of(appId), projectionTypeCode, Optional.of(e.getCause()));
 			// VdypApplication exceptions are expected to be processed as a result returned from the VdypApplication
 			// they came from do not rethrow
 		} else {
-			state.setProcessingResults(ProjectionStageCode.of(app), projectionTypeCode, Optional.of(e));
-			var message = ErrorMessageUtils.BuildVDYPApplicationErrorMessage(app.getId(), polygon, "running", e);
+			state.setProcessingResults(ProjectionStageCode.of(appId), projectionTypeCode, Optional.of(e));
+			var message = ErrorMessageUtils.BuildVDYPApplicationErrorMessage(appId, polygon, "running", e);
 			throw new PolygonExecutionException(message, e);
 		}
 	}

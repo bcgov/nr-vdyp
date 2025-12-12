@@ -41,9 +41,10 @@ public class TestProjectionResultsReader implements ProjectionResultsReader {
 				polygon.getMapSheet(), polygon.getPolygonNumber(), polygon.getDistrict(), 0 /* expect any year */
 		);
 
-		try {
-			ForwardDataStreamReader reader = testHelper
-					.buildForwardDataStreamReader(polygonStream, speciesStream, utilizationsStream);
+		try (
+				ForwardDataStreamReader reader = testHelper
+						.buildForwardDataStreamReader(polygonStream, speciesStream, utilizationsStream);
+		) {
 
 			var vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
 			while (vdypPolygon.isPresent()

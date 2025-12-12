@@ -62,8 +62,7 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 		readerControlMap.put(ControlKey.BEC_DEF.name(), controlMap.get(ControlKey.BEC_DEF.name()));
 		readerControlMap.put(ControlKey.SP0_DEF.name(), controlMap.get(ControlKey.SP0_DEF.name()));
 
-		try {
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(readerControlMap);
+		try (ForwardDataStreamReader reader = new ForwardDataStreamReader(readerControlMap);) {
 
 			var vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
 			while (vdypPolygon.isPresent()

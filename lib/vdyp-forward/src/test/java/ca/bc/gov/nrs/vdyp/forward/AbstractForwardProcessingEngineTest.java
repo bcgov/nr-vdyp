@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.forward;
 import java.io.IOException;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,11 @@ abstract class AbstractForwardProcessingEngineTest {
 		polygonDescriptionStream = polygonDescriptionStreamFactory.get();
 
 		forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
+	}
+
+	@AfterEach
+	void afterTest() throws ProcessingException {
+		forwardDataStreamReader.close();
 	}
 
 	protected void buildPolygonParserForStream(String fileName, String... streamContent)

@@ -108,7 +108,7 @@ public class VdypMatchers {
 	 * @param causeMatcher
 	 * @return
 	 */
-	public static Matcher<Throwable> causedBy(Matcher<? extends Throwable> causeMatcher) {
+	public static Matcher<Throwable> causedBy(Matcher<? super Throwable> causeMatcher) {
 
 		return new BaseMatcher<Throwable>() {
 
@@ -123,6 +123,22 @@ public class VdypMatchers {
 			}
 
 		};
+	}
+
+	/**
+	 * Matcher for exceptions that suppress others
+	 *
+	 * @param causeMatcher
+	 * @return
+	 */
+	@SafeVarargs
+	public static Matcher<Throwable> suppresses(Matcher<? super Throwable>... supressedMatchers) {
+
+		if (supressedMatchers.length == 0) {
+			return hasProperty("suppressed", emptyArray());
+		}
+		return hasProperty("suppressed", Matchers.<Throwable>arrayContaining(supressedMatchers));
+
 	}
 
 	public static <T> Matcher<Optional<T>> present() {
