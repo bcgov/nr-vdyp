@@ -5,11 +5,16 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class ProjectionFileSetModel {
 	private String projectionFileSetGUID;
+	private VDYPUserModel ownerModel;
 	private FileSetTypeCodeModel fileSetTypeCode;
 	private String fileSetName;
 
 	public String getProjectionFileSetGUID() {
 		return projectionFileSetGUID;
+	}
+
+	public VDYPUserModel getOwnerModel() {
+		return ownerModel;
 	}
 
 	public FileSetTypeCodeModel getFileSetTypeCode() {
@@ -22,6 +27,10 @@ public class ProjectionFileSetModel {
 
 	public void setProjectionFileSetGUID(String projectionFileSetGUID) {
 		this.projectionFileSetGUID = projectionFileSetGUID;
+	}
+
+	public void setOwnerModel(VDYPUserModel ownerModel) {
+		this.ownerModel = ownerModel;
 	}
 
 	public void setFileSetTypeCode(FileSetTypeCodeModel fileSetTypeCode) {

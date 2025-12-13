@@ -9,6 +9,9 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @SuppressWarnings("squid:S2160")
 @RegisterForReflection
 public class CalculationEngineCodeModel extends CodeTableModel {
+
+	public static final String VDYP8 = "VDYP8";
+
 	private String calculationEngineCode;
 
 	@Override

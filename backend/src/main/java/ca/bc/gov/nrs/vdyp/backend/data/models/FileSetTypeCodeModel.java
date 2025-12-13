@@ -9,6 +9,9 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @SuppressWarnings("squid:S2160")
 @RegisterForReflection
 public class FileSetTypeCodeModel extends CodeTableModel {
+	public static final String POLYGON = "POLYGON";
+	public static final String LAYER = "LAYER";
+	public static final String RESULTS = "RESULTS";
 	private String fileSetTypeCode;
 
 	@Override

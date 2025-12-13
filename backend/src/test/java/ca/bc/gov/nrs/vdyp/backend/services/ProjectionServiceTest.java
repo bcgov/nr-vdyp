@@ -21,11 +21,21 @@ import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionRepository;
+import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectionServiceTest {
+
+	@Mock
+	EntityManager em;
 	@Mock
 	ProjectionRepository repository;
+	@Mock
+	ProjectionFileSetService fileSetService;
+	@Mock
+	ProjectionStatusCodeLookup projectionStatusCodeLookup;
+	@Mock
+	CalculationEngineCodeLookup calculationEngineCodeLookup;
 	ProjectionResourceAssembler assembler;
 
 	ProjectionService service;
@@ -34,7 +44,9 @@ class ProjectionServiceTest {
 	void setUp() {
 		assembler = new ProjectionResourceAssembler();
 
-		service = new ProjectionService(assembler, repository);
+		service = new ProjectionService(
+				em, assembler, repository, fileSetService, projectionStatusCodeLookup, calculationEngineCodeLookup
+		);
 	}
 
 	@Test

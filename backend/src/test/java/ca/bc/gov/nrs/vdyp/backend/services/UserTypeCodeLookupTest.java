@@ -78,12 +78,12 @@ class UserTypeCodeLookupTest {
 
 	@Test
 	void test_require_NonExistant_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> lookup.require(""));
+		assertThrows(IllegalArgumentException.class, () -> lookup.requireModel(""));
 	}
 
 	@Test
 	void test_findNull_returnsEmpty() {
-		assertThat(lookup.find(null)).isSameAs(Optional.empty());
+		assertThat(lookup.findModel(null)).isSameAs(Optional.empty());
 	}
 
 	// This test is written to match the current business rule but if we are going to require a provisioned user we

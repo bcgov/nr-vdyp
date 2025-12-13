@@ -4,7 +4,9 @@ import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class ProjectionFileSetResourceAssembler {
 
 	private FileSetTypeCodeResourceAssembler fstcra;

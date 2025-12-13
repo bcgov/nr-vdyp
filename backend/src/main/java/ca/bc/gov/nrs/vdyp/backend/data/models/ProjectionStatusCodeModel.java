@@ -9,6 +9,11 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @SuppressWarnings("squid:S2160")
 @RegisterForReflection
 public class ProjectionStatusCodeModel extends CodeTableModel {
+	public static final String DRAFT = "DRAFT";
+	public static final String READY = "READY";
+	public static final String INPROGRESS = "INPROGRESS";
+	public static final String COMPLETE = "COMPLETE";
+
 	private String projectionStatusCode;
 
 	@Override

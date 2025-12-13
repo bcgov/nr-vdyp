@@ -4,7 +4,9 @@ import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class ProjectionBatchMappingResourceAssembler {
 	ProjectionResourceAssembler pra;
 

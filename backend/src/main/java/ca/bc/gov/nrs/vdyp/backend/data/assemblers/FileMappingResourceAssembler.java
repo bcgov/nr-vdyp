@@ -4,7 +4,9 @@ import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class FileMappingResourceAssembler {
 
 	ProjectionFileSetResourceAssembler pfsra;

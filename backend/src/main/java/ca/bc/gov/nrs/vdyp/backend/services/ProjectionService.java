@@ -32,8 +32,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
@@ -51,6 +55,7 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.SecurityContext;
@@ -63,12 +68,24 @@ import jakarta.ws.rs.core.SecurityContext;
 public class ProjectionService {
 
 	public static final Logger logger = LoggerFactory.getLogger(ProjectionService.class);
+	private final EntityManager em;
 	private final ProjectionResourceAssembler assembler;
 	private final ProjectionRepository repository;
+	private final ProjectionFileSetService fileSetService;
+	private final ProjectionStatusCodeLookup statusLookup;
+	private final CalculationEngineCodeLookup calclationEngineLookup;
 
-	public ProjectionService(ProjectionResourceAssembler assembler, ProjectionRepository repository) {
+	public ProjectionService(
+			EntityManager em, ProjectionResourceAssembler assembler, ProjectionRepository repository,
+			ProjectionFileSetService fileSetService, ProjectionStatusCodeLookup statusLookup,
+			CalculationEngineCodeLookup calclationEngineLookup
+	) {
+		this.em = em;
 		this.assembler = assembler;
 		this.repository = repository;
+		this.fileSetService = fileSetService;
+		this.statusLookup = statusLookup;
+		this.calclationEngineLookup = calclationEngineLookup;
 	}
 
 	static {
@@ -290,24 +307,45 @@ public class ProjectionService {
 	public ProjectionModel createNewProjection(VDYPUserModel actingUser, Parameters params)
 			throws ProjectionServiceException {
 		try {
-			// extract the report Title and description from the parameters
-			// leave report title in for processing, remove description
-			String reportTitle = params.getReportTitle();
-			String reportDescription = params.getReportTitle(); // TODO update params to be bale to read a description
+			ProjectionEntity entity = new ProjectionEntity();
+			// TODO FIX THIS extractConvenienceParameters(params, entity);
 
-			String saveParams = jsonObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
+			entity.setProjectionParameters(
+					jsonObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params)
+			);
+
 			// Create the 3 File Sets for the projection Polygon, Layer and Result
-            ProjectionFileSetService
+			var fileSetMap = fileSetService.createFileSetForNewProjection(actingUser);
+			for (var entry : fileSetMap.entrySet()) {
+				ProjectionFileSetEntity fse = em
+						.find(ProjectionFileSetEntity.class, entry.getValue().getProjectionFileSetGUID());
+				switch (entry.getKey().getCode()) {
+				case FileSetTypeCodeModel.POLYGON -> entity.setPolygonFileSet(fse);
+				case FileSetTypeCodeModel.LAYER -> entity.setLayerFileSet(fse);
+				case FileSetTypeCodeModel.RESULTS -> entity.setResultFileSet(fse);
+				}
+			}
 
 			// Set the Status to Draft
+			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
 
 			// Set the calculation Engine Code to VDYP8
+			entity.setCalculationEngineCode(calclationEngineLookup.requireEntity(CalculationEngineCodeModel.VDYP8));
 
 			// Start Date and End Date should be null as they are about running the projection
+
+			repository.persist(entity);
+			return assembler.toModel(entity);
 		} catch (JsonProcessingException e) {
 			throw new ProjectionServiceException("Invalid parameter JSON", e);
 		}
-		return null;
+	}
+
+	private static void extractConvenienceParameters(Parameters params, ProjectionModel model) {
+		// extract the report Title and description from the parameters
+		// leave report title in for processing, remove description
+		model.setReportTitle(params.getReportTitle());
+		model.setReportDescription(params.getReportTitle()); // TODO update params to be bale to read a description
 	}
 
 	public ProjectionEntity getProjectionEntity(UUID projectionGuid) throws ProjectionServiceException {
@@ -357,28 +395,44 @@ public class ProjectionService {
 		return assembler.toModel(entity);
 	}
 
-	public ProjectionModel editProjectionParameters(UUID projectionGUID, VDYPUserModel actingUser, String parameters)
+	public ProjectionModel editProjectionParameters(UUID projectionGUID, VDYPUserModel actingUser, Parameters params)
 			throws ProjectionServiceException {
-		ProjectionEntity entity = getProjectionEntity(projectionGUID);
-		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE);
-		checkProjectionStatusPermitsAction(entity.getProjectionStatusCode(), ProjectionAction.UPDATE);
+		ProjectionEntity existingEntity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(existingEntity, actingUser, ProjectionAction.UPDATE);
+		checkProjectionStatusPermitsAction(existingEntity.getProjectionStatusCode(), ProjectionAction.UPDATE);
+
+		ProjectionModel existingModel = assembler.toModel(existingEntity);
+		extractConvenienceParameters(params, existingModel);
 
 		// Update the parameters of import
-
-		repository.persist(entity);
-		return assembler.toModel(entity);
+		existingEntity = assembler.toEntity(existingModel);
+		repository.persist(existingEntity);
+		return assembler.toModel(existingEntity);
 	}
 
 	public boolean deleteProjection(UUID projectionGUID, VDYPUserModel actingUser) throws ProjectionServiceException {
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(entity.getProjectionStatusCode(), ProjectionAction.UPDATE);
-		// TODO Remove the Projection and
-		// Related Data:
-		// Delete File Sets / Delete COMS Objects
-		// Delete Batch Mapping if it exists
 
-		return true;
+		try {
+			// TODO Delete File Sets
+			// the file Set service should cascade into the file mapping service to do the deletions of the actual files
+			fileSetService.deleteFileSet(entity.getPolygonFileSet());
+			fileSetService.deleteFileSet(entity.getLayerFileSet());
+			fileSetService.deleteFileSet(entity.getResultFileSet());
+
+			// Related Data:
+			// Delete Batch Mapping if it exists
+
+			// TODO finally delete the projection data
+			repository.delete(entity);
+			return true;
+		} catch (Exception e) {
+			throw new ProjectionServiceException(
+					"Error deleting Projection", e, projectionGUID, UUID.fromString(actingUser.getVdypUserGUID())
+			);
+		}
 	}
 
 }

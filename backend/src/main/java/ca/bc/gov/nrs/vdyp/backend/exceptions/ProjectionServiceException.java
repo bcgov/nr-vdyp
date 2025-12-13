@@ -9,8 +9,12 @@ public class ProjectionServiceException extends Exception {
 
 	private static final Logger log = LoggerFactory.getLogger(ProjectionServiceException.class);
 
-	private final UUID projectionGuid;
+	private UUID projectionGuid;
 	private UUID actingUserGuid;
+
+	public ProjectionServiceException(String message, Throwable e) {
+		super(message, e);
+	}
 
 	public ProjectionServiceException(String message, UUID projectionGuid) {
 		super(message);
@@ -23,7 +27,7 @@ public class ProjectionServiceException extends Exception {
 	}
 
 	public ProjectionServiceException(String message, Throwable e, UUID projectionGuid) {
-		super(message, e);
+		this(message, e);
 		this.projectionGuid = projectionGuid;
 	}
 
