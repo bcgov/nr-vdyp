@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +21,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,9 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ForwardProcessorEndToEndTest {
 
+	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
+	protected static Path vdyp8OutputPath;
+
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessorEndToEndTest.class);
 
@@ -69,9 +73,6 @@ class ForwardProcessorEndToEndTest {
 		ForwardProcessor fp = new ForwardProcessor();
 
 		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
-
-		Path vdyp8OutputPath = Path.of(System.getenv().get("HOME"), "tmp", "vdyp-deltas", "vdyp8");
-		Files.createDirectories(vdyp8OutputPath);
 
 		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
@@ -161,24 +162,27 @@ class ForwardProcessorEndToEndTest {
 		vdyp7ControlMap
 				.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
-		var vdyp8Reader = new ForwardDataStreamReader(vdyp8ControlMap);
-		var vdyp7Reader = new ForwardDataStreamReader(vdyp7ControlMap);
+		try (
+				var vdyp8Reader = new ForwardDataStreamReader(vdyp8ControlMap);
+				var vdyp7Reader = new ForwardDataStreamReader(vdyp7ControlMap);
+		) {
 
-		Optional<VdypPolygon> optPolygon8 = vdyp8Reader.readNextPolygon();
-		Optional<VdypPolygon> optPolygon7 = vdyp7Reader.readNextPolygon();
+			Optional<VdypPolygon> optPolygon8 = vdyp8Reader.readNextPolygon();
+			Optional<VdypPolygon> optPolygon7 = vdyp7Reader.readNextPolygon();
 
-		while (optPolygon8.isPresent()) {
-			var polygon8 = optPolygon8.orElseThrow();
-			var polygon7 = optPolygon7.orElseThrow();
-			assertEquals(polygon7.getPolygonIdentifier(), polygon8.getPolygonIdentifier());
+			while (optPolygon8.isPresent()) {
+				var polygon8 = optPolygon8.orElseThrow();
+				var polygon7 = optPolygon7.orElseThrow();
+				assertEquals(polygon7.getPolygonIdentifier(), polygon8.getPolygonIdentifier());
 
-			compare(polygon7, polygon8);
+				compare(polygon7, polygon8);
 
-			optPolygon8 = vdyp8Reader.readNextPolygon();
-			optPolygon7 = vdyp7Reader.readNextPolygon();
+				optPolygon8 = vdyp8Reader.readNextPolygon();
+				optPolygon7 = vdyp7Reader.readNextPolygon();
+			}
+
+			assertTrue(optPolygon7.isEmpty());
 		}
-
-		assertTrue(optPolygon7.isEmpty());
 
 		assertTrue(nEquals >= 30012);
 		assertTrue(nWithin1Percent >= 58695);

@@ -5,8 +5,12 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -104,7 +108,7 @@ public class VdypMatchers {
 	 * @param causeMatcher
 	 * @return
 	 */
-	public static Matcher<Throwable> causedBy(Matcher<? extends Throwable> causeMatcher) {
+	public static Matcher<Throwable> causedBy(Matcher<? super Throwable> causeMatcher) {
 
 		return new BaseMatcher<Throwable>() {
 
@@ -119,6 +123,22 @@ public class VdypMatchers {
 			}
 
 		};
+	}
+
+	/**
+	 * Matcher for exceptions that suppress others
+	 *
+	 * @param causeMatcher
+	 * @return
+	 */
+	@SafeVarargs
+	public static Matcher<Throwable> suppresses(Matcher<? super Throwable>... supressedMatchers) {
+
+		if (supressedMatchers.length == 0) {
+			return hasProperty("suppressed", emptyArray());
+		}
+		return hasProperty("suppressed", Matchers.<Throwable>arrayContaining(supressedMatchers));
+
 	}
 
 	public static <T> Matcher<Optional<T>> present() {
@@ -896,6 +916,39 @@ public class VdypMatchers {
 					return null;
 				}
 
+			}
+		};
+	}
+
+	/**
+	 * Matches a Path if that Path points to a file or directory that exists
+	 *
+	 * @param linkOptions Options for how to treat links, defaults to following symlinks.
+	 */
+	public static Matcher<Path> exists(LinkOption... linkOptions) {
+		var options = EnumSet.noneOf(LinkOption.class);
+		for (var opt : linkOptions)
+			options.add(opt);
+		return new TypeSafeDiagnosingMatcher<Path>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("a path to a file that exists");
+				if (options.contains(LinkOption.NOFOLLOW_LINKS)) {
+					description.appendText(", not following symlinks");
+				} else {
+					description.appendText(", following symlinks");
+				}
+			}
+
+			@Override
+			protected boolean matchesSafely(Path item, Description mismatchDescription) {
+				if (Files.exists(item, linkOptions)) {
+					return true;
+				} else {
+					mismatchDescription.appendText("does not exist");
+					return false;
+				}
 			}
 		};
 	}

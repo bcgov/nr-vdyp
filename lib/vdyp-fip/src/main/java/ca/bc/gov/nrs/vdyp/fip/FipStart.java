@@ -98,13 +98,11 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	public static void main(final String... args) {
 
 		try (var app = new FipStart();) {
-			try {
-				app.doMain(args);
-			} catch (VdypApplicationInitializationException e) {
-				System.exit(CONFIG_LOAD_ERROR);
-			} catch (VdypApplicationProcessingException e) {
-				System.exit(PROCESSING_ERROR);
-			}
+			app.doMain(args);
+		} catch (VdypApplicationInitializationException e) {
+			System.exit(CONFIG_LOAD_ERROR);
+		} catch (VdypApplicationProcessingException e) {
+			System.exit(PROCESSING_ERROR);
 		}
 	}
 
@@ -798,7 +796,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		// error that total age is "less than" YTBH. Replicating that for now but
 		// consider changing it.
 
-		throwIfPresent(
+		Utils.throwIfPresent(
 				TotalAgeLowException.check(
 						LayerType.PRIMARY, primaryLayer.getAgeTotal(),
 
@@ -813,7 +811,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		// layers.
 
 		for (FipLayer layer : polygon.getLayers().values()) {
-			throwIfPresent(
+			Utils.throwIfPresent(
 					heightMinimum(layer.getLayerType())
 							.flatMap(min -> HeightLowException.check(layer.getLayerType(), layer.getHeight(), min))
 			);
@@ -823,11 +821,11 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			throw new UnsupportedModeException(polygon.getMode());
 		}
 
-		throwIfPresent(
+		Utils.throwIfPresent(
 				YearsToBreastHeightLowException.check(LayerType.PRIMARY, primaryLayer.getYearsToBreastHeight(), 0.5f)
 		);
 
-		throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, primaryLayer.getSiteIndex(), 0.5f));
+		Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, primaryLayer.getSiteIndex(), 0.5f));
 
 		for (FipLayer layer : polygon.getLayers().values()) {
 			var percentTotal = getPercentTotal(layer);

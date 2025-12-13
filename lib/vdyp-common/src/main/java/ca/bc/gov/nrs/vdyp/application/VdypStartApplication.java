@@ -11,7 +11,6 @@ import static java.lang.Math.min;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -91,7 +90,7 @@ import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
  * @param <I> input site class
  */
 public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, D extends DebugSettings>
-		extends VdypApplication implements Closeable {
+		extends VdypApplication implements AutoCloseable {
 
 	private static final Logger log = LoggerFactory.getLogger(VdypStartApplication.class);
 
@@ -243,7 +242,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected abstract BaseControlParser<D> getControlFileParser();
 
-	void closeVriWriter() {
+	void closeVriWriter() throws IOException {
 		if (vriWriter != null) {
 			vriWriter.close();
 			vriWriter = null;
@@ -276,8 +275,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	public abstract void process() throws ProcessingException;
 
 	@Override
-	public void close() {
-		closeVriWriter();
+	public void close() throws VdypApplicationInitializationException {
+		try {
+			closeVriWriter();
+		} catch (IOException e) {
+			throw new VdypApplicationInitializationException(e);
+		}
 	}
 
 	protected Coefficients getCoeForSpecies(BaseVdypSpecies<?> species, ControlKey controlKey) {
@@ -610,7 +613,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		baseArea *= yieldFactor;
 
 		// This is to prevent underflow errors in later calculations
-		throwIfPresent(
+		Utils.throwIfPresent(
 				BaseAreaLowException.check(layer.getLayerType(), "Estimated base area", Optional.of(baseArea), 0.05f)
 		);
 
@@ -725,21 +728,11 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	/**
-	 * Throw the exception contained in the optional if there is one. This exists to make it easier to handle checked
-	 * exceptions inside of lambdas as an alternative to using subclasses of RuntimeExceptions as wrappers.
-	 */
-	protected static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {
-		if (opt.isPresent()) {
-			throw opt.get();
-		}
-	}
-
-	/**
 	 * If the given optional contains an exception, throw it as a FatalProcessingException, wrapping it in a new
 	 * exception if necessary.
 	 */
 	protected static <E extends Throwable> void fatalIfPresent(Optional<E> opt) throws FatalProcessingException {
-		throwIfPresent(opt.map(ex -> {
+		Utils.throwIfPresent(opt.map(ex -> {
 			if (ex instanceof FatalProcessingException fatal) {
 				return fatal;
 			}

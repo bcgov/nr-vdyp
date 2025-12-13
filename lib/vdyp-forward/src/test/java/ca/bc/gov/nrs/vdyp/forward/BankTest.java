@@ -45,11 +45,9 @@ class BankTest {
 	}
 
 	@Test
-	void testConstruction() throws ProcessingException {
+	void testConstruction() throws ProcessingException, IOException {
 
-		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
-		var polygon = reader.readNextPolygon().orElseThrow(() -> new AssertionError("No polygons defined"));
+		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());
@@ -108,9 +106,7 @@ class BankTest {
 	@Test
 	void testSetCopy() throws ProcessingException {
 
-		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
-		var polygon = reader.readNextPolygon().orElseThrow(() -> new AssertionError("No polygons defined"));
+		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());
@@ -282,9 +278,7 @@ class BankTest {
 	@Test
 	void testRemoveSmallLayers() throws ProcessingException {
 
-		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
-		var polygon = reader.readNextPolygon().orElseThrow(() -> new AssertionError("No polygons defined"));
+		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());
@@ -311,9 +305,7 @@ class BankTest {
 	@Test
 	void testCopyConstructor() throws ProcessingException {
 
-		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
-		var polygon = reader.readNextPolygon().orElseThrow(() -> new AssertionError("No polygons defined"));
+		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());
@@ -329,9 +321,7 @@ class BankTest {
 	@Test
 	void testLayerUpdate() throws ProcessingException {
 
-		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
-		var polygon = reader.readNextPolygon().orElseThrow(() -> new AssertionError("No polygons defined"));
+		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());

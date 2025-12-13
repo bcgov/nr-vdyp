@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.fip.integration;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
@@ -22,11 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
-import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.fip.test.FipTestUtils;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -105,7 +105,7 @@ class ITFipStart {
 
 	@Disabled
 	@Test
-	void noControlFile() {
+	void noControlFile() throws Exception {
 		try (var app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -121,7 +121,7 @@ class ITFipStart {
 	}
 
 	@Test
-	void controlFileDoesntExist() {
+	void controlFileDoesntExist() throws Exception {
 		try (var app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -134,10 +134,6 @@ class ITFipStart {
 					)
 			);
 		}
-	}
-
-	public void assertFileExists(Path path) {
-		assertTrue(Files.exists(path), path + " does not exist");
 	}
 
 	public void assertFileMatches(Path testPath, Path expectedPath, BiPredicate<String, String> compare)
@@ -269,7 +265,7 @@ class ITFipStart {
 	}
 
 	@Test
-	void controlFile() throws IOException, ResourceParseException, ProcessingException {
+	void controlFile() throws Exception {
 		try (var app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -282,9 +278,9 @@ class ITFipStart {
 			app.process();
 		}
 
-		assertFileExists(outputDir.resolve(POLYGON_OUTPUT_NAME));
-		assertFileExists(outputDir.resolve(SPECIES_OUTPUT_NAME));
-		assertFileExists(outputDir.resolve(UTILIZATION_OUTPUT_NAME));
+		assertThat(outputDir.resolve(POLYGON_OUTPUT_NAME), exists());
+		assertThat(outputDir.resolve(SPECIES_OUTPUT_NAME), exists());
+		assertThat(outputDir.resolve(UTILIZATION_OUTPUT_NAME), exists());
 
 		assertFileMatches(outputDir.resolve(POLYGON_OUTPUT_NAME), FipTestUtils.class, "vp_1.dat", String::equals);
 		assertFileMatches(outputDir.resolve(SPECIES_OUTPUT_NAME), FipTestUtils.class, "vs_1.dat", String::equals);

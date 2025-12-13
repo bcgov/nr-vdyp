@@ -20,9 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
-import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -110,7 +108,7 @@ class ITVriStart {
 
 	@Disabled
 	@Test
-	void noControlFile() {
+	void noControlFile() throws Exception {
 		try (var app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -120,7 +118,7 @@ class ITVriStart {
 	}
 
 	@Test
-	void controlFileDoesntExist() {
+	void controlFileDoesntExist() throws Exception {
 		try (var app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -262,7 +260,7 @@ class ITVriStart {
 	}
 
 	@Test
-	void controlFile() throws IOException, ResourceParseException, ProcessingException {
+	void controlFile() throws Exception {
 		try (var app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);

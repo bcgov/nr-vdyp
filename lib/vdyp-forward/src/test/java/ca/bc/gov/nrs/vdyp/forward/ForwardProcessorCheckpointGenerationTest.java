@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.forward;
 import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,6 +14,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,9 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ForwardProcessorCheckpointGenerationTest {
 
+	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
+	protected static Path vdyp8OutputPath;
+
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessorCheckpointGenerationTest.class);
 
@@ -46,9 +50,6 @@ class ForwardProcessorCheckpointGenerationTest {
 		ForwardProcessor fp = new ForwardProcessor();
 
 		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
-
-		Path vdyp8OutputPath = Path.of(System.getenv().get("HOME"), "tmp", "vdyp-deltas", "vdyp8");
-		Files.createDirectories(vdyp8OutputPath);
 
 		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
@@ -84,18 +85,19 @@ class ForwardProcessorCheckpointGenerationTest {
 		);
 		controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
-		var reader = new ForwardDataStreamReader(controlMap);
-		Optional<VdypPolygon> polygon = reader.readNextPolygon();
-		var polygonName = polygon.orElseThrow().getPolygonIdentifier().getBase();
+		try (var reader = new ForwardDataStreamReader(controlMap);) {
+			Optional<VdypPolygon> polygon = reader.readNextPolygon();
+			var polygonName = polygon.orElseThrow().getPolygonIdentifier().getBase();
 
-		int count = 0;
-		var nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
-		var year = nextPolygonIdentifier.getYear();
-		while (nextPolygonIdentifier.getYear() == year && nextPolygonIdentifier.getBase().equals(polygonName)) {
-			count += 1;
-			nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
+			int count = 0;
+			var nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
+			var year = nextPolygonIdentifier.getYear();
+			while (nextPolygonIdentifier.getYear() == year && nextPolygonIdentifier.getBase().equals(polygonName)) {
+				count += 1;
+				nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
+			}
+
+			assert (count == 14);
 		}
-
-		assert (count == 14);
 	}
 }

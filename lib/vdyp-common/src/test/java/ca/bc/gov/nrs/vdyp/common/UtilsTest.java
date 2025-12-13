@@ -1,14 +1,26 @@
 package ca.bc.gov.nrs.vdyp.common;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.suppresses;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -224,4 +236,198 @@ class UtilsTest {
 		}
 	}
 
+	@Nested
+	class IO {
+
+		@Nested
+		class Close {
+
+			@Test
+			void simple() throws Exception {
+				var em = EasyMock.createControl();
+				Closeable toClose = em.mock(Closeable.class);
+
+				toClose.close();
+				EasyMock.expectLastCall().once();
+
+				em.replay();
+
+				assertDoesNotThrow(() -> {
+					Utils.close(toClose);
+				});
+
+				em.verify();
+			}
+
+			@Test
+			void aggregateNoThrow() throws Exception {
+				var em = EasyMock.createControl();
+				Closeable toClose = em.mock(Closeable.class);
+
+				toClose.close();
+				EasyMock.expectLastCall().once();
+
+				em.replay();
+				Deque<IOException> list = new LinkedList<>();
+
+				Utils.close(list, toClose, Optional.empty(), "test");
+
+				assertThat(list, Matchers.iterableWithSize(0));
+
+				assertDoesNotThrow(() -> {
+					Utils.aggregateExceptionsAsSupressed(list);
+				});
+
+				em.verify();
+			}
+
+			@Test
+			void aggregateThrow() throws Exception {
+				var em = EasyMock.createControl();
+				Closeable toClose = em.mock(Closeable.class);
+
+				toClose.close();
+				final IOException ex = new IOException("This is a test");
+				EasyMock.expectLastCall().andThrow(ex).once();
+
+				em.replay();
+				Deque<IOException> list = new LinkedList<>();
+
+				Utils.close(list, toClose, Optional.empty(), "test");
+
+				assertThat(list, Matchers.iterableWithSize(1));
+
+				assertThat(Utils.aggregateExceptionsAsSupressed(list), present(sameInstance(ex)));
+
+				em.verify();
+			}
+
+			@Test
+			void aggregateMultiple() throws Exception {
+				var em = EasyMock.createControl();
+				Closeable toClose1 = em.mock(Closeable.class);
+				Closeable toClose2 = em.mock(Closeable.class);
+
+				final IOException ex1 = new IOException("This is a test 1");
+				final IOException ex2 = new IOException("This is a test 2");
+
+				toClose1.close();
+				EasyMock.expectLastCall().andThrow(ex1).once();
+
+				toClose2.close();
+				EasyMock.expectLastCall().andThrow(ex2).once();
+
+				em.replay();
+				Deque<IOException> list = new LinkedList<>();
+
+				Utils.close(list, toClose1, Optional.empty(), "test 1");
+				Utils.close(list, toClose2, Optional.empty(), "test 2");
+
+				assertThat(list, Matchers.iterableWithSize(2));
+
+				assertThat(
+						Utils.aggregateExceptionsAsSupressed(list),
+						present(allOf(sameInstance(ex2), suppresses(sameInstance(ex1))))
+				);
+
+				em.verify();
+			}
+
+		}
+
+	}
+
+	@Nested
+	class Exceptions {
+		@Nested
+		class OptionalHelpers {
+			@Nested
+			class Map {
+				@Test
+				void empty() {
+					var result = Utils.map(Optional.empty(), (x) -> {
+						fail("Should not be called");
+						return null;
+					});
+					assertThat(result, notPresent());
+				}
+
+				@Test
+				void success() {
+					var result = Utils.map(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						return "output";
+					});
+					assertThat(result, present(is("output")));
+				}
+
+				@Test
+				void checkedException() {
+					assertThrows(IOException.class, () -> Utils.map(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						throw new IOException();
+					}));
+
+				}
+
+				@Test
+				void uncheckedException() {
+					assertThrows(IllegalStateException.class, () -> Utils.map(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						throw new IllegalStateException();
+					}));
+
+				}
+			}
+
+			@Nested
+			class IfPresent {
+				@Test
+				void empty() {
+					Utils.ifPresent(Optional.empty(), (x) -> {
+						fail("Should not be called");
+					});
+				}
+
+				@Test
+				void success() {
+					AtomicInteger calls = new AtomicInteger();
+					Utils.ifPresent(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						calls.incrementAndGet();
+					});
+
+					assertThat("should be called once", calls.get(), is(1));
+				}
+
+				@Test
+				void checkedException() {
+					AtomicInteger calls = new AtomicInteger();
+
+					assertThrows(IOException.class, () -> Utils.ifPresent(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						calls.incrementAndGet();
+						throw new IOException();
+					}));
+
+					assertThat("should be called once", calls.get(), is(1));
+
+				}
+
+				@Test
+				void uncheckedException() {
+					AtomicInteger calls = new AtomicInteger();
+
+					assertThrows(IllegalStateException.class, () -> Utils.ifPresent(Optional.of("input"), (x) -> {
+						assertThat(x, is("input"));
+						calls.incrementAndGet();
+						throw new IllegalStateException();
+					}));
+
+					assertThat("should be called once", calls.get(), is(1));
+
+				}
+			}
+		}
+	}
 }

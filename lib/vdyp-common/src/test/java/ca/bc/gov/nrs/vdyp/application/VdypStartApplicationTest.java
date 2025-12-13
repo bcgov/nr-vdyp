@@ -83,7 +83,7 @@ class VdypStartApplicationTest {
 	class Init {
 
 		@Test
-		void testInitWithoutErrors() throws IOException, ResourceParseException {
+		void testInitWithoutErrors() throws Exception {
 			controlMap = TestUtils.loadControlMap();
 
 			MockFileResolver resolver = dummyIo();
@@ -101,7 +101,7 @@ class VdypStartApplicationTest {
 
 		@Disabled
 		@Test
-		void testInitNoControlFile() {
+		void testInitNoControlFile() throws Exception {
 			var resolver1 = dummyIo();
 			resolver1.addError("test.ctr", () -> new FileNotFoundException());
 			MockFileResolver resolver = resolver1;
@@ -120,7 +120,7 @@ class VdypStartApplicationTest {
 
 		@Disabled
 		@Test
-		void testInitDefaultControl() throws IOException, ResourceParseException {
+		void testInitDefaultControl() throws Exception {
 			controlMap = TestUtils.loadControlMap();
 
 			MockFileResolver resolver = dummyIo();
@@ -138,7 +138,8 @@ class VdypStartApplicationTest {
 
 		@Disabled
 		@Test
-		void testInitControlViaStdIn() throws IOException, ResourceParseException {
+		void testInitControlViaStdIn()
+				throws IOException, ResourceParseException, VdypApplicationInitializationException {
 			MockFileResolver resolver = dummyIo();
 
 			var app = new TestStartApplication(controlMap, true);
@@ -151,7 +152,7 @@ class VdypStartApplicationTest {
 	}
 
 	@Test
-	void testApplicationExceptions() throws IOException, ResourceParseException {
+	void testApplicationExceptions() throws Exception {
 		try (var app = new TestStartApplication(controlMap, true)) {
 
 			assertThrows(VdypApplicationInitializationException.class, () -> app.doMain("bad path"));
@@ -159,7 +160,7 @@ class VdypStartApplicationTest {
 	}
 
 	@Test
-	void testApplicationProcessExceptions() {
+	void testApplicationProcessExceptions() throws Exception {
 		try (var app = new TestStartApplication(controlMap, false) {
 
 			@Override
@@ -188,7 +189,7 @@ class VdypStartApplicationTest {
 	@Nested
 	class HandleProcessing {
 		@Test
-		void testEmpty() throws IOException, ResourceParseException, ProcessingException {
+		void testEmpty() throws Exception {
 
 			var control = EasyMock.createControl();
 			MockFileResolver resolver = dummyIo();
@@ -212,7 +213,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testOneSuccess() throws IOException, ResourceParseException, ProcessingException {
+		void testOneSuccess() throws Exception {
 
 			var control = EasyMock.createControl();
 			MockFileResolver resolver = dummyIo();
@@ -249,7 +250,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testOneIgnore() throws IOException, ResourceParseException, ProcessingException {
+		void testOneIgnore() throws Exception {
 
 			var control = EasyMock.createControl();
 			MockFileResolver resolver = dummyIo();
@@ -285,7 +286,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testOneSkip() throws IOException, ResourceParseException, ProcessingException {
+		void testOneSkip() throws Exception {
 
 			var control = EasyMock.createControl();
 			MockFileResolver resolver = dummyIo();
@@ -321,7 +322,8 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testSkipThenSucceed() throws IOException, ResourceParseException, ProcessingException {
+		void testSkipThenSucceed() throws IOException, ResourceParseException, ProcessingException,
+				VdypApplicationInitializationException {
 
 			var control = EasyMock.createControl();
 			MockFileResolver resolver = dummyIo();
@@ -365,7 +367,8 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testMultipleSuccess() throws IOException, ResourceParseException, ProcessingException {
+		void testMultipleSuccess() throws IOException, ResourceParseException, ProcessingException,
+				VdypApplicationInitializationException {
 
 			var control = EasyMock.createControl();
 			MockFileResolver resolver = dummyIo();
@@ -415,7 +418,7 @@ class VdypStartApplicationTest {
 	class GetStreamingParser {
 
 		@Test
-		void testSimple() throws IOException, ProcessingException {
+		void testSimple() throws Exception {
 			StreamingParserFactory streamingParserFactory = EasyMock.createMock(StreamingParserFactory.class);
 			StreamingParser streamingParser = EasyMock.createMock(StreamingParser.class);
 
@@ -441,7 +444,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testEntryMissing() throws IOException {
+		void testEntryMissing() throws Exception {
 
 			MockFileResolver resolver = dummyIo();
 
@@ -460,7 +463,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testErrorOpeningFile() throws IOException {
+		void testErrorOpeningFile() throws Exception {
 			var mockControl = EasyMock.createControl();
 
 			StreamingParserFactory streamingParserFactory = mockControl.createMock(StreamingParserFactory.class);
@@ -1028,7 +1031,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testBadPrimarySpecies() {
+		void testBadPrimarySpecies() throws Exception {
 
 			var mockControl = EasyMock.createControl();
 
@@ -1051,7 +1054,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testBadPrimarySpeciesWithMinorSecondary() {
+		void testBadPrimarySpeciesWithMinorSecondary() throws Exception {
 
 			var mockControl = EasyMock.createControl();
 
@@ -1076,7 +1079,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testBadPrimarySpeciesWithMajorSecondary() {
+		void testBadPrimarySpeciesWithMajorSecondary() throws Exception {
 
 			var mockControl = EasyMock.createControl();
 
@@ -1787,7 +1790,7 @@ class VdypStartApplicationTest {
 						"C:75.0 B:24.989" //
 				}
 		)
-		void testFail(String dist) {
+		void testFail(String dist) throws Exception {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
 
@@ -1812,7 +1815,7 @@ class VdypStartApplicationTest {
 	@Nested
 	class SmallComponents {
 		@Test
-		void testEstimate() {
+		void testEstimate() throws Exception {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
 				ApplicationTestUtils.setControlMap(app, controlMap);
@@ -1957,7 +1960,7 @@ class VdypStartApplicationTest {
 	@Nested
 	class VeteranUtilization {
 		@Test
-		void testCompute() throws ProcessingException {
+		void testCompute() throws Exception {
 			controlMap = TestUtils.loadControlMap();
 			var bec = Utils.getBec("IDF", controlMap);
 			try (var app = new TestStartApplication(controlMap, false)) {
@@ -2122,7 +2125,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testApplyToObject() {
+		void testApplyToObject() throws Exception {
 			controlMap = TestUtils.loadControlMap();
 
 			try (var app = new TestStartApplication(controlMap, false)) {
@@ -2154,7 +2157,7 @@ class VdypStartApplicationTest {
 	class UtilityMethods {
 
 		@Test
-		void testGetCoeForSpecies() {
+		void testGetCoeForSpecies() throws Exception {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
 				var species = TestSpecies.build(sb -> {
@@ -2277,15 +2280,13 @@ class VdypStartApplicationTest {
 			@Test
 			void testThrowIfPresentWhenPresent() {
 				Exception expected = new Exception("Test");
-				var result = assertThrows(
-						Exception.class, () -> VdypStartApplication.throwIfPresent(Optional.of(expected))
-				);
+				var result = assertThrows(Exception.class, () -> Utils.throwIfPresent(Optional.of(expected)));
 				assertThat(result, sameInstance(expected));
 			}
 
 			@Test
 			void testThrowIfPresentWhenEmpty() {
-				assertDoesNotThrow(() -> VdypStartApplication.throwIfPresent(Optional.empty()));
+				assertDoesNotThrow(() -> Utils.throwIfPresent(Optional.empty()));
 			}
 
 			@Test
@@ -2365,7 +2366,7 @@ class VdypStartApplicationTest {
 	}
 
 	@Test
-	void testComputeUtilizationComponentsPrimaryByUtilNoCV() throws ProcessingException {
+	void testComputeUtilizationComponentsPrimaryByUtilNoCV() throws Exception {
 		controlMap = TestUtils.loadControlMap();
 		try (var app = new TestStartApplication(controlMap, false)) {
 
