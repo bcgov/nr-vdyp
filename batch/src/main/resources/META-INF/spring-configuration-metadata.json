@@ -13,7 +13,7 @@
             "defaultValue": true
         },
         {
-            "name": "batch.partition.default-partition-size",
+            "name": "batch.partition.default-number-of-partitions",
             "type": "java.lang.Integer",
             "description": "Default number of partitions for parallel VDYP projection processing",
             "defaultValue": 12
@@ -39,7 +39,7 @@
         {
             "name": "batch.reader.default-chunk-size",
             "type": "java.lang.Integer",
-            "description": "Default number of FEATURE_IDs processed per chunk in ChunkBasedPolygonItemReader",
+            "description": "Default number of FEATURE_IDs processed per chunk in BatchItemReader",
             "defaultValue": 150
         },
         {

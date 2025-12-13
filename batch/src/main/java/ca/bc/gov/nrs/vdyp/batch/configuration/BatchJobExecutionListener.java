@@ -18,9 +18,9 @@ import java.util.Map;
  * Job execution listener for partitioned VDYP batch job.
  */
 @Component
-public class PartitionedJobExecutionListener implements JobExecutionListener {
+public class BatchJobExecutionListener implements JobExecutionListener {
 
-	private static final Logger logger = LoggerFactory.getLogger(PartitionedJobExecutionListener.class);
+	private static final Logger logger = LoggerFactory.getLogger(BatchJobExecutionListener.class);
 
 	// Thread safety for afterJob execution - using job execution ID as key
 	private final Map<Long, Boolean> jobCompletionTracker = new HashMap<>();
@@ -37,10 +37,10 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		logger.info(separator);
 		logger.info("VDYP PARTITIONED JOB STARTING");
 
-		Long partitionSize = jobExecution.getJobParameters().getLong(BatchConstants.Partition.SIZE);
+		Long numPartitions = jobExecution.getJobParameters().getLong(BatchConstants.Partition.NUMBER);
 		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 
-		logger.info("VDYP Grid Size: {}", partitionSize);
+		logger.info("VDYP Number of Partitions: {}", numPartitions);
 		logger.info("Job Execution ID: {}", jobExecution.getId());
 		logger.info("Job GUID: {}", jobGuid);
 		logger.info(separator);

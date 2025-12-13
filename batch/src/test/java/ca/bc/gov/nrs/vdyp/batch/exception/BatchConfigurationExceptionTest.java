@@ -1,9 +1,10 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -15,7 +16,7 @@ import org.slf4j.Logger;
 class BatchConfigurationExceptionTest {
 
 	@Test
-	void testHandleConfigurationFailure_WithAllParameters() {
+	void testHandleConfigurationFailure_WithValidCause() {
 		IllegalArgumentException cause = new IllegalArgumentException("Invalid configuration value");
 		String errorDescription = "Failed to initialize batch configuration";
 		String jobGuid = "job-guid-123";
@@ -26,14 +27,14 @@ class BatchConfigurationExceptionTest {
 				.handleConfigurationFailure(cause, errorDescription, jobGuid, jobExecutionId, logger);
 
 		assertNotNull(exception);
-		assertTrue(exception.getMessage().contains(jobGuid));
-		assertTrue(exception.getMessage().contains(String.valueOf(jobExecutionId)));
-		assertTrue(exception.getMessage().contains(errorDescription));
-		assertTrue(exception.getMessage().contains("IllegalArgumentException"));
-		assertTrue(exception.getMessage().contains("Invalid configuration value"));
-		assertSame(cause, exception.getCause());
-		assertFalse(exception.isRetryable());
-		assertFalse(exception.isSkippable());
+		assertThat(exception.getMessage(), containsString("[GUID: " + jobGuid));
+		assertThat(exception.getMessage(), containsString("EXEID: " + jobExecutionId));
+		assertThat(exception.getMessage(), containsString(errorDescription));
+		assertThat(exception.getMessage(), containsString("Exception type: IllegalArgumentException"));
+		assertThat(exception.getMessage(), containsString("Root cause: Invalid configuration value"));
+		assertThat(exception.getCause(), sameInstance(cause));
+		assertThat(exception.isRetryable(), is(false));
+		assertThat(exception.isSkippable(), is(false));
 
 		verify(logger).error(anyString(), any(Throwable.class));
 	}
@@ -50,32 +51,10 @@ class BatchConfigurationExceptionTest {
 				.handleConfigurationFailure(cause, errorDescription, jobGuid, jobExecutionId, logger);
 
 		assertNotNull(exception);
-		assertTrue(exception.getMessage().contains("No error message available"));
-		assertTrue(exception.getMessage().contains(jobGuid));
-		assertTrue(exception.getMessage().contains(String.valueOf(jobExecutionId)));
-		assertTrue(exception.getMessage().contains(errorDescription));
-
-		verify(logger).error(anyString(), any(Throwable.class));
-	}
-
-	@Test
-	void testHandleConfigurationFailure_FormatsMessageCorrectly() {
-		NullPointerException cause = new NullPointerException("Required property is null");
-		String errorDescription = "Failed to read application properties";
-		String jobGuid = "test-guid";
-		Long jobExecutionId = 12345L;
-		Logger logger = mock(Logger.class);
-
-		BatchConfigurationException exception = BatchConfigurationException
-				.handleConfigurationFailure(cause, errorDescription, jobGuid, jobExecutionId, logger);
-
-		String message = exception.getMessage();
-
-		assertTrue(message.contains("[GUID: " + jobGuid));
-		assertTrue(message.contains("EXEID: " + jobExecutionId));
-		assertTrue(message.contains(errorDescription));
-		assertTrue(message.contains("Exception type: NullPointerException"));
-		assertTrue(message.contains("Root cause: Required property is null"));
+		assertThat(exception.getMessage(), containsString("No error message available"));
+		assertThat(exception.getMessage(), containsString(jobGuid));
+		assertThat(exception.getMessage(), containsString(String.valueOf(jobExecutionId)));
+		assertThat(exception.getMessage(), containsString(errorDescription));
 
 		verify(logger).error(anyString(), any(Throwable.class));
 	}

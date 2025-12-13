@@ -20,13 +20,17 @@ class BatchPartitionExceptionTest {
 	private static final String TEST_JOB_GUID = "test-job-guid-12345";
 
 	@Test
-	void testConstructorWithIoException() {
-		IOException cause = new IOException();
-		String message = "Failed to write partition file";
+	void testHandlePartitionFailure_WithException() {
+		IOException cause = new IOException("Permission denied");
 
 		BatchPartitionException exception = BatchPartitionException
-				.handlePartitionFailure(cause, message, TEST_JOB_GUID, logger);
+				.handlePartitionFailure(cause, "Failed to create partition file", TEST_JOB_GUID, logger);
 
+		assertThat(exception.getMessage(), notNullValue());
+		assertThat(exception.getMessage(), containsString("[GUID: test-job-guid-12345]"));
+		assertThat(exception.getMessage(), containsString("Failed to create partition file"));
+		assertThat(exception.getMessage(), containsString("IOException"));
+		assertThat(exception.getMessage(), containsString("Permission denied"));
 		assertThat(exception.getCause(), is(sameInstance(cause)));
 		assertThat(exception.isRetryable(), is(false));
 		assertThat(exception.isSkippable(), is(false));
@@ -34,54 +38,31 @@ class BatchPartitionExceptionTest {
 	}
 
 	@Test
-	void testHandlePartitionIoFailureWithContext() {
-		IOException cause = new IOException("Permission denied");
-		String jobGuid = "test-job-guid-123";
-
-		BatchPartitionException exception = BatchPartitionException
-				.handlePartitionFailure(cause, "Failed to create partition file", jobGuid, logger);
-
-		assertThat(exception.getMessage(), notNullValue());
-		assertThat(exception.getMessage(), containsString("[GUID: test-job-guid-123]"));
-		assertThat(exception.getMessage(), containsString("Failed to create partition file"));
-		assertThat(exception.getMessage(), containsString("IOException"));
-		assertThat(exception.getMessage(), containsString("Permission denied"));
-		assertThat(exception.getCause(), is(sameInstance(cause)));
-		assertThat(exception.isRetryable(), is(false));
-		assertThat(exception.isSkippable(), is(false));
-	}
-
-	@Test
-	void testHandlePartitionIoFailureWithoutContext() {
-		IOException cause = new IOException("Network timeout");
-		String jobGuid = "test-job-guid-456";
-
-		BatchPartitionException exception = BatchPartitionException
-				.handlePartitionFailure(cause, "Failed to read input file", jobGuid, logger);
-
-		assertThat(exception.getMessage(), notNullValue());
-		assertThat(exception.getMessage(), containsString("[GUID: test-job-guid-456]"));
-		assertThat(exception.getMessage(), containsString("Failed to read input file"));
-		assertThat(exception.getMessage(), containsString("IOException"));
-		assertThat(exception.getMessage(), containsString("Network timeout"));
-		assertThat(exception.getCause(), is(sameInstance(cause)));
-		assertThat(exception.isRetryable(), is(false));
-		assertThat(exception.isSkippable(), is(false));
-	}
-
-	@Test
-	void testHandlePartitionIoFailureWithNullCauseMessage() {
+	void testHandlePartitionFailure_WithNullExceptionMessage() {
 		IOException cause = new IOException((String) null);
-		String jobGuid = "test-job-guid-789";
 
 		BatchPartitionException exception = BatchPartitionException
-				.handlePartitionFailure(cause, "Failed to write partition", jobGuid, logger);
+				.handlePartitionFailure(cause, "Failed to write partition", TEST_JOB_GUID, logger);
 
 		assertThat(exception.getMessage(), notNullValue());
-		assertThat(exception.getMessage(), containsString("[GUID: test-job-guid-789]"));
+		assertThat(exception.getMessage(), containsString("[GUID: test-job-guid-12345]"));
 		assertThat(exception.getMessage(), containsString("Failed to write partition"));
 		assertThat(exception.getMessage(), containsString("IOException"));
 		assertThat(exception.getMessage(), containsString("No error message available"));
 		assertThat(exception.getCause(), is(sameInstance(cause)));
+	}
+
+	@Test
+	void testHandlePartitionFailure_WithoutException() {
+		BatchPartitionException exception = BatchPartitionException
+				.handlePartitionFailure("Failed to initialize partitioner", TEST_JOB_GUID, logger);
+
+		assertThat(exception.getMessage(), notNullValue());
+		assertThat(exception.getMessage(), containsString("[GUID: test-job-guid-12345]"));
+		assertThat(exception.getMessage(), containsString("Failed to initialize partitioner"));
+		assertThat(exception.getCause(), is(nullValue()));
+		assertThat(exception.isRetryable(), is(false));
+		assertThat(exception.isSkippable(), is(false));
+		assertThat(exception.getFeatureId(), is(nullValue()));
 	}
 }

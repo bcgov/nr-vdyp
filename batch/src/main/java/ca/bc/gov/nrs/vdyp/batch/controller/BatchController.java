@@ -41,7 +41,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
@@ -56,7 +56,7 @@ public class BatchController {
 
 	private final JobLauncher jobLauncher;
 	private final Job partitionedJob;
-	private final StreamingCsvPartitioner csvPartitioner;
+	private final BatchInputPartitioner inputPartitioner;
 	private final JobOperator jobOperator;
 
 	private final JobExplorer jobExplorer;
@@ -66,8 +66,8 @@ public class BatchController {
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
 
-	@Value("${batch.partition.default-partition-size}")
-	private Integer defaultPartitionSize;
+	@Value("${batch.partition.default-number-of-partitions}")
+	private Integer defaultNumPartitions;
 
 	@Value("${batch.partition.job-search-chunk-size}")
 	private int jobSearchChunkSize;
@@ -77,13 +77,13 @@ public class BatchController {
 	// It's available at runtime for handling HTTP requests to /api/batch endpoints, not just in tests.
 	public BatchController(
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, StreamingCsvPartitioner csvPartitioner, JobOperator jobOperator
+			BatchMetricsCollector metricsCollector, BatchInputPartitioner inputPartitioner, JobOperator jobOperator
 	) {
 		this.jobLauncher = jobLauncher;
 		this.partitionedJob = partitionedJob;
 		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
-		this.csvPartitioner = csvPartitioner;
+		this.inputPartitioner = inputPartitioner;
 		this.jobOperator = jobOperator;
 	}
 
@@ -330,27 +330,27 @@ public class BatchController {
 			Files.createDirectories(jobBaseDir);
 			logger.debug("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
 
-			logger.debug("[GUID: {}] Using {} partitions", jobGuid, defaultPartitionSize);
+			logger.debug("[GUID: {}] Using {} partitions", jobGuid, defaultNumPartitions);
 
 			// Partition CSV files using streaming approach BEFORE starting the job
 			logger.debug("[GUID: {}] Starting CSV partitioning...", jobGuid);
-			int featureIdToPartitionSize = csvPartitioner
-					.partitionCsvFiles(polygonFile, layerFile, defaultPartitionSize, jobBaseDir, jobGuid);
+			int featureIdToPartition = inputPartitioner
+					.partitionCsvFiles(polygonFile, layerFile, defaultNumPartitions, jobBaseDir, jobGuid);
 
 			logger.debug(
 					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}", jobGuid,
-					defaultPartitionSize, featureIdToPartitionSize
+					defaultNumPartitions, featureIdToPartition
 			);
 
 			// Now start the job with the partition directory included in parameters
 			JobParameters jobParameters = buildJobParameters(
-					projectionParametersJson, defaultPartitionSize, jobGuid, jobTimestamp, jobBaseDir.toString()
+					projectionParametersJson, defaultNumPartitions, jobGuid, jobTimestamp, jobBaseDir.toString()
 			);
 			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
 
 			logger.info(
 					"[GUID: {}] Batch job started - Execution ID: {}, Partitions: {}", jobGuid, jobExecution.getId(),
-					defaultPartitionSize
+					defaultNumPartitions
 			);
 
 			return jobExecution;
@@ -463,15 +463,23 @@ public class BatchController {
 				)
 		) {
 			String line;
+			boolean headerChecked = false;
+
 			while ( (line = reader.readLine()) != null) {
-				// Check if line has any non-whitespace content
-				if (!line.trim().isEmpty()) {
-					// Found at least one line with content - file is valid
+				// Skip blank lines and optionally skip header (only checked once)
+				boolean shouldSkip = line.isBlank() || (!headerChecked && BatchUtils.isHeaderLine(line));
+
+				if (!headerChecked && !line.isBlank()) {
+					headerChecked = true;
+				}
+
+				if (!shouldSkip) {
+					// Found at least one data line with content - file is valid
 					return;
 				}
 			}
 
-			// If we reach here, file contains only empty lines/whitespace
+			// If we reach here, file contains only empty lines/whitespace/headers
 			throw new ProjectionRequestValidationException(
 					List.of(
 							new ValidationMessage(
@@ -495,7 +503,7 @@ public class BatchController {
 	}
 
 	private JobParameters buildJobParameters(
-			String projectionParametersJson, Integer partitionSize, String jobGuid, String jobTimestamp,
+			String projectionParametersJson, Integer numPartitions, String jobGuid, String jobTimestamp,
 			String jobBaseDir
 	) {
 
@@ -503,7 +511,7 @@ public class BatchController {
 				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
 				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
-				.addLong(BatchConstants.Partition.SIZE, partitionSize.longValue());
+				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue());
 
 		return parametersBuilder.toJobParameters();
 	}

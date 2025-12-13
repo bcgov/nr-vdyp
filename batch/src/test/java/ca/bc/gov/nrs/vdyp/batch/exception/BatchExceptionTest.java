@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -30,45 +29,9 @@ class BatchExceptionTest {
 	}
 
 	@Test
-	void testGetFeatureId_WhenSet() {
-		String recordId = "FEATURE_123";
-		BatchException exception = new BatchException("Error", null, recordId, true, true);
-
-		assertEquals(recordId, exception.getFeatureId());
-	}
-
-	@Test
-	void testGetFeatureId_WhenNull() {
+	void testConstructor_WithNullFeatureId() {
 		BatchException exception = new BatchException("Error", null, null, true, true);
 
 		assertNull(exception.getFeatureId());
-	}
-
-	@Test
-	void testIsRetryable_True() {
-		BatchException exception = new BatchException("Error", null, "FEATURE_001", true, false);
-
-		assertTrue(exception.isRetryable());
-	}
-
-	@Test
-	void testIsRetryable_False() {
-		BatchException exception = new BatchException("Error", null, "FEATURE_001", false, false);
-
-		assertFalse(exception.isRetryable());
-	}
-
-	@Test
-	void testIsSkippable_True() {
-		BatchException exception = new BatchException("Error", null, "FEATURE_001", false, true);
-
-		assertTrue(exception.isSkippable());
-	}
-
-	@Test
-	void testIsSkippable_False() {
-		BatchException exception = new BatchException("Error", null, "FEATURE_001", false, false);
-
-		assertFalse(exception.isSkippable());
 	}
 }

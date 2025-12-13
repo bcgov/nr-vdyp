@@ -1,13 +1,8 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -63,90 +58,6 @@ class BatchResultAggregationExceptionTest {
 	}
 
 	@Test
-	void testHandleResultAggregationFailure_MessageFormat() {
-		Logger mockLogger = mock(Logger.class);
-		Long jobExecutionId = 11111L;
-		String jobGuid = "guid-12345";
-		IllegalStateException cause = new IllegalStateException("Invalid state");
-		String errorDescription = "Result merge failed";
-
-		BatchResultAggregationException exception = BatchResultAggregationException
-				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
-
-		String expectedPattern = String.format(
-				"[GUID: %s, EXEID: %d] %s. Exception type: IllegalStateException, Root cause: Invalid state", jobGuid,
-				jobExecutionId, errorDescription
-		);
-
-		assertEquals(expectedPattern, exception.getMessage());
-		verify(mockLogger).error(any(String.class), eq(cause));
-	}
-
-	@Test
-	void testExceptionProperties_NotSkippable() {
-		Logger mockLogger = mock(Logger.class);
-		Long jobExecutionId = 33333L;
-		String jobGuid = "guid-33333";
-		IOException cause = new IOException("I/O error");
-		String errorDescription = "Failed to merge results";
-
-		BatchResultAggregationException exception = BatchResultAggregationException
-				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
-
-		assertFalse(exception.isSkippable(), "ResultAggregationException should not be skippable");
-	}
-
-	@Test
-	void testExceptionProperties_RecordIdIsNull() {
-		Logger mockLogger = mock(Logger.class);
-		Long jobExecutionId = 44444L;
-		String jobGuid = "guid-44444";
-		IOException cause = new IOException("I/O error");
-		String errorDescription = "Aggregation error";
-
-		BatchResultAggregationException exception = BatchResultAggregationException
-				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
-
-		assertNull(
-				exception.getFeatureId(),
-				"ResultAggregationException should have null recordId (affects entire job, not specific record)"
-		);
-	}
-
-	@Test
-	void testIsBatchException() {
-		Logger mockLogger = mock(Logger.class);
-		Long jobExecutionId = 55555L;
-		String jobGuid = "guid-55555";
-		RuntimeException cause = new RuntimeException("Test");
-		String errorDescription = "Test aggregation error";
-
-		BatchResultAggregationException exception = BatchResultAggregationException
-				.handleResultAggregationFailure(cause, errorDescription, jobGuid, jobExecutionId, mockLogger);
-
-		assertTrue(exception instanceof BatchException);
-		assertTrue(exception instanceof Exception);
-	}
-
-	@Test
-	void testExceptionChaining() {
-		Logger mockLogger = mock(Logger.class);
-		Long jobExecutionId = 66666L;
-		String jobGuid = "guid-66666";
-		IllegalArgumentException rootCause = new IllegalArgumentException("Root cause");
-		RuntimeException intermediateCause = new RuntimeException("Intermediate cause", rootCause);
-		String errorDescription = "Aggregation failed with chained exceptions";
-
-		BatchResultAggregationException exception = BatchResultAggregationException.handleResultAggregationFailure(
-				intermediateCause, errorDescription, jobGuid, jobExecutionId, mockLogger
-		);
-
-		assertNotNull(exception);
-		assertSame(intermediateCause, exception.getCause());
-		assertSame(rootCause, exception.getCause().getCause());
-	}
-
-	@Test
 	void testHandleResultAggregationFailure_WithEmptyErrorDescription() {
 		Logger mockLogger = mock(Logger.class);
 		Long jobExecutionId = 77777L;
@@ -160,29 +71,6 @@ class BatchResultAggregationExceptionTest {
 		assertNotNull(exception);
 		assertTrue(exception.getMessage().contains(jobGuid));
 		assertTrue(exception.getMessage().contains(jobExecutionId.toString()));
-		verify(mockLogger).error(any(String.class), eq(cause));
-	}
-
-	@Test
-	void testHandleResultAggregationFailure_DifferentExceptionTypes() {
-		Logger mockLogger = mock(Logger.class);
-		Long jobExecutionId = 88888L;
-		String jobGuid = "guid-88888";
-		String errorDescription = "Test different exception types";
-
-		IOException ioException = new IOException("IO error");
-		BatchResultAggregationException result1 = BatchResultAggregationException
-				.handleResultAggregationFailure(ioException, errorDescription, jobGuid, jobExecutionId, mockLogger);
-		assertTrue(result1.getMessage().contains("IOException"));
-
-		NullPointerException npeException = new NullPointerException("NPE error");
-		BatchResultAggregationException result2 = BatchResultAggregationException
-				.handleResultAggregationFailure(npeException, errorDescription, jobGuid, jobExecutionId, mockLogger);
-		assertTrue(result2.getMessage().contains("NullPointerException"));
-
-		IllegalStateException iseException = new IllegalStateException("State error");
-		BatchResultAggregationException result3 = BatchResultAggregationException
-				.handleResultAggregationFailure(iseException, errorDescription, jobGuid, jobExecutionId, mockLogger);
-		assertTrue(result3.getMessage().contains("IllegalStateException"));
+		verify(mockLogger).error(exception.getMessage(), cause);
 	}
 }

@@ -7,11 +7,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 
 @SpringBootApplication
-@RegisterReflectionForBinding({ BatchRecord.class, BatchMetrics.class })
+@RegisterReflectionForBinding({ BatchChunkMetadata.class, BatchMetrics.class })
 public class VdypBatchApplication {
 	private static final Logger logger = LoggerFactory.getLogger(VdypBatchApplication.class);
 
