@@ -3,8 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.data.models;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-import org.apache.commons.lang3.StringUtils;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
@@ -39,7 +37,7 @@ public abstract class CodeTableModel {
 		if (other == null)
 			return false;
 		if ( (other instanceof CodeTableModel ctModel) && this.getClass() == ctModel.getClass()) {
-			return StringUtils.equals(getCode(), ctModel.getCode());
+			return Objects.equals(getCode(), ctModel.getCode());
 		}
 		return false;
 	}
