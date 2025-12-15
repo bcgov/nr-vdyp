@@ -2,9 +2,9 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionFileSetResourceAssembler;
-import ca.bc.gov.nrs.vdyp.backend.data.entities.FileSetTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
@@ -13,6 +13,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionFileSetRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 
 /**
  * Handles business rules for file sets, including creation updating and deletion
@@ -54,16 +55,18 @@ public class ProjectionFileSetService {
 		return map;
 	}
 
+	@Transactional
 	public ProjectionFileSetModel createEmptyFileSet(FileSetTypeCodeModel typeCodeModel, VDYPUserModel actingUser) {
 		ProjectionFileSetEntity saveEntity = new ProjectionFileSetEntity();
-		saveEntity.setOwnerUser(em.find(VDYPUserEntity.class, actingUser.getVdypUserGUID()));
-		saveEntity.setFileSetTypeCode(em.find(FileSetTypeCodeEntity.class, typeCodeModel.getCode()));
+		saveEntity.setOwnerUser(em.find(VDYPUserEntity.class, UUID.fromString(actingUser.getVdypUserGUID())));
+		saveEntity.setFileSetTypeCode(lookup.requireEntity(typeCodeModel.getCode()));
 		repository.persist(saveEntity);
 		return assembler.toModel(saveEntity);
 	}
 
-	public void deleteFileSet(ProjectionFileSetEntity polygonFileSet) {
-		repository.delete(polygonFileSet);
+	@Transactional
+	public void deleteFileSetById(UUID polygonFileSetGuid) {
+		repository.deleteById(polygonFileSetGuid);
 		// TODO this needs to go further and delete the actual files but that is not implemented yet
 	}
 }

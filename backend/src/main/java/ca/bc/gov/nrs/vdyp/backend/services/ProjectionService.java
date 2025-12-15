@@ -34,6 +34,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
@@ -56,6 +57,7 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.SecurityContext;
@@ -304,11 +306,13 @@ public class ProjectionService {
 		return repository.findByOwner(vdypUserGuid).stream().map(assembler::toModel).toList();
 	}
 
+	@Transactional
 	public ProjectionModel createNewProjection(VDYPUserModel actingUser, Parameters params)
 			throws ProjectionServiceException {
 		try {
 			ProjectionEntity entity = new ProjectionEntity();
-			// TODO FIX THIS extractConvenienceParameters(params, entity);
+			entity.setOwnerUser(em.find(VDYPUserEntity.class, UUID.fromString(actingUser.getVdypUserGUID())));
+			extractConvenienceParameters(params, entity);
 
 			entity.setProjectionParameters(
 					jsonObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params)
@@ -317,8 +321,9 @@ public class ProjectionService {
 			// Create the 3 File Sets for the projection Polygon, Layer and Result
 			var fileSetMap = fileSetService.createFileSetForNewProjection(actingUser);
 			for (var entry : fileSetMap.entrySet()) {
-				ProjectionFileSetEntity fse = em
-						.find(ProjectionFileSetEntity.class, entry.getValue().getProjectionFileSetGUID());
+				ProjectionFileSetEntity fse = em.find(
+						ProjectionFileSetEntity.class, UUID.fromString(entry.getValue().getProjectionFileSetGUID())
+				);
 				switch (entry.getKey().getCode()) {
 				case FileSetTypeCodeModel.POLYGON -> entity.setPolygonFileSet(fse);
 				case FileSetTypeCodeModel.LAYER -> entity.setLayerFileSet(fse);
@@ -341,7 +346,7 @@ public class ProjectionService {
 		}
 	}
 
-	private static void extractConvenienceParameters(Parameters params, ProjectionModel model) {
+	private static void extractConvenienceParameters(Parameters params, ProjectionEntity model) {
 		// extract the report Title and description from the parameters
 		// leave report title in for processing, remove description
 		model.setReportTitle(params.getReportTitle());
@@ -401,32 +406,35 @@ public class ProjectionService {
 		checkUserCanPerformAction(existingEntity, actingUser, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(existingEntity.getProjectionStatusCode(), ProjectionAction.UPDATE);
 
-		ProjectionModel existingModel = assembler.toModel(existingEntity);
-		extractConvenienceParameters(params, existingModel);
+		extractConvenienceParameters(params, existingEntity);
 
 		// Update the parameters of import
-		existingEntity = assembler.toEntity(existingModel);
 		repository.persist(existingEntity);
 		return assembler.toModel(existingEntity);
 	}
 
+	@Transactional
 	public boolean deleteProjection(UUID projectionGUID, VDYPUserModel actingUser) throws ProjectionServiceException {
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(entity.getProjectionStatusCode(), ProjectionAction.UPDATE);
 
 		try {
-			// TODO Delete File Sets
+			// first get the information for other tables that will need to be deleted when this projection is deleted
+			UUID[] fileSetIds = { entity.getPolygonFileSet().getProjectionFileSetGUID(),
+					entity.getPolygonFileSet().getProjectionFileSetGUID(),
+					entity.getPolygonFileSet().getProjectionFileSetGUID() };
+			repository.delete(entity);
+
+			// Delete File Sets
 			// the file Set service should cascade into the file mapping service to do the deletions of the actual files
-			fileSetService.deleteFileSet(entity.getPolygonFileSet());
-			fileSetService.deleteFileSet(entity.getLayerFileSet());
-			fileSetService.deleteFileSet(entity.getResultFileSet());
+			for (UUID id : fileSetIds) {
+				fileSetService.deleteFileSetById(id);
+			}
 
 			// Related Data:
 			// Delete Batch Mapping if it exists
 
-			// TODO finally delete the projection data
-			repository.delete(entity);
 			return true;
 		} catch (Exception e) {
 			throw new ProjectionServiceException(
