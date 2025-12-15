@@ -33,7 +33,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
-import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
@@ -41,7 +40,10 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionRepository;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionNotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -350,14 +352,14 @@ public class ProjectionService {
 		// extract the report Title and description from the parameters
 		// leave report title in for processing, remove description
 		model.setReportTitle(params.getReportTitle());
-		model.setReportDescription(params.getReportTitle()); // TODO update params to be bale to read a description
+		model.setReportDescription(params.getReportTitle()); // TODO update params to be able to read a description
 	}
 
 	public ProjectionEntity getProjectionEntity(UUID projectionGuid) throws ProjectionServiceException {
 		Optional<ProjectionEntity> entity = repository.findByIdOptional(projectionGuid);
 		if (entity.isEmpty()) {
 			// Handle Projection does not exist
-			throw new ProjectionServiceException("Projection does not exist. ", projectionGuid);
+			throw new ProjectionNotFoundException(projectionGuid);
 		}
 		return entity.get();
 	}
@@ -374,21 +376,24 @@ public class ProjectionService {
 		case DELETE:
 			UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());
 			if (!entity.getOwnerUser().getVdypUserGUID().equals(vdypUserGuid)) {
-				throw new ProjectionServiceException(
-						"User cannot perform requested action () on projeciton", entity.getProjectionGUID(),
+				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(),
 						vdypUserGuid
 				);
 			}
 		}
 	}
 
-	public void checkProjectionStatusPermitsAction(ProjectionStatusCodeEntity status, ProjectionAction action)
+	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
 			throws ProjectionServiceException {
-		switch (action) {
-		case UPDATE:
-			// TODO check againsdt some specific states throw ProjectionServiceException if htere is an issue
-		case DELETE:
-			// TODO check againsdt some specific states throw ProjectionServiceException if htere is an issue
+		if (entity.getProjectionStatusCode().getCode().equals(ProjectionStatusCodeModel.INPROGRESS)) {
+			switch (action) {
+			case UPDATE:
+			case DELETE:
+				// TODO check againsdt some specific states throw ProjectionServiceException if htere is an issue
+				throw new ProjectionStateException(
+						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
+				);
+			}
 
 		}
 	}
@@ -404,7 +409,7 @@ public class ProjectionService {
 			throws ProjectionServiceException {
 		ProjectionEntity existingEntity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(existingEntity, actingUser, ProjectionAction.UPDATE);
-		checkProjectionStatusPermitsAction(existingEntity.getProjectionStatusCode(), ProjectionAction.UPDATE);
+		checkProjectionStatusPermitsAction(existingEntity, ProjectionAction.UPDATE);
 
 		extractConvenienceParameters(params, existingEntity);
 
@@ -414,16 +419,20 @@ public class ProjectionService {
 	}
 
 	@Transactional
-	public boolean deleteProjection(UUID projectionGUID, VDYPUserModel actingUser) throws ProjectionServiceException {
+	public void deleteProjection(UUID projectionGUID, VDYPUserModel actingUser) throws ProjectionServiceException {
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
-		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE);
-		checkProjectionStatusPermitsAction(entity.getProjectionStatusCode(), ProjectionAction.UPDATE);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.DELETE);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.DELETE);
 
 		try {
 			// first get the information for other tables that will need to be deleted when this projection is deleted
 			UUID[] fileSetIds = { entity.getPolygonFileSet().getProjectionFileSetGUID(),
 					entity.getPolygonFileSet().getProjectionFileSetGUID(),
 					entity.getPolygonFileSet().getProjectionFileSetGUID() };
+
+			// TODO before the projection is deleted the Batch mapping should be deleted if it exists
+
+			// Delete the Projection
 			repository.delete(entity);
 
 			// Delete File Sets
@@ -432,10 +441,6 @@ public class ProjectionService {
 				fileSetService.deleteFileSetById(id);
 			}
 
-			// Related Data:
-			// Delete Batch Mapping if it exists
-
-			return true;
 		} catch (Exception e) {
 			throw new ProjectionServiceException(
 					"Error deleting Projection", e, projectionGUID, UUID.fromString(actingUser.getVdypUserGUID())
