@@ -376,9 +376,7 @@ public class ProjectionService {
 		case DELETE:
 			UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());
 			if (!entity.getOwnerUser().getVdypUserGUID().equals(vdypUserGuid)) {
-				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(),
-						vdypUserGuid
-				);
+				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 			}
 		}
 	}

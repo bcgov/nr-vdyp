@@ -156,7 +156,7 @@ class ProjectionServiceTest {
 	// ==========================================================
 
 	@Test
-	void checkUserCanPerformAction_allowsOwner_forReadUpdateDelete() throws Exception {
+	void checkUserCanPerformAction_allowsOwner_forReadUpdateDelete() {
 		UUID ownerId = UUID.randomUUID();
 		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), ownerId);
 		VDYPUserModel actingUser = user(ownerId);
@@ -222,7 +222,7 @@ class ProjectionServiceTest {
 	}
 
 	@Test
-	void checkProjectionStatusPermitsAction_allowsRead_evenIfInProgress() throws Exception {
+	void checkProjectionStatusPermitsAction_allowsRead_evenIfInProgress() {
 		ProjectionEntity entity = new ProjectionEntity();
 		entity.setProjectionGUID(UUID.randomUUID());
 
@@ -348,7 +348,7 @@ class ProjectionServiceTest {
 	}
 
 	@Test
-	void deleteProjection_wrapsExceptions_inProjectionServiceException() throws Exception {
+	void deleteProjection_wrapsExceptions_inProjectionServiceException() {
 		UUID projectionId = UUID.randomUUID();
 		UUID ownerId = UUID.randomUUID();
 
