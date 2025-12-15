@@ -427,8 +427,8 @@ public class ProjectionService {
 		try {
 			// first get the information for other tables that will need to be deleted when this projection is deleted
 			UUID[] fileSetIds = { entity.getPolygonFileSet().getProjectionFileSetGUID(),
-					entity.getPolygonFileSet().getProjectionFileSetGUID(),
-					entity.getPolygonFileSet().getProjectionFileSetGUID() };
+					entity.getLayerFileSet().getProjectionFileSetGUID(),
+					entity.getResultFileSet().getProjectionFileSetGUID() };
 
 			// TODO before the projection is deleted the Batch mapping should be deleted if it exists
 
