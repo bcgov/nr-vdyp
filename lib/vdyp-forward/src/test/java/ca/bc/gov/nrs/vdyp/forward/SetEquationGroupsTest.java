@@ -6,15 +6,16 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
 public class SetEquationGroupsTest extends AbstractForwardProcessingEngineTest {
 
 	@Test
 	void testSetEquationGroups() throws ProcessingException {
 
-		var reader = new ForwardDataStreamReader(controlMap);
-		var polygon = reader.readNextPolygon().get();
+		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		ForwardProcessingState fps = new ForwardProcessingState(controlMap);
 		fps.setPolygon(polygon);

@@ -1,20 +1,19 @@
 package ca.bc.gov.nrs.vdyp.vri.integration;
 
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
+
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.integration_tests.IntermediateDataBasedIntegrationTest;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
 
@@ -22,7 +21,7 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 
 	@ParameterizedTest
 	@MethodSource("testNameAndLayerProvider")
-	void testVriStart(String test, String layer) throws IOException, ResourceParseException, ProcessingException {
+	void testVriStart(String test, String layer) throws Exception {
 		State inputState = State.VriInput;
 		State outputState = State.ForwardInput;
 
@@ -32,8 +31,8 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 
 		Path baseControlFile = copyResource(TestUtils.class, "VRISTART.CTR", testConfigDir);
 
-		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
-		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
+		assumeThat("No input data", dataDir, exists());
+		assumeThat("No expected output data", expectedDir, exists());
 
 		doSkip(testDir, "testVriStart");
 

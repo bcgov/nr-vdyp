@@ -5,7 +5,6 @@ import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -90,8 +89,7 @@ import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSpecies;
 
-public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite, VriDebugSettings>
-		implements Closeable {
+public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite, VriDebugSettings> {
 
 	private static final String SPECIAL_PROCESSING_LOG_TEMPLATE = "Doing special processing for mode {}";
 	static final float FRACTION_AVAILABLE_N = 0.85f; // PCTFLAND_N;
@@ -107,13 +105,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	public static void main(final String... args) {
 
 		try (var app = new VriStart();) {
-			try {
-				app.doMain(args);
-			} catch (VdypApplicationInitializationException e) {
-				System.exit(CONFIG_LOAD_ERROR);
-			} catch (VdypApplicationProcessingException e) {
-				System.exit(PROCESSING_ERROR);
-			}
+			app.doMain(args);
+		} catch (VdypApplicationInitializationException e) {
+			System.exit(CONFIG_LOAD_ERROR);
+		} catch (VdypApplicationProcessingException e) {
+			System.exit(PROCESSING_ERROR);
 		}
 	}
 
@@ -850,7 +846,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		VriLayer veteranLayer = polygon.getLayers().get(LayerType.VETERAN);
 		if (veteranLayer != null) {
-			throwIfPresent(
+			Utils.throwIfPresent(
 					HeightLowException.check(
 							LayerType.VETERAN, veteranLayer.getPrimarySite().flatMap(VriSite::getHeight),
 							veteranMinHeight
@@ -943,33 +939,33 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			switch (mode) {
 
 			case START:
-				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
-				throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 4.5f));
-				throwIfPresent(BaseAreaLowException.check(LayerType.PRIMARY, baseArea, 0f));
-				throwIfPresent(TreesPerHectareLowException.check(LayerType.PRIMARY, treesPerHectare, 0f));
+				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+				Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 4.5f));
+				Utils.throwIfPresent(BaseAreaLowException.check(LayerType.PRIMARY, baseArea, 0f));
+				Utils.throwIfPresent(TreesPerHectareLowException.check(LayerType.PRIMARY, treesPerHectare, 0f));
 				break;
 
 			case YOUNG:
-				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				throwIfPresent(YearsToBreastHeightLowException.check(LayerType.PRIMARY, yearsToBreastHeight, 0f));
+				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+				Utils.throwIfPresent(YearsToBreastHeightLowException.check(LayerType.PRIMARY, yearsToBreastHeight, 0f));
 				break;
 
 			case BATN:
-				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
-				throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
+				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+				Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
 				break;
 
 			case BATC:
-				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
-				throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
-				throwIfPresent(CrownClosureLowException.check(LayerType.PRIMARY, Optional.of(crownClosure), 0f));
+				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+				Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
+				Utils.throwIfPresent(CrownClosureLowException.check(LayerType.PRIMARY, Optional.of(crownClosure), 0f));
 				break;
 
 			case DONT_PROCESS:
@@ -1468,7 +1464,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		final float primaryTreesPerHectare = treesPerHectare(primaryBaseAreaFinal, normativeQuadMeanDiameter);
 
-		throwIfPresent(
+		Utils.throwIfPresent(
 				PreprocessEstimatedBaseAreaLowException
 						.check(LayerType.PRIMARY, Optional.of(primaryBaseAreaFinal), 0.5f)
 		);

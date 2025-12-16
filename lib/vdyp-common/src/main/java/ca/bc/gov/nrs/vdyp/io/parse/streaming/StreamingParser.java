@@ -1,10 +1,11 @@
 package ca.bc.gov.nrs.vdyp.io.parse.streaming;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 
-public interface StreamingParser<T> extends AutoCloseable {
+public interface StreamingParser<T> extends Closeable {
 
 	/**
 	 * Get the next entry in the resource

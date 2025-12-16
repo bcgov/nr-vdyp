@@ -29,7 +29,7 @@ class RootFinderTest {
 	private final double epsilon = 0.00001;
 
 	@Test
-	void testRootFunction() {
+	void testRootFunction() throws Exception {
 		var control = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, control);
@@ -53,7 +53,7 @@ class RootFinderTest {
 	}
 
 	@Test
-	void testRootFunctionJacobian() {
+	void testRootFunctionJacobian() throws Exception {
 		var control = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, control);
@@ -84,7 +84,7 @@ class RootFinderTest {
 	}
 
 	@Test
-	void testRootFunctionSolve() {
+	void testRootFunctionSolve() throws Exception {
 		var control = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, control);

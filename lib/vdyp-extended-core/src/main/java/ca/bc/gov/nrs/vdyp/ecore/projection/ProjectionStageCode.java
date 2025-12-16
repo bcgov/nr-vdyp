@@ -1,9 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
-import ca.bc.gov.nrs.vdyp.fip.FipStart;
-import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
-import ca.bc.gov.nrs.vdyp.vri.VriStart;
+import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 
 public enum ProjectionStageCode {
 	Initial, Adjust, Forward, Back;
@@ -13,16 +11,16 @@ public enum ProjectionStageCode {
 	}
 
 	public static ProjectionStageCode of(VdypApplication app) {
-		if (app instanceof FipStart || app instanceof VriStart) {
+		return of(app.getId());
+	}
+
+	public static ProjectionStageCode of(VdypApplicationIdentifier app) {
+		switch (app) {
+		case FIP_START, VRI_START:
 			return Initial;
-		} else if (app instanceof VdypForwardApplication) {
+		case VDYP_FORWARD:
 			return Forward;
-// TODO: once these applications are implemented...
-//		} else if (app instanceof VdypAdjustApplication) {
-//			return Adjust;
-//		} else if (app instanceof VdypBackApplication) {
-//			return Back;
-		} else {
+		default:
 			throw new IllegalStateException("Unrecognized application type " + app.getClass().getSimpleName());
 		}
 	}
