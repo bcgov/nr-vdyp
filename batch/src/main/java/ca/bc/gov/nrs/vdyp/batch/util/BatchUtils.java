@@ -168,14 +168,16 @@ public final class BatchUtils {
 				}
 
 				if (!shouldSkip) {
-					// Record the byte offset at the START of this data record
-					offsets.add(currentByte);
-
 					// Extract and store FEATURE_ID
 					String featureId = extractFeatureId(line);
-					featureIds.add(featureId != null ? featureId : "");
 
-					recordCount++;
+					// Skip records with null or empty FEATURE_ID - we can't process them
+					if (featureId != null && !featureId.isEmpty()) {
+						// Record the byte offset at the START of this data record
+						offsets.add(currentByte);
+						featureIds.add(featureId);
+						recordCount++;
+					}
 				}
 
 				currentByte += lineBytes;
