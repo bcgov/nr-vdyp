@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         component-name: [
-          frontend, backend
+          frontend, backend, batch
         ]
     steps:
       - uses: actions/checkout@v3
@@ -27,9 +27,12 @@ jobs:
 
       - name: Tag relevant images
         run: |
-          docker pull ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:latest
-          docker tag ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:latest ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:${{ github.event.release.tag_name }}
-          docker push ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:${{ github.event.release.tag_name }}
+          IMAGE = ghcr.io/${{ github.repository }}/${{ matrix.component-name }}
+          docker pull $IMAGE:latest
+          docker tag $IMAGE:latest $IMAGE:${{ github.event.release.tag_name }}
+          docker tag $IMAGE:latest $IMAGE:deploy-test
+          docker push $IMAGE:${{ github.event.release.tag_name }}
+          docker push $IMAGE:deploy-test
 
   # include additional steps for DLV, PRD
   # rename to deploy-wftst, rename environment to tst
