@@ -21,7 +21,7 @@ class BatchProjectionExceptionTest {
 	@Test
 	void testHandleProjectionFailure_WithValidException() {
 		RuntimeException cause = new RuntimeException("Projection algorithm failed");
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-1", "/tmp/job", 5, 2);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-1", "/tmp/job", 100L, 2, 200L, 4);
 		String jobGuid = "job-guid-456";
 		Long jobExecutionId = 600L;
 		String partitionName = "partition-1";
@@ -36,14 +36,14 @@ class BatchProjectionExceptionTest {
 		assertThat(exception.getMessage(), containsString(partitionName));
 		assertThat(exception.getMessage(), containsString("RuntimeException"));
 		assertThat(exception.getMessage(), containsString("Projection algorithm failed"));
-		assertThat(exception.getMessage(), containsString("recordCount=2"));
-		assertThat(exception.getMessage(), containsString("startIndex=5"));
+		assertThat(exception.getMessage(), containsString("polygonRecordCount=2"));
+		assertThat(exception.getMessage(), containsString("polygonStartByte=100"));
 	}
 
 	@Test
 	void testHandleProjectionFailure_WithNullExceptionMessage() {
 		RuntimeException cause = new RuntimeException((String) null);
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-nomsg", "/tmp/job", 0, 1);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-nomsg", "/tmp/job", 0L, 1, 0L, 0);
 		String jobGuid = "job-guid-789";
 		Long jobExecutionId = 700L;
 		String partitionName = "partition-nomsg";
@@ -58,7 +58,7 @@ class BatchProjectionExceptionTest {
 	@Test
 	void testHandleProjectionFailure_IsSkippableAndNotRetryable() {
 		RuntimeException cause = new RuntimeException("Test");
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-test", "/tmp/job", 0, 5);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-test", "/tmp/job", 0L, 5, 0L, 0);
 
 		BatchProjectionException exception = BatchProjectionException
 				.handleProjectionFailure(cause, chunkMetadata, "guid", 1L, "partition-test", logger);

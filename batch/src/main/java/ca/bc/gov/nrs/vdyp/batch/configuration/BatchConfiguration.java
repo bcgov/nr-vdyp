@@ -73,7 +73,7 @@ public class BatchConfiguration {
 		jobLauncher.setJobRepository(jobRepository);
 		jobLauncher.setTaskExecutor(taskExecutor);
 		jobLauncher.afterPropertiesSet();
-		logger.info("Asynchronous JobLauncher created successfully");
+		logger.trace("Asynchronous JobLauncher created successfully");
 		return jobLauncher;
 	}
 
@@ -82,7 +82,7 @@ public class BatchConfiguration {
 	public BatchRetryPolicy retryPolicy() {
 		int maxAttempts = batchProperties.getRetry().getMaxAttempts();
 		int backoffPeriod = batchProperties.getRetry().getBackoffPeriod();
-		logger.info("Creating BatchRetryPolicy with maxAttempts={}, backoffPeriod={}", maxAttempts, backoffPeriod);
+		logger.trace("Creating BatchRetryPolicy with maxAttempts={}, backoffPeriod={}", maxAttempts, backoffPeriod);
 		return new BatchRetryPolicy(maxAttempts, backoffPeriod, metricsCollector);
 	}
 
@@ -90,7 +90,7 @@ public class BatchConfiguration {
 	@StepScope
 	public BatchSkipPolicy skipPolicy() {
 		int maxSkipCount = batchProperties.getSkip().getMaxCount();
-		logger.info("Creating BatchSkipPolicy with maxSkipCount={}", maxSkipCount);
+		logger.trace("Creating BatchSkipPolicy with maxSkipCount={}", maxSkipCount);
 		return new BatchSkipPolicy(maxSkipCount, metricsCollector);
 	}
 

@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,12 +34,12 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 	private final String jobGuid;
 	private final int chunkSize;
 
-	// Partition directory and job base directory
+	// Job base directory
 	private String jobBaseDir;
-	private Path partitionDir;
 
-	// Total record count for this partition
-	private int totalRecords = 0;
+	// Byte offset metadata for efficient streaming
+	private BatchUtils.RecordByteOffsets polygonOffsets;
+	private BatchUtils.RecordByteOffsets layerOffsets;
 
 	// Current processing state
 	private int currentIndex = 0;
@@ -72,8 +71,9 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 		}
 
 		// Check if we've read all records
+		int totalRecords = polygonOffsets.getTotalRecords();
 		if (currentIndex >= totalRecords) {
-			logger.debug(
+			logger.trace(
 					"[GUID: {}, EXEID: {}, Partition: {}] All records processed (currentIndex={}, totalRecords={})",
 					jobGuid, jobExecutionId, partitionName, currentIndex, totalRecords
 			);
@@ -84,14 +84,21 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 		int remainingRecords = totalRecords - currentIndex;
 		int recordsInThisChunk = Math.min(chunkSize, remainingRecords);
 
+		// Calculate byte offsets for polygon file
+		long polygonStartByte = BatchUtils.getChunkStartByte(polygonOffsets, currentIndex);
+
+		// Calculate byte offsets for layer file by finding matching FEATURE_IDs
+		BatchUtils.LayerByteRange layerRange = calculateLayerByteRange(currentIndex, recordsInThisChunk);
+
 		BatchChunkMetadata metadata = new BatchChunkMetadata(
-				partitionName, jobBaseDir, currentIndex, recordsInThisChunk
+				partitionName, jobBaseDir, polygonStartByte, recordsInThisChunk, layerRange.getStartByte(),
+				layerRange.getRecordCount()
 		);
 
 		logger.trace(
-				"[GUID: {}, EXEID: {}, Partition: {}] Created chunk metadata: startIndex={}, recordCount={}, progress={}/{}",
-				jobGuid, jobExecutionId, partitionName, currentIndex, recordsInThisChunk,
-				currentIndex + recordsInThisChunk, totalRecords
+				"[GUID: {}, EXEID: {}, Partition: {}] Created chunk metadata: polygonStartByte={}, polygonRecordCount={}, layerStartByte={}, layerRecordCount={}, progress={}/{}",
+				jobGuid, jobExecutionId, partitionName, polygonStartByte, recordsInThisChunk, layerRange.getStartByte(),
+				layerRange.getRecordCount(), currentIndex + recordsInThisChunk, totalRecords
 		);
 
 		// Advance current index for next read
@@ -122,27 +129,32 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 			}
 
 			String inputPartitionFolderName = BatchUtils.buildInputPartitionFolderName(partitionName);
-			this.partitionDir = Paths.get(this.jobBaseDir, inputPartitionFolderName);
-			if (!Files.exists(this.partitionDir)) {
+			Path partitionDir = Paths.get(this.jobBaseDir, inputPartitionFolderName);
+			if (!Files.exists(partitionDir)) {
 				BatchDataReadException dataReadException = BatchDataReadException.handleDataReadFailure(
-						new FileNotFoundException("Partition directory does not exist: " + this.partitionDir),
+						new FileNotFoundException("Partition directory does not exist: " + partitionDir),
 						"Partition directory does not exist", jobGuid, jobExecutionId, partitionName, logger
 				);
 				throw new ItemStreamException(dataReadException.getMessage(), dataReadException);
 			}
 
-			logger.debug(
+			logger.trace(
 					"[GUID: {}, EXEID: {}, Partition: {}] Reading from partition directory: {}", jobGuid,
-					jobExecutionId, partitionName, this.partitionDir
+					jobExecutionId, partitionName, partitionDir
 			);
 
-			// Count total records in polygon file
-			this.totalRecords = countTotalRecords();
+			// Calculate byte offsets for polygon and layer files
+			Path polygonFilePath = partitionDir.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
+			Path layerFilePath = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
+
+			this.polygonOffsets = BatchUtils.calculateRecordByteOffsets(polygonFilePath);
+			this.layerOffsets = BatchUtils.calculateRecordByteOffsets(layerFilePath);
 
 			readerOpened = true;
-			logger.debug(
-					"[GUID: {}, EXEID: {}, Partition: {}] BatchItemReader opened successfully. Total records: {}",
-					jobGuid, jobExecutionId, partitionName, totalRecords
+			logger.trace(
+					"[GUID: {}, EXEID: {}, Partition: {}] BatchItemReader opened successfully. Total polygon records: {}, total layer records: {}",
+					jobGuid, jobExecutionId, partitionName, polygonOffsets.getTotalRecords(),
+					layerOffsets.getTotalRecords()
 			);
 
 		} catch (IOException e) {
@@ -164,36 +176,21 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 	@Override
 	public void close() throws ItemStreamException {
 		logger.debug(
-				"[GUID: {}, EXEID: {}, Partition: {}] Closing BatchItemReader. Total records: {}", jobGuid,
-				jobExecutionId, partitionName, totalRecords
+				"[GUID: {}, EXEID: {}, Partition: {}] Closing BatchItemReader. Total polygon records: {}", jobGuid,
+				jobExecutionId, partitionName, polygonOffsets != null ? polygonOffsets.getTotalRecords() : 0
 		);
 
 		readerOpened = false;
 	}
 
 	/**
-	 * Count total data records in polygon file (excluding headers).
+	 * Calculates the byte range for layer records that match the FEATURE_IDs from a polygon chunk.
 	 *
-	 * @return Total number of data records
-	 * @throws IOException if file reading fails
+	 * @param polygonStartIndex  The starting record index in the polygon file
+	 * @param polygonRecordCount The number of polygon records in the chunk
+	 * @return LayerByteRange containing start byte and record count for matching layer records
 	 */
-	private int countTotalRecords() throws IOException {
-		Path polygonFile = partitionDir.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
-
-		if (!Files.exists(polygonFile)) {
-			throw new FileNotFoundException("Polygon file not found: " + polygonFile);
-		}
-
-		int count;
-		try (BufferedReader reader = Files.newBufferedReader(polygonFile)) {
-			count = BatchUtils.countDataRecords(reader);
-		}
-
-		logger.debug(
-				"[GUID: {}, EXEID: {}, Partition: {}] Counted {} total records in polygon file", jobGuid,
-				jobExecutionId, partitionName, count
-		);
-
-		return count;
+	private BatchUtils.LayerByteRange calculateLayerByteRange(int polygonStartIndex, int polygonRecordCount) {
+		return BatchUtils.calculateLayerByteRange(polygonOffsets, polygonStartIndex, polygonRecordCount, layerOffsets);
 	}
 }

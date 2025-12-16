@@ -16,7 +16,7 @@
   </appender>
 
   <!-- Application loggers -->
-  <logger name="ca.bc.gov.nrs.vdyp.batch" level="DEBUG" />
+  <logger name="ca.bc.gov.nrs.vdyp.batch" level="INFO" />
   <logger name="ca.bc.gov.nrs.vdyp" level="OFF" />
 
   <!-- Spring Boot and Spring Framework -->

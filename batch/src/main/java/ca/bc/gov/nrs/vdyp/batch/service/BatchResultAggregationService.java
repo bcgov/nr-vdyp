@@ -106,7 +106,7 @@ public class BatchResultAggregationService {
 		try (Stream<Path> allItems = Files.list(jobBasePath)) {
 			allItems.forEach(
 					item -> logger
-							.debug("Found item: {} (isDirectory: {})", item.getFileName(), Files.isDirectory(item))
+							.trace("Found item: {} (isDirectory: {})", item.getFileName(), Files.isDirectory(item))
 			);
 		}
 
@@ -115,7 +115,7 @@ public class BatchResultAggregationService {
 				String dirName = dir.getFileName().toString();
 				boolean matches = dirName.startsWith(BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX)
 						|| dirName.matches(BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX + "\\d+");
-				logger.debug("Directory {} matches output partition pattern: {}", dirName, matches);
+				logger.trace("Directory {} matches output partition pattern: {}", dirName, matches);
 				return matches;
 			}).forEach(partitionDirs::add);
 		}
@@ -135,7 +135,7 @@ public class BatchResultAggregationService {
 		// - Wrong: partition0, partition1, partition10, partition11, partition2, ... (alphabetical)
 		partitionDirs.sort(Comparator.comparingInt(this::extractPartitionNumber));
 
-		logger.debug(
+		logger.trace(
 				"Sorted partition directories by number: {}",
 				partitionDirs.stream().map(p -> String.format("%s(%d)", p.getFileName(), extractPartitionNumber(p)))
 						.toList()

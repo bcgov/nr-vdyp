@@ -56,12 +56,12 @@ public class BatchProjectionService {
 
 		String partitionName = chunkMetadata.getPartitionName();
 		String jobBaseDir = chunkMetadata.getJobBaseDir();
-		int startIndex = chunkMetadata.getStartIndex();
-		int recordCount = chunkMetadata.getRecordCount();
+		long polygonStartByte = chunkMetadata.getPolygonStartByte();
+		int polygonRecordCount = chunkMetadata.getPolygonRecordCount();
 
 		logger.debug(
-				"[GUID: {}, EXEID: {}] Starting VDYP projection for chunk (startIndex={}, recordCount={}) in partition {}",
-				jobGuid, jobExecutionId, startIndex, recordCount, partitionName
+				"[GUID: {}, EXEID: {}] Starting VDYP projection for chunk (polygonStartByte={}, polygonRecordCount={}) in partition {}",
+				jobGuid, jobExecutionId, polygonStartByte, polygonRecordCount, partitionName
 		);
 
 		Map<String, InputStream> inputStreams = null;
@@ -82,23 +82,23 @@ public class BatchProjectionService {
 
 				logger.debug(
 						"[GUID: {}, EXEID: {}] Running HCSV projection {} for chunk of {} records in partition {}",
-						jobGuid, jobExecutionId, batchProjectionId, recordCount, partitionName
+						jobGuid, jobExecutionId, batchProjectionId, polygonRecordCount, partitionName
 				);
 
 				// Run the projection on the streamed data
 				runner.run(inputStreams);
 
 				// Store intermediate results
-				storeChunkIntermediateResults(runner, outputPartitionDir, batchProjectionId, recordCount);
+				storeChunkIntermediateResults(runner, outputPartitionDir, batchProjectionId, polygonRecordCount);
 
 				String result = String.format(
-						"Chunk projection completed for %d records in partition %s. Results stored", recordCount,
+						"Chunk projection completed for %d records in partition %s. Results stored", polygonRecordCount,
 						partitionName
 				);
 
 				logger.debug(
 						"[GUID: {}, EXEID: {}] VDYP chunk projection completed for {} records in partition {}. Intermediate results stored",
-						jobGuid, jobExecutionId, recordCount, partitionName
+						jobGuid, jobExecutionId, polygonRecordCount, partitionName
 				);
 
 				return result;
@@ -139,7 +139,7 @@ public class BatchProjectionService {
 		// Only log when directory is actually created (first chunk of partition)
 		if (!alreadyExists) {
 			String inputPartitionName = BatchUtils.buildInputPartitionFolderName(partitionName);
-			logger.debug(
+			logger.trace(
 					"Created output partition directory: {} for input partition: {} within job folder: {}",
 					outputPartitionName, inputPartitionName, jobBasePath.getFileName()
 			);
@@ -149,12 +149,14 @@ public class BatchProjectionService {
 	}
 
 	/**
-	 * Creates input streams by reading directly from partition files for the specified record range. This method
-	 * streams data without loading entire CSV content into memory.
+	 * Creates input streams by reading directly from partition files using byte offsets. This method streams data
+	 * without loading entire CSV content into memory, using FileChannel for efficient random access.
 	 *
-	 * Important: Polygon stream reads by line index, but layer stream reads ALL layers matching the FEATURE_IDs from
-	 * the polygon range. This ensures complete polygon objects are passed to extended-core (one FEATURE_ID + all its
-	 * layers).
+	 * Both polygon and layer streams use byte offset metadata calculated by BatchItemReader to jump directly to the
+	 * required data positions, avoiding full file scans.
+	 *
+	 * The startByte offsets are calculated by BatchItemReader to point to data records only, skipping any headers that
+	 * may have been present in the partitioned files.
 	 *
 	 * Note: Caller is responsible for closing the returned InputStreams (handled in finally block of
 	 * performProjectionForChunk)
@@ -167,8 +169,10 @@ public class BatchProjectionService {
 
 		String partitionName = chunkMetadata.getPartitionName();
 		String jobBaseDir = chunkMetadata.getJobBaseDir();
-		int startIndex = chunkMetadata.getStartIndex();
-		int recordCount = chunkMetadata.getRecordCount();
+		long polygonStartByte = chunkMetadata.getPolygonStartByte();
+		int polygonRecordCount = chunkMetadata.getPolygonRecordCount();
+		long layerStartByte = chunkMetadata.getLayerStartByte();
+		int layerRecordCount = chunkMetadata.getLayerRecordCount();
 
 		// Get partition directory
 		String inputPartitionFolderName = BatchUtils.buildInputPartitionFolderName(partitionName);
@@ -177,20 +181,25 @@ public class BatchProjectionService {
 		Path polygonFile = partitionDir.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
 		Path layerFile = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
 
-		// Create polygon stream (line index based - closed by caller in finally block)
-		InputStream polygonStream = BatchRangeInputStream.create(polygonFile, startIndex, recordCount);
+		// Create polygon stream starting at the calculated byte offset
+		InputStream polygonStream = BatchRangeInputStream.create(polygonFile, polygonStartByte, polygonRecordCount);
 
-		// Create layer stream (FEATURE_ID based - includes ALL layers for polygon FEATURE_IDs - closed by caller)
-		InputStream layerStream = BatchRangeInputStream
-				.createForLayers(polygonFile, layerFile, startIndex, recordCount);
+		// Create layer stream starting at the calculated byte offset (or empty stream if no data)
+		InputStream layerStream;
+		if (layerRecordCount > 0) {
+			layerStream = BatchRangeInputStream.create(layerFile, layerStartByte, layerRecordCount);
+		} else {
+			// No layer records for this polygon chunk - create empty stream
+			layerStream = java.io.InputStream.nullInputStream();
+		}
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
 		inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStream);
 		inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layerStream);
 
 		logger.trace(
-				"Created input streams from partition files for chunk: startIndex={}, recordCount={}, partition={}",
-				startIndex, recordCount, partitionName
+				"Created input streams from partition files for chunk: polygonStartByte={}, polygonRecordCount={}, layerStartByte={}, layerRecordCount={}, partition={}",
+				polygonStartByte, polygonRecordCount, layerStartByte, layerRecordCount, partitionName
 		);
 
 		return inputStreams;

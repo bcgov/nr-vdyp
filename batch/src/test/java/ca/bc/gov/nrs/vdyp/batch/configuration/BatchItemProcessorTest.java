@@ -81,13 +81,13 @@ class BatchItemProcessorTest {
 	void testProcess_WithValidChunkMetadata_ReturnsChunkUnchanged() throws BatchException {
 		processor.beforeStep(stepExecution);
 
-		BatchChunkMetadata chunkMetadata = createChunkMetadata("test-partition", 0, 10);
+		BatchChunkMetadata chunkMetadata = createChunkMetadata("test-partition", 10);
 
 		BatchChunkMetadata result = processor.process(chunkMetadata);
 
 		assertNotNull(result);
-		assertEquals(0, result.getStartIndex());
-		assertEquals(10, result.getRecordCount());
+		assertEquals(0L, result.getPolygonStartByte());
+		assertEquals(10, result.getPolygonRecordCount());
 		assertEquals(chunkMetadata, result);
 	}
 
@@ -112,7 +112,7 @@ class BatchItemProcessorTest {
 		);
 	}
 
-	private BatchChunkMetadata createChunkMetadata(String partitionName, int startIndex, int recordCount) {
-		return new BatchChunkMetadata(partitionName, "/tmp/test-job", startIndex, recordCount);
+	private BatchChunkMetadata createChunkMetadata(String partitionName, int recordCount) {
+		return new BatchChunkMetadata(partitionName, "/tmp/test-job", 0L, recordCount, 0L, 0);
 	}
 }

@@ -67,7 +67,7 @@ class BatchItemReaderTest {
 		executionContext.putString("jobBaseDir", tempDir.toString());
 
 		ItemStreamException exception = assertThrows(ItemStreamException.class, () -> reader.open(executionContext));
-		assertTrue(exception.getMessage().contains("Polygon file not found"));
+		assertTrue(exception.getMessage().contains("Failed to initialize partition reader"));
 	}
 
 	@Test
@@ -75,6 +75,7 @@ class BatchItemReaderTest {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 		Files.createFile(partitionDir.resolve("polygons.csv")); // Empty file
+		Files.createFile(partitionDir.resolve("layers.csv")); // Empty layer file
 		executionContext.putString("jobBaseDir", tempDir.toString());
 
 		reader.open(executionContext);
@@ -96,15 +97,13 @@ class BatchItemReaderTest {
 		assertNotNull(chunk1);
 		assertEquals("test-partition", chunk1.getPartitionName());
 		assertEquals(tempDir.toString(), chunk1.getJobBaseDir());
-		assertEquals(0, chunk1.getStartIndex());
-		assertEquals(2, chunk1.getRecordCount());
+		assertEquals(2, chunk1.getPolygonRecordCount());
 
 		// Read second chunk (remaining 1 record)
 		BatchChunkMetadata chunk2 = reader.read();
 		assertNotNull(chunk2);
 		assertEquals("test-partition", chunk2.getPartitionName());
-		assertEquals(2, chunk2.getStartIndex());
-		assertEquals(1, chunk2.getRecordCount());
+		assertEquals(1, chunk2.getPolygonRecordCount());
 
 		// No more chunks
 		BatchChunkMetadata chunk3 = reader.read();
@@ -118,9 +117,12 @@ class BatchItemReaderTest {
 		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
-		// Create polygon file only
+		// Create polygon file
 		String polygonContent = "FEATURE_ID,DATA\n123,data1\n456,data2\n";
 		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
+
+		// Create empty layer file (no data records, layers file is required)
+		Files.createFile(partitionDir.resolve("layers.csv"));
 
 		executionContext.putString("jobBaseDir", tempDir.toString());
 
@@ -129,8 +131,7 @@ class BatchItemReaderTest {
 		BatchChunkMetadata chunkMetadata = reader.read();
 		assertNotNull(chunkMetadata);
 		assertEquals("test-partition", chunkMetadata.getPartitionName());
-		assertEquals(0, chunkMetadata.getStartIndex());
-		assertEquals(2, chunkMetadata.getRecordCount());
+		assertEquals(2, chunkMetadata.getPolygonRecordCount());
 
 		reader.close();
 	}
@@ -153,8 +154,7 @@ class BatchItemReaderTest {
 
 		BatchChunkMetadata chunkMetadata = reader.read();
 		assertNotNull(chunkMetadata);
-		assertEquals(0, chunkMetadata.getStartIndex());
-		assertEquals(1, chunkMetadata.getRecordCount());
+		assertEquals(1, chunkMetadata.getPolygonRecordCount());
 
 		reader.close();
 	}
@@ -188,14 +188,16 @@ class BatchItemReaderTest {
 
 	@Test
 	void testBatchChunkMetadata_ToString() {
-		BatchChunkMetadata metadata = new BatchChunkMetadata("partition-1", "/path/to/job", 10, 5);
+		BatchChunkMetadata metadata = new BatchChunkMetadata("partition-1", "/path/to/job", 100L, 5, 200L, 3);
 		String result = metadata.toString();
 
 		assertNotNull(result);
 		assertTrue(result.contains("partitionName='partition-1'"));
 		assertTrue(result.contains("jobBaseDir='/path/to/job'"));
-		assertTrue(result.contains("startIndex=10"));
-		assertTrue(result.contains("recordCount=5"));
+		assertTrue(result.contains("polygonStartByte=100"));
+		assertTrue(result.contains("polygonRecordCount=5"));
+		assertTrue(result.contains("layerStartByte=200"));
+		assertTrue(result.contains("layerRecordCount=3"));
 	}
 
 	private void setupValidTestFiles() throws IOException {

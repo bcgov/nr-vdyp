@@ -19,13 +19,13 @@ public class BatchProjectionException extends BatchException {
 			Exception cause, BatchChunkMetadata chunkMetadata, String jobGuid, Long jobExecutionId,
 			String partitionName, Logger logger
 	) {
-		int startIndex = chunkMetadata.getStartIndex();
-		int recordCount = chunkMetadata.getRecordCount();
+		long polygonStartByte = chunkMetadata.getPolygonStartByte();
+		int polygonRecordCount = chunkMetadata.getPolygonRecordCount();
 
 		String contextualMessage = String.format(
-				"[GUID: %s, EXEID: %d, Partition: %s] VDYP projection failed for chunk (startIndex=%d, recordCount=%d). Exception: %s, Message: %s",
-				jobGuid, jobExecutionId, partitionName, startIndex, recordCount, cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : "No error message"
+				"[GUID: %s, EXEID: %d, Partition: %s] VDYP projection failed for chunk (polygonStartByte=%d, polygonRecordCount=%d). Exception: %s, Message: %s",
+				jobGuid, jobExecutionId, partitionName, polygonStartByte, polygonRecordCount,
+				cause.getClass().getSimpleName(), cause.getMessage() != null ? cause.getMessage() : "No error message"
 		);
 
 		logger.error(contextualMessage, cause);

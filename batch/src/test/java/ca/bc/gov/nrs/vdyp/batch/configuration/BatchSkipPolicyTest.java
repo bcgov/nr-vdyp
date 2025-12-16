@@ -174,6 +174,6 @@ class BatchSkipPolicyTest {
 	}
 
 	private BatchChunkMetadata createChunkMetadata(String partitionName) {
-		return new BatchChunkMetadata(partitionName, "/tmp/test-job", 0, 1);
+		return new BatchChunkMetadata(partitionName, "/tmp/test-job", 0L, 1, 0L, 0);
 	}
 }

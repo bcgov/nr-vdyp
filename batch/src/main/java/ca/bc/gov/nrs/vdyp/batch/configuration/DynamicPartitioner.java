@@ -44,7 +44,7 @@ public class DynamicPartitioner implements Partitioner {
 
 			partitions.put(partitionName, context);
 
-			logger.debug("Created execution context for partition {}", i);
+			logger.trace("Created execution context for partition {}", i);
 		}
 
 		return partitions;

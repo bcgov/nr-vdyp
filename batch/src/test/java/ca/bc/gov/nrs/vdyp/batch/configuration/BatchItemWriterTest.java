@@ -254,6 +254,6 @@ class BatchItemWriterTest {
 	}
 
 	private BatchChunkMetadata createMockChunkMetadata(String partitionName, int startIndex, int recordCount) {
-		return new BatchChunkMetadata(partitionName, "/tmp/test-job", startIndex, recordCount);
+		return new BatchChunkMetadata(partitionName, "/tmp/test-job", 0L, recordCount, 0L, 0);
 	}
 }

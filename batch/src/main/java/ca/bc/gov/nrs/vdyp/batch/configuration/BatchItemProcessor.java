@@ -67,8 +67,9 @@ public class BatchItemProcessor implements ItemProcessor<BatchChunkMetadata, Bat
 	@Override
 	public BatchChunkMetadata process(@NonNull BatchChunkMetadata chunkMetadata) {
 		logger.trace(
-				"[GUID: {}, EXEID: {}, Partition: {}] Pass-through chunk metadata for processing: startIndex={}, recordCount={}",
-				jobGuid, jobExecutionId, partitionName, chunkMetadata.getStartIndex(), chunkMetadata.getRecordCount()
+				"[GUID: {}, EXEID: {}, Partition: {}] Pass-through chunk metadata for processing: polygonStartByte={}, polygonRecordCount={}",
+				jobGuid, jobExecutionId, partitionName, chunkMetadata.getPolygonStartByte(),
+				chunkMetadata.getPolygonRecordCount()
 		);
 
 		return chunkMetadata;

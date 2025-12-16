@@ -50,7 +50,7 @@ class BatchProjectionServiceTest {
 	@Test
 	void testPerformProjectionForChunk_WithMissingPartitionFiles() {
 		// Create chunk metadata pointing to non-existent partition files
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0, 1);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0);
 
 		BatchResultStorageException exception = assertThrows(BatchResultStorageException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
@@ -64,7 +64,7 @@ class BatchProjectionServiceTest {
 		// Create partition structure with invalid polygon data
 		createPartitionStructure(PARTITION_NAME, List.of("123456789,MAP1"), List.of("123456789,P"));
 
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0, 1);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0);
 
 		BatchProjectionException exception = assertThrows(BatchProjectionException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
@@ -86,7 +86,7 @@ class BatchProjectionServiceTest {
 				List.of("100000000,P", "200000000,P", "300000000,P")
 		);
 
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0, 3);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 3, 0L, 0);
 
 		assertThrows(BatchProjectionException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
@@ -99,7 +99,7 @@ class BatchProjectionServiceTest {
 		createPartitionStructure(PARTITION_NAME, generatePolygonLines(10), generateLayerLines(10));
 
 		// Process chunk: startIndex=5, recordCount=3 (records 5, 6, 7)
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 5, 3);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 3, 0L, 0);
 
 		assertThrows(BatchProjectionException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);

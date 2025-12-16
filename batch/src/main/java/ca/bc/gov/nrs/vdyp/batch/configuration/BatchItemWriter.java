@@ -81,7 +81,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 			);
 
 			if (this.projectionParameters != null) {
-				logger.debug(
+				logger.trace(
 						"[GUID: {}, EXEID: {}, Partition: {}] Projection parameters loaded successfully: selectedExecutionOptions={}",
 						jobGuid, jobExecutionId, partitionName,
 						this.projectionParameters.getSelectedExecutionOptions() != null
@@ -117,7 +117,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 	@Override
 	public ExitStatus afterStep(StepExecution stepExecution) {
 		String partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
-		logger.info(
+		logger.trace(
 				"[GUID: {}, EXEID: {}, Partition: {}] BatchItemWriter.afterStep() called", this.jobGuid,
 				this.jobExecutionId, partitionName
 		);
@@ -146,9 +146,9 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 		String partitionName = chunkMetadata.getPartitionName();
 
 		logger.trace(
-				"[GUID: {}, EXEID: {}, Partition: {}] Processing chunk metadata (startIndex={}, recordCount={}) using BatchProjectionService",
-				this.jobGuid, this.jobExecutionId, partitionName, chunkMetadata.getStartIndex(),
-				chunkMetadata.getRecordCount()
+				"[GUID: {}, EXEID: {}, Partition: {}] Processing chunk metadata (polygonStartByte={}, polygonRecordCount={}) using BatchProjectionService",
+				this.jobGuid, this.jobExecutionId, partitionName, chunkMetadata.getPolygonStartByte(),
+				chunkMetadata.getPolygonRecordCount()
 		);
 
 		// Perform chunk-based projection with streaming
@@ -157,7 +157,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 
 		logger.trace(
 				"[GUID: {}, EXEID: {}, Partition: {}] Successfully processed chunk of {} records. Result: {}",
-				this.jobGuid, this.jobExecutionId, partitionName, chunkMetadata.getRecordCount(), chunkResult
+				this.jobGuid, this.jobExecutionId, partitionName, chunkMetadata.getPolygonRecordCount(), chunkResult
 		);
 	}
 }
