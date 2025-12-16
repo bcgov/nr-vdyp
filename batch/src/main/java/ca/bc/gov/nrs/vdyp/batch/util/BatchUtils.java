@@ -150,13 +150,13 @@ public final class BatchUtils {
 		int recordCount = 0;
 		boolean headerChecked = false;
 
+		// Use platform line separator length (partitioned files are created with PrintWriter.println() which
+		// uses System.lineSeparator()) - The newline length in bytes (1 for \n LF, 2 for \r\n CRLF)
+		int newlineLength = System.lineSeparator().length();
+
 		try (BufferedReader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
 			String line;
 			while ( (line = reader.readLine()) != null) {
-				// Use platform line separator length (partitioned files are created with PrintWriter.println() which
-				// uses System.lineSeparator()) - The newline length in bytes (1 for \n LF, 2 for \r\n CRLF)
-				int newlineLength = System.lineSeparator().length();
-
 				// Calculate byte length including actual newline bytes
 				int lineBytes = line.getBytes(StandardCharsets.UTF_8).length + newlineLength;
 
