@@ -148,7 +148,7 @@ class BatchItemWriterTest {
 	@Test
 	void testWrite_successfulProcessing() throws BatchException {
 		setupWriterWithValidParameters();
-		BatchChunkMetadata chunkMetadata = createMockChunkMetadata(TEST_PARTITION_NAME, 0, 2);
+		BatchChunkMetadata chunkMetadata = createMockChunkMetadata(TEST_PARTITION_NAME, 2);
 		Chunk<BatchChunkMetadata> chunk = new Chunk<>(Arrays.asList(chunkMetadata));
 
 		when(batchProjectionService.performProjectionForChunk(any(), any(), any(), any()))
@@ -164,7 +164,7 @@ class BatchItemWriterTest {
 	@Test
 	void testWrite_WhenProjectionServiceThrows_PropagatesException() throws BatchException {
 		setupWriterWithValidParameters();
-		BatchChunkMetadata chunkMetadata = createMockChunkMetadata(TEST_PARTITION_NAME, 0, 1);
+		BatchChunkMetadata chunkMetadata = createMockChunkMetadata(TEST_PARTITION_NAME, 1);
 		Chunk<BatchChunkMetadata> chunk = new Chunk<>(Arrays.asList(chunkMetadata));
 
 		RuntimeException testException = new RuntimeException("Test projection failure");
@@ -180,7 +180,7 @@ class BatchItemWriterTest {
 
 	@Test
 	void testWrite_nullProjectionParameters_throwsException() {
-		BatchChunkMetadata chunkMetadata = createMockChunkMetadata(TEST_PARTITION_NAME, 0, 1);
+		BatchChunkMetadata chunkMetadata = createMockChunkMetadata(TEST_PARTITION_NAME, 1);
 		Chunk<BatchChunkMetadata> chunk = new Chunk<>(Arrays.asList(chunkMetadata));
 
 		BatchConfigurationException exception = assertThrows(BatchConfigurationException.class, () -> {
@@ -253,7 +253,7 @@ class BatchItemWriterTest {
 		writer.beforeStep(stepExecution);
 	}
 
-	private BatchChunkMetadata createMockChunkMetadata(String partitionName, int startIndex, int recordCount) {
+	private BatchChunkMetadata createMockChunkMetadata(String partitionName, int recordCount) {
 		return new BatchChunkMetadata(partitionName, "/tmp/test-job", 0L, recordCount, 0L, 0);
 	}
 }
