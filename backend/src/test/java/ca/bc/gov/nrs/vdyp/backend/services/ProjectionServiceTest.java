@@ -420,9 +420,18 @@ class ProjectionServiceTest {
 		UUID resultsId = UUID.randomUUID();
 
 		var fileSetMap = new HashMap<FileSetTypeCodeModel, ProjectionFileSetModel>();
-		fileSetMap.put(fileSetTypeCodeModel(FileSetTypeCodeModel.POLYGON), fileSetModel(polyId));
-		fileSetMap.put(fileSetTypeCodeModel(FileSetTypeCodeModel.LAYER), fileSetModel(layerId));
-		fileSetMap.put(fileSetTypeCodeModel(FileSetTypeCodeModel.RESULTS), fileSetModel(resultsId));
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.POLYGON),
+				fileSetModel(polyId, ownerId, FileSetTypeCodeModel.POLYGON)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.LAYER),
+				fileSetModel(layerId, ownerId, FileSetTypeCodeModel.LAYER)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.RESULTS),
+				fileSetModel(resultsId, ownerId, FileSetTypeCodeModel.RESULTS)
+		);
 
 		when(fileSetService.createFileSetForNewProjection(actingUser)).thenReturn(fileSetMap);
 
