@@ -1,8 +1,14 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class ProjectionModel {
+	public static final int DAYS_UNTIL_EXPIRY = 30;
+
 	private String projectionGUID;
 	private VDYPUserModel ownerUser;
 	private ProjectionFileSetModel polygonFileSet;
@@ -13,6 +19,9 @@ public class ProjectionModel {
 	private OffsetDateTime endDate;
 	private CalculationEngineCodeModel calculationEngineCode;
 	private ProjectionStatusCodeModel projectionStatusCode;
+	private LocalDate lastUpdatedDate;
+	private String reportTitle;
+	private String reportDescription;
 
 	public String getProjectionGUID() {
 		return projectionGUID;
@@ -54,6 +63,23 @@ public class ProjectionModel {
 		return projectionStatusCode;
 	}
 
+	public LocalDate getLastUpdatedDate() {
+		return lastUpdatedDate;
+	}
+
+	public LocalDate getExpiryDate() {
+		LocalDate updateDate = lastUpdatedDate == null ? LocalDate.now() : lastUpdatedDate;
+		return updateDate.plusDays(DAYS_UNTIL_EXPIRY);
+	}
+
+	public String getReportTitle() {
+		return reportTitle;
+	}
+
+	public String getReportDescription() {
+		return reportDescription;
+	}
+
 	public void setProjectionGUID(String projectionGUID) {
 		this.projectionGUID = projectionGUID;
 	}
@@ -93,4 +119,17 @@ public class ProjectionModel {
 	public void setProjectionStatusCode(ProjectionStatusCodeModel projectionStatusCode) {
 		this.projectionStatusCode = projectionStatusCode;
 	}
+
+	public void setLastUpdatedDate(LocalDate lastUpdatedDate) {
+		this.lastUpdatedDate = lastUpdatedDate;
+	}
+
+	public void setReportDescription(String reportDescription) {
+		this.reportDescription = reportDescription;
+	}
+
+	public void setReportTitle(String reportTitle) {
+		this.reportTitle = reportTitle;
+	}
+
 }
