@@ -25,16 +25,16 @@ public class ProjectionServiceException extends Exception {
 		actingUserGuid = null;
 	}
 
+	public ProjectionServiceException(String message, Throwable e, UUID projectionGuid) {
+		super(message, e);
+		this.projectionGuid = projectionGuid;
+		actingUserGuid = null;
+	}
+
 	public ProjectionServiceException(String message, UUID projectionGuid, UUID actingUserGuid) {
 		super(message);
 		this.projectionGuid = projectionGuid;
 		this.actingUserGuid = actingUserGuid;
-	}
-
-	public ProjectionServiceException(String message, Throwable e, UUID projectionGuid) {
-		super(message, e);
-		this.projectionGuid = projectionGuid;
-		this.actingUserGuid = null;
 	}
 
 	public ProjectionServiceException(String message, Throwable e, UUID projectionGuid, UUID actingUserGuid) {

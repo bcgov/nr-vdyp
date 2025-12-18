@@ -5,8 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.ApiError;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.ProjectionNotFoundExceptionMapper;
@@ -20,6 +24,38 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import jakarta.ws.rs.core.Response;
 
 class ExceptionMappingTest {
+
+	static Stream<Arguments> ServiceExceptionArguments() {
+		return Stream.of(
+				Arguments.of("Test Exception", UUID.randomUUID(), UUID.randomUUID()), //
+				Arguments.of("Test Exception 2", null, null), //
+				Arguments.of("Test Exception 3", UUID.randomUUID(), null) //
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("ServiceExceptionArguments")
+	void serviceExceptionConstruction(String message, UUID projectionGUID, UUID actingUserGuid) {
+		ProjectionServiceException exception1;
+		ProjectionServiceException exception2;
+		if (projectionGUID != null && actingUserGuid != null) {
+			exception1 = new ProjectionServiceException(message, projectionGUID, actingUserGuid);
+			exception2 = new ProjectionServiceException(
+					message, new Exception("because"), projectionGUID, actingUserGuid
+			);
+		} else if (projectionGUID != null) {
+			exception1 = new ProjectionServiceException(message, projectionGUID);
+			exception2 = new ProjectionServiceException(message, new Exception("because"), projectionGUID);
+		} else {
+			exception1 = new ProjectionServiceException(message);
+			exception2 = new ProjectionServiceException(message, new Exception("because"));
+		}
+		assertEquals(projectionGUID, exception1.getProjectionGuid());
+		assertEquals(actingUserGuid, exception1.getActingUserGuid());
+		assertEquals(projectionGUID, exception2.getProjectionGuid());
+		assertEquals(actingUserGuid, exception2.getActingUserGuid());
+		assertEquals("because", exception2.getCause().getMessage());
+	}
 
 	@Test
 	void unauthorizedExceptionTest() {
