@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         component-name: [
-          frontend, backend
+          frontend, backend, batch
         ]
     steps:
       - uses: actions/checkout@v3
@@ -29,7 +29,9 @@ jobs:
         run: |
           docker pull ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:latest
           docker tag ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:latest ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:${{ github.event.release.tag_name }}
+          docker tag ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:latest ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:deploy-test
           docker push ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:${{ github.event.release.tag_name }}
+          docker push ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:deploy-test
 
   # include additional steps for DLV, PRD
   # rename to deploy-wftst, rename environment to tst
