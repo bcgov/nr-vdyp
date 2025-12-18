@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
-import java.util.Map;
 import java.util.stream.Stream;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.CalculationEngineResourceAssembler;
@@ -15,8 +14,6 @@ public class CalculationEngineCodeLookup
 
 	CalculationEngineCodeRepository repository;
 	CalculationEngineResourceAssembler assembler;
-
-	private Map<String, String> mapExternalRolesToUserTypeCodes;
 
 	public CalculationEngineCodeLookup(
 			CalculationEngineCodeRepository repository, CalculationEngineResourceAssembler assembler

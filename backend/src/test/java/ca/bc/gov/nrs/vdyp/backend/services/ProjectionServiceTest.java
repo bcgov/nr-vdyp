@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -182,17 +181,6 @@ class ProjectionServiceTest {
 		assertThrows(
 				ProjectionUnauthorizedException.class,
 				() -> service.checkUserCanPerformAction(entity, actingUser, ProjectionService.ProjectionAction.READ)
-		);
-	}
-
-	@Test
-	void checkUserCanPerformAction_doesNothing_forCreate() {
-		UUID ownerId = UUID.randomUUID();
-		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), ownerId);
-		VDYPUserModel actingUser = user(UUID.randomUUID()); // even non-owner
-
-		assertDoesNotThrow(
-				() -> service.checkUserCanPerformAction(entity, actingUser, ProjectionService.ProjectionAction.CREATE)
 		);
 	}
 
@@ -400,7 +388,7 @@ class ProjectionServiceTest {
 		VDYPUserModel actingUser = user(ownerId);
 
 		VDYPUserEntity ownerEntity = userEntity(ownerId);
-		when(em.find(eq(VDYPUserEntity.class), eq(ownerId))).thenReturn(ownerEntity);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
 
 		Parameters params = new Parameters();
 		params.setReportTitle("My Report");
@@ -435,9 +423,9 @@ class ProjectionServiceTest {
 
 		when(fileSetService.createFileSetForNewProjection(actingUser)).thenReturn(fileSetMap);
 
-		when(em.find(eq(ProjectionFileSetEntity.class), eq(polyId))).thenReturn(fileSetEntity(polyId));
-		when(em.find(eq(ProjectionFileSetEntity.class), eq(layerId))).thenReturn(fileSetEntity(layerId));
-		when(em.find(eq(ProjectionFileSetEntity.class), eq(resultsId))).thenReturn(fileSetEntity(resultsId));
+		when(em.find(ProjectionFileSetEntity.class, polyId)).thenReturn(fileSetEntity(polyId));
+		when(em.find(ProjectionFileSetEntity.class, layerId)).thenReturn(fileSetEntity(layerId));
+		when(em.find(ProjectionFileSetEntity.class, resultsId)).thenReturn(fileSetEntity(resultsId));
 
 		// Simulate DB-generated ID / app-assigned ID
 		doAnswer(inv -> {

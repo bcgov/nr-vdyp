@@ -7,7 +7,6 @@ import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.userEntity;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -108,7 +107,7 @@ class ProjectionFileSetServiceTest {
 		VDYPUserModel actingUser = user(ownerId);
 
 		VDYPUserEntity ownerEntity = userEntity(ownerId);
-		when(em.find(eq(VDYPUserEntity.class), eq(ownerId))).thenReturn(ownerEntity);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
 
 		// lookup.requireEntity expects the code string from typeCodeModel.getCode()
 		// FileSetTypeCodeModel constants typically have getCode() returning something stable
@@ -139,7 +138,7 @@ class ProjectionFileSetServiceTest {
 		assertThat(persisted.getOwnerUser()).isSameAs(ownerEntity);
 		assertThat(persisted.getFileSetTypeCode()).isSameAs(typeEntity);
 
-		verify(em).find(eq(VDYPUserEntity.class), eq(ownerId));
+		verify(em).find(VDYPUserEntity.class, ownerId);
 		verify(fileSetTypeCodeLookup).requireEntity(FileSetTypeCodeModel.POLYGON);
 	}
 

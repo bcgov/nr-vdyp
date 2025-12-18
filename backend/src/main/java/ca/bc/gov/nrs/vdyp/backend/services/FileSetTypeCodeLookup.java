@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
-import java.util.Map;
 import java.util.stream.Stream;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.FileSetTypeCodeResourceAssembler;
@@ -14,8 +13,6 @@ public class FileSetTypeCodeLookup extends AbstractCodeTableLookup<FileSetTypeCo
 
 	FileSetTypeCodeRepository repository;
 	FileSetTypeCodeResourceAssembler assembler;
-
-	private Map<String, String> mapExternalRolesToUserTypeCodes;
 
 	public FileSetTypeCodeLookup(FileSetTypeCodeRepository repository, FileSetTypeCodeResourceAssembler assembler) {
 		this.repository = repository;

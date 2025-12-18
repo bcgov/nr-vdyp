@@ -2,37 +2,44 @@ package ca.bc.gov.nrs.vdyp.backend.exceptions;
 
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ProjectionServiceException extends Exception {
 
-	private static final Logger log = LoggerFactory.getLogger(ProjectionServiceException.class);
+	private final UUID projectionGuid;
+	private final UUID actingUserGuid;
 
-	private UUID projectionGuid;
-	private UUID actingUserGuid;
+	public ProjectionServiceException(String message) {
+		super(message);
+		projectionGuid = null;
+		actingUserGuid = null;
+	}
 
 	public ProjectionServiceException(String message, Throwable e) {
 		super(message, e);
+		projectionGuid = null;
+		actingUserGuid = null;
 	}
 
 	public ProjectionServiceException(String message, UUID projectionGuid) {
 		super(message);
 		this.projectionGuid = projectionGuid;
+		actingUserGuid = null;
 	}
 
 	public ProjectionServiceException(String message, UUID projectionGuid, UUID actingUserGuid) {
-		this(message, projectionGuid);
+		super(message);
+		this.projectionGuid = projectionGuid;
 		this.actingUserGuid = actingUserGuid;
 	}
 
 	public ProjectionServiceException(String message, Throwable e, UUID projectionGuid) {
-		this(message, e);
+		super(message, e);
 		this.projectionGuid = projectionGuid;
+		this.actingUserGuid = null;
 	}
 
 	public ProjectionServiceException(String message, Throwable e, UUID projectionGuid, UUID actingUserGuid) {
-		this(message, e, projectionGuid);
+		super(message, e);
+		this.projectionGuid = projectionGuid;
 		this.actingUserGuid = actingUserGuid;
 	}
 

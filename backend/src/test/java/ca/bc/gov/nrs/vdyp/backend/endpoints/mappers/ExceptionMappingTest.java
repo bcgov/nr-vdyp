@@ -63,7 +63,6 @@ class ExceptionMappingTest {
 	@Test
 	void stateExceptionTest() {
 		UUID projectionId = UUID.randomUUID();
-		UUID userId = UUID.randomUUID();
 		// Instantiate exception
 		ProjectionStateException exception = new ProjectionStateException(projectionId, "UPDATE", "INPROGRESS");
 

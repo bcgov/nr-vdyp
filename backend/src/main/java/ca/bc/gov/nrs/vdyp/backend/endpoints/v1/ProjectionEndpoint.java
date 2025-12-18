@@ -7,8 +7,6 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +41,6 @@ import jakarta.ws.rs.core.Response.Status;
 @RegisterForReflection
 public class ProjectionEndpoint implements Endpoint {
 
-	private static final Logger logger = LoggerFactory.getLogger(ProjectionEndpoint.class);
 	private final ProjectionService projectionService;
 
 	private final CurrentVDYPUser currentUser;
