@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.vdyp.backend.data.assemblers;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileSetTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class FileSetTypeCodeResourceAssembler {
 	public FileSetTypeCodeResourceAssembler() {
 	}

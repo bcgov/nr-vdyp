@@ -2,9 +2,9 @@ package ca.bc.gov.nrs.vdyp.backend.data.assemblers;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.UserTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
-@ApplicationScoped
+@Dependent
 public class UserTypeCodeResourceAssembler extends CodeTableResourceAssembler<UserTypeCodeEntity, UserTypeCodeModel> {
 
 	public UserTypeCodeResourceAssembler() {

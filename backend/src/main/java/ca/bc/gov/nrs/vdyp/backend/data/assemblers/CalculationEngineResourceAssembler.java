@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.vdyp.backend.data.assemblers;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.CalculationEngineCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class CalculationEngineResourceAssembler {
 	public CalculationEngineCodeEntity toEntity(CalculationEngineCodeModel model) {
 		if (model == null) {

@@ -23,6 +23,10 @@ public class ProjectionFileSetEntity extends AuditableEntity {
 	@JoinColumn(name = "file_set_type_code", referencedColumnName = "file_set_type_code")
 	private FileSetTypeCodeEntity fileSetTypeCode;
 
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "vdyp_user_guid", referencedColumnName = "vdyp_user_guid")
+	private VDYPUserEntity ownerUser;
+
 	@Column(name = "file_set_name", length = 4000)
 	private String fileSetName;
 
@@ -38,6 +42,10 @@ public class ProjectionFileSetEntity extends AuditableEntity {
 		return fileSetName;
 	}
 
+	public VDYPUserEntity getOwnerUser() {
+		return ownerUser;
+	}
+
 	public void setProjectionFileSetGUID(UUID projectionFileSetGUID) {
 		this.projectionFileSetGUID = projectionFileSetGUID;
 	}
@@ -49,4 +57,9 @@ public class ProjectionFileSetEntity extends AuditableEntity {
 	public void setFileSetName(String fileSetName) {
 		this.fileSetName = fileSetName;
 	}
+
+	public void setOwnerUser(VDYPUserEntity ownerUser) {
+		this.ownerUser = ownerUser;
+	}
+
 }
