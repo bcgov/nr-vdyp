@@ -16,12 +16,12 @@ public class BatchChunkMetadata {
 	private final String jobBaseDir;
 
 	// Polygon file metadata
-	private final long polygonStartByte;
-	private final int polygonRecordCount;
+	private final long polygonStartByte; // Start byte offset of polygon data records in this chunk
+	private final int polygonRecordCount; // Number of polygon data records in this chunk
 
 	// Layer file metadata
-	private final long layerStartByte;
-	private final int layerRecordCount;
+	private final long layerStartByte; // Start byte offset of layer data records in this chunk
+	private final int layerRecordCount; // Number of layer data records matching polygon feature IDs in this chunk
 
 	public BatchChunkMetadata(
 			@NonNull String partitionName, @NonNull String jobBaseDir, long polygonStartByte, int polygonRecordCount,

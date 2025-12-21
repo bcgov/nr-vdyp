@@ -9,6 +9,9 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,8 +158,8 @@ public class BatchProjectionService {
 	 * Both polygon and layer streams use byte offset metadata calculated by BatchItemReader to jump directly to the
 	 * required data positions, avoiding full file scans.
 	 *
-	 * The startByte offsets are calculated by BatchItemReader to point to data records only, skipping any headers that
-	 * may have been present in the partitioned files.
+	 * The startByte offsets from BatchItemReader are relative to the first DATA record (header excluded).
+	 * BatchRangeInputStream reads ONLY the data records without headers, as VDYP processing does not require headers.
 	 *
 	 * Note: Caller is responsible for closing the returned InputStreams (handled in finally block of
 	 * performProjectionForChunk)
@@ -181,10 +184,10 @@ public class BatchProjectionService {
 		Path polygonFile = partitionDir.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
 		Path layerFile = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
 
-		// Create polygon stream starting at the calculated byte offset
+		// Create polygon stream starting at the data record offset
 		InputStream polygonStream = BatchRangeInputStream.create(polygonFile, polygonStartByte, polygonRecordCount);
 
-		// Create layer stream starting at the calculated byte offset (or empty stream if no data)
+		// Create layer stream starting at the data record offset (or empty stream if no data)
 		InputStream layerStream;
 		if (layerRecordCount > 0) {
 			layerStream = BatchRangeInputStream.create(layerFile, layerStartByte, layerRecordCount);
@@ -193,16 +196,80 @@ public class BatchProjectionService {
 			layerStream = java.io.InputStream.nullInputStream();
 		}
 
+		// Debug logging: capture and log chunk data before passing to extended-core
+		if (logger.isTraceEnabled()) {
+			logChunkInputData(
+					chunkMetadata, polygonFile, layerFile, polygonStartByte, polygonRecordCount, layerStartByte,
+					layerRecordCount
+			);
+		}
+
 		Map<String, InputStream> inputStreams = new HashMap<>();
 		inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStream);
 		inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layerStream);
 
-		logger.trace(
-				"Created input streams from partition files for chunk: polygonStartByte={}, polygonRecordCount={}, layerStartByte={}, layerRecordCount={}, partition={}",
-				polygonStartByte, polygonRecordCount, layerStartByte, layerRecordCount, partitionName
-		);
-
 		return inputStreams;
+	}
+
+	/**
+	 * Logs chunk input data for debugging purposes. This method reads and logs the actual polygon and layer data that
+	 * will be sent to extended-core for projection.
+	 *
+	 * IMPORTANT: Since InputStreams can only be read once, this method creates NEW streams from the same source files
+	 * to log the data, leaving the original streams intact for extended-core processing.
+	 *
+	 * @throws IOException if file reading fails during debug logging
+	 */
+	private void logChunkInputData(
+			BatchChunkMetadata chunkMetadata, Path polygonFile, Path layerFile, long polygonStartByte,
+			int polygonRecordCount, long layerStartByte, int layerRecordCount
+	) throws IOException {
+
+		String partitionName = chunkMetadata.getPartitionName();
+
+		logger.trace("=== DEBUG: Chunk Input Data for partition {} ===", partitionName);
+		logger.trace("Polygon metadata: startByte={}, recordCount={}", polygonStartByte, polygonRecordCount);
+		logger.trace("Layer metadata: startByte={}, recordCount={}", layerStartByte, layerRecordCount);
+
+		// Read and log polygon data (create new stream to avoid consuming the original)
+		try (
+				InputStream debugPolygonStream = BatchRangeInputStream
+						.create(polygonFile, polygonStartByte, polygonRecordCount);
+				BufferedReader polygonReader = new BufferedReader(
+						new InputStreamReader(debugPolygonStream, StandardCharsets.UTF_8)
+				)
+		) {
+
+			logger.trace("--- Polygon Data ({}  records) ---", polygonRecordCount);
+			String line;
+			int lineNum = 1;
+			while ( (line = polygonReader.readLine()) != null) {
+				logger.trace("Polygon[{}]: {}", lineNum++, line);
+			}
+		}
+
+		// Read and log layer data (create new stream to avoid consuming the original)
+		if (layerRecordCount > 0) {
+			try (
+					InputStream debugLayerStream = BatchRangeInputStream
+							.create(layerFile, layerStartByte, layerRecordCount);
+					BufferedReader layerReader = new BufferedReader(
+							new InputStreamReader(debugLayerStream, StandardCharsets.UTF_8)
+					)
+			) {
+
+				logger.trace("--- Layer Data ({} records) ---", layerRecordCount);
+				String line;
+				int lineNum = 1;
+				while ( (line = layerReader.readLine()) != null) {
+					logger.trace("Layer[{}]: {}", lineNum++, line);
+				}
+			}
+		} else {
+			logger.trace("--- Layer Data: EMPTY (no layer records for this chunk) ---");
+		}
+
+		logger.trace("=== END DEBUG: Chunk Input Data ===");
 	}
 
 	/**
