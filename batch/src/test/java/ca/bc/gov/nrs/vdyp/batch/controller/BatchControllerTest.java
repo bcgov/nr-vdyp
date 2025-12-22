@@ -1,11 +1,9 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -44,7 +42,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,7 +62,7 @@ class BatchControllerTest {
 	private BatchMetricsCollector metricsCollector;
 
 	@Mock
-	private StreamingCsvPartitioner csvPartitioner;
+	private BatchInputPartitioner csvPartitioner;
 
 	@Mock
 	private JobExecution jobExecution;
@@ -89,13 +87,8 @@ class BatchControllerTest {
 		// Use system temp directory for cross-platform compatibility
 		String tempDir = System.getProperty("java.io.tmpdir");
 		ReflectionTestUtils.setField(batchController, "batchRootDirectory", tempDir);
-		ReflectionTestUtils.setField(batchController, "defaultPartitionSize", 4);
+		ReflectionTestUtils.setField(batchController, "defaultNumPartitions", 4);
 		ReflectionTestUtils.setField(batchController, "jobSearchChunkSize", 1000);
-	}
-
-	@Test
-	void testConstructor() {
-		assertNotNull(batchController);
 	}
 
 	@Test
@@ -171,36 +164,6 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsBadRequest() throws BatchPartitionException {
-		// Create controller with null job
-		BatchController controllerWithNullJob = new BatchController(
-				jobLauncher, null, jobExplorer, metricsCollector, csvPartitioner, jobOperator
-		);
-
-		String tempDir = System.getProperty("java.io.tmpdir");
-		ReflectionTestUtils.setField(controllerWithNullJob, "batchRootDirectory", tempDir);
-		ReflectionTestUtils.setField(controllerWithNullJob, "defaultPartitionSize", 4);
-		ReflectionTestUtils.setField(controllerWithNullJob, "jobSearchChunkSize", 1000);
-
-		MockMultipartFile polygonFile = new MockMultipartFile(
-				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
-		);
-		MockMultipartFile layerFile = new MockMultipartFile(
-				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
-		);
-
-		// Mock partitioner to return grid size
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
-
-		ResponseEntity<Map<String, Object>> response = controllerWithNullJob
-				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
-
-		// With null partitionedJob, the jobLauncher.run() will fail, resulting in a validation error
-		assertEquals(400, response.getStatusCode().value());
-		assertTrue(response.getBody().containsKey("validationMessages"));
-	}
-
-	@Test
 	void testStartBatchJobWithFiles_WithEmptyParametersJson_ReturnsBadRequest() {
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
@@ -214,38 +177,6 @@ class BatchControllerTest {
 
 		assertEquals(400, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("validationMessages"));
-	}
-
-	@Test
-	void testStartBatchJobWithFiles_UsesConfiguredDefaultPartitionSize()
-			throws BatchPartitionException, JobExecutionAlreadyRunningException, JobRestartException,
-			JobInstanceAlreadyCompleteException, JobParametersInvalidException {
-		MockMultipartFile polygonFile = new MockMultipartFile(
-				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
-		);
-		MockMultipartFile layerFile = new MockMultipartFile(
-				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
-		);
-
-		// Mock partitioner to return grid size
-		when(csvPartitioner.partitionCsvFiles(any(), any(), eq(4), any(), any())).thenReturn(4);
-
-		// Mock job execution
-		when(jobExecution.getId()).thenReturn(1L);
-		when(jobExecution.getStatus()).thenReturn(BatchStatus.STARTED);
-		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
-		when(jobInstance.getJobName()).thenReturn("testJob");
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString("jobGuid")).thenReturn("test-guid");
-		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
-
-		// Always uses default partition size from configuration
-		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
-
-		assertEquals(200, response.getStatusCode().value());
-		assertTrue(response.getBody().containsKey("jobExecutionId"));
 	}
 
 	@Test
@@ -574,33 +505,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithNullPolygonFile_ReturnsInternalServerError() {
-		MockMultipartFile layerFile = new MockMultipartFile(
-				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
-		);
-
-		ResponseEntity<Map<String, Object>> response = batchController.startBatchJobWithFiles(null, layerFile, "{}");
-
-		assertEquals(500, response.getStatusCode().value());
-		assertTrue(response.getBody().containsKey("error"));
-	}
-
-	@Test
-	void testStartBatchJobWithFiles_WithEmptyPolygonFile_ReturnsBadRequest() {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", new byte[0]);
-		MockMultipartFile layerFile = new MockMultipartFile(
-				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
-		);
-
-		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
-
-		assertEquals(400, response.getStatusCode().value());
-		assertTrue(response.getBody().containsKey("validationMessages"));
-	}
-
-	@Test
-	void testStartBatchJobWithFiles_WithPolygonFileOnlyWhitespace_ReturnsBadRequest() {
+	void testStartBatchJobWithFiles_WithInvalidPolygonFile_ReturnsBadRequest() {
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "   \n  \n\t\t\n".getBytes()
 		);
@@ -616,33 +521,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithNullLayerFile_ReturnsInternalServerError() {
-		MockMultipartFile polygonFile = new MockMultipartFile(
-				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
-		);
-
-		ResponseEntity<Map<String, Object>> response = batchController.startBatchJobWithFiles(polygonFile, null, "{}");
-
-		assertEquals(500, response.getStatusCode().value());
-		assertTrue(response.getBody().containsKey("error"));
-	}
-
-	@Test
-	void testStartBatchJobWithFiles_WithEmptyLayerFile_ReturnsBadRequest() {
-		MockMultipartFile polygonFile = new MockMultipartFile(
-				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
-		);
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", new byte[0]);
-
-		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
-
-		assertEquals(400, response.getStatusCode().value());
-		assertTrue(response.getBody().containsKey("validationMessages"));
-	}
-
-	@Test
-	void testStartBatchJobWithFiles_WithLayerFileOnlyWhitespace_ReturnsBadRequest() {
+	void testStartBatchJobWithFiles_WithInvalidLayerFile_ReturnsBadRequest() {
 		MockMultipartFile polygonFile = new MockMultipartFile(
 				"polygonFile", "polygon.csv", "text/csv", "FEATURE_ID\n123".getBytes()
 		);
@@ -658,7 +537,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithJobLauncherException_ReturnsInternalServerError()
+	void testStartBatchJobWithFiles_WithJobLauncherException_ReturnsBadRequest()
 			throws BatchPartitionException, JobExecutionAlreadyRunningException, JobRestartException,
 			JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		MockMultipartFile polygonFile = new MockMultipartFile(

@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -74,5 +76,67 @@ public final class BatchUtils {
 		// check if it starts with header keywords
 		return upperLine.startsWith("FEATURE") || upperLine.startsWith("TABLE") || upperLine.startsWith("POLYGON")
 				|| upperLine.contains("LAYER_ID") || upperLine.contains("SPECIES_CODE");
+	}
+
+	/**
+	 * Extract FEATURE_ID from the first field of a CSV line.
+	 *
+	 * @param csvLine The CSV line to parse
+	 * @return The FEATURE_ID as a String, or null if the line is null/empty. Callers MUST check for null before using
+	 *         the returned value.
+	 */
+	public static String extractFeatureId(String csvLine) {
+		if (csvLine == null || csvLine.trim().isEmpty()) {
+			return null;
+		}
+
+		int commaIndex = csvLine.indexOf(',');
+		if (commaIndex == -1) {
+			// No comma found, entire line might be the FEATURE_ID
+			return csvLine.trim();
+		} else {
+			// Extract first field before comma
+			return csvLine.substring(0, commaIndex).trim();
+		}
+	}
+
+	/**
+	 * Counts the total number of data records in a CSV file, skipping blank lines and header lines.
+	 *
+	 * @param reader The BufferedReader to read from
+	 * @return The number of data records (excluding headers and blank lines)
+	 * @throws IOException if reading fails
+	 */
+	public static int countDataRecords(BufferedReader reader) throws IOException {
+		int count = 0;
+		boolean headerChecked = false;
+
+		String line;
+		while ( (line = reader.readLine()) != null) {
+			// Skip blank lines and optionally skip header (only checked once)
+			boolean shouldSkip = line.isBlank() || (!headerChecked && isHeaderLine(line));
+
+			if (!headerChecked && !line.isBlank()) {
+				headerChecked = true;
+			}
+
+			if (!shouldSkip) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	/**
+	 * Returns the line separator length used in partitioned CSV files.
+	 *
+	 * Partitioned files are created with PrintWriter.println() which uses System.lineSeparator(), so we can directly
+	 * use the platform's line separator length instead of detecting it from files.
+	 *
+	 * @return The newline length in bytes (1 for \n LF, 2 for \r\n CRLF)
+	 */
+	public static int getLineSeparatorLength() {
+		return System.lineSeparator().length();
 	}
 }

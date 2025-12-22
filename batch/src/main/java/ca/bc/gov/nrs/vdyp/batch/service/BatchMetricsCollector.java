@@ -38,7 +38,7 @@ public class BatchMetricsCollector {
 			jobMetricsMap.put(jobGuid, metrics);
 			jobMetricsByArrivalTime.add(jobGuid);
 
-			logger.debug("[GUID: {}, EXEID: {}] Initialized metrics", jobGuid, jobExecutionId);
+			logger.trace("[GUID: {}, EXEID: {}] Initialized metrics", jobGuid, jobExecutionId);
 			return metrics;
 		}
 	}
@@ -53,7 +53,7 @@ public class BatchMetricsCollector {
 			metrics.getPartitionMetrics().put(partitionName, partitionMetrics);
 		}
 
-		logger.debug(
+		logger.trace(
 				"[GUID: {}, EXEID: {}, Partition: {}] Initialized partition metrics", jobGuid, jobExecutionId,
 				partitionName
 		);
@@ -67,7 +67,7 @@ public class BatchMetricsCollector {
 
 		partitionMetrics.complete(writeCount, exitCode);
 
-		logger.debug(
+		logger.trace(
 				"[GUID: {}, EXEID: {}, Partition: {}] Completed partition metrics, written: {}, exitCode: {}", jobGuid,
 				jobExecutionId, partitionName, writeCount, exitCode
 		);
@@ -80,7 +80,7 @@ public class BatchMetricsCollector {
 
 		metrics.finalizeJob(status, totalRead, totalWritten);
 
-		logger.info(
+		logger.trace(
 				"[GUID: {}, EXEID: {}] Finalized metrics: status={}, read={}, written={}", jobGuid, jobExecutionId,
 				status, totalRead, totalWritten
 		);
@@ -111,7 +111,7 @@ public class BatchMetricsCollector {
 			metrics.getRetryDetails().add(retryDetail);
 		}
 
-		logger.debug(
+		logger.warn(
 				"[GUID: {}, Partition: {}] Recorded retry attempt #{} for job execution ID: {}, successful: {}, error: {}",
 				jobGuid, partitionName, attemptNumber, jobExecutionId, successful, errorType
 		);
@@ -163,7 +163,7 @@ public class BatchMetricsCollector {
 
 			assert jobMetricsMap.size() == jobMetricsByArrivalTime.size();
 
-			logger.debug("Cleaned up old metrics, removed {} least recent entries", nItemsToRemove);
+			logger.trace("Cleaned up old metrics, removed {} least recent entries", nItemsToRemove);
 		}
 	}
 

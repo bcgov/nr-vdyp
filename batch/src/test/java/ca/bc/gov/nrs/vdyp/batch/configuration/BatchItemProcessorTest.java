@@ -6,13 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
-import java.util.stream.Stream;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.provider.Arguments;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -24,12 +20,12 @@ import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class VdypProjectionProcessorTest {
+class BatchItemProcessorTest {
 
 	@Mock
 	private BatchMetricsCollector metricsCollector;
@@ -46,13 +42,13 @@ class VdypProjectionProcessorTest {
 	@Mock
 	private JobParameters jobParameters;
 
-	private VdypProjectionProcessor processor;
+	private BatchItemProcessor processor;
 
 	private static final String JOB_GUID = "7c26643a-50cb-497e-a539-afac6966ecea";
 
 	@BeforeEach
 	void setUp() {
-		processor = new VdypProjectionProcessor(metricsCollector);
+		processor = new BatchItemProcessor(metricsCollector);
 
 		setupStepExecution();
 	}
@@ -69,11 +65,6 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testConstructor() {
-		assertNotNull(processor);
-	}
-
-	@Test
 	void testBeforeStep_InitializesProcessor() throws BatchException {
 		processor.beforeStep(stepExecution);
 
@@ -87,35 +78,22 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_ValidRecord_ReturnsProcessedRecord() throws BatchException {
+	void testProcess_WithValidChunkMetadata_ReturnsChunkUnchanged() throws BatchException {
 		processor.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = createValidBatchRecord();
-		BatchRecord result = processor.process(batchRecord);
+		BatchChunkMetadata chunkMetadata = createChunkMetadata("test-partition", 10);
+
+		BatchChunkMetadata result = processor.process(chunkMetadata);
 
 		assertNotNull(result);
-		assertEquals(batchRecord, result); // Pass-through processing
-	}
-
-	static Stream<Arguments> provideInvalidRecords() {
-		return Stream.of(Arguments.of("Missing Feature ID", (String) null), Arguments.of("Empty Feature ID", "   "));
-	}
-
-	@Test
-	void testProcess_NullMetricsCollector_ProcessesSuccessfully() throws BatchException {
-		processor = new VdypProjectionProcessor(null);
-		processor.beforeStep(stepExecution);
-
-		BatchRecord batchRecord = createValidBatchRecord();
-		BatchRecord result = processor.process(batchRecord);
-
-		assertNotNull(result);
-		assertEquals(batchRecord, result); // Pass-through processing
+		assertEquals(0L, result.getPolygonStartByte());
+		assertEquals(10, result.getPolygonRecordCount());
+		assertEquals(chunkMetadata, result);
 	}
 
 	@Test
 	void testBeforeStep_WithNullMetricsCollector_DoesNotThrowException() throws BatchException {
-		processor = new VdypProjectionProcessor(null);
+		processor = new BatchItemProcessor(null);
 
 		processor.beforeStep(stepExecution);
 
@@ -125,66 +103,16 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_WithValidFeatureId_ReturnsRecordUnchanged() throws BatchException {
-		processor.beforeStep(stepExecution);
-
-		BatchRecord batchRecord = new BatchRecord(
-				"VALID123", "12345678901,MAP1", Collections.emptyList(), "test-partition"
-		);
-
-		BatchRecord result = processor.process(batchRecord);
-
-		assertNotNull(result);
-		assertEquals("VALID123", result.getFeatureId());
-		assertEquals(batchRecord, result);
-	}
-
-	@Test
-	void testBeforeStep_LogsPartitionInformation() throws BatchException {
-		processor.beforeStep(stepExecution);
-
-		verify(stepExecution).getJobExecutionId();
-		verify(stepExecution).getExecutionContext();
-		verify(executionContext).getString("partitionName");
-	}
-
-	@Test
-	void testProcess_MultipleRecords_ProcessesAllSuccessfully() throws BatchException {
-		processor.beforeStep(stepExecution);
-
-		BatchRecord record1 = new BatchRecord(
-				"FEATURE001", "12345678901,MAP1", Collections.emptyList(), "test-partition"
-		);
-		BatchRecord result1 = processor.process(record1);
-		assertNotNull(result1);
-		assertEquals("FEATURE001", result1.getFeatureId());
-
-		BatchRecord record2 = new BatchRecord(
-				"FEATURE002", "12345678901,MAP1", Collections.emptyList(), "test-partition"
-		);
-		BatchRecord result2 = processor.process(record2);
-		assertNotNull(result2);
-		assertEquals("FEATURE002", result2.getFeatureId());
-
-		BatchRecord record3 = new BatchRecord(
-				"FEATURE003", "12345678901,MAP1", Collections.emptyList(), "test-partition"
-		);
-		BatchRecord result3 = processor.process(record3);
-		assertNotNull(result3);
-		assertEquals("FEATURE003", result3.getFeatureId());
-	}
-
-	@Test
 	void testBeforeStep_CalledTwice_ThrowsException() throws BatchException {
 		processor.beforeStep(stepExecution);
 
 		assertThrows(
 				BatchConfigurationException.class, () -> processor.beforeStep(stepExecution),
-				"VdypProjectionProcessor already initialized. beforeStep() should only be called once."
+				"BatchItemProcessor already initialized. beforeStep() should only be called once."
 		);
 	}
 
-	private BatchRecord createValidBatchRecord() {
-		return new BatchRecord("12345678901", "12345678901,MAP1", Collections.emptyList(), "test-partition");
+	private BatchChunkMetadata createChunkMetadata(String partitionName, int recordCount) {
+		return new BatchChunkMetadata(partitionName, "/tmp/test-job", 0L, recordCount, 0L, 0);
 	}
 }
