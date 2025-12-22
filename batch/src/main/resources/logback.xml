@@ -8,7 +8,7 @@
 
   <!-- File appender -->
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-		<file>${BATCH_ROOT_DIRECTORY:-/app/work}/vdyp-batch-debug.log</file>
+		<file>logs/vdyp-batch-debug.log</file>
     <append>false</append>
     <encoder>
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
@@ -16,7 +16,7 @@
   </appender>
 
   <!-- Application loggers -->
-  <logger name="ca.bc.gov.nrs.vdyp.batch" level="DEBUG" />
+  <logger name="ca.bc.gov.nrs.vdyp.batch" level="INFO" />
   <logger name="ca.bc.gov.nrs.vdyp" level="OFF" />
 
   <!-- Spring Boot and Spring Framework -->

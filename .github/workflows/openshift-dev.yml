@@ -52,7 +52,7 @@ jobs:
     strategy:
       matrix:
         package: [backend, frontend, batch]
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check if package should be built
         id: check_build

@@ -1,11 +1,8 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 
 /**
  * Exception thrown when VDYP projection operations fail.
@@ -19,27 +16,20 @@ public class BatchProjectionException extends BatchException {
 	}
 
 	public static BatchProjectionException handleProjectionFailure(
-			Exception cause, List<BatchRecord> batchRecords, String jobGuid, Long jobExecutionId, String partitionName,
-			Logger logger
+			Exception cause, BatchChunkMetadata chunkMetadata, String jobGuid, Long jobExecutionId,
+			String partitionName, Logger logger
 	) {
-		List<String> featureIds = batchRecords.stream().map(BatchRecord::getFeatureId).toList();
-
-		String featureIdsPreview = featureIds.stream().limit(5).collect(Collectors.joining(", "));
-		if (featureIds.size() > 5) {
-			featureIdsPreview += String.format(" and %d more", featureIds.size() - 5);
-		}
+		long polygonStartByte = chunkMetadata.getPolygonStartByte();
+		int polygonRecordCount = chunkMetadata.getPolygonRecordCount();
 
 		String contextualMessage = String.format(
-				"[GUID: %s, EXEID: %d, Partition: %s] VDYP projection failed for %d records. Exception: %s, Message: %s, FEATURE_IDs: [%s]",
-				jobGuid, jobExecutionId, partitionName, batchRecords.size(), cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : "No error message", featureIdsPreview
+				"[GUID: %s, EXEID: %d, Partition: %s] VDYP projection failed for chunk (polygonStartByte=%d, polygonRecordCount=%d). Exception: %s, Message: %s",
+				jobGuid, jobExecutionId, partitionName, polygonStartByte, polygonRecordCount,
+				cause.getClass().getSimpleName(), cause.getMessage() != null ? cause.getMessage() : "No error message"
 		);
 
 		logger.error(contextualMessage, cause);
 
-		// Use first feature ID for skip tracking
-		String firstFeatureId = !featureIds.isEmpty() ? featureIds.get(0) : null;
-
-		return new BatchProjectionException(contextualMessage, cause, firstFeatureId);
+		return new BatchProjectionException(contextualMessage, cause, null);
 	}
 }

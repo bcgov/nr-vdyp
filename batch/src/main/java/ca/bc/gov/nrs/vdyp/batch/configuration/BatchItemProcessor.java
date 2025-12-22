@@ -9,13 +9,13 @@ import org.springframework.lang.NonNull;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
-public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, BatchRecord> {
+public class BatchItemProcessor implements ItemProcessor<BatchChunkMetadata, BatchChunkMetadata> {
 
-	private static final Logger logger = LoggerFactory.getLogger(VdypProjectionProcessor.class);
+	private static final Logger logger = LoggerFactory.getLogger(BatchItemProcessor.class);
 
 	private final BatchMetricsCollector metricsCollector;
 
@@ -28,7 +28,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	// Protects against multiple beforeStep() calls
 	private boolean initialized = false;
 
-	public VdypProjectionProcessor(BatchMetricsCollector metricsCollector) {
+	public BatchItemProcessor(BatchMetricsCollector metricsCollector) {
 		this.metricsCollector = metricsCollector;
 	}
 
@@ -41,7 +41,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		if (initialized) {
 			throw BatchConfigurationException.handleConfigurationFailure(
 					new IllegalStateException("Multiple initialization attempts"),
-					"VdypProjectionProcessor already initialized. beforeStep() should only be called once",
+					"BatchItemProcessor already initialized. beforeStep() should only be called once",
 					stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID),
 					stepExecution.getJobExecutionId(), logger
 			);
@@ -55,7 +55,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 			metricsCollector.initializePartitionMetrics(jobExecutionId, jobGuid, partitionName);
 		}
 
-		logger.info(
+		logger.trace(
 				"[GUID: {}, Partition: {}] VDYP Projection Processor initialized for job {}", jobGuid, partitionName,
 				jobExecutionId
 		);
@@ -65,13 +65,14 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	}
 
 	@Override
-	public BatchRecord process(@NonNull BatchRecord batchRecord) {
+	public BatchChunkMetadata process(@NonNull BatchChunkMetadata chunkMetadata) {
 		logger.trace(
-				"[GUID: {}, EXEID: {} Partition: {}] Prepared record for chunk processing: FEATURE_ID {}", jobGuid,
-				jobExecutionId, partitionName, batchRecord.getFeatureId()
+				"[GUID: {}, EXEID: {}, Partition: {}] Pass-through chunk metadata for processing: polygonStartByte={}, polygonRecordCount={}",
+				jobGuid, jobExecutionId, partitionName, chunkMetadata.getPolygonStartByte(),
+				chunkMetadata.getPolygonRecordCount()
 		);
 
-		return batchRecord;
+		return chunkMetadata;
 	}
 
 }

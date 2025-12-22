@@ -42,7 +42,7 @@ public class BatchProperties {
 	}
 
 	public static class PartitionProperties {
-		private Integer defaultPartitionSize;
+		private Integer defaultNumberOfPartitions;
 		private Integer jobSearchChunkSize;
 		private String inputPolygonFileName;
 		private String inputLayerFileName;
@@ -52,12 +52,12 @@ public class BatchProperties {
 		private Integer minValidFileSize;
 		private boolean interimDirsCleanupEnabled = true;
 
-		public Integer getDefaultPartitionSize() {
-			return defaultPartitionSize;
+		public Integer getDefaultNumberOfPartitions() {
+			return defaultNumberOfPartitions;
 		}
 
-		public void setDefaultPartitionSize(Integer defaultPartitionSize) {
-			this.defaultPartitionSize = defaultPartitionSize;
+		public void setDefaultNumberOfPartitions(Integer defaultNumberOfPartitions) {
+			this.defaultNumberOfPartitions = defaultNumberOfPartitions;
 		}
 
 		public Integer getJobSearchChunkSize() {

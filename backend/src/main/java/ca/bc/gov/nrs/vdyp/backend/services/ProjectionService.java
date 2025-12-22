@@ -332,6 +332,8 @@ public class ProjectionService {
 				case FileSetTypeCodeModel.POLYGON -> entity.setPolygonFileSet(fse);
 				case FileSetTypeCodeModel.LAYER -> entity.setLayerFileSet(fse);
 				case FileSetTypeCodeModel.RESULTS -> entity.setResultFileSet(fse);
+				default ->
+					throw new ProjectionServiceException("Error creating projection: unknown FileSet Type created");
 				}
 			}
 
@@ -366,32 +368,33 @@ public class ProjectionService {
 		return entity.get();
 	}
 	public enum ProjectionAction {
-		CREATE, READ, UPDATE, DELETE
+		READ, UPDATE, DELETE
 	}
 
 	public void checkUserCanPerformAction(ProjectionEntity entity, VDYPUserModel actingUser, ProjectionAction action)
 			throws ProjectionServiceException {
 		switch (action) {
-		case READ:
-		case UPDATE:
-		case DELETE:
+		case READ, UPDATE, DELETE:
 			UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());
 			if (!entity.getOwnerUser().getVdypUserGUID().equals(vdypUserGuid)) {
 				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 			}
+			break;
 		}
+
 	}
 
 	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
 			throws ProjectionServiceException {
 		if (entity.getProjectionStatusCode().getCode().equals(ProjectionStatusCodeModel.INPROGRESS)) {
 			switch (action) {
-			case UPDATE:
-			case DELETE:
+			case UPDATE, DELETE:
 				// TODO check againsdt some specific states throw ProjectionServiceException if htere is an issue
 				throw new ProjectionStateException(
 						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
 				);
+			case READ:
+				break;
 			}
 
 		}

@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.UserTypeCodeResourceAssembler;
@@ -77,12 +79,12 @@ class UserTypeCodeLookupTest {
 	}
 
 	@Test
-	void test_require_NonExistant_ThrowsException() {
+	void test_requireModel_NonExistant_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> lookup.requireModel(""));
 	}
 
 	@Test
-	void test_findNull_returnsEmpty() {
+	void test_findModelNull_returnsEmpty() {
 		assertThat(lookup.findModel(null)).isSameAs(Optional.empty());
 	}
 
@@ -105,6 +107,40 @@ class UserTypeCodeLookupTest {
 	@MethodSource("normalizeString")
 	void test_normalize(String string, String normalizedString) {
 		assertThat(lookup.normalize(string)).isEqualTo(normalizedString);
+	}
+
+	@Test
+	void test_requireEntity_NonExistant_ThrowsException() {
+		assertThrows(IllegalArgumentException.class, () -> lookup.requireEntity(""));
+	}
+
+	@Test
+	void test_findEntityNull_returnsEmpty() {
+		assertThat(lookup.findEntity(null)).isSameAs(Optional.empty());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "user", "SuperUSER", "ADMIN" })
+	void test_findModel_Exists_returnsExpected(String code) {
+		assertEquals(lookup.normalize(code), lookup.findModel(code).get().getCode());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "user", "SuperUSER", "ADMIN" })
+	void test_requireModel_Exists_returnsExpected(String code) {
+		assertEquals(lookup.normalize(code), lookup.requireModel(code).getCode());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "user", "SuperUSER", "ADMIN" })
+	void test_findEntity_Exists_returnsExpected(String code) {
+		assertEquals(lookup.normalize(code), lookup.findEntity(code).get().getCode());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "user", "SuperUSER", "ADMIN" })
+	void test_requireEntity_Exists_returnsExpected(String code) {
+		assertEquals(lookup.normalize(code), lookup.requireEntity(code).getCode());
 	}
 
 }

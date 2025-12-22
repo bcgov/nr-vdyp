@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
-import java.util.Map;
 import java.util.stream.Stream;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionStatusCodeResourceAssembler;
@@ -15,8 +14,6 @@ public class ProjectionStatusCodeLookup
 
 	ProjectionStatusCodeRepository repository;
 	ProjectionStatusCodeResourceAssembler assembler;
-
-	private Map<String, String> mapExternalRolesToUserTypeCodes;
 
 	public ProjectionStatusCodeLookup(
 			ProjectionStatusCodeRepository repository, ProjectionStatusCodeResourceAssembler assembler

@@ -1,8 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
@@ -18,38 +15,36 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 
 /**
- * Chunk-based ItemWriter that processes multiple BatchRecords together for improved performance. This writer implements
- * the efficient chunk-based projection strategy where multiple FEATURE_IDs are processed in a single VDYP projection
- * operation.
+ * Memory-efficient ItemWriter that processes chunk metadata by streaming data directly from partition files. This
+ * writer implements the efficient streaming strategy where file data is read on-demand rather than being held in
+ * memory.
  */
-public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepExecutionListener {
+public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExecutionListener {
 
-	private static final Logger logger = LoggerFactory.getLogger(VdypChunkProjectionWriter.class);
+	private static final Logger logger = LoggerFactory.getLogger(BatchItemWriter.class);
 
-	private final VdypProjectionService vdypProjectionService;
+	private final BatchProjectionService batchProjectionService;
 	private final ObjectMapper objectMapper;
 
 	// Step execution context fields - initialized once in beforeStep() and never modified thereafter.
 	// Note: These fields cannot be made final due to Spring Batch's StepExecutionListener contract,
 	// which requires initialization after construction. They represent the step's immutable identity
 	// and configuration once set.
-	private String partitionName;
 	private Long jobExecutionId;
 	private String jobGuid;
 	private Parameters projectionParameters;
-	private String jobBaseDir;
 
 	// Protects against multiple beforeStep() calls
 	private boolean initialized = false;
 
-	public VdypChunkProjectionWriter(VdypProjectionService vdypProjectionService, ObjectMapper objectMapper) {
-		this.vdypProjectionService = vdypProjectionService;
+	public BatchItemWriter(BatchProjectionService batchProjectionService, ObjectMapper objectMapper) {
+		this.batchProjectionService = batchProjectionService;
 		this.objectMapper = objectMapper;
 	}
 
@@ -59,7 +54,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 			// StepExecutionListener.beforeStep() interface does not support checked exceptions.
 			// Wrap as RuntimeException to maintain interface contract
 			BatchConfigurationException configException = BatchConfigurationException.handleConfigurationFailure(
-					new IllegalStateException("VdypChunkProjectionWriter already initialized"),
+					new IllegalStateException("BatchItemWriter already initialized"),
 					"beforeStep() called multiple times - should only be called once", "N/A", 0L, logger
 			);
 			throw new IllegalStateException(configException.getMessage(), configException);
@@ -67,12 +62,12 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
-		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
-		this.jobBaseDir = stepExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 
-		logger.info(
-				"[GUID: {}, EXEID: {}, Partition: {}] VdypChunkProjectionWriter.beforeStep() called", jobGuid,
-				jobExecutionId, partitionName
+		String partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
+
+		logger.trace(
+				"[GUID: {}, EXEID: {}, Partition: {}] BatchItemWriter.beforeStep() called", jobGuid, jobExecutionId,
+				partitionName
 		);
 
 		String projectionParametersJson = stepExecution.getJobParameters()
@@ -80,13 +75,13 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 
 		try {
 			this.projectionParameters = objectMapper.readValue(projectionParametersJson, Parameters.class);
-			logger.info(
-					"[GUID: {}, EXEID: {}, Partition: {}] VdypChunkProjectionWriter initialized with projection parameters. Parameters null: {}",
+			logger.trace(
+					"[GUID: {}, EXEID: {}, Partition: {}] BatchItemWriter initialized with projection parameters. Parameters null: {}",
 					jobGuid, jobExecutionId, partitionName, this.projectionParameters == null
 			);
 
 			if (this.projectionParameters != null) {
-				logger.debug(
+				logger.trace(
 						"[GUID: {}, EXEID: {}, Partition: {}] Projection parameters loaded successfully: selectedExecutionOptions={}",
 						jobGuid, jobExecutionId, partitionName,
 						this.projectionParameters.getSelectedExecutionOptions() != null
@@ -121,21 +116,19 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 
 	@Override
 	public ExitStatus afterStep(StepExecution stepExecution) {
-		logger.info(
-				"[GUID: {}, EXEID: {}, Partition: {}] VdypChunkProjectionWriter.afterStep() called", this.jobGuid,
-				this.jobExecutionId, this.partitionName
+		String partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
+		logger.trace(
+				"[GUID: {}, EXEID: {}, Partition: {}] BatchItemWriter.afterStep() called", this.jobGuid,
+				this.jobExecutionId, partitionName
 		);
 		return stepExecution.getExitStatus();
 	}
 
 	@Override
-	public void write(@NonNull Chunk<? extends BatchRecord> chunk)
+	public void write(@NonNull Chunk<? extends BatchChunkMetadata> chunk)
 			throws BatchResultStorageException, BatchProjectionException, BatchConfigurationException {
 		if (chunk.isEmpty()) {
-			logger.debug(
-					"[GUID: {}, EXEID: {}, Partition: {}] Empty chunk received, skipping", this.jobGuid,
-					this.jobExecutionId, this.partitionName
-			);
+			logger.debug("[GUID: {}, EXEID: {}] Empty chunk received, skipping", this.jobGuid, this.jobExecutionId);
 			return;
 		}
 
@@ -148,22 +141,23 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 			);
 		}
 
-		List<BatchRecord> batchRecords = chunk.getItems().stream().collect(Collectors.toList());
+		// Spring Batch chunk size is 1, so chunk contains exactly one BatchChunkMetadata
+		BatchChunkMetadata chunkMetadata = chunk.getItems().get(0);
+		String partitionName = chunkMetadata.getPartitionName();
 
-		logger.info(
-				"[GUID: {}, EXEID: {}, Partition: {}] Processing chunk of {} records using VdypProjectionService",
-				this.jobGuid, this.jobExecutionId, this.partitionName, batchRecords.size()
+		logger.trace(
+				"[GUID: {}, EXEID: {}, Partition: {}] Processing chunk metadata (polygonStartByte={}, polygonRecordCount={}) using BatchProjectionService",
+				this.jobGuid, this.jobExecutionId, partitionName, chunkMetadata.getPolygonStartByte(),
+				chunkMetadata.getPolygonRecordCount()
 		);
 
-		// Perform chunk-based projection
-		String chunkResult = vdypProjectionService.performProjectionForChunk(
-				batchRecords, this.partitionName, this.projectionParameters, this.jobExecutionId, this.jobGuid,
-				this.jobBaseDir
-		);
+		// Perform chunk-based projection with streaming
+		String chunkResult = batchProjectionService
+				.performProjectionForChunk(chunkMetadata, this.projectionParameters, this.jobExecutionId, this.jobGuid);
 
-		logger.info(
+		logger.trace(
 				"[GUID: {}, EXEID: {}, Partition: {}] Successfully processed chunk of {} records. Result: {}",
-				this.jobGuid, this.jobExecutionId, this.partitionName, batchRecords.size(), chunkResult
+				this.jobGuid, this.jobExecutionId, partitionName, chunkMetadata.getPolygonRecordCount(), chunkResult
 		);
 	}
 }

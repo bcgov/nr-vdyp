@@ -76,12 +76,13 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private void processSkippableException(Throwable t) {
 		SkipContext skipContext = createSkipContext(t);
-		ExecutionContext executionContext = getCurrentExecutionContext();
+		SkipExecutionSnapshot executionSnapshot = getCurrentExecutionSnapshot();
 
-		recordSkipMetricsSafely(skipContext, executionContext);
+		recordSkipMetricsSafely(skipContext, executionSnapshot);
 
 		logger.info(
-				"[{}] {}", executionContext.currentPartitionName, "Skipping VDYP record due to error: " + t.getMessage()
+				"[{}] {}", executionSnapshot.currentPartitionName,
+				"Skipping VDYP record due to error: " + t.getMessage()
 		);
 	}
 
@@ -94,7 +95,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 		return new SkipContext(featureId, t);
 	}
 
-	private ExecutionContext getCurrentExecutionContext() {
+	private SkipExecutionSnapshot getCurrentExecutionSnapshot() {
 		Long currentJobExecutionId = jobExecutionId;
 		String currentJobGuid = jobGuid;
 		String currentPartitionName = partitionName;
@@ -113,18 +114,18 @@ public class BatchSkipPolicy implements SkipPolicy {
 			logger.warn("[VDYP Skip Policy] Warning: Could not access step context: {}", e.getMessage());
 		}
 
-		return new ExecutionContext(currentJobExecutionId, currentJobGuid, currentPartitionName);
+		return new SkipExecutionSnapshot(currentJobExecutionId, currentJobGuid, currentPartitionName);
 	}
 
 	/**
 	 * Records skip metrics, catching any BatchException to prevent metrics failures from affecting skip logic.
 	 */
-	private void recordSkipMetricsSafely(SkipContext skipContext, ExecutionContext executionContext) {
-		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
+	private void recordSkipMetricsSafely(SkipContext skipContext, SkipExecutionSnapshot executionSnapshot) {
+		if (metricsCollector != null && executionSnapshot.currentJobExecutionId != null) {
 			try {
 				metricsCollector.recordSkip(
-						executionContext.currentJobExecutionId, executionContext.currentJobGuid, skipContext.featureId,
-						skipContext.throwable, executionContext.currentPartitionName
+						executionSnapshot.currentJobExecutionId, executionSnapshot.currentJobGuid,
+						skipContext.featureId, skipContext.throwable, executionSnapshot.currentPartitionName
 				);
 			} catch (BatchException e) {
 				logger.warn("Failed to record skip metric: {}", e.getMessage());
@@ -142,12 +143,16 @@ public class BatchSkipPolicy implements SkipPolicy {
 		}
 	}
 
-	private static class ExecutionContext {
+	/**
+	 * Immutable snapshot of execution context at the time of skip processing. Captures job and partition information
+	 * atomically to ensure consistency when recording skip metrics.
+	 */
+	private static class SkipExecutionSnapshot {
 		final Long currentJobExecutionId;
 		final String currentJobGuid;
 		final String currentPartitionName;
 
-		ExecutionContext(Long jobExecutionId, String jobGuid, String partitionName) {
+		SkipExecutionSnapshot(Long jobExecutionId, String jobGuid, String partitionName) {
 			this.currentJobExecutionId = jobExecutionId;
 			this.currentJobGuid = jobGuid;
 			this.currentPartitionName = partitionName;

@@ -23,13 +23,13 @@ public class DynamicPartitioner implements Partitioner {
 
 	@Override
 	@NonNull
-	public Map<String, ExecutionContext> partition(int partitionSize) {
+	public Map<String, ExecutionContext> partition(int numPartitions) {
 		Map<String, ExecutionContext> partitions = new HashMap<>();
 
-		logger.info("Creating {} execution contexts for VDYP partitions", partitionSize);
+		logger.trace("Creating {} execution contexts for VDYP partitions", numPartitions);
 
 		// Create execution contexts for existing partition directories
-		for (int i = 0; i < partitionSize; i++) {
+		for (int i = 0; i < numPartitions; i++) {
 			ExecutionContext context = new ExecutionContext();
 
 			String partitionName = BatchConstants.Partition.PREFIX + i;
@@ -44,7 +44,7 @@ public class DynamicPartitioner implements Partitioner {
 
 			partitions.put(partitionName, context);
 
-			logger.debug("Created execution context for partition {}", i);
+			logger.trace("Created execution context for partition {}", i);
 		}
 
 		return partitions;
