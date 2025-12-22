@@ -94,6 +94,7 @@ jobs:
         uses: bcgov-nr/action-builder-ghcr@v2.2.0
         with:
           keep_versions: 50
+          keep_regex: "^deploy-(prod|test)$"
           package: ${{ matrix.package }}
           tag: ${{ steps.pr.outputs.pr }}
           tag_fallback: latest

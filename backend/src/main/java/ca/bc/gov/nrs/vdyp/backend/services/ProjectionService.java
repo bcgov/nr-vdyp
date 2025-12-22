@@ -22,6 +22,7 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.hibernate.boot.model.naming.IllegalIdentifierException;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionNotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
+import ca.bc.gov.nrs.vdyp.backend.model.FileMetadata;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -363,7 +365,6 @@ public class ProjectionService {
 		}
 		return entity.get();
 	}
-
 	public enum ProjectionAction {
 		CREATE, READ, UPDATE, DELETE
 	}
@@ -444,6 +445,34 @@ public class ProjectionService {
 					"Error deleting Projection", e, projectionGUID, UUID.fromString(actingUser.getVdypUserGUID())
 			);
 		}
+	}
+
+	@Transactional
+	public Object addProjectionFile(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel user, FileMetadata metadata)
+			throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, user, ProjectionAction.UPDATE);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+
+		// check that the filesetGUID is set and is one of the file sets for this projection
+		if (fileSetGUID == null) {
+			throw new ProjectionServiceException(
+					"Error adding file", new IllegalIdentifierException("No file Set Identified"), projectionGUID
+			);
+		}
+
+		if (!fileSetGUID.equals(entity.getPolygonFileSet().getProjectionFileSetGUID())
+				&& !fileSetGUID.equals(entity.getLayerFileSet().getProjectionFileSetGUID()) && //
+				!fileSetGUID.equals(entity.getResultFileSet().getProjectionFileSetGUID())) {
+			throw new ProjectionServiceException(
+					"Error adding file",
+					new IllegalIdentifierException(
+							String.format("File set %s did not belogn to the projection.", fileSetGUID)
+					), projectionGUID
+			);
+		}
+
+		fileSetService.addNewFileToFileSet(projectionGUID, fileSetGUID, user, metadata);
 	}
 
 }
