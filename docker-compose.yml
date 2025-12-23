@@ -109,6 +109,24 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
+
+  vdyp-batch:
+    depends_on:
+      vdyp-liquibase:
+        condition: service_completed_successfully        # wait for DB migrations
+
+    build:
+      context: ./
+      dockerfile: ./batch/Dockerfile
+    ports:
+      - "8081:8081"
+    env_file:
+      - batch/.env.vdypBatch
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1G
   
   vdyp-ui:
     build:

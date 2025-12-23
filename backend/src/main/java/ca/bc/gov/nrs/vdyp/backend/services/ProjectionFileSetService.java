@@ -99,7 +99,7 @@ public class ProjectionFileSetService {
 		}
 
 		// Ask File Mapping Service to create the file based on the meta data
-		return fileMappingService.createNewFile(projectionGUID, user, metadata);
+		return fileMappingService.createNewFile(projectionGUID, entity, user, metadata);
 
 	}
 }
