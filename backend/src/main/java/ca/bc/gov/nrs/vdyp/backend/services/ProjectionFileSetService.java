@@ -5,15 +5,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
+
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionFileSetResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionFileSetRepository;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileSetNotFoundException;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileSetUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
-import ca.bc.gov.nrs.vdyp.backend.model.FileMetadata;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -85,21 +89,27 @@ public class ProjectionFileSetService {
 		return entity.get();
 	}
 
-	@Transactional
-	public Object
-			addNewFileToFileSet(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel user, FileMetadata metadata) {
-		// Check that the file set exists
-		var entity = getProjectionFileSetEntity(fileSetGUID);
-
+	public void ensureAuthorizedAccess(ProjectionFileSetEntity entity, VDYPUserModel actingUser)
+			throws ProjectionServiceException {
 		// Check that the user owns the fileset (FUTURE PROOFING if you use someone elses fileset you should not be able
 		// to edit it) trivial check currently
 		if (entity.getOwnerUser() == null
-				&& entity.getOwnerUser().getVdypUserGUID().equals(UUID.fromString(user.getVdypUserGUID()))) {
-			throw new ProjectionFileSetUnauthorizedException();
+				&& entity.getOwnerUser().getVdypUserGUID().equals(UUID.fromString(actingUser.getVdypUserGUID()))) {
+			throw new ProjectionFileSetUnauthorizedException(entity.getProjectionFileSetGUID(), actingUser);
 		}
+	}
+
+	@Transactional
+	public FileMappingModel
+			addNewFileToFileSet(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel user, FileUpload file)
+					throws ProjectionServiceException {
+		// Check that the file set exists
+		var entity = getProjectionFileSetEntity(fileSetGUID);
+
+		ensureAuthorizedAccess(entity, user);
 
 		// Ask File Mapping Service to create the file based on the meta data
-		return fileMappingService.createNewFile(projectionGUID, entity, user, metadata);
+		return fileMappingService.createNewFile(projectionGUID, entity, user, file);
 
 	}
 }

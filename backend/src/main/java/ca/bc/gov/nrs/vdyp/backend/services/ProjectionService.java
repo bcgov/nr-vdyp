@@ -36,6 +36,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
@@ -45,7 +46,6 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionNotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
-import ca.bc.gov.nrs.vdyp.backend.model.FileMetadata;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -367,6 +367,7 @@ public class ProjectionService {
 		}
 		return entity.get();
 	}
+
 	public enum ProjectionAction {
 		READ, UPDATE, DELETE
 	}
@@ -451,8 +452,9 @@ public class ProjectionService {
 	}
 
 	@Transactional
-	public Object addProjectionFile(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel user, FileMetadata metadata)
-			throws ProjectionServiceException {
+	public FileMappingModel
+			addProjectionFile(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel user, FileUpload file)
+					throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, user, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
@@ -475,7 +477,7 @@ public class ProjectionService {
 			);
 		}
 
-		fileSetService.addNewFileToFileSet(projectionGUID, fileSetGUID, user, metadata);
+		return fileSetService.addNewFileToFileSet(projectionGUID, fileSetGUID, user, file);
 	}
 
 }

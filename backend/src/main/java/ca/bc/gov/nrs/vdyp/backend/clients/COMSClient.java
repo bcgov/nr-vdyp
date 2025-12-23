@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.clients;
 
-import java.util.Map;
-import java.util.Set;
+import java.io.InputStream;
+import java.util.List;
 
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -11,6 +11,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.COMSCreateBucketRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
 import io.quarkus.rest.client.reactive.ClientBasicAuth;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.PUT;
@@ -19,6 +20,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @RegisterRestClient(configKey = "coms")
 @Path("/api/v1")
@@ -34,28 +36,48 @@ public interface COMSClient {
 
 	@GET
 	@Path("/bucket")
-	Set<COMSBucket> searchForBucket(
+	List<COMSBucket> searchForBucket(
 			@QueryParam("bucketId") String bucketId, //
 			@QueryParam("active") Boolean active, //
 			@QueryParam("key") String key, //
 			@QueryParam("displayName") String displayName
 	);
 
-	@PUT
-	@Path("/object")
-	COMSObject createObject(
-			@QueryParam("bucketId") String bucketId, @QueryParam("tagset") Map<String, String> tagset,
-			@HeaderParam("Content-Disposition") String contentDisposition,
-			@HeaderParam("Content-Length") long contentLength, @HeaderParam("Content-Type") String contentType,
-			byte[] body
+	@DELETE
+	@Path("/bucket/{bucketId}")
+	Response deleteBucket(
+			@PathParam("bucketId") String bucketId, //
+			@QueryParam("recursive") boolean recursive
 	);
 
-	@GET
-	@Path("/object/{objectID}")
-	COMSObject getObject(@PathParam("objectID") String objectID);
+	@PUT
+	@Path("/object")
+	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	COMSObject createObject(
+			@QueryParam("bucketId") String bucketId, //
+			@HeaderParam("Content-Disposition") String contentDisposition, //
+			@HeaderParam("Content-Length") long contentLength, //
+			@HeaderParam("Content-Type") String contentType, //
+			InputStream body
+	);
 
 	@PUT
-	@Path("/object/{objectID}")
-	COMSObject updateObject(@PathParam("objectID") String objectID);
+	@Path("/object/{objectId}")
+	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	COMSObject updateObject(
+			@PathParam("objectId") String objectId, //
+			@HeaderParam("Content-Disposition") String contentDisposition, //
+			@HeaderParam("Content-Length") long contentLength, //
+			@HeaderParam("Content-Type") String contentType, //
+			InputStream body
+	);
+
+	@DELETE
+	@Path("/object/{objectId}")
+	Response deleteObject(@PathParam("objectId") String objectId);
+
+	@GET
+	@Path("/object/{objectId}")
+	COMSObject getObject(@PathParam("objectId") String objectId);
 
 }

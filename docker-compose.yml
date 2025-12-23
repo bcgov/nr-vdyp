@@ -51,6 +51,24 @@ services:
         "--searchPath=/liquibase/",
         "update"
       ]
+  s3:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Admin Console
+    environment:
+      MINIO_ROOT_USER: miniovdyp
+      MINIO_ROOT_PASSWORD: password
+      MINIO_LOG_LEVEL: debug
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
   coms:
     image: ghcr.io/bcgov/common-object-management-service:${COMS_TAG:-latest}
@@ -89,6 +107,7 @@ services:
       KC_PUBLICKEY: ${COMS_KEYCLOAK_PUBLICKEY}
       KC_REALM: ${COMS_KEYCLOAK_REALM}
       KC_SERVERURL: ${COMS_KEYCLOAK_SERVER_URL}
+      SERVER_LOGLEVEL: debug
 
   vdyp-backend:
     depends_on:
@@ -146,3 +165,4 @@ services:
 
 volumes:
   db_data:
+  minio-data:

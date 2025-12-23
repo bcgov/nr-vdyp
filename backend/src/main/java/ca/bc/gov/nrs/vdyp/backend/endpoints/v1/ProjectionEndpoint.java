@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
-import ca.bc.gov.nrs.vdyp.backend.model.FileMetadata;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
@@ -238,17 +237,18 @@ public class ProjectionEndpoint implements Endpoint {
 
 	@PUT
 	@Authenticated
-	@Path("/{projectionGUID}/fileset/{fileSetGUID}/getuploadurl")
+	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file")
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(
 			name = "Set the url for uploading url", description = "Fetches the presigned url for uploading a file to a fileset for this projection"
 	)
 	public Response addProjectionFile(
-			@PathParam("projectionGUID") UUID projectionGUID, @PathParam("fileSetGUID") UUID fileSetGUID,
-			@RestForm(value = "metadata") @PartType(MediaType.APPLICATION_JSON) FileMetadata metadata
+			@PathParam("projectionGUID") UUID projectionGUID, //
+			@PathParam("fileSetGUID") UUID fileSetGUID, //
+			@RestForm("file") FileUpload file //
 	) throws ProjectionServiceException {
-		var created = projectionService.addProjectionFile(projectionGUID, fileSetGUID, currentUser.getUser(), metadata);
+		var created = projectionService.addProjectionFile(projectionGUID, fileSetGUID, currentUser.getUser(), file);
 		return Response.status(Status.OK).entity(created).build();
 	}
 

@@ -44,6 +44,8 @@ class ProjectionFileSetServiceTest {
 	ProjectionFileSetRepository repository;
 	@Mock
 	FileSetTypeCodeLookup fileSetTypeCodeLookup;
+	@Mock
+	FileMappingService fileMappingService;
 	ProjectionFileSetResourceAssembler assembler;
 
 	ProjectionFileSetService service;
@@ -52,7 +54,7 @@ class ProjectionFileSetServiceTest {
 	void setUp() {
 		assembler = new ProjectionFileSetResourceAssembler();
 
-		service = new ProjectionFileSetService(em, repository, assembler, fileSetTypeCodeLookup);
+		service = new ProjectionFileSetService(em, repository, assembler, fileSetTypeCodeLookup, fileMappingService);
 	}
 
 	@Test
