@@ -33,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionFileSetRepository;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -149,7 +150,7 @@ class ProjectionFileSetServiceTest {
 	// ------------------------------------------------------------
 
 	@Test
-	void deleteFileSetById_deletesById() {
+	void deleteFileSetById_deletesById() throws ProjectionServiceException {
 		UUID id = UUID.randomUUID();
 
 		service.deleteFileSetById(id);

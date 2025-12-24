@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -74,9 +75,10 @@ public class ProjectionFileSetService {
 	}
 
 	@Transactional
-	public void deleteFileSetById(UUID polygonFileSetGuid) {
+	public void deleteFileSetById(UUID polygonFileSetGuid) throws ProjectionServiceException {
+		fileMappingService.deleteFilesForSet(polygonFileSetGuid);
+
 		repository.deleteById(polygonFileSetGuid);
-		// TODO this needs to go further and delete the actual files but that is not implemented yet
 	}
 
 	public ProjectionFileSetEntity getProjectionFileSetEntity(UUID projectionFileSetGuid)
@@ -112,4 +114,48 @@ public class ProjectionFileSetService {
 		return fileMappingService.createNewFile(projectionGUID, entity, user, file);
 
 	}
+
+	@Transactional
+	public void deleteFileFromFileSet(UUID fileSetGUID, VDYPUserModel user, UUID fileGUID)
+			throws ProjectionServiceException {
+		// Check that the file set exists
+		var entity = getProjectionFileSetEntity(fileSetGUID);
+
+		ensureAuthorizedAccess(entity, user);
+
+		// Ask File Mapping Service to create the file based on the meta data
+		fileMappingService.deleteFileMapping(fileGUID);
+	}
+
+	@Transactional
+	public void deleteAllFilesFromFileSet(UUID fileSetGUID, VDYPUserModel user) throws ProjectionServiceException {
+		// Check that the file set exists
+		var entity = getProjectionFileSetEntity(fileSetGUID);
+
+		ensureAuthorizedAccess(entity, user);
+
+		// Ask File Mapping Service to create the file based on the meta data
+		fileMappingService.deleteFilesForSet(fileSetGUID);
+	}
+
+	public FileMappingModel getFileForDownload(UUID fileSetGUID, VDYPUserModel actingUser, UUID fileGUID)
+			throws ProjectionServiceException {
+		// Check that the file set exists
+		var entity = getProjectionFileSetEntity(fileSetGUID);
+		ensureAuthorizedAccess(entity, actingUser);
+
+		// Ask file mapping service for the file
+		return fileMappingService.getFileById(fileGUID, true);
+	}
+
+	public List<FileMappingModel> getAllFilesForDownload(UUID fileSetGUID, VDYPUserModel actingUser)
+			throws ProjectionServiceException {
+		// Check that the file set exists
+		var entity = getProjectionFileSetEntity(fileSetGUID);
+		ensureAuthorizedAccess(entity, actingUser);
+
+		// Ask file mapping service for the file
+		return fileMappingService.getFilesForFileSet(fileSetGUID, true);
+	}
+
 }

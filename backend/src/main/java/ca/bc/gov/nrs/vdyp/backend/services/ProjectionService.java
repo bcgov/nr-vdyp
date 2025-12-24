@@ -408,7 +408,7 @@ public class ProjectionService {
 		return assembler.toModel(entity);
 	}
 
-	public ProjectionModel editProjectionParameters(UUID projectionGUID, VDYPUserModel actingUser, Parameters params)
+	public ProjectionModel editProjectionParameters(UUID projectionGUID, Parameters params, VDYPUserModel actingUser)
 			throws ProjectionServiceException {
 		ProjectionEntity existingEntity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(existingEntity, actingUser, ProjectionAction.UPDATE);
@@ -443,6 +443,9 @@ public class ProjectionService {
 			for (UUID id : fileSetIds) {
 				fileSetService.deleteFileSetById(id);
 			}
+			// Delete the bucket
+			// TODO if we were to share files in the future we probably shouldn't put the files in a projection bucket
+			// that should be deleted
 
 		} catch (Exception e) {
 			throw new ProjectionServiceException(
@@ -452,9 +455,8 @@ public class ProjectionService {
 	}
 
 	@Transactional
-	public FileMappingModel
-			addProjectionFile(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel user, FileUpload file)
-					throws ProjectionServiceException {
+	public ProjectionModel addProjectionFile(UUID projectionGUID, UUID fileSetGUID, FileUpload file, VDYPUserModel user)
+			throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, user, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
@@ -472,12 +474,95 @@ public class ProjectionService {
 			throw new ProjectionServiceException(
 					"Error adding file",
 					new IllegalIdentifierException(
-							String.format("File set %s did not belogn to the projection.", fileSetGUID)
+							String.format("File set %s did not belong to the projection.", fileSetGUID)
 					), projectionGUID
 			);
 		}
+		fileSetService.addNewFileToFileSet(projectionGUID, fileSetGUID, user, file);
+		return getProjectionByID(projectionGUID, user);
+	}
 
-		return fileSetService.addNewFileToFileSet(projectionGUID, fileSetGUID, user, file);
+	public FileMappingModel
+			getFileForDownload(UUID projectionGUID, UUID fileSetGUID, UUID fileGUID, VDYPUserModel actingUser)
+					throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+		// check that the filesetGUID is set and is one of the file sets for this projection
+		if (fileSetGUID == null) {
+			throw new ProjectionServiceException(
+					"Error getting file", new IllegalIdentifierException("No file Set Identified"), projectionGUID
+			);
+		}
+		if (fileGUID == null) {
+			throw new ProjectionServiceException(
+					"Error getting file", new IllegalIdentifierException("No file Identified"), projectionGUID
+			);
+		}
+		if (!fileSetGUID.equals(entity.getPolygonFileSet().getProjectionFileSetGUID())
+				&& !fileSetGUID.equals(entity.getLayerFileSet().getProjectionFileSetGUID()) && //
+				!fileSetGUID.equals(entity.getResultFileSet().getProjectionFileSetGUID())) {
+			throw new ProjectionServiceException(
+					"Error getting file",
+					new IllegalIdentifierException(
+							String.format("File set %s did not belong to the projection.", fileSetGUID)
+					), projectionGUID
+			);
+		}
+		return fileSetService.getFileForDownload(fileSetGUID, actingUser, fileGUID);
+	}
+
+	public void deleteFile(UUID projectionGUID, UUID fileSetGUID, UUID fileGUID, VDYPUserModel actingUser)
+			throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+		// check that the filesetGUID is set and is one of the file sets for this projection
+		if (fileSetGUID == null) {
+			throw new ProjectionServiceException(
+					"Error getting file", new IllegalIdentifierException("No file Set Identified"), projectionGUID
+			);
+		}
+		if (fileGUID == null) {
+			throw new ProjectionServiceException(
+					"Error getting file", new IllegalIdentifierException("No file Identified"), projectionGUID
+			);
+		}
+		if (!fileSetGUID.equals(entity.getPolygonFileSet().getProjectionFileSetGUID())
+				&& !fileSetGUID.equals(entity.getLayerFileSet().getProjectionFileSetGUID()) && //
+				!fileSetGUID.equals(entity.getResultFileSet().getProjectionFileSetGUID())) {
+			throw new ProjectionServiceException(
+					"Error getting file",
+					new IllegalIdentifierException(
+							String.format("File set %s did not belong to the projection.", fileSetGUID)
+					), projectionGUID
+			);
+		}
+		fileSetService.deleteFileFromFileSet(fileSetGUID, actingUser, fileGUID);
+	}
+
+	public void deleteAllFiles(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel actingUser)
+			throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+		// check that the filesetGUID is set and is one of the file sets for this projection
+		if (fileSetGUID == null) {
+			throw new ProjectionServiceException(
+					"Error getting file", new IllegalIdentifierException("No file Set Identified"), projectionGUID
+			);
+		}
+		if (!fileSetGUID.equals(entity.getPolygonFileSet().getProjectionFileSetGUID())
+				&& !fileSetGUID.equals(entity.getLayerFileSet().getProjectionFileSetGUID()) && //
+				!fileSetGUID.equals(entity.getResultFileSet().getProjectionFileSetGUID())) {
+			throw new ProjectionServiceException(
+					"Error getting file",
+					new IllegalIdentifierException(
+							String.format("File set %s did not belong to the projection.", fileSetGUID)
+					), projectionGUID
+			);
+		}
+		fileSetService.deleteAllFilesFromFileSet(fileSetGUID, actingUser);
 	}
 
 }

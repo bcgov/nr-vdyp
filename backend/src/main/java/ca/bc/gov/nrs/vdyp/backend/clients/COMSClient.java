@@ -29,6 +29,21 @@ import jakarta.ws.rs.core.Response;
 @ClientHeaderParam(name = "x-amz-endpoint", value = "${coms.s3access.endpoint}")
 @ClientHeaderParam(name = "x-amz-bucket", value = "${coms.s3access.bucket}")
 public interface COMSClient {
+	enum FileDownloadMode {
+		PROXY("proxy"), URL("url");
+
+		private final String paramValue;
+
+		FileDownloadMode(String paramValue) {
+			this.paramValue = paramValue;
+		}
+
+		public String getParamValue() {
+			return this.paramValue;
+		}
+
+	}
+
 	@PUT
 	@Path("/bucket")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -78,6 +93,6 @@ public interface COMSClient {
 
 	@GET
 	@Path("/object/{objectId}")
-	COMSObject getObject(@PathParam("objectId") String objectId);
+	String getObject(@PathParam("objectId") String objectId, @QueryParam("download") String download);
 
 }

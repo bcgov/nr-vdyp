@@ -25,6 +25,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @ApplicationScoped
 public class FileMappingService {
@@ -108,4 +109,54 @@ public class FileMappingService {
 		);
 	}
 
+	private FileMappingEntity getFileMappingEntity(UUID fileMappingGUID) throws ProjectionServiceException {
+		var entity = repository.findByIdOptional(fileMappingGUID);
+		if (entity.isEmpty()) {
+			throw new ProjectionServiceException(String.format("File %s", fileMappingGUID));
+		}
+		return entity.get();
+	}
+
+	public FileMappingModel getFileById(UUID fileMappingGUID, boolean isDownload) throws ProjectionServiceException {
+		var entity = getFileMappingEntity(fileMappingGUID);
+		return getFileDetails(entity, isDownload);
+	}
+
+	public List<FileMappingModel> getFilesForFileSet(UUID fileSetGUID, boolean isDownload) {
+		List<FileMappingEntity> entities = repository.listForFileSet(fileSetGUID);
+		return entities.stream().map(e -> getFileDetails(e, isDownload)).toList();
+	}
+
+	private FileMappingModel getFileDetails(FileMappingEntity entity, boolean isDownload) {
+		var model = assembler.toModel(entity);
+		if (isDownload) {
+			model.setDownloadURL(
+					comsClient.getObject(model.getComsObjectGUID(), COMSClient.FileDownloadMode.URL.getParamValue())
+			);
+		}
+		return model;
+	}
+
+	public void deleteFileMapping(UUID fileMappingGUID) throws ProjectionServiceException {
+		var entity = getFileMappingEntity(fileMappingGUID);
+		deleteFile(entity);
+	}
+
+	public void deleteFilesForSet(UUID polygonFileSetGuid) throws ProjectionServiceException {
+		List<FileMappingEntity> entities = repository.listForFileSet(polygonFileSetGuid);
+		for (FileMappingEntity entity : entities) {
+			deleteFile(entity);
+		}
+	}
+
+	private void deleteFile(FileMappingEntity entity) throws ProjectionServiceException {
+		UUID comsObjectID = entity.getComsObjectGUID();
+		try (Response response = comsClient.deleteObject(comsObjectID.toString())) {
+			if (response.getStatusInfo().getStatusCode() == Response.Status.OK.getStatusCode()) {
+				repository.delete(entity);
+			} else {
+				throw new ProjectionServiceException("Could not delete object in COMS");
+			}
+		}
+	}
 }
