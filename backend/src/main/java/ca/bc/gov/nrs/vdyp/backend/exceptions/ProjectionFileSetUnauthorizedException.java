@@ -5,7 +5,7 @@ import java.util.UUID;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 
 public class ProjectionFileSetUnauthorizedException extends ProjectionServiceException {
-	UUID fileSetGUID;
+	private final UUID fileSetGUID;
 
 	public ProjectionFileSetUnauthorizedException(UUID fileSetGUID, VDYPUserModel model) {
 		super(
@@ -14,5 +14,9 @@ public class ProjectionFileSetUnauthorizedException extends ProjectionServiceExc
 				)
 		);
 		this.fileSetGUID = fileSetGUID;
+	}
+
+	public UUID getFileSetGUID() {
+		return fileSetGUID;
 	}
 }
