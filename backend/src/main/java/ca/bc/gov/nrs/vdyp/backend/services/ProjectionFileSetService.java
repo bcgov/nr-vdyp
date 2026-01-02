@@ -111,7 +111,7 @@ public class ProjectionFileSetService {
 		ensureAuthorizedAccess(entity, user);
 
 		// Ask File Mapping Service to create the file based on the meta data
-		return fileMappingService.createNewFile(projectionGUID, entity, user, file);
+		return fileMappingService.createNewFile(projectionGUID, entity, file);
 
 	}
 

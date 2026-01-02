@@ -16,14 +16,12 @@ import ca.bc.gov.nrs.vdyp.backend.data.assemblers.FileMappingResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
-import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.FileMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSBucket;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSCreateBucketRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -33,21 +31,23 @@ public class FileMappingService {
 	private FileMappingRepository repository;
 	private FileMappingResourceAssembler assembler;
 
-	@Inject
-	@RestClient
-	COMSClient comsClient;
+	private COMSClient comsClient;
 
-	@Inject
-	COMSS3Config COMSS3Config;
+	private COMSS3Config comsS3Config;
 
-	public FileMappingService(FileMappingRepository repository, FileMappingResourceAssembler assembler) {
+	public FileMappingService(
+			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient,
+			COMSS3Config comsS3Config
+	) {
 		this.repository = repository;
 		this.assembler = assembler;
+		this.comsClient = comsClient;
+		this.comsS3Config = comsS3Config;
 	}
 
-	public FileMappingModel createNewFile(
-			UUID projectionGUID, ProjectionFileSetEntity projectionFileSetEntity, VDYPUserModel user, FileUpload file
-	) throws ProjectionServiceException {
+	public FileMappingModel
+			createNewFile(UUID projectionGUID, ProjectionFileSetEntity projectionFileSetEntity, FileUpload file)
+					throws ProjectionServiceException {
 		// Create the file name "projection/projectionGUID/[input|output]/pass the file meta data through as json and
 		// get the filename and type here
 		String filePrefix = String.format("vdyp/projection/%s", projectionGUID);
@@ -99,12 +99,12 @@ public class FileMappingService {
 
 	public COMSCreateBucketRequest buildCreateBucketRequest(UUID projectionGuid, String keyPrefix) {
 		return new COMSCreateBucketRequest(
-				COMSS3Config.accessId(), //
+				comsS3Config.accessId(), //
 				true, //
-				COMSS3Config.bucket(), //
+				comsS3Config.bucket(), //
 				"Projection " + projectionGuid + " Files", //
-				COMSS3Config.endpoint(), //
-				COMSS3Config.secretAccessKey(), //
+				comsS3Config.endpoint(), //
+				comsS3Config.secretAccessKey(), //
 				keyPrefix
 		);
 	}
