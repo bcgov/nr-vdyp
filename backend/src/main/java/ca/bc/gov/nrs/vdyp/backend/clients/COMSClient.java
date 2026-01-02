@@ -10,6 +10,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.COMSBucket;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSCreateBucketRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
 import io.quarkus.rest.client.reactive.ClientBasicAuth;
+import jakarta.json.JsonString;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -24,7 +25,7 @@ import jakarta.ws.rs.core.Response;
 
 @RegisterRestClient(configKey = "coms")
 @Path("/api/v1")
-@ClientBasicAuth(username = "${quarkus.rest-client.coms.username}", password = "${quarkus.rest-client.coms.password}")
+@ClientBasicAuth(username = "${coms.basic-auth.username}", password = "${coms.basic-auth.password}")
 @Produces(MediaType.APPLICATION_JSON)
 @ClientHeaderParam(name = "x-amz-endpoint", value = "${coms.s3access.endpoint}")
 @ClientHeaderParam(name = "x-amz-bucket", value = "${coms.s3access.bucket}")
@@ -93,6 +94,7 @@ public interface COMSClient {
 
 	@GET
 	@Path("/object/{objectId}")
-	String getObject(@PathParam("objectId") String objectId, @QueryParam("download") String download);
+	@Consumes(MediaType.APPLICATION_JSON)
+	JsonString getObject(@PathParam("objectId") String objectId, @QueryParam("download") String download);
 
 }

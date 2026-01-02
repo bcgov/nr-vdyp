@@ -112,7 +112,7 @@ public class FileMappingService {
 	private FileMappingEntity getFileMappingEntity(UUID fileMappingGUID) throws ProjectionServiceException {
 		var entity = repository.findByIdOptional(fileMappingGUID);
 		if (entity.isEmpty()) {
-			throw new ProjectionServiceException(String.format("File %s", fileMappingGUID));
+			throw new ProjectionServiceException(String.format("File %s does not exist in VDYP", fileMappingGUID));
 		}
 		return entity.get();
 	}
@@ -132,6 +132,7 @@ public class FileMappingService {
 		if (isDownload) {
 			model.setDownloadURL(
 					comsClient.getObject(model.getComsObjectGUID(), COMSClient.FileDownloadMode.URL.getParamValue())
+							.getString()
 			);
 		}
 		return model;
