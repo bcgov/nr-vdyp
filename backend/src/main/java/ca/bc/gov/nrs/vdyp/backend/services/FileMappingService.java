@@ -56,9 +56,9 @@ public class FileMappingService {
 		if (searchResponse.isEmpty()) {
 			COMSCreateBucketRequest request = buildCreateBucketRequest(projectionGUID, filePrefix);
 			COMSBucket createBucketResponse = comsClient.createBucket(request);
-			bucketGUID = createBucketResponse.bucketId;
+			bucketGUID = createBucketResponse.bucketId();
 		} else {
-			bucketGUID = searchResponse.get(0).bucketId;
+			bucketGUID = searchResponse.get(0).bucketId();
 		}
 		try {
 			String contentDisposition = buildContentDisposition(file.fileName());
