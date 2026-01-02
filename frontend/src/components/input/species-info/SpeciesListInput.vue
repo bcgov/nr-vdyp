@@ -18,6 +18,7 @@
             :disabled="!isConfirmEnabled"
             data-testid="species-select"
             @update:model-value="handleUpdateSpecies"
+            @keydown="handleSpeciesSelectKeyDown($event, index)"
           ></v-select>
         </v-col>
         <v-col cols="6">
@@ -37,6 +38,7 @@
               data-testid="species-percent"
               @update:focused="handlePercentBlur"
               @update:modelValue="handlePercentInput(index)"
+              @keydown="handleSpeciesPercentKeyDown($event, index)"
               :disabled="!isConfirmEnabled"
             ></v-text-field>
             <div class="spin-box">
@@ -296,6 +298,33 @@ const handleIncMouseout = () => {
 const handleDecMouseout = () => {
   stopDecrement()
   triggerSpeciesSortByPercent()
+}
+
+const handleSpeciesPercentKeyDown = (event: KeyboardEvent, index: number) => {
+  if (!props.isConfirmEnabled) return
+
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    updateValue('increment', index)
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    updateValue('decrement', index)
+  }
+}
+
+const handleSpeciesSelectKeyDown = (event: KeyboardEvent, index: number) => {
+  if (!props.isConfirmEnabled) return
+
+  // Delete or Backspace key clears the selection
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    // Only clear if there's a value selected
+    if (localSpeciesList.value[index].species) {
+      event.preventDefault()
+      localSpeciesList.value[index].species = null
+      localSpeciesList.value[index].percent = '0.0'
+      triggerSpeciesSortByPercent()
+    }
+  }
 }
 
 onBeforeUnmount(() => {

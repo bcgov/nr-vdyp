@@ -14,6 +14,7 @@
       :style="customStyle"
       :disabled="disabled"
       @update:modelValue="handleUpdateModelValue"
+      @keydown="handleKeyDown"
     >
       <template v-slot:label>
         <span v-html="label"></span>
@@ -163,6 +164,18 @@ const updateValue = (action: 'increment' | 'decrement') => {
 
 const handleUpdateModelValue = (newValue: string) => {
   emit('update:modelValue', newValue)
+}
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (props.disabled) return
+
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    updateValue('increment')
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    updateValue('decrement')
+  }
 }
 </script>
 
