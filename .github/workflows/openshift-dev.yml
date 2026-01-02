@@ -1,7 +1,6 @@
 name: Build and Deploy to Openshift Dev When PR
 permissions:
   contents: read
-  packages: write
 
 on:
   workflow_dispatch:
@@ -46,6 +45,9 @@ jobs:
   # https://github.com/bcgov-nr/action-builder-ghcr
   builds:
     name: Builds
+    permissions:
+      packages: write
+
     runs-on: ubuntu-22.04
     outputs:
       pr: ${{ steps.pr.outputs.pr }}
@@ -87,7 +89,7 @@ jobs:
       - name: Get PR Data
         if: steps.check_build.outputs.should_build == 'true'
         id: pr
-        uses: bcgov-nr/action-get-pr@v0.0.1
+        uses: bcgov-nr/action-get-pr@35514fa1d4765547da319e967b509363598e8b46
 
       - name: Build and Tag Packages with pr number
         if: steps.check_build.outputs.should_build == 'true'
