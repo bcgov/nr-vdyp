@@ -33,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionFileSetRepository;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +45,8 @@ class ProjectionFileSetServiceTest {
 	ProjectionFileSetRepository repository;
 	@Mock
 	FileSetTypeCodeLookup fileSetTypeCodeLookup;
+	@Mock
+	FileMappingService fileMappingService;
 	ProjectionFileSetResourceAssembler assembler;
 
 	ProjectionFileSetService service;
@@ -52,7 +55,7 @@ class ProjectionFileSetServiceTest {
 	void setUp() {
 		assembler = new ProjectionFileSetResourceAssembler();
 
-		service = new ProjectionFileSetService(em, repository, assembler, fileSetTypeCodeLookup);
+		service = new ProjectionFileSetService(em, repository, assembler, fileSetTypeCodeLookup, fileMappingService);
 	}
 
 	@Test
@@ -147,7 +150,7 @@ class ProjectionFileSetServiceTest {
 	// ------------------------------------------------------------
 
 	@Test
-	void deleteFileSetById_deletesById() {
+	void deleteFileSetById_deletesById() throws ProjectionServiceException {
 		UUID id = UUID.randomUUID();
 
 		service.deleteFileSetById(id);

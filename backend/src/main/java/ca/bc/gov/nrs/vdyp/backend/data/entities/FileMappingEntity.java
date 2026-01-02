@@ -24,7 +24,7 @@ public class FileMappingEntity extends AuditableEntity {
 	private UUID fileMappingGUID;
 
 	@ManyToOne
-	@JoinColumn(referencedColumnName = "projection_file_set_guid", name = "projection_file_set_guid")
+	@JoinColumn(referencedColumnName = "projection_file_set_guid", name = "projection_file_set_guid", nullable = false)
 	private ProjectionFileSetEntity projectionFileSet;
 
 	@NotNull

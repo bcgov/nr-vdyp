@@ -51,9 +51,11 @@ jobs:
     - name: Build with Maven
       run: mvn -Pcoverage package verify
     - name: Run Sonar Analysis
-      run: mvn sonar:sonar
-        -Dsonar.host.url=https://sonarcloud.io
-        -Dsonar.organization=bcgov-sonarcloud
+      run: |
+        mvn -B -ntp \
+        org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+        -Dsonar.host.url=https://sonarcloud.io \
+        -Dsonar.organization=bcgov-sonarcloud \
         -Dsonar.projectKey=bcgov_VDYP
       env:
         GITHUB_TOKEN: ${{ github.token }}

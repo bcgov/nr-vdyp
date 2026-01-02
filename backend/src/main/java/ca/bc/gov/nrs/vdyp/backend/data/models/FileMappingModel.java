@@ -7,6 +7,7 @@ public class FileMappingModel {
 	private String fileMappingGUID;
 	private ProjectionFileSetModel projectionFileSet;
 	private String comsObjectGUID;
+	private String downloadURL;
 
 	public String getFileMappingGUID() {
 		return fileMappingGUID;
@@ -30,5 +31,13 @@ public class FileMappingModel {
 
 	public void setComsObjectGUID(String comsObjectGUID) {
 		this.comsObjectGUID = comsObjectGUID;
+	}
+
+	public String getDownloadURL() {
+		return this.downloadURL;
+	}
+
+	public void setDownloadURL(String downloadURL) {
+		this.downloadURL = downloadURL;
 	}
 }

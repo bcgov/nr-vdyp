@@ -275,7 +275,7 @@ class ProjectionServiceTest {
 		Parameters params = new Parameters();
 		params.setReportTitle("New Title");
 
-		ProjectionModel model = service.editProjectionParameters(projectionId, user(ownerId), params);
+		ProjectionModel model = service.editProjectionParameters(projectionId, params, user(ownerId));
 
 		verify(repository).persist(entity);
 		assertThat(model.getReportTitle()).isEqualTo("New Title");
@@ -299,7 +299,7 @@ class ProjectionServiceTest {
 
 		assertThrows(
 				ProjectionStateException.class,
-				() -> service.editProjectionParameters(projectionId, user(ownerId), params)
+				() -> service.editProjectionParameters(projectionId, params, user(ownerId))
 		);
 	}
 
