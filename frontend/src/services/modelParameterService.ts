@@ -127,7 +127,7 @@ export const determineBclcsLevel4 = (speciesGroups: SpeciesGroup[]): string => {
 
   for (const speciesGroup of speciesGroups) {
     const speciesCode = speciesGroup.siteSpecies
-    const percent = parseFloat(speciesGroup.percent)
+    const percent = Number.parseFloat(speciesGroup.percent)
 
     if (BIZCONSTANTS.CONIFEROUS_SPECIES.has(speciesCode)) {
       coniferousTotal += percent
@@ -203,12 +203,14 @@ const createPolygonData = (
   mapId: string,
   polygonNumber: string,
 ): CSVRowType => {
-  const derivedByCode =
-    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME
-      ? BIZCONSTANTS.INVENTORY_CODES.FIP
-      : modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA
-        ? BIZCONSTANTS.INVENTORY_CODES.VRI
-        : ''
+  let derivedByCode = ''
+  if (modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME) {
+    derivedByCode = BIZCONSTANTS.INVENTORY_CODES.FIP
+  } else if (
+    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA
+  ) {
+    derivedByCode = BIZCONSTANTS.INVENTORY_CODES.VRI
+  }
 
   const bclcsLevel1 = computeBclcsLevel1(
     modelParameterStore.percentStockableArea,

@@ -44,4 +44,4 @@ const onConfirm = () => emit('confirm')
 const onEdit = () => emit('edit')
 </script>
 
-<style scoped></style>
+<style scoped />

@@ -22,12 +22,12 @@ const props = defineProps({
 
 const emit = defineEmits<(e: 'click', id: number) => void>()
 const onClick = (event: Event) => {
-  if (!props.isDisabled) {
+  if (props.isDisabled) {
+    console.debug('Button is disabled, onClick event not triggered')
+  } else {
     event.preventDefault() // preventing default behavior
     event.stopPropagation() // preventing event propagation
     emit('click', 1)
-  } else {
-    console.debug('Button is disabled, onClick event not triggered')
   }
 }
 </script>

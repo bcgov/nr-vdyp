@@ -204,7 +204,7 @@ const onConfirm = () => {
       Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<
         keyof typeof BIZCONSTANTS.SPECIES_MAP
       >
-    ).find((key) => key === duplicateSpeciesResult.duplicateSpecies)
+    ).includes(duplicateSpeciesResult.duplicateSpecies as keyof typeof BIZCONSTANTS.SPECIES_MAP)
       ? BIZCONSTANTS.SPECIES_MAP[duplicateSpecies]
       : ''
 

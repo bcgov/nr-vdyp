@@ -321,8 +321,8 @@ watch(
 watch([basalArea, treesPerHectare], ([newBA, newTPH]) => {
   let fDiam = 0
 
-  const fBA = parseFloat(newBA ?? '0') || 0
-  const fTPH = parseFloat(newTPH ?? '0') || 0
+  const fBA = Number.parseFloat(newBA ?? '0') || 0
+  const fTPH = Number.parseFloat(newTPH ?? '0') || 0
 
   try {
     if (fBA > 0 && fTPH > 0) {
@@ -391,16 +391,7 @@ const validateFormInputs = async (): Promise<boolean> => {
     spzHeight.value,
   )
 
-  if (!isBALimitsValid) {
-    const confirmed = await confirmDialogStore.openDialog(
-      MESSAGE.MSG_DIALOG_TITLE.CONFIRM,
-      MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_BSL_AREA_OVER_HEIGHT,
-      { width: 400 },
-    )
-    if (!confirmed) {
-      return false
-    }
-  } else {
+  if (isBALimitsValid) {
     const validateTPHmessage = standInfoValidation.validateTPHLimits(
       basalArea.value,
       treesPerHectare.value,
@@ -417,6 +408,15 @@ const validateFormInputs = async (): Promise<boolean> => {
       if (!confirmed) {
         return false
       }
+    }
+  } else {
+    const confirmed = await confirmDialogStore.openDialog(
+      MESSAGE.MSG_DIALOG_TITLE.CONFIRM,
+      MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_BSL_AREA_OVER_HEIGHT,
+      { width: 400 },
+    )
+    if (!confirmed) {
+      return false
     }
   }
 
@@ -441,13 +441,13 @@ const validateFormInputs = async (): Promise<boolean> => {
 
 const formattingValues = (): void => {
   if (basalArea.value) {
-    basalArea.value = parseFloat(basalArea.value).toFixed(
+    basalArea.value = Number.parseFloat(basalArea.value).toFixed(
       CONSTANTS.NUM_INPUT_LIMITS.BASAL_AREA_DECIMAL_NUM,
     )
   }
 
   if (treesPerHectare.value) {
-    treesPerHectare.value = parseFloat(treesPerHectare.value).toFixed(
+    treesPerHectare.value = Number.parseFloat(treesPerHectare.value).toFixed(
       CONSTANTS.NUM_INPUT_LIMITS.TPH_DECIMAL_NUM,
     )
   }
@@ -493,4 +493,4 @@ const onClear = () => {
 const handleDialogClose = () => {}
 </script>
 
-<style scoped></style>
+<style scoped />

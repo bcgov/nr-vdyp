@@ -150,8 +150,8 @@ watch(
   { deep: true },
 )
 
-let incrementIntervalId: number | null = null
-let decrementIntervalId: number | null = null
+let incrementIntervalId: ReturnType<typeof globalThis.setInterval> | null = null
+let decrementIntervalId: ReturnType<typeof globalThis.setInterval> | null = null
 
 const updateValue = (action: 'increment' | 'decrement', index: number) => {
   const localPercent = localSpeciesList.value[index].percent
@@ -176,7 +176,7 @@ const updateValue = (action: 'increment' | 'decrement', index: number) => {
 
 const startIncrement = (index: number) => {
   updateValue('increment', index)
-  incrementIntervalId = window.setInterval(
+  incrementIntervalId = globalThis.setInterval(
     () => updateValue('increment', index),
     CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL,
   )
@@ -191,7 +191,7 @@ const stopIncrement = () => {
 
 const startDecrement = (index: number) => {
   updateValue('decrement', index)
-  decrementIntervalId = window.setInterval(
+  decrementIntervalId = globalThis.setInterval(
     () => updateValue('decrement', index),
     CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL,
   )
@@ -206,8 +206,8 @@ const stopDecrement = () => {
 
 const triggerSpeciesSortByPercent = () => {
   localSpeciesList.value.sort((a: SpeciesList, b: SpeciesList) => {
-    const percentA = parseFloat(a.percent || '0')
-    const percentB = parseFloat(b.percent || '0')
+    const percentA = Number.parseFloat(a.percent || '0')
+    const percentB = Number.parseFloat(b.percent || '0')
 
     // Empty species are sent backward in the sort
     if (!a.species) return 1
@@ -251,13 +251,13 @@ const handlePercentBlur = () => {
 
       // Format percent value to fixed decimal places if it lacks a decimal or ends with a decimal point
       if (!item.percent.includes('.') || item.percent.endsWith('.')) {
-        item.percent = parseFloat(item.percent).toFixed(
+        item.percent = Number.parseFloat(item.percent).toFixed(
           CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
         )
       }
 
       // Parse the percent value, round it to the nearest allowed decimal place, and convert back to string
-      const roundedValue = parseFloat(item.percent).toFixed(
+      const roundedValue = Number.parseFloat(item.percent).toFixed(
         CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
       )
 
@@ -272,14 +272,14 @@ const handlePercentInput = (index: number) => {
   let localPercent = localSpeciesList.value[index].percent || ''
 
   // Allow only numbers and a single '.'
-  let cleanedValue = localPercent.replace(/[^0-9.]/g, '')
+  let cleanedValue = localPercent.replaceAll(/[^0-9.]/g, '')
 
   // If there are multiple '.', keep only the first one
   const dotIndex = cleanedValue.indexOf('.')
   if (dotIndex !== -1) {
     cleanedValue =
       cleanedValue.slice(0, dotIndex + 1) +
-      cleanedValue.slice(dotIndex + 1).replace(/\./g, '')
+      cleanedValue.slice(dotIndex + 1).replaceAll('.', '')
   }
   // Update the percent value in the list
   localSpeciesList.value[index].percent = cleanedValue

@@ -86,8 +86,7 @@ export const RunHCSVProjectionApiAxiosParamCreator = function (
         query.set(key, options.params[key])
       }
       localVarUrlObj.search = new URLSearchParams(query).toString()
-      const headersFromBaseOptions =
-        baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      const headersFromBaseOptions = baseOptions?.headers ?? {}
       localVarRequestOptions.headers = {
         ...localVarHeaderParameter,
         ...headersFromBaseOptions,

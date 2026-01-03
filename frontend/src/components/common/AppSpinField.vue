@@ -93,8 +93,8 @@ const emit = defineEmits(['update:modelValue'])
 
 const localValue = ref<string | null>(props.modelValue)
 
-let incrementInterval: number | null = null
-let decrementInterval: number | null = null
+let incrementInterval: ReturnType<typeof setInterval> | null = null
+let decrementInterval: ReturnType<typeof setInterval> | null = null
 
 // Watch for external modelValue changes
 watch(
@@ -113,7 +113,7 @@ watch(localValue, (newValue) => {
 
 const startIncrement = () => {
   updateValue('increment')
-  incrementInterval = window.setInterval(
+  incrementInterval = globalThis.setInterval(
     () => updateValue('increment'),
     props.interval,
   )
@@ -128,7 +128,7 @@ const stopIncrement = () => {
 
 const startDecrement = () => {
   updateValue('decrement')
-  decrementInterval = window.setInterval(
+  decrementInterval = globalThis.setInterval(
     () => updateValue('decrement'),
     props.interval,
   )
@@ -205,7 +205,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
   font-size: 7px;
   width: 10px;
   height: 10px;
-  color: #898989 !important;
+  color: #5a5a5a !important;
   background-color: #fbfbfb;
   display: flex;
   justify-content: center;
@@ -220,7 +220,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
   font-size: 7px;
   width: 10px;
   height: 10px;
-  color: #898989 !important;
+  color: #5a5a5a !important;
   background-color: #fbfbfb;
   display: flex;
   justify-content: center;

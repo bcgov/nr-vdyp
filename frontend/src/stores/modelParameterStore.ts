@@ -114,7 +114,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   const totalSpeciesPercent = computed(() => {
     const totalPercent = speciesList.value.reduce((acc, item) => {
-      return acc + (parseFloat(item.percent as any) || 0)
+      return acc + (Number.parseFloat(item.percent as any) || 0)
     }, 0)
 
     // Preserve to the first decimal place and convert to string in '##0.0' format
@@ -127,7 +127,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   const totalSpeciesGroupPercent = computed(() => {
     return speciesGroups.value.reduce((acc, group) => {
-      return acc + (parseFloat(group.percent) || 0)
+      return acc + (Number.parseFloat(group.percent) || 0)
     }, 0)
   })
 
@@ -146,7 +146,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       }
 
       // Add percent to the group
-      groupMap[item.species] += parseFloat(item.percent as any) || 0
+      groupMap[item.species] += Number.parseFloat(item.percent as any) || 0
     }
 
     // Convert groupMap to speciesGroups array
@@ -163,7 +163,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     })
 
     speciesGroups.value.sort(
-      (a, b) => parseFloat(b.percent) - parseFloat(a.percent),
+      (a, b) => Number.parseFloat(b.percent) - Number.parseFloat(a.percent),
     )
 
     // Update highestPercentSpecies and selectedSiteSpecies with the first siteSpecies in speciesGroups

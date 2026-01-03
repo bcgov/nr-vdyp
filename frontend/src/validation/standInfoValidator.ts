@@ -81,17 +81,17 @@ export class StandInfoValidator extends ValidationBase {
     }
 
     // Ensure these arguments are valid, handle invalid input
-    const parsedHeight = parseFloat(height)
-    const parsedBasalArea = parseFloat(basalArea)
+    const parsedHeight = Number.parseFloat(height)
+    const parsedBasalArea = Number.parseFloat(basalArea)
 
-    if (isNaN(parsedHeight) || parsedHeight <= 0) {
+    if (Number.isNaN(parsedHeight) || parsedHeight <= 0) {
       console.warn(
         `Invalid height value: ${height}. Unable to perform calculation.`,
       )
       return true
     }
 
-    if (isNaN(parsedBasalArea) || parsedBasalArea <= 0) {
+    if (Number.isNaN(parsedBasalArea) || parsedBasalArea <= 0) {
       console.warn(
         `Invalid basal area value: ${basalArea}. Unable to perform calculation.`,
       )
@@ -103,10 +103,10 @@ export class StandInfoValidator extends ValidationBase {
 
     // Validate the basal area against the calculated limit
     const fBALimit =
-      Math.exp(coeffs.coeff2 / (parseFloat(height) - const2)) * coeffs.coeff1 +
+      Math.exp(coeffs.coeff2 / (Number.parseFloat(height) - const2)) * coeffs.coeff1 +
       const1
 
-    return parseFloat(basalArea) <= fBALimit
+    return Number.parseFloat(basalArea) <= fBALimit
   }
 
   /**
@@ -177,25 +177,25 @@ export class StandInfoValidator extends ValidationBase {
     }
 
     // Ensure these input arguments are valid, handle invalid input
-    const parsedHeight = parseFloat(spzHeight)
-    const parsedBasalArea = parseFloat(basalArea)
-    const parsedTph = parseFloat(tph)
+    const parsedHeight = Number.parseFloat(spzHeight)
+    const parsedBasalArea = Number.parseFloat(basalArea)
+    const parsedTph = Number.parseFloat(tph)
 
-    if (isNaN(parsedHeight) || parsedHeight <= 0) {
+    if (Number.isNaN(parsedHeight) || parsedHeight <= 0) {
       console.warn(
         `Invalid height value: ${spzHeight}. Unable to perform calculation.`,
       )
       return null
     }
 
-    if (isNaN(parsedBasalArea) || parsedBasalArea <= 0) {
+    if (Number.isNaN(parsedBasalArea) || parsedBasalArea <= 0) {
       console.warn(
         `Invalid basal area value: ${basalArea}. Unable to perform calculation.`,
       )
       return null
     }
 
-    if (isNaN(parsedTph) || parsedTph <= 0) {
+    if (Number.isNaN(parsedTph) || parsedTph <= 0) {
       console.warn(
         `Invalid trees per hectare value: ${tph}. Unable to perform calculation.`,
       )
@@ -221,22 +221,22 @@ export class StandInfoValidator extends ValidationBase {
     const dqMax =
       const1 +
       P90.a0 +
-      P90.b0 * (parseFloat(spzHeight) - const2) +
-      P90.b1 * (parseFloat(spzHeight) - const2) ** 2
+      P90.b0 * (Number.parseFloat(spzHeight) - const2) +
+      P90.b1 * (Number.parseFloat(spzHeight) - const2) ** 2
 
     if (dqMax > 0) {
-      tphMin = parseFloat(basalArea) / (const3 * dqMax ** 2)
+      tphMin = Number.parseFloat(basalArea) / (const3 * dqMax ** 2)
     }
 
     // Maximum TPH calculation
     const dqMin =
       -const1 +
       P10.a0 +
-      P10.b0 * (parseFloat(spzHeight) - const2) +
-      P10.b1 * (parseFloat(spzHeight) - const2) ** 2
+      P10.b0 * (Number.parseFloat(spzHeight) - const2) +
+      P10.b1 * (Number.parseFloat(spzHeight) - const2) ** 2
 
     if (dqMin > 0) {
-      tphMax = parseFloat(basalArea) / (const3 * dqMin ** 2)
+      tphMax = Number.parseFloat(basalArea) / (const3 * dqMin ** 2)
     }
 
     // Minimum and maximum TPH values not calculated correctly
@@ -245,11 +245,11 @@ export class StandInfoValidator extends ValidationBase {
       return null
     }
 
-    if (parseFloat(tph) < tphMin) {
+    if (Number.parseFloat(tph) < tphMin) {
       return 'Trees/ha is less than a likely minimum for entered height. Do you wish to proceed?'
     }
 
-    if (parseFloat(tph) > tphMax) {
+    if (Number.parseFloat(tph) > tphMax) {
       return 'Trees/ha is above a likely maximum for entered height. Do you wish to proceed?'
     }
 
@@ -279,17 +279,17 @@ export class StandInfoValidator extends ValidationBase {
       return null
     }
 
-    const parsedBasalArea = parseFloat(basalArea)
-    const parsedTph = parseFloat(tph)
+    const parsedBasalArea = Number.parseFloat(basalArea)
+    const parsedTph = Number.parseFloat(tph)
 
-    if (isNaN(parsedBasalArea) || parsedBasalArea <= 0) {
+    if (Number.isNaN(parsedBasalArea) || parsedBasalArea <= 0) {
       console.warn(
         `Invalid basal area value: ${basalArea}. Unable to perform calculation.`,
       )
       return null
     }
 
-    if (isNaN(parsedTph) || parsedTph <= 0) {
+    if (Number.isNaN(parsedTph) || parsedTph <= 0) {
       console.warn(
         `Invalid trees per hectare value: ${tph}. Unable to perform calculation.`,
       )
@@ -297,8 +297,8 @@ export class StandInfoValidator extends ValidationBase {
     }
 
     let diam = 0
-    if (parseFloat(tph) > 0) {
-      diam = Math.sqrt(parseFloat(basalArea) / parseFloat(tph) / 0.00007854)
+    if (Number.parseFloat(tph) > 0) {
+      diam = Math.sqrt(Number.parseFloat(basalArea) / Number.parseFloat(tph) / 0.00007854)
     }
 
     const minDBH = extractLeadingNumber(minDBHLimit)

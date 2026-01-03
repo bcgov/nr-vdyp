@@ -76,7 +76,7 @@ describe('Model Parameter Service Unit Tests', () => {
     const featureIdStr = String(featureId)
     expect(featureIdStr.length).to.be.within(9, 10)
     expect(Number.isInteger(featureId)).to.be.true
-    const randomPart = parseInt(featureIdStr.substring(0, 2))
+    const randomPart = Number.parseInt(featureIdStr.substring(0, 2))
     expect(randomPart).to.be.within(1, 99)
   })
 
@@ -243,12 +243,14 @@ describe('Model Parameter Service Unit Tests', () => {
     cy.wrap(blobPolygon).should('be.instanceOf', Blob)
     cy.wrap(blobLayer).should('be.instanceOf', Blob)
 
-    const derivedByCode =
-      mockModelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME
-        ? BIZCONSTANTS.INVENTORY_CODES.FIP
-        : mockModelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA
-          ? BIZCONSTANTS.INVENTORY_CODES.VRI
-          : ''
+    let derivedByCode = ''
+    if (mockModelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME) {
+      derivedByCode = BIZCONSTANTS.INVENTORY_CODES.FIP
+    } else if (
+      mockModelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA
+    ) {
+      derivedByCode = BIZCONSTANTS.INVENTORY_CODES.VRI
+    }
 
     cy.wrap(blobPolygon)
       .then((blob) => blob.text())

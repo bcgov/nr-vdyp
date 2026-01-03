@@ -29,7 +29,7 @@ describe('<ReportingOutput />', () => {
   })
 
   it('supports long data and is scrollable', () => {
-    const longData = Array(50)
+    const longData = new Array(50)
       .fill(null)
       .map((_, i) => `Line ${i + 1}: Long data entry`)
 

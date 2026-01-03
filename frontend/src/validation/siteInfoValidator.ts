@@ -30,7 +30,7 @@ export class SiteInfoValidator extends ValidationBase {
   validateHeightRange(spzHeight: string | null): boolean {
     if (!spzHeight) return true
 
-    const numericHeight = parseFloat(spzHeight)
+    const numericHeight = Number.parseFloat(spzHeight)
 
     return this.validateRange(
       numericHeight,
@@ -42,7 +42,7 @@ export class SiteInfoValidator extends ValidationBase {
   validateBha50SiteIndexRange(bha50SiteIndex: string | null): boolean {
     if (!bha50SiteIndex) return true
 
-    const numericBha50 = parseFloat(bha50SiteIndex)
+    const numericBha50 = Number.parseFloat(bha50SiteIndex)
 
     return this.validateRange(
       numericBha50,

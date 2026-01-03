@@ -81,6 +81,12 @@ Run Unit Tests:
 npm run test:unit
 ```
 
+To run only a specific test file:
+
+```bash
+npx cypress run --component --spec "src/utils/util.cy.ts"
+```
+
 Open E2E Tests (Interactive Mode):
 
 ```bash

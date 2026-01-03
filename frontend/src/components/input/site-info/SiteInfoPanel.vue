@@ -377,7 +377,7 @@ const handleBha50SiteIndexUpdate = (value: string | null) => {
 
 const formattingValues = (): void => {
   if (bha50SiteIndex.value) {
-    bha50SiteIndex.value = parseFloat(bha50SiteIndex.value).toFixed(
+    bha50SiteIndex.value = Number.parseFloat(bha50SiteIndex.value).toFixed(
       CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_DECIMAL_NUM,
     )
   }
@@ -481,4 +481,4 @@ const onClear = () => {
 const handleDialogClose = () => {}
 </script>
 
-<style scoped></style>
+<style scoped />

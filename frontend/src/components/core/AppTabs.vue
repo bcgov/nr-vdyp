@@ -70,4 +70,4 @@ const handleTabUpdate = (newValue: unknown) => {
 }
 </script>
 
-<style scoped></style>
+<style scoped />
