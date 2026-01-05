@@ -393,7 +393,6 @@ class ProjectionServiceTest {
 		Parameters params = new Parameters();
 		params.setReportTitle("My Report");
 
-		// status + engine entities
 		var draftStatus = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
 		draftStatus.setCode(ProjectionStatusCodeModel.DRAFT);
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT)).thenReturn(draftStatus);
@@ -457,4 +456,197 @@ class ProjectionServiceTest {
 
 		assertThat(persisted.getProjectionParameters()).isNotBlank();
 	}
+
+	// ==============================
+	// addProjectionFile
+	// ==============================
+	@Test
+	void addProjectionFile_nullFileSet_throwsException() {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.addProjectionFile(projectionGUID, null, null, actingUser)
+		);
+	}
+
+	@Test
+	void addProjectionFile_invalidFileSet_throwsException() {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.addProjectionFile(projectionGUID, UUID.randomUUID(), null, actingUser)
+		);
+
+	}
+
+	@Test
+	void addProjectionFile_polygonFileSet_callsFileSetService() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		service.addProjectionFile(
+				projectionGUID, entity.getPolygonFileSet().getProjectionFileSetGUID(), null, actingUser
+		);
+		verify(fileSetService).addNewFileToFileSet(
+				projectionGUID, entity.getPolygonFileSet().getProjectionFileSetGUID(), actingUser, null
+		);
+	}
+
+	@Test
+	void addProjectionFile_layerFileSet_callsFileSetService() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		service.addProjectionFile(
+				projectionGUID, entity.getLayerFileSet().getProjectionFileSetGUID(), null, actingUser
+		);
+		verify(fileSetService).addNewFileToFileSet(
+				projectionGUID, entity.getLayerFileSet().getProjectionFileSetGUID(), actingUser, null
+		);
+	}
+
+	@Test
+	void addProjectionFile_resultFileSet_callsFileSetService() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		service.addProjectionFile(
+				projectionGUID, entity.getResultFileSet().getProjectionFileSetGUID(), null, actingUser
+		);
+		verify(fileSetService).addNewFileToFileSet(
+				projectionGUID, entity.getResultFileSet().getProjectionFileSetGUID(), actingUser, null
+		);
+	}
+
+	@Test
+	void deleteProjectionFile_validInput_callsFileSetService() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		UUID fileId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		service.deleteFile(projectionGUID, entity.getResultFileSet().getProjectionFileSetGUID(), fileId, actingUser);
+		verify(fileSetService)
+				.deleteFileFromFileSet(entity.getResultFileSet().getProjectionFileSetGUID(), actingUser, fileId);
+
+	}
+
+	@Test
+	void deleteProjectionFileSetFiles_validInput_callsFileSetService() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		service.deleteAllFiles(projectionGUID, entity.getResultFileSet().getProjectionFileSetGUID(), actingUser);
+		verify(fileSetService)
+				.deleteAllFilesFromFileSet(entity.getResultFileSet().getProjectionFileSetGUID(), actingUser);
+
+	}
+
+	@Test
+	void getProjectionFile_nullFile_throwsException() {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.getFileForDownload(
+						projectionGUID, entity.getResultFileSet().getProjectionFileSetGUID(), null, actingUser
+				)
+		);
+	}
+
+	@Test
+	void getProjectionFile_validInput_callsFileSetService() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		UUID fileId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		service.getFileForDownload(
+				projectionGUID, entity.getResultFileSet().getProjectionFileSetGUID(), fileId, actingUser
+		);
+		verify(fileSetService)
+				.getFileForDownload(entity.getResultFileSet().getProjectionFileSetGUID(), actingUser, fileId);
+
+	}
+
 }

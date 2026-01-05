@@ -454,6 +454,15 @@ public class ProjectionService {
 		}
 	}
 
+	private void validateIdentifier(UUID identifier, String message, String identifierType, UUID projectionGUID)
+			throws ProjectionServiceException {
+		if (identifier == null) {
+			throw new ProjectionServiceException(
+					message, new IllegalIdentifierException("No " + identifierType + " Provided"), projectionGUID
+			);
+		}
+	}
+
 	@Transactional
 	public ProjectionModel addProjectionFile(UUID projectionGUID, UUID fileSetGUID, FileUpload file, VDYPUserModel user)
 			throws ProjectionServiceException {
@@ -462,24 +471,25 @@ public class ProjectionService {
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 
 		// check that the filesetGUID is set and is one of the file sets for this projection
-		if (fileSetGUID == null) {
-			throw new ProjectionServiceException(
-					"Error adding file", new IllegalIdentifierException("No file Set Identified"), projectionGUID
-			);
-		}
+		validateIdentifier(fileSetGUID, "Error adding file", "file Set", projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, "Error adding file");
 
+		fileSetService.addNewFileToFileSet(projectionGUID, fileSetGUID, user, file);
+		return getProjectionByID(projectionGUID, user);
+	}
+
+	private void validateFileSetIsForProjection(ProjectionEntity entity, UUID fileSetGUID, String message)
+			throws ProjectionServiceException {
 		if (!fileSetGUID.equals(entity.getPolygonFileSet().getProjectionFileSetGUID())
 				&& !fileSetGUID.equals(entity.getLayerFileSet().getProjectionFileSetGUID()) && //
 				!fileSetGUID.equals(entity.getResultFileSet().getProjectionFileSetGUID())) {
 			throw new ProjectionServiceException(
-					"Error adding file",
+					message,
 					new IllegalIdentifierException(
 							String.format("File set %s did not belong to the projection.", fileSetGUID)
-					), projectionGUID
+					), entity.getProjectionGUID()
 			);
 		}
-		fileSetService.addNewFileToFileSet(projectionGUID, fileSetGUID, user, file);
-		return getProjectionByID(projectionGUID, user);
 	}
 
 	public FileMappingModel
@@ -489,26 +499,9 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 		// check that the filesetGUID is set and is one of the file sets for this projection
-		if (fileSetGUID == null) {
-			throw new ProjectionServiceException(
-					"Error getting file", new IllegalIdentifierException("No file Set Identified"), projectionGUID
-			);
-		}
-		if (fileGUID == null) {
-			throw new ProjectionServiceException(
-					"Error getting file", new IllegalIdentifierException("No file Identified"), projectionGUID
-			);
-		}
-		if (!fileSetGUID.equals(entity.getPolygonFileSet().getProjectionFileSetGUID())
-				&& !fileSetGUID.equals(entity.getLayerFileSet().getProjectionFileSetGUID()) && //
-				!fileSetGUID.equals(entity.getResultFileSet().getProjectionFileSetGUID())) {
-			throw new ProjectionServiceException(
-					"Error getting file",
-					new IllegalIdentifierException(
-							String.format("File set %s did not belong to the projection.", fileSetGUID)
-					), projectionGUID
-			);
-		}
+		validateIdentifier(fileSetGUID, "Error getting file", "file Set", projectionGUID);
+		validateIdentifier(fileGUID, "Error getting file", "file", projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, "Error getting file\"");
 		return fileSetService.getFileForDownload(fileSetGUID, actingUser, fileGUID);
 	}
 
@@ -518,26 +511,9 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 		// check that the filesetGUID is set and is one of the file sets for this projection
-		if (fileSetGUID == null) {
-			throw new ProjectionServiceException(
-					"Error getting file", new IllegalIdentifierException("No file Set Identified"), projectionGUID
-			);
-		}
-		if (fileGUID == null) {
-			throw new ProjectionServiceException(
-					"Error getting file", new IllegalIdentifierException("No file Identified"), projectionGUID
-			);
-		}
-		if (!fileSetGUID.equals(entity.getPolygonFileSet().getProjectionFileSetGUID())
-				&& !fileSetGUID.equals(entity.getLayerFileSet().getProjectionFileSetGUID()) && //
-				!fileSetGUID.equals(entity.getResultFileSet().getProjectionFileSetGUID())) {
-			throw new ProjectionServiceException(
-					"Error getting file",
-					new IllegalIdentifierException(
-							String.format("File set %s did not belong to the projection.", fileSetGUID)
-					), projectionGUID
-			);
-		}
+		validateIdentifier(fileSetGUID, "Error deleting file", "file Set", projectionGUID);
+		validateIdentifier(fileGUID, "Error deleting file", "file", projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, "Error deleting file");
 		fileSetService.deleteFileFromFileSet(fileSetGUID, actingUser, fileGUID);
 	}
 
@@ -547,21 +523,8 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 		// check that the filesetGUID is set and is one of the file sets for this projection
-		if (fileSetGUID == null) {
-			throw new ProjectionServiceException(
-					"Error getting file", new IllegalIdentifierException("No file Set Identified"), projectionGUID
-			);
-		}
-		if (!fileSetGUID.equals(entity.getPolygonFileSet().getProjectionFileSetGUID())
-				&& !fileSetGUID.equals(entity.getLayerFileSet().getProjectionFileSetGUID()) && //
-				!fileSetGUID.equals(entity.getResultFileSet().getProjectionFileSetGUID())) {
-			throw new ProjectionServiceException(
-					"Error getting file",
-					new IllegalIdentifierException(
-							String.format("File set %s did not belong to the projection.", fileSetGUID)
-					), projectionGUID
-			);
-		}
+		validateIdentifier(fileSetGUID, "Error deleting files", "file Set", projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, "Error deleting files");
 		fileSetService.deleteAllFilesFromFileSet(fileSetGUID, actingUser);
 	}
 

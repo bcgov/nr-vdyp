@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
@@ -33,6 +34,18 @@ public class TestUtils {
 		return e;
 	}
 
+	public static ProjectionEntity projectionEntity(UUID projectionId, UUID ownerId, String projectionStatus) {
+		ProjectionEntity e = projectionEntity(projectionId, ownerId);
+		e.setProjectionStatusCode(statusCode(projectionStatus));
+		return e;
+	}
+
+	public static ProjectionStatusCodeEntity statusCode(String status) {
+		var e = new ProjectionStatusCodeEntity();
+		e.setCode(status);
+		return e;
+	}
+
 	public static ProjectionFileSetModel fileSetModel(UUID id, UUID ownerId, String fileSetTypeCode) {
 		ProjectionFileSetModel m = new ProjectionFileSetModel();
 		m.setProjectionFileSetGUID(id.toString());
@@ -50,6 +63,12 @@ public class TestUtils {
 	public static ProjectionFileSetEntity fileSetEntity(UUID id) {
 		ProjectionFileSetEntity e = new ProjectionFileSetEntity();
 		e.setProjectionFileSetGUID(id);
+		return e;
+	}
+
+	public static ProjectionFileSetEntity fileSetEntity(UUID id, UUID ownerId) {
+		ProjectionFileSetEntity e = fileSetEntity(id);
+		e.setOwnerUser(userEntity(ownerId));
 		return e;
 	}
 }

@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
+import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.fileSetEntity;
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.fileSetModel;
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.fileSetTypeCodeModel;
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.user;
@@ -212,25 +213,14 @@ class ProjectionFileSetServiceTest {
 		);
 	}
 
-	ProjectionFileSetEntity createOwnedFileSet(UUID fileSetGuid) {
-		UUID ownerGuid = UUID.randomUUID();
-		VDYPUserEntity owner = new VDYPUserEntity();
-		owner.setVdypUserGUID(ownerGuid);
-
-		ProjectionFileSetEntity entity = new ProjectionFileSetEntity();
-		entity.setProjectionFileSetGUID(fileSetGuid);
-		entity.setOwnerUser(owner);
-		return entity;
-	}
-
 	@Test
 	void addFileToSet_validUser_callsFileMappingService() throws Exception {
 		UUID projectionGuid = UUID.randomUUID();
 		UUID fileSetGuid = UUID.randomUUID();
-
-		var entity = createOwnedFileSet(fileSetGuid);
+		UUID ownerId = UUID.randomUUID();
+		var entity = fileSetEntity(fileSetGuid, ownerId);
 		VDYPUserModel actingUser = new VDYPUserModel();
-		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		actingUser.setVdypUserGUID(ownerId.toString());
 
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
 
@@ -246,9 +236,10 @@ class ProjectionFileSetServiceTest {
 		UUID fileSetGuid = UUID.randomUUID();
 		UUID fileMappingGuid = UUID.randomUUID();
 
-		var entity = createOwnedFileSet(fileSetGuid);
+		UUID ownerId = UUID.randomUUID();
+		var entity = fileSetEntity(fileSetGuid, ownerId);
 		VDYPUserModel actingUser = new VDYPUserModel();
-		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		actingUser.setVdypUserGUID(ownerId.toString());
 
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
 
@@ -259,9 +250,10 @@ class ProjectionFileSetServiceTest {
 	@Test
 	void deleteAllFilesFromSet_validUser_callsFileMappingService() throws Exception {
 		UUID fileSetGuid = UUID.randomUUID();
-		var entity = createOwnedFileSet(fileSetGuid);
+		UUID ownerId = UUID.randomUUID();
+		var entity = fileSetEntity(fileSetGuid, ownerId);
 		VDYPUserModel actingUser = new VDYPUserModel();
-		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		actingUser.setVdypUserGUID(ownerId.toString());
 
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
 
@@ -273,9 +265,10 @@ class ProjectionFileSetServiceTest {
 	void getFileForDownload_validUser_callsFileMappingService() throws Exception {
 		UUID fileSetGuid = UUID.randomUUID();
 		UUID fileMappingGuid = UUID.randomUUID();
-		var entity = createOwnedFileSet(fileSetGuid);
+		UUID ownerId = UUID.randomUUID();
+		var entity = fileSetEntity(fileSetGuid, ownerId);
 		VDYPUserModel actingUser = new VDYPUserModel();
-		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		actingUser.setVdypUserGUID(ownerId.toString());
 
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
 
@@ -291,9 +284,10 @@ class ProjectionFileSetServiceTest {
 	@Test
 	void getAllFilesForDownload_validUser_callsFileMappingService() throws Exception {
 		UUID fileSetGuid = UUID.randomUUID();
-		var entity = createOwnedFileSet(fileSetGuid);
+		UUID ownerId = UUID.randomUUID();
+		var entity = fileSetEntity(fileSetGuid, ownerId);
 		VDYPUserModel actingUser = new VDYPUserModel();
-		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		actingUser.setVdypUserGUID(ownerId.toString());
 
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
 
