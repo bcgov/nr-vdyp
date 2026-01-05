@@ -123,6 +123,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 		var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
 
+		// FIXME this unit test needs to be updated to not fail when the current year changes SEE VDYP-897
 		String vdyp7YieldTableContent = new String(
 				Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "vdyp7-yield-table.csv"))
 		);
