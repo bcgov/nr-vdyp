@@ -91,12 +91,12 @@ public class ProjectionFileSetService {
 		return entity.get();
 	}
 
-	public void ensureAuthorizedAccess(ProjectionFileSetEntity entity, VDYPUserModel actingUser)
+	private void ensureAuthorizedAccess(ProjectionFileSetEntity entity, VDYPUserModel actingUser)
 			throws ProjectionServiceException {
 		// Check that the user owns the fileset (FUTURE PROOFING if you use someone elses fileset you should not be able
 		// to edit it) trivial check currently
-		if (entity.getOwnerUser() == null
-				&& entity.getOwnerUser().getVdypUserGUID().equals(UUID.fromString(actingUser.getVdypUserGUID()))) {
+		if (entity.getOwnerUser() != null
+				&& !entity.getOwnerUser().getVdypUserGUID().equals(UUID.fromString(actingUser.getVdypUserGUID()))) {
 			throw new ProjectionFileSetUnauthorizedException(entity.getProjectionFileSetGUID(), actingUser);
 		}
 	}

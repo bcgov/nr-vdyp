@@ -5,8 +5,12 @@ import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.fileSetTypeCodeModel;
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.user;
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.userEntity;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -15,7 +19,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionFileSetResourceAssem
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileSetTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
@@ -157,6 +164,146 @@ class ProjectionFileSetServiceTest {
 
 		verify(repository).deleteById(id);
 		verifyNoMoreInteractions(repository);
+	}
+
+	@Test
+	void getFileSetById_invalidGuid_throwsException() throws Exception {
+		UUID fileSetGuid = UUID.randomUUID();
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.empty());
+
+		assertThrows(ProjectionServiceException.class, () -> service.getProjectionFileSetEntity(fileSetGuid));
+	}
+
+	@Test
+	void getFileSetById_validGuid_returnsEntity() throws Exception {
+		UUID fileSetGUID = UUID.randomUUID();
+		ProjectionFileSetEntity entity = new ProjectionFileSetEntity();
+		entity.setProjectionFileSetGUID(fileSetGUID);
+
+		when(repository.findByIdOptional(fileSetGUID)).thenReturn(Optional.of(entity));
+
+		ProjectionFileSetEntity result = service.getProjectionFileSetEntity(fileSetGUID);
+		assertNotNull(result);
+		assertEquals(entity, result);
+	}
+
+	@Test
+	void addFileToSet_invalidUser_throwsException() {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID fileSetGuid = UUID.randomUUID();
+
+		UUID ownerGuid = UUID.randomUUID();
+		VDYPUserEntity owner = new VDYPUserEntity();
+		owner.setVdypUserGUID(ownerGuid);
+		UUID invalidOwnerGuid = UUID.randomUUID();
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(invalidOwnerGuid.toString());
+
+		ProjectionFileSetEntity entity = new ProjectionFileSetEntity();
+		entity.setProjectionFileSetGUID(fileSetGuid);
+		entity.setOwnerUser(owner);
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.addNewFileToFileSet(projectionGuid, fileSetGuid, actingUser, null)
+		);
+	}
+
+	ProjectionFileSetEntity createOwnedFileSet(UUID fileSetGuid) {
+		UUID ownerGuid = UUID.randomUUID();
+		VDYPUserEntity owner = new VDYPUserEntity();
+		owner.setVdypUserGUID(ownerGuid);
+
+		ProjectionFileSetEntity entity = new ProjectionFileSetEntity();
+		entity.setProjectionFileSetGUID(fileSetGuid);
+		entity.setOwnerUser(owner);
+		return entity;
+	}
+
+	@Test
+	void addFileToSet_validUser_callsFileMappingService() throws Exception {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID fileSetGuid = UUID.randomUUID();
+
+		var entity = createOwnedFileSet(fileSetGuid);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+
+		FileMappingModel fakeResult = new FileMappingModel();
+		when(fileMappingService.createNewFile(eq(projectionGuid), eq(entity), isNull())).thenReturn(fakeResult);
+
+		service.addNewFileToFileSet(projectionGuid, fileSetGuid, actingUser, null);
+		verify(fileMappingService).createNewFile(projectionGuid, entity, null);
+	}
+
+	@Test
+	void deleteFileFromSet_validUser_callsFileMappingService() throws Exception {
+		UUID fileSetGuid = UUID.randomUUID();
+		UUID fileMappingGuid = UUID.randomUUID();
+
+		var entity = createOwnedFileSet(fileSetGuid);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+
+		service.deleteFileFromFileSet(fileSetGuid, actingUser, fileMappingGuid);
+		verify(fileMappingService).deleteFileMapping(fileMappingGuid);
+	}
+
+	@Test
+	void deleteAllFilesFromSet_validUser_callsFileMappingService() throws Exception {
+		UUID fileSetGuid = UUID.randomUUID();
+		var entity = createOwnedFileSet(fileSetGuid);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+
+		service.deleteAllFilesFromFileSet(fileSetGuid, actingUser);
+		verify(fileMappingService).deleteFilesForSet(fileSetGuid);
+	}
+
+	@Test
+	void getFileForDownload_validUser_callsFileMappingService() throws Exception {
+		UUID fileSetGuid = UUID.randomUUID();
+		UUID fileMappingGuid = UUID.randomUUID();
+		var entity = createOwnedFileSet(fileSetGuid);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+
+		FileMappingModel stubReturn = new FileMappingModel();
+		when(fileMappingService.getFileById(eq(fileMappingGuid), eq(true))).thenReturn(stubReturn);
+
+		FileMappingModel result = service.getFileForDownload(fileSetGuid, actingUser, fileMappingGuid);
+		assertNotNull(result);
+
+		verify(fileMappingService).getFileById(fileMappingGuid, true);
+	}
+
+	@Test
+	void getAllFilesForDownload_validUser_callsFileMappingService() throws Exception {
+		UUID fileSetGuid = UUID.randomUUID();
+		var entity = createOwnedFileSet(fileSetGuid);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+
+		FileMappingModel stubReturn = new FileMappingModel();
+		when(fileMappingService.getFilesForFileSet(eq(fileSetGuid), eq(true))).thenReturn(List.of(stubReturn));
+
+		List<FileMappingModel> result = service.getAllFilesForDownload(fileSetGuid, actingUser);
+		assertNotNull(result);
+
+		verify(fileMappingService).getFilesForFileSet(fileSetGuid, true);
 	}
 
 }
