@@ -48,23 +48,23 @@ public class FileMappingService {
 	public FileMappingModel
 			createNewFile(UUID projectionGUID, ProjectionFileSetEntity projectionFileSetEntity, FileUpload file)
 					throws ProjectionServiceException {
-		// Create the file name "projection/projectionGUID/[input|output]/pass the file meta data through as json and
-		// get the filename and type here
-		String filePrefix = String.format("vdyp/projection/%s", projectionGUID);
-		List<COMSBucket> searchResponse = comsClient.searchForBucket(null, true, filePrefix, null);
-		String bucketGUID;
-		if (searchResponse.isEmpty()) {
-			COMSCreateBucketRequest request = buildCreateBucketRequest(projectionGUID, filePrefix);
-			COMSBucket createBucketResponse = comsClient.createBucket(request);
-			bucketGUID = createBucketResponse.bucketId();
-		} else {
-			bucketGUID = searchResponse.get(0).bucketId();
-		}
 		try {
 			String contentDisposition = buildContentDisposition(file.fileName());
 			long contentLength = Files.size(file.uploadedFile());
 
+			// Create the file name "projection/projectionGUID/[input|output]/pass the file meta data through as json
+			// and get the filename and type here
+			String filePrefix = String.format("vdyp/projection/%s", projectionGUID);
+			List<COMSBucket> searchResponse = comsClient.searchForBucket(null, true, filePrefix, null);
 			String contentType = file.contentType() != null ? file.contentType() : MediaType.APPLICATION_OCTET_STREAM;
+			String bucketGUID;
+			if (searchResponse.isEmpty()) {
+				COMSCreateBucketRequest request = buildCreateBucketRequest(projectionGUID, filePrefix);
+				COMSBucket createBucketResponse = comsClient.createBucket(request);
+				bucketGUID = createBucketResponse.bucketId();
+			} else {
+				bucketGUID = searchResponse.get(0).bucketId();
+			}
 			try (InputStream fileStream = Files.newInputStream(file.uploadedFile())) {
 				logger.info(
 						"Data for object bucketId {}, contentDisposistion {}, contentLength {}, contentType {}",

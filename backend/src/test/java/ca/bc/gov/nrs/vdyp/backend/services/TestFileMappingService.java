@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -67,7 +69,9 @@ public class TestFileMappingService {
 	@Test
 	void createNewFile_createsBucketWhenMissing_andPersistsEntity(@TempDir Path tempDir) throws Exception {
 		UUID projectionGuid = UUID.randomUUID();
+		UUID fileSetGUID = UUID.randomUUID();
 		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
+		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
 
 		// real temp file for Files.size() + Files.newInputStream()
 		Path uploaded = tempDir.resolve("input.txt");
@@ -107,7 +111,7 @@ public class TestFileMappingService {
 		FileMappingModel result = service.createNewFile(projectionGuid, fileSetEntity, fileUpload);
 
 		assertNotNull(result);
-		assertEquals(objectGuid, result.getComsObjectGUID());
+		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
 
 		verify(repository).persist(any(FileMappingEntity.class));
 		verify(comsClient).createBucket(any(COMSCreateBucketRequest.class));
@@ -117,9 +121,28 @@ public class TestFileMappingService {
 	}
 
 	@Test
+	void createNewFile_nullFile_throwsExceptionDoesNotCreate() throws Exception {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID fileSetGUID = UUID.randomUUID();
+		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
+		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
+
+		assertThrows(
+				ProjectionServiceException.class, () -> service.createNewFile(projectionGuid, fileSetEntity, null)
+		);
+
+		verify(repository, never()).persist(any(FileMappingEntity.class));
+		verify(comsClient, never()).createBucket(any(COMSCreateBucketRequest.class));
+		verify(comsClient, never()).createObject(any(), anyString(), anyLong(), eq(MediaType.TEXT_PLAIN), any()
+		);
+	}
+
+	@Test
 	void createNewFile_usesExistingBucket_whenSearchReturnsBucket(@TempDir Path tempDir) throws Exception {
 		UUID projectionGuid = UUID.randomUUID();
+		UUID fileSetGUID = UUID.randomUUID();
 		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
+		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
 
 		Path uploaded = tempDir.resolve("input.bin");
 		Files.write(uploaded, new byte[] { 1, 2, 3 });
@@ -150,7 +173,7 @@ public class TestFileMappingService {
 
 		FileMappingModel result = service.createNewFile(projectionGuid, fileSetEntity, fileUpload);
 
-		assertEquals(objectGuid, result.getComsObjectGUID());
+		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
 		verify(comsClient, never()).createBucket(any());
 	}
 
@@ -165,18 +188,96 @@ public class TestFileMappingService {
 
 		when(repository.findByIdOptional(fileMappingGuid)).thenReturn(Optional.of(entity));
 
-		FileMappingModel model = new FileMappingModel();
-		model.setComsObjectGUID(stringGUID);
-		when(assembler.toModel(entity)).thenReturn(model);
-
 		// COMS getObject returns a Response whose entity is the URL string
-		JsonString urlResponse = Json.createValue("https://example.com/presigned-url");
+		JsonString urlResponse = Json.createValue("https://example.com/presigned");
 		when(comsClient.getObject(eq(stringGUID), eq(COMSClient.FileDownloadMode.URL.getParamValue())))
 				.thenReturn(urlResponse);
 
 		FileMappingModel result = service.getFileById(fileMappingGuid, true);
 
 		assertEquals("https://example.com/presigned", result.getDownloadURL());
+	}
+
+	@Test
+	void getFileById_invalidGuid_throwsException() throws Exception {
+		UUID fileMappingGuid = UUID.randomUUID();
+
+		when(repository.findByIdOptional(fileMappingGuid)).thenReturn(Optional.empty());
+
+		assertThrows(ProjectionServiceException.class, () -> service.getFileById(fileMappingGuid, false));
+
+		verify(comsClient, never()).getObject(any(), any());
+	}
+
+	@Test
+	void getFileById_downloadFalse_doesNotSetDownloadUrl() throws Exception {
+		UUID fileMappingGuid = UUID.randomUUID();
+		UUID comsObjectGuid = UUID.randomUUID();
+		String stringGUID = comsObjectGuid.toString();
+
+		FileMappingEntity entity = new FileMappingEntity();
+		entity.setComsObjectGUID(comsObjectGuid);
+
+		when(repository.findByIdOptional(fileMappingGuid)).thenReturn(Optional.of(entity));
+
+		FileMappingModel model = new FileMappingModel();
+		model.setComsObjectGUID(stringGUID);
+
+		FileMappingModel result = service.getFileById(fileMappingGuid, false);
+
+		assertNull(result.getDownloadURL());
+		verify(comsClient, never()).getObject(any(), any());
+	}
+
+	@Test
+	void getFilesForSet_downloadFalse_getsList() throws Exception {
+		UUID fileSetGuid = UUID.randomUUID();
+		UUID fileMappingGuid1 = UUID.randomUUID();
+		UUID fileMappingGuid2 = UUID.randomUUID();
+
+		FileMappingEntity entity1 = new FileMappingEntity();
+		FileMappingEntity entity2 = new FileMappingEntity();
+		entity1.setFileMappingGUID(fileMappingGuid1);
+		entity2.setFileMappingGUID(fileMappingGuid2);
+
+		when(repository.listForFileSet(fileSetGuid)).thenReturn(List.of(entity1, entity2));
+
+		// COMS getObject returns a Response whose entity is the URL string
+		List<FileMappingModel> result = service.getFilesForFileSet(fileSetGuid, false);
+
+		assertNotNull(result);
+		assertEquals(2, result.size());
+		List<String> resultGuids = result.stream().map(FileMappingModel::getFileMappingGUID).toList();
+
+		assertTrue(resultGuids.contains(fileMappingGuid1.toString()));
+		assertTrue(resultGuids.contains(fileMappingGuid2.toString()));
+	}
+
+	@Test
+	void deleteFilesForSet_ok_deletesRepositoryEntities() throws Exception {
+		UUID fileMappingGuid1 = UUID.randomUUID();
+		UUID fileMappingGuid2 = UUID.randomUUID();
+		UUID comsObjectGUID1 = UUID.randomUUID();
+		UUID comsObjectGUID2 = UUID.randomUUID();
+		UUID fileSetGUID = UUID.randomUUID();
+
+		FileMappingEntity entity1 = new FileMappingEntity();
+		FileMappingEntity entity2 = new FileMappingEntity();
+		entity1.setFileMappingGUID(fileMappingGuid1);
+		entity1.setComsObjectGUID(comsObjectGUID1);
+		entity2.setFileMappingGUID(fileMappingGuid2);
+		entity2.setComsObjectGUID(comsObjectGUID2);
+
+		when(repository.listForFileSet(fileSetGUID)).thenReturn(List.of(entity1, entity2));
+
+		// Try-with-resources will close it; Response is safe to use here.
+		Response ok = Response.ok().build();
+		when(comsClient.deleteObject(any())).thenReturn(ok);
+
+		service.deleteFilesForSet(fileSetGUID);
+
+		verify(repository).delete(entity1);
+		verify(repository).delete(entity2);
 	}
 
 	@Test
@@ -215,3 +316,4 @@ public class TestFileMappingService {
 		verify(repository, never()).delete(any());
 	}
 }
+
