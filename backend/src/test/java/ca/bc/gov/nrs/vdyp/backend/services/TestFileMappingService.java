@@ -47,7 +47,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 @ExtendWith(MockitoExtension.class)
-public class TestFileMappingService {
+class TestFileMappingService {
 	@Mock
 	FileMappingRepository repository;
 	FileMappingResourceAssembler assembler;
@@ -88,7 +88,7 @@ public class TestFileMappingService {
 		when(comsS3Config.endpoint()).thenReturn("endpoint");
 
 		// COMS: bucket search empty => create bucket
-		when(comsClient.searchForBucket(isNull(), eq(true), anyString(), isNull())).thenReturn(List.of());
+		when(comsClient.searchForBucket(isNull(), true, anyString(), isNull())).thenReturn(List.of());
 
 		COMSBucket createdBucket = new COMSBucket("bucket", "name", "bucket-guid-123", "endpoint", "key", "region");
 		when(comsClient.createBucket(any(COMSCreateBucketRequest.class))).thenReturn(createdBucket);
@@ -190,7 +190,7 @@ public class TestFileMappingService {
 
 		// COMS getObject returns a Response whose entity is the URL string
 		JsonString urlResponse = Json.createValue("https://example.com/presigned");
-		when(comsClient.getObject(eq(stringGUID), eq(COMSClient.FileDownloadMode.URL.getParamValue())))
+		when(comsClient.getObject(stringGUID, COMSClient.FileDownloadMode.URL.getParamValue()))
 				.thenReturn(urlResponse);
 
 		FileMappingModel result = service.getFileById(fileMappingGuid, true);
@@ -199,7 +199,7 @@ public class TestFileMappingService {
 	}
 
 	@Test
-	void getFileById_invalidGuid_throwsException() throws Exception {
+	void getFileById_invalidGuid_throwsException() {
 		UUID fileMappingGuid = UUID.randomUUID();
 
 		when(repository.findByIdOptional(fileMappingGuid)).thenReturn(Optional.empty());
@@ -230,7 +230,7 @@ public class TestFileMappingService {
 	}
 
 	@Test
-	void getFilesForSet_downloadFalse_getsList() throws Exception {
+	void getFilesForSet_downloadFalse_getsList() {
 		UUID fileSetGuid = UUID.randomUUID();
 		UUID fileMappingGuid1 = UUID.randomUUID();
 		UUID fileMappingGuid2 = UUID.randomUUID();
@@ -300,7 +300,7 @@ public class TestFileMappingService {
 	}
 
 	@Test
-	void deleteFileMapping_nonOk_throwsAndDoesNotDelete() throws Exception {
+	void deleteFileMapping_nonOk_throwsAndDoesNotDelete() {
 		UUID fileMappingGuid = UUID.randomUUID();
 		UUID comsObjectGuid = UUID.randomUUID();
 

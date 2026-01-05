@@ -81,6 +81,13 @@ public class ProjectionService {
 	private final ProjectionStatusCodeLookup statusLookup;
 	private final CalculationEngineCodeLookup calclationEngineLookup;
 
+	private static final String FILE_SET_IDENTIFIER = "file set";
+	private static final String FILE_IDENTIFIER = "file";
+	private static final String FILE_ADD_ERROR = "Error adding file";
+	private static final String FILE_DELETE_ERROR = "Error deleting file";
+	private static final String FILE_GET_ERROR = "Error getting file";
+	private static final String FILES_DELETE_ERROR = "Error deleting files";
+
 	public ProjectionService(
 			EntityManager em, ProjectionResourceAssembler assembler, ProjectionRepository repository,
 			ProjectionFileSetService fileSetService, ProjectionStatusCodeLookup statusLookup,
@@ -471,8 +478,8 @@ public class ProjectionService {
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 
 		// check that the filesetGUID is set and is one of the file sets for this projection
-		validateIdentifier(fileSetGUID, "Error adding file", "file Set", projectionGUID);
-		validateFileSetIsForProjection(entity, fileSetGUID, "Error adding file");
+		validateIdentifier(fileSetGUID, FILE_ADD_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, FILE_ADD_ERROR);
 
 		fileSetService.addNewFileToFileSet(projectionGUID, fileSetGUID, user, file);
 		return getProjectionByID(projectionGUID, user);
@@ -499,9 +506,9 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 		// check that the filesetGUID is set and is one of the file sets for this projection
-		validateIdentifier(fileSetGUID, "Error getting file", "file Set", projectionGUID);
-		validateIdentifier(fileGUID, "Error getting file", "file", projectionGUID);
-		validateFileSetIsForProjection(entity, fileSetGUID, "Error getting file\"");
+		validateIdentifier(fileSetGUID, FILE_GET_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
+		validateIdentifier(fileGUID, FILE_GET_ERROR, FILE_IDENTIFIER, projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, FILE_GET_ERROR);
 		return fileSetService.getFileForDownload(fileSetGUID, actingUser, fileGUID);
 	}
 
@@ -511,9 +518,9 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 		// check that the filesetGUID is set and is one of the file sets for this projection
-		validateIdentifier(fileSetGUID, "Error deleting file", "file Set", projectionGUID);
-		validateIdentifier(fileGUID, "Error deleting file", "file", projectionGUID);
-		validateFileSetIsForProjection(entity, fileSetGUID, "Error deleting file");
+		validateIdentifier(fileSetGUID, FILE_DELETE_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
+		validateIdentifier(fileGUID, FILE_DELETE_ERROR, FILE_IDENTIFIER, projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, FILE_DELETE_ERROR);
 		fileSetService.deleteFileFromFileSet(fileSetGUID, actingUser, fileGUID);
 	}
 
@@ -523,8 +530,8 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 		// check that the filesetGUID is set and is one of the file sets for this projection
-		validateIdentifier(fileSetGUID, "Error deleting files", "file Set", projectionGUID);
-		validateFileSetIsForProjection(entity, fileSetGUID, "Error deleting files");
+		validateIdentifier(fileSetGUID, FILES_DELETE_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, FILES_DELETE_ERROR);
 		fileSetService.deleteAllFilesFromFileSet(fileSetGUID, actingUser);
 	}
 
