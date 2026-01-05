@@ -106,10 +106,14 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-flyway</artifactId>
       <exclusions>
-        <exclusion>
-          <groupId>org.jboss.slf4j</groupId>
-          <artifactId>slf4j-jboss-logmanager</artifactId>
-        </exclusion>
+				<exclusion>
+					<groupId>org.jboss.slf4j</groupId>
+					<artifactId>slf4j-jboss-logmanager</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jboss.slf4j</groupId>
+					<artifactId>slf4j-jboss</artifactId>
+				</exclusion>
       </exclusions>
     </dependency>
     <dependency>
