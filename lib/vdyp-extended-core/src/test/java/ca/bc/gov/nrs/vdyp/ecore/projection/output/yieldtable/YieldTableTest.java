@@ -528,6 +528,8 @@ class YieldTableTest {
 		logger.info("Resulting CSV file written to " + csvFilePath);
 
 		var vdyp8ResultYieldTable = new ResultYieldTable(new String(csvContent));
+
+		// FIXME this unit test needs to be updated to not fail when the current year changes SEE VDYP-897
 		var vdyp7ResultYieldTable = new ResultYieldTable(
 				Files.readString(Path.of(resourceFolderPath.toString(), "vdyp7_Output_YldTbl-do-suppress.csv"))
 		);
