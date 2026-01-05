@@ -9,6 +9,6 @@ class TestFileMappingModel {
 	void testSetDownloadURL() {
 		var model = new FileMappingModel();
 		model.setDownloadURL("http://test.com");
-		assertEquals(model.getDownloadURL(), "http://test.com");
+		assertEquals("http://test.com", model.getDownloadURL());
 	}
 }

@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -168,7 +166,7 @@ class ProjectionFileSetServiceTest {
 	}
 
 	@Test
-	void getFileSetById_invalidGuid_throwsException() throws Exception {
+	void getFileSetById_invalidGuid_throwsException() {
 		UUID fileSetGuid = UUID.randomUUID();
 
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.empty());
@@ -225,7 +223,7 @@ class ProjectionFileSetServiceTest {
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
 
 		FileMappingModel fakeResult = new FileMappingModel();
-		when(fileMappingService.createNewFile(eq(projectionGuid), eq(entity), isNull())).thenReturn(fakeResult);
+		when(fileMappingService.createNewFile(projectionGuid, entity, null)).thenReturn(fakeResult);
 
 		service.addNewFileToFileSet(projectionGuid, fileSetGuid, actingUser, null);
 		verify(fileMappingService).createNewFile(projectionGuid, entity, null);
@@ -273,7 +271,7 @@ class ProjectionFileSetServiceTest {
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
 
 		FileMappingModel stubReturn = new FileMappingModel();
-		when(fileMappingService.getFileById(eq(fileMappingGuid), eq(true))).thenReturn(stubReturn);
+		when(fileMappingService.getFileById(fileMappingGuid, true)).thenReturn(stubReturn);
 
 		FileMappingModel result = service.getFileForDownload(fileSetGuid, actingUser, fileMappingGuid);
 		assertNotNull(result);
@@ -292,7 +290,7 @@ class ProjectionFileSetServiceTest {
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
 
 		FileMappingModel stubReturn = new FileMappingModel();
-		when(fileMappingService.getFilesForFileSet(eq(fileSetGuid), eq(true))).thenReturn(List.of(stubReturn));
+		when(fileMappingService.getFilesForFileSet(fileSetGuid, true)).thenReturn(List.of(stubReturn));
 
 		List<FileMappingModel> result = service.getAllFilesForDownload(fileSetGuid, actingUser);
 		assertNotNull(result);
