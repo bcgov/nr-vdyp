@@ -21,7 +21,7 @@ const meta: Meta<typeof TheHeader> = {
       },
       template: `
         <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
-          <div style="background-color: rgb(0, 51, 102); width: 100%; max-width: 1280px;">
+          <div style="width: 100%; max-width: 1280px;">
             <story />
           </div>
         </div>
@@ -64,10 +64,13 @@ export const Default: Story = {
       return { args }
     },
     template: `
-      <TheHeader
-        v-bind="args"
-        v-slot="{ logoProps, titleProps, userMenuProps }"
-      />
+      <div id="app-container">
+        <TheHeader v-bind="args" />
+        <main id="main" tabindex="-1" style="padding: 20px;">
+          <h1>Main Content</h1>
+          <p>This is the main content area. Use the "Skip to main content" link to jump here.</p>
+        </main>
+      </div>
     `,
   }),
 }

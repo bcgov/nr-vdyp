@@ -8,11 +8,7 @@ const meta = {
   argTypes: {
     text: {
       control: 'text',
-      description: 'Text to display in the toolbar title',
-    },
-    style: {
-      control: 'object',
-      description: 'Custom styles to override the default styles',
+      description: 'Text to display in the header title',
     },
   },
 } satisfies Meta<typeof HeaderTitle>
@@ -23,10 +19,5 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   args: {
     text: 'VARIABLE DENSITY YIELD PROJECTION',
-    style: {
-      textAlign: 'center',
-      flex: 1,
-      fontWeight: 300,
-    },
   },
 }

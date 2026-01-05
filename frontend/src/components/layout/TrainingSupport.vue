@@ -1,36 +1,25 @@
 <template>
-  <span :class="computedClass" :style="computedStyle">
+  <span class="bcds-header-link">
     {{ text }}
   </span>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
-const props = defineProps({
+defineProps({
   text: {
     type: String,
     default: 'Training and Support',
   },
-  customStyle: {
-    type: Object,
-    default: () => ({}),
-  },
-})
-
-const computedClass = computed(() => {
-  return Object.keys(props.customStyle).length === 0
-    ? 'header-training-support'
-    : ''
-})
-
-const computedStyle = computed(() => {
-  return Object.keys(props.customStyle).length === 0 ? {} : props.customStyle
 })
 </script>
 
 <style scoped>
-.header-training-support {
-  font-size: 14px;
+.bcds-header-link {
+  font-family: var(--typography-font-families-bc-sans);
+  font-weight: var(--typography-font-weights-regular);
+  font-size: var(--typography-font-size-body);
+  line-height: var(--typography-line-heights-xdense);
+  color: var(--typography-color-primary);
+  white-space: nowrap;
 }
 </style>
