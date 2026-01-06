@@ -28,6 +28,7 @@ describe('<AppMessageDialog />', () => {
     dialogWidth: 400,
     btnLabel: BUTTON_LABEL.CONT_EDIT,
     scrollStrategy: 'none',
+    variant: 'info' as const,
   }
 
   it('renders with default props', () => {
@@ -45,8 +46,8 @@ describe('<AppMessageDialog />', () => {
     cy.get('.v-overlay__content').should('have.css', 'align-items', 'center')
 
     // Check the title, message, button label
-    cy.get('.popup-header').should('contain', defaultProps.title)
-    cy.get('.v-card-text').should('contain', defaultProps.message)
+    cy.get('.bcds-message-dialog--header').should('contain', defaultProps.title)
+    cy.get('.bcds-message-dialog--children').should('contain', defaultProps.message)
     cy.get('button').should('contain', defaultProps.btnLabel)
   })
 
@@ -81,7 +82,7 @@ describe('<AppMessageDialog />', () => {
     })
 
     // Check if the message container is not visible
-    cy.get('.v-card-text').should('not.be.visible')
+    cy.get('.bcds-message-dialog--children').should('not.be.visible')
   })
 
   it('renders with modified custom props', () => {
@@ -91,6 +92,7 @@ describe('<AppMessageDialog />', () => {
       message: 'Custom message content.',
       dialogWidth: 500,
       btnLabel: 'Submit',
+      variant: 'warning' as const,
     }
 
     cy.mount(AppMessageDialog, { props: customProps })
@@ -99,10 +101,10 @@ describe('<AppMessageDialog />', () => {
     cy.get('.v-dialog').should('be.visible')
 
     // Check the custom title
-    cy.get('.popup-header').should('contain', customProps.title)
+    cy.get('.bcds-message-dialog--header').should('contain', customProps.title)
 
     // Check the custom message
-    cy.get('.v-card-text').should('contain', customProps.message)
+    cy.get('.bcds-message-dialog--children').should('contain', customProps.message)
 
     // Check the custom dialog width
     cy.get('.v-overlay__content').should('have.css', 'max-width', '500px')
@@ -121,5 +123,123 @@ describe('<AppMessageDialog />', () => {
 
     // Check if the dialog is not exist
     cy.get('.v-dialog').should('not.exist')
+  })
+
+  it('displays icon for info variant', () => {
+    cy.mount(AppMessageDialog, {
+      props: {
+        ...defaultProps,
+        variant: 'info',
+      },
+    })
+
+    // Check if the icon element exists
+    cy.get('.bcds-message-dialog--icon').should('exist')
+  })
+
+  it('displays icon for confirmation variant', () => {
+    cy.mount(AppMessageDialog, {
+      props: {
+        ...defaultProps,
+        variant: 'confirmation',
+      },
+    })
+
+    // Check if the icon element exists
+    cy.get('.bcds-message-dialog--icon').should('exist')
+  })
+
+  it('displays icon for warning variant', () => {
+    cy.mount(AppMessageDialog, {
+      props: {
+        ...defaultProps,
+        variant: 'warning',
+      },
+    })
+
+    // Check if the icon element exists
+    cy.get('.bcds-message-dialog--icon').should('exist')
+  })
+
+  it('displays icon for error variant', () => {
+    cy.mount(AppMessageDialog, {
+      props: {
+        ...defaultProps,
+        variant: 'error',
+      },
+    })
+
+    // Check if the icon element exists
+    cy.get('.bcds-message-dialog--icon').should('exist')
+  })
+
+  it('emits "update:dialog" and "close" events when close icon is clicked', () => {
+    const updateDialogSpy = cy.spy().as('updateDialogSpy')
+    const closeSpy = cy.spy().as('closeSpy')
+
+    cy.mount(AppMessageDialog, {
+      props: {
+        ...defaultProps,
+        'onUpdate:dialog': updateDialogSpy,
+        onClose: closeSpy,
+      },
+    })
+
+    // Click the close icon
+    cy.get('.bcds-message-dialog--close-icon').click()
+
+    // Check if the "update:dialog" event was emitted with false
+    cy.get('@updateDialogSpy').should('have.been.calledOnceWith', false)
+
+    // Check if the "close" event was emitted
+    cy.get('@closeSpy').should('have.been.calledOnce')
+  })
+
+  it('applies correct CSS class for info variant', () => {
+    cy.mount(AppMessageDialog, {
+      props: {
+        ...defaultProps,
+        variant: 'info',
+      },
+    })
+
+    // Check if the variant class is applied
+    cy.get('.bcds-message-dialog').should('have.class', 'info')
+  })
+
+  it('applies correct CSS class for error variant', () => {
+    cy.mount(AppMessageDialog, {
+      props: {
+        ...defaultProps,
+        variant: 'error',
+      },
+    })
+
+    // Check if the variant class is applied
+    cy.get('.bcds-message-dialog').should('have.class', 'error')
+  })
+
+  it('applies correct CSS class for warning variant', () => {
+    cy.mount(AppMessageDialog, {
+      props: {
+        ...defaultProps,
+        variant: 'warning',
+      },
+    })
+
+    // Check if the variant class is applied
+    cy.get('.bcds-message-dialog').should('have.class', 'warning')
+  })
+
+  it('applies correct CSS class for confirmation variant', () => {
+    cy.mount(AppMessageDialog, {
+      props: {
+        ...defaultProps,
+        variant: 'confirmation',
+      },
+    })
+
+    // Check if the variant class is applied
+    cy.get('.bcds-message-dialog').should('have.class', 'confirmation')
   })
 })

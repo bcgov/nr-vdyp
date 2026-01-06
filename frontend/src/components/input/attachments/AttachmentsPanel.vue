@@ -6,6 +6,7 @@
       :message="messageDialog.message"
       :dialogWidth="messageDialog.dialogWidth"
       :btnLabel="messageDialog.btnLabel"
+      :variant="messageDialog.variant"
       @update:dialog="(value) => (messageDialog.dialog = value)"
       @close="handleDialogClose"
     />
@@ -130,6 +131,7 @@ const showErrorDialog = (title: string, message: string) => {
     message,
     btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     dialogWidth: 500,
+    variant: 'error',
   }
 }
 

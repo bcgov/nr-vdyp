@@ -6,29 +6,22 @@
     :max-width="computedDialogWidth"
     :scroll-strategy="computedScrollStrategy"
   >
-    <v-card :style="computedDialogStyle">
-      <v-card-title :style="computedHeaderStyle" class="popup-header">
-        {{ computedTitle }}
-      </v-card-title>
-      <v-card-text
-        v-show="Boolean(computedMessage)"
-        class="pa-4"
-        style="
-          font-size: 14px;
-          padding-left: 35px !important;
-          padding-right: 35px !important;
-          white-space: pre-line;
-        "
-      >
+    <v-card :class="['bcds-message-dialog', computedVariant]">
+      <div class="bcds-message-dialog--header popup-header">
+        <v-icon v-if="computedIcon" class="bcds-message-dialog--icon">{{
+          computedIcon
+        }}</v-icon>
+        <h2 class="bcds-message-dialog--title">{{ computedTitle }}</h2>
+        <v-icon class="bcds-message-dialog--close-icon" @click="agree"
+          >mdi-close</v-icon
+        >
+      </div>
+
+      <div v-show="Boolean(computedMessage)" class="bcds-message-dialog--children">
         {{ computedMessage }}
-      </v-card-text>
-      <v-card-actions
-        class="pt-3"
-        :style="{
-          backgroundColor: computedActionsBackground,
-          borderTop: '1px solid #0000001f',
-        }"
-      >
+      </div>
+
+      <div class="bcds-message-dialog--actions">
         <v-spacer></v-spacer>
         <AppButton
           :label="computedBtnLabel"
@@ -36,7 +29,7 @@
           class="ml-2"
           @click="agree"
         />
-      </v-card-actions>
+      </div>
     </v-card>
   </v-dialog>
 </template>
@@ -51,12 +44,9 @@ const props = defineProps<{
   title?: string
   message?: string
   dialogWidth?: number
-  dialogBorderRadius?: number
   btnLabel?: string
-  headerBackground?: string
-  headerColor?: string
-  actionsBackground?: string
   scrollStrategy?: any
+  variant?: 'info' | 'confirmation' | 'warning' | 'error'
 }>()
 
 const emit = defineEmits(['update:dialog', 'close'])
@@ -69,22 +59,17 @@ const computedBtnLabel = computed(
   () => props.btnLabel ?? BUTTON_LABEL.CONT_EDIT,
 )
 
-const computedHeaderStyle = computed(() => ({
-  fontWeight: '300',
-  paddingLeft: '30px',
-  padding: '1rem',
-  background: props.headerBackground ?? '#003366',
-  color: props.headerColor ?? '#ffffff',
-}))
+const computedVariant = computed(() => props.variant || 'info')
 
-const computedActionsBackground = computed(
-  () => props.actionsBackground ?? '#f6f6f6',
-)
-
-const computedDialogStyle = computed(() => {
-  return {
-    borderRadius: `${props.dialogBorderRadius ?? 8}px`,
+const computedIcon = computed(() => {
+  const variant = computedVariant.value
+  const iconMap = {
+    info: 'mdi-information',
+    confirmation: 'mdi-check-circle',
+    warning: 'mdi-alert',
+    error: 'mdi-alert-circle',
   }
+  return iconMap[variant]
 })
 
 const computedScrollStrategy = computed(() => {
@@ -104,7 +89,69 @@ const agree = () => {
 </script>
 
 <style scoped>
-.v-card-text {
-  padding: 1rem !important;
+.bcds-message-dialog {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Variant icon colors */
+.bcds-message-dialog.info .bcds-message-dialog--icon {
+  color: var(--icons-color-primary);
+}
+
+.bcds-message-dialog.confirmation .bcds-message-dialog--icon {
+  color: var(--icons-color-success);
+}
+
+.bcds-message-dialog.warning .bcds-message-dialog--icon {
+  color: var(--icons-color-warning);
+}
+
+.bcds-message-dialog.error .bcds-message-dialog--icon {
+  color: var(--icons-color-danger);
+}
+
+.bcds-message-dialog--header {
+  display: inline-flex;
+  flex-direction: row;
+  gap: var(--layout-padding-small);
+  justify-content: space-between;
+  padding: var(--layout-padding-medium) var(--layout-padding-large);
+  border-bottom: var(--layout-border-width-small) solid
+    var(--surface-color-border-default);
+}
+
+.bcds-message-dialog--title {
+  flex-grow: 1;
+  font: var(--typography-bold-h5);
+  color: var(--typography-color-primary);
+  margin: 0;
+}
+
+.bcds-message-dialog--icon {
+  justify-self: flex-start;
+  align-self: center;
+  padding-top: var(--layout-padding-xsmall);
+}
+
+.bcds-message-dialog--close-icon {
+  justify-self: flex-end;
+  color: var(--icons-color-primary);
+  cursor: pointer;
+}
+
+.bcds-message-dialog--children {
+  font: var(--typography-regular-body);
+  color: var(--typography-color-primary);
+  padding: var(--layout-padding-medium) var(--layout-padding-large);
+  border-bottom: var(--layout-border-width-small) solid
+    var(--surface-color-border-default);
+  white-space: pre-line;
+}
+
+.bcds-message-dialog--actions {
+  display: flex;
+  padding: var(--layout-padding-medium) var(--layout-padding-large);
+  gap: var(--layout-padding-small);
 }
 </style>

@@ -6,6 +6,7 @@
       :message="messageDialog.message"
       :dialogWidth="messageDialog.dialogWidth"
       :btnLabel="messageDialog.btnLabel"
+      :variant="messageDialog.variant"
       @update:dialog="(value) => (messageDialog.dialog = value)"
       @close="handleDialogClose"
     />
@@ -246,6 +247,7 @@ const validateComparison = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -260,6 +262,7 @@ const validateComparison = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_END_YEAR,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -281,6 +284,7 @@ const validateRequiredFields = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS_AGE,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -297,6 +301,7 @@ const validateRequiredFields = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: message,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -339,6 +344,7 @@ const validateRange = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: message,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -378,6 +384,7 @@ const validateRange = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: message,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid

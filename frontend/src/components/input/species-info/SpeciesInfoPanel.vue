@@ -6,6 +6,7 @@
       :message="messageDialog.message"
       :dialogWidth="messageDialog.dialogWidth"
       :btnLabel="messageDialog.btnLabel"
+      :variant="messageDialog.variant"
       @update:dialog="(value) => (messageDialog.dialog = value)"
       @close="handleDialogClose"
     />
@@ -220,6 +221,7 @@ const onConfirm = () => {
       title: MESSAGE.MSG_DIALOG_TITLE.DATA_DUPLICATED,
       message: message,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
     }
     return
   }
@@ -235,6 +237,7 @@ const onConfirm = () => {
       title: MESSAGE.MSG_DIALOG_TITLE.DATA_INCOMPLETE,
       message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_TOTAL_PCT,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
     }
     return
   }
@@ -247,6 +250,7 @@ const onConfirm = () => {
       title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
       message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
     }
     return
   }
