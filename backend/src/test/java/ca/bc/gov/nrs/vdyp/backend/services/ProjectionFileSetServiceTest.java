@@ -326,10 +326,29 @@ class ProjectionFileSetServiceTest {
 		FileMappingModel stubReturn = new FileMappingModel();
 		when(fileMappingService.getFilesForFileSet(fileSetGuid, true)).thenReturn(List.of(stubReturn));
 
-		List<FileMappingModel> result = service.getAllFilesForDownload(fileSetGuid, actingUser);
+		List<FileMappingModel> result = service.getAllFiles(fileSetGuid, actingUser, true);
 		assertNotNull(result);
 
 		verify(fileMappingService).getFilesForFileSet(fileSetGuid, true);
+	}
+
+	@Test
+	void getAllFilesNoDownload_validUser_callsFileMappingService() throws Exception {
+		UUID fileSetGuid = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		var entity = fileSetEntity(fileSetGuid, ownerId);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(ownerId.toString());
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+
+		FileMappingModel stubReturn = new FileMappingModel();
+		when(fileMappingService.getFilesForFileSet(fileSetGuid, false)).thenReturn(List.of(stubReturn));
+
+		List<FileMappingModel> result = service.getAllFiles(fileSetGuid, actingUser, false);
+		assertNotNull(result);
+
+		verify(fileMappingService).getFilesForFileSet(fileSetGuid, false);
 	}
 
 }

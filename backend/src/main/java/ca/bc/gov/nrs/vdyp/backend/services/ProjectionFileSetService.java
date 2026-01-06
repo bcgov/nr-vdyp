@@ -196,14 +196,14 @@ public class ProjectionFileSetService {
 		return fileMappingService.getFileById(fileGUID, true);
 	}
 
-	public List<FileMappingModel> getAllFilesForDownload(UUID fileSetGUID, VDYPUserModel actingUser)
+	public List<FileMappingModel> getAllFiles(UUID fileSetGUID, VDYPUserModel actingUser, boolean download)
 			throws ProjectionServiceException {
 		// Check that the file set exists
 		var entity = getProjectionFileSetEntity(fileSetGUID);
 		ensureAuthorizedAccess(entity, actingUser);
 
 		// Ask file mapping service for the file
-		return fileMappingService.getFilesForFileSet(fileSetGUID, true);
+		return fileMappingService.getFilesForFileSet(fileSetGUID, download);
 	}
 
 }

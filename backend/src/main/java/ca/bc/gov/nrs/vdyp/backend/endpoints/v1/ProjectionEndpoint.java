@@ -235,6 +235,22 @@ public class ProjectionEndpoint implements Endpoint {
 		return mapper.writeValueAsString(entity);
 	}
 
+	@GET
+	@Authenticated
+	@Path("/{projectionGUID}/fileset/{fileSetGUID}")
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Get lightweight details of files in a fileset for a projection", description = "Gets a list of all files in a projection file set"
+	)
+	public Response getFileSetFiles(
+			@PathParam("projectionGUID") UUID projectionGUID, //
+			@PathParam("fileSetGUID") UUID fileSetGUID
+	) throws ProjectionServiceException {
+		var found = projectionService.getAllFileSetFiles(projectionGUID, fileSetGUID, currentUser.getUser());
+		return Response.status(Status.OK).entity(found).build();
+	}
+
 	@POST
 	@Authenticated
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file")
