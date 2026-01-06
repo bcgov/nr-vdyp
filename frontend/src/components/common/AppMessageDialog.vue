@@ -32,7 +32,8 @@
         <v-spacer></v-spacer>
         <AppButton
           :label="computedBtnLabel"
-          customClass="blue-btn ml-2"
+          variant="primary"
+          class="ml-2"
           @click="agree"
         />
       </v-card-actions>

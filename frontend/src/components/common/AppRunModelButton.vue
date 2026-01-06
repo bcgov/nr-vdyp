@@ -4,7 +4,8 @@
       <v-spacer></v-spacer>
       <AppButton
         label="Run Model"
-        customClass="blue-btn ml-2"
+        variant="primary"
+        class="ml-2"
         :isDisabled="isDisabled"
         @click="runModel"
       />

@@ -13,25 +13,6 @@ body {
   text-transform: none; // Disabled V-BTN text from being capitalized
 }
 
-.blue-btn {
-  background: #003366;
-  color: #ffffff;
-  letter-spacing: 0.25px;
-  padding-left: 25px;
-  padding-right: 25px;
-  font-weight: 500;
-}
-
-.white-btn {
-  background: #ffffff;
-  color: #003366;
-  letter-spacing: 0.25px;
-  border: 1px solid #003366;
-  padding-left: 25px;
-  padding-right: 25px;
-  font-weight: 500;
-}
-
 /* Data Table */
 .v-data-table-footer {
   padding-top: 20px; // Increased the spacing between table and pagination

@@ -14,7 +14,7 @@
       <AppButton
         label="Print"
         :isDisabled="isButtonDisabled"
-        customClass="blue-btn"
+        variant="primary"
         @click="handlePrint"
       />
       <v-spacer></v-spacer>
@@ -25,14 +25,14 @@
             : 'Download'
         "
         :isDisabled="isButtonDisabled"
-        customClass="white-btn"
+        variant="tertiary"
         @click="handleDownload"
       />
       <AppButton
         v-if="tabname === REPORTING_TAB.MODEL_REPORT"
         label="Download Raw Results"
         :isDisabled="isRawResultsButtonDisabled"
-        customClass="white-btn"
+        variant="tertiary"
         @click="handleDownloadRawResult"
       />
     </v-card-actions>
