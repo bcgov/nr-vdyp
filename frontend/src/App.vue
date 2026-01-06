@@ -4,7 +4,7 @@
 
     <v-main id="main">
       <AppNotification />
-      <AppConfirmDialog />
+      <AppAlertDialog />
       <AppDialogDragger />
 
       <DefaultLayout>
@@ -17,7 +17,7 @@
 import {
   TheHeader,
   AppNotification,
-  AppConfirmDialog,
+  AppAlertDialog,
   AppDialogDragger,
 } from '@/components'
 

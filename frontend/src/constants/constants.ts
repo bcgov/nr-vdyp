@@ -206,8 +206,8 @@ export const FILE_NAME = Object.freeze({
 
 export const BUTTON_LABEL = Object.freeze({
   CONT_EDIT: 'Continue Editing',
-  CONF_YES: 'Yes',
-  CONF_NO: 'No',
+  ALERT_CONTINUE: 'Continue',
+  ALERT_CANCEL: 'Cancel',
 })
 
 export const REPORTING_TAB = Object.freeze({

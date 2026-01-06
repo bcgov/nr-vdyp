@@ -201,7 +201,7 @@
 import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
-import { useConfirmDialogStore } from '@/stores/common/confirmDialogStore'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { AppMessageDialog, AppPanelActions, AppSpinField } from '@/components'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import type { MessageDialog } from '@/interfaces/interfaces'
@@ -211,7 +211,7 @@ import { isEmptyOrZero, isZeroValue } from '@/utils/util'
 const form = ref<HTMLFormElement>()
 
 const modelParameterStore = useModelParameterStore()
-const confirmDialogStore = useConfirmDialogStore()
+const alertDialogStore = useAlertDialogStore()
 
 const messageDialog = ref<MessageDialog>({
   dialog: false,
@@ -400,7 +400,7 @@ const validateFormInputs = async (): Promise<boolean> => {
       becZone.value,
     )
     if (validateTPHmessage) {
-      const confirmed = await confirmDialogStore.openDialog(
+      const confirmed = await alertDialogStore.openDialog(
         MESSAGE.MSG_DIALOG_TITLE.CONFIRM,
         validateTPHmessage,
         { width: 400 },
@@ -410,7 +410,7 @@ const validateFormInputs = async (): Promise<boolean> => {
       }
     }
   } else {
-    const confirmed = await confirmDialogStore.openDialog(
+    const confirmed = await alertDialogStore.openDialog(
       MESSAGE.MSG_DIALOG_TITLE.CONFIRM,
       MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_BSL_AREA_OVER_HEIGHT,
       { width: 400 },
@@ -426,7 +426,7 @@ const validateFormInputs = async (): Promise<boolean> => {
     minDBHLimit.value,
   )
   if (validateQuadDiamMessage) {
-    const confirmed = await confirmDialogStore.openDialog(
+    const confirmed = await alertDialogStore.openDialog(
       MESSAGE.MSG_DIALOG_TITLE.CONFIRM,
       validateQuadDiamMessage,
       { width: 400 },
