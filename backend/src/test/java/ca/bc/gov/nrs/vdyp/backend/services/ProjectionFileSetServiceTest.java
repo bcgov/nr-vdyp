@@ -202,7 +202,6 @@ class ProjectionFileSetServiceTest {
 
 	@Test
 	void addFileToSet_invalidUser_throwsException() {
-		UUID projectionGuid = UUID.randomUUID();
 		UUID fileSetGuid = UUID.randomUUID();
 
 		UUID ownerGuid = UUID.randomUUID();
@@ -219,14 +218,12 @@ class ProjectionFileSetServiceTest {
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
 
 		assertThrows(
-				ProjectionServiceException.class,
-				() -> service.addNewFileToFileSet(projectionGuid, fileSetGuid, actingUser, null)
+				ProjectionServiceException.class, () -> service.addNewFileToFileSet(fileSetGuid, actingUser, null)
 		);
 	}
 
 	@Test
 	void addFileToSet_validUser_createsBucketWhenMissing_callsFileMappingService() throws Exception {
-		UUID projectionGuid = UUID.randomUUID();
 		UUID fileSetGuid = UUID.randomUUID();
 		UUID ownerId = UUID.randomUUID();
 		var entity = fileSetEntity(fileSetGuid, ownerId);
@@ -241,14 +238,13 @@ class ProjectionFileSetServiceTest {
 		FileMappingModel fakeResult = new FileMappingModel();
 		when(fileMappingService.createNewFile("coms-bucket-id", entity, null)).thenReturn(fakeResult);
 
-		service.addNewFileToFileSet(projectionGuid, fileSetGuid, actingUser, null);
+		service.addNewFileToFileSet(fileSetGuid, actingUser, null);
 		verify(fileMappingService).createNewFile("coms-bucket-id", entity, null);
 		verify(comsClient).createBucket(any());
 	}
 
 	@Test
 	void addFileToSet_validUser_usesExistingBucket_callsFileMappingService() throws Exception {
-		UUID projectionGuid = UUID.randomUUID();
 		UUID fileSetGuid = UUID.randomUUID();
 		UUID ownerId = UUID.randomUUID();
 		var entity = fileSetEntity(fileSetGuid, ownerId);
@@ -262,7 +258,7 @@ class ProjectionFileSetServiceTest {
 		FileMappingModel fakeResult = new FileMappingModel();
 		when(fileMappingService.createNewFile("coms-bucket-id", entity, null)).thenReturn(fakeResult);
 
-		service.addNewFileToFileSet(projectionGuid, fileSetGuid, actingUser, null);
+		service.addNewFileToFileSet(fileSetGuid, actingUser, null);
 		verify(fileMappingService).createNewFile("coms-bucket-id", entity, null);
 		verify(comsClient, never()).createBucket(any());
 	}

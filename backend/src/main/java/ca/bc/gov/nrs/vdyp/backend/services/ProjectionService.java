@@ -480,7 +480,7 @@ public class ProjectionService {
 		validateIdentifier(fileSetGUID, FILE_ADD_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
 		validateFileSetIsForProjection(entity, fileSetGUID, FILE_ADD_ERROR);
 
-		fileSetService.addNewFileToFileSet(projectionGUID, fileSetGUID, user, file);
+		fileSetService.addNewFileToFileSet(fileSetGUID, user, file);
 		return getProjectionByID(projectionGUID, user);
 	}
 

@@ -553,9 +553,8 @@ class ProjectionServiceTest {
 		service.addProjectionFile(
 				projectionGUID, entity.getPolygonFileSet().getProjectionFileSetGUID(), null, actingUser
 		);
-		verify(fileSetService).addNewFileToFileSet(
-				projectionGUID, entity.getPolygonFileSet().getProjectionFileSetGUID(), actingUser, null
-		);
+		verify(fileSetService)
+				.addNewFileToFileSet(entity.getPolygonFileSet().getProjectionFileSetGUID(), actingUser, null);
 	}
 
 	@Test
@@ -575,9 +574,8 @@ class ProjectionServiceTest {
 		service.addProjectionFile(
 				projectionGUID, entity.getLayerFileSet().getProjectionFileSetGUID(), null, actingUser
 		);
-		verify(fileSetService).addNewFileToFileSet(
-				projectionGUID, entity.getLayerFileSet().getProjectionFileSetGUID(), actingUser, null
-		);
+		verify(fileSetService)
+				.addNewFileToFileSet(entity.getLayerFileSet().getProjectionFileSetGUID(), actingUser, null);
 	}
 
 	@Test
@@ -597,9 +595,8 @@ class ProjectionServiceTest {
 		service.addProjectionFile(
 				projectionGUID, entity.getResultFileSet().getProjectionFileSetGUID(), null, actingUser
 		);
-		verify(fileSetService).addNewFileToFileSet(
-				projectionGUID, entity.getResultFileSet().getProjectionFileSetGUID(), actingUser, null
-		);
+		verify(fileSetService)
+				.addNewFileToFileSet(entity.getResultFileSet().getProjectionFileSetGUID(), actingUser, null);
 	}
 
 	@Test

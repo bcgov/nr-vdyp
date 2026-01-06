@@ -119,9 +119,8 @@ public class ProjectionFileSetService {
 	}
 
 	@Transactional
-	public FileMappingModel
-			addNewFileToFileSet(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel user, FileUpload file)
-					throws ProjectionServiceException {
+	public FileMappingModel addNewFileToFileSet(UUID fileSetGUID, VDYPUserModel user, FileUpload file)
+			throws ProjectionServiceException {
 		// Check that the file set exists
 		var entity = getProjectionFileSetEntity(fileSetGUID);
 
@@ -138,7 +137,7 @@ public class ProjectionFileSetService {
 		return String.format("vdyp/fileset/%s", fileSetGUID);
 	}
 
-	private String getCOMSBucketGUID(UUID fileSetGUID, boolean createIfNotExist) throws ProjectionServiceException {
+	private String getCOMSBucketGUID(UUID fileSetGUID, boolean createIfNotExist) {
 		String filePrefix = getBucketPrefix(fileSetGUID);
 		List<COMSBucket> searchResponse = comsClient.searchForBucket(null, true, filePrefix, null);
 		String bucketGUID = null;

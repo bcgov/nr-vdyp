@@ -30,7 +30,6 @@ public class FileMappingService {
 
 	private COMSClient comsClient;
 
-
 	public FileMappingService(
 			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient
 	) {
@@ -78,7 +77,6 @@ public class FileMappingService {
 		String safe = filename == null ? "upload.bin" : filename.replace("\"", "");
 		return "attachment; filename=\"" + safe + "\"";
 	}
-
 
 	private FileMappingEntity getFileMappingEntity(UUID fileMappingGUID) throws ProjectionServiceException {
 		var entity = repository.findByIdOptional(fileMappingGUID);

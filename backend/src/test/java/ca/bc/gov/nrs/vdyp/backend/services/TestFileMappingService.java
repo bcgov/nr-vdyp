@@ -61,7 +61,6 @@ class TestFileMappingService {
 
 	@Test
 	void createNewFile_PersistsEntity(@TempDir Path tempDir) throws Exception {
-		UUID projectionGuid = UUID.randomUUID();
 		UUID fileSetGUID = UUID.randomUUID();
 		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
 		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
@@ -123,8 +122,7 @@ class TestFileMappingService {
 
 		// COMS getObject returns a Response whose entity is the URL string
 		JsonString urlResponse = Json.createValue("https://example.com/presigned");
-		when(comsClient.getObject(stringGUID, COMSClient.FileDownloadMode.URL.getParamValue()))
-				.thenReturn(urlResponse);
+		when(comsClient.getObject(stringGUID, COMSClient.FileDownloadMode.URL.getParamValue())).thenReturn(urlResponse);
 
 		FileMappingModel result = service.getFileById(fileMappingGuid, true);
 
@@ -249,4 +247,3 @@ class TestFileMappingService {
 		verify(repository, never()).delete(any());
 	}
 }
-
