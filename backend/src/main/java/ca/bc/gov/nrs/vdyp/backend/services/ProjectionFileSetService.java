@@ -6,8 +6,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
+import ca.bc.gov.nrs.vdyp.backend.clients.COMSClient;
+import ca.bc.gov.nrs.vdyp.backend.config.COMSS3Config;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionFileSetResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
@@ -19,6 +22,8 @@ import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionFileSetRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileSetNotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileSetUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
+import ca.bc.gov.nrs.vdyp.backend.model.COMSBucket;
+import ca.bc.gov.nrs.vdyp.backend.model.COMSCreateBucketRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -33,16 +38,21 @@ public class ProjectionFileSetService {
 	FileSetTypeCodeLookup lookup;
 	FileMappingService fileMappingService;
 	EntityManager em;
+	COMSClient comsClient;
+	COMSS3Config comsS3Config;
 
 	public ProjectionFileSetService(
 			EntityManager em, ProjectionFileSetRepository repository, ProjectionFileSetResourceAssembler assembler,
-			FileSetTypeCodeLookup lookup, FileMappingService fileMappingService
+			FileSetTypeCodeLookup lookup, FileMappingService fileMappingService, @RestClient COMSClient comsClient,
+			COMSS3Config comsS3Config
 	) {
 		this.em = em;
 		this.repository = repository;
 		this.assembler = assembler;
 		this.lookup = lookup;
 		this.fileMappingService = fileMappingService;
+		this.comsClient = comsClient;
+		this.comsS3Config = comsS3Config;
 	}
 
 	FileSetTypeCodeModel[] projectionFileSets;
@@ -76,7 +86,14 @@ public class ProjectionFileSetService {
 
 	@Transactional
 	public void deleteFileSetById(UUID polygonFileSetGuid) throws ProjectionServiceException {
+		// delete the files
 		fileMappingService.deleteFilesForSet(polygonFileSetGuid);
+
+		// delete the bucket in COMS
+		String bucketID = getCOMSBucketGUID(polygonFileSetGuid, true);
+		if (bucketID != null) {
+			comsClient.deleteBucket(bucketID, true); // recursive because we have should have already deleted the files
+		}
 
 		repository.deleteById(polygonFileSetGuid);
 	}
@@ -110,9 +127,41 @@ public class ProjectionFileSetService {
 
 		ensureAuthorizedAccess(entity, user);
 
-		// Ask File Mapping Service to create the file based on the meta data
-		return fileMappingService.createNewFile(projectionGUID, entity, file);
+		String bucketID = getCOMSBucketGUID(fileSetGUID, true);
 
+		// Ask File Mapping Service to create the file based on the meta data
+		return fileMappingService.createNewFile(bucketID, entity, file);
+
+	}
+
+	private String getBucketPrefix(UUID fileSetGUID) {
+		return String.format("vdyp/fileset/%s", fileSetGUID);
+	}
+
+	private String getCOMSBucketGUID(UUID fileSetGUID, boolean createIfNotExist) throws ProjectionServiceException {
+		String filePrefix = getBucketPrefix(fileSetGUID);
+		List<COMSBucket> searchResponse = comsClient.searchForBucket(null, true, filePrefix, null);
+		String bucketGUID = null;
+		if (searchResponse.isEmpty()) {
+			COMSCreateBucketRequest request = buildCreateBucketRequest(fileSetGUID, filePrefix);
+			COMSBucket createBucketResponse = comsClient.createBucket(request);
+			bucketGUID = createBucketResponse.bucketId();
+		} else if (createIfNotExist) {
+			bucketGUID = searchResponse.get(0).bucketId();
+		}
+		return bucketGUID;
+	}
+
+	private COMSCreateBucketRequest buildCreateBucketRequest(UUID fileSetGUID, String keyPrefix) {
+		return new COMSCreateBucketRequest(
+				comsS3Config.accessId(), //
+				true, //
+				comsS3Config.bucket(), //
+				"Projection File Set " + fileSetGUID + " Files", //
+				comsS3Config.endpoint(), //
+				comsS3Config.secretAccessKey(), //
+				keyPrefix
+		);
 	}
 
 	@Transactional

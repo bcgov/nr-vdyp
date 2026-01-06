@@ -18,8 +18,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.FileMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
-import ca.bc.gov.nrs.vdyp.backend.model.COMSBucket;
-import ca.bc.gov.nrs.vdyp.backend.model.COMSCreateBucketRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
@@ -46,32 +44,20 @@ public class FileMappingService {
 	}
 
 	public FileMappingModel
-			createNewFile(UUID projectionGUID, ProjectionFileSetEntity projectionFileSetEntity, FileUpload file)
+			createNewFile(String comsBucketGUID, ProjectionFileSetEntity projectionFileSetEntity, FileUpload file)
 					throws ProjectionServiceException {
 		try {
 			String contentDisposition = buildContentDisposition(file.fileName());
 			long contentLength = Files.size(file.uploadedFile());
 
-			// Create the file name "projection/projectionGUID/[input|output]/pass the file meta data through as json
-			// and get the filename and type here
-			String filePrefix = String.format("vdyp/projection/%s", projectionGUID);
-			List<COMSBucket> searchResponse = comsClient.searchForBucket(null, true, filePrefix, null);
 			String contentType = file.contentType() != null ? file.contentType() : MediaType.APPLICATION_OCTET_STREAM;
-			String bucketGUID;
-			if (searchResponse.isEmpty()) {
-				COMSCreateBucketRequest request = buildCreateBucketRequest(projectionGUID, filePrefix);
-				COMSBucket createBucketResponse = comsClient.createBucket(request);
-				bucketGUID = createBucketResponse.bucketId();
-			} else {
-				bucketGUID = searchResponse.get(0).bucketId();
-			}
 			try (InputStream fileStream = Files.newInputStream(file.uploadedFile())) {
-				logger.info(
+				logger.debug(
 						"Data for object bucketId {}, contentDisposistion {}, contentLength {}, contentType {}",
-						bucketGUID, contentDisposition, contentLength, contentType
+						comsBucketGUID, contentDisposition, contentLength, contentType
 				);
 				COMSObject createObjectResponse = comsClient.createObject(
-						bucketGUID, contentDisposition, contentLength, contentType, fileStream
+						comsBucketGUID, contentDisposition, contentLength, contentType, fileStream
 
 				);
 				UUID objectGUID = UUID.fromString(createObjectResponse.id());
@@ -86,7 +72,7 @@ public class FileMappingService {
 				return assembler.toModel(entity);
 			}
 		} catch (Exception e) {
-			throw new ProjectionServiceException("Error uploading file to COMS", e, projectionGUID);
+			throw new ProjectionServiceException("Error uploading file to COMS", e);
 		}
 	}
 
@@ -97,17 +83,6 @@ public class FileMappingService {
 		return "attachment; filename=\"" + safe + "\"";
 	}
 
-	public COMSCreateBucketRequest buildCreateBucketRequest(UUID projectionGuid, String keyPrefix) {
-		return new COMSCreateBucketRequest(
-				comsS3Config.accessId(), //
-				true, //
-				comsS3Config.bucket(), //
-				"Projection " + projectionGuid + " Files", //
-				comsS3Config.endpoint(), //
-				comsS3Config.secretAccessKey(), //
-				keyPrefix
-		);
-	}
 
 	private FileMappingEntity getFileMappingEntity(UUID fileMappingGUID) throws ProjectionServiceException {
 		var entity = repository.findByIdOptional(fileMappingGUID);

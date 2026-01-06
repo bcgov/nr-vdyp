@@ -7,9 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -38,8 +36,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.FileMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
-import ca.bc.gov.nrs.vdyp.backend.model.COMSBucket;
-import ca.bc.gov.nrs.vdyp.backend.model.COMSCreateBucketRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
 import jakarta.json.Json;
 import jakarta.json.JsonString;
@@ -67,7 +63,7 @@ class TestFileMappingService {
 	}
 
 	@Test
-	void createNewFile_createsBucketWhenMissing_andPersistsEntity(@TempDir Path tempDir) throws Exception {
+	void createNewFile_PersistsEntity(@TempDir Path tempDir) throws Exception {
 		UUID projectionGuid = UUID.randomUUID();
 		UUID fileSetGUID = UUID.randomUUID();
 		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
@@ -81,22 +77,10 @@ class TestFileMappingService {
 		when(fileUpload.contentType()).thenReturn(MediaType.TEXT_PLAIN);
 		when(fileUpload.uploadedFile()).thenReturn(uploaded);
 
-		// config used by buildCreateBucketRequest()
-		when(comsS3Config.accessId()).thenReturn("access");
-		when(comsS3Config.secretAccessKey()).thenReturn("secret");
-		when(comsS3Config.bucket()).thenReturn("bucket");
-		when(comsS3Config.endpoint()).thenReturn("endpoint");
-
-		// COMS: bucket search empty => create bucket
-		when(comsClient.searchForBucket(isNull(), any(), anyString(), isNull())).thenReturn(List.of());
-
-		COMSBucket createdBucket = new COMSBucket("bucket", "name", "bucket-guid-123", "endpoint", "key", "region");
-		when(comsClient.createBucket(any(COMSCreateBucketRequest.class))).thenReturn(createdBucket);
-
 		// COMS: create object
 		UUID objectGuid = UUID.randomUUID();
 		COMSObject createdObject = new COMSObject(
-				objectGuid.toString(), /* path */ "vdyp/projection/x/file", /* public */ false, /* active */ true,
+				objectGuid.toString(), /* path */ "vdyp/fileset/x/file", /* public */ false, /* active */ true,
 				/* bucketId */ "existing-bucket-guid", /* name */ "input.bin", /* lastSyncedDate */ null,
 				/* createdBy */ null, /* createdAt */ null, /* updatedBy */ null, /* updatedAt */ null,
 				/* lastModifiedDate */ null, /* permissions */ Set.of("READ")
@@ -108,73 +92,25 @@ class TestFileMappingService {
 				)
 		).thenReturn(createdObject);
 
-		FileMappingModel result = service.createNewFile(projectionGuid, fileSetEntity, fileUpload);
+		FileMappingModel result = service.createNewFile("bucket-guid-123", fileSetEntity, fileUpload);
 
 		assertNotNull(result);
 		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
 
 		verify(repository).persist(any(FileMappingEntity.class));
-		verify(comsClient).createBucket(any(COMSCreateBucketRequest.class));
-		verify(comsClient).createObject(
-				eq("bucket-guid-123"), anyString(), eq(Files.size(uploaded)), eq(MediaType.TEXT_PLAIN), any()
-		);
 	}
 
 	@Test
-	void createNewFile_nullFile_throwsExceptionDoesNotCreate() throws Exception {
-		UUID projectionGuid = UUID.randomUUID();
+	void createNewFile_nullFile_throwsExceptionDoesNotCreate() {
 		UUID fileSetGUID = UUID.randomUUID();
 		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
 		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
 
 		assertThrows(
-				ProjectionServiceException.class, () -> service.createNewFile(projectionGuid, fileSetEntity, null)
+				ProjectionServiceException.class, () -> service.createNewFile("IRRELEVANT-GUID", fileSetEntity, null)
 		);
 
 		verify(repository, never()).persist(any(FileMappingEntity.class));
-		verify(comsClient, never()).createBucket(any(COMSCreateBucketRequest.class));
-		verify(comsClient, never()).createObject(any(), anyString(), anyLong(), eq(MediaType.TEXT_PLAIN), any()
-		);
-	}
-
-	@Test
-	void createNewFile_usesExistingBucket_whenSearchReturnsBucket(@TempDir Path tempDir) throws Exception {
-		UUID projectionGuid = UUID.randomUUID();
-		UUID fileSetGUID = UUID.randomUUID();
-		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
-		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
-
-		Path uploaded = tempDir.resolve("input.bin");
-		Files.write(uploaded, new byte[] { 1, 2, 3 });
-
-		when(fileUpload.fileName()).thenReturn("input.bin");
-		when(fileUpload.contentType()).thenReturn(null); // triggers application/octet-stream
-		when(fileUpload.uploadedFile()).thenReturn(uploaded);
-
-		COMSBucket existingBucket = new COMSBucket(
-				"bucket", "name", "existing-bucket-guid", "endpoint", "key", "region"
-		);
-		when(comsClient.searchForBucket(isNull(), eq(true), anyString(), isNull())).thenReturn(List.of(existingBucket));
-
-		UUID objectGuid = UUID.randomUUID();
-		COMSObject createdObject = new COMSObject(
-				objectGuid.toString(), /* path */ "vdyp/projection/x/file", /* public */ false, /* active */ true,
-				/* bucketId */ "existing-bucket-guid", /* name */ "input.bin", /* lastSyncedDate */ null,
-				/* createdBy */ null, /* createdAt */ null, /* updatedBy */ null, /* updatedAt */ null,
-				/* lastModifiedDate */ null, /* permissions */ Set.of("READ")
-		);
-
-		when(
-				comsClient.createObject(
-						eq("existing-bucket-guid"), anyString(), anyLong(), eq(MediaType.APPLICATION_OCTET_STREAM),
-						any()
-				)
-		).thenReturn(createdObject);
-
-		FileMappingModel result = service.createNewFile(projectionGuid, fileSetEntity, fileUpload);
-
-		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
-		verify(comsClient, never()).createBucket(any());
 	}
 
 	@Test

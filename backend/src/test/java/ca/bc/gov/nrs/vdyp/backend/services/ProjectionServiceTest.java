@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -328,11 +329,49 @@ class ProjectionServiceTest {
 		entity.setResultFileSet(results);
 
 		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(repository.countUsesFileSet(fsId)).thenReturn(0L);
+		when(repository.countUsesFileSet(layer.getProjectionFileSetGUID())).thenReturn(0L);
+		when(repository.countUsesFileSet(results.getProjectionFileSetGUID())).thenReturn(0L);
 
 		service.deleteProjection(projectionId, user(ownerId));
 
 		verify(repository).delete(entity);
+		verify(fileSetService).deleteFileSetById(fsId);
+		verify(fileSetService).deleteFileSetById(layer.getProjectionFileSetGUID());
+		verify(fileSetService).deleteFileSetById(results.getProjectionFileSetGUID());
+	}
 
+	@Test
+	void deleteProjection_deletesProjection_leavesFileSets_whenShared() throws Exception {
+		UUID projectionId = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.DRAFT);
+		entity.setProjectionStatusCode(statusEntity);
+
+		UUID fsId = UUID.randomUUID();
+		ProjectionFileSetEntity polygon = fileSetEntity(fsId);
+		ProjectionFileSetEntity layer = fileSetEntity(UUID.randomUUID());
+		ProjectionFileSetEntity results = fileSetEntity(UUID.randomUUID());
+
+		entity.setPolygonFileSet(polygon);
+		entity.setLayerFileSet(layer);
+		entity.setResultFileSet(results);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(repository.countUsesFileSet(fsId)).thenReturn(1L);
+		when(repository.countUsesFileSet(layer.getProjectionFileSetGUID())).thenReturn(1L);
+		when(repository.countUsesFileSet(results.getProjectionFileSetGUID())).thenReturn(1L);
+
+		service.deleteProjection(projectionId, user(ownerId));
+
+		verify(repository).delete(entity);
+		verify(fileSetService, never()).deleteFileSetById(fsId);
+		verify(fileSetService, never()).deleteFileSetById(layer.getProjectionFileSetGUID());
+		verify(fileSetService, never()).deleteFileSetById(results.getProjectionFileSetGUID());
 	}
 
 	@Test

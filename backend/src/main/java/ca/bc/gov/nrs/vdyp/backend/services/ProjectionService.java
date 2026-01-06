@@ -448,11 +448,10 @@ public class ProjectionService {
 			// Delete File Sets
 			// the file Set service should cascade into the file mapping service to do the deletions of the actual files
 			for (UUID id : fileSetIds) {
-				fileSetService.deleteFileSetById(id);
+				if (repository.countUsesFileSet(id) == 0) {
+					fileSetService.deleteFileSetById(id);
+				}
 			}
-			// Delete the bucket
-			// TODO if we were to share files in the future we probably shouldn't put the files in a projection bucket
-			// that should be deleted
 
 		} catch (Exception e) {
 			throw new ProjectionServiceException(

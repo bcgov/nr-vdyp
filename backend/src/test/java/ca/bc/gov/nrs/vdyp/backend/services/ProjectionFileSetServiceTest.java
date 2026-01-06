@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -30,6 +31,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import ca.bc.gov.nrs.vdyp.backend.clients.COMSClient;
+import ca.bc.gov.nrs.vdyp.backend.config.COMSS3Config;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionFileSetResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileSetTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
@@ -40,6 +43,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionFileSetRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
+import ca.bc.gov.nrs.vdyp.backend.model.COMSBucket;
 import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,14 +58,19 @@ class ProjectionFileSetServiceTest {
 	@Mock
 	FileMappingService fileMappingService;
 	ProjectionFileSetResourceAssembler assembler;
-
+	@Mock
+	COMSClient comsClient;
+	@Mock
+	COMSS3Config comsS3Config;
 	ProjectionFileSetService service;
 
 	@BeforeEach
 	void setUp() {
 		assembler = new ProjectionFileSetResourceAssembler();
 
-		service = new ProjectionFileSetService(em, repository, assembler, fileSetTypeCodeLookup, fileMappingService);
+		service = new ProjectionFileSetService(
+				em, repository, assembler, fileSetTypeCodeLookup, fileMappingService, comsClient, comsS3Config
+		);
 	}
 
 	@Test
@@ -159,10 +168,14 @@ class ProjectionFileSetServiceTest {
 	void deleteFileSetById_deletesById() throws ProjectionServiceException {
 		UUID id = UUID.randomUUID();
 
+		COMSBucket bucket = new COMSBucket("bucket", "bucket-name", "coms-bucket-id", "region", "endpoint", "key");
+		when(comsClient.searchForBucket(any(), any(), any(), any())).thenReturn(List.of(bucket));
+
 		service.deleteFileSetById(id);
 
 		verify(repository).deleteById(id);
 		verifyNoMoreInteractions(repository);
+		verify(comsClient).deleteBucket("coms-bucket-id", true);
 	}
 
 	@Test
@@ -212,7 +225,7 @@ class ProjectionFileSetServiceTest {
 	}
 
 	@Test
-	void addFileToSet_validUser_callsFileMappingService() throws Exception {
+	void addFileToSet_validUser_createsBucketWhenMissing_callsFileMappingService() throws Exception {
 		UUID projectionGuid = UUID.randomUUID();
 		UUID fileSetGuid = UUID.randomUUID();
 		UUID ownerId = UUID.randomUUID();
@@ -221,12 +234,37 @@ class ProjectionFileSetServiceTest {
 		actingUser.setVdypUserGUID(ownerId.toString());
 
 		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+		COMSBucket bucket = new COMSBucket("bucket", "bucket-name", "coms-bucket-id", "region", "endpoint", "key");
+		when(comsClient.searchForBucket(any(), any(), any(), any())).thenReturn(List.of());
+		when(comsClient.createBucket(any())).thenReturn(bucket);
 
 		FileMappingModel fakeResult = new FileMappingModel();
-		when(fileMappingService.createNewFile(projectionGuid, entity, null)).thenReturn(fakeResult);
+		when(fileMappingService.createNewFile("coms-bucket-id", entity, null)).thenReturn(fakeResult);
 
 		service.addNewFileToFileSet(projectionGuid, fileSetGuid, actingUser, null);
-		verify(fileMappingService).createNewFile(projectionGuid, entity, null);
+		verify(fileMappingService).createNewFile("coms-bucket-id", entity, null);
+		verify(comsClient).createBucket(any());
+	}
+
+	@Test
+	void addFileToSet_validUser_usesExistingBucket_callsFileMappingService() throws Exception {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID fileSetGuid = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		var entity = fileSetEntity(fileSetGuid, ownerId);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(ownerId.toString());
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+		COMSBucket bucket = new COMSBucket("bucket", "bucket-name", "coms-bucket-id", "region", "endpoint", "key");
+		when(comsClient.searchForBucket(any(), any(), any(), any())).thenReturn(List.of(bucket));
+
+		FileMappingModel fakeResult = new FileMappingModel();
+		when(fileMappingService.createNewFile("coms-bucket-id", entity, null)).thenReturn(fakeResult);
+
+		service.addNewFileToFileSet(projectionGuid, fileSetGuid, actingUser, null);
+		verify(fileMappingService).createNewFile("coms-bucket-id", entity, null);
+		verify(comsClient, never()).createBucket(any());
 	}
 
 	@Test
