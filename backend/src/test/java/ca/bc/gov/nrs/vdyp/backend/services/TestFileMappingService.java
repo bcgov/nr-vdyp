@@ -29,7 +29,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ca.bc.gov.nrs.vdyp.backend.clients.COMSClient;
-import ca.bc.gov.nrs.vdyp.backend.config.COMSS3Config;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.FileMappingResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
@@ -50,8 +49,6 @@ class TestFileMappingService {
 	@Mock
 	COMSClient comsClient;
 	@Mock
-	COMSS3Config comsS3Config;
-	@Mock
 	FileUpload fileUpload;
 
 	FileMappingService service;
@@ -59,7 +56,7 @@ class TestFileMappingService {
 	@BeforeEach
 	void setUp() {
 		assembler = new FileMappingResourceAssembler();
-		service = new FileMappingService(repository, assembler, comsClient, comsS3Config);
+		service = new FileMappingService(repository, assembler, comsClient);
 	}
 
 	@Test

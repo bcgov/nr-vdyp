@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.clients.COMSClient;
-import ca.bc.gov.nrs.vdyp.backend.config.COMSS3Config;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.FileMappingResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
@@ -31,16 +30,13 @@ public class FileMappingService {
 
 	private COMSClient comsClient;
 
-	private COMSS3Config comsS3Config;
 
 	public FileMappingService(
-			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient,
-			COMSS3Config comsS3Config
+			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient
 	) {
 		this.repository = repository;
 		this.assembler = assembler;
 		this.comsClient = comsClient;
-		this.comsS3Config = comsS3Config;
 	}
 
 	public FileMappingModel
