@@ -1,10 +1,10 @@
 import { mount } from 'cypress/vue'
-import AppRunModelButton from './AppRunModelButton.vue'
+import AppRunModelButtonPanel from './AppRunModelButtonPanel.vue'
 import AppButton from '../core/AppButton.vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 
-describe('AppRunModelButton.vue', () => {
+describe('AppRunModelButtonPanel.vue', () => {
   const vuetify = createVuetify()
 
   beforeEach(() => {
@@ -20,7 +20,7 @@ describe('AppRunModelButton.vue', () => {
   })
 
   it('renders the button with the correct label', () => {
-    mount(AppRunModelButton, {
+    mount(AppRunModelButtonPanel, {
       global: {
         plugins: [vuetify],
         components: { AppButton },
@@ -35,7 +35,7 @@ describe('AppRunModelButton.vue', () => {
   })
 
   it('renders the button with primary variant', () => {
-    mount(AppRunModelButton, {
+    mount(AppRunModelButtonPanel, {
       global: {
         plugins: [vuetify],
         components: { AppButton },
@@ -52,7 +52,7 @@ describe('AppRunModelButton.vue', () => {
   it('emits the "runModel" event when clicked', () => {
     const onRunModelSpy = cy.spy().as('runModelSpy')
 
-    mount(AppRunModelButton, {
+    mount(AppRunModelButtonPanel, {
       global: {
         plugins: [vuetify],
         components: { AppButton },
@@ -73,7 +73,7 @@ describe('AppRunModelButton.vue', () => {
   })
 
   it('disables the button when "isDisabled" is true', () => {
-    mount(AppRunModelButton, {
+    mount(AppRunModelButtonPanel, {
       global: {
         plugins: [vuetify],
         components: { AppButton },
@@ -88,7 +88,7 @@ describe('AppRunModelButton.vue', () => {
   })
 
   it('enables the button when "isDisabled" is false', () => {
-    mount(AppRunModelButton, {
+    mount(AppRunModelButtonPanel, {
       global: {
         plugins: [vuetify],
         components: { AppButton },
@@ -103,7 +103,7 @@ describe('AppRunModelButton.vue', () => {
   })
 
   it('applies custom card class when provided', () => {
-    mount(AppRunModelButton, {
+    mount(AppRunModelButtonPanel, {
       global: {
         plugins: [vuetify],
         components: { AppButton },
@@ -119,7 +119,7 @@ describe('AppRunModelButton.vue', () => {
   })
 
   it('applies default card class when not provided', () => {
-    mount(AppRunModelButton, {
+    mount(AppRunModelButtonPanel, {
       global: {
         plugins: [vuetify],
         components: { AppButton },
@@ -134,7 +134,7 @@ describe('AppRunModelButton.vue', () => {
   })
 
   it('applies custom card actions class when provided', () => {
-    mount(AppRunModelButton, {
+    mount(AppRunModelButtonPanel, {
       global: {
         plugins: [vuetify],
         components: { AppButton },
@@ -150,7 +150,7 @@ describe('AppRunModelButton.vue', () => {
   })
 
   it('applies default card actions class when not provided', () => {
-    mount(AppRunModelButton, {
+    mount(AppRunModelButtonPanel, {
       global: {
         plugins: [vuetify],
         components: { AppButton },

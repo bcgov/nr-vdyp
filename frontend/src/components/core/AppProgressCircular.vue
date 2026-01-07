@@ -25,6 +25,9 @@ defineProps({
 </script>
 
 <style scoped>
+/*
+ * Styling based on BC Gov Design Standards - Using Design Tokens
+ */
 .progress-container {
   position: fixed;
   top: 50%;

@@ -30,7 +30,7 @@
         <StandInfoPanel />
         <v-spacer class="space"></v-spacer>
         <ReportInfoPanel />
-        <AppRunModelButton
+        <AppRunModelButtonPanel
           :isDisabled="!modelParameterStore.runModelEnabled"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
@@ -46,7 +46,7 @@
       <template v-if="isFileUploadPanelsVisible">
         <v-spacer class="space"></v-spacer>
         <AttachmentsPanel />
-        <AppRunModelButton
+        <AppRunModelButtonPanel
           :isDisabled="!fileUploadStore.runModelEnabled"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
@@ -66,7 +66,7 @@ import { useReportingStore } from '@/stores/reportingStore'
 import {
   AppProgressCircular,
   AppTabs,
-  AppRunModelButton,
+  AppRunModelButtonPanel,
   ModelSelectionContainer,
   TopProjectYear,
   ReportingContainer,
