@@ -91,6 +91,9 @@ const onClick = (event: Event) => {
 </script>
 
 <style scoped>
+/*
+ * Styling based on BC Gov Design Standards - Button Component
+ */
 .bcds-button {
   border: none;
   border-radius: var(--layout-border-radius-medium);

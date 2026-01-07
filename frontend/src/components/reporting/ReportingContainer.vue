@@ -129,6 +129,4 @@ const handlePrint = () => {
   printReport(printData.value)
 }
 </script>
-<style scoped>
-/** */
-</style>
+<style scoped />

@@ -72,6 +72,9 @@ const cancel = () => {
 </script>
 
 <style scoped>
+/*
+ * Styling based on BC Gov Design Standards - Alert Dialog Component
+ */
 .bcds-alert-dialog {
   display: flex;
   flex-direction: column;

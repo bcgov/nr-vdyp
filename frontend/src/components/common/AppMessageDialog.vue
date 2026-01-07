@@ -89,6 +89,9 @@ const agree = () => {
 </script>
 
 <style scoped>
+/*
+ * Styling based on BC Gov Design Standards - Alert Dialog Component
+ */
 .bcds-message-dialog {
   display: flex;
   flex-direction: column;

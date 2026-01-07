@@ -966,6 +966,4 @@ const updateFileUploadMinDBH = (index: number, value: number) => {
   }
 }
 </script>
-<style scoped>
-/** */
-</style>
+<style scoped />
