@@ -2,17 +2,15 @@
   <div>
     <v-row class="mt-n5">
       <v-col cols="3" sm="3" md="3">
-        <span class="search-label">Model</span>
+        <label class="bcds-select-label" for="model-select">Model</label>
         <v-select
+          id="model-select"
           :items="OPTIONS.modelSelectionOptions"
           v-model="selectedModel"
           item-title="label"
           item-value="value"
           hide-details
-          dense
-          density="compact"
-          variant="outlined"
-          style="background-color: white !important"
+          append-inner-icon="mdi-chevron-down"
         ></v-select>
       </v-col>
     </v-row>

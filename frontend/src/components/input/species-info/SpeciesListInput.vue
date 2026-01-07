@@ -3,8 +3,9 @@
     <div v-for="(item, index) in localSpeciesList" :key="index">
       <v-row>
         <v-col cols="6">
+          <label class="bcds-select-label" :for="`species-select-${index}`">Species #{{ index + 1 }}</label>
           <v-select
-            :label="`Species #${index + 1}`"
+            :id="`species-select-${index}`"
             :items="computedSpeciesOptions"
             v-model="item.species"
             item-title="label"
@@ -13,18 +14,18 @@
             hide-details="auto"
             persistent-placeholder
             placeholder="Select..."
-            density="compact"
-            dense
             :disabled="!isConfirmEnabled"
             data-testid="species-select"
+            append-inner-icon="mdi-chevron-down"
             @update:model-value="handleUpdateSpecies"
             @keydown="handleSpeciesSelectKeyDown($event, index)"
           ></v-select>
         </v-col>
         <v-col cols="6">
           <div style="position: relative; width: 100%">
+            <label class="bcds-select-label" :for="`species-percent-${index}`">Species #{{ index + 1 }} Percent</label>
             <v-text-field
-              :label="`Species #${index + 1} Percent`"
+              :id="`species-percent-${index}`"
               type="text"
               v-model="item.percent"
               :max="max"

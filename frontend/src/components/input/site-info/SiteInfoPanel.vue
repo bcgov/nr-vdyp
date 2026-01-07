@@ -33,8 +33,9 @@
                 <v-col cols="6">
                   <v-row class="mb-2">
                     <v-col cols="6">
+                      <label class="bcds-select-label" for="bec-zone-select">BEC Zone</label>
                       <v-select
-                        label="BEC Zone"
+                        id="bec-zone-select"
                         :items="OPTIONS.becZoneOptions"
                         v-model="becZone"
                         item-title="label"
@@ -42,15 +43,15 @@
                         hide-details="auto"
                         persistent-placeholder
                         placeholder="Select Bec Zone"
-                        density="compact"
-                        dense
                         :disabled="!isConfirmEnabled"
+                        append-inner-icon="mdi-chevron-down"
                       ></v-select>
                     </v-col>
                     <v-col class="col-space-6" />
                     <v-col>
+                      <label class="bcds-select-label" for="eco-zone-select">Eco Zone</label>
                       <v-select
-                        label="Eco Zone"
+                        id="eco-zone-select"
                         :items="OPTIONS.ecoZoneOptions"
                         v-model="ecoZone"
                         item-title="label"
@@ -59,9 +60,8 @@
                         hide-details="auto"
                         persistent-placeholder
                         placeholder="Select Eco Zone"
-                        density="compact"
-                        dense
                         :disabled="!isConfirmEnabled"
+                        append-inner-icon="mdi-chevron-down"
                       ></v-select>
                     </v-col>
                   </v-row>
@@ -72,8 +72,9 @@
                 <v-col cols="6">
                   <v-row class="mb-2">
                     <v-col cols="6">
+                      <label class="bcds-select-label" for="site-species-select">Site Species</label>
                       <v-select
-                        label="Site Species"
+                        id="site-species-select"
                         :items="siteSpeciesOptions"
                         v-model="selectedSiteSpecies"
                         item-title="label"
@@ -81,10 +82,9 @@
                         hide-details="auto"
                         persistent-placeholder
                         placeholder="Select..."
-                        density="compact"
-                        dense
                         data-testid="selected-site-species"
                         disabled
+                        append-inner-icon="mdi-chevron-down"
                       ></v-select>
                     </v-col>
                   </v-row>

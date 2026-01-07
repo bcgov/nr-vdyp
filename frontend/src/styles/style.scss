@@ -1,3 +1,5 @@
+@use './select'; /* SELECT box */
+
 html,
 body {
   font-family: 'BC Sans', 'Noto Sans', Verdana, Arial, sans-serif !important;
@@ -141,12 +143,6 @@ input[type='number']::-webkit-outer-spin-button {
 .v-text-field .v-field--no-label input,
 .v-text-field .v-field--active input {
   background-color: #ffffff; // apply text field background color
-}
-
-/* SELECT box */
-/* Set the input slot background color of the v-select component to white */
-.v-field--variant-filled .v-field__overlay {
-  background-color: #ffffff;
 }
 
 /* Styles for enabled input components */

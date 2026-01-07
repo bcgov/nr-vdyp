@@ -20,8 +20,9 @@
       </v-col>
       <v-col class="col-space-2" />
       <v-col cols="3">
+        <label class="bcds-select-label" for="projection-type-select">Projection Type</label>
         <v-select
-          label="Projection Type"
+          id="projection-type-select"
           :items="OPTIONS.projectionTypeOptions"
           v-model="localProjectionType"
           item-title="label"
@@ -29,9 +30,8 @@
           hide-details="auto"
           persistent-placeholder
           placeholder="Select..."
-          density="compact"
-          dense
           :disabled="isDisabled"
+          append-inner-icon="mdi-chevron-down"
         ></v-select>
       </v-col>
     </v-row>
