@@ -1,21 +1,12 @@
 <template>
-  <div
-    class="centered-progress progress-wrapper"
-    v-if="isShow"
-    :style="{
-      backgroundColor: hasBackground ? backgroundColor : 'transparent',
-      boxShadow: hasBackground ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none',
-      borderRadius: `${borderRadius}px`,
-      padding: `${padding}px`,
-    }"
-  >
+  <div v-if="isShow" :class="['progress-container', { 'with-background': hasBackground }]">
     <v-progress-circular
       indeterminate
       :size="circleSize"
       :width="circleWidth"
       :color="circleColor"
     ></v-progress-circular>
-    <div v-if="showMessage" class="message">
+    <div v-if="showMessage" class="progress-message">
       {{ message }}
     </div>
   </div>
@@ -29,30 +20,34 @@ defineProps({
   circleSize: { type: Number, default: 70 },
   circleWidth: { type: Number, default: 5 },
   circleColor: { type: String, default: 'primary' },
-  backgroundColor: { type: String, default: 'rgba(255, 255, 255, 0.8)' },
   hasBackground: { type: Boolean, default: true },
-  padding: { type: Number, default: 20 },
-  borderRadius: { type: Number, default: 10 },
 })
 </script>
 
 <style scoped>
-.centered-progress {
+.progress-container {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 9999;
-}
-.progress-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  gap: var(--layout-margin-small);
 }
-.message {
-  font-weight: bold;
-  color: rgba(0, 0, 0, 0.87);
-  margin-top: 10px;
+
+.progress-container.with-background {
+  background-color: var(--surface-color-background-white);
+  border: var(--layout-border-width-small) solid var(--surface-color-border-default);
+  border-radius: var(--layout-border-radius-medium);
+  padding: var(--layout-padding-large);
+  box-shadow: var(--surface-shadow-medium);
+}
+
+.progress-message {
+  font: var(--typography-bold-body);
+  color: var(--typography-color-primary);
+  margin-top: var(--layout-margin-small);
 }
 </style>
