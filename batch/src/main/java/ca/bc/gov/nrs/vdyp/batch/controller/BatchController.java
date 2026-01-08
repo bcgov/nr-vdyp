@@ -40,8 +40,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
@@ -56,6 +56,7 @@ public class BatchController {
 
 	private final JobLauncher jobLauncher;
 	private final Job partitionedJob;
+	private final Job fetchAndPartitionJob;
 	private final BatchInputPartitioner inputPartitioner;
 	private final JobOperator jobOperator;
 
@@ -76,11 +77,13 @@ public class BatchController {
 	// As a @RestController, Spring automatically creates a singleton instance and injects the required dependencies.
 	// It's available at runtime for handling HTTP requests to /api/batch endpoints, not just in tests.
 	public BatchController(
-			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
+			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, @Qualifier("partitionedJob") Job partitionedJob,
+			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
 			BatchMetricsCollector metricsCollector, BatchInputPartitioner inputPartitioner, JobOperator jobOperator
 	) {
 		this.jobLauncher = jobLauncher;
 		this.partitionedJob = partitionedJob;
+		this.fetchAndPartitionJob = fetchAndPartitionJob;
 		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
 		this.inputPartitioner = inputPartitioner;
@@ -104,6 +107,39 @@ public class BatchController {
 			Map<String, Object> response = new HashMap<>();
 
 			JobExecution jobExecution = executeJob(polygonFile, layerFile, projectionParametersJson);
+			buildSuccessResponse(response, jobExecution);
+
+			return ResponseEntity.ok(response);
+
+		} catch (ProjectionRequestValidationException e) {
+			return ResponseEntity.badRequest().header("content-type", "application/json")
+					.body(createValidationErrorResponse(e));
+		} catch (Exception e) {
+			return buildErrorResponse(e);
+		}
+	}
+
+	/**
+	 * Start a new batch job execution
+	 */
+	@PostMapping(
+			value = "/startWithGUIDs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE
+	)
+	public ResponseEntity<Map<String, Object>> startBatchJobPersistedID(
+			@RequestParam("polygonCOMSObjectGUID") UUID polygonCOMSObjectGUID,
+			@RequestParam("layerCOMSObjectGUID") UUID layerCOMSObjectGUID,
+			@RequestParam("projectionParametersJson") String projectionParametersJson
+	) {
+
+		try {
+
+			logRequestDetails(polygonCOMSObjectGUID, layerCOMSObjectGUID, projectionParametersJson);
+
+			Map<String, Object> response = new HashMap<>();
+
+			JobExecution jobExecution = executeJob(
+					polygonCOMSObjectGUID, layerCOMSObjectGUID, projectionParametersJson
+			);
 			buildSuccessResponse(response, jobExecution);
 
 			return ResponseEntity.ok(response);
@@ -300,6 +336,13 @@ public class BatchController {
 		return ResponseEntity.ok(response);
 	}
 
+	private void logRequestDetails(UUID polygonCOMSObjectGUID, UUID layerCOMSObjectGUID, String parametersJson) {
+		logger.debug("=== VDYP Batch Job Request ===");
+		logger.debug("polygonCOMSObjectGUID: {} ", polygonCOMSObjectGUID);
+		logger.debug("layerCOMSObjectGUID: {} ", layerCOMSObjectGUID);
+		logger.debug("parametersJson: {} ", parametersJson);
+	}
+
 	private void logRequestDetails(MultipartFile polygonFile, MultipartFile layerFile, String parametersJson) {
 		logger.debug("=== VDYP Batch Job Request ===");
 		logger.debug("Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(), polygonFile.getSize());
@@ -309,26 +352,60 @@ public class BatchController {
 		);
 	}
 
+	private JobExecution executeJob(UUID polygonFileComsGuid, UUID layerFileComsGuid, String projectionParametersJson)
+			throws ProjectionRequestValidationException {
+
+		// TODO validateProjectionParameters(polygonFile, layerFile, projectionParametersJson);
+
+		try {
+			String jobGuid = BatchUtils.createJobGuid();
+			String jobTimestamp = BatchUtils.createJobTimestamp();
+
+			Path jobBaseDir = ensureProjectionDirectoryExists(jobGuid);
+
+			logger.debug("[GUID: {}] Using {} partitions", jobGuid, defaultNumPartitions);
+
+			// Now start the job with the partition directory included in parameters
+			JobParameters jobParameters = buildJobParameters(
+					projectionParametersJson, defaultNumPartitions, jobGuid, jobTimestamp, jobBaseDir.toString(),
+					polygonFileComsGuid, layerFileComsGuid
+			);
+			JobExecution jobExecution = jobLauncher.run(fetchAndPartitionJob, jobParameters);
+
+			logger.info(
+					"[GUID: {}] Batch job started - Execution ID: {}, Partitions: {}", jobGuid, jobExecution.getId(),
+					defaultNumPartitions
+			);
+
+			return jobExecution;
+
+		} catch (Exception e) {
+			logger.error("Failed to process uploaded CSV files", e);
+
+			String errorMessage = e.getMessage() != null ? e.getMessage()
+					: "Unknown error (" + e.getClass().getSimpleName() + ")";
+
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									"Failed to process uploaded CSV files: " + errorMessage
+							)
+					)
+			);
+		}
+	}
+
 	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson)
 			throws ProjectionRequestValidationException {
 
 		validateProjectionParameters(polygonFile, layerFile, projectionParametersJson);
 
 		try {
-			Path batchRootDir = Paths.get(batchRootDirectory);
-
-			if (!Files.exists(batchRootDir)) {
-				Files.createDirectories(batchRootDir);
-				logger.debug("Created batch root directory: {}", batchRootDir);
-			}
-
 			String jobGuid = BatchUtils.createJobGuid();
 			String jobTimestamp = BatchUtils.createJobTimestamp();
 
-			String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobGuid);
-			Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
-			Files.createDirectories(jobBaseDir);
-			logger.debug("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
+			Path jobBaseDir = ensureProjectionDirectoryExists(jobGuid);
 
 			logger.debug("[GUID: {}] Using {} partitions", jobGuid, defaultNumPartitions);
 
@@ -502,6 +579,22 @@ public class BatchController {
 		}
 	}
 
+	private Path ensureProjectionDirectoryExists(String jobGuid) throws IOException {
+		Path batchRootDir = Paths.get(batchRootDirectory);
+
+		if (!Files.exists(batchRootDir)) {
+			Files.createDirectories(batchRootDir);
+			logger.debug("Created batch root directory: {}", batchRootDir);
+		}
+
+		String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobGuid);
+		Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
+		Files.createDirectories(jobBaseDir);
+
+		logger.debug("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
+		return jobBaseDir;
+	}
+
 	private JobParameters buildJobParameters(
 			String projectionParametersJson, Integer numPartitions, String jobGuid, String jobTimestamp,
 			String jobBaseDir
@@ -510,6 +603,23 @@ public class BatchController {
 		JobParametersBuilder parametersBuilder = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
 				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
 				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
+				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue());
+
+		return parametersBuilder.toJobParameters();
+	}
+
+	private JobParameters buildJobParameters(
+			String projectionParametersJson, Integer numPartitions, String jobGuid, String jobTimestamp,
+			String jobBaseDir, UUID polygonCOMSObjectGUID, UUID layerCOMSObjectGUID
+	) {
+
+		JobParametersBuilder parametersBuilder = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
+				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir) //
+				.addString(BatchConstants.ComsInput.POLYGON_COMS_OBJECT_GUID, polygonCOMSObjectGUID.toString())
+				.addString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID, polygonCOMSObjectGUID.toString())
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
 				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue());
 

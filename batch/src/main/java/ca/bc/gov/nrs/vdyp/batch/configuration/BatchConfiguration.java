@@ -39,6 +39,7 @@ import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
+import ca.bc.gov.nrs.vdyp.batch.service.DownloadAndPartitionTasklet;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
@@ -132,6 +133,14 @@ public class BatchConfiguration {
 				.partitionHandler(dynamicPartitionHandler).build();
 	}
 
+	@Bean
+	public Step fetchAndPartitionFilesStep(
+			DownloadAndPartitionTasklet tasklet, PlatformTransactionManager transactionManager
+	) {
+		return new StepBuilder("fetchAndPartitionFilesStep", jobRepository).tasklet(tasklet, transactionManager)
+				.build();
+	}
+
 	/**
 	 * Worker step with metrics collection
 	 */
@@ -211,11 +220,6 @@ public class BatchConfiguration {
 
 	/**
 	 * Declare vdypJobMetricListener bean for use in job configuration
-	 *
-	 * @param metricsCollector
-	 * @param batchProperties
-	 * @param resultAggregationService
-	 * @return
 	 */
 	@Bean
 	public VDYPJobMetricListener vdypJobMetricListener(
@@ -242,18 +246,23 @@ public class BatchConfiguration {
 				.listener(loggingListener).build();
 	}
 
-						try {
-							metricsCollector.cleanupOldMetrics(20);
-						} catch (BatchMetricsException e) {
-							logger.error("Failed to cleanup old metrics: {}", e.getMessage());
-						}
-
-						logger.info(
-								"[GUID: {}] === VDYP Batch Job Completed === Execution ID: {}", jobGuid,
-								jobExecution.getId()
-						);
-					}
-				}).build();
+	/**
+	 * VDYP Batch Job that fetches files from s3 and partitions them before processing
+	 */
+	@Bean
+	@ConditionalOnProperty(name = "batch.job.auto-create", havingValue = "true", matchIfMissing = false)
+	public Job fetchAndPartitionJob(
+			BatchJobExecutionListener loggingListener, VDYPJobMetricListener metricListener,
+			Step fetchAndPartitionFilesStep, Step masterStep, Step postProcessingStep,
+			PlatformTransactionManager transactionManager
+	) {
+		return new JobBuilder("VdypFetchAndPartitionJob", jobRepository) //
+				.incrementer(new RunIdIncrementer()) //
+				.start(fetchAndPartitionFilesStep) //
+				.next(masterStep) //
+				.next(postProcessingStep) //
+				.listener(metricListener) //
+				.listener(loggingListener).build();
 	}
 
 	@Bean

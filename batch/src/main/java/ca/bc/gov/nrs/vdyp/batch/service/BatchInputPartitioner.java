@@ -38,10 +38,10 @@ public class BatchInputPartitioner {
 	/**
 	 * Partitions polygon and layer CSV files by FEATURE_ID into separate partition files.
 	 *
-	 * @param polygonFile  The polygon CSV file to partition
-	 * @param layerFile    The layer CSV file to partition
-	 * @param numPartition The number of partitions to create
-	 * @param jobBaseDir   The base directory for the job
+	 * @param polygonFile   The polygon CSV file to partition
+	 * @param layerFile     The layer CSV file to partition
+	 * @param numPartitions The number of partitions to create
+	 * @param jobBaseDir    The base directory for the job
 	 * @param jobGuid
 	 * @return The total number of unique FEATURE_IDs processed
 	 * @throws BatchPartitionException if partitioning fails (I/O errors or validation failures)
@@ -59,7 +59,131 @@ public class BatchInputPartitioner {
 
 		partitionLayerFile(layerFile, numPartitions, jobBaseDir, featureIdToPartition, jobGuid);
 
-		return featureIdToPartition.size();
+		return totalFeatureIds;
+	}
+
+	/**
+	 * Partitions polygon and layer CSV files by FEATURE_ID into separate partition files.
+	 *
+	 * @param polygonFile   The polygon CSV file to partition
+	 * @param layerFile     The layer CSV file to partition
+	 * @param numPartitions The number of partitions to create
+	 * @param jobBaseDir    The base directory for the job
+	 * @param jobGuid
+	 * @return The total number of unique FEATURE_IDs processed
+	 * @throws BatchPartitionException if partitioning fails (I/O errors or validation failures)
+	 */
+	public int partitionCsvFiles(
+			@NonNull Path polygonFile, @NonNull Path layerFile, @NonNull Integer numPartitions,
+			@NonNull Path jobBaseDir, @NonNull String jobGuid
+	) throws BatchPartitionException {
+
+		try (
+				BufferedReader polyReader = Files.newBufferedReader(polygonFile, StandardCharsets.UTF_8);
+				BufferedReader layerReader = Files.newBufferedReader(layerFile, StandardCharsets.UTF_8)
+		) {
+			return partitionCSVReaders(polyReader, layerReader, numPartitions, jobBaseDir, jobGuid);
+		} catch (IOException e) {
+			throw BatchPartitionException.handlePartitionFailure(e, "Failed to open CSV files", jobGuid, logger);
+		}
+	}
+
+	/**
+	 * Partition polygon and layer CSV readers by FEATURE_ID into separate partition files. Works round robin style,
+	 * this assumes that output files are permitted to vary in order as long as all FEATURE_IDS are reported in the
+	 * output The ordering issue could be fixed by merging the files in a round robin style as well.
+	 *
+	 * @param polygonReader A Buffered reader of the polygon CSV file to partition
+	 * @param layerReader   a Buffered reader of the layer CSV file to partition
+	 * @param numPartitions the number of partitions to create
+	 * @param jobBaseDir    The base directory for the job (A Property of the job)
+	 * @param jobGuid       The unique identifier for the job (A Property of the job)
+	 * @return the number of unique feature ids that have been written to the polygon partition files
+	 * @throws BatchPartitionException
+	 * @throws IOException
+	 */
+	private int partitionCSVReaders(
+			BufferedReader polygonReader, BufferedReader layerReader, Integer numPartitions, Path jobBaseDir,
+			String jobGuid
+	) throws BatchPartitionException, IOException {
+		int uniqueFeatureIdCount = 0;
+		Map<Integer, PrintWriter> polygonWriters = null;
+		Map<Integer, PrintWriter> layerWriters = null;
+		try {
+			// Get the first non blank line from each file
+			String polygonLine = readNextNonBlankLine(polygonReader);
+			String layerLine = readNextNonBlankLine(layerReader);
+
+			if (polygonLine == null || layerLine == null) {
+				throw new IllegalArgumentException("Input files contain no data lines");
+			}
+
+			if (BatchUtils.isHeaderLine(polygonLine)) {
+				polygonLine = readNextNonBlankLine(polygonReader);
+			}
+			if (BatchUtils.isHeaderLine(layerLine)) {
+				layerLine = readNextNonBlankLine(layerReader);
+			}
+
+			polygonWriters = createPartitionWriters(
+					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, numPartitions, jobGuid
+			);
+			layerWriters = createPartitionWriters(
+					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, numPartitions, jobGuid
+			);
+			while (polygonLine != null) {
+				Integer polygonFeatureId = BatchUtils.extractFeatureIdInteger(polygonLine);
+				if (polygonFeatureId == null) {
+					// Decide: skip or fail. I would fail in polygon file because it drives the join.
+					throw BatchPartitionException.handlePartitionFailure(
+							String.format("Polygon row missing FEATURE_ID: %s", polygonLine), jobGuid, logger
+					);
+				}
+				uniqueFeatureIdCount++;
+				int partition = (uniqueFeatureIdCount - 1) % numPartitions;
+				// write the polygon to it's partition round robin style
+				polygonWriters.get(partition).println(polygonLine);
+				polygonLine = readNextNonBlankLine(polygonReader);
+
+				// write all matching layer lines to the same partition
+				// First advance past orphan layer lines featureId < polygonFeatureId(TODO log these to a warning file)
+				Integer layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
+				while (layerFeatureId == null || layerFeatureId.compareTo(polygonFeatureId) < 0) {
+					// log orphan layer line
+					logger.warn(
+							"Orphan layer line with FEATURE_ID {} has no matching polygon [May be out of order in layer file], skipping: {}",
+							layerFeatureId, layerLine
+					);
+					layerLine = readNextNonBlankLine(layerReader);
+					layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
+				}
+				// Now write all matching layer lines
+				while (layerFeatureId != null && layerFeatureId.compareTo(polygonFeatureId) == 0) {
+					layerWriters.get(partition).println(layerLine);
+					layerLine = readNextNonBlankLine(layerReader);
+					layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
+				}
+			}
+			// Safe to exit because all layer lines that would exist in the files have no matching polygon so would not
+			// be projected any ways
+
+		} catch (Exception e) {
+			throw BatchPartitionException.handlePartitionFailure(e, "Error partitioning input files", jobGuid, logger);
+		} finally {
+			closeWriters(polygonWriters);
+			closeWriters(layerWriters);
+		}
+		return uniqueFeatureIdCount;
+	}
+
+	private static String readNextNonBlankLine(BufferedReader reader) throws IOException {
+		String line;
+		while ( (line = reader.readLine()) != null) {
+			if (!line.isBlank() && !BatchUtils.isHeaderLine(line)) {
+				return line;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -349,7 +473,6 @@ public class BatchInputPartitioner {
 	/**
 	 * Create PrintWriters for each partition.
 	 *
-	 * @param header Optional header line (null if no header)
 	 * @return Map of partition number to PrintWriter
 	 * @throws BatchPartitionException if directory creation or file writing fails
 	 */

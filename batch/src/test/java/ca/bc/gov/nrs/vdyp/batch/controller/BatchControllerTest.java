@@ -39,10 +39,11 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +55,9 @@ class BatchControllerTest {
 
 	@Mock
 	private Job partitionedJob;
+
+	@Mock
+	private Job downloadAndPartitionJob;
 
 	@Mock
 	private JobExplorer jobExplorer;
@@ -81,7 +85,8 @@ class BatchControllerTest {
 	@BeforeEach
 	void setUp() {
 		batchController = new BatchController(
-				jobLauncher, partitionedJob, jobExplorer, metricsCollector, csvPartitioner, jobOperator
+				jobLauncher, partitionedJob, downloadAndPartitionJob, jobExplorer, metricsCollector, csvPartitioner,
+				jobOperator
 		);
 
 		// Use system temp directory for cross-platform compatibility
@@ -112,7 +117,10 @@ class BatchControllerTest {
 		);
 
 		// Mock partitioner to return grid size
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
+		when(
+				csvPartitioner
+						.partitionCsvFiles(any(MultipartFile.class), any(MultipartFile.class), anyInt(), any(), any())
+		).thenReturn(4);
 
 		// Mock job execution
 		when(jobExecution.getId()).thenReturn(1L);
@@ -139,8 +147,10 @@ class BatchControllerTest {
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", "data".getBytes());
 
 		// Mock partitioner to throw exception
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any()))
-				.thenThrow(new RuntimeException("Empty file or invalid CSV data"));
+		when(
+				csvPartitioner
+						.partitionCsvFiles(any(MultipartFile.class), any(MultipartFile.class), anyInt(), any(), any())
+		).thenThrow(new RuntimeException("Empty file or invalid CSV data"));
 
 		ResponseEntity<Map<String, Object>> response = batchController
 				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
@@ -191,7 +201,10 @@ class BatchControllerTest {
 		);
 
 		// Mock partitioner
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
+		when(
+				csvPartitioner
+						.partitionCsvFiles(any(MultipartFile.class), any(MultipartFile.class), anyInt(), any(), any())
+		).thenReturn(4);
 
 		// Mock job execution with null start time
 		when(jobExecution.getId()).thenReturn(1L);
@@ -547,7 +560,10 @@ class BatchControllerTest {
 				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
 		);
 
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
+		when(
+				csvPartitioner
+						.partitionCsvFiles(any(MultipartFile.class), any(MultipartFile.class), anyInt(), any(), any())
+		).thenReturn(4);
 
 		when(jobLauncher.run(any(), any())).thenThrow(new IllegalStateException("Job launcher failed"));
 
