@@ -1,5 +1,6 @@
 @use './select'; /* SELECT box */
 @use './radio'; /* RADIO & RADIO GROUP */
+@use './checkbox'; /* CHECKBOX & CHECKBOX GROUP */
 
 html,
 body {
@@ -115,14 +116,6 @@ body {
   background-color: #ffffff;
   z-index: 1;
   border-bottom: none !important;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-/* CHECK-BOX */
-// label
-.v-label.v-label--clickable {
-  font-size: 14px;
-  font-weight: 400;
   color: rgba(0, 0, 0, 0.87);
 }
 
