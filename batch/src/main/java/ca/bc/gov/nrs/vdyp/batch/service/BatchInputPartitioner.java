@@ -178,7 +178,7 @@ public class BatchInputPartitioner {
 				)
 		) {
 			Map<Integer, PrintWriter> writers = createPartitionWriters(
-					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, headerLine, numPartitions, jobGuid
+					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, numPartitions, jobGuid
 			);
 
 			try {
@@ -298,7 +298,7 @@ public class BatchInputPartitioner {
 				)
 		) {
 			Map<Integer, PrintWriter> writers = createPartitionWriters(
-					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, headerLine, numPartitions, jobGuid
+					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, numPartitions, jobGuid
 			);
 
 			try {
@@ -353,9 +353,9 @@ public class BatchInputPartitioner {
 	 * @return Map of partition number to PrintWriter
 	 * @throws BatchPartitionException if directory creation or file writing fails
 	 */
-	private Map<Integer, PrintWriter> createPartitionWriters(
-			Path jobBaseDir, String filename, String header, Integer numPartitions, String jobGuid
-	) throws BatchPartitionException {
+	private Map<Integer, PrintWriter>
+			createPartitionWriters(Path jobBaseDir, String filename, Integer numPartitions, String jobGuid)
+					throws BatchPartitionException {
 		Map<Integer, PrintWriter> writers = new HashMap<>();
 
 		try {
@@ -366,11 +366,6 @@ public class BatchInputPartitioner {
 				Path csvFile = partitionDir.resolve(filename);
 				BufferedWriter bufferedWriter = Files.newBufferedWriter(csvFile, StandardCharsets.UTF_8);
 				PrintWriter writer = new PrintWriter(bufferedWriter, false);
-
-				// Write header only if present (headers are optional in input file)
-				if (header != null) {
-					writer.println(header);
-				}
 
 				writers.put(i, writer);
 			}

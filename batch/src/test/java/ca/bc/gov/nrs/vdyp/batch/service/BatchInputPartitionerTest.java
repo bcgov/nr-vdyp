@@ -284,7 +284,7 @@ class BatchInputPartitionerTest {
 
 		String layerContent = Files.readString(partition0LayerFile);
 		// Should only contain header since no matching feature IDs
-		assertEquals("FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE", layerContent.trim());
+		assertEquals("", layerContent.trim());
 	}
 
 	@Test
@@ -325,9 +325,10 @@ class BatchInputPartitionerTest {
 		assertTrue(Files.exists(partition0LayerFile));
 
 		String content = Files.readString(partition0LayerFile);
-		// Should contain header and two valid lines (empty lines skipped)
+		// Should contain two valid lines (empty lines skipped)
+		// No longer writing header only to be skipped in processing later
 		long lineCount = content.lines().count();
-		assertEquals(3, lineCount); // header + 2 data lines
+		assertEquals(2, lineCount); // 2 data lines
 	}
 
 	@Test
