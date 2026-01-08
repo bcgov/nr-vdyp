@@ -22,6 +22,14 @@ public final class BatchConstants {
 		}
 	}
 
+	public static final class ComsInput {
+		public static final String POLYGON_COMS_OBJECT_GUID = "polygonCOMSObjectGUID";
+		public static final String LAYER_COMS_OBJECT_GUID = "layerCOMSObjectGUID";
+
+		private ComsInput() {
+		}
+	}
+
 	public static final class Partition {
 		public static final String INPUT_PREFIX = "input";
 		public static final String OUTPUT_PREFIX = "output";

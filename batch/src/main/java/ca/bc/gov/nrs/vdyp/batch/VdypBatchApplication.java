@@ -2,14 +2,17 @@ package ca.bc.gov.nrs.vdyp.batch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.event.EventListener;
-import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
+
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 
+@ConfigurationPropertiesScan
 @SpringBootApplication
 @RegisterReflectionForBinding({ BatchChunkMetadata.class, BatchMetrics.class })
 public class VdypBatchApplication {
