@@ -92,11 +92,33 @@ public final class BatchUtils {
 
 		int commaIndex = csvLine.indexOf(',');
 		if (commaIndex == -1) {
-			// No comma found, entire line might be the FEATURE_ID
-			return csvLine.trim();
+			// No comma found, not a valid line return null
+			return null;
 		} else {
 			// Extract first field before comma
 			return csvLine.substring(0, commaIndex).trim();
+		}
+	}
+
+	/**
+	 * Extract FEATURE_ID from the first field of a CSV line as an Integer to allow for numeric comaprisons.
+	 *
+	 * @param csvLine The CSV line to parse
+	 * @return The FEATURE_ID as a Integer, or null if the line is null/empty. Callers MUST check for null before using
+	 *         the returned value.
+	 */
+	public static Integer extractFeatureIdInteger(String csvLine) {
+		if (csvLine == null || csvLine.trim().isEmpty()) {
+			return null;
+		}
+
+		int commaIndex = csvLine.indexOf(',');
+		if (commaIndex == -1) {
+			// No comma found, not a valid line return null
+			return null;
+		} else {
+			// Extract first field before comma
+			return Integer.valueOf(csvLine.substring(0, commaIndex).trim());
 		}
 	}
 
