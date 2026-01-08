@@ -1,4 +1,5 @@
 @use './select'; /* SELECT box */
+@use './radio'; /* RADIO & RADIO GROUP */
 
 html,
 body {
@@ -117,17 +118,12 @@ body {
   color: rgba(0, 0, 0, 0.87);
 }
 
-/* CHECK-BOX / RADIO */
+/* CHECK-BOX */
 // label
 .v-label.v-label--clickable {
   font-size: 14px;
   font-weight: 400;
   color: rgba(0, 0, 0, 0.87);
-}
-
-/* RADIO */
-.v-selection-control-group--inline {
-  height: 30px; // reduce the height of an inline radio group containing an error message because it is too tall
 }
 
 /* input TEXT-FIELD */

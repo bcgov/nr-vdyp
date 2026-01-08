@@ -102,6 +102,7 @@
                   <v-radio-group
                     v-model="siteSpeciesValues"
                     inline
+                    hide-details
                     :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
                   >
                     <v-radio
@@ -127,6 +128,7 @@
                   <v-radio-group
                     v-model="ageType"
                     inline
+                    hide-details
                     :disabled="isAgeTypeDisabled || !isConfirmEnabled"
                   >
                     <v-radio

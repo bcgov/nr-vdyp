@@ -45,6 +45,7 @@
         <v-radio-group
           v-model="selectedAgeYearRange"
           inline
+          hide-details
           :disabled="isDisabled"
         >
           <v-radio
