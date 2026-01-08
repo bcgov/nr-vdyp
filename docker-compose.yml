@@ -53,6 +53,7 @@ services:
       ]
   s3:
     image: minio/minio
+    restart: unless-stopped
     container_name: minio
     command: server /data --console-address ":9001"
     ports:
@@ -72,9 +73,12 @@ services:
 
   coms:
     image: ghcr.io/bcgov/common-object-management-service:${COMS_TAG:-latest}
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy        # wait for DB readiness
+      s3:
+        condition: service_healthy        # wait for MinIO readiness
     ports:
       - "3000:3000"
     entrypoint:
