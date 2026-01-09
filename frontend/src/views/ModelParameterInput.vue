@@ -7,12 +7,10 @@
   />
   <v-container fluid>
     <TopProjectYear />
-    <div class="hr-line-2 mb-4"></div>
-    <v-spacer class="space"></v-spacer>
-    <ModelSelectionContainer @update:modelSelection="updateModelSelection" />
-    <v-spacer class="space"></v-spacer>
-    <div class="hr-line mb-5"></div>
-    <v-spacer class="space"></v-spacer>
+    <ModelSelectionContainer
+      class="model-selection-section"
+      @update:modelSelection="updateModelSelection"
+    />
     <template
       v-if="
         appStore.modelSelection ===
@@ -24,12 +22,9 @@
         :tabs="modelParamTabs"
       />
       <template v-if="isModelParameterPanelsVisible">
-        <v-spacer class="space"></v-spacer>
-        <SiteInfoPanel />
-        <v-spacer class="space"></v-spacer>
-        <StandInfoPanel />
-        <v-spacer class="space"></v-spacer>
-        <ReportInfoPanel />
+        <SiteInfoPanel class="panel-spacing" />
+        <StandInfoPanel class="panel-spacing" />
+        <ReportInfoPanel class="panel-spacing" />
         <AppRunModelButtonPanel
           :isDisabled="!modelParameterStore.runModelEnabled"
           cardClass="input-model-param-run-model-card"
@@ -44,8 +39,7 @@
         :tabs="fileUploadTabs"
       />
       <template v-if="isFileUploadPanelsVisible">
-        <v-spacer class="space"></v-spacer>
-        <AttachmentsPanel />
+        <AttachmentsPanel class="panel-spacing" />
         <AppRunModelButtonPanel
           :isDisabled="!fileUploadStore.runModelEnabled"
           cardClass="input-model-param-run-model-card"
@@ -325,7 +319,11 @@ const runModelHandler = async () => {
 </script>
 
 <style scoped>
-.space {
-  margin-top: 10px;
+.model-selection-section {
+  margin-top: var(--layout-margin-medium);
+}
+
+.panel-spacing {
+  margin-top: var(--layout-margin-medium);
 }
 </style>

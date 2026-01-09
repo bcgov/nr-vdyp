@@ -1,0 +1,61 @@
+/* TABS - BC Government Design Standards */
+
+/* Tab container styling */
+.v-slide-group.v-tabs {
+  margin-top: var(--layout-margin-none);
+  margin-bottom: var(--layout-margin-none);
+}
+
+/* Default tab styling */
+.v-tab.v-tab.v-btn {
+  height: var(--v-tabs-height);
+  border-top-left-radius: var(--layout-border-radius-medium) !important;
+  border-top-right-radius: var(--layout-border-radius-medium) !important;
+  min-width: 90px;
+  border: var(--layout-border-width-small) solid var(--surface-color-border-medium);
+  color: var(--typography-color-secondary);
+  background-color: var(--surface-color-background-light-gray);
+  box-shadow: var(--surface-shadow-medium);
+  font: var(--typography-regular-body);
+  text-transform: none;
+  padding: var(--layout-padding-small) var(--layout-padding-medium);
+}
+
+/* Tab hover state */
+.v-tab.v-tab.v-btn:hover:not(.v-btn--disabled) {
+  background-color: var(--surface-color-secondary-hover);
+  border-color: var(--surface-color-border-dark);
+}
+
+/* Selected tab styling */
+.v-btn.v-tab-item--selected.v-tab--selected.v-theme--defaultTheme.v-btn--density-default.v-btn--size-default.v-btn--variant-text.v-tab {
+  background-color: var(--surface-color-background-white);
+  z-index: 1;
+  border-bottom: none !important;
+  color: var(--typography-color-primary);
+  font: var(--typography-bold-body);
+}
+
+/* Disabled tab styling */
+.v-btn.v-btn--disabled.v-tab {
+  color: var(--typography-color-disabled) !important;
+  background-color: var(--surface-color-secondary-disabled) !important;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* First tab specific styling (if needed) */
+.v-tab.first-tab {
+  margin-left: var(--layout-margin-none);
+}
+
+/* Tab window styling */
+.v-window.v-theme--defaultTheme.v-tabs-window {
+  box-shadow: var(--surface-shadow-medium);
+  border-radius: var(--layout-border-radius-none);
+}
+
+/* Tab content area */
+.v-window-item {
+  padding: var(--layout-padding-medium);
+}

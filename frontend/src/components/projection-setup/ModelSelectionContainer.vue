@@ -1,5 +1,5 @@
 <template>
-  <div id="modelSelectionCard" class="mt-n1 mb-3">
+  <div id="modelSelectionCard" class="model-selection-header">
     <h3
       v-if="internalModelSelection === MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
     >
@@ -8,7 +8,7 @@
     <h3 v-else>{{ HEADER_SELECTION.FILE_UPLOAD }}</h3>
   </div>
 
-  <v-card class="pa-4 job-type-sel-card" elevation="0">
+  <v-card class="job-type-sel-card" elevation="0">
     <ModelSelection @update:modelSelection="updateModelSelection" />
   </v-card>
 </template>
@@ -28,11 +28,24 @@ const updateModelSelection = (newSelection: string) => {
 }
 </script>
 <style scoped>
+.model-selection-header {
+  padding-top: var(--layout-padding-medium);
+  border-top: var(--layout-border-width-medium) solid var(--surface-color-border-default);
+  margin-bottom: var(--layout-margin-medium);
+}
+
+h3 {
+  font: var(--typography-bold-h3);
+  color: var(--typography-color-primary);
+}
+
 .job-type-sel-card {
-  padding-bottom: 16px !important;
-  background-color: #f6f6f6;
-  border-top: 1px solid #0000001f;
-  border-bottom: 1px solid #0000001f;
-  border-radius: 0px;
+  padding: var(--layout-padding-medium);
+  background-color: var(--surface-color-background-light-gray);
+  border-top: var(--layout-border-width-small) solid var(--surface-color-border-default);
+  border-bottom: var(--layout-border-width-small) solid var(--surface-color-border-default);
+  border-radius: var(--layout-border-radius-none);
+  box-shadow: var(--surface-shadow-none);
+  margin-bottom: var(--layout-margin-medium);
 }
 </style>

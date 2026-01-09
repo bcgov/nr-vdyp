@@ -3,6 +3,8 @@
 @use './checkbox'; /* CHECKBOX & CHECKBOX GROUP */
 @use './text-field'; /* TEXT-FIELD */
 @use './spin-field'; /* SPIN-FIELD (Spin box for text fields) */
+@use './tabs'; /* TABS */
+@use './slider'; /* SLIDER */
 
 html,
 body {
@@ -89,54 +91,6 @@ body {
   padding: 1rem !important;
 }
 
-/* TABS */
-// tab
-.v-tab.v-tab.v-btn {
-  height: var(--v-tabs-height);
-  border-top-left-radius: 5px !important;
-  border-top-right-radius: 5px !important;
-  min-width: 90px;
-  border: 0.1rem solid #a3a3a3;
-  color: rgb(118, 118, 118);
-  background-color: #f6f6f6;
-  box-shadow:
-    0px 2px 4px -1px rgba(0, 0, 0, 0.2),
-    0px 4px 5px 0px rgba(0, 0, 0, 0.14),
-    0px 1px 10px 0px rgba(0, 0, 0, 0.12); /* elevation-4 */
-}
-
-// tab window
-.v-window.v-theme--defaultTheme.v-tabs-window {
-  box-shadow:
-    0px 2px 4px -1px rgba(0, 0, 0, 0.2),
-    0px 4px 5px 0px rgba(0, 0, 0, 0.14),
-    0px 1px 10px 0px rgba(0, 0, 0, 0.12); /* elevation-4 */
-}
-
-// Selected tab
-.v-btn.v-tab-item--selected.v-tab--selected.v-theme--defaultTheme.v-btn--density-default.v-btn--size-default.v-btn--variant-text.v-tab {
-  background-color: #ffffff;
-  z-index: 1;
-  border-bottom: none !important;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-/* input TEXT-FIELD - Moved to _text-field.scss */
-
-/* SLIDER */
-.v-slider-track__tick-label {
-  top: -50px; /* Move the label to the top of the slider */
-}
-
-.v-slider-track__fill {
-  display: none; /* Hide the tracking line */
-}
-
-.v-slider-track {
-  border: 2px solid #e0e0e0;
-  background-color: transparent !important;
-}
-
 /* etc */
 
 .readonly-text {
@@ -163,10 +117,6 @@ body {
 
 .hr-line {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-.hr-line-2 {
-  border-top: 2px solid rgba(0, 0, 0, 0.12);
 }
 
 .col-space-1 {

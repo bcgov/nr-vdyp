@@ -5,7 +5,6 @@
     :hideSlider="true"
     :centerActive="true"
     :showArrows="true"
-    height="60px"
     :key="tabKey"
   >
     <v-tab

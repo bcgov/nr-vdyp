@@ -1,0 +1,54 @@
+/* SLIDER - BC Government Design Standards */
+
+/* Slider tick labels positioning */
+.v-slider-track__tick-label {
+  top: -50px; /* Move the label to the top of the slider */
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-primary);
+}
+
+/* Slider track fill - hidden for utilization slider pattern */
+.v-slider-track__fill {
+  display: none; /* Hide the tracking line */
+}
+
+/* Slider track styling */
+.v-slider-track {
+  border: var(--layout-border-width-medium) solid var(--surface-color-border-default);
+  background-color: transparent !important;
+  border-radius: var(--layout-border-radius-small);
+}
+
+.v-slider-thumb__surface {
+  background-color: var(--surface-color-border-medium);
+}
+
+/* Slider thumb hover state */
+.v-slider-thumb:hover {
+  box-shadow: var(--surface-shadow-medium);
+}
+
+.v-slider-thumb:hover::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% + 16px); /* 8px larger on each side */
+  height: calc(100% + 16px);
+  border: var(--layout-border-width-medium) solid var(--surface-color-secondary-hover);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Disabled slider styling */
+.v-slider.v-input--disabled .v-slider-track {
+  border-color: var(--surface-color-border-default);
+  opacity: 0.5;
+}
+
+/* Slider ticks styling */
+.v-slider-track__tick {
+  height: var(--layout-padding-none);
+}
