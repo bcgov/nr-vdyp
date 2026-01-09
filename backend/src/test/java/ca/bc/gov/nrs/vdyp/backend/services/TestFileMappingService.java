@@ -13,6 +13,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -126,7 +127,7 @@ class TestFileMappingService {
 
 		FileMappingModel result = service.getFileById(fileMappingGuid, true);
 
-		assertEquals("https://example.com/presigned", result.getDownloadURL());
+		assertEquals(new URL("https://example.com/presigned"), result.getDownloadURL());
 	}
 
 	@Test
