@@ -1,6 +1,8 @@
 @use './select'; /* SELECT box */
 @use './radio'; /* RADIO & RADIO GROUP */
 @use './checkbox'; /* CHECKBOX & CHECKBOX GROUP */
+@use './text-field'; /* TEXT-FIELD */
+@use './spin-field'; /* SPIN-FIELD (Spin box for text fields) */
 
 html,
 body {
@@ -119,32 +121,7 @@ body {
   color: rgba(0, 0, 0, 0.87);
 }
 
-/* input TEXT-FIELD */
-// input number field spin(arrows) button */
-input[type='number']::-webkit-inner-spin-button,
-input[type='number']::-webkit-outer-spin-button {
-  /* always show the spin (arrows) button */
-  display: block;
-  opacity: 1;
-  width: 20px;
-  height: 20px;
-}
-.v-text-field .v-field--no-label input,
-.v-text-field .v-field--active input {
-  background-color: #ffffff; // apply text field background color
-}
-
-/* Styles for enabled input components */
-/* Active components are darker in contrast to disabled components. */
-.v-input:not(.v-input--is-disabled) .v-label {
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.87);
-  opacity: 1;
-}
-.v-input:not(.v-input--is-disabled) .v-input__control {
-  color: rgba(0, 0, 0, 0.87);
-  opacity: 1;
-}
+/* input TEXT-FIELD - Moved to _text-field.scss */
 
 /* SLIDER */
 .v-slider-track__tick-label {

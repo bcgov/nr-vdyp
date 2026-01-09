@@ -32,12 +32,11 @@
           <v-form ref="form">
             <div class="mt-1">
               <v-row style="display: inline-flex; align-items: center">
-                <v-col cols="auto" style="margin-bottom: 20px">
-                  <div>Species % derived by:</div>
-                </v-col>
-                <v-col cols="auto">
+                <v-col cols="auto" class="species-percent-derived-by-container">
                   <div>
+                    <label class="bcds-radio-label" for="derivedBy">Species % derived by:</label>
                     <v-radio-group
+                      id="derivedBy"
                       v-model="derivedBy"
                       inline
                       :disabled="!isConfirmEnabled"
@@ -75,18 +74,18 @@
             </div>
             <div>
               <v-row>
-                <v-col cols="5">
+                <v-col cols="5" class="total-species-percent-container">
                   <div>
                     <v-row>
                       <v-col cols="6"></v-col>
                       <v-col cols="6">
+                        <label class="bcds-text-field-label" for="totalSpeciesPercent">Total Species Percent</label>
                         <v-text-field
+                          id="totalSpeciesPercent"
                           label="Total Species Percent"
                           :model-value="totalSpeciesPercent"
                           variant="underlined"
                           disabled
-                          density="compact"
-                          dense
                           data-testid="total-species-percent"
                         ></v-text-field>
                       </v-col>
@@ -304,4 +303,13 @@ const handleDialogClose = () => {}
   border-left: 1px dashed rgba(0, 0, 0, 0.12);
   height: 100%;
 }
+
+.total-species-percent-container {
+  padding-top: 6px;
+}
+
+.species-percent-derived-by-container {
+  padding-bottom: 0px;
+}
+
 </style>

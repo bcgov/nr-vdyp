@@ -66,9 +66,35 @@
                     </v-col>
                   </v-row>
                 </v-col>
+                <v-col class="col-space-6" />
+                <v-col>
+                  <v-row>
+                    <v-col cols="12">
+                      <label class="bcds-radio-label" for="siteIndex">Site Index:</label>
+                      <v-radio-group
+                        id="siteIndex"
+                        v-model="siteSpeciesValues"
+                        inline
+                        hide-details
+                        :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
+                      >
+                        <v-radio
+                          :key="OPTIONS.siteSpeciesValuesOptions[0].value"
+                          :label="OPTIONS.siteSpeciesValuesOptions[0].label"
+                          :value="OPTIONS.siteSpeciesValuesOptions[0].value"
+                        ></v-radio>
+                        <v-radio
+                          :key="OPTIONS.siteSpeciesValuesOptions[1].value"
+                          :label="OPTIONS.siteSpeciesValuesOptions[1].label"
+                          :value="OPTIONS.siteSpeciesValuesOptions[1].value"
+                        ></v-radio>
+                      </v-radio-group>
+                    </v-col>
+                  </v-row>
+                </v-col>
               </v-row>
               <div class="hr-line"></div>
-              <v-row class="mt-7">
+              <v-row class="mt-0">
                 <v-col cols="6">
                   <v-row class="mb-2">
                     <v-col cols="6">
@@ -91,54 +117,22 @@
                 </v-col>
               </v-row>
               <div class="hr-line"></div>
-              <v-row
-                class="mt-1"
-                style="display: inline-flex; align-items: center"
-              >
-                <v-col cols="auto" style="margin-bottom: 20px">
-                  <div class="mt-2">Site Index:</div>
-                </v-col>
+              <v-row class="mt-1">
                 <v-col cols="auto">
+                  <label class="bcds-radio-label" for="ageYears">Age Years:</label>
                   <v-radio-group
-                    v-model="siteSpeciesValues"
-                    inline
-                    hide-details
-                    :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
-                  >
-                    <v-radio
-                      style="width: 110px"
-                      :key="OPTIONS.siteSpeciesValuesOptions[0].value"
-                      :label="OPTIONS.siteSpeciesValuesOptions[0].label"
-                      :value="OPTIONS.siteSpeciesValuesOptions[0].value"
-                    ></v-radio>
-                    <v-radio
-                      class="pl-7"
-                      :key="OPTIONS.siteSpeciesValuesOptions[1].value"
-                      :label="OPTIONS.siteSpeciesValuesOptions[1].label"
-                      :value="OPTIONS.siteSpeciesValuesOptions[1].value"
-                    ></v-radio>
-                  </v-radio-group>
-                </v-col>
-              </v-row>
-              <v-row class="mt-n5">
-                <v-col cols="auto" style="margin-bottom: 20px">
-                  <div class="mt-2">Age Years:</div>
-                </v-col>
-                <v-col cols="auto">
-                  <v-radio-group
+                    id="ageYears"
                     v-model="ageType"
                     inline
                     hide-details
                     :disabled="isAgeTypeDisabled || !isConfirmEnabled"
                   >
                     <v-radio
-                      style="width: 110px"
                       :key="OPTIONS.ageTypeOptions[0].value"
                       :label="OPTIONS.ageTypeOptions[0].label"
                       :value="OPTIONS.ageTypeOptions[0].value"
                     ></v-radio>
                     <v-radio
-                      class="pl-7"
                       :key="OPTIONS.ageTypeOptions[1].value"
                       :label="OPTIONS.ageTypeOptions[1].label"
                       :value="OPTIONS.ageTypeOptions[1].value"
@@ -146,11 +140,13 @@
                   </v-radio-group>
                 </v-col>
               </v-row>
-              <v-row>
+              <v-row class="mt-0">
                 <v-col cols="6">
                   <v-row class="mb-2">
                     <v-col cols="6">
+                      <label class="bcds-text-field-label" for="spz-age-field">Years</label>
                       <v-text-field
+                        id="spz-age-field"
                         label="Years"
                         type="number"
                         v-model.number="spzAge"
@@ -160,8 +156,6 @@
                         persistent-placeholder
                         :placeholder="spzAgePlaceholder"
                         hide-details
-                        density="compact"
-                        dense
                         :disabled="isSpzAgeDisabled || !isConfirmEnabled"
                         data-testid="spz-age"
                       ></v-text-field>
@@ -184,8 +178,6 @@
                         :persistent-placeholder="true"
                         :placeholder="spzHeightPlaceholder"
                         :hideDetails="true"
-                        density="compact"
-                        :dense="true"
                         customStyle="padding-left: 0px"
                         :disabled="isSpzHeightDisabled || !isConfirmEnabled"
                         :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
@@ -218,9 +210,6 @@
                         :persistent-placeholder="true"
                         :placeholder="bha50SiteIndexPlaceholder"
                         :hideDetails="true"
-                        density="compact"
-                        :dense="true"
-                        customStyle="padding-left: 10px"
                         :disabled="
                           isBHA50SiteIndexDisabled || !isConfirmEnabled
                         "

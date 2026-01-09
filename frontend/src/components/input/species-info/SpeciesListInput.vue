@@ -21,9 +21,9 @@
             @keydown="handleSpeciesSelectKeyDown($event, index)"
           ></v-select>
         </v-col>
-        <v-col cols="6">
+        <v-col cols="6" class="pt-2">
           <div style="position: relative; width: 100%">
-            <label class="bcds-select-label" :for="`species-percent-${index}`">Species #{{ index + 1 }} Percent</label>
+            <label class="bcds-text-field-label" :for="`species-percent-${index}`">Species #{{ index + 1 }} Percent</label>
             <v-text-field
               :id="`species-percent-${index}`"
               type="text"
@@ -34,8 +34,6 @@
               :rules="[validatePercent]"
               persistent-placeholder
               placeholder="Select..."
-              density="compact"
-              dense
               data-testid="species-percent"
               @update:focused="handlePercentBlur"
               @update:modelValue="handlePercentInput(index)"
@@ -50,7 +48,7 @@
                 @mouseout="handleIncMouseout"
                 :class="{ disabled: !isConfirmEnabled }"
               >
-                {{ CONSTANTS.SPIN_BUTTON.UP }}
+                <!-- CSS triangle instead of text -->
               </div>
               <div
                 class="spin-down-arrow-button"
@@ -59,7 +57,7 @@
                 @mouseout="handleDecMouseout"
                 :class="{ disabled: !isConfirmEnabled }"
               >
-                {{ CONSTANTS.SPIN_BUTTON.DOWN }}
+                <!-- CSS triangle instead of text -->
               </div>
             </div>
           </div>
@@ -335,67 +333,5 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* custom spin box and spin button beside text field */
-.spin-box {
-  position: absolute;
-  right: 15px;
-  top: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 16px;
-  height: 20px;
-  background-color: transparent;
-  padding: 2px;
-}
-
-/* mouse over */
-.spin-box div:hover {
-  background-color: #d3d3d3 !important;
-}
-
-.spin-up-arrow-button {
-  cursor: default;
-  font-size: 7px;
-  width: 10px;
-  height: 10px;
-  background-color: #f2f0f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: scaleX(1.5);
-  padding-top: 3px;
-  padding-bottom: 2px;
-}
-
-.spin-down-arrow-button {
-  cursor: default;
-  font-size: 7px;
-  width: 10px;
-  height: 10px;
-  background-color: #f2f0f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: scaleX(1.5);
-  padding-top: 3px;
-  padding-bottom: 2px;
-}
-
-/* bottom line under text field */
-.spin-text-field-bottom-line {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-color: #ababab;
-}
-
-.spin-box .disabled {
-  cursor: not-allowed;
-  opacity: 0.5; /* Makes the button look visually disabled */
-  pointer-events: none; /* Prevents clicking */
-}
+/* Spin box styles are defined in src/styles/_spin-field.scss */
 </style>

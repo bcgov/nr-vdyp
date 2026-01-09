@@ -1,5 +1,16 @@
 /************** RADIO & RADIO GROUP - BC Gov Design Standards ****************/
 
+/* Manual label above radio group */
+.bcds-radio-label {
+  display: block;
+  color: var(--typography-color-secondary);
+  font-size: 12px;
+  font-weight: var(--typography-font-weights-regular);
+  line-height: 1.5;
+  padding-bottom: 0px;
+  margin-bottom: 0;
+}
+
 /* Radio Group Container */
 .v-radio-group {
   display: flex;
@@ -232,6 +243,11 @@
 .v-radio-group--disabled .v-radio .v-selection-control__input input[type='radio'],
 .v-radio-group.v-input--disabled .v-radio .v-selection-control__input input[type='radio'] {
   cursor: not-allowed;
+}
+
+/* Disabled state - label color (label comes before v-radio-group in HTML) */
+.bcds-radio-label:has(+ .v-radio-group.v-input--disabled) {
+  color: var(--typography-color-disabled) !important;
 }
 
 /* Read-only State */

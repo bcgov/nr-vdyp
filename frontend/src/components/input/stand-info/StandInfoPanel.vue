@@ -34,7 +34,9 @@
               <v-col cols="6">
                 <v-row class="mb-2">
                   <v-col cols="6">
+                    <label class="bcds-text-field-label" for="percent-stockable-area">% Stockable Area</label>
                     <v-text-field
+                      id="percent-stockable-area"
                       label="% Stockable Area"
                       type="number"
                       v-model.number="percentStockableArea"
@@ -50,8 +52,6 @@
                       placeholder=""
                       persistent-placeholder
                       hide-details
-                      density="compact"
-                      dense
                       :disabled="!isConfirmEnabled"
                       data-testid="percent-stockable-area"
                     ></v-text-field>
@@ -65,7 +65,9 @@
                   </v-col>
                   <v-col class="col-space-6" />
                   <v-col>
+                    <label class="bcds-text-field-label" for="crown-closure-percent">Crown Closure (%)</label>
                     <v-text-field
+                      id="crown-closure-percent"
                       label="Crown Closure (%)"
                       type="number"
                       v-model.number="crownClosure"
@@ -75,8 +77,6 @@
                       persistent-placeholder
                       :placeholder="crownClosurePlaceholder"
                       hide-details
-                      density="compact"
-                      dense
                       :disabled="isCrownClosureDisabled || !isConfirmEnabled"
                       data-testid="crown-closure"
                     ></v-text-field>
@@ -106,8 +106,6 @@
                       :persistent-placeholder="true"
                       :placeholder="basalAreaPlaceholder"
                       :hideDetails="true"
-                      density="compact"
-                      :dense="true"
                       customStyle="padding-left: 0px"
                       :disabled="isBasalAreaDisabled || !isConfirmEnabled"
                       :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
@@ -138,8 +136,6 @@
                       :persistent-placeholder="true"
                       :placeholder="treesPerHectarePlaceholder"
                       :hideDetails="true"
-                      density="compact"
-                      :dense="true"
                       customStyle="padding-left: 0px"
                       :disabled="isTreesPerHectareDisabled || !isConfirmEnabled"
                       :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
@@ -154,29 +150,27 @@
               </v-col>
               <v-col class="col-space-6" />
               <v-col>
-                <v-row class="mt-n1">
+                <v-row>
                   <v-col cols="6">
+                    <label class="bcds-text-field-label" for="minDBHLimit">Min DBH Limit</label>
                     <v-text-field
                       id="minDBHLimit"
                       label="Min DBH Limit"
                       :model-value="minDBHLimit"
                       variant="underlined"
                       disabled
-                      density="compact"
-                      dense
                       data-testid="min-dbh-limit"
-                      style="padding-left: 10px"
                     ></v-text-field>
                   </v-col>
                   <v-col class="col-space-6" />
                   <v-col v-if="isCurrentDiameterVisibled">
+                    <label class="bcds-text-field-label" for="current-diameter">Current Diameter</label>
                     <v-text-field
+                      id="current-diameter"
                       label="Current Diameter"
                       :model-value="currentDiameter"
                       variant="underlined"
                       disabled
-                      density="compact"
-                      dense
                       data-testid="current-diameter"
                     ></v-text-field>
                   </v-col>

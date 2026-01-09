@@ -2,23 +2,23 @@
   <v-col
     cols="6"
     v-if="speciesGroups.length > 0"
+    class="species-groups-container"
     data-testid="species-groups-container"
   >
     <div
       v-for="(group, index) in speciesGroups"
       :key="index"
-      class="mt-2"
       data-testid="species-group-row"
     >
       <v-row>
         <v-col cols="4" sm="4" md="4" data-testid="species-group-column">
+          <label class="bcds-text-field-label" for="species-group">Species Group</label>
           <v-text-field
+            id="species-group"
             label="Species Group"
             :model-value="group.group"
             variant="underlined"
             disabled
-            density="compact"
-            dense
           ></v-text-field>
         </v-col>
         <v-col
@@ -27,63 +27,63 @@
           md="4"
           data-testid="species-group-percent-column"
         >
+          <label class="bcds-text-field-label" for="species-group-percent">Species Group Percent</label>
           <v-text-field
+            id="species-group-percent"
             label="Species Group Percent"
             :model-value="group.percent"
             variant="underlined"
             disabled
-            density="compact"
-            dense
           ></v-text-field>
         </v-col>
         <v-col cols="4" sm="4" md="4" data-testid="site-species-column">
+          <label class="bcds-text-field-label" for="site-species">Site Species</label>
           <v-text-field
+            id="site-species"
             label="Site Species"
             :model-value="group.siteSpecies"
             variant="underlined"
             disabled
-            density="compact"
-            dense
           ></v-text-field>
         </v-col>
       </v-row>
-      <div class="hr-line mb-3"></div>
+      <div class="hr-line"></div>
     </div>
   </v-col>
-  <v-col cols="6" v-else>
+  <v-col class="species-groups-no-data-container" cols="6" v-else>
     <div class="mt-2">
       <v-row>
         <v-col cols="4" sm="4" md="4">
+          <label class="bcds-text-field-label" for="species-group-no-data">Species Group</label>
           <v-text-field
+            id="species-group-no-data"
             label="Species Group"
             variant="underlined"
             disabled
             persistent-placeholder
             placeholder=""
-            density="compact"
-            dense
           ></v-text-field>
         </v-col>
         <v-col cols="4" sm="4" md="4">
+          <label class="bcds-text-field-label" for="species-group-percent-no-data">Species Group Percent</label>
           <v-text-field
+            id="species-group-percent-no-data"
             label="Species Group Percent"
             variant="underlined"
             disabled
             persistent-placeholder
             placeholder=""
-            density="compact"
-            dense
           ></v-text-field>
         </v-col>
         <v-col cols="4" sm="4" md="4">
+          <label class="bcds-text-field-label" for="site-species-no-data">Site Species</label>
           <v-text-field
+            id="site-species-no-data"
             label="Site Species"
             variant="underlined"
             disabled
             persistent-placeholder
             placeholder=""
-            density="compact"
-            dense
           ></v-text-field>
         </v-col>
       </v-row>
@@ -102,4 +102,12 @@ defineProps({
 })
 </script>
 
-<style scoped />
+<style scoped>
+.species-groups-container {
+  padding-top: 8px;
+}
+.species-groups-no-data-container {
+  padding-top: 0px;
+}
+</style>
+
