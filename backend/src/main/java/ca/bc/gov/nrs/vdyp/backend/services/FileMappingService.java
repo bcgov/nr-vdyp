@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
@@ -99,10 +101,16 @@ public class FileMappingService {
 	private FileMappingModel getFileDetails(FileMappingEntity entity, boolean isDownload) {
 		var model = assembler.toModel(entity);
 		if (isDownload) {
-			model.setDownloadURL(
-					comsClient.getObject(model.getComsObjectGUID(), COMSClient.FileDownloadMode.URL.getParamValue())
-							.getString()
-			);
+			URL url = null;
+			try {
+				url = new URL(
+						comsClient.getObject(model.getComsObjectGUID(), COMSClient.FileDownloadMode.URL.getParamValue())
+								.getString()
+				);
+			} catch (MalformedURLException e) {
+				logger.error("Malformed URL received from COMS for object {}", model.getComsObjectGUID(), e);
+			}
+			model.setDownloadURL(url);
 		}
 		return model;
 	}
