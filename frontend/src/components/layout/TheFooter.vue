@@ -45,7 +45,7 @@
             <slot name="links">
               <div class="bcds-footer--links more-info">
                 <h2 class="bcds-footer--links-title">
-                  More info
+                  MORE INFO
                 </h2>
                 <ul>
                   <li>
@@ -289,16 +289,6 @@ const hasCustomContent = computed(() => !!slots.default)
   > .bcds-footer--container
   > .bcds-footer--container-content
   > .bcds-footer--logo-links
-  > .bcds-footer--logo
-  > p
-  > a:hover {
-  text-decoration: none;
-}
-
-.bcds-footer
-  > .bcds-footer--container
-  > .bcds-footer--container-content
-  > .bcds-footer--logo-links
   > .bcds-footer--links {
   margin: var(--layout-margin-none);
 }
@@ -377,17 +367,6 @@ const hasCustomContent = computed(() => !!slots.default)
   > a {
   color: var(--typography-color-primary);
   text-decoration: underline;
-}
-
-.bcds-footer
-  > .bcds-footer--container
-  > .bcds-footer--container-content
-  > .bcds-footer--logo-links
-  > .bcds-footer--links
-  > ul
-  > li
-  > a:hover {
-  text-decoration: none;
 }
 
 .bcds-footer > .bcds-footer--container > .bcds-footer--container-content > hr {

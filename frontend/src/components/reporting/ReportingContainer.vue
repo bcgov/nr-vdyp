@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container fluid class="bcds-reporting-container">
     <ReportingActions
       :isButtonDisabled="isButtonDisabled"
       :isRawResultsButtonDisabled="isRawResultsButtonDisabled"
@@ -129,4 +129,21 @@ const handlePrint = () => {
   printReport(printData.value)
 }
 </script>
-<style scoped />
+<style scoped>
+/* BC Gov Design Standards - Full-width container for reporting tabs */
+.bcds-reporting-container {
+  /* Override Vuetify's default container max-width and padding */
+  max-width: 100% !important;
+  width: 100%;
+  padding-left: var(--layout-padding-none) !important;
+  padding-right: var(--layout-padding-none) !important;
+  padding-top: var(--layout-padding-medium);
+  padding-bottom: var(--layout-padding-medium);
+  margin: var(--layout-margin-none);
+}
+
+/* Ensure container uses full available space */
+.bcds-reporting-container :deep(.v-container) {
+  max-width: 100% !important;
+}
+</style>

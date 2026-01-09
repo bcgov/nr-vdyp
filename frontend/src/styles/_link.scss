@@ -1,0 +1,244 @@
+/************** LINK - BC Gov Design Standards ****************/
+
+/* Base link styling */
+a,
+.bcds-link,
+.v-link {
+  color: var(--typography-color-link);
+  text-decoration: underline;
+  text-underline-offset: var(--layout-padding-hair);
+  cursor: pointer;
+  font: var(--typography-regular-small-body);
+}
+
+/* Icon slots */
+.bcds-link-icon {
+  display: inline-flex;
+  flex-direction: row;
+  vertical-align: text-bottom;
+  margin: var(--layout-margin-none) var(--layout-margin-xsmall);
+}
+
+/* Sizing variants */
+.bcds-link.small,
+a.small {
+  font: var(--typography-regular-small-body);
+}
+
+.bcds-link.medium,
+a.medium {
+  font: var(--typography-regular-body);
+}
+
+.bcds-link.large,
+a.large {
+  font: var(--typography-regular-large-body);
+}
+
+/* Hover state */
+a:hover,
+.bcds-link:hover,
+.v-link:hover {
+  color: var(--surface-color-border-active);
+}
+
+a.danger:hover,
+.bcds-link.danger:hover {
+  color: var(--surface-color-primary-danger-button-hover);
+}
+
+/* Focus state */
+a:focus,
+a:focus-visible,
+.bcds-link:focus,
+.bcds-link:focus-visible,
+.v-link:focus,
+.v-link:focus-visible {
+  outline: solid var(--layout-border-width-medium)
+    var(--surface-color-border-active);
+  outline-offset: var(--layout-margin-hair);
+  border-radius: var(--layout-border-radius-small);
+}
+
+/* Active/Current state */
+a.active,
+a[aria-current],
+.bcds-link.active,
+.bcds-link[aria-current] {
+  color: var(--surface-color-border-active);
+}
+
+/* Disabled state */
+a.disabled,
+a[aria-disabled='true'],
+.bcds-link.disabled,
+.bcds-link[aria-disabled='true'] {
+  color: var(--typography-color-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+a.disabled.danger,
+a[aria-disabled='true'].danger,
+.bcds-link.disabled.danger,
+.bcds-link[aria-disabled='true'].danger {
+  color: var(--typography-color-disabled);
+}
+
+/* Danger/Error variant */
+a.danger,
+.bcds-link.danger {
+  color: var(--typography-color-danger);
+}
+
+/* Unstyled link - inherits parent styles */
+.bcds-link.unstyled,
+a.unstyled {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: initial;
+}
+
+/* Link as Button styling */
+.bcds-link-button {
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: var(--layout-margin-small);
+  padding: var(--layout-padding-small) var(--layout-padding-medium);
+  border-radius: var(--layout-border-radius-medium);
+  text-decoration: none;
+  font: var(--typography-regular-body);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-underline-offset: initial;
+}
+
+/* Button variant - Primary */
+.bcds-link-button.primary {
+  background-color: var(--surface-color-primary-button-default);
+  color: var(--surface-color-background-white);
+  border: var(--layout-border-width-small) solid transparent;
+}
+
+.bcds-link-button.primary:hover {
+  background-color: var(--surface-color-primary-button-hover);
+  color: var(--surface-color-background-white);
+}
+
+.bcds-link-button.primary:focus,
+.bcds-link-button.primary:focus-visible {
+  outline: solid var(--layout-border-width-medium)
+    var(--surface-color-border-active);
+  outline-offset: var(--layout-margin-hair);
+}
+
+.bcds-link-button.primary.disabled,
+.bcds-link-button.primary[aria-disabled='true'] {
+  background-color: var(--surface-color-primary-button-disabled);
+  color: var(--typography-color-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Button variant - Secondary */
+.bcds-link-button.secondary {
+  background-color: var(--surface-color-background-white);
+  color: var(--surface-color-primary-button-default);
+  border: var(--layout-border-width-small) solid
+    var(--surface-color-primary-button-default);
+}
+
+.bcds-link-button.secondary:hover {
+  background-color: var(--surface-color-secondary-hover);
+  border-color: var(--surface-color-primary-button-hover);
+  color: var(--surface-color-primary-button-hover);
+}
+
+.bcds-link-button.secondary:focus,
+.bcds-link-button.secondary:focus-visible {
+  outline: solid var(--layout-border-width-medium)
+    var(--surface-color-border-active);
+  outline-offset: var(--layout-margin-hair);
+}
+
+.bcds-link-button.secondary.disabled,
+.bcds-link-button.secondary[aria-disabled='true'] {
+  background-color: var(--surface-color-background-white);
+  border-color: var(--surface-color-border-default);
+  color: var(--typography-color-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Button variant - Tertiary */
+.bcds-link-button.tertiary {
+  background-color: transparent;
+  color: var(--surface-color-primary-button-default);
+  border: var(--layout-border-width-small) solid transparent;
+}
+
+.bcds-link-button.tertiary:hover {
+  background-color: var(--surface-color-secondary-hover);
+  color: var(--surface-color-primary-button-hover);
+}
+
+.bcds-link-button.tertiary:focus,
+.bcds-link-button.tertiary:focus-visible {
+  outline: solid var(--layout-border-width-medium)
+    var(--surface-color-border-active);
+  outline-offset: var(--layout-margin-hair);
+}
+
+.bcds-link-button.tertiary.disabled,
+.bcds-link-button.tertiary[aria-disabled='true'] {
+  background-color: transparent;
+  color: var(--typography-color-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Button size - Large */
+.bcds-link-button.large {
+  min-height: 40px;
+  padding: var(--layout-padding-medium) var(--layout-padding-large);
+}
+
+/* Button size - Small */
+.bcds-link-button.small {
+  min-height: 32px;
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  font: var(--typography-regular-small-body);
+}
+
+/* Danger button variant */
+.bcds-link-button.danger {
+  background-color: var(--surface-color-primary-danger-button-default);
+  color: var(--surface-color-background-white);
+}
+
+.bcds-link-button.danger:hover {
+  background-color: var(--surface-color-primary-danger-button-hover);
+  color: var(--surface-color-background-white);
+}
+
+.bcds-link-button.danger.disabled,
+.bcds-link-button.danger[aria-disabled='true'] {
+  background-color: var(--surface-color-primary-button-disabled);
+  color: var(--typography-color-disabled);
+}
+
+.link-no-decoration {
+  text-decoration: none;
+  color: inherit;
+}
+
+.link-no-decoration:focus,
+.link-no-decoration:hover,
+.link-no-decoration:visited,
+.link-no-decoration:link,
+.link-no-decoration:active {
+  text-decoration: none;
+  color: inherit;
+}

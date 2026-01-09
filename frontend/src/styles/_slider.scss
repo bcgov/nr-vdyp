@@ -21,6 +21,8 @@
 
 .v-slider-thumb__surface {
   background-color: var(--surface-color-border-medium);
+  width: calc(var(--v-slider-thumb-size) + 3px);
+  height: calc(var(--v-slider-thumb-size) + 3px);
 }
 
 /* Slider thumb hover state */
