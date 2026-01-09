@@ -26,6 +26,7 @@ export { default as AttachmentsPanel } from './input/attachments/AttachmentsPane
 export { default as BCLogo } from './layout/BCLogo.vue'
 export { default as HeaderTitle } from './layout/HeaderTitle.vue'
 export { default as TheHeader } from './layout/TheHeader.vue'
+export { default as TheFooter } from './layout/TheFooter.vue'
 export { default as TrainingSupport } from './layout/TrainingSupport.vue'
 export { default as UserMenu } from './layout/UserMenu.vue'
 

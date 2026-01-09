@@ -11,11 +11,14 @@
         <router-view />
       </DefaultLayout>
     </v-main>
+
+    <TheFooter />
   </v-app>
 </template>
 <script setup lang="ts">
 import {
   TheHeader,
+  TheFooter,
   AppNotification,
   AppAlertDialog,
   AppDialogDragger,
