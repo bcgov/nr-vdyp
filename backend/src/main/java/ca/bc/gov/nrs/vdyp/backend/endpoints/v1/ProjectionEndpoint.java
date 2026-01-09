@@ -214,7 +214,7 @@ public class ProjectionEndpoint implements Endpoint {
 				MediaType.APPLICATION_JSON
 			) Parameters parameters
 	) throws ProjectionServiceException {
-		var created = projectionService.editProjectionParameters(projectionGUID, currentUser.getUser(), parameters);
+		var created = projectionService.editProjectionParameters(projectionGUID, parameters, currentUser.getUser());
 		return Response.status(Status.OK).entity(created).build();
 	}
 
@@ -233,6 +233,72 @@ public class ProjectionEndpoint implements Endpoint {
 
 	private <T> String serialize(Class<T> clazz, T entity) throws JsonProcessingException {
 		return mapper.writeValueAsString(entity);
+	}
+
+	@GET
+	@Authenticated
+	@Path("/{projectionGUID}/fileset/{fileSetGUID}")
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Get lightweight details of files in a fileset for a projection", description = "Gets a list of all files in a projection file set"
+	)
+	public Response getFileSetFiles(
+			@PathParam("projectionGUID") UUID projectionGUID, //
+			@PathParam("fileSetGUID") UUID fileSetGUID
+	) throws ProjectionServiceException {
+		var found = projectionService.getAllFileSetFiles(projectionGUID, fileSetGUID, currentUser.getUser());
+		return Response.status(Status.OK).entity(found).build();
+	}
+
+	@POST
+	@Authenticated
+	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file")
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Upload a file for a FileSet", description = "Stores a file in COMS and attaches it to the projection file set that is chosen"
+	)
+	public Response addProjectionFile(
+			@PathParam("projectionGUID") UUID projectionGUID, //
+			@PathParam("fileSetGUID") UUID fileSetGUID, //
+			@RestForm("file") FileUpload file //
+	) throws ProjectionServiceException {
+		var created = projectionService.addProjectionFile(projectionGUID, fileSetGUID, file, currentUser.getUser());
+		return Response.status(Status.OK).entity(created).build();
+	}
+
+	@GET
+	@Authenticated
+	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}")
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(name = "Get a file for download", description = "Gets the mapped file with a presigned url for download")
+	public Response downloadProjectionFile(
+			@PathParam("projectionGUID") UUID projectionGUID, //
+			@PathParam("fileSetGUID") UUID fileSetGUID, //
+			@PathParam("fileMappingGUID") UUID fileMappingGUID
+	) throws ProjectionServiceException {
+		var found = projectionService
+				.getFileForDownload(projectionGUID, fileSetGUID, fileMappingGUID, currentUser.getUser());
+		return Response.status(Status.OK).entity(found).build();
+	}
+
+	@DELETE
+	@Authenticated
+	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}")
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Delete a file from a fileset for a projection", description = "Deletes a file from a projection file sets"
+	)
+	public Response deleteProjectionFile(
+			@PathParam("projectionGUID") UUID projectionGUID, //
+			@PathParam("fileSetGUID") UUID fileSetGUID, //
+			@PathParam("fileMappingGUID") UUID fileMappingGUID
+	) throws ProjectionServiceException {
+		projectionService.deleteFile(projectionGUID, fileSetGUID, fileMappingGUID, currentUser.getUser());
+		return Response.status(Status.OK).build();
 	}
 
 }
