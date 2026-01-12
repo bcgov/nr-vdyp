@@ -57,7 +57,10 @@ public class DownloadAndPartitionTasklet implements Tasklet {
 		Path polygonPath = inputDir.resolve("polygon.csv");
 		Path layerPath = inputDir.resolve("layer.csv");
 
-		logger.debug("[GUID: {}] Downloading COMS inputs to {}", jobGuid, inputDir);
+		logger.debug(
+				"[GUID: {}] Downloading COMS inputs (Polygon:{}, Layer {}) to {}", jobGuid, polygonGuidStr,
+				layerGuidStr, inputDir
+		);
 
 		comsFileService.fetchObjectToFile(UUID.fromString(polygonGuidStr), polygonPath);
 		comsFileService.fetchObjectToFile(UUID.fromString(layerGuidStr), layerPath);
