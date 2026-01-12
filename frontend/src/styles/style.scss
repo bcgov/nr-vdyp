@@ -15,7 +15,7 @@ body {
 
 /* etc */
 .hr-line {
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  border-top: 1px solid var(--surface-color-border-default);
 }
 
 .col-space-1 {

@@ -1,72 +1,5 @@
 /************** CHECKBOX & CHECKBOX GROUP - BC Gov Design Standards ****************/
 
-/* Checkbox Group Container */
-.v-checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--layout-margin-small);
-}
-
-/* Checkbox Group Options - Orientation */
-.v-checkbox-group .v-selection-control-group {
-  display: flex;
-}
-
-/* Vertical orientation */
-.v-checkbox-group .v-selection-control-group:not(.v-selection-control-group--inline) {
-  flex-direction: column;
-  gap: var(--layout-margin-small);
-}
-
-/* Horizontal orientation (inline) */
-.v-checkbox-group .v-selection-control-group.v-selection-control-group--inline {
-  flex-direction: row;
-  gap: var(--layout-margin-medium);
-  flex-wrap: nowrap;
-}
-
-/* Horizontal orientation - flex-wrap variations */
-.v-checkbox-group .v-selection-control-group.v-selection-control-group--inline.flex-wrap-wrap {
-  flex-wrap: wrap;
-}
-
-.v-checkbox-group .v-selection-control-group.v-selection-control-group--inline.flex-wrap-wrap-reverse {
-  flex-wrap: wrap-reverse;
-}
-
-/* Checkbox Group Label */
-.v-checkbox-group > .v-label {
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-primary);
-  font-size: 14px;
-  font-weight: 400;
-}
-
-/* Checkbox Group Description/Helper Text */
-.v-checkbox-group .v-messages {
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-secondary);
-}
-
-/* Checkbox Group Error Message */
-.v-checkbox-group .v-messages--active {
-  display: inline-flex;
-  flex-direction: row;
-  gap: var(--layout-margin-xsmall);
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-danger);
-}
-
-/* Individual Checkbox */
-.v-checkbox {
-  cursor: pointer;
-  display: flex;
-  flex-direction: row;
-  gap: 0px; /* Remove gap, use padding on label instead for better control */
-  align-items: center;
-  forced-color-adjust: none;
-}
-
 /* Checkbox Selection Control */
 .v-checkbox .v-selection-control {
   min-height: unset;
@@ -74,260 +7,56 @@
 
 /* Checkbox Label */
 .v-checkbox .v-label {
-  font-size: 14px;
-  font-weight: 400;
+  font-size: var(--typography-font-size-label);
+  font-weight: var(--typography-font-weights-regular);
   color: var(--typography-color-secondary);
   cursor: pointer;
-  padding-left: 10px; /* Add spacing between checkbox and label */
+  padding-left: var(--layout-padding-small);
 }
 
 /* Checkbox Selection Control Input Wrapper */
 .v-checkbox .v-selection-control__wrapper {
   width: 20px;
   height: auto;
-  margin-inline-end: 0 !important;
-  border-radius: 0 !important; /* Prevent circular shape */
 }
 
-/* Override any border-radius on wrapper children except ::after pseudo-element */
-.v-checkbox .v-selection-control__wrapper > *:not(.v-selection-control__input::after) {
-  border-radius: 0 !important;
-}
-
-/* Checkbox Box Container - Use ::after for custom checkbox */
+/* Checkbox Box Container - Default with gray border */
 .v-checkbox .v-selection-control__input {
-  width: 20px !important;
   height: 20px !important;
   min-width: 20px !important;
-  min-height: 20px !important;
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: first baseline;
   margin-top: var(--layout-margin-hair);
-  color: var(--surface-color-primary-default) !important; /* BC Gov primary color - Override Vuetify's default */
-  border-radius: 0 !important; /* Prevent circular shape */
-  border: none !important; /* Remove Vuetify's default border */
-  background: transparent !important; /* Remove Vuetify's background */
+  color: var(--surface-color-border-medium) !important; /* Gray border by default */
 }
 
-/* Keep the input functional but invisible */
-.v-checkbox .v-selection-control__input input[type='checkbox'] {
-  opacity: 0;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  z-index: 2;
-  margin: 0;
+/* Selected checkbox - blue background */
+.v-checkbox .v-selection-control--dirty .v-selection-control__input {
+  color: var(--surface-color-primary-default) !important;
 }
 
-/* Hide the default Vuetify checkbox icon */
-.v-checkbox .v-selection-control__input .v-icon {
-  display: none !important;
+/* Disabled checkbox - gray border */
+.v-checkbox.v-checkbox--disabled .v-selection-control__input,
+.v-checkbox.v-input--disabled .v-selection-control__input {
+  color: var(--surface-color-border-medium) !important;
 }
 
-/* Create custom checkbox box using ::after */
-.v-checkbox .v-selection-control__input::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 20px;
-  height: 20px;
-  box-sizing: border-box;
-  background-color: var(--surface-color-secondary-default);
-  border-radius: var(--layout-border-radius-small) !important;
-  border: var(--layout-border-width-small) solid var(--surface-color-border-medium);
-  transition: all 200ms;
-  pointer-events: none;
-  z-index: 1;
+/* Disabled + Selected checkbox - gray background */
+.v-checkbox.v-checkbox--disabled .v-selection-control--dirty .v-selection-control__input,
+.v-checkbox.v-input--disabled .v-selection-control--dirty .v-selection-control__input {
+  color: var(--surface-color-primary-disabled) !important;
 }
 
-@media (prefers-reduced-motion) {
-  .v-checkbox .v-selection-control__input::after {
-    transition: none;
-  }
-}
-
-/* Create checkmark icon using ::before - Only visible when selected */
-.v-checkbox .v-selection-control__input::before {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-  opacity: 0;
-  pointer-events: none;
-  /* Smaller, thinner checkmark SVG - similar to BC Gov Design Standards */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M13.5 4.5L6 12L2.5 8.5' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-size: 14px 14px;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-/* Hover State */
-.v-checkbox:not(.v-checkbox--disabled):not(.v-input--disabled):hover .v-selection-control__input::after {
-  border-color: var(--surface-color-border-dark) !important;
-}
-
-/* Hover State - Selected */
-.v-checkbox:not(.v-checkbox--disabled):not(.v-input--disabled):hover .v-selection-control--dirty .v-selection-control__input::after {
-  background-color: var(--surface-color-primary-hover) !important;
-  border-color: var(--surface-color-primary-hover) !important;
-}
-
-/* Pressed State */
-.v-checkbox:not(.v-checkbox--disabled):not(.v-input--disabled):active .v-selection-control__input::after {
-  background-color: var(--surface-color-primary-default) !important;
-}
-
-/* Selected State - Checkbox background (using v-selection-control--dirty class) */
-.v-checkbox:not(.v-checkbox--disabled):not(.v-input--disabled) .v-selection-control--dirty .v-selection-control__input::after {
-  background-color: var(--surface-color-primary-default) !important;
-  border-color: var(--surface-color-primary-default) !important;
-}
-
-/* Show checkmark when selected (using v-selection-control--dirty class) */
-.v-checkbox:not(.v-checkbox--disabled):not(.v-input--disabled) .v-selection-control--dirty .v-selection-control__input::before {
-  opacity: 1;
-}
-
-/* Focused State - Blue outline box */
-.v-checkbox .v-selection-control__input input[type='checkbox']:focus-visible,
-.v-checkbox:focus-within .v-selection-control__input {
-  outline: solid var(--layout-border-width-medium) var(--surface-color-border-active) !important;
-  outline-offset: var(--layout-margin-hair) !important;
-  border-radius: var(--layout-border-radius-small) !important;
-}
-
-/* Alternative focus state for better browser compatibility */
-.v-checkbox .v-selection-control__input:has(input[type='checkbox']:focus-visible) {
-  outline: solid var(--layout-border-width-medium) var(--surface-color-border-active) !important;
-  outline-offset: var(--layout-margin-hair) !important;
-  border-radius: var(--layout-border-radius-small) !important;
-}
-
-/* Invalid State */
-.v-checkbox.v-input--error .v-selection-control__input::after {
-  border-color: var(--support-border-color-danger);
-}
-
-.v-checkbox.v-input--error .v-selection-control--dirty .v-selection-control__input::after {
-  background-color: var(--surface-color-primary-danger-button-default) !important;
-  border-color: var(--surface-color-primary-danger-button-default) !important;
-}
-
-.v-checkbox.v-input--error .v-selection-control--dirty .v-selection-control__input::before {
-  opacity: 1;
-}
-
-/* Disabled State - MUST come after Selected State to override */
-.v-checkbox.v-checkbox--disabled,
-.v-checkbox.v-input--disabled,
-.v-checkbox-group--disabled .v-checkbox,
-.v-checkbox-group.v-input--disabled .v-checkbox {
-  cursor: not-allowed;
+/* Disabled checkbox checkmark icon - dark gray color */
+.v-input.v-input--disabled.v-checkbox .v-selection-control__input .v-icon,
+.v-input.v-input--disabled.v-checkbox .v-selection-control__input i.mdi,
+.v-input.v-input--disabled.v-checkbox .v-selection-control__input i.mdi-checkbox-marked,
+div.v-input--disabled.v-checkbox .v-selection-control--disabled .v-selection-control__input .v-icon,
+div.v-checkbox.v-input--disabled .v-selection-control--dirty .v-selection-control__input i.v-icon,
+.v-selection-control--disabled .v-selection-control__input .v-icon {
+  color: var(--icons-color-disabled) !important;
   opacity: 1 !important;
 }
 
-.v-checkbox.v-checkbox--disabled .v-label,
-.v-checkbox.v-input--disabled .v-label,
-.v-checkbox-group--disabled .v-checkbox .v-label,
-.v-checkbox-group.v-input--disabled .v-checkbox .v-label {
-  color: var(--typography-color-disabled) !important;
-  cursor: not-allowed;
-}
-
-/* Disabled - Unselected State */
-.v-checkbox.v-checkbox--disabled:not(.v-selection-control--dirty) .v-selection-control__input::after,
-.v-checkbox.v-input--disabled:not(.v-selection-control--dirty) .v-selection-control__input::after,
-.v-checkbox .v-selection-control--disabled:not(.v-selection-control--dirty) .v-selection-control__input::after,
-.v-checkbox-group--disabled .v-checkbox .v-selection-control:not(.v-selection-control--dirty) .v-selection-control__input::after,
-.v-checkbox-group.v-input--disabled .v-checkbox .v-selection-control:not(.v-selection-control--dirty) .v-selection-control__input::after {
-  background-color: var(--surface-color-primary-disabled) !important;
-  border-color: var(--surface-color-border-medium) !important;
-  border-radius: var(--layout-border-radius-small) !important; /* Keep square shape */
-}
-
-/* Disabled - Selected State */
-.v-checkbox.v-checkbox--disabled .v-selection-control--dirty .v-selection-control__input::after,
-.v-checkbox.v-input--disabled .v-selection-control--dirty .v-selection-control__input::after,
-.v-checkbox .v-selection-control--disabled.v-selection-control--dirty .v-selection-control__input::after,
-.v-checkbox-group--disabled .v-checkbox .v-selection-control--dirty .v-selection-control__input::after,
-.v-checkbox-group.v-input--disabled .v-checkbox .v-selection-control--dirty .v-selection-control__input::after {
-  background-color: var(--surface-color-primary-disabled) !important;
-  border-color: var(--surface-color-border-medium) !important; /* Show border for disabled selected state */
-  border-radius: var(--layout-border-radius-small) !important; /* Keep square shape */
-}
-
-/* Disabled - Selected State - Checkmark icon color */
-.v-checkbox.v-checkbox--disabled .v-selection-control--dirty .v-selection-control__input::before,
-.v-checkbox.v-input--disabled .v-selection-control--dirty .v-selection-control__input::before,
-.v-checkbox .v-selection-control--disabled.v-selection-control--dirty .v-selection-control__input::before,
-.v-checkbox-group--disabled .v-checkbox .v-selection-control--dirty .v-selection-control__input::before,
-.v-checkbox-group.v-input--disabled .v-checkbox .v-selection-control--dirty .v-selection-control__input::before {
-  /* Gray checkmark for disabled state - smaller and thinner */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M13.5 4.5L6 12L2.5 8.5' stroke='%23999999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-size: 14px 14px;
-}
-
-.v-checkbox.v-checkbox--disabled .v-selection-control__input input[type='checkbox'],
-.v-checkbox.v-input--disabled .v-selection-control__input input[type='checkbox'],
-.v-checkbox-group--disabled .v-checkbox .v-selection-control__input input[type='checkbox'],
-.v-checkbox-group.v-input--disabled .v-checkbox .v-selection-control__input input[type='checkbox'] {
-  cursor: not-allowed;
-}
-
-/* Read-only State */
-.v-checkbox.v-input--readonly {
-  cursor: not-allowed;
-}
-
-.v-checkbox.v-input--readonly .v-label {
-  cursor: not-allowed;
-}
-
-.v-checkbox.v-input--readonly .v-selection-control__input input[type='checkbox'] {
-  cursor: not-allowed;
-}
-
-/* Indeterminate State */
-.v-checkbox[data-indeterminate] .v-selection-control__input::after,
-.v-checkbox.v-checkbox--indeterminate .v-selection-control__input::after {
-  background-color: #013366 !important; /* var(--surface-color-primary-default) */
-  border-color: #013366 !important; /* var(--surface-color-primary-default) */
-}
-
-.v-checkbox[data-indeterminate][data-disabled] .v-selection-control__input::after,
-.v-checkbox.v-checkbox--indeterminate.v-checkbox--disabled .v-selection-control__input::after,
-.v-checkbox.v-checkbox--indeterminate.v-input--disabled .v-selection-control__input::after {
-  background-color: var(--surface-color-primary-disabled);
-  border-color: var(--surface-color-primary-disabled);
-}
-
-.v-checkbox[data-indeterminate][data-invalid] .v-selection-control__input::after,
-.v-checkbox.v-checkbox--indeterminate.v-input--error .v-selection-control__input::after {
-  background-color: var(--surface-color-primary-danger-button-default) !important;
-}
-
-/* Indeterminate - Show minus/dash icon instead of checkmark */
-.v-checkbox[data-indeterminate] .v-selection-control__input::before,
-.v-checkbox.v-checkbox--indeterminate .v-selection-control__input::before {
-  opacity: 1;
-  /* Smaller minus/dash SVG for indeterminate state */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3 8H13' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-size: 14px 14px;
-}
-
-.v-checkbox[data-indeterminate][data-disabled] .v-selection-control__input::before,
-.v-checkbox.v-checkbox--indeterminate.v-checkbox--disabled .v-selection-control__input::before,
-.v-checkbox.v-checkbox--indeterminate.v-input--disabled .v-selection-control__input::before {
-  /* Gray minus/dash for disabled indeterminate state */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3 8H13' stroke='%23999999' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-size: 14px 14px;
+/* Specific override for mdi-checkbox-marked icon in disabled state */
+.v-input--disabled .v-selection-control__input i.mdi-checkbox-marked::before {
+  color: var(--icons-color-disabled) !important;
 }
