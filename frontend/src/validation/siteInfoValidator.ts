@@ -5,7 +5,7 @@ import { isEmptyOrZero } from '@/utils/util'
 export class SiteInfoValidator extends ValidationBase {
   validateRequiredFields(
     siteSpeciesValues: string | null,
-    spzAge: number | null,
+    spzAge: string | null,
     spzHeight: string | null,
     bha50SiteIndex: string | null,
   ): boolean {
@@ -17,11 +17,13 @@ export class SiteInfoValidator extends ValidationBase {
     return true
   }
 
-  validateAgeRange(spzAge: number | null): boolean {
+  validateAgeRange(spzAge: string | null): boolean {
     if (!spzAge) return true
 
+    const numericAge = Number.parseFloat(spzAge)
+
     return this.validateRange(
-      spzAge,
+      numericAge,
       CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN,
       CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX,
     )

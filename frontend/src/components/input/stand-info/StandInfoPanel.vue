@@ -34,12 +34,9 @@
               <v-col cols="6">
                 <v-row class="mb-2">
                   <v-col cols="6">
-                    <label class="bcds-text-field-label" for="percent-stockable-area">% Stockable Area</label>
-                    <v-text-field
-                      id="percent-stockable-area"
+                    <AppSpinField
                       label="% Stockable Area"
-                      type="number"
-                      v-model.number="percentStockableArea"
+                      :model-value="percentStockableArea"
                       :max="
                         CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX
                       "
@@ -49,12 +46,17 @@
                       :step="
                         CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_STEP
                       "
+                      :persistent-placeholder="true"
                       placeholder=""
-                      persistent-placeholder
-                      hide-details
+                      :hideDetails="true"
                       :disabled="!isConfirmEnabled"
+                      :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                      :decimalAllowNumber="
+                        CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_DECIMAL_NUM
+                      "
                       data-testid="percent-stockable-area"
-                    ></v-text-field>
+                      @update:modelValue="handlePercentStockableAreaUpdate"
+                    />
                     <v-label
                       v-show="isEmptyOrZero(percentStockableArea)"
                       style="font-size: 12px"
@@ -65,21 +67,23 @@
                   </v-col>
                   <v-col class="col-space-6" />
                   <v-col>
-                    <label class="bcds-text-field-label" for="crown-closure-percent">Crown Closure (%)</label>
-                    <v-text-field
-                      id="crown-closure-percent"
+                    <AppSpinField
                       label="Crown Closure (%)"
-                      type="number"
-                      v-model.number="crownClosure"
+                      :model-value="crownClosure"
                       :max="CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX"
                       :min="CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MIN"
                       :step="CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_STEP"
-                      persistent-placeholder
+                      :persistent-placeholder="true"
                       :placeholder="crownClosurePlaceholder"
-                      hide-details
+                      :hideDetails="true"
                       :disabled="isCrownClosureDisabled || !isConfirmEnabled"
+                      :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                      :decimalAllowNumber="
+                        CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_DECIMAL_NUM
+                      "
                       data-testid="crown-closure"
-                    ></v-text-field>
+                      @update:modelValue="handleCrownClosureUpdate"
+                    />
                     <v-label
                       v-show="
                         isZeroValue(crownClosure) && !isCrownClosureDisabled
@@ -106,7 +110,6 @@
                       :persistent-placeholder="true"
                       :placeholder="basalAreaPlaceholder"
                       :hideDetails="true"
-                      customStyle="padding-left: 0px"
                       :disabled="isBasalAreaDisabled || !isConfirmEnabled"
                       :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
                       :decimalAllowNumber="
@@ -136,7 +139,6 @@
                       :persistent-placeholder="true"
                       :placeholder="treesPerHectarePlaceholder"
                       :hideDetails="true"
-                      customStyle="padding-left: 0px"
                       :disabled="isTreesPerHectareDisabled || !isConfirmEnabled"
                       :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
                       :decimalAllowNumber="
@@ -279,7 +281,7 @@ const updateCrownClosureState = (isVolume: boolean, isComputed: boolean) => {
     crownClosure.value = null
   } else {
     crownClosurePlaceholder.value = ''
-    crownClosure.value = 0
+    crownClosure.value = '0'
   }
 }
 
@@ -331,6 +333,14 @@ watch([basalArea, treesPerHectare], ([newBA, newTPH]) => {
     currentDiameter.value = '0.0 cm' // Fallback to 0 on error
   }
 })
+
+const handlePercentStockableAreaUpdate = (value: string | null) => {
+  percentStockableArea.value = value
+}
+
+const handleCrownClosureUpdate = (value: string | null) => {
+  crownClosure.value = value
+}
 
 const handleBasalAreaUpdate = (value: string | null) => {
   basalArea.value = value
@@ -463,7 +473,7 @@ const onConfirm = async () => {
   }
 
   if (isEmptyOrZero(percentStockableArea.value)) {
-    percentStockableArea.value = 0
+    percentStockableArea.value = '0'
   }
 
   formattingValues()

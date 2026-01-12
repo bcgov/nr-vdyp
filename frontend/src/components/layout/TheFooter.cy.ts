@@ -17,7 +17,7 @@ describe('TheFooter.vue', () => {
 
     // Check if default links section exists
     cy.get('.bcds-footer--links').should('exist')
-    cy.get('.bcds-footer--links-title').should('contain.text', 'More info')
+    cy.get('.bcds-footer--links-title').should('contain.text', 'MORE INFO')
 
     // Check if copyright section is visible
     cy.get('.bcds-footer--copyright').should('exist')

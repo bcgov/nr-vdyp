@@ -35,14 +35,17 @@ describe('AppNotification.vue', () => {
 
     cy.mountWithVuetify(AppNotification)
 
-    // Verify the snackbar is visible with the correct message and style
+    // Verify the snackbar is visible with the correct message
     cy.get('.v-snackbar__wrapper')
       .should('be.visible')
       .and('contain.text', 'This is an informational message')
-      .and('have.css', 'background-color', 'rgb(33, 150, 243)')
 
-    // Verify the icon
-    cy.get('.v-icon').should('have.class', 'mdi-information')
+    // Verify BC Gov Design Standards info background color
+    cy.get('.app-snackbar.info .v-snackbar__wrapper')
+      .should('have.css', 'background-color', 'rgb(247, 249, 252)') // --support-surface-color-info
+
+    // Verify the icon is info type
+    cy.get('.app-snackbar__icon').should('have.class', 'mdi-information-outline')
   })
 
   it('displays an error notification', () => {
@@ -50,14 +53,17 @@ describe('AppNotification.vue', () => {
 
     cy.mountWithVuetify(AppNotification)
 
-    // Verify the snackbar is visible with the correct message and style
+    // Verify the snackbar is visible with the correct message
     cy.get('.v-snackbar__wrapper')
       .should('be.visible')
       .and('contain.text', 'This is an error message')
-      .and('have.css', 'background-color', 'rgb(176, 0, 32)')
 
-    // Verify the icon
-    cy.get('.v-icon').should('have.class', 'mdi-alert-circle')
+    // Verify BC Gov Design Standards error background color
+    cy.get('.app-snackbar.error .v-snackbar__wrapper')
+      .should('have.css', 'background-color', 'rgb(244, 225, 226)') // --support-surface-color-danger
+
+    // Verify the icon is error type
+    cy.get('.app-snackbar__icon').should('have.class', 'mdi-alert-circle-outline')
   })
 
   it('displays a warning notification', () => {
@@ -65,14 +71,17 @@ describe('AppNotification.vue', () => {
 
     cy.mountWithVuetify(AppNotification)
 
-    // Verify the snackbar is visible with the correct message and style
+    // Verify the snackbar is visible with the correct message
     cy.get('.v-snackbar__wrapper')
       .should('be.visible')
       .and('contain.text', 'This is a warning message')
-      .and('have.css', 'background-color', 'rgb(251, 140, 0)')
 
-    // Verify the icon
-    cy.get('.v-icon').should('have.class', 'mdi-alert')
+    // Verify BC Gov Design Standards warning background color
+    cy.get('.app-snackbar.warning .v-snackbar__wrapper')
+      .should('have.css', 'background-color', 'rgb(254, 241, 216)') // --support-surface-color-warning
+
+    // Verify the icon is warning type
+    cy.get('.app-snackbar__icon').should('have.class', 'mdi-alert-outline')
   })
 
   it('displays a success notification', () => {
@@ -80,13 +89,16 @@ describe('AppNotification.vue', () => {
 
     cy.mountWithVuetify(AppNotification)
 
-    // Verify the snackbar is visible with the correct message and style
+    // Verify the snackbar is visible with the correct message
     cy.get('.v-snackbar__wrapper')
       .should('be.visible')
       .and('contain.text', 'This is a success message')
-      .and('have.css', 'background-color', 'rgb(76, 175, 80)')
 
-    // Verify the icon
-    cy.get('.v-icon').should('have.class', 'mdi-check-circle')
+    // Verify BC Gov Design Standards success background color
+    cy.get('.app-snackbar.success .v-snackbar__wrapper')
+      .should('have.css', 'background-color', 'rgb(246, 255, 248)') // --support-surface-color-success
+
+    // Verify the icon is success type
+    cy.get('.app-snackbar__icon').should('have.class', 'mdi-check-circle-outline')
   })
 })

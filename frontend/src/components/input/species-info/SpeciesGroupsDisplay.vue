@@ -12,9 +12,9 @@
     >
       <v-row>
         <v-col cols="4" sm="4" md="4" data-testid="species-group-column">
-          <label class="bcds-text-field-label" for="species-group">Species Group</label>
+          <label class="bcds-text-field-label" :for="`species-group-${index}`">Species Group</label>
           <v-text-field
-            id="species-group"
+            :id="`species-group-${index}`"
             label="Species Group"
             :model-value="group.group"
             variant="underlined"
@@ -27,9 +27,9 @@
           md="4"
           data-testid="species-group-percent-column"
         >
-          <label class="bcds-text-field-label" for="species-group-percent">Species Group Percent</label>
+          <label class="bcds-text-field-label" :for="`species-group-percent-${index}`">Species Group Percent</label>
           <v-text-field
-            id="species-group-percent"
+            :id="`species-group-percent-${index}`"
             label="Species Group Percent"
             :model-value="group.percent"
             variant="underlined"
@@ -37,9 +37,9 @@
           ></v-text-field>
         </v-col>
         <v-col cols="4" sm="4" md="4" data-testid="site-species-column">
-          <label class="bcds-text-field-label" for="site-species">Site Species</label>
+          <label class="bcds-text-field-label" :for="`site-species-${index}`">Site Species</label>
           <v-text-field
-            id="site-species"
+            :id="`site-species-${index}`"
             label="Site Species"
             :model-value="group.siteSpecies"
             variant="underlined"

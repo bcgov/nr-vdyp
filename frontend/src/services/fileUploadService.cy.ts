@@ -28,12 +28,12 @@ describe('File Upload Service Unit Tests', () => {
     // Set default values
     fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.VOLUME
     fileUploadStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
-    fileUploadStore.startingAge = 10
-    fileUploadStore.finishingAge = 100
-    fileUploadStore.ageIncrement = 10
-    fileUploadStore.startYear = 2020
-    fileUploadStore.endYear = 2030
-    fileUploadStore.yearIncrement = 2
+    fileUploadStore.startingAge = '10'
+    fileUploadStore.finishingAge = '100'
+    fileUploadStore.ageIncrement = '10'
+    fileUploadStore.startYear = '2020'
+    fileUploadStore.endYear = '2030'
+    fileUploadStore.yearIncrement = '2'
     fileUploadStore.isForwardGrowEnabled =
       DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
     fileUploadStore.isBackwardGrowEnabled =
@@ -44,7 +44,7 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore.isCurrentYearEnabled = false
     fileUploadStore.isReferenceYearEnabled = false
     fileUploadStore.isBySpeciesEnabled = false
-    fileUploadStore.specificYear = 2025
+    fileUploadStore.specificYear = '2025'
 
     fileUploadStore.polygonFile = new File(['polygon content'], 'polygon.csv', {
       type: 'text/csv',

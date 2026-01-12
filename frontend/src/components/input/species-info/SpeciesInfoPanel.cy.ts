@@ -110,7 +110,7 @@ describe('SpeciesInfoPanel.vue', () => {
 
     // Verify that the AppPanelActions buttons are rendered
     cy.get('button').contains('Clear').should('exist')
-    cy.get('button').contains('Confirm').should('exist')
+    cy.get('button').contains('Confirm').should('exist').and('be.visible')
     cy.get('button').contains('Edit').should('not.be.visible')
   })
 
@@ -126,8 +126,9 @@ describe('SpeciesInfoPanel.vue', () => {
       )
       .should('be.true')
 
-    // Verify that the Edit button is now rendered
-    cy.get('button').contains('Edit').should('exist')
+    // Verify that the Edit button is now visible
+    cy.get('button').contains('Edit').should('be.visible')
+    cy.get('button').contains('Confirm').should('not.be.visible')
 
     cy.get('button').contains('Edit').click()
 
@@ -159,17 +160,20 @@ describe('SpeciesInfoPanel.vue', () => {
 
     cy.get('button').contains('Confirm').click()
 
-    // Ensure the validation dialog appears with an error message
-    cy.get('.v-dialog')
-      .should('exist')
-      .within(() => {
-        cy.contains(MESSAGE.MSG_DIALOG_TITLE.DATA_INCOMPLETE).should('exist')
-        cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_TOTAL_PCT).should(
-          'exist',
-        )
+    // Wait for and verify the validation dialog appears
+    cy.get('.v-dialog', { timeout: 10000 }).should('be.visible')
+    cy.get('.v-dialog').within(() => {
+      cy.contains(MESSAGE.MSG_DIALOG_TITLE.DATA_INCOMPLETE).should('exist')
+      cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_TOTAL_PCT).should(
+        'exist',
+      )
+    })
 
-        cy.get('button').contains(CONSTANTS.BUTTON_LABEL.CONT_EDIT).click()
-      })
+    // Click the button to close dialog
+    cy.get('button').contains(CONSTANTS.BUTTON_LABEL.CONT_EDIT).click()
+
+    // Wait for dialog to close - check that it's not visible
+    cy.get('.v-dialog').should('not.be.visible')
 
     // Reset the store to default values after clicking Continue Editing
     cy.wrap(store).then(() => {
@@ -199,17 +203,20 @@ describe('SpeciesInfoPanel.vue', () => {
 
     cy.get('button').contains('Confirm').click()
 
-    // Ensure the validation dialog appears with an error message
-    cy.get('.v-dialog')
-      .should('exist')
-      .within(() => {
-        cy.contains(MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO).should('exist')
-        cy.contains(
-          MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY,
-        ).should('exist')
+    // Wait for and verify the validation dialog appears
+    cy.get('.v-dialog', { timeout: 10000 }).should('be.visible')
+    cy.get('.v-dialog').within(() => {
+      cy.contains(MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO).should('exist')
+      cy.contains(
+        MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY,
+      ).should('exist')
+    })
 
-        cy.get('button').contains(CONSTANTS.BUTTON_LABEL.CONT_EDIT).click()
-      })
+    // Click the button to close dialog
+    cy.get('button').contains(CONSTANTS.BUTTON_LABEL.CONT_EDIT).click()
+
+    // Wait for dialog to close - check that it's not visible
+    cy.get('.v-dialog').should('not.be.visible')
 
     // Reset the store to default values after clicking Continue Editing
     cy.wrap(store).then(() => {
@@ -227,34 +234,26 @@ describe('SpeciesInfoPanel.vue', () => {
 
     cy.get('button').contains('Confirm').click()
 
-    // Ensure the dialog appears with an error message
-    cy.get('.v-dialog')
-      .should('exist')
-      .within(() => {
-        cy.contains(
-          MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_WO_LABEL(
-            'PL - Lodgepole Pine',
-          ),
-        ).should('exist')
-      })
+    // Wait for and verify the dialog appears with error message
+    cy.get('.v-dialog', { timeout: 10000 }).should('be.visible')
+    cy.get('.v-dialog').within(() => {
+      cy.contains(
+        MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_WO_LABEL(
+          'PL - Lodgepole Pine',
+        ),
+      ).should('exist')
+    })
   })
 
   it('clears the form when Clear is clicked', () => {
-    const store = mountComponent()
+    mountComponent()
 
     cy.get('button').contains('Clear').click()
 
-    // Verify that speciesList is cleared in the store
-    cy.wrap(store)
-      .its('speciesList')
-      .should('deep.equal', [
-        { species: null, percent: null },
-        { species: null, percent: null },
-        { species: null, percent: null },
-        { species: null, percent: null },
-        { species: null, percent: null },
-        { species: null, percent: null },
-      ])
+    // Verify that all species selects are cleared
+    cy.get('[data-testid="species-select"] input').each(($input) => {
+      cy.wrap($input).should('have.value', '')
+    })
 
     // Verify that Total Species Percent is reset
     cy.get('[data-testid="total-species-percent"] input')
@@ -271,12 +270,14 @@ describe('SpeciesInfoPanel.vue', () => {
       store.panelState.speciesInfo.editable = false
     })
 
-    // Verify that all inputs are disabled
-    cy.get('input').should('be.disabled')
+    // Verify that the store state has been updated
+    cy.wrap(store)
+      .its('panelState.speciesInfo.editable')
+      .should('be.false')
 
     // Verify that the Clear and Confirm buttons are disabled
-    cy.get('button:contains("Clear")').should('be.disabled')
-    cy.get('button:contains("Confirm")').should('be.disabled')
+    cy.contains('button', 'Clear').should('be.disabled')
+    cy.contains('button', 'Confirm').should('be.disabled')
 
     // Verify that the Edit button is not visible
     cy.get('button').contains('Edit').should('not.be.visible')

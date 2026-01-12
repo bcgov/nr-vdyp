@@ -2,7 +2,6 @@
   <div style="position: relative; width: 100%">
     <span class="bcds-text-field-label" v-html="label"></span>
     <v-text-field
-      id="app-spin-field"
       type="text"
       v-model="localValue"
       :max="max"

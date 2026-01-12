@@ -512,9 +512,9 @@ export const runModel = async (
   const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
 
   const projectionParameters: Parameters = {
-    ageStart: modelParameterStore.startingAge,
-    ageEnd: modelParameterStore.finishingAge,
-    ageIncrement: modelParameterStore.ageIncrement,
+    ageStart: modelParameterStore.startingAge ? Number.parseInt(modelParameterStore.startingAge) : null,
+    ageEnd: modelParameterStore.finishingAge ? Number.parseInt(modelParameterStore.finishingAge) : null,
+    ageIncrement: modelParameterStore.ageIncrement ? Number.parseInt(modelParameterStore.ageIncrement) : null,
     yearStart: null,
     yearEnd: null,
     reportTitle: modelParameterStore.reportTitle,

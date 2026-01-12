@@ -119,6 +119,6 @@
 
 /* Disabled state for spin-box container - white background like native spinner */
 .spin-box:has(.disabled) {
-  background-color: #ffffff !important;
+  background-color: var(--surface-color-forms-disabled) !important;
   border-radius: 2px; /* Match button border radius */
 }

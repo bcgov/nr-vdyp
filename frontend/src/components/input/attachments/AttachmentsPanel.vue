@@ -1,5 +1,5 @@
 <template>
-  <v-card class="elevation-4">
+  <v-card>
     <AppMessageDialog
       :dialog="messageDialog.dialog"
       :title="messageDialog.title"
@@ -26,43 +26,43 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text mt-n2">
+        <v-expansion-panel-text class="expansion-panel-text">
           <v-form ref="form">
-            <div class="ml-2 mt-10 mb-10">
+            <div>
               <v-row>
                 <v-col cols="5">
+                  <label class="bcds-file-input-label" for="polygon-file-input">
+                    Polygon File
+                  </label>
                   <v-file-input
                     id="polygon-file-input"
-                    :label="
-                      fileUploadStore.polygonFile
-                        ? 'Polygon File'
-                        : 'Select Polygon File...'
-                    "
                     v-model="fileUploadStore.polygonFile"
+                    label="Select Polygon File..."
                     show-size
                     chips
                     clearable
-                    density="compact"
                     accept=".csv"
                     :disabled="!isConfirmEnabled"
+                    persistent-placeholder
+                    class="bcds-file-input"
                   />
                 </v-col>
                 <v-col class="col-space-3" />
                 <v-col cols="5">
+                  <label class="bcds-file-input-label" for="layer-file-input">
+                    Layer File
+                  </label>
                   <v-file-input
                     id="layer-file-input"
-                    :label="
-                      fileUploadStore.layerFile
-                        ? 'Layer File'
-                        : 'Select Layer File...'
-                    "
                     v-model="fileUploadStore.layerFile"
+                    label="Select Layer File..."
                     show-size
                     chips
                     clearable
-                    density="compact"
                     accept=".csv"
                     :disabled="!isConfirmEnabled"
+                    persistent-placeholder
+                    class="bcds-file-input"
                   />
                 </v-col>
               </v-row>
@@ -287,6 +287,185 @@ const handleDialogClose = () => {}
 </script>
 
 <style scoped>
+/* Attachments Panel Card - BC Government Design Standards */
+
+/* File Input Label - BC Government Design Standards */
+.bcds-file-input-label {
+  display: block;
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-primary);
+  font-size: 12px;
+  font-weight: var(--typography-font-weights-regular);
+  line-height: 1.5;
+  padding: var(--layout-padding-xsmall) var(--layout-padding-none);
+  padding-bottom: 4px;
+  margin-bottom: 0;
+}
+
+/* File Input Component - BC Government Design Standards */
+.bcds-file-input {
+  flex-direction: column;
+  align-self: stretch;
+}
+
+/* Style Vuetify's label to look like placeholder */
+.bcds-file-input :deep(.v-label) {
+  font: var(--typography-regular-body);
+  font-size: 16px;
+  color: var(--typography-color-placeholder);
+  opacity: 1 !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  max-width: none !important;
+  width: auto !important;
+  white-space: nowrap !important;
+  pointer-events: none;
+}
+
+/* Hide label when file is selected */
+.bcds-file-input :deep(.v-field--dirty .v-label),
+.bcds-file-input :deep(.v-field--active .v-label) {
+  display: none;
+}
+
+/* Hide Vuetify's outline borders */
+.bcds-file-input :deep(.v-field__outline) {
+  display: none !important;
+}
+
+/* File Input Container */
+.bcds-file-input :deep(.v-field) {
+  color: var(--typography-color-primary);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--layout-margin-small);
+  background: var(--surface-color-forms-default);
+  box-sizing: border-box;
+  border: var(--layout-border-width-small) solid var(--surface-color-border-default);
+  border-radius: var(--layout-border-radius-medium);
+  padding: var(--layout-padding-small) 12px;
+  cursor: pointer;
+  height: var(--layout-margin-xxlarge);
+  min-height: var(--layout-margin-xxlarge);
+}
+
+/* Override Vuetify's filled variant background */
+.bcds-file-input :deep(.v-field--variant-filled .v-field__overlay) {
+  background-color: var(--surface-color-forms-default);
+  opacity: 1;
+}
+
+/* File Input Field Wrapper */
+.bcds-file-input :deep(.v-field__field) {
+  position: relative;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex-grow: 1;
+}
+
+/* File Input Element */
+.bcds-file-input :deep(.v-field__input) {
+  font: var(--typography-regular-body);
+  font-size: 16px;
+  padding: var(--layout-padding-none);
+  color: var(--typography-color-primary);
+  border: none;
+  flex-grow: 1;
+  min-height: auto;
+  background-color: transparent !important;
+  opacity: 1;
+}
+
+/* Focused state */
+.bcds-file-input :deep(.v-field:focus-within) {
+  border-radius: var(--layout-border-radius-large);
+  border: var(--layout-border-width-small) solid var(--surface-color-border-active);
+  outline: solid var(--layout-border-width-medium) var(--surface-color-border-active);
+  outline-offset: var(--layout-margin-hair);
+}
+
+/* Hover state */
+.bcds-file-input:not(.v-input--disabled) :deep(.v-field:hover) {
+  border-color: var(--surface-color-border-dark);
+}
+
+/* Disabled state */
+.bcds-file-input.v-input--disabled :deep(.v-field),
+.bcds-file-input[disabled] :deep(.v-field) {
+  background: var(--surface-color-forms-disabled);
+  color: var(--typography-color-placeholder);
+  cursor: not-allowed;
+  opacity: 1 !important;
+}
+
+.bcds-file-input.v-input--disabled :deep(.v-field__overlay) {
+  background-color: var(--surface-color-forms-disabled) !important;
+  opacity: 1 !important;
+}
+
+.bcds-file-input.v-input--disabled :deep(.v-field__input) {
+  background: var(--surface-color-forms-disabled);
+  color: var(--typography-color-placeholder);
+  cursor: not-allowed;
+}
+
+/* Disabled label */
+.bcds-file-input-label:has(+ .bcds-file-input.v-input--disabled) {
+  color: var(--typography-color-disabled) !important;
+}
+
+/* File chips styling */
+.bcds-file-input :deep(.v-chip) {
+  font: var(--typography-regular-small-body);
+  background-color: var(--surface-color-secondary-default);
+  border: var(--layout-border-width-small) solid var(--surface-color-border-default);
+  border-radius: var(--layout-border-radius-medium);
+}
+
+/* Clear icon */
+.bcds-file-input :deep(.v-field__clearable) {
+  color: var(--icons-color-primary);
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Prepend inner icon (file icon) */
+.bcds-file-input :deep(.v-field__prepend-inner) {
+  color: var(--icons-color-primary);
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-inline-start: 0 !important;
+  align-items: center;
+  display: flex;
+  height: 100%;
+  margin-inline-end: var(--layout-margin-small) !important;
+}
+
+/* Append inner icon */
+.bcds-file-input :deep(.v-field__append-inner) {
+  color: var(--icons-color-primary);
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-inline-end: 0 !important;
+  align-items: center;
+  display: flex;
+  height: 100%;
+  margin-inline-start: var(--layout-margin-small) !important;
+}
+
+/* Disabled icons */
+.bcds-file-input.v-input--disabled :deep(.v-field__prepend-inner),
+.bcds-file-input.v-input--disabled :deep(.v-field__append-inner),
+.bcds-file-input.v-input--disabled :deep(.v-field__clearable) {
+  color: var(--icons-color-disabled);
+}
+
+/* Column spacer */
 .col-space-3 {
   flex: 0 0 3rem;
 }

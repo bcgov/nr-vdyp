@@ -260,10 +260,14 @@ describe('Model Parameter Service Unit Tests', () => {
         expect(text).to.include(mockModelParameterStore.ecoZone)
         expect(text).to.include(mockModelParameterStore.percentStockableArea)
         expect(text).to.include(
-          computeBclcsLevel1(mockModelParameterStore.percentStockableArea),
+          computeBclcsLevel1(
+            Number(mockModelParameterStore.percentStockableArea),
+          ),
         )
         expect(text).to.include(
-          computeBclcsLevel2(mockModelParameterStore.percentStockableArea),
+          computeBclcsLevel2(
+            Number(mockModelParameterStore.percentStockableArea),
+          ),
         )
         expect(text).to.include(
           computeBclcsLevel3(mockModelParameterStore.becZone),
@@ -272,7 +276,9 @@ describe('Model Parameter Service Unit Tests', () => {
           determineBclcsLevel4(mockModelParameterStore.speciesGroups),
         )
         expect(text).to.include(
-          determineBclcsLevel5(mockModelParameterStore.percentStockableArea),
+          determineBclcsLevel5(
+            Number(mockModelParameterStore.percentStockableArea),
+          ),
         )
         expect(text).to.include(mockModelParameterStore.referenceYear)
       })
@@ -333,15 +339,15 @@ describe('Model Parameter Service Unit Tests', () => {
         .then((text) => {
           const projectionParams = JSON.parse(text)
           expect(projectionParams.ageStart).to.equal(
-            mockModelParameterStore.startingAge,
+            Number.parseInt(mockModelParameterStore.startingAge),
           )
           expect(projectionParams.ageEnd).to.equal(
-            mockModelParameterStore.finishingAge,
+            Number.parseInt(mockModelParameterStore.finishingAge),
           )
           expect(projectionParams.yearStart).to.be.null
           expect(projectionParams.yearEnd).to.be.null
           expect(projectionParams.ageIncrement).to.equal(
-            mockModelParameterStore.ageIncrement,
+            Number.parseInt(mockModelParameterStore.ageIncrement),
           )
           expect(projectionParams.outputFormat).to.equal(
             OutputFormatEnum.CSVYieldTable,
@@ -696,12 +702,16 @@ describe('Model Parameter Service Unit Tests', () => {
         .then((blob) => blob.text())
         .then((text) => {
           const projectionParams = JSON.parse(text)
-          expect(projectionParams.ageStart).to.equal(yearRangeStore.startingAge)
-          expect(projectionParams.ageEnd).to.equal(yearRangeStore.finishingAge)
+          expect(projectionParams.ageStart).to.equal(
+            Number.parseInt(yearRangeStore.startingAge),
+          )
+          expect(projectionParams.ageEnd).to.equal(
+            Number.parseInt(yearRangeStore.finishingAge),
+          )
           expect(projectionParams.yearStart).to.be.null
           expect(projectionParams.yearEnd).to.be.null
           expect(projectionParams.ageIncrement).to.equal(
-            yearRangeStore.ageIncrement,
+            Number.parseInt(yearRangeStore.ageIncrement),
           )
         })
     })

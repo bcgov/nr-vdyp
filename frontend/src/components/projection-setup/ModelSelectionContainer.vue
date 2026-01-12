@@ -1,16 +1,18 @@
 <template>
-  <div id="modelSelectionCard" class="model-selection-header">
-    <h3
-      v-if="internalModelSelection === MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
-    >
-      {{ HEADER_SELECTION.MODEL_PARAMETER_SELECTION }}
-    </h3>
-    <h3 v-else>{{ HEADER_SELECTION.FILE_UPLOAD }}</h3>
-  </div>
+  <div>
+    <div id="modelSelectionCard" class="model-selection-header">
+      <h3
+        v-if="internalModelSelection === MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
+      >
+        {{ HEADER_SELECTION.MODEL_PARAMETER_SELECTION }}
+      </h3>
+      <h3 v-else>{{ HEADER_SELECTION.FILE_UPLOAD }}</h3>
+    </div>
 
-  <v-card class="job-type-sel-card" elevation="0">
-    <ModelSelection @update:modelSelection="updateModelSelection" />
-  </v-card>
+    <v-card class="job-type-sel-card" elevation="0">
+      <ModelSelection @update:modelSelection="updateModelSelection" />
+    </v-card>
+  </div>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'

@@ -140,28 +140,39 @@ export const getFormData = (
     buildExecutionOptions(fileUploadStore)
   const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
 
+  const isAgeRange =
+    fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
+  const isYearRange =
+    fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
+
+  let ageIncrement: number | null = null
+  if (isYearRange && fileUploadStore.yearIncrement) {
+    ageIncrement = Number.parseInt(fileUploadStore.yearIncrement)
+  } else if (fileUploadStore.ageIncrement) {
+    ageIncrement = Number.parseInt(fileUploadStore.ageIncrement)
+  }
+
   const projectionParameters: Parameters = {
     ageStart:
-      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
-        ? fileUploadStore.startingAge
+      isAgeRange && fileUploadStore.startingAge
+        ? Number.parseInt(fileUploadStore.startingAge)
         : null,
     ageEnd:
-      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
-        ? fileUploadStore.finishingAge
+      isAgeRange && fileUploadStore.finishingAge
+        ? Number.parseInt(fileUploadStore.finishingAge)
         : null,
-    ageIncrement:
-      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
-        ? fileUploadStore.yearIncrement
-        : fileUploadStore.ageIncrement,
+    ageIncrement,
     yearStart:
-      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
-        ? fileUploadStore.startYear
+      isYearRange && fileUploadStore.startYear
+        ? Number.parseInt(fileUploadStore.startYear)
         : null,
     yearEnd:
-      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
-        ? fileUploadStore.endYear
+      isYearRange && fileUploadStore.endYear
+        ? Number.parseInt(fileUploadStore.endYear)
         : null,
-    forceYear: fileUploadStore.specificYear,
+    forceYear: fileUploadStore.specificYear
+      ? Number.parseInt(fileUploadStore.specificYear)
+      : null,
     outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions: selectedExecutionOptions,
     excludedExecutionOptions: excludedExecutionOptions,

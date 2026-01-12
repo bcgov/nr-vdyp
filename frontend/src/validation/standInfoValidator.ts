@@ -3,11 +3,14 @@ import { CONSTANTS, BIZCONSTANTS } from '@/constants'
 import { convertToNumberSafely, extractLeadingNumber } from '@/utils/util'
 
 export class StandInfoValidator extends ValidationBase {
-  validatePercentStockableAreaRange(psa: number | null): boolean {
+  validatePercentStockableAreaRange(psa: string | null): boolean {
     if (!psa) return true
 
+    const numericPsa = convertToNumberSafely(psa)
+    if (!numericPsa) return true
+
     return this.validateRange(
-      psa,
+      numericPsa,
       CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN,
       CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX,
     )
@@ -35,11 +38,14 @@ export class StandInfoValidator extends ValidationBase {
     )
   }
 
-  validatePercentCrownClosureRange(pcc: number | null): boolean {
+  validatePercentCrownClosureRange(pcc: string | null): boolean {
     if (!pcc) return true
 
+    const numericPcc = convertToNumberSafely(pcc)
+    if (!numericPcc) return true
+
     return this.validateRange(
-      pcc,
+      numericPcc,
       CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MIN,
       CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX,
     )

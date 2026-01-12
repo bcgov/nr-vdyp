@@ -57,106 +57,112 @@
     <v-row>
       <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
         <v-col cols="2">
-          <label class="bcds-text-field-label" for="startingAge">Starting Age</label>
-          <v-text-field
-            id="startingAge"
+          <AppSpinField
             label="Starting Age"
-            type="number"
-            v-model.number="localStartingAge"
+            :model-value="localStartingAge"
             :min="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleStartingAgeInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_DECIMAL_NUM"
+            data-testid="starting-age"
+            @update:modelValue="handleStartingAgeInput"
+          />
         </v-col>
         <v-col class="col-space-3" />
         <v-col cols="2" class="ml-2">
-          <label class="bcds-text-field-label" for="finishingAge">Finishing Age</label>
-          <v-text-field
-            id="finishingAge"
+          <AppSpinField
             label="Finishing Age"
-            type="number"
-            v-model.number="localFinishingAge"
+            :model-value="localFinishingAge"
             :min="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleFinishingAgeInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_DECIMAL_NUM"
+            data-testid="finishing-age"
+            @update:modelValue="handleFinishingAgeInput"
+          />
         </v-col>
         <v-col class="col-space-3" />
         <v-col cols="2" class="ml-2">
-          <label class="bcds-text-field-label" for="ageIncrement">Increment</label>
-          <v-text-field
-            id="ageIncrement"
+          <AppSpinField
             label="Increment"
-            type="number"
-            v-model.number="localAgeIncrement"
+            :model-value="localAgeIncrement"
             :min="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleAgeIncrementInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_DECIMAL_NUM"
+            data-testid="age-increment"
+            @update:modelValue="handleAgeIncrementInput"
+          />
         </v-col>
       </template>
       <template v-else>
         <v-col cols="2">
-          <label class="bcds-text-field-label" for="startYear">Start Year</label>
-          <v-text-field
-            id="startYear"
+          <AppSpinField
             label="Start Year"
-            type="number"
-            v-model.number="localStartYear"
+            :model-value="localStartYear"
             :min="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleStartYearInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_DECIMAL_NUM"
+            data-testid="start-year"
+            @update:modelValue="handleStartYearInput"
+          />
         </v-col>
         <v-col class="col-space-3" />
         <v-col cols="2" class="ml-2">
-          <label class="bcds-text-field-label" for="endYear">End Year</label>
-          <v-text-field
-            id="endYear"
+          <AppSpinField
             label="End Year"
-            type="number"
-            v-model.number="localEndYear"
+            :model-value="localEndYear"
             :min="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleEndYearInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_DECIMAL_NUM"
+            data-testid="end-year"
+            @update:modelValue="handleEndYearInput"
+          />
         </v-col>
         <v-col class="col-space-3" />
         <v-col cols="2" class="ml-2">
-          <label class="bcds-text-field-label" for="yearIncrement">Increment</label>
-          <v-text-field
-            id="yearIncrement"
+          <AppSpinField
             label="Increment"
-            type="number"
-            v-model.number="localYearIncrement"
+            :model-value="localYearIncrement"
             :min="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleYearIncrementInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_DECIMAL_NUM"
+            data-testid="year-increment"
+            @update:modelValue="handleYearIncrementInput"
+          />
         </v-col>
       </template>
       <v-col class="col-space-3" />
@@ -181,8 +187,8 @@
       </v-col>
     </v-row>
   </div>
-  <div class="ml-4 mt-5">
-    <div class="ml-n4 mt-n5">
+  <div class="ml-4 mt-7">
+    <div class="ml-n4">
       <span class="include-in-report-label" :class="{ 'include-in-report-disabled': isDisabled }">Include in Report</span>
     </div>
     <v-row class="ml-n6">
@@ -299,20 +305,21 @@
             </v-col>
             <v-col class="col-space-3" />
             <v-col cols="2" class="specific-year-container">
-              <label class="bcds-text-field-label" for="specificYear">Specific Year</label>
-              <v-text-field
-                id="specificYear"
+              <AppSpinField
                 label="Specific Year"
-                type="number"
-                v-model.number="localSpecificYear"
+                :model-value="localSpecificYear"
                 :min="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_MIN"
                 :max="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_MAX"
                 :step="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_STEP"
-                persistent-placeholder
+                :persistent-placeholder="true"
                 placeholder=""
+                :hideDetails="true"
                 :disabled="isSpecificYearDeactivated"
-                @update:model-value="handleSpecificYearInput"
-              ></v-text-field>
+                :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_DECIMAL_NUM"
+                data-testid="specific-year"
+                @update:modelValue="handleSpecificYearInput"
+              />
             </v-col>
             <v-col class="col-space-3" />
             <v-col cols="2" class="secondary-species-height-file-upload-container" style="padding-left: 0px;">
@@ -393,10 +400,10 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
-import { parseNumberOrNull } from '@/utils/util'
 import { useAppStore } from '@/stores/appStore'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { useFileUploadStore } from '@/stores/fileUploadStore'
+import { AppSpinField } from '@/components'
 
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
@@ -404,12 +411,12 @@ const fileUploadStore = useFileUploadStore()
 
 const props = defineProps<{
   selectedAgeYearRange: string | null
-  startingAge: number | null
-  finishingAge: number | null
-  ageIncrement: number | null
-  startYear: number | null
-  endYear: number | null
-  yearIncrement: number | null
+  startingAge: string | null
+  finishingAge: string | null
+  ageIncrement: string | null
+  startYear: string | null
+  endYear: string | null
+  yearIncrement: string | null
   isForwardGrowEnabled: boolean
   isBackwardGrowEnabled: boolean
   isComputedMAIEnabled: boolean
@@ -421,7 +428,7 @@ const props = defineProps<{
   isCurrentYearEnabled: boolean
   isReferenceYearEnabled: boolean
   incSecondaryHeight: boolean
-  specificYear: number | null
+  specificYear: string | null
   projectionType: string | null
   reportTitle: string | null
   isDisabled: boolean
@@ -465,12 +472,12 @@ const fileUploadSpeciesGroups = computed(
 const selectedAgeYearRange = ref<string>(
   props.selectedAgeYearRange || DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
 )
-const localStartingAge = ref<number | null>(props.startingAge)
-const localFinishingAge = ref<number | null>(props.finishingAge)
-const localAgeIncrement = ref<number | null>(props.ageIncrement)
-const localStartYear = ref<number | null>(props.startYear)
-const localEndYear = ref<number | null>(props.endYear)
-const localYearIncrement = ref<number | null>(props.yearIncrement)
+const localStartingAge = ref<string | null>(props.startingAge)
+const localFinishingAge = ref<string | null>(props.finishingAge)
+const localAgeIncrement = ref<string | null>(props.ageIncrement)
+const localStartYear = ref<string | null>(props.startYear)
+const localEndYear = ref<string | null>(props.endYear)
+const localYearIncrement = ref<string | null>(props.yearIncrement)
 const localIsForwardGrowEnabled = ref<boolean>(props.isForwardGrowEnabled)
 const localIsBackwardGrowEnabled = ref<boolean>(props.isBackwardGrowEnabled)
 const localIsComputedMAIEnabled = ref<boolean>(props.isComputedMAIEnabled)
@@ -484,7 +491,7 @@ const localIsPolygonIDEnabled = ref<boolean>(props.isPolygonIDEnabled)
 const localIsCurrentYearEnabled = ref<boolean>(props.isCurrentYearEnabled)
 const localIsReferenceYearEnabled = ref<boolean>(props.isReferenceYearEnabled)
 const localIncSecondaryHeight = ref<boolean>(props.incSecondaryHeight)
-const localSpecificYear = ref<number | null>(props.specificYear)
+const localSpecificYear = ref<string | null>(props.specificYear)
 const localProjectionType = ref<string | null>(props.projectionType)
 const localReportTitle = ref<string | null>(props.reportTitle)
 
@@ -743,15 +750,15 @@ watch(localProjectionType, (newVal) => {
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
 
 const isCulminationValuesEligible = (
-  _startingAge: number | null,
-  _finishingAge: number | null,
+  _startingAge: string | null,
+  _finishingAge: string | null,
 ) => {
-  return (
-    _startingAge !== null &&
-    _startingAge <= 10 &&
-    _finishingAge !== null &&
-    _finishingAge >= 300
-  )
+  if (_startingAge === null || _finishingAge === null) {
+    return false
+  }
+  const startAge = Number.parseFloat(_startingAge)
+  const finishAge = Number.parseFloat(_finishingAge)
+  return startAge <= 10 && finishAge >= 300
 }
 
 // Watch speciesGroups for changes and sync utilization sliderValues (with immediate: true for initial load)
@@ -901,32 +908,32 @@ const utilizationSliderTickLabels = utilizationClassOptions.reduce(
   {} as Record<number, string>,
 )
 
-const handleStartingAgeInput = (value: string) => {
-  localStartingAge.value = parseNumberOrNull(value)
+const handleStartingAgeInput = (value: string | null) => {
+  localStartingAge.value = value
 }
 
-const handleFinishingAgeInput = (value: string) => {
-  localFinishingAge.value = parseNumberOrNull(value)
+const handleFinishingAgeInput = (value: string | null) => {
+  localFinishingAge.value = value
 }
 
-const handleAgeIncrementInput = (value: string) => {
-  localAgeIncrement.value = parseNumberOrNull(value)
+const handleAgeIncrementInput = (value: string | null) => {
+  localAgeIncrement.value = value
 }
 
-const handleStartYearInput = (value: string) => {
-  localStartYear.value = parseNumberOrNull(value)
+const handleStartYearInput = (value: string | null) => {
+  localStartYear.value = value
 }
 
-const handleEndYearInput = (value: string) => {
-  localEndYear.value = parseNumberOrNull(value)
+const handleEndYearInput = (value: string | null) => {
+  localEndYear.value = value
 }
 
-const handleYearIncrementInput = (value: string) => {
-  localYearIncrement.value = parseNumberOrNull(value)
+const handleYearIncrementInput = (value: string | null) => {
+  localYearIncrement.value = value
 }
 
-const handleSpecificYearInput = (value: string) => {
-  localSpecificYear.value = parseNumberOrNull(value)
+const handleSpecificYearInput = (value: string | null) => {
+  localSpecificYear.value = value
 }
 
 // Update minimum DBH limit in the store based on slider value

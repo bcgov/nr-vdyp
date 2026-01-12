@@ -1,9 +1,4 @@
-import { mount } from 'cypress/vue'
-import { createVuetify } from 'vuetify'
-import 'vuetify/styles'
 import AppSpinField from './AppSpinField.vue'
-
-const vuetify = createVuetify()
 
 describe('AppSpinField.vue', () => {
   beforeEach(() => {
@@ -30,59 +25,50 @@ describe('AppSpinField.vue', () => {
   }
 
   it('renders correctly with initial props', () => {
-    mount(AppSpinField, {
+    cy.mountWithVuetify(AppSpinField, {
       props,
-      global: {
-        plugins: [vuetify],
-      },
     })
 
     // Verify label is rendered correctly
-    cy.get('label').should('contain.text', props.label)
+    cy.get('.bcds-text-field-label').should('contain.text', props.label)
 
     // Verify initial value
     cy.get('input').should('have.value', props.modelValue)
   })
 
   it('increments the value when the up button is clicked', () => {
-    mount(AppSpinField, {
+    cy.mountWithVuetify(AppSpinField, {
       props,
-      global: {
-        plugins: [vuetify],
-      },
     })
 
-    // Click the increment button
-    cy.get('.spin-up-arrow-button').click()
+    // Trigger mousedown and mouseup events on the increment button
+    cy.get('.spin-up-arrow-button').trigger('mousedown')
+    cy.get('.spin-up-arrow-button').trigger('mouseup')
     cy.get('input').should('have.value', '11.00')
   })
 
   it('decrements the value when the down button is clicked', () => {
-    mount(AppSpinField, {
+    cy.mountWithVuetify(AppSpinField, {
       props,
-      global: {
-        plugins: [vuetify],
-      },
     })
 
-    // Click the decrement button
-    cy.get('.spin-down-arrow-button').click()
+    // Trigger mousedown and mouseup events on the decrement button
+    cy.get('.spin-down-arrow-button').trigger('mousedown')
+    cy.get('.spin-down-arrow-button').trigger('mouseup')
     cy.get('input').should('have.value', '9.00')
   })
 
   it('does not exceed max limits', () => {
-    mount(AppSpinField, {
+    cy.mountWithVuetify(AppSpinField, {
       props: {
         ...props,
-        modelValue: props.max.toString(),
-      },
-      global: {
-        plugins: [vuetify],
+        modelValue: props.max.toFixed(props.decimalAllowNumber),
       },
     })
 
     // Try to increment beyond the max value
-    cy.get('.spin-up-arrow-button').click()
+    cy.get('.spin-up-arrow-button').trigger('mousedown')
+    cy.get('.spin-up-arrow-button').trigger('mouseup')
     cy.get('input').should(
       'have.value',
       props.max.toFixed(props.decimalAllowNumber),
@@ -90,16 +76,14 @@ describe('AppSpinField.vue', () => {
   })
 
   it('does not exceed min limits', () => {
-    mount(AppSpinField, {
+    cy.mountWithVuetify(AppSpinField, {
       props: {
         ...props,
-        modelValue: props.min.toString(),
-      },
-      global: {
-        plugins: [vuetify],
+        modelValue: props.min.toFixed(props.decimalAllowNumber),
       },
     })
-    cy.get('.spin-down-arrow-button').click()
+    cy.get('.spin-down-arrow-button').trigger('mousedown')
+    cy.get('.spin-down-arrow-button').trigger('mouseup')
     cy.get('input').should(
       'have.value',
       props.min.toFixed(props.decimalAllowNumber),
@@ -107,13 +91,10 @@ describe('AppSpinField.vue', () => {
   })
 
   it('disables the buttons when the component is disabled', () => {
-    mount(AppSpinField, {
+    cy.mountWithVuetify(AppSpinField, {
       props: {
         ...props,
         disabled: true,
-      },
-      global: {
-        plugins: [vuetify],
       },
     })
 
@@ -128,22 +109,21 @@ describe('AppSpinField.vue', () => {
   it('emits the correct value when updated', () => {
     const onUpdateSpy = cy.spy().as('updateSpy')
 
-    mount(AppSpinField, {
+    cy.mountWithVuetify(AppSpinField, {
       props: {
         ...props,
         'onUpdate:modelValue': onUpdateSpy,
       },
-      global: {
-        plugins: [vuetify],
-      },
     })
 
     // Increment and verify emitted value
-    cy.get('.spin-up-arrow-button').click()
+    cy.get('.spin-up-arrow-button').trigger('mousedown')
+    cy.get('.spin-up-arrow-button').trigger('mouseup')
     cy.get('@updateSpy').should('have.been.calledWith', '11.00')
 
     // Decrement and verify emitted value
-    cy.get('.spin-down-arrow-button').click()
+    cy.get('.spin-down-arrow-button').trigger('mousedown')
+    cy.get('.spin-down-arrow-button').trigger('mouseup')
     cy.get('@updateSpy').should('have.been.calledWith', '10.00')
   })
 })

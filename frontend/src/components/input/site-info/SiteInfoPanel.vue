@@ -144,21 +144,23 @@
                 <v-col cols="6">
                   <v-row class="mb-2">
                     <v-col cols="6">
-                      <label class="bcds-text-field-label" for="spz-age-field">Years</label>
-                      <v-text-field
-                        id="spz-age-field"
+                      <AppSpinField
                         label="Years"
-                        type="number"
-                        v-model.number="spzAge"
+                        :model-value="spzAge"
                         :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX"
                         :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN"
                         :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_STEP"
-                        persistent-placeholder
+                        :persistent-placeholder="true"
                         :placeholder="spzAgePlaceholder"
-                        hide-details
+                        :hideDetails="true"
                         :disabled="isSpzAgeDisabled || !isConfirmEnabled"
+                        :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                        :decimalAllowNumber="
+                          CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_DECIMAL_NUM
+                        "
                         data-testid="spz-age"
-                      ></v-text-field>
+                        @update:modelValue="handleSpzAgeUpdate"
+                      />
                       <v-label
                         v-show="isZeroValue(spzAge)"
                         style="font-size: 12px"
@@ -178,7 +180,6 @@
                         :persistent-placeholder="true"
                         :placeholder="spzHeightPlaceholder"
                         :hideDetails="true"
-                        customStyle="padding-left: 0px"
                         :disabled="isSpzHeightDisabled || !isConfirmEnabled"
                         :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
                         :decimalAllowNumber="
@@ -358,6 +359,10 @@ watch(
   },
   { immediate: true },
 )
+
+const handleSpzAgeUpdate = (value: string | null) => {
+  spzAge.value = value
+}
 
 const handleSpzHeightUpdate = (value: string | null) => {
   spzHeight.value = value

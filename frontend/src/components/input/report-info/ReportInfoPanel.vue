@@ -153,27 +153,27 @@ const handleSelectedAgeYearRangeUpdate = (value: string) => {
   currentStore.value.selectedAgeYearRange = value
 }
 
-const handleStartingAgeUpdate = (value: number | null) => {
+const handleStartingAgeUpdate = (value: string | null) => {
   currentStore.value.startingAge = value
 }
 
-const handleFinishingAgeUpdate = (value: number | null) => {
+const handleFinishingAgeUpdate = (value: string | null) => {
   currentStore.value.finishingAge = value
 }
 
-const handleAgeIncrementUpdate = (value: number | null) => {
+const handleAgeIncrementUpdate = (value: string | null) => {
   currentStore.value.ageIncrement = value
 }
 
-const handleStartYearUpdate = (value: number | null) => {
+const handleStartYearUpdate = (value: string | null) => {
   currentStore.value.startYear = value
 }
 
-const handleEndYearUpdate = (value: number | null) => {
+const handleEndYearUpdate = (value: string | null) => {
   currentStore.value.endYear = value
 }
 
-const handleYearIncrementUpdate = (value: number | null) => {
+const handleYearIncrementUpdate = (value: string | null) => {
   currentStore.value.yearIncrement = value
 }
 
@@ -221,7 +221,7 @@ const handleIncSecondaryHeightUpdate = (value: boolean) => {
   currentStore.value.incSecondaryHeight = value
 }
 
-const handleSpecificYearUpdate = (value: number | null) => {
+const handleSpecificYearUpdate = (value: string | null) => {
   currentStore.value.specificYear = value
 }
 

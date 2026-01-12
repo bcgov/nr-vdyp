@@ -101,11 +101,11 @@ describe('SiteInfoPanel.vue', () => {
       })
 
     // Verify input fields
-    cy.get('label').contains('Years').should('exist')
+    cy.contains('Years').should('exist')
     cy.get('[data-testid="spz-age"] input').should('have.value', '60')
-    cy.get('label').contains('Height in Meters').should('exist')
+    cy.contains('Height in Meters').should('exist')
     cy.get('[data-testid="spz-height"] input').should('have.value', '17.00')
-    cy.get('label').contains('BHA 50 Site Index').should('exist')
+    cy.contains('BHA 50 Site Index').should('exist')
     cy.get('[data-testid="bha-50-site-index"] input').should('have.value', '')
     // Verify AppPanelActions buttons (Edit should not be visible in initial state)
     cy.get('button').contains('Clear').should('exist')
@@ -133,7 +133,7 @@ describe('SiteInfoPanel.vue', () => {
     // Verify that the Edit button is now rendered
     cy.get('button').contains('Edit').should('exist')
     // Verify values are stored
-    cy.wrap(store).its('spzAge').should('eq', 50)
+    cy.wrap(store).its('spzAge').should('eq', '50')
     cy.wrap(store).its('spzHeight').should('eq', '15.5')
   })
 
@@ -270,11 +270,7 @@ describe('SiteInfoPanel.vue', () => {
 
     // Verify disabled fields
     cy.get('.v-radio-group').eq(1).should('have.class', 'v-input--disabled') // Age Years disabled
-    cy.get('label')
-      .contains('Years')
-      .closest('.v-text-field')
-      .find('input')
-      .should('be.disabled')
+    cy.get('[data-testid="spz-age"] input').should('be.disabled')
     cy.get('[data-testid="spz-height"] .v-field').should(
       'have.class',
       'v-field--disabled',

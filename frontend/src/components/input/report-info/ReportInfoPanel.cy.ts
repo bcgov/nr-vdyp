@@ -52,12 +52,12 @@ describe('ReportInfoPanel.vue', () => {
       )
 
       modelParameterStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
-      modelParameterStore.startingAge = 10
-      modelParameterStore.finishingAge = 100
-      modelParameterStore.ageIncrement = 5
-      modelParameterStore.startYear = 2020
-      modelParameterStore.endYear = 2030
-      modelParameterStore.yearIncrement = 2
+      modelParameterStore.startingAge = '10'
+      modelParameterStore.finishingAge = '100'
+      modelParameterStore.ageIncrement = '5'
+      modelParameterStore.startYear = '2020'
+      modelParameterStore.endYear = '2030'
+      modelParameterStore.yearIncrement = '2'
       modelParameterStore.isForwardGrowEnabled =
         DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
       modelParameterStore.isBackwardGrowEnabled =
@@ -77,12 +77,12 @@ describe('ReportInfoPanel.vue', () => {
       )
 
       fileUploadStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
-      fileUploadStore.startingAge = 10
-      fileUploadStore.finishingAge = 100
-      fileUploadStore.ageIncrement = 5
-      fileUploadStore.startYear = 2020
-      fileUploadStore.endYear = 2030
-      fileUploadStore.yearIncrement = 2
+      fileUploadStore.startingAge = '10'
+      fileUploadStore.finishingAge = '100'
+      fileUploadStore.ageIncrement = '5'
+      fileUploadStore.startYear = '2020'
+      fileUploadStore.endYear = '2030'
+      fileUploadStore.yearIncrement = '2'
       fileUploadStore.isForwardGrowEnabled =
         DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
       fileUploadStore.isBackwardGrowEnabled =
@@ -118,24 +118,24 @@ describe('ReportInfoPanel.vue', () => {
       .contains('Report Information')
       .should('exist')
 
-    cy.get('[id="startingAge"]')
+    cy.get('[data-testid="starting-age"]')
+      .find('input')
       .should('exist')
       .and('have.value', '10')
-      .and('have.attr', 'type', 'number')
 
-    cy.get('[id="finishingAge"]')
+    cy.get('[data-testid="finishing-age"]')
+      .find('input')
       .should('exist')
       .and('have.value', '100')
-      .and('have.attr', 'type', 'number')
 
-    cy.get('[id="ageIncrement"]')
+    cy.get('[data-testid="age-increment"]')
+      .find('input')
       .should('exist')
       .and('have.value', '5')
-      .and('have.attr', 'type', 'number')
 
-    cy.get('[id="startYear"]').should('not.exist')
-    cy.get('[id="endYear"]').should('not.exist')
-    cy.get('[id="yearIncrement"]').should('not.exist')
+    cy.get('[data-testid="start-year"]').should('not.exist')
+    cy.get('[data-testid="end-year"]').should('not.exist')
+    cy.get('[data-testid="year-increment"]').should('not.exist')
 
     cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI)
       .find('input[type="checkbox"]')
@@ -162,24 +162,24 @@ describe('ReportInfoPanel.vue', () => {
       .find('input')
       .click()
 
-    cy.get('[id="startYear"]')
+    cy.get('[data-testid="start-year"]')
+      .find('input')
       .should('exist')
       .and('have.value', '2020')
-      .and('have.attr', 'type', 'number')
 
-    cy.get('[id="endYear"]')
+    cy.get('[data-testid="end-year"]')
+      .find('input')
       .should('exist')
       .and('have.value', '2030')
-      .and('have.attr', 'type', 'number')
 
-    cy.get('[id="yearIncrement"]')
+    cy.get('[data-testid="year-increment"]')
+      .find('input')
       .should('exist')
       .and('have.value', '2')
-      .and('have.attr', 'type', 'number')
 
-    cy.get('[id="startingAge"]').should('not.exist')
-    cy.get('[id="finishingAge"]').should('not.exist')
-    cy.get('[id="ageIncrement"]').should('not.exist')
+    cy.get('[data-testid="starting-age"]').should('not.exist')
+    cy.get('[data-testid="finishing-age"]').should('not.exist')
+    cy.get('[data-testid="age-increment"]').should('not.exist')
 
     cy.get('.v-select')
       .find('input')
@@ -199,24 +199,24 @@ describe('ReportInfoPanel.vue', () => {
       .contains('Report Information')
       .should('exist')
 
-    cy.get('[id="startingAge"]')
+    cy.get('[data-testid="starting-age"]')
+      .find('input')
       .should('exist')
       .and('have.value', '10')
-      .and('have.attr', 'type', 'number')
 
-    cy.get('[id="finishingAge"]')
+    cy.get('[data-testid="finishing-age"]')
+      .find('input')
       .should('exist')
       .and('have.value', '100')
-      .and('have.attr', 'type', 'number')
 
-    cy.get('[id="ageIncrement"]')
+    cy.get('[data-testid="age-increment"]')
+      .find('input')
       .should('exist')
       .and('have.value', '5')
-      .and('have.attr', 'type', 'number')
 
-    cy.get('[id="startYear"]').should('not.exist')
-    cy.get('[id="endYear"]').should('not.exist')
-    cy.get('[id="yearIncrement"]').should('not.exist')
+    cy.get('[data-testid="start-year"]').should('not.exist')
+    cy.get('[data-testid="end-year"]').should('not.exist')
+    cy.get('[data-testid="year-increment"]').should('not.exist')
 
     cy.get('.v-select')
       .find('input')
@@ -269,11 +269,11 @@ describe('ReportInfoPanel.vue', () => {
         true
     })
 
-    cy.get('input[id="startingAge"]').should('exist').clear()
-    cy.get('input[id="startingAge"]').type('200')
+    cy.get('[data-testid="starting-age"]').find('input').should('exist').clear()
+    cy.get('[data-testid="starting-age"]').find('input').type('200')
 
-    cy.get('input[id="finishingAge"]').should('exist').clear()
-    cy.get('input[id="finishingAge"]').type('50')
+    cy.get('[data-testid="finishing-age"]').find('input').should('exist').clear()
+    cy.get('[data-testid="finishing-age"]').find('input').type('50')
 
     cy.get('button').contains('Confirm').click()
 
@@ -302,11 +302,11 @@ describe('ReportInfoPanel.vue', () => {
       .find('input')
       .click()
 
-    cy.get('input[id="startYear"]').should('exist').clear()
-    cy.get('input[id="startYear"]').type('2030')
+    cy.get('[data-testid="start-year"]').find('input').should('exist').clear()
+    cy.get('[data-testid="start-year"]').find('input').type('2030')
 
-    cy.get('input[id="endYear"]').should('exist').clear()
-    cy.get('input[id="endYear"]').type('2020')
+    cy.get('[data-testid="end-year"]').find('input').should('exist').clear()
+    cy.get('[data-testid="end-year"]').find('input').type('2020')
 
     cy.get('button').contains('Confirm').click()
 
@@ -331,8 +331,8 @@ describe('ReportInfoPanel.vue', () => {
         true
     })
 
-    cy.get('input[id="startingAge"]').should('exist').clear()
-    cy.get('input[id="startingAge"]').type('-1')
+    cy.get('[data-testid="starting-age"]').find('input').should('exist').clear()
+    cy.get('[data-testid="starting-age"]').find('input').type('-1')
 
     cy.get('button').contains('Confirm').click()
 
@@ -359,8 +359,8 @@ describe('ReportInfoPanel.vue', () => {
         true
     })
 
-    cy.get('input[id="finishingAge"]').should('exist').clear()
-    cy.get('input[id="finishingAge"]').type(
+    cy.get('[data-testid="finishing-age"]').find('input').should('exist').clear()
+    cy.get('[data-testid="finishing-age"]').find('input').type(
       (CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX + 1).toString(),
     )
 
@@ -389,8 +389,8 @@ describe('ReportInfoPanel.vue', () => {
         true
     })
 
-    cy.get('input[id="ageIncrement"]').should('exist').clear()
-    cy.get('input[id="ageIncrement"]').type(
+    cy.get('[data-testid="age-increment"]').find('input').should('exist').clear()
+    cy.get('[data-testid="age-increment"]').find('input').type(
       (CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX + 1).toString(),
     )
 
@@ -423,8 +423,8 @@ describe('ReportInfoPanel.vue', () => {
       .find('input')
       .click()
 
-    cy.get('input[id="startYear"]').should('exist').clear()
-    cy.get('input[id="startYear"]').type(
+    cy.get('[data-testid="start-year"]').find('input').should('exist').clear()
+    cy.get('[data-testid="start-year"]').find('input').type(
       (CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN - 1).toString(),
     )
 
@@ -457,8 +457,8 @@ describe('ReportInfoPanel.vue', () => {
       .find('input')
       .click()
 
-    cy.get('input[id="endYear"]').should('exist').clear()
-    cy.get('input[id="endYear"]').type(
+    cy.get('[data-testid="end-year"]').find('input').should('exist').clear()
+    cy.get('[data-testid="end-year"]').find('input').type(
       (CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX + 1).toString(),
     )
 
@@ -491,8 +491,8 @@ describe('ReportInfoPanel.vue', () => {
       .find('input')
       .click()
 
-    cy.get('input[id="yearIncrement"]').should('exist').clear()
-    cy.get('input[id="yearIncrement"]').type(
+    cy.get('[data-testid="year-increment"]').find('input').should('exist').clear()
+    cy.get('[data-testid="year-increment"]').find('input').type(
       (CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX + 1).toString(),
     )
 
@@ -523,9 +523,9 @@ describe('ReportInfoPanel.vue', () => {
 
     cy.get('button').contains('Clear').click()
 
-    cy.get('[id="startingAge"]').should('exist').should('have.value', '')
-    cy.get('[id="finishingAge"]').should('exist').should('have.value', '')
-    cy.get('[id="ageIncrement"]').should('exist').should('have.value', '')
+    cy.get('[data-testid="starting-age"]').find('input').should('exist').should('have.value', '')
+    cy.get('[data-testid="finishing-age"]').find('input').should('exist').should('have.value', '')
+    cy.get('[data-testid="age-increment"]').find('input').should('exist').should('have.value', '')
     cy.get('[id="reportTitle"]').should('exist').should('have.value', '')
     cy.get('.v-select')
       .find('input')
@@ -543,7 +543,9 @@ describe('ReportInfoPanel.vue', () => {
         false
     })
 
-    cy.get('input[type="number"]').should('be.disabled')
+    cy.get('[data-testid="starting-age"]').find('input').should('be.disabled')
+    cy.get('[data-testid="finishing-age"]').find('input').should('be.disabled')
+    cy.get('[data-testid="age-increment"]').find('input').should('be.disabled')
     cy.get('button').contains('Clear').should('not.be.disabled')
     cy.get('button').contains('Confirm').should('not.be.disabled')
     cy.get('button').contains('Edit').should('not.be.visible')
@@ -556,7 +558,9 @@ describe('ReportInfoPanel.vue', () => {
       store.panelState[CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO].editable = false
     })
 
-    cy.get('input[type="number"]').should('be.disabled')
+    cy.get('[data-testid="starting-age"]').find('input').should('be.disabled')
+    cy.get('[data-testid="finishing-age"]').find('input').should('be.disabled')
+    cy.get('[data-testid="age-increment"]').find('input').should('be.disabled')
     cy.get('button').contains('Clear').should('not.be.disabled')
     cy.get('button').contains('Confirm').should('not.be.disabled')
     cy.get('button').contains('Edit').should('not.be.visible')
@@ -613,14 +617,14 @@ describe('ReportInfoPanel.vue', () => {
 
   it('passes isModelParametersMode prop correctly - model parameter mode', () => {
     mountComponent({}, CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
-    cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+    cy.contains('span.min-dbh-limit-species-group-label', 'Minimum DBH Limit by Species Group').should(
       'be.visible',
     )
   })
 
   it('passes isModelParametersMode prop correctly - file upload mode', () => {
     mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
-    cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+    cy.contains('span.min-dbh-limit-species-group-label', 'Minimum DBH Limit by Species Group').should(
       'be.visible',
     )
   })
