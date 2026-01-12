@@ -619,7 +619,7 @@ public class BatchController {
 				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir) //
 				.addString(BatchConstants.ComsInput.POLYGON_COMS_OBJECT_GUID, polygonCOMSObjectGUID.toString())
-				.addString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID, polygonCOMSObjectGUID.toString())
+				.addString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID, layerCOMSObjectGUID.toString())
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
 				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue());
 
