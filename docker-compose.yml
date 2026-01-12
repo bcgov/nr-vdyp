@@ -60,9 +60,8 @@ services:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Admin Console
     environment:
-      MINIO_ROOT_USER: miniovdyp
-      MINIO_ROOT_PASSWORD: password
-      MINIO_LOG_LEVEL: debug
+      MINIO_ROOT_USER: ${OBJECTSTORAGE_ACCESSKEYID}
+      MINIO_ROOT_PASSWORD: ${OBJECTSTORAGE_SECRETACCESSKEY}
     volumes:
       - minio-data:/data
     healthcheck:
@@ -70,6 +69,17 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - s3
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://s3:9000 ${OBJECTSTORAGE_ACCESSKEYID} ${OBJECTSTORAGE_SECRETACCESSKEY}; do sleep 2; done &&
+      mc mb --ignore-existing local/${OBJECTSTORAGE_BUCKET} &&
+      mc anonymous set none local/${OBJECTSTORAGE_BUCKET}
+      "
 
   coms:
     image: ghcr.io/bcgov/common-object-management-service:${COMS_TAG:-latest}
@@ -111,6 +121,8 @@ services:
       KC_PUBLICKEY: ${COMS_KEYCLOAK_PUBLICKEY}
       KC_REALM: ${COMS_KEYCLOAK_REALM}
       KC_SERVERURL: ${COMS_KEYCLOAK_SERVER_URL}
+
+      SERVER_LOGLEVEL: debug
 
   vdyp-backend:
     depends_on:
