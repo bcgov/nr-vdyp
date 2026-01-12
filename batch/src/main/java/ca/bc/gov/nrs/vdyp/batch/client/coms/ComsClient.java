@@ -23,7 +23,7 @@ public class ComsClient {
 		String jsonStringUrl = comsRestClient.get()
 				.uri(
 						uriBuilder -> uriBuilder.path("/object/{objectId}").queryParam("download", "url")
-								.queryParam("expiresIn", props.object().presignExpiresIn()).build(objectId)
+								.build(objectId)
 				).retrieve().body(String.class);
 
 		return mapper.readValue(jsonStringUrl, String.class);
