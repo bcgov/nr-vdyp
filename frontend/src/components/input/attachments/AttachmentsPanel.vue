@@ -294,7 +294,7 @@ const handleDialogClose = () => {}
   display: block;
   font: var(--typography-regular-small-body);
   color: var(--typography-color-primary);
-  font-size: 12px;
+  font-size: var(--typography-font-size-label);
   font-weight: var(--typography-font-weights-regular);
   line-height: 1.5;
   padding: var(--layout-padding-xsmall) var(--layout-padding-none);
@@ -311,7 +311,7 @@ const handleDialogClose = () => {}
 /* Style Vuetify's label to look like placeholder */
 .bcds-file-input :deep(.v-label) {
   font: var(--typography-regular-body);
-  font-size: 16px;
+  font-size: var(--typography-font-size-body);
   color: var(--typography-color-placeholder);
   opacity: 1 !important;
   position: absolute !important;
@@ -371,7 +371,7 @@ const handleDialogClose = () => {}
 /* File Input Element */
 .bcds-file-input :deep(.v-field__input) {
   font: var(--typography-regular-body);
-  font-size: 16px;
+  font-size: var(--typography-font-size-body);
   padding: var(--layout-padding-none);
   color: var(--typography-color-primary);
   border: none;

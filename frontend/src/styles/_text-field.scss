@@ -15,7 +15,7 @@
   display: block;
   font: var(--typography-regular-small-body);
   color: var(--typography-color-primary);
-  font-size: 12px;
+  font-size: var(--typography-font-size-label);
   font-weight: var(--typography-font-weights-regular);
   line-height: 1.5;
   padding: var(--layout-padding-xsmall) var(--layout-padding-none);
@@ -92,7 +92,7 @@
 /* Input element styling - TEXT-FIELD ONLY */
 .v-text-field:not(.v-select):not(.v-autocomplete) .v-field__input {
   font: var(--typography-regular-body);
-  font-size: 16px;
+  font-size: var(--typography-font-size-body);
   padding: var(--layout-padding-none);
   color: var(--typography-color-primary);
   border: none;

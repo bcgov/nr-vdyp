@@ -4,7 +4,7 @@
 .bcds-select-label {
   display: block;
   color: var(--typography-color-secondary);
-  font-size: 12px;
+  font-size: var(--typography-font-size-label);
   font-weight: var(--typography-font-weights-regular);
   line-height: 1.5;
   padding-bottom: 4px;
@@ -136,7 +136,7 @@
 
 /* Selected value text - Remove all padding from container */
 .v-select .v-field__input {
-  font-size: 16px;
+  font-size: var(--typography-font-size-body);
   font-weight: var(--typography-font-weights-regular);
   color: var(--typography-color-primary);
   overflow: hidden;
@@ -211,7 +211,7 @@
 /* Show only the chevron-down icon we explicitly added */
 .v-select .v-field__append-inner .mdi-chevron-down {
   display: inline-flex !important;
-  font-size: 24px;
+  font-size: var(--typography-font-size-h4);
   opacity: 1;
   transition: transform 0.2s ease; /* Smooth rotation animation */
   transform: rotate(0deg); /* Default: pointing down */
@@ -299,7 +299,7 @@
 /* List item text - add minimal padding here only */
 .v-select .v-list-item-title,
 .v-menu .v-list .v-list-item-title {
-  font-size: 16px;
+  font-size: var(--typography-font-size-body);
   font-weight: var(--typography-font-weights-regular);
   color: var(--typography-color-primary);
   padding: 8px !important;

@@ -4,7 +4,7 @@
 .bcds-radio-label {
   display: block;
   color: var(--typography-color-secondary);
-  font-size: 12px;
+  font-size: var(--typography-font-size-label);
   font-weight: var(--typography-font-weights-regular);
   line-height: 1.5;
   padding-bottom: 0px;
@@ -40,7 +40,7 @@
 .v-radio-group > .v-label {
   font: var(--typography-regular-small-body);
   color: var(--typography-color-primary);
-  font-size: 14px;
+  font-size: var(--typography-font-size-small-body);
   font-weight: 400;
 }
 
@@ -76,7 +76,7 @@
 
 /* Radio Label */
 .v-radio .v-label {
-  font-size: 14px;
+  font-size: var(--typography-font-size-small-body);
   font-weight: 400;
   color: var(--typography-color-primary);
   cursor: pointer;

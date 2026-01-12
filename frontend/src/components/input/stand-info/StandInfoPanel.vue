@@ -59,7 +59,7 @@
                     />
                     <v-label
                       v-show="isEmptyOrZero(percentStockableArea)"
-                      style="font-size: 12px"
+                      style="font-size: var(--typography-font-size-label)"
                       >{{
                         MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED
                       }}</v-label
@@ -88,7 +88,7 @@
                       v-show="
                         isZeroValue(crownClosure) && !isCrownClosureDisabled
                       "
-                      style="font-size: 12px"
+                      style="font-size: var(--typography-font-size-label)"
                       >{{
                         MESSAGE.MDL_PRM_INPUT_HINT.DENSITY_PCC_APPLY_DFT
                       }}</v-label
@@ -124,7 +124,7 @@
                         siteSpeciesValues ===
                         CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
                       "
-                      style="font-size: 12px"
+                      style="font-size: var(--typography-font-size-label)"
                       >{{ MESSAGE.MDL_PRM_INPUT_HINT.DENSITY_WO_AGE }}</v-label
                     >
                   </v-col>

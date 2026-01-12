@@ -163,7 +163,7 @@
                       />
                       <v-label
                         v-show="isZeroValue(spzAge)"
-                        style="font-size: 12px"
+                        style="font-size: var(--typography-font-size-label)"
                         >{{
                           MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
                         }}</v-label
@@ -190,7 +190,7 @@
                       />
                       <v-label
                         v-show="isZeroValue(spzHeight)"
-                        style="font-size: 12px"
+                        style="font-size: var(--typography-font-size-label)"
                         >{{
                           MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
                         }}</v-label
@@ -224,7 +224,7 @@
                       />
                       <v-label
                         v-show="isZeroValue(bha50SiteIndex)"
-                        style="font-size: 12px"
+                        style="font-size: var(--typography-font-size-label)"
                         >{{
                           MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
                         }}</v-label
