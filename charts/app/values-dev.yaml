@@ -78,6 +78,7 @@ backend:
     QUARKUS_OIDC_AUTH_SERVER_URL: ~
     VDYP_DB_SECRET_NAME: crunchy-postgres-dev-pguser-app-vdyp
     VDYP_PROXY_DB_SECRET_NAME: crunchy-postgres-dev-pguser-proxy-vdyp-rest
+    COMS_BASE_URL: ~
 frontend:
   fullnameOverride: "vdyp-ui-dev"
   # -- enable or disable a component deployment.
