@@ -42,7 +42,7 @@ public class BatchInputPartitioner {
 	 * @param layerFile     The layer CSV file to partition
 	 * @param numPartitions The number of partitions to create
 	 * @param jobBaseDir    The base directory for the job
-	 * @param jobGuid
+	 * @param jobGuid       The GUID of the job
 	 * @return The total number of unique FEATURE_IDs processed
 	 * @throws BatchPartitionException if partitioning fails (I/O errors or validation failures)
 	 */
@@ -69,7 +69,7 @@ public class BatchInputPartitioner {
 	 * @param layerFile     The layer CSV file to partition
 	 * @param numPartitions The number of partitions to create
 	 * @param jobBaseDir    The base directory for the job
-	 * @param jobGuid
+	 * @param jobGuid       The GUID of the job
 	 * @return The total number of unique FEATURE_IDs processed
 	 * @throws BatchPartitionException if partitioning fails (I/O errors or validation failures)
 	 */
@@ -99,8 +99,8 @@ public class BatchInputPartitioner {
 	 * @param jobBaseDir    The base directory for the job (A Property of the job)
 	 * @param jobGuid       The unique identifier for the job (A Property of the job)
 	 * @return the number of unique feature ids that have been written to the polygon partition files
-	 * @throws BatchPartitionException
-	 * @throws IOException
+	 * @throws BatchPartitionException when there is a problem partitioning the file (e.g. invalid polygon feature ID)
+	 * @throws IOException             when there is an issue reading or writing files
 	 */
 	private int partitionCSVReaders(
 			BufferedReader polygonReader, BufferedReader layerReader, Integer numPartitions, Path jobBaseDir,
@@ -308,8 +308,6 @@ public class BatchInputPartitioner {
 
 		// FIXME: VDYP-869
 		Map<String, Integer> featureIdToPartition = new HashMap<>();
-
-		String headerLine = detectHeader(polygonFile, jobGuid);
 
 		try (
 				BufferedReader reader = new BufferedReader(
