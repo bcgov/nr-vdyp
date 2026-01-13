@@ -106,6 +106,30 @@ class BatchControllerTest {
 	}
 
 	@Test
+	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse()
+			throws BatchPartitionException, JobExecutionAlreadyRunningException, JobRestartException,
+			JobInstanceAlreadyCompleteException, JobParametersInvalidException {
+		UUID polygonCOMSGUID = UUID.randomUUID();
+		UUID layerCOMSGUID = UUID.randomUUID();
+
+		// Mock job execution
+		when(jobExecution.getId()).thenReturn(1L);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.STARTED);
+		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
+		when(jobInstance.getJobName()).thenReturn("testJob");
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn("test-guid");
+		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
+
+		ResponseEntity<Map<String, Object>> response = batchController
+				.startBatchJobPersistedID(polygonCOMSGUID, layerCOMSGUID, "{}");
+
+		assertEquals(200, response.getStatusCode().value());
+		assertTrue(response.getBody().containsKey("jobExecutionId"));
+	}
+
+	@Test
 	void testStartBatchJobWithFiles_WithValidInput_ReturnsSuccessResponse()
 			throws BatchPartitionException, JobExecutionAlreadyRunningException, JobRestartException,
 			JobInstanceAlreadyCompleteException, JobParametersInvalidException {

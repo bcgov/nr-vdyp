@@ -355,7 +355,7 @@ public class BatchController {
 	private JobExecution executeJob(UUID polygonFileComsGuid, UUID layerFileComsGuid, String projectionParametersJson)
 			throws ProjectionRequestValidationException {
 
-		// TODO validateProjectionParameters(polygonFile, layerFile, projectionParametersJson);
+		validateParametersJSON(projectionParametersJson);
 
 		try {
 			String jobGuid = BatchUtils.createJobGuid();
@@ -380,7 +380,7 @@ public class BatchController {
 			return jobExecution;
 
 		} catch (Exception e) {
-			logger.error("Failed to process uploaded CSV files", e);
+			logger.error("Failed to start GUID based job", e);
 
 			String errorMessage = e.getMessage() != null ? e.getMessage()
 					: "Unknown error (" + e.getClass().getSimpleName() + ")";
@@ -389,7 +389,7 @@ public class BatchController {
 					List.of(
 							new ValidationMessage(
 									ValidationMessageKind.GENERIC,
-									"Failed to process uploaded CSV files: " + errorMessage
+									"Failed to start GUID based job: " + errorMessage
 							)
 					)
 			);
@@ -398,8 +398,8 @@ public class BatchController {
 
 	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson)
 			throws ProjectionRequestValidationException {
-
-		validateProjectionParameters(polygonFile, layerFile, projectionParametersJson);
+		validateParametersJSON(projectionParametersJson);
+		validateProjectionParameters(polygonFile, layerFile);
 
 		try {
 			String jobGuid = BatchUtils.createJobGuid();
@@ -454,12 +454,7 @@ public class BatchController {
 		}
 	}
 
-	/**
-	 * Validates that projection parameters are provided and not empty.
-	 */
-	private void validateProjectionParameters(
-			MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson
-	) throws ProjectionRequestValidationException {
+	private void validateParametersJSON(String projectionParametersJson) throws ProjectionRequestValidationException {
 
 		if (projectionParametersJson == null || projectionParametersJson.trim().isEmpty()) {
 			throw new ProjectionRequestValidationException(
@@ -471,6 +466,15 @@ public class BatchController {
 					)
 			);
 		}
+	}
+
+	/**
+	 * Validates that projection parameters are provided and not empty.
+	 */
+	private void validateProjectionParameters(
+			MultipartFile polygonFile, MultipartFile layerFile
+	) throws ProjectionRequestValidationException {
+
 
 		// Validate polygon file
 		if (polygonFile == null || polygonFile.isEmpty()) {
