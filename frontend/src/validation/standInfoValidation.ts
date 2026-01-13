@@ -3,10 +3,10 @@ import { StandInfoValidator } from './standInfoValidator'
 const standInfoValidator = new StandInfoValidator()
 
 export const validateRange = (
-  percentStockableArea: number | null,
+  percentStockableArea: string | null,
   basalArea: string | null,
   treesPerHectare: string | null,
-  crownClosure: number | null,
+  crownClosure: string | null,
 ) => {
   if (
     !standInfoValidator.validatePercentStockableAreaRange(percentStockableArea)

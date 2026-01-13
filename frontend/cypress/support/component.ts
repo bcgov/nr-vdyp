@@ -13,6 +13,7 @@ import type { MountingOptions } from '@vue/test-utils'
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
 import '@bcgov/bc-sans/css/BCSans.css'
+import '@bcgov/design-tokens/css/variables.css'
 import '../../src/styles/style.scss'
 
 const vuetify = createVuetify({

@@ -9,8 +9,8 @@ const reportInfoValidator = new ReportInfoValidator()
  * @returns Object - Validation result
  */
 export const validateComparison = (
-  startValue: number | null,
-  endValue: number | null,
+  startValue: string | null,
+  endValue: string | null,
 ) => {
   if (!reportInfoValidator.validateAgeComparison(startValue, endValue)) {
     return { isValid: false }
@@ -26,9 +26,9 @@ export const validateComparison = (
  * @returns Object - Validation result
  */
 export const validateRequiredFields = (
-  startValue: number | null,
-  endValue: number | null,
-  incrementValue: number | null,
+  startValue: string | null,
+  endValue: string | null,
+  incrementValue: string | null,
 ) => {
   if (
     !reportInfoValidator.validateRequiredFields(
@@ -43,9 +43,9 @@ export const validateRequiredFields = (
 }
 
 export const validateAgeRange = (
-  startingAge: number | null,
-  finishingAge: number | null,
-  ageIncrement: number | null,
+  startingAge: string | null,
+  finishingAge: string | null,
+  ageIncrement: string | null,
 ) => {
   if (!reportInfoValidator.validateStartingAgeRange(startingAge)) {
     return {
@@ -72,9 +72,9 @@ export const validateAgeRange = (
 }
 
 export const validateYearRange = (
-  startYear: number | null,
-  endYear: number | null,
-  yearIncrement: number | null,
+  startYear: string | null,
+  endYear: string | null,
+  yearIncrement: string | null,
 ) => {
   if (!reportInfoValidator.validateStartYearRange(startYear)) {
     return {

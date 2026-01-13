@@ -7,7 +7,7 @@ export class SpeciesInfoValidator extends ValidationBase {
     if (percent === null || percent === '') {
       return true
     }
-    const numValue = Math.floor(parseFloat(percent) * 10) / 10
+    const numValue = Math.floor(Number.parseFloat(percent) * 10) / 10
     return (
       numValue >= CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN &&
       numValue <= CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX

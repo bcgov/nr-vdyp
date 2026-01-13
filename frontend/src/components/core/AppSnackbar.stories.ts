@@ -19,12 +19,12 @@ const meta: Meta<typeof AppSnackbar> = {
     type: {
       control: 'select',
       options: ['info', 'success', 'error', 'warning', ''],
-      description: 'Type of notification',
+      description: 'Type of notification - determines the theme and styling according to BC Gov Design System',
       defaultValue: 'info',
     },
     timeout: {
       control: { type: 'range', min: 2000, max: 10000, step: 500 },
-      description: 'Duration for the notification to stay visible',
+      description: 'Duration for the notification to stay visible (in milliseconds)',
       defaultValue: 5000,
     },
     autoTimeout: {
@@ -45,13 +45,7 @@ const meta: Meta<typeof AppSnackbar> = {
     },
     color: {
       control: 'color',
-      description: 'Snackbar background color',
-      defaultValue: '#2196F3',
-    },
-    rounded: {
-      control: 'boolean',
-      description: 'Enable or disable rounded corners',
-      defaultValue: true,
+      description: 'Custom background color (overrides type-based theme)',
     },
     onClose: { action: 'close', description: 'Emitted when snackbar closes' },
   },
@@ -69,36 +63,6 @@ export const InfoNotification: Story = {
     type: 'info',
     timeout: 5000,
     location: 'top',
-    color: '#d9eaf7',
-    rounded: true,
-  },
-}
-
-export const ErrorNotification: Story = {
-  args: {
-    isVisible: true,
-    autoTimeout: true,
-    showTimer: false,
-    message: 'This is an error message.',
-    type: 'error',
-    timeout: 5000,
-    location: 'top',
-    color: '#d8292f',
-    rounded: true,
-  },
-}
-
-export const WarningNotification: Story = {
-  args: {
-    isVisible: true,
-    autoTimeout: true,
-    showTimer: false,
-    message: 'This is a warning message.',
-    type: 'warning',
-    timeout: 5000,
-    location: 'top',
-    color: '#f9f1c6',
-    rounded: true,
   },
 }
 
@@ -111,7 +75,64 @@ export const SuccessNotification: Story = {
     type: 'success',
     timeout: 5000,
     location: 'top',
-    color: '#2e8540',
-    rounded: true,
+  },
+}
+
+export const WarningNotification: Story = {
+  args: {
+    isVisible: true,
+    autoTimeout: true,
+    showTimer: false,
+    message: 'This is a warning message.',
+    type: 'warning',
+    timeout: 5000,
+    location: 'top',
+  },
+}
+
+export const ErrorNotification: Story = {
+  args: {
+    isVisible: true,
+    autoTimeout: true,
+    showTimer: false,
+    message: 'This is an error message.',
+    type: 'error',
+    timeout: 5000,
+    location: 'top',
+  },
+}
+
+export const WithTimer: Story = {
+  args: {
+    isVisible: true,
+    autoTimeout: true,
+    showTimer: true,
+    message: 'This notification has a visible timer.',
+    type: 'info',
+    timeout: 8000,
+    location: 'top',
+  },
+}
+
+export const NoAutoClose: Story = {
+  args: {
+    isVisible: true,
+    autoTimeout: false,
+    showTimer: false,
+    message: 'This notification stays open until manually closed.',
+    type: 'warning',
+    location: 'top',
+  },
+}
+
+export const BottomLocation: Story = {
+  args: {
+    isVisible: true,
+    autoTimeout: true,
+    showTimer: false,
+    message: 'This notification appears at the bottom.',
+    type: 'success',
+    timeout: 5000,
+    location: 'bottom',
   },
 }

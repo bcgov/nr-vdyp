@@ -5,7 +5,6 @@
     :hideSlider="true"
     :centerActive="true"
     :showArrows="true"
-    height="60px"
     :key="tabKey"
   >
     <v-tab
@@ -70,4 +69,4 @@ const handleTabUpdate = (newValue: unknown) => {
 }
 </script>
 
-<style scoped></style>
+<style scoped />

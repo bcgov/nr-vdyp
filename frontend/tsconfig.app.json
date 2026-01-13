@@ -13,6 +13,7 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
     "baseUrl": ".",
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
     "types": ["cypress", "node"],
     "paths": {
       "@/*": ["./src/*"]

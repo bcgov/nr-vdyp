@@ -23,7 +23,7 @@ describe('Site Info Validation Unit Tests', () => {
       expect(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
-          0,
+          '0',
           '15.0',
           '20.0',
         ).isValid,
@@ -33,7 +33,7 @@ describe('Site Info Validation Unit Tests', () => {
       expect(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
-          50,
+          '50',
           null,
           '20.0',
         ).isValid,
@@ -44,7 +44,7 @@ describe('Site Info Validation Unit Tests', () => {
       expect(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
-          50,
+          '50',
           '15.0',
           '20.0',
         ).isValid,
@@ -98,17 +98,23 @@ describe('Site Info Validation Unit Tests', () => {
     it('should validate spzAge range correctly', () => {
       // Valid range
       expect(
-        validateRange(CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN, null, null)
-          .isValid,
+        validateRange(
+          String(CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN),
+          null,
+          null,
+        ).isValid,
       ).to.be.true
       expect(
-        validateRange(CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX, null, null)
-          .isValid,
+        validateRange(
+          String(CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX),
+          null,
+          null,
+        ).isValid,
       ).to.be.true
 
       // Out of range
       const belowMinResult = validateRange(
-        CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN - 1,
+        String(CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN - 1),
         null,
         null,
       )
@@ -116,7 +122,7 @@ describe('Site Info Validation Unit Tests', () => {
       expect(belowMinResult.errorType).to.equal('spzAge')
 
       const aboveMaxResult = validateRange(
-        CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX + 1,
+        String(CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX + 1),
         null,
         null,
       )

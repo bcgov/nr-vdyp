@@ -4,17 +4,6 @@ import 'vuetify/styles'
 
 const defaultTheme: ThemeDefinition = {
   dark: false,
-  colors: {
-    primary: '#003366',
-    secondary: '#fcba19',
-    accent: '#606060',
-    error: '#d8292f',
-    warning: '#f9f1c6',
-    info: '#d9eaf7',
-    success: '#2e8540',
-    anchor: '#1A5A96',
-    background: '#ffffff',
-  },
   variables: {
     'disabled-opacity': 0.6,
   },

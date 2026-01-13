@@ -114,7 +114,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   const totalSpeciesPercent = computed(() => {
     const totalPercent = speciesList.value.reduce((acc, item) => {
-      return acc + (parseFloat(item.percent as any) || 0)
+      return acc + (Number.parseFloat(item.percent as any) || 0)
     }, 0)
 
     // Preserve to the first decimal place and convert to string in '##0.0' format
@@ -127,7 +127,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   const totalSpeciesGroupPercent = computed(() => {
     return speciesGroups.value.reduce((acc, group) => {
-      return acc + (parseFloat(group.percent) || 0)
+      return acc + (Number.parseFloat(group.percent) || 0)
     }, 0)
   })
 
@@ -146,7 +146,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       }
 
       // Add percent to the group
-      groupMap[item.species] += parseFloat(item.percent as any) || 0
+      groupMap[item.species] += Number.parseFloat(item.percent as any) || 0
     }
 
     // Convert groupMap to speciesGroups array
@@ -163,7 +163,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     })
 
     speciesGroups.value.sort(
-      (a, b) => parseFloat(b.percent) - parseFloat(a.percent),
+      (a, b) => Number.parseFloat(b.percent) - Number.parseFloat(a.percent),
     )
 
     // Update highestPercentSpecies and selectedSiteSpecies with the first siteSpecies in speciesGroups
@@ -176,26 +176,26 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const ecoZone = ref<string | null>(null)
   const siteSpeciesValues = ref<string | null>(null)
   const ageType = ref<string | null>(null)
-  const spzAge = ref<number | null>(null)
+  const spzAge = ref<string | null>(null)
   const spzHeight = ref<string | null>(null)
   const bha50SiteIndex = ref<string | null>(null)
 
   // stand information
-  const percentStockableArea = ref<number | null>(null)
+  const percentStockableArea = ref<string | null>(null)
   const basalArea = ref<string | null>(null)
   const treesPerHectare = ref<string | null>(null)
   const minDBHLimit = ref<string | null>(null)
   const currentDiameter = ref<string | null>(null)
-  const crownClosure = ref<number | null>(null)
+  const crownClosure = ref<string | null>(null)
 
   // report info
   const selectedAgeYearRange = ref<string | null>(null)
-  const startingAge = ref<number | null>(null)
-  const finishingAge = ref<number | null>(null)
-  const ageIncrement = ref<number | null>(null)
-  const startYear = ref<number | null>(null)
-  const endYear = ref<number | null>(null)
-  const yearIncrement = ref<number | null>(null)
+  const startingAge = ref<string | null>(null)
+  const finishingAge = ref<string | null>(null)
+  const ageIncrement = ref<string | null>(null)
+  const startYear = ref<string | null>(null)
+  const endYear = ref<string | null>(null)
+  const yearIncrement = ref<string | null>(null)
   const isForwardGrowEnabled = ref<boolean>(true)
   const isBackwardGrowEnabled = ref<boolean>(true)
 
@@ -208,7 +208,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const isCurrentYearEnabled = ref<boolean>(false)
   const isReferenceYearEnabled = ref<boolean>(false)
   const incSecondaryHeight = ref<boolean>(false)
-  const specificYear = ref<number | null>(null)
+  const specificYear = ref<string | null>(null)
 
   const projectionType = ref<string | null>(null)
   const reportTitle = ref<string | null>(null)

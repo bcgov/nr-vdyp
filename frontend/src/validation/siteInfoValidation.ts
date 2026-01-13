@@ -4,7 +4,7 @@ const siteInfoValidator = new SiteInfoValidator()
 
 export const validateRequiredFields = (
   siteSpeciesValues: string | null,
-  spzAge: number | null,
+  spzAge: string | null,
   spzHeight: string | null,
   bha50SiteIndex: string | null,
 ) => {
@@ -23,7 +23,7 @@ export const validateRequiredFields = (
 }
 
 export const validateRange = (
-  spzAge: number | null,
+  spzAge: string | null,
   spzHeight: string | null,
   bha50SiteIndex: string | null,
 ) => {

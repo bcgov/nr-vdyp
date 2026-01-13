@@ -1,20 +1,33 @@
 <template>
-  <v-app-bar
-    extension-height="10"
-    style="height: 64px !important"
-    color="#003366"
-  >
-    <BCLogo v-bind="logoProps" />
-    <v-spacer></v-spacer>
-    <HeaderTitle v-bind="titleProps" />
-    <v-spacer></v-spacer>
+  <header class="bcds-header">
+    <div class="bcds-header--container">
+      <!-- Skip links for accessibility -->
+      <ul class="bcds-header--skiplinks">
+        <li>
+          <a href="#main" @click.prevent="skipToMain">Skip to main content</a>
+        </li>
+      </ul>
 
-    <v-toolbar-items class="header-right-toolbar">
-      <TrainingSupport />
-      <span class="header-separator">|</span>
-      <UserMenu v-bind="userMenuProps" />
-    </v-toolbar-items>
-  </v-app-bar>
+      <!-- Left group: Logo + Separator + Title -->
+      <div class="bcds-header--left">
+        <!-- BC Logo -->
+        <BCLogo v-bind="logoProps" />
+
+        <!-- Separator line -->
+        <div class="bcds-header--line"></div>
+
+        <!-- Title -->
+          <HeaderTitle v-bind="titleProps" />
+      </div>
+
+      <!-- Right group: Training and Support + User Menu -->
+      <div class="bcds-header--actions">
+        <TrainingSupport />
+        <div class="bcds-header--separator"></div>
+        <UserMenu v-bind="userMenuProps" />
+      </div>
+    </div>
+  </header>
 </template>
 
 <script setup lang="ts">
@@ -37,29 +50,97 @@ defineProps({
     default: () => ({}),
   },
 })
+
+const skipToMain = () => {
+  const mainElement = document.getElementById('main')
+  if (mainElement) {
+    mainElement.focus()
+    mainElement.scrollIntoView()
+  }
+}
 </script>
 <style scoped>
-/* v-app-bar whole box */
-header.v-toolbar.v-toolbar--density-default.v-theme--defaultTheme.v-locale--is-ltr.v-app-bar {
-  justify-content: center;
+/* BC Gov Design System Header Styles */
+.bcds-header {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: var(--surface-color-forms-default);
+  border-bottom-color: var(--surface-color-border-default);
+  border-bottom-style: solid;
+  border-bottom-width: var(--layout-border-width-small);
+  min-height: 65px;
+  padding: var(--layout-padding-none) var(--layout-padding-medium);
+  width: 100%;
 }
 
-/* right-toolbar whole box */
-div.v-toolbar-items.header-right-toolbar {
-  padding-right: 10px;
+.bcds-header > .bcds-header--container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--layout-padding-medium);
+  width: 100%;
 }
 
-.header-right-toolbar {
-  padding-right: 16px;
+/* Left group: Logo + Separator + Title */
+.bcds-header--left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--layout-padding-medium);
+}
+
+.bcds-header > .bcds-header--container > ul.bcds-header--skiplinks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+}
+
+.bcds-header > .bcds-header--container > ul.bcds-header--skiplinks li a,
+.bcds-header > .bcds-header--container > ul.bcds-header--skiplinks li button {
+  background-color: var(--surface-color-forms-default);
+  box-sizing: border-box;
+  color: var(--typography-color-link);
+  font-family: var(--typography-font-families-bc-sans);
+  font-weight: var(--typography-font-weights-regular);
+  font-size: var(--typography-font-size-body);
+  line-height: var(--typography-line-heights-xdense);
+  margin-top: -17.5px; /* Center the link visually in a single line-height header */
+  padding: var(--layout-padding-xsmall) var(--layout-padding-medium);
+  position: absolute;
+  margin-left: -100000px;
+}
+
+.bcds-header > .bcds-header--container > ul.bcds-header--skiplinks li a:focus,
+.bcds-header
+  > .bcds-header--container
+  > ul.bcds-header--skiplinks
+  li
+  button:focus {
+  margin-left: 0; /* Line up left edge with left edge of logo image */
+  text-wrap: nowrap;
+}
+
+.bcds-header--left > .bcds-header--line {
+  background-color: var(--surface-color-border-default);
+  width: 1px;
+  height: 32px;
+}
+
+/* Actions container (Training Support + User Menu) */
+.bcds-header--actions {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 
-.header-right-toolbar span {
-  padding: 0 8px;
-}
-
-span.header-separator {
-  padding: 0px;
+.bcds-header--separator {
+  background-color: var(--surface-color-border-default);
+  margin-left: 10px;
+  width: 1px;
+  height: 22px;
 }
 </style>

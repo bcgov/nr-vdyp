@@ -64,35 +64,33 @@ const logout = () => {
 
 <style scoped>
 .header-user-button {
-  padding-left: 0px;
-  padding-right: 0px;
+  padding: 0.25rem 0.5rem;
   min-width: auto;
   background-color: transparent;
-  color: rgb(255, 255, 255);
+  color: var(--typography-color-primary);
   box-shadow: none;
+  font-family: var(--typography-font-families-bc-sans);
+  font-weight: var(--typography-font-weights-regular);
+  font-size: var(--typography-font-size-body);
+  line-height: var(--typography-line-heights-xdense);
 }
 
-/* user-icon*/
-i.mdi-account-circle.mdi.v-icon.notranslate.v-theme--defaultTheme.v-icon--size-default.header-user-icon {
-  margin-top: 3px;
+.header-user-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
-span.header-user-icon {
-  margin-right: 4px;
-  padding-top: 1px;
+.header-user-icon {
+  margin-right: 0.25rem;
+  color: var(--typography-color-primary);
 }
 
-span.header-user-name {
-  padding: 0px 0px 0px 3px;
+.header-user-name {
   text-transform: none;
-  font-size: 14px;
+  font-family: var(--typography-font-families-bc-sans);
+  font-weight: var(--typography-font-weights-regular);
+  font-size: var(--typography-font-size-body);
+  line-height: var(--typography-line-heights-xdense);
   letter-spacing: normal;
-  line-height: 21px;
-}
-
-/* user-icon and user-name whole box */
-button.v-btn.v-theme--defaultTheme.v-btn--density-default.v-btn--size-default.v-btn--variant-text.d-flex.align-center {
-  padding-left: 5px;
-  padding-right: 5px;
+  white-space: nowrap;
 }
 </style>

@@ -20,13 +20,11 @@ const ssoRedirectUrl = env.VITE_SSO_REDIRECT_URI
  * @returns {Keycloak} The Keycloak instance.
  */
 const createKeycloakInstance = (): Keycloak => {
-  if (!keycloakInstance) {
-    keycloakInstance = new Keycloak({
-      url: `${ssoAuthServerUrl}` as string,
-      realm: `${ssoRealm}` as string,
-      clientId: `${ssoClientId}` as string,
-    })
-  }
+  keycloakInstance ??= new Keycloak({
+    url: `${ssoAuthServerUrl}`,
+    realm: `${ssoRealm}`,
+    clientId: `${ssoClientId}`,
+  })
   return keycloakInstance
 }
 
@@ -38,7 +36,89 @@ const initOptions: KeycloakInitOptions = {
 }
 
 const loginOptions = {
-  redirectUri: ssoRedirectUrl as string,
+  redirectUri: ssoRedirectUrl,
+}
+
+/**
+ * Initializes Keycloak from stored tokens if available.
+ * @returns {Promise<Keycloak | undefined>} The initialized Keycloak instance or undefined if not stored.
+ */
+const tryInitializeFromStoredTokens = async (): Promise<Keycloak | undefined> => {
+  const authStore = useAuthStore()
+  authStore.loadUserFromStorage()
+
+  if (
+    authStore.authenticated &&
+    authStore.user?.accessToken &&
+    authStore.user?.refToken &&
+    authStore.user?.idToken
+  ) {
+    keycloakInstance!.token = authStore.user.accessToken
+    keycloakInstance!.refreshToken = authStore.user.refToken
+    keycloakInstance!.idToken = authStore.user.idToken
+    keycloakInstance!.authenticated = true
+
+    if (!validateAccessToken(keycloakInstance!.token ?? '')) {
+      logErrorAndLogout(
+        AUTH_ERR.AUTH_001,
+        'Token validation failed (Error: AUTH_001).',
+      )
+      return undefined
+    }
+
+    await handleTokenValidation()
+    return keycloakInstance ?? undefined
+  }
+
+  return undefined
+}
+
+/**
+ * Initializes Keycloak with fresh authentication.
+ * @returns {Promise<Keycloak | undefined>} The initialized Keycloak instance or undefined on failure.
+ */
+const initializeWithFreshAuth = async (): Promise<Keycloak | undefined> => {
+  const auth = await keycloakInstance!.init(initOptions)
+  console.info(`SSO initialization complete : ${auth}`)
+
+  if (
+    !auth ||
+    !keycloakInstance!.token ||
+    !keycloakInstance!.refreshToken ||
+    !keycloakInstance!.idToken
+  ) {
+    keycloakInstance!.login(loginOptions)
+    return undefined
+  }
+
+  console.info('Ready to parsed token payload')
+  const tokenParsed = JSON.parse(atob(keycloakInstance!.token.split('.')[1]))
+
+  if (tokenParsed.identity_provider !== KEYCLOAK.IDP_AZUR_IDIR) {
+    logErrorAndLogout(
+      AUTH_ERR.AUTH_002,
+      'Authentication failed: Invalid identity provider. (Error: AUTH_002).',
+    )
+    return undefined
+  }
+
+  if (!validateAccessToken(keycloakInstance!.token)) {
+    logErrorAndLogout(
+      AUTH_ERR.AUTH_003,
+      'Token validation failed. (Error: AUTH_003).',
+    )
+    return undefined
+  }
+
+  const authStore = useAuthStore()
+  authStore.setUser({
+    accessToken: keycloakInstance!.token,
+    refToken: keycloakInstance!.refreshToken,
+    idToken: keycloakInstance!.idToken,
+  })
+
+  await handleTokenValidation()
+  return keycloakInstance ?? undefined
 }
 
 /**
@@ -56,85 +136,18 @@ export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
   try {
     keycloakInstance = createKeycloakInstance()
 
-    const authStore = useAuthStore()
-
-    // to avoid making a KeyCloak API on every request
-    authStore.loadUserFromStorage()
-    if (
-      authStore.authenticated &&
-      authStore.user &&
-      authStore.user.accessToken &&
-      authStore.user.refToken &&
-      authStore.user.idToken
-    ) {
-      keycloakInstance.token = authStore.user.accessToken
-      keycloakInstance.refreshToken = authStore.user.refToken
-      keycloakInstance.idToken = authStore.user.idToken
-      keycloakInstance.authenticated = true
-
-      // Perform token validation
-      if (!validateAccessToken(keycloakInstance.token ?? '')) {
-        logErrorAndLogout(
-          AUTH_ERR.AUTH_001,
-          'Token validation failed (Error: AUTH_001).',
-        )
-        return undefined
-      }
-
-      // Perform token validation and refresh if expired
-      await handleTokenValidation()
-
-      return keycloakInstance
+    const storedInstance = await tryInitializeFromStoredTokens()
+    if (storedInstance) {
+      return storedInstance
     }
 
-    const auth = await keycloakInstance.init(initOptions)
-    console.info(`SSO initialization complete : ${auth}`)
-    if (
-      auth &&
-      keycloakInstance.token &&
-      keycloakInstance.refreshToken &&
-      keycloakInstance.idToken
-    ) {
-      console.info('Ready to parsed token payload')
-      const tokenParsed = JSON.parse(atob(keycloakInstance.token.split('.')[1]))
-
-      // do validate the IDP in the JWT
-      if (tokenParsed.identity_provider !== KEYCLOAK.IDP_AZUR_IDIR) {
-        logErrorAndLogout(
-          AUTH_ERR.AUTH_002,
-          'Authentication failed: Invalid identity provider. (Error: AUTH_002).',
-        )
-        return undefined
-      }
-
-      // Perform token validation
-      if (!validateAccessToken(keycloakInstance.token)) {
-        logErrorAndLogout(
-          AUTH_ERR.AUTH_003,
-          'Token validation failed. (Error: AUTH_003).',
-        )
-        return undefined
-      }
-
-      authStore.setUser({
-        accessToken: keycloakInstance.token,
-        refToken: keycloakInstance.refreshToken,
-        idToken: keycloakInstance.idToken,
-      })
-
-      // Perform token validation and refresh if expired
-      await handleTokenValidation()
-
-      return keycloakInstance
-    } else {
-      keycloakInstance.login(loginOptions)
-    }
+    return await initializeWithFreshAuth()
   } catch (err) {
     if (notificationStore) {
       notificationStore.showErrorMessage(AUTH_ERR.AUTH_004)
     }
     console.error('Keycloak initialization failed (Error: AUTH_004):', err)
-    keycloakInstance = null // Reset the instance on failure
+    keycloakInstance = null
     throw err
   }
 }
@@ -178,9 +191,7 @@ const validateAccessToken = (accessToken: string): boolean => {
  */
 export const initializeKeycloakAndAuth = async (): Promise<boolean> => {
   try {
-    if (!keycloakInstance) {
-      keycloakInstance = createKeycloakInstance()
-    }
+    keycloakInstance ??= createKeycloakInstance()
 
     const authStore = useAuthStore()
 
@@ -322,7 +333,7 @@ export const logout = (): void => {
   const authStore = useAuthStore()
   authStore.clearUser()
 
-  window.location.href = `https://logon7.gov.bc.ca/clp-cgi/logoff.cgi?retnow=1&returl=${encodeURIComponent(
+  globalThis.location.href = `https://logon7.gov.bc.ca/clp-cgi/logoff.cgi?retnow=1&returl=${encodeURIComponent(
     `${ssoAuthServerUrl}/realms/${ssoRealm}/protocol/openid-connect/logout?post_logout_redirect_uri=` +
       ssoRedirectUrl +
       '&client_id=' +

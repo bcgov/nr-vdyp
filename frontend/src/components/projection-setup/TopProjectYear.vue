@@ -1,5 +1,5 @@
 <template>
-  <div class="top-project-year mt-3">
+  <div class="top-project-year">
     <h1 class="top-project">{{ title }}</h1>
     <span class="top-year">Year: {{ fiscalYear }}</span>
   </div>
@@ -40,17 +40,17 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 60px;
+  margin-bottom: var(--layout-margin-small);
+  padding-bottom: var(--layout-padding-xlarge);
 }
 
 .top-project {
-  font-size: 24px;
-  font-weight: bold;
+  font: var(--typography-bold-h1);
+  color: var(--typography-color-primary);
 }
 
 .top-year {
-  font-size: 24px;
-  font-weight: bold;
+  font: var(--typography-bold-large-body);
+  color: var(--typography-color-primary);
 }
 </style>

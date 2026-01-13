@@ -42,7 +42,7 @@ describe('Util Functions Unit Tests', () => {
     it('should return true for blank values', () => {
       expect(isBlank(undefined)).to.be.true
       expect(isBlank(null)).to.be.true
-      expect(isBlank(NaN)).to.be.true
+      expect(isBlank(Number.NaN)).to.be.true
       expect(isBlank([])).to.be.true
       expect(isBlank('  ')).to.be.true
       expect(isBlank('')).to.be.true
@@ -73,7 +73,7 @@ describe('Util Functions Unit Tests', () => {
       expect(isZeroValue(undefined)).to.be.false
       expect(isZeroValue('abc')).to.be.false
       expect(isZeroValue({})).to.be.false
-      expect(isZeroValue(NaN)).to.be.false
+      expect(isZeroValue(Number.NaN)).to.be.false
       expect(isZeroValue('-0')).to.be.true // Edge case: "-0" is considered 0
     })
   })
@@ -136,9 +136,9 @@ describe('Util Functions Unit Tests', () => {
 
     it('should return null for invalid timestamps', () => {
       // Updated to expect Invalid Date for NaN
-      const invalidDate = formatUnixTimestampToDate(NaN)
+      const invalidDate = formatUnixTimestampToDate(Number.NaN)
       expect(invalidDate).to.be.instanceOf(Date) // Invalid Date is still a Date object
-      expect(isNaN(invalidDate!.getTime())).to.be.true // Verify it's invalid
+      expect(Number.isNaN(invalidDate!.getTime())).to.be.true // Verify it's invalid
       // Negative timestamp is valid
       const negDate = formatUnixTimestampToDate(-1)
       expect(negDate).to.be.instanceOf(Date)
@@ -216,16 +216,32 @@ describe('Util Functions Unit Tests', () => {
 
       // Use cy.stub with alias and return value in correct order
       cy.stub(URL, 'createObjectURL').as('createObjectURL').returns('mock-url')
-      cy.spy(document, 'createElement').as('createElement')
+      cy.stub(URL, 'revokeObjectURL').as('revokeObjectURL')
+
+      // Create a mock anchor element with a spy on click and remove
+      let mockAnchor: HTMLAnchorElement | null = null
+      const originalCreateElement = document.createElement.bind(document)
+
+      cy.stub(document, 'createElement').callsFake((tagName: string) => {
+        const element = originalCreateElement(tagName)
+        if (tagName === 'a') {
+          mockAnchor = element as HTMLAnchorElement
+          cy.spy(mockAnchor, 'click').as('click')
+          cy.spy(mockAnchor, 'remove').as('remove')
+        }
+        return element
+      }).as('createElement')
+
       cy.spy(document.body, 'appendChild').as('appendChild')
-      cy.spy(document.body, 'removeChild').as('removeChild')
 
       downloadFile(blob, fileName)
 
       cy.get('@createObjectURL').should('have.been.calledWith', blob)
       cy.get('@createElement').should('have.been.calledWith', 'a')
       cy.get('@appendChild').should('have.been.called')
-      cy.get('@removeChild').should('have.been.called')
+      cy.get('@click').should('have.been.called')
+      cy.get('@remove').should('have.been.called')
+      cy.get('@revokeObjectURL').should('have.been.calledWith', 'mock-url')
     })
   })
 
@@ -313,7 +329,7 @@ describe('Util Functions Unit Tests', () => {
 
     it('should handle special characters and maintain valid filename structure', () => {
       expect(sanitizeFileName('file/name/path')).to.equal('file_name_path')
-      expect(sanitizeFileName('file\\name\\path')).to.equal('file_name_path')
+      expect(sanitizeFileName(String.raw`file\name\path`)).to.equal('file_name_path')
       expect(sanitizeFileName('file<name>path')).to.equal('file_name_path')
     })
 

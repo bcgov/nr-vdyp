@@ -39,12 +39,12 @@ describe('ReportConfiguration.vue', () => {
 
   const props = {
     selectedAgeYearRange: CONSTANTS.AGE_YEAR_RANGE.AGE,
-    startingAge: 10,
-    finishingAge: 300,
-    ageIncrement: 5,
-    startYear: 2020,
-    endYear: 2030,
-    yearIncrement: 2,
+    startingAge: '10',
+    finishingAge: '300',
+    ageIncrement: '5',
+    startYear: '2020',
+    endYear: '2030',
+    yearIncrement: '2',
     isForwardGrowEnabled: DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED,
     isBackwardGrowEnabled: DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
     isComputedMAIEnabled: DEFAULTS.DEFAULT_VALUES.IS_COMPUTED_MAI_ENABLED,
@@ -85,23 +85,23 @@ describe('ReportConfiguration.vue', () => {
       .find('input[type="radio"]')
       .should('be.checked')
 
-    cy.get('input[id="startingAge"]').should(
+    cy.get('[data-testid="starting-age"] input').should(
       'have.value',
-      props.startingAge.toString(),
+      props.startingAge,
     )
-    cy.get('input[id="finishingAge"]').should(
+    cy.get('[data-testid="finishing-age"] input').should(
       'have.value',
-      props.finishingAge.toString(),
+      props.finishingAge,
     )
-    cy.get('input[id="ageIncrement"]').should(
+    cy.get('[data-testid="age-increment"] input').should(
       'have.value',
-      props.ageIncrement.toString(),
+      props.ageIncrement,
     )
 
-    cy.get('input[id="startYear"]').should('not.exist')
-    cy.get('input[id="endYear"]').should('not.exist')
-    cy.get('input[id="yearIncrement"]').should('not.exist')
-    cy.get('input[id="specificYear"]').should('exist')
+    cy.get('[data-testid="start-year"]').should('not.exist')
+    cy.get('[data-testid="end-year"]').should('not.exist')
+    cy.get('[data-testid="year-increment"]').should('not.exist')
+    cy.get('[data-testid="specific-year"]').should('exist')
     cy.get(
       '[data-testid="inc-secondary-height"] input[type="checkbox"]',
     ).should('exist')
@@ -133,20 +133,20 @@ describe('ReportConfiguration.vue', () => {
       .find('input[type="radio"]')
       .should('be.checked')
 
-    cy.get('input[id="startYear"]').should(
+    cy.get('[data-testid="start-year"] input').should(
       'have.value',
-      props.startYear.toString(),
+      props.startYear,
     )
-    cy.get('input[id="endYear"]').should('have.value', props.endYear.toString())
-    cy.get('input[id="yearIncrement"]').should(
+    cy.get('[data-testid="end-year"] input').should('have.value', props.endYear)
+    cy.get('[data-testid="year-increment"] input').should(
       'have.value',
-      props.yearIncrement.toString(),
+      props.yearIncrement,
     )
 
-    cy.get('input[id="startingAge"]').should('not.exist')
-    cy.get('input[id="finishingAge"]').should('not.exist')
-    cy.get('input[id="ageIncrement"]').should('not.exist')
-    cy.get('input[id="specificYear"]').should('have.value', '')
+    cy.get('[data-testid="starting-age"]').should('not.exist')
+    cy.get('[data-testid="finishing-age"]').should('not.exist')
+    cy.get('[data-testid="age-increment"]').should('not.exist')
+    cy.get('[data-testid="specific-year"] input').should('have.value', '')
     cy.get(
       '[data-testid="inc-secondary-height"] input[type="checkbox"]',
     ).should('exist')
@@ -220,20 +220,20 @@ describe('ReportConfiguration.vue', () => {
       },
     })
 
-    cy.get('input[id="startingAge"]').clear()
-    cy.get('input[id="startingAge"]').type('15')
-    cy.get('@updateSpy').should('have.been.calledWith', 15)
+    cy.get('[data-testid="starting-age"] input').clear()
+    cy.get('[data-testid="starting-age"] input').type('15')
+    cy.get('@updateSpy').should('have.been.calledWith', '15')
 
-    cy.get('input[id="finishingAge"]').clear()
-    cy.get('input[id="finishingAge"]').type('120')
-    cy.get('@updateSpy').should('have.been.calledWith', 120)
+    cy.get('[data-testid="finishing-age"] input').clear()
+    cy.get('[data-testid="finishing-age"] input').type('120')
+    cy.get('@updateSpy').should('have.been.calledWith', '120')
 
-    cy.get('input[id="ageIncrement"]').clear()
-    cy.get('input[id="ageIncrement"]').type('10')
-    cy.get('@updateSpy').should('have.been.calledWith', 10)
+    cy.get('[data-testid="age-increment"] input').clear()
+    cy.get('[data-testid="age-increment"] input').type('10')
+    cy.get('@updateSpy').should('have.been.calledWith', '10')
 
-    cy.get('.v-select').click()
-    cy.get('.v-list-item')
+    cy.get('#projection-type-select').click({ force: true })
+    cy.get('.v-list-item', { timeout: 6000 })
       .contains(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
       .click({ force: true })
     cy.get('@updateSpy').should(
@@ -301,15 +301,15 @@ describe('ReportConfiguration.vue', () => {
       .parent()
       .find('input')
       .click()
-    cy.get('input[id="startYear"]').clear()
-    cy.get('input[id="startYear"]').type('2021')
-    cy.get('@updateSpy').should('have.been.calledWith', 2021)
-    cy.get('input[id="endYear"]').clear()
-    cy.get('input[id="endYear"]').type('2030')
-    cy.get('@updateSpy').should('have.been.calledWith', 2030)
-    cy.get('input[id="yearIncrement"]').clear()
-    cy.get('input[id="yearIncrement"]').type('3')
-    cy.get('@updateSpy').should('have.been.calledWith', 3)
+    cy.get('[data-testid="start-year"] input').clear()
+    cy.get('[data-testid="start-year"] input').type('2021')
+    cy.get('@updateSpy').should('have.been.calledWith', '2021')
+    cy.get('[data-testid="end-year"] input').clear()
+    cy.get('[data-testid="end-year"] input').type('2030')
+    cy.get('@updateSpy').should('have.been.calledWith', '2030')
+    cy.get('[data-testid="year-increment"] input').clear()
+    cy.get('[data-testid="year-increment"] input').type('3')
+    cy.get('@updateSpy').should('have.been.calledWith', '3')
 
     cy.get('input[id="reportTitle"]').clear()
     cy.get('input[id="reportTitle"]').type('Updated Report Title')
@@ -325,10 +325,10 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-    cy.get('input[id="startingAge"]').clear()
-    cy.get('input[id="startingAge"]').type('10')
-    cy.get('input[id="finishingAge"]').clear()
-    cy.get('input[id="finishingAge"]').type('300')
+    cy.get('[data-testid="starting-age"] input').clear()
+    cy.get('[data-testid="starting-age"] input').type('10')
+    cy.get('[data-testid="finishing-age"] input').clear()
+    cy.get('[data-testid="finishing-age"] input').type('300')
     cy.get(
       '[data-testid="is-culmination-values-enabled"] input[type="checkbox"]',
     ).should('not.be.disabled')
@@ -343,15 +343,15 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-    cy.get('input[id="startingAge"]').clear()
-    cy.get('input[id="startingAge"]').type('11')
+    cy.get('[data-testid="starting-age"] input').clear()
+    cy.get('[data-testid="starting-age"] input').type('11')
     cy.get(
       '[data-testid="is-culmination-values-enabled"] input[type="checkbox"]',
     ).should('be.disabled')
-    cy.get('input[id="startingAge"]').clear()
-    cy.get('input[id="startingAge"]').type('10')
-    cy.get('input[id="finishingAge"]').clear()
-    cy.get('input[id="finishingAge"]').type('299')
+    cy.get('[data-testid="starting-age"] input').clear()
+    cy.get('[data-testid="starting-age"] input').type('10')
+    cy.get('[data-testid="finishing-age"] input').clear()
+    cy.get('[data-testid="finishing-age"] input').type('299')
     cy.get(
       '[data-testid="is-culmination-values-enabled"] input[type="checkbox"]',
     ).should('be.disabled')
@@ -418,7 +418,7 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-    cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+    cy.contains('span.min-dbh-limit-species-group-label', 'Minimum DBH Limit by Species Group').should(
       'be.visible',
     )
     cy.get('.v-slider', { timeout: 6000 }).should(
@@ -444,7 +444,7 @@ describe('ReportConfiguration.vue', () => {
       },
     })
 
-    cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+    cy.contains('span.min-dbh-limit-species-group-label', 'Minimum DBH Limit by Species Group').should(
       'not.exist',
     )
   })
@@ -472,7 +472,7 @@ describe('ReportConfiguration.vue', () => {
         },
       })
 
-      cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+      cy.contains('span.min-dbh-limit-species-group-label', 'Minimum DBH Limit by Species Group').should(
         'be.visible',
       )
       
@@ -498,8 +498,8 @@ describe('ReportConfiguration.vue', () => {
       cy.get('.v-slider').should('not.have.class', 'v-slider--disabled')
 
       // Change projection type to CFO Biomass
-      cy.get('.v-select').click()
-      cy.get('.v-list-item')
+      cy.get('#projection-type-select').click({ force: true })
+      cy.get('.v-list-item', { timeout: 6000 })
         .contains(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
         .click({ force: true })
 

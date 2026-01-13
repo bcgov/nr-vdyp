@@ -26,8 +26,11 @@ const dialogDrag = ref<DialogDrag>({
 })
 
 const mousedownHandler = (e: MouseEvent) => {
-  const closestDialog = (e.target as HTMLElement).closest('.v-overlay--active .v-overlay__content')
-  if (e.button === 0 && closestDialog !== null && (e.target as HTMLElement).classList.contains('popup-header')) {
+  const target = e.target as HTMLElement
+  const closestDialog = target.closest('.v-overlay--active .v-overlay__content')
+  const closestPopupHeader = target.closest('.popup-header')
+
+  if (e.button === 0 && closestDialog !== null && closestPopupHeader !== null) {
     dialogDrag.value.el = closestDialog as HTMLElement
     dialogDrag.value.mouseStartX = e.clientX
     dialogDrag.value.mouseStartY = e.clientY

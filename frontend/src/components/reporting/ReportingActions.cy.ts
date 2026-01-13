@@ -1,8 +1,11 @@
 import ReportingActions from './ReportingActions.vue'
+import { REPORTING_TAB } from '@/constants/constants'
 
 describe('<ReportingActions />', () => {
   const defaultProps = {
     isButtonDisabled: false,
+    isRawResultsButtonDisabled: false,
+    tabname: REPORTING_TAB.VIEW_LOG_FILE,
   }
 
   it('renders with default props and buttons are enabled', () => {
@@ -24,15 +27,14 @@ describe('<ReportingActions />', () => {
   })
 
   it('disables both buttons when isButtonDisabled is true', () => {
-    cy.mount(ReportingActions, { props: { isButtonDisabled: true } })
+    cy.mount(ReportingActions, {
+      props: { ...defaultProps, isButtonDisabled: true },
+    })
 
-    // Check if both buttons are disabled using specific selectors
-    cy.get('.v-btn').contains('Print').parent().should('have.attr', 'disabled')
+    // Check if both buttons are disabled
+    cy.contains('button', 'Print').should('be.disabled')
 
-    cy.get('.v-btn')
-      .contains('Download')
-      .parent()
-      .should('have.attr', 'disabled')
+    cy.contains('button', 'Download').should('be.disabled')
   })
 
   it('emits events correctly when buttons are clicked', () => {

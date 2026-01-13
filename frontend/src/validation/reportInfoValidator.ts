@@ -10,9 +10,9 @@ export class ReportInfoValidator extends ValidationBase {
    * @returns boolean - True if all required fields are provided, false otherwise
    */
   validateRequiredFields(
-    startValue: number | null,
-    endValue: number | null,
-    incrementValue: number | null,
+    startValue: string | null,
+    endValue: string | null,
+    incrementValue: string | null,
   ): boolean {
     return startValue !== null && endValue !== null && incrementValue !== null
   }
@@ -24,70 +24,78 @@ export class ReportInfoValidator extends ValidationBase {
    * @returns boolean - True if endValue >= startValue, false otherwise
    */
   validateAgeComparison(
-    startValue: number | null,
-    endValue: number | null,
+    startValue: string | null,
+    endValue: string | null,
   ): boolean {
     if (startValue !== null && endValue !== null) {
-      return endValue >= startValue
+      const numStart = Number.parseFloat(startValue)
+      const numEnd = Number.parseFloat(endValue)
+      return numEnd >= numStart
     }
     return true
   }
 
-  validateStartingAgeRange(startingAge: number | null): boolean {
+  validateStartingAgeRange(startingAge: string | null): boolean {
     if (startingAge !== null) {
+      const num = Number.parseFloat(startingAge)
       return (
-        startingAge >= CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN &&
-        startingAge <= CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX
+        num >= CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN &&
+        num <= CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX
       )
     }
     return true
   }
 
-  validateFinishingAgeRange(finishingAge: number | null): boolean {
+  validateFinishingAgeRange(finishingAge: string | null): boolean {
     if (finishingAge !== null) {
+      const num = Number.parseFloat(finishingAge)
       return (
-        finishingAge >= CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN &&
-        finishingAge <= CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX
+        num >= CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN &&
+        num <= CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX
       )
     }
     return true
   }
 
-  validateAgeIncrementRange(ageIncrement: number | null): boolean {
+  validateAgeIncrementRange(ageIncrement: string | null): boolean {
     if (ageIncrement !== null) {
+      const num = Number.parseFloat(ageIncrement)
       return (
-        ageIncrement >= CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN &&
-        ageIncrement <= CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX
+        num >= CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN &&
+        num <= CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX
       )
     }
     return true
   }
   //
-  validateStartYearRange(startYear: number | null): boolean {
+  validateStartYearRange(startYear: string | null): boolean {
     if (startYear !== null) {
+      const num = Number.parseFloat(startYear)
       return (
-        startYear >= CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN &&
-        startYear <= CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX
+        num >= CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN &&
+        num <= CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX
       )
     }
     return true
   }
 
-  validateEndYearRange(endYear: number | null): boolean {
+  validateEndYearRange(endYear: string | null): boolean {
     if (endYear !== null) {
+      const num = Number.parseFloat(endYear)
       return (
-        endYear >= CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN &&
-        endYear <= CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX
+        num >= CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN &&
+        num <= CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX
       )
     }
     return true
   }
 
-  validateYearIncrementRange(yearIncrement: number | null): boolean {
+  validateYearIncrementRange(yearIncrement: string | null): boolean {
     if (yearIncrement !== null) {
+      const num = Number.parseFloat(yearIncrement)
       return (
-        yearIncrement >= CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN &&
-        yearIncrement <= CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX
+        num >= CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN &&
+        num <= CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX
       )
     }
     return true

@@ -2,12 +2,11 @@ import { mount } from 'cypress/vue'
 import TrainingSupport from './TrainingSupport.vue'
 
 describe('TrainingSupport.vue', () => {
-  it('renders default text and style correctly', () => {
+  it('renders default text correctly', () => {
     mount(TrainingSupport)
 
     cy.get('span')
-      .should('have.class', 'header-training-support')
-      .and('have.css', 'font-size', '14px')
+      .should('have.class', 'bcds-header-link')
       .and('contain.text', 'Training and Support')
   })
 
@@ -20,28 +19,6 @@ describe('TrainingSupport.vue', () => {
 
     cy.get('span')
       .should('contain.text', 'Custom Training Text')
-      .and('have.class', 'header-training-support')
-  })
-
-  it('applies custom styles when customStyle prop is provided', () => {
-    mount(TrainingSupport, {
-      props: {
-        text: 'Custom Styled Text',
-        customStyle: {
-          fontSize: '18px',
-          color: '#1976d2',
-          fontWeight: 'bold',
-          textDecoration: 'underline',
-        },
-      },
-    })
-
-    cy.get('span')
-      .should('have.css', 'font-size', '18px')
-      .and('have.css', 'color', 'rgb(25, 118, 210)')
-      .and('have.css', 'font-weight', '700')
-      .and('have.css', 'text-decoration-line', 'underline')
-      .and('not.have.class', 'header-training-support')
-      .and('contain.text', 'Custom Styled Text')
+      .and('have.class', 'bcds-header-link')
   })
 })

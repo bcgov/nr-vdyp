@@ -4,7 +4,8 @@
       <v-spacer></v-spacer>
       <AppButton
         label="Run Model"
-        customClass="blue-btn ml-2"
+        variant="primary"
+        class="ml-2"
         :isDisabled="isDisabled"
         @click="runModel"
       />
@@ -36,36 +37,43 @@ const runModel = () => {
 }
 </script>
 <style scoped>
+/*
+ * Styling based on BC Gov Design Standards - Using Design Tokens
+ */
 .input-model-param-run-model-card {
-  padding: 16px !important;
-  margin-top: 20px !important;
-  background-color: #f6f6f6;
-  border: 1px solid #0000001f;
+  padding: var(--layout-padding-medium) !important;
+  margin-top: var(--layout-margin-medium) !important;
+  background-color: var(--surface-color-background-light-gray);
+  border: var(--layout-border-width-small) solid
+    var(--surface-color-border-default);
   border-top-left-radius: 0px;
   border-top-right-radius: 0px;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: var(--layout-border-radius-large);
+  border-bottom-right-radius: var(--layout-border-radius-large);
   display: flex;
   justify-content: end;
   align-items: end;
   text-align: end;
 }
+
 .file-upload-run-model-card {
-  padding: 16px !important;
-  margin-top: 20px !important;
-  background-color: #f6f6f6;
-  border-top: 1px solid #0000001f;
+  padding: var(--layout-padding-medium) !important;
+  margin-top: var(--layout-margin-medium) !important;
+  background-color: var(--surface-color-background-light-gray);
+  border-top: var(--layout-border-width-small) solid
+    var(--surface-color-border-default);
   border-top-left-radius: 0px;
   border-top-right-radius: 0px;
-  border-bottom-left-radius: 3px;
-  border-bottom-right-radius: 3px;
+  border-bottom-left-radius: var(--layout-border-radius-small);
+  border-bottom-right-radius: var(--layout-border-radius-small);
   display: flex;
   justify-content: end;
   align-items: end;
   text-align: end;
 }
+
 .card-actions {
   padding-right: 0px !important;
-  margin-right: 8px !important;
+  margin-right: var(--layout-margin-xsmall) !important;
 }
 </style>

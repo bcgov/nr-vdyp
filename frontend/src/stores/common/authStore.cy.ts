@@ -181,12 +181,16 @@ describe('Auth Store Unit Tests', () => {
         idToken: type === 'id' ? token : '',
       }
       authStore.setUser(user)
-      const parsed =
-        type === 'access'
-          ? authStore.getParsedAccessToken()
-          : type === 'refresh'
-            ? authStore.getParsedRefreshToken()
-            : authStore.getParsedIdToken()
+
+      let parsed
+      if (type === 'access') {
+        parsed = authStore.getParsedAccessToken()
+      } else if (type === 'refresh') {
+        parsed = authStore.getParsedRefreshToken()
+      } else {
+        parsed = authStore.getParsedIdToken()
+      }
+
       expect(parsed).to.be.null
     })
 

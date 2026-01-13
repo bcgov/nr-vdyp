@@ -22,15 +22,15 @@ describe('AppSnackbar.vue', () => {
   })
 
   it('displays an informational notification', () => {
+    const onCloseSpy = cy.spy().as('onCloseSpy')
     cy.mount(AppSnackbar, {
       props: {
         isVisible: true,
         message: 'This is an informational message.',
         type: 'info',
-        color: '#d9eaf7',
         location: 'top',
-        rounded: true,
         autoTimeout: false,
+        'onUpdate:isVisible': onCloseSpy,
       },
     })
 
@@ -38,26 +38,28 @@ describe('AppSnackbar.vue', () => {
     cy.get('.v-snackbar__wrapper')
       .should('be.visible')
       .and('contain.text', 'This is an informational message')
-      .and('have.css', 'background-color', 'rgb(217, 234, 247)')
 
-    // Verify the icon
-    cy.get('.v-icon').should('have.class', 'mdi-information')
+    // Verify the icon (outline version)
+    cy.get('.app-snackbar__icon').should('have.class', 'mdi-information-outline')
 
-    // Close the snackbar
+    // Verify snackbar has info class
+    cy.get('.app-snackbar').should('have.class', 'info')
+
+    // Close the snackbar and verify close event
     cy.get('.v-snackbar__actions .v-btn').click()
-    cy.get('.v-snackbar__wrapper').should('not.be.visible')
+    cy.get('@onCloseSpy').should('have.been.calledWith', false)
   })
 
   it('displays an error notification', () => {
+    const onCloseSpy = cy.spy().as('onCloseSpy')
     cy.mount(AppSnackbar, {
       props: {
         isVisible: true,
         message: 'This is an error message.',
         type: 'error',
-        color: '#d8292f',
         location: 'top',
-        rounded: true,
         autoTimeout: false,
+        'onUpdate:isVisible': onCloseSpy,
       },
     })
 
@@ -65,26 +67,28 @@ describe('AppSnackbar.vue', () => {
     cy.get('.v-snackbar__wrapper')
       .should('be.visible')
       .and('contain.text', 'This is an error message')
-      .and('have.css', 'background-color', 'rgb(216, 41, 47)')
 
-    // Verify the icon
-    cy.get('.v-icon').should('have.class', 'mdi-alert-circle')
+    // Verify the icon (outline version)
+    cy.get('.app-snackbar__icon').should('have.class', 'mdi-alert-circle-outline')
 
-    // Close the snackbar
+    // Verify snackbar has error class
+    cy.get('.app-snackbar').should('have.class', 'error')
+
+    // Close the snackbar and verify close event
     cy.get('.v-snackbar__actions .v-btn').click()
-    cy.get('.v-snackbar__wrapper').should('not.be.visible')
+    cy.get('@onCloseSpy').should('have.been.calledWith', false)
   })
 
   it('displays a warning notification', () => {
+    const onCloseSpy = cy.spy().as('onCloseSpy')
     cy.mount(AppSnackbar, {
       props: {
         isVisible: true,
         message: 'This is a warning message.',
         type: 'warning',
-        color: '#f9f1c6',
         location: 'top',
-        rounded: true,
-        autoTimeout: true,
+        autoTimeout: false,
+        'onUpdate:isVisible': onCloseSpy,
       },
     })
 
@@ -92,26 +96,28 @@ describe('AppSnackbar.vue', () => {
     cy.get('.v-snackbar__wrapper')
       .should('be.visible')
       .and('contain.text', 'This is a warning message')
-      .and('have.css', 'background-color', 'rgb(249, 241, 198)')
 
-    // Verify the icon
-    cy.get('.v-icon').should('have.class', 'mdi-alert')
+    // Verify the icon (outline version)
+    cy.get('.app-snackbar__icon').should('have.class', 'mdi-alert-outline')
 
-    // Close the snackbar
+    // Verify snackbar has warning class
+    cy.get('.app-snackbar').should('have.class', 'warning')
+
+    // Close the snackbar and verify close event
     cy.get('.v-snackbar__actions .v-btn').click()
-    cy.get('.v-snackbar__wrapper').should('not.be.visible')
+    cy.get('@onCloseSpy').should('have.been.calledWith', false)
   })
 
   it('displays a success notification', () => {
+    const onCloseSpy = cy.spy().as('onCloseSpy')
     cy.mount(AppSnackbar, {
       props: {
         isVisible: true,
         message: 'This is a success message.',
         type: 'success',
-        color: '#2e8540',
         location: 'top',
-        rounded: true,
         autoTimeout: false,
+        'onUpdate:isVisible': onCloseSpy,
       },
     })
 
@@ -119,32 +125,60 @@ describe('AppSnackbar.vue', () => {
     cy.get('.v-snackbar__wrapper')
       .should('be.visible')
       .and('contain.text', 'This is a success message')
-      .and('have.css', 'background-color', 'rgb(46, 133, 64)')
 
-    // Verify the icon
-    cy.get('.v-icon').should('have.class', 'mdi-check-circle')
+    // Verify the icon (outline version)
+    cy.get('.app-snackbar__icon').should('have.class', 'mdi-check-circle-outline')
 
-    // Close the snackbar
+    // Verify snackbar has success class
+    cy.get('.app-snackbar').should('have.class', 'success')
+
+    // Close the snackbar and verify close event
     cy.get('.v-snackbar__actions .v-btn').click()
-    cy.get('.v-snackbar__wrapper').should('not.be.visible')
+    cy.get('@onCloseSpy').should('have.been.calledWith', false)
   })
 
   it('handles auto timeout', () => {
+    const onCloseSpy = cy.spy().as('onCloseSpy')
     cy.mount(AppSnackbar, {
       props: {
         isVisible: true,
         message: 'This message will auto-hide.',
         type: 'info',
-        color: '#d9eaf7',
         timeout: 2000, // 2 seconds
         autoTimeout: true,
+        'onUpdate:isVisible': onCloseSpy,
       },
     })
 
     // Verify snackbar visibility
     cy.get('.v-snackbar__wrapper').should('be.visible')
 
-    // Wait for auto timeout
-    cy.get('.v-snackbar__wrapper', { timeout: 3000 }).should('not.be.visible')
+    // Wait for auto timeout and verify close event was called
+    cy.get('@onCloseSpy', { timeout: 3000 }).should('have.been.calledWith', false)
+  })
+
+  it('displays correct BC Gov Design System styling', () => {
+    cy.mount(AppSnackbar, {
+      props: {
+        isVisible: true,
+        message: 'Testing BC Gov Design System styling.',
+        type: 'info',
+        location: 'top',
+        autoTimeout: false,
+      },
+    })
+
+    // Verify layout structure
+    cy.get('.v-snackbar__wrapper').should('have.css', 'display', 'flex')
+    cy.get('.v-snackbar__wrapper').should('have.css', 'flex-direction', 'row')
+    cy.get('.v-snackbar__wrapper').should('have.css', 'align-items', 'center')
+
+    // Verify icon and content are inline
+    cy.get('.app-snackbar__icon').should('be.visible')
+    cy.get('.app-snackbar__container').should('be.visible')
+    cy.get('.app-snackbar__close-icon').should('be.visible')
+
+    // Verify border radius is applied
+    cy.get('.v-snackbar__wrapper').should('have.css', 'border-radius')
   })
 })

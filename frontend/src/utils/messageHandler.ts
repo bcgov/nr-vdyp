@@ -39,6 +39,52 @@ export const messageResult = (
 }
 
 /**
+ * Logs a message to the console based on message type.
+ */
+const logToConsole = (message: string, messageType: MessageType) => {
+  switch (messageType) {
+    case MESSAGE_TYPE.ERROR:
+      console.error(message)
+      break
+    case MESSAGE_TYPE.WARNING:
+      console.warn(message)
+      break
+    case MESSAGE_TYPE.INFO:
+      console.info(message)
+      break
+    case MESSAGE_TYPE.SUCCESS:
+      console.log(message)
+      break
+    default:
+      console.log(message)
+  }
+}
+
+/**
+ * Shows a notification message based on message type.
+ */
+const showNotification = (
+  message: string,
+  messageType: MessageType,
+  notificationStore: ReturnType<typeof useNotificationStore>,
+) => {
+  switch (messageType) {
+    case MESSAGE_TYPE.ERROR:
+      notificationStore.showErrorMessage(message)
+      break
+    case MESSAGE_TYPE.WARNING:
+      notificationStore.showWarningMessage(message)
+      break
+    case MESSAGE_TYPE.SUCCESS:
+      notificationStore.showSuccessMessage(message)
+      break
+    case MESSAGE_TYPE.INFO:
+    default:
+      notificationStore.showInfoMessage(message)
+  }
+}
+
+/**
  * Logs messages to both the console or/and notification with conditional control.
  * @param {string} message - The message to display.
  * @param {string} messageType - The type of message.
@@ -67,47 +113,11 @@ const logMessage = (
     : message
 
   if (!disableConsole) {
-    switch (messageType) {
-      case MESSAGE_TYPE.ERROR:
-        console.error(consoleMessage)
-        break
-      case MESSAGE_TYPE.WARNING:
-        console.warn(consoleMessage)
-        break
-      case MESSAGE_TYPE.INFO:
-        console.info(consoleMessage)
-        break
-      case MESSAGE_TYPE.SUCCESS:
-        console.log(consoleMessage)
-        break
-      default:
-        console.log(consoleMessage)
-    }
+    logToConsole(consoleMessage, messageType)
   }
 
-  if (!disableNotification) {
-    switch (messageType) {
-      case MESSAGE_TYPE.ERROR:
-        if (notificationStore) {
-          notificationStore.showErrorMessage(message)
-        }
-        break
-      case MESSAGE_TYPE.WARNING:
-        if (notificationStore) {
-          notificationStore.showWarningMessage(message)
-        }
-        break
-      case MESSAGE_TYPE.SUCCESS:
-        if (notificationStore) {
-          notificationStore.showSuccessMessage(message)
-        }
-        break
-      case MESSAGE_TYPE.INFO:
-      default:
-        if (notificationStore) {
-          notificationStore.showInfoMessage(message)
-        }
-    }
+  if (!disableNotification && notificationStore) {
+    showNotification(message, messageType, notificationStore)
   }
 }
 

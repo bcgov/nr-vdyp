@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import AppRunModelButton from './AppRunModelButton.vue'
+import AppRunModelButtonPanel from './AppRunModelButtonPanel.vue'
 
-const meta: Meta<typeof AppRunModelButton> = {
-  title: 'components/common/AppRunModelButton',
-  component: AppRunModelButton,
+const meta: Meta<typeof AppRunModelButtonPanel> = {
+  title: 'components/common/AppRunModelButtonPanel',
+  component: AppRunModelButtonPanel,
   argTypes: {
     isDisabled: {
       control: { type: 'boolean' },
@@ -26,16 +26,16 @@ const meta: Meta<typeof AppRunModelButton> = {
 
 export default meta
 
-type Story = StoryObj<typeof AppRunModelButton>
+type Story = StoryObj<typeof AppRunModelButtonPanel>
 
 export const FileUploadRunModel: Story = {
   render: (args) => ({
-    components: { AppRunModelButton },
+    components: { AppRunModelButtonPanel },
     setup() {
       return { args }
     },
     template: `
-      <AppRunModelButton
+      <AppRunModelButtonPanel
         v-bind="args"
         @runModel="args.runModel"
       />
@@ -50,12 +50,12 @@ export const FileUploadRunModel: Story = {
 
 export const InputModelParametersRunModel: Story = {
   render: (args) => ({
-    components: { AppRunModelButton },
+    components: { AppRunModelButtonPanel },
     setup() {
       return { args }
     },
     template: `
-      <AppRunModelButton
+      <AppRunModelButtonPanel
         v-bind="args"
         @runModel="args.runModel"
       />

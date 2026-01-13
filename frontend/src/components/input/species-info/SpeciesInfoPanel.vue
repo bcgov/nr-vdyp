@@ -6,6 +6,7 @@
       :message="messageDialog.message"
       :dialogWidth="messageDialog.dialogWidth"
       :btnLabel="messageDialog.btnLabel"
+      :variant="messageDialog.variant"
       @update:dialog="(value) => (messageDialog.dialog = value)"
       @close="handleDialogClose"
     />
@@ -31,12 +32,11 @@
           <v-form ref="form">
             <div class="mt-1">
               <v-row style="display: inline-flex; align-items: center">
-                <v-col cols="auto" style="margin-bottom: 20px">
-                  <div>Species % derived by:</div>
-                </v-col>
-                <v-col cols="auto">
+                <v-col cols="auto" class="species-percent-derived-by-container">
                   <div>
+                    <label class="bcds-radio-label" for="derivedBy">Species % derived by:</label>
                     <v-radio-group
+                      id="derivedBy"
                       v-model="derivedBy"
                       inline
                       :disabled="!isConfirmEnabled"
@@ -74,18 +74,18 @@
             </div>
             <div>
               <v-row>
-                <v-col cols="5">
+                <v-col cols="5" class="total-species-percent-container">
                   <div>
                     <v-row>
                       <v-col cols="6"></v-col>
                       <v-col cols="6">
+                        <label class="bcds-text-field-label" for="totalSpeciesPercent">Total Species Percent</label>
                         <v-text-field
+                          id="totalSpeciesPercent"
                           label="Total Species Percent"
                           :model-value="totalSpeciesPercent"
                           variant="underlined"
                           disabled
-                          density="compact"
-                          dense
                           data-testid="total-species-percent"
                         ></v-text-field>
                       </v-col>
@@ -204,7 +204,7 @@ const onConfirm = () => {
       Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<
         keyof typeof BIZCONSTANTS.SPECIES_MAP
       >
-    ).find((key) => key === duplicateSpeciesResult.duplicateSpecies)
+    ).includes(duplicateSpeciesResult.duplicateSpecies as keyof typeof BIZCONSTANTS.SPECIES_MAP)
       ? BIZCONSTANTS.SPECIES_MAP[duplicateSpecies]
       : ''
 
@@ -220,6 +220,7 @@ const onConfirm = () => {
       title: MESSAGE.MSG_DIALOG_TITLE.DATA_DUPLICATED,
       message: message,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
     }
     return
   }
@@ -235,6 +236,7 @@ const onConfirm = () => {
       title: MESSAGE.MSG_DIALOG_TITLE.DATA_INCOMPLETE,
       message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_TOTAL_PCT,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
     }
     return
   }
@@ -247,6 +249,7 @@ const onConfirm = () => {
       title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
       message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
     }
     return
   }
@@ -300,4 +303,13 @@ const handleDialogClose = () => {}
   border-left: 1px dashed rgba(0, 0, 0, 0.12);
   height: 100%;
 }
+
+.total-species-percent-container {
+  padding-top: 6px;
+}
+
+.species-percent-derived-by-container {
+  padding-bottom: 0px;
+}
+
 </style>

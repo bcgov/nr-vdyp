@@ -135,12 +135,7 @@ export class FileUploadValidator extends ValidationBase {
   }
 
   private async getFileHeaders(file: File): Promise<string[]> {
-    const reader = new FileReader()
-    const fileContent = await new Promise<string>((resolve) => {
-      reader.onload = () => resolve(reader.result as string)
-      reader.readAsText(file)
-    })
-    
+    const fileContent = await file.text()
     const headerLine = fileContent.split('\n')[0]
     return this.parseCSVHeader(headerLine)
   }
@@ -150,10 +145,8 @@ export class FileUploadValidator extends ValidationBase {
     let current = ''
     let inQuotes = false
     let quoteChar = ''
-    
-    for (let i = 0; i < headerLine.length; i++) {
-      const char = headerLine[i]
-      
+
+    for (const char of headerLine) {
       if (!inQuotes && (char === '"' || char === "'")) {
         // Start of quoted field
         inQuotes = true
@@ -171,12 +164,12 @@ export class FileUploadValidator extends ValidationBase {
         current += char
       }
     }
-    
+
     // Add the last field
     if (current.length > 0 || headers.length > 0) {
       headers.push(current.trim())
     }
-    
+
     return headers
   }
 
