@@ -109,7 +109,7 @@ public class BatchInputPartitioner {
 		int uniqueFeatureIdCount = 0;
 		Map<Integer, PrintWriter> polygonWriters = null;
 		Map<Integer, PrintWriter> layerWriters = null;
-		try {
+		try (PrintWriter warningWriter = createWarningWriter(jobBaseDir)) {
 			// Get the first non blank line from each file
 			String polygonLine = readNextNonBlankLine(polygonReader);
 			String layerLine = readNextNonBlankLine(layerReader);
@@ -468,6 +468,12 @@ public class BatchInputPartitioner {
 				writers.get(partition).println(line);
 			}
 		}
+	}
+
+	private PrintWriter createWarningWriter(Path jobBaseDir) throws IOException {
+		Path warningFile = jobBaseDir.resolve(jobBaseDir + BatchConstants.Partition.WARNING_FILE_NAME);
+		BufferedWriter bufferedWriter = Files.newBufferedWriter(warningFile, StandardCharsets.UTF_8);
+		return new PrintWriter(bufferedWriter, false);
 	}
 
 	/**
