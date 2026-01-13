@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -15,9 +16,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 
@@ -140,6 +146,282 @@ class BatchInputPartitionerTest {
 		long partition1LayerCount = partition1LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
 				.count();
 		assertEquals(2, partition1LayerCount, "Partition 1 should have 2 layer records");
+	}
+
+	@ParameterizedTest(name = "headersPresent={0}")
+	@ValueSource(booleans = { true, false })
+	void testPartitionReaders_RoundRobinChunking_TwoPartitions(boolean headersPresent)
+			throws BatchPartitionException, IOException {
+		// Test data with 5 FEATURE_IDs and 2 partitions
+		// Balanced distribution: chunkSize=2, remainder=1
+		// Expected: partition0 gets 3 records (2+1), partition1 gets 2 records
+		String polygonCsv = (headersPresent ? "FEATURE_ID,MAP_ID,POLYGON_NUMBER,ORG_UNIT\n" : "") + """
+				15724968,082G055,1234,DCR
+				15724970,082G055,5678,DCR
+				15724973,082G055,9999,DCR
+				15725009,082G055,1111,DCR
+				15725037,082G055,2222,DCR
+				""";
+
+		String layerCsv = (headersPresent ? "FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE\n" : "") + """
+				15724968,082G055,1234,P
+				15724970,082G055,5678,P
+				15724973,082G055,9999,P
+				15725009,082G055,1111,P
+				15725037,082G055,2222,P
+				""";
+		try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
+			Path polygonPath = fs.getPath("/polygon.csv");
+			Path layerPath = fs.getPath("/layer.csv");
+
+			Files.writeString(polygonPath, polygonCsv);
+			Files.writeString(layerPath, layerCsv);
+			int totalFeatureIds = batchInputPartitioner
+					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID);
+
+			assertEquals(5, totalFeatureIds);
+
+			// Verify balanced distribution: partition0 gets 3 records (first partition gets +1 from remainder)
+			Path partition0Polygon = tempDir.resolve("input-partition0").resolve("polygons.csv");
+			String partition0Content = Files.readString(partition0Polygon);
+			assertTrue(partition0Content.contains("15724968"), "Partition 0 should contain first FEATURE_ID");
+			assertTrue(partition0Content.contains("15724973"), "Partition 0 should contain third FEATURE_ID");
+			assertTrue(partition0Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
+			assertFalse(partition0Content.contains("15725009"), "Partition 0 should NOT contain fourth FEATURE_ID");
+
+			// Partition 1 gets remaining 2 records
+			Path partition1Polygon = tempDir.resolve("input-partition1").resolve("polygons.csv");
+			String partition1Content = Files.readString(partition1Polygon);
+			assertTrue(partition1Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
+			assertTrue(partition1Content.contains("15725009"), "Partition 1 should contain fourth FEATURE_ID");
+			assertFalse(partition1Content.contains("15724973"), "Partition 1 should NOT contain third FEATURE_ID");
+
+			// Verify layers follow the same partitioning
+			Path partition0Layer = tempDir.resolve("input-partition0").resolve("layers.csv");
+			String partition0LayerContent = Files.readString(partition0Layer);
+			long partition0LayerCount = partition0LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
+					.count();
+			assertEquals(3, partition0LayerCount, "Partition 0 should have 3 layer records");
+
+			Path partition1Layer = tempDir.resolve("input-partition1").resolve("layers.csv");
+			String partition1LayerContent = Files.readString(partition1Layer);
+			long partition1LayerCount = partition1LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
+					.count();
+			assertEquals(2, partition1LayerCount, "Partition 1 should have 2 layer records");
+		}
+	}
+
+	@Test
+	void testParititionReaders_BlankPolygonFile_throwsParititonException() throws BatchPartitionException, IOException {
+		// Test data with 5 FEATURE_IDs and 2 partitions
+		// Balanced distribution: chunkSize=2, remainder=1
+		// Expected: partition0 gets 3 records (2+1), partition1 gets 2 records
+		String polygonCsv = "";
+
+		String layerCsv = """
+				FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE
+				15724968,082G055,1234,P
+				15724970,082G055,5678,P
+				15724973,082G055,9999,P
+				15725009,082G055,1111,P
+				15725037,082G055,2222,P
+				""";
+		try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
+			Path polygonPath = fs.getPath("/polygon.csv");
+			Path layerPath = fs.getPath("/layer.csv");
+
+			Files.writeString(polygonPath, polygonCsv);
+			Files.writeString(layerPath, layerCsv);
+			assertThrows(
+					BatchPartitionException.class,
+					() -> batchInputPartitioner.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID)
+			);
+		}
+	}
+
+	@Test
+	void testParititionReaders_BlankLayerFile_throwsParititonException() throws BatchPartitionException, IOException {
+		// Test data with 5 FEATURE_IDs and 2 partitions
+		// Balanced distribution: chunkSize=2, remainder=1
+		// Expected: partition0 gets 3 records (2+1), partition1 gets 2 records
+		String polygonCsv = """
+				FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE
+				15724968,082G055,1234,P
+				15724970,082G055,5678,P
+				15724973,082G055,9999,P
+				15725009,082G055,1111,P
+				15725037,082G055,2222,P
+				""";
+
+		String layerCsv = "";
+		try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
+			Path polygonPath = fs.getPath("/polygon.csv");
+			Path layerPath = fs.getPath("/layer.csv");
+
+			Files.writeString(polygonPath, polygonCsv);
+			Files.writeString(layerPath, layerCsv);
+			assertThrows(
+					BatchPartitionException.class,
+					() -> batchInputPartitioner.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID)
+			);
+		}
+	}
+
+	@ParameterizedTest(name = "invalidID={0}")
+	@ValueSource(strings = { "1INVALID", "ABC123", "!@#$%", "123 456", "", "     " })
+	void testParititionReaders_InvalidPolygonFeatureID_throwsParititonException(String invalidID)
+			throws BatchPartitionException, IOException {
+		// Test data with 5 FEATURE_IDs and 2 partitions
+		// Balanced distribution: chunkSize=2, remainder=1
+		// Expected: partition0 gets 3 records (2+1), partition1 gets 2 records
+		String polygonCsv = "FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE\n"//
+				+ invalidID + ",082G055,1234,P";
+
+		String layerCsv = """
+				FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE
+				15724968,082G055,1234,P
+				""";
+		try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
+			Path polygonPath = fs.getPath("/polygon.csv");
+			Path layerPath = fs.getPath("/layer.csv");
+
+			Files.writeString(polygonPath, polygonCsv);
+			Files.writeString(layerPath, layerCsv);
+			assertThrows(
+					BatchPartitionException.class,
+					() -> batchInputPartitioner.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID)
+			);
+		}
+	}
+
+	@Test
+	void testPartitionReaders_OutofOrderLayers_SkipsOrphan() throws BatchPartitionException, IOException {
+		// Test data with 5 FEATURE_IDs and 2 partitions
+		// Balanced distribution: chunkSize=2, remainder=1
+		// Expected: partition0 gets 3 records (2+1), partition1 gets 2 records
+		String polygonCsv = """
+				15724968,082G055,1234,DCR
+				15724970,082G055,5678,DCR
+				15724973,082G055,9999,DCR
+				15725009,082G055,1111,DCR
+				15725037,082G055,2222,DCR
+				""";
+
+		// one layer record has a non-matching FEATURE_ID and should be skipped as orphaned
+		String layerCsv = """
+				05724967,082G055,1234,P
+				15724968,082G055,1234,P
+				1INVALID,082G055,1234,P
+				        ,082G055,1234,P
+				123 5432,082G055,1234,P
+				15724970,082G055,5678,P
+				15724973,082G055,9999,P
+				15725009,082G055,1111,P
+				15725037,082G055,2222,P
+				""";
+		try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
+			Path polygonPath = fs.getPath("/polygon.csv");
+			Path layerPath = fs.getPath("/layer.csv");
+
+			Files.writeString(polygonPath, polygonCsv);
+			Files.writeString(layerPath, layerCsv);
+			int totalFeatureIds = batchInputPartitioner
+					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID);
+
+			assertEquals(5, totalFeatureIds);
+
+			// Verify balanced distribution: partition0 gets 3 records (first partition gets +1 from remainder)
+			Path partition0Polygon = tempDir.resolve("input-partition0").resolve("polygons.csv");
+			String partition0Content = Files.readString(partition0Polygon);
+			assertTrue(partition0Content.contains("15724968"), "Partition 0 should contain first FEATURE_ID");
+			assertTrue(partition0Content.contains("15724973"), "Partition 0 should contain third FEATURE_ID");
+			assertTrue(partition0Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
+			assertFalse(partition0Content.contains("15725009"), "Partition 0 should NOT contain fourth FEATURE_ID");
+
+			// Partition 1 gets remaining 2 records
+			Path partition1Polygon = tempDir.resolve("input-partition1").resolve("polygons.csv");
+			String partition1Content = Files.readString(partition1Polygon);
+			assertTrue(partition1Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
+			assertTrue(partition1Content.contains("15725009"), "Partition 1 should contain fourth FEATURE_ID");
+			assertFalse(partition1Content.contains("15724973"), "Partition 1 should NOT contain third FEATURE_ID");
+
+			// Verify layers follow the same partitioning
+			Path partition0Layer = tempDir.resolve("input-partition0").resolve("layers.csv");
+			String partition0LayerContent = Files.readString(partition0Layer);
+			long partition0LayerCount = partition0LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
+					.count();
+			assertEquals(3, partition0LayerCount, "Partition 0 should have 3 layer records");
+
+			Path partition1Layer = tempDir.resolve("input-partition1").resolve("layers.csv");
+			String partition1LayerContent = Files.readString(partition1Layer);
+			long partition1LayerCount = partition1LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
+					.count();
+			assertEquals(2, partition1LayerCount, "Partition 1 should have 2 layer records");
+		}
+	}
+
+	@Test
+	void testPartitionReaders_LastFeatureFirst_GetsOnlyThatLayer() throws BatchPartitionException, IOException {
+		// Test data with 5 FEATURE_IDs and 2 partitions
+		// Balanced distribution: chunkSize=2, remainder=1
+		// Expected: partition0 gets 3 records (2+1), partition1 gets 2 records
+		String polygonCsv = """
+				15724968,082G055,1234,DCR
+				15724970,082G055,5678,DCR
+				15724973,082G055,9999,DCR
+				15725009,082G055,1111,DCR
+				15725037,082G055,2222,DCR
+				""";
+
+		// highest FEATURE_ID layer record comes first, should be the only one matched the rest should be logged in
+		// warning as being orphaned
+		String layerCsv = """
+				15725037,082G055,2222,P
+				05724967,082G055,1234,P
+				15724968,082G055,1234,P
+				15724970,082G055,5678,P
+				15724973,082G055,9999,P
+				15725009,082G055,1111,P
+				""";
+		try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
+			Path polygonPath = fs.getPath("/polygon.csv");
+			Path layerPath = fs.getPath("/layer.csv");
+
+			Files.writeString(polygonPath, polygonCsv);
+			Files.writeString(layerPath, layerCsv);
+			int totalFeatureIds = batchInputPartitioner
+					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID);
+
+			assertEquals(5, totalFeatureIds);
+
+			// Verify balanced distribution: partition0 gets 3 records (first partition gets +1 from remainder)
+			Path partition0Polygon = tempDir.resolve("input-partition0").resolve("polygons.csv");
+			String partition0Content = Files.readString(partition0Polygon);
+			assertTrue(partition0Content.contains("15724968"), "Partition 0 should contain first FEATURE_ID");
+			assertTrue(partition0Content.contains("15724973"), "Partition 0 should contain third FEATURE_ID");
+			assertTrue(partition0Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
+			assertFalse(partition0Content.contains("15725009"), "Partition 0 should NOT contain fourth FEATURE_ID");
+
+			// Partition 1 gets remaining 2 records
+			Path partition1Polygon = tempDir.resolve("input-partition1").resolve("polygons.csv");
+			String partition1Content = Files.readString(partition1Polygon);
+			assertTrue(partition1Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
+			assertTrue(partition1Content.contains("15725009"), "Partition 1 should contain fourth FEATURE_ID");
+			assertFalse(partition1Content.contains("15724973"), "Partition 1 should NOT contain third FEATURE_ID");
+
+			// Verify layers follow the same partitioning
+			Path partition0Layer = tempDir.resolve("input-partition0").resolve("layers.csv");
+			String partition0LayerContent = Files.readString(partition0Layer);
+			long partition0LayerCount = partition0LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
+					.count();
+			assertEquals(1, partition0LayerCount, "Partition 0 should have 3 layer records");
+
+			Path partition1Layer = tempDir.resolve("input-partition1").resolve("layers.csv");
+			String partition1LayerContent = Files.readString(partition1Layer);
+			long partition1LayerCount = partition1LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
+					.count();
+			assertEquals(0, partition1LayerCount, "Partition 1 should have 2 layer records");
+		}
 	}
 
 	@Test
