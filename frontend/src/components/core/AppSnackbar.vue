@@ -84,66 +84,66 @@ const getIcon = (type: string): string => {
 
 /* Base wrapper styles */
 .app-snackbar :deep(.v-snackbar__wrapper) {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: var(--layout-margin-small) !important;
-  padding: var(--layout-padding-medium) var(--layout-padding-large) !important;
-  min-height: 48px !important;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--layout-margin-small);
+  padding: var(--layout-padding-medium) var(--layout-padding-large);
+  min-height: 48px;
 }
 
 /* Snackbar content area - make it inline with actions */
 .app-snackbar :deep(.v-snackbar__content) {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: var(--layout-margin-small) !important;
-  flex-grow: 1 !important;
-  padding: 0 !important;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--layout-margin-small);
+  flex-grow: 1;
+  padding: 0;
 }
 
 /* Snackbar actions area - inline with content */
 .app-snackbar :deep(.v-snackbar__actions) {
-  display: flex !important;
-  align-items: center !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
 /* Content container */
 .app-snackbar__container {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  flex-grow: 1 !important;
-  font: var(--typography-regular-body) !important;
-  color: var(--typography-color-primary) !important;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-grow: 1;
+  font: var(--typography-regular-body);
+  color: var(--typography-color-primary);
 }
 
 /* Left icon */
 .app-snackbar__icon {
-  display: inline-flex !important;
-  align-self: center !important;
-  min-width: var(--icons-size-medium) !important;
-  height: var(--icons-size-medium) !important;
-  font-size: var(--icons-size-medium) !important;
+  display: inline-flex;
+  align-self: center;
+  min-width: var(--icons-size-medium);
+  height: var(--icons-size-medium);
+  font-size: var(--icons-size-medium);
 }
 
 /* Close icon positioning */
 .app-snackbar__close-icon {
-  display: flex !important;
-  align-items: center !important;
-  color: var(--icons-color-primary) !important;
+  display: flex;
+  align-items: center;
+  color: var(--icons-color-primary);
 }
 
 .app-snackbar__close-icon :deep(.v-btn) {
-  color: var(--icons-color-primary) !important;
+  color: var(--icons-color-primary);
 }
 
 .app-snackbar__close-icon :deep(.v-btn) svg {
-  min-width: var(--icons-size-medium) !important;
-  height: var(--icons-size-medium) !important;
-  color: var(--icons-color-primary) !important;
+  min-width: var(--icons-size-medium);
+  height: var(--icons-size-medium);
+  color: var(--icons-color-primary);
 }
 
 /* Variants */
@@ -152,47 +152,47 @@ const getIcon = (type: string): string => {
 .app-snackbar.info :deep(.v-snackbar__wrapper) {
   background-color: var(--support-surface-color-info) !important;
   border: var(--layout-border-width-small) solid
-    var(--support-border-color-info) !important;
-  border-radius: var(--layout-border-radius-medium) !important;
+    var(--support-border-color-info);
+  border-radius: var(--layout-border-radius-medium);
 }
 
 .app-snackbar.info .app-snackbar__icon {
-  color: var(--icons-color-info) !important;
+  color: var(--icons-color-info);
 }
 
 /* Success variant */
 .app-snackbar.success :deep(.v-snackbar__wrapper) {
   background-color: var(--support-surface-color-success) !important;
   border: var(--layout-border-width-small) solid
-    var(--support-border-color-success) !important;
-  border-radius: var(--layout-border-radius-medium) !important;
+    var(--support-border-color-success);
+  border-radius: var(--layout-border-radius-medium);
 }
 
 .app-snackbar.success .app-snackbar__icon {
-  color: var(--icons-color-success) !important;
+  color: var(--icons-color-success);
 }
 
 /* Warning variant */
 .app-snackbar.warning :deep(.v-snackbar__wrapper) {
   background-color: var(--support-surface-color-warning) !important;
   border: var(--layout-border-width-small) solid
-    var(--support-border-color-warning) !important;
-  border-radius: var(--layout-border-radius-medium) !important;
+    var(--support-border-color-warning);
+  border-radius: var(--layout-border-radius-medium);
 }
 
 .app-snackbar.warning .app-snackbar__icon {
-  color: var(--icons-color-warning) !important;
+  color: var(--icons-color-warning);
 }
 
 /* Error/Danger variant */
 .app-snackbar.error :deep(.v-snackbar__wrapper) {
   background-color: var(--support-surface-color-danger) !important;
   border: var(--layout-border-width-small) solid
-    var(--support-border-color-danger) !important;
-  border-radius: var(--layout-border-radius-medium) !important;
+    var(--support-border-color-danger);
+  border-radius: var(--layout-border-radius-medium);
 }
 
 .app-snackbar.error .app-snackbar__icon {
-  color: var(--icons-color-danger) !important;
+  color: var(--icons-color-danger);
 }
 </style>
