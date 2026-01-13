@@ -1,9 +1,9 @@
-export { default as AppConfirmDialog } from './common/AppConfirmDialog.vue'
+export { default as AppAlertDialog } from './common/AppAlertDialog.vue'
 export { default as AppDialogDragger } from './common/AppDialogDragger.vue'
 export { default as AppMessageDialog } from './common/AppMessageDialog.vue'
 export { default as AppNotification } from './common/AppNotification.vue'
 export { default as AppPanelActions } from './common/AppPanelActions.vue'
-export { default as AppRunModelButton } from './common/AppRunModelButton.vue'
+export { default as AppRunModelButtonPanel } from './common/AppRunModelButtonPanel.vue'
 export { default as AppSpinField } from './common/AppSpinField.vue'
 
 export { default as AppButton } from './core/AppButton.vue'
@@ -26,6 +26,7 @@ export { default as AttachmentsPanel } from './input/attachments/AttachmentsPane
 export { default as BCLogo } from './layout/BCLogo.vue'
 export { default as HeaderTitle } from './layout/HeaderTitle.vue'
 export { default as TheHeader } from './layout/TheHeader.vue'
+export { default as TheFooter } from './layout/TheFooter.vue'
 export { default as TrainingSupport } from './layout/TrainingSupport.vue'
 export { default as UserMenu } from './layout/UserMenu.vue'
 

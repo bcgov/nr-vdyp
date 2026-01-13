@@ -1,9 +1,7 @@
 <template>
-  <v-toolbar-title
-    :text="text"
-    :class="!style ? 'header-toolbar-title' : ''"
-    :style="style"
-  />
+  <span class="bcds-header--title">
+    {{ text }}
+  </span>
 </template>
 
 <script setup lang="ts">
@@ -12,17 +10,15 @@ defineProps({
     type: String,
     default: 'VARIABLE DENSITY YIELD PROJECTION',
   },
-  style: {
-    type: Object,
-    default: null,
-  },
 })
 </script>
 
 <style scoped>
-.header-toolbar-title {
-  text-align: center;
-  flex: 1;
-  font-weight: 300;
+.bcds-header--title {
+  font-family: var(--typography-font-families-bc-sans);
+  font-weight: var(--typography-font-weights-bold);
+  font-size: var(--typography-font-size-h4);
+  line-height: var(--typography-line-heights-sparse);
+  color: var(--typography-color-primary);
 }
 </style>

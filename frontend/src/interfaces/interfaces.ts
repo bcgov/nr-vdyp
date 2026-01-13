@@ -7,6 +7,7 @@ export interface MessageDialog {
   message: string
   dialogWidth?: number
   btnLabel?: string
+  variant?: 'info' | 'confirmation' | 'warning' | 'error'
 }
 
 export interface JobSearchParams {

@@ -1,5 +1,6 @@
 <template>
   <div style="position: relative; width: 100%">
+    <span class="bcds-text-field-label" v-html="label"></span>
     <v-text-field
       type="text"
       v-model="localValue"
@@ -9,16 +10,11 @@
       :persistent-placeholder="persistentPlaceholder"
       :placeholder="placeholder"
       :hide-details="hideDetails"
-      :density="density"
-      :dense="dense"
       :style="customStyle"
       :disabled="disabled"
       @update:modelValue="handleUpdateModelValue"
-    >
-      <template v-slot:label>
-        <span v-html="label"></span>
-      </template>
-    </v-text-field>
+      @keydown="handleKeyDown"
+    ></v-text-field>
     <!-- Spin Buttons -->
     <div class="spin-box">
       <div
@@ -28,7 +24,7 @@
         @mouseleave="stopIncrement"
         :class="{ disabled: disabled }"
       >
-        {{ CONSTANTS.SPIN_BUTTON.UP }}
+        <!-- CSS triangle instead of text -->
       </div>
       <div
         class="spin-down-arrow-button"
@@ -37,7 +33,7 @@
         @mouseleave="stopDecrement"
         :class="{ disabled: disabled }"
       >
-        {{ CONSTANTS.SPIN_BUTTON.DOWN }}
+        <!-- CSS triangle instead of text -->
       </div>
     </div>
   </div>
@@ -92,8 +88,8 @@ const emit = defineEmits(['update:modelValue'])
 
 const localValue = ref<string | null>(props.modelValue)
 
-let incrementInterval: number | null = null
-let decrementInterval: number | null = null
+let incrementInterval: ReturnType<typeof setInterval> | null = null
+let decrementInterval: ReturnType<typeof setInterval> | null = null
 
 // Watch for external modelValue changes
 watch(
@@ -112,7 +108,7 @@ watch(localValue, (newValue) => {
 
 const startIncrement = () => {
   updateValue('increment')
-  incrementInterval = window.setInterval(
+  incrementInterval = globalThis.setInterval(
     () => updateValue('increment'),
     props.interval,
   )
@@ -127,7 +123,7 @@ const stopIncrement = () => {
 
 const startDecrement = () => {
   updateValue('decrement')
-  decrementInterval = window.setInterval(
+  decrementInterval = globalThis.setInterval(
     () => updateValue('decrement'),
     props.interval,
   )
@@ -164,62 +160,25 @@ const updateValue = (action: 'increment' | 'decrement') => {
 const handleUpdateModelValue = (newValue: string) => {
   emit('update:modelValue', newValue)
 }
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (props.disabled) return
+
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    updateValue('increment')
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    updateValue('decrement')
+  }
+}
 </script>
 
 <style scoped>
-/* custom spin box and spin button beside text field */
+/* Spin box styles are defined in src/styles/_spin-field.scss */
+
+/* Position adjustment for spin-box when label is outside v-text-field */
 .spin-box {
-  position: absolute;
-  right: 15px;
-  top: 17px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 16px;
-  height: 20px;
-  background-color: transparent;
-  padding: 2px;
-}
-
-/* mouse over */
-.spin-box div:hover {
-  color: #8a8a8a !important;
-}
-
-.spin-up-arrow-button {
-  cursor: default;
-  font-size: 7px;
-  width: 10px;
-  height: 10px;
-  color: #898989 !important;
-  background-color: #fbfbfb;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: scaleX(1.5);
-  padding-top: 3px;
-  padding-bottom: 2px;
-}
-
-.spin-down-arrow-button {
-  cursor: default;
-  font-size: 7px;
-  width: 10px;
-  height: 10px;
-  color: #898989 !important;
-  background-color: #fbfbfb;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: scaleX(1.5);
-  padding-top: 3px;
-  padding-bottom: 2px;
-}
-
-.spin-box .disabled {
-  cursor: not-allowed;
-  opacity: 0.5; /* Makes the button look visually disabled */
-  pointer-events: none; /* Prevents clicking */
+  top: calc(50% + 12px); /* Offset by half of label height (~24px) */
 }
 </style>

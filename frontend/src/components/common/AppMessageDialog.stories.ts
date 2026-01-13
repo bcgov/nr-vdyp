@@ -26,30 +26,21 @@ const meta: Meta<typeof AppMessageDialog> = {
       description: 'Dialog width',
       defaultValue: 400,
     },
-    dialogBorderRadius: {
-      control: { type: 'range', min: 0, max: 50, step: 1 },
-      description: 'Dialog border radius',
-      defaultValue: 8,
-    },
     btnLabel: {
       control: 'text',
       description: 'Button label',
       defaultValue: 'OK',
     },
-    headerBackground: {
-      control: 'color',
-      description: 'Background color for header',
-      defaultValue: '#003366',
+    variant: {
+      control: 'select',
+      options: ['info', 'confirmation', 'warning', 'error'],
+      description: 'Dialog variant (determines icon and color scheme)',
+      defaultValue: 'info',
     },
-    headerColor: {
-      control: 'color',
-      description: 'Color for header',
-      defaultValue: '#ffffff',
-    },
-    actionsBackground: {
-      control: 'color',
-      description: 'Background color for actions',
-      defaultValue: '#f6f6f6',
+    scrollStrategy: {
+      control: 'text',
+      description: 'Scroll strategy for dialog',
+      defaultValue: 'block',
     },
     'onUpdate:dialog': {
       action: 'update:dialog',
@@ -65,17 +56,49 @@ const meta: Meta<typeof AppMessageDialog> = {
 export default meta
 type Story = StoryObj<typeof AppMessageDialog>
 
-export const Primary: Story = {
+export const Info: Story = {
+  args: {
+    dialog: true,
+    title: 'Information',
+    message:
+      'This is an informational message to provide additional context or details.',
+    dialogWidth: 400,
+    btnLabel: 'Continue Editing',
+    variant: 'info',
+  },
+}
+
+export const Confirmation: Story = {
+  args: {
+    dialog: true,
+    title: 'Success',
+    message: 'Your changes have been saved successfully.',
+    dialogWidth: 400,
+    btnLabel: 'OK',
+    variant: 'confirmation',
+  },
+}
+
+export const Warning: Story = {
   args: {
     dialog: true,
     title: 'Missing Information',
     message:
       'Input field is missing essential information which must be filled in order to confirm and continue.',
     dialogWidth: 400,
-    dialogBorderRadius: 8,
     btnLabel: 'Continue Editing',
-    headerBackground: '#003366',
-    headerColor: '#ffffff',
-    actionsBackground: '#f6f6f6',
+    variant: 'warning',
+  },
+}
+
+export const ErrorState: Story = {
+  args: {
+    dialog: true,
+    title: 'Error Occurred',
+    message:
+      'An unexpected error has occurred. Please try again or contact support if the problem persists.',
+    dialogWidth: 400,
+    btnLabel: 'Close',
+    variant: 'error',
   },
 }

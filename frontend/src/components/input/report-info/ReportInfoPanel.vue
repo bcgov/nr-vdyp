@@ -6,6 +6,7 @@
       :message="messageDialog.message"
       :dialogWidth="messageDialog.dialogWidth"
       :btnLabel="messageDialog.btnLabel"
+      :variant="messageDialog.variant"
       @update:dialog="(value) => (messageDialog.dialog = value)"
       @close="handleDialogClose"
     />
@@ -152,27 +153,27 @@ const handleSelectedAgeYearRangeUpdate = (value: string) => {
   currentStore.value.selectedAgeYearRange = value
 }
 
-const handleStartingAgeUpdate = (value: number | null) => {
+const handleStartingAgeUpdate = (value: string | null) => {
   currentStore.value.startingAge = value
 }
 
-const handleFinishingAgeUpdate = (value: number | null) => {
+const handleFinishingAgeUpdate = (value: string | null) => {
   currentStore.value.finishingAge = value
 }
 
-const handleAgeIncrementUpdate = (value: number | null) => {
+const handleAgeIncrementUpdate = (value: string | null) => {
   currentStore.value.ageIncrement = value
 }
 
-const handleStartYearUpdate = (value: number | null) => {
+const handleStartYearUpdate = (value: string | null) => {
   currentStore.value.startYear = value
 }
 
-const handleEndYearUpdate = (value: number | null) => {
+const handleEndYearUpdate = (value: string | null) => {
   currentStore.value.endYear = value
 }
 
-const handleYearIncrementUpdate = (value: number | null) => {
+const handleYearIncrementUpdate = (value: string | null) => {
   currentStore.value.yearIncrement = value
 }
 
@@ -220,7 +221,7 @@ const handleIncSecondaryHeightUpdate = (value: boolean) => {
   currentStore.value.incSecondaryHeight = value
 }
 
-const handleSpecificYearUpdate = (value: number | null) => {
+const handleSpecificYearUpdate = (value: string | null) => {
   currentStore.value.specificYear = value
 }
 
@@ -246,6 +247,7 @@ const validateComparison = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -260,6 +262,7 @@ const validateComparison = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_END_YEAR,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -281,6 +284,7 @@ const validateRequiredFields = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS_AGE,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -297,6 +301,7 @@ const validateRequiredFields = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: message,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -339,6 +344,7 @@ const validateRange = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: message,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -378,6 +384,7 @@ const validateRange = (): boolean => {
         title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
         message: message,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        variant: 'error',
       }
     }
     return result.isValid
@@ -445,6 +452,4 @@ const onClear = () => {
 
 const handleDialogClose = () => {}
 </script>
-<style scoped>
-/** */
-</style>
+<style scoped />

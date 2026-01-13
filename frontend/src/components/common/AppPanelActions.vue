@@ -3,21 +3,23 @@
     <v-spacer></v-spacer>
     <AppButton
       label="Clear"
-      customClass="white-btn"
+      variant="tertiary"
       :isDisabled="!isConfirmEnabled"
       @click="onClear"
     />
     <AppButton
       label="Confirm"
       v-show="!isConfirmed"
-      customClass="blue-btn ml-2"
+      variant="primary"
+      class="ml-2"
       :isDisabled="!isConfirmEnabled"
       @click="onConfirm"
     />
     <AppButton
       label="Edit"
       v-show="isConfirmed"
-      customClass="blue-btn ml-2"
+      variant="primary"
+      class="ml-2"
       @click="onEdit"
     />
   </v-card-actions>
@@ -44,4 +46,4 @@ const onConfirm = () => emit('confirm')
 const onEdit = () => emit('edit')
 </script>
 
-<style scoped></style>
+<style scoped />

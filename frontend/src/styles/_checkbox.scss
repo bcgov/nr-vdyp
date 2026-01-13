@@ -1,0 +1,62 @@
+/************** CHECKBOX & CHECKBOX GROUP - BC Gov Design Standards ****************/
+
+/* Checkbox Selection Control */
+.v-checkbox .v-selection-control {
+  min-height: unset;
+}
+
+/* Checkbox Label */
+.v-checkbox .v-label {
+  font-size: var(--typography-font-size-label);
+  font-weight: var(--typography-font-weights-regular);
+  color: var(--typography-color-secondary);
+  cursor: pointer;
+  padding-left: var(--layout-padding-small);
+}
+
+/* Checkbox Selection Control Input Wrapper */
+.v-checkbox .v-selection-control__wrapper {
+  width: 20px;
+  height: auto;
+}
+
+/* Checkbox Box Container - Default with gray border */
+.v-checkbox .v-selection-control__input {
+  height: 20px !important;
+  min-width: 20px !important;
+  margin-top: var(--layout-margin-hair);
+  color: var(--surface-color-border-medium) !important; /* Gray border by default */
+}
+
+/* Selected checkbox - blue background */
+.v-checkbox .v-selection-control--dirty .v-selection-control__input {
+  color: var(--surface-color-primary-default) !important;
+}
+
+/* Disabled checkbox - gray border */
+.v-checkbox.v-checkbox--disabled .v-selection-control__input,
+.v-checkbox.v-input--disabled .v-selection-control__input {
+  color: var(--surface-color-border-medium) !important;
+}
+
+/* Disabled + Selected checkbox - gray background */
+.v-checkbox.v-checkbox--disabled .v-selection-control--dirty .v-selection-control__input,
+.v-checkbox.v-input--disabled .v-selection-control--dirty .v-selection-control__input {
+  color: var(--surface-color-primary-disabled) !important;
+}
+
+/* Disabled checkbox checkmark icon - dark gray color */
+.v-input.v-input--disabled.v-checkbox .v-selection-control__input .v-icon,
+.v-input.v-input--disabled.v-checkbox .v-selection-control__input i.mdi,
+.v-input.v-input--disabled.v-checkbox .v-selection-control__input i.mdi-checkbox-marked,
+div.v-input--disabled.v-checkbox .v-selection-control--disabled .v-selection-control__input .v-icon,
+div.v-checkbox.v-input--disabled .v-selection-control--dirty .v-selection-control__input i.v-icon,
+.v-selection-control--disabled .v-selection-control__input .v-icon {
+  color: var(--icons-color-disabled) !important;
+  opacity: 1 !important;
+}
+
+/* Specific override for mdi-checkbox-marked icon in disabled state */
+.v-input--disabled .v-selection-control__input i.mdi-checkbox-marked::before {
+  color: var(--icons-color-disabled) !important;
+}

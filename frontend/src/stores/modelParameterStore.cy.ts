@@ -221,25 +221,25 @@ describe('ModelParameterStore Unit Tests', () => {
   })
 
   it('should update year range properties correctly', () => {
-    store.startYear = 2020
-    store.endYear = 2030
-    store.yearIncrement = 2
+    store.startYear = '2020'
+    store.endYear = '2030'
+    store.yearIncrement = '2'
 
-    expect(store.startYear).to.equal(2020)
-    expect(store.endYear).to.equal(2030)
-    expect(store.yearIncrement).to.equal(2)
+    expect(store.startYear).to.equal('2020')
+    expect(store.endYear).to.equal('2030')
+    expect(store.yearIncrement).to.equal('2')
   })
 
   it('should update age range properties correctly', () => {
     store.selectedAgeYearRange = 'Custom Range'
-    store.startingAge = 15
-    store.finishingAge = 85
-    store.ageIncrement = 10
+    store.startingAge = '15'
+    store.finishingAge = '85'
+    store.ageIncrement = '10'
 
     expect(store.selectedAgeYearRange).to.equal('Custom Range')
-    expect(store.startingAge).to.equal(15)
-    expect(store.finishingAge).to.equal(85)
-    expect(store.ageIncrement).to.equal(10)
+    expect(store.startingAge).to.equal('15')
+    expect(store.finishingAge).to.equal('85')
+    expect(store.ageIncrement).to.equal('10')
   })
 
   it('should update report info properties correctly', () => {
@@ -412,8 +412,8 @@ describe('ModelParameterStore Unit Tests', () => {
   })
 
   it('should update crownClosure correctly', () => {
-    store.crownClosure = 75
-    expect(store.crownClosure).to.equal(75)
+    store.crownClosure = '75'
+    expect(store.crownClosure).to.equal('75')
   })
 
   it('should update yield table options correctly', () => {
@@ -443,8 +443,8 @@ describe('ModelParameterStore Unit Tests', () => {
   })
 
   it('should update specificYear correctly', () => {
-    store.specificYear = 2025
-    expect(store.specificYear).to.equal(2025)
+    store.specificYear = '2025'
+    expect(store.specificYear).to.equal('2025')
   })
 
   it('should handle all boolean options in combination', () => {
@@ -457,7 +457,7 @@ describe('ModelParameterStore Unit Tests', () => {
     store.isCurrentYearEnabled = true
     store.isReferenceYearEnabled = true
     store.incSecondaryHeight = true
-    store.specificYear = 2050
+    store.specificYear = '2050'
 
     expect(store.isComputedMAIEnabled).to.be.true
     expect(store.isCulminationValuesEnabled).to.be.true
@@ -468,15 +468,15 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.isCurrentYearEnabled).to.be.true
     expect(store.isReferenceYearEnabled).to.be.true
     expect(store.incSecondaryHeight).to.be.true
-    expect(store.specificYear).to.equal(2050)
+    expect(store.specificYear).to.equal('2050')
   })
 
   it('should handle null and undefined values for specificYear', () => {
     store.specificYear = null
     expect(store.specificYear).to.be.null
 
-    store.specificYear = 2030
-    expect(store.specificYear).to.equal(2030)
+    store.specificYear = '2030'
+    expect(store.specificYear).to.equal('2030')
 
     store.specificYear = null
     expect(store.specificYear).to.be.null

@@ -1,38 +1,18 @@
 <template>
-  <v-img
+  <img
     alt="B.C. Government Logo"
-    :lazy-src="bcLogo"
     :src="bcLogo"
-    :style="{
-      maxHeight: `${maxHeight}px`,
-      maxWidth: `${maxWidth}px`,
-      marginLeft: `${marginLeft}px`,
-    }"
-    id="header-bc-logo-img"
-  ></v-img>
+    class="bcds-logo"
+  />
 </template>
 
 <script setup lang="ts">
-import bcLogo from '@/assets/gov-bc-logo-horiz.png'
-
-defineProps({
-  maxHeight: {
-    type: Number,
-    default: 50,
-  },
-  maxWidth: {
-    type: Number,
-    default: 150,
-  },
-  marginLeft: {
-    type: Number,
-    default: 15,
-  },
-})
+import bcLogo from '@/assets/BCID_H_rgb_pos.svg'
 </script>
 
 <style scoped>
-#header-bc-logo-img {
-  display: block;
+.bcds-logo {
+  min-width: 129px;
+  width: 129px;
 }
 </style>

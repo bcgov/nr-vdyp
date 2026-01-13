@@ -1,10 +1,8 @@
 <template>
-  <div class="ml-4 mt-5 mb-5">
-    <div class="ml-n4 mt-n5">
-      <span class="text-h7">Report Title</span>
-    </div>
+  <div class="mb-5">
     <v-row>
       <v-col cols="7">
+        <label class="bcds-text-field-label" for="reportTitle">Report Title</label>
         <v-text-field
           id="reportTitle"
           type="string"
@@ -12,16 +10,15 @@
           hide-details="auto"
           persistent-placeholder
           placeholder="Enter a report title..."
-          density="compact"
-          dense
-          style="max-width: 97% !important"
           :disabled="isDisabled"
+          class="report-title-text-field"
         ></v-text-field>
       </v-col>
       <v-col class="col-space-2" />
-      <v-col cols="3">
+      <v-col cols="3" class="projection-type-container">
+        <label class="bcds-select-label" for="projection-type-select">Projection Type</label>
         <v-select
-          label="Projection Type"
+          id="projection-type-select"
           :items="OPTIONS.projectionTypeOptions"
           v-model="localProjectionType"
           item-title="label"
@@ -29,9 +26,8 @@
           hide-details="auto"
           persistent-placeholder
           placeholder="Select..."
-          density="compact"
-          dense
           :disabled="isDisabled"
+          append-inner-icon="mdi-chevron-down"
         ></v-select>
       </v-col>
     </v-row>
@@ -41,7 +37,7 @@
     v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD"
   >
     <v-row>
-      <v-col cols="12" class="mb-n8">
+      <v-col cols="12" class="age-year-range-container mb-n8">
         <v-radio-group
           v-model="selectedAgeYearRange"
           inline
@@ -57,143 +53,143 @@
       </v-col>
     </v-row>
   </div>
-  <div class="ml-4">
+  <div>
     <v-row>
       <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
         <v-col cols="2">
-          <v-text-field
-            id="startingAge"
+          <AppSpinField
             label="Starting Age"
-            type="number"
-            v-model.number="localStartingAge"
+            :model-value="localStartingAge"
             :min="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
-            density="compact"
-            dense
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleStartingAgeInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_DECIMAL_NUM"
+            data-testid="starting-age"
+            @update:modelValue="handleStartingAgeInput"
+          />
         </v-col>
         <v-col class="col-space-3" />
         <v-col cols="2" class="ml-2">
-          <v-text-field
-            id="finishingAge"
+          <AppSpinField
             label="Finishing Age"
-            type="number"
-            v-model.number="localFinishingAge"
+            :model-value="localFinishingAge"
             :min="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
-            density="compact"
-            dense
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleFinishingAgeInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_DECIMAL_NUM"
+            data-testid="finishing-age"
+            @update:modelValue="handleFinishingAgeInput"
+          />
         </v-col>
         <v-col class="col-space-3" />
         <v-col cols="2" class="ml-2">
-          <v-text-field
-            id="ageIncrement"
+          <AppSpinField
             label="Increment"
-            type="number"
-            v-model.number="localAgeIncrement"
+            :model-value="localAgeIncrement"
             :min="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
-            density="compact"
-            dense
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleAgeIncrementInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_DECIMAL_NUM"
+            data-testid="age-increment"
+            @update:modelValue="handleAgeIncrementInput"
+          />
         </v-col>
       </template>
       <template v-else>
         <v-col cols="2">
-          <v-text-field
-            id="startYear"
+          <AppSpinField
             label="Start Year"
-            type="number"
-            v-model.number="localStartYear"
+            :model-value="localStartYear"
             :min="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
-            density="compact"
-            dense
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleStartYearInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_DECIMAL_NUM"
+            data-testid="start-year"
+            @update:modelValue="handleStartYearInput"
+          />
         </v-col>
         <v-col class="col-space-3" />
         <v-col cols="2" class="ml-2">
-          <v-text-field
-            id="endYear"
+          <AppSpinField
             label="End Year"
-            type="number"
-            v-model.number="localEndYear"
+            :model-value="localEndYear"
             :min="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
-            density="compact"
-            dense
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleEndYearInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_DECIMAL_NUM"
+            data-testid="end-year"
+            @update:modelValue="handleEndYearInput"
+          />
         </v-col>
         <v-col class="col-space-3" />
         <v-col cols="2" class="ml-2">
-          <v-text-field
-            id="yearIncrement"
+          <AppSpinField
             label="Increment"
-            type="number"
-            v-model.number="localYearIncrement"
+            :model-value="localYearIncrement"
             :min="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN"
             :max="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX"
             :step="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_STEP"
-            persistent-placeholder
+            :persistent-placeholder="true"
             placeholder=""
-            density="compact"
-            dense
+            :hideDetails="true"
             :disabled="isDisabled"
-            @update:model-value="handleYearIncrementInput"
-          ></v-text-field>
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_DECIMAL_NUM"
+            data-testid="year-increment"
+            @update:modelValue="handleYearIncrementInput"
+          />
         </v-col>
       </template>
       <v-col class="col-space-3" />
-      <v-col cols="2">
-        <v-checkbox
-          v-model="localIsForwardGrowEnabled"
-          label="Forward"
-          hide-details
-          :disabled="isForwardGrowDeactivated"
-          data-testid="is-forward-grow-enabled"
-        ></v-checkbox>
-      </v-col>
-      <v-col class="col-space-3" />
-      <v-col cols="2" class="ml-2">
-        <v-checkbox
-          v-model="localIsBackwardGrowEnabled"
-          label="Backward"
-          hide-details
-          :disabled="isBackwardGrowDeactivated"
-          data-testid="is-backward-grow-enabled"
-        ></v-checkbox>
+      <v-col class="pl-8">
+        <v-row class="pt-11">
+          <v-checkbox
+            v-model="localIsForwardGrowEnabled"
+            label="Forward"
+            hide-details
+            :disabled="isForwardGrowDeactivated"
+            data-testid="is-forward-grow-enabled"
+          ></v-checkbox>
+          <v-col class="col-space-3" />
+          <v-checkbox
+            v-model="localIsBackwardGrowEnabled"
+            label="Backward"
+            hide-details
+            :disabled="isBackwardGrowDeactivated"
+            data-testid="is-backward-grow-enabled"
+          ></v-checkbox>
+        </v-row>
       </v-col>
     </v-row>
   </div>
-  <div class="ml-4 mt-5">
-    <div class="ml-n4 mt-n5">
-      <span class="text-h7">Include in Report</span>
+  <div class="ml-4 mt-7">
+    <div class="ml-n4">
+      <span class="include-in-report-label" :class="{ 'include-in-report-disabled': isDisabled }">Include in Report</span>
     </div>
     <v-row class="ml-n6">
       <v-col cols="12" style="padding-top: 1px">
@@ -204,7 +200,7 @@
           "
         >
           <v-row>
-            <v-col cols="2">
+            <v-col cols="2" class="computed-mai-container">
               <v-checkbox
                 v-model="localIsComputedMAIEnabled"
                 label="Computed MAI"
@@ -214,7 +210,7 @@
               ></v-checkbox>
             </v-col>
             <v-col class="col-space-3" />
-            <v-col cols="2" class="ml-2">
+            <v-col cols="2" class="culmination-values-container">
               <v-checkbox
                 v-model="localIsCulminationValuesEnabled"
                 label="Culmination Values"
@@ -224,7 +220,7 @@
               ></v-checkbox>
             </v-col>
             <v-col class="col-space-3" />
-            <v-col cols="2" class="ml-1">
+            <v-col cols="2" class="by-species-container">
               <v-checkbox
                 v-model="localIsBySpeciesEnabled"
                 label="By Species"
@@ -234,7 +230,7 @@
               ></v-checkbox>
             </v-col>
             <v-col class="col-space-3" />
-            <v-col cols="2" class="ml-2">
+            <v-col cols="3" class="secondary-species-height-container">
               <v-checkbox
                 v-model="localIncSecondaryHeight"
                 label="Secondary Species Height"
@@ -247,7 +243,7 @@
         </template>
         <template v-else>
           <v-row>
-            <v-col cols="2">
+            <v-col cols="2" class="by-layer-container">
               <v-checkbox
                 v-model="localIsByLayerEnabled"
                 label="By Layer"
@@ -257,7 +253,7 @@
               ></v-checkbox>
             </v-col>
             <v-col class="col-space-3" />
-            <v-col cols="2" class="ml-2">
+            <v-col cols="2" class="by-species-file-upload-container">
               <v-checkbox
                 v-model="localIsBySpeciesEnabled"
                 label="By Species"
@@ -267,7 +263,7 @@
               ></v-checkbox>
             </v-col>
             <v-col class="col-space-3" />
-            <v-col cols="2" class="ml-1">
+            <v-col cols="2" class="projection-mode-container">
               <v-checkbox
                 v-model="localIsProjectionModeEnabled"
                 label="Projection Mode"
@@ -297,8 +293,8 @@
               ></v-checkbox>
             </v-col>
           </v-row>
-          <v-row class="mt-n7">
-            <v-col cols="2">
+          <v-row class="mt-1">
+            <v-col cols="2" class="reference-year-container">
               <v-checkbox
                 v-model="localIsReferenceYearEnabled"
                 label="Reference Year"
@@ -308,25 +304,25 @@
               ></v-checkbox>
             </v-col>
             <v-col class="col-space-3" />
-            <v-col cols="2" class="ml-4">
-              <v-text-field
-                id="specificYear"
+            <v-col cols="2" class="specific-year-container">
+              <AppSpinField
                 label="Specific Year"
-                type="number"
-                v-model.number="localSpecificYear"
+                :model-value="localSpecificYear"
                 :min="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_MIN"
                 :max="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_MAX"
                 :step="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_STEP"
-                persistent-placeholder
+                :persistent-placeholder="true"
                 placeholder=""
-                density="compact"
-                dense
+                :hideDetails="true"
                 :disabled="isSpecificYearDeactivated"
-                @update:model-value="handleSpecificYearInput"
-              ></v-text-field>
+                :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_DECIMAL_NUM"
+                data-testid="specific-year"
+                @update:modelValue="handleSpecificYearInput"
+              />
             </v-col>
             <v-col class="col-space-3" />
-            <v-col cols="2" class="ml-2" style="padding-left: 0px;">
+            <v-col cols="2" class="secondary-species-height-file-upload-container" style="padding-left: 0px;">
               <v-checkbox
                 v-model="localIncSecondaryHeight"
                 label="Secondary Species Height"
@@ -342,14 +338,14 @@
   </div>
   <div class="ml-4 mt-10" v-if="isModelParametersMode">
     <div class="ml-n4 mt-n5">
-      <span class="text-h7">Minimum DBH Limit by Species Group</span>
+      <span class="min-dbh-limit-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">Minimum DBH Limit by Species Group</span>
     </div>
-    <v-container fluid class="ml-n6 mt-5">
+    <v-container fluid class="ml-n10 mt-5">
       <v-row v-for="(group, index) in speciesGroups" :key="index">
-        <v-col style="max-width: 5%; padding-top: 0px; padding-left: 20px">
+        <v-col class="min-dbh-limit-species-group-list-container" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
           {{ `${group.group}` }}
         </v-col>
-        <v-col cols="8">
+        <v-col cols="8" class="ml-n5">
           <v-slider
             v-model="utilizationSliderValues[index]"
             :min="0"
@@ -357,9 +353,6 @@
             :ticks="utilizationSliderTickLabels"
             show-ticks="always"
             step="1"
-            tick-size="0"
-            color="#e0e0e0"
-            thumb-color="#767676"
             thumb-size="12"
             track-size="7"
             track-color="transparent"
@@ -378,14 +371,14 @@
     "
   >
     <div class="ml-n4 mt-n5">
-      <span class="text-h7">Minimum DBH Limit by Species Group</span>
+      <span class="min-dbh-limit-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">Minimum DBH Limit by Species Group</span>
     </div>
-    <v-container fluid class="ml-n6 mt-5">
+    <v-container fluid class="ml-n10 mt-5">
       <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index">
-        <v-col style="max-width: 5%; padding-top: 0px; padding-left: 20px">
+        <v-col class="min-dbh-limit-species-group-list-container" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
           {{ `${group.group}` }}
         </v-col>
-        <v-col cols="8">
+        <v-col cols="8" class="ml-n5">
           <v-slider
             v-model="fileUploadUtilizationSliderValues[index]"
             :min="0"
@@ -393,9 +386,6 @@
             :ticks="utilizationSliderTickLabels"
             show-ticks="always"
             step="1"
-            tick-size="0"
-            color="#e0e0e0"
-            thumb-color="#767676"
             thumb-size="12"
             track-size="7"
             track-color="transparent"
@@ -410,10 +400,10 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
-import { parseNumberOrNull } from '@/utils/util'
 import { useAppStore } from '@/stores/appStore'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { useFileUploadStore } from '@/stores/fileUploadStore'
+import { AppSpinField } from '@/components'
 
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
@@ -421,12 +411,12 @@ const fileUploadStore = useFileUploadStore()
 
 const props = defineProps<{
   selectedAgeYearRange: string | null
-  startingAge: number | null
-  finishingAge: number | null
-  ageIncrement: number | null
-  startYear: number | null
-  endYear: number | null
-  yearIncrement: number | null
+  startingAge: string | null
+  finishingAge: string | null
+  ageIncrement: string | null
+  startYear: string | null
+  endYear: string | null
+  yearIncrement: string | null
   isForwardGrowEnabled: boolean
   isBackwardGrowEnabled: boolean
   isComputedMAIEnabled: boolean
@@ -438,7 +428,7 @@ const props = defineProps<{
   isCurrentYearEnabled: boolean
   isReferenceYearEnabled: boolean
   incSecondaryHeight: boolean
-  specificYear: number | null
+  specificYear: string | null
   projectionType: string | null
   reportTitle: string | null
   isDisabled: boolean
@@ -482,12 +472,12 @@ const fileUploadSpeciesGroups = computed(
 const selectedAgeYearRange = ref<string>(
   props.selectedAgeYearRange || DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
 )
-const localStartingAge = ref<number | null>(props.startingAge)
-const localFinishingAge = ref<number | null>(props.finishingAge)
-const localAgeIncrement = ref<number | null>(props.ageIncrement)
-const localStartYear = ref<number | null>(props.startYear)
-const localEndYear = ref<number | null>(props.endYear)
-const localYearIncrement = ref<number | null>(props.yearIncrement)
+const localStartingAge = ref<string | null>(props.startingAge)
+const localFinishingAge = ref<string | null>(props.finishingAge)
+const localAgeIncrement = ref<string | null>(props.ageIncrement)
+const localStartYear = ref<string | null>(props.startYear)
+const localEndYear = ref<string | null>(props.endYear)
+const localYearIncrement = ref<string | null>(props.yearIncrement)
 const localIsForwardGrowEnabled = ref<boolean>(props.isForwardGrowEnabled)
 const localIsBackwardGrowEnabled = ref<boolean>(props.isBackwardGrowEnabled)
 const localIsComputedMAIEnabled = ref<boolean>(props.isComputedMAIEnabled)
@@ -501,7 +491,7 @@ const localIsPolygonIDEnabled = ref<boolean>(props.isPolygonIDEnabled)
 const localIsCurrentYearEnabled = ref<boolean>(props.isCurrentYearEnabled)
 const localIsReferenceYearEnabled = ref<boolean>(props.isReferenceYearEnabled)
 const localIncSecondaryHeight = ref<boolean>(props.incSecondaryHeight)
-const localSpecificYear = ref<number | null>(props.specificYear)
+const localSpecificYear = ref<string | null>(props.specificYear)
 const localProjectionType = ref<string | null>(props.projectionType)
 const localReportTitle = ref<string | null>(props.reportTitle)
 
@@ -760,15 +750,15 @@ watch(localProjectionType, (newVal) => {
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
 
 const isCulminationValuesEligible = (
-  _startingAge: number | null,
-  _finishingAge: number | null,
+  _startingAge: string | null,
+  _finishingAge: string | null,
 ) => {
-  return (
-    _startingAge !== null &&
-    _startingAge <= 10 &&
-    _finishingAge !== null &&
-    _finishingAge >= 300
-  )
+  if (_startingAge === null || _finishingAge === null) {
+    return false
+  }
+  const startAge = Number.parseFloat(_startingAge)
+  const finishAge = Number.parseFloat(_finishingAge)
+  return startAge <= 10 && finishAge >= 300
 }
 
 // Watch speciesGroups for changes and sync utilization sliderValues (with immediate: true for initial load)
@@ -918,32 +908,32 @@ const utilizationSliderTickLabels = utilizationClassOptions.reduce(
   {} as Record<number, string>,
 )
 
-const handleStartingAgeInput = (value: string) => {
-  localStartingAge.value = parseNumberOrNull(value)
+const handleStartingAgeInput = (value: string | null) => {
+  localStartingAge.value = value
 }
 
-const handleFinishingAgeInput = (value: string) => {
-  localFinishingAge.value = parseNumberOrNull(value)
+const handleFinishingAgeInput = (value: string | null) => {
+  localFinishingAge.value = value
 }
 
-const handleAgeIncrementInput = (value: string) => {
-  localAgeIncrement.value = parseNumberOrNull(value)
+const handleAgeIncrementInput = (value: string | null) => {
+  localAgeIncrement.value = value
 }
 
-const handleStartYearInput = (value: string) => {
-  localStartYear.value = parseNumberOrNull(value)
+const handleStartYearInput = (value: string | null) => {
+  localStartYear.value = value
 }
 
-const handleEndYearInput = (value: string) => {
-  localEndYear.value = parseNumberOrNull(value)
+const handleEndYearInput = (value: string | null) => {
+  localEndYear.value = value
 }
 
-const handleYearIncrementInput = (value: string) => {
-  localYearIncrement.value = parseNumberOrNull(value)
+const handleYearIncrementInput = (value: string | null) => {
+  localYearIncrement.value = value
 }
 
-const handleSpecificYearInput = (value: string) => {
-  localSpecificYear.value = parseNumberOrNull(value)
+const handleSpecificYearInput = (value: string | null) => {
+  localSpecificYear.value = value
 }
 
 // Update minimum DBH limit in the store based on slider value
@@ -967,5 +957,91 @@ const updateFileUploadMinDBH = (index: number, value: number) => {
 }
 </script>
 <style scoped>
-/** */
+.include-in-report-label {
+  display: block;
+  color: var(--typography-color-secondary);
+  font-family: var(--typography-font-families-bc-sans);
+  font-weight: var(--typography-font-weights-regular);
+  font-size: var(--typography-font-size-body);
+  line-height: 1.5;
+  padding-bottom: 2px;
+  margin-bottom: 12px;
+}
+
+.include-in-report-disabled {
+  color: var(--typography-color-disabled) !important;
+}
+
+.min-dbh-limit-species-group-label {
+  display: block;
+  color: var(--typography-color-secondary);
+  font-family: var(--typography-font-families-bc-sans);
+  font-weight: var(--typography-font-weights-regular);
+  font-size: var(--typography-font-size-body);
+  line-height: 1.5;
+  padding-bottom: 2px;
+  margin-bottom: 12px;
+}
+
+.min-dbh-limit-species-group-list-container {
+  max-width: 5%;
+  padding-top: 0px;
+  padding-left: 20px
+}
+
+.min-dbh-disabled {
+  color: var(--typography-color-disabled) !important;
+}
+
+.report-title-text-field {
+  max-width: 97.5% !important
+}
+
+.projection-type-container {
+  padding-top: 16px;
+}
+
+.computed-mai-container {
+  padding-left: 8px;
+}
+
+.culmination-values-container {
+  padding-left: 17px;
+}
+
+.by-species-container {
+  padding-left: 26px;
+}
+
+.secondary-species-height-container {
+  padding-left: 34px;
+}
+
+.age-year-range-container {
+  margin-left: 6px;
+}
+
+.by-layer-container {
+  padding-left: 8px;
+}
+
+.reference-year-container {
+  padding-left: 8px;
+}
+
+.by-species-file-upload-container {
+  padding-left: 17px;
+}
+
+.specific-year-container {
+  margin-left: 5px;
+}
+
+.projection-mode-container {
+  margin-left: 14px;
+}
+
+.secondary-species-height-file-upload-container {
+  margin-left: 21px;
+}
 </style>

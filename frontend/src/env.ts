@@ -4,4 +4,4 @@ declare global {
   }
 }
 
-export const env: Record<string, any> = { ...import.meta.env, ...window.config }
+export const env: Record<string, any> = { ...import.meta.env, ...(globalThis as unknown as Window).config }

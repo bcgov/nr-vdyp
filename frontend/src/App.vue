@@ -4,20 +4,23 @@
 
     <v-main id="main">
       <AppNotification />
-      <AppConfirmDialog />
+      <AppAlertDialog />
       <AppDialogDragger />
 
       <DefaultLayout>
         <router-view />
       </DefaultLayout>
     </v-main>
+
+    <TheFooter />
   </v-app>
 </template>
 <script setup lang="ts">
 import {
   TheHeader,
+  TheFooter,
   AppNotification,
-  AppConfirmDialog,
+  AppAlertDialog,
   AppDialogDragger,
 } from '@/components'
 

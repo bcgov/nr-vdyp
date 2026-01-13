@@ -20,11 +20,11 @@ const axiosInstance: AxiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     console.debug(
-      `Request timeout: ${config.timeout}, ${config.headers}, method: ${config.method}, responseType: ${config.responseType}, url: ${config.url}`,
+      `Request timeout: ${config.timeout}, ${JSON.stringify(config.headers)}, method: ${config.method}, responseType: ${config.responseType}, url: ${config.url}`,
     )
 
     const authStore = useAuthStore()
-    if (authStore && authStore.user && authStore.user.accessToken) {
+    if (authStore?.user?.accessToken) {
       // Validate and refresh token if necessary
       await handleTokenValidation()
 
@@ -44,7 +44,7 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     console.error('Request error:', error)
-    return Promise.reject(convertToAxiosError(error))
+    throw convertToAxiosError(error)
   },
 )
 
@@ -66,7 +66,7 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    return Promise.reject(convertToAxiosError(error))
+    throw convertToAxiosError(error)
   },
 )
 

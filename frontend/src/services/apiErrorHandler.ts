@@ -11,84 +11,135 @@ import { SVC_ERR } from '@/constants/message'
  * @param contextMessage - Optional context message to prepend to error messages.
  */
 export const handleApiError = (error: unknown, contextMessage?: string) => {
-  const pinia = getActivePinia()
-  let notificationStore
-
-  if (pinia) {
-    notificationStore = useNotificationStore(pinia)
-  } else {
-    console.warn('Pinia is not active. Message will only be logged.')
-  }
-
+  const notificationStore = getNotificationStore()
   const prependMessage = (message: string) =>
     contextMessage ? `${contextMessage}: ${message}` : message
 
   if (axios.isCancel(error)) {
-    const message = prependMessage('Request was canceled.')
-    console.warn(message, (error as AxiosError).message)
-    if (notificationStore) {
-      notificationStore.showInfoMessage(message)
-    }
+    handleCanceledRequest(error, prependMessage, notificationStore)
     return
   }
 
   if (isAxiosError(error)) {
-    const axiosError = error as AxiosError
-
-    /* If the server returned a response */
-    if (axiosError.response) {
-      const response: AxiosResponse = axiosError.response
-
-      console.error(prependMessage('API Error Response:'), {
-        status: response.status,
-        data: response.data,
-        headers: response.headers,
-      })
-
-      const message = prependMessage(getErrorMessage(response.status))
-
-      if (notificationStore) {
-        notificationStore.showErrorMessage(message)
-      }
-    } else if (axiosError.request) {
-      /*
-      Handles cases where the server fails to return a response.
-      This can be due to network issues or a failed connection to the server. */
-      const message = prependMessage(`${SVC_ERR.DEFAULT} (Error: No Response)`)
-      console.error(message, axiosError.request)
-      if (notificationStore) {
-        notificationStore.showErrorMessage(message)
-      }
-    } else {
-      /*
-      Handles cases where a configuration error occurs while sending a request.
-      For example, an invalid URL or header setting can cause an error.
-      */
-      const message = prependMessage(
-        `${SVC_ERR.DEFAULT} (Error: Configuration Issue)`,
-      )
-      console.error(message, axiosError.message)
-      if (notificationStore) {
-        notificationStore.showErrorMessage(message)
-      }
-    }
-
-    // Log additional error information for debugging
-    console.error('Axios Config:', axiosError.config)
-    if (axiosError.code) {
-      // Refer to Axios Error code
-      console.error(`Axios Error Code: ${axiosError.code}`)
-    }
+    handleAxiosError(error, prependMessage, notificationStore)
   } else {
-    // Treat it as a normal JavaScript error if the error passed in is not an Axios error.
-    const message = prependMessage(
-      'The request could not be processed properly. Please try again.',
-    )
-    console.error(message, (error as Error).message)
-    if (notificationStore) {
-      notificationStore.showErrorMessage(message)
-    }
+    handleGenericError(error, prependMessage, notificationStore)
   }
+}
+
+/**
+ * Gets the notification store or returns undefined if Pinia is not active.
+ */
+function getNotificationStore() {
+  const pinia = getActivePinia()
+  if (pinia) {
+    return useNotificationStore(pinia)
+  }
+  console.warn('Pinia is not active. Message will only be logged.')
+  return undefined
+}
+
+/**
+ * Handles canceled requests.
+ */
+function handleCanceledRequest(
+  error: unknown,
+  prependMessage: (message: string) => string,
+  notificationStore?: ReturnType<typeof useNotificationStore>,
+) {
+  const message = prependMessage('Request was canceled.')
+  console.warn(message, (error as AxiosError).message)
+  notificationStore?.showInfoMessage(message)
+}
+
+/**
+ * Handles Axios-specific errors.
+ */
+function handleAxiosError(
+  axiosError: AxiosError,
+  prependMessage: (message: string) => string,
+  notificationStore?: ReturnType<typeof useNotificationStore>,
+) {
+  if (axiosError.response) {
+    handleResponseError(axiosError.response, prependMessage, notificationStore)
+  } else if (axiosError.request) {
+    handleRequestError(axiosError.request, prependMessage, notificationStore)
+  } else {
+    handleConfigurationError(axiosError, prependMessage, notificationStore)
+  }
+
+  logAxiosDebugInfo(axiosError)
+}
+
+/**
+ * Handles errors from server responses.
+ */
+function handleResponseError(
+  response: AxiosResponse,
+  prependMessage: (message: string) => string,
+  notificationStore?: ReturnType<typeof useNotificationStore>,
+) {
+  console.error(prependMessage('API Error Response:'), {
+    status: response.status,
+    data: response.data,
+    headers: response.headers,
+  })
+
+  const message = prependMessage(getErrorMessage(response.status))
+  notificationStore?.showErrorMessage(message)
+}
+
+/**
+ * Handles cases where the server fails to return a response.
+ * This can be due to network issues or a failed connection to the server.
+ */
+function handleRequestError(
+  request: unknown,
+  prependMessage: (message: string) => string,
+  notificationStore?: ReturnType<typeof useNotificationStore>,
+) {
+  const message = prependMessage(`${SVC_ERR.DEFAULT} (Error: No Response)`)
+  console.error(message, request)
+  notificationStore?.showErrorMessage(message)
+}
+
+/**
+ * Handles cases where a configuration error occurs while sending a request.
+ * For example, an invalid URL or header setting can cause an error.
+ */
+function handleConfigurationError(
+  axiosError: AxiosError,
+  prependMessage: (message: string) => string,
+  notificationStore?: ReturnType<typeof useNotificationStore>,
+) {
+  const message = prependMessage(`${SVC_ERR.DEFAULT} (Error: Configuration Issue)`)
+  console.error(message, axiosError.message)
+  notificationStore?.showErrorMessage(message)
+}
+
+/**
+ * Logs additional Axios error information for debugging.
+ */
+function logAxiosDebugInfo(axiosError: AxiosError) {
+  console.error('Axios Config:', axiosError.config)
+  if (axiosError.code) {
+    console.error(`Axios Error Code: ${axiosError.code}`)
+  }
+}
+
+/**
+ * Handles generic JavaScript errors.
+ */
+function handleGenericError(
+  error: unknown,
+  prependMessage: (message: string) => string,
+  notificationStore?: ReturnType<typeof useNotificationStore>,
+) {
+  const message = prependMessage(
+    'The request could not be processed properly. Please try again.',
+  )
+  console.error(message, (error as Error).message)
+  notificationStore?.showErrorMessage(message)
 }
 
 /**

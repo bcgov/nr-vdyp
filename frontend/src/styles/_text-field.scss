@@ -1,0 +1,303 @@
+/************** TEXT-FIELD - BC Gov Design Standards ****************/
+
+/* Text Field Component - BC Design Standards Alignment */
+/* Use more specific selectors to avoid affecting v-select */
+
+.v-text-field:not(.v-select):not(.v-autocomplete) {
+  flex-direction: column;
+  align-self: stretch;
+  max-width: -moz-available;
+  max-width: -webkit-fill-available;
+}
+
+/* Manual label above text field */
+.bcds-text-field-label {
+  display: block;
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-primary);
+  font-size: var(--typography-font-size-label);
+  font-weight: var(--typography-font-weights-regular);
+  line-height: 1.5;
+  padding: var(--layout-padding-xsmall) var(--layout-padding-none);
+  padding-bottom: 4px;
+  margin-bottom: 0;
+}
+
+/* Required indicator styling */
+.bcds-text-field-label .required {
+  color: var(--typography-color-secondary);
+  padding: var(--layout-padding-none) var(--layout-padding-xsmall);
+}
+
+/* Hide Vuetify's built-in label since we use manual label - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-label {
+  display: none !important; /* Hide Vuetify's floating label */
+}
+
+/* Hide Vuetify's outline borders (we use our own border) - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__outline {
+  display: none !important;
+}
+
+/* Text Field Container (the input box) - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field {
+  color: var(--typography-color-primary);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--layout-margin-small);
+  background: var(--surface-color-forms-default);
+  box-sizing: border-box;
+  border: var(--layout-border-width-small) solid
+    var(--surface-color-border-default);
+  border-radius: var(--layout-border-radius-medium);
+  padding: var(--layout-padding-small) 12px;
+  cursor: text;
+  /* Sizes - Medium (default) */
+  height: var(--layout-margin-xxlarge);
+  min-height: var(--layout-margin-xxlarge);
+}
+
+/* Override Vuetify's filled variant background - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field--variant-filled .v-field__overlay {
+  background-color: var(--surface-color-forms-default);
+  opacity: 1;
+}
+
+/* Sizes - Small/Compact - TEXT-FIELD ONLY */
+.v-text-field.v-input--density-compact:not(.v-select):not(.v-autocomplete) .v-field,
+.v-text-field[density='compact']:not(.v-select):not(.v-autocomplete) .v-field {
+  height: var(--layout-margin-xlarge);
+  min-height: var(--layout-margin-xlarge);
+}
+
+/* Remove all padding from v-field__field wrapper - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__field {
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex-grow: 1;
+}
+
+/* Maintain consistent padding in all states - TEXT-FIELD ONLY */
+.v-text-field.v-input--focused:not(.v-select):not(.v-autocomplete) .v-field__field,
+.v-text-field.v-input--dirty:not(.v-select):not(.v-autocomplete) .v-field__field,
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field--focused .v-field__field,
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field--active .v-field__field,
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field--dirty .v-field__field {
+  padding: 0 !important;
+}
+
+/* Input element styling - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__input {
+  font: var(--typography-regular-body);
+  font-size: var(--typography-font-size-body);
+  padding: var(--layout-padding-none);
+  color: var(--typography-color-primary);
+  border: none;
+  flex-grow: 1;
+  min-height: auto;
+  background-color: transparent !important;
+}
+
+/* Force zero padding in all states - TEXT-FIELD ONLY */
+.v-text-field.v-input--focused:not(.v-select):not(.v-autocomplete) .v-field__input,
+.v-text-field.v-input--focused.v-input--dirty:not(.v-select):not(.v-autocomplete) .v-field__input,
+.v-text-field.v-input--dirty:not(.v-select):not(.v-autocomplete) .v-field__input,
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field--focused .v-field__input,
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field--active .v-field__input,
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field--dirty .v-field__input {
+  padding: 0 !important;
+  padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
+}
+
+/* Native input element inside v-field__input - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__input input {
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  line-height: normal;
+  background-color: transparent !important;
+}
+
+/* Placeholder styling - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__input::placeholder,
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__input input::placeholder {
+  color: var(--typography-color-placeholder);
+}
+
+/* Focused state outline - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field:focus-within {
+  border-radius: var(--layout-border-radius-large);
+  border: var(--layout-border-width-small) solid
+    var(--surface-color-border-active);
+  outline: solid var(--layout-border-width-medium)
+    var(--surface-color-border-active);
+  outline-offset: var(--layout-margin-hair);
+}
+
+/* Remove default focus styles from input - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__input input:focus,
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__input input:focus-visible {
+  outline: none;
+}
+
+/* Hover state - TEXT-FIELD ONLY */
+.v-text-field:not(.v-input--disabled):not(.v-select):not(.v-autocomplete) .v-field:hover {
+  border-color: var(--surface-color-border-dark);
+}
+
+/* Disabled state - TEXT-FIELD ONLY */
+.v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete) .v-field,
+.v-text-field[disabled]:not(.v-select):not(.v-autocomplete) .v-field {
+  background: var(--surface-color-forms-disabled);
+  color: var(--typography-color-placeholder);
+  cursor: not-allowed;
+  opacity: 1 !important;
+}
+
+.v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete) .v-field__overlay {
+  background-color: var(--surface-color-forms-disabled) !important;
+  opacity: 1 !important;
+}
+
+.v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete) .v-field__input,
+.v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete) .v-field__input input {
+  background: var(--surface-color-forms-disabled);
+  color: var(--typography-color-placeholder);
+  cursor: not-allowed;
+}
+
+.v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete) .v-field__input input::placeholder {
+  color: var(--typography-color-disabled) !important;
+}
+
+/* Disabled state - label color (label comes before v-text-field in HTML) */
+.bcds-text-field-label:has(+ .v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete)) {
+  color: var(--typography-color-disabled) !important;
+}
+
+/* Invalid/Error state - TEXT-FIELD ONLY */
+.v-text-field.v-input--error:not(.v-select):not(.v-autocomplete) .v-field {
+  border-radius: var(--layout-border-radius-medium);
+  border: var(--layout-border-width-small) solid
+    var(--support-border-color-danger);
+  background: var(--surface-color-forms-default);
+}
+
+/* Read-only state - TEXT-FIELD ONLY */
+.v-text-field.v-input--readonly:not(.v-select):not(.v-autocomplete) .v-field,
+.v-text-field[readonly]:not(.v-select):not(.v-autocomplete) .v-field {
+  background: var(--surface-color-forms-disabled);
+}
+
+.v-text-field.v-input--readonly:not(.v-select):not(.v-autocomplete) .v-field__overlay {
+  background-color: var(--surface-color-forms-disabled) !important;
+}
+
+.v-text-field.v-input--readonly:not(.v-select):not(.v-autocomplete) .v-field__input,
+.v-text-field.v-input--readonly:not(.v-select):not(.v-autocomplete) .v-field__input input {
+  background: var(--surface-color-forms-disabled);
+}
+
+/* Description text below text field - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-messages {
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-secondary);
+  padding: var(--layout-padding-xsmall) var(--layout-padding-none);
+}
+
+/* Error message styling - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-messages--active,
+.v-text-field.v-input--error:not(.v-select):not(.v-autocomplete) .v-messages {
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-danger);
+}
+
+/* Icon slots - Left icon - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__prepend-inner {
+  color: var(--icons-color-primary);
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-inline-start: 0 !important;
+  align-items: center;
+  display: flex;
+  height: 100%;
+  margin-inline-end: var(--layout-margin-small) !important;
+}
+
+/* Icon slots - Right icon - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__append-inner {
+  color: var(--icons-color-primary);
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-inline-end: 0 !important;
+  align-items: center;
+  display: flex;
+  height: 100%;
+  margin-inline-start: var(--layout-margin-small) !important;
+}
+
+/* Exclamation icon for invalid state - TEXT-FIELD ONLY */
+.v-text-field.v-input--error:not(.v-select):not(.v-autocomplete) .v-field__append-inner svg,
+.v-text-field.v-input--error:not(.v-select):not(.v-autocomplete) .v-field__append-inner .v-icon {
+  color: var(--icons-color-danger);
+  min-width: var(--icons-size-medium);
+  height: var(--icons-size-medium);
+}
+
+/* Disabled state - icons - TEXT-FIELD ONLY */
+.v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete) .v-field__prepend-inner,
+.v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete) .v-field__append-inner {
+  color: var(--icons-color-disabled);
+}
+
+/* Clearable icon styling - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field__clearable {
+  color: var(--icons-color-primary);
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Input number field spin (arrows) button - Keep existing behavior */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  /* Always show the spin (arrows) button */
+  display: block;
+  opacity: 1;
+  width: 20px;
+  height: 20px;
+  /* Center the spinner vertically */
+  margin: 0;
+  position: relative;
+  top: 0;
+}
+
+/* Ensure number input has proper alignment for spinner centering */
+.v-text-field:not(.v-select):not(.v-autocomplete) input[type='number'] {
+  line-height: 1 !important; /* Reset line-height for proper vertical centering */
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure text field input background is white when active - TEXT-FIELD ONLY */
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field--no-label input,
+.v-text-field:not(.v-select):not(.v-autocomplete) .v-field--active input {
+  background-color: var(--surface-color-forms-default);
+}
+
+/* Active/enabled input components - darker contrast - TEXT-FIELD ONLY */
+.v-text-field:not(.v-input--is-disabled):not(.v-select):not(.v-autocomplete) .v-label {
+  font-weight: 500;
+  color: var(--typography-color-primary);
+  opacity: 1;
+}
+
+.v-text-field:not(.v-input--is-disabled):not(.v-select):not(.v-autocomplete) .v-input__control {
+  color: var(--typography-color-primary);
+  opacity: 1;
+}

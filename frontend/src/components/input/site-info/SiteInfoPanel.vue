@@ -6,6 +6,7 @@
       :message="messageDialog.message"
       :dialogWidth="messageDialog.dialogWidth"
       :btnLabel="messageDialog.btnLabel"
+      :variant="messageDialog.variant"
       @update:dialog="(value) => (messageDialog.dialog = value)"
       @close="handleDialogClose"
     />
@@ -32,8 +33,9 @@
                 <v-col cols="6">
                   <v-row class="mb-2">
                     <v-col cols="6">
+                      <label class="bcds-select-label" for="bec-zone-select">BEC Zone</label>
                       <v-select
-                        label="BEC Zone"
+                        id="bec-zone-select"
                         :items="OPTIONS.becZoneOptions"
                         v-model="becZone"
                         item-title="label"
@@ -41,15 +43,15 @@
                         hide-details="auto"
                         persistent-placeholder
                         placeholder="Select Bec Zone"
-                        density="compact"
-                        dense
                         :disabled="!isConfirmEnabled"
+                        append-inner-icon="mdi-chevron-down"
                       ></v-select>
                     </v-col>
                     <v-col class="col-space-6" />
                     <v-col>
+                      <label class="bcds-select-label" for="eco-zone-select">Eco Zone</label>
                       <v-select
-                        label="Eco Zone"
+                        id="eco-zone-select"
                         :items="OPTIONS.ecoZoneOptions"
                         v-model="ecoZone"
                         item-title="label"
@@ -58,21 +60,47 @@
                         hide-details="auto"
                         persistent-placeholder
                         placeholder="Select Eco Zone"
-                        density="compact"
-                        dense
                         :disabled="!isConfirmEnabled"
+                        append-inner-icon="mdi-chevron-down"
                       ></v-select>
+                    </v-col>
+                  </v-row>
+                </v-col>
+                <v-col class="col-space-6" />
+                <v-col>
+                  <v-row>
+                    <v-col cols="12">
+                      <label class="bcds-radio-label" for="siteIndex">Site Index:</label>
+                      <v-radio-group
+                        id="siteIndex"
+                        v-model="siteSpeciesValues"
+                        inline
+                        hide-details
+                        :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
+                      >
+                        <v-radio
+                          :key="OPTIONS.siteSpeciesValuesOptions[0].value"
+                          :label="OPTIONS.siteSpeciesValuesOptions[0].label"
+                          :value="OPTIONS.siteSpeciesValuesOptions[0].value"
+                        ></v-radio>
+                        <v-radio
+                          :key="OPTIONS.siteSpeciesValuesOptions[1].value"
+                          :label="OPTIONS.siteSpeciesValuesOptions[1].label"
+                          :value="OPTIONS.siteSpeciesValuesOptions[1].value"
+                        ></v-radio>
+                      </v-radio-group>
                     </v-col>
                   </v-row>
                 </v-col>
               </v-row>
               <div class="hr-line"></div>
-              <v-row class="mt-7">
+              <v-row class="mt-0">
                 <v-col cols="6">
                   <v-row class="mb-2">
                     <v-col cols="6">
+                      <label class="bcds-select-label" for="site-species-select">Site Species</label>
                       <v-select
-                        label="Site Species"
+                        id="site-species-select"
                         :items="siteSpeciesOptions"
                         v-model="selectedSiteSpecies"
                         item-title="label"
@@ -80,62 +108,31 @@
                         hide-details="auto"
                         persistent-placeholder
                         placeholder="Select..."
-                        density="compact"
-                        dense
                         data-testid="selected-site-species"
                         disabled
+                        append-inner-icon="mdi-chevron-down"
                       ></v-select>
                     </v-col>
                   </v-row>
                 </v-col>
               </v-row>
               <div class="hr-line"></div>
-              <v-row
-                class="mt-1"
-                style="display: inline-flex; align-items: center"
-              >
-                <v-col cols="auto" style="margin-bottom: 20px">
-                  <div class="mt-2">Site Index:</div>
-                </v-col>
+              <v-row class="mt-1">
                 <v-col cols="auto">
+                  <label class="bcds-radio-label" for="ageYears">Age Years:</label>
                   <v-radio-group
-                    v-model="siteSpeciesValues"
-                    inline
-                    :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
-                  >
-                    <v-radio
-                      style="width: 110px"
-                      :key="OPTIONS.siteSpeciesValuesOptions[0].value"
-                      :label="OPTIONS.siteSpeciesValuesOptions[0].label"
-                      :value="OPTIONS.siteSpeciesValuesOptions[0].value"
-                    ></v-radio>
-                    <v-radio
-                      class="pl-7"
-                      :key="OPTIONS.siteSpeciesValuesOptions[1].value"
-                      :label="OPTIONS.siteSpeciesValuesOptions[1].label"
-                      :value="OPTIONS.siteSpeciesValuesOptions[1].value"
-                    ></v-radio>
-                  </v-radio-group>
-                </v-col>
-              </v-row>
-              <v-row class="mt-n5">
-                <v-col cols="auto" style="margin-bottom: 20px">
-                  <div class="mt-2">Age Years:</div>
-                </v-col>
-                <v-col cols="auto">
-                  <v-radio-group
+                    id="ageYears"
                     v-model="ageType"
                     inline
+                    hide-details
                     :disabled="isAgeTypeDisabled || !isConfirmEnabled"
                   >
                     <v-radio
-                      style="width: 110px"
                       :key="OPTIONS.ageTypeOptions[0].value"
                       :label="OPTIONS.ageTypeOptions[0].label"
                       :value="OPTIONS.ageTypeOptions[0].value"
                     ></v-radio>
                     <v-radio
-                      class="pl-7"
                       :key="OPTIONS.ageTypeOptions[1].value"
                       :label="OPTIONS.ageTypeOptions[1].label"
                       :value="OPTIONS.ageTypeOptions[1].value"
@@ -143,28 +140,30 @@
                   </v-radio-group>
                 </v-col>
               </v-row>
-              <v-row>
+              <v-row class="mt-0">
                 <v-col cols="6">
                   <v-row class="mb-2">
                     <v-col cols="6">
-                      <v-text-field
+                      <AppSpinField
                         label="Years"
-                        type="number"
-                        v-model.number="spzAge"
+                        :model-value="spzAge"
                         :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX"
                         :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN"
                         :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_STEP"
-                        persistent-placeholder
+                        :persistent-placeholder="true"
                         :placeholder="spzAgePlaceholder"
-                        hide-details
-                        density="compact"
-                        dense
+                        :hideDetails="true"
                         :disabled="isSpzAgeDisabled || !isConfirmEnabled"
+                        :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                        :decimalAllowNumber="
+                          CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_DECIMAL_NUM
+                        "
                         data-testid="spz-age"
-                      ></v-text-field>
+                        @update:modelValue="handleSpzAgeUpdate"
+                      />
                       <v-label
                         v-show="isZeroValue(spzAge)"
-                        style="font-size: 12px"
+                        style="font-size: var(--typography-font-size-label)"
                         >{{
                           MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
                         }}</v-label
@@ -181,9 +180,6 @@
                         :persistent-placeholder="true"
                         :placeholder="spzHeightPlaceholder"
                         :hideDetails="true"
-                        density="compact"
-                        :dense="true"
-                        customStyle="padding-left: 0px"
                         :disabled="isSpzHeightDisabled || !isConfirmEnabled"
                         :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
                         :decimalAllowNumber="
@@ -194,7 +190,7 @@
                       />
                       <v-label
                         v-show="isZeroValue(spzHeight)"
-                        style="font-size: 12px"
+                        style="font-size: var(--typography-font-size-label)"
                         >{{
                           MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
                         }}</v-label
@@ -215,9 +211,6 @@
                         :persistent-placeholder="true"
                         :placeholder="bha50SiteIndexPlaceholder"
                         :hideDetails="true"
-                        density="compact"
-                        :dense="true"
-                        customStyle="padding-left: 10px"
                         :disabled="
                           isBHA50SiteIndexDisabled || !isConfirmEnabled
                         "
@@ -231,7 +224,7 @@
                       />
                       <v-label
                         v-show="isZeroValue(bha50SiteIndex)"
-                        style="font-size: 12px"
+                        style="font-size: var(--typography-font-size-label)"
                         >{{
                           MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
                         }}</v-label
@@ -367,6 +360,10 @@ watch(
   { immediate: true },
 )
 
+const handleSpzAgeUpdate = (value: string | null) => {
+  spzAge.value = value
+}
+
 const handleSpzHeightUpdate = (value: string | null) => {
   spzHeight.value = value
 }
@@ -377,7 +374,7 @@ const handleBha50SiteIndexUpdate = (value: string | null) => {
 
 const formattingValues = (): void => {
   if (bha50SiteIndex.value) {
-    bha50SiteIndex.value = parseFloat(bha50SiteIndex.value).toFixed(
+    bha50SiteIndex.value = Number.parseFloat(bha50SiteIndex.value).toFixed(
       CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_DECIMAL_NUM,
     )
   }
@@ -404,6 +401,7 @@ const onConfirm = () => {
               selectedSiteSpecies.value,
             ),
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
     }
     return
   }
@@ -434,6 +432,7 @@ const onConfirm = () => {
       title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
       message: message,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
     }
     return
   }
@@ -481,4 +480,4 @@ const onClear = () => {
 const handleDialogClose = () => {}
 </script>
 
-<style scoped></style>
+<style scoped />

@@ -376,7 +376,7 @@ export const BEC_ZONE_COASTAL_MAP: Record<string, boolean> = {
 }
 
 export const TPH_EQUATION_CONSTANTS = {
-  const1: 5.0,
+  const1: 5,
   const2: 1.3,
   const3: 0.00007854,
 }

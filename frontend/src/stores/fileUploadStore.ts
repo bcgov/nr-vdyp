@@ -72,12 +72,12 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
 
   // report info
   const selectedAgeYearRange = ref<string | null>(null)
-  const startingAge = ref<number | null>(null)
-  const finishingAge = ref<number | null>(null)
-  const ageIncrement = ref<number | null>(null)
-  const startYear = ref<number | null>(null)
-  const endYear = ref<number | null>(null)
-  const yearIncrement = ref<number | null>(null)
+  const startingAge = ref<string | null>(null)
+  const finishingAge = ref<string | null>(null)
+  const ageIncrement = ref<string | null>(null)
+  const startYear = ref<string | null>(null)
+  const endYear = ref<string | null>(null)
+  const yearIncrement = ref<string | null>(null)
   const isForwardGrowEnabled = ref<boolean>(true)
   const isBackwardGrowEnabled = ref<boolean>(true)
 
@@ -90,7 +90,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const isCurrentYearEnabled = ref<boolean>(false)
   const isReferenceYearEnabled = ref<boolean>(false)
   const incSecondaryHeight = ref<boolean>(false)
-  const specificYear = ref<number | null>(null)
+  const specificYear = ref<string | null>(null)
 
   const projectionType = ref<string | null>(null)
   const reportTitle = ref<string | null>(null)

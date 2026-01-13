@@ -70,7 +70,7 @@ describe('StandInfoPanel.vue', () => {
     cy.get('[data-testid="percent-stockable-area"] input')
       .should('exist')
       .and('have.value', DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA)
-      .and('have.attr', 'type', 'number')
+      .and('have.attr', 'type', 'text')
       .and(
         'have.attr',
         'max',
@@ -91,7 +91,7 @@ describe('StandInfoPanel.vue', () => {
     cy.get('[data-testid="crown-closure"] input')
       .should('exist')
       .and('have.value', '')
-      .and('have.attr', 'type', 'number')
+      .and('have.attr', 'type', 'text')
       .and('have.attr', 'max', CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX)
       .and('have.attr', 'min', CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MIN)
       .and('have.attr', 'step', CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_STEP)
@@ -292,11 +292,13 @@ describe('StandInfoPanel.vue', () => {
 
     // Verify that the Clear and Confirm buttons are disabled
     cy.get('button:contains("Clear")')
-      .should('have.class', 'v-btn--disabled')
-      .and('have.attr', 'disabled')
+      .should('have.attr', 'disabled')
+    cy.get('button:contains("Clear")')
+      .should('have.attr', 'data-disabled')
     cy.get('button:contains("Confirm")')
-      .should('have.class', 'v-btn--disabled')
-      .and('have.attr', 'disabled')
+      .should('have.attr', 'disabled')
+    cy.get('button:contains("Confirm")')
+      .should('have.attr', 'data-disabled')
 
     // Verify that the Edit button is not visible
     cy.get('button').contains('Edit').should('not.be.visible')

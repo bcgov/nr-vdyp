@@ -11,7 +11,7 @@ const meta: Meta<typeof AppProgressCircular> = {
     hasBackground: {
       control: { type: 'boolean' },
       defaultValue: true,
-      description: 'Whether the background color is applied',
+      description: 'Whether to show background wrapper with border and shadow',
     },
     message: { control: { type: 'text' }, defaultValue: 'Loading...' },
     circleSize: {
@@ -29,21 +29,6 @@ const meta: Meta<typeof AppProgressCircular> = {
       defaultValue: 'primary',
       description: 'Color of the circular progress indicator',
     },
-    backgroundColor: {
-      control: { type: 'color' },
-      defaultValue: 'rgba(255, 255, 255, 0.8)',
-      description: 'Background color of the wrapper div',
-    },
-    padding: {
-      control: { type: 'range', min: 0, max: 50, step: 1 },
-      defaultValue: 20,
-      description: 'Padding around the circular progress',
-    },
-    borderRadius: {
-      control: { type: 'range', min: 0, max: 50, step: 1 },
-      defaultValue: 10,
-      description: 'Border radius of the wrapper div',
-    },
   },
 }
 
@@ -60,8 +45,28 @@ export const Primary: Story = {
     circleSize: 70,
     circleWidth: 5,
     circleColor: 'primary',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    padding: 20,
-    borderRadius: 10,
+  },
+}
+
+export const WithoutBackground: Story = {
+  args: {
+    isShow: true,
+    showMessage: true,
+    hasBackground: false,
+    message: 'Processing...',
+    circleSize: 70,
+    circleWidth: 5,
+    circleColor: 'primary',
+  },
+}
+
+export const WithoutMessage: Story = {
+  args: {
+    isShow: true,
+    showMessage: false,
+    hasBackground: true,
+    circleSize: 70,
+    circleWidth: 5,
+    circleColor: 'primary',
   },
 }

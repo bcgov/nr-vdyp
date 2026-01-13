@@ -3,8 +3,9 @@
     <div v-for="(item, index) in localSpeciesList" :key="index">
       <v-row>
         <v-col cols="6">
+          <label class="bcds-select-label" :for="`species-select-${index}`">Species #{{ index + 1 }}</label>
           <v-select
-            :label="`Species #${index + 1}`"
+            :id="`species-select-${index}`"
             :items="computedSpeciesOptions"
             v-model="item.species"
             item-title="label"
@@ -13,17 +14,18 @@
             hide-details="auto"
             persistent-placeholder
             placeholder="Select..."
-            density="compact"
-            dense
             :disabled="!isConfirmEnabled"
             data-testid="species-select"
+            append-inner-icon="mdi-chevron-down"
             @update:model-value="handleUpdateSpecies"
+            @keydown="handleSpeciesSelectKeyDown($event, index)"
           ></v-select>
         </v-col>
-        <v-col cols="6">
+        <v-col cols="6" class="pt-2">
           <div style="position: relative; width: 100%">
+            <label class="bcds-text-field-label" :for="`species-percent-${index}`">Species #{{ index + 1 }} Percent</label>
             <v-text-field
-              :label="`Species #${index + 1} Percent`"
+              :id="`species-percent-${index}`"
               type="text"
               v-model="item.percent"
               :max="max"
@@ -32,11 +34,10 @@
               :rules="[validatePercent]"
               persistent-placeholder
               placeholder="Select..."
-              density="compact"
-              dense
               data-testid="species-percent"
               @update:focused="handlePercentBlur"
               @update:modelValue="handlePercentInput(index)"
+              @keydown="handleSpeciesPercentKeyDown($event, index)"
               :disabled="!isConfirmEnabled"
             ></v-text-field>
             <div class="spin-box">
@@ -47,7 +48,7 @@
                 @mouseout="handleIncMouseout"
                 :class="{ disabled: !isConfirmEnabled }"
               >
-                {{ CONSTANTS.SPIN_BUTTON.UP }}
+                <!-- CSS triangle instead of text -->
               </div>
               <div
                 class="spin-down-arrow-button"
@@ -56,7 +57,7 @@
                 @mouseout="handleDecMouseout"
                 :class="{ disabled: !isConfirmEnabled }"
               >
-                {{ CONSTANTS.SPIN_BUTTON.DOWN }}
+                <!-- CSS triangle instead of text -->
               </div>
             </div>
           </div>
@@ -148,8 +149,8 @@ watch(
   { deep: true },
 )
 
-let incrementIntervalId: number | null = null
-let decrementIntervalId: number | null = null
+let incrementIntervalId: ReturnType<typeof globalThis.setInterval> | null = null
+let decrementIntervalId: ReturnType<typeof globalThis.setInterval> | null = null
 
 const updateValue = (action: 'increment' | 'decrement', index: number) => {
   const localPercent = localSpeciesList.value[index].percent
@@ -174,7 +175,7 @@ const updateValue = (action: 'increment' | 'decrement', index: number) => {
 
 const startIncrement = (index: number) => {
   updateValue('increment', index)
-  incrementIntervalId = window.setInterval(
+  incrementIntervalId = globalThis.setInterval(
     () => updateValue('increment', index),
     CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL,
   )
@@ -189,7 +190,7 @@ const stopIncrement = () => {
 
 const startDecrement = (index: number) => {
   updateValue('decrement', index)
-  decrementIntervalId = window.setInterval(
+  decrementIntervalId = globalThis.setInterval(
     () => updateValue('decrement', index),
     CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL,
   )
@@ -204,8 +205,8 @@ const stopDecrement = () => {
 
 const triggerSpeciesSortByPercent = () => {
   localSpeciesList.value.sort((a: SpeciesList, b: SpeciesList) => {
-    const percentA = parseFloat(a.percent || '0')
-    const percentB = parseFloat(b.percent || '0')
+    const percentA = Number.parseFloat(a.percent || '0')
+    const percentB = Number.parseFloat(b.percent || '0')
 
     // Empty species are sent backward in the sort
     if (!a.species) return 1
@@ -249,13 +250,13 @@ const handlePercentBlur = () => {
 
       // Format percent value to fixed decimal places if it lacks a decimal or ends with a decimal point
       if (!item.percent.includes('.') || item.percent.endsWith('.')) {
-        item.percent = parseFloat(item.percent).toFixed(
+        item.percent = Number.parseFloat(item.percent).toFixed(
           CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
         )
       }
 
       // Parse the percent value, round it to the nearest allowed decimal place, and convert back to string
-      const roundedValue = parseFloat(item.percent).toFixed(
+      const roundedValue = Number.parseFloat(item.percent).toFixed(
         CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
       )
 
@@ -270,14 +271,14 @@ const handlePercentInput = (index: number) => {
   let localPercent = localSpeciesList.value[index].percent || ''
 
   // Allow only numbers and a single '.'
-  let cleanedValue = localPercent.replace(/[^0-9.]/g, '')
+  let cleanedValue = localPercent.replaceAll(/[^0-9.]/g, '')
 
   // If there are multiple '.', keep only the first one
   const dotIndex = cleanedValue.indexOf('.')
   if (dotIndex !== -1) {
     cleanedValue =
       cleanedValue.slice(0, dotIndex + 1) +
-      cleanedValue.slice(dotIndex + 1).replace(/\./g, '')
+      cleanedValue.slice(dotIndex + 1).replaceAll('.', '')
   }
   // Update the percent value in the list
   localSpeciesList.value[index].percent = cleanedValue
@@ -298,6 +299,33 @@ const handleDecMouseout = () => {
   triggerSpeciesSortByPercent()
 }
 
+const handleSpeciesPercentKeyDown = (event: KeyboardEvent, index: number) => {
+  if (!props.isConfirmEnabled) return
+
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    updateValue('increment', index)
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    updateValue('decrement', index)
+  }
+}
+
+const handleSpeciesSelectKeyDown = (event: KeyboardEvent, index: number) => {
+  if (!props.isConfirmEnabled) return
+
+  // Delete or Backspace key clears the selection
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    // Only clear if there's a value selected
+    if (localSpeciesList.value[index].species) {
+      event.preventDefault()
+      localSpeciesList.value[index].species = null
+      localSpeciesList.value[index].percent = '0.0'
+      triggerSpeciesSortByPercent()
+    }
+  }
+}
+
 onBeforeUnmount(() => {
   stopIncrement()
   stopDecrement()
@@ -305,67 +333,5 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* custom spin box and spin button beside text field */
-.spin-box {
-  position: absolute;
-  right: 15px;
-  top: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 16px;
-  height: 20px;
-  background-color: transparent;
-  padding: 2px;
-}
-
-/* mouse over */
-.spin-box div:hover {
-  background-color: #d3d3d3 !important;
-}
-
-.spin-up-arrow-button {
-  cursor: default;
-  font-size: 7px;
-  width: 10px;
-  height: 10px;
-  background-color: #f2f0f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: scaleX(1.5);
-  padding-top: 3px;
-  padding-bottom: 2px;
-}
-
-.spin-down-arrow-button {
-  cursor: default;
-  font-size: 7px;
-  width: 10px;
-  height: 10px;
-  background-color: #f2f0f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: scaleX(1.5);
-  padding-top: 3px;
-  padding-bottom: 2px;
-}
-
-/* bottom line under text field */
-.spin-text-field-bottom-line {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-color: #ababab;
-}
-
-.spin-box .disabled {
-  cursor: not-allowed;
-  opacity: 0.5; /* Makes the button look visually disabled */
-  pointer-events: none; /* Prevents clicking */
-}
+/* Spin box styles are defined in src/styles/_spin-field.scss */
 </style>

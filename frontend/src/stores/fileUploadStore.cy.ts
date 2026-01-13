@@ -113,25 +113,25 @@ describe('FileUploadStore Unit Tests', () => {
   })
 
   it('should update year range properties correctly', () => {
-    store.startYear = 2020
-    store.endYear = 2030
-    store.yearIncrement = 2
+    store.startYear = '2020'
+    store.endYear = '2030'
+    store.yearIncrement = '2'
 
-    expect(store.startYear).to.equal(2020)
-    expect(store.endYear).to.equal(2030)
-    expect(store.yearIncrement).to.equal(2)
+    expect(store.startYear).to.equal('2020')
+    expect(store.endYear).to.equal('2030')
+    expect(store.yearIncrement).to.equal('2')
   })
 
   it('should update age range properties correctly', () => {
     store.selectedAgeYearRange = 'Custom Range'
-    store.startingAge = 15
-    store.finishingAge = 85
-    store.ageIncrement = 10
+    store.startingAge = '15'
+    store.finishingAge = '85'
+    store.ageIncrement = '10'
 
     expect(store.selectedAgeYearRange).to.equal('Custom Range')
-    expect(store.startingAge).to.equal(15)
-    expect(store.finishingAge).to.equal(85)
-    expect(store.ageIncrement).to.equal(10)
+    expect(store.startingAge).to.equal('15')
+    expect(store.finishingAge).to.equal('85')
+    expect(store.ageIncrement).to.equal('10')
   })
 
   it('should update report info properties correctly', () => {

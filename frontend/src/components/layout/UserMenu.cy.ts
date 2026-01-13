@@ -1,30 +1,17 @@
-/// <reference types="cypress" />
-
 import UserMenu from './UserMenu.vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/common/authStore'
 
-describe('UserMenu.vue', () => {
+describe('UserMenu', () => {
   let authStore: ReturnType<typeof useAuthStore>
 
   beforeEach(() => {
-    cy.document().then((doc) => {
-      const style = doc.createElement('style')
-      style.innerHTML = `
-        body {
-          background-color: rgb(0, 51, 102) !important;
-        }
-      `
-      doc.head.appendChild(style)
-    })
-
     const pinia = createPinia()
     setActivePinia(pinia)
     authStore = useAuthStore()
   })
 
-  it('renders the user menu for a logged-in user', () => {
-    // Mock getParsedIdToken for logged-in user
+  it('renders with authenticated user from token', () => {
     cy.stub(authStore, 'getParsedIdToken').returns({
       client_roles: [],
       display_name: null,
@@ -41,28 +28,21 @@ describe('UserMenu.vue', () => {
     cy.mount(UserMenu, {
       props: {
         userIcon: 'mdi-account-circle',
-        guestName: 'Guest',
+        familyName:  'Doe',
+        givenName: 'John',
         logoutText: 'Logout',
       },
-    }).then(() => {
-      // Wait for DOM to be ready
-      cy.get('.header-user-button', { timeout: 6000 }).should('be.visible')
-
-      // Assert the icon is displayed
-      cy.get('.header-user-icon')
-        .should('exist')
-        .and('have.class', 'mdi-account-circle')
-
-      // Click the user menu button to open the menu
-      cy.get('.header-user-button').click()
-
-      // Assert the logout button exists
-      cy.get('.v-list-item-title').contains('Logout').should('exist')
     })
+
+    cy.get('.header-user-button').should('be.visible')
+    cy.get('.header-user-name').should('contain', 'John Doe')
+    cy.get('.header-user-icon').should('have.class', 'mdi-account-circle')
+
+    cy.get('.header-user-button').click()
+    cy.get('.v-list-item-title').should('contain', 'Logout')
   })
 
-  it('renders the user menu for a guest user', () => {
-    // Mock getParsedIdToken for guest user
+  it('renders guest user when no authentication', () => {
     cy.stub(authStore, 'getParsedIdToken').returns(null)
 
     cy.mount(UserMenu, {
@@ -71,17 +51,13 @@ describe('UserMenu.vue', () => {
         guestName: 'Guest',
         logoutText: 'Logout',
       },
-    }).then(() => {
-      // Wait for DOM to be ready
-      cy.get('.header-user-button', { timeout: 6000 }).should('be.visible')
-
-      // Assert the default guest name is displayed
-      cy.get('.header-user-name').should('contain', 'Guest')
     })
+
+    cy.get('.header-user-button').should('be.visible')
+    cy.get('.header-user-name').should('contain', 'Guest')
   })
 
-  it('renders the user menu with props-based name when token is null', () => {
-    // Mock getParsedIdToken for null token
+  it('renders with props-based name', () => {
     cy.stub(authStore, 'getParsedIdToken').returns(null)
 
     cy.mount(UserMenu, {
@@ -92,12 +68,23 @@ describe('UserMenu.vue', () => {
         guestName: 'Guest',
         logoutText: 'Logout',
       },
-    }).then(() => {
-      // Wait for DOM to be ready
-      cy.get('.header-user-button', { timeout: 6000 }).should('be.visible')
-
-      // Assert the props-based name is displayed
-      cy.get('.header-user-name').should('contain', 'Jane Smith')
     })
+
+    cy.get('.header-user-button').should('be.visible')
+    cy.get('.header-user-name').should('contain', 'Jane Smith')
+  })
+
+  it('displays custom guest name', () => {
+    cy.stub(authStore, 'getParsedIdToken').returns(null)
+
+    cy.mount(UserMenu, {
+      props: {
+        userIcon: 'mdi-account-circle',
+        guestName: 'Visitor',
+        logoutText: 'Logout',
+      },
+    })
+
+    cy.get('.header-user-name').should('contain', 'Visitor')
   })
 })

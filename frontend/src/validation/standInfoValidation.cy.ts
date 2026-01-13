@@ -13,7 +13,7 @@ describe('Stand Information Validation Unit Tests', () => {
     it('should return true for valid percentStockableArea within range', () => {
       expect(
         validateRange(
-          CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN,
+          String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN),
           null,
           null,
           null,
@@ -21,19 +21,19 @@ describe('Stand Information Validation Unit Tests', () => {
       ).to.be.true
       expect(
         validateRange(
-          CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX,
+          String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX),
           null,
           null,
           null,
         ).isValid,
       ).to.be.true
-      expect(validateRange(50, null, null, null).isValid).to.be.true
+      expect(validateRange('50', null, null, null).isValid).to.be.true
     })
 
     it('should return false for percentStockableArea out of range', () => {
       expect(
         validateRange(
-          CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN - 1,
+          String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN - 1),
           null,
           null,
           null,
@@ -41,7 +41,7 @@ describe('Stand Information Validation Unit Tests', () => {
       ).to.be.false
       expect(
         validateRange(
-          CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX + 1,
+          String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX + 1),
           null,
           null,
           null,
@@ -54,7 +54,7 @@ describe('Stand Information Validation Unit Tests', () => {
     })
 
     it('should return false for negative percentStockableArea', () => {
-      expect(validateRange(-10, null, null, null).isValid).to.be.false
+      expect(validateRange('-10', null, null, null).isValid).to.be.false
     })
 
     it('should return false for invalid basalArea', () => {
@@ -85,7 +85,7 @@ describe('Stand Information Validation Unit Tests', () => {
           null,
           null,
           null,
-          CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX + 1,
+          String(CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX + 1),
         ).isValid,
       ).to.be.false
     })

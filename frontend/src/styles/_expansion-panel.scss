@@ -1,0 +1,93 @@
+/* EXPANSION PANEL - BC Government Design Standards */
+
+/* Expansion panel container */
+.v-expansion-panels {
+  border-radius: var(--layout-border-radius-medium);
+}
+
+/* Individual expansion panel */
+.v-expansion-panel {
+  background-color: var(--surface-color-background-white);
+  border: var(--layout-border-width-small) solid var(--surface-color-border-default);
+  border-radius: var(--layout-border-radius-medium) !important;
+  box-shadow: var(--surface-shadow-small);
+}
+
+/* Expansion panel title/header */
+.v-expansion-panel-title {
+  font: var(--typography-bold-body);
+  color: var(--typography-color-primary);
+  padding: var(--layout-padding-medium);
+  min-height: 48px;
+}
+
+.v-expansion-panel-title:hover {
+  background-color: var(--surface-color-secondary-hover);
+}
+
+/* Expansion panel title text (h6) */
+.v-expansion-panel-title .text-h6 {
+  font: var(--typography-bold-h6);
+  color: var(--typography-color-primary);
+}
+
+/* Custom expansion panel title wrapper */
+.expansion-panel-title {
+  display: flex;
+  align-items: center;
+}
+
+/* Expansion panel icon column */
+.expansion-panel-icon-col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: var(--layout-margin-medium); /* spacing between icon and title */
+}
+
+/* Expansion panel icon */
+.expansion-panel-icon {
+  font-size: var(--icons-size-large); /* 24px */
+  color: var(--icons-color-primary);
+}
+
+/* Expansion panel text/content area */
+.v-expansion-panel-text {
+  padding: var(--layout-padding-medium);
+  color: var(--typography-color-primary);
+}
+
+.expansion-panel-text {
+  padding-left: calc(var(--icons-size-large) + var(--layout-margin-medium) + var(--layout-padding-medium)); /* align with title text */
+}
+
+/* Expanded state */
+.v-expansion-panel--active {
+  border-color: var(--surface-color-border-active);
+}
+
+.v-expansion-panel--active .v-expansion-panel-title {
+  background-color: var(--surface-color-background-light-blue);
+}
+
+/* Disabled expansion panel */
+.v-expansion-panel--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.v-expansion-panel--disabled .v-expansion-panel-title {
+  color: var(--typography-color-disabled);
+  background-color: var(--surface-color-secondary-disabled);
+}
+
+.v-expansion-panel--disabled .expansion-panel-icon {
+  color: var(--icons-color-disabled);
+}
+
+/* Expander header (custom class used in components) */
+.expander-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}

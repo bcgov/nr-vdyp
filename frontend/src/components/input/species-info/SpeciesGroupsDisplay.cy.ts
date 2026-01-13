@@ -1,9 +1,4 @@
-import { mount } from 'cypress/vue'
-import { createVuetify } from 'vuetify'
-import 'vuetify/styles'
 import SpeciesGroupsDisplay from './SpeciesGroupsDisplay.vue'
-
-const vuetify = createVuetify()
 
 describe('SpeciesGroupsDisplay.vue', () => {
   beforeEach(() => {
@@ -28,11 +23,8 @@ describe('SpeciesGroupsDisplay.vue', () => {
   }
 
   it('renders correctly with species groups', () => {
-    mount(SpeciesGroupsDisplay, {
+    cy.mountWithVuetify(SpeciesGroupsDisplay, {
       props: propsWithGroups,
-      global: {
-        plugins: [vuetify],
-      },
     })
 
     // Check if the correct number of group rows are rendered
@@ -103,11 +95,8 @@ describe('SpeciesGroupsDisplay.vue', () => {
   })
 
   it('renders correctly without species groups', () => {
-    mount(SpeciesGroupsDisplay, {
+    cy.mountWithVuetify(SpeciesGroupsDisplay, {
       props: { speciesGroups: [] },
-      global: {
-        plugins: [vuetify],
-      },
     })
 
     // Verify the container is empty

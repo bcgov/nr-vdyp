@@ -6,6 +6,7 @@
       :message="messageDialog.message"
       :dialogWidth="messageDialog.dialogWidth"
       :btnLabel="messageDialog.btnLabel"
+      :variant="messageDialog.variant"
       @update:dialog="(value) => (messageDialog.dialog = value)"
       @close="handleDialogClose"
     />
@@ -33,10 +34,9 @@
               <v-col cols="6">
                 <v-row class="mb-2">
                   <v-col cols="6">
-                    <v-text-field
+                    <AppSpinField
                       label="% Stockable Area"
-                      type="number"
-                      v-model.number="percentStockableArea"
+                      :model-value="percentStockableArea"
                       :max="
                         CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX
                       "
@@ -46,17 +46,20 @@
                       :step="
                         CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_STEP
                       "
+                      :persistent-placeholder="true"
                       placeholder=""
-                      persistent-placeholder
-                      hide-details
-                      density="compact"
-                      dense
+                      :hideDetails="true"
                       :disabled="!isConfirmEnabled"
+                      :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                      :decimalAllowNumber="
+                        CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_DECIMAL_NUM
+                      "
                       data-testid="percent-stockable-area"
-                    ></v-text-field>
+                      @update:modelValue="handlePercentStockableAreaUpdate"
+                    />
                     <v-label
                       v-show="isEmptyOrZero(percentStockableArea)"
-                      style="font-size: 12px"
+                      style="font-size: var(--typography-font-size-label)"
                       >{{
                         MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED
                       }}</v-label
@@ -64,26 +67,28 @@
                   </v-col>
                   <v-col class="col-space-6" />
                   <v-col>
-                    <v-text-field
+                    <AppSpinField
                       label="Crown Closure (%)"
-                      type="number"
-                      v-model.number="crownClosure"
+                      :model-value="crownClosure"
                       :max="CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX"
                       :min="CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MIN"
                       :step="CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_STEP"
-                      persistent-placeholder
+                      :persistent-placeholder="true"
                       :placeholder="crownClosurePlaceholder"
-                      hide-details
-                      density="compact"
-                      dense
+                      :hideDetails="true"
                       :disabled="isCrownClosureDisabled || !isConfirmEnabled"
+                      :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                      :decimalAllowNumber="
+                        CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_DECIMAL_NUM
+                      "
                       data-testid="crown-closure"
-                    ></v-text-field>
+                      @update:modelValue="handleCrownClosureUpdate"
+                    />
                     <v-label
                       v-show="
                         isZeroValue(crownClosure) && !isCrownClosureDisabled
                       "
-                      style="font-size: 12px"
+                      style="font-size: var(--typography-font-size-label)"
                       >{{
                         MESSAGE.MDL_PRM_INPUT_HINT.DENSITY_PCC_APPLY_DFT
                       }}</v-label
@@ -105,9 +110,6 @@
                       :persistent-placeholder="true"
                       :placeholder="basalAreaPlaceholder"
                       :hideDetails="true"
-                      density="compact"
-                      :dense="true"
-                      customStyle="padding-left: 0px"
                       :disabled="isBasalAreaDisabled || !isConfirmEnabled"
                       :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
                       :decimalAllowNumber="
@@ -122,7 +124,7 @@
                         siteSpeciesValues ===
                         CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
                       "
-                      style="font-size: 12px"
+                      style="font-size: var(--typography-font-size-label)"
                       >{{ MESSAGE.MDL_PRM_INPUT_HINT.DENSITY_WO_AGE }}</v-label
                     >
                   </v-col>
@@ -137,9 +139,6 @@
                       :persistent-placeholder="true"
                       :placeholder="treesPerHectarePlaceholder"
                       :hideDetails="true"
-                      density="compact"
-                      :dense="true"
-                      customStyle="padding-left: 0px"
                       :disabled="isTreesPerHectareDisabled || !isConfirmEnabled"
                       :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
                       :decimalAllowNumber="
@@ -153,29 +152,27 @@
               </v-col>
               <v-col class="col-space-6" />
               <v-col>
-                <v-row class="mt-n1">
+                <v-row>
                   <v-col cols="6">
+                    <label class="bcds-text-field-label" for="minDBHLimit">Min DBH Limit</label>
                     <v-text-field
                       id="minDBHLimit"
                       label="Min DBH Limit"
                       :model-value="minDBHLimit"
                       variant="underlined"
                       disabled
-                      density="compact"
-                      dense
                       data-testid="min-dbh-limit"
-                      style="padding-left: 10px"
                     ></v-text-field>
                   </v-col>
                   <v-col class="col-space-6" />
                   <v-col v-if="isCurrentDiameterVisibled">
+                    <label class="bcds-text-field-label" for="current-diameter">Current Diameter</label>
                     <v-text-field
+                      id="current-diameter"
                       label="Current Diameter"
                       :model-value="currentDiameter"
                       variant="underlined"
                       disabled
-                      density="compact"
-                      dense
                       data-testid="current-diameter"
                     ></v-text-field>
                   </v-col>
@@ -201,7 +198,7 @@
 import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
-import { useConfirmDialogStore } from '@/stores/common/confirmDialogStore'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { AppMessageDialog, AppPanelActions, AppSpinField } from '@/components'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import type { MessageDialog } from '@/interfaces/interfaces'
@@ -211,7 +208,7 @@ import { isEmptyOrZero, isZeroValue } from '@/utils/util'
 const form = ref<HTMLFormElement>()
 
 const modelParameterStore = useModelParameterStore()
-const confirmDialogStore = useConfirmDialogStore()
+const alertDialogStore = useAlertDialogStore()
 
 const messageDialog = ref<MessageDialog>({
   dialog: false,
@@ -284,7 +281,7 @@ const updateCrownClosureState = (isVolume: boolean, isComputed: boolean) => {
     crownClosure.value = null
   } else {
     crownClosurePlaceholder.value = ''
-    crownClosure.value = 0
+    crownClosure.value = '0'
   }
 }
 
@@ -321,8 +318,8 @@ watch(
 watch([basalArea, treesPerHectare], ([newBA, newTPH]) => {
   let fDiam = 0
 
-  const fBA = parseFloat(newBA ?? '0') || 0
-  const fTPH = parseFloat(newTPH ?? '0') || 0
+  const fBA = Number.parseFloat(newBA ?? '0') || 0
+  const fTPH = Number.parseFloat(newTPH ?? '0') || 0
 
   try {
     if (fBA > 0 && fTPH > 0) {
@@ -336,6 +333,14 @@ watch([basalArea, treesPerHectare], ([newBA, newTPH]) => {
     currentDiameter.value = '0.0 cm' // Fallback to 0 on error
   }
 })
+
+const handlePercentStockableAreaUpdate = (value: string | null) => {
+  percentStockableArea.value = value
+}
+
+const handleCrownClosureUpdate = (value: string | null) => {
+  crownClosure.value = value
+}
 
 const handleBasalAreaUpdate = (value: string | null) => {
   basalArea.value = value
@@ -374,6 +379,7 @@ const validateRange = (): boolean => {
       title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
       message: message,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
     }
   }
 
@@ -391,16 +397,7 @@ const validateFormInputs = async (): Promise<boolean> => {
     spzHeight.value,
   )
 
-  if (!isBALimitsValid) {
-    const confirmed = await confirmDialogStore.openDialog(
-      MESSAGE.MSG_DIALOG_TITLE.CONFIRM,
-      MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_BSL_AREA_OVER_HEIGHT,
-      { width: 400 },
-    )
-    if (!confirmed) {
-      return false
-    }
-  } else {
+  if (isBALimitsValid) {
     const validateTPHmessage = standInfoValidation.validateTPHLimits(
       basalArea.value,
       treesPerHectare.value,
@@ -409,7 +406,7 @@ const validateFormInputs = async (): Promise<boolean> => {
       becZone.value,
     )
     if (validateTPHmessage) {
-      const confirmed = await confirmDialogStore.openDialog(
+      const confirmed = await alertDialogStore.openDialog(
         MESSAGE.MSG_DIALOG_TITLE.CONFIRM,
         validateTPHmessage,
         { width: 400 },
@@ -417,6 +414,15 @@ const validateFormInputs = async (): Promise<boolean> => {
       if (!confirmed) {
         return false
       }
+    }
+  } else {
+    const confirmed = await alertDialogStore.openDialog(
+      MESSAGE.MSG_DIALOG_TITLE.CONFIRM,
+      MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_BSL_AREA_OVER_HEIGHT,
+      { width: 400 },
+    )
+    if (!confirmed) {
+      return false
     }
   }
 
@@ -426,7 +432,7 @@ const validateFormInputs = async (): Promise<boolean> => {
     minDBHLimit.value,
   )
   if (validateQuadDiamMessage) {
-    const confirmed = await confirmDialogStore.openDialog(
+    const confirmed = await alertDialogStore.openDialog(
       MESSAGE.MSG_DIALOG_TITLE.CONFIRM,
       validateQuadDiamMessage,
       { width: 400 },
@@ -441,13 +447,13 @@ const validateFormInputs = async (): Promise<boolean> => {
 
 const formattingValues = (): void => {
   if (basalArea.value) {
-    basalArea.value = parseFloat(basalArea.value).toFixed(
+    basalArea.value = Number.parseFloat(basalArea.value).toFixed(
       CONSTANTS.NUM_INPUT_LIMITS.BASAL_AREA_DECIMAL_NUM,
     )
   }
 
   if (treesPerHectare.value) {
-    treesPerHectare.value = parseFloat(treesPerHectare.value).toFixed(
+    treesPerHectare.value = Number.parseFloat(treesPerHectare.value).toFixed(
       CONSTANTS.NUM_INPUT_LIMITS.TPH_DECIMAL_NUM,
     )
   }
@@ -467,7 +473,7 @@ const onConfirm = async () => {
   }
 
   if (isEmptyOrZero(percentStockableArea.value)) {
-    percentStockableArea.value = 0
+    percentStockableArea.value = '0'
   }
 
   formattingValues()
@@ -493,4 +499,4 @@ const onClear = () => {
 const handleDialogClose = () => {}
 </script>
 
-<style scoped></style>
+<style scoped />

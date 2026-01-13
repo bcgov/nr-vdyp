@@ -1,17 +1,24 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+type DialogVariant = 'info' | 'confirmation' | 'warning' | 'error' | 'destructive'
+
 interface DialogOptions {
   width: number
   noconfirm: boolean
+  variant?: DialogVariant
 }
 
-export const useConfirmDialogStore = defineStore('confirmDialog', () => {
+export const useAlertDialogStore = defineStore('alertDialog', () => {
   const dialog = ref<boolean>(false)
   const resolve = ref<((value: boolean) => void) | null>(null)
   const title = ref<string | null>(null)
   const message = ref<string | null>(null)
-  const options = ref<DialogOptions>({ width: 400, noconfirm: false })
+  const options = ref<DialogOptions>({
+    width: 400,
+    noconfirm: false,
+    variant: 'confirmation',
+  })
 
   const getIsOpen = computed(() => dialog.value)
   const getDialogTitle = computed(() => title.value)
@@ -50,7 +57,7 @@ export const useConfirmDialogStore = defineStore('confirmDialog', () => {
     resolve.value = null
     title.value = ''
     message.value = ''
-    options.value = { width: 400, noconfirm: false }
+    options.value = { width: 400, noconfirm: false, variant: 'confirmation' }
   }
 
   return {

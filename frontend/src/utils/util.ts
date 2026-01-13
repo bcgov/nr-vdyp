@@ -78,7 +78,7 @@ export const isZeroValue = (value: any): boolean => {
 
   const numericValue = Number(trimmedValue)
 
-  return !isNaN(numericValue) && numericValue === 0
+  return !Number.isNaN(numericValue) && numericValue === 0
 }
 
 /**
@@ -120,7 +120,7 @@ export const parseNumberOrNull = (
 
   const parsedValue = Number(value)
 
-  return isNaN(parsedValue) ? null : parsedValue
+  return Number.isNaN(parsedValue) ? null : parsedValue
 }
 
 /**
@@ -143,7 +143,7 @@ export const convertToNumberSafely = (item: NumStrNullType): number | null => {
   if (typeof item === 'string') {
     const trimmed = trimValue(item)
     const convertedNumber = Number(trimmed)
-    return isNaN(convertedNumber) ? null : convertedNumber
+    return Number.isNaN(convertedNumber) ? null : convertedNumber
   }
   if (typeof item === 'number') return item
   return null
@@ -165,8 +165,9 @@ export const convertToNumberSafely = (item: NumStrNullType): number | null => {
  */
 export const extractLeadingNumber = (input: string | null): number | null => {
   if (input == null) return null
-  const match = input.match(/^\s*-?\d+(\.\d+)?/)
-  return match ? parseFloat(match[0]) : null
+  const regex = /^\s*-?\d+(\.\d+)?/
+  const match = regex.exec(input)
+  return match ? Number.parseFloat(match[0]) : null
 }
 
 /**
@@ -259,16 +260,14 @@ export const increaseItemBySpinButton = (
   let newValue
 
   // If value is null, assign step value and format
-  if (!value) {
-    newValue = step
-  } else {
+  if (value) {
     // extract only numbers, commas, and minus signs
-    const extractedValue = value.replace(/[^\d.-]/g, '')
+    const extractedValue = value.replaceAll(/[^\d.-]/g, '')
 
-    const numericValue = parseFloat(extractedValue)
+    const numericValue = Number.parseFloat(extractedValue)
 
     // Check if the extracted value is a valid number
-    if (isNaN(numericValue)) {
+    if (Number.isNaN(numericValue)) {
       newValue = step // Assign step value if invalid
     } else {
       newValue = numericValue + step
@@ -277,6 +276,8 @@ export const increaseItemBySpinButton = (
     if (newValue < min) {
       newValue = min
     }
+  } else {
+    newValue = step
   }
 
   if (newValue > max) {
@@ -316,15 +317,13 @@ export const decrementItemBySpinButton = (
   }
 
   let newValue
-  if (!value) {
-    newValue = min
-  } else {
+  if (value) {
     // extract only numbers, commas, and minus signs
-    const extractedValue = value.replace(/[^\d.-]/g, '')
+    const extractedValue = value.replaceAll(/[^\d.-]/g, '')
 
-    const numericValue = parseFloat(extractedValue)
+    const numericValue = Number.parseFloat(extractedValue)
 
-    if (isNaN(numericValue)) {
+    if (Number.isNaN(numericValue)) {
       newValue = min
     } else {
       newValue = numericValue - step
@@ -337,6 +336,8 @@ export const decrementItemBySpinButton = (
     if (newValue > max) {
       newValue = max
     }
+  } else {
+    newValue = min
   }
 
   return newValue
@@ -360,7 +361,7 @@ export const downloadFile = (blob: Blob, fileName: string) => {
   a.download = fileName
   document.body.appendChild(a)
   a.click()
-  document.body.removeChild(a)
+  a.remove()
   URL.revokeObjectURL(url)
 }
 
@@ -381,10 +382,9 @@ export const extractZipFileName = (headers: any): string | null => {
   }
 
   if (contentDisposition) {
-    const fileNameMatch = contentDisposition.match(/filename="([^"]+)"/)
-    if (fileNameMatch && fileNameMatch[1]) {
-      return fileNameMatch[1]
-    }
+    const regex = /filename="([^"]+)"/
+    const fileNameMatch = regex.exec(contentDisposition)
+    return fileNameMatch?.[1] ?? null
   }
   return null
 }
@@ -440,11 +440,11 @@ export const sanitizeFileName = (name: string) => {
   }
 
   // Allow only alphanumeric characters, dot, underscore, and hyphen in base name
-  let sanitized = baseName.replace(/[^a-zA-Z0-9._-]/g, '_')
+  let sanitized = baseName.replaceAll(/[^a-zA-Z0-9._-]/g, '_')
   // Replace consecutive underscores with a single underscore
-  sanitized = sanitized.replace(/_+/g, '_')
+  sanitized = sanitized.replaceAll(/_+/g, '_')
   // Remove leading and trailing underscores with explicit grouping
-  sanitized = sanitized.replace(/(^_+)|(_+$)/g, '')
+  sanitized = sanitized.replaceAll(/(^_+)|(_+$)/g, '')
   // Remove trailing underscore before extension if it exists
   if (extension && sanitized.endsWith('_')) {
     sanitized = sanitized.slice(0, -1)
