@@ -131,6 +131,7 @@ public class BatchInputPartitioner {
 			layerWriters = createPartitionWriters(
 					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, numPartitions, jobGuid
 			);
+			Integer layerFeatureId = null;
 			while (polygonLine != null) {
 				Integer polygonFeatureId = BatchUtils.extractFeatureIdInteger(polygonLine);
 				if (polygonFeatureId == null) {
@@ -146,14 +147,10 @@ public class BatchInputPartitioner {
 				polygonLine = readNextNonBlankLine(polygonReader);
 
 				// write all matching layer lines to the same partition
-				// First advance past orphan layer lines featureId < polygonFeatureId(TODO log these to a warning file)
-				Integer layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
+				// First advance past orphan layer lines featureId < polygonFeatureId
+				layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
 				while (layerFeatureId == null || layerFeatureId.compareTo(polygonFeatureId) < 0) {
-					// log orphan layer line
-					logger.warn(
-							"Orphan layer line with FEATURE_ID {} has no matching polygon [May be out of order in layer file], skipping: {}",
-							layerFeatureId, layerLine
-					);
+					handleOrphanLayerLine(warningWriter, layerLine, jobGuid);
 					layerLine = readNextNonBlankLine(layerReader);
 					layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
 				}
@@ -164,8 +161,15 @@ public class BatchInputPartitioner {
 					layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
 				}
 			}
-			// Safe to exit because all layer lines that would exist in the files have no matching polygon so would not
-			// be projected any ways
+			// Check for any remaining lines in the Layer file and log warnings about orphaned lines
+			if (layerFeatureId != null) {
+				handleOrphanLayerLine(warningWriter, layerLine, jobGuid);
+			}
+			// Check for additional lines after the last polygon
+			while (layerLine != null) {
+				handleOrphanLayerLine(warningWriter, layerLine, jobGuid);
+				layerLine = readNextNonBlankLine(layerReader);
+			}
 
 		} catch (Exception e) {
 			throw BatchPartitionException.handlePartitionFailure(e, "Error partitioning input files", jobGuid, logger);
@@ -176,10 +180,21 @@ public class BatchInputPartitioner {
 		return uniqueFeatureIdCount;
 	}
 
+	private void handleOrphanLayerLine(PrintWriter warningWriter, String layerLine, String jobGuid) {
+		String message = String.format(
+				"Job GUID: [%s] Orphan layer line has no matching polygon [Out of order or invalid feature id, skipping: %s",
+				jobGuid, layerLine
+		);
+
+		// log orphan layer line
+		logger.warn(message);
+		warningWriter.println(message);
+	}
+
 	private static String readNextNonBlankLine(BufferedReader reader) throws IOException {
 		String line;
 		while ( (line = reader.readLine()) != null) {
-			if (!line.isBlank() && !BatchUtils.isHeaderLine(line)) {
+			if (!line.isBlank()) {
 				return line;
 			}
 		}
