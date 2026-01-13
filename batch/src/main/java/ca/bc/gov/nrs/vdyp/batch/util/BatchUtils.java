@@ -117,8 +117,12 @@ public final class BatchUtils {
 			// No comma found, not a valid line return null
 			return null;
 		} else {
-			// Extract first field before comma
-			return Integer.valueOf(csvLine.substring(0, commaIndex).trim());
+			try {
+				// Extract first field before comma
+				return Integer.valueOf(csvLine.substring(0, commaIndex).trim());
+			} catch (NumberFormatException e) {
+				return null;
+			}
 		}
 	}
 
