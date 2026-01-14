@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -358,4 +359,92 @@ class Hcsv_Vdyp7_Comparison_Test {
 			);
 		}
 	}
+
+	/**
+	 * Run based on one of the integration test input data sets
+	 *
+	 * @param intTestName The name of the integration test to use
+	 * @param test        Accepts the resulting yield table.
+	 * @throws IOException
+	 * @throws ResourceParseException
+	 */
+	void runIntTestData(String intTestName, Consumer<ResultYieldTable> test)
+			throws IOException, ResourceParseException {
+
+		Map<String, List<String>> paramMap = new HashMap<>();
+		var parameters = new Parameters();
+		try (
+				InputStream paramStream = MainTest.class.getResourceAsStream(intTestName + "/input/parms.txt");
+				InputStreamReader reader = new InputStreamReader(paramStream);
+				BufferedReader bufReader = new BufferedReader(reader); var lines = bufReader.lines();
+		) {
+			ParamsReader.parseParameters(paramMap, lines);
+			ParamsReader.parseParameters(parameters, paramMap);
+		}
+
+		// Included to generate JSON text of parameters as needed
+		// ObjectMapper mapper = new ObjectMapper();
+		// String serializedParametersText = mapper.writeValueAsString(parameters);
+
+		try (
+				InputStream polyStream = MainTest.class
+						.getResourceAsStream(intTestName + "/input/VDYP7_INPUT_POLY.csv");
+				InputStream layerStream = MainTest.class
+						.getResourceAsStream(intTestName + "/input/VDYP7_INPUT_LAYER.csv");
+		) {
+
+			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
+					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
+					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
+					.post("/projection/hcsv?trialRun=false") //
+					.then().statusCode(201) //
+					.and().contentType("application/octet-stream") //
+					.and().header("content-disposition", Matchers.startsWith("attachment;filename=\"vdyp-output-")) //
+					.extract().body().asInputStream();
+
+			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
+			ZipEntry entry1 = zipFile.getNextEntry();
+			assertEquals("YieldTable.csv", entry1.getName());
+			String vdyp8YieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry1));
+			assertThat(vdyp8YieldTableContent, not(emptyString()));
+
+			var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
+
+			test.accept(vdyp8YieldTable);
+		}
+	}
+
+	@Test
+	void test835() throws IOException, ResourceParseException {
+
+		logger.info("Starting vdyp-835");
+
+		runIntTestData("vdyp-835", result -> {
+			result.entrySet();
+
+			assertThat(
+					result,
+					(Matcher<? super ResultYieldTable>) hasSpecificEntry(
+							"17585871",
+							hasSpecificEntry(
+									"1",
+									hasSpecificEntry(
+											"2026",
+											Matchers.allOf(
+													hasSpecificEntry(
+															"PRJ_LOREY_HT",
+															VdypMatchers.parseAs(
+																	closeTo(15.3942f, 0.02f), ValueParser.FLOAT
+															)
+													)
+											)
+									)
+							)
+					)
+			);
+		});
+
+	}
+
 }

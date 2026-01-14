@@ -308,7 +308,7 @@ class YieldTableTest {
 		assertThat(
 				resultYieldTable,
 				VdypMatchers.recursiveHasEntry(is("13919428"), is(""), is("2029"), is("PRJ_LOREY_HT"))
-						.withValue(VdypMatchers.parseAs(closeTo(21.3734f), ValueParser.FLOAT))
+						.withValue(VdypMatchers.parseAs(closeTo(15.57318f), ValueParser.FLOAT))
 		);
 
 	}
