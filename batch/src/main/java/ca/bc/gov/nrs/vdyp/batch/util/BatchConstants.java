@@ -22,6 +22,14 @@ public final class BatchConstants {
 		}
 	}
 
+	public static final class ComsInput {
+		public static final String POLYGON_COMS_OBJECT_GUID = "polygonCOMSObjectGUID";
+		public static final String LAYER_COMS_OBJECT_GUID = "layerCOMSObjectGUID";
+
+		private ComsInput() {
+		}
+	}
+
 	public static final class Partition {
 		public static final String INPUT_PREFIX = "input";
 		public static final String OUTPUT_PREFIX = "output";
@@ -33,6 +41,7 @@ public final class BatchConstants {
 		public static final String INPUT_POLYGON_FILE_NAME = "polygons.csv";
 		public static final String INPUT_LAYER_FILE_NAME = "layers.csv";
 		public static final String ASSIGNED_FEATURE_IDS = "assignedFeatureIds";
+		public static final String WARNING_FILE_NAME = "warnings.txt";
 
 		private Partition() {
 		}

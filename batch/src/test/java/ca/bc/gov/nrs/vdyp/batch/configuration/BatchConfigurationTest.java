@@ -43,8 +43,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -83,6 +83,8 @@ class BatchConfigurationTest {
 
 	@Mock
 	private BatchJobExecutionListener jobExecutionListener;
+	@Mock
+	private VDYPJobMetricListener metricListener;
 
 	@Mock
 	private BatchResultAggregationService resultAggregationService;
@@ -157,8 +159,9 @@ class BatchConfigurationTest {
 		Step masterStep = mock(Step.class);
 		Step postProcessingStep = mock(Step.class);
 
-		Job result = configuration
-				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+		Job result = configuration.partitionedJob(
+				jobExecutionListener, metricListener, masterStep, postProcessingStep, transactionManager
+		);
 
 		assertNotNull(result);
 		assertEquals("VdypPartitionedJob", result.getName());
@@ -577,8 +580,9 @@ class BatchConfigurationTest {
 		Step masterStep = mock(Step.class);
 		Step postProcessingStep = mock(Step.class);
 
-		Job job = configuration
-				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+		Job job = configuration.partitionedJob(
+				jobExecutionListener, metricListener, masterStep, postProcessingStep, transactionManager
+		);
 
 		assertNotNull(job);
 		assertEquals("VdypPartitionedJob", job.getName());

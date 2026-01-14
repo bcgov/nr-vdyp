@@ -97,7 +97,12 @@
             <artifactId>spring-batch-test</artifactId>
             <scope>test</scope>
         </dependency>
-        
+			<dependency>
+				<groupId>com.google.jimfs</groupId>
+				<artifactId>jimfs</artifactId>
+				<version>1.3.0</version>
+				<scope>test</scope>
+			</dependency>
         <!-- Explicit JUnit 5 dependencies to ensure version consistency -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
