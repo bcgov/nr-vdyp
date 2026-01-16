@@ -25,16 +25,6 @@
   height: 100%;
 }
 
-/* Maintain consistent padding in all states - use !important to override Vuetify */
-.v-select.v-input--focused .v-field__field,
-.v-select.v-input--dirty .v-field__field,
-.v-select--active .v-field__field,
-.v-select .v-field--focused .v-field__field,
-.v-select .v-field--active .v-field__field,
-.v-select .v-field--dirty .v-field__field {
-  padding: 0 !important;
-}
-
 .v-select .v-label {
   display: none !important; /* Hide Vuetify's floating label */
 }
@@ -62,12 +52,6 @@
   opacity: 1;
 }
 
-/* Compact/Dense size */
-.v-select.v-input--density-compact .v-field {
-  height: 32px; /* Fixed height for compact */
-  min-height: unset;
-}
-
 /* Disabled state */
 .v-select.v-input--disabled .v-field {
   background-color: var(--surface-color-forms-disabled) !important;
@@ -81,30 +65,10 @@
   opacity: 1 !important;
 }
 
-/* Disabled state - ensure field wrapper is transparent */
-.v-select.v-input--disabled .v-field__field {
-  background-color: transparent !important;
-}
-
 /* Disabled state - text color and background */
 .v-select.v-input--disabled .v-field__input,
 .v-select.v-input--disabled .v-select__selection,
 .v-select.v-input--disabled .v-select__selection-text {
-  color: var(--typography-color-disabled) !important;
-}
-
-/* Disabled state - ensure input area is transparent to show overlay background */
-.v-select.v-input--disabled .v-field__input {
-  background-color: transparent !important;
-}
-
-/* Disabled state - ensure native input element is also transparent */
-.v-select.v-input--disabled .v-field__input input {
-  background-color: transparent !important;
-}
-
-/* Disabled state - placeholder color */
-.v-select.v-input--disabled .v-field__input input::placeholder {
   color: var(--typography-color-disabled) !important;
 }
 
@@ -125,15 +89,6 @@
   outline-offset: 1px;
 }
 
-/* Error/Invalid state */
-.v-select.v-input--error .v-field {
-  border-color: var(--support-border-color-danger);
-}
-
-.v-select.v-input--error .v-field:focus-within {
-  outline-color: var(--support-border-color-danger);
-}
-
 /* Selected value text - Remove all padding from container */
 .v-select .v-field__input {
   font-size: var(--typography-font-size-body);
@@ -150,34 +105,9 @@
   min-height: 100%;
 }
 
-/* Force zero padding in all states */
-.v-select.v-input--focused .v-field__input,
-.v-select.v-input--focused.v-input--dirty .v-field__input,
-.v-select.v-input--dirty .v-field__input,
-.v-select--active .v-field__input,
-.v-select .v-field--focused .v-field__input,
-.v-select .v-field--active .v-field__input,
-.v-select .v-field--dirty .v-field__input {
-  padding: 0 !important;
-  padding-inline-start: 0 !important;
-  padding-inline-end: 0 !important;
-}
-
 /* Apply padding to the selection element instead */
 .v-select .v-field__input .v-select__selection {
-  padding: 0 !important;
-  margin: 0 !important;
   padding-inline-start: 12px !important; /* Apply left padding here */
-  padding-inline-end: 0 !important;
-  margin-inline-start: 0 !important;
-  margin-inline-end: 0 !important;
-}
-
-/* Ensure selection text has no extra padding */
-.v-select .v-field__input .v-select__selection-text {
-  padding: 0 !important;
-  margin: 0 !important;
-  padding-inline-start: 0 !important;
   padding-inline-end: 0 !important;
 }
 
@@ -191,16 +121,6 @@
   display: flex;
   align-items: center;
   line-height: normal; /* Reset line-height for proper centering */
-}
-
-/* Dropdown icon - BC Design Standards style */
-.v-select .v-field__append-inner {
-  color: var(--icons-color-primary);
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  align-items: center;
-  display: flex;
-  height: 100%;
 }
 
 /* Hide all Vuetify icons in append-inner and show only chevron-down */
@@ -228,95 +148,8 @@
   color: var(--icons-color-disabled);
 }
 
-.v-select.v-input--disabled .v-field__append-inner .mdi-chevron-down {
-  opacity: 0.38;
-}
-
-/* Clear icon (for clearable selects) */
-.v-select .v-field__clearable {
-  color: var(--icons-color-primary);
-}
-
-/* Dropdown menu panel */
-.v-select .v-overlay__content,
-.v-menu > .v-overlay__content {
-  background-color: var(--surface-color-forms-default);
-  border: 1px solid var(--surface-color-border-default);
-  border-radius: var(--layout-border-radius-medium);
-  box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2),
-    0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
-}
-
-/* Dropdown list - Target both .v-select context and global v-menu */
-.v-select .v-list,
-.v-menu .v-list {
-  background-color: var(--surface-color-forms-default);
-  padding: 4px 0 !important;
-}
-
-/* List item - Remove all default Vuetify padding - Global selector for select dropdowns */
-.v-select .v-list-item,
-.v-menu .v-list .v-list-item {
-  border-radius: var(--layout-border-radius-medium);
-  cursor: pointer;
-  min-height: 40px;
-  padding: 0 !important;
-  padding-inline-start: 0 !important;
-  padding-inline-end: 0 !important;
-  margin: 0 4px !important;
-  color: var(--typography-color-primary);
-}
-
-/* Remove padding from all list item inner wrappers */
-.v-select .v-list-item__content,
-.v-menu .v-list .v-list-item__content {
-  padding: 0 !important;
-  padding-inline-start: 0 !important;
-  padding-inline-end: 0 !important;
-  margin: 0 !important;
-}
-
-/* Remove padding from list item overlay */
-.v-select .v-list-item__overlay,
-.v-menu .v-list .v-list-item__overlay {
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-/* Remove padding from prepend/append slots and minimize width */
-.v-select .v-list-item__prepend,
-.v-select .v-list-item__append,
-.v-menu .v-list .v-list-item__prepend,
-.v-menu .v-list .v-list-item__append {
-  padding: 0 !important;
-  padding-inline-start: 0 !important;
-  padding-inline-end: 0 !important;
-  margin: 0 !important;
-  width: 0 !important;
-  min-width: 0 !important;
-}
-
 /* List item text - add minimal padding here only */
 .v-select .v-list-item-title,
 .v-menu .v-list .v-list-item-title {
-  font-size: var(--typography-font-size-body);
-  font-weight: var(--typography-font-weights-regular);
-  color: var(--typography-color-primary);
   padding: 8px !important;
-  padding-inline-start: 8px !important;
-  padding-inline-end: 8px !important;
-  margin: 0 !important;
-}
-
-.v-select .v-list-item:hover,
-.v-select .v-list-item:focus,
-.v-menu .v-list .v-list-item:hover,
-.v-menu .v-list .v-list-item:focus {
-  background-color: var(--surface-color-secondary-button-hover);
-}
-
-/* Selected item in dropdown */
-.v-select .v-list-item--active,
-.v-menu .v-list .v-list-item--active {
-  background-color: var(--surface-color-secondary-button-hover);
 }

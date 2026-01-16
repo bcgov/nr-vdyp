@@ -36,44 +36,6 @@
   height: 30px; /* Reduce the height of an inline radio group containing an error message */
 }
 
-/* Radio Group Label */
-.v-radio-group > .v-label {
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-primary);
-  font-size: var(--typography-font-size-small-body);
-  font-weight: 400;
-}
-
-/* Radio Group Description/Helper Text */
-.v-radio-group .v-messages {
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-secondary);
-}
-
-/* Radio Group Error Message */
-.v-radio-group .v-messages--active {
-  display: inline-flex;
-  flex-direction: row;
-  gap: var(--layout-margin-xsmall);
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-danger);
-}
-
-/* Individual Radio Button */
-.v-radio {
-  cursor: pointer;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0px;
-  forced-color-adjust: none;
-}
-
-/* Radio Selection Control */
-.v-radio .v-selection-control {
-  min-height: unset;
-}
-
 /* Radio Label */
 .v-radio .v-label {
   font-size: var(--typography-font-size-small-body);
@@ -102,17 +64,6 @@
   justify-content: center;
 }
 
-/* Keep the input functional but invisible */
-.v-radio .v-selection-control__input input[type='radio'] {
-  opacity: 0;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  z-index: 2;
-  margin: 0;
-}
-
 /* Hide the default Vuetify radio icon */
 .v-radio .v-selection-control__input .v-icon {
   opacity: 0 !important;
@@ -138,22 +89,6 @@
   z-index: 1;
 }
 
-@media (prefers-reduced-motion) {
-  .v-radio .v-selection-control__input::after {
-    transition: none;
-  }
-}
-
-/* Hover State */
-.v-radio:hover:not(.v-radio--disabled):not(.v-input--disabled) .v-selection-control__input::after {
-  border-color: var(--surface-color-border-dark);
-}
-
-/* Pressed State */
-.v-radio:active:not(.v-radio--disabled):not(.v-input--disabled) .v-selection-control__input::after {
-  border-color: var(--surface-color-border-dark);
-}
-
 /* Selected State - Inner filled circle (only when NOT disabled) */
 .v-radio:not(.v-radio--disabled):not(.v-input--disabled) .v-selection-control__input--dirty::after,
 .v-radio:not(.v-radio--disabled):not(.v-input--disabled).v-selection-control--dirty .v-selection-control__input::after {
@@ -167,21 +102,6 @@
 .v-radio .v-selection-control__input:has(input[type='radio']:focus-visible)::after {
   outline: solid 2px var(--surface-color-border-active);
   outline-offset: 1px;
-}
-
-/* Invalid State */
-.v-radio.v-input--error .v-selection-control__input::after {
-  border-color: var(--support-border-color-danger);
-}
-
-.v-radio.v-input--error.v-selection-control--dirty .v-label {
-  color: var(--typography-color-danger);
-}
-
-.v-radio.v-input--error .v-selection-control__input--dirty::after,
-.v-radio.v-input--error.v-selection-control--dirty .v-selection-control__input::after {
-  border-width: 5px;
-  border-color: var(--support-border-color-danger);
 }
 
 /* Disabled State - MUST come after Selected State to override */
@@ -216,49 +136,4 @@
 .v-radio-group.v-input--disabled .v-radio.v-selection-control--dirty .v-selection-control__input::after {
   background-color: var(--surface-color-forms-disabled) !important;
   border-color: rgba(0, 0, 0, 0.26) !important;
-}
-
-/* Disabled - Unselected State - 1px border */
-.v-radio.v-radio--disabled:not(.v-selection-control--dirty) .v-selection-control__input:not(.v-selection-control__input--dirty)::after,
-.v-radio.v-input--disabled:not(.v-selection-control--dirty) .v-selection-control__input:not(.v-selection-control__input--dirty)::after,
-.v-radio-group--disabled .v-radio:not(.v-selection-control--dirty) .v-selection-control__input:not(.v-selection-control__input--dirty)::after,
-.v-radio-group.v-input--disabled .v-radio:not(.v-selection-control--dirty) .v-selection-control__input:not(.v-selection-control__input--dirty)::after {
-  border-width: 1px !important;
-}
-
-/* Disabled - Selected State - 5px border */
-.v-radio.v-radio--disabled .v-selection-control__input--dirty::after,
-.v-radio.v-input--disabled .v-selection-control__input--dirty::after,
-.v-radio-group--disabled .v-radio .v-selection-control__input--dirty::after,
-.v-radio-group.v-input--disabled .v-radio .v-selection-control__input--dirty::after,
-.v-radio.v-radio--disabled.v-selection-control--dirty .v-selection-control__input::after,
-.v-radio.v-input--disabled.v-selection-control--dirty .v-selection-control__input::after,
-.v-radio-group--disabled .v-radio.v-selection-control--dirty .v-selection-control__input::after,
-.v-radio-group.v-input--disabled .v-radio.v-selection-control--dirty .v-selection-control__input::after {
-  border-width: 5px !important;
-}
-
-.v-radio.v-radio--disabled .v-selection-control__input input[type='radio'],
-.v-radio.v-input--disabled .v-selection-control__input input[type='radio'],
-.v-radio-group--disabled .v-radio .v-selection-control__input input[type='radio'],
-.v-radio-group.v-input--disabled .v-radio .v-selection-control__input input[type='radio'] {
-  cursor: not-allowed;
-}
-
-/* Disabled state - label color (label comes before v-radio-group in HTML) */
-.bcds-radio-label:has(+ .v-radio-group.v-input--disabled) {
-  color: var(--typography-color-disabled) !important;
-}
-
-/* Read-only State */
-.v-radio.v-input--readonly {
-  cursor: not-allowed;
-}
-
-.v-radio.v-input--readonly .v-label {
-  cursor: not-allowed;
-}
-
-.v-radio.v-input--readonly .v-selection-control__input input[type='radio'] {
-  cursor: not-allowed;
 }
