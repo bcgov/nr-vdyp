@@ -6,8 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -15,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
@@ -372,16 +375,16 @@ public class YieldTable implements Closeable {
 
 		var targetAge = rowContext.getCurrentTableAgeToRequest() - rowContext.getLayerAgeOffset();
 
-//		Awaiting the implementation of DCSV...
-//
-//		Integer DCSVLayerFieldOffset = null;
-//		if (!rowContext.isPolygonTable()) {
-//			if (rowContext.getLayerReportingInfo().getSourceLayerID() == 0) {
-//				DCSVLayerFieldOffset = 0;
-//			} else if (rowContext.getLayerReportingInfo().getSourceLayerID() == 1) {
-//				DCSVLayerFieldOffset = DCSVField.DCSV_OFld__RS_FIRST - DCSVField.DCSV_OFld__R1_FIRST;
-//			}
-//		}
+		// Awaiting the implementation of DCSV...
+		//
+		// Integer DCSVLayerFieldOffset = null;
+		// if (!rowContext.isPolygonTable()) {
+		// if (rowContext.getLayerReportingInfo().getSourceLayerID() == 0) {
+		// DCSVLayerFieldOffset = 0;
+		// } else if (rowContext.getLayerReportingInfo().getSourceLayerID() == 1) {
+		// DCSVLayerFieldOffset = DCSVField.DCSV_OFld__RS_FIRST - DCSVField.DCSV_OFld__R1_FIRST;
+		// }
+		// }
 
 		Double percentStockable;
 		if (rowContext.isPolygonTable()) {
@@ -1501,9 +1504,12 @@ public class YieldTable implements Closeable {
 		var reportedStandPercent = projectedSp0.getPercentGenus();
 
 		double loreyHeight = entity.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
-		if (ucReportingLevel == UtilizationClassSet._4_0 /* i.e., "ALL" + "SMALL" */) {
-			loreyHeight += entity.getLoreyHeightByUtilization().get(UtilizationClass.SMALL);
-		}
+
+		// TODO VDYP-903 Uncomment this to improve calculation of Lorey height when there are a large proportion of trees between 4.0 and 7.5 cm
+		/*
+		if (ucReportingLevel == UtilizationClassSet._4_0 ) {
+			loreyHeight = ComputationMethods.computeLoreyHeightWithSmallClass(entity);
+		}*/
 
 		return new LayerYields(
 				true, isDominantSpecies, projectedSp0.getGenus(), calendarYear, totalAge, dominantHeight, loreyHeight,

@@ -2,14 +2,17 @@ package ca.bc.gov.nrs.vdyp.batch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.event.EventListener;
-import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
+
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 
+@ConfigurationPropertiesScan
 @SpringBootApplication
 @RegisterReflectionForBinding({ BatchChunkMetadata.class, BatchMetrics.class })
 public class VdypBatchApplication {
@@ -33,6 +36,7 @@ public class VdypBatchApplication {
 		logger.info(separator);
 		logger.info("VDYP Batch Processing Service Started!");
 		logger.info("API Endpoints:");
+		logger.info("  POST   /api/batch/startWithGUIDs  - Start batch job with GUIDs");
 		logger.info("  POST   /api/batch/start           - Start batch job");
 		logger.info("  POST   /api/batch/stop/{{jobGuid}}     - Stop batch job");
 		logger.info("  POST   /api/batch/status/{{jobGuid}}     - Query job status");

@@ -1,14 +1,15 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,10 +40,11 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +56,9 @@ class BatchControllerTest {
 
 	@Mock
 	private Job partitionedJob;
+
+	@Mock
+	private Job downloadAndPartitionJob;
 
 	@Mock
 	private JobExplorer jobExplorer;
@@ -81,7 +86,8 @@ class BatchControllerTest {
 	@BeforeEach
 	void setUp() {
 		batchController = new BatchController(
-				jobLauncher, partitionedJob, jobExplorer, metricsCollector, csvPartitioner, jobOperator
+				jobLauncher, partitionedJob, downloadAndPartitionJob, jobExplorer, metricsCollector, csvPartitioner,
+				jobOperator
 		);
 
 		// Use system temp directory for cross-platform compatibility
@@ -96,8 +102,34 @@ class BatchControllerTest {
 		ResponseEntity<Map<String, Object>> response = batchController.health();
 
 		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals("UP", response.getBody().get("status"));
 		assertEquals("VDYP Batch Processing Service", response.getBody().get("service"));
+	}
+
+	@Test
+	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse()
+			throws JobExecutionAlreadyRunningException, JobRestartException,
+			JobInstanceAlreadyCompleteException, JobParametersInvalidException {
+		UUID polygonCOMSGUID = UUID.randomUUID();
+		UUID layerCOMSGUID = UUID.randomUUID();
+
+		// Mock job execution
+		when(jobExecution.getId()).thenReturn(1L);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.STARTED);
+		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
+		when(jobInstance.getJobName()).thenReturn("testJob");
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn("test-guid");
+		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
+
+		ResponseEntity<Map<String, Object>> response = batchController
+				.startBatchJobPersistedID(polygonCOMSGUID, layerCOMSGUID, "{}");
+
+		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertTrue(response.getBody().containsKey("jobExecutionId"));
 	}
 
 	@Test
@@ -112,7 +144,10 @@ class BatchControllerTest {
 		);
 
 		// Mock partitioner to return grid size
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
+		when(
+				csvPartitioner
+						.partitionCsvFiles(any(MultipartFile.class), any(MultipartFile.class), anyInt(), any(), any())
+		).thenReturn(4);
 
 		// Mock job execution
 		when(jobExecution.getId()).thenReturn(1L);
@@ -128,6 +163,7 @@ class BatchControllerTest {
 				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
 	}
 
@@ -139,13 +175,16 @@ class BatchControllerTest {
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", "data".getBytes());
 
 		// Mock partitioner to throw exception
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any()))
-				.thenThrow(new RuntimeException("Empty file or invalid CSV data"));
+		when(
+				csvPartitioner
+						.partitionCsvFiles(any(MultipartFile.class), any(MultipartFile.class), anyInt(), any(), any())
+		).thenThrow(new RuntimeException("Empty file or invalid CSV data"));
 
 		ResponseEntity<Map<String, Object>> response = batchController
 				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("validationMessages"));
 	}
 
@@ -160,6 +199,7 @@ class BatchControllerTest {
 				.startBatchJobWithFiles(polygonFile, layerFile, null);
 
 		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("error"));
 	}
 
@@ -176,6 +216,7 @@ class BatchControllerTest {
 				.startBatchJobWithFiles(polygonFile, layerFile, "   ");
 
 		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("validationMessages"));
 	}
 
@@ -191,7 +232,10 @@ class BatchControllerTest {
 		);
 
 		// Mock partitioner
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
+		when(
+				csvPartitioner
+						.partitionCsvFiles(any(MultipartFile.class), any(MultipartFile.class), anyInt(), any(), any())
+		).thenReturn(4);
 
 		// Mock job execution with null start time
 		when(jobExecution.getId()).thenReturn(1L);
@@ -207,6 +251,7 @@ class BatchControllerTest {
 				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("startTime"));
 		assertTrue(response.getBody().containsKey("jobGuid"));
 	}
@@ -218,10 +263,10 @@ class BatchControllerTest {
 		Long executionId = 123L;
 
 		// Mock finding job execution
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(jobInstance));
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
@@ -232,6 +277,7 @@ class BatchControllerTest {
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
 
 		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals("STOP_REQUESTED", response.getBody().get(BatchConstants.Job.STATUS));
 		assertEquals(jobGuid, response.getBody().get(BatchConstants.Job.GUID));
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
@@ -244,10 +290,10 @@ class BatchControllerTest {
 		Long executionId = 123L;
 
 		// Mock finding job execution
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(jobInstance));
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
@@ -258,6 +304,7 @@ class BatchControllerTest {
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
 
 		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals("STOP_FAILED", response.getBody().get(BatchConstants.Job.STATUS));
 	}
 
@@ -268,10 +315,10 @@ class BatchControllerTest {
 		Long executionId = 123L;
 
 		// Mock finding job execution
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(jobInstance));
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
@@ -282,6 +329,7 @@ class BatchControllerTest {
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
 
 		assertEquals(202, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals("ALREADY_STOPPING", response.getBody().get(BatchConstants.Job.STATUS));
 	}
 
@@ -290,16 +338,17 @@ class BatchControllerTest {
 		UUID jobGuid = UUID.randomUUID();
 
 		// Mock no job found
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(jobInstance));
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn("different-guid");
 
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
 
 		assertEquals(404, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals("Job execution not found", response.getBody().get(BatchConstants.Job.ERROR));
 	}
 
@@ -310,10 +359,10 @@ class BatchControllerTest {
 		Long executionId = 123L;
 
 		// Mock finding job execution
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(jobInstance));
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
@@ -324,6 +373,7 @@ class BatchControllerTest {
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
 
 		assertEquals(500, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals("Failed to stop job execution", response.getBody().get(BatchConstants.Job.ERROR));
 	}
 
@@ -345,17 +395,18 @@ class BatchControllerTest {
 		StepExecution step2 = new StepExecution("workerStep:partition1", realExecution);
 		step1.setStatus(BatchStatus.COMPLETED);
 		step2.setStatus(BatchStatus.STARTED);
-		realExecution.addStepExecutions(Arrays.asList(step1, step2));
+		realExecution.addStepExecutions(List.of(step1, step2));
 
 		// Mock finding job execution
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(realInstance));
-		when(jobExplorer.getJobExecutions(realInstance)).thenReturn(Arrays.asList(realExecution));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(realInstance));
+		when(jobExplorer.getJobExecutions(realInstance)).thenReturn(List.of(realExecution));
 
 		ResponseEntity<Map<String, Object>> response = batchController.getJobStatus(jobGuid);
 
 		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals(jobGuid, response.getBody().get(BatchConstants.Job.GUID));
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
 		assertEquals("STARTED", response.getBody().get(BatchConstants.Job.STATUS));
@@ -369,10 +420,10 @@ class BatchControllerTest {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(jobInstance));
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
 		when(jobExecution.getId()).thenReturn(executionId);
@@ -386,6 +437,7 @@ class BatchControllerTest {
 		ResponseEntity<Map<String, Object>> response = batchController.getJobStatus(jobGuid);
 
 		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals(false, response.getBody().get("isRunning"));
 		assertTrue(response.getBody().containsKey("endTime"));
 	}
@@ -408,17 +460,18 @@ class BatchControllerTest {
 		StepExecution step2 = new StepExecution("workerStep:partition1", realExecution);
 		step1.setStatus(BatchStatus.FAILED);
 		step2.setStatus(BatchStatus.COMPLETED);
-		realExecution.addStepExecutions(Arrays.asList(step1, step2));
+		realExecution.addStepExecutions(List.of(step1, step2));
 
 		// Mock finding job execution
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(realInstance));
-		when(jobExplorer.getJobExecutions(realInstance)).thenReturn(Arrays.asList(realExecution));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(realInstance));
+		when(jobExplorer.getJobExecutions(realInstance)).thenReturn(List.of(realExecution));
 
 		ResponseEntity<Map<String, Object>> response = batchController.getJobStatus(jobGuid);
 
 		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals(2L, response.getBody().get("totalPartitions"));
 		assertEquals(2L, response.getBody().get("completedPartitions")); // Both failed and completed count
 	}
@@ -428,16 +481,17 @@ class BatchControllerTest {
 		UUID jobGuid = UUID.randomUUID();
 
 		// Mock no job found
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(jobInstance));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Arrays.asList(jobExecution));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(jobInstance));
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn("different-guid");
 
 		ResponseEntity<Map<String, Object>> response = batchController.getJobStatus(jobGuid);
 
 		assertEquals(404, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals("Job execution not found", response.getBody().get(BatchConstants.Job.ERROR));
 	}
 
@@ -451,6 +505,7 @@ class BatchControllerTest {
 		ResponseEntity<Map<String, Object>> response = batchController.getJobStatus(jobGuid);
 
 		assertEquals(500, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals("Failed to get job status", response.getBody().get(BatchConstants.Job.ERROR));
 	}
 
@@ -464,6 +519,7 @@ class BatchControllerTest {
 		ResponseEntity<Map<String, Object>> response = batchController.getJobStatus(jobGuid);
 
 		assertEquals(404, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals("Job execution not found", response.getBody().get(BatchConstants.Job.ERROR));
 	}
 
@@ -487,19 +543,20 @@ class BatchControllerTest {
 		execution2.setStartTime(LocalDateTime.now());
 
 		// Mock finding job execution across multiple instances
-		when(jobExplorer.getJobNames()).thenReturn(Arrays.asList("testJob"));
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(2L);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(Arrays.asList(instance1, instance2));
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(instance1, instance2));
 
 		// First instance doesn't have matching GUID
-		when(jobExplorer.getJobExecutions(instance1)).thenReturn(Arrays.asList(execution1));
+		when(jobExplorer.getJobExecutions(instance1)).thenReturn(List.of(execution1));
 
 		// Second instance has matching GUID
-		when(jobExplorer.getJobExecutions(instance2)).thenReturn(Arrays.asList(execution2));
+		when(jobExplorer.getJobExecutions(instance2)).thenReturn(List.of(execution2));
 
 		ResponseEntity<Map<String, Object>> response = batchController.getJobStatus(jobGuid);
 
 		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertEquals(jobGuid, response.getBody().get(BatchConstants.Job.GUID));
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
 	}
@@ -517,6 +574,7 @@ class BatchControllerTest {
 				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("validationMessages"));
 	}
 
@@ -533,6 +591,7 @@ class BatchControllerTest {
 				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("validationMessages"));
 	}
 
@@ -547,7 +606,10 @@ class BatchControllerTest {
 				"layerFile", "layer.csv", "text/csv", "FEATURE_ID\n123".getBytes()
 		);
 
-		when(csvPartitioner.partitionCsvFiles(any(), any(), anyInt(), any(), any())).thenReturn(4);
+		when(
+				csvPartitioner
+						.partitionCsvFiles(any(MultipartFile.class), any(MultipartFile.class), anyInt(), any(), any())
+		).thenReturn(4);
 
 		when(jobLauncher.run(any(), any())).thenThrow(new IllegalStateException("Job launcher failed"));
 
@@ -555,6 +617,7 @@ class BatchControllerTest {
 				.startBatchJobWithFiles(polygonFile, layerFile, "{}");
 
 		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("validationMessages"));
 	}
 }

@@ -394,7 +394,7 @@ public class ProjectionService {
 
 	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
 			throws ProjectionServiceException {
-		if (entity.getProjectionStatusCode().getCode().equals(ProjectionStatusCodeModel.INPROGRESS)) {
+		if (entity.getProjectionStatusCode().getCode().equals(ProjectionStatusCodeModel.RUNNING)) {
 			switch (action) {
 			case UPDATE, DELETE:
 				// TODO check againsdt some specific states throw ProjectionServiceException if htere is an issue

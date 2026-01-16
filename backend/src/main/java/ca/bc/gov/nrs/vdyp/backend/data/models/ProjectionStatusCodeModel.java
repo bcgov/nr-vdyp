@@ -11,8 +11,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public class ProjectionStatusCodeModel extends CodeTableModel {
 	public static final String DRAFT = "DRAFT";
 	public static final String READY = "READY";
-	public static final String INPROGRESS = "INPROGRESS";
-	public static final String COMPLETE = "COMPLETE";
+	public static final String RUNNING = "RUNNING";
+	public static final String FAILED = "FAILED";
 
 	private String projectionStatusCode;
 

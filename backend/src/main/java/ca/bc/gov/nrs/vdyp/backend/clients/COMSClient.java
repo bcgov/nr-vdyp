@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.clients;
 import java.io.InputStream;
 import java.util.List;
 
-import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import ca.bc.gov.nrs.vdyp.backend.model.COMSBucket;
@@ -27,8 +26,6 @@ import jakarta.ws.rs.core.Response;
 @Path("/api/v1")
 @ClientBasicAuth(username = "${coms.basic-auth.username}", password = "${coms.basic-auth.password}")
 @Produces(MediaType.APPLICATION_JSON)
-@ClientHeaderParam(name = "x-amz-endpoint", value = "${coms.s3access.endpoint}")
-@ClientHeaderParam(name = "x-amz-bucket", value = "${coms.s3access.bucket}")
 public interface COMSClient {
 	enum FileDownloadMode {
 		PROXY("proxy"), URL("url");

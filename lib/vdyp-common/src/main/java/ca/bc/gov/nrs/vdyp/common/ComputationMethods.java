@@ -76,6 +76,37 @@ public class ComputationMethods {
 	}
 
 	/**
+	 * Computes the average Lorey Height across both Small and All classes for the given entity.
+	 *
+	 * @param entity
+	 * @return
+	 */
+	public static float computeLoreyHeightWithSmallClass(VdypUtilizationHolder entity) {
+		// Average the trees from the 4-7.5 and 7.5+ classes weighted by basal area.
+
+		final var ba = entity.getBaseAreaByUtilization();
+		final var tph = entity.getTreesPerHectareByUtilization(); // Area of the stand divides out so TPH works in
+																	// place of number of trees
+		final var lh = entity.getLoreyHeightByUtilization();
+
+		double numerator = 0;
+		double denominator = 0;
+
+		for (var uc : new UtilizationClass[] { UtilizationClass.ALL, UtilizationClass.SMALL }) {
+			final double baTph = ba.get(uc) * tph.get(uc);
+			numerator += baTph * lh.get(uc);
+			denominator += baTph;
+		}
+		if (denominator == 0) {
+			// BA, TPH, and LH are always non-negative so if the sum of BA*TPH is 0, then each term was 0, and each
+			// BA*TPH*LH term was then also 0 so denominator==0 implies numerator==0. There are no trees 4.0 cm or
+			// larger diameter.
+			return 0f;
+		}
+		return (float) (numerator / denominator);
+	}
+
+	/**
 	 * YUC1 - compute Utilization components (quad-mean-diameter, basal area and trees-per-hectare) and, optionally,
 	 * volumes for a polygon's primary layer.
 	 *
