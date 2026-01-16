@@ -196,7 +196,7 @@ class ProjectionServiceTest {
 
 		// You’ll need whatever your status entity type is. Here’s a minimal pattern:
 		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
-		statusEntity.setCode(ProjectionStatusCodeModel.INPROGRESS);
+		statusEntity.setCode(ProjectionStatusCodeModel.RUNNING);
 		entity.setProjectionStatusCode(statusEntity);
 
 		assertThrows(
@@ -216,7 +216,7 @@ class ProjectionServiceTest {
 		entity.setProjectionGUID(UUID.randomUUID());
 
 		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
-		statusEntity.setCode(ProjectionStatusCodeModel.INPROGRESS);
+		statusEntity.setCode(ProjectionStatusCodeModel.RUNNING);
 		entity.setProjectionStatusCode(statusEntity);
 
 		assertDoesNotThrow(
@@ -290,7 +290,7 @@ class ProjectionServiceTest {
 		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
 
 		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
-		statusEntity.setCode(ProjectionStatusCodeModel.INPROGRESS);
+		statusEntity.setCode(ProjectionStatusCodeModel.RUNNING);
 		entity.setProjectionStatusCode(statusEntity);
 
 		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
@@ -409,7 +409,7 @@ class ProjectionServiceTest {
 		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
 
 		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
-		statusEntity.setCode(ProjectionStatusCodeModel.INPROGRESS);
+		statusEntity.setCode(ProjectionStatusCodeModel.RUNNING);
 		entity.setProjectionStatusCode(statusEntity);
 
 		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
