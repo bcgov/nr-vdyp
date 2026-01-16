@@ -1,5 +1,9 @@
 import apiClient from '@/services/apiClient'
-import type { ParameterDetailsMessage, RootResource } from '@/services/vdyp-api'
+import type {
+  ParameterDetailsMessage,
+  ProjectionModel,
+  RootResource,
+} from '@/services/vdyp-api'
 
 /**
  * Fetches help details from the API.
@@ -68,6 +72,20 @@ export const rootGet = async (): Promise<RootResource> => {
     return response.data
   } catch (error) {
     console.error('Error fetching root details:', error)
+    throw error
+  }
+}
+
+/**
+ * Fetches all projections for the authenticated user.
+ * @returns A promise that resolves to an array of ProjectionModel.
+ */
+export const getUserProjections = async (): Promise<ProjectionModel[]> => {
+  try {
+    const response = await apiClient.getUserProjections()
+    return response.data
+  } catch (error) {
+    console.error('Error fetching user projections:', error)
     throw error
   }
 }

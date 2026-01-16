@@ -6,7 +6,7 @@
         label="Print"
         :isDisabled="isButtonDisabled"
         variant="primary"
-        leftIcon="mdi-printer"
+        mdi-name="mdi-printer"
         @click="handlePrint"
       />
       <v-spacer></v-spacer>
@@ -18,7 +18,7 @@
         "
         :isDisabled="isButtonDisabled"
         variant="secondary"
-        leftIcon="mdi-download"
+        mdi-name="mdi-download"
         @click="handleDownload"
       />
       <AppButton
@@ -26,7 +26,7 @@
         label="Download Raw Results"
         :isDisabled="isRawResultsButtonDisabled"
         variant="secondary"
-        leftIcon="mdi-download"
+        mdi-name="mdi-download"
         @click="handleDownloadRawResult"
       />
     </v-card-actions>

@@ -10,8 +10,8 @@ export const KEYCLOAK = Object.freeze({
 })
 
 export const SORT_ORDER = Object.freeze({
-  ASC: 'ASC',
-  DESC: 'DESC',
+  ASC: 'asc',
+  DESC: 'desc',
 })
 
 export const PANEL = Object.freeze({
@@ -224,4 +224,41 @@ export const REPORTING_TAB = Object.freeze({
   MODEL_REPORT: 'ModelReport',
   VIEW_ERR_MSG: 'ViewErrorMessages',
   VIEW_LOG_FILE: 'ViewLogFile',
+})
+
+export const PROJECTION_STATUS = Object.freeze({
+  DRAFT: 'Draft',
+  READY: 'Ready', // complete
+  RUNNING: 'Running',
+  FAILED: 'Failed',
+})
+
+export const PROJECTION_LIST_HEADER_KEY = Object.freeze({
+  TITLE: 'title',
+  DESCRIPTION: 'description',
+  METHOD: 'method',
+  PROJECTION_TYPE: 'projectionType',
+  LAST_UPDATED: 'lastUpdated',
+  EXPIRATION: 'expiration',
+  STATUS: 'status',
+})
+
+export const PROJECTION_USER_ACTION = Object.freeze({
+  EDIT: 'edit',
+  VIEW: 'view',
+  DUPLICATE: 'duplicate',
+  DOWNLOAD: 'download',
+  CANCEL: 'cancel',
+  DELETE: 'delete',
+  SORT: 'sort'
+})
+
+export const BREAKPOINT = Object.freeze({
+  CARD_VIEW: 1025,
+})
+
+export const PAGINATION = Object.freeze({
+  DEFAULT_PAGE: 1,
+  DEFAULT_ITEMS_PER_PAGE: 20,
+  DEFAULT_CARD_SORT_BY: 'lastUpdated-desc'
 })

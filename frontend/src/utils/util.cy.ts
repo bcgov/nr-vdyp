@@ -6,7 +6,9 @@ import {
   isZeroValue,
   isEmptyOrZero,
   parseNumberOrNull,
-  formatDateTime,
+  formatDateTimeDisplay,
+  formatDateDisplay,
+  getStatusIcon,
   formatUnixTimestampToDate,
   delay,
   increaseItemBySpinButton,
@@ -111,19 +113,57 @@ describe('Util Functions Unit Tests', () => {
     })
   })
 
-  describe('formatDateTime', () => {
-    it('should format valid dates correctly', () => {
-      const date = new Date(2025, 1, 28, 14, 30, 0) // Months are 0-indexed
-      expect(formatDateTime(date)).to.equal('2025-02-28 14:30:00')
+  describe('formatDateTimeDisplay', () => {
+    it('should format ISO date string to display format', () => {
+      expect(formatDateTimeDisplay('2026-01-10T14:30:00')).to.equal(
+        'Jan 10 / 14:30',
+      )
+      expect(formatDateTimeDisplay('2026-02-28T09:15:00')).to.equal(
+        'Feb 28 / 09:15',
+      )
     })
 
-    it('should return null for invalid or null dates', () => {
-      expect(formatDateTime(null)).to.be.null
+    it('should handle midnight correctly', () => {
+      expect(formatDateTimeDisplay('2026-01-01T00:00:00')).to.equal(
+        'Jan 01 / 00:00',
+      )
     })
 
-    it('should handle edge case dates', () => {
-      const leapYear = new Date(2020, 1, 29, 0, 0, 0) // Leap year
-      expect(formatDateTime(leapYear)).to.equal('2020-02-29 00:00:00')
+    it('should handle end of day correctly', () => {
+      expect(formatDateTimeDisplay('2026-12-31T23:59:00')).to.equal(
+        'Dec 31 / 23:59',
+      )
+    })
+  })
+
+  describe('formatDateDisplay', () => {
+    it('should format ISO date string to short display format', () => {
+      // Use ISO datetime format to avoid timezone issues
+      expect(formatDateDisplay('2026-01-15T12:00:00')).to.equal('Jan 15')
+      expect(formatDateDisplay('2026-02-28T12:00:00')).to.equal('Feb 28')
+    })
+
+    it('should handle first and last day of year', () => {
+      expect(formatDateDisplay('2026-01-01T12:00:00')).to.equal('Jan 01')
+      expect(formatDateDisplay('2026-12-31T12:00:00')).to.equal('Dec 31')
+    })
+
+    it('should handle leap year date', () => {
+      expect(formatDateDisplay('2024-02-29T12:00:00')).to.equal('Feb 29')
+    })
+  })
+
+  describe('getStatusIcon', () => {
+    it('should return icon URL for valid statuses', () => {
+      expect(getStatusIcon('Draft')).to.include('Draft_Icon.png')
+      expect(getStatusIcon('Ready')).to.include('Ready_Icon.png')
+      expect(getStatusIcon('Running')).to.include('Running_Icon.png')
+      expect(getStatusIcon('Failed')).to.include('Failed_Icon.png')
+    })
+
+    it('should return empty string for unknown status', () => {
+      expect(getStatusIcon('Unknown')).to.equal('')
+      expect(getStatusIcon('')).to.equal('')
     })
   })
 

@@ -109,4 +109,40 @@ describe('apiActions Unit Tests', () => {
         })
     })
   })
+
+  context('getUserProjections', () => {
+    it('should fetch user projections successfully', () => {
+      const mockResponse = {
+        data: [
+          { id: '1', name: 'Projection 1', status: 'READY' },
+          { id: '2', name: 'Projection 2', status: 'DRAFT' },
+        ],
+      }
+      cy.stub(apiClient, 'getUserProjections').resolves(mockResponse)
+
+      cy.wrap(apiActions.getUserProjections()).then((result) => {
+        expect(apiClient.getUserProjections).to.be.calledOnce
+        expect(result).to.deep.equal([
+          { id: '1', name: 'Projection 1', status: 'READY' },
+          { id: '2', name: 'Projection 2', status: 'DRAFT' },
+        ])
+      })
+    })
+
+    it('should handle error when fetching user projections', () => {
+      const mockError = new Error('Network error')
+      cy.stub(apiClient, 'getUserProjections').rejects(mockError)
+
+      apiActions
+        .getUserProjections()
+        .then(() => {
+          // assert-fail block
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(apiClient.getUserProjections).to.be.calledOnce
+          expect(error).to.equal(mockError)
+        })
+    })
+  })
 })

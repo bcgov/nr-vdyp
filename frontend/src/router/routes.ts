@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import ProjectionListView from '@/views/ProjectionListView.vue'
 import ModelParameterInput from '@/views/ModelParameterInput.vue'
 import PageNotFound from '@/views/PageNotFound.vue'
 import AuthInfo from '@/views/test/AuthInfo.vue'
@@ -7,6 +8,11 @@ import ParameterDetail from '@/views/test/ParameterDetail.vue'
 export const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
+    name: 'ProjectionListView',
+    component: ProjectionListView,
+  },
+  {
+    path: '/model-parameter-input',
     name: 'ModelParameterInput',
     component: ModelParameterInput,
   },
