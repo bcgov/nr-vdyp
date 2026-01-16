@@ -289,6 +289,38 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_03_00",
+        "author": "pminter",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_03_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_03/00/dml/app-vdyp.projection_status_code.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "DELETE FROM \"app-vdyp\".projection_status_code WHERE projection_status_code IN ('FAILED')"
+          },
+          {
+            "sql": "UPDATE \"app-vdyp\".projection_status_code SET projection_status_code = 'COMPLETE', description='Complete' WHERE projection_status_code IN ('READY')"
+          },
+          {
+            "sql": "UPDATE \"app-vdyp\".projection_status_code SET projection_status_code = 'INPROGRESS', description='In Progress' WHERE projection_status_code IN ('RUNNING')"
+          }
+        ]
+      }
     }
-   ] 
+  ]
 }
