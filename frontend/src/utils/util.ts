@@ -171,29 +171,86 @@ export const extractLeadingNumber = (input: string | null): number | null => {
 }
 
 /**
- * Formats a Date object into a string with the format "YYYY-MM-DD HH:MM:SS".
- * Returns null if the input date is null or invalid.
+ * Formats an ISO date string into a display format "MMM DD / HH:MM".
+ * Used for displaying last updated timestamps in tables and cards.
  *
- * @param date - The Date object to format, or null
- * @returns {string | null} Formatted date-time string (e.g., "2025-02-28 14:30:00") or null if input is invalid
+ * @param dateString - The ISO date string to format (e.g., "2026-01-10T14:30:00")
+ * @returns {string} Formatted date-time string (e.g., "Jan 10 / 14:30")
  * @example
- *   formatDateTime(new Date(2025, 1, 28, 14, 30, 0)) // "2025-02-28 14:30:00"
- *   formatDateTime(null) // null
+ *   formatDateTimeDisplay("2026-01-10T14:30:00") // "Jan 10 / 14:30"
  */
-export const formatDateTime = (date: Date | null): string | null => {
-  if (!date) {
-    return null
+export const formatDateTimeDisplay = (dateString: string): string => {
+  const date = new Date(dateString)
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
+  const month = monthNames[date.getMonth()]
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${month} ${day} / ${hours}:${minutes}`
+}
+
+/**
+ * Formats an ISO date string into a display format "MMM DD".
+ * Used for displaying expiration dates in tables and cards.
+ *
+ * @param dateString - The ISO date string to format (e.g., "2026-01-15")
+ * @returns {string} Formatted date string (e.g., "Jan 15")
+ * @example
+ *   formatDateDisplay("2026-01-15") // "Jan 15"
+ */
+export const formatDateDisplay = (dateString: string): string => {
+  const date = new Date(dateString)
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
+  const month = monthNames[date.getMonth()]
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${month} ${day}`
+}
+
+/**
+ * Returns the URL for a status icon based on the projection status.
+ *
+ * @param status - The projection status ('Draft', 'Ready', 'Running', 'Failed')
+ * @returns {string} The URL to the status icon, or empty string if status not found
+ * @example
+ *   getStatusIcon('Draft') // URL to Draft_Icon.png
+ *   getStatusIcon('Ready') // URL to Ready_Icon.png
+ */
+export const getStatusIcon = (status: string): string => {
+  const iconMap: Record<string, string> = {
+    Draft: new URL('@/assets/icons/Draft_Icon.png', import.meta.url).href,
+    Ready: new URL('@/assets/icons/Ready_Icon.png', import.meta.url).href,
+    Running: new URL('@/assets/icons/Running_Icon.png', import.meta.url).href,
+    Failed: new URL('@/assets/icons/Failed_Icon.png', import.meta.url).href,
   }
-
-  const year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(date)
-  const month = new Intl.DateTimeFormat('en', { month: '2-digit' }).format(date)
-  const day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(date)
-
-  const hour = date.getHours().toString().padStart(2, '0')
-  const minute = date.getMinutes().toString().padStart(2, '0')
-  const second = date.getSeconds().toString().padStart(2, '0')
-
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+  return iconMap[status] || ''
 }
 
 /**

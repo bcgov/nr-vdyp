@@ -7,19 +7,40 @@
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
     :data-hovered="isHovered || undefined"
-    :aria-label="ariaLabel || label"
   >
-    <v-icon v-if="leftIcon" class="button-icon-left">{{ leftIcon }}</v-icon>
-    <span v-if="label" class="button-label">{{ label }}</span>
-    <v-icon v-if="rightIcon" class="button-icon-right">{{ rightIcon }}</v-icon>
+    <!-- Left icon position -->
+    <template v-if="iconPosition === 'left'">
+      <img v-if="iconSrc" :src="iconSrc" :alt="label" class="button-icon-img button-icon-left" />
+      <v-icon v-else-if="mdiName" class="button-icon-left">{{ mdiName }}</v-icon>
+      <span v-if="label" class="button-label">{{ label }}</span>
+    </template>
+    <!-- Right icon position -->
+    <template v-else-if="iconPosition === 'right'">
+      <span v-if="label" class="button-label">{{ label }}</span>
+      <img v-if="iconSrc" :src="iconSrc" :alt="label" class="button-icon-img button-icon-right" />
+      <v-icon v-else-if="mdiName" class="button-icon-right">{{ mdiName }}</v-icon>
+    </template>
+    <!-- Top icon position: icon above label -->
+    <template v-else-if="iconPosition === 'top'">
+      <img v-if="iconSrc" :src="iconSrc" :alt="label" class="button-icon-img button-icon-top" />
+      <v-icon v-else-if="mdiName" class="button-icon-top">{{ mdiName }}</v-icon>
+      <span v-if="label" class="button-label">{{ label }}</span>
+    </template>
+    <!-- Bottom icon position: icon below label -->
+    <template v-else-if="iconPosition === 'bottom'">
+      <span v-if="label" class="button-label">{{ label }}</span>
+      <img v-if="iconSrc" :src="iconSrc" :alt="label" class="button-icon-img button-icon-bottom" />
+      <v-icon v-else-if="mdiName" class="button-icon-bottom">{{ mdiName }}</v-icon>
+    </template>
   </button>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'link'
+type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'link' | 'danger'
 type ButtonSize = 'xsmall' | 'small' | 'medium' | 'large'
+type IconPosition = 'left' | 'right' | 'top' | 'bottom'
 
 const props = defineProps({
   label: {
@@ -30,7 +51,7 @@ const props = defineProps({
     type: String as () => ButtonVariant,
     default: 'primary',
     validator: (value: string) =>
-      ['primary', 'secondary', 'tertiary', 'link'].includes(value),
+      ['primary', 'secondary', 'tertiary', 'link', 'danger'].includes(value),
   },
   size: {
     type: String as () => ButtonSize,
@@ -38,25 +59,23 @@ const props = defineProps({
     validator: (value: string) =>
       ['xsmall', 'small', 'medium', 'large'].includes(value),
   },
-  danger: {
-    type: Boolean,
-    default: false,
-  },
   isDisabled: {
     type: Boolean,
     default: false,
   },
-  leftIcon: {
+  mdiName: {
     type: String,
     default: '',
   },
-  rightIcon: {
+  iconSrc: {
     type: String,
     default: '',
   },
-  ariaLabel: {
-    type: String,
-    default: '',
+  iconPosition: {
+    type: String as () => IconPosition,
+    default: 'left',
+    validator: (value: string) =>
+      ['left', 'right', 'top', 'bottom'].includes(value),
   },
 })
 
@@ -66,14 +85,16 @@ const isHovered = ref(false)
 const buttonClasses = computed(() => {
   const classes = ['bcds-button', props.variant, props.size]
 
-  // Add danger class if applicable
-  if (props.danger) {
-    classes.push('danger')
+  // Add icon class if this is an icon-only button
+  if ((props.mdiName || props.iconSrc) && !props.label) {
+    classes.push('icon')
   }
 
-  // Add icon class if this is an icon-only button
-  if ((props.leftIcon || props.rightIcon) && !props.label) {
-    classes.push('icon')
+  // Add icon-top/icon-bottom class for vertical icon layout
+  if (props.iconPosition === 'top') {
+    classes.push('icon-top')
+  } else if (props.iconPosition === 'bottom') {
+    classes.push('icon-bottom')
   }
 
   return classes.join(' ')
@@ -195,12 +216,8 @@ const onClick = (event: Event) => {
   color: var(--icons-color-primary-invert);
 }
 
-.bcds-button.primary.danger {
-  background-color: var(--surface-color-primary-danger-button-default);
-}
-
 .bcds-button.primary[data-disabled] {
-  background-color: var(--surface-color-primary-danger-button-disabled);
+  background-color: var(--surface-color-primary-button-disabled);
   color: var(--typography-color-disabled);
 }
 
@@ -208,20 +225,11 @@ const onClick = (event: Event) => {
   background-color: var(--surface-color-primary-button-hover);
 }
 
-.bcds-button.primary.danger[data-hovered] {
-  background-color: var(--surface-color-primary-danger-button-hover);
-}
-
 /* Variant - Secondary */
 .bcds-button.secondary {
   background-color: var(--surface-color-secondary-button-default);
   border: 1px solid var(--surface-color-border-dark);
   color: var(--typography-color-primary);
-}
-
-.bcds-button.secondary.danger {
-  border-color: var(--support-border-color-danger);
-  color: var(--surface-color-primary-danger-button-default);
 }
 
 .bcds-button.secondary[data-disabled] {
@@ -234,18 +242,10 @@ const onClick = (event: Event) => {
   background-color: var(--surface-color-secondary-button-hover);
 }
 
-.bcds-button.secondary.danger[data-hovered] {
-  background-color: var(--support-surface-color-danger);
-}
-
 /* Variant - Tertiary */
 .bcds-button.tertiary {
   background-color: var(--surface-color-tertiary-button-default);
   color: var(--typography-color-primary);
-}
-
-.bcds-button.tertiary.danger {
-  color: var(--surface-color-primary-danger-button-default);
 }
 
 .bcds-button.tertiary[data-disabled] {
@@ -257,10 +257,6 @@ const onClick = (event: Event) => {
   background-color: var(--surface-color-tertiary-button-hover);
 }
 
-.bcds-button.tertiary.danger[data-hovered] {
-  background-color: var(--support-surface-color-danger);
-}
-
 /* Variant - Link */
 .bcds-button.link {
   background-color: var(--surface-color-tertiary-button-default);
@@ -269,11 +265,85 @@ const onClick = (event: Event) => {
   text-underline-offset: 0.3em;
 }
 
-.bcds-button.link.danger {
-  color: var(--surface-color-primary-danger-button-default);
-}
-
 .bcds-button.link[data-disabled] {
   color: var(--typography-color-disabled);
+}
+
+/* Variant - Danger */
+.bcds-button.danger {
+  background-color: var(--surface-color-primary-danger-button-default);
+  color: var(--icons-color-primary-invert);
+}
+
+.bcds-button.danger[data-disabled] {
+  background-color: var(--surface-color-primary-danger-button-disabled);
+  color: var(--typography-color-disabled);
+}
+
+.bcds-button.danger[data-hovered] {
+  background-color: var(--surface-color-primary-danger-button-hover);
+}
+
+/* Icon Top Layout - vertical icon above label */
+.bcds-button.icon-top {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--layout-padding-xsmall);
+  padding: var(--layout-padding-xsmall);
+  min-height: auto;
+  min-width: auto;
+}
+
+.bcds-button.icon-top .button-icon-top {
+  margin: 0;
+}
+
+.bcds-button.icon-top .button-label {
+  font: var(--typography-regular-small-body);
+}
+
+/* Image icon styles */
+.button-icon-img {
+  /* Use auto to preserve original image dimensions and prevent blurriness */
+  width: auto;
+  height: auto;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.button-icon-img.button-icon-left {
+  margin-right: var(--layout-padding-xsmall, 4px);
+}
+
+.button-icon-img.button-icon-right {
+  margin-left: var(--layout-padding-xsmall, 4px);
+}
+
+.button-icon-img.button-icon-top {
+  margin: 0;
+}
+
+/* Icon Bottom Layout - vertical icon below label */
+.bcds-button.icon-bottom {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--layout-padding-xsmall);
+  padding: var(--layout-padding-small) var(--layout-padding-medium);
+  min-height: auto;
+  min-width: auto;
+}
+
+.bcds-button.icon-bottom .button-icon-bottom {
+  margin: 0;
+}
+
+.bcds-button.icon-bottom .button-label {
+  font: var(--typography-regular-small-body);
+}
+
+.button-icon-img.button-icon-bottom {
+  margin: 0;
 }
 </style>

@@ -9,44 +9,33 @@ const meta: Meta<typeof AppButton> = {
     label: {
       control: 'text',
       description: 'The label displayed on the button',
-      defaultValue: 'Button',
     },
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'tertiary', 'link'],
+      options: ['primary', 'secondary', 'tertiary', 'link', 'danger'],
       description: 'The button variant/style',
-      defaultValue: 'primary',
     },
     size: {
       control: 'select',
       options: ['xsmall', 'small', 'medium', 'large'],
       description: 'The button size',
-      defaultValue: 'medium',
-    },
-    danger: {
-      control: 'boolean',
-      description: 'Applies danger styling',
-      defaultValue: false,
     },
     isDisabled: {
       control: 'boolean',
       description: 'Disables the button if true',
-      defaultValue: false,
     },
-    leftIcon: {
+    mdiName: {
       control: 'text',
-      description: 'Icon to display on the left side',
-      defaultValue: '',
+      description: 'MDI icon name (e.g., mdi-cog)',
     },
-    rightIcon: {
+    iconSrc: {
       control: 'text',
-      description: 'Icon to display on the right side',
-      defaultValue: '',
+      description: 'Image source URL for custom icon',
     },
-    ariaLabel: {
-      control: 'text',
-      description: 'Accessible label for screen readers (required for icon-only buttons)',
-      defaultValue: '',
+    iconPosition: {
+      control: 'select',
+      options: ['left', 'right', 'top', 'bottom'],
+      description: 'Position of the icon relative to the label',
     },
     onClick: {
       action: 'click',
@@ -97,9 +86,8 @@ export const Link: Story = {
 export const Danger: Story = {
   args: {
     label: 'Danger Button',
-    variant: 'primary',
+    variant: 'danger',
     size: 'medium',
-    danger: true,
     isDisabled: false,
   },
 }
@@ -131,44 +119,56 @@ export const Large: Story = {
   },
 }
 
-export const Icon: Story = {
+export const IconOnly: Story = {
   args: {
     label: '',
     variant: 'primary',
     size: 'medium',
-    leftIcon: 'mdi-cog',
-    ariaLabel: 'Settings',
+    mdiName: 'mdi-cog',
     isDisabled: false,
   },
 }
 
-export const LeftIcon: Story = {
+export const IconLeft: Story = {
   args: {
     label: 'Left Icon',
     variant: 'primary',
     size: 'medium',
-    leftIcon: 'mdi-check-circle',
+    mdiName: 'mdi-check-circle',
+    iconPosition: 'left',
     isDisabled: false,
   },
 }
 
-export const RightIcon: Story = {
+export const IconRight: Story = {
   args: {
     label: 'Right Icon',
     variant: 'primary',
     size: 'medium',
-    rightIcon: 'mdi-arrow-right',
+    mdiName: 'mdi-arrow-right',
+    iconPosition: 'right',
     isDisabled: false,
   },
 }
 
-export const BothIcons: Story = {
+export const IconTop: Story = {
   args: {
-    label: 'Both Icons',
+    label: 'Top Icon',
     variant: 'primary',
     size: 'medium',
-    leftIcon: 'mdi-check-circle',
-    rightIcon: 'mdi-arrow-right',
+    mdiName: 'mdi-account',
+    iconPosition: 'top',
+    isDisabled: false,
+  },
+}
+
+export const IconBottom: Story = {
+  args: {
+    label: 'Bottom Icon',
+    variant: 'primary',
+    size: 'medium',
+    mdiName: 'mdi-account',
+    iconPosition: 'bottom',
     isDisabled: false,
   },
 }

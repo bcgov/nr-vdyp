@@ -90,3 +90,6 @@ export const utilizationClassOptions = [
     value: UtilizationClassSetEnum._225,
   },
 ]
+
+// Pagination options for items per page
+export const itemsPerPageOptions = [10, 20, 50, 100]

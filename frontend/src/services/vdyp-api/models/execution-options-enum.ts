@@ -22,7 +22,7 @@ export enum ExecutionOptionsEnum {
   DoEnableProgressLogging = 'doEnableProgressLogging',
   DoEnableErrorLogging = 'doEnableErrorLogging',
   DoEnableDebugLogging = 'doEnableDebugLogging',
-  DoEnableProjectionReport = 'doEnableProjectionReport',
+  DoEnableProjectionReport = 'doEnableProjectionReport', // Option indicating that the request is a projection based on the input model parameter
   DoDelayExecutionFolderDeletion = 'doDelayExecutionFolderDeletion',
   AllowAggressiveValueEstimation = 'allowAggressiveValueEstimation',
   ReportIncludeWholeStemVolume = 'reportIncludeWholeStemVolume',
