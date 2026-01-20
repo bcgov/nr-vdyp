@@ -64,6 +64,8 @@ on:
         required: true
       VITE_API_URL:
         required: true
+      KEYCLOAK_CLIENT_SECRET:
+        required: true
 permissions:
   contents: read        # for actions/checkout
 jobs:
@@ -114,13 +116,20 @@ jobs:
             helm rollback ${{ steps.vars.outputs.release }} || \
               helm uninstall ${{ steps.vars.outputs.release }}
           fi
+      # Secrets Management
+      - name: Create Secrets
+        working-directory: ${{ inputs.directory }}
+        run: |
+          oc -n ${{ secrets.oc_namespace }} create secret generic "vdyp-oidc" \
+          --from-literal=client-secret='${{ secrets.KEYCLOAK_CLIENT_SECRET }}' \
+          --dry-run=client -o yaml | oc apply -f -
 
       # Package Helm chart
       - name: Checkout Helm Chart
         uses: actions/checkout@v4
         with:
             ref: ${{ inputs.ref || 'main' }}  # fallback if ref is not provided
-      - name: Congfigure Helm
+      - name: Configure Helm
         working-directory: ${{ inputs.directory }}
         run: |
           # Helm package
@@ -147,6 +156,7 @@ jobs:
             --set backend.env.VDYP_DB_USER=${{ vars.VDYP_DB_USER }} \
             --set backend.env.VDYP_DB_DATABASE=${{ vars.VDYP_DB_DATABASE }} \
             --set backend.env.COMS_BASE_URL=${{ vars.COMS_BASE_URL }} \
+            --set backend.env.CORS_FRONTEND_BASE_URL=${{ vars.CORS_FRONTEND_BASE_URL }} \
             --set batch.env.BATCH_DB_USER=${{ vars.BATCH_DB_USERNAME }} \
             --set batch.env.BATCH_DB_DATABASE=${{ vars.BATCH_DB_DATABASE }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \

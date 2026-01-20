@@ -79,6 +79,9 @@ backend:
     VDYP_DB_SECRET_NAME: crunchy-postgres-dev-pguser-app-vdyp
     VDYP_PROXY_DB_SECRET_NAME: crunchy-postgres-dev-pguser-proxy-vdyp-rest
     COMS_BASE_URL: ~
+    CORS_FRONTEND_BASE_URL: ~
+    OIDC_CLIENT_SECRET_SECRET_NAME: vdyp-oidc
+    OIDC_CLIENT_SECRET_SECRET_KEY: client-secret
 frontend:
   fullnameOverride: "vdyp-ui-dev"
   # -- enable or disable a component deployment.
