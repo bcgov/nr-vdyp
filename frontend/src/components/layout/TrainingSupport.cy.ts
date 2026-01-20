@@ -1,23 +1,32 @@
-import { mount } from 'cypress/vue'
 import TrainingSupport from './TrainingSupport.vue'
+import { RouterLinkStub } from '@vue/test-utils'
 
 describe('TrainingSupport.vue', () => {
-  it('renders default text correctly', () => {
-    mount(TrainingSupport)
+  const mountOptions = {
+    global: {
+      stubs: {
+        RouterLink: RouterLinkStub,
+      },
+    },
+  }
 
-    cy.get('span')
+  it('renders default text correctly', () => {
+    cy.mount(TrainingSupport, mountOptions)
+
+    cy.get('a')
       .should('have.class', 'bcds-header-link')
       .and('contain.text', 'Training and Support')
   })
 
   it('renders with custom text', () => {
-    mount(TrainingSupport, {
+    cy.mount(TrainingSupport, {
+      ...mountOptions,
       props: {
         text: 'Custom Training Text',
       },
     })
 
-    cy.get('span')
+    cy.get('a')
       .should('contain.text', 'Custom Training Text')
       .and('have.class', 'bcds-header-link')
   })

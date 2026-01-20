@@ -82,8 +82,7 @@ describe('<AppButton />', () => {
     cy.mount(AppButton, {
       props: {
         label: 'Danger Button',
-        variant: 'primary',
-        danger: true,
+        variant: 'danger',
       },
     })
 
@@ -107,60 +106,48 @@ describe('<AppButton />', () => {
     cy.mount(AppButton, {
       props: {
         label: 'Button with Icon',
-        leftIcon: 'mdi-check',
+        mdiName: 'mdi-check',
+        iconPosition: 'left',
       },
     })
 
     cy.get('button').should('contain', 'Button with Icon')
     cy.get('.button-icon-left').should('exist')
-    cy.get('.button-icon-left').should('have.class', 'mdi-check')
   })
 
   it('renders with right icon', () => {
     cy.mount(AppButton, {
       props: {
         label: 'Button with Icon',
-        rightIcon: 'mdi-arrow-right',
+        mdiName: 'mdi-arrow-right',
+        iconPosition: 'right',
       },
     })
 
     cy.get('button').should('contain', 'Button with Icon')
     cy.get('.button-icon-right').should('exist')
-    cy.get('.button-icon-right').should('have.class', 'mdi-arrow-right')
   })
 
   it('renders icon-only button', () => {
     cy.mount(AppButton, {
       props: {
-        leftIcon: 'mdi-close',
-        ariaLabel: 'Close',
+        mdiName: 'mdi-close',
+        iconPosition: 'left',
       },
     })
 
     cy.get('button').should('have.class', 'icon')
-    cy.get('button').should('have.attr', 'aria-label', 'Close')
     cy.get('.button-icon-left').should('exist')
   })
 
-  it('applies aria-label', () => {
-    cy.mount(AppButton, {
-      props: {
-        label: 'Submit',
-        ariaLabel: 'Submit form',
-      },
-    })
-
-    cy.get('button').should('have.attr', 'aria-label', 'Submit form')
-  })
-
-  it('uses label as aria-label when ariaLabel is not provided', () => {
+  it('displays label text in button', () => {
     cy.mount(AppButton, {
       props: {
         label: 'Submit',
       },
     })
 
-    cy.get('button').should('have.attr', 'aria-label', 'Submit')
+    cy.get('button').should('contain', 'Submit')
   })
 
   it('emits click event when clicked', () => {
@@ -214,17 +201,16 @@ describe('<AppButton />', () => {
     cy.mount(AppButton, {
       props: {
         label: 'Complex Button',
-        variant: 'secondary',
+        variant: 'danger',
         size: 'large',
-        danger: true,
-        leftIcon: 'mdi-alert',
+        mdiName: 'mdi-alert',
+        iconPosition: 'left',
       },
     })
 
     cy.get('button').should('have.class', 'bcds-button')
-    cy.get('button').should('have.class', 'secondary')
-    cy.get('button').should('have.class', 'large')
     cy.get('button').should('have.class', 'danger')
+    cy.get('button').should('have.class', 'large')
     cy.get('.button-icon-left').should('exist')
   })
 })

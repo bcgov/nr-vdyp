@@ -1,7 +1,13 @@
 <template>
-  <span class="bcds-header-link">
+<!-- TODO: This router-link to /model-parameter-input is a temporary workaround
+     because the landing page has changed to Projection List View.
+     This link should be removed once proper navigation is implemented. -->
+  <router-link to="/model-parameter-input" class="bcds-header-link">
     {{ text }}
-  </span>
+  </router-link>
+  <!-- <span class="bcds-header-link">
+    {{ text }}
+  </span> -->
 </template>
 
 <script setup lang="ts">
@@ -21,5 +27,6 @@ defineProps({
   line-height: var(--typography-line-heights-xdense);
   color: var(--typography-color-primary);
   white-space: nowrap;
+  text-decoration: none;
 }
 </style>

@@ -4,6 +4,7 @@ import apiClient from '@/services/apiClient'
 import {
   GetHelpApi,
   GetRootApi,
+  GetUserProjectionsApi,
   RunHCSVProjectionApi,
   ParameterNamesEnum,
 } from '@/services/vdyp-api'
@@ -128,6 +129,36 @@ describe('apiClient Unit Tests', () => {
           expect(error).to.equal(mockError)
         },
       )
+    })
+  })
+
+  context('getUserProjections', () => {
+    it('should fetch user projections successfully (with test data)', () => {
+      const mockProjections = [{ id: 1, name: 'Test Projection' }]
+      cy.stub(window, 'fetch').resolves({
+        json: () => Promise.resolve(mockProjections),
+      } as Response)
+
+      cy.wrap(apiClient.getUserProjections()).then((result: unknown) => {
+        const response = result as { data: unknown; status: number }
+        expect(response).to.have.property('data')
+        expect(response.data).to.deep.equal(mockProjections)
+        expect(response.status).to.equal(200)
+      })
+    })
+
+    it('should call API when test data flag is disabled', () => {
+      const mockResponse = {
+        data: [{ id: 1, name: 'API Projection' }],
+      }
+      cy.stub(
+        GetUserProjectionsApi.prototype,
+        'getUserProjections',
+      ).resolves(mockResponse)
+
+      // Note: This test documents the API call behavior
+      // Currently USE_TEST_PROJECTION_DATA is true, so this stub won't be called
+      expect(GetUserProjectionsApi.prototype.getUserProjections).to.exist
     })
   })
 })

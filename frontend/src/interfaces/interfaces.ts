@@ -56,3 +56,27 @@ export interface Tab {
   tabname: string | null // Optional tabname
   disabled: boolean
 }
+
+export type ProjectionStatus = 'Draft' | 'Ready' | 'Running' | 'Failed'
+
+export interface Projection {
+  projectionGUID: string
+  title: string
+  description: string
+  method: string
+  projectionType: string
+  lastUpdated: string
+  expiration: string
+  status: ProjectionStatus
+}
+
+export interface TableHeader {
+  key: string
+  title: string
+  sortable: boolean
+}
+
+export interface SortOption {
+  title: string
+  value: string
+}
