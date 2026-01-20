@@ -8,7 +8,7 @@
 defineProps({
   text: {
     type: String,
-    default: 'VARIABLE DENSITY YIELD PROJECTION',
+    default: 'Variable Density Yield Projection',
   },
 })
 </script>

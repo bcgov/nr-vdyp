@@ -51,17 +51,6 @@ export const projectionTypeOptions = [
   { label: 'CFS Biomass', value: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS },
 ]
 
-export const modelSelectionOptions = [
-  {
-    label: 'File Upload',
-    value: CONSTANTS.MODEL_SELECTION.FILE_UPLOAD,
-  },
-  {
-    label: 'Input Model Parameters',
-    value: CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
-  },
-]
-
 // Utilization class options with (slider) index, label, and enum value mapping
 export const utilizationClassOptions = [
   {

@@ -6,11 +6,16 @@
     :hasBackground="true"
   />
   <v-container fluid>
-    <TopProjectYear />
-    <ModelSelectionContainer
-      class="model-selection-section"
-      @update:modelSelection="updateModelSelection"
-    />
+    <div>
+      <div id="modelSelectionCard" class="model-selection-header">
+        <h3
+          v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
+        >
+          {{ CONSTANTS.HEADER_SELECTION.MODEL_PARAMETER_SELECTION }}
+        </h3>
+        <h3 v-else>{{ CONSTANTS.HEADER_SELECTION.FILE_UPLOAD }}</h3>
+      </div>
+    </div>
     <template
       v-if="
         appStore.modelSelection ===
@@ -61,8 +66,6 @@ import {
   AppProgressCircular,
   AppTabs,
   AppRunModelButtonPanel,
-  ModelSelectionContainer,
-  TopProjectYear,
   ReportingContainer,
   SpeciesInfoPanel,
   SiteInfoPanel,
@@ -165,13 +168,8 @@ const isFileUploadPanelsVisible = computed(() => {
   )
 })
 
-const updateModelSelection = (newSelection: string) => {
-  appStore.setModelSelection(newSelection)
-}
-
 onMounted(() => {
-  modelParameterStore.setDefaultValues()
-  fileUploadStore.setDefaultValues()
+  console.debug(`appStore.modelSelection: ${appStore.modelSelection}`)
 })
 
 const processResponse = async (response: any): Promise<boolean> => {
@@ -319,8 +317,13 @@ const runModelHandler = async () => {
 </script>
 
 <style scoped>
-.model-selection-section {
-  margin-top: var(--layout-margin-medium);
+.model-selection-header {
+  margin-bottom: var(--layout-margin-medium);
+}
+
+h3 {
+  font: var(--typography-bold-h3);
+  color: var(--typography-color-primary);
 }
 
 .panel-spacing {
