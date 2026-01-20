@@ -42,6 +42,8 @@ spec:
               value: "info"
             - name: VITE_SSO_AUTH_SERVER_URL
               value: {{ .Values.frontend.env.VITE_SSO_AUTH_SERVER_URL | quote }}
+            - name: VITE_SSO_TOKEN_ISSUER
+              value: {{ .Values.frontend.env.VITE_SSO_TOKEN_ISSUER | quote }}
             - name: VITE_SSO_CLIENT_ID
               value: {{ .Values.frontend.env.VITE_SSO_CLIENT_ID | quote }}
             - name: VITE_SSO_REALM

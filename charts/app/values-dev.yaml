@@ -127,6 +127,7 @@ frontend:
     minAvailable: 1 # the minimum number of pods that must be available during the disruption budget.
   env:
     VITE_SSO_AUTH_SERVER_URL: ~
+    VITE_SSO_TOKEN_ISSUER: ~
     VITE_SSO_CLIENT_ID: ~
     VITE_SSO_REALM: ~
     VITE_SSO_REDIRECT_URI: ~

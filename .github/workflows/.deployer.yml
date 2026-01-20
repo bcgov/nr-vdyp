@@ -62,6 +62,8 @@ on:
         required: true
       VITE_SSO_REDIRECT_URI:
         required: true
+      VITE_SSO_TOKEN_ISSUER:
+        required: true
       VITE_API_URL:
         required: true
       KEYCLOAK_CLIENT_SECRET:
@@ -152,7 +154,7 @@ jobs:
             --set bitnami-pg.auth.username=${{ vars.POSTGRES_USER }} \
             --set bitnami-pg.auth.database=${{ vars.POSTGRES_DATABASE }} \
             --set global.secrets.VDYP_DB_PASSWORD=${{ secrets.VDYP_DB_PASSWORD }} \
-            --set backend.env.QUARKUS_OIDC_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }}/realms/${{ secrets.VITE_SSO_REALM }} \
+            --set backend.env.QUARKUS_OIDC_AUTH_SERVER_URL=${{ secrets.VITE_SSO_TOKEN_ISSUER }}\
             --set backend.env.VDYP_DB_USER=${{ vars.VDYP_DB_USER }} \
             --set backend.env.VDYP_DB_DATABASE=${{ vars.VDYP_DB_DATABASE }} \
             --set backend.env.COMS_BASE_URL=${{ vars.COMS_BASE_URL }} \
@@ -164,6 +166,7 @@ jobs:
             --set frontend.env.VITE_SSO_REALM=${{ secrets.VITE_SSO_REALM }} \
             --set frontend.env.VITE_SSO_REDIRECT_URI=${{ secrets.VITE_SSO_REDIRECT_URI }} \
             --set frontend.env.VITE_API_URL=${{ secrets.VITE_API_URL }} \
+            --set frontend.env.VITE_SSO_TOKEN_ISSUER=${{ secrets.VITE_SSO_TOKEN_ISSUER }} \
             --set-string coms.image.tag=${{ vars.COMS_TAG }} \
             --set-string coms.env.OBJECTSTORAGE_ENABLED=true \
             --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=${{ vars.OBJECTSTORAGE_ACCESSKEYID }} \
