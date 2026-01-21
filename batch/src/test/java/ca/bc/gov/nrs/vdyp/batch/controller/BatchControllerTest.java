@@ -108,9 +108,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse()
-			throws JobExecutionAlreadyRunningException, JobRestartException,
-			JobInstanceAlreadyCompleteException, JobParametersInvalidException {
+	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse() throws JobExecutionAlreadyRunningException,
+			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		UUID polygonCOMSGUID = UUID.randomUUID();
 		UUID layerCOMSGUID = UUID.randomUUID();
 

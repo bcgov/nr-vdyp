@@ -21,10 +21,8 @@ public class ComsClient {
 
 	public String getPresignedUrl(String objectId) throws IOException {
 		String jsonStringUrl = comsRestClient.get()
-				.uri(
-						uriBuilder -> uriBuilder.path("/object/{objectId}").queryParam("download", "url")
-								.build(objectId)
-				).retrieve().body(String.class);
+				.uri(uriBuilder -> uriBuilder.path("/object/{objectId}").queryParam("download", "url").build(objectId))
+				.retrieve().body(String.class);
 
 		return mapper.readValue(jsonStringUrl, String.class);
 	}
