@@ -1,15 +1,15 @@
 import {
   GetHelpApi,
   GetRootApi,
-  GetUserProjectionsApi,
-  RunHCSVProjectionApi,
+  ProjectionApi,
   ParameterNamesEnum,
 } from '@/services/vdyp-api/'
+import type { Parameters } from '@/services/vdyp-api/'
 import axiosInstance from '@/services/axiosInstance'
 import type { AxiosRequestConfig } from 'axios'
 
 // TODO: Remove this flag and test data when CRUD is complete
-const USE_TEST_PROJECTION_DATA = true
+const USE_TEST_PROJECTION_DATA = false
 
 const fetchTestProjectionData = async () => {
   const response = await fetch('/test-data/projections.json')
@@ -19,12 +19,7 @@ const fetchTestProjectionData = async () => {
 // Create API instances with the provided axiosInstance.
 const helpApiInstance = new GetHelpApi(undefined, undefined, axiosInstance)
 const rootApiInstance = new GetRootApi(undefined, undefined, axiosInstance)
-const userProjectionsApiInstance = new GetUserProjectionsApi(
-  undefined,
-  undefined,
-  axiosInstance,
-)
-const projectionApiInstance = new RunHCSVProjectionApi(
+const projectionApiInstance = new ProjectionApi(
   undefined,
   undefined,
   axiosInstance,
@@ -99,7 +94,141 @@ export const apiClient = {
         config: {},
       }
     }
-    return userProjectionsApiInstance.getUserProjections(options)
+    return projectionApiInstance.getUserProjections(options)
+  },
+
+  /**
+   * Creates a new empty projection with default parameters.
+   * @param parameters The projection parameters.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the created projection.
+   */
+  createProjection: (parameters: Parameters, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.createProjection(parameters, options)
+  },
+
+  /**
+   * Retrieves a projection by its GUID.
+   * @param projectionGUID The projection GUID.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the projection details.
+   */
+  getProjection: (projectionGUID: string, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.getProjection(projectionGUID, options)
+  },
+
+  /**
+   * Updates projection parameters.
+   * @param projectionGUID The projection GUID.
+   * @param parameters The updated projection parameters.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the updated projection.
+   */
+  updateProjectionParams: (
+    projectionGUID: string,
+    parameters: Parameters,
+    options?: AxiosRequestConfig,
+  ) => {
+    return projectionApiInstance.updateProjectionParams(
+      projectionGUID,
+      parameters,
+      options,
+    )
+  },
+
+  /**
+   * Deletes a projection.
+   * @param projectionGUID The projection GUID.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the delete operation.
+   */
+  deleteProjection: (projectionGUID: string, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.deleteProjection(projectionGUID, options)
+  },
+
+  /**
+   * Retrieves all files in a fileset for a projection.
+   * @param projectionGUID The projection GUID.
+   * @param fileSetGUID The fileset GUID.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the list of file mappings.
+   */
+  getFileSetFiles: (
+    projectionGUID: string,
+    fileSetGUID: string,
+    options?: AxiosRequestConfig,
+  ) => {
+    return projectionApiInstance.getFileSetFiles(
+      projectionGUID,
+      fileSetGUID,
+      options,
+    )
+  },
+
+  /**
+   * Uploads a file to a fileset.
+   * @param projectionGUID The projection GUID.
+   * @param fileSetGUID The fileset GUID.
+   * @param file The file to upload.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the updated projection.
+   */
+  uploadFileToFileSet: (
+    projectionGUID: string,
+    fileSetGUID: string,
+    file: File,
+    options?: AxiosRequestConfig,
+  ) => {
+    return projectionApiInstance.uploadFileToFileSet(
+      projectionGUID,
+      fileSetGUID,
+      file,
+      options,
+    )
+  },
+
+  /**
+   * Gets a file for download with presigned URL.
+   * @param projectionGUID The projection GUID.
+   * @param fileSetGUID The fileset GUID.
+   * @param fileMappingGUID The file mapping GUID.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the file mapping with download URL.
+   */
+  getFileForDownload: (
+    projectionGUID: string,
+    fileSetGUID: string,
+    fileMappingGUID: string,
+    options?: AxiosRequestConfig,
+  ) => {
+    return projectionApiInstance.getFileForDownload(
+      projectionGUID,
+      fileSetGUID,
+      fileMappingGUID,
+      options,
+    )
+  },
+
+  /**
+   * Deletes a file from a fileset.
+   * @param projectionGUID The projection GUID.
+   * @param fileSetGUID The fileset GUID.
+   * @param fileMappingGUID The file mapping GUID.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the delete operation.
+   */
+  deleteFileFromFileSet: (
+    projectionGUID: string,
+    fileSetGUID: string,
+    fileMappingGUID: string,
+    options?: AxiosRequestConfig,
+  ) => {
+    return projectionApiInstance.deleteFileFromFileSet(
+      projectionGUID,
+      fileSetGUID,
+      fileMappingGUID,
+      options,
+    )
   },
 }
 

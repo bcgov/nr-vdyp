@@ -189,7 +189,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const crownClosure = ref<string | null>(null)
 
   // report info
-  const selectedAgeYearRange = ref<string | null>(null)
+  const selectedAgeYearRange = ref<string | null>(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
   const startingAge = ref<string | null>(null)
   const finishingAge = ref<string | null>(null)
   const ageIncrement = ref<string | null>(null)

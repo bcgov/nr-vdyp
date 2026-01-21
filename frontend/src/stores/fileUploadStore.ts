@@ -71,15 +71,15 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   }
 
   // report info
-  const selectedAgeYearRange = ref<string | null>(null)
+  const selectedAgeYearRange = ref<string | null>(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
   const startingAge = ref<string | null>(null)
   const finishingAge = ref<string | null>(null)
   const ageIncrement = ref<string | null>(null)
   const startYear = ref<string | null>(null)
   const endYear = ref<string | null>(null)
   const yearIncrement = ref<string | null>(null)
-  const isForwardGrowEnabled = ref<boolean>(true)
-  const isBackwardGrowEnabled = ref<boolean>(true)
+  const isForwardGrowEnabled = ref<boolean>(false)
+  const isBackwardGrowEnabled = ref<boolean>(false)
 
   const isComputedMAIEnabled = ref<boolean>(false)
   const isCulminationValuesEnabled = ref<boolean>(false)

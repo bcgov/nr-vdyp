@@ -170,6 +170,11 @@ const isFileUploadPanelsVisible = computed(() => {
 
 onMounted(() => {
   console.debug(`appStore.modelSelection: ${appStore.modelSelection}`)
+  fileUploadStore.initializeSpeciesGroups()
+
+  // TODO -- remove the codes below
+  modelParameterStore.setDefaultValues()
+  fileUploadStore.setDefaultValues()
 })
 
 const processResponse = async (response: any): Promise<boolean> => {

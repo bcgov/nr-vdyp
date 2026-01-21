@@ -149,6 +149,7 @@ export const PRINT_ERR = Object.freeze({
 
 export const PROGRESS_MSG = Object.freeze({
   RUNNING_MODEL: 'Running Model...',
+  DELETING_PROJECTION: 'Deleting Projection...',
 })
 
 export const SUCCESS_MSG = Object.freeze({
@@ -160,4 +161,9 @@ export const SUCCESS_MSG = Object.freeze({
     'Model run completed successfully. Please check the results in the report tab.',
   INPUT_MODEL_PARAM_RUN_RESULT_W_ERR:
     'Model run completed with errors - check error log',
+  PROJECTION_DELETED: 'Projection has been successfully deleted.',
+})
+
+export const PROJECTION_ERR = Object.freeze({
+  DELETE_FAILED: 'Failed to delete the projection. Please try again later.',
 })

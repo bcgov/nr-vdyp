@@ -1,5 +1,6 @@
 <template>
   <button
+    v-bind="activatorProps"
     :class="buttonClasses"
     :disabled="isDisabled"
     :data-disabled="isDisabled || undefined"
@@ -46,6 +47,10 @@ const props = defineProps({
   label: {
     type: String,
     default: '',
+  },
+  activatorProps: {
+    type: Object,
+    default: () => ({}),
   },
   variant: {
     type: String as () => ButtonVariant,

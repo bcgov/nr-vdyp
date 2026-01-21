@@ -3,6 +3,28 @@
     <!-- Header with Title and New Projection Button -->
     <div class="page-header">
       <h1 class="page-heading">Projections</h1>
+      <v-menu>
+        <template v-slot:activator="{ props }">
+          <AppButton
+            :activator-props="props"
+            label="New Projection"
+            mdi-name="mdi-plus"
+            variant="primary"
+          />
+        </template>
+        <v-list>
+          <v-list-item
+            @click="handleNewProjection('inputModelParameters')"
+          >
+            <v-list-item-title>Input Model Parameters</v-list-item-title>
+          </v-list-item>
+          <v-list-item
+            @click="handleNewProjection('fileUpload')"
+          >
+            <v-list-item-title>File Upload</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </div>
 
     <!-- Desktop/Tablet Table View (above 1025px) -->
@@ -43,24 +65,46 @@
       :total-items="projections.length"
       :items-per-page-options="itemsPerPageOptions"
     />
+
+    <!-- Progress Indicator -->
+    <AppProgressCircular
+      :is-show="isProgressVisible"
+      :message="progressMessage"
+    />
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import type { Projection, TableHeader, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
-import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION } from '@/constants/constants'
+import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION } from '@/constants/constants'
+import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import ProjectionTable from '@/components/projection-list/ProjectionTable.vue'
 import ProjectionCardList from '@/components/projection-list/ProjectionCardList.vue'
 import ProjectionPagination from '@/components/projection-list/ProjectionPagination.vue'
-import { fetchUserProjections } from '@/services/projectionListService'
+import { fetchUserProjections, deleteProjectionWithFiles } from '@/services/projectionService'
+import { useAppStore } from '@/stores/appStore'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
+import { useNotificationStore } from '@/stores/common/notificationStore'
+import { AppButton } from '@/components'
+import AppProgressCircular from '@/components/core/AppProgressCircular.vue'
+
+const router = useRouter()
+const appStore = useAppStore()
+const alertDialogStore = useAlertDialogStore()
+const notificationStore = useNotificationStore()
 
 // Projections data from API
 const projections = ref<Projection[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
+
+// Progress state
+const isProgressVisible = ref(false)
+const progressMessage = ref('')
 
 // Load projections from API
 const loadProjections = async () => {
@@ -191,12 +235,41 @@ const handleDownload = (projectionGUID: string) => {
   console.log('Download projection:', projectionGUID)
 }
 
-const handleDelete = (projectionGUID: string) => {
-  console.log('Delete projection:', projectionGUID)
+const handleDelete = async (projectionGUID: string) => {
+  const confirmed = await alertDialogStore.openDialog(
+    'Confirmation',
+    'Are you sure you want to delete this Projection? Once deleted, it will not be recoverable and will be removed forever.',
+    { variant: 'confirmation' },
+  )
+
+  if (confirmed) {
+    isProgressVisible.value = true
+    progressMessage.value = PROGRESS_MSG.DELETING_PROJECTION
+    try {
+      await deleteProjectionWithFiles(projectionGUID)
+      notificationStore.showSuccessMessage(SUCCESS_MSG.PROJECTION_DELETED)
+      // Refresh the projections list
+      await loadProjections()
+    } catch (err) {
+      console.error('Error deleting projection:', err)
+      notificationStore.showErrorMessage(PROJECTION_ERR.DELETE_FAILED)
+    } finally {
+      isProgressVisible.value = false
+    }
+  }
 }
 
 const handleCancel = (projectionGUID: string) => {
   console.log('Cancel projection:', projectionGUID)
+}
+
+const handleNewProjection = (type: 'inputModelParameters' | 'fileUpload') => {
+  if (type === 'inputModelParameters') {
+    appStore.setModelSelection(MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+  } else {
+    appStore.setModelSelection(MODEL_SELECTION.FILE_UPLOAD)
+  }
+  router.push('/model-parameter-input')
 }
 
 // Window resize handler

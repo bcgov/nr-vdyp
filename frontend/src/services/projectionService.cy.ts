@@ -4,7 +4,7 @@ import {
   sortProjections,
   paginateProjections,
   calculateTotalPages,
-} from '@/services/projectionListService'
+} from '@/services/projectionService'
 import type { Projection } from '@/interfaces/interfaces'
 import { SORT_ORDER, PROJECTION_LIST_HEADER_KEY } from '@/constants/constants'
 
