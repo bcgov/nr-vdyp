@@ -14,6 +14,7 @@ package ca.bc.gov.nrs.vdyp.ecore.model.v1;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
@@ -24,12 +25,16 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 	{ UtilizationParameter.JSON_PROPERTY_SPECIES_NAME, UtilizationParameter.JSON_PROPERTY_UTILIZATION_CLASS }
 )
 public class UtilizationParameter {
-	public static final String JSON_PROPERTY_SPECIES_NAME = "speciesName";
+	public static final String JSON_PROPERTY_SPECIES_NAME = "s";
+	public static final String JSON_PROPERTY_SPECIES_NAME_ALIAS = "speciesName";
 	@JsonProperty(JSON_PROPERTY_SPECIES_NAME)
+	@JsonAlias(JSON_PROPERTY_SPECIES_NAME_ALIAS)
 	private String speciesName;
 
-	public static final String JSON_PROPERTY_UTILIZATION_CLASS = "utilizationClass";
+	public static final String JSON_PROPERTY_UTILIZATION_CLASS = "u";
+	public static final String JSON_PROPERTY_UTILIZATION_CLASS_ALIAS = "utilizationClass";
 	@JsonProperty(JSON_PROPERTY_UTILIZATION_CLASS)
+	@JsonAlias(JSON_PROPERTY_UTILIZATION_CLASS_ALIAS)
 	private String utilizationClass;
 
 	/**
