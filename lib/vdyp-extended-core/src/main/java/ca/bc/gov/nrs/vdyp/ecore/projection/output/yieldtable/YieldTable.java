@@ -6,10 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -17,7 +15,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
@@ -1505,11 +1502,12 @@ public class YieldTable implements Closeable {
 
 		double loreyHeight = entity.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
 
-		// TODO VDYP-903 Uncomment this to improve calculation of Lorey height when there are a large proportion of trees between 4.0 and 7.5 cm
+		// TODO VDYP-903 Uncomment this to improve calculation of Lorey height when there are a large proportion of
+		// trees between 4.0 and 7.5 cm
 		/*
-		if (ucReportingLevel == UtilizationClassSet._4_0 ) {
-			loreyHeight = ComputationMethods.computeLoreyHeightWithSmallClass(entity);
-		}*/
+		 * if (ucReportingLevel == UtilizationClassSet._4_0 ) { loreyHeight =
+		 * ComputationMethods.computeLoreyHeightWithSmallClass(entity); }
+		 */
 
 		return new LayerYields(
 				true, isDominantSpecies, projectedSp0.getGenus(), calendarYear, totalAge, dominantHeight, loreyHeight,
