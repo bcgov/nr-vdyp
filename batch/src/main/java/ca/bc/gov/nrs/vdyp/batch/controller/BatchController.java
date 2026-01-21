@@ -388,8 +388,7 @@ public class BatchController {
 			throw new ProjectionRequestValidationException(
 					List.of(
 							new ValidationMessage(
-									ValidationMessageKind.GENERIC,
-									"Failed to start GUID based job: " + errorMessage
+									ValidationMessageKind.GENERIC, "Failed to start GUID based job: " + errorMessage
 							)
 					)
 			);
@@ -471,10 +470,8 @@ public class BatchController {
 	/**
 	 * Validates that projection parameters are provided and not empty.
 	 */
-	private void validateProjectionParameters(
-			MultipartFile polygonFile, MultipartFile layerFile
-	) throws ProjectionRequestValidationException {
-
+	private void validateProjectionParameters(MultipartFile polygonFile, MultipartFile layerFile)
+			throws ProjectionRequestValidationException {
 
 		// Validate polygon file
 		if (polygonFile == null || polygonFile.isEmpty()) {
