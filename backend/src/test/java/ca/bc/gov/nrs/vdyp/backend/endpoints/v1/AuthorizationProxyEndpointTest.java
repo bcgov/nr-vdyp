@@ -78,25 +78,26 @@ public class AuthorizationProxyEndpointTest {
 
 		UriInfo uriInfo = mock(UriInfo.class); // not used by token(), but required by signature
 
-		Response r = endpoint.token(uriInfo, form);
+		try (Response r = endpoint.token(uriInfo, form)) {
 
-		// Verify client_secret was injected into form
-		assertEquals("s3cr3t", form.getFirst("client_secret"));
+			// Verify client_secret was injected into form
+			assertEquals("s3cr3t", form.getFirst("client_secret"));
 
-		// Verify request setup
-		verify(req).putHeader("Content-Type", "application/x-www-form-urlencoded");
+			// Verify request setup
+			verify(req).putHeader("Content-Type", "application/x-www-form-urlencoded");
 
-		// Verify body contains the expected x-www-form-urlencoded pairs (order-independent)
-		String sentBody = bodyCaptor.getValue().toString();
-		assertFormBodyContainsAll(
-				sentBody, "grant_type=authorization_code", "client_secret=s3cr3t", "code=a+b", // space -> '+'
-				"redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F"
-		);
+			// Verify body contains the expected x-www-form-urlencoded pairs (order-independent)
+			String sentBody = bodyCaptor.getValue().toString();
+			assertFormBodyContainsAll(
+					sentBody, "grant_type=authorization_code", "client_secret=s3cr3t", "code=a+b", // space -> '+'
+					"redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F"
+			);
 
-		// Verify response mapping
-		assertEquals(200, r.getStatus());
-		assertEquals("application/json", r.getMediaType().toString());
-		assertEquals("{\"access_token\":\"abc\"}", r.getEntity());
+			// Verify response mapping
+			assertEquals(200, r.getStatus());
+			assertEquals("application/json", r.getMediaType().toString());
+			assertEquals("{\"access_token\":\"abc\"}", r.getEntity());
+		}
 	}
 
 	@Test
@@ -108,14 +109,15 @@ public class AuthorizationProxyEndpointTest {
 				URI.create("http://localhost/auth/realms/standard/protocol/openid-connect/auth?foo=bar&x=1")
 		);
 
-		Response r = endpoint.authorize(uriInfo);
+		try (Response r = endpoint.authorize(uriInfo)) {
+			assertEquals(303, r.getStatus()); // Response.seeOther => 303
+			assertEquals(
+					URI.create(
+							"https://dev.loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/auth?foo=bar&x=1"
+					), r.getLocation()
+			);
 
-		assertEquals(303, r.getStatus()); // Response.seeOther => 303
-		assertEquals(
-				URI.create(
-						"https://dev.loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/auth?foo=bar&x=1"
-				), r.getLocation()
-		);
+		}
 	}
 
 	@Test
