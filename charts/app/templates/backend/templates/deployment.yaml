@@ -100,7 +100,7 @@ spec:
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: /
+              path: /q/health
               port: http
               scheme: HTTP
             initialDelaySeconds: 5
@@ -112,7 +112,7 @@ spec:
             successThreshold: 1
             failureThreshold: 3
             httpGet:
-              path: /
+              path: /q/health
               port: 8080
               scheme: HTTP
             initialDelaySeconds: 15
