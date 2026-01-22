@@ -126,6 +126,7 @@ frontend:
     enabled: false # enable it in PRODUCTION for having pod disruption budget.
     minAvailable: 1 # the minimum number of pods that must be available during the disruption budget.
   env:
+    BACKEND_URL: ~
     VITE_SSO_AUTH_SERVER_URL: ~
     VITE_SSO_TOKEN_ISSUER: ~
     VITE_SSO_CLIENT_ID: ~

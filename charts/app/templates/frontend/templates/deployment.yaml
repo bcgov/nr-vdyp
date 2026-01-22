@@ -37,7 +37,7 @@ spec:
           imagePullPolicy: {{ default "Always" .Values.frontend.imagePullPolicy }}
           env:
             - name: BACKEND_URL
-              value: "http://{{ .Release.Name }}-backend"
+              value: {{ .Values.frontend.env.BACKEND_URL | quote }}
             - name: LOG_LEVEL
               value: "info"
             - name: VITE_SSO_AUTH_SERVER_URL
