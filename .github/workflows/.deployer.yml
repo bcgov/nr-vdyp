@@ -120,7 +120,6 @@ jobs:
           fi
       # Secrets Management
       - name: Create Secrets
-        working-directory: ${{ inputs.directory }}
         run: |
           oc -n ${{ secrets.oc_namespace }} create secret generic "vdyp-oidc" \
           --from-literal=client-secret='${{ secrets.KEYCLOAK_CLIENT_SECRET }}' \
