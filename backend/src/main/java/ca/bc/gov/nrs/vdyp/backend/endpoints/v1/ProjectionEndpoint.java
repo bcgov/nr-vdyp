@@ -45,6 +45,8 @@ public class ProjectionEndpoint implements Endpoint {
 
 	private final CurrentVDYPUser currentUser;
 
+	private static ObjectMapper mapper = new ObjectMapper();
+
 	public ProjectionEndpoint(ProjectionService service, CurrentVDYPUser currentUser) {
 		this.projectionService = service;
 		this.currentUser = currentUser;
@@ -229,7 +231,15 @@ public class ProjectionEndpoint implements Endpoint {
 		return Response.status(Status.NO_CONTENT).build();
 	}
 
-	private static ObjectMapper mapper = new ObjectMapper();
+	@POST
+	@Authenticated
+	@Path("/run")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(name = "Run a Projection", description = "Send a Projection to the processing engine to be run.")
+	public Response runProjection(@PathParam("projectionGUID") UUID projectionGUID) throws ProjectionServiceException {
+		var started = projectionService.startBatchProjection(currentUser.getUser(), projectionGUID);
+		return Response.status(Status.OK).entity(started).build();
+	}
 
 	private <T> String serialize(Class<T> clazz, T entity) throws JsonProcessingException {
 		return mapper.writeValueAsString(entity);

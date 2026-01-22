@@ -150,7 +150,7 @@ public class ProjectionService {
 
 	private ObjectMapper jsonObjectMapper = new ObjectMapper();
 
-	private Response runProjection(
+	public Response runProjection(
 			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrialRun, Parameters params,
 			SecurityContext securityContext
 	) throws AbstractProjectionRequestException {
@@ -373,6 +373,15 @@ public class ProjectionService {
 			throw new ProjectionNotFoundException(projectionGuid);
 		}
 		return entity.get();
+	}
+
+	public ProjectionModel startBatchProjection(VDYPUserModel user, UUID projectionGUID)
+			throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, user, ProjectionAction.UPDATE);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+
+		return assembler.toModel(entity);
 	}
 
 	public enum ProjectionAction {
