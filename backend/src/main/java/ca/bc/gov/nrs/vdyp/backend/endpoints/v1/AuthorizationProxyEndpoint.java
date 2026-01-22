@@ -8,7 +8,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -24,10 +23,13 @@ import jakarta.ws.rs.core.UriInfo;
 @Path("/auth/realms/standard")
 public class AuthorizationProxyEndpoint {
 
-	@Inject
 	OidcConfig cfg;
 	private final WebClient client = WebClient
 			.create(io.vertx.core.Vertx.vertx(), new WebClientOptions().setFollowRedirects(false));
+
+	public AuthorizationProxyEndpoint(OidcConfig cfg) {
+		this.cfg = cfg;
+	}
 
 	@POST
 	@Path("/protocol/openid-connect/token")
