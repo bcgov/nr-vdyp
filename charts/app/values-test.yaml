@@ -78,6 +78,9 @@ backend:
     QUARKUS_OIDC_AUTH_SERVER_URL: ~
     VDYP_DB_SECRET_NAME: crunchy-postgres-test-pguser-app-vdyp
     VDYP_PROXY_DB_SECRET_NAME: crunchy-postgres-test-pguser-proxy-vdyp-rest
+    CORS_FRONTEND_BASE_URL: ~
+    OIDC_CLIENT_SECRET_SECRET_NAME: vdyp-oidc
+    OIDC_CLIENT_SECRET_SECRET_KEY: client-secret
 
 frontend:
   fullnameOverride: "vdyp-ui-test"

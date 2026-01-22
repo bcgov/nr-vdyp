@@ -44,6 +44,15 @@ spec:
               value: info
             - name: QUARKUS_OIDC_AUTH_SERVER_URL
               value: {{ .Values.backend.env.QUARKUS_OIDC_AUTH_SERVER_URL | quote }}
+            - name: QUARKUS_OIDC_CLIENT_ID
+              value: {{ .Values.frontend.env.VITE_SSO_CLIENT_ID | quote }}
+            - name: QUARKUS_OIDC_APPLICATION_TYPE
+              value: "service"
+            - name: QUARKUS_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.OIDC_CLIENT_SECRET_SECRET_NAME }}
+                  key: {{ .Values.backend.env.OIDC_CLIENT_SECRET_SECRET_KEY }}
             - name: COMS_BASE_URL
               value: {{ .Values.backend.env.COMS_BASE_URL | quote }}
             - name: COMS_S3_ACCESSKEYID
@@ -58,10 +67,8 @@ spec:
               value: {{ .Values.coms.env.BASICAUTH_USERNAME | quote }}
             - name: COMS_BASICAUTH_PASSWORD
               value: {{ .Values.coms.env.BASICAUTH_PASSWORD | quote }}
-            - name: QUARKUS_OIDC_APPLICATION_TYPE
-              value: "service"
-            - name: QUARKUS_OIDC_CREDENTIALS_SECRET
-              value: ""
+            - name: CORS_FRONTEND_BASE_URL
+              value: {{ .Values.backend.env.CORS_FRONTEND_BASE_URL | quote }}
             - name: VDYP_DB_PROXY_USER
               valueFrom:
                 secretKeyRef:
@@ -93,7 +100,7 @@ spec:
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: /
+              path: /q/health
               port: http
               scheme: HTTP
             initialDelaySeconds: 5
@@ -105,7 +112,7 @@ spec:
             successThreshold: 1
             failureThreshold: 3
             httpGet:
-              path: /
+              path: /q/health
               port: 8080
               scheme: HTTP
             initialDelaySeconds: 15

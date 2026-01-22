@@ -10,6 +10,7 @@ import { getActivePinia } from 'pinia'
 
 let keycloakInstance: Keycloak | null = null
 
+const ssoTokenIssuer= env.VITE_SSO_TOKEN_ISSUER
 const ssoAuthServerUrl = env.VITE_SSO_AUTH_SERVER_URL
 const ssoClientId = env.VITE_SSO_CLIENT_ID
 const ssoRealm = env.VITE_SSO_REALM
@@ -167,7 +168,7 @@ const validateAccessToken = (accessToken: string): boolean => {
     const tokenParsed = JSON.parse(atob(accessToken.split('.')[1]))
 
     // Validate issuer
-    if (tokenParsed.iss !== `${ssoAuthServerUrl}/realms/${ssoRealm}`) {
+    if (tokenParsed.iss !== `${ssoTokenIssuer}`) {
       console.error('Invalid token issuer.')
       return false
     }
