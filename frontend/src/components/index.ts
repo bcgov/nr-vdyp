@@ -30,6 +30,10 @@ export { default as TheFooter } from './layout/TheFooter.vue'
 export { default as TrainingSupport } from './layout/TrainingSupport.vue'
 export { default as UserMenu } from './layout/UserMenu.vue'
 
+export { default as ModelSelection } from './projection-setup/ModelSelection.vue'
+export { default as ModelSelectionContainer } from './projection-setup/ModelSelectionContainer.vue'
+export { default as TopProjectYear } from './projection-setup/TopProjectYear.vue'
+
 export { default as ReportingActions } from './reporting/ReportingActions.vue'
 export { default as ReportingContainer } from './reporting/ReportingContainer.vue'
 export { default as ReportingOutput } from './reporting/ReportingOutput.vue'

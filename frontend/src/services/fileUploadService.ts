@@ -7,10 +7,10 @@ import {
   DebugOptionsEnum,
   MetadataToOutputEnum,
   CombineAgeYearRangeEnum,
+  ParameterNamesEnum,
   type Parameters,
 } from '@/services/vdyp-api'
-import { createProjection } from '@/services/projectionService'
-import type { ProjectionModel } from '@/services/vdyp-api'
+import { projectionHcsvPost } from '@/services/apiActions'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
 import { addExecutionOptionsFromMappings } from '@/utils/util'
 
@@ -133,14 +133,9 @@ export const buildDebugOptions = (): {
   return { selectedDebugOptions, excludedDebugOptions }
 }
 
-/**
- * Builds projection parameters from the file upload store.
- * @param fileUploadStore The store containing model parameters.
- * @returns The projection parameters object.
- */
-export const buildProjectionParameters = (
+export const getFormData = (
   fileUploadStore: ReturnType<typeof useFileUploadStore>,
-): Parameters => {
+) => {
   const { selectedExecutionOptions, excludedExecutionOptions } =
     buildExecutionOptions(fileUploadStore)
   const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
@@ -183,42 +178,42 @@ export const buildProjectionParameters = (
     excludedExecutionOptions: excludedExecutionOptions,
     selectedDebugOptions: selectedDebugOptions,
     excludedDebugOptions: excludedDebugOptions,
-    reportTitle: fileUploadStore.reportTitle,
     combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
     metadataToOutput: MetadataToOutputEnum.VERSION,
-    utils: []
-    // utils: fileUploadStore.fileUploadSpeciesGroup.map(
-    //   (sg: FileUploadSpeciesGroup) =>
-    //     ({
-    //       speciesName: sg.group,
-    //       utilizationClass: sg.minimumDBHLimit,
-    //     }) as UtilizationParameter,
-    // ),
+    utils: fileUploadStore.fileUploadSpeciesGroup.map(
+      (sg: FileUploadSpeciesGroup) =>
+        ({
+          speciesName: sg.group,
+          utilizationClass: sg.minimumDBHLimit,
+        }) as UtilizationParameter,
+    ),
   }
 
-  return projectionParameters
+  const formData = new FormData()
+
+  formData.append(
+    ParameterNamesEnum.PROJECTION_PARAMETERS,
+    new Blob([JSON.stringify(projectionParameters)], {
+      type: 'application/json',
+    }),
+  )
+  formData.append(
+    ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
+    fileUploadStore.polygonFile as Blob,
+  )
+  formData.append(
+    ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
+    fileUploadStore.layerFile as Blob,
+  )
+
+  return formData
 }
 
-/**
- * Runs the model by creating a projection with uploaded files and parameters.
- * @param fileUploadStore The store containing model parameters and files.
- * @param createProjectionFunc Optional projection function (defaults to createProjection).
- * @returns The created ProjectionModel.
- */
 export const runModelFileUpload = async (
   fileUploadStore: ReturnType<typeof useFileUploadStore>,
-  createProjectionFunc: (
-    parameters: Parameters,
-    polygonFile?: File | Blob,
-    layerFile?: File | Blob,
-  ) => Promise<ProjectionModel> = createProjection,
-): Promise<ProjectionModel> => {
-  const projectionParameters = buildProjectionParameters(fileUploadStore)
-
-  const result = await createProjectionFunc(
-    projectionParameters,
-    fileUploadStore.polygonFile as File,
-    fileUploadStore.layerFile as File,
-  )
-  return result
+  projectionHcsvPostFunc = projectionHcsvPost,
+) => {
+  const formData = getFormData(fileUploadStore)
+  const response = await projectionHcsvPostFunc(formData, false)
+  return response
 }

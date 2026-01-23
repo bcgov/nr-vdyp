@@ -4,10 +4,10 @@ import {
   ExecutionOptionsEnum,
   DebugOptionsEnum,
   MetadataToOutputEnum,
+  ParameterNamesEnum,
   type Parameters,
 } from '@/services/vdyp-api'
-import { createProjection } from '@/services/projectionService'
-import type { ProjectionModel } from '@/services/vdyp-api'
+import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
@@ -492,35 +492,29 @@ const buildDebugOptions = (): {
 }
 
 /**
- * Runs the model by creating a projection with the generated CSV files and parameters.
+ * Runs the model by sending the generated CSV files and projection parameters to the projection service.
  * @param modelParameterStore The store containing model parameters.
- * @param createProjectionFunc Optional projection function (defaults to createProjection).
- * @returns The created ProjectionModel.
+ * @param projectionHcsvPostFunc Optional custom projection function (defaults to projectionHcsvPost).
+ * @returns The result from the projectionHcsvPost API call.
  */
 export const runModel = async (
   modelParameterStore: any,
-  createProjectionFunc: (
-    parameters: Parameters,
-    polygonFile?: File | Blob,
-    layerFile?: File | Blob,
-  ) => Promise<ProjectionModel> = createProjection,
-): Promise<ProjectionModel> => {
+  projectionHcsvPostFunc: (
+    formData: FormData,
+    trialRun: boolean,
+  ) => Promise<any> = projectionHcsvPost,
+) => {
   const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
+  const formData = new FormData()
 
   const { selectedExecutionOptions, excludedExecutionOptions } =
     buildExecutionOptions(modelParameterStore)
   const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
 
   const projectionParameters: Parameters = {
-    ageStart: modelParameterStore.startingAge
-      ? Number.parseInt(modelParameterStore.startingAge)
-      : null,
-    ageEnd: modelParameterStore.finishingAge
-      ? Number.parseInt(modelParameterStore.finishingAge)
-      : null,
-    ageIncrement: modelParameterStore.ageIncrement
-      ? Number.parseInt(modelParameterStore.ageIncrement)
-      : null,
+    ageStart: modelParameterStore.startingAge ? Number.parseInt(modelParameterStore.startingAge) : null,
+    ageEnd: modelParameterStore.finishingAge ? Number.parseInt(modelParameterStore.finishingAge) : null,
+    ageIncrement: modelParameterStore.ageIncrement ? Number.parseInt(modelParameterStore.ageIncrement) : null,
     yearStart: null,
     yearEnd: null,
     reportTitle: modelParameterStore.reportTitle,
@@ -539,10 +533,23 @@ export const runModel = async (
     ),
   }
 
-  const result = await createProjectionFunc(
-    projectionParameters,
-    blobPolygon,
-    blobLayer,
+  formData.append(
+    ParameterNamesEnum.PROJECTION_PARAMETERS,
+    new Blob([JSON.stringify(projectionParameters)], {
+      type: 'application/json',
+    }),
   )
+  formData.append(
+    ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
+    blobPolygon,
+    CONSTANTS.FILE_NAME.INPUT_POLY_CSV,
+  )
+  formData.append(
+    ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
+    blobLayer,
+    CONSTANTS.FILE_NAME.INPUT_LAYER_CSV,
+  )
+
+  const result = await projectionHcsvPostFunc(formData, false)
   return result
 }

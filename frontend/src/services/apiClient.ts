@@ -2,6 +2,7 @@ import {
   GetHelpApi,
   GetRootApi,
   ProjectionApi,
+  RunHCSVProjectionApi,
   ParameterNamesEnum,
 } from '@/services/vdyp-api/'
 import type { Parameters } from '@/services/vdyp-api/'
@@ -24,6 +25,11 @@ const projectionApiInstance = new ProjectionApi(
   undefined,
   axiosInstance,
 )
+const runHCSVProjectionApiInstance = new RunHCSVProjectionApi(
+  undefined,
+  undefined,
+  axiosInstance,
+)
 
 export const apiClient = {
   /**
@@ -36,6 +42,7 @@ export const apiClient = {
   },
 
   /**
+   * THIS IS for Non-Persistent Projection Run Version
    * Sends a projection HCSV POST request to the API.
    * It extracts the required files and parameters from the provided FormData.
    * @param formData The FormData containing the polygon file, layer file, and projection parameters.
@@ -59,7 +66,7 @@ export const apiClient = {
       ...options,
     }
 
-    return projectionApiInstance.projectionHcsvPostForm(
+    return runHCSVProjectionApiInstance.projectionHcsvPostForm(
       formData.get(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA) as File,
       formData.get(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA) as File,
       formData.get(ParameterNamesEnum.PROJECTION_PARAMETERS) as any,
