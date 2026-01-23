@@ -82,15 +82,12 @@ import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
 import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION } from '@/constants/constants'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
-import ProjectionTable from '@/components/projection-list/ProjectionTable.vue'
-import ProjectionCardList from '@/components/projection-list/ProjectionCardList.vue'
-import ProjectionPagination from '@/components/projection-list/ProjectionPagination.vue'
+import { AppButton, AppProgressCircular } from '@/components'
+import { ProjectionTable, ProjectionCardList, ProjectionPagination } from '@/components/projection'
 import { fetchUserProjections, deleteProjectionWithFiles } from '@/services/projectionService'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@/stores/projection/appStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
-import { AppButton } from '@/components'
-import AppProgressCircular from '@/components/core/AppProgressCircular.vue'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -269,7 +266,7 @@ const handleNewProjection = (type: 'inputModelParameters' | 'fileUpload') => {
   } else {
     appStore.setModelSelection(MODEL_SELECTION.FILE_UPLOAD)
   }
-  router.push('/model-parameter-input')
+  router.push('/projection-detail')
 }
 
 // Window resize handler

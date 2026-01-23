@@ -98,8 +98,7 @@
 import type { Projection, TableHeader } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { PROJECTION_USER_ACTION, SORT_ORDER } from '@/constants/constants'
-import ProjectionActionsMenu from '@/components/projection-list/ProjectionActionsMenu.vue'
-import ProjectionStatusBadge from '@/components/projection-list/ProjectionStatusBadge.vue'
+import { ProjectionActionsMenu, ProjectionStatusBadge} from '@/components/projection'
 import { formatDateTimeDisplay, formatDateDisplay } from '@/utils/util'
 
 interface Props {

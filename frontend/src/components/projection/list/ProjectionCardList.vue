@@ -213,14 +213,9 @@
 import type { Projection, SortOption } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS, PROJECTION_USER_ACTION } from '@/constants/constants'
 import { formatDateTimeDisplay, formatDateDisplay } from '@/utils/util'
-import AppButton from '@/components/core/AppButton.vue'
-import ProjectionStatusBadge from '@/components/projection-list/ProjectionStatusBadge.vue'
-import EditIcon from '@/assets/icons/Edit_Icon_Menu.png'
-import DuplicateIcon from '@/assets/icons/Duplicate_Icon_Menu.png'
-import DeleteIcon from '@/assets/icons/Delete_Icon_Menu.png'
-import ViewIcon from '@/assets/icons/View_Icon_Menu.png'
-import DownloadIcon from '@/assets/icons/Download_Icon_Menu.png'
-import CancelIcon from '@/assets/icons/Cancel_Icon_Menu.png'
+import { AppButton } from '@/components'
+import { ProjectionStatusBadge } from '@/components/projection'
+import { EditIcon, DuplicateIcon, DeleteIcon, ViewIcon, DownloadIcon, CancelIcon } from '@/assets/'
 
 interface Props {
   projections: Projection[]

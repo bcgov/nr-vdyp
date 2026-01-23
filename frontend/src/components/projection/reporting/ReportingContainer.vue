@@ -15,14 +15,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { PropType } from 'vue'
-import ReportingActions from '@/components/reporting/ReportingActions.vue'
-import ReportingOutput from '@/components/reporting/ReportingOutput.vue'
+import { ReportingActions, ReportingOutput} from '@/components/projection'
 import {
   downloadTextFile,
   downloadCSVFile,
   printReport,
 } from '@/services/reportService'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@/stores/projection/appStore'
 import { useProjectionStore } from '@/stores/projection/projectionStore'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { ReportingTab } from '@/types/types'
