@@ -1,0 +1,2 @@
+INSERT INTO "app-vdyp".user_type_code (user_type_code,description,display_order,effective_date,expiry_date,revision_count,create_user,create_date,update_user,update_date) VALUES
+                                                                                                                                                                               ('SYSTEM','System',0,'2026-01-23','9999-12-31',1,'System','2025-11-28','System','2026-01-26');
