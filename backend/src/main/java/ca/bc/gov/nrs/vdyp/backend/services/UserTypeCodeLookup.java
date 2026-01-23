@@ -6,6 +6,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.UserTypeCodeResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.UserTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
@@ -15,6 +18,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class UserTypeCodeLookup extends AbstractCodeTableLookup<UserTypeCodeModel, UserTypeCodeEntity> {
 
+	private static final Logger logger = LoggerFactory.getLogger(UserTypeCodeLookup.class);
 	UserTypeCodeRepository repository;
 	UserTypeCodeResourceAssembler assembler;
 
@@ -28,8 +32,9 @@ public class UserTypeCodeLookup extends AbstractCodeTableLookup<UserTypeCodeMode
 
 	private void ensureExternalRoleMap() {
 		mapExternalRolesToUserTypeCodes = new HashMap<>();
-		mapExternalRolesToUserTypeCodes.put("Admin", "ADMIN");
-		mapExternalRolesToUserTypeCodes.put("Super User", "SUPERUSER");
+		mapExternalRolesToUserTypeCodes.put("ADMIN", UserTypeCodeModel.ADMIN);
+		mapExternalRolesToUserTypeCodes.put("SYSTEM", UserTypeCodeModel.SYSTEM);
+		mapExternalRolesToUserTypeCodes.put("USER", UserTypeCodeModel.USER);
 	}
 
 	@Override
@@ -44,13 +49,13 @@ public class UserTypeCodeLookup extends AbstractCodeTableLookup<UserTypeCodeMode
 
 	public UserTypeCodeModel getUserTypeCodeFromExternalRoles(Set<String> roles) {
 		// default to user only get replace if user has higher level role
-		UserTypeCodeModel model = requireModel("USER");
+		UserTypeCodeModel model = null;
 		for (String role : roles) {
 			Optional<UserTypeCodeModel> internalCode = findModel(
 					mapExternalRolesToUserTypeCodes.getOrDefault(role, "")
 			);
 			if (internalCode.isPresent()
-					&& internalCode.get().getDisplayOrder().compareTo(model.getDisplayOrder()) < 0) {
+					&& (model == null || internalCode.get().getDisplayOrder().compareTo(model.getDisplayOrder()) < 0)) {
 				model = internalCode.get();
 			}
 		}
