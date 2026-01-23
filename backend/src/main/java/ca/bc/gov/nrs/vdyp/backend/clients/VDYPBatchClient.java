@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import ca.bc.gov.nrs.vdyp.backend.model.BatchProcessingModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -17,15 +17,18 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public interface VDYPBatchClient {
 	@POST
-	@Path("/startWithGUID")
-	BatchProcessingModel startBatchProcessWithGUID(@QueryParam("projectionGUID") UUID projectionGUID);
+	@Path("/startWithGUIDs")
+	BatchJobModel startBatchProcessWithGUID(
+			@QueryParam("projectionGUID") UUID projectionGUID,
+			@QueryParam("projectionParametersJson") String projectionParametersJson
+	);
 
 	@POST
 	@Path("/stop/{batchJobGUID}")
-	BatchProcessingModel stopBatchJob(@PathParam("batchJobGUID") UUID batchJobGUID);
+	BatchJobModel stopBatchJob(@PathParam("batchJobGUID") UUID batchJobGUID);
 
 	@POST
 	@Path("/status/{batchJobGUID}")
-	BatchProcessingModel batchJobStatus(@PathParam("batchJobGUID") UUID batchJobGUID);
+	BatchJobModel batchJobStatus(@PathParam("batchJobGUID") UUID batchJobGUID);
 
 }

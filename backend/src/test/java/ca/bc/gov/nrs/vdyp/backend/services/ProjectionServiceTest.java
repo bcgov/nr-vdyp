@@ -62,6 +62,8 @@ class ProjectionServiceTest {
 	ProjectionStatusCodeLookup projectionStatusCodeLookup;
 	@Mock
 	CalculationEngineCodeLookup calculationEngineCodeLookup;
+	@Mock
+	ProjectionBatchMappingService batchMappingService;
 	ProjectionResourceAssembler assembler;
 
 	ProjectionService service;
@@ -71,7 +73,8 @@ class ProjectionServiceTest {
 		assembler = new ProjectionResourceAssembler();
 
 		service = new ProjectionService(
-				em, assembler, repository, fileSetService, projectionStatusCodeLookup, calculationEngineCodeLookup
+				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+				calculationEngineCodeLookup
 		);
 	}
 

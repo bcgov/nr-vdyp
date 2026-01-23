@@ -78,6 +78,7 @@ public class ProjectionService {
 	private final ProjectionResourceAssembler assembler;
 	private final ProjectionRepository repository;
 	private final ProjectionFileSetService fileSetService;
+	private final ProjectionBatchMappingService batchMappingService;
 	private final ProjectionStatusCodeLookup statusLookup;
 	private final CalculationEngineCodeLookup calclationEngineLookup;
 
@@ -90,13 +91,14 @@ public class ProjectionService {
 
 	public ProjectionService(
 			EntityManager em, ProjectionResourceAssembler assembler, ProjectionRepository repository,
-			ProjectionFileSetService fileSetService, ProjectionStatusCodeLookup statusLookup,
-			CalculationEngineCodeLookup calclationEngineLookup
+			ProjectionFileSetService fileSetService, ProjectionBatchMappingService batchMappingService,
+			ProjectionStatusCodeLookup statusLookup, CalculationEngineCodeLookup calclationEngineLookup
 	) {
 		this.em = em;
 		this.assembler = assembler;
 		this.repository = repository;
 		this.fileSetService = fileSetService;
+		this.batchMappingService = batchMappingService;
 		this.statusLookup = statusLookup;
 		this.calclationEngineLookup = calclationEngineLookup;
 	}
@@ -381,6 +383,8 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, user, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 
+		batchMappingService.startProjectionInBatch(entity);
+
 		return assembler.toModel(entity);
 	}
 
@@ -390,6 +394,8 @@ public class ProjectionService {
 
 	public void checkUserCanPerformAction(ProjectionEntity entity, VDYPUserModel actingUser, ProjectionAction action)
 			throws ProjectionServiceException {
+		if (actingUser.isSystemUser())
+			return;
 		switch (action) {
 		case READ, UPDATE, DELETE:
 			UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());

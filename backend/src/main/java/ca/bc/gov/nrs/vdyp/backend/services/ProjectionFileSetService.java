@@ -110,6 +110,8 @@ public class ProjectionFileSetService {
 
 	private void ensureAuthorizedAccess(ProjectionFileSetEntity entity, VDYPUserModel actingUser)
 			throws ProjectionServiceException {
+		if (actingUser.isSystemUser())
+			return;
 		// Check that the user owns the fileset (FUTURE PROOFING if you use someone elses fileset you should not be able
 		// to edit it) trivial check currently
 		if (entity.getOwnerUser() != null
