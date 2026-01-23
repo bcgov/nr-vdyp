@@ -126,20 +126,17 @@ public class BatchController {
 			value = "/startWithGUIDs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE
 	)
 	public ResponseEntity<Map<String, Object>> startBatchJobPersistedID(
-			@RequestParam("polygonCOMSObjectGUID") UUID polygonCOMSObjectGUID,
-			@RequestParam("layerCOMSObjectGUID") UUID layerCOMSObjectGUID,
+			@RequestParam("projectionGUID") UUID projectionGUID,
 			@RequestParam("projectionParametersJson") String projectionParametersJson
 	) {
 
 		try {
 
-			logRequestDetails(polygonCOMSObjectGUID, layerCOMSObjectGUID, projectionParametersJson);
+			logRequestDetails(projectionGUID, projectionParametersJson);
 
 			Map<String, Object> response = new HashMap<>();
 
-			JobExecution jobExecution = executeJob(
-					polygonCOMSObjectGUID, layerCOMSObjectGUID, projectionParametersJson
-			);
+			JobExecution jobExecution = executeJob(projectionGUID, projectionParametersJson);
 			buildSuccessResponse(response, jobExecution);
 
 			return ResponseEntity.ok(response);
@@ -336,10 +333,9 @@ public class BatchController {
 		return ResponseEntity.ok(response);
 	}
 
-	private void logRequestDetails(UUID polygonCOMSObjectGUID, UUID layerCOMSObjectGUID, String parametersJson) {
+	private void logRequestDetails(UUID projectionGUID, String parametersJson) {
 		logger.debug("=== VDYP Batch Job Request ===");
-		logger.debug("polygonCOMSObjectGUID: {} ", polygonCOMSObjectGUID);
-		logger.debug("layerCOMSObjectGUID: {} ", layerCOMSObjectGUID);
+		logger.debug("projectionGUID: {} ", projectionGUID);
 		logger.debug("parametersJson: {} ", parametersJson);
 	}
 
@@ -352,7 +348,7 @@ public class BatchController {
 		);
 	}
 
-	private JobExecution executeJob(UUID polygonFileComsGuid, UUID layerFileComsGuid, String projectionParametersJson)
+	private JobExecution executeJob(UUID projectionGuid, String projectionParametersJson)
 			throws ProjectionRequestValidationException {
 
 		validateParametersJSON(projectionParametersJson);
@@ -368,7 +364,7 @@ public class BatchController {
 			// Now start the job with the partition directory included in parameters
 			JobParameters jobParameters = buildJobParameters(
 					projectionParametersJson, defaultNumPartitions, jobGuid, jobTimestamp, jobBaseDir.toString(),
-					polygonFileComsGuid, layerFileComsGuid
+					projectionGuid
 			);
 			JobExecution jobExecution = jobLauncher.run(fetchAndPartitionJob, jobParameters);
 
@@ -612,15 +608,14 @@ public class BatchController {
 
 	private JobParameters buildJobParameters(
 			String projectionParametersJson, Integer numPartitions, String jobGuid, String jobTimestamp,
-			String jobBaseDir, UUID polygonCOMSObjectGUID, UUID layerCOMSObjectGUID
+			String jobBaseDir, UUID projectionGUID
 	) {
 
 		JobParametersBuilder parametersBuilder = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
 				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
 				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir) //
-				.addString(BatchConstants.ComsInput.POLYGON_COMS_OBJECT_GUID, polygonCOMSObjectGUID.toString())
-				.addString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID, layerCOMSObjectGUID.toString())
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGUID.toString())
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
 				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue());
 

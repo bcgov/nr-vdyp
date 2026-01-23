@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.UUID;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -15,6 +16,9 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.stereotype.Component;
 
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -25,9 +29,14 @@ public class DownloadAndPartitionTasklet implements Tasklet {
 	private final ComsFileService comsFileService;
 	private final BatchInputPartitioner inputPartitioner;
 
-	public DownloadAndPartitionTasklet(ComsFileService comsFileService, BatchInputPartitioner inputPartitioner) {
+	private final VdypClient vdypClient;
+
+	public DownloadAndPartitionTasklet(
+			ComsFileService comsFileService, BatchInputPartitioner inputPartitioner, VdypClient vdypClient
+	) {
 		this.comsFileService = comsFileService;
 		this.inputPartitioner = inputPartitioner;
+		this.vdypClient = vdypClient;
 	}
 
 	@Override
@@ -41,13 +50,21 @@ public class DownloadAndPartitionTasklet implements Tasklet {
 		String baseDir = params.getString(BatchConstants.Job.BASE_DIR);
 		Long partitions = params.getLong(BatchConstants.Partition.NUMBER);
 
-		String polygonGuidStr = params.getString(BatchConstants.ComsInput.POLYGON_COMS_OBJECT_GUID);
-		String layerGuidStr = params.getString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID);
+		String projectionGUID = params.getString(BatchConstants.GuidInput.PROJECTION_GUID);
 
-		if (jobGuid == null || baseDir == null || partitions == null || polygonGuidStr == null
-				|| layerGuidStr == null) {
+		if (jobGuid == null || baseDir == null || partitions == null || projectionGUID == null) {
 			throw new IllegalArgumentException("Missing required job parameters for COMS download mode.");
 		}
+
+		VdypProjectionDetails projectionDetails = vdypClient.getProjectionDetails(projectionGUID);
+
+		List<FileMappingDetails> polyGonFiles = vdypClient
+				.getFileSetFiles(projectionGUID, projectionDetails.polygonFileSet().guid());
+		List<FileMappingDetails> layerFiles = vdypClient
+				.getFileSetFiles(projectionGUID, projectionDetails.layerFileSet().guid());
+
+		String polygonGuidStr = polyGonFiles.get(0).comsObjectGuid();
+		String layerGuidStr = layerFiles.get(0).comsObjectGuid();
 
 		// Download the inputs
 		Path jobBaseDir = Paths.get(baseDir);

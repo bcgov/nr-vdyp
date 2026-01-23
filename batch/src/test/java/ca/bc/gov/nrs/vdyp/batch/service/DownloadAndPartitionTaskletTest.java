@@ -26,6 +26,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +36,8 @@ class DownloadAndPartitionTaskletTest {
 
 	@Mock
 	BatchInputPartitioner inputPartitioner;
+	@Mock
+	VdypClient vdypClient;
 
 	@Mock
 	ChunkContext chunkContext;
@@ -51,6 +54,7 @@ class DownloadAndPartitionTaskletTest {
 	StepContribution stepContribution;
 
 	DownloadAndPartitionTasklet tasklet;
+	UUID projectionGuid = UUID.randomUUID();
 	UUID polygonComsObjectGuid = UUID.randomUUID();
 	UUID layerComsObjectGuid = UUID.randomUUID();
 
@@ -59,7 +63,7 @@ class DownloadAndPartitionTaskletTest {
 
 	@BeforeEach
 	void setup() {
-		tasklet = new DownloadAndPartitionTasklet(comsFileService, inputPartitioner);
+		tasklet = new DownloadAndPartitionTasklet(comsFileService, inputPartitioner, vdypClient);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -68,13 +72,12 @@ class DownloadAndPartitionTaskletTest {
 
 	@Test
 	void testExecute_nullJobGuid_ThrowsException() {
+		projectionGuid = UUID.randomUUID();
 		polygonComsObjectGuid = UUID.randomUUID();
 		layerComsObjectGuid = UUID.randomUUID();
 		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.BASE_DIR, tempDir.toString())
 				.addLong(BatchConstants.Partition.NUMBER, 4L)
-				.addString(BatchConstants.ComsInput.POLYGON_COMS_OBJECT_GUID, polygonComsObjectGuid.toString())
-				.addString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID, layerComsObjectGuid.toString())
-				.toJobParameters();
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		assertThrows(IllegalArgumentException.class, () -> {
 			tasklet.execute(stepContribution, chunkContext);
@@ -83,13 +86,12 @@ class DownloadAndPartitionTaskletTest {
 
 	@Test
 	void testExecute_nullBaseDir_ThrowsException() {
+		projectionGuid = UUID.randomUUID();
 		polygonComsObjectGuid = UUID.randomUUID();
 		layerComsObjectGuid = UUID.randomUUID();
 		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
 				.addLong(BatchConstants.Partition.NUMBER, 4L)
-				.addString(BatchConstants.ComsInput.POLYGON_COMS_OBJECT_GUID, polygonComsObjectGuid.toString())
-				.addString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID, layerComsObjectGuid.toString())
-				.toJobParameters();
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		assertThrows(IllegalArgumentException.class, () -> {
 			tasklet.execute(stepContribution, chunkContext);
@@ -98,13 +100,12 @@ class DownloadAndPartitionTaskletTest {
 
 	@Test
 	void testExecute_nullPartitions_ThrowsException() {
+		projectionGuid = UUID.randomUUID();
 		polygonComsObjectGuid = UUID.randomUUID();
 		layerComsObjectGuid = UUID.randomUUID();
 		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
 				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString())
-				.addString(BatchConstants.ComsInput.POLYGON_COMS_OBJECT_GUID, polygonComsObjectGuid.toString())
-				.addString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID, layerComsObjectGuid.toString())
-				.toJobParameters();
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		assertThrows(IllegalArgumentException.class, () -> {
 			tasklet.execute(stepContribution, chunkContext);
@@ -116,20 +117,6 @@ class DownloadAndPartitionTaskletTest {
 		layerComsObjectGuid = UUID.randomUUID();
 		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
 				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()).addLong(BatchConstants.Partition.NUMBER, 4L)
-				.addString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID, layerComsObjectGuid.toString())
-				.toJobParameters();
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		assertThrows(IllegalArgumentException.class, () -> {
-			tasklet.execute(stepContribution, chunkContext);
-		});
-	}
-
-	@Test
-	void testExecute_nullLaayerFile_ThrowsException() {
-		polygonComsObjectGuid = UUID.randomUUID();
-		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
-				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()).addLong(BatchConstants.Partition.NUMBER, 4L)
-				.addString(BatchConstants.ComsInput.POLYGON_COMS_OBJECT_GUID, polygonComsObjectGuid.toString())
 				.toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		assertThrows(IllegalArgumentException.class, () -> {
@@ -143,9 +130,7 @@ class DownloadAndPartitionTaskletTest {
 		layerComsObjectGuid = UUID.randomUUID();
 		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
 				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()).addLong(BatchConstants.Partition.NUMBER, 4L)
-				.addString(BatchConstants.ComsInput.POLYGON_COMS_OBJECT_GUID, polygonComsObjectGuid.toString())
-				.addString(BatchConstants.ComsInput.LAYER_COMS_OBJECT_GUID, layerComsObjectGuid.toString())
-				.toJobParameters();
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 
 		doNothing().when(comsFileService).fetchObjectToFile(any(UUID.class), any(Path.class));
