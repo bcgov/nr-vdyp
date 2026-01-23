@@ -96,7 +96,7 @@
                 <v-col cols="6" />
               </v-row>
             </div>
-            <AppPanelActions
+            <ActionPanel
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -115,13 +115,12 @@ import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import {
   AppMessageDialog,
-  AppPanelActions,
 } from '@/components'
 import {
+  ActionPanel,
   SpeciesListInput,
   SpeciesGroupsDisplay,
 } from '@/components/projection'
-
 import {
   BIZCONSTANTS,
   CONSTANTS,

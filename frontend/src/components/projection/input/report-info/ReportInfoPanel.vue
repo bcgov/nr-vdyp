@@ -82,7 +82,7 @@
               @update:projectionType="handleProjectionTypeUpdate"
               @update:reportTitle="handleReportTitleUpdate"
             />
-            <AppPanelActions
+            <ActionPanel
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -102,9 +102,9 @@ import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import {
   AppMessageDialog,
-  AppPanelActions,
 } from '@/components'
 import {
+  ActionPanel,
   ReportConfiguration,
 } from '@/components/projection'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'

@@ -67,7 +67,7 @@
                 </v-col>
               </v-row>
             </div>
-            <AppPanelActions
+            <ActionPanel
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -84,7 +84,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
-import { AppMessageDialog, AppPanelActions } from '@/components'
+import { AppMessageDialog } from '@/components'
+import { ActionPanel } from '@/components/projection'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { fileUploadValidation } from '@/validation'

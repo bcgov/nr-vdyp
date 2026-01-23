@@ -234,7 +234,7 @@
                 </v-col>
               </v-row>
             </div>
-            <AppPanelActions
+            <ActionPanel
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -252,7 +252,10 @@
 import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
-import { AppMessageDialog, AppPanelActions, AppSpinField } from '@/components'
+import { AppMessageDialog, AppSpinField } from '@/components'
+import {
+  ActionPanel,
+} from '@/components/projection'
 import type { SpeciesGroup, MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
 import { siteInfoValidation } from '@/validation'
