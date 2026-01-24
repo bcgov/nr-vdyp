@@ -123,7 +123,10 @@ public class BatchController {
 	 * Start a new batch job execution
 	 */
 	@PostMapping(
-			value = "/startWithGUIDs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE
+			value = "/startWithGUIDs", //
+			consumes = MediaType.MULTIPART_FORM_DATA_VALUE, //
+			produces = MediaType.APPLICATION_JSON_VALUE
+
 	)
 	public ResponseEntity<Map<String, Object>> startBatchJobPersistedID(
 			@RequestParam("projectionGUID") UUID projectionGUID,

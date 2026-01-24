@@ -15,6 +15,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class ProjectionBatchMappingService {
@@ -34,6 +35,7 @@ public class ProjectionBatchMappingService {
 		this.batchClient = batchClient;
 	}
 
+	@Transactional
 	public ProjectionBatchMappingModel startProjectionInBatch(ProjectionEntity projectionEntity)
 			throws ProjectionServiceException {
 		try {
@@ -46,6 +48,7 @@ public class ProjectionBatchMappingService {
 			entity.setWarningCount(model.warnings());
 			entity.setProjection(projectionEntity);
 			entity.setCompletedPolygonCount(0);
+			entity.setPolygonCount(0);
 			repository.persist(entity);
 			return assembler.toModel(entity);
 		} catch (Exception e) {

@@ -377,6 +377,7 @@ public class ProjectionService {
 		return entity.get();
 	}
 
+	@Transactional
 	public ProjectionModel startBatchProjection(VDYPUserModel user, UUID projectionGUID)
 			throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
@@ -384,6 +385,9 @@ public class ProjectionService {
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 
 		batchMappingService.startProjectionInBatch(entity);
+
+		// TODO if we get here (or if there is something specific returned from start in batch
+		// set the status to running
 
 		return assembler.toModel(entity);
 	}
