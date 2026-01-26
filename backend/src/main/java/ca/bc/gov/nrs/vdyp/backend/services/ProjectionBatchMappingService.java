@@ -48,7 +48,7 @@ public class ProjectionBatchMappingService {
 			entity.setWarningCount(model.warnings());
 			entity.setProjection(projectionEntity);
 			entity.setCompletedPolygonCount(0);
-			entity.setPolygonCount(0);
+			entity.setPolygonCount(0); // FIXME VDYP-918
 			repository.persist(entity);
 			return assembler.toModel(entity);
 		} catch (Exception e) {
