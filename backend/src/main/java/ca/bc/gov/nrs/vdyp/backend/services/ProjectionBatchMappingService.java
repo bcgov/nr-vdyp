@@ -19,7 +19,7 @@ import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class ProjectionBatchMappingService {
-	private static final Logger logger = LoggerFactory.getLogger(FileMappingService.class);
+	private static final Logger logger = LoggerFactory.getLogger(ProjectionBatchMappingService.class);
 
 	private ProjectionBatchMappingRepository repository;
 	private ProjectionBatchMappingResourceAssembler assembler;
