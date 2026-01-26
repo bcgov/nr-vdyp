@@ -5,15 +5,16 @@ import ModelParameterInput from '@/views/ModelParameterInput.vue'
 import PageNotFound from '@/views/PageNotFound.vue'
 import AuthInfo from '@/views/test/AuthInfo.vue'
 import ParameterDetail from '@/views/test/ParameterDetail.vue'
+import { ROUTE_PATH } from '@/constants/constants'
 
 export const routes: Array<RouteRecordRaw> = [
   {
-    path: '/',
+    path: ROUTE_PATH.PROJECTION_LIST,
     name: 'ProjectionListView',
     component: ProjectionListView,
   },
   {
-    path: '/projection-detail',
+    path: ROUTE_PATH.PROJECTION_DETAIL,
     name: 'ProjectionDetail',
     component: ProjectionDetail,
   },

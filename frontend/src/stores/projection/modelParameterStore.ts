@@ -2,9 +2,8 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
-import type { SpeciesList, SpeciesGroup } from '@/interfaces/interfaces'
+import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
-import type { ParsedProjectionParameters } from '@/services/projectionService'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 
 export const useModelParameterStore = defineStore('modelParameter', () => {

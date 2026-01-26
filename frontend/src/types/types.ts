@@ -5,6 +5,7 @@ import {
   SORT_ORDER,
   MESSAGE_TYPE,
   REPORTING_TAB,
+  PROJECTION_VIEW_MODE,
 } from '@/constants/constants'
 
 export type MessageType =
@@ -48,3 +49,7 @@ export type Variant =
   | 'solo-filled'
 
 export type NumStrNullType = number | string | null
+
+export type DialogVariant = 'info' | 'confirmation' | 'warning' | 'error' | 'destructive'
+
+export type ProjectionViewMode = (typeof PROJECTION_VIEW_MODE)[keyof typeof PROJECTION_VIEW_MODE]

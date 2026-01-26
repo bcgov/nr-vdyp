@@ -37,7 +37,7 @@
 import type { PropType } from 'vue'
 import { AppButton } from '@/components'
 import type { ReportingTab } from '@/types/types'
-import { REPORTING_TAB } from '@/constants/constants'
+import { REPORTING_TAB, REPORTING_ACTION } from '@/constants/constants'
 
 defineProps({
   isButtonDisabled: {
@@ -55,18 +55,18 @@ defineProps({
 })
 
 const emit =
-  defineEmits<(e: 'print' | 'download' | 'downloadrawresult') => void>()
+  defineEmits<(e: typeof REPORTING_ACTION.PRINT | typeof REPORTING_ACTION.DOWNLOAD | typeof REPORTING_ACTION.DOWNLOAD_RAW_RESULT) => void>()
 
 const handlePrint = () => {
-  emit('print')
+  emit(REPORTING_ACTION.PRINT)
 }
 
 const handleDownload = () => {
-  emit('download')
+  emit(REPORTING_ACTION.DOWNLOAD)
 }
 
 const handleDownloadRawResult = () => {
-  emit('downloadrawresult')
+  emit(REPORTING_ACTION.DOWNLOAD_RAW_RESULT)
 }
 </script>
 

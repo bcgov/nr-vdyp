@@ -2,8 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { FileUploadPanelName, PanelState } from '@/types/types'
-import type { FileUploadSpeciesGroup } from '@/interfaces/interfaces'
-import type { ParsedProjectionParameters } from '@/services/projectionService'
+import type { FileUploadSpeciesGroup, ParsedProjectionParameters } from '@/interfaces/interfaces'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 
 export const useFileUploadStore = defineStore('fileUploadStore', () => {

@@ -14,12 +14,12 @@
         </template>
         <v-list>
           <v-list-item
-            @click="handleNewProjection('inputModelParameters')"
+            @click="handleNewProjection(NEW_PROJECTION_TYPE.INPUT_MODEL_PARAMETERS)"
           >
             <v-list-item-title>Input Model Parameters</v-list-item-title>
           </v-list-item>
           <v-list-item
-            @click="handleNewProjection('fileUpload')"
+            @click="handleNewProjection(NEW_PROJECTION_TYPE.FILE_UPLOAD)"
           >
             <v-list-item-title>File Upload</v-list-item-title>
           </v-list-item>
@@ -82,7 +82,7 @@ import { useRouter } from 'vue-router'
 import type { Projection, TableHeader, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
-import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION } from '@/constants/constants'
+import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, NEW_PROJECTION_TYPE, ROUTE_PATH } from '@/constants/constants'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { AppButton, AppProgressCircular } from '@/components'
 import { ProjectionTable, ProjectionCardList, ProjectionPagination } from '@/components/projection'
@@ -123,7 +123,6 @@ const loadProjections = async () => {
   error.value = null
   try {
     projections.value = await fetchUserProjections()
-    console.debug('>>>>>>>> loaded Projections!!')
   } catch (err) {
     error.value = 'Failed to load projections'
     console.error('Error loading projections:', err)
@@ -251,7 +250,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
 
     // Set the app store state
     appStore.setModelSelection(method)
-    appStore.setViewMode(isViewMode ? 'view' : 'edit')
+    appStore.setViewMode(isViewMode ? PROJECTION_VIEW_MODE.VIEW : PROJECTION_VIEW_MODE.EDIT)
     appStore.setCurrentProjectionGUID(projectionGUID)
 
     if (isInputModelParams) {
@@ -282,7 +281,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     }
 
     // Navigate to the projection detail view
-    router.push('/projection-detail')
+    router.push(ROUTE_PATH.PROJECTION_DETAIL)
   } catch (err) {
     console.error('Error loading projection:', err)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED)
@@ -442,11 +441,11 @@ const handleRowClick = async (projection: Projection) => {
   await loadAndNavigateToProjection(projection.projectionGUID, isViewMode)
 }
 
-const handleNewProjection = (type: 'inputModelParameters' | 'fileUpload') => {
+const handleNewProjection = (type: (typeof NEW_PROJECTION_TYPE)[keyof typeof NEW_PROJECTION_TYPE]) => {
   // Reset app store for new projection
   appStore.resetForNewProjection()
 
-  if (type === 'inputModelParameters') {
+  if (type === NEW_PROJECTION_TYPE.INPUT_MODEL_PARAMETERS) {
     appStore.setModelSelection(MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
     // Reset model parameter store
     modelParameterStore.resetStore()
@@ -455,7 +454,7 @@ const handleNewProjection = (type: 'inputModelParameters' | 'fileUpload') => {
     // Reset file upload store
     fileUploadStore.resetStore()
   }
-  router.push('/projection-detail')
+  router.push(ROUTE_PATH.PROJECTION_DETAIL)
 }
 
 // Window resize handler

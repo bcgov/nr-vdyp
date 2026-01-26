@@ -10,39 +10,13 @@ import {
   getFileForDownload as apiGetFileForDownload,
 } from '@/services/apiActions'
 import type { ProjectionModel, Parameters, FileMappingModel } from '@/services/vdyp-api'
-import type { Projection, ProjectionStatus } from '@/interfaces/interfaces'
+import type { Projection, ProjectionStatus, ParsedProjectionParameters } from '@/interfaces/interfaces'
 import {
   MODEL_SELECTION,
   PROJECTION_STATUS,
   PROJECTION_TYPE,
-  PROJECTION_LIST_HEADER_KEY,
-  SORT_ORDER,
 } from '@/constants/constants'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
-
-// ============================================================================
-// Types for parsed projection parameters
-// ============================================================================
-
-export interface ParsedProjectionParameters {
-  outputFormat: string | null
-  selectedExecutionOptions: string[]
-  selectedDebugOptions: string[]
-  ageStart: string | null
-  ageEnd: string | null
-  yearStart: string | null
-  yearEnd: string | null
-  forceYear: string | null
-  ageIncrement: string | null
-  metadataToOutput: string | null
-  filters: unknown
-  utils: unknown[]
-  excludedExecutionOptions: string[]
-  excludedDebugOptions: string[]
-  combineAgeYearRange: string | null
-  progressFrequency: string | null
-  reportTitle: string | null
-}
 
 // ============================================================================
 // Projection List
@@ -148,70 +122,6 @@ export const fetchUserProjections = async (): Promise<Projection[]> => {
     console.error('Error fetching user projections:', error)
     throw error
   }
-}
-
-/**
- * Sorts projections by a given key and order
- * @param projections The array of projections to sort
- * @param sortBy The key to sort by
- * @param sortOrder The order to sort ('asc' or 'desc')
- * @returns A new sorted array of projections
- */
-export const sortProjections = (
-  projections: Projection[],
-  sortBy: string,
-  sortOrder: typeof SORT_ORDER.ASC | typeof SORT_ORDER.DESC,
-): Projection[] => {
-  return [...projections].sort((a, b) => {
-    const aValue = a[sortBy as keyof Projection]
-    const bValue = b[sortBy as keyof Projection]
-
-    if (sortBy === PROJECTION_LIST_HEADER_KEY.LAST_UPDATED || sortBy === PROJECTION_LIST_HEADER_KEY.EXPIRATION) {
-      const aDate = new Date(aValue).getTime()
-      const bDate = new Date(bValue).getTime()
-      return sortOrder === SORT_ORDER.ASC ? aDate - bDate : bDate - aDate
-    }
-
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return sortOrder === SORT_ORDER.ASC
-        ? aValue.localeCompare(bValue, undefined, { numeric: true })
-        : bValue.localeCompare(aValue, undefined, { numeric: true })
-    }
-
-    if (aValue < bValue) return sortOrder === SORT_ORDER.ASC ? -1 : 1
-    if (aValue > bValue) return sortOrder === SORT_ORDER.ASC ? 1 : -1
-    return 0
-  })
-}
-
-/**
- * Paginates projections
- * @param projections The array of projections to paginate
- * @param currentPage The current page number (1-based)
- * @param itemsPerPage The number of items per page
- * @returns A new array of projections for the current page
- */
-export const paginateProjections = (
-  projections: Projection[],
-  currentPage: number,
-  itemsPerPage: number,
-): Projection[] => {
-  const start = (currentPage - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return projections.slice(start, end)
-}
-
-/**
- * Calculates total pages
- * @param totalItems The total number of items
- * @param itemsPerPage The number of items per page
- * @returns The total number of pages
- */
-export const calculateTotalPages = (
-  totalItems: number,
-  itemsPerPage: number,
-): number => {
-  return Math.ceil(totalItems / itemsPerPage)
 }
 
 // ============================================================================
@@ -400,22 +310,6 @@ export const deleteProjectionWithFiles = async (
   }
 }
 
-/**
- * Deletes a projection
- * @param projectionGUID The projection GUID
- * @returns A promise that resolves when the projection is deleted
- */
-export const deleteProjectionById = async (
-  projectionGUID: string,
-): Promise<void> => {
-  try {
-    await apiDeleteProjection(projectionGUID)
-  } catch (error) {
-    console.error('Error deleting projection:', error)
-    throw error
-  }
-}
-
 // ============================================================================
 // File Set Operations
 // ============================================================================
@@ -530,19 +424,6 @@ export const parseProjectionParams = (
 }
 
 /**
- * Checks if an execution option is selected
- * @param params Parsed projection parameters
- * @param option The execution option to check
- * @returns true if the option is in selectedExecutionOptions
- */
-export const hasExecutionOption = (
-  params: ParsedProjectionParameters,
-  option: string,
-): boolean => {
-  return params.selectedExecutionOptions.includes(option)
-}
-
-/**
  * Determines if the projection is read-only based on its status
  * @param status The projection status
  * @returns true if the projection should be read-only
@@ -551,21 +432,3 @@ export const isProjectionReadOnly = (status: ProjectionStatus): boolean => {
   return status === PROJECTION_STATUS.READY || status === PROJECTION_STATUS.RUNNING
 }
 
-/**
- * Determines the age/year range selection based on parameters
- * @param params Parsed projection parameters
- * @returns 'age', 'year', or 'both' based on what's configured
- */
-export const determineAgeYearRangeSelection = (
-  params: ParsedProjectionParameters,
-): string => {
-  const hasAge = params.ageStart !== null || params.ageEnd !== null
-  const hasYear = params.yearStart !== null || params.yearEnd !== null
-
-  if (hasAge && hasYear) {
-    return params.combineAgeYearRange || 'intersect'
-  } else if (hasYear) {
-    return 'year'
-  }
-  return 'age'
-}
