@@ -10,7 +10,7 @@ public class IncomingSecurityConfiguration {
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.authorizeHttpRequests(a -> a.anyRequest().permitAll()).oauth2Login(o -> o.disable())
-				.formLogin(f -> f.disable()).httpBasic(b -> b.disable()).csrf(csrf -> csrf.disable());
+				.formLogin(f -> f.disable()).httpBasic(b -> b.disable());
 		return http.build();
 	}
 }
