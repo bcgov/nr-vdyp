@@ -23,6 +23,14 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class VdypRestClientConfig {
 	@Bean
+	RestClient vdypBackendRestClient(
+			OAuth2AuthorizedClientManager oauth2AuthorizedClientManager, VdypProperties vdypProperties
+	) {
+		return RestClient.builder().baseUrl(vdypProperties.baseUrl())
+				.requestInterceptor(bearerInterceptor(oauth2AuthorizedClientManager, vdypProperties)).build();
+	}
+
+	@Bean
 	OAuth2AuthorizedClientManager oauth2AuthorizedClientManager(
 			ClientRegistrationRepository clientRegistrationRepository,
 			OAuth2AuthorizedClientService authorizedClientService
@@ -37,17 +45,15 @@ public class VdypRestClientConfig {
 		return manager;
 	}
 
-	@Bean
-	RestClient vdypBackendRestClient(
+	ClientHttpRequestInterceptor bearerInterceptor(
 			OAuth2AuthorizedClientManager oauth2AuthorizedClientManager, VdypProperties vdypProperties
 	) {
-
 		Authentication principal = new AnonymousAuthenticationToken(
 				vdypProperties.principal(), vdypProperties.principal(),
 				Collections.singletonList(new SimpleGrantedAuthority("ROLE_SYSTEM"))
 		);
-		ClientHttpRequestInterceptor bearerInterceptor = (request, body, execution) -> {
-			// Principal is required by the API; for client_credentials it can be a synthetic principal.
+
+		return (request, body, execution) -> {
 			OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest
 					.withClientRegistrationId(vdypProperties.clientRegistrationId()).principal(principal).build();
 
@@ -57,12 +63,9 @@ public class VdypRestClientConfig {
 						"Unable to authorize OAuth2 client '" + vdypProperties.clientRegistrationId() + "'"
 				);
 			}
-
 			OAuth2AccessToken token = client.getAccessToken();
 			request.getHeaders().set(HttpHeaders.AUTHORIZATION, "Bearer " + token.getTokenValue());
 			return execution.execute(request, body);
 		};
-
-		return RestClient.builder().baseUrl(vdypProperties.baseUrl()).requestInterceptor(bearerInterceptor).build();
 	}
 }
