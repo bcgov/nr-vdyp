@@ -123,25 +123,25 @@ class UserTypeCodeLookupTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = { "user", "SuperUSER", "ADMIN" })
+	@ValueSource(strings = { "user", "sysTEM", "ADMIN" })
 	void test_findModel_Exists_returnsExpected(String code) {
 		assertEquals(lookup.normalize(code), lookup.findModel(code).get().getCode());
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = { "user", "SuperUSER", "ADMIN" })
+	@ValueSource(strings = { "user", "System", "ADMIN" })
 	void test_requireModel_Exists_returnsExpected(String code) {
 		assertEquals(lookup.normalize(code), lookup.requireModel(code).getCode());
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = { "user", "SuperUSER", "ADMIN" })
+	@ValueSource(strings = { "user", "sysTEM", "ADMIN" })
 	void test_findEntity_Exists_returnsExpected(String code) {
 		assertEquals(lookup.normalize(code), lookup.findEntity(code).get().getCode());
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = { "user", "SuperUSER", "ADMIN" })
+	@ValueSource(strings = { "user", "System", "ADMIN" })
 	void test_requireEntity_Exists_returnsExpected(String code) {
 		assertEquals(lookup.normalize(code), lookup.requireEntity(code).getCode());
 	}
