@@ -7,8 +7,9 @@ import {
   uploadFileToFileSet,
   deleteFileFromFileSet as apiDeleteFileFromFileSet,
   getFileSetFiles as apiGetFileSetFiles,
+  getFileForDownload as apiGetFileForDownload,
 } from '@/services/apiActions'
-import type { ProjectionModel, Parameters } from '@/services/vdyp-api'
+import type { ProjectionModel, Parameters, FileMappingModel } from '@/services/vdyp-api'
 import type { Projection, ProjectionStatus } from '@/interfaces/interfaces'
 import {
   MODEL_SELECTION,
@@ -18,6 +19,30 @@ import {
   SORT_ORDER,
 } from '@/constants/constants'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
+
+// ============================================================================
+// Types for parsed projection parameters
+// ============================================================================
+
+export interface ParsedProjectionParameters {
+  outputFormat: string | null
+  selectedExecutionOptions: string[]
+  selectedDebugOptions: string[]
+  ageStart: string | null
+  ageEnd: string | null
+  yearStart: string | null
+  yearEnd: string | null
+  forceYear: string | null
+  ageIncrement: string | null
+  metadataToOutput: string | null
+  filters: unknown
+  utils: unknown[]
+  excludedExecutionOptions: string[]
+  excludedDebugOptions: string[]
+  combineAgeYearRange: string | null
+  progressFrequency: string | null
+  reportTitle: string | null
+}
 
 // ============================================================================
 // Projection List
@@ -389,4 +414,158 @@ export const deleteProjectionById = async (
     console.error('Error deleting projection:', error)
     throw error
   }
+}
+
+// ============================================================================
+// File Set Operations
+// ============================================================================
+
+/**
+ * Fetches all files in a fileset for a projection
+ * @param projectionGUID The projection GUID
+ * @param fileSetGUID The fileset GUID
+ * @returns A promise that resolves to an array of FileMappingModel
+ */
+export const getFileSetFiles = async (
+  projectionGUID: string,
+  fileSetGUID: string,
+): Promise<FileMappingModel[]> => {
+  try {
+    return await apiGetFileSetFiles(projectionGUID, fileSetGUID)
+  } catch (error) {
+    console.error('Error fetching fileset files:', error)
+    throw error
+  }
+}
+
+/**
+ * Gets a file for download with presigned URL
+ * @param projectionGUID The projection GUID
+ * @param fileSetGUID The fileset GUID
+ * @param fileMappingGUID The file mapping GUID
+ * @returns A promise that resolves to the FileMappingModel with download URL
+ */
+export const getFileForDownload = async (
+  projectionGUID: string,
+  fileSetGUID: string,
+  fileMappingGUID: string,
+): Promise<FileMappingModel> => {
+  try {
+    return await apiGetFileForDownload(projectionGUID, fileSetGUID, fileMappingGUID)
+  } catch (error) {
+    console.error('Error getting file for download:', error)
+    throw error
+  }
+}
+
+// ============================================================================
+// Projection Parameter Parsing
+// ============================================================================
+
+/**
+ * Parses the projectionParameters JSON string into a typed object
+ * @param parametersJson The JSON string from ProjectionModel.projectionParameters
+ * @returns Parsed projection parameters object
+ */
+export const parseProjectionParams = (
+  parametersJson: string | null | undefined,
+): ParsedProjectionParameters => {
+  const defaults: ParsedProjectionParameters = {
+    outputFormat: null,
+    selectedExecutionOptions: [],
+    selectedDebugOptions: [],
+    ageStart: null,
+    ageEnd: null,
+    yearStart: null,
+    yearEnd: null,
+    forceYear: null,
+    ageIncrement: null,
+    metadataToOutput: null,
+    filters: null,
+    utils: [],
+    excludedExecutionOptions: [],
+    excludedDebugOptions: [],
+    combineAgeYearRange: null,
+    progressFrequency: null,
+    reportTitle: null,
+  }
+
+  if (!parametersJson) {
+    return defaults
+  }
+
+  try {
+    const parsed = JSON.parse(parametersJson)
+    return {
+      outputFormat: parsed.outputFormat ?? null,
+      selectedExecutionOptions: Array.isArray(parsed.selectedExecutionOptions)
+        ? parsed.selectedExecutionOptions
+        : [],
+      selectedDebugOptions: Array.isArray(parsed.selectedDebugOptions)
+        ? parsed.selectedDebugOptions
+        : [],
+      ageStart: parsed.ageStart ?? null,
+      ageEnd: parsed.ageEnd ?? null,
+      yearStart: parsed.yearStart ?? null,
+      yearEnd: parsed.yearEnd ?? null,
+      forceYear: parsed.forceYear ?? null,
+      ageIncrement: parsed.ageIncrement ?? null,
+      metadataToOutput: parsed.metadataToOutput ?? null,
+      filters: parsed.filters ?? null,
+      utils: Array.isArray(parsed.utils) ? parsed.utils : [],
+      excludedExecutionOptions: Array.isArray(parsed.excludedExecutionOptions)
+        ? parsed.excludedExecutionOptions
+        : [],
+      excludedDebugOptions: Array.isArray(parsed.excludedDebugOptions)
+        ? parsed.excludedDebugOptions
+        : [],
+      combineAgeYearRange: parsed.combineAgeYearRange ?? null,
+      progressFrequency: parsed.progressFrequency ?? null,
+      reportTitle: parsed.reportTitle ?? null,
+    }
+  } catch {
+    console.error('Error parsing projection parameters JSON')
+    return defaults
+  }
+}
+
+/**
+ * Checks if an execution option is selected
+ * @param params Parsed projection parameters
+ * @param option The execution option to check
+ * @returns true if the option is in selectedExecutionOptions
+ */
+export const hasExecutionOption = (
+  params: ParsedProjectionParameters,
+  option: string,
+): boolean => {
+  return params.selectedExecutionOptions.includes(option)
+}
+
+/**
+ * Determines if the projection is read-only based on its status
+ * @param status The projection status
+ * @returns true if the projection should be read-only
+ */
+export const isProjectionReadOnly = (status: ProjectionStatus): boolean => {
+  return status === PROJECTION_STATUS.READY || status === PROJECTION_STATUS.RUNNING
+}
+
+/**
+ * Determines the age/year range selection based on parameters
+ * @param params Parsed projection parameters
+ * @returns 'age', 'year', or 'both' based on what's configured
+ */
+export const determineAgeYearRangeSelection = (
+  params: ParsedProjectionParameters,
+): string => {
+  const hasAge = params.ageStart !== null || params.ageEnd !== null
+  const hasYear = params.yearStart !== null || params.yearEnd !== null
+
+  if (hasAge && hasYear) {
+    return params.combineAgeYearRange || 'intersect'
+  } else if (hasYear) {
+    return 'year'
+  }
+  return 'age'
 }

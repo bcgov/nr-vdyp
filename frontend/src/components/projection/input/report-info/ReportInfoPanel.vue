@@ -52,7 +52,7 @@
               :specificYear="currentStore.specificYear"
               :projectionType="currentStore.projectionType"
               :reportTitle="currentStore.reportTitle"
-              :isDisabled="!isConfirmEnabled"
+              :isDisabled="isInputDisabled"
               :isModelParametersMode="isModelParametersMode"
               @update:selectedAgeYearRange="handleSelectedAgeYearRangeUpdate"
               @update:startingAge="handleStartingAgeUpdate"
@@ -83,6 +83,7 @@
               @update:reportTitle="handleReportTitleUpdate"
             />
             <ActionPanel
+              v-if="!isReadOnly"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -107,7 +108,7 @@ import {
   ActionPanel,
   ReportConfiguration,
 } from '@/components/projection'
-import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
+import { CONSTANTS, MESSAGE } from '@/constants'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { reportInfoValidation } from '@/validation'
 
@@ -138,11 +139,20 @@ const panelName = computed(() => {
 })
 
 const panelOpenStates = computed(() => currentStore.value.panelOpenStates)
+
+// Check if we're in read-only (view) mode
+const isReadOnly = computed(() => appStore.isReadOnly)
+
 const isConfirmEnabled = computed(
-  () => currentStore.value.panelState[panelName.value].editable,
+  () => !isReadOnly.value && currentStore.value.panelState[panelName.value].editable,
 )
 const isConfirmed = computed(
   () => currentStore.value.panelState[panelName.value].confirmed,
+)
+
+// Determine if inputs should be disabled (read-only mode or not editable)
+const isInputDisabled = computed(
+  () => isReadOnly.value || !currentStore.value.panelState[panelName.value].editable,
 )
 
 const isModelParametersMode = computed(
@@ -310,6 +320,38 @@ const validateRequiredFields = (): boolean => {
   }
 }
 
+const validateReportTitleField = (): boolean => {
+  const result = reportInfoValidation.validateReportTitle(
+    currentStore.value.reportTitle,
+  )
+  if (!result.isValid) {
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_REPORT_TITLE_REQ,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
+    }
+  }
+  return result.isValid
+}
+
+const validateProjectionTypeField = (): boolean => {
+  const result = reportInfoValidation.validateProjectionType(
+    currentStore.value.projectionType,
+  )
+  if (!result.isValid) {
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_PROJECTION_TYPE_REQ,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
+    }
+  }
+  return result.isValid
+}
+
 const validateRange = (): boolean => {
   if (
     currentStore.value.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
@@ -394,6 +436,8 @@ const validateRange = (): boolean => {
 }
 
 const onConfirm = () => {
+  if (!validateReportTitleField()) return
+  if (!validateProjectionTypeField()) return
   if (!validateComparison()) return
   if (!validateRequiredFields()) return
   if (!validateRange()) return
@@ -425,31 +469,20 @@ const onClear = () => {
   currentStore.value.startYear = null
   currentStore.value.endYear = null
   currentStore.value.yearIncrement = null
-  currentStore.value.isForwardGrowEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
-  currentStore.value.isBackwardGrowEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
-  currentStore.value.isComputedMAIEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_COMPUTED_MAI_ENABLED
-  currentStore.value.isCulminationValuesEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_CULMINATION_VALUES_ENABLED
-  currentStore.value.isBySpeciesEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_BY_SPECIES_ENABLED
-  currentStore.value.isByLayerEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED
-  currentStore.value.isProjectionModeEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_PROJECTION_MODE_ENABLED
-  currentStore.value.isPolygonIDEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_POLYGON_ID_ENABLED
-  currentStore.value.isCurrentYearEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_CURRENT_YEAR_ENABLED
-  currentStore.value.isReferenceYearEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_REFERENCE_YEAR_ENABLED
-  currentStore.value.incSecondaryHeight =
-    DEFAULTS.DEFAULT_VALUES.INC_SECONDARY_HEIGHT
+  currentStore.value.isForwardGrowEnabled = false
+  currentStore.value.isBackwardGrowEnabled = false
+  currentStore.value.isComputedMAIEnabled = false
+  currentStore.value.isCulminationValuesEnabled = false
+  currentStore.value.isBySpeciesEnabled = false
+  currentStore.value.isByLayerEnabled = false
+  currentStore.value.isProjectionModeEnabled = false
+  currentStore.value.isPolygonIDEnabled = false
+  currentStore.value.isCurrentYearEnabled = false
+  currentStore.value.isReferenceYearEnabled = false
+  currentStore.value.incSecondaryHeight = false
   currentStore.value.specificYear = null
   currentStore.value.reportTitle = null
-  currentStore.value.projectionType = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
+  currentStore.value.projectionType = null
 }
 
 const handleDialogClose = () => {}

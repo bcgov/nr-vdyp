@@ -41,6 +41,7 @@
       @download="handleDownload"
       @cancel="handleCancel"
       @delete="handleDelete"
+      @rowClick="handleRowClick"
     />
 
     <!-- Mobile Card View (1025px and below) -->
@@ -56,6 +57,7 @@
       @download="handleDownload"
       @cancel="handleCancel"
       @delete="handleDelete"
+      @rowClick="handleRowClick"
     />
 
     <!-- Pagination -->
@@ -84,13 +86,25 @@ import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_S
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { AppButton, AppProgressCircular } from '@/components'
 import { ProjectionTable, ProjectionCardList, ProjectionPagination } from '@/components/projection'
-import { fetchUserProjections, deleteProjectionWithFiles } from '@/services/projectionService'
+import {
+  fetchUserProjections,
+  deleteProjectionWithFiles,
+  getProjectionById,
+  getFileSetFiles,
+  getFileForDownload,
+  parseProjectionParams,
+  isProjectionReadOnly,
+} from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
+import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
+import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const router = useRouter()
 const appStore = useAppStore()
+const modelParameterStore = useModelParameterStore()
+const fileUploadStore = useFileUploadStore()
 const alertDialogStore = useAlertDialogStore()
 const notificationStore = useNotificationStore()
 
@@ -215,13 +229,171 @@ const handleCardSort = (value: string) => {
   sortOrder.value = order as SortOrder
 }
 
-// Action handlers (placeholders for future implementation)
-const handleView = (projectionGUID: string) => {
-  console.log('View projection:', projectionGUID)
+/**
+ * Loads a projection and navigates to the detail view
+ * @param projectionGUID The projection GUID to load
+ * @param isViewMode If true, opens in view (read-only) mode; otherwise in edit mode
+ */
+const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: boolean) => {
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.LOADING_PROJECTION
+
+  try {
+    // Fetch the projection data
+    const projectionModel = await getProjectionById(projectionGUID)
+    const params = parseProjectionParams(projectionModel.projectionParameters)
+
+    // Determine the method (File Upload or Input Model Parameters)
+    const isInputModelParams = params.selectedExecutionOptions.includes('doEnableProjectionReport')
+    const method = isInputModelParams
+      ? MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      : MODEL_SELECTION.FILE_UPLOAD
+
+    // Set the app store state
+    appStore.setModelSelection(method)
+    appStore.setViewMode(isViewMode ? 'view' : 'edit')
+    appStore.setCurrentProjectionGUID(projectionGUID)
+
+    if (isInputModelParams) {
+      // Reset and restore model parameter store
+      modelParameterStore.resetStore()
+      modelParameterStore.restoreFromProjectionParams(params, isViewMode)
+
+      // Load and parse file content if available
+      if (projectionModel.polygonFileSet?.projectionFileSetGUID &&
+          projectionModel.layerFileSet?.projectionFileSetGUID) {
+        await loadFileContentForModelParams(
+          projectionGUID,
+          projectionModel.polygonFileSet.projectionFileSetGUID,
+          projectionModel.layerFileSet.projectionFileSetGUID,
+        )
+      }
+    } else {
+      // Reset and restore file upload store
+      fileUploadStore.resetStore()
+      fileUploadStore.restoreFromProjectionParams(params, isViewMode)
+
+      // Set file references for display (file names only, not actual files)
+      await loadFileReferencesForFileUpload(
+        projectionGUID,
+        projectionModel.polygonFileSet?.projectionFileSetGUID,
+        projectionModel.layerFileSet?.projectionFileSetGUID,
+      )
+    }
+
+    // Navigate to the projection detail view
+    router.push('/projection-detail')
+  } catch (err) {
+    console.error('Error loading projection:', err)
+    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED)
+  } finally {
+    isProgressVisible.value = false
+  }
 }
 
-const handleEdit = (projectionGUID: string) => {
+/**
+ * Loads file content for Input Model Parameters mode
+ */
+const loadFileContentForModelParams = async (
+  projectionGUID: string,
+  polygonFileSetGUID: string,
+  layerFileSetGUID: string,
+) => {
+  try {
+    // Get polygon files
+    const polygonFiles = await getFileSetFiles(projectionGUID, polygonFileSetGUID)
+    const layerFiles = await getFileSetFiles(projectionGUID, layerFileSetGUID)
+
+    let polygonContent = ''
+    let layerContent = ''
+
+    // Download and read polygon file content
+    if (polygonFiles.length > 0 && polygonFiles[0].fileMappingGUID) {
+      const polygonFileInfo = await getFileForDownload(
+        projectionGUID,
+        polygonFileSetGUID,
+        polygonFiles[0].fileMappingGUID,
+      )
+      if (polygonFileInfo.downloadURL) {
+        const response = await fetch(polygonFileInfo.downloadURL)
+        polygonContent = await response.text()
+      }
+    }
+
+    // Download and read layer file content
+    if (layerFiles.length > 0 && layerFiles[0].fileMappingGUID) {
+      const layerFileInfo = await getFileForDownload(
+        projectionGUID,
+        layerFileSetGUID,
+        layerFiles[0].fileMappingGUID,
+      )
+      if (layerFileInfo.downloadURL) {
+        const response = await fetch(layerFileInfo.downloadURL)
+        layerContent = await response.text()
+      }
+    }
+
+    // Restore store from file content
+    if (polygonContent || layerContent) {
+      modelParameterStore.restoreFromFileContent(polygonContent, layerContent)
+    }
+  } catch (err) {
+    console.error('Error loading file content:', err)
+  }
+}
+
+/**
+ * Loads file references for File Upload mode (names only, not actual files)
+ * Since FileMappingModel doesn't have fileName, we use the fileSet name
+ */
+const loadFileReferencesForFileUpload = async (
+  projectionGUID: string,
+  polygonFileSetGUID: string | undefined,
+  layerFileSetGUID: string | undefined,
+) => {
+  try {
+    let polygonFileName: string | null = null
+    let layerFileName: string | null = null
+
+    if (polygonFileSetGUID) {
+      const polygonFiles = await getFileSetFiles(projectionGUID, polygonFileSetGUID)
+      if (polygonFiles.length > 0) {
+        // Use fileSet name if available, otherwise use a default
+        polygonFileName = polygonFiles[0].projectionFileSet?.fileSetName || 'Polygon File'
+      }
+    }
+
+    if (layerFileSetGUID) {
+      const layerFiles = await getFileSetFiles(projectionGUID, layerFileSetGUID)
+      if (layerFiles.length > 0) {
+        // Use fileSet name if available, otherwise use a default
+        layerFileName = layerFiles[0].projectionFileSet?.fileSetName || 'Layer File'
+      }
+    }
+
+    fileUploadStore.setFileReferences(polygonFileName, layerFileName)
+  } catch (err) {
+    console.error('Error loading file references:', err)
+  }
+}
+
+// Action handlers
+const handleView = async (projectionGUID: string) => {
+  console.log('View projection:', projectionGUID)
+  await loadAndNavigateToProjection(projectionGUID, true)
+}
+
+const handleEdit = async (projectionGUID: string) => {
   console.log('Edit projection:', projectionGUID)
+  // Find the projection to check its status
+  const projection = projections.value.find(p => p.projectionGUID === projectionGUID)
+  if (projection && isProjectionReadOnly(projection.status)) {
+    // If status is Ready or Running, open in view mode instead
+    notificationStore.showWarningMessage('This projection is read-only and cannot be edited.')
+    await loadAndNavigateToProjection(projectionGUID, true)
+  } else {
+    await loadAndNavigateToProjection(projectionGUID, false)
+  }
 }
 
 const handleDuplicate = (projectionGUID: string) => {
@@ -260,11 +432,28 @@ const handleCancel = (projectionGUID: string) => {
   console.log('Cancel projection:', projectionGUID)
 }
 
+/**
+ * Handles row/card click - opens projection in view or edit mode based on status
+ * @param projection The projection that was clicked
+ */
+const handleRowClick = async (projection: Projection) => {
+  // If status is Ready or Running, open in view mode; otherwise open in edit mode
+  const isViewMode = isProjectionReadOnly(projection.status)
+  await loadAndNavigateToProjection(projection.projectionGUID, isViewMode)
+}
+
 const handleNewProjection = (type: 'inputModelParameters' | 'fileUpload') => {
+  // Reset app store for new projection
+  appStore.resetForNewProjection()
+
   if (type === 'inputModelParameters') {
     appStore.setModelSelection(MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+    // Reset model parameter store
+    modelParameterStore.resetStore()
   } else {
     appStore.setModelSelection(MODEL_SELECTION.FILE_UPLOAD)
+    // Reset file upload store
+    fileUploadStore.resetStore()
   }
   router.push('/projection-detail')
 }

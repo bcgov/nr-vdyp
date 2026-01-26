@@ -83,6 +83,9 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
   SITE_VLD_AGE_RNG: "'Years' must range from 0 and 500",
   SITE_VLD_HIGHT_RNG: "'Height in Meters' must range from 0.00 and 99.90",
   SITE_VLD_SI_RNG: "'BHA 50 Site Index' must range from 0.00 and 60.00",
+  SITE_VLD_SITE_INDEX_REQ:
+    "Please select a Site Index option ('Supplied' or 'Computed')",
+  SITE_VLD_BEC_ZONE_REQ: 'Please select a BEC Zone',
   SITE_VLD_SPCZ_REQ_VALS_SUP: (selectedSiteSpeciesValue: string | null) =>
     `The species '${selectedSiteSpeciesValue}' must have Years/Height in Meters values supplied`,
   SITE_VLD_SPCZ_REQ_SI_VAL: (selectedSiteSpeciesValue: string | null) =>
@@ -110,6 +113,8 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
     `'End Year' must range from ${endYearMin} and ${endYearMax}`,
   RPT_VLD_YEAR_INC_RNG: (yearIncMin: number, yearIncMax: number) =>
     `'Increment' must range from ${yearIncMin} and ${yearIncMax}`,
+  RPT_VLD_REPORT_TITLE_REQ: 'Please enter a Report Title.',
+  RPT_VLD_PROJECTION_TYPE_REQ: 'Please select a Projection Type.',
 })
 
 export const FILE_UPLOAD_ERR = Object.freeze({
@@ -150,6 +155,7 @@ export const PRINT_ERR = Object.freeze({
 export const PROGRESS_MSG = Object.freeze({
   RUNNING_MODEL: 'Running Model...',
   DELETING_PROJECTION: 'Deleting Projection...',
+  LOADING_PROJECTION: 'Loading Projection...',
 })
 
 export const SUCCESS_MSG = Object.freeze({
@@ -166,4 +172,5 @@ export const SUCCESS_MSG = Object.freeze({
 
 export const PROJECTION_ERR = Object.freeze({
   DELETE_FAILED: 'Failed to delete the projection. Please try again later.',
+  LOAD_FAILED: 'Failed to load the projection. Please try again later.',
 })

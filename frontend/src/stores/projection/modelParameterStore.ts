@@ -4,6 +4,8 @@ import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
 import type { SpeciesList, SpeciesGroup } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
+import type { ParsedProjectionParameters } from '@/services/projectionService'
+import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 
 export const useModelParameterStore = defineStore('modelParameter', () => {
   // panel open
@@ -257,6 +259,236 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     referenceYear.value = new Date().getFullYear()
   }
 
+  // Reset store to initial state
+  const resetStore = () => {
+    // Reset panel states
+    panelOpenStates.value = {
+      speciesInfo: CONSTANTS.PANEL.OPEN,
+      siteInfo: CONSTANTS.PANEL.CLOSE,
+      standInfo: CONSTANTS.PANEL.CLOSE,
+      reportInfo: CONSTANTS.PANEL.CLOSE,
+    }
+    panelState.value = {
+      speciesInfo: { confirmed: false, editable: true },
+      siteInfo: { confirmed: false, editable: false },
+      standInfo: { confirmed: false, editable: false },
+      reportInfo: { confirmed: false, editable: false },
+    }
+    runModelEnabled.value = false
+
+    // Reset species info
+    derivedBy.value = null
+    speciesList.value = [
+      { species: null, percent: null },
+      { species: null, percent: null },
+      { species: null, percent: null },
+      { species: null, percent: null },
+      { species: null, percent: null },
+      { species: null, percent: null },
+    ]
+    speciesGroups.value = []
+    highestPercentSpecies.value = null
+    selectedSiteSpecies.value = null
+
+    // Reset site info
+    becZone.value = null
+    ecoZone.value = null
+    siteSpeciesValues.value = null
+    ageType.value = DEFAULTS.DEFAULT_VALUES.AGE_TYPE
+    spzAge.value = null
+    spzHeight.value = null
+    bha50SiteIndex.value = null
+
+    // Reset stand info
+    percentStockableArea.value = null
+    basalArea.value = null
+    treesPerHectare.value = null
+    minDBHLimit.value = null
+    currentDiameter.value = null
+    crownClosure.value = null
+
+    // Reset report info
+    selectedAgeYearRange.value = DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE
+    startingAge.value = null
+    finishingAge.value = null
+    ageIncrement.value = null
+    startYear.value = null
+    endYear.value = null
+    yearIncrement.value = null
+    isForwardGrowEnabled.value = true
+    isBackwardGrowEnabled.value = true
+    isComputedMAIEnabled.value = false
+    isCulminationValuesEnabled.value = false
+    isBySpeciesEnabled.value = false
+    isByLayerEnabled.value = true
+    isProjectionModeEnabled.value = false
+    isPolygonIDEnabled.value = false
+    isCurrentYearEnabled.value = false
+    isReferenceYearEnabled.value = false
+    incSecondaryHeight.value = false
+    specificYear.value = null
+    projectionType.value = null
+    reportTitle.value = null
+    referenceYear.value = null
+  }
+
+  /**
+   * Restore store state from parsed projection parameters
+   * @param params Parsed projection parameters from the backend
+   * @param isViewMode If true, sets all panels to confirmed and non-editable
+   */
+  const restoreFromProjectionParams = (
+    params: ParsedProjectionParameters,
+    isViewMode: boolean = false,
+  ) => {
+    // Restore report info from parameters
+    reportTitle.value = params.reportTitle
+
+    // Restore age/year range settings
+    startingAge.value = params.ageStart
+    finishingAge.value = params.ageEnd
+    ageIncrement.value = params.ageIncrement
+    startYear.value = params.yearStart
+    endYear.value = params.yearEnd
+
+    // Determine selectedAgeYearRange based on what values exist
+    const hasAge = params.ageStart !== null || params.ageEnd !== null
+    const hasYear = params.yearStart !== null || params.yearEnd !== null
+    if (hasAge && hasYear) {
+      selectedAgeYearRange.value = params.combineAgeYearRange || 'intersect'
+    } else if (hasYear) {
+      selectedAgeYearRange.value = CONSTANTS.AGE_YEAR_RANGE.YEAR
+    } else {
+      selectedAgeYearRange.value = CONSTANTS.AGE_YEAR_RANGE.AGE
+    }
+
+    // Restore execution options
+    const options = params.selectedExecutionOptions
+
+    isForwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.ForwardGrowEnabled)
+    isBackwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.BackGrowEnabled)
+    isByLayerEnabled.value = options.includes(ExecutionOptionsEnum.DoSummarizeProjectionByLayer)
+    isBySpeciesEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)
+    isPolygonIDEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable)
+    isProjectionModeEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable)
+    isCurrentYearEnabled.value = options.includes(ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables)
+    isReferenceYearEnabled.value = options.includes(ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables)
+    incSecondaryHeight.value = options.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)
+    isComputedMAIEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
+    isCulminationValuesEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)
+
+    // Determine projection type
+    if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)) {
+      projectionType.value = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+    } else if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)) {
+      projectionType.value = CONSTANTS.PROJECTION_TYPE.VOLUME
+    }
+
+    // Set reference year to current year if not set
+    if (!referenceYear.value) {
+      referenceYear.value = new Date().getFullYear()
+    }
+
+    // Set panel states based on view/edit mode
+    if (isViewMode) {
+      // In view mode, all panels are confirmed and not editable
+      panelOpenStates.value = {
+        speciesInfo: CONSTANTS.PANEL.OPEN,
+        siteInfo: CONSTANTS.PANEL.OPEN,
+        standInfo: CONSTANTS.PANEL.OPEN,
+        reportInfo: CONSTANTS.PANEL.OPEN,
+      }
+      panelState.value = {
+        speciesInfo: { confirmed: true, editable: false },
+        siteInfo: { confirmed: true, editable: false },
+        standInfo: { confirmed: true, editable: false },
+        reportInfo: { confirmed: true, editable: false },
+      }
+      runModelEnabled.value = false
+    } else {
+      // In edit mode, all panels are confirmed and editable
+      panelOpenStates.value = {
+        speciesInfo: CONSTANTS.PANEL.OPEN,
+        siteInfo: CONSTANTS.PANEL.OPEN,
+        standInfo: CONSTANTS.PANEL.OPEN,
+        reportInfo: CONSTANTS.PANEL.OPEN,
+      }
+      panelState.value = {
+        speciesInfo: { confirmed: true, editable: true },
+        siteInfo: { confirmed: true, editable: true },
+        standInfo: { confirmed: true, editable: true },
+        reportInfo: { confirmed: true, editable: true },
+      }
+      runModelEnabled.value = true
+    }
+  }
+
+  /**
+   * Restore species, site, and stand info from CSV file content
+   * @param polygonCsvContent The content of the polygon CSV file
+   * @param layerCsvContent The content of the layer CSV file
+   */
+  const restoreFromFileContent = (
+    polygonCsvContent: string,
+    layerCsvContent: string,
+  ) => {
+    try {
+      // Parse polygon CSV for site and stand info
+      const polygonLines = polygonCsvContent.split('\n')
+      if (polygonLines.length < 2) return
+
+      const polygonHeaders = polygonLines[0].split(',').map(h => h.trim())
+      const polygonValues = polygonLines[1].split(',').map(v => v.trim())
+
+      const getPolygonValue = (header: string): string | null => {
+        const index = polygonHeaders.indexOf(header)
+        return index >= 0 ? polygonValues[index] || null : null
+      }
+
+      // Restore site info from polygon
+      becZone.value = getPolygonValue('BEC_ZONE')
+      percentStockableArea.value = getPolygonValue('PCNT_STOCKABLE')
+
+      // Parse layer CSV for species info
+      const layerLines = layerCsvContent.split('\n')
+      if (layerLines.length < 2) return
+
+      const layerHeaders = layerLines[0].split(',').map(h => h.trim())
+      const layerValues = layerLines[1].split(',').map(v => v.trim())
+
+      const getLayerValue = (header: string): string | null => {
+        const index = layerHeaders.indexOf(header)
+        return index >= 0 ? layerValues[index] || null : null
+      }
+
+      // Restore species list from layer file
+      const newSpeciesList: SpeciesList[] = []
+      for (let i = 1; i <= 6; i++) {
+        const species = getLayerValue(`SPECIES_${i}`)
+        const percent = getLayerValue(`SPECIES_PCT_${i}`)
+        newSpeciesList.push({
+          species: species || null,
+          percent: percent || null,
+        })
+      }
+      speciesList.value = newSpeciesList
+      updateSpeciesGroup()
+
+      // Restore additional site info from layer
+      spzAge.value = getLayerValue('PROJ_AGE_1')
+      spzHeight.value = getLayerValue('PROJ_HEIGHT_1')
+      bha50SiteIndex.value = getLayerValue('SITE_INDEX')
+      crownClosure.value = getLayerValue('CROWN_CLOSURE')
+
+      // Restore stand info from layer
+      basalArea.value = getLayerValue('BASAL_AREA')
+      treesPerHectare.value = getLayerValue('TREES_PER_HA')
+
+    } catch (error) {
+      console.error('Error parsing file content for restoration:', error)
+    }
+  }
+
   return {
     // panel open
     panelOpenStates,
@@ -316,5 +548,9 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     referenceYear,
     // set default values
     setDefaultValues,
+    // restore functions
+    resetStore,
+    restoreFromProjectionParams,
+    restoreFromFileContent,
   }
 })

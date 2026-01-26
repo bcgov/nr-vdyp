@@ -228,10 +228,10 @@ const validatePercent = (percent: string | null): boolean | string => {
   return true
 }
 
-// Loop through speciesList to set percent to 0.0 for empty species
+// Loop through speciesList to set percent to 0.0 for empty species or empty percent
 const handleUpdateSpecies = () => {
   for (const item of localSpeciesList.value) {
-    if (!item.species) {
+    if (!item.species || !item.percent) {
       item.percent = '0.0'
     }
   }

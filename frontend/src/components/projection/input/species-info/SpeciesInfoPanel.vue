@@ -39,7 +39,7 @@
                       id="derivedBy"
                       v-model="derivedBy"
                       inline
-                      :disabled="!isConfirmEnabled"
+                      :disabled="isInputDisabled"
                     >
                       <v-radio
                         v-for="option in OPTIONS.derivedByOptions"
@@ -58,7 +58,7 @@
                   <SpeciesListInput
                     :speciesList="speciesList"
                     :computedSpeciesOptions="computedSpeciesOptions"
-                    :isConfirmEnabled="isConfirmEnabled"
+                    :isConfirmEnabled="!isInputDisabled"
                     :max="CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX"
                     :min="CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN"
                     :step="CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_STEP"
@@ -97,6 +97,7 @@
               </v-row>
             </div>
             <ActionPanel
+              v-if="!isReadOnly"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -113,6 +114,7 @@
 import { ref, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
+import { useAppStore } from '@/stores/projection/appStore'
 import {
   AppMessageDialog,
 } from '@/components'
@@ -124,7 +126,6 @@ import {
 import {
   BIZCONSTANTS,
   CONSTANTS,
-  DEFAULTS,
   MESSAGE,
   OPTIONS,
 } from '@/constants'
@@ -135,6 +136,10 @@ import { cloneDeep } from 'lodash'
 const form = ref<HTMLFormElement>()
 
 const modelParameterStore = useModelParameterStore()
+const appStore = useAppStore()
+
+// Check if we're in read-only (view) mode
+const isReadOnly = computed(() => appStore.isReadOnly)
 
 const messageDialog = ref<MessageDialog>({
   dialog: false,
@@ -153,10 +158,15 @@ const {
 
 const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO
 const isConfirmEnabled = computed(
-  () => modelParameterStore.panelState[panelName].editable,
+  () => !isReadOnly.value && modelParameterStore.panelState[panelName].editable,
 )
 const isConfirmed = computed(
   () => modelParameterStore.panelState[panelName].confirmed,
+)
+
+// Determine if inputs should be disabled (read-only mode or not editable)
+const isInputDisabled = computed(
+  () => isReadOnly.value || !modelParameterStore.panelState[panelName].editable,
 )
 
 const computedSpeciesOptions = computed(() =>
@@ -280,12 +290,7 @@ const onClear = () => {
     item.species = null
     item.percent = null
   }
-
-  if (form.value) {
-    form.value.reset()
-  }
-
-  derivedBy.value = DEFAULTS.DEFAULT_VALUES.DERIVED_BY
+  derivedBy.value = null
 }
 
 const handleDialogClose = () => {}

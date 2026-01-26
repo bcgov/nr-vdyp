@@ -34,40 +34,65 @@
                   <label class="bcds-file-input-label" for="polygon-file-input">
                     Polygon File
                   </label>
-                  <v-file-input
-                    id="polygon-file-input"
-                    v-model="fileUploadStore.polygonFile"
-                    label="Select Polygon File..."
-                    show-size
-                    chips
-                    clearable
-                    accept=".csv"
-                    :disabled="!isConfirmEnabled"
-                    persistent-placeholder
-                    class="bcds-file-input"
-                  />
+                  <!-- View mode: Display file name only -->
+                  <div v-if="isReadOnly" class="file-display-container">
+                    <v-icon class="file-display-icon">mdi-file-document-outline</v-icon>
+                    <span class="file-display-name">{{ fileUploadStore.polygonFileName }}</span>
+                  </div>
+                  <!-- Edit mode: Show existing file info and allow replacement -->
+                  <template v-else>
+                    <div v-if="hasExistingPolygonFile && !fileUploadStore.polygonFile" class="existing-file-info">
+                      <v-icon size="small" class="existing-file-icon">mdi-file-check-outline</v-icon>
+                      <span class="existing-file-name">Current: {{ fileUploadStore.polygonFileName }}</span>
+                    </div>
+                    <v-file-input
+                      id="polygon-file-input"
+                      v-model="fileUploadStore.polygonFile"
+                      :label="hasExistingPolygonFile ? 'Replace Polygon File...' : 'Select Polygon File...'"
+                      show-size
+                      chips
+                      clearable
+                      accept=".csv"
+                      :disabled="isInputDisabled"
+                      persistent-placeholder
+                      class="bcds-file-input"
+                    />
+                  </template>
                 </v-col>
                 <v-col class="col-space-3" />
                 <v-col cols="5">
                   <label class="bcds-file-input-label" for="layer-file-input">
                     Layer File
                   </label>
-                  <v-file-input
-                    id="layer-file-input"
-                    v-model="fileUploadStore.layerFile"
-                    label="Select Layer File..."
-                    show-size
-                    chips
-                    clearable
-                    accept=".csv"
-                    :disabled="!isConfirmEnabled"
-                    persistent-placeholder
-                    class="bcds-file-input"
-                  />
+                  <!-- View mode: Display file name only -->
+                  <div v-if="isReadOnly" class="file-display-container">
+                    <v-icon class="file-display-icon">mdi-file-document-outline</v-icon>
+                    <span class="file-display-name">{{ fileUploadStore.layerFileName }}</span>
+                  </div>
+                  <!-- Edit mode: Show existing file info and allow replacement -->
+                  <template v-else>
+                    <div v-if="hasExistingLayerFile && !fileUploadStore.layerFile" class="existing-file-info">
+                      <v-icon size="small" class="existing-file-icon">mdi-file-check-outline</v-icon>
+                      <span class="existing-file-name">Current: {{ fileUploadStore.layerFileName }}</span>
+                    </div>
+                    <v-file-input
+                      id="layer-file-input"
+                      v-model="fileUploadStore.layerFile"
+                      :label="hasExistingLayerFile ? 'Replace Layer File...' : 'Select Layer File...'"
+                      show-size
+                      chips
+                      clearable
+                      accept=".csv"
+                      :disabled="isInputDisabled"
+                      persistent-placeholder
+                      class="bcds-file-input"
+                    />
+                  </template>
                 </v-col>
               </v-row>
             </div>
             <ActionPanel
+              v-if="!isReadOnly"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -84,6 +109,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
+import { useAppStore } from '@/stores/projection/appStore'
 import { AppMessageDialog } from '@/components'
 import { ActionPanel } from '@/components/projection'
 import { CONSTANTS, MESSAGE } from '@/constants'
@@ -92,6 +118,10 @@ import { fileUploadValidation } from '@/validation'
 
 const form = ref<HTMLFormElement>()
 const fileUploadStore = useFileUploadStore()
+const appStore = useAppStore()
+
+// Check if we're in read-only (view) mode
+const isReadOnly = computed(() => appStore.isReadOnly)
 
 const messageDialog = ref<MessageDialog>({
   dialog: false,
@@ -103,10 +133,23 @@ const panelName = CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS
 
 const panelOpenStates = computed(() => fileUploadStore.panelOpenStates)
 const isConfirmEnabled = computed(
-  () => fileUploadStore.panelState[panelName].editable,
+  () => !isReadOnly.value && fileUploadStore.panelState[panelName].editable,
 )
 const isConfirmed = computed(
   () => fileUploadStore.panelState[panelName].confirmed,
+)
+
+// Determine if inputs should be disabled (read-only mode or not editable)
+const isInputDisabled = computed(
+  () => isReadOnly.value || !fileUploadStore.panelState[panelName].editable,
+)
+
+// Check if there are existing files from the server (for edit mode display)
+const hasExistingPolygonFile = computed(
+  () => fileUploadStore.polygonFileName !== null,
+)
+const hasExistingLayerFile = computed(
+  () => fileUploadStore.layerFileName !== null,
 )
 
 const MAX_DISPLAY_ERR_ITEMS = 2
@@ -210,7 +253,55 @@ const validateHeaderColumns = async (
   return true
 }
 
+const validatePolygonFile = async (): Promise<boolean> => {
+  if (!fileUploadStore.polygonFile) return true
+
+  const duplicatesValid = await validateDuplicateColumns(
+    fileUploadStore.polygonFile,
+    fileUploadValidation.validatePolygonDuplicateColumns,
+    MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_DUPLICATE_COLUMNS,
+    MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_DUPLICATE_COLUMNS,
+  )
+  if (!duplicatesValid) return false
+
+  return validateHeaderColumns(
+    fileUploadStore.polygonFile,
+    fileUploadValidation.validatePolygonHeader,
+    MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_HEADER_MISMATCH,
+  )
+}
+
+const validateLayerFile = async (): Promise<boolean> => {
+  if (!fileUploadStore.layerFile) return true
+
+  const duplicatesValid = await validateDuplicateColumns(
+    fileUploadStore.layerFile,
+    fileUploadValidation.validateLayerDuplicateColumns,
+    MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_DUPLICATE_COLUMNS,
+    MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_DUPLICATE_COLUMNS,
+  )
+  if (!duplicatesValid) return false
+
+  return validateHeaderColumns(
+    fileUploadStore.layerFile,
+    fileUploadValidation.validateLayerHeader,
+    MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_HEADER_MISMATCH,
+  )
+}
+
 const validateFiles = async (): Promise<boolean> => {
+  // Determine new file or existing server file
+  const hasPolygon = fileUploadStore.polygonFile || hasExistingPolygonFile.value
+  const hasLayer = fileUploadStore.layerFile || hasExistingLayerFile.value
+
+  // If both files exist (either new or on server), validate only the new ones
+  if (hasPolygon && hasLayer) {
+    const polygonValid = await validatePolygonFile()
+    if (!polygonValid) return false
+    return validateLayerFile()
+  }
+
+  // If files are missing and no existing server files, run basic validation
   const result = await fileUploadValidation.validateFiles(
     fileUploadStore.polygonFile,
     fileUploadStore.layerFile,
@@ -221,40 +312,6 @@ const validateFiles = async (): Promise<boolean> => {
     showErrorDialog(MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE, message)
     return false
   }
-
-  // Validate polygon file duplicates
-  const polygonDuplicatesValid = await validateDuplicateColumns(
-    fileUploadStore.polygonFile,
-    fileUploadValidation.validatePolygonDuplicateColumns,
-    MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_DUPLICATE_COLUMNS,
-    MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_DUPLICATE_COLUMNS,
-  )
-  if (!polygonDuplicatesValid) return false
-
-  // Validate polygon file headers
-  const polygonHeaderValid = await validateHeaderColumns(
-    fileUploadStore.polygonFile,
-    fileUploadValidation.validatePolygonHeader,
-    MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_HEADER_MISMATCH,
-  )
-  if (!polygonHeaderValid) return false
-
-  // Validate layer file duplicates
-  const layerDuplicatesValid = await validateDuplicateColumns(
-    fileUploadStore.layerFile,
-    fileUploadValidation.validateLayerDuplicateColumns,
-    MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_DUPLICATE_COLUMNS,
-    MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_DUPLICATE_COLUMNS,
-  )
-  if (!layerDuplicatesValid) return false
-
-  // Validate layer file headers
-  const layerHeaderValid = await validateHeaderColumns(
-    fileUploadStore.layerFile,
-    fileUploadValidation.validateLayerHeader,
-    MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_HEADER_MISMATCH,
-  )
-  if (!layerHeaderValid) return false
 
   return true
 }
@@ -469,5 +526,49 @@ const handleDialogClose = () => {}
 /* Column spacer */
 .col-space-3 {
   flex: 0 0 3rem;
+}
+
+/* File display for view mode */
+.file-display-container {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-margin-small);
+  padding: var(--layout-padding-small) 12px;
+  background: var(--surface-color-background-light-gray);
+  border: var(--layout-border-width-small) solid var(--surface-color-border-default);
+  border-radius: var(--layout-border-radius-medium);
+  height: var(--layout-margin-xxlarge);
+  min-height: var(--layout-margin-xxlarge);
+}
+
+.file-display-icon {
+  color: var(--icons-color-primary);
+  font-size: 20px;
+}
+
+.file-display-name {
+  font: var(--typography-regular-body);
+  color: var(--typography-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Existing file info for edit mode */
+.existing-file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-margin-xsmall);
+  padding: var(--layout-padding-xsmall) 0;
+  margin-bottom: var(--layout-margin-xsmall);
+}
+
+.existing-file-icon {
+  color: var(--icons-color-success);
+}
+
+.existing-file-name {
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-secondary);
 }
 </style>

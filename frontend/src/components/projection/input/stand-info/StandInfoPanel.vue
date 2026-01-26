@@ -49,7 +49,7 @@
                       :persistent-placeholder="true"
                       placeholder=""
                       :hideDetails="true"
-                      :disabled="!isConfirmEnabled"
+                      :disabled="isInputDisabled"
                       :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
                       :decimalAllowNumber="
                         CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_DECIMAL_NUM
@@ -180,6 +180,7 @@
               </v-col>
             </v-row>
             <ActionPanel
+              v-if="!isReadOnly"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -197,6 +198,7 @@
 import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
+import { useAppStore } from '@/stores/projection/appStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { AppMessageDialog, AppSpinField } from '@/components'
 import {
@@ -210,7 +212,11 @@ import { isEmptyOrZero, isZeroValue } from '@/utils/util'
 const form = ref<HTMLFormElement>()
 
 const modelParameterStore = useModelParameterStore()
+const appStore = useAppStore()
 const alertDialogStore = useAlertDialogStore()
+
+// Check if we're in read-only (view) mode
+const isReadOnly = computed(() => appStore.isReadOnly)
 
 const messageDialog = ref<MessageDialog>({
   dialog: false,
@@ -236,10 +242,15 @@ const {
 
 const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO
 const isConfirmEnabled = computed(
-  () => modelParameterStore.panelState[panelName].editable,
+  () => !isReadOnly.value && modelParameterStore.panelState[panelName].editable,
 )
 const isConfirmed = computed(
   () => modelParameterStore.panelState[panelName].confirmed,
+)
+
+// Determine if inputs should be disabled (read-only mode or not editable)
+const isInputDisabled = computed(
+  () => isReadOnly.value || !modelParameterStore.panelState[panelName].editable,
 )
 
 const isCrownClosureDisabled = ref(false)

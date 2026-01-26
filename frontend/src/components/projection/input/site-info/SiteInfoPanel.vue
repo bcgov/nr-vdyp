@@ -43,7 +43,7 @@
                         hide-details="auto"
                         persistent-placeholder
                         placeholder="Select Bec Zone"
-                        :disabled="!isConfirmEnabled"
+                        :disabled="isInputDisabled"
                         append-inner-icon="mdi-chevron-down"
                       ></v-select>
                     </v-col>
@@ -60,7 +60,7 @@
                         hide-details="auto"
                         persistent-placeholder
                         placeholder="Select Eco Zone"
-                        :disabled="!isConfirmEnabled"
+                        :disabled="isInputDisabled"
                         append-inner-icon="mdi-chevron-down"
                       ></v-select>
                     </v-col>
@@ -93,7 +93,7 @@
                   </v-row>
                 </v-col>
               </v-row>
-              <div class="hr-line"></div>
+              <div clas0s="hr-line"></div>
               <v-row class="mt-0">
                 <v-col cols="6">
                   <v-row class="mb-2">
@@ -235,6 +235,7 @@
               </v-row>
             </div>
             <ActionPanel
+              v-if="!isReadOnly"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -252,6 +253,7 @@
 import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
+import { useAppStore } from '@/stores/projection/appStore'
 import { AppMessageDialog, AppSpinField } from '@/components'
 import {
   ActionPanel,
@@ -264,6 +266,10 @@ import { isZeroValue } from '@/utils/util'
 const form = ref<HTMLFormElement>()
 
 const modelParameterStore = useModelParameterStore()
+const appStore = useAppStore()
+
+// Check if we're in read-only (view) mode
+const isReadOnly = computed(() => appStore.isReadOnly)
 
 const messageDialog = ref<MessageDialog>({
   dialog: false,
@@ -288,10 +294,15 @@ const {
 
 const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO
 const isConfirmEnabled = computed(
-  () => modelParameterStore.panelState[panelName].editable,
+  () => !isReadOnly.value && modelParameterStore.panelState[panelName].editable,
 )
 const isConfirmed = computed(
   () => modelParameterStore.panelState[panelName].confirmed,
+)
+
+// Determine if inputs should be disabled (read-only mode or not editable)
+const isInputDisabled = computed(
+  () => isReadOnly.value || !modelParameterStore.panelState[panelName].editable,
 )
 
 const siteSpeciesOptions = computed(() =>
@@ -384,6 +395,31 @@ const formattingValues = (): void => {
 }
 
 const onConfirm = () => {
+  // validation - pre-confirm fields (Site Index selection, BEC Zone)
+  const preConfirmResult = siteInfoValidation.validatePreConfirmFields(
+    siteSpeciesValues.value,
+    becZone.value,
+  )
+  if (!preConfirmResult.isValid) {
+    let message = ''
+    switch (preConfirmResult.errorType) {
+      case 'siteIndex':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SITE_INDEX_REQ
+        break
+      case 'becZone':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_BEC_ZONE_REQ
+        break
+    }
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
+      message: message,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      variant: 'error',
+    }
+    return
+  }
+
   // validation - required fields
   const requiredResult = siteInfoValidation.validateRequiredFields(
     siteSpeciesValues.value,
@@ -462,22 +498,23 @@ const onEdit = () => {
 }
 
 const onClear = () => {
-  becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
+  becZone.value = null
   ecoZone.value = null
   selectedSiteSpecies.value = highestPercentSpecies.value
-  siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
+  siteSpeciesValues.value = null
   ageType.value = DEFAULTS.DEFAULT_VALUES.AGE_TYPE
 
-  handleDerivedByChange(
-    derivedBy.value,
-    selectedSiteSpecies.value,
-    siteSpeciesValues.value,
-  )
-
-  spzAge.value = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
-  spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+  spzAge.value = null
+  spzHeight.value = null
   bha50SiteIndex.value = ''
-  bha50SiteIndexPlaceholder.value = CONSTANTS.SPECIAL_INDICATORS.COMPUTED
+  bha50SiteIndexPlaceholder.value = ''
+
+  isBHA50SiteIndexDisabled.value = false
+  isSpzAgeDisabled.value = false
+  isSpzHeightDisabled.value = false
+
+  spzAgePlaceholder.value = ''
+  spzHeightPlaceholder.value = ''
 }
 
 const handleDialogClose = () => {}

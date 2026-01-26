@@ -49,8 +49,9 @@
     <v-card
       v-for="projection in projections"
       :key="projection.projectionGUID"
-      class="projection-card"
+      class="projection-card clickable-card"
       elevation="1"
+      @click="handleCardClick($event, projection)"
     >
       <!-- Header Section with gray background -->
       <div class="card-header-section">
@@ -233,10 +234,20 @@ const emit = defineEmits<{
   (e: 'download', projectionGUID: string): void
   (e: 'cancel', projectionGUID: string): void
   (e: 'delete', projectionGUID: string): void
+  (e: 'rowClick', projection: Projection): void
 }>()
 
 const handleSortChange = (value: string) => {
   emit('sort', value)
+}
+
+const handleCardClick = (event: MouseEvent, projection: Projection) => {
+  // Don't trigger card click if clicking on the action buttons area
+  const target = event.target as HTMLElement
+  if (target.closest('.card-actions')) {
+    return
+  }
+  emit('rowClick', projection)
 }
 </script>
 
@@ -256,6 +267,15 @@ const handleSortChange = (value: string) => {
   border: 1px solid var(--surface-color-border-default);
   border-radius: var(--layout-border-radius-medium);
   background: var(--surface-color-forms-default);
+}
+
+.projection-card.clickable-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+}
+
+.projection-card.clickable-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* Card Header Section with gray background */
