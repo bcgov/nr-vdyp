@@ -47,6 +47,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionNotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -155,8 +156,6 @@ public class ProjectionService {
 		return Response.serverError().status(Status.NOT_IMPLEMENTED).build();
 	}
 
-	private ObjectMapper jsonObjectMapper = new ObjectMapper();
-
 	public Response runProjection(
 			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrialRun, Parameters params,
 			SecurityContext securityContext
@@ -167,7 +166,7 @@ public class ProjectionService {
 
 		try {
 			// Included to generate JSON text of parameters as needed
-			String serializedParametersText = jsonObjectMapper.writerWithDefaultPrettyPrinter()
+			String serializedParametersText = objectMapper.writerWithDefaultPrettyPrinter()
 					.writeValueAsString(params);
 			logger.info(serializedParametersText);
 		} catch (JsonProcessingException e) {
@@ -333,7 +332,7 @@ public class ProjectionService {
 			extractConvenienceParameters(params, entity);
 
 			entity.setProjectionParameters(
-					jsonObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params)
+					objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params)
 			);
 
 			// Create the 3 File Sets for the projection Polygon, Layer and Result
@@ -393,13 +392,13 @@ public class ProjectionService {
 		List<FileMappingModel> files = fileSetService
 				.getAllFiles(entity.getPolygonFileSet().getProjectionFileSetGUID(), user, false);
 		if (files.isEmpty()) {
-			throw new ProjectionServiceException(
+			throw new ProjectionValidationException(
 					"Cannot start projection: No polygon files have been uploaded.", projectionGUID
 			);
 		}
 		files = fileSetService.getAllFiles(entity.getLayerFileSet().getProjectionFileSetGUID(), user, false);
 		if (files.isEmpty()) {
-			throw new ProjectionServiceException(
+			throw new ProjectionValidationException(
 					"Cannot start projection: No layer files have been uploaded.", projectionGUID
 			);
 		}
@@ -408,7 +407,7 @@ public class ProjectionService {
 			Parameters params = objectMapper.readValue(entity.getProjectionParameters(), Parameters.class);
 			ProjectionRequestParametersValidator.validate(params, ProjectionRequestKind.HCSV);
 		} catch (Exception e) {
-			throw new ProjectionServiceException("Invalid parameter JSON", e);
+			throw new ProjectionValidationException("Invalid parameter JSON", e, projectionGUID);
 		}
 		ProjectionBatchMappingModel batchMappingModel = batchMappingService.startProjectionInBatch(entity);
 
