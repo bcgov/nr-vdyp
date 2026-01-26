@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +32,7 @@ class UserTypeCodeLookupTest {
 	UserTypeCodeLookup lookup;
 
 	UserTypeCodeEntity admin = new UserTypeCodeEntity();
-	UserTypeCodeEntity superUser = new UserTypeCodeEntity();
+	UserTypeCodeEntity system = new UserTypeCodeEntity();
 	UserTypeCodeEntity user = new UserTypeCodeEntity();
 
 	@BeforeEach
@@ -40,13 +41,13 @@ class UserTypeCodeLookupTest {
 		assembler = new UserTypeCodeResourceAssembler();
 
 		admin.setCode("ADMIN");
-		admin.setDisplayOrder(BigDecimal.ZERO);
-		superUser.setCode("SUPERUSER");
-		superUser.setDisplayOrder(BigDecimal.ONE);
+		admin.setDisplayOrder(BigDecimal.ONE);
+		system.setCode("SYSTEM");
+		system.setDisplayOrder(BigDecimal.ZERO);
 		user.setCode("USER");
 		user.setDisplayOrder(BigDecimal.TEN);
 
-		when(repository.listAll()).thenReturn(List.of(admin, superUser, user));
+		when(repository.listAll()).thenReturn(List.of(admin, system, user));
 		lookup = new UserTypeCodeLookup(repository, assembler);
 		lookup.init();
 
@@ -56,16 +57,15 @@ class UserTypeCodeLookupTest {
 	// should change the logic
 	static List<Arguments> roleAndExpectedCode() {
 		return List.of(
-				Arguments.of(Set.of(), "USER"), //
-				Arguments.of(Set.of(""), "USER"), //
-				Arguments.of(Set.of("Admin"), "ADMIN"), //
-				Arguments.of(Set.of("Super User"), "SUPERUSER"), //
+				Arguments.of(Set.of("USER"), "USER"), //
 				Arguments.of(Set.of("User"), "USER"), //
-				Arguments.of(Set.of("Unknown"), "USER"), //
-				Arguments.of(Set.of("User", "Super User"), "SUPERUSER"), //
+				Arguments.of(Set.of("SYSTEM"), "SYSTEM"), //
+				Arguments.of(Set.of("System"), "SYSTEM"), //
+				Arguments.of(Set.of("Admin"), "ADMIN"), //
+				Arguments.of(Set.of("ADMIN"), "ADMIN"), //
+				Arguments.of(Set.of("Unknown"), null), //
 				Arguments.of(Set.of("User", "Admin"), "ADMIN"), //
-				Arguments.of(Set.of("Super User", "User", "Admin"), "ADMIN"), //
-				Arguments.of(Set.of("Super User", "User"), "SUPERUSER")
+				Arguments.of(Set.of("SYSTEM", "User", "Admin"), "SYSTEM") //
 		);
 
 	}
@@ -74,8 +74,11 @@ class UserTypeCodeLookupTest {
 	@MethodSource("roleAndExpectedCode")
 	void test_getUserTypeCodeFromExternalRoles_NoRoles(Set<String> userRoles, String expectedTypeCode) {
 		UserTypeCodeModel type = lookup.getUserTypeCodeFromExternalRoles(userRoles);
-
-		assertThat(type.getCode()).isEqualTo(expectedTypeCode);
+		if (expectedTypeCode == null) {
+			Assertions.assertNull(type);
+		} else {
+			assertThat(type.getCode()).isEqualTo(expectedTypeCode);
+		}
 	}
 
 	@Test

@@ -52,7 +52,7 @@ public class UserTypeCodeLookup extends AbstractCodeTableLookup<UserTypeCodeMode
 		UserTypeCodeModel model = null;
 		for (String role : roles) {
 			Optional<UserTypeCodeModel> internalCode = findModel(
-					mapExternalRolesToUserTypeCodes.getOrDefault(role, "")
+					mapExternalRolesToUserTypeCodes.getOrDefault(normalize(role), "")
 			);
 			if (internalCode.isPresent()
 					&& (model == null || internalCode.get().getDisplayOrder().compareTo(model.getDisplayOrder()) < 0)) {
