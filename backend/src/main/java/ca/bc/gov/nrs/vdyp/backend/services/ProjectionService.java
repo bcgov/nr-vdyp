@@ -38,6 +38,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
@@ -54,6 +55,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionRunner;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRequestParametersValidator;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
@@ -81,6 +83,7 @@ public class ProjectionService {
 	private final ProjectionBatchMappingService batchMappingService;
 	private final ProjectionStatusCodeLookup statusLookup;
 	private final CalculationEngineCodeLookup calclationEngineLookup;
+	private final ObjectMapper objectMapper;
 
 	private static final String FILE_SET_IDENTIFIER = "file set";
 	private static final String FILE_IDENTIFIER = "file";
@@ -92,7 +95,8 @@ public class ProjectionService {
 	public ProjectionService(
 			EntityManager em, ProjectionResourceAssembler assembler, ProjectionRepository repository,
 			ProjectionFileSetService fileSetService, ProjectionBatchMappingService batchMappingService,
-			ProjectionStatusCodeLookup statusLookup, CalculationEngineCodeLookup calclationEngineLookup
+			ProjectionStatusCodeLookup statusLookup, CalculationEngineCodeLookup calclationEngineLookup,
+			ObjectMapper objectMapper
 	) {
 		this.em = em;
 		this.assembler = assembler;
@@ -101,6 +105,7 @@ public class ProjectionService {
 		this.batchMappingService = batchMappingService;
 		this.statusLookup = statusLookup;
 		this.calclationEngineLookup = calclationEngineLookup;
+		this.objectMapper = objectMapper;
 	}
 
 	static {
@@ -384,10 +389,34 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, user, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
 
-		batchMappingService.startProjectionInBatch(entity);
+		// Check that the Projection has at least one polygon file and layer file
+		List<FileMappingModel> files = fileSetService
+				.getAllFiles(entity.getPolygonFileSet().getProjectionFileSetGUID(), user, false);
+		if (files.isEmpty()) {
+			throw new ProjectionServiceException(
+					"Cannot start projection: No polygon files have been uploaded.", projectionGUID
+			);
+		}
+		files = fileSetService.getAllFiles(entity.getLayerFileSet().getProjectionFileSetGUID(), user, false);
+		if (files.isEmpty()) {
+			throw new ProjectionServiceException(
+					"Cannot start projection: No layer files have been uploaded.", projectionGUID
+			);
+		}
+		try {
+			// Check that the Parameters JSON is valid.
+			Parameters params = objectMapper.readValue(entity.getProjectionParameters(), Parameters.class);
+			ProjectionRequestParametersValidator.validate(params, ProjectionRequestKind.HCSV);
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Invalid parameter JSON", e);
+		}
+		ProjectionBatchMappingModel batchMappingModel = batchMappingService.startProjectionInBatch(entity);
 
-		// TODO if we get here (or if there is something specific returned from start in batch
 		// set the status to running
+		if (batchMappingModel != null && batchMappingModel.getBatchJobGUID() != null) {
+			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.RUNNING));
+			repository.persist(entity);
+		}
 
 		return assembler.toModel(entity);
 	}
