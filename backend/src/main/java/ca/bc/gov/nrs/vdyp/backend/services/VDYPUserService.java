@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.VDYPUserResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.VDYPUserRepository;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -82,23 +83,34 @@ public class VDYPUserService {
 			logger.debug("Checking for user with oidcId {}", oidcId);
 			Optional<VDYPUserEntity> userOption = userRepository.findByOIDC(oidcId);
 			if (userOption.isEmpty()) {
-				String firstName = jwt.getClaim("given_name");
-				String lastName = jwt.getClaim("family_name");
-				// FIXME VDYP-847 Record email and Display Name to our system
-
-				VDYPUserModel newUser = new VDYPUserModel();
-				newUser.setOidcGUID(oidcId);
-				newUser.setFirstName(firstName);
-				newUser.setLastName(lastName);
-
 				Set<String> roles = identity.getRoles();
-				newUser.setUserTypeCode(userTypeLookup.getUserTypeCodeFromExternalRoles(roles));
-				logger.debug(
-						"Creating new user with oidcId {}, firstName {}, lastName {}, usertypeCode {}", oidcId,
-						firstName, lastName, newUser.getUserTypeCode().getCode()
-				);
+				UserTypeCodeModel userType = userTypeLookup.getUserTypeCodeFromExternalRoles(roles);
+				if (!userType.isSystemUser()) {
+					String firstName = jwt.getClaim("given_name");
+					String lastName = jwt.getClaim("family_name");
+					// FIXME VDYP-847 Record email and Display Name to our system
 
-				return createUser(newUser);
+					VDYPUserModel newUser = new VDYPUserModel();
+					newUser.setUserTypeCode(userType);
+					newUser.setOidcGUID(oidcId);
+					newUser.setFirstName(firstName);
+					newUser.setLastName(lastName);
+
+					logger.debug(
+							"Creating new user with oidcId {}, firstName {}, lastName {}, usertypeCode {}", oidcId,
+							firstName, lastName, newUser.getUserTypeCode().getCode()
+					);
+
+					return createUser(newUser);
+				} else {
+					// TODO should I let the system create a user for the system user? Is there any harm?
+					VDYPUserModel newUser = new VDYPUserModel();
+					newUser.setUserTypeCode(userType);
+					newUser.setOidcGUID(oidcId);
+					newUser.setFirstName("System");
+					newUser.setLastName("");
+					userOption = Optional.of(assembler.toEntity(newUser));
+				}
 			}
 			return assembler.toModel(userOption.get());
 		} else {

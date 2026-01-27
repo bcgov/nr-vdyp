@@ -66,4 +66,8 @@ public class VDYPUserModel {
 	public int hashCode() {
 		return Objects.hash(vdypUserGUID);
 	}
+
+	public boolean isSystemUser() {
+		return this.userTypeCode != null && userTypeCode.isSystemUser();
+	}
 }

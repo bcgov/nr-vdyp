@@ -110,8 +110,7 @@ class BatchControllerTest {
 	@Test
 	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse() throws JobExecutionAlreadyRunningException,
 			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
-		UUID polygonCOMSGUID = UUID.randomUUID();
-		UUID layerCOMSGUID = UUID.randomUUID();
+		UUID projectionGUID = UUID.randomUUID();
 
 		// Mock job execution
 		when(jobExecution.getId()).thenReturn(1L);
@@ -123,8 +122,7 @@ class BatchControllerTest {
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn("test-guid");
 		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
 
-		ResponseEntity<Map<String, Object>> response = batchController
-				.startBatchJobPersistedID(polygonCOMSGUID, layerCOMSGUID, "{}");
+		ResponseEntity<Map<String, Object>> response = batchController.startBatchJobPersistedID(projectionGUID, "{}");
 
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());

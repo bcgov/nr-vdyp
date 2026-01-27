@@ -22,11 +22,10 @@ public final class BatchConstants {
 		}
 	}
 
-	public static final class ComsInput {
-		public static final String POLYGON_COMS_OBJECT_GUID = "polygonCOMSObjectGUID";
-		public static final String LAYER_COMS_OBJECT_GUID = "layerCOMSObjectGUID";
+	public static final class GuidInput {
+		public static final String PROJECTION_GUID = "projectionGUID";
 
-		private ComsInput() {
+		private GuidInput() {
 		}
 	}
 

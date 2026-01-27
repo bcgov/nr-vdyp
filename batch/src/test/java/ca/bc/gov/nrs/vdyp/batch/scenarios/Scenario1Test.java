@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -165,8 +166,11 @@ class Scenario1Test {
 	private UUID startBatchJob(MockMultipartFile polygonFile, MockMultipartFile layerFile, String parametersJson)
 			throws Exception {
 		MvcResult result = mockMvc.perform(
-				MockMvcRequestBuilders.multipart("/api/batch/start").file(polygonFile).file(layerFile)
-						.param("parameters", parametersJson).contentType(MediaType.MULTIPART_FORM_DATA)
+				MockMvcRequestBuilders.multipart("/api/batch/start") //
+						.file(polygonFile).file(layerFile) //
+						.param("parameters", parametersJson) //
+						.with(csrf())//
+						.contentType(MediaType.MULTIPART_FORM_DATA) //
 		).andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
 		String responseBody = result.getResponse().getContentAsString();
