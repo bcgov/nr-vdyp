@@ -262,7 +262,7 @@ const basalAreaPlaceholder = ref('')
 const treesPerHectarePlaceholder = ref('')
 const crownClosurePlaceholder = ref('')
 
-const updateBasalAreaState = (isEnabled: boolean) => {
+const updateBasalAreaState = (isEnabled: boolean, force: boolean = false) => {
   isBasalAreaDisabled.value = !isEnabled
 
   if (isBasalAreaDisabled.value) {
@@ -270,11 +270,13 @@ const updateBasalAreaState = (isEnabled: boolean) => {
     basalArea.value = null
   } else {
     basalAreaPlaceholder.value = ''
-    basalArea.value = DEFAULTS.DEFAULT_VALUES.BASAL_AREA
+    if (force || basalArea.value === null) {
+      basalArea.value = DEFAULTS.DEFAULT_VALUES.BASAL_AREA
+    }
   }
 }
 
-const updateTreesPerHectareState = (isEnabled: boolean) => {
+const updateTreesPerHectareState = (isEnabled: boolean, force: boolean = false) => {
   isTreesPerHectareDisabled.value = !isEnabled
 
   if (isTreesPerHectareDisabled.value) {
@@ -282,11 +284,13 @@ const updateTreesPerHectareState = (isEnabled: boolean) => {
     treesPerHectare.value = null
   } else {
     treesPerHectarePlaceholder.value = ''
-    treesPerHectare.value = DEFAULTS.DEFAULT_VALUES.TPH
+    if (force || treesPerHectare.value === null) {
+      treesPerHectare.value = DEFAULTS.DEFAULT_VALUES.TPH
+    }
   }
 }
 
-const updateCrownClosureState = (isVolume: boolean, isComputed: boolean) => {
+const updateCrownClosureState = (isVolume: boolean, isComputed: boolean, force: boolean = false) => {
   isCrownClosureDisabled.value = !(isVolume && isComputed)
 
   if (isCrownClosureDisabled.value) {
@@ -294,7 +298,9 @@ const updateCrownClosureState = (isVolume: boolean, isComputed: boolean) => {
     crownClosure.value = null
   } else {
     crownClosurePlaceholder.value = ''
-    crownClosure.value = '0'
+    if (force || crownClosure.value === null) {
+      crownClosure.value = '0'
+    }
   }
 }
 
@@ -308,15 +314,16 @@ const updateCurrentDiameterState = (
 const updateStates = (
   newDerivedBy: string | null,
   newSiteSpeciesValues: string | null,
+  force: boolean = false,
 ) => {
   const isVolume = newDerivedBy === CONSTANTS.DERIVED_BY.VOLUME
   const isBasalArea = newDerivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA
   const isComputed =
     newSiteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
 
-  updateBasalAreaState(isBasalArea && isComputed)
-  updateTreesPerHectareState(isBasalArea && isComputed)
-  updateCrownClosureState(isVolume, isComputed)
+  updateBasalAreaState(isBasalArea && isComputed, force)
+  updateTreesPerHectareState(isBasalArea && isComputed, force)
+  updateCrownClosureState(isVolume, isComputed, force)
   updateCurrentDiameterState(isBasalArea, isComputed)
 }
 
@@ -505,7 +512,7 @@ const onEdit = () => {
 }
 
 const onClear = () => {
-  updateStates(derivedBy.value, siteSpeciesValues.value)
+  updateStates(derivedBy.value, siteSpeciesValues.value, true)
   percentStockableArea.value = DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
 }
 

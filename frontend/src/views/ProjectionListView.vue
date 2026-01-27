@@ -100,6 +100,10 @@ import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
+import {
+  ExecutionOptionsEnum,
+} from '@/services/vdyp-api'
+import { parseCsvFileContent } from '@/services/projection/modelParameterService'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -243,7 +247,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     const params = parseProjectionParams(projectionModel.projectionParameters)
 
     // Determine the method (File Upload or Input Model Parameters)
-    const isInputModelParams = params.selectedExecutionOptions.includes('doEnableProjectionReport')
+    const isInputModelParams = params.selectedExecutionOptions.includes(ExecutionOptionsEnum.DoEnableProjectionReport)
     const method = isInputModelParams
       ? MODEL_SELECTION.INPUT_MODEL_PARAMETERS
       : MODEL_SELECTION.FILE_UPLOAD
@@ -332,9 +336,10 @@ const loadFileContentForModelParams = async (
       }
     }
 
-    // Restore store from file content
+    // Parse CSV content and restore store
     if (polygonContent || layerContent) {
-      modelParameterStore.restoreFromFileContent(polygonContent, layerContent)
+      const parsed = parseCsvFileContent(polygonContent, layerContent)
+      modelParameterStore.restoreFromFileContent(parsed)
     }
   } catch (err) {
     console.error('Error loading file content:', err)

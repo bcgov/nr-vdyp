@@ -322,15 +322,19 @@ const spzAgePlaceholder = ref('')
 const spzHeightPlaceholder = ref('')
 const bha50SiteIndexPlaceholder = ref('')
 
-const handleSiteSpeciesValuesState = (newSiteSpeciesValues: string | null) => {
+const handleSiteSpeciesValuesState = (newSiteSpeciesValues: string | null, force: boolean = false) => {
   if (newSiteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED) {
     isAgeTypeDisabled.value = false
     isSpzAgeDisabled.value = false
     isSpzHeightDisabled.value = false
     isBHA50SiteIndexDisabled.value = true
 
-    spzAge.value = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
-    spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+    if (force || spzAge.value === null) {
+      spzAge.value = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+    }
+    if (force || spzHeight.value === null) {
+      spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+    }
     bha50SiteIndex.value = ''
 
     spzAgePlaceholder.value = ''
@@ -344,7 +348,9 @@ const handleSiteSpeciesValuesState = (newSiteSpeciesValues: string | null) => {
 
     spzAge.value = null
     spzHeight.value = null
-    bha50SiteIndex.value = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
+    if (force || bha50SiteIndex.value === null) {
+      bha50SiteIndex.value = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
+    }
 
     spzAgePlaceholder.value = CONSTANTS.SPECIAL_INDICATORS.NA
     spzHeightPlaceholder.value = CONSTANTS.SPECIAL_INDICATORS.NA

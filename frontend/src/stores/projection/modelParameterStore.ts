@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
-import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters } from '@/interfaces/interfaces'
+import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters, ParsedCsvFileContent } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 
@@ -423,68 +423,37 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   }
 
   /**
-   * Restore species, site, and stand info from CSV file content
-   * @param polygonCsvContent The content of the polygon CSV file
-   * @param layerCsvContent The content of the layer CSV file
+   * Restore species, site, and stand info from parsed CSV file content
+   * @param parsed The parsed CSV file content from parseCsvFileContent()
    */
-  const restoreFromFileContent = (
-    polygonCsvContent: string,
-    layerCsvContent: string,
-  ) => {
-    try {
-      // Parse polygon CSV for site and stand info
-      const polygonLines = polygonCsvContent.split('\n')
-      if (polygonLines.length < 2) return
+  const restoreFromFileContent = (parsed: ParsedCsvFileContent) => {
+    // Restore species info
+    derivedBy.value = parsed.derivedBy
+    speciesList.value = parsed.speciesList
+    updateSpeciesGroup()
 
-      const polygonHeaders = polygonLines[0].split(',').map(h => h.trim())
-      const polygonValues = polygonLines[1].split(',').map(v => v.trim())
+    if (parsed.highestPercentSpecies) {
+      highestPercentSpecies.value = parsed.highestPercentSpecies
+      selectedSiteSpecies.value = parsed.highestPercentSpecies
+    }
 
-      const getPolygonValue = (header: string): string | null => {
-        const index = polygonHeaders.indexOf(header)
-        return index >= 0 ? polygonValues[index] || null : null
-      }
+    // Restore site info
+    becZone.value = parsed.becZone
+    ecoZone.value = parsed.ecoZone
+    siteSpeciesValues.value = parsed.siteSpeciesValues
+    spzAge.value = parsed.spzAge
+    spzHeight.value = parsed.spzHeight
+    bha50SiteIndex.value = parsed.bha50SiteIndex
 
-      // Restore site info from polygon
-      becZone.value = getPolygonValue('BEC_ZONE')
-      percentStockableArea.value = getPolygonValue('PCNT_STOCKABLE')
+    // Restore stand info
+    percentStockableArea.value = parsed.percentStockableArea
+    crownClosure.value = parsed.crownClosure
+    basalArea.value = parsed.basalArea
+    treesPerHectare.value = parsed.treesPerHectare
 
-      // Parse layer CSV for species info
-      const layerLines = layerCsvContent.split('\n')
-      if (layerLines.length < 2) return
-
-      const layerHeaders = layerLines[0].split(',').map(h => h.trim())
-      const layerValues = layerLines[1].split(',').map(v => v.trim())
-
-      const getLayerValue = (header: string): string | null => {
-        const index = layerHeaders.indexOf(header)
-        return index >= 0 ? layerValues[index] || null : null
-      }
-
-      // Restore species list from layer file
-      const newSpeciesList: SpeciesList[] = []
-      for (let i = 1; i <= 6; i++) {
-        const species = getLayerValue(`SPECIES_${i}`)
-        const percent = getLayerValue(`SPECIES_PCT_${i}`)
-        newSpeciesList.push({
-          species: species || null,
-          percent: percent || null,
-        })
-      }
-      speciesList.value = newSpeciesList
-      updateSpeciesGroup()
-
-      // Restore additional site info from layer
-      spzAge.value = getLayerValue('PROJ_AGE_1')
-      spzHeight.value = getLayerValue('PROJ_HEIGHT_1')
-      bha50SiteIndex.value = getLayerValue('SITE_INDEX')
-      crownClosure.value = getLayerValue('CROWN_CLOSURE')
-
-      // Restore stand info from layer
-      basalArea.value = getLayerValue('BASAL_AREA')
-      treesPerHectare.value = getLayerValue('TREES_PER_HA')
-
-    } catch (error) {
-      console.error('Error parsing file content for restoration:', error)
+    // Restore reference year
+    if (parsed.referenceYear) {
+      referenceYear.value = parsed.referenceYear
     }
   }
 

@@ -93,6 +93,23 @@ export interface DialogOptions {
   variant?: DialogVariant
 }
 
+export interface ParsedCsvFileContent {
+  derivedBy: string | null
+  becZone: string | null
+  ecoZone: string | null
+  percentStockableArea: string | null
+  referenceYear: number | null
+  speciesList: SpeciesList[]
+  highestPercentSpecies: string | null
+  siteSpeciesValues: string | null
+  spzAge: string | null
+  spzHeight: string | null
+  bha50SiteIndex: string | null
+  crownClosure: string | null
+  basalArea: string | null
+  treesPerHectare: string | null
+}
+
 export interface ParsedProjectionParameters {
   outputFormat: string | null
   selectedExecutionOptions: string[]
