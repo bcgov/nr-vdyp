@@ -6,7 +6,9 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 
@@ -70,5 +72,18 @@ public class TestUtils {
 		ProjectionFileSetEntity e = fileSetEntity(id);
 		e.setOwnerUser(userEntity(ownerId));
 		return e;
+	}
+
+	public static FileMappingModel fileMappingModel(UUID id, UUID comsId) {
+		FileMappingModel m = new FileMappingModel();
+		m.setFileMappingGUID(id.toString());
+		m.setComsObjectGUID(comsId.toString());
+		return m;
+	}
+
+	public static ProjectionBatchMappingModel batchMappingModel(UUID id) {
+		ProjectionBatchMappingModel m = new ProjectionBatchMappingModel();
+		m.setBatchJobGUID(id.toString());
+		return m;
 	}
 }

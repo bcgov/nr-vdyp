@@ -1,11 +1,32 @@
 [
-  {
-    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata",
-    "allDeclaredFields": true,
-    "allDeclaredMethods": true,
-    "allDeclaredConstructors": true,
-    "unsafeAllocated": true
-  },
+	{
+		"name": "ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"unsafeAllocated": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"unsafeAllocated": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"unsafeAllocated": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails$VdypProjectionFileSet",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"unsafeAllocated": true
+	},
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics",
     "allDeclaredFields": true,
