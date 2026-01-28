@@ -8,6 +8,7 @@ export { default as StandInfoPanel } from './input/stand-info/StandInfoPanel.vue
 export { default as ReportInfoPanel } from './input/report-info/ReportInfoPanel.vue'
 export { default as AttachmentsPanel } from './input/attachments/AttachmentsPanel.vue'
 export { default as ProjectionActionsMenu } from './list/ProjectionActionsMenu.vue'
+export { default as RunProjectionButtonPanel } from './input/RunProjectionButtonPanel.vue'
 export { default as ProjectionCardList } from './list/ProjectionCardList.vue'
 export { default as ProjectionPagination } from './list/ProjectionPagination.vue'
 export { default as ProjectionStatusBadge } from './list/ProjectionStatusBadge.vue'

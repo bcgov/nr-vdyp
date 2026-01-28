@@ -156,6 +156,7 @@ export const PROGRESS_MSG = Object.freeze({
   RUNNING_MODEL: 'Running Model...',
   DELETING_PROJECTION: 'Deleting Projection...',
   LOADING_PROJECTION: 'Loading Projection...',
+  RUNNING_PROJECTION: 'Running Projection...',
 })
 
 export const SUCCESS_MSG = Object.freeze({
@@ -173,4 +174,5 @@ export const SUCCESS_MSG = Object.freeze({
 export const PROJECTION_ERR = Object.freeze({
   DELETE_FAILED: 'Failed to delete the projection. Please try again later.',
   LOAD_FAILED: 'Failed to load the projection. Please try again later.',
+  MISSING_GUID: 'No projection is currently selected. Please create or select a projection first.',
 })

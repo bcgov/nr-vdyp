@@ -144,6 +144,16 @@ export const apiClient = {
   },
 
   /**
+   * Runs a projection (sends to batch processing).
+   * @param projectionGUID The projection GUID.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the updated projection with RUNNING status.
+   */
+  runProjection: (projectionGUID: string, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.runProjection(projectionGUID, options)
+  },
+
+  /**
    * Deletes a projection.
    * @param projectionGUID The projection GUID.
    * @param options Optional Axios request configuration.

@@ -4,6 +4,7 @@ import {
   getProjection as apiGetProjection,
   updateProjectionParams as apiUpdateProjectionParams,
   deleteProjection as apiDeleteProjection,
+  runProjection as apiRunProjection,
   uploadFileToFileSet,
   deleteFileFromFileSet as apiDeleteFileFromFileSet,
   getFileSetFiles as apiGetFileSetFiles,
@@ -193,6 +194,23 @@ export const createProjection = async (
     return projectionModel
   } catch (error) {
     console.error('Error creating projection:', error)
+    throw error
+  }
+}
+
+/**
+ * Runs a projection by sending it to batch processing.
+ * The projection must be in DRAFT status with valid parameters and uploaded files.
+ * @param projectionGUID The projection GUID
+ * @returns A promise that resolves to the updated ProjectionModel with RUNNING status
+ */
+export const runProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    return await apiRunProjection(projectionGUID)
+  } catch (error) {
+    console.error('Error running projection:', error)
     throw error
   }
 }

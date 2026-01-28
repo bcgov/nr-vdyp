@@ -1,4 +1,5 @@
 import { BIZCONSTANTS, CONSTANTS, CSVHEADERS, DEFAULTS } from '@/constants'
+import { PROJECTION_ERR } from '@/constants/message'
 import {
   OutputFormatEnum,
   ExecutionOptionsEnum,
@@ -7,7 +8,11 @@ import {
   type Parameters,
   type ProjectionModel
 } from '@/services/vdyp-api'
-import { createProjection } from '@/services/projectionService'
+import {
+  createProjection as projServiceCreateProjection,
+  runProjection as projServiceRunProjection,
+} from '@/services/projectionService'
+import { useAppStore } from '@/stores/projection/appStore'
 import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup, SpeciesList, ParsedCsvFileContent } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
@@ -451,7 +456,7 @@ export const parseCsvFileContent = (
     referenceYear: refYear ? Number.parseInt(refYear) : null,
     speciesList,
     highestPercentSpecies,
-    siteSpeciesValues: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED, // TODO - It should be parsed, not hardcoded
+    siteSpeciesValues: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED, // FIXME VDYP-922
     spzAge: getLayerValue('EST_AGE_SPP1'),
     spzHeight: getLayerValue('EST_HEIGHT_SPP1'),
     bha50SiteIndex: getLayerValue('ESTIMATED_SITE_INDEX'),
@@ -571,26 +576,18 @@ const buildDebugOptions = (): {
 }
 
 /**
- * Runs the model by creating a projection with the generated CSV files and parameters.
+ * Builds projection parameters from the model parameter store.
  * @param modelParameterStore The store containing model parameters.
- * @param createProjectionFunc Optional projection function (defaults to createProjection).
- * @returns The created ProjectionModel.
+ * @returns The projection parameters object.
  */
-export const runModel = async (
+export const buildProjectionParameters = (
   modelParameterStore: any,
-  createProjectionFunc: (
-    parameters: Parameters,
-    polygonFile?: File | Blob,
-    layerFile?: File | Blob,
-  ) => Promise<ProjectionModel> = createProjection,
-): Promise<ProjectionModel> => {
-  const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
-
+): Parameters => {
   const { selectedExecutionOptions, excludedExecutionOptions } =
     buildExecutionOptions(modelParameterStore)
   const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
 
-  const projectionParameters: Parameters = {
+  return {
     ageStart: modelParameterStore.startingAge
       ? Number.parseInt(modelParameterStore.startingAge)
       : null,
@@ -604,10 +601,10 @@ export const runModel = async (
     yearEnd: null,
     reportTitle: modelParameterStore.reportTitle,
     outputFormat: OutputFormatEnum.CSVYieldTable,
-    selectedExecutionOptions: selectedExecutionOptions,
-    excludedExecutionOptions: excludedExecutionOptions,
-    selectedDebugOptions: selectedDebugOptions,
-    excludedDebugOptions: excludedDebugOptions,
+    selectedExecutionOptions,
+    excludedExecutionOptions,
+    selectedDebugOptions,
+    excludedDebugOptions,
     metadataToOutput: MetadataToOutputEnum.NONE,
     utils: modelParameterStore.speciesGroups.map(
       (sg: SpeciesGroup) =>
@@ -617,6 +614,24 @@ export const runModel = async (
         }) as UtilizationParameter,
     ),
   }
+}
+
+/**
+ * Creates a projection with the generated CSV files and parameters (without running it).
+ * @param modelParameterStore The store containing model parameters.
+ * @param createProjectionFunc Optional projection function (defaults to projServiceCreateProjection).
+ * @returns The created ProjectionModel.
+ */
+export const createProjection = async (
+  modelParameterStore: any,
+  createProjectionFunc: (
+    parameters: Parameters,
+    polygonFile?: File | Blob,
+    layerFile?: File | Blob,
+  ) => Promise<ProjectionModel> = projServiceCreateProjection,
+): Promise<ProjectionModel> => {
+  const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
+  const projectionParameters = buildProjectionParameters(modelParameterStore)
 
   const result = await createProjectionFunc(
     projectionParameters,
@@ -624,4 +639,21 @@ export const runModel = async (
     blobLayer,
   )
   return result
+}
+
+/**
+ * Runs the current projection by sending it to batch processing.
+ * The projection must already be created and its GUID stored in the app store.
+ *
+ * @returns The updated ProjectionModel with RUNNING status.
+ * @throws Error if the projection GUID is not available in the app store.
+ */
+export const runProjection = async (
+): Promise<ProjectionModel> => {
+  const appStore = useAppStore()
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) {
+    throw new Error(PROJECTION_ERR.MISSING_GUID)
+  }
+  return await projServiceRunProjection(projectionGUID)
 }

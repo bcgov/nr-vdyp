@@ -480,6 +480,46 @@ export const ProjectionApiAxiosParamCreator = function (
     },
 
     /**
+     * Run a projection (send to batch processing)
+     * @POST /api/v8/projection/{projectionGUID}/run
+     */
+    runProjection: async (
+      projectionGUID: string,
+      options: AxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      if (projectionGUID === null || projectionGUID === undefined) {
+        throw new Error(
+          'Required parameter projectionGUID was null or undefined.',
+        )
+      }
+      const localVarPath = `/api/v8/projection/${encodeURIComponent(projectionGUID)}/run`
+      const localVarUrlObj = new URL(localVarPath, env.VITE_API_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+      const localVarRequestOptions: AxiosRequestConfig = {
+        method: 'POST',
+        ...baseOptions,
+        ...options,
+      }
+      const localVarHeaderParameter = {} as Record<string, string>
+
+      const headersFromBaseOptions = baseOptions?.headers ?? {}
+      localVarRequestOptions.headers = {
+        ...localVarHeaderParameter,
+        ...headersFromBaseOptions,
+        ...options.headers,
+      }
+
+      return {
+        url:
+          localVarUrlObj.pathname + localVarUrlObj.search + localVarUrlObj.hash,
+        options: localVarRequestOptions,
+      }
+    },
+
+    /**
      * Run HCSV projection
      * @POST /api/v8/projection/hcsv
      */
@@ -822,6 +862,32 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
       }
     },
 
+    async runProjection(
+      projectionGUID: string,
+      options?: AxiosRequestConfig,
+    ): Promise<
+      (
+        axios?: AxiosInstance,
+        basePath?: string,
+      ) => Promise<AxiosResponse<ProjectionModel>>
+    > {
+      const localVarAxiosArgs =
+        await ProjectionApiAxiosParamCreator(configuration).runProjection(
+          projectionGUID,
+          options,
+        )
+      return (
+        axios: AxiosInstance = globalAxios,
+        basePath: string = BASE_PATH,
+      ) => {
+        const axiosRequestArgs: AxiosRequestConfig = {
+          ...localVarAxiosArgs.options,
+          url: basePath + localVarAxiosArgs.url,
+        }
+        return axios.request(axiosRequestArgs)
+      }
+    },
+
     async projectionHcsvPostForm(
       polygonInputData?: FileUpload,
       layersInputData?: FileUpload,
@@ -957,6 +1023,15 @@ export const ProjectionApiFactory = function (
           fileMappingGUID,
           options,
         )
+        .then((request) => request(axios, basePath))
+    },
+
+    async runProjection(
+      projectionGUID: string,
+      options?: AxiosRequestConfig,
+    ): Promise<AxiosResponse<ProjectionModel>> {
+      return ProjectionApiFp(configuration)
+        .runProjection(projectionGUID, options)
         .then((request) => request(axios, basePath))
     },
 
@@ -1098,6 +1173,18 @@ export class ProjectionApi extends BaseAPI {
         fileMappingGUID,
         options,
       )
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   * Run a projection (send to batch processing)
+   */
+  public async runProjection(
+    projectionGUID: string,
+    options?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<ProjectionModel>> {
+    return ProjectionApiFp(this.configuration)
+      .runProjection(projectionGUID, options)
       .then((request) => request(this.axios, this.basePath))
   }
 

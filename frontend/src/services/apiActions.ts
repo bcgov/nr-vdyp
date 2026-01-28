@@ -110,6 +110,23 @@ export const createProjection = async (
 }
 
 /**
+ * Runs a projection by sending it to batch processing.
+ * @param projectionGUID The projection GUID.
+ * @returns A promise that resolves to the updated ProjectionModel with RUNNING status.
+ */
+export const runProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.runProjection(projectionGUID)
+    return response.data
+  } catch (error) {
+    console.error('Error running projection:', error)
+    throw error
+  }
+}
+
+/**
  * Fetches a projection by its GUID.
  * @param projectionGUID The projection GUID.
  * @returns A promise that resolves to the ProjectionModel.

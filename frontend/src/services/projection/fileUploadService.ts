@@ -1,5 +1,7 @@
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
+import { useAppStore } from '@/stores/projection/appStore'
 import { CONSTANTS } from '@/constants'
+import { PROJECTION_ERR } from '@/constants/message'
 import type { FileUploadSpeciesGroup } from '@/interfaces/interfaces'
 import {
   OutputFormatEnum,
@@ -10,7 +12,10 @@ import {
   type Parameters,
   type ProjectionModel
 } from '@/services/vdyp-api'
-import { createProjection } from '@/services/projectionService'
+import {
+  createProjection as projServiceCreateProjection,
+  runProjection as projServiceRunProjection,
+} from '@/services/projectionService'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
 import { addExecutionOptionsFromMappings } from '@/utils/util'
 
@@ -199,18 +204,18 @@ export const buildProjectionParameters = (
 }
 
 /**
- * Runs the model by creating a projection with uploaded files and parameters.
+ * Creates a projection with uploaded files and parameters (without running it).
  * @param fileUploadStore The store containing model parameters and files.
- * @param createProjectionFunc Optional projection function (defaults to createProjection).
+ * @param createProjectionFunc Optional projection function (defaults to projServiceCreateProjection).
  * @returns The created ProjectionModel.
  */
-export const runModelFileUpload = async (
+export const createProjection = async (
   fileUploadStore: ReturnType<typeof useFileUploadStore>,
   createProjectionFunc: (
     parameters: Parameters,
     polygonFile?: File | Blob,
     layerFile?: File | Blob,
-  ) => Promise<ProjectionModel> = createProjection,
+  ) => Promise<ProjectionModel> = projServiceCreateProjection,
 ): Promise<ProjectionModel> => {
   const projectionParameters = buildProjectionParameters(fileUploadStore)
 
@@ -220,4 +225,21 @@ export const runModelFileUpload = async (
     fileUploadStore.layerFile as File,
   )
   return result
+}
+
+/**
+ * Runs the current projection by sending it to batch processing.
+ * The projection must already be created and its GUID stored in the app store.
+ *
+ * @returns The updated ProjectionModel with RUNNING status.
+ * @throws Error if the projection GUID is not available in the app store.
+ */
+export const runProjectionFileUpload = async (
+): Promise<ProjectionModel> => {
+  const appStore = useAppStore()
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) {
+    throw new Error(PROJECTION_ERR.MISSING_GUID)
+  }
+  return await projServiceRunProjection(projectionGUID)
 }

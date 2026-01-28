@@ -30,7 +30,7 @@
         <SiteInfoPanel class="panel-spacing" />
         <StandInfoPanel class="panel-spacing" />
         <ReportInfoPanel class="panel-spacing" />
-        <AppRunModelButtonPanel
+        <RunProjectionButtonPanel
           :isDisabled="!modelParameterStore.runModelEnabled"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
@@ -45,7 +45,7 @@
       />
       <template v-if="isFileUploadPanelsVisible">
         <AttachmentsPanel class="panel-spacing" />
-        <AppRunModelButtonPanel
+        <RunProjectionButtonPanel
           :isDisabled="!fileUploadStore.runModelEnabled"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
@@ -65,7 +65,6 @@ import { useReportingStore } from '@/stores/reportingStore'
 import {
   AppProgressCircular,
   AppTabs,
-  AppRunModelButtonPanel,
 } from '@/components'
 import {
   ReportingContainer,
@@ -74,12 +73,13 @@ import {
   StandInfoPanel,
   ReportInfoPanel,
   AttachmentsPanel,
+  RunProjectionButtonPanel
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import { handleApiError } from '@/services/apiErrorHandler'
-import { runModel } from '@/services/projection/modelParameterService'
-import { runModelFileUpload } from '@/services/projection/fileUploadService'
+import { runProjection } from '@/services/projection/modelParameterService'
+import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
 import {
   checkZipForErrors,
   delay,
@@ -260,7 +260,7 @@ const handleError = (error: any) => {
 const runModelHandler = async () => {
   try {
     isProgressVisible.value = true
-    progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_MODEL
+    progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_PROJECTION
 
     await delay(500)
 
@@ -270,7 +270,7 @@ const runModelHandler = async () => {
     ) {
       reportingStore.modelParamDisableTabs()
 
-      const response = await runModel(modelParameterStore)
+      const response = await runProjection()
       console.debug('Full response:', response)
 
       const hasErrors = await processResponse(response)
@@ -292,7 +292,7 @@ const runModelHandler = async () => {
     ) {
       reportingStore.fileUploadDisableTabs()
 
-      const response = await runModelFileUpload(fileUploadStore)
+      const response = await runProjectionFileUpload()
       console.debug('Full response:', response)
 
       const hasErrors = await processResponse(response)
