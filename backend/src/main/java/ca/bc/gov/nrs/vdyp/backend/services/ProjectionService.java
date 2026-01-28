@@ -326,7 +326,7 @@ public class ProjectionService {
 	@Transactional
 	public ProjectionModel
 			createNewProjection(VDYPUserModel actingUser, Parameters params, ModelParameters modelParameters)
-			throws ProjectionServiceException {
+					throws ProjectionServiceException {
 		try {
 			ProjectionEntity entity = new ProjectionEntity();
 			entity.setOwnerUser(em.find(VDYPUserEntity.class, UUID.fromString(actingUser.getVdypUserGUID())));
@@ -482,7 +482,7 @@ public class ProjectionService {
 			);
 
 			repository.persist(existingEntity);
-		} catch (Exception e) {
+		} catch (JsonProcessingException e) {
 			throw new ProjectionServiceException(
 					"Error updating projection parameters", e, projectionGUID,
 					UUID.fromString(actingUser.getVdypUserGUID())
