@@ -129,14 +129,18 @@ import {
   MESSAGE,
   OPTIONS,
 } from '@/constants'
+import { PROJECTION_ERR } from '@/constants/message'
 import type { SpeciesList, MessageDialog } from '@/interfaces/interfaces'
 import { speciesInfoValidation } from '@/validation'
 import { cloneDeep } from 'lodash'
+import { saveProjectionOnPanelConfirm } from '@/services/projection/modelParameterService'
+import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const form = ref<HTMLFormElement>()
 
 const modelParameterStore = useModelParameterStore()
 const appStore = useAppStore()
+const notificationStore = useNotificationStore()
 
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
@@ -204,7 +208,7 @@ const handleSpeciesListUpdate = (updatedList: SpeciesList[]) => {
   }
 }
 
-const onConfirm = () => {
+const onConfirm = async () => {
   // validation - duplicate
   const duplicateSpeciesResult = speciesInfoValidation.validateDuplicateSpecies(
     speciesList.value,
@@ -270,6 +274,15 @@ const onConfirm = () => {
     form.value.validate()
   } else {
     console.warn('Form reference is null. Validation skipped.')
+  }
+
+  // Save projection (create or update) before confirming the panel
+  try {
+    await saveProjectionOnPanelConfirm(modelParameterStore, panelName)
+  } catch (error) {
+    console.error('Error saving projection:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED)
+    return
   }
 
   // this panel is not in a confirmed state

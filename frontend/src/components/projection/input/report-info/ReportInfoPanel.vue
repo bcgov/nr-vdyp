@@ -109,14 +109,19 @@ import {
   ReportConfiguration,
 } from '@/components/projection'
 import { CONSTANTS, MESSAGE } from '@/constants'
+import { PROJECTION_ERR } from '@/constants/message'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { reportInfoValidation } from '@/validation'
+import { saveProjectionOnPanelConfirm as saveModelParamProjection } from '@/services/projection/modelParameterService'
+import { saveProjectionOnPanelConfirm as saveFileUploadProjection } from '@/services/projection/fileUploadService'
+import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const form = ref<HTMLFormElement>()
 
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const fileUploadStore = useFileUploadStore()
+const notificationStore = useNotificationStore()
 
 const messageDialog = ref<MessageDialog>({
   dialog: false,
@@ -435,7 +440,7 @@ const validateRange = (): boolean => {
   }
 }
 
-const onConfirm = () => {
+const onConfirm = async () => {
   if (!validateReportTitleField()) return
   if (!validateProjectionTypeField()) return
   if (!validateComparison()) return
@@ -446,6 +451,19 @@ const onConfirm = () => {
     form.value.validate()
   } else {
     console.warn('Form reference is null. Validation skipped.')
+  }
+
+  // Save projection (create or update) before confirming the panel
+  try {
+    if (isModelParametersMode.value) {
+      await saveModelParamProjection(modelParameterStore, panelName.value)
+    } else {
+      await saveFileUploadProjection(fileUploadStore, panelName.value)
+    }
+  } catch (error) {
+    console.error('Error saving projection:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED)
+    return
   }
 
   // this panel is not in a confirmed state

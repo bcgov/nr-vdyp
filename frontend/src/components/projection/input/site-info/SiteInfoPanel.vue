@@ -260,13 +260,17 @@ import {
 } from '@/components/projection'
 import type { SpeciesGroup, MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
+import { PROJECTION_ERR } from '@/constants/message'
 import { siteInfoValidation } from '@/validation'
 import { isZeroValue } from '@/utils/util'
+import { saveProjectionOnPanelConfirm } from '@/services/projection/modelParameterService'
+import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const form = ref<HTMLFormElement>()
 
 const modelParameterStore = useModelParameterStore()
 const appStore = useAppStore()
+const notificationStore = useNotificationStore()
 
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
@@ -400,7 +404,7 @@ const formattingValues = (): void => {
   }
 }
 
-const onConfirm = () => {
+const onConfirm = async () => {
   // validation - pre-confirm fields (Site Index selection, BEC Zone)
   const preConfirmResult = siteInfoValidation.validatePreConfirmFields(
     siteSpeciesValues.value,
@@ -489,6 +493,15 @@ const onConfirm = () => {
   }
 
   formattingValues()
+
+  // Save projection (create or update) before confirming the panel
+  try {
+    await saveProjectionOnPanelConfirm(modelParameterStore, panelName)
+  } catch (error) {
+    console.error('Error saving projection:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED)
+    return
+  }
 
   // this panel is not in a confirmed state
   if (!isConfirmed.value) {

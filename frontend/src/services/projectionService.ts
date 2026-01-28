@@ -250,6 +250,65 @@ export const updateProjection = async (
 }
 
 /**
+ * Updates a projection's parameters and replaces its associated files.
+ * Deletes all existing files from both filesets and uploads new files.
+ * @param projectionGUID The projection GUID
+ * @param parameters The updated projection parameters
+ * @param polygonFile The new polygon file to upload (File or Blob)
+ * @param layerFile The new layer file to upload (File or Blob)
+ * @returns A promise that resolves to the updated ProjectionModel
+ */
+export const updateProjectionWithFiles = async (
+  projectionGUID: string,
+  parameters: Parameters,
+  polygonFile: File | Blob,
+  layerFile: File | Blob,
+): Promise<ProjectionModel> => {
+  try {
+    // Step 1: Update projection parameters
+    await apiUpdateProjectionParams(projectionGUID, parameters)
+
+    // Step 2: Get the projection to find fileset GUIDs
+    const projectionModel = await apiGetProjection(projectionGUID)
+
+    // Debug: Log created projection model
+    console.log('=== updateProjectionWithFiles Backend Response ===')
+    console.log('projectionGUID:', projectionModel.projectionGUID)
+    console.log('reportTitle:', projectionModel.reportTitle)
+    console.log('reportDescription:', projectionModel.reportDescription)
+    console.log('projectionStatusCode:', projectionModel.projectionStatusCode)
+    console.log('lastUpdatedDate:', projectionModel.lastUpdatedDate)
+    console.log('expiryDate:', projectionModel.expiryDate)
+    console.log('projectionParameters:', projectionModel.projectionParameters)
+    console.log('polygonFileSet:', projectionModel.polygonFileSet)
+    console.log('layerFileSet:', projectionModel.layerFileSet)
+    console.log('Full projectionModel:', JSON.stringify(projectionModel, null, 2))
+    console.log('=== End createProjection ===')
+
+    // Step 3: Delete existing files and upload new ones for polygon fileset
+    if (projectionModel.polygonFileSet?.projectionFileSetGUID) {
+      const polygonFileSetGUID = projectionModel.polygonFileSet.projectionFileSetGUID
+      await deleteAllFilesFromFileSet(projectionGUID, polygonFileSetGUID)
+      await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, polygonFile as File)
+    }
+
+    // Step 4: Delete existing files and upload new ones for layer fileset
+    if (projectionModel.layerFileSet?.projectionFileSetGUID) {
+      const layerFileSetGUID = projectionModel.layerFileSet.projectionFileSetGUID
+      await deleteAllFilesFromFileSet(projectionGUID, layerFileSetGUID)
+      const updatedProjection = await uploadFileToFileSet(projectionGUID, layerFileSetGUID, layerFile as File)
+      return updatedProjection
+    }
+
+    // Return the updated projection if no layer fileset exists
+    return await apiGetProjection(projectionGUID)
+  } catch (error) {
+    console.error('Error updating projection with files:', error)
+    throw error
+  }
+}
+
+/**
  * Deletes a file from a fileset
  * @param projectionGUID The projection GUID
  * @param fileSetGUID The fileset GUID

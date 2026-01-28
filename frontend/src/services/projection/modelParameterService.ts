@@ -11,8 +11,10 @@ import {
 import {
   createProjection as projServiceCreateProjection,
   runProjection as projServiceRunProjection,
+  updateProjectionWithFiles,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
+import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup, SpeciesList, ParsedCsvFileContent } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
@@ -599,7 +601,7 @@ export const buildProjectionParameters = (
       : null,
     yearStart: null,
     yearEnd: null,
-    reportTitle: modelParameterStore.reportTitle,
+    reportTitle: modelParameterStore.reportTitle || DEFAULTS.DEFAULT_VALUES.REPORT_TITLE,
     outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions,
     excludedExecutionOptions,
@@ -656,4 +658,41 @@ export const runProjection = async (
     throw new Error(PROJECTION_ERR.MISSING_GUID)
   }
   return await projServiceRunProjection(projectionGUID)
+}
+
+/**
+ * Saves the projection when a panel's Next button is clicked (Input Model Parameters mode).
+ *
+ * - CREATE mode + first panel (speciesInfo): Creates a new projection with parameters and CSV files,
+ *   stores the GUID, and switches to EDIT mode.
+ * - EDIT mode (any panel): Updates the existing projection parameters and re-uploads CSV files.
+ *
+ * @param modelParameterStore The store containing model parameters.
+ * @param panelName The name of the panel being confirmed.
+ * @throws Error if the save operation fails.
+ */
+export const saveProjectionOnPanelConfirm = async (
+  modelParameterStore: any,
+  panelName: string,
+): Promise<void> => {
+  const appStore = useAppStore()
+
+  if (
+    appStore.viewMode === PROJECTION_VIEW_MODE.CREATE &&
+    panelName === CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO
+  ) {
+    // Create mode + first panel: create projection with CSV files
+    const result = await createProjection(modelParameterStore)
+    appStore.setCurrentProjectionGUID(result.projectionGUID)
+    appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
+  } else if (appStore.viewMode === PROJECTION_VIEW_MODE.EDIT) {
+    // Edit mode: update projection with new CSV files
+    const projectionGUID = appStore.getCurrentProjectionGUID
+    if (!projectionGUID) {
+      throw new Error(PROJECTION_ERR.MISSING_GUID)
+    }
+    const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
+    const projectionParameters = buildProjectionParameters(modelParameterStore)
+    await updateProjectionWithFiles(projectionGUID, projectionParameters, blobPolygon, blobLayer)
+  }
 }

@@ -157,6 +157,7 @@ export const PROGRESS_MSG = Object.freeze({
   DELETING_PROJECTION: 'Deleting Projection...',
   LOADING_PROJECTION: 'Loading Projection...',
   RUNNING_PROJECTION: 'Running Projection...',
+  SAVING_PROJECTION: 'Saving Projection...',
 })
 
 export const SUCCESS_MSG = Object.freeze({
@@ -169,10 +170,13 @@ export const SUCCESS_MSG = Object.freeze({
   INPUT_MODEL_PARAM_RUN_RESULT_W_ERR:
     'Model run completed with errors - check error log',
   PROJECTION_DELETED: 'Projection has been successfully deleted.',
+  PROJECTION_CREATED: 'Projection has been successfully created.',
+  PROJECTION_UPDATED: 'Projection has been successfully updated.',
 })
 
 export const PROJECTION_ERR = Object.freeze({
   DELETE_FAILED: 'Failed to delete the projection. Please try again later.',
   LOAD_FAILED: 'Failed to load the projection. Please try again later.',
   MISSING_GUID: 'No projection is currently selected. Please create or select a projection first.',
+  SAVE_FAILED: 'Failed to save the projection. Please try again.',
 })

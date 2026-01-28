@@ -15,7 +15,12 @@ import {
 import {
   createProjection as projServiceCreateProjection,
   runProjection as projServiceRunProjection,
+  updateProjection,
+  deleteAllFilesFromFileSet,
+  getProjectionById,
 } from '@/services/projectionService'
+import { uploadFileToFileSet } from '@/services/apiActions'
+import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
 import { addExecutionOptionsFromMappings } from '@/utils/util'
 
@@ -242,4 +247,63 @@ export const runProjectionFileUpload = async (
     throw new Error(PROJECTION_ERR.MISSING_GUID)
   }
   return await projServiceRunProjection(projectionGUID)
+}
+
+/**
+ * Saves the projection when a panel's Next button is clicked (File Upload mode).
+ *
+ * - CREATE mode + first panel (reportInfo): Creates a new projection with parameters only (no files),
+ *   stores the GUID, and switches to EDIT mode.
+ * - EDIT mode + reportInfo: Updates the existing projection parameters.
+ * - EDIT mode + attachments: Updates projection parameters and handles file uploads
+ *   (deletes old files, uploads new files if provided).
+ *
+ * @param fileUploadStore The store containing file upload parameters and files.
+ * @param panelName The name of the panel being confirmed.
+ * @throws Error if the save operation fails.
+ */
+export const saveProjectionOnPanelConfirm = async (
+  fileUploadStore: ReturnType<typeof useFileUploadStore>,
+  panelName: string,
+): Promise<void> => {
+  const appStore = useAppStore()
+
+  if (
+    appStore.viewMode === PROJECTION_VIEW_MODE.CREATE &&
+    panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO
+  ) {
+    // Create mode + first panel: create projection with params only (no files yet)
+    const projectionParameters = buildProjectionParameters(fileUploadStore)
+    const result = await projServiceCreateProjection(projectionParameters)
+    appStore.setCurrentProjectionGUID(result.projectionGUID)
+    appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
+  } else if (appStore.viewMode === PROJECTION_VIEW_MODE.EDIT) {
+    const projectionGUID = appStore.getCurrentProjectionGUID
+    if (!projectionGUID) {
+      throw new Error(PROJECTION_ERR.MISSING_GUID)
+    }
+
+    // Update projection parameters
+    const projectionParameters = buildProjectionParameters(fileUploadStore)
+    await updateProjection(projectionGUID, projectionParameters)
+
+    // For Attachments panel, handle file uploads
+    if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS) {
+      const projectionModel = await getProjectionById(projectionGUID)
+
+      // Upload polygon file if a new one was selected
+      if (fileUploadStore.polygonFile && projectionModel.polygonFileSet?.projectionFileSetGUID) {
+        const polygonFileSetGUID = projectionModel.polygonFileSet.projectionFileSetGUID
+        await deleteAllFilesFromFileSet(projectionGUID, polygonFileSetGUID)
+        await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, fileUploadStore.polygonFile as File)
+      }
+
+      // Upload layer file if a new one was selected
+      if (fileUploadStore.layerFile && projectionModel.layerFileSet?.projectionFileSetGUID) {
+        const layerFileSetGUID = projectionModel.layerFileSet.projectionFileSetGUID
+        await deleteAllFilesFromFileSet(projectionGUID, layerFileSetGUID)
+        await uploadFileToFileSet(projectionGUID, layerFileSetGUID, fileUploadStore.layerFile as File)
+      }
+    }
+  }
 }
