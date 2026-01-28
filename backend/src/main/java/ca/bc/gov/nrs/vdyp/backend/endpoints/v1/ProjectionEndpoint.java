@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
+import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
@@ -189,9 +190,12 @@ public class ProjectionEndpoint implements Endpoint {
 	public Response createEmptyProjection(
 			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
-			) Parameters parameters
+			) Parameters parameters,
+			@RestForm(value = ParameterNames.MODEL_PARAMETERS) @PartType(
+				MediaType.APPLICATION_JSON
+			) ModelParameters modelParameters
 	) throws ProjectionServiceException {
-		var created = projectionService.createNewProjection(currentUser.getUser(), parameters);
+		var created = projectionService.createNewProjection(currentUser.getUser(), parameters, modelParameters);
 		return Response.status(Status.CREATED).entity(created).build();
 	}
 
@@ -217,9 +221,13 @@ public class ProjectionEndpoint implements Endpoint {
 			@PathParam("projectionGUID") UUID projectionGUID,
 			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
-			) Parameters parameters
+			) Parameters parameters,
+			@RestForm(value = ParameterNames.MODEL_PARAMETERS) @PartType(
+				MediaType.APPLICATION_JSON
+			) ModelParameters modelParameters
 	) throws ProjectionServiceException {
-		var created = projectionService.editProjectionParameters(projectionGUID, parameters, currentUser.getUser());
+		var created = projectionService
+				.editProjectionParameters(projectionGUID, parameters, modelParameters, currentUser.getUser());
 		return Response.status(Status.OK).entity(created).build();
 	}
 

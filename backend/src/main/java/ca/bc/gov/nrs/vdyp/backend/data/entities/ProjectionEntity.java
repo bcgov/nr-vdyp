@@ -39,8 +39,10 @@ public class ProjectionEntity extends AuditableEntity {
 	@JoinColumn(name = "RESULT_projection_file_set_guid", referencedColumnName = "projection_file_set_guid")
 	private ProjectionFileSetEntity resultFileSet;
 
-	@Column(name = "projection_parameters_json", length = 4000)
+	@Column(name = "projection_parameters_json", length = 3000)
 	private String projectionParameters;
+	@Column(name = "model_parameters_json", length = 2000)
+	private String modelParameters;
 	@Column(name = "start_date")
 	private OffsetDateTime startDate;
 	@Column(name = "end_date")
@@ -80,6 +82,10 @@ public class ProjectionEntity extends AuditableEntity {
 
 	public String getProjectionParameters() {
 		return projectionParameters;
+	}
+
+	public String getModelParameters() {
+		return modelParameters;
 	}
 
 	public OffsetDateTime getStartDate() {
@@ -128,6 +134,10 @@ public class ProjectionEntity extends AuditableEntity {
 
 	public void setProjectionParameters(String projectionParameters) {
 		this.projectionParameters = projectionParameters;
+	}
+
+	public void setModelParameters(String modelParameters) {
+		this.modelParameters = modelParameters;
 	}
 
 	public void setStartDate(OffsetDateTime startDate) {

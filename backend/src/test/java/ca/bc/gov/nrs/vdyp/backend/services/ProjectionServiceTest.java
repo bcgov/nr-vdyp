@@ -55,6 +55,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
+import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import jakarta.persistence.EntityManager;
 
@@ -288,7 +289,9 @@ class ProjectionServiceTest {
 		Parameters params = new Parameters();
 		params.setReportTitle("New Title");
 
-		ProjectionModel model = service.editProjectionParameters(projectionId, params, user(ownerId));
+		ModelParameters modelParameters = null;
+
+		ProjectionModel model = service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId));
 
 		verify(repository).persist(entity);
 		assertThat(model.getReportTitle()).isEqualTo("New Title");
@@ -310,9 +313,11 @@ class ProjectionServiceTest {
 		Parameters params = new Parameters();
 		params.setReportTitle("Whatever");
 
+		ModelParameters modelParameters = null;
+
 		assertThrows(
 				ProjectionStateException.class,
-				() -> service.editProjectionParameters(projectionId, params, user(ownerId))
+				() -> service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId))
 		);
 	}
 
@@ -444,6 +449,8 @@ class ProjectionServiceTest {
 		Parameters params = new Parameters();
 		params.setReportTitle("My Report");
 
+		ModelParameters modelParamsJson = null;
+
 		var draftStatus = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
 		draftStatus.setCode(ProjectionStatusCodeModel.DRAFT);
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT)).thenReturn(draftStatus);
@@ -484,7 +491,7 @@ class ProjectionServiceTest {
 			return null;
 		}).when(repository).persist(any(ProjectionEntity.class));
 
-		ProjectionModel model = service.createNewProjection(actingUser, params);
+		ProjectionModel model = service.createNewProjection(actingUser, params, modelParamsJson);
 
 		assertNotNull(model);
 

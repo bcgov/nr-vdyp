@@ -48,6 +48,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
+import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -166,8 +167,7 @@ public class ProjectionService {
 
 		try {
 			// Included to generate JSON text of parameters as needed
-			String serializedParametersText = objectMapper.writerWithDefaultPrettyPrinter()
-					.writeValueAsString(params);
+			String serializedParametersText = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
 			logger.info(serializedParametersText);
 		} catch (JsonProcessingException e) {
 			logger.warn(MessageFormat.format("{0}: unable to log parameters JSON", projectionId), e);
@@ -324,15 +324,18 @@ public class ProjectionService {
 	}
 
 	@Transactional
-	public ProjectionModel createNewProjection(VDYPUserModel actingUser, Parameters params)
+	public ProjectionModel
+			createNewProjection(VDYPUserModel actingUser, Parameters params, ModelParameters modelParameters)
 			throws ProjectionServiceException {
 		try {
 			ProjectionEntity entity = new ProjectionEntity();
 			entity.setOwnerUser(em.find(VDYPUserEntity.class, UUID.fromString(actingUser.getVdypUserGUID())));
 			extractConvenienceParameters(params, entity);
 
-			entity.setProjectionParameters(
-					objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params)
+			entity.setProjectionParameters(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params));
+
+			entity.setModelParameters(
+					objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(modelParameters)
 			);
 
 			// Create the 3 File Sets for the projection Polygon, Layer and Result
@@ -462,16 +465,29 @@ public class ProjectionService {
 		return assembler.toModel(entity);
 	}
 
-	public ProjectionModel editProjectionParameters(UUID projectionGUID, Parameters params, VDYPUserModel actingUser)
-			throws ProjectionServiceException {
+	public ProjectionModel editProjectionParameters(
+			UUID projectionGUID, Parameters params, ModelParameters modelParameters, VDYPUserModel actingUser
+	) throws ProjectionServiceException {
 		ProjectionEntity existingEntity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(existingEntity, actingUser, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(existingEntity, ProjectionAction.UPDATE);
 
 		extractConvenienceParameters(params, existingEntity);
+		try {
+			// Update the parameters of import
+			existingEntity
+					.setProjectionParameters(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params));
+			existingEntity.setModelParameters(
+					objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(modelParameters)
+			);
 
-		// Update the parameters of import
-		repository.persist(existingEntity);
+			repository.persist(existingEntity);
+		} catch (Exception e) {
+			throw new ProjectionServiceException(
+					"Error updating projection parameters", e, projectionGUID,
+					UUID.fromString(actingUser.getVdypUserGUID())
+			);
+		}
 		return assembler.toModel(existingEntity);
 	}
 
