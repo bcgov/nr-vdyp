@@ -82,7 +82,7 @@ import { useRouter } from 'vue-router'
 import type { Projection, TableHeader, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
-import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, NEW_PROJECTION_TYPE, ROUTE_PATH } from '@/constants/constants'
+import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, NEW_PROJECTION_TYPE, ROUTE_PATH } from '@/constants/constants'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { AppButton, AppProgressCircular } from '@/components'
 import { ProjectionTable, ProjectionCardList, ProjectionPagination } from '@/components/projection'
@@ -94,6 +94,7 @@ import {
   getFileForDownload,
   parseProjectionParams,
   isProjectionReadOnly,
+  mapProjectionStatus,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -256,6 +257,9 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     appStore.setModelSelection(method)
     appStore.setViewMode(isViewMode ? PROJECTION_VIEW_MODE.VIEW : PROJECTION_VIEW_MODE.EDIT)
     appStore.setCurrentProjectionGUID(projectionGUID)
+    appStore.setCurrentProjectionStatus(
+      mapProjectionStatus(projectionModel.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT),
+    )
 
     if (isInputModelParams) {
       // Reset and restore model parameter store

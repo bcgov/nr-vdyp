@@ -26,7 +26,7 @@ import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 /**
  * Maps backend ProjectionStatusCode to frontend ProjectionStatus
  */
-const mapProjectionStatus = (statusCode: string): ProjectionStatus => {
+export const mapProjectionStatus = (statusCode: string): ProjectionStatus => {
   const statusMap: Record<string, ProjectionStatus> = PROJECTION_STATUS
   return statusMap[statusCode] || PROJECTION_STATUS.DRAFT
 }

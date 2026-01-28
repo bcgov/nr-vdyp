@@ -31,7 +31,7 @@
         <StandInfoPanel class="panel-spacing" />
         <ReportInfoPanel class="panel-spacing" />
         <RunProjectionButtonPanel
-          :isDisabled="!modelParameterStore.runModelEnabled"
+          :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -46,7 +46,7 @@
       <template v-if="isFileUploadPanelsVisible">
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
-          :isDisabled="!fileUploadStore.runModelEnabled"
+          :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
