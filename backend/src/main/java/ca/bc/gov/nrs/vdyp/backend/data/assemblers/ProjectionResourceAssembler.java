@@ -29,6 +29,7 @@ public class ProjectionResourceAssembler {
 		ProjectionEntity entity = new ProjectionEntity();
 		entity.setProjectionGUID(UUID.fromString(model.getProjectionGUID()));
 		entity.setProjectionParameters(model.getProjectionParameters());
+		entity.setModelParameters(model.getModelParameters());
 		entity.setPolygonFileSet(pfsra.toEntity(model.getPolygonFileSet()));
 		entity.setLayerFileSet(pfsra.toEntity(model.getLayerFileSet()));
 		entity.setResultFileSet(pfsra.toEntity(model.getResultFileSet()));
@@ -50,6 +51,7 @@ public class ProjectionResourceAssembler {
 		ProjectionModel model = new ProjectionModel();
 		model.setProjectionGUID(entity.getProjectionGUID().toString());
 		model.setProjectionParameters(entity.getProjectionParameters());
+		model.setModelParameters(entity.getModelParameters());
 		model.setPolygonFileSet(pfsra.toModel(entity.getPolygonFileSet()));
 		model.setLayerFileSet(pfsra.toModel(entity.getLayerFileSet()));
 		model.setResultFileSet(pfsra.toModel(entity.getResultFileSet()));

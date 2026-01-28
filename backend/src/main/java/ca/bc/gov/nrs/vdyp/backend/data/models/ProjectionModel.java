@@ -15,6 +15,7 @@ public class ProjectionModel {
 	private ProjectionFileSetModel layerFileSet;
 	private ProjectionFileSetModel resultFileSet;
 	private String projectionParameters;
+	private String modelParameters;
 	private OffsetDateTime startDate;
 	private OffsetDateTime endDate;
 	private CalculationEngineCodeModel calculationEngineCode;
@@ -45,6 +46,10 @@ public class ProjectionModel {
 
 	public String getProjectionParameters() {
 		return projectionParameters;
+	}
+
+	public String getModelParameters() {
+		return modelParameters;
 	}
 
 	public OffsetDateTime getStartDate() {
@@ -102,6 +107,10 @@ public class ProjectionModel {
 
 	public void setProjectionParameters(String projectionParameters) {
 		this.projectionParameters = projectionParameters;
+	}
+
+	public void setModelParameters(String modelParameters) {
+		this.modelParameters = modelParameters;
 	}
 
 	public void setStartDate(OffsetDateTime startDate) {
