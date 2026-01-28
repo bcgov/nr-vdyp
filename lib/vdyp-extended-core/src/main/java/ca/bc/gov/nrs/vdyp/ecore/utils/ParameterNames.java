@@ -18,6 +18,7 @@ package ca.bc.gov.nrs.vdyp.ecore.utils;
 public class ParameterNames {
 	public static final String TRIAL_RUN = "trialRun";
 	public static final String PROJECTION_PARAMETERS = "Projection Parameters";
+	public static final String MODEL_PARAMETERS = "Model Parameters";
 	public static final String HCSV_POLYGON_INPUT_DATA = "HCSV-Polygon";
 	public static final String HCSV_LAYERS_INPUT_DATA = "HCSV-Layers";
 	public static final String SCSV_POLYGON_INPUT_DATA = "SCSV-Polygon";

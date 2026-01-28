@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -36,7 +37,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
@@ -55,6 +58,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
+import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import jakarta.persistence.EntityManager;
 
@@ -288,7 +292,9 @@ class ProjectionServiceTest {
 		Parameters params = new Parameters();
 		params.setReportTitle("New Title");
 
-		ProjectionModel model = service.editProjectionParameters(projectionId, params, user(ownerId));
+		ModelParameters modelParameters = null;
+
+		ProjectionModel model = service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId));
 
 		verify(repository).persist(entity);
 		assertThat(model.getReportTitle()).isEqualTo("New Title");
@@ -310,9 +316,51 @@ class ProjectionServiceTest {
 		Parameters params = new Parameters();
 		params.setReportTitle("Whatever");
 
+		ModelParameters modelParameters = null;
+
 		assertThrows(
 				ProjectionStateException.class,
-				() -> service.editProjectionParameters(projectionId, params, user(ownerId))
+				() -> service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId))
+		);
+	}
+
+	@Test
+	void editProjectionParameters_throwsProjectionServiceException_whenJsonProcessingException()
+			throws JsonProcessingException {
+		ObjectMapper failingMapper = mock(ObjectMapper.class);
+		ObjectWriter writer = mock(ObjectWriter.class);
+
+		when(failingMapper.writerWithDefaultPrettyPrinter()).thenReturn(writer);
+		when(writer.writeValueAsString(any(Parameters.class))).thenReturn("{ }");
+		when(writer.writeValueAsString(any(ModelParameters.class))).thenThrow(new JsonProcessingException("boom") {
+		});
+
+		service = new ProjectionService(
+				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+				calculationEngineCodeLookup, failingMapper
+		);
+
+		UUID projectionId = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.DRAFT);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+
+		Parameters params = new Parameters();
+		params.setReportTitle("Whatever");
+
+		ModelParameters modelParameters = new ModelParameters(
+				List.of(), "", "", "", "", "", "", "", "", "", 55.5f, 0f, 13f, 10000.0f, "7.4+", ""
+		);
+
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId))
 		);
 	}
 
@@ -444,6 +492,8 @@ class ProjectionServiceTest {
 		Parameters params = new Parameters();
 		params.setReportTitle("My Report");
 
+		ModelParameters modelParamsJson = null;
+
 		var draftStatus = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
 		draftStatus.setCode(ProjectionStatusCodeModel.DRAFT);
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT)).thenReturn(draftStatus);
@@ -484,7 +534,7 @@ class ProjectionServiceTest {
 			return null;
 		}).when(repository).persist(any(ProjectionEntity.class));
 
-		ProjectionModel model = service.createNewProjection(actingUser, params);
+		ProjectionModel model = service.createNewProjection(actingUser, params, modelParamsJson);
 
 		assertNotNull(model);
 
