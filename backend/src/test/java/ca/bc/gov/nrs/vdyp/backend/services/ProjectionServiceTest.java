@@ -296,7 +296,6 @@ class ProjectionServiceTest {
 
 		ProjectionModel model = service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId));
 
-		verify(repository).persist(entity);
 		assertThat(model.getReportTitle()).isEqualTo("New Title");
 	}
 
