@@ -465,6 +465,7 @@ public class ProjectionService {
 		return assembler.toModel(entity);
 	}
 
+	@Transactional
 	public ProjectionModel editProjectionParameters(
 			UUID projectionGUID, Parameters params, ModelParameters modelParameters, VDYPUserModel actingUser
 	) throws ProjectionServiceException {
@@ -480,8 +481,6 @@ public class ProjectionService {
 			existingEntity.setModelParameters(
 					objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(modelParameters)
 			);
-
-			repository.persist(existingEntity);
 		} catch (JsonProcessingException e) {
 			throw new ProjectionServiceException(
 					"Error updating projection parameters", e, projectionGUID,
