@@ -1,7 +1,11 @@
 package ca.bc.gov.nrs.vdyp.batch.client.coms;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -27,4 +31,25 @@ public class ComsClient {
 		return mapper.readValue(jsonStringUrl, String.class);
 	}
 
+	public void updateObject(String objectId, Path filePath) throws IOException {
+
+		long contentLength = Files.size(filePath);
+
+		String resolvedContentType = Files.probeContentType(filePath);
+
+		comsRestClient.put() //
+				.uri(uriBuilder -> uriBuilder.path("/object/{objectId}").build(objectId)) //
+				.headers(headers -> {
+					headers.set(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
+					headers.set(HttpHeaders.CONTENT_TYPE, resolvedContentType);
+				}) //
+				.body(outputStream -> Files.copy(filePath, outputStream)) //
+				.retrieve().onStatus(
+						HttpStatusCode::isError, //
+						(req, res) -> {
+							throw new IOException("COMS updateObject failed: HTTP " + res.getStatusCode());
+						}
+				) //
+				.body(String.class);
+	}
 }
