@@ -238,73 +238,74 @@ export const getProjectionById = async (
 }
 
 /**
- * Updates projection parameters
+ * Updates only the projection parameters (without model parameters).
+ * Use this for basic parameter updates that don't require model parameter changes.
  * @param projectionGUID The projection GUID
  * @param parameters The updated projection parameters
- * @param modelParameters Optional model parameters for Input Model Parameters mode
  * @returns A promise that resolves to the updated ProjectionModel
  */
-export const updateProjection = async (
+export const updateProjectionParams = async (
   projectionGUID: string,
   parameters: Parameters,
-  modelParameters?: ModelParameters,
 ): Promise<ProjectionModel> => {
   try {
-    return await apiUpdateProjectionParams(projectionGUID, parameters, modelParameters)
+    console.log('=== updateProjectionParams ===')
+
+    console.log('org projectionParameters:', JSON.stringify(parameters))
+
+    const updatedProjection = await apiUpdateProjectionParams(projectionGUID, parameters)
+    console.log('updated projectionParameters:', updatedProjection.projectionParameters)
+
+    // Step 2: Get the updated projection
+    const projectionModel = await apiGetProjection(projectionGUID)
+
+    console.log('get projectionParameters:', projectionModel.projectionParameters)
+    // console.log('Full projectionModel:', JSON.stringify(projectionModel, null, 2))
+
+    // Return the updated projection
+    return projectionModel
   } catch (error) {
-    console.error('Error updating projection:', error)
+    console.error('Error updating projection parameters:', error)
     throw error
   }
 }
 
 /**
- * Updates a projection's parameters and replaces its associated files.
- * Deletes all existing files from both filesets and uploads new files.
+ * Updates projection parameters along with model parameters.
+ * Use this for Input Model Parameters mode where both projection settings
+ * and model-specific parameters need to be updated together.
  * @param projectionGUID The projection GUID
  * @param parameters The updated projection parameters
- * @param polygonFile The new polygon file to upload (File or Blob)
- * @param layerFile The new layer file to upload (File or Blob)
  * @param modelParameters Optional model parameters for Input Model Parameters mode
  * @returns A promise that resolves to the updated ProjectionModel
  */
-export const updateProjectionWithFiles = async (
+export const updateProjectionParamsWithModel = async (
   projectionGUID: string,
   parameters: Parameters,
   modelParameters?: ModelParameters,
 ): Promise<ProjectionModel> => {
   try {
+    console.log('=== updateProjectionParamsWithModel ===')
 
-    console.log('=== updateProjectionWithFiles before apiUpdateProjectionParams call ===')
+    console.log('org projectionParameters:', JSON.stringify(parameters))
+    console.log('org modelParameters:', JSON.stringify(modelParameters))
 
-    console.log('Parameters:', JSON.stringify(parameters))
-    console.log('ModelParameters:', JSON.stringify(modelParameters))
+    // Step 1: Update projection parameters and model parameters
+    const updatedProjection = await apiUpdateProjectionParams(projectionGUID, parameters, modelParameters)
+    console.log('updated projectionParameters:', updatedProjection.projectionParameters)
+    console.log('updated modelParameters:', updatedProjection.modelParameters)
 
-    // Step 1: Update projection parameters
-    const result = await apiUpdateProjectionParams(projectionGUID, parameters, modelParameters)
-    console.log('modelParameters:', result.modelParameters)
-
-    // Step 2: Get the projection to find fileset GUIDs
+    // Step 2: Get the updated projection
     const projectionModel = await apiGetProjection(projectionGUID)
 
-    // Debug: Log created projection model
-    console.log('=== updateProjectionWithFiles Backend Response ===')
-    console.log('projectionGUID:', projectionModel.projectionGUID)
-    console.log('reportTitle:', projectionModel.reportTitle)
-    console.log('reportDescription:', projectionModel.reportDescription)
-    console.log('projectionStatusCode:', projectionModel.projectionStatusCode)
-    console.log('lastUpdatedDate:', projectionModel.lastUpdatedDate)
-    console.log('expiryDate:', projectionModel.expiryDate)
-    console.log('projectionParameters:', projectionModel.projectionParameters)
-    console.log('modelParameters:', projectionModel.modelParameters)
-    console.log('polygonFileSet:', projectionModel.polygonFileSet)
-    console.log('layerFileSet:', projectionModel.layerFileSet)
-    console.log('Full projectionModel:', JSON.stringify(projectionModel, null, 2))
-    console.log('=== End createProjection ===')
+    console.log('get projectionParameters:', projectionModel.projectionParameters)
+    console.log('get modelParameters:', projectionModel.modelParameters)
+    // console.log('Full projectionModel:', JSON.stringify(projectionModel, null, 2))
 
-    // Return the updated projection if no layer fileset exists
-    return await apiGetProjection(projectionGUID)
+    // Return the updated projection
+    return projectionModel
   } catch (error) {
-    console.error('Error updating projection with files:', error)
+    console.error('Error updating projection with model parameters:', error)
     throw error
   }
 }

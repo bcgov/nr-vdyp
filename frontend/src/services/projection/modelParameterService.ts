@@ -13,7 +13,7 @@ import {
 import {
   createProjection as projServiceCreateProjection,
   runProjection as projServiceRunProjection,
-  updateProjectionWithFiles,
+  updateProjectionParamsWithModel,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
@@ -736,6 +736,6 @@ export const saveProjectionOnPanelConfirm = async (
 
     const projectionParameters = buildProjectionParameters(modelParameterStore)
     const modelParameters = buildModelParameters(modelParameterStore)
-    await updateProjectionWithFiles(projectionGUID, projectionParameters, modelParameters)
+    await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters)
   }
 }

@@ -15,7 +15,7 @@ import {
 import {
   createProjection as projServiceCreateProjection,
   runProjection as projServiceRunProjection,
-  updateProjection,
+  updateProjectionParams,
   // deleteAllFilesFromFileSet,
   // getProjectionById,
 } from '@/services/projectionService'
@@ -285,7 +285,7 @@ export const saveProjectionOnPanelConfirm = async (
 
     // Update projection parameters
     const projectionParameters = buildProjectionParameters(fileUploadStore)
-    await updateProjection(projectionGUID, projectionParameters)
+    await updateProjectionParams(projectionGUID, projectionParameters)
 
     // For Attachments panel, handle file uploads
     // TODO VDYP-825
