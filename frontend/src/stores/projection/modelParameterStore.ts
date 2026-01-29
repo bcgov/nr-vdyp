@@ -307,31 +307,13 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     startingAge.value = params.ageStart
     finishingAge.value = params.ageEnd
     ageIncrement.value = params.ageIncrement
-    startYear.value = params.yearStart
-    endYear.value = params.yearEnd
-
-    // Determine selectedAgeYearRange based on what values exist
-    const hasAge = params.ageStart !== null || params.ageEnd !== null
-    const hasYear = params.yearStart !== null || params.yearEnd !== null
-    if (hasAge && hasYear) {
-      selectedAgeYearRange.value = params.combineAgeYearRange || 'intersect'
-    } else if (hasYear) {
-      selectedAgeYearRange.value = CONSTANTS.AGE_YEAR_RANGE.YEAR
-    } else {
-      selectedAgeYearRange.value = CONSTANTS.AGE_YEAR_RANGE.AGE
-    }
 
     // Restore execution options
     const options = params.selectedExecutionOptions
 
     isForwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.ForwardGrowEnabled)
     isBackwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.BackGrowEnabled)
-    isByLayerEnabled.value = options.includes(ExecutionOptionsEnum.DoSummarizeProjectionByLayer)
     isBySpeciesEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)
-    isPolygonIDEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable)
-    isProjectionModeEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable)
-    isCurrentYearEnabled.value = options.includes(ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables)
-    isReferenceYearEnabled.value = options.includes(ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables)
     incSecondaryHeight.value = options.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)
     isComputedMAIEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
     isCulminationValuesEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)

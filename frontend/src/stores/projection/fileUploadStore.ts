@@ -196,17 +196,18 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     ageIncrement.value = params.ageIncrement
     startYear.value = params.yearStart
     endYear.value = params.yearEnd
+    yearIncrement.value = params.ageIncrement
 
     // Determine selectedAgeYearRange based on what values exist
     const hasAge = params.ageStart !== null || params.ageEnd !== null
     const hasYear = params.yearStart !== null || params.yearEnd !== null
-    if (hasAge && hasYear) {
-      selectedAgeYearRange.value = params.combineAgeYearRange || 'intersect'
+    if (hasAge) {
+      selectedAgeYearRange.value = CONSTANTS.AGE_YEAR_RANGE.AGE
     } else if (hasYear) {
       selectedAgeYearRange.value = CONSTANTS.AGE_YEAR_RANGE.YEAR
-    } else {
-      selectedAgeYearRange.value = CONSTANTS.AGE_YEAR_RANGE.AGE
     }
+
+    specificYear.value = params.forceYear
 
     // Restore execution options
     const options = params.selectedExecutionOptions
