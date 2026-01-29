@@ -5,7 +5,7 @@ import {
   RunHCSVProjectionApi,
   ParameterNamesEnum,
 } from '@/services/vdyp-api/'
-import type { Parameters } from '@/services/vdyp-api/'
+import type { Parameters, ModelParameters } from '@/services/vdyp-api/'
 import axiosInstance from '@/services/axiosInstance'
 import type { AxiosRequestConfig } from 'axios'
 
@@ -107,11 +107,12 @@ export const apiClient = {
   /**
    * Creates a new empty projection with default parameters.
    * @param parameters The projection parameters.
+   * @param modelParameters Optional model parameters for Input Model Parameters mode.
    * @param options Optional Axios request configuration.
    * @returns The Axios promise for the created projection.
    */
-  createProjection: (parameters: Parameters, options?: AxiosRequestConfig) => {
-    return projectionApiInstance.createProjection(parameters, options)
+  createProjection: (parameters: Parameters, modelParameters?: ModelParameters, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.createProjection(parameters, modelParameters, options)
   },
 
   /**
@@ -128,17 +129,20 @@ export const apiClient = {
    * Updates projection parameters.
    * @param projectionGUID The projection GUID.
    * @param parameters The updated projection parameters.
+   * @param modelParameters Optional model parameters for Input Model Parameters mode.
    * @param options Optional Axios request configuration.
    * @returns The Axios promise for the updated projection.
    */
   updateProjectionParams: (
     projectionGUID: string,
     parameters: Parameters,
+    modelParameters?: ModelParameters,
     options?: AxiosRequestConfig,
   ) => {
     return projectionApiInstance.updateProjectionParams(
       projectionGUID,
       parameters,
+      modelParameters,
       options,
     )
   },

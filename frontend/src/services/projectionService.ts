@@ -10,7 +10,7 @@ import {
   getFileSetFiles as apiGetFileSetFiles,
   getFileForDownload as apiGetFileForDownload,
 } from '@/services/apiActions'
-import type { ProjectionModel, Parameters, FileMappingModel } from '@/services/vdyp-api'
+import type { ProjectionModel, Parameters, FileMappingModel, ModelParameters } from '@/services/vdyp-api'
 import type { Projection, ProjectionStatus, ParsedProjectionParameters } from '@/interfaces/interfaces'
 import {
   MODEL_SELECTION,
@@ -135,12 +135,14 @@ export const fetchUserProjections = async (): Promise<Projection[]> => {
  * @param parameters The projection parameters
  * @param polygonFile Optional polygon file to upload (File or Blob)
  * @param layerFile Optional layer file to upload (File or Blob)
+ * @param modelParameters Optional model parameters for Input Model Parameters mode
  * @returns A promise that resolves to the created ProjectionModel
  */
 export const createProjection = async (
   parameters: Parameters,
   polygonFile?: File | Blob,
   layerFile?: File | Blob,
+  modelParameters?: ModelParameters,
 ): Promise<ProjectionModel> => {
   try {
     // Debug: Log parameters size
@@ -148,9 +150,12 @@ export const createProjection = async (
     console.log('=== createProjection Debug ===')
     console.log('Parameters JSON length:', parametersJson.length, 'bytes')
     console.log('Parameters:', parametersJson)
+    if (modelParameters) {
+      console.log('ModelParameters:', JSON.stringify(modelParameters))
+    }
 
     // Step 1: Create the projection
-    const projectionModel = await apiCreateProjection(parameters)
+    const projectionModel = await apiCreateProjection(parameters, modelParameters)
 
     // Debug: Log created projection model
     console.log('=== createProjection Backend Response ===')
@@ -161,6 +166,7 @@ export const createProjection = async (
     console.log('lastUpdatedDate:', projectionModel.lastUpdatedDate)
     console.log('expiryDate:', projectionModel.expiryDate)
     console.log('projectionParameters:', projectionModel.projectionParameters)
+    console.log('modelParameters:', projectionModel.modelParameters)
     console.log('polygonFileSet:', projectionModel.polygonFileSet)
     console.log('layerFileSet:', projectionModel.layerFileSet)
     console.log('Full projectionModel:', JSON.stringify(projectionModel, null, 2))
@@ -235,14 +241,16 @@ export const getProjectionById = async (
  * Updates projection parameters
  * @param projectionGUID The projection GUID
  * @param parameters The updated projection parameters
+ * @param modelParameters Optional model parameters for Input Model Parameters mode
  * @returns A promise that resolves to the updated ProjectionModel
  */
 export const updateProjection = async (
   projectionGUID: string,
   parameters: Parameters,
+  modelParameters?: ModelParameters,
 ): Promise<ProjectionModel> => {
   try {
-    return await apiUpdateProjectionParams(projectionGUID, parameters)
+    return await apiUpdateProjectionParams(projectionGUID, parameters, modelParameters)
   } catch (error) {
     console.error('Error updating projection:', error)
     throw error
@@ -256,6 +264,7 @@ export const updateProjection = async (
  * @param parameters The updated projection parameters
  * @param polygonFile The new polygon file to upload (File or Blob)
  * @param layerFile The new layer file to upload (File or Blob)
+ * @param modelParameters Optional model parameters for Input Model Parameters mode
  * @returns A promise that resolves to the updated ProjectionModel
  */
 export const updateProjectionWithFiles = async (
@@ -263,10 +272,18 @@ export const updateProjectionWithFiles = async (
   parameters: Parameters,
   polygonFile: File | Blob,
   layerFile: File | Blob,
+  modelParameters?: ModelParameters,
 ): Promise<ProjectionModel> => {
   try {
+
+    console.log('=== updateProjectionWithFiles before apiUpdateProjectionParams call ===')
+
+    console.log('Parameters:', JSON.stringify(parameters))
+    console.log('ModelParameters:', JSON.stringify(modelParameters))
+
     // Step 1: Update projection parameters
-    await apiUpdateProjectionParams(projectionGUID, parameters)
+    const result = await apiUpdateProjectionParams(projectionGUID, parameters, modelParameters)
+    console.log('modelParameters:', result.modelParameters)
 
     // Step 2: Get the projection to find fileset GUIDs
     const projectionModel = await apiGetProjection(projectionGUID)
@@ -280,6 +297,7 @@ export const updateProjectionWithFiles = async (
     console.log('lastUpdatedDate:', projectionModel.lastUpdatedDate)
     console.log('expiryDate:', projectionModel.expiryDate)
     console.log('projectionParameters:', projectionModel.projectionParameters)
+    console.log('modelParameters:', projectionModel.modelParameters)
     console.log('polygonFileSet:', projectionModel.polygonFileSet)
     console.log('layerFileSet:', projectionModel.layerFileSet)
     console.log('Full projectionModel:', JSON.stringify(projectionModel, null, 2))

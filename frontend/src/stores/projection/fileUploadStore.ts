@@ -270,16 +270,16 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
       }
       runModelEnabled.value = false
     } else {
-      // In edit mode, all panels are confirmed and editable
+      // In edit mode, only first panel is open and editable (same as new projection)
       panelOpenStates.value = {
         reportInfo: CONSTANTS.PANEL.OPEN,
-        attachments: CONSTANTS.PANEL.OPEN,
+        attachments: CONSTANTS.PANEL.CLOSE,
       }
       panelState.value = {
-        reportInfo: { confirmed: true, editable: true },
-        attachments: { confirmed: true, editable: true },
+        reportInfo: { confirmed: false, editable: true },
+        attachments: { confirmed: false, editable: false },
       }
-      runModelEnabled.value = true
+      runModelEnabled.value = false
     }
   }
 

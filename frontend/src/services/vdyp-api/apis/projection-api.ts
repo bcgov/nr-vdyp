@@ -8,6 +8,7 @@ import type {
   FileMappingModel,
   Parameters,
   FileUpload,
+  ModelParameters,
 } from '../models'
 import { ParameterNamesEnum } from '../models'
 import { env } from '@/env'
@@ -65,6 +66,7 @@ export const ProjectionApiAxiosParamCreator = function (
      */
     createProjection: async (
       parameters: Parameters,
+      modelParameters?: ModelParameters,
       options: AxiosRequestConfig = {},
     ): Promise<RequestArgs> => {
       const localVarPath = `/api/v8/projection/new`
@@ -85,6 +87,13 @@ export const ProjectionApiAxiosParamCreator = function (
         ParameterNamesEnum.PROJECTION_PARAMETERS,
         new Blob([JSON.stringify(parameters)], { type: 'application/json' }),
       )
+
+      if (modelParameters) {
+        formData.append(
+          ParameterNamesEnum.MODEL_PARAMETERS,
+          new Blob([JSON.stringify(modelParameters)], { type: 'application/json' }),
+        )
+      }
 
       localVarHeaderParameter['Content-Type'] = 'multipart/form-data'
 
@@ -172,6 +181,7 @@ export const ProjectionApiAxiosParamCreator = function (
     updateProjectionParams: async (
       projectionGUID: string,
       parameters: Parameters,
+      modelParameters?: ModelParameters,
       options: AxiosRequestConfig = {},
     ): Promise<RequestArgs> => {
       if (projectionGUID === null || projectionGUID === undefined) {
@@ -197,6 +207,13 @@ export const ProjectionApiAxiosParamCreator = function (
         ParameterNamesEnum.PROJECTION_PARAMETERS,
         new Blob([JSON.stringify(parameters)], { type: 'application/json' }),
       )
+
+      if (modelParameters) {
+        formData.append(
+          ParameterNamesEnum.MODEL_PARAMETERS,
+          new Blob([JSON.stringify(modelParameters)], { type: 'application/json' }),
+        )
+      }
 
       localVarHeaderParameter['Content-Type'] = 'multipart/form-data'
 
@@ -640,6 +657,7 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
 
     async createProjection(
       parameters: Parameters,
+      modelParameters?: ModelParameters,
       options?: AxiosRequestConfig,
     ): Promise<
       (
@@ -650,6 +668,7 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
       const localVarAxiosArgs =
         await ProjectionApiAxiosParamCreator(configuration).createProjection(
           parameters,
+          modelParameters,
           options,
         )
       return (
@@ -693,6 +712,7 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
     async updateProjectionParams(
       projectionGUID: string,
       parameters: Parameters,
+      modelParameters?: ModelParameters,
       options?: AxiosRequestConfig,
     ): Promise<
       (
@@ -703,7 +723,7 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
       const localVarAxiosArgs =
         await ProjectionApiAxiosParamCreator(
           configuration,
-        ).updateProjectionParams(projectionGUID, parameters, options)
+        ).updateProjectionParams(projectionGUID, parameters, modelParameters, options)
       return (
         axios: AxiosInstance = globalAxios,
         basePath: string = BASE_PATH,
@@ -943,10 +963,11 @@ export const ProjectionApiFactory = function (
 
     async createProjection(
       parameters: Parameters,
+      modelParameters?: ModelParameters,
       options?: AxiosRequestConfig,
     ): Promise<AxiosResponse<ProjectionModel>> {
       return ProjectionApiFp(configuration)
-        .createProjection(parameters, options)
+        .createProjection(parameters, modelParameters, options)
         .then((request) => request(axios, basePath))
     },
 
@@ -962,10 +983,11 @@ export const ProjectionApiFactory = function (
     async updateProjectionParams(
       projectionGUID: string,
       parameters: Parameters,
+      modelParameters?: ModelParameters,
       options?: AxiosRequestConfig,
     ): Promise<AxiosResponse<ProjectionModel>> {
       return ProjectionApiFp(configuration)
-        .updateProjectionParams(projectionGUID, parameters, options)
+        .updateProjectionParams(projectionGUID, parameters, modelParameters, options)
         .then((request) => request(axios, basePath))
     },
 
@@ -1072,10 +1094,11 @@ export class ProjectionApi extends BaseAPI {
    */
   public async createProjection(
     parameters: Parameters,
+    modelParameters?: ModelParameters,
     options?: AxiosRequestConfig,
   ): Promise<AxiosResponse<ProjectionModel>> {
     return ProjectionApiFp(this.configuration)
-      .createProjection(parameters, options)
+      .createProjection(parameters, modelParameters, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -1097,10 +1120,11 @@ export class ProjectionApi extends BaseAPI {
   public async updateProjectionParams(
     projectionGUID: string,
     parameters: Parameters,
+    modelParameters?: ModelParameters,
     options?: AxiosRequestConfig,
   ): Promise<AxiosResponse<ProjectionModel>> {
     return ProjectionApiFp(this.configuration)
-      .updateProjectionParams(projectionGUID, parameters, options)
+      .updateProjectionParams(projectionGUID, parameters, modelParameters, options)
       .then((request) => request(this.axios, this.basePath))
   }
 

@@ -5,6 +5,7 @@ import type {
   RootResource,
   Parameters,
   FileMappingModel,
+  ModelParameters,
 } from '@/services/vdyp-api'
 
 /**
@@ -95,13 +96,15 @@ export const getUserProjections = async (): Promise<ProjectionModel[]> => {
 /**
  * Creates a new empty projection with default parameters.
  * @param parameters The projection parameters.
+ * @param modelParameters Optional model parameters for Input Model Parameters mode.
  * @returns A promise that resolves to the created ProjectionModel.
  */
 export const createProjection = async (
   parameters: Parameters,
+  modelParameters?: ModelParameters,
 ): Promise<ProjectionModel> => {
   try {
-    const response = await apiClient.createProjection(parameters)
+    const response = await apiClient.createProjection(parameters, modelParameters)
     return response.data
   } catch (error) {
     console.error('Error creating projection:', error)
@@ -147,16 +150,19 @@ export const getProjection = async (
  * Updates projection parameters.
  * @param projectionGUID The projection GUID.
  * @param parameters The updated projection parameters.
+ * @param modelParameters Optional model parameters for Input Model Parameters mode.
  * @returns A promise that resolves to the updated ProjectionModel.
  */
 export const updateProjectionParams = async (
   projectionGUID: string,
   parameters: Parameters,
+  modelParameters?: ModelParameters,
 ): Promise<ProjectionModel> => {
   try {
     const response = await apiClient.updateProjectionParams(
       projectionGUID,
       parameters,
+      modelParameters,
     )
     return response.data
   } catch (error) {

@@ -103,6 +103,7 @@ import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import {
   ExecutionOptionsEnum,
+  type ModelParameters,
 } from '@/services/vdyp-api'
 import { parseCsvFileContent } from '@/services/projection/modelParameterService'
 
@@ -266,13 +267,26 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
       modelParameterStore.resetStore()
       modelParameterStore.restoreFromProjectionParams(params, isViewMode)
 
-      // Load and parse file content if available
-      if (projectionModel.polygonFileSet?.projectionFileSetGUID &&
-          projectionModel.layerFileSet?.projectionFileSetGUID) {
+      // Restore from modelParameters if available, otherwise fall back to file content
+      let restoredFromModelParams = false
+      if (projectionModel.modelParameters) {
+        try {
+          const modelParams: ModelParameters = JSON.parse(projectionModel.modelParameters)
+          modelParameterStore.restoreFromModelParameters(modelParams)
+          restoredFromModelParams = true
+        } catch (err) {
+          console.error('Error parsing modelParameters:', err)
+        }
+      }
+
+      // Fall back to loading from file content if modelParameters was not available or failed to parse
+      const hasFilesets = projectionModel.polygonFileSet?.projectionFileSetGUID &&
+          projectionModel.layerFileSet?.projectionFileSetGUID
+      if (!restoredFromModelParams && hasFilesets) {
         await loadFileContentForModelParams(
           projectionGUID,
-          projectionModel.polygonFileSet.projectionFileSetGUID,
-          projectionModel.layerFileSet.projectionFileSetGUID,
+          projectionModel.polygonFileSet!.projectionFileSetGUID,
+          projectionModel.layerFileSet!.projectionFileSetGUID,
         )
       }
     } else {

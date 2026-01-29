@@ -5,6 +5,7 @@ import type { PanelName, PanelState } from '@/types/types'
 import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters, ParsedCsvFileContent } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
+import type { ModelParameters } from '@/services/vdyp-api'
 
 export const useModelParameterStore = defineStore('modelParameter', () => {
   // panel open
@@ -405,20 +406,20 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       }
       runModelEnabled.value = false
     } else {
-      // In edit mode, all panels are confirmed and editable
+      // In edit mode, only first panel is open and editable (same as new projection)
       panelOpenStates.value = {
         speciesInfo: CONSTANTS.PANEL.OPEN,
-        siteInfo: CONSTANTS.PANEL.OPEN,
-        standInfo: CONSTANTS.PANEL.OPEN,
-        reportInfo: CONSTANTS.PANEL.OPEN,
+        siteInfo: CONSTANTS.PANEL.CLOSE,
+        standInfo: CONSTANTS.PANEL.CLOSE,
+        reportInfo: CONSTANTS.PANEL.CLOSE,
       }
       panelState.value = {
-        speciesInfo: { confirmed: true, editable: true },
-        siteInfo: { confirmed: true, editable: true },
-        standInfo: { confirmed: true, editable: true },
-        reportInfo: { confirmed: true, editable: true },
+        speciesInfo: { confirmed: false, editable: true },
+        siteInfo: { confirmed: false, editable: false },
+        standInfo: { confirmed: false, editable: false },
+        reportInfo: { confirmed: false, editable: false },
       }
-      runModelEnabled.value = true
+      runModelEnabled.value = false
     }
   }
 
@@ -429,7 +430,13 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const restoreFromFileContent = (parsed: ParsedCsvFileContent) => {
     // Restore species info
     derivedBy.value = parsed.derivedBy
-    speciesList.value = parsed.speciesList
+    // Format percent values with proper decimal places
+    speciesList.value = parsed.speciesList.map((item) => ({
+      species: item.species,
+      percent: item.percent !== null && item.percent !== undefined && item.percent !== ''
+        ? Number.parseFloat(item.percent as string).toFixed(CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM)
+        : null,
+    }))
     updateSpeciesGroup()
 
     if (parsed.highestPercentSpecies) {
@@ -454,6 +461,66 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     // Restore reference year
     if (parsed.referenceYear) {
       referenceYear.value = parsed.referenceYear
+    }
+  }
+
+  /**
+   * Restore species, site, and stand info from model parameters JSON
+   * @param params The ModelParameters object from the backend
+   */
+  const restoreFromModelParameters = (params: ModelParameters) => {
+    // Restore species info
+    derivedBy.value = params.derivedBy
+
+    // Restore species list from params.species
+    if (params.species && params.species.length > 0) {
+      speciesList.value = []
+      for (let i = 0; i < 6; i++) {
+        if (i < params.species.length) {
+          const percentValue = params.species[i].percent
+          let formattedPercent: string | null = null
+          if (percentValue !== null && percentValue !== undefined) {
+            // Convert to number (handles both number and string from JSON) and format with decimal
+            const numValue = typeof percentValue === 'string' ? Number.parseFloat(percentValue) : percentValue
+            formattedPercent = numValue.toFixed(CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM)
+          }
+          speciesList.value.push({
+            species: params.species[i].code,
+            percent: formattedPercent,
+          })
+        } else {
+          speciesList.value.push({ species: null, percent: null })
+        }
+      }
+      updateSpeciesGroup()
+    }
+
+    // Restore site species
+    if (params.siteSpecies) {
+      highestPercentSpecies.value = params.siteSpecies
+      selectedSiteSpecies.value = params.siteSpecies
+    }
+
+    // Restore site info
+    becZone.value = params.becZone
+    ecoZone.value = params.ecoZone
+    siteSpeciesValues.value = params.siteIndex
+    ageType.value = params.ageYears
+    spzAge.value = params.speciesAge !== null ? params.speciesAge.toString() : null
+    spzHeight.value = params.speciesHeight !== null ? params.speciesHeight.toString() : null
+    bha50SiteIndex.value = params.bha50SiteIndex !== null ? params.bha50SiteIndex.toString() : null
+
+    // Restore stand info
+    percentStockableArea.value = params.stockable !== null ? params.stockable.toString() : null
+    crownClosure.value = params.cc !== null ? params.cc.toString() : null
+    basalArea.value = params.BA !== null ? params.BA.toString() : null
+    treesPerHectare.value = params.TPH !== null ? params.TPH.toString() : null
+    minDBHLimit.value = params.minDBHLimit
+    currentDiameter.value = params.currentDiameter
+
+    // Set reference year to current year if not set
+    if (!referenceYear.value) {
+      referenceYear.value = new Date().getFullYear()
     }
   }
 
@@ -520,5 +587,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     resetStore,
     restoreFromProjectionParams,
     restoreFromFileContent,
+    restoreFromModelParameters,
   }
 })

@@ -6,7 +6,9 @@ import {
   DebugOptionsEnum,
   MetadataToOutputEnum,
   type Parameters,
-  type ProjectionModel
+  type ProjectionModel,
+  type ModelParameters,
+  type ModelSpecies,
 } from '@/services/vdyp-api'
 import {
   createProjection as projServiceCreateProjection,
@@ -619,6 +621,44 @@ export const buildProjectionParameters = (
 }
 
 /**
+ * Builds model parameters from the model parameter store.
+ * This creates a JSON structure that will be sent to the backend to persist
+ * the user's selections for Input Model Parameters mode.
+ * @param modelParameterStore The store containing model parameters.
+ * @returns The model parameters object.
+ */
+export const buildModelParameters = (
+  modelParameterStore: any,
+): ModelParameters => {
+  // Build species list from the store
+  const species: ModelSpecies[] = modelParameterStore.speciesList
+    .filter((item: SpeciesList) => item.species !== null && item.percent !== null)
+    .map((item: SpeciesList) => ({
+      code: item.species as string,
+      percent: item.percent !== null ? Number.parseFloat(item.percent as string) : null,
+    }))
+
+  return {
+    species,
+    derivedBy: modelParameterStore.derivedBy,
+    becZone: modelParameterStore.becZone,
+    ecoZone: modelParameterStore.ecoZone,
+    siteIndex: modelParameterStore.siteSpeciesValues,
+    siteSpecies: modelParameterStore.selectedSiteSpecies || modelParameterStore.highestPercentSpecies,
+    ageYears: modelParameterStore.ageType,
+    speciesAge: modelParameterStore.spzAge ? Number.parseFloat(modelParameterStore.spzAge) : null,
+    speciesHeight: modelParameterStore.spzHeight ? Number.parseFloat(modelParameterStore.spzHeight) : null,
+    bha50SiteIndex: modelParameterStore.bha50SiteIndex ? Number.parseFloat(modelParameterStore.bha50SiteIndex) : null,
+    stockable: modelParameterStore.percentStockableArea ? Number.parseFloat(modelParameterStore.percentStockableArea) : null,
+    cc: modelParameterStore.crownClosure ? Number.parseFloat(modelParameterStore.crownClosure) : null,
+    BA: modelParameterStore.basalArea ? Number.parseFloat(modelParameterStore.basalArea) : null,
+    TPH: modelParameterStore.treesPerHectare ? Number.parseFloat(modelParameterStore.treesPerHectare) : null,
+    minDBHLimit: modelParameterStore.minDBHLimit,
+    currentDiameter: modelParameterStore.currentDiameter,
+  }
+}
+
+/**
  * Creates a projection with the generated CSV files and parameters (without running it).
  * @param modelParameterStore The store containing model parameters.
  * @param createProjectionFunc Optional projection function (defaults to projServiceCreateProjection).
@@ -630,15 +670,18 @@ export const createProjection = async (
     parameters: Parameters,
     polygonFile?: File | Blob,
     layerFile?: File | Blob,
+    modelParameters?: ModelParameters,
   ) => Promise<ProjectionModel> = projServiceCreateProjection,
 ): Promise<ProjectionModel> => {
   const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
   const projectionParameters = buildProjectionParameters(modelParameterStore)
+  const modelParameters = buildModelParameters(modelParameterStore)
 
   const result = await createProjectionFunc(
     projectionParameters,
     blobPolygon,
     blobLayer,
+    modelParameters,
   )
   return result
 }
@@ -693,6 +736,7 @@ export const saveProjectionOnPanelConfirm = async (
     }
     const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
     const projectionParameters = buildProjectionParameters(modelParameterStore)
-    await updateProjectionWithFiles(projectionGUID, projectionParameters, blobPolygon, blobLayer)
+    const modelParameters = buildModelParameters(modelParameterStore)
+    await updateProjectionWithFiles(projectionGUID, projectionParameters, blobPolygon, blobLayer, modelParameters)
   }
 }
