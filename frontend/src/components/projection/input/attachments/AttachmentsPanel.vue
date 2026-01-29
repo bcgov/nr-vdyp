@@ -113,16 +113,16 @@ import { useAppStore } from '@/stores/projection/appStore'
 import { AppMessageDialog } from '@/components'
 import { ActionPanel } from '@/components/projection'
 import { CONSTANTS, MESSAGE } from '@/constants'
-import { PROJECTION_ERR } from '@/constants/message'
+// import { PROJECTION_ERR } from '@/constants/message'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { fileUploadValidation } from '@/validation'
-import { saveProjectionOnPanelConfirm } from '@/services/projection/fileUploadService'
-import { useNotificationStore } from '@/stores/common/notificationStore'
+// import { saveProjectionOnPanelConfirm } from '@/services/projection/fileUploadService'
+// import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const form = ref<HTMLFormElement>()
 const fileUploadStore = useFileUploadStore()
 const appStore = useAppStore()
-const notificationStore = useNotificationStore()
+// const notificationStore = useNotificationStore()
 
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
@@ -330,13 +330,15 @@ const onConfirm = async () => {
   }
 
   // Save projection (update + file uploads) before confirming the panel
-  try {
-    await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
-  } catch (error) {
-    console.error('Error saving projection:', error)
-    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED)
-    return
-  }
+  // TODO VDYP-825
+
+  // try {
+  //   await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
+  // } catch (error) {
+  //   console.error('Error saving projection:', error)
+  //   notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED)
+  //   return
+  // }
 
   if (!isConfirmed.value) {
     fileUploadStore.confirmPanel(panelName)
