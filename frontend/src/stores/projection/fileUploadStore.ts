@@ -132,27 +132,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const polygonFileName = ref<string | null>(null)
   const layerFileName = ref<string | null>(null)
 
-  // set default values
-  const setDefaultValues = () => {
-    selectedAgeYearRange.value = DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE
-    startingAge.value = DEFAULTS.DEFAULT_VALUES.STARTING_AGE
-    finishingAge.value = DEFAULTS.DEFAULT_VALUES.FINISHING_AGE
-    ageIncrement.value = DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT
-    startYear.value = DEFAULTS.DEFAULT_VALUES.START_YEAR
-    endYear.value = DEFAULTS.DEFAULT_VALUES.END_YEAR
-    yearIncrement.value = DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT
-    isForwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
-    isBackwardGrowEnabled.value =
-      DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
-    isByLayerEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED
-    isPolygonIDEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_POLYGON_ID_ENABLED
-    projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
-    reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
-
-    // initialize species groups
-    initializeSpeciesGroups()
-  }
-
   // Reset store to initial state
   const resetStore = () => {
     // Reset panel states
@@ -338,8 +317,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     layerFile,
     polygonFileName,
     layerFileName,
-    // set default values
-    setDefaultValues,
     // restore functions
     resetStore,
     restoreFromProjectionParams,

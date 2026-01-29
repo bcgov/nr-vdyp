@@ -218,47 +218,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   //
   const referenceYear = ref<number | null>(null)
 
-  // set default values
-  const setDefaultValues = () => {
-    derivedBy.value = DEFAULTS.DEFAULT_VALUES.DERIVED_BY
-    speciesList.value = [
-      { species: 'PL', percent: '30.0' },
-      { species: 'AC', percent: '30.0' },
-      { species: 'H', percent: '30.0' },
-      { species: 'S', percent: '10.0' },
-      { species: null, percent: '0.0' },
-      { species: null, percent: '0.0' },
-    ]
-
-    updateSpeciesGroup()
-
-    becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
-    siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
-    ageType.value = DEFAULTS.DEFAULT_VALUES.AGE_TYPE
-    spzAge.value = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
-    spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
-    bha50SiteIndex.value = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
-    percentStockableArea.value = DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
-    crownClosure.value = DEFAULTS.DEFAULT_VALUES.CROWN_CLOSURE
-    minDBHLimit.value = DEFAULTS.DEFAULT_VALUES.MIN_DBH_LIMIT
-    currentDiameter.value = DEFAULTS.DEFAULT_VALUES.CURRENT_DIAMETER
-    selectedAgeYearRange.value = DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE
-    startingAge.value = DEFAULTS.DEFAULT_VALUES.STARTING_AGE
-    finishingAge.value = DEFAULTS.DEFAULT_VALUES.FINISHING_AGE
-    ageIncrement.value = DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT
-    startYear.value = DEFAULTS.DEFAULT_VALUES.START_YEAR
-    endYear.value = DEFAULTS.DEFAULT_VALUES.END_YEAR
-    yearIncrement.value = DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT
-    isForwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
-    isBackwardGrowEnabled.value =
-      DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
-    projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
-    isByLayerEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED
-    reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
-
-    referenceYear.value = new Date().getFullYear()
-  }
-
   // Reset store to initial state
   const resetStore = () => {
     // Reset panel states
@@ -581,8 +540,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     reportTitle,
     //
     referenceYear,
-    // set default values
-    setDefaultValues,
     // restore functions
     resetStore,
     restoreFromProjectionParams,
