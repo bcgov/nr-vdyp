@@ -630,12 +630,11 @@ export const buildProjectionParameters = (
 export const buildModelParameters = (
   modelParameterStore: any,
 ): ModelParameters => {
-  // Build species list from the store
   const species: ModelSpecies[] = modelParameterStore.speciesList
     .filter((item: SpeciesList) => item.species !== null && item.percent !== null)
     .map((item: SpeciesList) => ({
       code: item.species as string,
-      percent: item.percent !== null ? Number.parseFloat(item.percent as string) : null,
+      percent: item.percent,
     }))
 
   return {
@@ -646,13 +645,13 @@ export const buildModelParameters = (
     siteIndex: modelParameterStore.siteSpeciesValues,
     siteSpecies: modelParameterStore.selectedSiteSpecies || modelParameterStore.highestPercentSpecies,
     ageYears: modelParameterStore.ageType,
-    speciesAge: modelParameterStore.spzAge ? Number.parseFloat(modelParameterStore.spzAge) : null,
-    speciesHeight: modelParameterStore.spzHeight ? Number.parseFloat(modelParameterStore.spzHeight) : null,
-    bha50SiteIndex: modelParameterStore.bha50SiteIndex ? Number.parseFloat(modelParameterStore.bha50SiteIndex) : null,
-    stockable: modelParameterStore.percentStockableArea ? Number.parseFloat(modelParameterStore.percentStockableArea) : null,
-    cc: modelParameterStore.crownClosure ? Number.parseFloat(modelParameterStore.crownClosure) : null,
-    BA: modelParameterStore.basalArea ? Number.parseFloat(modelParameterStore.basalArea) : null,
-    TPH: modelParameterStore.treesPerHectare ? Number.parseFloat(modelParameterStore.treesPerHectare) : null,
+    speciesAge: modelParameterStore.spzAge ? modelParameterStore.spzAge : null,
+    speciesHeight: modelParameterStore.spzHeight ? modelParameterStore.spzHeight : null,
+    bha50SiteIndex: modelParameterStore.bha50SiteIndex ? modelParameterStore.bha50SiteIndex : null,
+    stockable: modelParameterStore.percentStockableArea ? modelParameterStore.percentStockableArea : null,
+    cc: modelParameterStore.crownClosure ? modelParameterStore.crownClosure : null,
+    BA: modelParameterStore.basalArea ? modelParameterStore.basalArea : null,
+    TPH: modelParameterStore.treesPerHectare ? modelParameterStore.treesPerHectare : null,
     minDBHLimit: modelParameterStore.minDBHLimit,
     currentDiameter: modelParameterStore.currentDiameter,
   }
