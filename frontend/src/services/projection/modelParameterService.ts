@@ -706,9 +706,9 @@ export const runProjection = async (
 /**
  * Saves the projection when a panel's Next button is clicked (Input Model Parameters mode).
  *
- * - CREATE mode + first panel (speciesInfo): Creates a new projection with parameters and CSV files,
+ * - CREATE mode + first panel (speciesInfo): Creates a new projection with projection parameters and model parameters,
  *   stores the GUID, and switches to EDIT mode.
- * - EDIT mode (any panel): Updates the existing projection parameters and re-uploads CSV files.
+ * - EDIT mode (any panel): Updates the existing projection parameters and model parameters.
  *
  * @param modelParameterStore The store containing model parameters.
  * @param panelName The name of the panel being confirmed.
@@ -724,19 +724,19 @@ export const saveProjectionOnPanelConfirm = async (
     appStore.viewMode === PROJECTION_VIEW_MODE.CREATE &&
     panelName === CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO
   ) {
-    // Create mode + first panel: create projection with CSV files
+    // Create mode + first panel: create projection
     const result = await createProjection(modelParameterStore)
     appStore.setCurrentProjectionGUID(result.projectionGUID)
     appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
   } else if (appStore.viewMode === PROJECTION_VIEW_MODE.EDIT) {
-    // Edit mode: update projection with new CSV files
+    // Edit mode: update projection
     const projectionGUID = appStore.getCurrentProjectionGUID
     if (!projectionGUID) {
       throw new Error(PROJECTION_ERR.MISSING_GUID)
     }
-    const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
+
     const projectionParameters = buildProjectionParameters(modelParameterStore)
     const modelParameters = buildModelParameters(modelParameterStore)
-    await updateProjectionWithFiles(projectionGUID, projectionParameters, blobPolygon, blobLayer, modelParameters)
+    await updateProjectionWithFiles(projectionGUID, projectionParameters, modelParameters)
   }
 }

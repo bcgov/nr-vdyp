@@ -270,8 +270,6 @@ export const updateProjection = async (
 export const updateProjectionWithFiles = async (
   projectionGUID: string,
   parameters: Parameters,
-  polygonFile: File | Blob,
-  layerFile: File | Blob,
   modelParameters?: ModelParameters,
 ): Promise<ProjectionModel> => {
   try {
@@ -302,21 +300,6 @@ export const updateProjectionWithFiles = async (
     console.log('layerFileSet:', projectionModel.layerFileSet)
     console.log('Full projectionModel:', JSON.stringify(projectionModel, null, 2))
     console.log('=== End createProjection ===')
-
-    // Step 3: Delete existing files and upload new ones for polygon fileset
-    if (projectionModel.polygonFileSet?.projectionFileSetGUID) {
-      const polygonFileSetGUID = projectionModel.polygonFileSet.projectionFileSetGUID
-      await deleteAllFilesFromFileSet(projectionGUID, polygonFileSetGUID)
-      await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, polygonFile as File)
-    }
-
-    // Step 4: Delete existing files and upload new ones for layer fileset
-    if (projectionModel.layerFileSet?.projectionFileSetGUID) {
-      const layerFileSetGUID = projectionModel.layerFileSet.projectionFileSetGUID
-      await deleteAllFilesFromFileSet(projectionGUID, layerFileSetGUID)
-      const updatedProjection = await uploadFileToFileSet(projectionGUID, layerFileSetGUID, layerFile as File)
-      return updatedProjection
-    }
 
     // Return the updated projection if no layer fileset exists
     return await apiGetProjection(projectionGUID)
