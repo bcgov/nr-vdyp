@@ -204,7 +204,7 @@ import { AppMessageDialog, AppSpinField } from '@/components'
 import {
   ActionPanel,
 } from '@/components/projection'
-import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
+import { CONSTANTS, DEFAULTS, MESSAGE, OPTIONS } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { standInfoValidation } from '@/validation'
@@ -233,6 +233,7 @@ const {
 
   derivedBy,
   becZone,
+  speciesGroups,
   selectedSiteSpecies,
   siteSpeciesValues,
   spzHeight,
@@ -335,6 +336,31 @@ watch(
   [derivedBy, siteSpeciesValues],
   ([newDerivedBy, newSiteSpeciesValues]) => {
     updateStates(newDerivedBy, newSiteSpeciesValues)
+  },
+  { immediate: true },
+)
+
+// Auto-populate minDBHLimit based on selectedSiteSpecies
+watch(
+  selectedSiteSpecies,
+  (newSiteSpecies) => {
+    if (!newSiteSpecies) {
+      minDBHLimit.value = null
+      return
+    }
+
+    // Find the species group for the selected site species
+    const group = speciesGroups.value.find(
+      (g) => g.siteSpecies === newSiteSpecies
+    )
+
+    if (group?.minimumDBHLimit) {
+      // Convert enum value to display label
+      const option = OPTIONS.utilizationClassOptions.find(
+        (opt) => opt.value === group.minimumDBHLimit
+      )
+      minDBHLimit.value = option?.label ?? null
+    }
   },
   { immediate: true },
 )
