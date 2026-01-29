@@ -287,7 +287,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     incSecondaryHeight.value = false
     specificYear.value = null
     projectionType.value = null
-    reportTitle.value = null
+    reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
     referenceYear.value = null
   }
 
