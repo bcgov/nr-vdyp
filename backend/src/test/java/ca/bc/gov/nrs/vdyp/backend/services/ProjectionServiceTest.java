@@ -51,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionNotFoundException;
@@ -566,6 +567,8 @@ class ProjectionServiceTest {
 		UUID ownerId = UUID.randomUUID();
 
 		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		ProjectionFileSetEntity fileSetEntity = fileSetEntity(UUID.randomUUID());
+		entity.setResultFileSet(fileSetEntity);
 		VDYPUserModel actingUser = new VDYPUserModel();
 		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
 
@@ -644,9 +647,11 @@ class ProjectionServiceTest {
 		UUID projectionGUID = UUID.randomUUID();
 		UUID ownerId = UUID.randomUUID();
 
-		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
 		VDYPUserModel actingUser = new VDYPUserModel();
-		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		UserTypeCodeModel model = new UserTypeCodeModel();
+		model.setCode(UserTypeCodeModel.SYSTEM);
+		actingUser.setUserTypeCode(model);
 
 		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
 		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
