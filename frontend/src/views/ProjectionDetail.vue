@@ -30,8 +30,9 @@
         <SiteInfoPanel class="panel-spacing" />
         <StandInfoPanel class="panel-spacing" />
         <ReportInfoPanel class="panel-spacing" />
+        <!-- TODO: remove true from isDisabled when run projection is ready in a ticket -->
         <RunProjectionButtonPanel
-          :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
+          :isDisabled="true || !modelParameterStore.runModelEnabled || !appStore.isDraft"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
