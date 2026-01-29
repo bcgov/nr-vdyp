@@ -252,6 +252,20 @@ public class ProjectionEndpoint implements Endpoint {
 		return Response.status(Status.OK).entity(started).build();
 	}
 
+	@POST
+	@Authenticated
+	@Path("/{projectionGUID}/complete")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Set a Projections Status", description = "(System Only) Updates as a projection status to complete after processing."
+	)
+	public Response updateCompleteProjectionStatus(
+			@PathParam("projectionGUID") UUID projectionGUID, @QueryParam("success") boolean success
+	) throws ProjectionServiceException {
+		var started = projectionService.updateCompleteStatus(currentUser.getUser(), projectionGUID, success);
+		return Response.status(Status.OK).entity(started).build();
+	}
+
 	private <T> String serialize(Class<T> clazz, T entity) throws JsonProcessingException {
 		return mapper.writeValueAsString(entity);
 	}
