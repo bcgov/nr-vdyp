@@ -44,6 +44,7 @@ export interface ProjectionModel {
   layerFileSet: ProjectionFileSetModel
   resultFileSet: ProjectionFileSetModel
   projectionParameters: string
+  modelParameters: string | null
   startDate: string | null
   endDate: string | null
   calculationEngineCode: CalculationEngineCodeModel

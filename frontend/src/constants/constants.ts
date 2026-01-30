@@ -253,6 +253,34 @@ export const PROJECTION_USER_ACTION = Object.freeze({
   SORT: 'sort'
 })
 
+export const PROJECTION_VIEW_MODE = Object.freeze({
+  VIEW: 'view',
+  EDIT: 'edit',
+  CREATE: 'create',
+})
+
+export const NEW_PROJECTION_TYPE = Object.freeze({
+  INPUT_MODEL_PARAMETERS: 'inputModelParameters',
+  FILE_UPLOAD: 'fileUpload',
+})
+
+export const PANEL_ACTION = Object.freeze({
+  CLEAR: 'clear',
+  CONFIRM: 'confirm',
+  EDIT: 'edit',
+})
+
+export const REPORTING_ACTION = Object.freeze({
+  PRINT: 'print',
+  DOWNLOAD: 'download',
+  DOWNLOAD_RAW_RESULT: 'downloadrawresult',
+})
+
+export const ROUTE_PATH = Object.freeze({
+  PROJECTION_LIST: '/',
+  PROJECTION_DETAIL: '/projection-detail',
+})
+
 export const BREAKPOINT = Object.freeze({
   CARD_VIEW: 1025,
 })

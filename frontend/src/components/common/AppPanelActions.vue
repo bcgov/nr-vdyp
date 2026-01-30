@@ -27,6 +27,7 @@
 
 <script setup lang="ts">
 import { AppButton } from '@/components'
+import { PANEL_ACTION } from '@/constants/constants'
 
 defineProps({
   isConfirmEnabled: {
@@ -39,11 +40,11 @@ defineProps({
   },
 })
 
-const emit = defineEmits(['clear', 'confirm', 'edit'])
+const emit = defineEmits([PANEL_ACTION.CLEAR, PANEL_ACTION.CONFIRM, PANEL_ACTION.EDIT])
 
-const onClear = () => emit('clear')
-const onConfirm = () => emit('confirm')
-const onEdit = () => emit('edit')
+const onClear = () => emit(PANEL_ACTION.CLEAR)
+const onConfirm = () => emit(PANEL_ACTION.CONFIRM)
+const onEdit = () => emit(PANEL_ACTION.EDIT)
 </script>
 
 <style scoped />

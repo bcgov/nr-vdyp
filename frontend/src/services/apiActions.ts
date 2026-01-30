@@ -3,6 +3,9 @@ import type {
   ParameterDetailsMessage,
   ProjectionModel,
   RootResource,
+  Parameters,
+  FileMappingModel,
+  ModelParameters,
 } from '@/services/vdyp-api'
 
 /**
@@ -86,6 +89,196 @@ export const getUserProjections = async (): Promise<ProjectionModel[]> => {
     return response.data
   } catch (error) {
     console.error('Error fetching user projections:', error)
+    throw error
+  }
+}
+
+/**
+ * Creates a new empty projection with default parameters.
+ * @param parameters The projection parameters.
+ * @param modelParameters Optional model parameters for Input Model Parameters mode.
+ * @returns A promise that resolves to the created ProjectionModel.
+ */
+export const createProjection = async (
+  parameters: Parameters,
+  modelParameters?: ModelParameters,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.createProjection(parameters, modelParameters)
+    return response.data
+  } catch (error) {
+    console.error('Error creating projection:', error)
+    throw error
+  }
+}
+
+/**
+ * Runs a projection by sending it to batch processing.
+ * @param projectionGUID The projection GUID.
+ * @returns A promise that resolves to the updated ProjectionModel with RUNNING status.
+ */
+export const runProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.runProjection(projectionGUID)
+    return response.data
+  } catch (error) {
+    console.error('Error running projection:', error)
+    throw error
+  }
+}
+
+/**
+ * Fetches a projection by its GUID.
+ * @param projectionGUID The projection GUID.
+ * @returns A promise that resolves to the ProjectionModel.
+ */
+export const getProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.getProjection(projectionGUID)
+    return response.data
+  } catch (error) {
+    console.error('Error fetching projection:', error)
+    throw error
+  }
+}
+
+/**
+ * Updates projection parameters.
+ * @param projectionGUID The projection GUID.
+ * @param parameters The updated projection parameters.
+ * @param modelParameters Optional model parameters for Input Model Parameters mode.
+ * @returns A promise that resolves to the updated ProjectionModel.
+ */
+export const updateProjectionParams = async (
+  projectionGUID: string,
+  parameters: Parameters,
+  modelParameters?: ModelParameters,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.updateProjectionParams(
+      projectionGUID,
+      parameters,
+      modelParameters,
+    )
+    return response.data
+  } catch (error) {
+    console.error('Error updating projection parameters:', error)
+    throw error
+  }
+}
+
+/**
+ * Deletes a projection.
+ * @param projectionGUID The projection GUID.
+ * @returns A promise that resolves when the projection is deleted.
+ */
+export const deleteProjection = async (
+  projectionGUID: string,
+): Promise<void> => {
+  try {
+    await apiClient.deleteProjection(projectionGUID)
+  } catch (error) {
+    console.error('Error deleting projection:', error)
+    throw error
+  }
+}
+
+/**
+ * Fetches all files in a fileset for a projection.
+ * @param projectionGUID The projection GUID.
+ * @param fileSetGUID The fileset GUID.
+ * @returns A promise that resolves to an array of FileMappingModel.
+ */
+export const getFileSetFiles = async (
+  projectionGUID: string,
+  fileSetGUID: string,
+): Promise<FileMappingModel[]> => {
+  try {
+    const response = await apiClient.getFileSetFiles(
+      projectionGUID,
+      fileSetGUID,
+    )
+    return response.data
+  } catch (error) {
+    console.error('Error fetching fileset files:', error)
+    throw error
+  }
+}
+
+/**
+ * Uploads a file to a fileset.
+ * @param projectionGUID The projection GUID.
+ * @param fileSetGUID The fileset GUID.
+ * @param file The file to upload.
+ * @returns A promise that resolves to the updated ProjectionModel.
+ */
+export const uploadFileToFileSet = async (
+  projectionGUID: string,
+  fileSetGUID: string,
+  file: File,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.uploadFileToFileSet(
+      projectionGUID,
+      fileSetGUID,
+      file,
+    )
+    return response.data
+  } catch (error) {
+    console.error('Error uploading file to fileset:', error)
+    throw error
+  }
+}
+
+/**
+ * Gets a file for download with presigned URL.
+ * @param projectionGUID The projection GUID.
+ * @param fileSetGUID The fileset GUID.
+ * @param fileMappingGUID The file mapping GUID.
+ * @returns A promise that resolves to the FileMappingModel with download URL.
+ */
+export const getFileForDownload = async (
+  projectionGUID: string,
+  fileSetGUID: string,
+  fileMappingGUID: string,
+): Promise<FileMappingModel> => {
+  try {
+    const response = await apiClient.getFileForDownload(
+      projectionGUID,
+      fileSetGUID,
+      fileMappingGUID,
+    )
+    return response.data
+  } catch (error) {
+    console.error('Error getting file for download:', error)
+    throw error
+  }
+}
+
+/**
+ * Deletes a file from a fileset.
+ * @param projectionGUID The projection GUID.
+ * @param fileSetGUID The fileset GUID.
+ * @param fileMappingGUID The file mapping GUID.
+ * @returns A promise that resolves when the file is deleted.
+ */
+export const deleteFileFromFileSet = async (
+  projectionGUID: string,
+  fileSetGUID: string,
+  fileMappingGUID: string,
+): Promise<void> => {
+  try {
+    await apiClient.deleteFileFromFileSet(
+      projectionGUID,
+      fileSetGUID,
+      fileMappingGUID,
+    )
+  } catch (error) {
+    console.error('Error deleting file from fileset:', error)
     throw error
   }
 }

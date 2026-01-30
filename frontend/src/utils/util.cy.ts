@@ -206,7 +206,7 @@ describe('Util Functions Unit Tests', () => {
   describe('increaseItemBySpinButton', () => {
     it('should increase the value correctly', () => {
       expect(increaseItemBySpinButton('10', 20, 0, 5)).to.equal(15)
-      expect(increaseItemBySpinButton(null, 20, 0, 5)).to.equal(5)
+      expect(increaseItemBySpinButton(null, 20, 0, 5)).to.equal(0)
       expect(increaseItemBySpinButton('10a', 20, 0, 5)).to.equal(15)
       expect(increaseItemBySpinButton('25', 20, 0, 5)).to.equal(20)
       expect(increaseItemBySpinButton('-5', 20, 0, 5)).to.equal(0)

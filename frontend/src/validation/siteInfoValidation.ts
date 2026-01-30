@@ -50,3 +50,24 @@ export const validateRange = (
 
   return { isValid: true }
 }
+
+export const validatePreConfirmFields = (
+  siteSpeciesValues: string | null,
+  becZone: string | null,
+) => {
+  if (!siteInfoValidator.validateSiteIndexSelection(siteSpeciesValues)) {
+    return {
+      isValid: false,
+      errorType: 'siteIndex',
+    }
+  }
+
+  if (!siteInfoValidator.validateBecZone(becZone)) {
+    return {
+      isValid: false,
+      errorType: 'becZone',
+    }
+  }
+
+  return { isValid: true }
+}

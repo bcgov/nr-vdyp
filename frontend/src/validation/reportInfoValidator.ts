@@ -100,4 +100,22 @@ export class ReportInfoValidator extends ValidationBase {
     }
     return true
   }
+
+  /**
+   * Validates that the report title is provided.
+   * @param reportTitle - The report title value
+   * @returns boolean - True if report title is provided and not empty, false otherwise
+   */
+  validateReportTitle(reportTitle: string | null): boolean {
+    return reportTitle !== null && reportTitle.trim() !== ''
+  }
+
+  /**
+   * Validates that the projection type is selected.
+   * @param projectionType - The projection type value
+   * @returns boolean - True if projection type is selected, false otherwise
+   */
+  validateProjectionType(projectionType: string | null): boolean {
+    return projectionType !== null && projectionType.trim() !== ''
+  }
 }

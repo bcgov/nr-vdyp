@@ -1,12 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { logout as keycloakLogout } from '@/services/keycloak'
-
-interface User {
-  accessToken: string
-  refToken: string
-  idToken: string
-}
+import type { User } from '@/interfaces/interfaces'
 
 export const useAuthStore = defineStore('authStore', () => {
   const authenticated = ref<boolean>(false)

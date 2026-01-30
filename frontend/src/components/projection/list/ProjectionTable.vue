@@ -39,7 +39,8 @@
           v-else
           v-for="projection in projections"
           :key="projection.projectionGUID"
-          class="table-row"
+          class="table-row clickable-row"
+          @click="handleRowClick($event, projection)"
         >
           <td class="table-cell">
             <span class="cell-content cell-with-tooltip tooltip-right" :data-tooltip="projection.title">{{
@@ -47,7 +48,7 @@
             }}</span>
           </td>
           <td class="table-cell">
-            <span class="cell-content cell-with-tooltip" :data-tooltip="projection.description">{{
+            <span class="cell-content cell-with-tooltip tooltip-right" :data-tooltip="projection.description">{{
               projection.description
             }}</span>
           </td>
@@ -98,8 +99,7 @@
 import type { Projection, TableHeader } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { PROJECTION_USER_ACTION, SORT_ORDER } from '@/constants/constants'
-import ProjectionActionsMenu from '@/components/projection-list/ProjectionActionsMenu.vue'
-import ProjectionStatusBadge from '@/components/projection-list/ProjectionStatusBadge.vue'
+import { ProjectionActionsMenu, ProjectionStatusBadge} from '@/components/projection'
 import { formatDateTimeDisplay, formatDateDisplay } from '@/utils/util'
 
 interface Props {
@@ -119,10 +119,20 @@ const emit = defineEmits<{
   (e: 'download', projectionGUID: string): void
   (e: 'cancel', projectionGUID: string): void
   (e: 'delete', projectionGUID: string): void
+  (e: 'rowClick', projection: Projection): void
 }>()
 
 const handleSort = (key: string) => {
   emit('sort', key)
+}
+
+const handleRowClick = (event: MouseEvent, projection: Projection) => {
+  // Don't trigger row click if clicking on the actions cell or its children
+  const target = event.target as HTMLElement
+  if (target.closest('.actions-cell')) {
+    return
+  }
+  emit('rowClick', projection)
 }
 </script>
 
@@ -185,8 +195,15 @@ const handleSort = (key: string) => {
 }
 
 .table-row {
-  border-bottom: 1px solid var(--surface-color-border-default)
+  border-bottom: 1px solid var(--surface-color-border-default);
+}
 
+.table-row.clickable-row {
+  cursor: pointer;
+}
+
+.table-row.clickable-row:hover {
+  background-color: var(--surface-color-background-light-gray);
 }
 
 .table-row:nth-child(even) {
@@ -260,7 +277,7 @@ const handleSort = (key: string) => {
 
 /* Custom CSS Tooltip - BC Gov Design Standards */
 .cell-with-tooltip {
-  cursor: default;
+  cursor: inherit;
 }
 
 .cell-with-tooltip:hover::after {

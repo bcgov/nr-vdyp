@@ -1,13 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-type DialogVariant = 'info' | 'confirmation' | 'warning' | 'error' | 'destructive'
-
-interface DialogOptions {
-  width: number
-  noconfirm: boolean
-  variant?: DialogVariant
-}
+import type { DialogOptions } from '@/interfaces/interfaces'
 
 export const useAlertDialogStore = defineStore('alertDialog', () => {
   const dialog = ref<boolean>(false)

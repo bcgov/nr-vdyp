@@ -11,6 +11,14 @@ export { default as AppProgressCircular } from './core/AppProgressCircular.vue'
 export { default as AppSnackbar } from './core/AppSnackbar.vue'
 export { default as AppTabs } from './core/AppTabs.vue'
 
+export { default as BCLogo } from './layout/BCLogo.vue'
+export { default as HeaderTitle } from './layout/HeaderTitle.vue'
+export { default as TheHeader } from './layout/TheHeader.vue'
+export { default as TheFooter } from './layout/TheFooter.vue'
+export { default as TrainingSupport } from './layout/TrainingSupport.vue'
+export { default as UserMenu } from './layout/UserMenu.vue'
+
+// NON-Persistent Projection Run Version
 export { default as ReportConfiguration } from './input/ReportConfiguration.vue'
 
 export { default as SpeciesListInput } from './input/species-info/SpeciesListInput.vue'
@@ -22,13 +30,6 @@ export { default as StandInfoPanel } from './input/stand-info/StandInfoPanel.vue
 export { default as ReportInfoPanel } from './input/report-info/ReportInfoPanel.vue'
 
 export { default as AttachmentsPanel } from './input/attachments/AttachmentsPanel.vue'
-
-export { default as BCLogo } from './layout/BCLogo.vue'
-export { default as HeaderTitle } from './layout/HeaderTitle.vue'
-export { default as TheHeader } from './layout/TheHeader.vue'
-export { default as TheFooter } from './layout/TheFooter.vue'
-export { default as TrainingSupport } from './layout/TrainingSupport.vue'
-export { default as UserMenu } from './layout/UserMenu.vue'
 
 export { default as ModelSelection } from './projection-setup/ModelSelection.vue'
 export { default as ModelSelectionContainer } from './projection-setup/ModelSelectionContainer.vue'
