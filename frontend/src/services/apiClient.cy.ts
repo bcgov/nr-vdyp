@@ -1,15 +1,20 @@
 /// <reference types="cypress" />
 
+import { createPinia, setActivePinia } from 'pinia'
 import apiClient from '@/services/apiClient'
 import {
   GetHelpApi,
   GetRootApi,
-  GetUserProjectionsApi,
+  ProjectionApi,
   RunHCSVProjectionApi,
   ParameterNamesEnum,
 } from '@/services/vdyp-api'
 
 describe('apiClient Unit Tests', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   context('helpGet', () => {
     it('should fetch help details successfully', () => {
       const mockResponse = { data: [{ id: 1, name: 'Help Detail' }] }
@@ -133,32 +138,35 @@ describe('apiClient Unit Tests', () => {
   })
 
   context('getUserProjections', () => {
-    it('should fetch user projections successfully (with test data)', () => {
-      const mockProjections = [{ id: 1, name: 'Test Projection' }]
-      cy.stub(window, 'fetch').resolves({
-        json: () => Promise.resolve(mockProjections),
-      } as Response)
-
-      cy.wrap(apiClient.getUserProjections()).then((result: unknown) => {
-        const response = result as { data: unknown; status: number }
-        expect(response).to.have.property('data')
-        expect(response.data).to.deep.equal(mockProjections)
-        expect(response.status).to.equal(200)
-      })
-    })
-
-    it('should call API when test data flag is disabled', () => {
+    it('should fetch user projections successfully', () => {
       const mockResponse = {
         data: [{ id: 1, name: 'API Projection' }],
       }
-      cy.stub(
-        GetUserProjectionsApi.prototype,
-        'getUserProjections',
-      ).resolves(mockResponse)
+      cy.stub(ProjectionApi.prototype, 'getUserProjections').resolves(
+        mockResponse,
+      )
 
-      // Note: This test documents the API call behavior
-      // Currently USE_TEST_PROJECTION_DATA is true, so this stub won't be called
-      expect(GetUserProjectionsApi.prototype.getUserProjections).to.exist
+      cy.wrap(apiClient.getUserProjections()).then((result: unknown) => {
+        const response = result as { data: unknown }
+        expect(ProjectionApi.prototype.getUserProjections).to.be.calledOnce
+        expect(response).to.have.property('data')
+        expect(response.data).to.deep.equal([{ id: 1, name: 'API Projection' }])
+      })
+    })
+
+    it('should handle error when fetching user projections', () => {
+      const mockError = new Error('Network error')
+      cy.stub(ProjectionApi.prototype, 'getUserProjections').rejects(mockError)
+
+      apiClient
+        .getUserProjections()
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(ProjectionApi.prototype.getUserProjections).to.be.calledOnce
+          expect(error).to.equal(mockError)
+        })
     })
   })
 })

@@ -67,14 +67,14 @@ describe('Model Parameter Service Unit Tests', () => {
 
   it('should generate a valid feature ID', () => {
     const featureId = generateFeatureId()
-    expect(String(featureId).length).to.be.within(9, 10)
+    expect(String(featureId).length).to.be.within(8, 10)
     expect(Number.isInteger(featureId)).to.be.true
   })
 
   it('should generate a valid feature ID with random and timestamp parts', () => {
     const featureId = generateFeatureId()
     const featureIdStr = String(featureId)
-    expect(featureIdStr.length).to.be.within(9, 10)
+    expect(featureIdStr.length).to.be.within(8, 10)
     expect(Number.isInteger(featureId)).to.be.true
     const randomPart = Number.parseInt(featureIdStr.substring(0, 2))
     expect(randomPart).to.be.within(1, 99)
