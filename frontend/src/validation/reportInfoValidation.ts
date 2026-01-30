@@ -99,3 +99,27 @@ export const validateYearRange = (
 
   return { isValid: true }
 }
+
+/**
+ * Validates that the report title is provided.
+ * @param reportTitle - The report title value
+ * @returns Object - Validation result
+ */
+export const validateReportTitle = (reportTitle: string | null) => {
+  if (!reportInfoValidator.validateReportTitle(reportTitle)) {
+    return { isValid: false }
+  }
+  return { isValid: true }
+}
+
+/**
+ * Validates that the projection type is selected.
+ * @param projectionType - The projection type value
+ * @returns Object - Validation result
+ */
+export const validateProjectionType = (projectionType: string | null) => {
+  if (!reportInfoValidator.validateProjectionType(projectionType)) {
+    return { isValid: false }
+  }
+  return { isValid: true }
+}

@@ -49,8 +49,9 @@
     <v-card
       v-for="projection in projections"
       :key="projection.projectionGUID"
-      class="projection-card"
+      class="projection-card clickable-card"
       elevation="1"
+      @click="handleCardClick($event, projection)"
     >
       <!-- Header Section with gray background -->
       <div class="card-header-section">
@@ -213,14 +214,9 @@
 import type { Projection, SortOption } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS, PROJECTION_USER_ACTION } from '@/constants/constants'
 import { formatDateTimeDisplay, formatDateDisplay } from '@/utils/util'
-import AppButton from '@/components/core/AppButton.vue'
-import ProjectionStatusBadge from '@/components/projection-list/ProjectionStatusBadge.vue'
-import EditIcon from '@/assets/icons/Edit_Icon_Menu.png'
-import DuplicateIcon from '@/assets/icons/Duplicate_Icon_Menu.png'
-import DeleteIcon from '@/assets/icons/Delete_Icon_Menu.png'
-import ViewIcon from '@/assets/icons/View_Icon_Menu.png'
-import DownloadIcon from '@/assets/icons/Download_Icon_Menu.png'
-import CancelIcon from '@/assets/icons/Cancel_Icon_Menu.png'
+import { AppButton } from '@/components'
+import { ProjectionStatusBadge } from '@/components/projection'
+import { EditIcon, DuplicateIcon, DeleteIcon, ViewIcon, DownloadIcon, CancelIcon } from '@/assets/'
 
 interface Props {
   projections: Projection[]
@@ -238,10 +234,20 @@ const emit = defineEmits<{
   (e: 'download', projectionGUID: string): void
   (e: 'cancel', projectionGUID: string): void
   (e: 'delete', projectionGUID: string): void
+  (e: 'rowClick', projection: Projection): void
 }>()
 
 const handleSortChange = (value: string) => {
   emit('sort', value)
+}
+
+const handleCardClick = (event: MouseEvent, projection: Projection) => {
+  // Don't trigger card click if clicking on the action buttons area
+  const target = event.target as HTMLElement
+  if (target.closest('.card-actions')) {
+    return
+  }
+  emit('rowClick', projection)
 }
 </script>
 
@@ -261,6 +267,15 @@ const handleSortChange = (value: string) => {
   border: 1px solid var(--surface-color-border-default);
   border-radius: var(--layout-border-radius-medium);
   background: var(--surface-color-forms-default);
+}
+
+.projection-card.clickable-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+}
+
+.projection-card.clickable-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* Card Header Section with gray background */

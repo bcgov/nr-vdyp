@@ -1,4 +1,4 @@
-import type { SortOrder } from '@/types/types'
+import type { SortOrder, DialogVariant } from '@/types/types'
 import { UtilizationClassSetEnum } from '@/services/vdyp-api/models/utilization-class-set-enum'
 
 export interface MessageDialog {
@@ -79,4 +79,36 @@ export interface TableHeader {
 export interface SortOption {
   title: string
   value: string
+}
+
+export interface User {
+  accessToken: string
+  refToken: string
+  idToken: string
+}
+
+export interface DialogOptions {
+  width: number
+  noconfirm: boolean
+  variant?: DialogVariant
+}
+
+export interface ParsedProjectionParameters {
+  outputFormat: string | null
+  selectedExecutionOptions: string[]
+  selectedDebugOptions: string[]
+  ageStart: string | null
+  ageEnd: string | null
+  yearStart: string | null
+  yearEnd: string | null
+  forceYear: string | null
+  ageIncrement: string | null
+  metadataToOutput: string | null
+  filters: unknown
+  utils: unknown[]
+  excludedExecutionOptions: string[]
+  excludedDebugOptions: string[]
+  combineAgeYearRange: string | null
+  progressFrequency: string | null
+  reportTitle: string | null
 }

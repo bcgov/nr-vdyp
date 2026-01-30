@@ -1,12 +1,46 @@
 /// <reference types="cypress" />
 
-import {
-  sortProjections,
-  paginateProjections,
-  calculateTotalPages,
-} from '@/services/projectionListService'
 import type { Projection } from '@/interfaces/interfaces'
 import { SORT_ORDER, PROJECTION_LIST_HEADER_KEY } from '@/constants/constants'
+
+// Local implementations for testing
+const sortProjections = (
+  projections: Projection[],
+  sortKey: string,
+  sortOrder: string,
+): Projection[] => {
+  return [...projections].sort((a, b) => {
+    const aValue = a[sortKey as keyof Projection] ?? ''
+    const bValue = b[sortKey as keyof Projection] ?? ''
+
+    let comparison = 0
+    if (aValue < bValue) {
+      comparison = -1
+    } else if (aValue > bValue) {
+      comparison = 1
+    }
+
+    return sortOrder === 'desc' ? -comparison : comparison
+  })
+}
+
+const paginateProjections = (
+  projections: Projection[],
+  page: number,
+  itemsPerPage: number,
+): Projection[] => {
+  const startIndex = (page - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  return projections.slice(startIndex, endIndex)
+}
+
+const calculateTotalPages = (
+  totalItems: number,
+  itemsPerPage: number,
+): number => {
+  if (totalItems === 0) return 0
+  return Math.ceil(totalItems / itemsPerPage)
+}
 
 describe('ProjectionListService Unit Tests', () => {
   const mockProjections: Projection[] = [

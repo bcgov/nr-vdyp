@@ -23,7 +23,7 @@ import {
   printReport,
 } from '@/services/reportService'
 import { useAppStore } from '@/stores/appStore'
-import { useProjectionStore } from '@/stores/projectionStore'
+import { useProjectionStore } from '@/stores/projection/projectionStore'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { ReportingTab } from '@/types/types'
 import * as messageHandler from '@/utils/messageHandler'

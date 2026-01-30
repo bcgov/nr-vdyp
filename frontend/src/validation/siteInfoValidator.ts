@@ -52,4 +52,15 @@ export class SiteInfoValidator extends ValidationBase {
       CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MAX,
     )
   }
+
+  validateSiteIndexSelection(siteSpeciesValues: string | null): boolean {
+    return (
+      siteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED ||
+      siteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+    )
+  }
+
+  validateBecZone(becZone: string | null): boolean {
+    return becZone !== null && becZone !== ''
+  }
 }

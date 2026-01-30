@@ -43,19 +43,21 @@ describe('TheHeader.vue', () => {
       cy.get('.bcds-logo').should('have.attr', 'alt', 'B.C. Government Logo')
 
       // Check if HeaderTitle is rendered with default text
-      cy.get('.bcds-header--title').should(
+      cy.get('.bcds-header--title-full').should(
         'contain.text',
-        'VARIABLE DENSITY YIELD PROJECTION',
+        'Variable Density Yield Projection',
       )
+      cy.get('.bcds-header--title-short').should('contain.text', 'VDYP')
 
       // Check if UserMenu is rendered with the provided props
       cy.get('.header-user-name').should('contain.text', 'John Doe')
 
       // Check if TrainingSupport is rendered
-      cy.get('.bcds-header-link').should(
+      cy.get('.bcds-header-link-full').should(
         'contain.text',
         'Training and Support',
       )
+      cy.get('.bcds-header-link-short').should('contain.text', 'Support')
     })
   })
 

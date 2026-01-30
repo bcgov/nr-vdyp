@@ -6,9 +6,13 @@ const meta = {
   component: HeaderTitle,
   tags: ['autodocs'],
   argTypes: {
-    text: {
+    fullText: {
       control: 'text',
-      description: 'Text to display in the header title',
+      description: 'Full text to display on large screens (>= 920px)',
+    },
+    shortText: {
+      control: 'text',
+      description: 'Abbreviated text to display on small screens (< 920px)',
     },
   },
 } satisfies Meta<typeof HeaderTitle>
@@ -18,6 +22,7 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
-    text: 'VARIABLE DENSITY YIELD PROJECTION',
+    fullText: 'Variable Density Yield Projection',
+    shortText: 'VDYP',
   },
 }
