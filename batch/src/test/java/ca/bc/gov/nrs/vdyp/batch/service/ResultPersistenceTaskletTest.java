@@ -32,6 +32,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultPersistenceException;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -79,7 +80,7 @@ class ResultPersistenceTaskletTest {
 				.addLong(BatchConstants.Partition.NUMBER, 4L)
 				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		assertThrows(IllegalArgumentException.class, () -> {
+		assertThrows(BatchResultPersistenceException.class, () -> {
 			tasklet.execute(stepContribution, chunkContext);
 		});
 	}
@@ -91,7 +92,7 @@ class ResultPersistenceTaskletTest {
 				.addLong(BatchConstants.Partition.NUMBER, 4L)
 				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		assertThrows(IllegalArgumentException.class, () -> {
+		assertThrows(BatchResultPersistenceException.class, () -> {
 			tasklet.execute(stepContribution, chunkContext);
 		});
 	}
@@ -103,7 +104,7 @@ class ResultPersistenceTaskletTest {
 				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString())
 				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		assertThrows(IllegalArgumentException.class, () -> {
+		assertThrows(BatchResultPersistenceException.class, () -> {
 			tasklet.execute(stepContribution, chunkContext);
 		});
 	}
@@ -114,7 +115,7 @@ class ResultPersistenceTaskletTest {
 				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()).addLong(BatchConstants.Partition.NUMBER, 4L)
 				.toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		assertThrows(IllegalArgumentException.class, () -> {
+		assertThrows(BatchResultPersistenceException.class, () -> {
 			tasklet.execute(stepContribution, chunkContext);
 		});
 	}
@@ -156,9 +157,13 @@ class ResultPersistenceTaskletTest {
 		UUID resultFileSetGuid = UUID.randomUUID();
 		UUID resultFileComsObjectGuid = UUID.randomUUID();
 
-		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
-				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()).addLong(BatchConstants.Partition.NUMBER, 4L)
-				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
+		jobParameters = new JobParametersBuilder() //
+				.addString(BatchConstants.Job.GUID, "job-123") //
+				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()) //
+				.addLong(BatchConstants.Partition.NUMBER, 4L) //
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()) //
+				.addString(BatchConstants.Job.TIMESTAMP, BatchUtils.createJobTimestamp()) //
+				.toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
 		when(details.resultFileSet())
