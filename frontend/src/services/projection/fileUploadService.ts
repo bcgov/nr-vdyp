@@ -209,30 +209,6 @@ export const buildProjectionParameters = (
 }
 
 /**
- * Creates a projection with uploaded files and parameters (without running it).
- * @param fileUploadStore The store containing model parameters and files.
- * @param createProjectionFunc Optional projection function (defaults to projServiceCreateProjection).
- * @returns The created ProjectionModel.
- */
-export const createProjection = async (
-  fileUploadStore: ReturnType<typeof useFileUploadStore>,
-  createProjectionFunc: (
-    parameters: Parameters,
-    polygonFile?: File | Blob,
-    layerFile?: File | Blob,
-  ) => Promise<ProjectionModel> = projServiceCreateProjection,
-): Promise<ProjectionModel> => {
-  const projectionParameters = buildProjectionParameters(fileUploadStore)
-
-  const result = await createProjectionFunc(
-    projectionParameters,
-    fileUploadStore.polygonFile as File,
-    fileUploadStore.layerFile as File,
-  )
-  return result
-}
-
-/**
  * Runs the current projection by sending it to batch processing.
  * The projection must already be created and its GUID stored in the app store.
  *

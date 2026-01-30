@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
-import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters, ParsedCsvFileContent } from '@/interfaces/interfaces'
+import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
 import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-api'
 import type { ModelParameters } from '@/services/vdyp-api'
@@ -380,45 +380,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   }
 
   /**
-   * Restore species, site, and stand info from parsed CSV file content
-   * @param parsed The parsed CSV file content from parseCsvFileContent()
-   */
-  const restoreFromFileContent = (parsed: ParsedCsvFileContent) => {
-    // Restore species info
-    derivedBy.value = parsed.derivedBy
-    // Format percent values with proper decimal places
-    speciesList.value = parsed.speciesList.map((item) => ({
-      species: item.species,
-      percent: item.percent,
-    }))
-    updateSpeciesGroup()
-
-    if (parsed.highestPercentSpecies) {
-      highestPercentSpecies.value = parsed.highestPercentSpecies
-      selectedSiteSpecies.value = parsed.highestPercentSpecies
-    }
-
-    // Restore site info
-    becZone.value = parsed.becZone
-    ecoZone.value = parsed.ecoZone
-    siteSpeciesValues.value = parsed.siteSpeciesValues
-    spzAge.value = parsed.spzAge
-    spzHeight.value = parsed.spzHeight
-    bha50SiteIndex.value = parsed.bha50SiteIndex
-
-    // Restore stand info
-    percentStockableArea.value = parsed.percentStockableArea
-    crownClosure.value = parsed.crownClosure
-    basalArea.value = parsed.basalArea
-    treesPerHectare.value = parsed.treesPerHectare
-
-    // Restore reference year
-    if (parsed.referenceYear) {
-      referenceYear.value = parsed.referenceYear
-    }
-  }
-
-  /**
    * Convert a nullable number to string or null
    */
   const toStringOrNull = (value: number | null | undefined): string | null => {
@@ -564,7 +525,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     // restore functions
     resetStore,
     restoreFromProjectionParams,
-    restoreFromFileContent,
     restoreFromModelParameters,
   }
 })

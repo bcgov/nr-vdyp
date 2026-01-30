@@ -5,7 +5,6 @@ import {
   updateProjectionParams as apiUpdateProjectionParams,
   deleteProjection as apiDeleteProjection,
   runProjection as apiRunProjection,
-  uploadFileToFileSet,
   deleteFileFromFileSet as apiDeleteFileFromFileSet,
   getFileSetFiles as apiGetFileSetFiles,
   getFileForDownload as apiGetFileForDownload,
@@ -103,20 +102,20 @@ export const fetchUserProjections = async (): Promise<Projection[]> => {
     const projectionModels = await getUserProjections()
 
     // Debug: Log backend response
-    console.log('=== fetchUserProjections Backend Response ===')
-    console.log('Total projections received:', projectionModels.length)
-    projectionModels.forEach((model, index) => {
-      console.log(`--- Projection ${index + 1} ---`)
-      console.log('  projectionGUID:', model.projectionGUID)
-      console.log('  reportTitle:', model.reportTitle)
-      console.log('  reportDescription:', model.reportDescription)
-      console.log('  projectionStatusCode:', model.projectionStatusCode)
-      console.log('  lastUpdatedDate:', model.lastUpdatedDate)
-      console.log('  expiryDate:', model.expiryDate)
-      console.log('  projectionParameters:', model.projectionParameters)
-      console.log('  Full model:', JSON.stringify(model, null, 2))
-    })
-    console.log('=== End fetchUserProjections ===')
+    // console.log('=== fetchUserProjections Backend Response ===')
+    // console.log('Total projections received:', projectionModels.length)
+    // projectionModels.forEach((model, index) => {
+    //   console.log(`--- Projection ${index + 1} ---`)
+    //   console.log('  projectionGUID:', model.projectionGUID)
+    //   console.log('  reportTitle:', model.reportTitle)
+    //   console.log('  reportDescription:', model.reportDescription)
+    //   console.log('  projectionStatusCode:', model.projectionStatusCode)
+    //   console.log('  lastUpdatedDate:', model.lastUpdatedDate)
+    //   console.log('  expiryDate:', model.expiryDate)
+    //   console.log('  projectionParameters:', model.projectionParameters)
+    //   console.log('  Full model:', JSON.stringify(model, null, 2))
+    // })
+    // console.log('=== End fetchUserProjections ===')
 
     return projectionModels.map((model) => transformProjection(model))
   } catch (error) {
@@ -131,71 +130,30 @@ export const fetchUserProjections = async (): Promise<Projection[]> => {
 
 /**
  * Creates a new projection with the given parameters.
- * If polygon and layer files are provided, uploads them to the appropriate filesets.
  * @param parameters The projection parameters
- * @param polygonFile Optional polygon file to upload (File or Blob)
- * @param layerFile Optional layer file to upload (File or Blob)
- * @param modelParameters Optional model parameters for Input Model Parameters mode
+ * @param modelParameters Optional The model parameters for Input Model Parameters mode
  * @returns A promise that resolves to the created ProjectionModel
  */
 export const createProjection = async (
   parameters: Parameters,
-  polygonFile?: File | Blob,
-  layerFile?: File | Blob,
   modelParameters?: ModelParameters,
 ): Promise<ProjectionModel> => {
   try {
-    // Debug: Log parameters size
     const parametersJson = JSON.stringify(parameters)
-    console.log('=== createProjection Debug ===')
+    console.log('=== createProjection ===')
     console.log('Parameters JSON length:', parametersJson.length, 'bytes')
     console.log('Parameters:', parametersJson)
     if (modelParameters) {
       console.log('ModelParameters:', JSON.stringify(modelParameters))
     }
 
-    // Step 1: Create the projection
     const projectionModel = await apiCreateProjection(parameters, modelParameters)
 
-    // Debug: Log created projection model
     console.log('=== createProjection Backend Response ===')
-    console.log('projectionGUID:', projectionModel.projectionGUID)
-    console.log('reportTitle:', projectionModel.reportTitle)
-    console.log('reportDescription:', projectionModel.reportDescription)
-    console.log('projectionStatusCode:', projectionModel.projectionStatusCode)
-    console.log('lastUpdatedDate:', projectionModel.lastUpdatedDate)
-    console.log('expiryDate:', projectionModel.expiryDate)
     console.log('projectionParameters:', projectionModel.projectionParameters)
     console.log('modelParameters:', projectionModel.modelParameters)
-    console.log('polygonFileSet:', projectionModel.polygonFileSet)
-    console.log('layerFileSet:', projectionModel.layerFileSet)
     console.log('Full projectionModel:', JSON.stringify(projectionModel, null, 2))
     console.log('=== End createProjection ===')
-
-    // Step 2: If files are provided, upload them to the respective filesets
-    if (polygonFile && layerFile) {
-      const projectionGUID = projectionModel.projectionGUID
-
-      // Upload polygon file to polygonFileSet
-      const polygonFileSetGUID =
-        projectionModel.polygonFileSet.projectionFileSetGUID
-      await uploadFileToFileSet(
-        projectionGUID,
-        polygonFileSetGUID,
-        polygonFile as File,
-      )
-
-      // Upload layer file to layerFileSet
-      const layerFileSetGUID =
-        projectionModel.layerFileSet.projectionFileSetGUID
-      const updatedProjection = await uploadFileToFileSet(
-        projectionGUID,
-        layerFileSetGUID,
-        layerFile as File,
-      )
-
-      return updatedProjection
-    }
 
     return projectionModel
   } catch (error) {
@@ -250,13 +208,11 @@ export const updateProjectionParams = async (
 ): Promise<ProjectionModel> => {
   try {
     console.log('=== updateProjectionParams ===')
-
     console.log('org projectionParameters:', JSON.stringify(parameters))
 
     const updatedProjection = await apiUpdateProjectionParams(projectionGUID, parameters)
     console.log('updated projectionParameters:', updatedProjection.projectionParameters)
 
-    // Step 2: Get the updated projection
     const projectionModel = await apiGetProjection(projectionGUID)
 
     console.log('get projectionParameters:', projectionModel.projectionParameters)

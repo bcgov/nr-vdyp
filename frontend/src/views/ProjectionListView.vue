@@ -91,7 +91,6 @@ import {
   deleteProjectionWithFiles,
   getProjectionById,
   getFileSetFiles,
-  getFileForDownload,
   parseProjectionParams,
   isProjectionReadOnly,
   mapProjectionStatus,
@@ -105,7 +104,6 @@ import {
   ExecutionOptionsEnum,
   type ModelParameters,
 } from '@/services/vdyp-api'
-import { parseCsvFileContent } from '@/services/projection/modelParameterService'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -267,26 +265,13 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
       modelParameterStore.resetStore()
 
       // First, restore species/site/stand info to populate speciesGroups
-      let restoredFromModelParams = false
       if (projectionModel.modelParameters) {
         try {
           const modelParams: ModelParameters = JSON.parse(projectionModel.modelParameters)
           modelParameterStore.restoreFromModelParameters(modelParams)
-          restoredFromModelParams = true
         } catch (err) {
           console.error('Error parsing modelParameters:', err)
         }
-      }
-
-      // Fall back to loading from file content if modelParameters was not available or failed to parse
-      const hasFilesets = projectionModel.polygonFileSet?.projectionFileSetGUID &&
-          projectionModel.layerFileSet?.projectionFileSetGUID
-      if (!restoredFromModelParams && hasFilesets) {
-        await loadFileContentForModelParams(
-          projectionGUID,
-          projectionModel.polygonFileSet!.projectionFileSetGUID,
-          projectionModel.layerFileSet!.projectionFileSetGUID,
-        )
       }
 
       // Then, restore report settings and utilization levels (speciesGroups is now populated)
@@ -311,58 +296,6 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED)
   } finally {
     isProgressVisible.value = false
-  }
-}
-
-/**
- * Loads file content for Input Model Parameters mode
- */
-const loadFileContentForModelParams = async (
-  projectionGUID: string,
-  polygonFileSetGUID: string,
-  layerFileSetGUID: string,
-) => {
-  try {
-    // Get polygon files
-    const polygonFiles = await getFileSetFiles(projectionGUID, polygonFileSetGUID)
-    const layerFiles = await getFileSetFiles(projectionGUID, layerFileSetGUID)
-
-    let polygonContent = ''
-    let layerContent = ''
-
-    // Download and read polygon file content
-    if (polygonFiles.length > 0 && polygonFiles[0].fileMappingGUID) {
-      const polygonFileInfo = await getFileForDownload(
-        projectionGUID,
-        polygonFileSetGUID,
-        polygonFiles[0].fileMappingGUID,
-      )
-      if (polygonFileInfo.downloadURL) {
-        const response = await fetch(polygonFileInfo.downloadURL)
-        polygonContent = await response.text()
-      }
-    }
-
-    // Download and read layer file content
-    if (layerFiles.length > 0 && layerFiles[0].fileMappingGUID) {
-      const layerFileInfo = await getFileForDownload(
-        projectionGUID,
-        layerFileSetGUID,
-        layerFiles[0].fileMappingGUID,
-      )
-      if (layerFileInfo.downloadURL) {
-        const response = await fetch(layerFileInfo.downloadURL)
-        layerContent = await response.text()
-      }
-    }
-
-    // Parse CSV content and restore store
-    if (polygonContent || layerContent) {
-      const parsed = parseCsvFileContent(polygonContent, layerContent)
-      modelParameterStore.restoreFromFileContent(parsed)
-    }
-  } catch (err) {
-    console.error('Error loading file content:', err)
   }
 }
 

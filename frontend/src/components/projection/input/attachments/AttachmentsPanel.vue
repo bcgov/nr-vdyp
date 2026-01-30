@@ -41,10 +41,10 @@
                   </div>
                   <!-- Edit mode: Show existing file info and allow replacement -->
                   <template v-else>
-                    <div v-if="hasExistingPolygonFile && !fileUploadStore.polygonFile" class="existing-file-info">
+                    <!-- <div v-if="hasExistingPolygonFile && !fileUploadStore.polygonFile" class="existing-file-info">
                       <v-icon size="small" class="existing-file-icon">mdi-file-check-outline</v-icon>
                       <span class="existing-file-name">Current: {{ fileUploadStore.polygonFileName }}</span>
-                    </div>
+                    </div> -->
                     <v-file-input
                       id="polygon-file-input"
                       v-model="fileUploadStore.polygonFile"
@@ -71,10 +71,10 @@
                   </div>
                   <!-- Edit mode: Show existing file info and allow replacement -->
                   <template v-else>
-                    <div v-if="hasExistingLayerFile && !fileUploadStore.layerFile" class="existing-file-info">
+                    <!-- <div v-if="hasExistingLayerFile && !fileUploadStore.layerFile" class="existing-file-info">
                       <v-icon size="small" class="existing-file-icon">mdi-file-check-outline</v-icon>
                       <span class="existing-file-name">Current: {{ fileUploadStore.layerFileName }}</span>
-                    </div>
+                    </div> -->
                     <v-file-input
                       id="layer-file-input"
                       v-model="fileUploadStore.layerFile"

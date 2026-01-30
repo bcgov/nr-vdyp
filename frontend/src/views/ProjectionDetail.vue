@@ -46,8 +46,9 @@
       />
       <template v-if="isFileUploadPanelsVisible">
         <AttachmentsPanel class="panel-spacing" />
+        <!-- TODO: remove true from isDisabled when run projection is ready in a ticket -->
         <RunProjectionButtonPanel
-          :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
+          :isDisabled="true || !fileUploadStore.runModelEnabled || !appStore.isDraft"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -172,7 +173,6 @@ const isFileUploadPanelsVisible = computed(() => {
 })
 
 onMounted(() => {
-  console.debug(`appStore.modelSelection: ${appStore.modelSelection}`)
   // Only initialize species groups for new projections
   // For existing projections (view/edit), the values are already restored from the backend
   if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD) {
