@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.batch.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -164,5 +166,20 @@ public final class BatchUtils {
 	 */
 	public static int getLineSeparatorLength() {
 		return System.lineSeparator().length();
+	}
+
+	public static Path getFinalZipName(Path jobBasePath, String jobTimestamp) {
+		String finalZipName = String.format("vdyp-output-%s.zip", jobTimestamp);
+		return jobBasePath.resolve(finalZipName);
+	}
+
+	public static void confirmDirectoryExists(Path dirPath) throws IOException {
+		if (!Files.exists(dirPath)) {
+			throw new IOException("Directory does not exist: " + dirPath);
+		}
+
+		if (!Files.isDirectory(dirPath)) {
+			throw new IOException("Path is not a directory: " + dirPath);
+		}
 	}
 }

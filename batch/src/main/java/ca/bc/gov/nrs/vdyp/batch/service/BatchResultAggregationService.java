@@ -55,13 +55,7 @@ public class BatchResultAggregationService {
 
 		try {
 			Path jobBasePath = Paths.get(jobBaseDir);
-			if (!Files.exists(jobBasePath)) {
-				throw new IOException("Directory does not exist: " + jobBaseDir);
-			}
-
-			if (!Files.isDirectory(jobBasePath)) {
-				throw new IOException("Path is not a directory: " + jobBaseDir);
-			}
+			BatchUtils.confirmDirectoryExists(jobBasePath);
 
 			logger.debug("Using job base directory: {}", jobBasePath);
 
@@ -70,8 +64,7 @@ public class BatchResultAggregationService {
 			logger.debug("Found {} partition output directories to aggregate", partitionOutputDirs.size());
 
 			// Create final ZIP file
-			String finalZipFileName = String.format("vdyp-output-%s.zip", jobTimestamp);
-			Path finalZipPath = jobBasePath.resolve(finalZipFileName);
+			Path finalZipPath = BatchUtils.getFinalZipName(jobBasePath, jobTimestamp);
 
 			if (partitionOutputDirs.isEmpty()) {
 				logger.warn("No partition output directories found for aggregation");
