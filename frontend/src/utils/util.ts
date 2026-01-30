@@ -288,7 +288,7 @@ export const delay = (ms: number): Promise<any> => {
 /**
  * Increases the numeric value extracted from an input string by a specified step,
  * ensuring the result stays within the provided minimum and maximum limits.
- * Non-numeric characters are stripped, and invalid or null inputs default to the step value.
+ * Non-numeric characters are stripped, and invalid or null inputs default to the minimum value.
  * Throws an error if step is not positive.
  *
  * @param value - The input value as a string (e.g., "10.5") or null, potentially containing non-numeric characters
@@ -299,7 +299,7 @@ export const delay = (ms: number): Promise<any> => {
  * @throws {Error} If step is not a positive number
  * @example
  *   increaseItemBySpinButton("10", 20, 0, 5) // 15
- *   increaseItemBySpinButton(null, 20, 0, 5) // 5
+ *   increaseItemBySpinButton(null, 20, 0, 5) // 0
  *   increaseItemBySpinButton("10a", 20, 0, 5) // 15
  *   increaseItemBySpinButton("25", 20, 0, 5) // 20
  *   increaseItemBySpinButton("-5", 20, 0, 5) // 0
@@ -316,7 +316,7 @@ export const increaseItemBySpinButton = (
 
   let newValue
 
-  // If value is null, assign step value and format
+  // If value is null or empty, start from min value
   if (value) {
     // extract only numbers, commas, and minus signs
     const extractedValue = value.replaceAll(/[^\d.-]/g, '')
@@ -325,7 +325,7 @@ export const increaseItemBySpinButton = (
 
     // Check if the extracted value is a valid number
     if (Number.isNaN(numericValue)) {
-      newValue = step // Assign step value if invalid
+      newValue = min // Start from min if invalid
     } else {
       newValue = numericValue + step
     }
@@ -334,7 +334,7 @@ export const increaseItemBySpinButton = (
       newValue = min
     }
   } else {
-    newValue = step
+    newValue = min
   }
 
   if (newValue > max) {
