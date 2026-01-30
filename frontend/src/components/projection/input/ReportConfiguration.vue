@@ -771,7 +771,7 @@ watch(
       ),
     )
   },
-  { immediate: true },
+  { immediate: true, deep: true, flush: 'sync' },
 )
 
 // Watch fileUploadSpeciesGroups for changes and sync utilization sliderValues (with immediate: true for initial load)
@@ -784,13 +784,20 @@ watch(
       ),
     )
   },
-  { immediate: true, deep: true },
+  { immediate: true, deep: true, flush: 'sync' },
 )
 
 // Watch fileUploadStore projectionType to update species groups and slider values when projection type changes
+// Only apply default values for new projections - existing projections have their utils restored from backend
 watch(
   () => fileUploadStore.projectionType,
-  (newType) => {
+  (newType, oldType) => {
+    // Skip if this is an initial load (oldType is null) for existing projections (view/edit mode)
+    // Only update species groups when user explicitly changes projection type in create mode
+    if (oldType === null && appStore.viewMode !== CONSTANTS.PROJECTION_VIEW_MODE.CREATE) {
+      return
+    }
+
     // Update species groups based on projection type
     fileUploadStore.updateSpeciesGroupsForProjectionType(newType)
     // Update slider values when projection type changes

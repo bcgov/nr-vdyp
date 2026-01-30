@@ -173,7 +173,11 @@ const isFileUploadPanelsVisible = computed(() => {
 
 onMounted(() => {
   console.debug(`appStore.modelSelection: ${appStore.modelSelection}`)
-  fileUploadStore.initializeSpeciesGroups()
+  // Only initialize species groups for new projections
+  // For existing projections (view/edit), the values are already restored from the backend
+  if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD) {
+    fileUploadStore.initializeSpeciesGroups()
+  }
 })
 
 const processResponse = async (response: any): Promise<boolean> => {

@@ -263,11 +263,10 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     )
 
     if (isInputModelParams) {
-      // Reset and restore model parameter store
+      // Reset model parameter store
       modelParameterStore.resetStore()
-      modelParameterStore.restoreFromProjectionParams(params, isViewMode)
 
-      // Restore from modelParameters if available, otherwise fall back to file content
+      // First, restore species/site/stand info to populate speciesGroups
       let restoredFromModelParams = false
       if (projectionModel.modelParameters) {
         try {
@@ -289,6 +288,9 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
           projectionModel.layerFileSet!.projectionFileSetGUID,
         )
       }
+
+      // Then, restore report settings and utilization levels (speciesGroups is now populated)
+      modelParameterStore.restoreFromProjectionParams(params, isViewMode)
     } else {
       // Reset and restore file upload store
       fileUploadStore.resetStore()

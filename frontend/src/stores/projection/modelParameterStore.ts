@@ -4,7 +4,7 @@ import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
 import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters, ParsedCsvFileContent } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
-import { ExecutionOptionsEnum } from '@/services/vdyp-api'
+import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-api'
 import type { ModelParameters } from '@/services/vdyp-api'
 
 export const useModelParameterStore = defineStore('modelParameter', () => {
@@ -292,6 +292,70 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   }
 
   /**
+   * Restore execution options from the selected options array
+   */
+  const restoreExecutionOptions = (options: string[]) => {
+    isForwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.ForwardGrowEnabled)
+    isBackwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.BackGrowEnabled)
+    isBySpeciesEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)
+    incSecondaryHeight.value = options.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)
+    isComputedMAIEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
+    isCulminationValuesEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)
+
+    if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)) {
+      projectionType.value = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+    } else if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)) {
+      projectionType.value = CONSTANTS.PROJECTION_TYPE.VOLUME
+    }
+  }
+
+  /**
+   * Restore utilization levels from utils array to species groups
+   */
+  const restoreUtilizationLevels = (utils: unknown[] | undefined) => {
+    if (!utils || !Array.isArray(utils) || utils.length === 0) {
+      return
+    }
+
+    const utilsMap: Record<string, UtilizationClassSetEnum> = {}
+    for (const util of utils) {
+      const utilObj = util as { s: string; u: string }
+      if (utilObj.s && utilObj.u) {
+        utilsMap[utilObj.s] = utilObj.u as UtilizationClassSetEnum
+      }
+    }
+
+    for (const group of speciesGroups.value) {
+      if (utilsMap[group.group]) {
+        group.minimumDBHLimit = utilsMap[group.group]
+      }
+    }
+  }
+
+  /**
+   * Set panel states for view or edit mode
+   */
+  const setPanelStatesForMode = (isViewMode: boolean) => {
+    const openState = isViewMode ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE
+    const confirmed = isViewMode
+    const editable = !isViewMode
+
+    panelOpenStates.value = {
+      speciesInfo: CONSTANTS.PANEL.OPEN,
+      siteInfo: openState,
+      standInfo: openState,
+      reportInfo: openState,
+    }
+    panelState.value = {
+      speciesInfo: { confirmed, editable },
+      siteInfo: { confirmed, editable: false },
+      standInfo: { confirmed, editable: false },
+      reportInfo: { confirmed, editable: false },
+    }
+    runModelEnabled.value = false
+  }
+
+  /**
    * Restore store state from parsed projection parameters
    * @param params Parsed projection parameters from the backend
    * @param isViewMode If true, sets all panels to confirmed and non-editable
@@ -300,68 +364,19 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     params: ParsedProjectionParameters,
     isViewMode: boolean = false,
   ) => {
-    // Restore report info from parameters
     reportTitle.value = params.reportTitle
-
-    // Restore age/year range settings
     startingAge.value = params.ageStart
     finishingAge.value = params.ageEnd
     ageIncrement.value = params.ageIncrement
 
-    // Restore execution options
-    const options = params.selectedExecutionOptions
+    restoreExecutionOptions(params.selectedExecutionOptions)
+    restoreUtilizationLevels(params.utils)
 
-    isForwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.ForwardGrowEnabled)
-    isBackwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.BackGrowEnabled)
-    isBySpeciesEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)
-    incSecondaryHeight.value = options.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)
-    isComputedMAIEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
-    isCulminationValuesEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)
-
-    // Determine projection type
-    if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)) {
-      projectionType.value = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-    } else if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)) {
-      projectionType.value = CONSTANTS.PROJECTION_TYPE.VOLUME
-    }
-
-    // Set reference year to current year if not set
     if (!referenceYear.value) {
       referenceYear.value = new Date().getFullYear()
     }
 
-    // Set panel states based on view/edit mode
-    if (isViewMode) {
-      // In view mode, all panels are confirmed and not editable
-      panelOpenStates.value = {
-        speciesInfo: CONSTANTS.PANEL.OPEN,
-        siteInfo: CONSTANTS.PANEL.OPEN,
-        standInfo: CONSTANTS.PANEL.OPEN,
-        reportInfo: CONSTANTS.PANEL.OPEN,
-      }
-      panelState.value = {
-        speciesInfo: { confirmed: true, editable: false },
-        siteInfo: { confirmed: true, editable: false },
-        standInfo: { confirmed: true, editable: false },
-        reportInfo: { confirmed: true, editable: false },
-      }
-      runModelEnabled.value = false
-    } else {
-      // In edit mode, only first panel is open and editable (same as new projection)
-      panelOpenStates.value = {
-        speciesInfo: CONSTANTS.PANEL.OPEN,
-        siteInfo: CONSTANTS.PANEL.CLOSE,
-        standInfo: CONSTANTS.PANEL.CLOSE,
-        reportInfo: CONSTANTS.PANEL.CLOSE,
-      }
-      panelState.value = {
-        speciesInfo: { confirmed: false, editable: true },
-        siteInfo: { confirmed: false, editable: false },
-        standInfo: { confirmed: false, editable: false },
-        reportInfo: { confirmed: false, editable: false },
-      }
-      runModelEnabled.value = false
-    }
+    setPanelStatesForMode(isViewMode)
   }
 
   /**
@@ -374,9 +389,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     // Format percent values with proper decimal places
     speciesList.value = parsed.speciesList.map((item) => ({
       species: item.species,
-      percent: item.percent !== null && item.percent !== undefined && item.percent !== ''
-        ? Number.parseFloat(item.percent as string).toFixed(CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM)
-        : null,
+      percent: item.percent,
     }))
     updateSpeciesGroup()
 
@@ -406,60 +419,86 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   }
 
   /**
+   * Convert a nullable number to string or null
+   */
+  const toStringOrNull = (value: number | null | undefined): string | null => {
+    return value !== null && value !== undefined ? value.toString() : null
+  }
+
+  /**
+   * Format percent value to fixed decimal string
+   */
+  const formatPercentValue = (percentValue: number | string | null | undefined): string | null => {
+    if (percentValue === null || percentValue === undefined) {
+      return null
+    }
+    const numValue = typeof percentValue === 'string' ? Number.parseFloat(percentValue) : percentValue
+    return numValue.toFixed(CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM)
+  }
+
+  /**
+   * Restore species list from model parameters
+   */
+  const restoreSpeciesListFromParams = (species: ModelParameters['species']) => {
+    if (!species || species.length === 0) {
+      return
+    }
+
+    speciesList.value = []
+    for (let i = 0; i < 6; i++) {
+      if (i < species.length) {
+        speciesList.value.push({
+          species: species[i].code,
+          percent: formatPercentValue(species[i].percent),
+        })
+      } else {
+        speciesList.value.push({ species: null, percent: null })
+      }
+    }
+    updateSpeciesGroup()
+  }
+
+  /**
+   * Restore site info from model parameters
+   */
+  const restoreSiteInfoFromParams = (params: ModelParameters) => {
+    becZone.value = params.becZone
+    ecoZone.value = params.ecoZone
+    siteSpeciesValues.value = params.siteIndex
+    ageType.value = params.ageYears
+    spzAge.value = toStringOrNull(params.speciesAge)
+    spzHeight.value = toStringOrNull(params.speciesHeight)
+    bha50SiteIndex.value = toStringOrNull(params.bha50SiteIndex)
+  }
+
+  /**
+   * Restore stand info from model parameters
+   */
+  const restoreStandInfoFromParams = (params: ModelParameters) => {
+    percentStockableArea.value = toStringOrNull(params.stockable)
+    crownClosure.value = toStringOrNull(params.cc)
+    basalArea.value = toStringOrNull(params.BA)
+    treesPerHectare.value = toStringOrNull(params.TPH)
+    minDBHLimit.value = params.minDBHLimit
+    currentDiameter.value = params.currentDiameter
+  }
+
+  /**
    * Restore species, site, and stand info from model parameters JSON
    * @param params The ModelParameters object from the backend
    */
   const restoreFromModelParameters = (params: ModelParameters) => {
-    // Restore species info
     derivedBy.value = params.derivedBy
+    restoreSpeciesListFromParams(params.species)
 
-    // Restore species list from params.species
-    if (params.species && params.species.length > 0) {
-      speciesList.value = []
-      for (let i = 0; i < 6; i++) {
-        if (i < params.species.length) {
-          const percentValue = params.species[i].percent
-          let formattedPercent: string | null = null
-          if (percentValue !== null && percentValue !== undefined) {
-            // Convert to number (handles both number and string from JSON) and format with decimal
-            const numValue = typeof percentValue === 'string' ? Number.parseFloat(percentValue) : percentValue
-            formattedPercent = numValue.toFixed(CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM)
-          }
-          speciesList.value.push({
-            species: params.species[i].code,
-            percent: formattedPercent,
-          })
-        } else {
-          speciesList.value.push({ species: null, percent: null })
-        }
-      }
-      updateSpeciesGroup()
-    }
-
-    // Restore site species
     if (params.siteSpecies) {
       highestPercentSpecies.value = params.siteSpecies
       selectedSiteSpecies.value = params.siteSpecies
     }
 
-    // Restore site info
-    becZone.value = params.becZone
-    ecoZone.value = params.ecoZone
-    siteSpeciesValues.value = params.siteIndex
-    ageType.value = params.ageYears
-    spzAge.value = params.speciesAge !== null ? params.speciesAge.toString() : null
-    spzHeight.value = params.speciesHeight !== null ? params.speciesHeight.toString() : null
-    bha50SiteIndex.value = params.bha50SiteIndex !== null ? params.bha50SiteIndex.toString() : null
+    restoreSiteInfoFromParams(params)
+    restoreStandInfoFromParams(params)
 
-    // Restore stand info
-    percentStockableArea.value = params.stockable !== null ? params.stockable.toString() : null
-    crownClosure.value = params.cc !== null ? params.cc.toString() : null
-    basalArea.value = params.BA !== null ? params.BA.toString() : null
-    treesPerHectare.value = params.TPH !== null ? params.TPH.toString() : null
-    minDBHLimit.value = params.minDBHLimit
-    currentDiameter.value = params.currentDiameter
-
-    // Set reference year to current year if not set
     if (!referenceYear.value) {
       referenceYear.value = new Date().getFullYear()
     }

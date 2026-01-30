@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { FileUploadPanelName, PanelState } from '@/types/types'
 import type { FileUploadSpeciesGroup, ParsedProjectionParameters } from '@/interfaces/interfaces'
-import { ExecutionOptionsEnum } from '@/services/vdyp-api'
+import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-api'
 
 export const useFileUploadStore = defineStore('fileUploadStore', () => {
   // panel open
@@ -235,6 +235,26 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     initializeSpeciesGroups()
     if (projectionType.value) {
       updateSpeciesGroupsForProjectionType(projectionType.value)
+    }
+
+    // Restore utilization levels (Minimum DBH Limit by Species Group) from saved utils
+    if (params.utils && Array.isArray(params.utils) && params.utils.length > 0) {
+      // Create a map of species code to utilization value
+      const utilsMap: Record<string, UtilizationClassSetEnum> = {}
+      for (const util of params.utils) {
+        const utilObj = util as { s: string; u: string }
+        if (utilObj.s && utilObj.u) {
+          // Map the utilization string to enum value
+          utilsMap[utilObj.s] = utilObj.u as UtilizationClassSetEnum
+        }
+      }
+
+      // Apply utilization levels to fileUploadSpeciesGroup
+      // Create a new array to ensure Vue reactivity triggers watchers
+      fileUploadSpeciesGroup.value = fileUploadSpeciesGroup.value.map((group) => ({
+        ...group,
+        minimumDBHLimit: utilsMap[group.group] || group.minimumDBHLimit,
+      }))
     }
 
     // Set panel states based on view/edit mode
