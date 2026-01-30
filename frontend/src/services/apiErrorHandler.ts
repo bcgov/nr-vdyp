@@ -49,7 +49,7 @@ function handleCanceledRequest(
 ) {
   const message = prependMessage('Request was canceled.')
   console.warn(message, (error as AxiosError).message)
-  notificationStore?.showInfoMessage(message)
+  notificationStore?.showInfoMessage(message, 'Request canceled')
 }
 
 /**
@@ -86,7 +86,7 @@ function handleResponseError(
   })
 
   const message = prependMessage(getErrorMessage(response.status))
-  notificationStore?.showErrorMessage(message)
+  notificationStore?.showErrorMessage(message, 'API error')
 }
 
 /**
@@ -100,7 +100,7 @@ function handleRequestError(
 ) {
   const message = prependMessage(`${SVC_ERR.DEFAULT} (Error: No Response)`)
   console.error(message, request)
-  notificationStore?.showErrorMessage(message)
+  notificationStore?.showErrorMessage(message, 'Network error')
 }
 
 /**
@@ -114,7 +114,7 @@ function handleConfigurationError(
 ) {
   const message = prependMessage(`${SVC_ERR.DEFAULT} (Error: Configuration Issue)`)
   console.error(message, axiosError.message)
-  notificationStore?.showErrorMessage(message)
+  notificationStore?.showErrorMessage(message, 'Configuration error')
 }
 
 /**
@@ -139,7 +139,7 @@ function handleGenericError(
     'The request could not be processed properly. Please try again.',
   )
   console.error(message, (error as Error).message)
-  notificationStore?.showErrorMessage(message)
+  notificationStore?.showErrorMessage(message, 'Request error')
 }
 
 /**

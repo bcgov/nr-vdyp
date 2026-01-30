@@ -293,7 +293,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     router.push(ROUTE_PATH.PROJECTION_DETAIL)
   } catch (err) {
     console.error('Error loading projection:', err)
-    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED)
+    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, 'Load failed')
   } finally {
     isProgressVisible.value = false
   }
@@ -346,7 +346,7 @@ const handleEdit = async (projectionGUID: string) => {
   const projection = projections.value.find(p => p.projectionGUID === projectionGUID)
   if (projection && isProjectionReadOnly(projection.status)) {
     // If status is Ready or Running, open in view mode instead
-    notificationStore.showWarningMessage('This projection is read-only and cannot be edited.')
+    notificationStore.showWarningMessage('This projection is read-only and cannot be edited.', 'Read-only projection')
     await loadAndNavigateToProjection(projectionGUID, true)
   } else {
     await loadAndNavigateToProjection(projectionGUID, false)
@@ -373,12 +373,12 @@ const handleDelete = async (projectionGUID: string) => {
     progressMessage.value = PROGRESS_MSG.DELETING_PROJECTION
     try {
       await deleteProjectionWithFiles(projectionGUID)
-      notificationStore.showSuccessMessage(SUCCESS_MSG.PROJECTION_DELETED)
+      notificationStore.showSuccessMessage(SUCCESS_MSG.PROJECTION_DELETED, 'Projection deleted')
       // Refresh the projections list
       await loadProjections()
     } catch (err) {
       console.error('Error deleting projection:', err)
-      notificationStore.showErrorMessage(PROJECTION_ERR.DELETE_FAILED)
+      notificationStore.showErrorMessage(PROJECTION_ERR.DELETE_FAILED, 'Delete failed')
     } finally {
       isProgressVisible.value = false
     }

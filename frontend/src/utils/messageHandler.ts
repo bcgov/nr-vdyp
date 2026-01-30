@@ -9,12 +9,16 @@ import { getActivePinia } from 'pinia'
  * @param {string} successMessage - Message for successful operation.
  * @param {string} failMessage - Message for failed operation.
  * @param {Error | null} error - Optional error object for logging.
+ * @param {string} successTitle - Optional title for successful operation.
+ * @param {string} failTitle - Optional title for failed operation.
  */
 export const messageResult = (
   isSuccess: boolean,
   successMessage: string,
   failMessage: string,
   error: Error | null = null,
+  successTitle: string = '',
+  failTitle: string = '',
 ) => {
   const pinia = getActivePinia()
   let notificationStore
@@ -28,12 +32,12 @@ export const messageResult = (
   if (isSuccess) {
     console.info(successMessage)
     if (notificationStore) {
-      notificationStore.showSuccessMessage(successMessage)
+      notificationStore.showSuccessMessage(successMessage, successTitle)
     }
   } else {
     console.warn(failMessage, error)
     if (notificationStore) {
-      notificationStore.showWarningMessage(failMessage)
+      notificationStore.showWarningMessage(failMessage, failTitle)
     }
   }
 }
@@ -67,20 +71,21 @@ const showNotification = (
   message: string,
   messageType: MessageType,
   notificationStore: ReturnType<typeof useNotificationStore>,
+  title: string = '',
 ) => {
   switch (messageType) {
     case MESSAGE_TYPE.ERROR:
-      notificationStore.showErrorMessage(message)
+      notificationStore.showErrorMessage(message, title)
       break
     case MESSAGE_TYPE.WARNING:
-      notificationStore.showWarningMessage(message)
+      notificationStore.showWarningMessage(message, title)
       break
     case MESSAGE_TYPE.SUCCESS:
-      notificationStore.showSuccessMessage(message)
+      notificationStore.showSuccessMessage(message, title)
       break
     case MESSAGE_TYPE.INFO:
     default:
-      notificationStore.showInfoMessage(message)
+      notificationStore.showInfoMessage(message, title)
   }
 }
 
@@ -91,6 +96,7 @@ const showNotification = (
  * @param {string} [optionalMessage] - Optional detail message for console output.
  * @param {boolean} [disableConsole=false] - Whether to disable console logging.
  * @param {boolean} [disableNotification=false] - Whether to disable notification messages.
+ * @param {string} [title=''] - Optional title for the notification.
  */
 const logMessage = (
   message: string,
@@ -98,6 +104,7 @@ const logMessage = (
   optionalMessage?: string | null,
   disableConsole: boolean = false,
   disableNotification: boolean = false,
+  title: string = '',
 ) => {
   const pinia = getActivePinia()
   let notificationStore
@@ -117,7 +124,7 @@ const logMessage = (
   }
 
   if (!disableNotification && notificationStore) {
-    showNotification(message, messageType, notificationStore)
+    showNotification(message, messageType, notificationStore, title)
   }
 }
 
@@ -127,12 +134,14 @@ const logMessage = (
  * @param {string} [optionalMessage] - Optional detail message for console output.
  * @param {boolean} [disableConsole=false] - Whether to disable console logging.
  * @param {boolean} [disableNotification=false] - Whether to disable notification messages.
+ * @param {string} [title=''] - Optional title for the notification.
  */
 export const logInfoMessage = (
   message: string,
   optionalMessage?: string | null,
   disableConsole = false,
   disableNotification = false,
+  title = '',
 ) =>
   logMessage(
     message,
@@ -140,6 +149,7 @@ export const logInfoMessage = (
     optionalMessage,
     disableConsole,
     disableNotification,
+    title,
   )
 
 /**
@@ -148,12 +158,14 @@ export const logInfoMessage = (
  * @param {string} [optionalMessage] - Optional detail message for console output.
  * @param {boolean} [disableConsole=false] - Whether to disable console logging.
  * @param {boolean} [disableNotification=false] - Whether to disable notification messages.
+ * @param {string} [title=''] - Optional title for the notification.
  */
 export const logErrorMessage = (
   message: string,
   optionalMessage?: string | null,
   disableConsole = false,
   disableNotification = false,
+  title = '',
 ) =>
   logMessage(
     message,
@@ -161,6 +173,7 @@ export const logErrorMessage = (
     optionalMessage,
     disableConsole,
     disableNotification,
+    title,
   )
 
 /**
@@ -169,12 +182,14 @@ export const logErrorMessage = (
  * @param {string} [optionalMessage] - Optional detail message for console output.
  * @param {boolean} [disableConsole=false] - Whether to disable console logging.
  * @param {boolean} [disableNotification=false] - Whether to disable notification messages.
+ * @param {string} [title=''] - Optional title for the notification.
  */
 export const logSuccessMessage = (
   message: string,
   optionalMessage?: string | null,
   disableConsole = false,
   disableNotification = false,
+  title = '',
 ) =>
   logMessage(
     message,
@@ -182,6 +197,7 @@ export const logSuccessMessage = (
     optionalMessage,
     disableConsole,
     disableNotification,
+    title,
   )
 
 /**
@@ -190,12 +206,14 @@ export const logSuccessMessage = (
  * @param {string} [optionalMessage] - Optional detail message for console output.
  * @param {boolean} [disableConsole=false] - Whether to disable console logging.
  * @param {boolean} [disableNotification=false] - Whether to disable notification messages.
+ * @param {string} [title=''] - Optional title for the notification.
  */
 export const logWarningMessage = (
   message: string,
   optionalMessage?: string | null,
   disableConsole = false,
   disableNotification = false,
+  title = '',
 ) =>
   logMessage(
     message,
@@ -203,4 +221,5 @@ export const logWarningMessage = (
     optionalMessage,
     disableConsole,
     disableNotification,
+    title,
   )
