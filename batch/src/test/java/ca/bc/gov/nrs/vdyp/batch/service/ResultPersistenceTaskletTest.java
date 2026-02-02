@@ -155,7 +155,6 @@ class ResultPersistenceTaskletTest {
 	@Test
 	void testExecute_filesExist_emptyFileSetCallsVDYPClient() throws Exception {
 		UUID resultFileSetGuid = UUID.randomUUID();
-		UUID resultFileComsObjectGuid = UUID.randomUUID();
 
 		jobParameters = new JobParametersBuilder() //
 				.addString(BatchConstants.Job.GUID, "job-123") //

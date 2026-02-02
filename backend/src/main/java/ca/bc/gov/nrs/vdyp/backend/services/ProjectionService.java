@@ -442,6 +442,9 @@ public class ProjectionService {
 			break;
 		case COMPLETE_PROJECTION, STORE_RESULTS:
 			throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
+		default:
+			break;
+
 		}
 
 	}
@@ -456,15 +459,14 @@ public class ProjectionService {
 						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
 				);
 
-			case READ, COMPLETE_PROJECTION:
+			default: // STORE_RESULTS, COMPLETE_PROJECTION, READ
 				break;
 			}
 
 		} else { // status != RUNNING
 					// If the projection is not running we should not handle COMPLETE projection actions or STORE
-					// RESUTLS
-			switch (action) {
-			case COMPLETE_PROJECTION, STORE_RESULTS:
+					// RESULTS
+			if (action == ProjectionAction.COMPLETE_PROJECTION || action == ProjectionAction.STORE_RESULTS) {
 				throw new ProjectionStateException(
 						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
 				);
