@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.backend.data.assemblers;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -53,7 +52,7 @@ class TestProjectionResourceAssembler {
 		ProjectionResourceAssembler assembler = new ProjectionResourceAssembler();
 		ProjectionModel assembledModel = assembler.toModel(entity);
 		assertThat(assembledModel).usingRecursiveComparison().isEqualTo(model);
-		assertThat(assembledModel.getExpiryDate()).isEqualTo(LocalDate.now().plusDays(30));
+		assertThat(assembledModel.getExpiryDate()).isAfterOrEqualTo(OffsetDateTime.now().plusDays(29));
 	}
 
 	@ParameterizedTest

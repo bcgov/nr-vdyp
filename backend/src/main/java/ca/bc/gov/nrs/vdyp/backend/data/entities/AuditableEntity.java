@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.entities;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
@@ -22,7 +22,7 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 
 	@NotNull
 	@Column(name = "create_date", nullable = false)
-	private LocalDate createDate;
+	private OffsetDateTime createDate;
 
 	@NotNull
 	@Column(name = "update_user", length = 64, nullable = false)
@@ -30,7 +30,7 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 
 	@NotNull
 	@Column(name = "update_date", nullable = false)
-	private LocalDate updateDate;
+	private OffsetDateTime updateDate;
 
 	private String currentUser() {
 		return "system";
@@ -51,7 +51,7 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 		return createUser;
 	}
 
-	public LocalDate getCreateDate() {
+	public OffsetDateTime getCreateDate() {
 		return createDate;
 	}
 
@@ -59,11 +59,11 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 		return updateUser;
 	}
 
-	public LocalDate getUpdateDate() {
+	public OffsetDateTime getUpdateDate() {
 		return updateDate;
 	}
 
-	private void setCreateDate(LocalDate date) {
+	private void setCreateDate(OffsetDateTime date) {
 		this.createDate = date;
 	}
 
@@ -71,7 +71,7 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 		this.createUser = user;
 	}
 
-	private void setUpdateDate(LocalDate date) {
+	private void setUpdateDate(OffsetDateTime date) {
 		this.updateDate = date;
 	}
 
@@ -81,16 +81,16 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 
 	@PrePersist
 	public void beforeInsert() {
-		setCreateDate(LocalDate.now());
+		setCreateDate(OffsetDateTime.now());
 		setCreateUser(currentUser());
-		setUpdateDate(LocalDate.now());
+		setUpdateDate(OffsetDateTime.now());
 		setUpdateUser(currentUser());
 		incrementRevisionCount();
 	}
 
 	@PreUpdate
 	public void beforeUpdate() {
-		setUpdateDate(LocalDate.now());
+		setUpdateDate(OffsetDateTime.now());
 		setUpdateUser(currentUser());
 		incrementRevisionCount();
 	}
