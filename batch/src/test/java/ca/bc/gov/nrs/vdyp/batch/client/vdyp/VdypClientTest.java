@@ -57,8 +57,7 @@ class VdypClientTest {
 		when(
 				restClient.get().uri(ArgumentMatchers.<Function<UriBuilder, URI>>any()).retrieve()
 						.body(VdypProjectionDetails.class)
-		)
-				.thenReturn(expected);
+		).thenReturn(expected);
 
 		// Act
 		VdypProjectionDetails actual = client.getProjectionDetails(projectionGuid);

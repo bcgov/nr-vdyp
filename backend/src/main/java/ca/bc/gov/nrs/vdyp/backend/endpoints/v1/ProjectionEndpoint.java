@@ -121,11 +121,7 @@ public class ProjectionEndpoint implements Endpoint {
 				);
 			} catch (ProjectionRequestValidationException e) {
 				return Response.status(Status.BAD_REQUEST).header("content-type", "application/json")
-						.entity(
-								serialize(
-										new ValidationMessageListResource(e.getValidationMessages())
-								)
-						).build();
+						.entity(serialize(new ValidationMessageListResource(e.getValidationMessages()))).build();
 			}
 		} catch (Exception e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR)
