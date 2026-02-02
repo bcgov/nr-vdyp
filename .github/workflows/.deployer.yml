@@ -68,6 +68,8 @@ on:
         required: true
       KEYCLOAK_CLIENT_SECRET:
         required: true
+      COMS_KEYCLOAK_PUBLICKEY:
+        required: true
 permissions:
   contents: read        # for actions/checkout
 jobs:
@@ -154,10 +156,12 @@ jobs:
             --set bitnami-pg.auth.database=${{ vars.POSTGRES_DATABASE }} \
             --set global.secrets.VDYP_DB_PASSWORD=${{ secrets.VDYP_DB_PASSWORD }} \
             --set backend.env.QUARKUS_OIDC_AUTH_SERVER_URL=${{ secrets.VITE_SSO_TOKEN_ISSUER }}\
+            --set backend.env.QUARKUS_OIDC_PUBLIC_KEY=${{ secrets.COMS_KEYCLOAK_PUBLICKEY }} \
             --set backend.env.VDYP_DB_USER=${{ vars.VDYP_DB_USER }} \
             --set backend.env.VDYP_DB_DATABASE=${{ vars.VDYP_DB_DATABASE }} \
             --set backend.env.COMS_BASE_URL=${{ vars.COMS_BASE_URL }} \
             --set backend.env.CORS_FRONTEND_BASE_URL=${{ vars.CORS_FRONTEND_BASE_URL }} \
+            --set backend.env.BATCH_BASE_URL=${{ vars.BATCH_BASE_URL }} \
             --set batch.env.BATCH_DB_USER=${{ vars.BATCH_DB_USERNAME }} \
             --set batch.env.BATCH_DB_DATABASE=${{ vars.BATCH_DB_DATABASE }} \
             --set frontend.env.BACKEND_URL=${{ vars.BACKEND_URL }} \
