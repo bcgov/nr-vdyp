@@ -1,20 +1,36 @@
 export const SVC_ERR = Object.freeze({
   DEFAULT: 'Service Communication Error. Please try again later.',
+  DEFAULT_TITLE: 'Communication Error',
   REQUEST_TIMEOUT: 'Request timed out. Please try again. (Error: Timeout)',
+  REQUEST_TIMEOUT_TITLE: 'Timeout Error',
   SERVICE_UNAVAILABLE:
     'The service is currently unavailable. Please try later. (Error: Unavailable)',
+  SERVICE_UNAVAILABLE_TITLE: 'Service Unavailable',
   BAD_GATEWAY:
     'The server was unable to complete your request. Please try again later. (Error: Bad Gateway)',
+  BAD_GATEWAY_TITLE: 'Bad Gateway',
   GATEWAY_TIMEOUT:
     'The server did not respond in time. Please try again later. (Error: Gateway Timeout)',
+  GATEWAY_TIMEOUT_TITLE: 'Gateway Timeout',
   INTERNAL_SERVER_ERROR:
     'Service Internal Server Error. Please try again later.',
+  INTERNAL_SERVER_ERROR_TITLE: 'Internal Server Error',
   BAD_REQUEST: 'The server could not understand the request.',
+  BAD_REQUEST_TITLE: 'Bad Request',
   FORBIDDEN: 'Do not have permission to access this resource.',
+  FORBIDDEN_TITLE: 'Forbidden',
   UNAUTHORIZED: 'Log in to access this resource.',
+  UNAUTHORIZED_TITLE: 'Unauthorized',
   NOT_FOUND: 'The requested resource could not be found.',
+  NOT_FOUND_TITLE: 'Not Found',
   NOT_ACCEPTABLE: 'The requested format is not supported.',
+  NOT_ACCEPTABLE_TITLE: 'Unsupported Format',
   UNSUPPORTED_MEDIA_TYPE: 'The media type is not supported. Please check the content type.',
+  UNSUPPORTED_MEDIA_TYPE_TITLE: 'Unsupported Media Type',
+  PROCESSING_ERROR: 'The request could not be processed properly. Please try again.',
+  PROCESSING_ERROR_TITLE: 'Processing Error',
+  REQUEST_CANCELED: 'Request was canceled.',
+  REQUEST_CANCELED_TITLE: 'Request Cancelled'
 })
 
 export const AUTH_ERR = Object.freeze({
@@ -42,6 +58,7 @@ export const AUTH_ERR = Object.freeze({
     'Session has exceeded the maximum duration, logging out (Error: AUTH_031). Please log in again.',
   AUTH_032:
     'Error during user authentication re-validation (Error: AUTH_032). Please log in again.',
+  TITLE: 'Authentication Error'
 })
 
 export const AXIOS_INST_ERR = Object.freeze({
@@ -148,6 +165,7 @@ export const FILE_UPLOAD_ERR = Object.freeze({
 
 export const FILE_DOWNLOAD_ERR = Object.freeze({
   NO_DATA: 'No data available to download.',
+  NO_DATA_TITLE: 'No data to download',
 })
 
 export const MODEL_PARAM_INPUT_ERR = Object.freeze({
@@ -156,6 +174,7 @@ export const MODEL_PARAM_INPUT_ERR = Object.freeze({
 
 export const PRINT_ERR = Object.freeze({
   NO_DATA: 'No data available to print.',
+  NO_DATA_TITLE: 'No data to print',
 })
 
 export const PROGRESS_MSG = Object.freeze({
@@ -175,14 +194,18 @@ export const SUCCESS_MSG = Object.freeze({
     'Model run completed successfully. Please check the results in the report tab.',
   INPUT_MODEL_PARAM_RUN_RESULT_W_ERR:
     'Model run completed with errors - check error log',
+  PROJECTION_RUN_RESULT_TITLE: 'Projection Completed Successfully',
+  PROJECTION_RUN_RESULT_W_ERR_TITLE: 'Projection Completed Successfully with Errors',
   PROJECTION_DELETED: 'Projection has been successfully deleted.',
-  PROJECTION_CREATED: 'Projection has been successfully created.',
-  PROJECTION_UPDATED: 'Projection has been successfully updated.',
+  PROJECTION_DELETED_TITLE: 'Projection deleted',
 })
 
 export const PROJECTION_ERR = Object.freeze({
   DELETE_FAILED: 'Failed to delete the projection. Please try again later.',
+  DELETE_FAILED_TITLE: 'Projection Delete Failed',
   LOAD_FAILED: 'Failed to load the projection. Please try again later.',
+  LOAD_FAILED_TITLE: 'Projection Load Failed',
   MISSING_GUID: 'No projection is currently selected. Please create or select a projection first.',
   SAVE_FAILED: 'Failed to save the projection. Please try again.',
+  SAVE_FAILED_TITLE: 'Projection Save Failed'
 })

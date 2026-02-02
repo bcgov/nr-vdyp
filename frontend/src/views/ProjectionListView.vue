@@ -293,7 +293,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     router.push(ROUTE_PATH.PROJECTION_DETAIL)
   } catch (err) {
     console.error('Error loading projection:', err)
-    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, 'Projection Load Failed')
+    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
   } finally {
     isProgressVisible.value = false
   }
@@ -378,7 +378,7 @@ const handleDelete = async (projectionGUID: string) => {
       await loadProjections()
     } catch (err) {
       console.error('Error deleting projection:', err)
-      notificationStore.showErrorMessage(PROJECTION_ERR.DELETE_FAILED, 'Projection Delete Failed')
+      notificationStore.showErrorMessage(PROJECTION_ERR.DELETE_FAILED, PROJECTION_ERR.DELETE_FAILED_TITLE)
     } finally {
       isProgressVisible.value = false
     }

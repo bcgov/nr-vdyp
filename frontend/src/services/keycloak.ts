@@ -145,7 +145,7 @@ export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
     return await initializeWithFreshAuth()
   } catch (err) {
     if (notificationStore) {
-      notificationStore.showErrorMessage(AUTH_ERR.AUTH_004, 'Authentication Error')
+      notificationStore.showErrorMessage(AUTH_ERR.AUTH_004, AUTH_ERR.TITLE)
     }
     console.error('Keycloak initialization failed (Error: AUTH_004):', err)
     keycloakInstance = null
