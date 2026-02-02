@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
@@ -32,9 +33,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 class ComsClientTest {
 	@Mock
 	RestClient comsRestClient;
-	@Mock
-	ComsProperties props;
-
 	@SuppressWarnings("rawtypes")
 	@Mock
 	RestClient.RequestHeadersUriSpec uriSpec;
@@ -50,7 +48,7 @@ class ComsClientTest {
 
 	@BeforeEach
 	void setUp() {
-		comsClient = new ComsClient(comsRestClient, props, new ObjectMapper());
+		comsClient = new ComsClient(comsRestClient, new ObjectMapper());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -86,28 +84,28 @@ class ComsClientTest {
 	void updateObject_setsUriAndHeaders_andCallsBodyString(@TempDir Path tempDir) throws Exception {
 		// Arrange
 		RestClient restClient = mock(RestClient.class);
-		ComsProperties props = mock(ComsProperties.class);
-		ComsClient client = new ComsClient(restClient, props, new ObjectMapper());
+		ComsProperties comsProps = mock(ComsProperties.class);
+		ComsClient client = new ComsClient(restClient, new ObjectMapper());
 
 		String objectId = "obj-123";
 		Path file = tempDir.resolve("upload.txt");
 		Files.writeString(file, "hello");
 
-		RestClient.RequestBodyUriSpec uriSpec = mock(RestClient.RequestBodyUriSpec.class);
+		RestClient.RequestBodyUriSpec mockUriSpec = mock(RestClient.RequestBodyUriSpec.class);
 		RestClient.RequestBodySpec bodySpec = mock(RestClient.RequestBodySpec.class);
 		RestClient.RequestBodySpec afterBodySpec = mock(RestClient.RequestBodySpec.class); // <- key
-		RestClient.ResponseSpec responseSpec = mock(RestClient.ResponseSpec.class);
+		RestClient.ResponseSpec mockResponseSpec = mock(RestClient.ResponseSpec.class);
 
-		when(restClient.put()).thenReturn(uriSpec);
-		when(uriSpec.uri(any(Function.class))).thenReturn(bodySpec);
+		when(restClient.put()).thenReturn(mockUriSpec);
+		when(mockUriSpec.uri(ArgumentMatchers.<Function<UriBuilder, URI>>any())).thenReturn(bodySpec);
 		when(bodySpec.headers(any())).thenReturn(bodySpec);
 
 		// IMPORTANT: whatever overload body(...) resolves to, return a different spec
 		doReturn(afterBodySpec).when(bodySpec).body(any());
 
-		when(afterBodySpec.retrieve()).thenReturn(responseSpec);
-		when(responseSpec.onStatus(any(), any())).thenReturn(responseSpec);
-		when(responseSpec.body(String.class)).thenReturn("ok");
+		when(afterBodySpec.retrieve()).thenReturn(mockResponseSpec);
+		when(mockResponseSpec.onStatus(any(), any())).thenReturn(mockResponseSpec);
+		when(mockResponseSpec.body(String.class)).thenReturn("ok");
 
 		// Act
 		client.updateObject(objectId, file);
@@ -115,7 +113,7 @@ class ComsClientTest {
 		// Assert URI
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Function<UriBuilder, URI>> uriCaptor = ArgumentCaptor.forClass(Function.class);
-		verify(uriSpec).uri(uriCaptor.capture());
+		verify(mockUriSpec).uri(uriCaptor.capture());
 
 		URI built = uriCaptor.getValue().apply(new DefaultUriBuilderFactory(BASE_URL).builder());
 		assertEquals(BASE_URL + "/object/" + objectId, built.toString());
@@ -132,6 +130,6 @@ class ComsClientTest {
 		assertEquals(Files.probeContentType(file), headers.getFirst(HttpHeaders.CONTENT_TYPE));
 
 		// Assert terminal call
-		verify(responseSpec).body(String.class);
+		verify(mockResponseSpec).body(String.class);
 	}
 }

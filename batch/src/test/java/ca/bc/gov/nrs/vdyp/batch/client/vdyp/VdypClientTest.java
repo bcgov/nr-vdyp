@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -23,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
@@ -54,7 +54,10 @@ class VdypClientTest {
 		String projectionGuid = "proj-123";
 		VdypProjectionDetails expected = mock(VdypProjectionDetails.class);
 
-		when(restClient.get().uri(any(Function.class)).retrieve().body(eq(VdypProjectionDetails.class)))
+		when(
+				restClient.get().uri(ArgumentMatchers.<Function<UriBuilder, URI>>any()).retrieve()
+						.body(VdypProjectionDetails.class)
+		)
 				.thenReturn(expected);
 
 		// Act
@@ -80,7 +83,10 @@ class VdypClientTest {
 		String fileSetGuid = "fs-456";
 		List<FileMappingDetails> expected = List.of(mock(FileMappingDetails.class));
 
-		when(restClient.get().uri(any(Function.class)).retrieve().body(any(ParameterizedTypeReference.class)))
+		when(
+				restClient.get().uri(ArgumentMatchers.<Function<UriBuilder, URI>>any()).retrieve()
+						.body(any(ParameterizedTypeReference.class))
+		)
 				.thenReturn(expected);
 
 		// Act
@@ -112,11 +118,11 @@ class VdypClientTest {
 		var resp = mock(RestClient.ResponseSpec.class);
 
 		when(restClient.post()).thenReturn(req);
-		when(req.uri(any(Function.class))).thenReturn(req);
+		when(req.uri(ArgumentMatchers.<Function<UriBuilder, URI>>any())).thenReturn(req);
 		when(req.contentType(MediaType.MULTIPART_FORM_DATA)).thenReturn(req);
 		doReturn(req).when(req).body(any(MultiValueMap.class));
 		when(req.retrieve()).thenReturn(resp);
-		when(resp.body(eq(FileMappingDetails.class))).thenReturn(mock(FileMappingDetails.class));
+		when(resp.body(FileMappingDetails.class)).thenReturn(mock(FileMappingDetails.class));
 
 		// act
 		client.uploadFileToFileSet(projectionGuid, fileSetGuid, file);

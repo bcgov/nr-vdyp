@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.client.vdyp;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -21,13 +20,13 @@ public class VdypClient {
 		this.vdypBackendRestClient = vdypBackendRestClient;
 	}
 
-	public VdypProjectionDetails getProjectionDetails(String projectionGUID) throws IOException {
+	public VdypProjectionDetails getProjectionDetails(String projectionGUID) {
 		return vdypBackendRestClient.get()
 				.uri(uriBuilder -> uriBuilder.path("/api/v8/projection/{projectionGUID}").build(projectionGUID))
 				.retrieve().body(VdypProjectionDetails.class);
 	}
 
-	public List<FileMappingDetails> getFileSetFiles(String projectionGUID, String fileSetGUID) throws IOException {
+	public List<FileMappingDetails> getFileSetFiles(String projectionGUID, String fileSetGUID) {
 		return vdypBackendRestClient.get()
 				.uri(
 						uriBuilder -> uriBuilder.path("/api/v8/projection/{projectionGUID}/fileset/{fileSetGUID}")

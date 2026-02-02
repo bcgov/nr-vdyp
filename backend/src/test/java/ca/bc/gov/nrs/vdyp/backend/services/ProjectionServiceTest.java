@@ -196,10 +196,10 @@ class ProjectionServiceTest {
 		UUID ownerId = UUID.randomUUID();
 		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), ownerId);
 		VDYPUserModel actingUser = user(ownerId);
-		UserTypeCodeModel SystemUserType = new UserTypeCodeModel();
-		SystemUserType.setCode(UserTypeCodeModel.SYSTEM);
+        UserTypeCodeModel systemUserType = new UserTypeCodeModel();
+        systemUserType.setCode(UserTypeCodeModel.SYSTEM);
 		VDYPUserModel systemUser = new VDYPUserModel();
-		systemUser.setUserTypeCode(SystemUserType);
+        systemUser.setUserTypeCode(systemUserType);
 		assertThrows(
 				ProjectionUnauthorizedException.class,
 				() -> service.checkUserCanPerformAction(

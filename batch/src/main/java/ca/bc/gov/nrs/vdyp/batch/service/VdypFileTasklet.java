@@ -20,7 +20,7 @@ public abstract class VdypFileTasklet implements Tasklet {
 	String jobTimestamp;
 	String projectionGUID;
 
-	public VdypFileTasklet(ComsFileService comsFileService, VdypClient vdypClient) {
+	VdypFileTasklet(ComsFileService comsFileService, VdypClient vdypClient) {
 		this.comsFileService = comsFileService;
 		this.vdypClient = vdypClient;
 	}

@@ -14,12 +14,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class ComsClient {
 	private final RestClient comsRestClient;
-	private final ComsProperties props;
 	private final ObjectMapper mapper;
 
-	public ComsClient(RestClient comsRestClient, ComsProperties props, ObjectMapper objectMapper) {
+	public ComsClient(RestClient comsRestClient, ObjectMapper objectMapper) {
 		this.comsRestClient = comsRestClient;
-		this.props = props;
 		this.mapper = objectMapper;
 	}
 
