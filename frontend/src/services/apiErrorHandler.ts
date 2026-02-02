@@ -49,7 +49,7 @@ function handleCanceledRequest(
 ) {
   const message = prependMessage('Request was canceled.')
   console.warn(message, (error as AxiosError).message)
-  notificationStore?.showInfoMessage(message, 'Request canceled')
+  notificationStore?.showInfoMessage(message, 'Request Cancelled')
 }
 
 /**
@@ -85,8 +85,8 @@ function handleResponseError(
     headers: response.headers,
   })
 
-  const message = prependMessage(getErrorMessage(response.status))
-  notificationStore?.showErrorMessage(message, 'API error')
+  const { message, title } = getErrorMessage(response.status)
+  notificationStore?.showErrorMessage(prependMessage(message), title)
 }
 
 /**
@@ -100,7 +100,7 @@ function handleRequestError(
 ) {
   const message = prependMessage(`${SVC_ERR.DEFAULT} (Error: No Response)`)
   console.error(message, request)
-  notificationStore?.showErrorMessage(message, 'Network error')
+  notificationStore?.showErrorMessage(message, 'Communication Error')
 }
 
 /**
@@ -114,7 +114,7 @@ function handleConfigurationError(
 ) {
   const message = prependMessage(`${SVC_ERR.DEFAULT} (Error: Configuration Issue)`)
   console.error(message, axiosError.message)
-  notificationStore?.showErrorMessage(message, 'Configuration error')
+  notificationStore?.showErrorMessage(message, 'Configuration Error')
 }
 
 /**
@@ -139,53 +139,45 @@ function handleGenericError(
     'The request could not be processed properly. Please try again.',
   )
   console.error(message, (error as Error).message)
-  notificationStore?.showErrorMessage(message, 'Request error')
+  notificationStore?.showErrorMessage(message, 'Processing Error')
 }
 
 /**
- * Return error messages based on status code
+ * Return error messages and titles based on status code
  * @param status
- * @returns
+ * @returns { message, title }
  */
-function getErrorMessage(status: number): string {
+function getErrorMessage(status: number): { message: string; title: string } {
   let logMessage = ''
 
   switch (status) {
     case StatusCodes.REQUEST_TIMEOUT:
-      return SVC_ERR.REQUEST_TIMEOUT
+      return { message: SVC_ERR.REQUEST_TIMEOUT, title: 'Timeout Error' }
     case StatusCodes.SERVICE_UNAVAILABLE:
-      return SVC_ERR.SERVICE_UNAVAILABLE
+      return { message: SVC_ERR.SERVICE_UNAVAILABLE, title: 'Service Unavailable' }
     case StatusCodes.BAD_GATEWAY:
-      return SVC_ERR.BAD_GATEWAY
+      return { message: SVC_ERR.BAD_GATEWAY, title: 'Bad Gateway' }
     case StatusCodes.GATEWAY_TIMEOUT:
-      return SVC_ERR.GATEWAY_TIMEOUT
+      return { message: SVC_ERR.GATEWAY_TIMEOUT, title: 'Gateway Timeout' }
     case StatusCodes.INTERNAL_SERVER_ERROR:
-      return SVC_ERR.INTERNAL_SERVER_ERROR
+      return { message: SVC_ERR.INTERNAL_SERVER_ERROR, title: 'Internal Server Error' }
     case StatusCodes.BAD_REQUEST:
-      logMessage = 'Bad Request: The server could not understand the request.'
-      break
+      return { message: SVC_ERR.BAD_REQUEST, title: 'Bad Request' }
     case StatusCodes.FORBIDDEN:
-      logMessage = 'Forbidden: Do not have permission to access this resource.'
-      break
+      return { message: SVC_ERR.FORBIDDEN, title: 'Forbidden' }
     case StatusCodes.UNAUTHORIZED:
-      logMessage = 'Unauthorized: Log in to access this resource.'
-      break
+      return { message: SVC_ERR.UNAUTHORIZED, title: 'Unauthorized' }
     case StatusCodes.NOT_FOUND:
-      logMessage = 'Not Found: The requested resource could not be found.'
-      break
+      return { message: SVC_ERR.NOT_FOUND, title: 'Not Found' }
     case StatusCodes.NOT_ACCEPTABLE:
-      logMessage = 'Not Acceptable: The requested format is not supported.'
-      break
+      return { message: SVC_ERR.NOT_ACCEPTABLE, title: 'Unsupported Format' }
     case StatusCodes.UNSUPPORTED_MEDIA_TYPE:
-      logMessage = 'Unsupported Media Type: Please check the content type.'
-      break
+      return { message: SVC_ERR.UNSUPPORTED_MEDIA_TYPE, title: 'Unsupported Media Type' }
     default:
       logMessage = `Unexpected status code: ${status}`
-      break
+      console.error(logMessage)
+      return { message: `${SVC_ERR.DEFAULT} (Error Code: ${status})`, title: 'Communication Error' }
   }
-
-  console.error(logMessage)
-  return `${SVC_ERR.DEFAULT} (Error Code: ${status})`
 }
 
 /**

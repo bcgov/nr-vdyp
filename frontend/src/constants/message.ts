@@ -9,6 +9,12 @@ export const SVC_ERR = Object.freeze({
     'The server did not respond in time. Please try again later. (Error: Gateway Timeout)',
   INTERNAL_SERVER_ERROR:
     'Service Internal Server Error. Please try again later.',
+  BAD_REQUEST: 'The server could not understand the request.',
+  FORBIDDEN: 'Do not have permission to access this resource.',
+  UNAUTHORIZED: 'Log in to access this resource.',
+  NOT_FOUND: 'The requested resource could not be found.',
+  NOT_ACCEPTABLE: 'The requested format is not supported.',
+  UNSUPPORTED_MEDIA_TYPE: 'The media type is not supported. Please check the content type.',
 })
 
 export const AUTH_ERR = Object.freeze({

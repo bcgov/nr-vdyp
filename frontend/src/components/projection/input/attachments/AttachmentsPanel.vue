@@ -336,7 +336,7 @@ const onConfirm = async () => {
   //   await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
   // } catch (error) {
   //   console.error('Error saving projection:', error)
-  //   notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED)
+  //   notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, 'Projection Save Failed')
   //   return
   // }
 
