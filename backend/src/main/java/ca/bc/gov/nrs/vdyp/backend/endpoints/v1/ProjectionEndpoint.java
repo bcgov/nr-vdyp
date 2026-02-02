@@ -123,7 +123,6 @@ public class ProjectionEndpoint implements Endpoint {
 				return Response.status(Status.BAD_REQUEST).header("content-type", "application/json")
 						.entity(
 								serialize(
-										ValidationMessageListResource.class,
 										new ValidationMessageListResource(e.getValidationMessages())
 								)
 						).build();
@@ -266,7 +265,7 @@ public class ProjectionEndpoint implements Endpoint {
 		return Response.status(Status.OK).entity(started).build();
 	}
 
-	private <T> String serialize(Class<T> clazz, T entity) throws JsonProcessingException {
+	private <T> String serialize(T entity) throws JsonProcessingException {
 		return mapper.writeValueAsString(entity);
 	}
 

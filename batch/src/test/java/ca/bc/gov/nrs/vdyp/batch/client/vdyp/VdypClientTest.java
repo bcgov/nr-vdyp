@@ -85,9 +85,8 @@ class VdypClientTest {
 
 		when(
 				restClient.get().uri(ArgumentMatchers.<Function<UriBuilder, URI>>any()).retrieve()
-						.body(any(ParameterizedTypeReference.class))
-		)
-				.thenReturn(expected);
+						.body(ArgumentMatchers.<ParameterizedTypeReference<List<FileMappingDetails>>>any())
+		).thenReturn(expected);
 
 		// Act
 		List<FileMappingDetails> actual = client.getFileSetFiles(projectionGuid, fileSetGuid);
