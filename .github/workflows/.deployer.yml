@@ -164,6 +164,7 @@ jobs:
             --set backend.env.BATCH_BASE_URL=${{ vars.BATCH_BASE_URL }} \
             --set batch.env.BATCH_DB_USER=${{ vars.BATCH_DB_USERNAME }} \
             --set batch.env.BATCH_DB_DATABASE=${{ vars.BATCH_DB_DATABASE }} \
+            --set batch.env.VDYP_BASE_URL=${{ vars.VDYP_BASE_URL }} \
             --set frontend.env.BACKEND_URL=${{ vars.BACKEND_URL }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
             --set frontend.env.VITE_SSO_CLIENT_ID=${{ secrets.VITE_SSO_CLIENT_ID }} \

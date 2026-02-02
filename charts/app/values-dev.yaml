@@ -260,4 +260,5 @@ batch:
     SPRING_PROFILES_ACTIVE: "dev"
     BATCH_DB_USER: ~
     BATCH_DB_DATABASE: ~
+    VDYP_BASE_URL: ~
 
