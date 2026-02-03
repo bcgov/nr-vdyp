@@ -33,6 +33,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -51,6 +53,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionNotFoundException;
@@ -189,6 +192,37 @@ class ProjectionServiceTest {
 	}
 
 	@Test
+	void checkUserCanPerformAction_allowsSystem_forCompleteStoreResults() {
+		UUID ownerId = UUID.randomUUID();
+		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), ownerId);
+		VDYPUserModel actingUser = user(ownerId);
+		UserTypeCodeModel systemUserType = new UserTypeCodeModel();
+		systemUserType.setCode(UserTypeCodeModel.SYSTEM);
+		VDYPUserModel systemUser = new VDYPUserModel();
+		systemUser.setUserTypeCode(systemUserType);
+		assertThrows(
+				ProjectionUnauthorizedException.class,
+				() -> service.checkUserCanPerformAction(
+						entity, actingUser, ProjectionService.ProjectionAction.COMPLETE_PROJECTION
+				)
+		);
+		assertThrows(
+				ProjectionUnauthorizedException.class,
+				() -> service
+						.checkUserCanPerformAction(entity, actingUser, ProjectionService.ProjectionAction.STORE_RESULTS)
+		);
+		assertDoesNotThrow(
+				() -> service.checkUserCanPerformAction(
+						entity, systemUser, ProjectionService.ProjectionAction.COMPLETE_PROJECTION
+				)
+		);
+		assertDoesNotThrow(
+				() -> service
+						.checkUserCanPerformAction(entity, systemUser, ProjectionService.ProjectionAction.STORE_RESULTS)
+		);
+	}
+
+	@Test
 	void checkUserCanPerformAction_throwsUnauthorized_whenNotOwner() {
 		UUID ownerId = UUID.randomUUID();
 		UUID otherUserId = UUID.randomUUID();
@@ -226,6 +260,34 @@ class ProjectionServiceTest {
 		);
 	}
 
+	@ParameterizedTest
+	@ValueSource(
+			strings = { ProjectionStatusCodeModel.DRAFT, ProjectionStatusCodeModel.READY,
+					ProjectionStatusCodeModel.FAILED }
+	)
+	void checkProjectionStatusPermitsAction_blocksCompleteStore_whenInDraft(String statusCode) {
+		ProjectionEntity entity = new ProjectionEntity();
+		entity.setProjectionGUID(UUID.randomUUID());
+
+		// You’ll need whatever your status entity type is. Here’s a minimal pattern:
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(statusCode);
+		entity.setProjectionStatusCode(statusEntity);
+
+		assertThrows(
+				ProjectionStateException.class,
+				() -> service.checkProjectionStatusPermitsAction(
+						entity, ProjectionService.ProjectionAction.COMPLETE_PROJECTION
+				)
+		);
+
+		assertThrows(
+				ProjectionStateException.class,
+				() -> service
+						.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.STORE_RESULTS)
+		);
+	}
+
 	@Test
 	void checkProjectionStatusPermitsAction_allowsRead_evenIfInProgress() {
 		ProjectionEntity entity = new ProjectionEntity();
@@ -237,6 +299,15 @@ class ProjectionServiceTest {
 
 		assertDoesNotThrow(
 				() -> service.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.READ)
+		);
+		assertDoesNotThrow(
+				() -> service.checkProjectionStatusPermitsAction(
+						entity, ProjectionService.ProjectionAction.COMPLETE_PROJECTION
+				)
+		);
+		assertDoesNotThrow(
+				() -> service
+						.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.STORE_RESULTS)
 		);
 	}
 
@@ -566,6 +637,8 @@ class ProjectionServiceTest {
 		UUID ownerId = UUID.randomUUID();
 
 		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		ProjectionFileSetEntity fileSetEntity = fileSetEntity(UUID.randomUUID());
+		entity.setResultFileSet(fileSetEntity);
 		VDYPUserModel actingUser = new VDYPUserModel();
 		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
 
@@ -644,9 +717,11 @@ class ProjectionServiceTest {
 		UUID projectionGUID = UUID.randomUUID();
 		UUID ownerId = UUID.randomUUID();
 
-		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
 		VDYPUserModel actingUser = new VDYPUserModel();
-		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		UserTypeCodeModel model = new UserTypeCodeModel();
+		model.setCode(UserTypeCodeModel.SYSTEM);
+		actingUser.setUserTypeCode(model);
 
 		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
 		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));

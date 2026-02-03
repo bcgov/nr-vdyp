@@ -53,6 +53,8 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.backend.env.OIDC_CLIENT_SECRET_SECRET_NAME }}
                   key: {{ .Values.backend.env.OIDC_CLIENT_SECRET_SECRET_KEY }}
+            - name: QUARKUS_OIDC_PUBLIC_KEY
+              value: {{ .Values.backend.env.QUARKUS_OIDC_PUBLIC_KEY | quote }}
             - name: COMS_BASE_URL
               value: {{ .Values.backend.env.COMS_BASE_URL | quote }}
             - name: COMS_S3_ACCESSKEYID
@@ -69,6 +71,8 @@ spec:
               value: {{ .Values.coms.env.BASICAUTH_PASSWORD | quote }}
             - name: CORS_FRONTEND_BASE_URL
               value: {{ .Values.backend.env.CORS_FRONTEND_BASE_URL | quote }}
+            - name: BATCH_BASE_URL
+              value: {{ .Values.backend.env.BATCH_BASE_URL | quote }}
             - name: VDYP_DB_PROXY_USER
               valueFrom:
                 secretKeyRef:
