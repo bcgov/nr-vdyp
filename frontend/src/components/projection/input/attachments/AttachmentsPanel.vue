@@ -34,21 +34,15 @@
                   <label class="bcds-file-input-label" for="polygon-file-input">
                     Polygon File
                   </label>
-                  <!-- View mode: Display file name only -->
+                  <!-- View mode -->
                   <div v-if="isReadOnly" class="file-display-container">
-                    <v-icon class="file-display-icon">mdi-file-document-outline</v-icon>
-                    <span class="file-display-name">{{ fileUploadStore.polygonFileName }}</span>
                   </div>
-                  <!-- Edit mode: Show existing file info and allow replacement -->
+                  <!-- Edit mode -->
                   <template v-else>
-                    <!-- <div v-if="hasExistingPolygonFile && !fileUploadStore.polygonFile" class="existing-file-info">
-                      <v-icon size="small" class="existing-file-icon">mdi-file-check-outline</v-icon>
-                      <span class="existing-file-name">Current: {{ fileUploadStore.polygonFileName }}</span>
-                    </div> -->
                     <v-file-input
                       id="polygon-file-input"
                       v-model="fileUploadStore.polygonFile"
-                      :label="hasExistingPolygonFile ? 'Replace Polygon File...' : 'Select Polygon File...'"
+                      label="Select Polygon File..."
                       show-size
                       chips
                       clearable
@@ -64,21 +58,15 @@
                   <label class="bcds-file-input-label" for="layer-file-input">
                     Layer File
                   </label>
-                  <!-- View mode: Display file name only -->
+                  <!-- View mode -->
                   <div v-if="isReadOnly" class="file-display-container">
-                    <v-icon class="file-display-icon">mdi-file-document-outline</v-icon>
-                    <span class="file-display-name">{{ fileUploadStore.layerFileName }}</span>
                   </div>
                   <!-- Edit mode: Show existing file info and allow replacement -->
                   <template v-else>
-                    <!-- <div v-if="hasExistingLayerFile && !fileUploadStore.layerFile" class="existing-file-info">
-                      <v-icon size="small" class="existing-file-icon">mdi-file-check-outline</v-icon>
-                      <span class="existing-file-name">Current: {{ fileUploadStore.layerFileName }}</span>
-                    </div> -->
                     <v-file-input
                       id="layer-file-input"
                       v-model="fileUploadStore.layerFile"
-                      :label="hasExistingLayerFile ? 'Replace Layer File...' : 'Select Layer File...'"
+                      label="Select Layer File..."
                       show-size
                       chips
                       clearable
@@ -113,16 +101,16 @@ import { useAppStore } from '@/stores/projection/appStore'
 import { AppMessageDialog } from '@/components'
 import { ActionPanel } from '@/components/projection'
 import { CONSTANTS, MESSAGE } from '@/constants'
-// import { PROJECTION_ERR } from '@/constants/message'
+import { PROJECTION_ERR } from '@/constants/message'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { fileUploadValidation } from '@/validation'
-// import { saveProjectionOnPanelConfirm } from '@/services/projection/fileUploadService'
-// import { useNotificationStore } from '@/stores/common/notificationStore'
+import { saveProjectionOnPanelConfirm } from '@/services/projection/fileUploadService'
+import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const form = ref<HTMLFormElement>()
 const fileUploadStore = useFileUploadStore()
 const appStore = useAppStore()
-// const notificationStore = useNotificationStore()
+const notificationStore = useNotificationStore()
 
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
@@ -146,14 +134,6 @@ const isConfirmed = computed(
 // Determine if inputs should be disabled (read-only mode or not editable)
 const isInputDisabled = computed(
   () => isReadOnly.value || !fileUploadStore.panelState[panelName].editable,
-)
-
-// Check if there are existing files from the server (for edit mode display)
-const hasExistingPolygonFile = computed(
-  () => fileUploadStore.polygonFileName !== null,
-)
-const hasExistingLayerFile = computed(
-  () => fileUploadStore.layerFileName !== null,
 )
 
 const MAX_DISPLAY_ERR_ITEMS = 2
@@ -295,8 +275,8 @@ const validateLayerFile = async (): Promise<boolean> => {
 
 const validateFiles = async (): Promise<boolean> => {
   // Determine new file or existing server file
-  const hasPolygon = fileUploadStore.polygonFile || hasExistingPolygonFile.value
-  const hasLayer = fileUploadStore.layerFile || hasExistingLayerFile.value
+  const hasPolygon = fileUploadStore.polygonFile
+  const hasLayer = fileUploadStore.layerFile
 
   // If both files exist (either new or on server), validate only the new ones
   if (hasPolygon && hasLayer) {
@@ -330,15 +310,13 @@ const onConfirm = async () => {
   }
 
   // Save projection (update + file uploads) before confirming the panel
-  // TODO VDYP-825
-
-  // try {
-  //   await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
-  // } catch (error) {
-  //   console.error('Error saving projection:', error)
-  //   notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
-  //   return
-  // }
+  try {
+    await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
+  } catch (error) {
+    console.error('Error saving projection:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
+    return
+  }
 
   if (!isConfirmed.value) {
     fileUploadStore.confirmPanel(panelName)

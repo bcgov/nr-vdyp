@@ -16,10 +16,10 @@ import {
   createProjection as projServiceCreateProjection,
   runProjection as projServiceRunProjection,
   updateProjectionParams,
-  // deleteAllFilesFromFileSet,
-  // getProjectionById,
+  deleteAllFilesFromFileSet,
+  getProjectionById,
 } from '@/services/projectionService'
-// import { uploadFileToFileSet } from '@/services/apiActions'
+import { uploadFileToFileSet } from '@/services/apiActions'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
 import { addExecutionOptionsFromMappings } from '@/utils/util'
@@ -264,24 +264,22 @@ export const saveProjectionOnPanelConfirm = async (
     await updateProjectionParams(projectionGUID, projectionParameters)
 
     // For Attachments panel, handle file uploads
-    // TODO VDYP-825
+    if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS) {
+      const projectionModel = await getProjectionById(projectionGUID)
 
-    // if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS) {
-    //   const projectionModel = await getProjectionById(projectionGUID)
+      // Upload polygon file if a new one was selected
+      if (fileUploadStore.polygonFile && projectionModel.polygonFileSet?.projectionFileSetGUID) {
+        const polygonFileSetGUID = projectionModel.polygonFileSet.projectionFileSetGUID
+        await deleteAllFilesFromFileSet(projectionGUID, polygonFileSetGUID)
+        await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, fileUploadStore.polygonFile as File)
+      }
 
-    //   // Upload polygon file if a new one was selected
-    //   if (fileUploadStore.polygonFile && projectionModel.polygonFileSet?.projectionFileSetGUID) {
-    //     const polygonFileSetGUID = projectionModel.polygonFileSet.projectionFileSetGUID
-    //     await deleteAllFilesFromFileSet(projectionGUID, polygonFileSetGUID)
-    //     await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, fileUploadStore.polygonFile as File)
-    //   }
-
-    //   // Upload layer file if a new one was selected
-    //   if (fileUploadStore.layerFile && projectionModel.layerFileSet?.projectionFileSetGUID) {
-    //     const layerFileSetGUID = projectionModel.layerFileSet.projectionFileSetGUID
-    //     await deleteAllFilesFromFileSet(projectionGUID, layerFileSetGUID)
-    //     await uploadFileToFileSet(projectionGUID, layerFileSetGUID, fileUploadStore.layerFile as File)
-    //   }
-    // }
+      // Upload layer file if a new one was selected
+      if (fileUploadStore.layerFile && projectionModel.layerFileSet?.projectionFileSetGUID) {
+        const layerFileSetGUID = projectionModel.layerFileSet.projectionFileSetGUID
+        await deleteAllFilesFromFileSet(projectionGUID, layerFileSetGUID)
+        await uploadFileToFileSet(projectionGUID, layerFileSetGUID, fileUploadStore.layerFile as File)
+      }
+    }
   }
 }
