@@ -128,10 +128,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const polygonFile = ref<File | null>(null)
   const layerFile = ref<File | null>(null)
 
-  // File names for display (used when viewing/editing existing projections)
-  const polygonFileName = ref<string | null>(null)
-  const layerFileName = ref<string | null>(null)
-
   // Reset store to initial state
   const resetStore = () => {
     // Reset panel states
@@ -174,8 +170,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     // Reset attachments
     polygonFile.value = null
     layerFile.value = null
-    polygonFileName.value = null
-    layerFileName.value = null
   }
 
   /**
@@ -283,22 +277,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     }
   }
 
-  /**
-   * Set file references for display purposes
-   * Note: In view mode, we can only display file names, not actual File objects
-   * since files need to be downloaded from the server
-   * @param polygon The polygon file name from server (or null)
-   * @param layer The layer file name from server (or null)
-   */
-  const setFileReferences = (
-    polygon: string | null,
-    layer: string | null,
-  ) => {
-    // Set file names with defaults if not provided
-    polygonFileName.value = polygon || 'polygon.csv'
-    layerFileName.value = layer || 'layer.csv'
-  }
-
   return {
     // panel open
     panelOpenStates,
@@ -336,11 +314,9 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     // attachments
     polygonFile,
     layerFile,
-    polygonFileName,
-    layerFileName,
     // restore functions
     resetStore,
     restoreFromProjectionParams,
-    setFileReferences,
+    // setFileReferences,
   }
 })
