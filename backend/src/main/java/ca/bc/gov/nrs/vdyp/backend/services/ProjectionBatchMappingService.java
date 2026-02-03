@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -56,4 +57,23 @@ public class ProjectionBatchMappingService {
 		}
 	}
 
+	@Transactional
+	public void cancelProjection(ProjectionEntity projectionEntity) throws ProjectionServiceException {
+		try {
+			Optional<ProjectionBatchMappingEntity> entityOpt = repository
+					.findByProjectionGUID(projectionEntity.getProjectionGUID());
+			if (entityOpt.isPresent()) {
+				ProjectionBatchMappingEntity entity = entityOpt.get();
+				BatchJobModel job = batchClient.stopBatchJob(entity.getBatchJobGUID());
+				repository.delete(entity);
+			} else {
+				throw new ProjectionServiceException(
+						"No batch mapping found for projection GUID: " + projectionEntity.getProjectionGUID()
+				);
+			}
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Error starting projection batch process", e);
+		}
+	}
 }
+

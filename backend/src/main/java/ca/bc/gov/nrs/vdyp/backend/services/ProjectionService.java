@@ -425,8 +425,21 @@ public class ProjectionService {
 		return assembler.toModel(entity);
 	}
 
+	@Transactional
+	public ProjectionModel cancelBatchProjection(VDYPUserModel user, UUID projectionGUID)
+			throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, user, ProjectionAction.CANCEL);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.CANCEL);
+
+		batchMappingService.cancelProjection(entity);
+		entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
+
+		return assembler.toModel(entity);
+	}
+
 	public enum ProjectionAction {
-		READ, UPDATE, DELETE, STORE_RESULTS, COMPLETE_PROJECTION
+		READ, UPDATE, DELETE, STORE_RESULTS, COMPLETE_PROJECTION, CANCEL
 	}
 
 	public void checkUserCanPerformAction(ProjectionEntity entity, VDYPUserModel actingUser, ProjectionAction action)
@@ -435,12 +448,13 @@ public class ProjectionService {
 			return;
 		UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());
 		switch (action) {
-		case READ, UPDATE, DELETE:
+		case READ, UPDATE, DELETE, CANCEL:
 			if (!entity.getOwnerUser().getVdypUserGUID().equals(vdypUserGuid)) {
 				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 			}
 			break;
 		case COMPLETE_PROJECTION, STORE_RESULTS:
+			// these actions are only performed by the system the endpoint cannot be called by a different kidn of user
 			throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 		default:
 			break;
@@ -454,19 +468,20 @@ public class ProjectionService {
 		if (entity.getProjectionStatusCode().getCode().equals(ProjectionStatusCodeModel.RUNNING)) {
 			switch (action) {
 			case UPDATE, DELETE:
-				// TODO check againsdt some specific states throw ProjectionServiceException if htere is an issue
 				throw new ProjectionStateException(
 						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
 				);
 
-			default: // STORE_RESULTS, COMPLETE_PROJECTION, READ
+			default: // STORE_RESULTS, COMPLETE_PROJECTION, READ, CANCEL
 				break;
 			}
 
 		} else { // status != RUNNING
 					// If the projection is not running we should not handle COMPLETE projection actions or STORE
 					// RESULTS
-			if (action == ProjectionAction.COMPLETE_PROJECTION || action == ProjectionAction.STORE_RESULTS) {
+			if (action == ProjectionAction.COMPLETE_PROJECTION //
+					|| action == ProjectionAction.STORE_RESULTS //
+					|| action == ProjectionAction.CANCEL) {
 				throw new ProjectionStateException(
 						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
 				);
