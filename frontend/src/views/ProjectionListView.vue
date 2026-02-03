@@ -90,7 +90,6 @@ import {
   fetchUserProjections,
   deleteProjectionWithFiles,
   getProjectionById,
-  getFileSetFiles,
   parseProjectionParams,
   isProjectionReadOnly,
   mapProjectionStatus,
@@ -280,13 +279,6 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
       // Reset and restore file upload store
       fileUploadStore.resetStore()
       fileUploadStore.restoreFromProjectionParams(params, isViewMode)
-
-      // Set file references for display (file names only, not actual files)
-      await loadFileReferencesForFileUpload(
-        projectionGUID,
-        projectionModel.polygonFileSet?.projectionFileSetGUID,
-        projectionModel.layerFileSet?.projectionFileSetGUID,
-      )
     }
 
     // Navigate to the projection detail view
@@ -296,41 +288,6 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
   } finally {
     isProgressVisible.value = false
-  }
-}
-
-/**
- * Loads file references for File Upload mode (names only, not actual files)
- * Since FileMappingModel doesn't have fileName, we use the fileSet name
- */
-const loadFileReferencesForFileUpload = async (
-  projectionGUID: string,
-  polygonFileSetGUID: string | undefined,
-  layerFileSetGUID: string | undefined,
-) => {
-  try {
-    let polygonFileName: string | null = null
-    let layerFileName: string | null = null
-
-    if (polygonFileSetGUID) {
-      const polygonFiles = await getFileSetFiles(projectionGUID, polygonFileSetGUID)
-      if (polygonFiles.length > 0) {
-        // Use fileSet name if available, otherwise use a default
-        polygonFileName = polygonFiles[0].projectionFileSet?.fileSetName || 'Polygon File'
-      }
-    }
-
-    if (layerFileSetGUID) {
-      const layerFiles = await getFileSetFiles(projectionGUID, layerFileSetGUID)
-      if (layerFiles.length > 0) {
-        // Use fileSet name if available, otherwise use a default
-        layerFileName = layerFiles[0].projectionFileSet?.fileSetName || 'Layer File'
-      }
-    }
-
-    fileUploadStore.setFileReferences(polygonFileName, layerFileName)
-  } catch (err) {
-    console.error('Error loading file references:', err)
   }
 }
 
