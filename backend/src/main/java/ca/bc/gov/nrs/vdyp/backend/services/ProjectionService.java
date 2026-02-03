@@ -548,7 +548,8 @@ public class ProjectionService {
 					entity.getLayerFileSet().getProjectionFileSetGUID(),
 					entity.getResultFileSet().getProjectionFileSetGUID() };
 
-			// TODO before the projection is deleted the Batch mapping should be deleted if it exists
+			// delete the batch mapping if it exists
+			batchMappingService.deleteMappingForProjection(entity);
 
 			// Delete the Projection
 			repository.delete(entity);

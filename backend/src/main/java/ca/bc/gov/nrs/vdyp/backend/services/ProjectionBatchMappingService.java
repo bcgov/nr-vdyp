@@ -75,5 +75,13 @@ public class ProjectionBatchMappingService {
 			throw new ProjectionServiceException("Error starting projection batch process", e);
 		}
 	}
+
+	@Transactional
+	public void deleteMappingForProjection(ProjectionEntity projectionEntity) {
+		Optional<ProjectionBatchMappingEntity> entityOpt = repository
+				.findByProjectionGUID(projectionEntity.getProjectionGUID());
+
+		entityOpt.ifPresent(entity -> repository.delete(entity));
+	}
 }
 
