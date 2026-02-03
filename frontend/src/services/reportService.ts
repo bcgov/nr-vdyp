@@ -15,7 +15,7 @@ export const downloadTextFile = (
   saveAsFunc = saveAs,
 ) => {
   if (!data || data.length === 0 || (data.length > 0 && data.every((item) => item.trim() === ''))) {
-    messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
     return
   }
 
@@ -36,7 +36,7 @@ export const downloadCSVFile = (
   saveAsFunc = saveAs,
 ) => {
   if (!data || data.length === 0 || (data.length > 0 && data.every((item) => item.trim() === ''))) {
-    messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
     return
   }
 
@@ -52,7 +52,7 @@ export const downloadCSVFile = (
  */
 export const printReport = (data: string[], printJSFunc = printJS) => {
   if (!data || data.length === 0 || (data.length > 0 && data.every((item) => item.trim() === ''))) {
-    messageHandler.logWarningMessage(MESSAGE.PRINT_ERR.NO_DATA)
+    messageHandler.logWarningMessage(MESSAGE.PRINT_ERR.NO_DATA, null, false, false, MESSAGE.PRINT_ERR.NO_DATA_TITLE)
     return
   }
 

@@ -217,13 +217,14 @@ const processResponse = async (response: any): Promise<boolean> => {
         CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
         ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR
         : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT_W_ERR,
-    )
+    null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_W_ERR_TITLE)
   } else {
     logSuccessMessage(
       appStore.modelSelection ===
         CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
         ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT
         : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT,
+      null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_TITLE
     )
   }
   return hasErrors

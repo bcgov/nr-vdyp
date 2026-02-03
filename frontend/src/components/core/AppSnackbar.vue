@@ -13,7 +13,10 @@
   >
     <v-icon class="app-snackbar__icon">{{ getIcon(computedType) }}</v-icon>
     <div class="app-snackbar__container">
-      <span>{{ computedMessage }}</span>
+      <span v-if="computedTitle" class="app-snackbar__title">{{
+        computedTitle
+      }}</span>
+      <span class="app-snackbar__message">{{ computedMessage }}</span>
     </div>
 
     <template #actions>
@@ -31,6 +34,7 @@ import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{
   isVisible?: boolean
+  title?: string
   message?: string
   type?: 'info' | 'success' | 'error' | 'warning' | ''
   color?: string
@@ -51,6 +55,7 @@ watch(
   },
 )
 
+const computedTitle = computed(() => props.title ?? '')
 const computedMessage = computed(() => props.message ?? 'Notification message')
 const computedType = computed(() => props.type ?? 'info')
 const computedColor = computed(() => props.color ?? 'info')
@@ -86,26 +91,27 @@ const getIcon = (type: string): string => {
 .app-snackbar :deep(.v-snackbar__wrapper) {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--layout-margin-small);
   padding: var(--layout-padding-medium) var(--layout-padding-large);
   min-height: 48px;
 }
 
-/* Snackbar content area - make it inline with actions */
+/* Snackbar content area - top aligned with actions */
 .app-snackbar :deep(.v-snackbar__content) {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--layout-margin-small);
   flex-grow: 1;
   padding: 0;
 }
 
-/* Snackbar actions area - inline with content */
+/* Snackbar actions area - top aligned */
 .app-snackbar :deep(.v-snackbar__actions) {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  align-self: flex-start;
   margin: 0;
   padding: 0;
 }
@@ -113,36 +119,56 @@ const getIcon = (type: string): string => {
 /* Content container */
 .app-snackbar__container {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   flex-grow: 1;
   font: var(--typography-regular-body);
   color: var(--typography-color-primary);
 }
 
-/* Left icon */
+/* Title/Header text */
+.app-snackbar__title {
+  font: var(--typography-bold-body);
+  color: var(--typography-color-primary);
+}
+
+/* Message text */
+.app-snackbar__message {
+  font: var(--typography-regular-body);
+  color: var(--typography-color-primary);
+}
+
+/* Left icon - aligned with title line */
 .app-snackbar__icon {
   display: inline-flex;
-  align-self: center;
+  align-self: flex-start;
   min-width: var(--icons-size-medium);
   height: var(--icons-size-medium);
   font-size: var(--icons-size-medium);
+  margin-top: 4px;
 }
 
-/* Close icon positioning */
+/* Close icon positioning - aligned with title line */
 .app-snackbar__close-icon {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   color: var(--icons-color-primary);
 }
 
 .app-snackbar__close-icon :deep(.v-btn) {
   color: var(--icons-color-primary);
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+}
+
+.app-snackbar__close-icon :deep(.v-btn) .v-icon {
+  font-size: 18px;
 }
 
 .app-snackbar__close-icon :deep(.v-btn) svg {
-  min-width: var(--icons-size-medium);
-  height: var(--icons-size-medium);
+  min-width: 18px;
+  height: 18px;
   color: var(--icons-color-primary);
 }
 

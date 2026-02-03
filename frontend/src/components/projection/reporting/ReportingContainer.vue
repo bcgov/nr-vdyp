@@ -89,13 +89,13 @@ const isRawResultsButtonDisabled = computed(() => !rawResults.value)
 
 const handleDownload = () => {
   if (!downloadData.value || downloadData.value.length === 0) {
-    messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
     return
   }
   switch (props.tabname) {
     case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
       if (!downloadData.value || downloadData.value.length === 0) {
-        messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
+        messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
         return
       }
       downloadCSVFile(downloadData.value, CONSTANTS.FILE_NAME.YIELD_TABLE_CSV)
@@ -114,7 +114,7 @@ const handleDownloadRawResult = () => {
     !projectionStore.rawResultZipFile ||
     !projectionStore.rawResultZipFileName
   ) {
-    messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
     return
   }
 
