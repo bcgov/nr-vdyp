@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -20,7 +19,7 @@ public class ProjectionModel {
 	private OffsetDateTime endDate;
 	private CalculationEngineCodeModel calculationEngineCode;
 	private ProjectionStatusCodeModel projectionStatusCode;
-	private LocalDate lastUpdatedDate;
+	private OffsetDateTime lastUpdatedDate;
 	private String reportTitle;
 	private String reportDescription;
 
@@ -68,12 +67,12 @@ public class ProjectionModel {
 		return projectionStatusCode;
 	}
 
-	public LocalDate getLastUpdatedDate() {
+	public OffsetDateTime getLastUpdatedDate() {
 		return lastUpdatedDate;
 	}
 
-	public LocalDate getExpiryDate() {
-		LocalDate updateDate = lastUpdatedDate == null ? LocalDate.now() : lastUpdatedDate;
+	public OffsetDateTime getExpiryDate() {
+		OffsetDateTime updateDate = lastUpdatedDate == null ? OffsetDateTime.now() : lastUpdatedDate;
 		return updateDate.plusDays(DAYS_UNTIL_EXPIRY);
 	}
 
@@ -129,7 +128,7 @@ public class ProjectionModel {
 		this.projectionStatusCode = projectionStatusCode;
 	}
 
-	public void setLastUpdatedDate(LocalDate lastUpdatedDate) {
+	public void setLastUpdatedDate(OffsetDateTime lastUpdatedDate) {
 		this.lastUpdatedDate = lastUpdatedDate;
 	}
 
