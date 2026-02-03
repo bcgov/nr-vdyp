@@ -1,6 +1,7 @@
 <template>
   <AppSnackbar
     :is-visible="isShow"
+    :title="title"
     :message="message"
     :type="type"
     :color="color"
@@ -16,7 +17,7 @@ import { NOTIFICATION } from '@/constants/constants'
 
 const notificationStore = useNotificationStore()
 
-const { isShow, message, type, color } = storeToRefs(notificationStore)
+const { isShow, title, message, type, color } = storeToRefs(notificationStore)
 
 const closeMessage = () => {
   notificationStore.resetMessage()

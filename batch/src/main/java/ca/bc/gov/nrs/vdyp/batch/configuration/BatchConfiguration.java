@@ -40,6 +40,7 @@ import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.service.DownloadAndPartitionTasklet;
+import ca.bc.gov.nrs.vdyp.batch.service.ResultPersistenceTasklet;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
@@ -253,7 +254,7 @@ public class BatchConfiguration {
 	@ConditionalOnProperty(name = "batch.job.auto-create", havingValue = "true", matchIfMissing = false)
 	public Job fetchAndPartitionJob(
 			BatchJobExecutionListener loggingListener, VDYPJobMetricListener metricListener,
-			Step fetchAndPartitionFilesStep, Step masterStep, Step postProcessingStep,
+			Step fetchAndPartitionFilesStep, Step masterStep, Step postProcessingStep, Step persistResultFileStep,
 			PlatformTransactionManager transactionManager
 	) {
 		return new JobBuilder("VdypFetchAndPartitionJob", jobRepository) //
@@ -261,6 +262,7 @@ public class BatchConfiguration {
 				.start(fetchAndPartitionFilesStep) //
 				.next(masterStep) //
 				.next(postProcessingStep) //
+				.next(persistResultFileStep) //
 				.listener(metricListener) //
 				.listener(loggingListener).build();
 	}
@@ -360,4 +362,10 @@ public class BatchConfiguration {
 			return RepeatStatus.FINISHED;
 		};
 	}
+
+	@Bean
+	public Step persistResultFileStep(ResultPersistenceTasklet tasklet, PlatformTransactionManager transactionManager) {
+		return new StepBuilder("persistResultFileStep", jobRepository).tasklet(tasklet, transactionManager).build();
+	}
+
 }

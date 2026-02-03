@@ -121,12 +121,7 @@ public class ProjectionEndpoint implements Endpoint {
 				);
 			} catch (ProjectionRequestValidationException e) {
 				return Response.status(Status.BAD_REQUEST).header("content-type", "application/json")
-						.entity(
-								serialize(
-										ValidationMessageListResource.class,
-										new ValidationMessageListResource(e.getValidationMessages())
-								)
-						).build();
+						.entity(serialize(new ValidationMessageListResource(e.getValidationMessages()))).build();
 			}
 		} catch (Exception e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -252,7 +247,21 @@ public class ProjectionEndpoint implements Endpoint {
 		return Response.status(Status.OK).entity(started).build();
 	}
 
-	private <T> String serialize(Class<T> clazz, T entity) throws JsonProcessingException {
+	@POST
+	@Authenticated
+	@Path("/{projectionGUID}/complete")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Set a Projections Status", description = "(System Only) Updates as a projection status to complete after processing."
+	)
+	public Response updateCompleteProjectionStatus(
+			@PathParam("projectionGUID") UUID projectionGUID, @QueryParam("success") boolean success
+	) throws ProjectionServiceException {
+		var started = projectionService.updateCompleteStatus(currentUser.getUser(), projectionGUID, success);
+		return Response.status(Status.OK).entity(started).build();
+	}
+
+	private <T> String serialize(T entity) throws JsonProcessingException {
 		return mapper.writeValueAsString(entity);
 	}
 
