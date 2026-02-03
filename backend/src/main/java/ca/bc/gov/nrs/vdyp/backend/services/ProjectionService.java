@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
@@ -274,8 +276,8 @@ public class ProjectionService {
 			} catch (IOException e) {
 				return Response.status(500)
 						.entity(
-								"Saw IOException when generating results zip file" + e.getMessage() != null
-										? ": " + e.getMessage() : ""
+								"Saw IOException when generating results zip file"
+										+ (e.getMessage() != null ? ": " + e.getMessage() : "")
 						).build();
 			}
 
@@ -417,27 +419,32 @@ public class ProjectionService {
 		// set the status to running
 		if (batchMappingModel != null && batchMappingModel.getBatchJobGUID() != null) {
 			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.RUNNING));
-			repository.persist(entity);
+			entity.setStartDate(OffsetDateTime.now());
 		}
 
 		return assembler.toModel(entity);
 	}
 
 	public enum ProjectionAction {
-		READ, UPDATE, DELETE
+		READ, UPDATE, DELETE, STORE_RESULTS, COMPLETE_PROJECTION
 	}
 
 	public void checkUserCanPerformAction(ProjectionEntity entity, VDYPUserModel actingUser, ProjectionAction action)
 			throws ProjectionServiceException {
 		if (actingUser.isSystemUser())
 			return;
+		UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());
 		switch (action) {
 		case READ, UPDATE, DELETE:
-			UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());
 			if (!entity.getOwnerUser().getVdypUserGUID().equals(vdypUserGuid)) {
 				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 			}
 			break;
+		case COMPLETE_PROJECTION, STORE_RESULTS:
+			throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
+		default:
+			break;
+
 		}
 
 	}
@@ -451,10 +458,19 @@ public class ProjectionService {
 				throw new ProjectionStateException(
 						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
 				);
-			case READ:
+
+			default: // STORE_RESULTS, COMPLETE_PROJECTION, READ
 				break;
 			}
 
+		} else { // status != RUNNING
+					// If the projection is not running we should not handle COMPLETE projection actions or STORE
+					// RESULTS
+			if (action == ProjectionAction.COMPLETE_PROJECTION || action == ProjectionAction.STORE_RESULTS) {
+				throw new ProjectionStateException(
+						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
+				);
+			}
 		}
 	}
 
@@ -488,6 +504,21 @@ public class ProjectionService {
 			);
 		}
 		return assembler.toModel(existingEntity);
+	}
+
+	@Transactional
+	public ProjectionModel updateCompleteStatus(VDYPUserModel actingUser, UUID projectionGUID, boolean success)
+			throws ProjectionServiceException {
+		ProjectionEntity entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.COMPLETE_PROJECTION);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.COMPLETE_PROJECTION);
+
+		ProjectionStatusCodeEntity status = statusLookup
+				.requireEntity(success ? ProjectionStatusCodeModel.READY : ProjectionStatusCodeModel.FAILED);
+
+		entity.setProjectionStatusCode(status);
+		entity.setEndDate(OffsetDateTime.now());
+		return assembler.toModel(entity);
 	}
 
 	@Transactional
@@ -546,8 +577,13 @@ public class ProjectionService {
 	public ProjectionModel addProjectionFile(UUID projectionGUID, UUID fileSetGUID, FileUpload file, VDYPUserModel user)
 			throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
-		checkUserCanPerformAction(entity, user, ProjectionAction.UPDATE);
-		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+		ProjectionAction action = ProjectionAction.UPDATE;
+		if (entity.getResultFileSet().getProjectionFileSetGUID().equals(fileSetGUID)) {
+			action = ProjectionAction.STORE_RESULTS;
+		}
+
+		checkUserCanPerformAction(entity, user, action);
+		checkProjectionStatusPermitsAction(entity, action);
 
 		// check that the filesetGUID is set and is one of the file sets for this projection
 		validateIdentifier(fileSetGUID, FILE_ADD_ERROR, FILE_SET_IDENTIFIER, projectionGUID);

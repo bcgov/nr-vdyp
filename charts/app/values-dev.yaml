@@ -82,6 +82,7 @@ backend:
     CORS_FRONTEND_BASE_URL: ~
     OIDC_CLIENT_SECRET_SECRET_NAME: vdyp-oidc
     OIDC_CLIENT_SECRET_SECRET_KEY: client-secret
+    BATCH_BASE_URL: ~
 frontend:
   fullnameOverride: "vdyp-ui-dev"
   # -- enable or disable a component deployment.
@@ -259,4 +260,5 @@ batch:
     SPRING_PROFILES_ACTIVE: "dev"
     BATCH_DB_USER: ~
     BATCH_DB_DATABASE: ~
+    VDYP_BASE_URL: ~
 
