@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -463,28 +464,23 @@ public class ProjectionService {
 
 	}
 
+	Map<String, Set<ProjectionAction>> permittedActionsByStatus = Map.of(
+			ProjectionStatusCodeModel.DRAFT,
+			Set.of(ProjectionAction.UPDATE, ProjectionAction.DELETE, ProjectionAction.READ),
+			ProjectionStatusCodeModel.RUNNING,
+			Set.of(
+					ProjectionAction.READ, ProjectionAction.COMPLETE_PROJECTION, ProjectionAction.STORE_RESULTS,
+					ProjectionAction.CANCEL
+			), //
+			ProjectionStatusCodeModel.READY, Set.of(ProjectionAction.DELETE, ProjectionAction.READ),
+			ProjectionStatusCodeModel.FAILED, Set.of(ProjectionAction.DELETE, ProjectionAction.READ)
+	);
 	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
 			throws ProjectionServiceException {
-		if (entity.getProjectionStatusCode().getCode().equals(ProjectionStatusCodeModel.RUNNING)) {
-			switch (action) {
-			case UPDATE, DELETE:
-				throw new ProjectionStateException(
-						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
-				);
-
-			default: // STORE_RESULTS, COMPLETE_PROJECTION, READ, CANCEL
-				break;
-			}
-
-		} else { // status != RUNNING
-					// If the projection is not running we should not handle COMPLETE projection actions or STORE
-					// RESULTS
-			if (action == ProjectionAction.COMPLETE_PROJECTION //
-					|| action == ProjectionAction.STORE_RESULTS //
-					|| action == ProjectionAction.CANCEL) {
-				throw new ProjectionStateException(
-						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
-				);
+		String statusCode = entity.getProjectionStatusCode().getCode();
+		if (permittedActionsByStatus.containsKey(statusCode)) {
+			if (!permittedActionsByStatus.get(statusCode).contains(action)) {
+				throw new ProjectionStateException(entity.getProjectionGUID(), action.name(), statusCode);
 			}
 		}
 	}
