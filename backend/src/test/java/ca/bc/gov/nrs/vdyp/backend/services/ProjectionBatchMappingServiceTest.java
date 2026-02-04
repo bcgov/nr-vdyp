@@ -1,12 +1,15 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.projectionEntity;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -22,6 +25,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 
 @ExtendWith(MockitoExtension.class)
@@ -68,4 +72,80 @@ class ProjectionBatchMappingServiceTest {
 		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
 
+	@Test
+	void cancelProjection_happyPath_callsBatchClientCancel() throws Exception {
+		// Arrange
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setBatchJobGUID(batchJobGuid);
+		mappingEntity.setProjection(projectionEntity);
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
+
+		// Act
+		service.cancelProjection(projectionEntity);
+
+		// Verify cancel called
+		verify(batchClient, times(1)).stopBatchJob(batchJobGuid);
+		verify(repository, times(1)).delete(mappingEntity);
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void cancelProjection_invalidBatchMapping() throws Exception {
+		// Arrange
+		UUID projectionGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
+
+		// Act
+		assertThrows(ProjectionServiceException.class, () -> service.cancelProjection(projectionEntity));
+
+		// Verify cancel not called
+		verify(batchClient, never()).stopBatchJob(projectionGuid);
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void deleteMappingForProjection_happyPath_deletesMapping() {
+		// Arrange
+		UUID projectionGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setProjection(projectionEntity);
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
+
+		// Act
+		service.deleteMappingForProjection(projectionEntity);
+
+		// Verify delete called
+		verify(repository, times(1)).delete(mappingEntity);
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void deleteMappingForProjection_projectionHasNoMapping_doesntDelete() {
+		// Arrange
+		UUID projectionGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
+
+		// Act
+		service.deleteMappingForProjection(projectionEntity);
+
+		// Verify delete called
+		verify(repository, never()).delete(any());
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
 }
