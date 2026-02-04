@@ -475,6 +475,7 @@ public class ProjectionService {
 			ProjectionStatusCodeModel.READY, Set.of(ProjectionAction.DELETE, ProjectionAction.READ),
 			ProjectionStatusCodeModel.FAILED, Set.of(ProjectionAction.DELETE, ProjectionAction.READ)
 	);
+
 	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
 			throws ProjectionServiceException {
 		String statusCode = entity.getProjectionStatusCode().getCode();

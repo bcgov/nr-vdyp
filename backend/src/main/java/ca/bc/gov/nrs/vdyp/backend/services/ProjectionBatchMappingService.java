@@ -84,4 +84,3 @@ public class ProjectionBatchMappingService {
 		entityOpt.ifPresent(entity -> repository.delete(entity));
 	}
 }
-
