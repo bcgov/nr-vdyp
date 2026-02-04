@@ -961,7 +961,7 @@ class ProjectionServiceTest {
 					ProjectionStatusCodeModel.FAILED, //
 					ProjectionStatusCodeModel.DRAFT }
 	)
-	void cancelBatchProcessing_notRunning_throwsException(String statusCode) throws ProjectionServiceException {
+	void cancelBatchProcessing_notRunning_throwsException(String statusCode) {
 		UUID projectionGUID = UUID.randomUUID();
 		UUID ownerId = UUID.randomUUID();
 

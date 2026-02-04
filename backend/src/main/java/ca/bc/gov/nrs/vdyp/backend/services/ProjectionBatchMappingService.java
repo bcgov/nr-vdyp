@@ -64,7 +64,7 @@ public class ProjectionBatchMappingService {
 					.findByProjectionGUID(projectionEntity.getProjectionGUID());
 			if (entityOpt.isPresent()) {
 				ProjectionBatchMappingEntity entity = entityOpt.get();
-				BatchJobModel job = batchClient.stopBatchJob(entity.getBatchJobGUID());
+				batchClient.stopBatchJob(entity.getBatchJobGUID());
 				repository.delete(entity);
 			} else {
 				throw new ProjectionServiceException(

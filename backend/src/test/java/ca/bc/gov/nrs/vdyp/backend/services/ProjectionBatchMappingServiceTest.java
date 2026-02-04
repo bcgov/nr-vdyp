@@ -96,7 +96,7 @@ class ProjectionBatchMappingServiceTest {
 	}
 
 	@Test
-	void cancelProjection_invalidBatchMapping() throws Exception {
+	void cancelProjection_invalidBatchMapping() {
 		// Arrange
 		UUID projectionGuid = UUID.randomUUID();
 

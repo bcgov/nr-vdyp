@@ -479,10 +479,9 @@ public class ProjectionService {
 	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
 			throws ProjectionServiceException {
 		String statusCode = entity.getProjectionStatusCode().getCode();
-		if (permittedActionsByStatus.containsKey(statusCode)) {
-			if (!permittedActionsByStatus.get(statusCode).contains(action)) {
+		if (permittedActionsByStatus.containsKey(statusCode)
+				&& !permittedActionsByStatus.get(statusCode).contains(action)) {
 				throw new ProjectionStateException(entity.getProjectionGUID(), action.name(), statusCode);
-			}
 		}
 	}
 
