@@ -24,10 +24,11 @@ class TestFileMappingResourceAssembler {
 
 	static Stream<Arguments> modelEntityData() {
 		return Stream.of(
-				Arguments.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()),
-				Arguments.of(null, UUID.randomUUID(), UUID.randomUUID()),
-				Arguments.of(UUID.randomUUID(), null, UUID.randomUUID()),
-				Arguments.of(UUID.randomUUID(), UUID.randomUUID(), null)
+				Arguments.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "test.csv"),
+				Arguments.of(
+						null, UUID.randomUUID(), UUID.randomUUID(), "much_longer_name_with_special-characters!.csv"
+				), Arguments.of(UUID.randomUUID(), null, UUID.randomUUID(), "polygon.csv"),
+				Arguments.of(UUID.randomUUID(), UUID.randomUUID(), null, "layers.csv")
 		);
 	}
 
@@ -63,6 +64,7 @@ class TestFileMappingResourceAssembler {
 		private UUID fileMappingUUID = null;
 		private UUID comsObjectUUID = null;
 		private UUID projectionFileSetUUID = null;
+		String filename = null;
 
 		public static TestFileMappingResourceAssembler.FileMappingTestData builder() {
 			return new TestFileMappingResourceAssembler.FileMappingTestData();
@@ -83,10 +85,16 @@ class TestFileMappingResourceAssembler {
 			return this;
 		}
 
+		public TestFileMappingResourceAssembler.FileMappingTestData filename(String filename) {
+			this.filename = filename;
+			return this;
+		}
+
 		public FileMappingEntity buildEntity() {
 			FileMappingEntity data = new FileMappingEntity();
 			data.setFileMappingGUID(fileMappingUUID);
 			data.setComsObjectGUID(comsObjectUUID);
+			data.setFilename(filename);
 			if (projectionFileSetUUID != null) {
 				var projectionFileSet = new ProjectionFileSetEntity();
 				projectionFileSet.setProjectionFileSetGUID(projectionFileSetUUID);
@@ -98,6 +106,7 @@ class TestFileMappingResourceAssembler {
 		public FileMappingModel buildModel() {
 			FileMappingModel data = new FileMappingModel();
 			data.setFileMappingGUID(fileMappingUUID == null ? null : fileMappingUUID.toString());
+			data.setFilename(filename);
 			data.setComsObjectGUID(comsObjectUUID == null ? null : comsObjectUUID.toString());
 			if (projectionFileSetUUID != null) {
 				var projectionFileSet = new ProjectionFileSetModel();
