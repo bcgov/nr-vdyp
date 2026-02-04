@@ -265,6 +265,21 @@ public class ProjectionEndpoint implements Endpoint {
 		return mapper.writeValueAsString(entity);
 	}
 
+	@POST
+	@Authenticated
+	@Path("/{projectionGUID}/cancel")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Cancel A Projection", description = "Cancels a running projection."
+	)
+	public Response cancelProjection(
+			@PathParam("projectionGUID") UUID projectionGUID, @QueryParam("success") boolean success
+	) throws ProjectionServiceException {
+		var started = projectionService.cancelBatchProjection(currentUser.getUser(), projectionGUID);
+		return Response.status(Status.OK).entity(started).build();
+	}
+
+
 	@GET
 	@Authenticated
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}")
