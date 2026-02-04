@@ -93,6 +93,7 @@ class TestFileMappingService {
 
 		assertNotNull(result);
 		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
+		assertEquals("input.txt", result.getFilename());
 
 		verify(repository).persist(any(FileMappingEntity.class));
 	}

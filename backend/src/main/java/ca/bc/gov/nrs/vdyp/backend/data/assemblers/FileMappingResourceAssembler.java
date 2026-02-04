@@ -23,6 +23,7 @@ public class FileMappingResourceAssembler {
 		FileMappingModel model = new FileMappingModel();
 		model.setFileMappingGUID(entity.getFileMappingGUID() == null ? null : entity.getFileMappingGUID().toString());
 		model.setComsObjectGUID(entity.getComsObjectGUID() == null ? null : entity.getComsObjectGUID().toString());
+		model.setFilename(entity.getFilename());
 		model.setProjectionFileSet(
 				entity.getProjectionFileSet() == null ? null : pfsra.toModel(entity.getProjectionFileSet())
 		);
@@ -40,6 +41,7 @@ public class FileMappingResourceAssembler {
 				model.getFileMappingGUID() == null ? null : UUID.fromString(model.getFileMappingGUID())
 		);
 		entity.setComsObjectGUID(model.getComsObjectGUID() == null ? null : UUID.fromString(model.getComsObjectGUID()));
+		entity.setFilename(model.getFilename());
 		entity.setProjectionFileSet(
 				model.getProjectionFileSet() == null ? null : pfsra.toEntity(model.getProjectionFileSet())
 		);

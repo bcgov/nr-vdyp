@@ -31,8 +31,16 @@ public class FileMappingEntity extends AuditableEntity {
 	@Column(name = "coms_object_guid", nullable = false, updatable = true, length = 36)
 	private UUID comsObjectGUID;
 
+	@NotNull
+	@Column(name = "filename", nullable = false, updatable = true, length = 255)
+	private String filename;
+
 	public UUID getFileMappingGUID() {
 		return fileMappingGUID;
+	}
+
+	public String getFilename() {
+		return filename;
 	}
 
 	public ProjectionFileSetEntity getProjectionFileSet() {
@@ -45,6 +53,10 @@ public class FileMappingEntity extends AuditableEntity {
 
 	public void setFileMappingGUID(UUID fileMappingGUID) {
 		this.fileMappingGUID = fileMappingGUID;
+	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;
 	}
 
 	public void setProjectionFileSet(ProjectionFileSetEntity projectionFileSet) {

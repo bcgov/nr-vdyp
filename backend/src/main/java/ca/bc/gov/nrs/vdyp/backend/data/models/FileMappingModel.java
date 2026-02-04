@@ -7,12 +7,17 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class FileMappingModel {
 	private String fileMappingGUID;
+	private String filename;
 	private ProjectionFileSetModel projectionFileSet;
 	private String comsObjectGUID;
 	private URL downloadURL;
 
 	public String getFileMappingGUID() {
 		return fileMappingGUID;
+	}
+
+	public String getFilename() {
+		return filename;
 	}
 
 	public ProjectionFileSetModel getProjectionFileSet() {
@@ -25,6 +30,10 @@ public class FileMappingModel {
 
 	public void setFileMappingGUID(String fileMappingGUID) {
 		this.fileMappingGUID = fileMappingGUID;
+	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;
 	}
 
 	public void setProjectionFileSet(ProjectionFileSetModel projectionFileSet) {
