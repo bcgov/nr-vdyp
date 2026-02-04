@@ -72,7 +72,7 @@ public class ProjectionBatchMappingService {
 				);
 			}
 		} catch (Exception e) {
-			throw new ProjectionServiceException("Error starting projection batch process", e);
+			throw new ProjectionServiceException("Error cancelling projection batch process", e);
 		}
 	}
 

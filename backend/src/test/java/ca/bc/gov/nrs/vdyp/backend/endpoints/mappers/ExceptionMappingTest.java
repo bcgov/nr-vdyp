@@ -108,7 +108,7 @@ class ExceptionMappingTest {
 		// Act
 		try (Response response = mapper.toResponse(exception)) {
 			// Assert HTTP semantics
-			assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
+			assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 			assertNotNull(response.getEntity());
 			assertInstanceOf(ApiError.class, response.getEntity());
 

@@ -481,7 +481,7 @@ public class ProjectionService {
 		String statusCode = entity.getProjectionStatusCode().getCode();
 		if (permittedActionsByStatus.containsKey(statusCode)
 				&& !permittedActionsByStatus.get(statusCode).contains(action)) {
-				throw new ProjectionStateException(entity.getProjectionGUID(), action.name(), statusCode);
+			throw new ProjectionStateException(entity.getProjectionGUID(), action.name(), statusCode);
 		}
 	}
 
