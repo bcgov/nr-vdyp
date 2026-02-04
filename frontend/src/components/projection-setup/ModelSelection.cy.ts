@@ -45,10 +45,10 @@ describe('ModelSelection.vue', () => {
     cy.get('.v-select').click()
 
     // Select a new option
-    cy.get('.v-list-item').contains('Input Model Parameters').click()
+    cy.get('.v-list-item').contains('Manual Input').click()
 
     // Verify that the selected value is updated
-    cy.get('.v-select').should('contain.text', 'Input Model Parameters')
+    cy.get('.v-select').should('contain.text', 'Manual Input')
 
     // Verify that the emit event is triggered
     cy.get('@updateModelSelectionSpy').should(
