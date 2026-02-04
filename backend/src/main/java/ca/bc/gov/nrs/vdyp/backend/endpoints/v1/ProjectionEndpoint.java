@@ -273,7 +273,7 @@ public class ProjectionEndpoint implements Endpoint {
 			name = "Cancel A Projection", description = "Cancels a running projection."
 	)
 	public Response cancelProjection(
-			@PathParam("projectionGUID") UUID projectionGUID, @QueryParam("success") boolean success
+			@PathParam("projectionGUID") UUID projectionGUID
 	) throws ProjectionServiceException {
 		var started = projectionService.cancelBatchProjection(currentUser.getUser(), projectionGUID);
 		return Response.status(Status.OK).entity(started).build();
