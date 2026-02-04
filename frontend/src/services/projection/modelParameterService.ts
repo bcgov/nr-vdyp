@@ -14,7 +14,11 @@ import {
   createProjection as projServiceCreateProjection,
   runProjection as projServiceRunProjection,
   updateProjectionParamsWithModel,
+  getProjectionById,
+  deleteAllFilesFromFileSet,
 } from '@/services/projectionService'
+import { uploadFileToFileSet } from '@/services/apiActions'
+import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 import type { CSVRowType } from '@/types/types'
@@ -603,18 +607,50 @@ export const createProjection = async (
 
 /**
  * Runs the current projection by sending it to batch processing.
+ * For Input Model Parameters mode, this function:
+ * 1. Creates CSV files (polygon and layer) from user selections
+ * 2. Uploads these files to the backend
+ * 3. Sends the projection to batch processing
+ *
  * The projection must already be created and its GUID stored in the app store.
  *
  * @returns The updated ProjectionModel with RUNNING status.
  * @throws Error if the projection GUID is not available in the app store.
  */
-export const runProjection = async (
-): Promise<ProjectionModel> => {
+export const runProjection = async (): Promise<ProjectionModel> => {
   const appStore = useAppStore()
+  const modelParameterStore = useModelParameterStore()
   const projectionGUID = appStore.getCurrentProjectionGUID
+
   if (!projectionGUID) {
     throw new Error(PROJECTION_ERR.MISSING_GUID)
   }
+
+  // Step 1: Create CSV files from user selections
+  const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
+
+  // Convert Blobs to Files
+  const polygonFile = new File([blobPolygon], 'polygon.csv', { type: 'text/csv' })
+  const layerFile = new File([blobLayer], 'layer.csv', { type: 'text/csv' })
+
+  // Step 2: Get projection to retrieve fileSet GUIDs
+  const projectionModel = await getProjectionById(projectionGUID)
+
+  // Step 3: Upload polygon file
+  if (projectionModel.polygonFileSet?.projectionFileSetGUID) {
+    const polygonFileSetGUID = projectionModel.polygonFileSet.projectionFileSetGUID
+    await deleteAllFilesFromFileSet(projectionGUID, polygonFileSetGUID)
+    await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, polygonFile)
+  }
+
+  // Step 4: Upload layer file
+  if (projectionModel.layerFileSet?.projectionFileSetGUID) {
+    const layerFileSetGUID = projectionModel.layerFileSet.projectionFileSetGUID
+    await deleteAllFilesFromFileSet(projectionGUID, layerFileSetGUID)
+    await uploadFileToFileSet(projectionGUID, layerFileSetGUID, layerFile)
+  }
+
+  // Step 5: Run the projection in batch
   return await projServiceRunProjection(projectionGUID)
 }
 

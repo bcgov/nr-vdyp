@@ -198,6 +198,9 @@ export const SUCCESS_MSG = Object.freeze({
   PROJECTION_RUN_RESULT_W_ERR_TITLE: 'Projection Completed Successfully with Errors',
   PROJECTION_DELETED: 'Projection has been successfully deleted.',
   PROJECTION_DELETED_TITLE: 'Projection deleted',
+  BATCH_PROJECTION_STARTED:
+    'Projection has been submitted for batch processing. You can check the status in the Projection List.',
+  BATCH_PROJECTION_STARTED_TITLE: 'Projection Started',
 })
 
 export const PROJECTION_ERR = Object.freeze({
