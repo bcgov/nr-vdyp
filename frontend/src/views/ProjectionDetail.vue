@@ -30,9 +30,8 @@
         <SiteInfoPanel class="panel-spacing" />
         <StandInfoPanel class="panel-spacing" />
         <ReportInfoPanel class="panel-spacing" />
-        <!-- TODO: remove true from isDisabled when run projection is ready in a ticket -->
         <RunProjectionButtonPanel
-          :isDisabled="true || !modelParameterStore.runModelEnabled || !appStore.isDraft"
+          :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -46,9 +45,8 @@
       />
       <template v-if="isFileUploadPanelsVisible">
         <AttachmentsPanel class="panel-spacing" />
-        <!-- TODO: remove true from isDisabled when run projection is ready in a ticket -->
         <RunProjectionButtonPanel
-          :isDisabled="true || !fileUploadStore.runModelEnabled || !appStore.isDraft"
+          :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -58,11 +56,10 @@
   </v-container>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
-import { useProjectionStore } from '@/stores/projectionStore'
 import { useReportingStore } from '@/stores/reportingStore'
 import {
   AppProgressCircular,
@@ -78,17 +75,15 @@ import {
   RunProjectionButtonPanel
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
-import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
+import { CONSTANTS, MESSAGE } from '@/constants'
+import { mapProjectionStatus } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runProjection } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
 import {
-  checkZipForErrors,
   delay,
-  extractZipFileName,
-  sanitizeFileName,
 } from '@/utils/util'
-import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
+import { logSuccessMessage } from '@/utils/messageHandler'
 
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
@@ -98,7 +93,6 @@ const fileUploadActiveTab = ref(0)
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const fileUploadStore = useFileUploadStore()
-const projectionStore = useProjectionStore()
 const reportingStore = useReportingStore()
 
 const modelParamTabs = computed<Tab[]>(() => [
@@ -180,62 +174,6 @@ onMounted(() => {
   }
 })
 
-const processResponse = async (response: any): Promise<boolean> => {
-  const zipFileName =
-    extractZipFileName(response.headers) ||
-    CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
-
-  const resultBlob = response.data
-
-  console.debug('resultBlob:', resultBlob, 'type:', resultBlob?.type)
-  console.debug('resultBlob size:', resultBlob.size)
-
-  if (!resultBlob || !(resultBlob instanceof Blob)) {
-    throw new Error('Invalid response data')
-  }
-
-  const reportTitle =
-    appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-      ? modelParameterStore.reportTitle
-      : fileUploadStore.reportTitle
-
-  let finalFileName = zipFileName
-
-  if (
-    reportTitle &&
-    reportTitle !== DEFAULTS.DEFAULT_VALUES.REPORT_TITLE &&
-    zipFileName.startsWith('vdyp-output')
-  ) {
-    const sanitizedTitle = sanitizeFileName(reportTitle)
-    const timestampPart = zipFileName.substring('vdyp-output'.length)
-    // Limit the total file name to 200 characters to account for operating system file name length restrictions
-    const maxTitleLength = 200 - timestampPart.length
-    const truncatedTitle = sanitizedTitle.substring(0, maxTitleLength)
-    finalFileName = truncatedTitle + timestampPart
-  }
-
-  const hasErrors = await checkZipForErrors(resultBlob)
-  await projectionStore.handleZipResponse(resultBlob, finalFileName)
-
-  if (hasErrors) {
-    logErrorMessage(
-      appStore.modelSelection ===
-        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-        ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR
-        : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT_W_ERR,
-    null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_W_ERR_TITLE)
-  } else {
-    logSuccessMessage(
-      appStore.modelSelection ===
-        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-        ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT
-        : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT,
-      null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_TITLE
-    )
-  }
-  return hasErrors
-}
-
 const handleError = (error: any) => {
   if (error.response && error.response.data) {
     try {
@@ -274,47 +212,47 @@ const runModelHandler = async () => {
       appStore.modelSelection ===
       CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
     ) {
-      reportingStore.modelParamDisableTabs()
-
       const response = await runProjection()
       console.debug('Full response:', response)
 
-      const hasErrors = await processResponse(response)
-
-      reportingStore.modelParamEnableTabs()
-
-      await nextTick() // Ensure UI updates before switching tabs
-      setTimeout(() => {
-        modelParamActiveTab.value = hasErrors
-          ? CONSTANTS.MODEL_PARAM_TAB_INDEX.VIEW_ERROR_MESSAGES
-          : CONSTANTS.MODEL_PARAM_TAB_INDEX.MODEL_REPORT
-        console.log(
-          'After tab switch (Input Model):',
-          modelParamActiveTab.value,
+      // Update status to RUNNING and switch to VIEW mode
+      if (response && response.projectionStatusCode) {
+        appStore.setCurrentProjectionStatus(
+          mapProjectionStatus(response.projectionStatusCode.code),
         )
-      }, 100) // Switching tabs after a small delay
+        appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+      }
+
+      // Show success notification
+      logSuccessMessage(
+        MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED,
+        null,
+        false,
+        false,
+        MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
+      )
     } else if (
       appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
     ) {
-      reportingStore.fileUploadDisableTabs()
-
       const response = await runProjectionFileUpload()
       console.debug('Full response:', response)
 
-      const hasErrors = await processResponse(response)
-
-      reportingStore.fileUploadEnableTabs()
-
-      await nextTick() // Ensure UI updates before switching tabs
-      setTimeout(() => {
-        fileUploadActiveTab.value = hasErrors
-          ? CONSTANTS.FILE_UPLOAD_TAB_INDEX.VIEW_ERROR_MESSAGES
-          : CONSTANTS.FILE_UPLOAD_TAB_INDEX.MODEL_REPORT
-        console.log(
-          'After tab switch (File Upload):',
-          fileUploadActiveTab.value,
+      // Update status to RUNNING and switch to VIEW mode
+      if (response && response.projectionStatusCode) {
+        appStore.setCurrentProjectionStatus(
+          mapProjectionStatus(response.projectionStatusCode.code),
         )
-      }, 100) // Switching tabs after a small delay
+        appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+      }
+
+      // Show success notification
+      logSuccessMessage(
+        MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED,
+        null,
+        false,
+        false,
+        MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
+      )
     }
   } catch (error) {
     handleError(error)

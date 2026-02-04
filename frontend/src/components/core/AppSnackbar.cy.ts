@@ -171,7 +171,7 @@ describe('AppSnackbar.vue', () => {
     // Verify layout structure
     cy.get('.v-snackbar__wrapper').should('have.css', 'display', 'flex')
     cy.get('.v-snackbar__wrapper').should('have.css', 'flex-direction', 'row')
-    cy.get('.v-snackbar__wrapper').should('have.css', 'align-items', 'center')
+    cy.get('.v-snackbar__wrapper').should('have.css', 'align-items', 'flex-start')
 
     // Verify icon and content are inline
     cy.get('.app-snackbar__icon').should('be.visible')
