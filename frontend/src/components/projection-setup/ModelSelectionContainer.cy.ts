@@ -52,11 +52,11 @@ describe('ModelSelectionContainer.vue', () => {
     // Open the dropdown
     cy.get('.v-select').click()
 
-    // Select "Input Model Parameters"
-    cy.get('.v-list-item').contains('Input Model Parameters').click()
+    // Select "Manual Input"
+    cy.get('.v-list-item').contains('Manual Input').click()
 
     // Verify that the selected value is updated
-    cy.get('.v-select').should('contain.text', 'Input Model Parameters')
+    cy.get('.v-select').should('contain.text', 'Manual Input')
 
     // Verify the emitted event
     cy.get('@updateModelSelectionSpy').should(

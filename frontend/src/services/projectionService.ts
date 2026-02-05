@@ -131,7 +131,7 @@ export const fetchUserProjections = async (): Promise<Projection[]> => {
 /**
  * Creates a new projection with the given parameters.
  * @param parameters The projection parameters
- * @param modelParameters Optional The model parameters for Input Model Parameters mode
+ * @param modelParameters Optional The model parameters for Manual Input mode
  * @returns A promise that resolves to the created ProjectionModel
  */
 export const createProjection = async (
@@ -228,11 +228,11 @@ export const updateProjectionParams = async (
 
 /**
  * Updates projection parameters along with model parameters.
- * Use this for Input Model Parameters mode where both projection settings
+ * Use this for Manual Input mode where both projection settings
  * and model-specific parameters need to be updated together.
  * @param projectionGUID The projection GUID
  * @param parameters The updated projection parameters
- * @param modelParameters Optional model parameters for Input Model Parameters mode
+ * @param modelParameters Optional model parameters for Manual Input mode
  * @returns A promise that resolves to the updated ProjectionModel
  */
 export const updateProjectionParamsWithModel = async (

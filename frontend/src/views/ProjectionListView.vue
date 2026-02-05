@@ -16,7 +16,7 @@
           <v-list-item
             @click="handleNewProjection(NEW_PROJECTION_TYPE.INPUT_MODEL_PARAMETERS)"
           >
-            <v-list-item-title>Input Model Parameters</v-list-item-title>
+            <v-list-item-title>Manual Input</v-list-item-title>
           </v-list-item>
           <v-list-item
             @click="handleNewProjection(NEW_PROJECTION_TYPE.FILE_UPLOAD)"
@@ -245,7 +245,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     const projectionModel = await getProjectionById(projectionGUID)
     const params = parseProjectionParams(projectionModel.projectionParameters)
 
-    // Determine the method (File Upload or Input Model Parameters)
+    // Determine the method (File Upload or Manual Input)
     const isInputModelParams = params.selectedExecutionOptions.includes(ExecutionOptionsEnum.DoEnableProjectionReport)
     const method = isInputModelParams
       ? MODEL_SELECTION.INPUT_MODEL_PARAMETERS

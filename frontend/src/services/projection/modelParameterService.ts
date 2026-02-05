@@ -548,7 +548,7 @@ export const buildProjectionParameters = (
 /**
  * Builds model parameters from the model parameter store.
  * This creates a JSON structure that will be sent to the backend to persist
- * the user's selections for Input Model Parameters mode.
+ * the user's selections for Manual Input mode.
  * @param modelParameterStore The store containing model parameters.
  * @returns The model parameters object.
  */
@@ -607,7 +607,7 @@ export const createProjection = async (
 
 /**
  * Runs the current projection by sending it to batch processing.
- * For Input Model Parameters mode, this function:
+ * For Manual Input mode, this function:
  * 1. Creates CSV files (polygon and layer) from user selections
  * 2. Uploads these files to the backend
  * 3. Sends the projection to batch processing
@@ -655,7 +655,7 @@ export const runProjection = async (): Promise<ProjectionModel> => {
 }
 
 /**
- * Saves the projection when a panel's Next button is clicked (Input Model Parameters mode).
+ * Saves the projection when a panel's Next button is clicked (Manual Input mode).
  *
  * - CREATE mode + first panel (speciesInfo): Creates a new projection with projection parameters and model parameters,
  *   stores the GUID, and switches to EDIT mode.
