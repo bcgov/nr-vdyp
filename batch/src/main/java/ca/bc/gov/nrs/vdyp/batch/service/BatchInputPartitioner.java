@@ -131,9 +131,9 @@ public class BatchInputPartitioner {
 			layerWriters = createPartitionWriters(
 					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, numPartitions, jobGuid
 			);
-			Integer layerFeatureId = null;
+			Long layerFeatureId = null;
 			while (polygonLine != null) {
-				Integer polygonFeatureId = BatchUtils.extractFeatureIdInteger(polygonLine);
+				Long polygonFeatureId = BatchUtils.extractFeatureIdLong(polygonLine);
 				if (polygonFeatureId == null) {
 					// Decide: skip or fail. I would fail in polygon file because it drives the join.
 					throw BatchPartitionException.handlePartitionFailure(
@@ -148,17 +148,17 @@ public class BatchInputPartitioner {
 
 				// write all matching layer lines to the same partition
 				// First advance past orphan layer lines featureId < polygonFeatureId
-				layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
+				layerFeatureId = BatchUtils.extractFeatureIdLong(layerLine);
 				while (layerFeatureId == null || layerFeatureId.compareTo(polygonFeatureId) < 0) {
 					handleOrphanLayerLine(warningWriter, layerLine, jobGuid);
 					layerLine = readNextNonBlankLine(layerReader);
-					layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
+					layerFeatureId = BatchUtils.extractFeatureIdLong(layerLine);
 				}
 				// Now write all matching layer lines
 				while (layerFeatureId != null && layerFeatureId.compareTo(polygonFeatureId) == 0) {
 					layerWriters.get(partition).println(layerLine);
 					layerLine = readNextNonBlankLine(layerReader);
-					layerFeatureId = BatchUtils.extractFeatureIdInteger(layerLine);
+					layerFeatureId = BatchUtils.extractFeatureIdLong(layerLine);
 				}
 			}
 			// Check for any remaining lines in the Layer file and log warnings about orphaned lines
