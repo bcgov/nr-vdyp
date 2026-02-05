@@ -93,6 +93,7 @@ import {
   parseProjectionParams,
   isProjectionReadOnly,
   mapProjectionStatus,
+  getFileSetFiles,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -279,6 +280,45 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
       // Reset and restore file upload store
       fileUploadStore.resetStore()
       fileUploadStore.restoreFromProjectionParams(params, isViewMode)
+
+      // Load existing file info for file upload projections
+      if (projectionModel.polygonFileSet?.projectionFileSetGUID) {
+        try {
+          const polygonFiles = await getFileSetFiles(
+            projectionGUID,
+            projectionModel.polygonFileSet.projectionFileSetGUID,
+          )
+          if (polygonFiles.length > 0) {
+            const file = polygonFiles[0]
+            fileUploadStore.setPolygonFileInfo({
+              filename: file.projectionFileSet?.fileSetName || 'Polygon File',
+              fileMappingGUID: file.fileMappingGUID,
+              fileSetGUID: projectionModel.polygonFileSet.projectionFileSetGUID,
+            })
+          }
+        } catch (err) {
+          console.error('Error loading polygon file info:', err)
+        }
+      }
+
+      if (projectionModel.layerFileSet?.projectionFileSetGUID) {
+        try {
+          const layerFiles = await getFileSetFiles(
+            projectionGUID,
+            projectionModel.layerFileSet.projectionFileSetGUID,
+          )
+          if (layerFiles.length > 0) {
+            const file = layerFiles[0]
+            fileUploadStore.setLayerFileInfo({
+              filename: file.projectionFileSet?.fileSetName || 'Layer File',
+              fileMappingGUID: file.fileMappingGUID,
+              fileSetGUID: projectionModel.layerFileSet.projectionFileSetGUID,
+            })
+          }
+        } catch (err) {
+          console.error('Error loading layer file info:', err)
+        }
+      }
     }
 
     // Navigate to the projection detail view

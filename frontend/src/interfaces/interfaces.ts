@@ -112,3 +112,9 @@ export interface ParsedProjectionParameters {
   progressFrequency: string | null
   reportTitle: string | null
 }
+
+export interface UploadedFileInfo {
+  filename: string
+  fileMappingGUID: string
+  fileSetGUID: string
+}

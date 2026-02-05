@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { FileUploadPanelName, PanelState } from '@/types/types'
-import type { FileUploadSpeciesGroup, ParsedProjectionParameters } from '@/interfaces/interfaces'
+import type { FileUploadSpeciesGroup, ParsedProjectionParameters, UploadedFileInfo } from '@/interfaces/interfaces'
 import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-api'
 
 export const useFileUploadStore = defineStore('fileUploadStore', () => {
@@ -128,6 +128,23 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const polygonFile = ref<File | null>(null)
   const layerFile = ref<File | null>(null)
 
+  // uploaded file info (from server)
+  const polygonFileInfo = ref<UploadedFileInfo | null>(null)
+  const layerFileInfo = ref<UploadedFileInfo | null>(null)
+
+  // file upload state
+  const isUploadingPolygon = ref<boolean>(false)
+  const isUploadingLayer = ref<boolean>(false)
+
+  // Set uploaded file info
+  const setPolygonFileInfo = (info: UploadedFileInfo | null) => {
+    polygonFileInfo.value = info
+  }
+
+  const setLayerFileInfo = (info: UploadedFileInfo | null) => {
+    layerFileInfo.value = info
+  }
+
   // Reset store to initial state
   const resetStore = () => {
     // Reset panel states
@@ -170,6 +187,12 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     // Reset attachments
     polygonFile.value = null
     layerFile.value = null
+
+    // Reset uploaded file info
+    polygonFileInfo.value = null
+    layerFileInfo.value = null
+    isUploadingPolygon.value = false
+    isUploadingLayer.value = false
   }
 
   /**
@@ -314,9 +337,15 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     // attachments
     polygonFile,
     layerFile,
+    // uploaded file info
+    polygonFileInfo,
+    layerFileInfo,
+    isUploadingPolygon,
+    isUploadingLayer,
+    setPolygonFileInfo,
+    setLayerFileInfo,
     // restore functions
     resetStore,
     restoreFromProjectionParams,
-    // setFileReferences,
   }
 })
