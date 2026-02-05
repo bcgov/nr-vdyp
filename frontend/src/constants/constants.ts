@@ -166,13 +166,13 @@ export const MESSAGE_TYPE = Object.freeze({
 })
 
 export const HEADER_SELECTION = Object.freeze({
-  MODEL_PARAMETER_SELECTION: 'Model Parameter Selection',
+  MODEL_PARAMETER_SELECTION: 'Manual Input',
   FILE_UPLOAD: 'File Upload',
 })
 
 export const MODEL_SELECTION = Object.freeze({
   FILE_UPLOAD: 'File Upload',
-  INPUT_MODEL_PARAMETERS: 'Input Model Parameters',
+  INPUT_MODEL_PARAMETERS: 'Manual Input',
 })
 
 export const MODEL_PARAM_TAB_NAME = Object.freeze({

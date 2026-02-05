@@ -57,7 +57,7 @@ export const modelSelectionOptions = [
     value: CONSTANTS.MODEL_SELECTION.FILE_UPLOAD,
   },
   {
-    label: 'Input Model Parameters',
+    label: 'Manual Input',
     value: CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
   },
 ]

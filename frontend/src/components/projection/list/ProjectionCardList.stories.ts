@@ -18,7 +18,7 @@ const sampleProjections: Projection[] = [
     projectionGUID: '63c26de0-f6f3-42c2-ccc2-3c2b1e60d033',
     title: 'Interior Region Draft',
     description: 'Draft projection for interior region analysis',
-    method: 'Input Model Parameters',
+    method: 'Manual Input',
     projectionType: 'CFS Biomass',
     lastUpdated: '2026-01-09T09:15:00',
     expiration: '2026-01-14',

@@ -107,7 +107,7 @@ export const apiClient = {
   /**
    * Creates a new empty projection with default parameters.
    * @param parameters The projection parameters.
-   * @param modelParameters Optional model parameters for Input Model Parameters mode.
+   * @param modelParameters Optional model parameters for Manual Input mode.
    * @param options Optional Axios request configuration.
    * @returns The Axios promise for the created projection.
    */
@@ -129,7 +129,7 @@ export const apiClient = {
    * Updates projection parameters.
    * @param projectionGUID The projection GUID.
    * @param parameters The updated projection parameters.
-   * @param modelParameters Optional model parameters for Input Model Parameters mode.
+   * @param modelParameters Optional model parameters for Manual Input mode.
    * @param options Optional Axios request configuration.
    * @returns The Axios promise for the updated projection.
    */
