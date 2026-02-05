@@ -109,7 +109,7 @@ public final class BatchUtils {
 	 * @return The FEATURE_ID as a Integer, or null if the line is null/empty. Callers MUST check for null before using
 	 *         the returned value.
 	 */
-	public static Integer extractFeatureIdInteger(String csvLine) {
+	public static Long extractFeatureIdLong(String csvLine) {
 		if (csvLine == null || csvLine.trim().isEmpty()) {
 			return null;
 		}
@@ -121,7 +121,7 @@ public final class BatchUtils {
 		} else {
 			try {
 				// Extract first field before comma
-				return Integer.valueOf(csvLine.substring(0, commaIndex).trim());
+				return Long.valueOf(csvLine.substring(0, commaIndex).trim());
 			} catch (NumberFormatException e) {
 				return null;
 			}
