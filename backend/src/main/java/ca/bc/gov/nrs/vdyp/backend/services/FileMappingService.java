@@ -59,9 +59,6 @@ public class FileMappingService {
 				);
 				UUID objectGUID = UUID.fromString(createObjectResponse.id());
 
-				// Update the file set name with the uploaded filename
-				projectionFileSetEntity.setFileSetName(file.fileName());
-
 				// persist a record here for the file
 				FileMappingEntity entity = new FileMappingEntity();
 				entity.setComsObjectGUID(objectGUID);
@@ -135,11 +132,6 @@ public class FileMappingService {
 		UUID comsObjectID = entity.getComsObjectGUID();
 		try (Response response = comsClient.deleteObject(comsObjectID.toString())) {
 			if (response.getStatusInfo().getStatusCode() == Response.Status.OK.getStatusCode()) {
-				// Clear the file set name since the file is being deleted
-				ProjectionFileSetEntity fileSet = entity.getProjectionFileSet();
-				if (fileSet != null) {
-					fileSet.setFileSetName(null);
-				}
 				repository.delete(entity);
 			} else {
 				throw new ProjectionServiceException("Could not delete object in COMS");
