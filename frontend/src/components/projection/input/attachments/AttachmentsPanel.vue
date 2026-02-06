@@ -347,7 +347,7 @@ const uploadPolygonFile = async (file: File) => {
     if (files.length > 0) {
       const uploadedFile = files[0]
       fileUploadStore.setPolygonFileInfo({
-        filename: uploadedFile.projectionFileSet?.fileSetName || file.name,
+        filename: uploadedFile.filename || file.name,
         fileMappingGUID: uploadedFile.fileMappingGUID,
         fileSetGUID: polygonFileSetGUID,
       })
@@ -406,7 +406,7 @@ const uploadLayerFile = async (file: File) => {
     if (files.length > 0) {
       const uploadedFile = files[0]
       fileUploadStore.setLayerFileInfo({
-        filename: uploadedFile.projectionFileSet?.fileSetName || file.name,
+        filename: uploadedFile.filename || file.name,
         fileMappingGUID: uploadedFile.fileMappingGUID,
         fileSetGUID: layerFileSetGUID,
       })

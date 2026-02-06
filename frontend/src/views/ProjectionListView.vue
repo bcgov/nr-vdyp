@@ -291,7 +291,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
           if (polygonFiles.length > 0) {
             const file = polygonFiles[0]
             fileUploadStore.setPolygonFileInfo({
-              filename: file.projectionFileSet?.fileSetName || 'Polygon File',
+              filename: file.filename || 'Polygon File',
               fileMappingGUID: file.fileMappingGUID,
               fileSetGUID: projectionModel.polygonFileSet.projectionFileSetGUID,
             })
@@ -310,7 +310,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
           if (layerFiles.length > 0) {
             const file = layerFiles[0]
             fileUploadStore.setLayerFileInfo({
-              filename: file.projectionFileSet?.fileSetName || 'Layer File',
+              filename: file.filename || 'Layer File',
               fileMappingGUID: file.fileMappingGUID,
               fileSetGUID: projectionModel.layerFileSet.projectionFileSetGUID,
             })
