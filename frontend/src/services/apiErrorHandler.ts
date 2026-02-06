@@ -13,7 +13,7 @@ import { SVC_ERR } from '@/constants/message'
 export const handleApiError = (error: unknown, contextMessage?: string) => {
   const notificationStore = getNotificationStore()
   const prependMessage = (message: string) =>
-    contextMessage ? `${contextMessage}: ${message}` : message
+    contextMessage ? `${contextMessage} due to ${message}` : message
 
   if (axios.isCancel(error)) {
     handleCanceledRequest(error, prependMessage, notificationStore)

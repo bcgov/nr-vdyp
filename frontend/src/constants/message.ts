@@ -1,35 +1,35 @@
 export const SVC_ERR = Object.freeze({
-  DEFAULT: 'Service Communication Error. Please try again later.',
+  DEFAULT: 'service communication error. Please try again later.',
   DEFAULT_TITLE: 'Communication Error',
-  REQUEST_TIMEOUT: 'Request timed out. Please try again. (Error: Timeout)',
+  REQUEST_TIMEOUT: 'request timed out. Please try again later.',
   REQUEST_TIMEOUT_TITLE: 'Timeout Error',
   SERVICE_UNAVAILABLE:
-    'The service is currently unavailable. Please try later. (Error: Unavailable)',
+    'the service being unavailable. Please try again later.',
   SERVICE_UNAVAILABLE_TITLE: 'Service Unavailable',
   BAD_GATEWAY:
-    'The server was unable to complete your request. Please try again later. (Error: Bad Gateway)',
+    'the server being unable to complete the request. Please try again later.',
   BAD_GATEWAY_TITLE: 'Bad Gateway',
   GATEWAY_TIMEOUT:
-    'The server did not respond in time. Please try again later. (Error: Gateway Timeout)',
+    'the server not responding in time. Please try again later.',
   GATEWAY_TIMEOUT_TITLE: 'Gateway Timeout',
   INTERNAL_SERVER_ERROR:
-    'Service Internal Server Error. Please try again later.',
+    'internal server error. Please try again later.',
   INTERNAL_SERVER_ERROR_TITLE: 'Internal Server Error',
-  BAD_REQUEST: 'The server could not understand the request.',
+  BAD_REQUEST: 'the server not understanding the request. Please try again later.',
   BAD_REQUEST_TITLE: 'Bad Request',
-  FORBIDDEN: 'Do not have permission to access this resource.',
+  FORBIDDEN: 'insufficient permission to access the resource. Please try again later.',
   FORBIDDEN_TITLE: 'Forbidden',
-  UNAUTHORIZED: 'Log in to access this resource.',
+  UNAUTHORIZED: 'the requirement to log in to access the resource. Please try again later.',
   UNAUTHORIZED_TITLE: 'Unauthorized',
-  NOT_FOUND: 'The requested resource could not be found.',
+  NOT_FOUND: 'the requested resource not being found. Please try again later.',
   NOT_FOUND_TITLE: 'Not Found',
-  NOT_ACCEPTABLE: 'The requested format is not supported.',
+  NOT_ACCEPTABLE: 'the requested format not being supported. Please try again later.',
   NOT_ACCEPTABLE_TITLE: 'Unsupported Format',
-  UNSUPPORTED_MEDIA_TYPE: 'The media type is not supported. Please check the content type.',
+  UNSUPPORTED_MEDIA_TYPE: 'the media type not being supported. Please try again later.',
   UNSUPPORTED_MEDIA_TYPE_TITLE: 'Unsupported Media Type',
-  PROCESSING_ERROR: 'The request could not be processed properly. Please try again.',
+  PROCESSING_ERROR: 'the request not being processed properly. Please try again later.',
   PROCESSING_ERROR_TITLE: 'Processing Error',
-  REQUEST_CANCELED: 'Request was canceled.',
+  REQUEST_CANCELED: 'the request being canceled. Please try again later.',
   REQUEST_CANCELED_TITLE: 'Request Cancelled'
 })
 
@@ -160,7 +160,7 @@ export const FILE_UPLOAD_ERR = Object.freeze({
     'The response is missing one or more required files. Please contact support or try again later.',
   INVALID_RESPONSED_FILE:
     'The response contains invalid or corrupted files. Please contact support or try again later.',
-  FAIL_RUN_MODEL: 'Failed to run the projection model.',
+  FAIL_RUN_MODEL: 'Failed to run the projection',
 })
 
 export const FILE_DOWNLOAD_ERR = Object.freeze({
@@ -169,7 +169,7 @@ export const FILE_DOWNLOAD_ERR = Object.freeze({
 })
 
 export const MODEL_PARAM_INPUT_ERR = Object.freeze({
-  FAIL_RUN_MODEL: 'Failed to run the projection model.',
+  FAIL_RUN_MODEL: 'Failed to run the projection',
 })
 
 export const PRINT_ERR = Object.freeze({
