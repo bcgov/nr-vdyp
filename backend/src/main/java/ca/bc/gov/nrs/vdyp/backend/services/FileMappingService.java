@@ -66,6 +66,7 @@ public class FileMappingService {
 				FileMappingEntity entity = new FileMappingEntity();
 				entity.setComsObjectGUID(objectGUID);
 				entity.setProjectionFileSet(projectionFileSetEntity);
+				entity.setFilename(file.fileName());
 				repository.persist(entity);
 
 				// return the data from COMS up the chain

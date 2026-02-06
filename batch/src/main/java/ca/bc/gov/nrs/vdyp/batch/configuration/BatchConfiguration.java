@@ -33,6 +33,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
@@ -231,6 +232,14 @@ public class BatchConfiguration {
 	}
 
 	/**
+	 * Declare vdypJobFailedListener bean for use in job configuration
+	 */
+	@Bean
+	public VDYPJobFailedListener vdypJobFailedListener(VdypClient vdypClient) {
+		return new VDYPJobFailedListener(vdypClient);
+	}
+
+	/**
 	 * VDYP Batch Job with metrics initialization Only created when explicitly enabled via property
 	 */
 	@Bean
@@ -254,6 +263,7 @@ public class BatchConfiguration {
 	@ConditionalOnProperty(name = "batch.job.auto-create", havingValue = "true", matchIfMissing = false)
 	public Job fetchAndPartitionJob(
 			BatchJobExecutionListener loggingListener, VDYPJobMetricListener metricListener,
+			VDYPJobFailedListener vdypJobFailedListener,
 			Step fetchAndPartitionFilesStep, Step masterStep, Step postProcessingStep, Step persistResultFileStep,
 			PlatformTransactionManager transactionManager
 	) {
@@ -264,7 +274,9 @@ public class BatchConfiguration {
 				.next(postProcessingStep) //
 				.next(persistResultFileStep) //
 				.listener(metricListener) //
-				.listener(loggingListener).build();
+				.listener(loggingListener) //
+				.listener(vdypJobFailedListener) //
+				.build();
 	}
 
 	@Bean

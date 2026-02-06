@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -425,8 +426,21 @@ public class ProjectionService {
 		return assembler.toModel(entity);
 	}
 
+	@Transactional
+	public ProjectionModel cancelBatchProjection(VDYPUserModel user, UUID projectionGUID)
+			throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, user, ProjectionAction.CANCEL);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.CANCEL);
+
+		batchMappingService.cancelProjection(entity);
+		entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
+
+		return assembler.toModel(entity);
+	}
+
 	public enum ProjectionAction {
-		READ, UPDATE, DELETE, STORE_RESULTS, COMPLETE_PROJECTION
+		READ, UPDATE, DELETE, STORE_RESULTS, COMPLETE_PROJECTION, CANCEL
 	}
 
 	public void checkUserCanPerformAction(ProjectionEntity entity, VDYPUserModel actingUser, ProjectionAction action)
@@ -435,12 +449,13 @@ public class ProjectionService {
 			return;
 		UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());
 		switch (action) {
-		case READ, UPDATE, DELETE:
+		case READ, UPDATE, DELETE, CANCEL:
 			if (!entity.getOwnerUser().getVdypUserGUID().equals(vdypUserGuid)) {
 				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 			}
 			break;
 		case COMPLETE_PROJECTION, STORE_RESULTS:
+			// these actions are only performed by the system the endpoint cannot be called by a different kidn of user
 			throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 		default:
 			break;
@@ -449,28 +464,24 @@ public class ProjectionService {
 
 	}
 
+	Map<String, Set<ProjectionAction>> permittedActionsByStatus = Map.of(
+			ProjectionStatusCodeModel.DRAFT,
+			Set.of(ProjectionAction.UPDATE, ProjectionAction.DELETE, ProjectionAction.READ),
+			ProjectionStatusCodeModel.RUNNING,
+			Set.of(
+					ProjectionAction.READ, ProjectionAction.COMPLETE_PROJECTION, ProjectionAction.STORE_RESULTS,
+					ProjectionAction.CANCEL
+			), //
+			ProjectionStatusCodeModel.READY, Set.of(ProjectionAction.DELETE, ProjectionAction.READ),
+			ProjectionStatusCodeModel.FAILED, Set.of(ProjectionAction.DELETE, ProjectionAction.READ)
+	);
+
 	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
 			throws ProjectionServiceException {
-		if (entity.getProjectionStatusCode().getCode().equals(ProjectionStatusCodeModel.RUNNING)) {
-			switch (action) {
-			case UPDATE, DELETE:
-				// TODO check againsdt some specific states throw ProjectionServiceException if htere is an issue
-				throw new ProjectionStateException(
-						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
-				);
-
-			default: // STORE_RESULTS, COMPLETE_PROJECTION, READ
-				break;
-			}
-
-		} else { // status != RUNNING
-					// If the projection is not running we should not handle COMPLETE projection actions or STORE
-					// RESULTS
-			if (action == ProjectionAction.COMPLETE_PROJECTION || action == ProjectionAction.STORE_RESULTS) {
-				throw new ProjectionStateException(
-						entity.getProjectionGUID(), action.name(), entity.getProjectionStatusCode().getCode()
-				);
-			}
+		String statusCode = entity.getProjectionStatusCode().getCode();
+		if (permittedActionsByStatus.containsKey(statusCode)
+				&& !permittedActionsByStatus.get(statusCode).contains(action)) {
+			throw new ProjectionStateException(entity.getProjectionGUID(), action.name(), statusCode);
 		}
 	}
 
@@ -533,7 +544,8 @@ public class ProjectionService {
 					entity.getLayerFileSet().getProjectionFileSetGUID(),
 					entity.getResultFileSet().getProjectionFileSetGUID() };
 
-			// TODO before the projection is deleted the Batch mapping should be deleted if it exists
+			// delete the batch mapping if it exists
+			batchMappingService.deleteMappingForProjection(entity);
 
 			// Delete the Projection
 			repository.delete(entity);
