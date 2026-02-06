@@ -4,5 +4,6 @@ export interface FileMappingModel {
   fileMappingGUID: string
   projectionFileSet: ProjectionFileSetModel
   comsObjectGUID: string
+  filename: string | null
   downloadURL: string | null
 }
