@@ -29,5 +29,6 @@ import DefaultLayout from '@/layouts/DefaultLayout.vue'
 <style lang="scss" scoped>
 #main {
   min-height: 300px;
+  margin-bottom: 24px;
 }
 </style>
