@@ -210,5 +210,15 @@ export const PROJECTION_ERR = Object.freeze({
   LOAD_FAILED_TITLE: 'Projection Load Failed',
   MISSING_GUID: 'No projection is currently selected. Please create or select a projection first.',
   SAVE_FAILED: 'Failed to save the projection. Please try again.',
-  SAVE_FAILED_TITLE: 'Projection Save Failed'
+  SAVE_FAILED_TITLE: 'Projection Save Failed',
+  FILE_UPLOAD_FAILED: 'Failed to upload the file. Please try again.',
+  FILE_UPLOAD_FAILED_TITLE: 'File Upload Failed',
+  FILE_DELETE_FAILED: 'Failed to remove the file. Please try again.',
+  FILE_DELETE_FAILED_TITLE: 'File Removal Failed',
+})
+
+export const FILE_REMOVAL_DIALOG = Object.freeze({
+  TITLE: 'Remove File?',
+  POLYGON_MESSAGE: (filename: string) => `Do you wish to remove polygon file: ${filename} from this projection?`,
+  LAYER_MESSAGE: (filename: string) => `Do you wish to remove layer file: ${filename} from this projection?`,
 })

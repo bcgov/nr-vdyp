@@ -28,57 +28,92 @@
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
           <v-form ref="form">
-            <div>
-              <v-row>
-                <v-col cols="5">
-                  <label class="bcds-file-input-label" for="polygon-file-input">
-                    Polygon File
-                  </label>
-                  <!-- View mode -->
-                  <div v-if="isReadOnly" class="file-display-container">
-                  </div>
-                  <!-- Edit mode -->
-                  <template v-else>
-                    <v-file-input
-                      id="polygon-file-input"
-                      v-model="fileUploadStore.polygonFile"
-                      label="Select Polygon File..."
-                      show-size
-                      chips
-                      clearable
-                      accept=".csv"
-                      :disabled="isInputDisabled"
-                      persistent-placeholder
-                      class="bcds-file-input"
-                    />
+            <v-row class="file-upload-row">
+              <v-col cols="6" class="file-upload-col file-upload-col-left">
+                <span class="bcds-file-input-label">
+                  {{ isReadOnly ? 'Polygon File' : 'Select Polygon File' }}
+                </span>
+                <!-- View mode -->
+                <div v-if="isReadOnly" class="file-display-container">
+                  <template v-if="fileUploadStore.polygonFileInfo">
+                    <v-icon class="file-display-icon">mdi-paperclip</v-icon>
+                    <span class="file-display-name">{{ fileUploadStore.polygonFileInfo.filename }}</span>
                   </template>
-                </v-col>
-                <v-col class="col-space-3" />
-                <v-col cols="5">
-                  <label class="bcds-file-input-label" for="layer-file-input">
-                    Layer File
-                  </label>
-                  <!-- View mode -->
-                  <div v-if="isReadOnly" class="file-display-container">
-                  </div>
-                  <!-- Edit mode: Show existing file info and allow replacement -->
                   <template v-else>
-                    <v-file-input
-                      id="layer-file-input"
-                      v-model="fileUploadStore.layerFile"
-                      label="Select Layer File..."
-                      show-size
-                      chips
-                      clearable
-                      accept=".csv"
-                      :disabled="isInputDisabled"
-                      persistent-placeholder
-                      class="bcds-file-input"
-                    />
+                    <span class="file-display-name file-display-empty">No file uploaded</span>
                   </template>
-                </v-col>
-              </v-row>
-            </div>
+                </div>
+                <!-- Edit mode -->
+                <template v-else>
+                  <v-file-upload
+                    v-model="polygonFiles"
+                    :disabled="isInputDisabled || fileUploadStore.isUploadingPolygon"
+                    :loading="fileUploadStore.isUploadingPolygon"
+                    show-size
+                    clearable
+                    accept=".csv"
+                    class="bcds-file-upload"
+                  />
+                  <!-- Uploaded file info -->
+                  <div v-if="fileUploadStore.polygonFileInfo" class="uploaded-file-info">
+                    <v-icon size="small" class="uploaded-file-icon">mdi-paperclip</v-icon>
+                    <span class="uploaded-file-name">{{ fileUploadStore.polygonFileInfo.filename }}</span>
+                    <v-btn
+                      icon
+                      variant="text"
+                      size="x-small"
+                      class="uploaded-file-delete-btn"
+                      :disabled="isInputDisabled"
+                      @click="confirmRemovePolygonFile"
+                    >
+                      <v-icon size="25">mdi-delete-forever</v-icon>
+                    </v-btn>
+                  </div>
+                </template>
+              </v-col>
+              <v-col cols="6" class="file-upload-col file-upload-col-right">
+                <span class="bcds-file-input-label">
+                  {{ isReadOnly ? 'Layer File' : 'Select Layer File' }}
+                </span>
+                <!-- View mode -->
+                <div v-if="isReadOnly" class="file-display-container">
+                  <template v-if="fileUploadStore.layerFileInfo">
+                    <v-icon class="file-display-icon">mdi-paperclip</v-icon>
+                    <span class="file-display-name">{{ fileUploadStore.layerFileInfo.filename }}</span>
+                  </template>
+                  <template v-else>
+                    <span class="file-display-name file-display-empty">No file uploaded</span>
+                  </template>
+                </div>
+                <!-- Edit mode: Show existing file info and allow replacement -->
+                <template v-else>
+                  <v-file-upload
+                    v-model="layerFiles"
+                    :disabled="isInputDisabled || fileUploadStore.isUploadingLayer"
+                    :loading="fileUploadStore.isUploadingLayer"
+                    show-size
+                    clearable
+                    accept=".csv"
+                    class="bcds-file-upload"
+                  />
+                  <!-- Uploaded file info -->
+                  <div v-if="fileUploadStore.layerFileInfo" class="uploaded-file-info">
+                    <v-icon size="small" class="uploaded-file-icon">mdi-paperclip</v-icon>
+                    <span class="uploaded-file-name">{{ fileUploadStore.layerFileInfo.filename }}</span>
+                    <v-btn
+                      icon
+                      variant="text"
+                      size="x-small"
+                      class="uploaded-file-delete-btn"
+                      :disabled="isInputDisabled"
+                      @click="confirmRemoveLayerFile"
+                    >
+                      <v-icon size="25">mdi-delete-forever</v-icon>
+                    </v-btn>
+                  </div>
+                </template>
+              </v-col>
+            </v-row>
             <ActionPanel
               v-if="!isReadOnly"
               :isConfirmEnabled="isConfirmEnabled"
@@ -95,22 +130,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { AppMessageDialog } from '@/components'
 import { ActionPanel } from '@/components/projection'
 import { CONSTANTS, MESSAGE } from '@/constants'
-import { PROJECTION_ERR } from '@/constants/message'
+import { PROJECTION_ERR, FILE_REMOVAL_DIALOG } from '@/constants/message'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { fileUploadValidation } from '@/validation'
 import { saveProjectionOnPanelConfirm } from '@/services/projection/fileUploadService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
+import {
+  getProjectionById,
+  getFileSetFiles,
+  deleteFileFromFileSet,
+} from '@/services/projectionService'
+import { uploadFileToFileSet } from '@/services/apiActions'
 
 const form = ref<HTMLFormElement>()
 const fileUploadStore = useFileUploadStore()
 const appStore = useAppStore()
 const notificationStore = useNotificationStore()
+const alertDialogStore = useAlertDialogStore()
+
+// Local file arrays for v-file-upload (it uses array model)
+const polygonFiles = ref<File[]>([])
+const layerFiles = ref<File[]>([])
 
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
@@ -161,16 +208,6 @@ const showErrorDialog = (title: string, message: string) => {
     dialogWidth: 500,
     variant: 'error',
   }
-}
-
-const handleBasicFileValidationError = (errorType: string): string => {
-  const errorMessages: Record<string, string> = {
-    polygonFileMissing: MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING,
-    layerFileMissing: MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING,
-    polygonFileNotCSVFormat: MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_NOT_CSV_FORMAT,
-    layerFileNotCSVFormat: MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT,
-  }
-  return errorMessages[errorType] || ''
 }
 
 const buildHeaderErrorMessage = (details: {
@@ -237,11 +274,9 @@ const validateHeaderColumns = async (
   return true
 }
 
-const validatePolygonFile = async (): Promise<boolean> => {
-  if (!fileUploadStore.polygonFile) return true
-
+const validatePolygonFile = async (file: File): Promise<boolean> => {
   const duplicatesValid = await validateDuplicateColumns(
-    fileUploadStore.polygonFile,
+    file,
     fileUploadValidation.validatePolygonDuplicateColumns,
     MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_DUPLICATE_COLUMNS,
     MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_DUPLICATE_COLUMNS,
@@ -249,17 +284,15 @@ const validatePolygonFile = async (): Promise<boolean> => {
   if (!duplicatesValid) return false
 
   return validateHeaderColumns(
-    fileUploadStore.polygonFile,
+    file,
     fileUploadValidation.validatePolygonHeader,
     MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_HEADER_MISMATCH,
   )
 }
 
-const validateLayerFile = async (): Promise<boolean> => {
-  if (!fileUploadStore.layerFile) return true
-
+const validateLayerFile = async (file: File): Promise<boolean> => {
   const duplicatesValid = await validateDuplicateColumns(
-    fileUploadStore.layerFile,
+    file,
     fileUploadValidation.validateLayerDuplicateColumns,
     MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_DUPLICATE_COLUMNS,
     MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_DUPLICATE_COLUMNS,
@@ -267,41 +300,226 @@ const validateLayerFile = async (): Promise<boolean> => {
   if (!duplicatesValid) return false
 
   return validateHeaderColumns(
-    fileUploadStore.layerFile,
+    file,
     fileUploadValidation.validateLayerHeader,
     MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_HEADER_MISMATCH,
   )
 }
 
-const validateFiles = async (): Promise<boolean> => {
-  // Determine new file or existing server file
-  const hasPolygon = fileUploadStore.polygonFile
-  const hasLayer = fileUploadStore.layerFile
-
-  // If both files exist (either new or on server), validate only the new ones
-  if (hasPolygon && hasLayer) {
-    const polygonValid = await validatePolygonFile()
-    if (!polygonValid) return false
-    return validateLayerFile()
+// Upload polygon file immediately when selected
+const uploadPolygonFile = async (file: File) => {
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) {
+    notificationStore.showErrorMessage(PROJECTION_ERR.MISSING_GUID, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
+    return
   }
 
-  // If files are missing and no existing server files, run basic validation
-  const result = await fileUploadValidation.validateFiles(
-    fileUploadStore.polygonFile,
-    fileUploadStore.layerFile,
+  // Validate the file first
+  const isValid = await validatePolygonFile(file)
+  if (!isValid) {
+    polygonFiles.value = []
+    return
+  }
+
+  fileUploadStore.isUploadingPolygon = true
+  try {
+    const projectionModel = await getProjectionById(projectionGUID)
+    if (!projectionModel.polygonFileSet?.projectionFileSetGUID) {
+      throw new Error('Polygon file set not found')
+    }
+
+    const polygonFileSetGUID = projectionModel.polygonFileSet.projectionFileSetGUID
+
+    // Delete existing file if any
+    if (fileUploadStore.polygonFileInfo) {
+      await deleteFileFromFileSet(
+        projectionGUID,
+        fileUploadStore.polygonFileInfo.fileSetGUID,
+        fileUploadStore.polygonFileInfo.fileMappingGUID,
+      )
+    }
+
+    // Upload new file
+    await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, file)
+
+    // Fetch the uploaded file info
+    const files = await getFileSetFiles(projectionGUID, polygonFileSetGUID)
+    if (files.length > 0) {
+      const uploadedFile = files[0]
+      fileUploadStore.setPolygonFileInfo({
+        filename: uploadedFile.filename || file.name,
+        fileMappingGUID: uploadedFile.fileMappingGUID,
+        fileSetGUID: polygonFileSetGUID,
+      })
+    }
+
+    // Clear the file input
+    polygonFiles.value = []
+    fileUploadStore.polygonFile = null
+  } catch (error) {
+    console.error('Error uploading polygon file:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.FILE_UPLOAD_FAILED, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
+    polygonFiles.value = []
+  } finally {
+    fileUploadStore.isUploadingPolygon = false
+  }
+}
+
+// Upload layer file immediately when selected
+const uploadLayerFile = async (file: File) => {
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) {
+    notificationStore.showErrorMessage(PROJECTION_ERR.MISSING_GUID, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
+    return
+  }
+
+  // Validate the file first
+  const isValid = await validateLayerFile(file)
+  if (!isValid) {
+    layerFiles.value = []
+    return
+  }
+
+  fileUploadStore.isUploadingLayer = true
+  try {
+    const projectionModel = await getProjectionById(projectionGUID)
+    if (!projectionModel.layerFileSet?.projectionFileSetGUID) {
+      throw new Error('Layer file set not found')
+    }
+
+    const layerFileSetGUID = projectionModel.layerFileSet.projectionFileSetGUID
+
+    // Delete existing file if any
+    if (fileUploadStore.layerFileInfo) {
+      await deleteFileFromFileSet(
+        projectionGUID,
+        fileUploadStore.layerFileInfo.fileSetGUID,
+        fileUploadStore.layerFileInfo.fileMappingGUID,
+      )
+    }
+
+    // Upload new file
+    await uploadFileToFileSet(projectionGUID, layerFileSetGUID, file)
+
+    // Fetch the uploaded file info
+    const files = await getFileSetFiles(projectionGUID, layerFileSetGUID)
+    if (files.length > 0) {
+      const uploadedFile = files[0]
+      fileUploadStore.setLayerFileInfo({
+        filename: uploadedFile.filename || file.name,
+        fileMappingGUID: uploadedFile.fileMappingGUID,
+        fileSetGUID: layerFileSetGUID,
+      })
+    }
+
+    // Clear the file input
+    layerFiles.value = []
+    fileUploadStore.layerFile = null
+  } catch (error) {
+    console.error('Error uploading layer file:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.FILE_UPLOAD_FAILED, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
+    layerFiles.value = []
+  } finally {
+    fileUploadStore.isUploadingLayer = false
+  }
+}
+
+// Watch for polygon file selection
+watch(polygonFiles, (newFiles) => {
+  if (newFiles && newFiles.length > 0) {
+    uploadPolygonFile(newFiles[0])
+  }
+})
+
+// Watch for layer file selection
+watch(layerFiles, (newFiles) => {
+  if (newFiles && newFiles.length > 0) {
+    uploadLayerFile(newFiles[0])
+  }
+})
+
+// Confirm and remove polygon file
+const confirmRemovePolygonFile = async () => {
+  if (!fileUploadStore.polygonFileInfo) return
+
+  const confirmed = await alertDialogStore.openDialog(
+    FILE_REMOVAL_DIALOG.TITLE,
+    FILE_REMOVAL_DIALOG.POLYGON_MESSAGE(fileUploadStore.polygonFileInfo.filename),
+    { variant: 'confirmation' },
   )
 
-  if (!result.isValid) {
-    const message = handleBasicFileValidationError(result.errorType || '')
-    showErrorDialog(MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE, message)
+  if (confirmed) {
+    await removePolygonFile()
+  }
+}
+
+// Remove polygon file from server
+const removePolygonFile = async () => {
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID || !fileUploadStore.polygonFileInfo) return
+
+  try {
+    await deleteFileFromFileSet(
+      projectionGUID,
+      fileUploadStore.polygonFileInfo.fileSetGUID,
+      fileUploadStore.polygonFileInfo.fileMappingGUID,
+    )
+    fileUploadStore.setPolygonFileInfo(null)
+  } catch (error) {
+    console.error('Error removing polygon file:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.FILE_DELETE_FAILED, PROJECTION_ERR.FILE_DELETE_FAILED_TITLE)
+  }
+}
+
+// Confirm and remove layer file
+const confirmRemoveLayerFile = async () => {
+  if (!fileUploadStore.layerFileInfo) return
+
+  const confirmed = await alertDialogStore.openDialog(
+    FILE_REMOVAL_DIALOG.TITLE,
+    FILE_REMOVAL_DIALOG.LAYER_MESSAGE(fileUploadStore.layerFileInfo.filename),
+    { variant: 'confirmation' },
+  )
+
+  if (confirmed) {
+    await removeLayerFile()
+  }
+}
+
+// Remove layer file from server
+const removeLayerFile = async () => {
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID || !fileUploadStore.layerFileInfo) return
+
+  try {
+    await deleteFileFromFileSet(
+      projectionGUID,
+      fileUploadStore.layerFileInfo.fileSetGUID,
+      fileUploadStore.layerFileInfo.fileMappingGUID,
+    )
+    fileUploadStore.setLayerFileInfo(null)
+  } catch (error) {
+    console.error('Error removing layer file:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.FILE_DELETE_FAILED, PROJECTION_ERR.FILE_DELETE_FAILED_TITLE)
+  }
+}
+
+// Validate that both files are uploaded
+const validateFilesUploaded = (): boolean => {
+  if (!fileUploadStore.polygonFileInfo) {
+    showErrorDialog(MESSAGE.MSG_DIALOG_TITLE.MISSING_FILE, MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING)
     return false
   }
-
+  if (!fileUploadStore.layerFileInfo) {
+    showErrorDialog(MESSAGE.MSG_DIALOG_TITLE.MISSING_FILE, MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING)
+    return false
+  }
   return true
 }
 
 const onConfirm = async () => {
-  if (!(await validateFiles())) return
+  // Validate that both files are uploaded
+  if (!validateFilesUploaded()) return
 
   if (form.value) {
     form.value.validate()
@@ -309,7 +527,8 @@ const onConfirm = async () => {
     console.warn('Form reference is null. Validation skipped.')
   }
 
-  // Save projection (update + file uploads) before confirming the panel
+  // Save projection (update parameters) before confirming the panel
+  // Note: Files are already uploaded immediately, so we just update params
   try {
     await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
   } catch (error) {
@@ -330,14 +549,12 @@ const onEdit = () => {
 }
 
 const onClear = () => {
-  fileUploadStore.polygonFile = null
-  fileUploadStore.layerFile = null
 }
 
 const handleDialogClose = () => {}
 </script>
 
-<style scoped>
+<style>
 /* Attachments Panel Card - BC Government Design Standards */
 
 /* File Input Label - BC Government Design Standards */
@@ -353,172 +570,97 @@ const handleDialogClose = () => {}
   margin-bottom: 0;
 }
 
-/* File Input Component - BC Government Design Standards */
-.bcds-file-input {
-  flex-direction: column;
-  align-self: stretch;
+/* File Upload Component - BC Government Design Standards */
+/* Main container styling - matching provided design */
+.bcds-file-upload {
+  background-color: var(--theme-gray-20) !important;
+  border: 1px dashed var(--surface-color-border-medium) !important;
+  border-radius: var(--layout-border-radius-medium) !important;
+  padding: var(--layout-padding-large) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 140px;
+  gap: var(--layout-margin-small);
 }
 
-/* Style Vuetify's label to look like placeholder */
-.bcds-file-input :deep(.v-label) {
-  font: var(--typography-regular-body);
-  font-size: var(--typography-font-size-body);
-  color: var(--typography-color-placeholder);
-  opacity: 1 !important;
-  position: absolute !important;
-  left: 0 !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  max-width: none !important;
-  width: auto !important;
-  white-space: nowrap !important;
-  pointer-events: none;
+.bcds-file-upload:hover {
+  border-color: var(--surface-color-border-dark) !important;
+  background-color: var(--theme-gray-30) !important;
 }
 
-/* Hide label when file is selected */
-.bcds-file-input :deep(.v-field--dirty .v-label),
-.bcds-file-input :deep(.v-field--active .v-label) {
+.bcds-file-upload .v-file-upload-items {
   display: none;
 }
 
-/* Hide Vuetify's outline borders */
-.bcds-file-input :deep(.v-field__outline) {
+/* Upload icon styling */
+.bcds-file-upload .v-file-upload-icon .v-icon {
+  color: var(--icons-color-primary) !important;
+  font-size: 32px !important;
+}
+
+/* "Drag and drop files here" text */
+.bcds-file-upload .v-file-upload-title {
+  font: var(--typography-regular-body) !important;
+  color: var(--typography-color-primary) !important;
+}
+
+/* "or" divider */
+.bcds-file-upload .v-file-upload-divider {
+  width: 100%;
+  max-width: 300px;
+}
+
+.bcds-file-upload .v-file-upload-divider .v-divider__content {
+  font: var(--typography-regular-small-body) !important;
+  color: var(--typography-color-secondary) !important;
+}
+
+.bcds-file-upload .v-file-upload-divider .v-divider {
+  border-color: var(--surface-color-border-medium) !important;
+}
+
+/* "Browse Files" button - outlined style */
+.bcds-file-upload button.v-btn.v-btn--variant-tonal {
+  background-color: #FFFFFF !important;
+  border: 1px solid var(--surface-color-border-dark) !important;
+  color: var(--typography-color-primary) !important;
+  font: var(--typography-regular-body) !important;
+  text-transform: none !important;
+  padding: 8px 24px !important;
+  min-width: 120px;
+  box-shadow: none !important;
+  border-radius: var(--layout-border-radius-medium) !important;
+}
+
+.bcds-file-upload button.v-btn.v-btn--variant-tonal:hover {
+  background-color: var(--surface-color-secondary-button-hover) !important;
+}
+
+.bcds-file-upload button.v-btn .v-btn__overlay,
+.bcds-file-upload button.v-btn .v-btn__underlay {
   display: none !important;
 }
 
-/* File Input Container */
-.bcds-file-input :deep(.v-field) {
-  color: var(--typography-color-primary);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--layout-margin-small);
-  background: var(--surface-color-forms-default);
-  box-sizing: border-box;
-  border: var(--layout-border-width-small) solid var(--surface-color-border-default);
-  border-radius: var(--layout-border-radius-medium);
-  padding: var(--layout-padding-small) 12px;
-  cursor: pointer;
-  height: var(--layout-margin-xxlarge);
-  min-height: var(--layout-margin-xxlarge);
+/* File upload row - full width layout */
+.file-upload-row {
+  margin: 0 !important;
 }
 
-/* Override Vuetify's filled variant background */
-.bcds-file-input :deep(.v-field--variant-filled .v-field__overlay) {
-  background-color: var(--surface-color-forms-default);
-  opacity: 1;
-}
-
-/* File Input Field Wrapper */
-.bcds-file-input :deep(.v-field__field) {
-  position: relative;
-  padding: 0 !important;
-  display: flex;
-  align-items: center;
-  height: 100%;
-  flex-grow: 1;
-}
-
-/* File Input Element */
-.bcds-file-input :deep(.v-field__input) {
-  font: var(--typography-regular-body);
-  font-size: var(--typography-font-size-body);
-  padding: var(--layout-padding-none);
-  color: var(--typography-color-primary);
-  border: none;
-  flex-grow: 1;
-  min-height: auto;
-  background-color: transparent !important;
-  opacity: 1;
-}
-
-/* Focused state */
-.bcds-file-input :deep(.v-field:focus-within) {
-  border-radius: var(--layout-border-radius-large);
-  border: var(--layout-border-width-small) solid var(--surface-color-border-active);
-  outline: solid var(--layout-border-width-medium) var(--surface-color-border-active);
-  outline-offset: var(--layout-margin-hair);
-}
-
-/* Hover state */
-.bcds-file-input:not(.v-input--disabled) :deep(.v-field:hover) {
-  border-color: var(--surface-color-border-dark);
-}
-
-/* Disabled state */
-.bcds-file-input.v-input--disabled :deep(.v-field),
-.bcds-file-input[disabled] :deep(.v-field) {
-  background: var(--surface-color-forms-disabled);
-  color: var(--typography-color-placeholder);
-  cursor: not-allowed;
-  opacity: 1 !important;
-}
-
-.bcds-file-input.v-input--disabled :deep(.v-field__overlay) {
-  background-color: var(--surface-color-forms-disabled) !important;
-  opacity: 1 !important;
-}
-
-.bcds-file-input.v-input--disabled :deep(.v-field__input) {
-  background: var(--surface-color-forms-disabled);
-  color: var(--typography-color-placeholder);
-  cursor: not-allowed;
-}
-
-/* Disabled label */
-.bcds-file-input-label:has(+ .bcds-file-input.v-input--disabled) {
-  color: var(--typography-color-disabled) !important;
-}
-
-/* File chips styling */
-.bcds-file-input :deep(.v-chip) {
-  font: var(--typography-regular-small-body);
-  background-color: var(--surface-color-secondary-default);
-  border: var(--layout-border-width-small) solid var(--surface-color-border-default);
-  border-radius: var(--layout-border-radius-medium);
-}
-
-/* Clear icon */
-.bcds-file-input :deep(.v-field__clearable) {
-  color: var(--icons-color-primary);
+.file-upload-col {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
 
-/* Prepend inner icon (file icon) */
-.bcds-file-input :deep(.v-field__prepend-inner) {
-  color: var(--icons-color-primary);
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  padding-inline-start: 0 !important;
-  align-items: center;
-  display: flex;
-  height: 100%;
-  margin-inline-end: var(--layout-margin-small) !important;
+.file-upload-col-left {
+  padding-left: 0 !important;
+  padding-right: 12px !important;
 }
 
-/* Append inner icon */
-.bcds-file-input :deep(.v-field__append-inner) {
-  color: var(--icons-color-primary);
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  padding-inline-end: 0 !important;
-  align-items: center;
-  display: flex;
-  height: 100%;
-  margin-inline-start: var(--layout-margin-small) !important;
-}
-
-/* Disabled icons */
-.bcds-file-input.v-input--disabled :deep(.v-field__prepend-inner),
-.bcds-file-input.v-input--disabled :deep(.v-field__append-inner),
-.bcds-file-input.v-input--disabled :deep(.v-field__clearable) {
-  color: var(--icons-color-disabled);
-}
-
-/* Column spacer */
-.col-space-3 {
-  flex: 0 0 3rem;
+.file-upload-col-right {
+  padding-left: 12px !important;
+  padding-right: 0 !important;
 }
 
 /* File display for view mode */
@@ -530,7 +672,6 @@ const handleDialogClose = () => {}
   background: var(--surface-color-background-light-gray);
   border: var(--layout-border-width-small) solid var(--surface-color-border-default);
   border-radius: var(--layout-border-radius-medium);
-  height: var(--layout-margin-xxlarge);
   min-height: var(--layout-margin-xxlarge);
 }
 
@@ -547,21 +688,40 @@ const handleDialogClose = () => {}
   white-space: nowrap;
 }
 
-/* Existing file info for edit mode */
-.existing-file-info {
+.file-display-empty {
+  color: var(--typography-color-placeholder);
+  font-style: italic;
+}
+
+/* Uploaded file info display */
+.uploaded-file-info {
   display: flex;
   align-items: center;
   gap: var(--layout-margin-xsmall);
-  padding: var(--layout-padding-xsmall) 0;
-  margin-bottom: var(--layout-margin-xsmall);
+  padding: var(--layout-padding-medium);
+  margin-top: var(--layout-margin-medium);
+  border: var(--layout-border-width-small) solid var(--surface-color-border-default);
 }
 
-.existing-file-icon {
-  color: var(--icons-color-success);
+.uploaded-file-icon {
+  color: var(--icons-color-primary);
 }
 
-.existing-file-name {
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-secondary);
+.uploaded-file-name {
+  font: var(--typography-regular-body);
+  color: var(--typography-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.uploaded-file-delete-btn {
+  color: var(--icons-color-primary);
+  margin-left: auto;
+}
+
+.uploaded-file-delete-btn:hover {
+  color: var(--icons-color-danger);
 }
 </style>
