@@ -88,7 +88,7 @@ class VdypClientTest {
 		).thenReturn(expected);
 
 		// Act
-		List<FileMappingDetails> actual = client.getFileSetFiles(projectionGuid, fileSetGuid);
+		List<FileMappingDetails> actual = client.getFileSetFiles(projectionGuid, fileSetGuid, true);
 
 		// Assert (return value)
 		assertSame(expected, actual);
@@ -100,7 +100,10 @@ class VdypClientTest {
 		verify(restClient.get(), times(2)).uri(uriFnCaptor.capture());
 
 		URI built = uriFnCaptor.getValue().apply(new DefaultUriBuilderFactory(BASE_URL).builder());
-		assertEquals(BASE_URL + "/api/v8/projection/" + projectionGuid + "/fileset/" + fileSetGuid, built.toString());
+		assertEquals(
+				BASE_URL + "/api/v8/projection/" + projectionGuid + "/fileset/" + fileSetGuid + "?downloadUrls=true",
+				built.toString()
+		);
 	}
 
 	@Test
