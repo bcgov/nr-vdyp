@@ -28,6 +28,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
+import ca.bc.gov.nrs.vdyp.batch.client.coms.PresignedFileFetcher;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
@@ -58,6 +59,8 @@ class DownloadAndPartitionTaskletTest {
 
 	@Mock
 	StepContribution stepContribution;
+	@Mock
+	PresignedFileFetcher fileFetcher;
 
 	DownloadAndPartitionTasklet tasklet;
 	UUID projectionGuid = UUID.randomUUID();
@@ -69,7 +72,7 @@ class DownloadAndPartitionTaskletTest {
 
 	@BeforeEach
 	void setup() {
-		tasklet = new DownloadAndPartitionTasklet(comsFileService, inputPartitioner, vdypClient);
+		tasklet = new DownloadAndPartitionTasklet(comsFileService, inputPartitioner, vdypClient, fileFetcher);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -146,22 +149,32 @@ class DownloadAndPartitionTaskletTest {
 		when(details.layerFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(layerFileSetGuid.toString()));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(vdypClient.getFileSetFiles(any(), matches(polygonFileSetGuid.toString()))).thenReturn(
-				List.of(new FileMappingDetails(polygonFileSetGuid.toString(), polygonComsObjectGuid.toString()))
+
+		when(vdypClient.getFileSetFiles(any(), matches(polygonFileSetGuid.toString()), eq(true))).thenReturn(
+				List.of(
+						new FileMappingDetails(
+								polygonFileSetGuid.toString(), polygonComsObjectGuid.toString(),
+								"http://test.com/polygon"
+						)
+				)
 		);
-		when(vdypClient.getFileSetFiles(any(), matches(layerFileSetGuid.toString()))).thenReturn(
-				List.of(new FileMappingDetails(layerFileSetGuid.toString(), layerComsObjectGuid.toString()))
+		when(vdypClient.getFileSetFiles(any(), matches(layerFileSetGuid.toString()), eq(true))).thenReturn(
+				List.of(
+						new FileMappingDetails(
+								layerFileSetGuid.toString(), layerComsObjectGuid.toString(), "http://test.com/layer"
+						)
+				)
 		);
 
-		doNothing().when(comsFileService).fetchObjectToFile(any(UUID.class), any(Path.class));
+		doNothing().when(fileFetcher).downloadToFile(any(String.class), any(Path.class));
 
 		// Act
 		RepeatStatus status = tasklet.execute(stepContribution, chunkContext);
 
 		// Assert
 		assertEquals(RepeatStatus.FINISHED, status);
-		verify(comsFileService).fetchObjectToFile(eq(polygonComsObjectGuid), any(Path.class));
-		verify(comsFileService).fetchObjectToFile(eq(layerComsObjectGuid), any(Path.class));
+		verify(fileFetcher).downloadToFile(eq("http://test.com/polygon"), any(Path.class));
+		verify(fileFetcher).downloadToFile(eq("http://test.com/layer"), any(Path.class));
 		verify(inputPartitioner).partitionCsvFiles(
 				tempDir.resolve("input/polygon.csv"), tempDir.resolve("input/layer.csv"), 4, tempDir, "job-123"
 		);

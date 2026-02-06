@@ -263,9 +263,8 @@ public class BatchConfiguration {
 	@ConditionalOnProperty(name = "batch.job.auto-create", havingValue = "true", matchIfMissing = false)
 	public Job fetchAndPartitionJob(
 			BatchJobExecutionListener loggingListener, VDYPJobMetricListener metricListener,
-			VDYPJobFailedListener vdypJobFailedListener,
-			Step fetchAndPartitionFilesStep, Step masterStep, Step postProcessingStep, Step persistResultFileStep,
-			PlatformTransactionManager transactionManager
+			VDYPJobFailedListener vdypJobFailedListener, Step fetchAndPartitionFilesStep, Step masterStep,
+			Step postProcessingStep, Step persistResultFileStep, PlatformTransactionManager transactionManager
 	) {
 		return new JobBuilder("VdypFetchAndPartitionJob", jobRepository) //
 				.incrementer(new RunIdIncrementer()) //

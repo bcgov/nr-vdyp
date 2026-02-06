@@ -135,8 +135,12 @@ class ResultPersistenceTaskletTest {
 		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
 		when(details.resultFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));
-		when(vdypClient.getFileSetFiles(any(), matches(resultFileSetGuid.toString()))).thenReturn(
-				List.of(new FileMappingDetails(UUID.randomUUID().toString(), resultFileComsObjectGuid.toString()))
+		when(vdypClient.getFileSetFiles(any(), matches(resultFileSetGuid.toString()), eq(false))).thenReturn(
+				List.of(
+						new FileMappingDetails(
+								UUID.randomUUID().toString(), resultFileComsObjectGuid.toString(), "http://test.com"
+						)
+				)
 		);
 
 		doNothing().when(comsFileService).updateStoredObject(any(UUID.class), any(Path.class));
@@ -167,7 +171,7 @@ class ResultPersistenceTaskletTest {
 		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
 		when(details.resultFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));
-		when(vdypClient.getFileSetFiles(any(), matches(resultFileSetGuid.toString()))).thenReturn(List.of());
+		when(vdypClient.getFileSetFiles(any(), matches(resultFileSetGuid.toString()), eq(false))).thenReturn(List.of());
 
 		doNothing().when(vdypClient).uploadFileToFileSet(
 				matches(projectionGuid.toString()), matches(resultFileSetGuid.toString()), any(Path.class)

@@ -574,15 +574,16 @@ public class ProjectionService {
 		}
 	}
 
-	public List<FileMappingModel> getAllFileSetFiles(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel user)
-			throws ProjectionServiceException {
+	public List<FileMappingModel>
+			getAllFileSetFiles(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel user, boolean download)
+					throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, user, ProjectionAction.READ);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.READ);
 		// check that the filesetGUID is set and is one of the file sets for this projection
 		validateIdentifier(fileSetGUID, FILE_ADD_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
 		validateFileSetIsForProjection(entity, fileSetGUID, FILE_ADD_ERROR);
-		return fileSetService.getAllFiles(fileSetGUID, user, false);
+		return fileSetService.getAllFiles(fileSetGUID, user, download);
 	}
 
 	@Transactional

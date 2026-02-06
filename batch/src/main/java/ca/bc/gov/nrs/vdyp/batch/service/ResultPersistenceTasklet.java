@@ -25,7 +25,7 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 	private static final Logger logger = LoggerFactory.getLogger(ResultPersistenceTasklet.class);
 
 	public ResultPersistenceTasklet(ComsFileService comsFileService, VdypClient vdypClient) {
-		super(comsFileService, vdypClient);
+		super(comsFileService, vdypClient, null);
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 			VdypProjectionDetails projectionDetails = vdypClient.getProjectionDetails(projectionGUID);
 
 			List<FileMappingDetails> resultFiles = vdypClient
-					.getFileSetFiles(projectionGUID, projectionDetails.resultFileSet().guid());
+					.getFileSetFiles(projectionGUID, projectionDetails.resultFileSet().guid(), false);
 
 			Path jobBasePath = Paths.get(baseDir);
 			BatchUtils.confirmDirectoryExists(jobBasePath);
