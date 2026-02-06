@@ -171,7 +171,8 @@ spec:
     dynamicConfiguration:
       postgresql:
         pg_hba:
-          - {{ .Values.patroni.postgresql.pg_hba}}
+          - "host all all 0.0.0.0/0 md5"
+          - "host all all ::1/128 md5"
         parameters:
           shared_buffers: {{ .Values.patroni.postgresql.parameters.shared_buffers }}
           wal_buffers: {{ .Values.patroni.postgresql.parameters.wal_buffers }}
