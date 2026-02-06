@@ -31,10 +31,13 @@
         <StandInfoPanel class="panel-spacing" />
         <ReportInfoPanel class="panel-spacing" />
         <RunProjectionButtonPanel
+          v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
+          :showCancelButton="isRunning"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
+          @cancelRun="cancelRunHandler"
         />
       </template>
     </template>
@@ -46,10 +49,13 @@
       <template v-if="isFileUploadPanelsVisible">
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
+          v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
+          :showCancelButton="isRunning"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
+          @cancelRun="cancelRunHandler"
         />
       </template>
     </template>
@@ -61,6 +67,7 @@ import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useReportingStore } from '@/stores/reportingStore'
+import { useNotificationStore } from '@/stores/common/notificationStore'
 import {
   AppProgressCircular,
   AppTabs,
@@ -76,7 +83,7 @@ import {
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE } from '@/constants'
-import { mapProjectionStatus } from '@/services/projectionService'
+import { mapProjectionStatus, cancelProjection, getProjectionById } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runProjection } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
@@ -94,6 +101,9 @@ const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const fileUploadStore = useFileUploadStore()
 const reportingStore = useReportingStore()
+const notificationStore = useNotificationStore()
+
+const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
 
 const modelParamTabs = computed<Tab[]>(() => [
   {
@@ -257,6 +267,60 @@ const runModelHandler = async () => {
   } catch (error) {
     handleError(error)
     console.error('Error during model execution:', error)
+  } finally {
+    isProgressVisible.value = false
+  }
+}
+
+const updateProjectionState = (status: string) => {
+  const mappedStatus = mapProjectionStatus(status)
+  appStore.setCurrentProjectionStatus(mappedStatus)
+
+  if (mappedStatus === CONSTANTS.PROJECTION_STATUS.READY || mappedStatus === CONSTANTS.PROJECTION_STATUS.FAILED) {
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+  } else if (mappedStatus === CONSTANTS.PROJECTION_STATUS.DRAFT) {
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
+  }
+}
+
+const cancelRunHandler = async () => {
+  const projectionGUID = appStore.currentProjectionGUID
+  if (!projectionGUID) {
+    notificationStore.showErrorMessage(MESSAGE.PROJECTION_ERR.CANCEL_FAILED, MESSAGE.PROJECTION_ERR.CANCEL_FAILED_TITLE)
+    return
+  }
+
+  try {
+    isProgressVisible.value = true
+    progressMessage.value = MESSAGE.PROGRESS_MSG.CANCELLING_PROJECTION
+
+    // Pre-check: fetch the latest projection status from the backend
+    const latestProjection = await getProjectionById(projectionGUID)
+    const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
+
+    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
+      // Projection is no longer running — update state and show appropriate message
+      updateProjectionState(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
+
+      if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
+        notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED_TITLE)
+      } else if (latestStatus === CONSTANTS.PROJECTION_STATUS.FAILED) {
+        notificationStore.showWarningMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED_TITLE)
+      } else {
+        notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.CANCEL_NOT_RUNNING, MESSAGE.PROJECTION_ERR.CANCEL_NOT_RUNNING_TITLE)
+      }
+      return
+    }
+
+    await cancelProjection(projectionGUID)
+
+    appStore.setCurrentProjectionStatus(CONSTANTS.PROJECTION_STATUS.DRAFT)
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
+
+    notificationStore.showSuccessMessage(MESSAGE.SUCCESS_MSG.PROJECTION_CANCELLED, MESSAGE.SUCCESS_MSG.PROJECTION_CANCELLED_TITLE)
+  } catch (error) {
+    console.error('Error cancelling projection:', error)
+    notificationStore.showErrorMessage(MESSAGE.PROJECTION_ERR.CANCEL_FAILED, MESSAGE.PROJECTION_ERR.CANCEL_FAILED_TITLE)
   } finally {
     isProgressVisible.value = false
   }

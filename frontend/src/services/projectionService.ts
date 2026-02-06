@@ -5,6 +5,7 @@ import {
   updateProjectionParams as apiUpdateProjectionParams,
   deleteProjection as apiDeleteProjection,
   runProjection as apiRunProjection,
+  cancelProjection as apiCancelProjection,
   deleteFileFromFileSet as apiDeleteFileFromFileSet,
   getFileSetFiles as apiGetFileSetFiles,
   getFileForDownload as apiGetFileForDownload,
@@ -78,7 +79,7 @@ const getMethod = (parameters: Record<string, unknown>): string => {
 /**
  * Transforms a backend ProjectionModel to frontend Projection interface
  */
-const transformProjection = (model: ProjectionModel): Projection => {
+export const transformProjection = (model: ProjectionModel): Projection => {
   const parameters = parseProjectionParameters(model.projectionParameters)
 
   return {
@@ -175,6 +176,23 @@ export const runProjection = async (
     return await apiRunProjection(projectionGUID)
   } catch (error) {
     console.error('Error running projection:', error)
+    throw error
+  }
+}
+
+/**
+ * Cancels a running projection by sending a cancel request to the backend.
+ * The projection status should return to DRAFT after cancellation.
+ * @param projectionGUID The projection GUID
+ * @returns A promise that resolves to the updated ProjectionModel with DRAFT status
+ */
+export const cancelProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    return await apiCancelProjection(projectionGUID)
+  } catch (error) {
+    console.error('Error cancelling projection:', error)
     throw error
   }
 }

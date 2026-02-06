@@ -183,6 +183,7 @@ export const PROGRESS_MSG = Object.freeze({
   LOADING_PROJECTION: 'Loading Projection...',
   RUNNING_PROJECTION: 'Running Projection...',
   SAVING_PROJECTION: 'Saving Projection...',
+  CANCELLING_PROJECTION: 'Cancelling Projection...',
 })
 
 export const SUCCESS_MSG = Object.freeze({
@@ -198,6 +199,8 @@ export const SUCCESS_MSG = Object.freeze({
   PROJECTION_RUN_RESULT_W_ERR_TITLE: 'Projection Completed Successfully with Errors',
   PROJECTION_DELETED: 'Projection has been successfully deleted.',
   PROJECTION_DELETED_TITLE: 'Projection deleted',
+  PROJECTION_CANCELLED: 'Projection has been successfully cancelled.',
+  PROJECTION_CANCELLED_TITLE: 'Projection Cancelled',
   BATCH_PROJECTION_STARTED:
     'Projection has been submitted for batch processing. You can check the status in the Projection List.',
   BATCH_PROJECTION_STARTED_TITLE: 'Projection Started',
@@ -215,6 +218,14 @@ export const PROJECTION_ERR = Object.freeze({
   FILE_UPLOAD_FAILED_TITLE: 'File Upload Failed',
   FILE_DELETE_FAILED: 'Failed to remove the file. Please try again.',
   FILE_DELETE_FAILED_TITLE: 'File Removal Failed',
+  CANCEL_FAILED: 'Failed to cancel the projection. Please try again later.',
+  CANCEL_FAILED_TITLE: 'Projection Cancel Failed',
+  CANCEL_ALREADY_COMPLETED: 'Cannot cancel the projection run. Projection has already completed. Results are ready.',
+  CANCEL_ALREADY_COMPLETED_TITLE: 'Projection Completed',
+  CANCEL_ALREADY_FAILED: 'Projection has already finished with errors.',
+  CANCEL_ALREADY_FAILED_TITLE: 'Projection Failed',
+  CANCEL_NOT_RUNNING: 'Projection is no longer running.',
+  CANCEL_NOT_RUNNING_TITLE: 'Cannot Cancel',
 })
 
 export const FILE_REMOVAL_DIALOG = Object.freeze({

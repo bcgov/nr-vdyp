@@ -89,7 +89,9 @@ import { ProjectionTable, ProjectionCardList, ProjectionPagination } from '@/com
 import {
   fetchUserProjections,
   deleteProjectionWithFiles,
+  cancelProjection,
   getProjectionById,
+  transformProjection,
   parseProjectionParams,
   isProjectionReadOnly,
   mapProjectionStatus,
@@ -233,6 +235,77 @@ const handleCardSort = (value: string) => {
 }
 
 /**
+ * Loads file set files and applies the file info to the store
+ */
+const loadFileSetInfo = async (
+  projectionGUID: string,
+  fileSetGUID: string,
+  defaultName: string,
+  setFileInfo: (info: { filename: string; fileMappingGUID: string; fileSetGUID: string }) => void,
+) => {
+  try {
+    const files = await getFileSetFiles(projectionGUID, fileSetGUID)
+    if (files.length > 0) {
+      const file = files[0]
+      setFileInfo({
+        filename: file.filename || defaultName,
+        fileMappingGUID: file.fileMappingGUID,
+        fileSetGUID,
+      })
+    }
+  } catch (err) {
+    console.error(`Error loading ${defaultName.toLowerCase()} info:`, err)
+  }
+}
+
+/**
+ * Restores model parameter state from a projection
+ */
+const restoreInputModelParamsState = (
+  modelParameters: string | null | undefined,
+  params: ReturnType<typeof parseProjectionParams>,
+  isViewMode: boolean,
+) => {
+  modelParameterStore.resetStore()
+
+  if (modelParameters) {
+    try {
+      const modelParams: ModelParameters = JSON.parse(modelParameters)
+      modelParameterStore.restoreFromModelParameters(modelParams)
+    } catch (err) {
+      console.error('Error parsing modelParameters:', err)
+    }
+  }
+
+  modelParameterStore.restoreFromProjectionParams(params, isViewMode)
+}
+
+/**
+ * Restores file upload state from a projection
+ */
+const restoreFileUploadState = async (
+  projectionGUID: string,
+  projectionModel: Awaited<ReturnType<typeof getProjectionById>>,
+  params: ReturnType<typeof parseProjectionParams>,
+  isViewMode: boolean,
+) => {
+  fileUploadStore.resetStore()
+  fileUploadStore.restoreFromProjectionParams(params, isViewMode)
+
+  const polygonFileSetGUID = projectionModel.polygonFileSet?.projectionFileSetGUID
+  const layerFileSetGUID = projectionModel.layerFileSet?.projectionFileSetGUID
+
+  await Promise.all([
+    polygonFileSetGUID
+      ? loadFileSetInfo(projectionGUID, polygonFileSetGUID, 'Polygon File', fileUploadStore.setPolygonFileInfo)
+      : Promise.resolve(),
+    layerFileSetGUID
+      ? loadFileSetInfo(projectionGUID, layerFileSetGUID, 'Layer File', fileUploadStore.setLayerFileInfo)
+      : Promise.resolve(),
+  ])
+}
+
+/**
  * Loads a projection and navigates to the detail view
  * @param projectionGUID The projection GUID to load
  * @param isViewMode If true, opens in view (read-only) mode; otherwise in edit mode
@@ -242,17 +315,14 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
   progressMessage.value = PROGRESS_MSG.LOADING_PROJECTION
 
   try {
-    // Fetch the projection data
     const projectionModel = await getProjectionById(projectionGUID)
     const params = parseProjectionParams(projectionModel.projectionParameters)
 
-    // Determine the method (File Upload or Manual Input)
     const isInputModelParams = params.selectedExecutionOptions.includes(ExecutionOptionsEnum.DoEnableProjectionReport)
     const method = isInputModelParams
       ? MODEL_SELECTION.INPUT_MODEL_PARAMETERS
       : MODEL_SELECTION.FILE_UPLOAD
 
-    // Set the app store state
     appStore.setModelSelection(method)
     appStore.setViewMode(isViewMode ? PROJECTION_VIEW_MODE.VIEW : PROJECTION_VIEW_MODE.EDIT)
     appStore.setCurrentProjectionGUID(projectionGUID)
@@ -261,67 +331,11 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     )
 
     if (isInputModelParams) {
-      // Reset model parameter store
-      modelParameterStore.resetStore()
-
-      // First, restore species/site/stand info to populate speciesGroups
-      if (projectionModel.modelParameters) {
-        try {
-          const modelParams: ModelParameters = JSON.parse(projectionModel.modelParameters)
-          modelParameterStore.restoreFromModelParameters(modelParams)
-        } catch (err) {
-          console.error('Error parsing modelParameters:', err)
-        }
-      }
-
-      // Then, restore report settings and utilization levels (speciesGroups is now populated)
-      modelParameterStore.restoreFromProjectionParams(params, isViewMode)
+      restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode)
     } else {
-      // Reset and restore file upload store
-      fileUploadStore.resetStore()
-      fileUploadStore.restoreFromProjectionParams(params, isViewMode)
-
-      // Load existing file info for file upload projections
-      if (projectionModel.polygonFileSet?.projectionFileSetGUID) {
-        try {
-          const polygonFiles = await getFileSetFiles(
-            projectionGUID,
-            projectionModel.polygonFileSet.projectionFileSetGUID,
-          )
-          if (polygonFiles.length > 0) {
-            const file = polygonFiles[0]
-            fileUploadStore.setPolygonFileInfo({
-              filename: file.filename || 'Polygon File',
-              fileMappingGUID: file.fileMappingGUID,
-              fileSetGUID: projectionModel.polygonFileSet.projectionFileSetGUID,
-            })
-          }
-        } catch (err) {
-          console.error('Error loading polygon file info:', err)
-        }
-      }
-
-      if (projectionModel.layerFileSet?.projectionFileSetGUID) {
-        try {
-          const layerFiles = await getFileSetFiles(
-            projectionGUID,
-            projectionModel.layerFileSet.projectionFileSetGUID,
-          )
-          if (layerFiles.length > 0) {
-            const file = layerFiles[0]
-            fileUploadStore.setLayerFileInfo({
-              filename: file.filename || 'Layer File',
-              fileMappingGUID: file.fileMappingGUID,
-              fileSetGUID: projectionModel.layerFileSet.projectionFileSetGUID,
-            })
-          }
-        } catch (err) {
-          console.error('Error loading layer file info:', err)
-        }
-      }
+      await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode)
     }
 
-    // Navigate to the projection detail view
     router.push(ROUTE_PATH.PROJECTION_DETAIL)
   } catch (err) {
     console.error('Error loading projection:', err)
@@ -382,8 +396,45 @@ const handleDelete = async (projectionGUID: string) => {
   }
 }
 
-const handleCancel = (projectionGUID: string) => {
-  console.log('Cancel projection:', projectionGUID)
+const updateProjectionInList = (projectionModel: Awaited<ReturnType<typeof getProjectionById>>) => {
+  const updated = transformProjection(projectionModel)
+  const index = projections.value.findIndex(p => p.projectionGUID === updated.projectionGUID)
+  if (index !== -1) {
+    projections.value[index] = updated
+  }
+}
+
+const handleCancel = async (projectionGUID: string) => {
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.CANCELLING_PROJECTION
+  try {
+    // Pre-check: fetch the latest projection status from the backend
+    const latestProjection = await getProjectionById(projectionGUID)
+    const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT)
+
+    if (latestStatus !== PROJECTION_STATUS.RUNNING) {
+      // Projection is no longer running — update the single item and show appropriate message
+      updateProjectionInList(latestProjection)
+
+      if (latestStatus === PROJECTION_STATUS.READY) {
+        notificationStore.showInfoMessage(PROJECTION_ERR.CANCEL_ALREADY_COMPLETED, PROJECTION_ERR.CANCEL_ALREADY_COMPLETED_TITLE)
+      } else if (latestStatus === PROJECTION_STATUS.FAILED) {
+        notificationStore.showWarningMessage(PROJECTION_ERR.CANCEL_ALREADY_FAILED, PROJECTION_ERR.CANCEL_ALREADY_FAILED_TITLE)
+      } else {
+        notificationStore.showInfoMessage(PROJECTION_ERR.CANCEL_NOT_RUNNING, PROJECTION_ERR.CANCEL_NOT_RUNNING_TITLE)
+      }
+      return
+    }
+
+    const cancelledProjection = await cancelProjection(projectionGUID)
+    updateProjectionInList(cancelledProjection)
+    notificationStore.showSuccessMessage(SUCCESS_MSG.PROJECTION_CANCELLED, SUCCESS_MSG.PROJECTION_CANCELLED_TITLE)
+  } catch (err) {
+    console.error('Error cancelling projection:', err)
+    notificationStore.showErrorMessage(PROJECTION_ERR.CANCEL_FAILED, PROJECTION_ERR.CANCEL_FAILED_TITLE)
+  } finally {
+    isProgressVisible.value = false
+  }
 }
 
 /**
