@@ -14,11 +14,13 @@
         </template>
         <v-list>
           <v-list-item
+            class="new-projection-menu-item"
             @click="handleNewProjection(NEW_PROJECTION_TYPE.INPUT_MODEL_PARAMETERS)"
           >
             <v-list-item-title>Manual Input</v-list-item-title>
           </v-list-item>
           <v-list-item
+            class="new-projection-menu-item"
             @click="handleNewProjection(NEW_PROJECTION_TYPE.FILE_UPLOAD)"
           >
             <v-list-item-title>File Upload</v-list-item-title>
@@ -496,5 +498,13 @@ onUnmounted(() => {
   font: var(--typography-bold-h4);
   color: var(--typography-color-primary);
   margin: 0;
+}
+
+.new-projection-menu-item {
+  cursor: pointer;
+}
+
+.new-projection-menu-item:hover {
+  background-color: #eceae8;
 }
 </style>
