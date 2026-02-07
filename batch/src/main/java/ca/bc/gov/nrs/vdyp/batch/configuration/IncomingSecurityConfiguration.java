@@ -9,6 +9,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class IncomingSecurityConfiguration {
 	@Bean
+	@SuppressWarnings("java:S4502") // CSRF disabled intentionally for server-to-server communication
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/batch/startWithGUIDs", "/api/batch/stop/**", "/api/batch/status/**"))
 				.authorizeHttpRequests(a -> a.anyRequest().permitAll())//
