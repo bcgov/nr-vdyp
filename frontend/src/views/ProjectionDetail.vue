@@ -14,6 +14,34 @@
           {{ CONSTANTS.HEADER_SELECTION.MODEL_PARAMETER_SELECTION }}
         </h3>
         <h3 v-else>{{ CONSTANTS.HEADER_SELECTION.FILE_UPLOAD }}</h3>
+        <v-menu v-if="isRunning">
+          <template #activator="{ props }">
+            <button v-bind="props" class="running-status-menu-button">
+              <img
+                :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
+                alt="Running"
+                class="running-status-icon"
+              />
+              <span class="running-status-text">Running</span>
+              <v-icon size="small">mdi-chevron-down</v-icon>
+            </button>
+          </template>
+          <v-list class="running-status-menu-list">
+            <v-list-item
+              class="running-status-menu-item"
+              @click="cancelRunHandler"
+            >
+              <div class="running-menu-item-content">
+                <img
+                  src="@/assets/icons/Cancel_Icon_Menu.png"
+                  alt="Cancel"
+                  class="running-menu-icon"
+                />
+                <span class="running-menu-text">Cancel</span>
+              </div>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </div>
     </div>
     <template
@@ -89,6 +117,7 @@ import { runProjection } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
 import {
   delay,
+  getStatusIcon,
 } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
@@ -330,10 +359,73 @@ const cancelRunHandler = async () => {
 <style scoped>
 .model-selection-header {
   margin-bottom: var(--layout-margin-medium);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 h3 {
   font: var(--typography-bold-h3);
+  color: var(--typography-color-primary);
+}
+
+.running-status-menu-button {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  border-radius: var(--layout-border-radius-small);
+  transition: background-color 0.2s;
+}
+
+.running-status-menu-button:hover {
+  background-color: var(--surface-color-background-light-gray);
+}
+
+.running-status-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.running-status-text {
+  font: var(--typography-regular-body);
+  color: var(--support-border-color-warning);
+}
+
+.running-status-menu-list {
+  min-width: 120px;
+}
+
+.running-status-menu-item {
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.running-status-menu-item:hover {
+  background-color: #eceae8;
+}
+
+.running-menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-medium);
+}
+
+.running-menu-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.running-menu-text {
+  font: var(--typography-regular-body);
   color: var(--typography-color-primary);
 }
 
