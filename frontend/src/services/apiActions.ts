@@ -130,6 +130,23 @@ export const runProjection = async (
 }
 
 /**
+ * Cancels a running projection.
+ * @param projectionGUID The projection GUID.
+ * @returns A promise that resolves to the updated ProjectionModel with DRAFT status.
+ */
+export const cancelProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.cancelProjection(projectionGUID)
+    return response.data
+  } catch (error) {
+    console.error('Error cancelling projection:', error)
+    throw error
+  }
+}
+
+/**
  * Fetches a projection by its GUID.
  * @param projectionGUID The projection GUID.
  * @returns A promise that resolves to the ProjectionModel.

@@ -30,11 +30,14 @@
           <v-form ref="form">
             <v-row class="file-upload-row">
               <v-col cols="6" class="file-upload-col file-upload-col-left">
-                <span class="bcds-file-input-label">
+                <span
+                  class="bcds-file-input-label"
+                  :class="{ 'bcds-file-input-label--disabled': isReadOnly }"
+                >
                   {{ isReadOnly ? 'Polygon File' : 'Select Polygon File' }}
                 </span>
                 <!-- View mode -->
-                <div v-if="isReadOnly" class="file-display-container">
+                <div v-if="isReadOnly" class="file-display-container file-display-container--disabled">
                   <template v-if="fileUploadStore.polygonFileInfo">
                     <v-icon class="file-display-icon">mdi-paperclip</v-icon>
                     <span class="file-display-name">{{ fileUploadStore.polygonFileInfo.filename }}</span>
@@ -72,11 +75,14 @@
                 </template>
               </v-col>
               <v-col cols="6" class="file-upload-col file-upload-col-right">
-                <span class="bcds-file-input-label">
+                <span
+                  class="bcds-file-input-label"
+                  :class="{ 'bcds-file-input-label--disabled': isReadOnly }"
+                >
                   {{ isReadOnly ? 'Layer File' : 'Select Layer File' }}
                 </span>
                 <!-- View mode -->
-                <div v-if="isReadOnly" class="file-display-container">
+                <div v-if="isReadOnly" class="file-display-container file-display-container--disabled">
                   <template v-if="fileUploadStore.layerFileInfo">
                     <v-icon class="file-display-icon">mdi-paperclip</v-icon>
                     <span class="file-display-name">{{ fileUploadStore.layerFileInfo.filename }}</span>
@@ -675,9 +681,25 @@ const handleDialogClose = () => {}
   min-height: var(--layout-margin-xxlarge);
 }
 
+/* Disabled state - View mode file display container */
+.file-display-container--disabled {
+  background: var(--surface-color-forms-disabled);
+  cursor: default;
+}
+
+/* Disabled state - View mode label */
+.bcds-file-input-label--disabled {
+  color: var(--typography-color-disabled) !important;
+}
+
 .file-display-icon {
   color: var(--icons-color-primary);
   font-size: 20px;
+}
+
+/* Disabled state - View mode file icon */
+.file-display-container--disabled .file-display-icon {
+  color: var(--icons-color-disabled);
 }
 
 .file-display-name {
@@ -688,8 +710,19 @@ const handleDialogClose = () => {}
   white-space: nowrap;
 }
 
+/* Disabled state - View mode file name */
+.file-display-container--disabled .file-display-name {
+  color: var(--typography-color-disabled);
+}
+
 .file-display-empty {
   color: var(--typography-color-placeholder);
+  font-style: italic;
+}
+
+/* Disabled state - View mode empty text */
+.file-display-container--disabled .file-display-empty {
+  color: var(--typography-color-disabled);
   font-style: italic;
 }
 

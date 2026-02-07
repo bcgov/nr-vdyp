@@ -3,11 +3,20 @@
     <v-card-actions :class="computedCardActionsClass">
       <v-spacer></v-spacer>
       <AppButton
+        v-if="!showCancelButton"
         label="Run Projection"
         variant="primary"
         class="ml-2"
         :isDisabled="isDisabled"
         @click="runModel"
+      />
+      <AppButton
+        v-else
+        label="Cancel Run"
+        variant="danger"
+        mdi-name="mdi-stop-circle-outline"
+        class="ml-2"
+        @click="cancelRun"
       />
     </v-card-actions>
   </v-card>
@@ -16,13 +25,16 @@
 import { computed } from 'vue'
 import AppButton from '@/components/core/AppButton.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   isDisabled: boolean
+  showCancelButton?: boolean
   cardClass?: string
   cardActionsClass?: string
-}>()
+}>(), {
+  showCancelButton: false,
+})
 
-const emit = defineEmits(['runModel'])
+const emit = defineEmits(['runModel', 'cancelRun'])
 
 const computedCardClass = computed(
   () => props.cardClass ?? 'file-upload-run-model-card',
@@ -34,6 +46,10 @@ const computedCardActionsClass = computed(
 
 const runModel = () => {
   emit('runModel')
+}
+
+const cancelRun = () => {
+  emit('cancelRun')
 }
 </script>
 <style scoped>

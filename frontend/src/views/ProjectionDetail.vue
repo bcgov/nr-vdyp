@@ -14,6 +14,34 @@
           {{ CONSTANTS.HEADER_SELECTION.MODEL_PARAMETER_SELECTION }}
         </h3>
         <h3 v-else>{{ CONSTANTS.HEADER_SELECTION.FILE_UPLOAD }}</h3>
+        <v-menu v-if="isRunning">
+          <template #activator="{ props }">
+            <button v-bind="props" class="running-status-menu-button">
+              <img
+                :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
+                alt="Running"
+                class="running-status-icon"
+              />
+              <span class="running-status-text">Running</span>
+              <v-icon size="small">mdi-chevron-down</v-icon>
+            </button>
+          </template>
+          <v-list class="running-status-menu-list">
+            <v-list-item
+              class="running-status-menu-item"
+              @click="cancelRunHandler"
+            >
+              <div class="running-menu-item-content">
+                <img
+                  src="@/assets/icons/Cancel_Icon_Menu.png"
+                  alt="Cancel"
+                  class="running-menu-icon"
+                />
+                <span class="running-menu-text">Cancel</span>
+              </div>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </div>
     </div>
     <template
@@ -31,10 +59,13 @@
         <StandInfoPanel class="panel-spacing" />
         <ReportInfoPanel class="panel-spacing" />
         <RunProjectionButtonPanel
+          v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
+          :showCancelButton="isRunning"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
+          @cancelRun="cancelRunHandler"
         />
       </template>
     </template>
@@ -46,10 +77,13 @@
       <template v-if="isFileUploadPanelsVisible">
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
+          v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
+          :showCancelButton="isRunning"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
+          @cancelRun="cancelRunHandler"
         />
       </template>
     </template>
@@ -61,6 +95,7 @@ import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useReportingStore } from '@/stores/reportingStore'
+import { useNotificationStore } from '@/stores/common/notificationStore'
 import {
   AppProgressCircular,
   AppTabs,
@@ -76,12 +111,13 @@ import {
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE } from '@/constants'
-import { mapProjectionStatus } from '@/services/projectionService'
+import { mapProjectionStatus, cancelProjection, getProjectionById } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runProjection } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
 import {
   delay,
+  getStatusIcon,
 } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
@@ -94,6 +130,9 @@ const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const fileUploadStore = useFileUploadStore()
 const reportingStore = useReportingStore()
+const notificationStore = useNotificationStore()
+
+const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
 
 const modelParamTabs = computed<Tab[]>(() => [
   {
@@ -261,15 +300,132 @@ const runModelHandler = async () => {
     isProgressVisible.value = false
   }
 }
+
+const updateProjectionState = (status: string) => {
+  const mappedStatus = mapProjectionStatus(status)
+  appStore.setCurrentProjectionStatus(mappedStatus)
+
+  if (mappedStatus === CONSTANTS.PROJECTION_STATUS.READY || mappedStatus === CONSTANTS.PROJECTION_STATUS.FAILED) {
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+  } else if (mappedStatus === CONSTANTS.PROJECTION_STATUS.DRAFT) {
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
+  }
+}
+
+const cancelRunHandler = async () => {
+  const projectionGUID = appStore.currentProjectionGUID
+  if (!projectionGUID) {
+    notificationStore.showErrorMessage(MESSAGE.PROJECTION_ERR.CANCEL_FAILED, MESSAGE.PROJECTION_ERR.CANCEL_FAILED_TITLE)
+    return
+  }
+
+  try {
+    isProgressVisible.value = true
+    progressMessage.value = MESSAGE.PROGRESS_MSG.CANCELLING_PROJECTION
+
+    // Pre-check: fetch the latest projection status from the backend
+    const latestProjection = await getProjectionById(projectionGUID)
+    const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
+
+    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
+      // Projection is no longer running — update state and show appropriate message
+      updateProjectionState(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
+
+      if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
+        notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED_TITLE)
+      } else if (latestStatus === CONSTANTS.PROJECTION_STATUS.FAILED) {
+        notificationStore.showWarningMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED_TITLE)
+      } else {
+        notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.CANCEL_NOT_RUNNING, MESSAGE.PROJECTION_ERR.CANCEL_NOT_RUNNING_TITLE)
+      }
+      return
+    }
+
+    await cancelProjection(projectionGUID)
+
+    appStore.setCurrentProjectionStatus(CONSTANTS.PROJECTION_STATUS.DRAFT)
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
+
+    notificationStore.showSuccessMessage(MESSAGE.SUCCESS_MSG.PROJECTION_CANCELLED, MESSAGE.SUCCESS_MSG.PROJECTION_CANCELLED_TITLE)
+  } catch (error) {
+    console.error('Error cancelling projection:', error)
+    notificationStore.showErrorMessage(MESSAGE.PROJECTION_ERR.CANCEL_FAILED, MESSAGE.PROJECTION_ERR.CANCEL_FAILED_TITLE)
+  } finally {
+    isProgressVisible.value = false
+  }
+}
 </script>
 
 <style scoped>
 .model-selection-header {
   margin-bottom: var(--layout-margin-medium);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 h3 {
   font: var(--typography-bold-h3);
+  color: var(--typography-color-primary);
+}
+
+.running-status-menu-button {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  border-radius: var(--layout-border-radius-small);
+  transition: background-color 0.2s;
+}
+
+.running-status-menu-button:hover {
+  background-color: var(--surface-color-background-light-gray);
+}
+
+.running-status-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.running-status-text {
+  font: var(--typography-regular-body);
+  color: var(--support-border-color-warning);
+}
+
+.running-status-menu-list {
+  min-width: 120px;
+}
+
+.running-status-menu-item {
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.running-status-menu-item:hover {
+  background-color: #eceae8;
+}
+
+.running-menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-medium);
+}
+
+.running-menu-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.running-menu-text {
+  font: var(--typography-regular-body);
   color: var(--typography-color-primary);
 }
 
