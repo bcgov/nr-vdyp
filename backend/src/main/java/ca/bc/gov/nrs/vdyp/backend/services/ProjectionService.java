@@ -624,7 +624,7 @@ public class ProjectionService {
 					throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
-		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.READ);
 		// check that the filesetGUID is set and is one of the file sets for this projection
 		validateIdentifier(fileSetGUID, FILE_GET_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
 		validateIdentifier(fileGUID, FILE_GET_ERROR, FILE_IDENTIFIER, projectionGUID);
@@ -635,8 +635,8 @@ public class ProjectionService {
 	public void deleteFile(UUID projectionGUID, UUID fileSetGUID, UUID fileGUID, VDYPUserModel actingUser)
 			throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
-		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
-		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.DELETE);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.DELETE);
 		// check that the filesetGUID is set and is one of the file sets for this projection
 		validateIdentifier(fileSetGUID, FILE_DELETE_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
 		validateIdentifier(fileGUID, FILE_DELETE_ERROR, FILE_IDENTIFIER, projectionGUID);
@@ -647,8 +647,8 @@ public class ProjectionService {
 	public void deleteAllFiles(UUID projectionGUID, UUID fileSetGUID, VDYPUserModel actingUser)
 			throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
-		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
-		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.DELETE);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.DELETE);
 		// check that the filesetGUID is set and is one of the file sets for this projection
 		validateIdentifier(fileSetGUID, FILES_DELETE_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
 		validateFileSetIsForProjection(entity, fileSetGUID, FILES_DELETE_ERROR);
