@@ -158,6 +158,16 @@ export const apiClient = {
   },
 
   /**
+   * Cancels a running projection.
+   * @param projectionGUID The projection GUID.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the updated projection with DRAFT status.
+   */
+  cancelProjection: (projectionGUID: string, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.cancelProjection(projectionGUID, options)
+  },
+
+  /**
    * Deletes a projection.
    * @param projectionGUID The projection GUID.
    * @param options Optional Axios request configuration.
