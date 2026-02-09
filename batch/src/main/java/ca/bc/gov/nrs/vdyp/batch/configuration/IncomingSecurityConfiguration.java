@@ -11,8 +11,13 @@ public class IncomingSecurityConfiguration {
 	@Bean
 	@SuppressWarnings("java:S4502") // CSRF disabled intentionally for server-to-server communication
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/batch/startWithGUIDs", "/api/batch/stop/**", "/api/batch/status/**"))
-				.authorizeHttpRequests(a -> a.anyRequest().permitAll())//
+		http.csrf(
+				csrf -> csrf.ignoringRequestMatchers(
+						"/api/batch/startWithGUIDs", //
+						"/api/batch/stop/**", //
+						"/api/batch/status/**" //
+				)
+		).authorizeHttpRequests(a -> a.anyRequest().permitAll())//
 				.oauth2Login(AbstractHttpConfigurer::disable)//
 				.formLogin(AbstractHttpConfigurer::disable)//
 				.httpBasic(AbstractHttpConfigurer::disable);
