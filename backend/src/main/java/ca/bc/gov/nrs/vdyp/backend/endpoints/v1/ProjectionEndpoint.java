@@ -269,12 +269,9 @@ public class ProjectionEndpoint implements Endpoint {
 	@Authenticated
 	@Path("/{projectionGUID}/cancel")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Cancel A Projection", description = "Cancels a running projection."
-	)
-	public Response cancelProjection(
-			@PathParam("projectionGUID") UUID projectionGUID
-	) throws ProjectionServiceException {
+	@Tag(name = "Cancel A Projection", description = "Cancels a running projection.")
+	public Response cancelProjection(@PathParam("projectionGUID") UUID projectionGUID)
+			throws ProjectionServiceException {
 		var started = projectionService.cancelBatchProjection(currentUser.getUser(), projectionGUID);
 		return Response.status(Status.OK).entity(started).build();
 	}
