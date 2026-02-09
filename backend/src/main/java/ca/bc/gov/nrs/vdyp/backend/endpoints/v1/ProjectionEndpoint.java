@@ -269,9 +269,12 @@ public class ProjectionEndpoint implements Endpoint {
 	@Authenticated
 	@Path("/{projectionGUID}/cancel")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Cancel A Projection", description = "Cancels a running projection.")
-	public Response cancelProjection(@PathParam("projectionGUID") UUID projectionGUID)
-			throws ProjectionServiceException {
+	@Tag(
+			name = "Cancel A Projection", description = "Cancels a running projection."
+	)
+	public Response cancelProjection(
+			@PathParam("projectionGUID") UUID projectionGUID
+	) throws ProjectionServiceException {
 		var started = projectionService.cancelBatchProjection(currentUser.getUser(), projectionGUID);
 		return Response.status(Status.OK).entity(started).build();
 	}
@@ -286,11 +289,9 @@ public class ProjectionEndpoint implements Endpoint {
 	)
 	public Response getFileSetFiles(
 			@PathParam("projectionGUID") UUID projectionGUID, //
-			@PathParam("fileSetGUID") UUID fileSetGUID,
-			@QueryParam("downloadUrls") @DefaultValue("false") boolean downloadUrls
+			@PathParam("fileSetGUID") UUID fileSetGUID
 	) throws ProjectionServiceException {
-		var found = projectionService
-				.getAllFileSetFiles(projectionGUID, fileSetGUID, currentUser.getUser(), downloadUrls);
+		var found = projectionService.getAllFileSetFiles(projectionGUID, fileSetGUID, currentUser.getUser());
 		return Response.status(Status.OK).entity(found).build();
 	}
 

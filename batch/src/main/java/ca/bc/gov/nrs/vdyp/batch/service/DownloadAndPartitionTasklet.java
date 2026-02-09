@@ -4,13 +4,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
-import ca.bc.gov.nrs.vdyp.batch.client.coms.PresignedFileFetcher;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
@@ -24,10 +24,9 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 	private final BatchInputPartitioner inputPartitioner;
 
 	public DownloadAndPartitionTasklet(
-			ComsFileService comsFileService, BatchInputPartitioner inputPartitioner, VdypClient vdypClient,
-			PresignedFileFetcher fileFetcher
+			ComsFileService comsFileService, BatchInputPartitioner inputPartitioner, VdypClient vdypClient
 	) {
-		super(comsFileService, vdypClient, fileFetcher);
+		super(comsFileService, vdypClient);
 		this.inputPartitioner = inputPartitioner;
 	}
 
@@ -41,12 +40,12 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 			VdypProjectionDetails projectionDetails = vdypClient.getProjectionDetails(projectionGUID);
 
 			List<FileMappingDetails> polyGonFiles = vdypClient
-					.getFileSetFiles(projectionGUID, projectionDetails.polygonFileSet().guid(), true);
+					.getFileSetFiles(projectionGUID, projectionDetails.polygonFileSet().guid());
 			List<FileMappingDetails> layerFiles = vdypClient
-					.getFileSetFiles(projectionGUID, projectionDetails.layerFileSet().guid(), true);
+					.getFileSetFiles(projectionGUID, projectionDetails.layerFileSet().guid());
 
-			String polygonFileSignedUrl = polyGonFiles.get(0).downloadURL();
-			String layerFileSignedUrl = layerFiles.get(0).downloadURL();
+			String polygonGuidStr = polyGonFiles.get(0).comsObjectGuid();
+			String layerGuidStr = layerFiles.get(0).comsObjectGuid();
 
 			// Download the inputs
 			Path jobBaseDir = Paths.get(baseDir);
@@ -57,15 +56,12 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 			Path layerPath = inputDir.resolve("layer.csv");
 
 			logger.debug(
-					"[GUID: {}] Downloading COMS inputs (Polygon:{}, Layer {}) to {}", jobGuid, polygonFileSignedUrl,
-					layerFileSignedUrl, inputDir
+					"[GUID: {}] Downloading COMS inputs (Polygon:{}, Layer {}) to {}", jobGuid, polygonGuidStr,
+					layerGuidStr, inputDir
 			);
 
-			fileFetcher.downloadToFile(polygonFileSignedUrl, polygonPath);
-			fileFetcher.downloadToFile(layerFileSignedUrl, layerPath);
-
-			// comsFileService.fetchObjectToFile(UUID.fromString(polygonGuidStr), polygonPath);
-			// comsFileService.fetchObjectToFile(UUID.fromString(layerGuidStr), layerPath);
+			comsFileService.fetchObjectToFile(UUID.fromString(polygonGuidStr), polygonPath);
+			comsFileService.fetchObjectToFile(UUID.fromString(layerGuidStr), layerPath);
 
 			inputPartitioner.partitionCsvFiles(polygonPath, layerPath, partitions.intValue(), jobBaseDir, jobGuid);
 		} catch (Exception e) {

@@ -26,11 +26,10 @@ public class VdypClient {
 				.retrieve().body(VdypProjectionDetails.class);
 	}
 
-	public List<FileMappingDetails> getFileSetFiles(String projectionGUID, String fileSetGUID, boolean downloadUrls) {
+	public List<FileMappingDetails> getFileSetFiles(String projectionGUID, String fileSetGUID) {
 		return vdypBackendRestClient.get()
 				.uri(
 						uriBuilder -> uriBuilder.path("/api/v8/projection/{projectionGUID}/fileset/{fileSetGUID}")
-								.queryParam("downloadUrls", downloadUrls) //
 								.build(projectionGUID, fileSetGUID)
 				).retrieve().body(new ParameterizedTypeReference<>() {
 				});
@@ -63,5 +62,4 @@ public class VdypClient {
 				.retrieve() //
 				.body(Void.class);
 	}
-
 }

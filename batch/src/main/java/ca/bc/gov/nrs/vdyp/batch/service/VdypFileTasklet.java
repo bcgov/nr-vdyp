@@ -6,7 +6,6 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 
-import ca.bc.gov.nrs.vdyp.batch.client.coms.PresignedFileFetcher;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -14,7 +13,6 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 public abstract class VdypFileTasklet implements Tasklet {
 	final ComsFileService comsFileService;
 	final VdypClient vdypClient;
-	final PresignedFileFetcher fileFetcher;
 	Long jobId;
 	String jobGuid;
 	String baseDir;
@@ -22,10 +20,9 @@ public abstract class VdypFileTasklet implements Tasklet {
 	String jobTimestamp;
 	String projectionGUID;
 
-	VdypFileTasklet(ComsFileService comsFileService, VdypClient vdypClient, PresignedFileFetcher fileFetcher) {
+	VdypFileTasklet(ComsFileService comsFileService, VdypClient vdypClient) {
 		this.comsFileService = comsFileService;
 		this.vdypClient = vdypClient;
-		this.fileFetcher = fileFetcher;
 	}
 
 	abstract void performVdypFileOperation() throws BatchException;
