@@ -9,7 +9,7 @@ public class ComsRestClientConfig {
 
 	@Bean
 	RestClient comsRestClient(ComsProperties props) {
-		return RestClient.builder().baseUrl(props.baseUrl()).defaultHeaders(h -> {
+		return RestClient.builder().baseUrl(props.baseUrl() + "/api/v1").defaultHeaders(h -> {
 			h.setBasicAuth(props.basicAuth().username(), props.basicAuth().password());
 
 		}).build();
