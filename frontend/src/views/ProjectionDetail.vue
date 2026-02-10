@@ -148,6 +148,7 @@ import {
   delay,
   getStatusIcon,
   downloadFile,
+  downloadURL,
   sanitizeFileName,
 } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
@@ -450,9 +451,11 @@ const handleDownloadReport = async () => {
       return
     }
 
-    const response = await fetch(fileMapping.downloadURL)
-    const blob = await response.blob()
-    downloadFile(blob, zipFileName)
+    // Causes a CORS error when connecting to NRS Object Store
+    //const response = await fetch(fileMapping.downloadURL)
+    //const blob = await response.blob()
+    //downloadFile(blob, zipFileName)
+    downloadURL(fileMapping.downloadURL, zipFileName);
 
     notificationStore.showSuccessMessage(
       MESSAGE.SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),
