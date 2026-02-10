@@ -46,6 +46,22 @@ const statusClass = computed(() => {
 }
 
 .status-text.status-draft {
+  font: var(--typography-bold-body);
   color: var(--typography-color-secondary);
+}
+
+.status-text.status-ready {
+  font: var(--typography-bold-body);
+  color: var(--support-border-color-success);
+}
+
+.status-text.status-failed {
+  font: var(--typography-bold-body);
+  color: var(--support-border-color-error);
+}
+
+.status-text.status-running {
+  font: var(--typography-bold-body);
+  color: var(--support-border-color-warning);
 }
 </style>

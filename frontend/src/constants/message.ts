@@ -184,6 +184,7 @@ export const PROGRESS_MSG = Object.freeze({
   RUNNING_PROJECTION: 'Running Projection...',
   SAVING_PROJECTION: 'Saving Projection...',
   CANCELLING_PROJECTION: 'Cancelling Projection...',
+  DOWNLOADING_PROJECTION: 'Downloading Projection...',
 })
 
 export const SUCCESS_MSG = Object.freeze({
@@ -204,6 +205,9 @@ export const SUCCESS_MSG = Object.freeze({
   BATCH_PROJECTION_STARTED:
     'Projection has been submitted for batch processing. You can check the status in the Projection List.',
   BATCH_PROJECTION_STARTED_TITLE: 'Projection Started',
+  DOWNLOAD_SUCCESS: (fileName: string) =>
+    `${fileName} was successfully downloaded to your device`,
+  DOWNLOAD_SUCCESS_TITLE: 'Download Complete',
 })
 
 export const PROJECTION_ERR = Object.freeze({
@@ -226,6 +230,9 @@ export const PROJECTION_ERR = Object.freeze({
   CANCEL_ALREADY_FAILED_TITLE: 'Projection Failed',
   CANCEL_NOT_RUNNING: 'Projection is no longer running.',
   CANCEL_NOT_RUNNING_TITLE: 'Cannot Cancel',
+  DOWNLOAD_FAILED: (fileName: string) =>
+    `${fileName} was unable to download to your device. Please try your download again.`,
+  DOWNLOAD_FAILED_TITLE: 'Download Failed',
 })
 
 export const FILE_REMOVAL_DIALOG = Object.freeze({

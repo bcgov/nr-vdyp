@@ -90,8 +90,9 @@
         </div>
       </v-list-item>
 
-      <!-- Delete: for all statuses -->
+      <!-- Delete: for Draft and Failed only (not Ready or Running) -->
       <v-list-item
+        v-if="status === PROJECTION_STATUS.DRAFT || status === PROJECTION_STATUS.FAILED"
         class="action-menu-item danger"
         @click="$emit(PROJECTION_USER_ACTION.DELETE)"
       >

@@ -259,7 +259,7 @@ export const PROJECTION_VIEW_MODE = Object.freeze({
   CREATE: 'create',
 })
 
-export const NEW_PROJECTION_TYPE = Object.freeze({
+export const PROJECTION_INPUT_METHOD = Object.freeze({
   INPUT_MODEL_PARAMETERS: 'inputModelParameters',
   FILE_UPLOAD: 'fileUpload',
 })

@@ -155,7 +155,7 @@
             />
           </template>
 
-          <!-- Ready: View, Duplicate, Download, Delete -->
+          <!-- Ready: View, Duplicate, Download -->
           <template v-else-if="projection.status === PROJECTION_STATUS.READY">
             <AppButton
               label="View"
@@ -178,16 +178,9 @@
               :icon-src="DownloadIcon"
               @click="$emit(PROJECTION_USER_ACTION.DOWNLOAD, projection.projectionGUID)"
             />
-            <AppButton
-              label="Delete"
-              variant="tertiary"
-              icon-position="top"
-              :icon-src="DeleteIcon"
-              @click="$emit(PROJECTION_USER_ACTION.DELETE, projection.projectionGUID)"
-            />
           </template>
 
-          <!-- Running: Cancel, Delete -->
+          <!-- Running: Cancel -->
           <template v-else-if="projection.status === PROJECTION_STATUS.RUNNING">
             <AppButton
               label="Cancel"
@@ -195,13 +188,6 @@
               icon-position="top"
               :icon-src="CancelIcon"
               @click="$emit(PROJECTION_USER_ACTION.CANCEL, projection.projectionGUID)"
-            />
-            <AppButton
-              label="Delete"
-              variant="tertiary"
-              icon-position="top"
-              :icon-src="DeleteIcon"
-              @click="$emit(PROJECTION_USER_ACTION.DELETE, projection.projectionGUID)"
             />
           </template>
         </div>
