@@ -185,6 +185,7 @@ export const PROGRESS_MSG = Object.freeze({
   SAVING_PROJECTION: 'Saving Projection...',
   CANCELLING_PROJECTION: 'Cancelling Projection...',
   DOWNLOADING_PROJECTION: 'Downloading Projection...',
+  LOADING_RESULTS: 'Loading Projection Results...',
 })
 
 export const SUCCESS_MSG = Object.freeze({
@@ -233,6 +234,8 @@ export const PROJECTION_ERR = Object.freeze({
   DOWNLOAD_FAILED: (fileName: string) =>
     `${fileName} was unable to download to your device. Please try your download again.`,
   DOWNLOAD_FAILED_TITLE: 'Download Failed',
+  RESULTS_LOAD_FAILED: 'Failed to load projection results. Please try downloading the report instead.',
+  RESULTS_LOAD_FAILED_TITLE: 'Results Load Failed',
 })
 
 export const FILE_REMOVAL_DIALOG = Object.freeze({

@@ -118,11 +118,12 @@
   </v-container>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useReportingStore } from '@/stores/reportingStore'
+import { useProjectionStore } from '@/stores/projection/projectionStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import {
   AppProgressCircular,
@@ -147,11 +148,11 @@ import { runProjectionFileUpload } from '@/services/projection/fileUploadService
 import {
   delay,
   getStatusIcon,
-  downloadFile,
   downloadURL,
   sanitizeFileName,
+  checkZipForErrors,
 } from '@/utils/util'
-import { logSuccessMessage } from '@/utils/messageHandler'
+import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 import { DownloadIcon } from '@/assets/'
 
 const isProgressVisible = ref(false)
@@ -163,6 +164,7 @@ const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const fileUploadStore = useFileUploadStore()
 const reportingStore = useReportingStore()
+const projectionStore = useProjectionStore()
 const notificationStore = useNotificationStore()
 
 const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
@@ -240,11 +242,127 @@ const isFileUploadPanelsVisible = computed(() => {
   )
 })
 
+/**
+ * Enables reporting tabs, navigates to the appropriate tab, and shows a result message.
+ * Navigates to Error Messages tab if errors are found, otherwise Model Report tab.
+ */
+const enableTabsAndNavigate = async (hasErrors: boolean) => {
+  const isInputModel = appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+
+  if (isInputModel) {
+    reportingStore.modelParamEnableTabs()
+    await nextTick()
+    setTimeout(() => {
+      modelParamActiveTab.value = hasErrors
+        ? CONSTANTS.MODEL_PARAM_TAB_INDEX.VIEW_ERROR_MESSAGES
+        : CONSTANTS.MODEL_PARAM_TAB_INDEX.MODEL_REPORT
+    }, 100)
+  } else {
+    reportingStore.fileUploadEnableTabs()
+    await nextTick()
+    setTimeout(() => {
+      fileUploadActiveTab.value = hasErrors
+        ? CONSTANTS.FILE_UPLOAD_TAB_INDEX.VIEW_ERROR_MESSAGES
+        : CONSTANTS.FILE_UPLOAD_TAB_INDEX.MODEL_REPORT
+    }, 100)
+  }
+
+  const successMsg = isInputModel
+    ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT
+    : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT
+  const errorMsg = isInputModel
+    ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR
+    : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT_W_ERR
+
+  if (hasErrors) {
+    logErrorMessage(errorMsg, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_W_ERR_TITLE)
+  } else {
+    logSuccessMessage(successMsg, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_TITLE)
+  }
+}
+
+/**
+ * Fetches the result zip file for a READY projection, parses it,
+ * populates the report tabs, and navigates to the appropriate tab.
+ * Navigates to Error Messages tab if errors are found, otherwise Model Report tab.
+ */
+const fetchAndPopulateResults = async () => {
+  const projectionGUID = appStore.currentProjectionGUID
+  if (!projectionGUID) return
+
+  try {
+    isProgressVisible.value = true
+    progressMessage.value = MESSAGE.PROGRESS_MSG.LOADING_RESULTS
+
+    const projectionModel = await getProjectionById(projectionGUID)
+    const resultFileSetGUID = projectionModel.resultFileSet?.projectionFileSetGUID
+
+    if (!resultFileSetGUID) {
+      console.warn('No result file set found for projection')
+      return
+    }
+
+    const files = await getFileSetFiles(projectionGUID, resultFileSetGUID)
+    if (!files || files.length === 0) {
+      console.warn('No files found in result file set')
+      return
+    }
+
+    const resultFile = files[0]
+    if (!resultFile.fileMappingGUID) {
+      console.warn('No file mapping GUID found')
+      return
+    }
+
+    const fileMapping = await getFileForDownload(
+      projectionGUID,
+      resultFileSetGUID,
+      resultFile.fileMappingGUID,
+    )
+
+    if (!fileMapping.downloadURL) {
+      console.warn('No download URL found')
+      return
+    }
+
+    // Fetch the zip blob from the download URL
+    const response = await fetch(fileMapping.downloadURL)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch zip file: ${response.status} ${response.statusText}`)
+    }
+    const zipBlob = await response.blob()
+
+    const reportTitle =
+      appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+        ? modelParameterStore.reportTitle
+        : fileUploadStore.reportTitle
+    const zipFileName = sanitizeFileName(`${reportTitle || 'Projection'}_All Files`) + '.zip'
+
+    const hasErrors = await checkZipForErrors(zipBlob)
+    await projectionStore.handleZipResponse(zipBlob, zipFileName)
+
+    await enableTabsAndNavigate(hasErrors)
+  } catch (error) {
+    console.error('Error fetching and populating results:', error)
+    notificationStore.showErrorMessage(
+      MESSAGE.PROJECTION_ERR.RESULTS_LOAD_FAILED,
+      MESSAGE.PROJECTION_ERR.RESULTS_LOAD_FAILED_TITLE,
+    )
+  } finally {
+    isProgressVisible.value = false
+  }
+}
+
 onMounted(() => {
   // Only initialize species groups for new projections
   // For existing projections (view/edit), the values are already restored from the backend
   if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD) {
     fileUploadStore.initializeSpeciesGroups()
+  }
+
+  // For READY projections, automatically fetch and display results
+  if (isReady.value) {
+    fetchAndPopulateResults()
   }
 })
 
