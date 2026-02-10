@@ -42,6 +42,14 @@
             </v-list-item>
           </v-list>
         </v-menu>
+        <div v-else-if="isReady" class="ready-status-container">
+          <img
+            :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
+            alt="Ready"
+            class="ready-status-icon"
+          />
+          <span class="ready-status-text">Ready</span>
+        </div>
       </div>
     </div>
     <template
@@ -50,10 +58,20 @@
         CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
       "
     >
-      <AppTabs
-        v-model:currentTab="modelParamActiveTab"
-        :tabs="modelParamTabs"
-      />
+      <div class="tabs-with-download">
+        <AppTabs
+          v-model:currentTab="modelParamActiveTab"
+          :tabs="modelParamTabs"
+        />
+        <AppButton
+          label="Download Report"
+          :icon-src="DownloadIcon"
+          variant="primary"
+          :is-disabled="!isDownloadReady"
+          class="download-report-button"
+          @click="handleDownloadReport"
+        />
+      </div>
       <template v-if="isModelParameterPanelsVisible">
         <SiteInfoPanel class="panel-spacing" />
         <StandInfoPanel class="panel-spacing" />
@@ -70,10 +88,20 @@
       </template>
     </template>
     <template v-else>
-      <AppTabs
-        v-model:currentTab="fileUploadActiveTab"
-        :tabs="fileUploadTabs"
-      />
+      <div class="tabs-with-download">
+        <AppTabs
+          v-model:currentTab="fileUploadActiveTab"
+          :tabs="fileUploadTabs"
+        />
+        <AppButton
+          label="Download Report"
+          :icon-src="DownloadIcon"
+          variant="primary"
+          :is-disabled="!isDownloadReady"
+          class="download-report-button"
+          @click="handleDownloadReport"
+        />
+      </div>
       <template v-if="isFileUploadPanelsVisible">
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
@@ -99,6 +127,7 @@ import { useNotificationStore } from '@/stores/common/notificationStore'
 import {
   AppProgressCircular,
   AppTabs,
+  AppButton,
 } from '@/components'
 import {
   ReportingContainer,
@@ -111,15 +140,18 @@ import {
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE } from '@/constants'
-import { mapProjectionStatus, cancelProjection, getProjectionById } from '@/services/projectionService'
+import { mapProjectionStatus, cancelProjection, getProjectionById, getFileSetFiles, getFileForDownload } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runProjection } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
 import {
   delay,
   getStatusIcon,
+  downloadFile,
+  sanitizeFileName,
 } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
+import { DownloadIcon } from '@/assets/'
 
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
@@ -133,6 +165,8 @@ const reportingStore = useReportingStore()
 const notificationStore = useNotificationStore()
 
 const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
+const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
+const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
 
 const modelParamTabs = computed<Tab[]>(() => [
   {
@@ -354,6 +388,86 @@ const cancelRunHandler = async () => {
     isProgressVisible.value = false
   }
 }
+
+const handleDownloadReport = async () => {
+  const projectionGUID = appStore.currentProjectionGUID
+  if (!projectionGUID) {
+    notificationStore.showErrorMessage(MESSAGE.PROJECTION_ERR.MISSING_GUID)
+    return
+  }
+
+  const reportTitle =
+    appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      ? modelParameterStore.reportTitle
+      : fileUploadStore.reportTitle
+  const zipFileName = sanitizeFileName(`${reportTitle || 'Projection'}_All Files`) + '.zip'
+
+  isProgressVisible.value = true
+  progressMessage.value = MESSAGE.PROGRESS_MSG.DOWNLOADING_PROJECTION
+
+  try {
+    const projectionModel = await getProjectionById(projectionGUID)
+    const resultFileSetGUID = projectionModel.resultFileSet?.projectionFileSetGUID
+
+    if (!resultFileSetGUID) {
+      notificationStore.showErrorMessage(
+        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+      )
+      return
+    }
+
+    const files = await getFileSetFiles(projectionGUID, resultFileSetGUID)
+
+    if (!files || files.length === 0) {
+      notificationStore.showErrorMessage(
+        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+      )
+      return
+    }
+
+    const resultFile = files[0]
+    if (!resultFile.fileMappingGUID) {
+      notificationStore.showErrorMessage(
+        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+      )
+      return
+    }
+
+    const fileMapping = await getFileForDownload(
+      projectionGUID,
+      resultFileSetGUID,
+      resultFile.fileMappingGUID,
+    )
+
+    if (!fileMapping.downloadURL) {
+      notificationStore.showErrorMessage(
+        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+      )
+      return
+    }
+
+    const response = await fetch(fileMapping.downloadURL)
+    const blob = await response.blob()
+    downloadFile(blob, zipFileName)
+
+    notificationStore.showSuccessMessage(
+      MESSAGE.SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),
+      MESSAGE.SUCCESS_MSG.DOWNLOAD_SUCCESS_TITLE,
+    )
+  } catch (err) {
+    console.error('Error downloading projection files:', err)
+    notificationStore.showErrorMessage(
+      MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+      MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+    )
+  } finally {
+    isProgressVisible.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -394,7 +508,7 @@ h3 {
 }
 
 .running-status-text {
-  font: var(--typography-regular-body);
+  font: var(--typography-bold-h5);
   color: var(--support-border-color-warning);
 }
 
@@ -429,7 +543,41 @@ h3 {
   color: var(--typography-color-primary);
 }
 
+.ready-status-container {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+}
+
+.ready-status-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.ready-status-text {
+  font: var(--typography-bold-h5);
+  color: var(--support-border-color-success);
+}
+
 .panel-spacing {
   margin-top: var(--layout-margin-medium);
+}
+
+.tabs-with-download {
+  position: relative;
+}
+
+.download-report-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.download-report-button :deep(.button-icon-img) {
+  filter: brightness(0) invert(1);
 }
 </style>

@@ -15,13 +15,13 @@
         <v-list>
           <v-list-item
             class="new-projection-menu-item"
-            @click="handleNewProjection(NEW_PROJECTION_TYPE.INPUT_MODEL_PARAMETERS)"
+            @click="handleNewProjection(PROJECTION_INPUT_METHOD.INPUT_MODEL_PARAMETERS)"
           >
             <v-list-item-title>Manual Input</v-list-item-title>
           </v-list-item>
           <v-list-item
             class="new-projection-menu-item"
-            @click="handleNewProjection(NEW_PROJECTION_TYPE.FILE_UPLOAD)"
+            @click="handleNewProjection(PROJECTION_INPUT_METHOD.FILE_UPLOAD)"
           >
             <v-list-item-title>File Upload</v-list-item-title>
           </v-list-item>
@@ -84,8 +84,9 @@ import { useRouter } from 'vue-router'
 import type { Projection, TableHeader, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
-import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, NEW_PROJECTION_TYPE, ROUTE_PATH } from '@/constants/constants'
+import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH } from '@/constants/constants'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
+import { downloadFile, sanitizeFileName } from '@/utils/util'
 import { AppButton, AppProgressCircular } from '@/components'
 import { ProjectionTable, ProjectionCardList, ProjectionPagination } from '@/components/projection'
 import {
@@ -98,6 +99,7 @@ import {
   isProjectionReadOnly,
   mapProjectionStatus,
   getFileSetFiles,
+  getFileForDownload,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -370,8 +372,79 @@ const handleDuplicate = (projectionGUID: string) => {
   console.log('Duplicate projection:', projectionGUID)
 }
 
-const handleDownload = (projectionGUID: string) => {
-  console.log('Download projection:', projectionGUID)
+const handleDownload = async (projectionGUID: string) => {
+  const projection = projections.value.find(p => p.projectionGUID === projectionGUID)
+  const reportTitle = projection?.title || 'Projection'
+  const zipFileName = sanitizeFileName(`${reportTitle}_All Files`) + '.zip'
+
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.DOWNLOADING_PROJECTION
+
+  try {
+    // Get full projection model to access resultFileSet
+    const projectionModel = await getProjectionById(projectionGUID)
+    const resultFileSetGUID = projectionModel.resultFileSet?.projectionFileSetGUID
+
+    if (!resultFileSetGUID) {
+      notificationStore.showErrorMessage(
+        PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+      )
+      return
+    }
+
+    // Get list of files in the result fileset
+    const files = await getFileSetFiles(projectionGUID, resultFileSetGUID)
+
+    if (!files || files.length === 0) {
+      notificationStore.showErrorMessage(
+        PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+      )
+      return
+    }
+
+    // The backend stores results as a zip file — download it directly and rename
+    const resultFile = files[0]
+    if (!resultFile.fileMappingGUID) {
+      notificationStore.showErrorMessage(
+        PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+      )
+      return
+    }
+
+    const fileMapping = await getFileForDownload(
+      projectionGUID,
+      resultFileSetGUID,
+      resultFile.fileMappingGUID,
+    )
+
+    if (!fileMapping.downloadURL) {
+      notificationStore.showErrorMessage(
+        PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+      )
+      return
+    }
+
+    const response = await fetch(fileMapping.downloadURL)
+    const blob = await response.blob()
+    downloadFile(blob, zipFileName)
+
+    notificationStore.showSuccessMessage(
+      SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),
+      SUCCESS_MSG.DOWNLOAD_SUCCESS_TITLE,
+    )
+  } catch (err) {
+    console.error('Error downloading projection files:', err)
+    notificationStore.showErrorMessage(
+      PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
+      PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+    )
+  } finally {
+    isProgressVisible.value = false
+  }
 }
 
 const handleDelete = async (projectionGUID: string) => {
@@ -449,11 +522,11 @@ const handleRowClick = async (projection: Projection) => {
   await loadAndNavigateToProjection(projection.projectionGUID, isViewMode)
 }
 
-const handleNewProjection = (type: (typeof NEW_PROJECTION_TYPE)[keyof typeof NEW_PROJECTION_TYPE]) => {
+const handleNewProjection = (type: (typeof PROJECTION_INPUT_METHOD)[keyof typeof PROJECTION_INPUT_METHOD]) => {
   // Reset app store for new projection
   appStore.resetForNewProjection()
 
-  if (type === NEW_PROJECTION_TYPE.INPUT_MODEL_PARAMETERS) {
+  if (type === PROJECTION_INPUT_METHOD.INPUT_MODEL_PARAMETERS) {
     appStore.setModelSelection(MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
     // Reset model parameter store
     modelParameterStore.resetStore()
