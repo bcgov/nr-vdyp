@@ -146,10 +146,16 @@ public class BatchInputPartitioner {
 				polygonWriters.get(partition).println(polygonLine);
 				polygonLine = readNextNonBlankLine(polygonReader);
 
+				if (layerLine == null) {
+					continue;
+					// If we have reached the end of the layer file process polygons only
+				}
+
 				// write all matching layer lines to the same partition
 				// First advance past orphan layer lines featureId < polygonFeatureId
 				layerFeatureId = BatchUtils.extractFeatureIdLong(layerLine);
-				while (layerFeatureId == null || layerFeatureId.compareTo(polygonFeatureId) < 0) {
+				while (layerLine != null
+						&& (layerFeatureId == null || layerFeatureId.compareTo(polygonFeatureId) < 0)) {
 					handleOrphanLayerLine(warningWriter, layerLine, jobGuid);
 					layerLine = readNextNonBlankLine(layerReader);
 					layerFeatureId = BatchUtils.extractFeatureIdLong(layerLine);
