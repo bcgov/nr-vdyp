@@ -413,6 +413,21 @@ export const decrementItemBySpinButton = (
  */
 export const downloadFile = (blob: Blob, fileName: string) => {
   const url = URL.createObjectURL(blob)
+  downloadURL(url, fileName);
+}
+
+/**
+ * Downloads a Blob as a file by triggering a browser download.
+ * Creates a temporary URL and simulates a link click to download the file,
+ * regardless of whether the file is a CSV, ZIP, or any other type.
+ *
+ * @param blob - The Blob object containing the file data.
+ * @param fileName - The name of the file to save (e.g., "data.zip" or "data.csv").
+ * @example
+ *   const fileBlob = new Blob(["sample content"], { type: "application/octet-stream" });
+ *   downloadFile(fileBlob, "example.zip"); // Downloads "example.zip"
+ */
+export const downloadURL = (url: string, fileName: string) => {
   const a = document.createElement('a')
   a.href = url
   a.download = fileName
@@ -421,7 +436,6 @@ export const downloadFile = (blob: Blob, fileName: string) => {
   a.remove()
   URL.revokeObjectURL(url)
 }
-
 /**
  * Extracts the zip file name from the response headers.
  * It checks for a 'content-disposition' header and extracts the file name.
