@@ -451,10 +451,6 @@ const handleDownloadReport = async () => {
       return
     }
 
-    // Causes a CORS error when connecting to NRS Object Store
-    //const response = await fetch(fileMapping.downloadURL)
-    //const blob = await response.blob()
-    //downloadFile(blob, zipFileName)
     downloadURL(fileMapping.downloadURL, zipFileName);
 
     notificationStore.showSuccessMessage(
