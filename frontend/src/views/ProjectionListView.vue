@@ -86,7 +86,7 @@ import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
 import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH } from '@/constants/constants'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
-import { downloadFile, sanitizeFileName } from '@/utils/util'
+import { downloadFile, downloadURL, sanitizeFileName } from '@/utils/util'
 import { AppButton, AppProgressCircular } from '@/components'
 import { ProjectionTable, ProjectionCardList, ProjectionPagination } from '@/components/projection'
 import {
@@ -428,9 +428,7 @@ const handleDownload = async (projectionGUID: string) => {
       return
     }
 
-    const response = await fetch(fileMapping.downloadURL)
-    const blob = await response.blob()
-    downloadFile(blob, zipFileName)
+    downloadURL(fileMapping.downloadURL, zipFileName);
 
     notificationStore.showSuccessMessage(
       SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),
