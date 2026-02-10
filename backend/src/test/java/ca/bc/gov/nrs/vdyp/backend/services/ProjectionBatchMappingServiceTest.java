@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -122,10 +123,10 @@ class ProjectionBatchMappingServiceTest {
 		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
 		mappingEntity.setProjection(projectionEntity);
 
-		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(mappingEntity));
 
 		// Act
-		service.deleteMappingForProjection(projectionEntity);
+		service.deleteMappingsForProjection(projectionEntity);
 
 		// Verify delete called
 		verify(repository, times(1)).delete(mappingEntity);
@@ -139,10 +140,10 @@ class ProjectionBatchMappingServiceTest {
 
 		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
 
-		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of());
 
 		// Act
-		service.deleteMappingForProjection(projectionEntity);
+		service.deleteMappingsForProjection(projectionEntity);
 
 		// Verify delete called
 		verify(repository, never()).delete(any());
