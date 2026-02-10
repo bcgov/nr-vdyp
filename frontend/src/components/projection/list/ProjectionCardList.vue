@@ -155,7 +155,7 @@
             />
           </template>
 
-          <!-- Ready: View, Duplicate, Download -->
+          <!-- Ready: View, Duplicate, Download, Delete -->
           <template v-else-if="projection.status === PROJECTION_STATUS.READY">
             <AppButton
               label="View"
@@ -177,6 +177,13 @@
               icon-position="top"
               :icon-src="DownloadIcon"
               @click="$emit(PROJECTION_USER_ACTION.DOWNLOAD, projection.projectionGUID)"
+            />
+            <AppButton
+              label="Delete"
+              variant="tertiary"
+              icon-position="top"
+              :icon-src="DeleteIcon"
+              @click="$emit(PROJECTION_USER_ACTION.DELETE, projection.projectionGUID)"
             />
           </template>
 

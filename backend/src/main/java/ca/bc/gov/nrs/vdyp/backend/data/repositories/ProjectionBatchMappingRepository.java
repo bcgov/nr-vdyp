@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.data.repositories;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,4 +14,7 @@ public class ProjectionBatchMappingRepository implements PanacheRepositoryBase<P
 		return find("projection.projectionGUID = ?1", projectionGUID).singleResultOptional();
 	}
 
+	public List<ProjectionBatchMappingEntity> listByProjectionGUID(UUID projectionGUID) {
+		return list("projection.projectionGUID = ?1", projectionGUID);
+	}
 }

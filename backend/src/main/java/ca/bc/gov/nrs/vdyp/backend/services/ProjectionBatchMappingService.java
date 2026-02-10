@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -77,10 +78,10 @@ public class ProjectionBatchMappingService {
 	}
 
 	@Transactional
-	public void deleteMappingForProjection(ProjectionEntity projectionEntity) {
-		Optional<ProjectionBatchMappingEntity> entityOpt = repository
-				.findByProjectionGUID(projectionEntity.getProjectionGUID());
+	public void deleteMappingsForProjection(ProjectionEntity projectionEntity) {
+		List<ProjectionBatchMappingEntity> entityList = repository
+				.listByProjectionGUID(projectionEntity.getProjectionGUID());
 
-		entityOpt.ifPresent(entity -> repository.delete(entity));
+		entityList.forEach(e -> repository.delete(e));
 	}
 }

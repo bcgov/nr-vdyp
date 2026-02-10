@@ -469,7 +469,7 @@ class ProjectionServiceTest {
 		verify(fileSetService).deleteFileSetById(fsId);
 		verify(fileSetService).deleteFileSetById(layer.getProjectionFileSetGUID());
 		verify(fileSetService).deleteFileSetById(results.getProjectionFileSetGUID());
-		verify(batchMappingService).deleteMappingForProjection(entity);
+		verify(batchMappingService).deleteMappingsForProjection(entity);
 	}
 
 	@Test
