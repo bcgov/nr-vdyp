@@ -332,11 +332,7 @@ const fetchAndPopulateResults = async () => {
     }
     const zipBlob = await response.blob()
 
-    const reportTitle =
-      appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-        ? modelParameterStore.reportTitle
-        : fileUploadStore.reportTitle
-    const zipFileName = sanitizeFileName(`${reportTitle || 'Projection'}_All Files`) + '.zip'
+    const zipFileName = resultFile.filename || CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
 
     const hasErrors = await checkZipForErrors(zipBlob)
     await projectionStore.handleZipResponse(zipBlob, zipFileName)
@@ -486,6 +482,9 @@ const cancelRunHandler = async () => {
 
       if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
         notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED_TITLE)
+        isProgressVisible.value = false
+        await fetchAndPopulateResults()
+        return
       } else if (latestStatus === CONSTANTS.PROJECTION_STATUS.FAILED) {
         notificationStore.showWarningMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED_TITLE)
       } else {
@@ -569,7 +568,7 @@ const handleDownloadReport = async () => {
       return
     }
 
-    downloadURL(fileMapping.downloadURL, zipFileName);
+    downloadURL(fileMapping.downloadURL, zipFileName)
 
     notificationStore.showSuccessMessage(
       MESSAGE.SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),

@@ -404,7 +404,7 @@ const handleDownload = async (projectionGUID: string) => {
       return
     }
 
-    // The backend stores results as a zip file — download it directly and rename
+    // The backend stores results as a zip file — download it directly
     const resultFile = files[0]
     if (!resultFile.fileMappingGUID) {
       notificationStore.showErrorMessage(
