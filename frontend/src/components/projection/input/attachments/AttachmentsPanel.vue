@@ -49,6 +49,7 @@
                 <!-- Edit mode -->
                 <template v-else>
                   <v-file-upload
+                    :key="polygonUploadKey"
                     v-model="polygonFiles"
                     :disabled="isInputDisabled || fileUploadStore.isUploadingPolygon"
                     :loading="fileUploadStore.isUploadingPolygon"
@@ -94,6 +95,7 @@
                 <!-- Edit mode: Show existing file info and allow replacement -->
                 <template v-else>
                   <v-file-upload
+                    :key="layerUploadKey"
                     v-model="layerFiles"
                     :disabled="isInputDisabled || fileUploadStore.isUploadingLayer"
                     :loading="fileUploadStore.isUploadingLayer"
@@ -164,6 +166,10 @@ const alertDialogStore = useAlertDialogStore()
 // Local file arrays for v-file-upload (it uses array model)
 const polygonFiles = ref<File[]>([])
 const layerFiles = ref<File[]>([])
+
+// Keys to force v-file-upload re-render after clearing, so re-selecting the same file triggers upload
+const polygonUploadKey = ref(0)
+const layerUploadKey = ref(0)
 
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
@@ -324,6 +330,7 @@ const uploadPolygonFile = async (file: File) => {
   const isValid = await validatePolygonFile(file)
   if (!isValid) {
     polygonFiles.value = []
+    polygonUploadKey.value++
     return
   }
 
@@ -361,11 +368,13 @@ const uploadPolygonFile = async (file: File) => {
 
     // Clear the file input
     polygonFiles.value = []
+    polygonUploadKey.value++
     fileUploadStore.polygonFile = null
   } catch (error) {
     console.error('Error uploading polygon file:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.FILE_UPLOAD_FAILED, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
     polygonFiles.value = []
+    polygonUploadKey.value++
   } finally {
     fileUploadStore.isUploadingPolygon = false
   }
@@ -383,6 +392,7 @@ const uploadLayerFile = async (file: File) => {
   const isValid = await validateLayerFile(file)
   if (!isValid) {
     layerFiles.value = []
+    layerUploadKey.value++
     return
   }
 
@@ -420,11 +430,13 @@ const uploadLayerFile = async (file: File) => {
 
     // Clear the file input
     layerFiles.value = []
+    layerUploadKey.value++
     fileUploadStore.layerFile = null
   } catch (error) {
     console.error('Error uploading layer file:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.FILE_UPLOAD_FAILED, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
     layerFiles.value = []
+    layerUploadKey.value++
   } finally {
     fileUploadStore.isUploadingLayer = false
   }
