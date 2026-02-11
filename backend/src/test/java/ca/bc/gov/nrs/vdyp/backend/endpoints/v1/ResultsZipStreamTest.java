@@ -41,7 +41,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 
 @ExtendWith(MockitoExtension.class)
-public class ResultsZipStreamTest {
+class ResultsZipStreamTest {
 	@Mock
 	ProjectionService projectionService;
 	@Mock
@@ -119,7 +119,6 @@ public class ResultsZipStreamTest {
 		UUID resultFileGuid = UUID.randomUUID();
 		VDYPUserModel user = user(ownerGuid);
 		URL url = new URL("https://example.com/out.zip");
-		byte[] zipBytes = new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x11, 0x22, 0x33 };
 
 		when(currentUser.getUser()).thenReturn(user);
 
@@ -141,10 +140,8 @@ public class ResultsZipStreamTest {
 
 		Response resp = endpoint.streamResultsZip(guid, mock(HttpHeaders.class));
 		StreamingOutput so = (StreamingOutput) resp.getEntity();
-
-		WebApplicationException ex = assertThrows(
-				WebApplicationException.class, () -> so.write(new ByteArrayOutputStream())
-		);
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		WebApplicationException ex = assertThrows(WebApplicationException.class, () -> so.write(outputStream));
 
 		assertEquals(404, ex.getResponse().getStatus());
 		assertEquals(MediaType.TEXT_PLAIN_TYPE, ex.getResponse().getMediaType());
@@ -161,7 +158,6 @@ public class ResultsZipStreamTest {
 		UUID resultFileGuid = UUID.randomUUID();
 		VDYPUserModel user = user(ownerGuid);
 		URL url = new URL("https://example.com/out.zip");
-		byte[] zipBytes = new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x11, 0x22, 0x33 };
 
 		when(currentUser.getUser()).thenReturn(user);
 
@@ -183,9 +179,9 @@ public class ResultsZipStreamTest {
 
 		Response resp = endpoint.streamResultsZip(guid, mock(HttpHeaders.class));
 		StreamingOutput so = (StreamingOutput) resp.getEntity();
-
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		WebApplicationException ex = assertThrows(
-				WebApplicationException.class, () -> so.write(new ByteArrayOutputStream())
+				WebApplicationException.class, () -> so.write(outputStream)
 		);
 
 		assertEquals(500, ex.getResponse().getStatus());
