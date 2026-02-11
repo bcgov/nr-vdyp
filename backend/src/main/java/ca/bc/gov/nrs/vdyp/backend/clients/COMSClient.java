@@ -8,6 +8,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSBucket;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSCreateBucketRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
+import ca.bc.gov.nrs.vdyp.backend.model.COMSObjectVersion;
 import io.quarkus.rest.client.reactive.ClientBasicAuth;
 import jakarta.json.JsonString;
 import jakarta.ws.rs.Consumes;
@@ -88,6 +89,17 @@ public interface COMSClient {
 	@DELETE
 	@Path("/object/{objectId}")
 	Response deleteObject(@PathParam("objectId") String objectId);
+
+	@DELETE
+	@Path("/object/{objectId}")
+	Response deleteObjectVersion(
+			@PathParam("objectId") String objectId, //
+			@QueryParam("s3VersionId") String s3VersionId
+	);
+
+	@GET
+	@Path("/object/{objectId}/version")
+	List<COMSObjectVersion> getObjectVersions(@PathParam("objectId") String objectId);
 
 	@GET
 	@Path("/object/{objectId}")

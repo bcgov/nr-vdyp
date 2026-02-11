@@ -20,6 +20,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.FileMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
+import ca.bc.gov.nrs.vdyp.backend.model.COMSObjectVersion;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -129,13 +130,26 @@ public class FileMappingService {
 	}
 
 	private void deleteFile(FileMappingEntity entity) throws ProjectionServiceException {
-		UUID comsObjectID = entity.getComsObjectGUID();
-		try (Response response = comsClient.deleteObject(comsObjectID.toString())) {
-			if (response.getStatusInfo().getStatusCode() == Response.Status.OK.getStatusCode()) {
-				repository.delete(entity);
-			} else {
-				throw new ProjectionServiceException("Could not delete object in COMS");
+		String comsObjectID = entity.getComsObjectGUID().toString();
+
+		List<COMSObjectVersion> versions = comsClient.getObjectVersions(comsObjectID);
+
+		if (versions != null && !versions.isEmpty()) {
+			// Hard delete: remove each version individually
+			for (COMSObjectVersion version : versions) {
+				try (Response response = comsClient.deleteObjectVersion(comsObjectID, version.s3VersionId())) {
+					if (response.getStatusInfo().getStatusCode() != Response.Status.OK.getStatusCode()) {
+						throw new ProjectionServiceException(
+								String.format(
+										"Could not delete version %s of object %s in COMS", version.s3VersionId(),
+										comsObjectID
+								)
+						);
+					}
+				}
 			}
-		}
+		} 
+
+		repository.delete(entity);
 	}
 }
