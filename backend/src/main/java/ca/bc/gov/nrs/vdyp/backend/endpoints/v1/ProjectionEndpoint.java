@@ -1,6 +1,10 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -14,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
+import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
@@ -24,6 +29,8 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.quarkus.security.Authenticated;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -35,13 +42,20 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.StreamingOutput;
 
 @Path("/api/v8/projection")
 @Tag(name = "Projection API", description = "the projection API")
 @RegisterForReflection
+@ApplicationScoped
 public class ProjectionEndpoint implements Endpoint {
 
 	public static final Logger logger = LoggerFactory.getLogger(ProjectionEndpoint.class);
@@ -51,9 +65,17 @@ public class ProjectionEndpoint implements Endpoint {
 
 	private static ObjectMapper mapper = new ObjectMapper();
 
+	private final Client client;
+
+	@Inject
 	public ProjectionEndpoint(ProjectionService service, CurrentVDYPUser currentUser) {
+		this(service, currentUser, ClientBuilder.newBuilder().build());
+	}
+
+	ProjectionEndpoint(ProjectionService service, CurrentVDYPUser currentUser, Client client) {
 		this.projectionService = service;
 		this.currentUser = currentUser;
+		this.client = client;
 	}
 
 	@jakarta.ws.rs.POST
@@ -290,6 +312,54 @@ public class ProjectionEndpoint implements Endpoint {
 	) throws ProjectionServiceException {
 		var found = projectionService.getAllFileSetFiles(projectionGUID, fileSetGUID, currentUser.getUser());
 		return Response.status(Status.OK).entity(found).build();
+	}
+
+	@GET
+	@Authenticated
+	@Path("/{projectionGUID}/resultZip")
+	@Produces("application/zip")
+	@Tag(name = "Results Zip", description = "Stream the results ZIP from s3 storage to prevent CORS issues")
+	public Response streamResultsZip(@PathParam("projectionGUID") UUID projectionGUID, @Context HttpHeaders headers)
+			throws ProjectionServiceException {
+		var projection = projectionService.getProjectionEntity(projectionGUID);
+		List<FileMappingModel> resultFiles = projectionService.getAllFileSetFiles(
+				projectionGUID, projection.getResultFileSet().getProjectionFileSetGUID(), currentUser.getUser()
+		);
+		if (resultFiles.isEmpty()) {
+			throw new WebApplicationException(
+					Response.status(Status.NOT_FOUND).entity("No result files found for projection " + projectionGUID)
+							.type(MediaType.TEXT_PLAIN).build()
+			);
+		}
+		FileMappingModel file = projectionService.getFileForDownload(
+				projectionGUID, projection.getResultFileSet().getProjectionFileSetGUID(),
+				UUID.fromString(resultFiles.get(0).getFileMappingGUID()), currentUser.getUser()
+		);
+
+		URL upstreamUrl = file.getDownloadURL();
+
+		StreamingOutput stream = (OutputStream out) -> {
+			Response upstream = client.target(upstreamUrl.toString()).request("application/zip").get();
+
+			try (upstream) {
+				if (upstream.getStatus() != 200) {
+					// Propagate error cleanly (don’t stream partial garbage)
+					throw new WebApplicationException(
+							Response.status(upstream.getStatus()).entity(upstream.readEntity(String.class))
+									.type(MediaType.TEXT_PLAIN).build()
+					);
+				}
+
+				try (InputStream in = upstream.readEntity(InputStream.class)) {
+					in.transferTo(out); // Java 9+
+					out.flush();
+				}
+			}
+		};
+
+		return Response.ok(stream).header(
+				HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"vdyp_output_" + projectionGUID + ".zip\""
+		).build();
 	}
 
 	@POST
