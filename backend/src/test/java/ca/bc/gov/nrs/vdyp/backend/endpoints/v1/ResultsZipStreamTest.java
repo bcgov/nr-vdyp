@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
+import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.fileMappingModel;
+import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.fileSetEntity;
+import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.projectionEntity;
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.user;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -13,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +26,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
@@ -60,15 +66,23 @@ public class ResultsZipStreamTest {
 	@Test
 	void streamResultsZip_ok_returnsStreamingOutput_and_streamsBytes_and_setsContentDisposition() throws Exception {
 		UUID guid = UUID.randomUUID();
-		VDYPUserModel user = user(UUID.randomUUID());
+		UUID resultFSGuid = UUID.randomUUID();
+		UUID ownerGuid = UUID.randomUUID();
+		UUID resultFileGuid = UUID.randomUUID();
+		VDYPUserModel user = user(ownerGuid);
 		URL url = new URL("https://example.com/out.zip");
 		byte[] zipBytes = new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x11, 0x22, 0x33 };
 
 		when(currentUser.getUser()).thenReturn(user);
 
-		var file = mock(FileMappingModel.class);
-		when(projectionService.getResultSetFile(guid, user)).thenReturn(file);
-		when(file.getDownloadURL()).thenReturn(url);
+		ProjectionEntity entity = projectionEntity(guid, ownerGuid);
+		ProjectionFileSetEntity resultFS = fileSetEntity(resultFSGuid, ownerGuid);
+		entity.setResultFileSet(resultFS);
+		FileMappingModel file = fileMappingModel(resultFileGuid, UUID.randomUUID());
+		file.setDownloadURL(url);
+		when(projectionService.getProjectionEntity(guid)).thenReturn(entity);
+		when(projectionService.getAllFileSetFiles(guid, resultFSGuid, user)).thenReturn(List.of(file));
+		when(projectionService.getFileForDownload(guid, resultFSGuid, resultFileGuid, user)).thenReturn(file);
 
 		when(client.target(url.toString())).thenReturn(target);
 		when(target.request("application/zip")).thenReturn(builder);
@@ -93,7 +107,6 @@ public class ResultsZipStreamTest {
 
 		assertArrayEquals(zipBytes, out.toByteArray());
 
-		verify(projectionService).getResultSetFile(guid, user);
 		verify(upstream).close();
 	}
 
@@ -101,14 +114,23 @@ public class ResultsZipStreamTest {
 	void streamResultsZip_upstream404_throwsWebApplicationException_withSameStatus_and_closesUpstream()
 			throws Exception {
 		UUID guid = UUID.randomUUID();
-		VDYPUserModel user = user(UUID.randomUUID());
-		URL url = new URL("https://example.com/missing.zip");
+		UUID resultFSGuid = UUID.randomUUID();
+		UUID ownerGuid = UUID.randomUUID();
+		UUID resultFileGuid = UUID.randomUUID();
+		VDYPUserModel user = user(ownerGuid);
+		URL url = new URL("https://example.com/out.zip");
+		byte[] zipBytes = new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x11, 0x22, 0x33 };
 
 		when(currentUser.getUser()).thenReturn(user);
 
-		var file = mock(FileMappingModel.class);
-		when(projectionService.getResultSetFile(guid, user)).thenReturn(file);
-		when(file.getDownloadURL()).thenReturn(url);
+		ProjectionEntity entity = projectionEntity(guid, ownerGuid);
+		ProjectionFileSetEntity resultFS = fileSetEntity(resultFSGuid, ownerGuid);
+		entity.setResultFileSet(resultFS);
+		FileMappingModel file = fileMappingModel(resultFileGuid, UUID.randomUUID());
+		file.setDownloadURL(url);
+		when(projectionService.getProjectionEntity(guid)).thenReturn(entity);
+		when(projectionService.getAllFileSetFiles(guid, resultFSGuid, user)).thenReturn(List.of(file));
+		when(projectionService.getFileForDownload(guid, resultFSGuid, resultFileGuid, user)).thenReturn(file);
 
 		when(client.target(url.toString())).thenReturn(target);
 		when(target.request("application/zip")).thenReturn(builder);
@@ -134,14 +156,23 @@ public class ResultsZipStreamTest {
 	void streamResultsZip_upstream500_throwsWebApplicationException_withSameStatus_and_closesUpstream()
 			throws Exception {
 		UUID guid = UUID.randomUUID();
-		VDYPUserModel user = user(UUID.randomUUID());
-		URL url = new URL("https://example.com/error.zip");
+		UUID resultFSGuid = UUID.randomUUID();
+		UUID ownerGuid = UUID.randomUUID();
+		UUID resultFileGuid = UUID.randomUUID();
+		VDYPUserModel user = user(ownerGuid);
+		URL url = new URL("https://example.com/out.zip");
+		byte[] zipBytes = new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x11, 0x22, 0x33 };
 
 		when(currentUser.getUser()).thenReturn(user);
 
-		var file = mock(FileMappingModel.class);
-		when(projectionService.getResultSetFile(guid, user)).thenReturn(file);
-		when(file.getDownloadURL()).thenReturn(url);
+		ProjectionEntity entity = projectionEntity(guid, ownerGuid);
+		ProjectionFileSetEntity resultFS = fileSetEntity(resultFSGuid, ownerGuid);
+		entity.setResultFileSet(resultFS);
+		FileMappingModel file = fileMappingModel(resultFileGuid, UUID.randomUUID());
+		file.setDownloadURL(url);
+		when(projectionService.getProjectionEntity(guid)).thenReturn(entity);
+		when(projectionService.getAllFileSetFiles(guid, resultFSGuid, user)).thenReturn(List.of(file));
+		when(projectionService.getFileForDownload(guid, resultFSGuid, resultFileGuid, user)).thenReturn(file);
 
 		when(client.target(url.toString())).thenReturn(target);
 		when(target.request("application/zip")).thenReturn(builder);
