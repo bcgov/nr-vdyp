@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -17,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
+import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
@@ -319,7 +321,20 @@ public class ProjectionEndpoint implements Endpoint {
 	@Tag(name = "Results Zip", description = "Stream the results ZIP from s3 storage to prevent CORS issues")
 	public Response streamResultsZip(@PathParam("projectionGUID") UUID projectionGUID, @Context HttpHeaders headers)
 			throws ProjectionServiceException {
-		var file = projectionService.getResultSetFile(projectionGUID, currentUser.getUser());
+		var projection = projectionService.getProjectionEntity(projectionGUID);
+		List<FileMappingModel> resultFiles = projectionService.getAllFileSetFiles(
+				projectionGUID, projection.getResultFileSet().getProjectionFileSetGUID(), currentUser.getUser()
+		);
+		if (resultFiles.isEmpty()) {
+			throw new WebApplicationException(
+					Response.status(Status.NOT_FOUND).entity("No result files found for projection " + projectionGUID)
+							.type(MediaType.TEXT_PLAIN).build()
+			);
+		}
+		FileMappingModel file = projectionService.getFileForDownload(
+				projectionGUID, projection.getResultFileSet().getProjectionFileSetGUID(),
+				UUID.fromString(resultFiles.get(0).getFileMappingGUID()), currentUser.getUser()
+		);
 
 		URL upstreamUrl = file.getDownloadURL();
 

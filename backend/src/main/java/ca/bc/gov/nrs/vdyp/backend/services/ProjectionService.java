@@ -439,22 +439,6 @@ public class ProjectionService {
 		return assembler.toModel(entity);
 	}
 
-	public FileMappingModel getResultSetFile(UUID projectionGUID, VDYPUserModel actingUser)
-			throws ProjectionServiceException {
-		var entity = getProjectionEntity(projectionGUID);
-		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
-		checkProjectionStatusPermitsAction(entity, ProjectionAction.READ);
-		List<FileMappingModel> files = fileSetService
-				.getAllFiles(entity.getResultFileSet().getProjectionFileSetGUID(), actingUser, false);
-		if (files.isEmpty()) {
-			throw new ProjectionServiceException("No result file found", projectionGUID);
-		}
-		return fileSetService.getFileForDownload(
-				entity.getResultFileSet().getProjectionFileSetGUID(), actingUser,
-				UUID.fromString(files.get(0).getFileMappingGUID())
-		);
-	}
-
 	public enum ProjectionAction {
 		READ, UPDATE, DELETE, STORE_RESULTS, COMPLETE_PROJECTION, CANCEL
 	}
