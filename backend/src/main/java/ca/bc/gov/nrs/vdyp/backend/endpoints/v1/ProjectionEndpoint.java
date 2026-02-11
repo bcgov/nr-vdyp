@@ -27,6 +27,8 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.quarkus.security.Authenticated;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -51,6 +53,7 @@ import jakarta.ws.rs.core.StreamingOutput;
 @Path("/api/v8/projection")
 @Tag(name = "Projection API", description = "the projection API")
 @RegisterForReflection
+@ApplicationScoped
 public class ProjectionEndpoint implements Endpoint {
 
 	public static final Logger logger = LoggerFactory.getLogger(ProjectionEndpoint.class);
@@ -62,6 +65,7 @@ public class ProjectionEndpoint implements Endpoint {
 
 	private final Client client;
 
+	@Inject
 	public ProjectionEndpoint(ProjectionService service, CurrentVDYPUser currentUser) {
 		this(service, currentUser, ClientBuilder.newBuilder().build());
 	}
