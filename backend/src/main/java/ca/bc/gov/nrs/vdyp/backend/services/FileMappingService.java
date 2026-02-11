@@ -148,7 +148,7 @@ public class FileMappingService {
 					}
 				}
 			}
-		} 
+		}
 
 		repository.delete(entity);
 	}
