@@ -37,6 +37,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.FileMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
+import ca.bc.gov.nrs.vdyp.backend.model.COMSObjectVersion;
 import jakarta.json.Json;
 import jakarta.json.JsonString;
 import jakarta.ws.rs.core.MediaType;
@@ -203,9 +204,11 @@ class TestFileMappingService {
 
 		when(repository.listForFileSet(fileSetGUID)).thenReturn(List.of(entity1, entity2));
 
-		// Try-with-resources will close it; Response is safe to use here.
-		Response ok = Response.ok().build();
-		when(comsClient.deleteObject(any())).thenReturn(ok);
+		COMSObjectVersion version1 = new COMSObjectVersion("v1", "s3v1", comsObjectGUID1.toString(), false);
+		COMSObjectVersion version2 = new COMSObjectVersion("v2", "s3v2", comsObjectGUID2.toString(), false);
+		when(comsClient.getObjectVersions(comsObjectGUID1.toString())).thenReturn(List.of(version1));
+		when(comsClient.getObjectVersions(comsObjectGUID2.toString())).thenReturn(List.of(version2));
+		when(comsClient.deleteObjectVersion(any(), any())).thenReturn(Response.ok().build());
 
 		service.deleteFilesForSet(fileSetGUID);
 
@@ -223,9 +226,9 @@ class TestFileMappingService {
 
 		when(repository.findByIdOptional(fileMappingGuid)).thenReturn(Optional.of(entity));
 
-		// Try-with-resources will close it; Response is safe to use here.
-		Response ok = Response.ok().build();
-		when(comsClient.deleteObject(comsObjectGuid.toString())).thenReturn(ok);
+		COMSObjectVersion version = new COMSObjectVersion("v1", "s3v1", comsObjectGuid.toString(), false);
+		when(comsClient.getObjectVersions(comsObjectGuid.toString())).thenReturn(List.of(version));
+		when(comsClient.deleteObjectVersion(any(), any())).thenReturn(Response.ok().build());
 
 		service.deleteFileMapping(fileMappingGuid);
 
@@ -242,8 +245,10 @@ class TestFileMappingService {
 
 		when(repository.findByIdOptional(fileMappingGuid)).thenReturn(Optional.of(entity));
 
+		COMSObjectVersion version = new COMSObjectVersion("v1", "s3v1", comsObjectGuid.toString(), false);
+		when(comsClient.getObjectVersions(comsObjectGuid.toString())).thenReturn(List.of(version));
 		Response bad = Response.status(Response.Status.BAD_REQUEST).build();
-		when(comsClient.deleteObject(comsObjectGuid.toString())).thenReturn(bad);
+		when(comsClient.deleteObjectVersion(comsObjectGuid.toString(), "s3v1")).thenReturn(bad);
 
 		assertThrows(ProjectionServiceException.class, () -> service.deleteFileMapping(fileMappingGuid));
 		verify(repository, never()).delete(any());
