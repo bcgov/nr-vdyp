@@ -476,6 +476,7 @@ const removePolygonFile = async () => {
   const projectionGUID = appStore.getCurrentProjectionGUID
   if (!projectionGUID || !fileUploadStore.polygonFileInfo) return
 
+  fileUploadStore.isDeletingFile = true
   try {
     await deleteFileFromFileSet(
       projectionGUID,
@@ -486,6 +487,8 @@ const removePolygonFile = async () => {
   } catch (error) {
     console.error('Error removing polygon file:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.FILE_DELETE_FAILED, PROJECTION_ERR.FILE_DELETE_FAILED_TITLE)
+  } finally {
+    fileUploadStore.isDeletingFile = false
   }
 }
 
@@ -509,6 +512,7 @@ const removeLayerFile = async () => {
   const projectionGUID = appStore.getCurrentProjectionGUID
   if (!projectionGUID || !fileUploadStore.layerFileInfo) return
 
+  fileUploadStore.isDeletingFile = true
   try {
     await deleteFileFromFileSet(
       projectionGUID,
@@ -519,6 +523,8 @@ const removeLayerFile = async () => {
   } catch (error) {
     console.error('Error removing layer file:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.FILE_DELETE_FAILED, PROJECTION_ERR.FILE_DELETE_FAILED_TITLE)
+  } finally {
+    fileUploadStore.isDeletingFile = false
   }
 }
 

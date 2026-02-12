@@ -135,6 +135,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   // file upload state
   const isUploadingPolygon = ref<boolean>(false)
   const isUploadingLayer = ref<boolean>(false)
+  const isDeletingFile = ref<boolean>(false)
 
   // Set uploaded file info
   const setPolygonFileInfo = (info: UploadedFileInfo | null) => {
@@ -193,6 +194,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     layerFileInfo.value = null
     isUploadingPolygon.value = false
     isUploadingLayer.value = false
+    isDeletingFile.value = false
   }
 
   /**
@@ -342,6 +344,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     layerFileInfo,
     isUploadingPolygon,
     isUploadingLayer,
+    isDeletingFile,
     setPolygonFileInfo,
     setLayerFileInfo,
     // restore functions

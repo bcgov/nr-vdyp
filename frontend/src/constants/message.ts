@@ -186,6 +186,8 @@ export const PROGRESS_MSG = Object.freeze({
   CANCELLING_PROJECTION: 'Cancelling Projection...',
   DOWNLOADING_PROJECTION: 'Downloading Projection...',
   LOADING_RESULTS: 'Loading Projection Results...',
+  UPLOADING_FILE: 'Uploading File...',
+  DELETING_FILE: 'Deleting File...',
 })
 
 export const SUCCESS_MSG = Object.freeze({

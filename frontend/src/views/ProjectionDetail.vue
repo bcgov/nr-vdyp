@@ -1,8 +1,8 @@
 <template>
   <AppProgressCircular
-    :isShow="isProgressVisible"
+    :isShow="showProgress"
     :showMessage="true"
-    :message="progressMessage"
+    :message="progressMessage || fileOperationMessage"
     :hasBackground="true"
   />
   <v-container fluid>
@@ -157,6 +157,14 @@ import { DownloadIcon } from '@/assets/'
 
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
+const isFileUploading = computed(() => fileUploadStore.isUploadingPolygon || fileUploadStore.isUploadingLayer)
+const isDeletingFile = computed(() => fileUploadStore.isDeletingFile)
+const showProgress = computed(() => isProgressVisible.value || isFileUploading.value || isDeletingFile.value)
+const fileOperationMessage = computed(() => {
+  if (isDeletingFile.value) return MESSAGE.PROGRESS_MSG.DELETING_FILE
+  if (isFileUploading.value) return MESSAGE.PROGRESS_MSG.UPLOADING_FILE
+  return ''
+})
 const modelParamActiveTab = ref(0)
 const fileUploadActiveTab = ref(0)
 
