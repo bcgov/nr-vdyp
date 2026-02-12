@@ -690,6 +690,23 @@ const handleDialogClose = () => {}
   padding-right: 0 !important;
 }
 
+/* Responsive stacking below 1000px */
+@media (max-width: 999px) {
+  .file-upload-col {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  .file-upload-col-left {
+    padding-right: 0 !important;
+    margin-bottom: 16px;
+  }
+
+  .file-upload-col-right {
+    padding-left: 0 !important;
+  }
+}
+
 /* File display for view mode */
 .file-display-container {
   display: flex;
