@@ -530,11 +530,13 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return vriWriter;
 	}
 
+	final static float MINIMUM_BASAL_AREA = 0.05f;
+
 	// EMP040
 	protected float estimatePrimaryBaseArea(
 			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
 			float crownClosure
-	) throws BaseAreaLowException {
+	) {
 		boolean lowCrownClosure = layer.getCrownClosure() < LOW_CROWN_CLOSURE;
 		crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : crownClosure;
 
@@ -613,9 +615,13 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		baseArea *= yieldFactor;
 
 		// This is to prevent underflow errors in later calculations
-		Utils.throwIfPresent(
-				BaseAreaLowException.check(layer.getLayerType(), "Estimated base area", Optional.of(baseArea), 0.05f)
-		);
+		// VDYP7 returned an error code in parallel with the modified result but the error was ignored.
+		// For VDYP8 we log a warning.
+		if (baseArea < MINIMUM_BASAL_AREA) {
+			log.atWarn().setMessage("Estimated basal area {} is too low. Increasing to {}.").addArgument(baseArea)
+					.addArgument(MINIMUM_BASAL_AREA).log();
+			baseArea = MINIMUM_BASAL_AREA;
+		}
 
 		return baseArea;
 	}
@@ -645,7 +651,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected float estimatePrimaryBaseArea(
 			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
-	) throws BaseAreaLowException {
+	) {
 		return estimatePrimaryBaseArea(
 				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, layer.getCrownClosure()
 		);
@@ -834,7 +840,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	// FIPLAND
-	public float estimatePercentForestLand(P polygon, Optional<L> vetLayer, L primaryLayer) throws ProcessingException {
+	public float estimatePercentForestLand(P polygon, Optional<L> vetLayer, L primaryLayer) {
 		if (polygon.getPercentAvailable().isPresent()) {
 			return polygon.getPercentAvailable().get();
 		}

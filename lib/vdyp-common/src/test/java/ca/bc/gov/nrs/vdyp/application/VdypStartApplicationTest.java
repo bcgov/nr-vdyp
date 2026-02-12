@@ -1456,13 +1456,11 @@ class VdypStartApplicationTest {
 					});
 				});
 
-				var ex = assertThrows(
-						BaseAreaLowException.class,
+				var result = assertDoesNotThrow(
 						() -> app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f)
 				);
 
-				assertThat(ex, hasProperty("value", present(is(0f))));
-				assertThat(ex, hasProperty("threshold", present(is(0.05f))));
+				assertThat(result, is(0.05f));
 			}
 		}
 
