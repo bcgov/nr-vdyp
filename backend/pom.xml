@@ -22,6 +22,7 @@
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.version>3.10.1</quarkus.platform.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
+		<testcontainers.version>1.21.4</testcontainers.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -38,7 +39,14 @@
 					</exclusion>
 				</exclusions>
       </dependency>
-    </dependencies>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-bom</artifactId>
+				<version>${testcontainers.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
   </dependencyManagement>
   <dependencies>
     <dependency>
