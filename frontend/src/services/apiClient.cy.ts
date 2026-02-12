@@ -169,4 +169,41 @@ describe('apiClient Unit Tests', () => {
         })
     })
   })
+
+  context('streamResultsZip', () => {
+    it('should stream results zip successfully', () => {
+      const mockBlob = new Blob(['zip content'], { type: 'application/zip' })
+      const mockResponse = { data: mockBlob }
+      cy.stub(ProjectionApi.prototype, 'streamResultsZip').resolves(
+        mockResponse,
+      )
+
+      const projectionGUID = 'test-guid-123'
+
+      cy.wrap(apiClient.streamResultsZip(projectionGUID)).then(
+        (result: unknown) => {
+          const response = result as { data: Blob }
+          expect(ProjectionApi.prototype.streamResultsZip).to.be.calledOnce
+          expect(response.data).to.be.instanceOf(Blob)
+          expect(response.data.size).to.equal(mockBlob.size)
+          expect(response.data.type).to.equal(mockBlob.type)
+        },
+      )
+    })
+
+    it('should handle error when streaming results zip', () => {
+      const mockError = new Error('Download failed')
+      cy.stub(ProjectionApi.prototype, 'streamResultsZip').rejects(mockError)
+
+      apiClient
+        .streamResultsZip('test-guid-123')
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(ProjectionApi.prototype.streamResultsZip).to.be.calledOnce
+          expect(error).to.equal(mockError)
+        })
+    })
+  })
 })

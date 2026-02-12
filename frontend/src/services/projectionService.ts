@@ -9,10 +9,12 @@ import {
   deleteFileFromFileSet as apiDeleteFileFromFileSet,
   getFileSetFiles as apiGetFileSetFiles,
   getFileForDownload as apiGetFileForDownload,
+  streamResultsZip as apiStreamResultsZip,
 } from '@/services/apiActions'
 import type { ProjectionModel, Parameters, FileMappingModel, ModelParameters } from '@/services/vdyp-api'
 import type { Projection, ProjectionStatus, ParsedProjectionParameters } from '@/interfaces/interfaces'
 import {
+  FILE_NAME,
   MODEL_SELECTION,
   PROJECTION_STATUS,
   PROJECTION_TYPE,
@@ -483,5 +485,39 @@ export const parseProjectionParams = (
  */
 export const isProjectionReadOnly = (status: ProjectionStatus): boolean => {
   return status === PROJECTION_STATUS.READY || status === PROJECTION_STATUS.RUNNING
+}
+
+// ============================================================================
+// Stream Results Zip
+// ============================================================================
+
+/**
+ * Streams the results ZIP file for a projection via backend proxy.
+ * Returns the zip as a Blob along with the filename from the response headers.
+ * @param projectionGUID The projection GUID
+ * @returns A promise that resolves to an object with zipBlob and zipFileName
+ */
+export const streamResultsZip = async (
+  projectionGUID: string,
+): Promise<{ zipBlob: Blob; zipFileName: string }> => {
+  try {
+    const response = await apiStreamResultsZip(projectionGUID)
+    const zipBlob = response.data as Blob
+
+    // Extract filename from Content-Disposition header
+    let zipFileName = FILE_NAME.PROJECTION_RESULT_ZIP
+    const contentDisposition = response.headers?.['content-disposition']
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/)
+      if (filenameMatch?.[1]) {
+        zipFileName = filenameMatch[1]
+      }
+    }
+
+    return { zipBlob, zipFileName }
+  } catch (error) {
+    console.error('Error streaming results zip:', error)
+    throw error
+  }
 }
 

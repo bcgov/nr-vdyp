@@ -577,6 +577,46 @@ export const ProjectionApiAxiosParamCreator = function (
     },
 
     /**
+     * Stream the results ZIP file for a projection via backend proxy
+     * @GET /api/v8/projection/{projectionGUID}/resultZip
+     */
+    streamResultsZip: async (
+      projectionGUID: string,
+      options: AxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      if (projectionGUID === null || projectionGUID === undefined) {
+        throw new Error(
+          'Required parameter projectionGUID was null or undefined.',
+        )
+      }
+      const localVarPath = `/api/v8/projection/${encodeURIComponent(projectionGUID)}/resultZip`
+      const localVarUrlObj = new URL(localVarPath, env.VITE_API_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+      const localVarRequestOptions: AxiosRequestConfig = {
+        method: 'GET',
+        ...baseOptions,
+        ...options,
+      }
+      const localVarHeaderParameter = {} as Record<string, string>
+
+      const headersFromBaseOptions = baseOptions?.headers ?? {}
+      localVarRequestOptions.headers = {
+        ...localVarHeaderParameter,
+        ...headersFromBaseOptions,
+        ...options.headers,
+      }
+
+      return {
+        url:
+          localVarUrlObj.pathname + localVarUrlObj.search + localVarUrlObj.hash,
+        options: localVarRequestOptions,
+      }
+    },
+
+    /**
      * Run HCSV projection
      * @POST /api/v8/projection/hcsv
      */
@@ -974,6 +1014,32 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
       }
     },
 
+    async streamResultsZip(
+      projectionGUID: string,
+      options?: AxiosRequestConfig,
+    ): Promise<
+      (
+        axios?: AxiosInstance,
+        basePath?: string,
+      ) => Promise<AxiosResponse<Blob>>
+    > {
+      const localVarAxiosArgs =
+        await ProjectionApiAxiosParamCreator(configuration).streamResultsZip(
+          projectionGUID,
+          options,
+        )
+      return (
+        axios: AxiosInstance = globalAxios,
+        basePath: string = BASE_PATH,
+      ) => {
+        const axiosRequestArgs: AxiosRequestConfig = {
+          ...localVarAxiosArgs.options,
+          url: basePath + localVarAxiosArgs.url,
+        }
+        return axios.request(axiosRequestArgs)
+      }
+    },
+
     async projectionHcsvPostForm(
       polygonInputData?: FileUpload,
       layersInputData?: FileUpload,
@@ -1129,6 +1195,15 @@ export const ProjectionApiFactory = function (
     ): Promise<AxiosResponse<ProjectionModel>> {
       return ProjectionApiFp(configuration)
         .cancelProjection(projectionGUID, options)
+        .then((request) => request(axios, basePath))
+    },
+
+    async streamResultsZip(
+      projectionGUID: string,
+      options?: AxiosRequestConfig,
+    ): Promise<AxiosResponse<Blob>> {
+      return ProjectionApiFp(configuration)
+        .streamResultsZip(projectionGUID, options)
         .then((request) => request(axios, basePath))
     },
 
@@ -1296,6 +1371,18 @@ export class ProjectionApi extends BaseAPI {
   ): Promise<AxiosResponse<ProjectionModel>> {
     return ProjectionApiFp(this.configuration)
       .cancelProjection(projectionGUID, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   * Stream the results ZIP file for a projection via backend proxy
+   */
+  public async streamResultsZip(
+    projectionGUID: string,
+    options?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<Blob>> {
+    return ProjectionApiFp(this.configuration)
+      .streamResultsZip(projectionGUID, options)
       .then((request) => request(this.axios, this.basePath))
   }
 

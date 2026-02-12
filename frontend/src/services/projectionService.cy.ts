@@ -1,7 +1,16 @@
 /// <reference types="cypress" />
 
 import type { Projection } from '@/interfaces/interfaces'
-import { SORT_ORDER, PROJECTION_LIST_HEADER_KEY } from '@/constants/constants'
+import { SORT_ORDER, PROJECTION_LIST_HEADER_KEY, PROJECTION_STATUS, FILE_NAME } from '@/constants/constants'
+import {
+  mapProjectionStatus,
+  parseProjectionParams,
+  isProjectionReadOnly,
+  transformProjection,
+  streamResultsZip,
+} from '@/services/projectionService'
+import apiClient from '@/services/apiClient'
+import type { ProjectionModel } from '@/services/vdyp-api'
 
 // Local implementations for testing
 const sortProjections = (
@@ -256,6 +265,138 @@ describe('ProjectionListService Unit Tests', () => {
 
     it('should handle items equal to itemsPerPage', () => {
       expect(calculateTotalPages(5, 5)).to.equal(1)
+    })
+  })
+})
+
+describe('projectionService Unit Tests', () => {
+  describe('mapProjectionStatus', () => {
+    it('should map known status codes correctly', () => {
+      expect(mapProjectionStatus('DRAFT')).to.equal(PROJECTION_STATUS.DRAFT)
+      expect(mapProjectionStatus('READY')).to.equal(PROJECTION_STATUS.READY)
+      expect(mapProjectionStatus('RUNNING')).to.equal(PROJECTION_STATUS.RUNNING)
+      expect(mapProjectionStatus('FAILED')).to.equal(PROJECTION_STATUS.FAILED)
+    })
+
+    it('should default to DRAFT for unknown status codes', () => {
+      expect(mapProjectionStatus('Unknown')).to.equal(PROJECTION_STATUS.DRAFT)
+      expect(mapProjectionStatus('')).to.equal(PROJECTION_STATUS.DRAFT)
+    })
+  })
+
+  describe('parseProjectionParams', () => {
+    it('should return defaults for null or undefined input', () => {
+      const result = parseProjectionParams(null)
+      expect(result.selectedExecutionOptions).to.deep.equal([])
+      expect(result.ageStart).to.be.null
+      expect(result.outputFormat).to.be.null
+    })
+
+    it('should parse valid JSON string', () => {
+      const json = JSON.stringify({
+        ageStart: 10,
+        ageEnd: 100,
+        selectedExecutionOptions: ['DoIncludeProjectedMOFVolumes'],
+      })
+      const result = parseProjectionParams(json)
+      expect(result.ageStart).to.equal(10)
+      expect(result.ageEnd).to.equal(100)
+      expect(result.selectedExecutionOptions).to.deep.equal([
+        'DoIncludeProjectedMOFVolumes',
+      ])
+    })
+
+    it('should return defaults for invalid JSON', () => {
+      const result = parseProjectionParams('not valid json')
+      expect(result.selectedExecutionOptions).to.deep.equal([])
+      expect(result.ageStart).to.be.null
+    })
+  })
+
+  describe('isProjectionReadOnly', () => {
+    it('should return true for Ready and Running statuses', () => {
+      expect(isProjectionReadOnly(PROJECTION_STATUS.READY)).to.be.true
+      expect(isProjectionReadOnly(PROJECTION_STATUS.RUNNING)).to.be.true
+    })
+
+    it('should return false for Draft and Failed statuses', () => {
+      expect(isProjectionReadOnly(PROJECTION_STATUS.DRAFT)).to.be.false
+      expect(isProjectionReadOnly(PROJECTION_STATUS.FAILED)).to.be.false
+    })
+  })
+
+  describe('transformProjection', () => {
+    it('should transform a ProjectionModel to Projection', () => {
+      const model = {
+        projectionGUID: 'guid-abc',
+        reportTitle: 'Test Title',
+        reportDescription: 'Test Desc',
+        projectionStatusCode: { code: 'READY', description: '', displayOrder: 0 },
+        lastUpdatedDate: '2024-01-15',
+        expiryDate: '2024-06-15',
+        projectionParameters: '',
+      } as unknown as ProjectionModel
+      const result = transformProjection(model)
+      expect(result.projectionGUID).to.equal('guid-abc')
+      expect(result.title).to.equal('Test Title')
+      expect(result.description).to.equal('Test Desc')
+      expect(result.status).to.equal(PROJECTION_STATUS.READY)
+      expect(result.lastUpdated).to.equal('2024-01-15')
+      expect(result.expiration).to.equal('2024-06-15')
+    })
+
+    it('should handle missing optional fields', () => {
+      const model = {
+        projectionGUID: 'guid-xyz',
+        projectionParameters: '',
+      } as unknown as ProjectionModel
+      const result = transformProjection(model)
+      expect(result.title).to.equal('')
+      expect(result.description).to.equal('')
+      expect(result.status).to.equal(PROJECTION_STATUS.DRAFT)
+    })
+  })
+
+  describe('streamResultsZip', () => {
+    it('should return zip blob with filename from header', () => {
+      const mockBlob = new Blob(['zip'], { type: 'application/zip' })
+      const mockResponse = {
+        data: mockBlob,
+        headers: {
+          'content-disposition': 'attachment; filename="results.zip"',
+        },
+      }
+      cy.stub(apiClient, 'streamResultsZip').resolves(mockResponse)
+
+      cy.wrap(streamResultsZip('test-guid')).then((result: any) => {
+        expect(apiClient.streamResultsZip).to.be.calledOnceWith('test-guid')
+        expect(result.zipBlob).to.equal(mockBlob)
+        expect(result.zipFileName).to.equal('results.zip')
+      })
+    })
+
+    it('should use default filename when header is missing', () => {
+      const mockBlob = new Blob(['zip'], { type: 'application/zip' })
+      const mockResponse = { data: mockBlob, headers: {} }
+      cy.stub(apiClient, 'streamResultsZip').resolves(mockResponse)
+
+      cy.wrap(streamResultsZip('test-guid')).then((result: any) => {
+        expect(result.zipFileName).to.equal(FILE_NAME.PROJECTION_RESULT_ZIP)
+      })
+    })
+
+    it('should handle error when streaming fails', () => {
+      const mockError = new Error('Download failed')
+      cy.stub(apiClient, 'streamResultsZip').rejects(mockError)
+
+      streamResultsZip('test-guid')
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(apiClient.streamResultsZip).to.be.calledOnce
+          expect(error).to.equal(mockError)
+        })
     })
   })
 })
