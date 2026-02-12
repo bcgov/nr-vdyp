@@ -626,6 +626,11 @@ export const runProjection = async (): Promise<ProjectionModel> => {
     throw new Error(PROJECTION_ERR.MISSING_GUID)
   }
 
+  // Ensure referenceYear is set before creating CSV files
+  if (!modelParameterStore.referenceYear) {
+    modelParameterStore.referenceYear = new Date().getFullYear()
+  }
+
   // Step 1: Create CSV files from user selections
   const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
 
