@@ -553,12 +553,15 @@ const onConfirm = async () => {
 
   // Save projection (update parameters) before confirming the panel
   // Note: Files are already uploaded immediately, so we just update params
+  appStore.isSavingProjection = true
   try {
     await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
   } catch (error) {
     console.error('Error saving projection:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
     return
+  } finally {
+    appStore.isSavingProjection = false
   }
 
   if (!isConfirmed.value) {

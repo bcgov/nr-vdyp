@@ -17,6 +17,9 @@ export const useAppStore = defineStore('appStore', () => {
   // Current projection status
   const currentProjectionStatus = ref<ProjectionStatus>(PROJECTION_STATUS.DRAFT)
 
+  // Saving state for progress indicator
+  const isSavingProjection = ref(false)
+
   const getModelSelection = computed(() => modelSelection.value)
   const getViewMode = computed(() => viewMode.value)
   const getCurrentProjectionGUID = computed(() => currentProjectionGUID.value)
@@ -45,6 +48,7 @@ export const useAppStore = defineStore('appStore', () => {
     viewMode.value = PROJECTION_VIEW_MODE.CREATE
     currentProjectionGUID.value = null
     currentProjectionStatus.value = PROJECTION_STATUS.DRAFT
+    isSavingProjection.value = false
   }
 
   return {
@@ -62,6 +66,7 @@ export const useAppStore = defineStore('appStore', () => {
     setViewMode,
     setCurrentProjectionGUID,
     setCurrentProjectionStatus,
+    isSavingProjection,
     resetForNewProjection,
   }
 })

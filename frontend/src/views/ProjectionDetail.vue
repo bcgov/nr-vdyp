@@ -159,8 +159,10 @@ const isProgressVisible = ref(false)
 const progressMessage = ref('')
 const isFileUploading = computed(() => fileUploadStore.isUploadingPolygon || fileUploadStore.isUploadingLayer)
 const isDeletingFile = computed(() => fileUploadStore.isDeletingFile)
-const showProgress = computed(() => isProgressVisible.value || isFileUploading.value || isDeletingFile.value)
+const isSaving = computed(() => appStore.isSavingProjection)
+const showProgress = computed(() => isProgressVisible.value || isFileUploading.value || isDeletingFile.value || isSaving.value)
 const fileOperationMessage = computed(() => {
+  if (isSaving.value) return MESSAGE.PROGRESS_MSG.SAVING_PROJECTION
   if (isDeletingFile.value) return MESSAGE.PROGRESS_MSG.DELETING_FILE
   if (isFileUploading.value) return MESSAGE.PROGRESS_MSG.UPLOADING_FILE
   return ''
