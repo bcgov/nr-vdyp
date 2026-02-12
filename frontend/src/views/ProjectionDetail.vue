@@ -141,14 +141,14 @@ import {
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE } from '@/constants'
-import { mapProjectionStatus, cancelProjection, getProjectionById, getFileSetFiles, getFileForDownload } from '@/services/projectionService'
+import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runProjection } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
 import {
   delay,
   getStatusIcon,
-  downloadURL,
+  downloadFile,
   sanitizeFileName,
   checkZipForErrors,
 } from '@/utils/util'
@@ -294,45 +294,8 @@ const fetchAndPopulateResults = async () => {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.LOADING_RESULTS
 
-    const projectionModel = await getProjectionById(projectionGUID)
-    const resultFileSetGUID = projectionModel.resultFileSet?.projectionFileSetGUID
-
-    if (!resultFileSetGUID) {
-      console.warn('No result file set found for projection')
-      return
-    }
-
-    const files = await getFileSetFiles(projectionGUID, resultFileSetGUID)
-    if (!files || files.length === 0) {
-      console.warn('No files found in result file set')
-      return
-    }
-
-    const resultFile = files[0]
-    if (!resultFile.fileMappingGUID) {
-      console.warn('No file mapping GUID found')
-      return
-    }
-
-    const fileMapping = await getFileForDownload(
-      projectionGUID,
-      resultFileSetGUID,
-      resultFile.fileMappingGUID,
-    )
-
-    if (!fileMapping.downloadURL) {
-      console.warn('No download URL found')
-      return
-    }
-
-    // Fetch the zip blob from the download URL
-    const response = await fetch(fileMapping.downloadURL)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch zip file: ${response.status} ${response.statusText}`)
-    }
-    const zipBlob = await response.blob()
-
-    const zipFileName = resultFile.filename || CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
+    // Stream the results zip via backend proxy (avoids CORS issues with direct S3 access)
+    const { zipBlob, zipFileName } = await streamResultsZip(projectionGUID)
 
     const hasErrors = await checkZipForErrors(zipBlob)
     await projectionStore.handleZipResponse(zipBlob, zipFileName)
@@ -524,51 +487,9 @@ const handleDownloadReport = async () => {
   progressMessage.value = MESSAGE.PROGRESS_MSG.DOWNLOADING_PROJECTION
 
   try {
-    const projectionModel = await getProjectionById(projectionGUID)
-    const resultFileSetGUID = projectionModel.resultFileSet?.projectionFileSetGUID
-
-    if (!resultFileSetGUID) {
-      notificationStore.showErrorMessage(
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    const files = await getFileSetFiles(projectionGUID, resultFileSetGUID)
-
-    if (!files || files.length === 0) {
-      notificationStore.showErrorMessage(
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    const resultFile = files[0]
-    if (!resultFile.fileMappingGUID) {
-      notificationStore.showErrorMessage(
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    const fileMapping = await getFileForDownload(
-      projectionGUID,
-      resultFileSetGUID,
-      resultFile.fileMappingGUID,
-    )
-
-    if (!fileMapping.downloadURL) {
-      notificationStore.showErrorMessage(
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    downloadURL(fileMapping.downloadURL, zipFileName)
+    // Stream the results zip via backend proxy and download with custom filename
+    const { zipBlob } = await streamResultsZip(projectionGUID)
+    downloadFile(zipBlob, zipFileName)
 
     notificationStore.showSuccessMessage(
       MESSAGE.SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),
