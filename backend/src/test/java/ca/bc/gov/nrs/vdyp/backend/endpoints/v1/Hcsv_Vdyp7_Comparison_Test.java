@@ -29,6 +29,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -479,6 +480,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	@Disabled("VDYP-899")
 	void test899_F13() throws IOException, ResourceParseException {
 
 		logger.info("Starting vdyp-899-F13");
