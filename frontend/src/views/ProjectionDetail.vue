@@ -246,7 +246,7 @@ const isFileUploadPanelsVisible = computed(() => {
  * Enables reporting tabs, navigates to the appropriate tab, and shows a result message.
  * Navigates to Error Messages tab if errors are found, otherwise Model Report tab.
  */
-const enableTabsAndNavigate = async (hasErrors: boolean) => {
+const enableTabsAndNavigate = async (hasErrors: boolean, showMessage: boolean = true) => {
   const isInputModel = appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
 
   if (isInputModel) {
@@ -274,10 +274,12 @@ const enableTabsAndNavigate = async (hasErrors: boolean) => {
     ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR
     : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT_W_ERR
 
-  if (hasErrors) {
-    logErrorMessage(errorMsg, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_W_ERR_TITLE)
-  } else {
-    logSuccessMessage(successMsg, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_TITLE)
+  if (showMessage) {
+    if (hasErrors) {
+      logErrorMessage(errorMsg, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_W_ERR_TITLE)
+    } else {
+      logSuccessMessage(successMsg, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_TITLE)
+    }
   }
 }
 
@@ -286,7 +288,7 @@ const enableTabsAndNavigate = async (hasErrors: boolean) => {
  * populates the report tabs, and navigates to the appropriate tab.
  * Navigates to Error Messages tab if errors are found, otherwise Model Report tab.
  */
-const fetchAndPopulateResults = async () => {
+const fetchAndPopulateResults = async (showMessage: boolean = true) => {
   const projectionGUID = appStore.currentProjectionGUID
   if (!projectionGUID) return
 
@@ -300,7 +302,7 @@ const fetchAndPopulateResults = async () => {
     const hasErrors = await checkZipForErrors(zipBlob)
     await projectionStore.handleZipResponse(zipBlob, zipFileName)
 
-    await enableTabsAndNavigate(hasErrors)
+    await enableTabsAndNavigate(hasErrors, showMessage)
   } catch (error) {
     console.error('Error fetching and populating results:', error)
     notificationStore.showErrorMessage(
@@ -320,8 +322,9 @@ onMounted(() => {
   }
 
   // For READY projections, automatically fetch and display results
+  // Skip showing result messages when navigating from the list view
   if (isReady.value) {
-    fetchAndPopulateResults()
+    fetchAndPopulateResults(false)
   }
 })
 
