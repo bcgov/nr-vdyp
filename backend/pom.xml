@@ -369,6 +369,7 @@
 								<include>**/ITDataDriven.java</include>
 							</includes>
 							<systemPropertyVariables>
+								<api.version>1.44</api.version>
                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                 <maven.home>${maven.home}</maven.home>
