@@ -21,14 +21,6 @@
         mdi-name="mdi-download"
         @click="handleDownload"
       />
-      <AppButton
-        v-if="tabname === REPORTING_TAB.MODEL_REPORT"
-        label="Download Raw Results"
-        :isDisabled="isRawResultsButtonDisabled"
-        variant="secondary"
-        mdi-name="mdi-download"
-        @click="handleDownloadRawResult"
-      />
     </v-card-actions>
   </v-card>
 </template>
@@ -41,10 +33,6 @@ import { REPORTING_TAB, REPORTING_ACTION } from '@/constants/constants'
 
 defineProps({
   isButtonDisabled: {
-    type: Boolean,
-    required: true,
-  },
-  isRawResultsButtonDisabled: {
     type: Boolean,
     required: true,
   },
@@ -63,10 +51,6 @@ const handlePrint = () => {
 
 const handleDownload = () => {
   emit(REPORTING_ACTION.DOWNLOAD)
-}
-
-const handleDownloadRawResult = () => {
-  emit(REPORTING_ACTION.DOWNLOAD_RAW_RESULT)
 }
 </script>
 

@@ -2,7 +2,6 @@
   <v-container fluid class="bcds-reporting-container">
     <ReportingActions
       :isButtonDisabled="isButtonDisabled"
-      :isRawResultsButtonDisabled="isRawResultsButtonDisabled"
       :tabname="tabname"
       @print="handlePrint"
       @download="handleDownload"
@@ -75,17 +74,9 @@ const printData = computed(() => {
   else return data.value
 })
 
-const rawResults = computed(() => {
-  if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT) {
-    return projectionStore.rawResultZipFile
-  }
-  return null
-})
-
 const isButtonDisabled = computed(
   () => !downloadData.value || downloadData.value.length === 0,
 )
-const isRawResultsButtonDisabled = computed(() => !rawResults.value)
 
 const handleDownload = () => {
   if (!downloadData.value || downloadData.value.length === 0) {
