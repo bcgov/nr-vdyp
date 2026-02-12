@@ -215,24 +215,6 @@ const fileUploadTabs = computed<Tab[]>(() => [
     tabname: null,
     disabled: false,
   },
-  {
-    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.MODEL_REPORT,
-    component: ReportingContainer,
-    tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
-    disabled: !isReady.value || !reportingStore.fileUploadReportingTabsEnabled,
-  },
-  {
-    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.VIEW_LOG_FILE,
-    component: ReportingContainer,
-    tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
-    disabled: !isReady.value || !reportingStore.fileUploadReportingTabsEnabled,
-  },
-  {
-    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.VIEW_ERROR_MESSAGES,
-    component: ReportingContainer,
-    tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
-    disabled: !isReady.value || !reportingStore.fileUploadReportingTabsEnabled,
-  },
 ])
 
 const isModelParameterPanelsVisible = computed(() => {
@@ -257,38 +239,19 @@ const isFileUploadPanelsVisible = computed(() => {
  * Navigates to Error Messages tab if errors are found, otherwise Model Report tab.
  */
 const enableTabsAndNavigate = async (hasErrors: boolean, showMessage: boolean = true) => {
-  const isInputModel = appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-
-  if (isInputModel) {
-    reportingStore.modelParamEnableTabs()
-    await nextTick()
-    setTimeout(() => {
-      modelParamActiveTab.value = hasErrors
-        ? CONSTANTS.MODEL_PARAM_TAB_INDEX.VIEW_ERROR_MESSAGES
-        : CONSTANTS.MODEL_PARAM_TAB_INDEX.MODEL_REPORT
-    }, 100)
-  } else {
-    reportingStore.fileUploadEnableTabs()
-    await nextTick()
-    setTimeout(() => {
-      fileUploadActiveTab.value = hasErrors
-        ? CONSTANTS.FILE_UPLOAD_TAB_INDEX.VIEW_ERROR_MESSAGES
-        : CONSTANTS.FILE_UPLOAD_TAB_INDEX.MODEL_REPORT
-    }, 100)
-  }
-
-  const successMsg = isInputModel
-    ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT
-    : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT
-  const errorMsg = isInputModel
-    ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR
-    : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT_W_ERR
+  reportingStore.modelParamEnableTabs()
+  await nextTick()
+  setTimeout(() => {
+    modelParamActiveTab.value = hasErrors
+      ? CONSTANTS.MODEL_PARAM_TAB_INDEX.VIEW_ERROR_MESSAGES
+      : CONSTANTS.MODEL_PARAM_TAB_INDEX.MODEL_REPORT
+  }, 100)
 
   if (showMessage) {
     if (hasErrors) {
-      logErrorMessage(errorMsg, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_W_ERR_TITLE)
+      logErrorMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_W_ERR_TITLE)
     } else {
-      logSuccessMessage(successMsg, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_TITLE)
+      logSuccessMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_TITLE)
     }
   }
 }
@@ -331,9 +294,10 @@ onMounted(() => {
     fileUploadStore.initializeSpeciesGroups()
   }
 
-  // For READY projections, automatically fetch and display results
+  // For READY Input Model Parameters projections, automatically fetch and display results
+  // File Upload projections do not have reporting tabs; users download the ZIP instead
   // Skip showing result messages when navigating from the list view
-  if (isReady.value) {
+  if (isReady.value && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
     fetchAndPopulateResults(false)
   }
 })
@@ -459,7 +423,9 @@ const cancelRunHandler = async () => {
       if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
         notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED_TITLE)
         isProgressVisible.value = false
-        await fetchAndPopulateResults()
+        if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
+          await fetchAndPopulateResults()
+        }
         return
       } else if (latestStatus === CONSTANTS.PROJECTION_STATUS.FAILED) {
         notificationStore.showWarningMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED_TITLE)
