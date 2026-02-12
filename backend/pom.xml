@@ -349,9 +349,6 @@
 						<include>**/Test*.java</include>
 						<include>**/*Test.java</include>
 					</includes>
-					<excludes>
-						<exclude>**/Hcsv_44GrpATest.java</exclude>
-					</excludes>
 					<systemPropertyVariables>
             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
             <maven.home>${maven.home}</maven.home>
