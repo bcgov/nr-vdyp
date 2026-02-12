@@ -182,19 +182,19 @@ const modelParamTabs = computed<Tab[]>(() => [
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.MODEL_REPORT,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
-    disabled: !reportingStore.modelParamReportingTabsEnabled,
+    disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.VIEW_LOG_FILE,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
-    disabled: !reportingStore.modelParamReportingTabsEnabled,
+    disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.VIEW_ERROR_MESSAGES,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
-    disabled: !reportingStore.modelParamReportingTabsEnabled,
+    disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
 ])
 
@@ -209,19 +209,19 @@ const fileUploadTabs = computed<Tab[]>(() => [
     label: CONSTANTS.FILE_UPLOAD_TAB_NAME.MODEL_REPORT,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
-    disabled: !reportingStore.fileUploadReportingTabsEnabled,
+    disabled: !isReady.value || !reportingStore.fileUploadReportingTabsEnabled,
   },
   {
     label: CONSTANTS.FILE_UPLOAD_TAB_NAME.VIEW_LOG_FILE,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
-    disabled: !reportingStore.fileUploadReportingTabsEnabled,
+    disabled: !isReady.value || !reportingStore.fileUploadReportingTabsEnabled,
   },
   {
     label: CONSTANTS.FILE_UPLOAD_TAB_NAME.VIEW_ERROR_MESSAGES,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
-    disabled: !reportingStore.fileUploadReportingTabsEnabled,
+    disabled: !isReady.value || !reportingStore.fileUploadReportingTabsEnabled,
   },
 ])
 
