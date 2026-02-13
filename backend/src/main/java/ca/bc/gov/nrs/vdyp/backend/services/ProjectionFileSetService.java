@@ -90,7 +90,7 @@ public class ProjectionFileSetService {
 		fileMappingService.deleteFilesForSet(polygonFileSetGuid);
 
 		// delete the bucket in COMS
-		String bucketID = getCOMSBucketGUID(polygonFileSetGuid, true);
+		String bucketID = getCOMSBucketGUID(polygonFileSetGuid, false);
 		if (bucketID != null) {
 			comsClient.deleteBucket(bucketID, true); // recursive because we have should have already deleted the files
 		}
@@ -143,12 +143,12 @@ public class ProjectionFileSetService {
 		String filePrefix = getBucketPrefix(fileSetGUID);
 		List<COMSBucket> searchResponse = comsClient.searchForBucket(null, true, filePrefix, null);
 		String bucketGUID = null;
-		if (searchResponse.isEmpty()) {
+		if (!searchResponse.isEmpty()) {
+			bucketGUID = searchResponse.get(0).bucketId();
+		} else if (createIfNotExist) {
 			COMSCreateBucketRequest request = buildCreateBucketRequest(fileSetGUID, filePrefix);
 			COMSBucket createBucketResponse = comsClient.createBucket(request);
 			bucketGUID = createBucketResponse.bucketId();
-		} else if (createIfNotExist) {
-			bucketGUID = searchResponse.get(0).bucketId();
 		}
 		return bucketGUID;
 	}
