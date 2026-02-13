@@ -4,7 +4,9 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 import ca.bc.gov.nrs.vdyp.backend.config.OidcConfig;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -14,6 +16,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
@@ -98,6 +101,50 @@ public class AuthorizationProxyEndpoint {
 		return Response.seeOther(URI.create(target)).build();
 	}
 
+	@GET
+	@Path("/protocol/openid-connect/3p-cookies/{page}")
+	public Uni<Response> forward3pCookies(
+			@Context UriInfo uriInfo, @Context jakarta.ws.rs.core.HttpHeaders headers,
+			@jakarta.ws.rs.PathParam("page") String page
+	) {
+
+		if (!"step1.html".equals(page) && !"step2.html".equals(page)) {
+			return Uni.createFrom().item(Response.status(Response.Status.NOT_FOUND).build());
+		}
+
+		String qs = uriInfo.getRequestUri().getRawQuery();
+		String target = cfg.authServerUrl() + "/protocol/openid-connect/3p-cookies/" + page
+				+ (qs != null ? "?" + qs : "");
+
+		return Uni.createFrom().completionStage(
+				client.getAbs(target) //
+						.putHeader("Accept", headerOr(headers, "Accept", "*/*")) //
+						.putHeader("User-Agent", headerOr(headers, "User-Agent", "")) //
+						.putHeader("Accept-Language", headerOr(headers, "Accept-Language", "")) //
+						.putHeader("Referer", headerOr(headers, "Referer", "")) //
+						.send() //
+						.toCompletionStage() //
+		).onItem().transform(this::buildProxiedResponse);
+	}
+
+	@GET
+	@Path("/protocol/openid-connect/login-status-iframe.html")
+	public Uni<Response> forward3pCookies(@Context UriInfo uriInfo, @Context jakarta.ws.rs.core.HttpHeaders headers) {
+
+		String qs = uriInfo.getRequestUri().getRawQuery();
+		String target = cfg.authServerUrl() + "/protocol/openid-connect/3p-cookies/login-status-iframe.html";
+
+		return Uni.createFrom().completionStage(
+				client.getAbs(target) //
+						.putHeader("Accept", headerOr(headers, "Accept", "*/*")) //
+						.putHeader("User-Agent", headerOr(headers, "User-Agent", "")) //
+						.putHeader("Accept-Language", headerOr(headers, "Accept-Language", "")) //
+						.putHeader("Referer", headerOr(headers, "Referer", "")) //
+						.send() //
+						.toCompletionStage() //
+		).onItem().transform(this::buildProxiedResponse);
+	}
+
 	// -------- helpers --------
 	private static String toFormUrlEncoded(MultivaluedMap<String, String> form) {
 		var sb = new StringBuilder();
@@ -115,6 +162,33 @@ public class AuthorizationProxyEndpoint {
 
 	private static String urlEnc(String s) {
 		return java.net.URLEncoder.encode(s, StandardCharsets.UTF_8);
+	}
+
+	private Response buildProxiedResponse(HttpResponse<Buffer> resp) {
+		Response.ResponseBuilder rb = Response.status(resp.statusCode());
+
+		String contentType = resp.getHeader("Content-Type");
+		if (contentType != null)
+			rb.type(contentType);
+
+		copyIfPresent(resp, rb, "Cache-Control");
+		copyIfPresent(resp, rb, "Pragma");
+		copyIfPresent(resp, rb, "Expires");
+		resp.headers().getAll("Set-Cookie").forEach(v -> rb.header("Set-Cookie", v));
+		copyIfPresent(resp, rb, "Location");
+
+		return rb.entity(resp.bodyAsBuffer() != null ? resp.bodyAsBuffer().getBytes() : new byte[0]).build();
+	}
+
+	private static void copyIfPresent(HttpResponse<?> resp, Response.ResponseBuilder rb, String header) {
+		String v = resp.getHeader(header);
+		if (v != null)
+			rb.header(header, v);
+	}
+
+	private static String headerOr(HttpHeaders headers, String name, String def) {
+		String v = headers.getHeaderString(name);
+		return v != null ? v : def;
 	}
 
 }
