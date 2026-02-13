@@ -175,7 +175,7 @@ public class BatchResultAggregationService {
 	private void aggregateYieldTables(List<Path> partitionOutputDirs, ZipOutputStream zipOut) throws IOException {
 		logger.debug("Aggregating yield tables from {} partitions", partitionOutputDirs.size());
 
-		Map<String, List<Path>> allYieldTablePaths = new HashMap<String, List<Path>>();
+		Map<String, List<Path>> allYieldTablePaths = new HashMap<>();
 
 		// Collect all yield tables from partitions (already sorted by partition number)
 		// CRITICAL: Process partitions in order and collect files sequentially to maintain order
@@ -221,7 +221,7 @@ public class BatchResultAggregationService {
 	 * @throws IOException if directory walking fails
 	 */
 	private Map<String, List<Path>> collectYieldTablesFromPartition(Path partitionOutputDir) throws IOException {
-		Map<String, List<Path>> yieldTables = new HashMap<String, List<Path>>();
+		Map<String, List<Path>> yieldTables = new HashMap<>();
 
 		if (!isValidPartitionDirectory(partitionOutputDir)) {
 			return yieldTables;
