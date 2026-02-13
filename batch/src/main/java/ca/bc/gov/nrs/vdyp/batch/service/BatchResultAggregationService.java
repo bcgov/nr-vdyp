@@ -175,19 +175,20 @@ public class BatchResultAggregationService {
 	private void aggregateYieldTables(List<Path> partitionOutputDirs, ZipOutputStream zipOut) throws IOException {
 		logger.debug("Aggregating yield tables from {} partitions", partitionOutputDirs.size());
 
-		List<Path> allYieldTablePaths = new ArrayList<>();
+		Map<String, List<Path>> allYieldTablePaths = new HashMap<String, List<Path>>();
 
 		// Collect all yield tables from partitions (already sorted by partition number)
 		// CRITICAL: Process partitions in order and collect files sequentially to maintain order
 		for (Path partitionOutputDir : partitionOutputDirs) {
-			List<Path> partitionYieldTables = collectYieldTablesFromPartition(partitionOutputDir);
+			Map<String, List<Path>> partitionYieldTables = collectYieldTablesFromPartition(partitionOutputDir);
 
 			// Sort files within this partition by filename (contains timestamp)
 			// Example: YieldTables_batch-1-partition0-projection-HCSV-2025_12_08_21_35_00_3599_YieldTable.csv
-			partitionYieldTables.sort(Comparator.comparing(path -> path.getFileName().toString()));
-
-			// Add files from this partition in order - DO NOT sort the final list
-			allYieldTablePaths.addAll(partitionYieldTables);
+			for (Map.Entry<String, List<Path>> entry : partitionYieldTables.entrySet()) {
+				entry.getValue().sort(Comparator.comparing(path -> path.getFileName().toString()));
+				// Add files from this partition in order - DO NOT sort the final list
+				allYieldTablePaths.computeIfAbsent(entry.getKey(), k -> new ArrayList<>()).addAll(entry.getValue());
+			}
 
 			logger.trace(
 					"Added {} yield table files from partition {} (total so far: {})", partitionYieldTables.size(),
@@ -206,7 +207,9 @@ public class BatchResultAggregationService {
 		);
 
 		// Merge all yield tables in the correct order (DO NOT re-sort here)
-		mergeYieldTables(allYieldTablePaths, zipOut, partitionOutputDirs);
+		for (Map.Entry<String, List<Path>> entry : allYieldTablePaths.entrySet()) {
+			mergeYieldTables(entry.getValue(), zipOut, partitionOutputDirs, entry.getKey());
+		}
 
 		logger.debug("Aggregated {} yield table files in order", allYieldTablePaths.size());
 	}
@@ -217,8 +220,8 @@ public class BatchResultAggregationService {
 	 * @return List of yield table file paths from this partition
 	 * @throws IOException if directory walking fails
 	 */
-	private List<Path> collectYieldTablesFromPartition(Path partitionOutputDir) throws IOException {
-		List<Path> yieldTables = new ArrayList<>();
+	private Map<String, List<Path>> collectYieldTablesFromPartition(Path partitionOutputDir) throws IOException {
+		Map<String, List<Path>> yieldTables = new HashMap<String, List<Path>>();
 
 		if (!isValidPartitionDirectory(partitionOutputDir)) {
 			return yieldTables;
@@ -226,7 +229,15 @@ public class BatchResultAggregationService {
 
 		try (Stream<Path> files = Files.walk(partitionOutputDir)) {
 			files.filter(Files::isRegularFile).filter(file -> isYieldTableFile(file.getFileName().toString()))
-					.forEach(yieldTables::add);
+					.forEach(t -> {
+						String fileName = t.getFileName().toString();
+						int periodIndex = fileName.lastIndexOf(".");
+						String fileType = fileName.substring(periodIndex + 1).toLowerCase();
+						yieldTables.computeIfAbsent(fileType, k -> new ArrayList<>()).add(t);
+						logger.trace(
+								"Found yield table file: {} in partition {}", fileName, partitionOutputDir.getFileName()
+						);
+					});
 		}
 
 		return yieldTables;
@@ -246,9 +257,10 @@ public class BatchResultAggregationService {
 	 *
 	 * @throws IOException if merging fails
 	 */
-	private void mergeYieldTables(List<Path> tablePaths, ZipOutputStream zipOut, List<Path> partitionOutputDirs)
-			throws IOException {
-		ZipEntry zipEntry = new ZipEntry(BatchConstants.File.YIELD_TABLE_FILENAME);
+	private void mergeYieldTables(
+			List<Path> tablePaths, ZipOutputStream zipOut, List<Path> partitionOutputDirs, String fileType
+	) throws IOException {
+		ZipEntry zipEntry = new ZipEntry(BatchConstants.File.YIELD_TABLE_TYPE + "." + fileType);
 		zipOut.putNextEntry(zipEntry);
 
 		TableNumberAssigner tableNumberAssigner = new TableNumberAssigner();
