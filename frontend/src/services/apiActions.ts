@@ -277,6 +277,23 @@ export const getFileForDownload = async (
 }
 
 /**
+ * Streams the results ZIP file for a projection via backend proxy.
+ * @param projectionGUID The projection GUID.
+ * @returns A promise that resolves to the full Axios response containing the zip blob.
+ */
+export const streamResultsZip = async (
+  projectionGUID: string,
+): Promise<any> => {
+  try {
+    const response = await apiClient.streamResultsZip(projectionGUID)
+    return response
+  } catch (error) {
+    console.error('Error streaming results zip:', error)
+    throw error
+  }
+}
+
+/**
  * Deletes a file from a fileset.
  * @param projectionGUID The projection GUID.
  * @param fileSetGUID The fileset GUID.

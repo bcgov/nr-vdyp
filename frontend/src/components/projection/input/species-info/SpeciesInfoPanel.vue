@@ -277,12 +277,15 @@ const onConfirm = async () => {
   }
 
   // Save projection (create or update) before confirming the panel
+  appStore.isSavingProjection = true
   try {
     await saveProjectionOnPanelConfirm(modelParameterStore, panelName)
   } catch (error) {
     console.error('Error saving projection:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
     return
+  } finally {
+    appStore.isSavingProjection = false
   }
 
   // this panel is not in a confirmed state

@@ -24,7 +24,7 @@ permissions:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v3
@@ -36,6 +36,15 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+    - name: Docker diagnostics
+      shell: bash
+      run: |
+        set -euxo pipefail
+        command -v docker
+        docker --version
+        docker version
+        docker info
+        ls -l /var/run/docker.sock || true
     - name: Cache SonarCloud packages
       uses: actions/cache@v3
       with:

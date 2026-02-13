@@ -86,7 +86,7 @@ import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
 import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH } from '@/constants/constants'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
-import { downloadFile, downloadURL, sanitizeFileName } from '@/utils/util'
+import { downloadFile, sanitizeFileName } from '@/utils/util'
 import { AppButton, AppProgressCircular } from '@/components'
 import { ProjectionTable, ProjectionCardList, ProjectionPagination } from '@/components/projection'
 import {
@@ -99,7 +99,7 @@ import {
   isProjectionReadOnly,
   mapProjectionStatus,
   getFileSetFiles,
-  getFileForDownload,
+  streamResultsZip,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -381,54 +381,9 @@ const handleDownload = async (projectionGUID: string) => {
   progressMessage.value = PROGRESS_MSG.DOWNLOADING_PROJECTION
 
   try {
-    // Get full projection model to access resultFileSet
-    const projectionModel = await getProjectionById(projectionGUID)
-    const resultFileSetGUID = projectionModel.resultFileSet?.projectionFileSetGUID
-
-    if (!resultFileSetGUID) {
-      notificationStore.showErrorMessage(
-        PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    // Get list of files in the result fileset
-    const files = await getFileSetFiles(projectionGUID, resultFileSetGUID)
-
-    if (!files || files.length === 0) {
-      notificationStore.showErrorMessage(
-        PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    // The backend stores results as a zip file — download it directly and rename
-    const resultFile = files[0]
-    if (!resultFile.fileMappingGUID) {
-      notificationStore.showErrorMessage(
-        PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    const fileMapping = await getFileForDownload(
-      projectionGUID,
-      resultFileSetGUID,
-      resultFile.fileMappingGUID,
-    )
-
-    if (!fileMapping.downloadURL) {
-      notificationStore.showErrorMessage(
-        PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    downloadURL(fileMapping.downloadURL, zipFileName);
+    // Stream the results zip via backend proxy and download with custom filename
+    const { zipBlob } = await streamResultsZip(projectionGUID)
+    downloadFile(zipBlob, zipFileName)
 
     notificationStore.showSuccessMessage(
       SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),

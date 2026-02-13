@@ -241,6 +241,24 @@ export const apiClient = {
   },
 
   /**
+   * Streams the results ZIP file for a projection via backend proxy.
+   * @param projectionGUID The projection GUID.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the zip blob.
+   */
+  streamResultsZip: (projectionGUID: string, options?: AxiosRequestConfig) => {
+    const customOptions: AxiosRequestConfig = {
+      headers: {
+        Accept: 'application/zip',
+        ...options?.headers,
+      },
+      responseType: 'blob',
+      ...options,
+    }
+    return projectionApiInstance.streamResultsZip(projectionGUID, customOptions)
+  },
+
+  /**
    * Deletes a file from a fileset.
    * @param projectionGUID The projection GUID.
    * @param fileSetGUID The fileset GUID.

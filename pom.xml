@@ -303,6 +303,9 @@
 						<include>**/Test*.java</include>
 						<include>**/*Test.java</include>
 					</includes>
+					<systemPropertyVariables>
+						<api.version>1.44</api.version>
+					</systemPropertyVariables>
 					<skipTests>${skipUnitTests}</skipTests>
 				</configuration>
 			</plugin>
@@ -315,6 +318,10 @@
 						<include>**/ITDataDriven.java</include>
 					</includes>
 					<skipTests>${skipIntegrationTests}</skipTests>
+
+					<systemPropertyVariables>
+						<api.version>1.44</api.version>
+					</systemPropertyVariables>
 				</configuration>
 				<executions>
 					<execution>
