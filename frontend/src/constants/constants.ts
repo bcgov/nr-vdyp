@@ -209,7 +209,7 @@ export const FILE_NAME = Object.freeze({
   LOG_TXT: 'ProgressLog.txt',
   DEBUG_TXT: 'DebugLog.txt',
   YIELD_TABLE_CSV: 'YieldTable.csv',
-  YIELD_TABLE_TXT: 'YieldReport.txt',
+  YIELD_TABLE_TXT: 'YieldTable.txt',
   INPUT_POLY_CSV: 'VDYP7_INPUT_POLY.csv',
   INPUT_LAYER_CSV: 'VDYP7_INPUT_LAYER.csv',
 })

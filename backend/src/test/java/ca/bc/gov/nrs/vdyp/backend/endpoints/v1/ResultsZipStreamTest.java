@@ -180,9 +180,7 @@ class ResultsZipStreamTest {
 		Response resp = endpoint.streamResultsZip(guid, mock(HttpHeaders.class));
 		StreamingOutput so = (StreamingOutput) resp.getEntity();
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		WebApplicationException ex = assertThrows(
-				WebApplicationException.class, () -> so.write(outputStream)
-		);
+		WebApplicationException ex = assertThrows(WebApplicationException.class, () -> so.write(outputStream));
 
 		assertEquals(500, ex.getResponse().getStatus());
 

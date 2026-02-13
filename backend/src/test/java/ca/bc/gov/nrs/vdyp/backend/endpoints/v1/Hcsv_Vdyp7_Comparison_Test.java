@@ -29,6 +29,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -437,6 +438,69 @@ class Hcsv_Vdyp7_Comparison_Test {
 															VdypMatchers.parseAs(
 																	closeTo(15.3942f, 0.02f), ValueParser.FLOAT
 															)
+													)
+											)
+									)
+							)
+					)
+			);
+		});
+
+	}
+
+	@Test
+	void test899_F06() throws IOException, ResourceParseException {
+
+		logger.info("Starting vdyp-899-F06");
+
+		runIntTestData("f-record-test-06-noback", result -> {
+			result.entrySet();
+
+			assertThat(
+					result,
+					(Matcher<? super ResultYieldTable>) hasSpecificEntry(
+							"2086846",
+							hasSpecificEntry(
+									"1",
+									hasSpecificEntry(
+											"2023",
+											Matchers.allOf(
+													hasSpecificEntry(
+															"PRJ_VOL_DW",
+															VdypMatchers
+																	.parseAs(closeTo(9.9627f, 0.02f), ValueParser.FLOAT)
+													)
+											)
+									)
+							)
+					)
+			);
+		});
+
+	}
+
+	@Test
+	@Disabled("VDYP-899")
+	void test899_F13() throws IOException, ResourceParseException {
+
+		logger.info("Starting vdyp-899-F13");
+
+		runIntTestData("f-record-test-13-noback", result -> {
+			result.entrySet();
+
+			assertThat(
+					result,
+					(Matcher<? super ResultYieldTable>) hasSpecificEntry(
+							"2086846",
+							hasSpecificEntry(
+									"1",
+									hasSpecificEntry(
+											"2023",
+											Matchers.allOf(
+													hasSpecificEntry(
+															"PRJ_TPH",
+															VdypMatchers
+																	.parseAs(closeTo(458.86f, 0.02f), ValueParser.FLOAT)
 													)
 											)
 									)
