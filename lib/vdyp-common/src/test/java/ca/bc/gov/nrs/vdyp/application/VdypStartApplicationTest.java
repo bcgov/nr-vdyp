@@ -45,7 +45,6 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
-import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
@@ -1456,13 +1455,11 @@ class VdypStartApplicationTest {
 					});
 				});
 
-				var ex = assertThrows(
-						BaseAreaLowException.class,
+				var result = assertDoesNotThrow(
 						() -> app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f)
 				);
 
-				assertThat(ex, hasProperty("value", present(is(0f))));
-				assertThat(ex, hasProperty("threshold", present(is(0.05f))));
+				assertThat(result, is(0.05f));
 			}
 		}
 

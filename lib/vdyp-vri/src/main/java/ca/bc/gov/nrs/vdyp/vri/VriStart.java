@@ -1362,21 +1362,15 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		};
 	}
 
-	VriPolygon processBatc(VriPolygon poly) throws FatalProcessingException, PreprocessEstimatedBaseAreaLowException {
+	VriPolygon processBatc(VriPolygon poly) throws FatalProcessingException {
 
 		try {
 			VriLayer primaryLayer = getPrimaryLayer(poly);
 			Optional<VriLayer> veteranLayer = getVeteranLayer(poly);
 			var bec = poly.getBiogeoclimaticZone();
 
-			//
-			final float percentForestLand = poly.getPercentAvailable().orElseGet(() -> {
-				try {
-					return this.estimatePercentForestLand(poly, veteranLayer, primaryLayer);
-				} catch (ProcessingException ex) {
-					throw new RuntimeProcessingException(ex);
-				}
-			}); // PCTFLAND
+			final float percentForestLand = poly.getPercentAvailable()
+					.orElseGet(() -> this.estimatePercentForestLand(poly, veteranLayer, primaryLayer)); // PCTFLAND
 
 			final float primaryBreastHeightAge = getLayerBreastHeightAge(primaryLayer).orElseThrow();
 
@@ -1415,8 +1409,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		} catch (RuntimeProcessingException | LayerMissingException ex) {
 			throw new FatalProcessingException(ex);
-		} catch (BaseAreaLowException e) {
-			throw new PreprocessEstimatedBaseAreaLowException(e);
 		}
 	}
 
