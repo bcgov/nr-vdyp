@@ -476,6 +476,7 @@ const removePolygonFile = async () => {
   const projectionGUID = appStore.getCurrentProjectionGUID
   if (!projectionGUID || !fileUploadStore.polygonFileInfo) return
 
+  fileUploadStore.isDeletingFile = true
   try {
     await deleteFileFromFileSet(
       projectionGUID,
@@ -486,6 +487,8 @@ const removePolygonFile = async () => {
   } catch (error) {
     console.error('Error removing polygon file:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.FILE_DELETE_FAILED, PROJECTION_ERR.FILE_DELETE_FAILED_TITLE)
+  } finally {
+    fileUploadStore.isDeletingFile = false
   }
 }
 
@@ -509,6 +512,7 @@ const removeLayerFile = async () => {
   const projectionGUID = appStore.getCurrentProjectionGUID
   if (!projectionGUID || !fileUploadStore.layerFileInfo) return
 
+  fileUploadStore.isDeletingFile = true
   try {
     await deleteFileFromFileSet(
       projectionGUID,
@@ -519,6 +523,8 @@ const removeLayerFile = async () => {
   } catch (error) {
     console.error('Error removing layer file:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.FILE_DELETE_FAILED, PROJECTION_ERR.FILE_DELETE_FAILED_TITLE)
+  } finally {
+    fileUploadStore.isDeletingFile = false
   }
 }
 
@@ -547,12 +553,15 @@ const onConfirm = async () => {
 
   // Save projection (update parameters) before confirming the panel
   // Note: Files are already uploaded immediately, so we just update params
+  appStore.isSavingProjection = true
   try {
     await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
   } catch (error) {
     console.error('Error saving projection:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
     return
+  } finally {
+    appStore.isSavingProjection = false
   }
 
   if (!isConfirmed.value) {
@@ -679,6 +688,23 @@ const handleDialogClose = () => {}
 .file-upload-col-right {
   padding-left: 12px !important;
   padding-right: 0 !important;
+}
+
+/* Responsive stacking below 1000px */
+@media (max-width: 999px) {
+  .file-upload-col {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  .file-upload-col-left {
+    padding-right: 0 !important;
+    margin-bottom: 16px;
+  }
+
+  .file-upload-col-right {
+    padding-left: 0 !important;
+  }
 }
 
 /* File display for view mode */

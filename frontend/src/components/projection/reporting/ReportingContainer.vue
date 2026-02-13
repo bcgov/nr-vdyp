@@ -2,7 +2,6 @@
   <v-container fluid class="bcds-reporting-container">
     <ReportingActions
       :isButtonDisabled="isButtonDisabled"
-      :isRawResultsButtonDisabled="isRawResultsButtonDisabled"
       :tabname="tabname"
       @print="handlePrint"
       @download="handleDownload"
@@ -21,7 +20,7 @@ import {
   downloadCSVFile,
   printReport,
 } from '@/services/reportService'
-import { useAppStore } from '@/stores/projection/appStore'
+// import { useAppStore } from '@/stores/projection/appStore'
 import { useProjectionStore } from '@/stores/projection/projectionStore'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { ReportingTab } from '@/types/types'
@@ -34,20 +33,20 @@ const props = defineProps({
     required: true,
   },
 })
-const appStore = useAppStore()
+// const appStore = useAppStore()
 const projectionStore = useProjectionStore()
 
 const data = computed(() => {
   switch (props.tabname) {
     case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
-      if (
-        appStore.modelSelection ===
-        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-      ) {
-        return [...projectionStore.txtYieldLines]
-      } else {
+      // if (
+      //   appStore.modelSelection ===
+      //   CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      // ) {
+      //   return [...projectionStore.txtYieldLines]
+      // } else {
         return [...projectionStore.csvYieldLines]
-      }
+      // }
     case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
       return [...projectionStore.errorMessages]
     case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
@@ -66,26 +65,18 @@ const downloadData = computed(() => {
 
 const printData = computed(() => {
   if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT) {
-    if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
-        return [...projectionStore.txtYieldLines]
-    } else {
+    // if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
+    //     return [...projectionStore.txtYieldLines]
+    // } else {
         return [...projectionStore.csvYieldLines]
-    }
+    // }
   }
   else return data.value
-})
-
-const rawResults = computed(() => {
-  if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT) {
-    return projectionStore.rawResultZipFile
-  }
-  return null
 })
 
 const isButtonDisabled = computed(
   () => !downloadData.value || downloadData.value.length === 0,
 )
-const isRawResultsButtonDisabled = computed(() => !rawResults.value)
 
 const handleDownload = () => {
   if (!downloadData.value || downloadData.value.length === 0) {

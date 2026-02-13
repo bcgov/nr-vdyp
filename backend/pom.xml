@@ -20,8 +20,9 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.10.1</quarkus.platform.version>
+		<quarkus.platform.version>3.10.1</quarkus.platform.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
+		<testcontainers.version>2.0.2</testcontainers.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -38,7 +39,14 @@
 					</exclusion>
 				</exclusions>
       </dependency>
-    </dependencies>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-bom</artifactId>
+				<version>${testcontainers.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
   </dependencyManagement>
   <dependencies>
     <dependency>
@@ -288,7 +296,6 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>5.11.0</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -342,7 +349,7 @@
 						<include>**/Test*.java</include>
 						<include>**/*Test.java</include>
 					</includes>
-          <systemPropertyVariables>
+					<systemPropertyVariables>
             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
             <maven.home>${maven.home}</maven.home>
           </systemPropertyVariables>
@@ -361,6 +368,7 @@
 								<include>**/ITDataDriven.java</include>
 							</includes>
 							<systemPropertyVariables>
+								<api.version>1.44</api.version>
                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                 <maven.home>${maven.home}</maven.home>
@@ -385,5 +393,5 @@
         <quarkus.native.enabled>true</quarkus.native.enabled>
       </properties>
     </profile>
-  </profiles>
+	</profiles>
 </project>

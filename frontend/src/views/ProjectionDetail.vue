@@ -1,8 +1,8 @@
 <template>
   <AppProgressCircular
-    :isShow="isProgressVisible"
+    :isShow="showProgress"
     :showMessage="true"
-    :message="progressMessage"
+    :message="progressMessage || fileOperationMessage"
     :hasBackground="true"
   />
   <v-container fluid>
@@ -118,11 +118,12 @@
   </v-container>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useReportingStore } from '@/stores/reportingStore'
+import { useProjectionStore } from '@/stores/projection/projectionStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import {
   AppProgressCircular,
@@ -140,7 +141,7 @@ import {
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE } from '@/constants'
-import { mapProjectionStatus, cancelProjection, getProjectionById, getFileSetFiles, getFileForDownload } from '@/services/projectionService'
+import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runProjection } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
@@ -148,14 +149,24 @@ import {
   delay,
   getStatusIcon,
   downloadFile,
-  downloadURL,
   sanitizeFileName,
+  checkZipForErrors,
 } from '@/utils/util'
-import { logSuccessMessage } from '@/utils/messageHandler'
+import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 import { DownloadIcon } from '@/assets/'
 
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
+const isFileUploading = computed(() => fileUploadStore.isUploadingPolygon || fileUploadStore.isUploadingLayer)
+const isDeletingFile = computed(() => fileUploadStore.isDeletingFile)
+const isSaving = computed(() => appStore.isSavingProjection)
+const showProgress = computed(() => isProgressVisible.value || isFileUploading.value || isDeletingFile.value || isSaving.value)
+const fileOperationMessage = computed(() => {
+  if (isSaving.value) return MESSAGE.PROGRESS_MSG.SAVING_PROJECTION
+  if (isDeletingFile.value) return MESSAGE.PROGRESS_MSG.DELETING_FILE
+  if (isFileUploading.value) return MESSAGE.PROGRESS_MSG.UPLOADING_FILE
+  return ''
+})
 const modelParamActiveTab = ref(0)
 const fileUploadActiveTab = ref(0)
 
@@ -163,6 +174,7 @@ const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const fileUploadStore = useFileUploadStore()
 const reportingStore = useReportingStore()
+const projectionStore = useProjectionStore()
 const notificationStore = useNotificationStore()
 
 const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
@@ -180,19 +192,19 @@ const modelParamTabs = computed<Tab[]>(() => [
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.MODEL_REPORT,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
-    disabled: !reportingStore.modelParamReportingTabsEnabled,
+    disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.VIEW_LOG_FILE,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
-    disabled: !reportingStore.modelParamReportingTabsEnabled,
+    disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.VIEW_ERROR_MESSAGES,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
-    disabled: !reportingStore.modelParamReportingTabsEnabled,
+    disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
 ])
 
@@ -202,24 +214,6 @@ const fileUploadTabs = computed<Tab[]>(() => [
     component: ReportInfoPanel,
     tabname: null,
     disabled: false,
-  },
-  {
-    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.MODEL_REPORT,
-    component: ReportingContainer,
-    tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
-    disabled: !reportingStore.fileUploadReportingTabsEnabled,
-  },
-  {
-    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.VIEW_LOG_FILE,
-    component: ReportingContainer,
-    tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
-    disabled: !reportingStore.fileUploadReportingTabsEnabled,
-  },
-  {
-    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.VIEW_ERROR_MESSAGES,
-    component: ReportingContainer,
-    tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
-    disabled: !reportingStore.fileUploadReportingTabsEnabled,
   },
 ])
 
@@ -240,11 +234,71 @@ const isFileUploadPanelsVisible = computed(() => {
   )
 })
 
+/**
+ * Enables reporting tabs, navigates to the appropriate tab, and shows a result message.
+ * Navigates to Error Messages tab if errors are found, otherwise Model Report tab.
+ */
+const enableTabsAndNavigate = async (hasErrors: boolean, showMessage: boolean = true) => {
+  reportingStore.modelParamEnableTabs()
+  await nextTick()
+  setTimeout(() => {
+    modelParamActiveTab.value = hasErrors
+      ? CONSTANTS.MODEL_PARAM_TAB_INDEX.VIEW_ERROR_MESSAGES
+      : CONSTANTS.MODEL_PARAM_TAB_INDEX.MODEL_REPORT
+  }, 100)
+
+  if (showMessage) {
+    if (hasErrors) {
+      logErrorMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_W_ERR_TITLE)
+    } else {
+      logSuccessMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT, null, false, false, MESSAGE.SUCCESS_MSG.PROJECTION_RUN_RESULT_TITLE)
+    }
+  }
+}
+
+/**
+ * Fetches the result zip file for a READY projection, parses it,
+ * populates the report tabs, and navigates to the appropriate tab.
+ * Navigates to Error Messages tab if errors are found, otherwise Model Report tab.
+ */
+const fetchAndPopulateResults = async (showMessage: boolean = true) => {
+  const projectionGUID = appStore.currentProjectionGUID
+  if (!projectionGUID) return
+
+  try {
+    isProgressVisible.value = true
+    progressMessage.value = MESSAGE.PROGRESS_MSG.LOADING_RESULTS
+
+    // Stream the results zip via backend proxy (avoids CORS issues with direct S3 access)
+    const { zipBlob, zipFileName } = await streamResultsZip(projectionGUID)
+
+    const hasErrors = await checkZipForErrors(zipBlob)
+    await projectionStore.handleZipResponse(zipBlob, zipFileName)
+
+    await enableTabsAndNavigate(hasErrors, showMessage)
+  } catch (error) {
+    console.error('Error fetching and populating results:', error)
+    notificationStore.showErrorMessage(
+      MESSAGE.PROJECTION_ERR.RESULTS_LOAD_FAILED,
+      MESSAGE.PROJECTION_ERR.RESULTS_LOAD_FAILED_TITLE,
+    )
+  } finally {
+    isProgressVisible.value = false
+  }
+}
+
 onMounted(() => {
   // Only initialize species groups for new projections
   // For existing projections (view/edit), the values are already restored from the backend
   if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD) {
     fileUploadStore.initializeSpeciesGroups()
+  }
+
+  // For READY Input Model Parameters projections, automatically fetch and display results
+  // File Upload projections do not have reporting tabs; users download the ZIP instead
+  // Skip showing result messages when navigating from the list view
+  if (isReady.value && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
+    fetchAndPopulateResults(false)
   }
 })
 
@@ -368,6 +422,11 @@ const cancelRunHandler = async () => {
 
       if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
         notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED_TITLE)
+        isProgressVisible.value = false
+        if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
+          await fetchAndPopulateResults()
+        }
+        return
       } else if (latestStatus === CONSTANTS.PROJECTION_STATUS.FAILED) {
         notificationStore.showWarningMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_FAILED_TITLE)
       } else {
@@ -407,51 +466,9 @@ const handleDownloadReport = async () => {
   progressMessage.value = MESSAGE.PROGRESS_MSG.DOWNLOADING_PROJECTION
 
   try {
-    const projectionModel = await getProjectionById(projectionGUID)
-    const resultFileSetGUID = projectionModel.resultFileSet?.projectionFileSetGUID
-
-    if (!resultFileSetGUID) {
-      notificationStore.showErrorMessage(
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    const files = await getFileSetFiles(projectionGUID, resultFileSetGUID)
-
-    if (!files || files.length === 0) {
-      notificationStore.showErrorMessage(
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    const resultFile = files[0]
-    if (!resultFile.fileMappingGUID) {
-      notificationStore.showErrorMessage(
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    const fileMapping = await getFileForDownload(
-      projectionGUID,
-      resultFileSetGUID,
-      resultFile.fileMappingGUID,
-    )
-
-    if (!fileMapping.downloadURL) {
-      notificationStore.showErrorMessage(
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED(zipFileName),
-        MESSAGE.PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
-      return
-    }
-
-    downloadURL(fileMapping.downloadURL, zipFileName);
+    // Stream the results zip via backend proxy and download with custom filename
+    const { zipBlob } = await streamResultsZip(projectionGUID)
+    downloadFile(zipBlob, zipFileName)
 
     notificationStore.showSuccessMessage(
       MESSAGE.SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),

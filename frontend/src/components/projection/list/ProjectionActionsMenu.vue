@@ -90,7 +90,7 @@
         </div>
       </v-list-item>
 
-      <!-- Delete: for Draft and Failed only (not Ready or Running) -->
+      <!-- Delete: for Draft, Failed, Ready only (not Running) -->
       <v-list-item
         v-if="status === PROJECTION_STATUS.DRAFT || status === PROJECTION_STATUS.FAILED || status === PROJECTION_STATUS.READY"
         class="action-menu-item danger"
