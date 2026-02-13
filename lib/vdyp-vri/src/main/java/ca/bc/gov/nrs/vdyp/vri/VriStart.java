@@ -1369,10 +1369,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			Optional<VriLayer> veteranLayer = getVeteranLayer(poly);
 			var bec = poly.getBiogeoclimaticZone();
 
-			//
-			final float percentForestLand = poly.getPercentAvailable().orElseGet(() -> {
-				return this.estimatePercentForestLand(poly, veteranLayer, primaryLayer);
-			}); // PCTFLAND
+			final float percentForestLand = poly.getPercentAvailable()
+					.orElseGet(() -> this.estimatePercentForestLand(poly, veteranLayer, primaryLayer)); // PCTFLAND
 
 			final float primaryBreastHeightAge = getLayerBreastHeightAge(primaryLayer).orElseThrow();
 
