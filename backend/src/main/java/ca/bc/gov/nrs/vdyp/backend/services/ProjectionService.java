@@ -88,6 +88,7 @@ public class ProjectionService {
 	private final ProjectionBatchMappingService batchMappingService;
 	private final ProjectionStatusCodeLookup statusLookup;
 	private final CalculationEngineCodeLookup calclationEngineLookup;
+	private final VDYPUserService userService;
 	private final ObjectMapper objectMapper;
 
 	private static final String FILE_SET_IDENTIFIER = "file set";
@@ -97,11 +98,13 @@ public class ProjectionService {
 	private static final String FILE_GET_ERROR = "Error getting file";
 	private static final String FILES_DELETE_ERROR = "Error deleting files";
 
+	private static final int BATCH_DELETE_LIMIT = 50;
+
 	public ProjectionService(
 			EntityManager em, ProjectionResourceAssembler assembler, ProjectionRepository repository,
 			ProjectionFileSetService fileSetService, ProjectionBatchMappingService batchMappingService,
 			ProjectionStatusCodeLookup statusLookup, CalculationEngineCodeLookup calclationEngineLookup,
-			ObjectMapper objectMapper
+			VDYPUserService userService, ObjectMapper objectMapper
 	) {
 		this.em = em;
 		this.assembler = assembler;
@@ -110,6 +113,7 @@ public class ProjectionService {
 		this.batchMappingService = batchMappingService;
 		this.statusLookup = statusLookup;
 		this.calclationEngineLookup = calclationEngineLookup;
+		this.userService = userService;
 		this.objectMapper = objectMapper;
 	}
 
@@ -655,4 +659,21 @@ public class ProjectionService {
 		fileSetService.deleteAllFilesFromFileSet(fileSetGUID, actingUser);
 	}
 
+	public void cleanupExpiredProjections() {
+		while (true) {
+			List<UUID> expiredProjections = repository.findExpiredIDs(BATCH_DELETE_LIMIT);
+			if (expiredProjections.isEmpty()) {
+				return;
+			}
+			VDYPUserModel systemUser = userService.getSystemUser();
+			for (UUID projectionGUID : expiredProjections) {
+				try {
+					deleteProjection(projectionGUID, systemUser);
+					logger.info("Deleted expired projection: {}", projectionGUID);
+				} catch (ProjectionServiceException e) {
+					logger.error("Failed to delete expired projection: {}", projectionGUID, e);
+				}
+			}
+		}
+	}
 }
