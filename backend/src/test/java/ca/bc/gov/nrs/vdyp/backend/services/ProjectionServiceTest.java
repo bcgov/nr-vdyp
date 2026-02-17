@@ -80,6 +80,8 @@ class ProjectionServiceTest {
 	CalculationEngineCodeLookup calculationEngineCodeLookup;
 	@Mock
 	ProjectionBatchMappingService batchMappingService;
+	@Mock
+	VDYPUserService userService;
 	ProjectionResourceAssembler assembler;
 
 	ProjectionService service;
@@ -90,7 +92,7 @@ class ProjectionServiceTest {
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, new ObjectMapper()
+				calculationEngineCodeLookup, userService, new ObjectMapper()
 		);
 	}
 
@@ -407,7 +409,7 @@ class ProjectionServiceTest {
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, failingMapper
+				calculationEngineCodeLookup, userService, failingMapper
 		);
 
 		UUID projectionId = UUID.randomUUID();
