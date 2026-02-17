@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -994,5 +995,93 @@ class ProjectionServiceTest {
 		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
 
 		verify(batchMappingService, times(1)).cancelProjection(any());
+	}
+
+	@Test
+	void cleanupExpiredProjections_doesNothing_whenNoExpiredProjections() {
+		when(repository.findExpiredIDs(anyInt())).thenReturn(List.of());
+		service.cleanupExpiredProjections();
+
+		verify(repository, never()).delete(any());
+	}
+
+	@Test
+	void cleanupExpiredProjections_deletesExpiredProjectionsByID() throws ProjectionServiceException {
+
+		UUID expiredId1 = UUID.randomUUID();
+		VDYPUserModel systemUser = user(UUID.randomUUID());
+		UserTypeCodeModel systemType = new UserTypeCodeModel();
+		systemType.setCode(UserTypeCodeModel.SYSTEM);
+		systemUser.setUserTypeCode(systemType);
+
+		ProjectionEntity entity = projectionEntity(expiredId1, UUID.randomUUID());
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.DRAFT);
+		entity.setProjectionStatusCode(statusEntity);
+
+		UUID fsId = UUID.randomUUID();
+		ProjectionFileSetEntity polygon = fileSetEntity(fsId);
+		ProjectionFileSetEntity layer = fileSetEntity(UUID.randomUUID());
+		ProjectionFileSetEntity results = fileSetEntity(UUID.randomUUID());
+
+		entity.setPolygonFileSet(polygon);
+		entity.setLayerFileSet(layer);
+		entity.setResultFileSet(results);
+
+		when(repository.findExpiredIDs(anyInt())).thenReturn(List.of(expiredId1)).thenReturn(List.of());
+		when(userService.getSystemUser()).thenReturn(systemUser);
+		when(repository.findByIdOptional(expiredId1)).thenReturn(Optional.of(entity));
+		when(repository.countUsesFileSet(fsId)).thenReturn(0L);
+		when(repository.countUsesFileSet(layer.getProjectionFileSetGUID())).thenReturn(0L);
+		when(repository.countUsesFileSet(results.getProjectionFileSetGUID())).thenReturn(0L);
+
+		service.cleanupExpiredProjections();
+
+		verify(repository).delete(entity);
+		verify(fileSetService).deleteFileSetById(fsId);
+		verify(fileSetService).deleteFileSetById(layer.getProjectionFileSetGUID());
+		verify(fileSetService).deleteFileSetById(results.getProjectionFileSetGUID());
+		verify(batchMappingService).deleteMappingsForProjection(entity);
+	}
+
+	@Test
+	void cleanupExpiredProjections_skipsFailedProjectionsByID() throws ProjectionServiceException {
+		VDYPUserModel systemUser = user(UUID.randomUUID());
+		UserTypeCodeModel systemType = new UserTypeCodeModel();
+		systemType.setCode(UserTypeCodeModel.SYSTEM);
+		systemUser.setUserTypeCode(systemType);
+
+		UUID expiredId1 = UUID.randomUUID();
+		UUID expiredId2 = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(expiredId2, UUID.randomUUID());
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.DRAFT);
+		entity.setProjectionStatusCode(statusEntity);
+
+		UUID fsId = UUID.randomUUID();
+		ProjectionFileSetEntity polygon = fileSetEntity(fsId);
+		ProjectionFileSetEntity layer = fileSetEntity(UUID.randomUUID());
+		ProjectionFileSetEntity results = fileSetEntity(UUID.randomUUID());
+
+		entity.setPolygonFileSet(polygon);
+		entity.setLayerFileSet(layer);
+		entity.setResultFileSet(results);
+
+		when(repository.findExpiredIDs(anyInt())).thenReturn(List.of(expiredId1, expiredId2))
+				.thenReturn(List.of(expiredId1));
+		when(userService.getSystemUser()).thenReturn(systemUser);
+		when(repository.findByIdOptional(expiredId1)).thenReturn(Optional.empty());
+		when(repository.findByIdOptional(expiredId2)).thenReturn(Optional.of(entity));
+
+		service.cleanupExpiredProjections();
+
+		verify(repository).delete(entity);
+		verify(fileSetService).deleteFileSetById(fsId);
+		verify(fileSetService).deleteFileSetById(layer.getProjectionFileSetGUID());
+		verify(fileSetService).deleteFileSetById(results.getProjectionFileSetGUID());
+		verify(batchMappingService).deleteMappingsForProjection(entity);
 	}
 }

@@ -16,6 +16,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -660,18 +661,23 @@ public class ProjectionService {
 	}
 
 	public void cleanupExpiredProjections() {
+		VDYPUserModel systemUser = userService.getSystemUser();
+		Set<UUID> failedIds = new HashSet<>();
 		while (true) {
 			List<UUID> expiredProjections = repository.findExpiredIDs(BATCH_DELETE_LIMIT);
-			if (expiredProjections.isEmpty()) {
+
+			List<UUID> attemptIds = expiredProjections.stream().filter(id -> !failedIds.contains(id)).toList();
+			if (attemptIds.isEmpty()) {
 				return;
 			}
-			VDYPUserModel systemUser = userService.getSystemUser();
-			for (UUID projectionGUID : expiredProjections) {
+
+			for (UUID projectionGUID : attemptIds) {
 				try {
 					deleteProjection(projectionGUID, systemUser);
 					logger.info("Deleted expired projection: {}", projectionGUID);
 				} catch (ProjectionServiceException e) {
 					logger.error("Failed to delete expired projection: {}", projectionGUID, e);
+					failedIds.add(projectionGUID);
 				}
 			}
 		}
