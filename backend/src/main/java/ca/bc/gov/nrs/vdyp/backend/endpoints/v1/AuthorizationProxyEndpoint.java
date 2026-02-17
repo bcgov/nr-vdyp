@@ -23,7 +23,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
 @ApplicationScoped
-@Path("/auth/realms/standard")
+@Path("/auth")
 public class AuthorizationProxyEndpoint {
 
 	OidcConfig cfg;
@@ -35,7 +35,7 @@ public class AuthorizationProxyEndpoint {
 	}
 
 	@POST
-	@Path("/protocol/openid-connect/token")
+	@Path("/realms/standard/protocol/openid-connect/token")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response token(@Context UriInfo uriInfo, MultivaluedMap<String, String> form) {
@@ -54,42 +54,42 @@ public class AuthorizationProxyEndpoint {
 	}
 
 	@GET
-	@Path("/protocol/openid-connect/auth")
+	@Path("/realms/standard/protocol/openid-connect/auth")
 	public Response authorize(@Context UriInfo uriInfo) {
 
 		return forwardSimpleRequest("/protocol/openid-connect/auth", uriInfo);
 	}
 
 	@GET
-	@Path("/.well-known/openid-configuration")
+	@Path("/realms/standard/.well-known/openid-configuration")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response forwardConfig(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/.well-known/openid-configuration", uriInfo);
 	}
 
 	@GET
-	@Path("/protocol/openid-connect/token/introspect")
+	@Path("/realms/standard/protocol/openid-connect/token/introspect")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response forwardIntrospect(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/protocol/openid-connect/token/introspect", uriInfo);
 	}
 
 	@GET
-	@Path("/protocol/openid-connect/userinfo")
+	@Path("/realms/standard/protocol/openid-connect/userinfo")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response forwardUserInfo(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/protocol/openid-connect/userinfo", uriInfo);
 	}
 
 	@GET
-	@Path("/protocol/openid-connect/certs")
+	@Path("/realms/standard/protocol/openid-connect/certs")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response forwardCerts(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/protocol/openid-connect/certs", uriInfo);
 	}
 
 	@GET
-	@Path("/protocol/openid-connect/logout")
+	@Path("/realms/standard/protocol/openid-connect/logout")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response forwardLogout(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/protocol/openid-connect/logout", uriInfo);
@@ -102,7 +102,7 @@ public class AuthorizationProxyEndpoint {
 	}
 
 	@GET
-	@Path("/protocol/openid-connect/3p-cookies/{page}")
+	@Path("/realms/standard/protocol/openid-connect/3p-cookies/{page}")
 	public Uni<Response> forward3pCookies(
 			@Context UriInfo uriInfo, @Context jakarta.ws.rs.core.HttpHeaders headers,
 			@jakarta.ws.rs.PathParam("page") String page
@@ -128,11 +128,32 @@ public class AuthorizationProxyEndpoint {
 	}
 
 	@GET
-	@Path("/protocol/openid-connect/login-status-iframe.html")
-	public Uni<Response> forward3pCookies(@Context UriInfo uriInfo, @Context jakarta.ws.rs.core.HttpHeaders headers) {
+	@Path("/realms/standard/protocol/openid-connect/login-status-iframe.html")
+	public Uni<Response>
+			forwardLoginStatusIframe(@Context UriInfo uriInfo, @Context jakarta.ws.rs.core.HttpHeaders headers) {
 
 		String qs = uriInfo.getRequestUri().getRawQuery();
-		String target = cfg.authServerUrl() + "/protocol/openid-connect/3p-cookies/login-status-iframe.html";
+		String target = cfg.authServerUrl() + "/protocol/openid-connect/login-status-iframe.html";
+
+		return Uni.createFrom().completionStage(
+				client.getAbs(target) //
+						.putHeader("Accept", headerOr(headers, "Accept", "*/*")) //
+						.putHeader("User-Agent", headerOr(headers, "User-Agent", "")) //
+						.putHeader("Accept-Language", headerOr(headers, "Accept-Language", "")) //
+						.putHeader("Referer", headerOr(headers, "Referer", "")) //
+						.send() //
+						.toCompletionStage() //
+		).onItem().transform(this::buildProxiedResponse);
+	}
+
+	@GET
+	@Path("/resources/{path:.*}")
+	public Uni<Response> forwardResources(
+			@Context UriInfo uriInfo, @Context jakarta.ws.rs.core.HttpHeaders headers,
+			@jakarta.ws.rs.PathParam("path") String path
+	) {
+		// Forward static resource requests to Keycloak
+		String target = cfg.authServerUrl().replace("/realms/standard", "") + "/resources/" + path;
 
 		return Uni.createFrom().completionStage(
 				client.getAbs(target) //
