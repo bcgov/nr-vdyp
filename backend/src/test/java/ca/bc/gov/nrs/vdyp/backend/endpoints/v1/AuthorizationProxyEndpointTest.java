@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -10,7 +11,9 @@ import static org.mockito.Mockito.when;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,10 +24,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import ca.bc.gov.nrs.vdyp.backend.config.OidcConfig;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
@@ -155,6 +160,193 @@ public class AuthorizationProxyEndpointTest {
 	private static void assertLocation(Response r, String expected) {
 		assertEquals(303, r.getStatus());
 		assertEquals(URI.create(expected), r.getLocation());
+	}
+
+	@Test
+	void forward3pCookies_step1_proxiesUpstreamResponse() {
+		when(cfg.authServerUrl()).thenReturn("https://dev.loginproxy.gov.bc.ca/auth/realms/standard");
+
+		UriInfo uriInfo = mock(UriInfo.class);
+		when(uriInfo.getRequestUri()).thenReturn(URI.create("http://localhost/auth/realms/standard/protocol/openid-connect/3p-cookies/step1.html?version=1"));
+
+		HttpHeaders headers = mock(HttpHeaders.class);
+		when(headers.getHeaderString("Accept")).thenReturn("text/html");
+		when(headers.getHeaderString("User-Agent")).thenReturn("TestAgent");
+		when(headers.getHeaderString("Accept-Language")).thenReturn(null);
+		when(headers.getHeaderString("Referer")).thenReturn(null);
+
+		@SuppressWarnings("unchecked")
+		HttpRequest<Buffer> req = mock(HttpRequest.class);
+		@SuppressWarnings("unchecked")
+		HttpResponse<Buffer> upstream = mock(HttpResponse.class);
+
+		when(webClient.getAbs("https://dev.loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/3p-cookies/step1.html?version=1"))
+				.thenReturn(req);
+		when(req.putHeader(any(String.class), any(String.class))).thenReturn(req);
+		when(req.send()).thenReturn(Future.succeededFuture(upstream));
+
+		when(upstream.statusCode()).thenReturn(200);
+		when(upstream.getHeader("Content-Type")).thenReturn("text/html");
+		when(upstream.getHeader("Cache-Control")).thenReturn(null);
+		when(upstream.getHeader("Pragma")).thenReturn(null);
+		when(upstream.getHeader("Expires")).thenReturn(null);
+		when(upstream.getHeader("Location")).thenReturn(null);
+		MultiMap multiMap = mock(MultiMap.class);
+		when(multiMap.getAll("Set-Cookie")).thenReturn(Collections.emptyList());
+		when(upstream.headers()).thenReturn(multiMap);
+		when(upstream.bodyAsBuffer()).thenReturn(Buffer.buffer("<html>step1</html>"));
+
+		Response r = endpoint.forward3pCookies(uriInfo, headers, "step1.html").await().indefinitely();
+		assertEquals(200, r.getStatus());
+	}
+
+	@Test
+	void forward3pCookies_step2_proxiesUpstreamResponse() {
+		when(cfg.authServerUrl()).thenReturn("https://dev.loginproxy.gov.bc.ca/auth/realms/standard");
+
+		UriInfo uriInfo = mock(UriInfo.class);
+		when(uriInfo.getRequestUri()).thenReturn(URI.create("http://localhost/auth/realms/standard/protocol/openid-connect/3p-cookies/step2.html"));
+
+		HttpHeaders headers = mock(HttpHeaders.class);
+		when(headers.getHeaderString(any())).thenReturn(null);
+
+		@SuppressWarnings("unchecked")
+		HttpRequest<Buffer> req = mock(HttpRequest.class);
+		@SuppressWarnings("unchecked")
+		HttpResponse<Buffer> upstream = mock(HttpResponse.class);
+
+		when(webClient.getAbs("https://dev.loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/3p-cookies/step2.html"))
+				.thenReturn(req);
+		when(req.putHeader(any(String.class), any(String.class))).thenReturn(req);
+		when(req.send()).thenReturn(Future.succeededFuture(upstream));
+
+		when(upstream.statusCode()).thenReturn(200);
+		when(upstream.getHeader("Content-Type")).thenReturn("text/html");
+		when(upstream.getHeader("Cache-Control")).thenReturn("no-cache");
+		when(upstream.getHeader("Pragma")).thenReturn("no-cache");
+		when(upstream.getHeader("Expires")).thenReturn(null);
+		when(upstream.getHeader("Location")).thenReturn(null);
+		MultiMap multiMap = mock(MultiMap.class);
+		when(multiMap.getAll("Set-Cookie")).thenReturn(List.of("session=abc"));
+		when(upstream.headers()).thenReturn(multiMap);
+		when(upstream.bodyAsBuffer()).thenReturn(Buffer.buffer("<html>step2</html>"));
+
+		Response r = endpoint.forward3pCookies(uriInfo, headers, "step2.html").await().indefinitely();
+		assertEquals(200, r.getStatus());
+	}
+
+	@Test
+	void forward3pCookies_invalidPage_returns404() {
+		UriInfo uriInfo = mock(UriInfo.class);
+		HttpHeaders headers = mock(HttpHeaders.class);
+
+		Response r = endpoint.forward3pCookies(uriInfo, headers, "evil.html").await().indefinitely();
+		assertEquals(404, r.getStatus());
+	}
+
+	@Test
+	void forwardLoginStatusIframe_proxiesUpstreamResponse() {
+		when(cfg.authServerUrl()).thenReturn("https://dev.loginproxy.gov.bc.ca/auth/realms/standard");
+
+		UriInfo uriInfo = mock(UriInfo.class);
+		when(uriInfo.getRequestUri()).thenReturn(URI.create("http://localhost/auth/realms/standard/protocol/openid-connect/login-status-iframe.html"));
+
+		HttpHeaders headers = mock(HttpHeaders.class);
+		when(headers.getHeaderString(any())).thenReturn(null);
+
+		@SuppressWarnings("unchecked")
+		HttpRequest<Buffer> req = mock(HttpRequest.class);
+		@SuppressWarnings("unchecked")
+		HttpResponse<Buffer> upstream = mock(HttpResponse.class);
+
+		when(webClient.getAbs("https://dev.loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/login-status-iframe.html"))
+				.thenReturn(req);
+		when(req.putHeader(any(String.class), any(String.class))).thenReturn(req);
+		when(req.send()).thenReturn(Future.succeededFuture(upstream));
+
+		when(upstream.statusCode()).thenReturn(200);
+		when(upstream.getHeader("Content-Type")).thenReturn("text/html");
+		when(upstream.getHeader("Cache-Control")).thenReturn(null);
+		when(upstream.getHeader("Pragma")).thenReturn(null);
+		when(upstream.getHeader("Expires")).thenReturn(null);
+		when(upstream.getHeader("Location")).thenReturn(null);
+		MultiMap multiMap = mock(MultiMap.class);
+		when(multiMap.getAll("Set-Cookie")).thenReturn(Collections.emptyList());
+		when(upstream.headers()).thenReturn(multiMap);
+		when(upstream.bodyAsBuffer()).thenReturn(Buffer.buffer("<html>iframe</html>"));
+
+		Response r = endpoint.forwardLoginStatusIframe(uriInfo, headers).await().indefinitely();
+		assertEquals(200, r.getStatus());
+	}
+
+	@Test
+	void forwardResources_proxiesUpstreamResponse() {
+		when(cfg.authServerUrl()).thenReturn("https://dev.loginproxy.gov.bc.ca/auth/realms/standard");
+
+		UriInfo uriInfo = mock(UriInfo.class);
+
+		HttpHeaders headers = mock(HttpHeaders.class);
+		when(headers.getHeaderString(any())).thenReturn(null);
+
+		@SuppressWarnings("unchecked")
+		HttpRequest<Buffer> req = mock(HttpRequest.class);
+		@SuppressWarnings("unchecked")
+		HttpResponse<Buffer> upstream = mock(HttpResponse.class);
+
+		when(webClient.getAbs("https://dev.loginproxy.gov.bc.ca/auth/resources/some/path/style.css"))
+				.thenReturn(req);
+		when(req.putHeader(any(String.class), any(String.class))).thenReturn(req);
+		when(req.send()).thenReturn(Future.succeededFuture(upstream));
+
+		when(upstream.statusCode()).thenReturn(200);
+		when(upstream.getHeader("Content-Type")).thenReturn("text/css");
+		when(upstream.getHeader("Cache-Control")).thenReturn("max-age=3600");
+		when(upstream.getHeader("Pragma")).thenReturn(null);
+		when(upstream.getHeader("Expires")).thenReturn(null);
+		when(upstream.getHeader("Location")).thenReturn(null);
+		MultiMap multiMap = mock(MultiMap.class);
+		when(multiMap.getAll("Set-Cookie")).thenReturn(Collections.emptyList());
+		when(upstream.headers()).thenReturn(multiMap);
+		when(upstream.bodyAsBuffer()).thenReturn(Buffer.buffer("body{color:red}"));
+
+		Response r = endpoint.forwardResources(uriInfo, headers, "some/path/style.css").await().indefinitely();
+		assertEquals(200, r.getStatus());
+	}
+
+	@Test
+	void buildProxiedResponse_handlesNullBody() {
+		when(cfg.authServerUrl()).thenReturn("https://dev.loginproxy.gov.bc.ca/auth/realms/standard");
+
+		UriInfo uriInfo = mock(UriInfo.class);
+		when(uriInfo.getRequestUri()).thenReturn(URI.create("http://localhost/auth/realms/standard/protocol/openid-connect/login-status-iframe.html"));
+
+		HttpHeaders headers = mock(HttpHeaders.class);
+		when(headers.getHeaderString(any())).thenReturn(null);
+
+		@SuppressWarnings("unchecked")
+		HttpRequest<Buffer> req = mock(HttpRequest.class);
+		@SuppressWarnings("unchecked")
+		HttpResponse<Buffer> upstream = mock(HttpResponse.class);
+
+		when(webClient.getAbs(any(String.class))).thenReturn(req);
+		when(req.putHeader(any(String.class), any(String.class))).thenReturn(req);
+		when(req.send()).thenReturn(Future.succeededFuture(upstream));
+
+		when(upstream.statusCode()).thenReturn(204);
+		when(upstream.getHeader("Content-Type")).thenReturn(null);
+		when(upstream.getHeader("Cache-Control")).thenReturn(null);
+		when(upstream.getHeader("Pragma")).thenReturn(null);
+		when(upstream.getHeader("Expires")).thenReturn(null);
+		when(upstream.getHeader("Location")).thenReturn(null);
+		MultiMap multiMap = mock(MultiMap.class);
+		when(multiMap.getAll("Set-Cookie")).thenReturn(Collections.emptyList());
+		when(upstream.headers()).thenReturn(multiMap);
+		when(upstream.bodyAsBuffer()).thenReturn(null);
+
+		Response r = endpoint.forwardLoginStatusIframe(uriInfo, headers).await().indefinitely();
+		assertEquals(204, r.getStatus());
+		byte[] entity = (byte[]) r.getEntity();
+		assertEquals(0, entity.length);
 	}
 
 	private static void assertFormBodyContainsAll(String body, String... expectedPairs) {

@@ -16,7 +16,61 @@
     <noscript>
       <strong>We're sorry but VDYP doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
-    <div id="app"></div>
+    <div id="app">
+      <!-- Bootstrap loader: displayed until Vue app mounts -->
+      <style>
+        .app-loader {
+          display: flex;
+          flex-direction: column;
+          min-height: 100vh;
+          font-family: 'BC Sans', 'Noto Sans', Arial, sans-serif;
+          background-color: #f2f2f2;
+        }
+        .app-loader-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .app-loader-box {
+          background-color: #ffffff;
+          border: 1px solid #d1d1d1;
+          border-radius: 8px;
+          padding: 32px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+        }
+        .app-loader-spinner {
+          width: 70px;
+          height: 70px;
+          border: 5px solid #e0e0e0;
+          border-top: 5px solid #003366;
+          border-radius: 50%;
+          animation: app-loader-spin 0.9s linear infinite;
+        }
+        .app-loader-text {
+          color: #313132;
+          font-size: 1rem;
+          font-weight: 600;
+        }
+        @keyframes app-loader-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+      <div class="app-loader">
+        <div class="app-loader-content">
+          <div class="app-loader-box">
+            <div class="app-loader-spinner"></div>
+            <div class="app-loader-text">Loading VDYP, please wait...</div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
