@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -210,5 +211,23 @@ class VDYPUserServiceTest {
 		UUID doesNotExist = UUID.randomUUID();
 		when(userRepository.findById(doesNotExist)).thenReturn(null);
 		assertThat(service.getUserById(doesNotExist)).isNull();
+	}
+
+	@Test
+	void getSystemUser_returnsSystemUser() {
+		UserTypeCodeModel systemUserType = new UserTypeCodeModel();
+		systemUserType.setCode(UserTypeCodeModel.SYSTEM);
+
+		when(userTypeLookup.requireModel(UserTypeCodeModel.SYSTEM)).thenReturn(systemUserType);
+
+		VDYPUserModel systemUser = service.getSystemUser();
+
+		assertThat(systemUser).isNotNull();
+		assertThat(systemUser.getFirstName()).isEqualTo("System");
+		assertThat(systemUser.getLastName()).isEqualTo("User");
+
+		VDYPUserModel systemUser2 = service.getSystemUser();
+
+		assertSame(systemUser, systemUser2);
 	}
 }

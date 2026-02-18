@@ -28,6 +28,8 @@ public class VDYPUserService {
 	private final VDYPUserResourceAssembler assembler;
 	private final UserTypeCodeLookup userTypeLookup;
 
+	private VDYPUserModel systemUserCache = null;
+
 	public VDYPUserService(
 			VDYPUserRepository userRepository, VDYPUserResourceAssembler assembler, UserTypeCodeLookup userTypeLookup
 	) {
@@ -116,5 +118,17 @@ public class VDYPUserService {
 		} else {
 			return null;
 		}
+	}
+
+	public VDYPUserModel getSystemUser() {
+		if (systemUserCache == null) {
+			logger.debug("System user cache miss, loading system user");
+			systemUserCache = new VDYPUserModel();
+			systemUserCache.setOidcGUID("system");
+			systemUserCache.setFirstName("System");
+			systemUserCache.setLastName("User");
+			systemUserCache.setUserTypeCode(userTypeLookup.requireModel(UserTypeCodeModel.SYSTEM));
+		}
+		return systemUserCache;
 	}
 }
