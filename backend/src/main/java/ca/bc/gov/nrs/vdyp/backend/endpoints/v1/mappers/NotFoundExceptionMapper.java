@@ -9,7 +9,7 @@ public class NotFoundExceptionMapper extends AbstractApiExceptionMapper<NotFound
 
 	@Override
 	protected void log(NotFoundException exception) {
-		logger.debug("Resource not found: {}", exception.getMessage());
+		logger.warn("Resource not found: {}", exception.getMessage());
 	}
 
 	@Override
