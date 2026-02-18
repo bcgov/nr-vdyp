@@ -281,6 +281,9 @@ export const ROUTE_PATH = Object.freeze({
   PROJECTION_DETAIL: '/projection-detail',
 })
 
+export const buildProjectionDetailPath = (projectionGUID: string, viewMode: string): string =>
+  `${ROUTE_PATH.PROJECTION_DETAIL}/${projectionGUID}/${viewMode}`
+
 export const BREAKPOINT = Object.freeze({
   CARD_VIEW: 1025,
 })

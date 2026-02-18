@@ -119,6 +119,8 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useProjectionLoader } from '@/composables/useProjectionLoader'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
@@ -155,12 +157,16 @@ import {
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 import { DownloadIcon } from '@/assets/'
 
+const route = useRoute()
+const router = useRouter()
+const { isLoading: isProjectionLoading, loadProjection } = useProjectionLoader()
+
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
 const isFileUploading = computed(() => fileUploadStore.isUploadingPolygon || fileUploadStore.isUploadingLayer)
 const isDeletingFile = computed(() => fileUploadStore.isDeletingFile)
 const isSaving = computed(() => appStore.isSavingProjection)
-const showProgress = computed(() => isProgressVisible.value || isFileUploading.value || isDeletingFile.value || isSaving.value)
+const showProgress = computed(() => isProgressVisible.value || isFileUploading.value || isDeletingFile.value || isSaving.value || isProjectionLoading.value)
 const fileOperationMessage = computed(() => {
   if (isSaving.value) return MESSAGE.PROGRESS_MSG.SAVING_PROJECTION
   if (isDeletingFile.value) return MESSAGE.PROGRESS_MSG.DELETING_FILE
@@ -287,7 +293,31 @@ const fetchAndPopulateResults = async (showMessage: boolean = true) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  const { projectionGUID, viewMode } = route.params as { projectionGUID: string; viewMode: string }
+
+  // Browser refresh handling: re-fetch projection data if stores are empty but route has params
+  const isCreateMode = viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE
+  const needsReload = !isCreateMode && projectionGUID && !appStore.currentProjectionGUID
+
+  if (needsReload) {
+    isProgressVisible.value = true
+    progressMessage.value = MESSAGE.PROGRESS_MSG.LOADING_PROJECTION
+
+    const success = await loadProjection(projectionGUID, viewMode as typeof appStore.viewMode)
+
+    isProgressVisible.value = false
+
+    if (!success) {
+      notificationStore.showErrorMessage(
+        MESSAGE.PROJECTION_ERR.LOAD_FAILED,
+        MESSAGE.PROJECTION_ERR.LOAD_FAILED_TITLE,
+      )
+      router.replace(CONSTANTS.ROUTE_PATH.PROJECTION_LIST)
+      return
+    }
+  }
+
   // Only initialize species groups for new projections
   // For existing projections (view/edit), the values are already restored from the backend
   if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD) {
