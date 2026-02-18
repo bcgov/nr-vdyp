@@ -1,11 +1,11 @@
 <template>
-  <router-link to="/" class="bcds-logo-link">
+  <div class="bcds-logo-container">
     <img
       alt="B.C. Government Logo"
       :src="bcLogo"
       class="bcds-logo"
     />
-  </router-link>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -13,21 +13,8 @@ import bcLogo from '@/assets/BCID_H_rgb_pos.svg'
 </script>
 
 <style scoped>
-.bcds-logo-link {
+.bcds-logo-container {
   display: inline-block;
-  cursor: pointer;
-  text-decoration: none;
-  outline: none;
-}
-
-.bcds-logo-link:focus {
-  outline: none;
-}
-
-.bcds-logo-link:focus-visible {
-  outline: 2px solid var(--surface-color-border-active);
-  outline-offset: 2px;
-  border-radius: var(--layout-border-radius-small);
 }
 
 .bcds-logo {

@@ -7,6 +7,10 @@
   />
   <v-container fluid>
     <div>
+      <router-link to="/" class="return-to-list-link">
+        <img :src="MenuIcon" alt="" class="return-to-list-icon" />
+        <span>Return to Projections List</span>
+      </router-link>
       <div id="modelSelectionCard" class="model-selection-header">
         <h3
           v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
@@ -153,7 +157,7 @@ import {
   checkZipForErrors,
 } from '@/utils/util'
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
-import { DownloadIcon } from '@/assets/'
+import { DownloadIcon, MenuIcon } from '@/assets/'
 
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
@@ -487,6 +491,26 @@ const handleDownloadReport = async () => {
 </script>
 
 <style scoped>
+.return-to-list-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--layout-padding-small);
+  text-decoration: none;
+  color: var(--typography-color-link);
+  font: var(--typography-regular-body);
+  margin-bottom: var(--layout-margin-small);
+}
+
+.return-to-list-link:hover {
+  text-decoration: underline;
+}
+
+.return-to-list-icon {
+  width: 20px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 .model-selection-header {
   margin-bottom: var(--layout-margin-medium);
   display: flex;
