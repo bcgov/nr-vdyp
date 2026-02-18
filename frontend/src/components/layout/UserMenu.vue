@@ -73,6 +73,8 @@ const logout = () => {
   font-weight: var(--typography-font-weights-regular);
   font-size: var(--typography-font-size-body);
   line-height: var(--typography-line-heights-xdense);
+  overflow: hidden;
+  flex-shrink: 1;
 }
 
 .header-user-button:hover {
@@ -92,5 +94,13 @@ const logout = () => {
   line-height: var(--typography-line-heights-xdense);
   letter-spacing: normal;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .header-user-icon {
+    display: none;
+  }
 }
 </style>

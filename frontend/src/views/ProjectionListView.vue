@@ -7,7 +7,7 @@
         <template v-slot:activator="{ props }">
           <AppButton
             :activator-props="props"
-            label="New Projection"
+            :label="newProjectionLabel"
             mdi-name="mdi-plus"
             variant="primary"
           />
@@ -175,6 +175,7 @@ const cardSortBy = ref<string>(PAGINATION.DEFAULT_CARD_SORT_BY)
 
 // Computed
 const isCardView = computed(() => windowWidth.value <= BREAKPOINT.CARD_VIEW)
+const newProjectionLabel = computed(() => windowWidth.value <= 360 ? 'Projection' : 'New Projection')
 console.log(`windowWidth: ${windowWidth.value}px`)
 
 const sortedProjections = computed(() => {
@@ -510,6 +511,8 @@ onUnmounted(() => {
 .projection-list-container {
   padding: var(--layout-padding-medium);
   max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Header with Title and Button */
@@ -524,6 +527,12 @@ onUnmounted(() => {
   font: var(--typography-bold-h4);
   color: var(--typography-color-primary);
   margin: 0;
+}
+
+/* Prevent button label from wrapping on narrow screens */
+.page-header :deep(.v-btn) {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .new-projection-menu-item {
