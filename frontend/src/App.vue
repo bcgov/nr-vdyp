@@ -30,5 +30,6 @@ import DefaultLayout from '@/layouts/DefaultLayout.vue'
 #main {
   min-height: 300px;
   margin-bottom: 24px;
+  overflow-x: hidden;
 }
 </style>

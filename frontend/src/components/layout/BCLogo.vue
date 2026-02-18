@@ -22,4 +22,18 @@ import bcLogo from '@/assets/BCID_H_rgb_pos.svg'
   width: 129px;
   display: block;
 }
+
+@media (max-width: 480px) {
+  .bcds-logo {
+    min-width: 100px;
+    width: 100px;
+  }
+}
+
+@media (max-width: 360px) {
+  .bcds-logo {
+    min-width: 80px;
+    width: 80px;
+  }
+}
 </style>
