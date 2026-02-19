@@ -54,8 +54,6 @@ export const AUTH_ERR = Object.freeze({
     'Error during user authentication refresh (Error: AUTH_021). Please log in again.',
   AUTH_030:
     'Error during user authentication re-validation (Error: AUTH_030). Please log in again.',
-  AUTH_031:
-    'Session has exceeded the maximum duration, logging out (Error: AUTH_031). Please log in again.',
   AUTH_032:
     'Error during user authentication re-validation (Error: AUTH_032). Please log in again.',
   TITLE: 'Authentication Error'
@@ -72,9 +70,7 @@ export const MSG_DIALOG_TITLE = Object.freeze({
   MISSING_INFO: 'Missing Information',
   INVALID_INPUT: 'Invalid Input!',
   CONFIRM: 'Confirm',
-  NO_MODIFY: 'No Modifications!',
   MISSING_FILE: 'Missing File',
-  INVALID_FILE: 'Invalid File!',
   POLYGON_FILE_HEADER_MISMATCH: 'Polygon File Header Mismatch!',
   LAYER_FILE_HEADER_MISMATCH: 'Layer File Header Mismatch!',
   POLYGON_FILE_DUPLICATE_COLUMNS: 'Polygon File Duplicate Columns!',
@@ -102,7 +98,6 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
     'Species percentage must add up to a total of 100.0% in order to run a valid model',
   SPCZ_VLD_MISSING_DERIVED_BY:
     "Input field - 'Species % derived by' - is missing essential information which must be filled in order to confirm and continue",
-  SPCZ_VLD_TOTAL_PCT_NOT_100: 'Species Percent do not total 100.0%',
   SITE_VLD_AGE_RNG: "'Years' must range from 0 and 500",
   SITE_VLD_HIGHT_RNG: "'Height in Meters' must range from 0.00 and 99.90",
   SITE_VLD_SI_RNG: "'BHA 50 Site Index' must range from 0.00 and 60.00",
@@ -144,10 +139,6 @@ export const FILE_UPLOAD_ERR = Object.freeze({
   LAYER_FILE_MISSING: 'Layer file is missing. Please upload the required file.',
   POLYGON_FILE_MISSING:
     'Polygon file is missing. Please upload the required file.',
-  LAYER_FILE_NOT_CSV_FORMAT:
-    'The uploaded Layer file is not in CSV format. Please upload a valid CSV file.',
-  POLYGON_FILE_NOT_CSV_FORMAT:
-    'The uploaded Polygon file is not in CSV format. Please upload a valid CSV file.',
   POLYGON_FILE_DUPLICATE_COLUMNS:
     'The Polygon file contains duplicate column names. Each column must have a unique name. Please fix the file and try again.',
   LAYER_FILE_DUPLICATE_COLUMNS:
@@ -178,7 +169,6 @@ export const PRINT_ERR = Object.freeze({
 })
 
 export const PROGRESS_MSG = Object.freeze({
-  RUNNING_MODEL: 'Running Model...',
   DELETING_PROJECTION: 'Deleting Projection...',
   LOADING_PROJECTION: 'Loading Projection...',
   RUNNING_PROJECTION: 'Running Projection...',
@@ -191,10 +181,6 @@ export const PROGRESS_MSG = Object.freeze({
 })
 
 export const SUCCESS_MSG = Object.freeze({
-  FILE_UPLOAD_RUN_RESULT:
-    'Model run completed successfully. Please check the results in the report tab.',
-  FILE_UPLOAD_RUN_RESULT_W_ERR:
-    'File successfully downloaded with errors - check error log',
   INPUT_MODEL_PARAM_RUN_RESULT:
     'Model run completed successfully. Please check the results in the report tab.',
   INPUT_MODEL_PARAM_RUN_RESULT_W_ERR:

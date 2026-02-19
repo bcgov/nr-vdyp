@@ -1,4 +1,4 @@
-import type { SortOrder, DialogVariant } from '@/types/types'
+import type { DialogVariant } from '@/types/types'
 import { UtilizationClassSetEnum } from '@/services/vdyp-api/models/utilization-class-set-enum'
 
 export interface MessageDialog {
@@ -8,29 +8,6 @@ export interface MessageDialog {
   dialogWidth?: number
   btnLabel?: string
   variant?: 'info' | 'confirmation' | 'warning' | 'error'
-}
-
-export interface JobSearchParams {
-  pageNumber: number
-  pageSize: number
-  sortBy?: string
-  sortOrder?: SortOrder
-  searchJobName?: string
-  startDate?: string | null
-  endDate?: string | null
-  status?: string
-}
-
-export interface CodeSearchParams {
-  pageNumber: number
-  pageSize: number
-}
-
-export interface TableOptions {
-  page: number
-  itemsPerPage: number
-  sortBy: string
-  sortDesc: string
 }
 
 export interface SpeciesList {

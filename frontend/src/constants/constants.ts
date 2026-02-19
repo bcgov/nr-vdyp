@@ -47,12 +47,6 @@ export const MINIMUM_DBH_LIMITS = Object.freeze({
   CM22_5: '22.5 cm+',
 })
 
-export const INCLUDE_IN_REPORT = Object.freeze({
-  COMPUTED_MAI: 'Computed MAI',
-  CULMINATION_VALUES: 'Culmination Values',
-  BY_SPECIES: 'By Species',
-})
-
 export const PROJECTION_TYPE = Object.freeze({
   VOLUME: 'Volume',
   CFS_BIOMASS: 'CFS Biomass',
@@ -60,8 +54,6 @@ export const PROJECTION_TYPE = Object.freeze({
 
 export const SPECIAL_INDICATORS = Object.freeze({
   NA: 'N/A',
-  NOT_USED: '<Not Used>',
-  COMPUTED: 'Computed',
 })
 
 export const MODEL_PARAMETER_PANEL = Object.freeze({
@@ -144,11 +136,6 @@ export const CONTINUOUS_INC_DEC = Object.freeze({
   INTERVAL: 100, // (e.g., 100ms)
 })
 
-export const SPIN_BUTTON = Object.freeze({
-  UP: '▲',
-  DOWN: '▼',
-})
-
 export const NOTIFICATION = Object.freeze({
   SHOW_TIME: 5000, // in milliseconds (5 sec)
 })
@@ -184,9 +171,6 @@ export const MODEL_PARAM_TAB_NAME = Object.freeze({
 
 export const FILE_UPLOAD_TAB_NAME = Object.freeze({
   FILE_UPLOAD: 'Parameter Selection',
-  MODEL_REPORT: 'Model Report',
-  VIEW_LOG_FILE: 'View Log File',
-  VIEW_ERROR_MESSAGES: 'View Error Messages',
 })
 
 export const MODEL_PARAM_TAB_INDEX = {
@@ -198,9 +182,6 @@ export const MODEL_PARAM_TAB_INDEX = {
 
 export const FILE_UPLOAD_TAB_INDEX = {
   PARAM_SELECTION: 0,
-  MODEL_REPORT: 1,
-  VIEW_LOG_FILE: 2,
-  VIEW_ERROR_MESSAGES: 3,
 }
 
 export const FILE_NAME = Object.freeze({

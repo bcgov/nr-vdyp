@@ -413,7 +413,7 @@ const handleDelete = async (projectionGUID: string) => {
     progressMessage.value = PROGRESS_MSG.DELETING_PROJECTION
     try {
       await deleteProjectionWithFiles(projectionGUID)
-      notificationStore.showSuccessMessage(SUCCESS_MSG.PROJECTION_DELETED, 'Projection deleted')
+      notificationStore.showSuccessMessage(SUCCESS_MSG.PROJECTION_DELETED, SUCCESS_MSG.PROJECTION_DELETED_TITLE)
       // Refresh the projections list
       await loadProjections()
     } catch (err) {
