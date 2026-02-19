@@ -2,8 +2,13 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +27,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObjectVersion;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -61,11 +67,7 @@ public class FileMappingService {
 				UUID objectGUID = UUID.fromString(createObjectResponse.id());
 
 				// persist a record here for the file
-				FileMappingEntity entity = new FileMappingEntity();
-				entity.setComsObjectGUID(objectGUID);
-				entity.setProjectionFileSet(projectionFileSetEntity);
-				entity.setFilename(file.fileName());
-				repository.persist(entity);
+				FileMappingEntity entity = persistFileMapping(objectGUID, projectionFileSetEntity, file.fileName());
 
 				// return the data from COMS up the chain
 				return assembler.toModel(entity);
@@ -151,5 +153,55 @@ public class FileMappingService {
 		}
 
 		repository.delete(entity);
+	}
+
+	private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL)
+			.connectTimeout(Duration.ofSeconds(10)).build();
+
+	public FileMappingModel
+			duplicateFile(FileMappingModel file, ProjectionFileSetEntity fileSetEntity, String comsBucketGUID)
+					throws ProjectionServiceException {
+		HttpRequest getReq = HttpRequest.newBuilder(URI.create(file.getDownloadURL().toString())).GET().build();
+
+		try {
+			HttpResponse<InputStream> resp = http.send(getReq, HttpResponse.BodyHandlers.ofInputStream());
+
+			if (resp.statusCode() >= 400) {
+				throw new ProjectionServiceException("Upstream GET failed: HTTP " + resp.statusCode());
+			}
+
+			long len = resp.headers().firstValueAsLong("Content-Length").orElseThrow(
+					() -> new ProjectionServiceException(
+							"Upstream did not send Content-Length; COMS PUT requires Content-Length."
+					)
+			);
+
+			try (InputStream in = resp.body()) {
+				COMSObject comsObj = comsClient.createObject(
+						comsBucketGUID, buildContentDisposition(file.getFilename()), len,
+						jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM, // String constant
+						in
+				);
+				FileMappingEntity newEntity = persistFileMapping(
+						UUID.fromString(comsObj.id()), fileSetEntity, file.getFilename()
+				);
+				return assembler.toModel(newEntity);
+			}
+		} catch (ProjectionServiceException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Error duplicating file in COMS", e);
+		}
+	}
+
+	@Transactional
+	protected FileMappingEntity
+			persistFileMapping(UUID objectGUID, ProjectionFileSetEntity fileSetEntity, String fileName) {
+		FileMappingEntity entity = new FileMappingEntity();
+		entity.setComsObjectGUID(objectGUID);
+		entity.setProjectionFileSet(fileSetEntity);
+		entity.setFilename(fileName);
+		repository.persist(entity);
+		return entity;
 	}
 }

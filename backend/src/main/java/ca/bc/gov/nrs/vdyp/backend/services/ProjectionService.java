@@ -682,4 +682,31 @@ public class ProjectionService {
 			}
 		}
 	}
+
+	@Transactional
+	public ProjectionModel duplicateProjection(UUID projectionGUID, VDYPUserModel actingUser)
+			throws ProjectionServiceException {
+		ProjectionModel newProjection;
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.READ);
+		try {
+			Parameters parameters = objectMapper.readValue(entity.getProjectionParameters(), Parameters.class);
+			ModelParameters modelparameters = objectMapper
+					.readValue(entity.getModelParameters(), ModelParameters.class);
+			parameters.setReportTitle(parameters.getReportTitle() + " - COPY");
+
+			newProjection = createNewProjection(actingUser, parameters, modelparameters);
+			ProjectionEntity newEntity = getProjectionEntity(UUID.fromString(newProjection.getProjectionGUID()));
+
+			// If this is not a manual input projection copy the input files if they exist
+			if (modelparameters == null) {
+				fileSetService.duplicateFilesFromTo(entity.getPolygonFileSet(), newEntity.getPolygonFileSet());
+				fileSetService.duplicateFilesFromTo(entity.getLayerFileSet(), newEntity.getLayerFileSet());
+			}
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Failed to duplicate projection", e);
+		}
+		return newProjection;
+	}
 }

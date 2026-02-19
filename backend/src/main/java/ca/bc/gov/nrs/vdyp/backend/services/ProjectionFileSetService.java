@@ -208,4 +208,13 @@ public class ProjectionFileSetService {
 		return fileMappingService.getFilesForFileSet(fileSetGUID, download);
 	}
 
+	public void duplicateFilesFromTo(ProjectionFileSetEntity fromFileSet, ProjectionFileSetEntity toFileSet)
+			throws ProjectionServiceException {
+		List<FileMappingModel> filesToDuplicate = fileMappingService
+				.getFilesForFileSet(fromFileSet.getProjectionFileSetGUID(), true);
+		String bucketID = getCOMSBucketGUID(toFileSet.getProjectionFileSetGUID(), true);
+		for (FileMappingModel file : filesToDuplicate) {
+			FileMappingModel result = fileMappingService.duplicateFile(file, toFileSet, bucketID);
+		}
+	}
 }

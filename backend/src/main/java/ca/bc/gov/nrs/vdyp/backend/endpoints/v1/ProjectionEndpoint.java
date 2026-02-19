@@ -298,6 +298,17 @@ public class ProjectionEndpoint implements Endpoint {
 		return Response.status(Status.OK).entity(started).build();
 	}
 
+	@POST
+	@Authenticated
+	@Path("/{projectionGUID}/duplicate")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(name = "Duplicate A Projection", description = "Duplicates the inputs of an existing projection.")
+	public Response duplicateProjection(@PathParam("projectionGUID") UUID projectionGUID)
+			throws ProjectionServiceException {
+		var started = projectionService.duplicateProjection(projectionGUID, currentUser.getUser());
+		return Response.status(Status.OK).entity(started).build();
+	}
+
 	@GET
 	@Authenticated
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}")
