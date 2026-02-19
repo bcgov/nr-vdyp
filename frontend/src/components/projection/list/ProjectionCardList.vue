@@ -250,6 +250,7 @@ const handleCardClick = (event: MouseEvent, projection: Projection) => {
   display: flex;
   flex-direction: column;
   gap: var(--layout-margin-small);
+  width: 100%;
 }
 
 .sort-dropdown {

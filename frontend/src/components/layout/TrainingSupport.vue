@@ -1,14 +1,8 @@
 <template>
-<!-- TODO: This router-link to /model-parameter-input is a temporary workaround
-     because the landing page has changed to Projection List View.
-     This link should be removed once proper navigation is implemented. -->
-  <router-link to="/model-parameter-input" class="bcds-header-link">
+  <span class="bcds-header-link">
     <span class="bcds-header-link-full">{{ fullText }}</span>
     <span class="bcds-header-link-short">{{ shortText }}</span>
-  </router-link>
-  <!-- <span class="bcds-header-link">
-    {{ text }}
-  </span> -->
+  </span>
 </template>
 
 <script setup lang="ts">
