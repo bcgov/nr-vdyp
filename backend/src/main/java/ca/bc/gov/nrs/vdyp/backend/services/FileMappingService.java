@@ -8,7 +8,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
-import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,14 +36,17 @@ public class FileMappingService {
 	private final FileMappingRepository repository;
 	private final FileMappingResourceAssembler assembler;
 
+	private final HttpClient httpClient;
 	private final COMSClient comsClient;
 
 	public FileMappingService(
-			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient
+			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient,
+			HttpClient httpClient
 	) {
 		this.repository = repository;
 		this.assembler = assembler;
 		this.comsClient = comsClient;
+		this.httpClient = httpClient;
 	}
 
 	public FileMappingModel
@@ -155,16 +157,13 @@ public class FileMappingService {
 		repository.delete(entity);
 	}
 
-	private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL)
-			.connectTimeout(Duration.ofSeconds(10)).build();
-
 	public FileMappingModel
 			duplicateFile(FileMappingModel file, ProjectionFileSetEntity fileSetEntity, String comsBucketGUID)
 					throws ProjectionServiceException {
 		HttpRequest getReq = HttpRequest.newBuilder(URI.create(file.getDownloadURL().toString())).GET().build();
 
 		try {
-			HttpResponse<InputStream> resp = http.send(getReq, HttpResponse.BodyHandlers.ofInputStream());
+			HttpResponse<InputStream> resp = httpClient.send(getReq, HttpResponse.BodyHandlers.ofInputStream());
 
 			if (resp.statusCode() >= 400) {
 				throw new ProjectionServiceException("Upstream GET failed: HTTP " + resp.statusCode());
