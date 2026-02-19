@@ -92,6 +92,14 @@ public class Parameters {
 	@JsonProperty(JSON_PROPERTY_REPORT_TITLE)
 	private String reportTitle;
 
+	public static final String JSON_PROPERTY_REPORT_DESC = "reportDesc";
+	@JsonProperty(JSON_PROPERTY_REPORT_DESC)
+	private String reportDesc;
+
+	public static final String JSON_PROPERTY_COPY_TITLE = "copyTitle";
+	@JsonProperty(JSON_PROPERTY_COPY_TITLE)
+	private String copyTitle;
+
 	public static final String JSON_PROPERTY_FILTERS = "filters";
 	@JsonProperty(JSON_PROPERTY_FILTERS)
 	public FilterParameters filters;
@@ -883,6 +891,22 @@ public class Parameters {
 
 	public void setReportTitle(String reportTitle) {
 		this.reportTitle = reportTitle;
+	}
+
+	public String getReportDesc() {
+		return reportTitle;
+	}
+
+	public void setReportDesc(String reportDesc) {
+		this.reportDesc = reportDesc;
+	}
+
+	public String getCopyTitle() {
+		return copyTitle;
+	}
+
+	public void setCopyTitle(String copyTitle) {
+		this.copyTitle = copyTitle;
 	}
 
 	@Override

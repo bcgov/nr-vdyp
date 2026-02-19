@@ -380,7 +380,11 @@ public class ProjectionService {
 		// extract the report Title and description from the parameters
 		// leave report title in for processing, remove description
 		model.setReportTitle(params.getReportTitle());
-		model.setReportDescription(params.getReportTitle()); // TODO update params to be able to read a description
+		String desc = params.getReportDesc();
+		if (desc == null) {
+			desc = params.getReportTitle();
+		}
+		model.setReportDescription(desc);
 	}
 
 	public ProjectionEntity getProjectionEntity(UUID projectionGuid) throws ProjectionServiceException {
@@ -694,7 +698,13 @@ public class ProjectionService {
 			Parameters parameters = objectMapper.readValue(entity.getProjectionParameters(), Parameters.class);
 			ModelParameters modelparameters = objectMapper
 					.readValue(entity.getModelParameters(), ModelParameters.class);
-			parameters.setReportTitle(parameters.getReportTitle() + " - COPY");
+
+			long numCopies = repository.countCopyTitle(parameters.getReportTitle());
+
+			parameters.setCopyTitle(parameters.getReportTitle());
+			parameters.setReportTitle(
+					parameters.getReportTitle() + " - COPY" + (numCopies > 0 ? "" + (numCopies - 1) : "")
+			);
 
 			newProjection = createNewProjection(actingUser, parameters, modelparameters);
 			ProjectionEntity newEntity = getProjectionEntity(UUID.fromString(newProjection.getProjectionGUID()));

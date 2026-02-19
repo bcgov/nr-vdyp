@@ -61,6 +61,7 @@ public class ProjectionResourceAssembler {
 		model.setEndDate(entity.getEndDate());
 		model.setOwnerUser(vura.toModel(entity.getOwnerUser()));
 		model.setProjectionStatusCode(pscra.toModel(entity.getProjectionStatusCode()));
+		model.setCreateDate(entity.getCreateDate());
 		model.setLastUpdatedDate(entity.getUpdateDate());
 		model.setReportTitle(entity.getReportTitle());
 		model.setReportDescription(entity.getReportDescription());
