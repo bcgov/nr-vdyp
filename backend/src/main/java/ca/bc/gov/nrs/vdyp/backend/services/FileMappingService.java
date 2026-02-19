@@ -34,10 +34,10 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class FileMappingService {
 	private static final Logger logger = LoggerFactory.getLogger(FileMappingService.class);
-	private FileMappingRepository repository;
-	private FileMappingResourceAssembler assembler;
+	private final FileMappingRepository repository;
+	private final FileMappingResourceAssembler assembler;
 
-	private COMSClient comsClient;
+	private final COMSClient comsClient;
 
 	public FileMappingService(
 			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient
