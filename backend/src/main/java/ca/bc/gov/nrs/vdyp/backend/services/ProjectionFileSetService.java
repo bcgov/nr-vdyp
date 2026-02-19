@@ -214,7 +214,7 @@ public class ProjectionFileSetService {
 				.getFilesForFileSet(fromFileSet.getProjectionFileSetGUID(), true);
 		String bucketID = getCOMSBucketGUID(toFileSet.getProjectionFileSetGUID(), true);
 		for (FileMappingModel file : filesToDuplicate) {
-			FileMappingModel result = fileMappingService.duplicateFile(file, toFileSet, bucketID);
+			fileMappingService.duplicateFile(file, toFileSet, bucketID);
 		}
 	}
 }

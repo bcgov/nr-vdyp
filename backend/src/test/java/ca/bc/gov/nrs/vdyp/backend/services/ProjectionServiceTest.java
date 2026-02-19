@@ -1163,7 +1163,7 @@ class ProjectionServiceTest {
 	}
 
 	@Test
-	void duplicateProjection_allNullParams_completes() throws ProjectionServiceException, JsonProcessingException {
+	void duplicateProjection_allNullParams_completes() throws ProjectionServiceException {
 		UUID projectionId = UUID.randomUUID();
 		UUID newProjectionId = UUID.randomUUID();
 

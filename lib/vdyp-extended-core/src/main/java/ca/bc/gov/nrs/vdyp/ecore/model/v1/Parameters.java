@@ -894,7 +894,7 @@ public class Parameters {
 	}
 
 	public String getReportDesc() {
-		return reportTitle;
+		return reportDesc;
 	}
 
 	public void setReportDesc(String reportDesc) {

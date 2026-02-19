@@ -188,6 +188,9 @@ public class FileMappingService {
 			}
 		} catch (ProjectionServiceException e) {
 			throw e;
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt(); // restore interrupt status
+			throw new ProjectionServiceException("Thread interrupted during COMS duplication", e);
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error duplicating file in COMS", e);
 		}

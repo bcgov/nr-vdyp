@@ -63,7 +63,7 @@ public class ProjectionEndpoint implements Endpoint {
 
 	private final CurrentVDYPUser currentUser;
 
-	private final static ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private final Client client;
 
