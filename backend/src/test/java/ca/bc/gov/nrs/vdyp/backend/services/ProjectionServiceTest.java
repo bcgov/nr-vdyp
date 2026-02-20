@@ -376,9 +376,11 @@ class ProjectionServiceTest {
 		ModelParameters modelParameters = null;
 
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
-		ProjectionModel model = service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId));
+		ProjectionModel model = service
+				.editProjectionParameters(projectionId, params, modelParameters, "Test Description", user(ownerId));
 
 		assertThat(model.getReportTitle()).isEqualTo("New Title");
+		assertThat(model.getReportDescription()).isEqualTo("Test Description");
 	}
 
 	@Test
@@ -401,7 +403,7 @@ class ProjectionServiceTest {
 
 		assertThrows(
 				ProjectionStateException.class,
-				() -> service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId))
+				() -> service.editProjectionParameters(projectionId, params, modelParameters, "", user(ownerId))
 		);
 	}
 
@@ -441,7 +443,7 @@ class ProjectionServiceTest {
 
 		assertThrows(
 				ProjectionServiceException.class,
-				() -> service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId))
+				() -> service.editProjectionParameters(projectionId, params, modelParameters, null, user(ownerId))
 		);
 	}
 
@@ -617,7 +619,7 @@ class ProjectionServiceTest {
 		}).when(repository).persist(any(ProjectionEntity.class));
 
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
-		ProjectionModel model = service.createNewProjection(actingUser, params, modelParamsJson);
+		ProjectionModel model = service.createNewProjection(actingUser, params, modelParamsJson, "Test Description");
 
 		assertNotNull(model);
 
@@ -627,9 +629,7 @@ class ProjectionServiceTest {
 		ProjectionEntity persisted = captor.getValue();
 		assertThat(persisted.getOwnerUser()).isSameAs(ownerEntity);
 		assertThat(persisted.getReportTitle()).isEqualTo("My Report");
-
-		// NOTE: your current code sets description = title. This asserts current behavior.
-		assertThat(persisted.getReportDescription()).isEqualTo("My Report");
+		assertThat(persisted.getReportDescription()).isEqualTo("Test Description");
 
 		assertThat(persisted.getProjectionStatusCode()).isSameAs(draftStatus);
 		assertThat(persisted.getCalculationEngineCode()).isSameAs(engine);

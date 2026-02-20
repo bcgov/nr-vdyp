@@ -341,13 +341,14 @@ public class ProjectionService {
 	}
 
 	@Transactional
-	public ProjectionModel
-			createNewProjection(VDYPUserModel actingUser, Parameters params, ModelParameters modelParameters)
-					throws ProjectionServiceException {
+	public ProjectionModel createNewProjection(
+			VDYPUserModel actingUser, Parameters params, ModelParameters modelParameters, String reportDescription
+	) throws ProjectionServiceException {
 		try {
 			ProjectionEntity entity = new ProjectionEntity();
 			entity.setOwnerUser(em.find(VDYPUserEntity.class, UUID.fromString(actingUser.getVdypUserGUID())));
 			extractConvenienceParameters(params, entity);
+			entity.setReportDescription(reportDescription != null ? reportDescription : "");
 
 			entity.setProjectionParameters(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params));
 
@@ -390,11 +391,6 @@ public class ProjectionService {
 			// extract the report Title and description from the parameters
 			// leave report title in for processing, remove description
 			model.setReportTitle(params.getReportTitle());
-			String desc = params.getReportDesc();
-			if (desc == null) {
-				desc = params.getReportTitle();
-			}
-			model.setReportDescription(desc);
 		}
 	}
 
@@ -514,13 +510,16 @@ public class ProjectionService {
 
 	@Transactional
 	public ProjectionModel editProjectionParameters(
-			UUID projectionGUID, Parameters params, ModelParameters modelParameters, VDYPUserModel actingUser
+			UUID projectionGUID, Parameters params, ModelParameters modelParameters, String reportDescription,
+			VDYPUserModel actingUser
 	) throws ProjectionServiceException {
 		ProjectionEntity existingEntity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(existingEntity, actingUser, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(existingEntity, ProjectionAction.UPDATE);
 
 		extractConvenienceParameters(params, existingEntity);
+
+		existingEntity.setReportDescription(reportDescription != null ? reportDescription : "");
 		try {
 			// Update the parameters of import
 			existingEntity
@@ -721,7 +720,7 @@ public class ProjectionService {
 				modelParameters = objectMapper.readValue(entity.getModelParameters(), ModelParameters.class);
 			}
 
-			newProjection = createNewProjection(actingUser, parameters, modelParameters);
+			newProjection = createNewProjection(actingUser, parameters, modelParameters, entity.getReportDescription());
 			ProjectionEntity newEntity = getProjectionEntity(UUID.fromString(newProjection.getProjectionGUID()));
 
 			// If this is not a manual input projection copy the input files if they exist
