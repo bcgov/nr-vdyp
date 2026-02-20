@@ -377,10 +377,16 @@ public class ProjectionService {
 	}
 
 	private static void extractConvenienceParameters(Parameters params, ProjectionEntity model) {
-		// extract the report Title and description from the parameters
-		// leave report title in for processing, remove description
-		model.setReportTitle(params.getReportTitle());
-		model.setReportDescription(params.getReportTitle()); // TODO update params to be able to read a description
+		if (params != null) {
+			// extract the report Title and description from the parameters
+			// leave report title in for processing, remove description
+			model.setReportTitle(params.getReportTitle());
+			String desc = params.getReportDesc();
+			if (desc == null) {
+				desc = params.getReportTitle();
+			}
+			model.setReportDescription(desc);
+		}
 	}
 
 	public ProjectionEntity getProjectionEntity(UUID projectionGuid) throws ProjectionServiceException {
@@ -681,5 +687,41 @@ public class ProjectionService {
 				}
 			}
 		}
+	}
+
+	@Transactional
+	public ProjectionModel duplicateProjection(UUID projectionGUID, VDYPUserModel actingUser)
+			throws ProjectionServiceException {
+		ProjectionModel newProjection;
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.READ);
+		try {
+			Parameters parameters = null;
+			ModelParameters modelParameters = null;
+			if (entity.getProjectionParameters() != null) {
+				parameters = objectMapper.readValue(entity.getProjectionParameters(), Parameters.class);
+				long numCopies = repository.countCopyTitle(parameters.getReportTitle());
+				parameters.setCopyTitle(parameters.getReportTitle());
+				parameters.setReportTitle(
+						parameters.getReportTitle() + " - COPY" + (numCopies > 0 ? "" + (numCopies - 1) : "")
+				);
+			}
+			if (entity.getModelParameters() != null) {
+				modelParameters = objectMapper.readValue(entity.getModelParameters(), ModelParameters.class);
+			}
+
+			newProjection = createNewProjection(actingUser, parameters, modelParameters);
+			ProjectionEntity newEntity = getProjectionEntity(UUID.fromString(newProjection.getProjectionGUID()));
+
+			// If this is not a manual input projection copy the input files if they exist
+			if (modelParameters == null) {
+				fileSetService.duplicateFilesFromTo(entity.getPolygonFileSet(), newEntity.getPolygonFileSet());
+				fileSetService.duplicateFilesFromTo(entity.getLayerFileSet(), newEntity.getLayerFileSet());
+			}
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Failed to duplicate projection", e);
+		}
+		return newProjection;
 	}
 }

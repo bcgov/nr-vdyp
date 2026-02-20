@@ -351,4 +351,33 @@ class ProjectionFileSetServiceTest {
 		verify(fileMappingService).getFilesForFileSet(fileSetGuid, false);
 	}
 
+	@Test
+	void duplicateFilesFromTo_callsFileMappingService() throws Exception {
+		UUID fromFileSetGuid = UUID.randomUUID();
+		UUID toFileSetGuid = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionFileSetEntity fromEntity = fileSetEntity(fromFileSetGuid, ownerId);
+		ProjectionFileSetEntity toEntity = fileSetEntity(toFileSetGuid, ownerId);
+
+		FileMappingModel file1 = new FileMappingModel();
+		FileMappingModel file2 = new FileMappingModel();
+		when(fileMappingService.getFilesForFileSet(fromFileSetGuid, true)).thenReturn(List.of(file1, file2));
+
+		String bucketId = "coms-bucket-id";
+		when(comsClient.searchForBucket(any(), any(), any(), any()))
+				.thenReturn(List.of(new COMSBucket("bucket", "bucket-name", bucketId, "region", "endpoint", "key")));
+
+		FileMappingModel duplicatedFile1 = new FileMappingModel();
+		FileMappingModel duplicatedFile2 = new FileMappingModel();
+		when(fileMappingService.duplicateFile(file1, toEntity, bucketId)).thenReturn(duplicatedFile1);
+		when(fileMappingService.duplicateFile(file2, toEntity, bucketId)).thenReturn(duplicatedFile2);
+
+		service.duplicateFilesFromTo(fromEntity, toEntity);
+
+		verify(fileMappingService).getFilesForFileSet(fromFileSetGuid, true);
+		verify(fileMappingService).duplicateFile(file1, toEntity, bucketId);
+		verify(fileMappingService).duplicateFile(file2, toEntity, bucketId);
+	}
+
 }
