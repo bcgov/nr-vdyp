@@ -54,6 +54,7 @@ export const PROJECTION_TYPE = Object.freeze({
 
 export const SPECIAL_INDICATORS = Object.freeze({
   NA: 'N/A',
+  COMPUTED: 'Computed',
 })
 
 export const MODEL_PARAMETER_PANEL = Object.freeze({
@@ -65,6 +66,7 @@ export const MODEL_PARAMETER_PANEL = Object.freeze({
 
 export const FILE_UPLOAD_PANEL = Object.freeze({
   REPORT_INFO: 'reportInfo',
+  MINIMUM_DBH: 'minimumDBH',
   ATTACHMENTS: 'attachments',
 })
 
@@ -249,6 +251,7 @@ export const PANEL_ACTION = Object.freeze({
   CLEAR: 'clear',
   CONFIRM: 'confirm',
   EDIT: 'edit',
+  CANCEL: 'cancel',
 })
 
 export const REPORTING_ACTION = Object.freeze({

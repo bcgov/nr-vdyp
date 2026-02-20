@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { FileUploadPanelName, PanelState } from '@/types/types'
 import type { FileUploadSpeciesGroup, ParsedProjectionParameters, UploadedFileInfo } from '@/interfaces/interfaces'
@@ -9,6 +9,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   // panel open
   const panelOpenStates = ref<Record<FileUploadPanelName, PanelState>>({
     reportInfo: CONSTANTS.PANEL.OPEN,
+    minimumDBH: CONSTANTS.PANEL.CLOSE,
     attachments: CONSTANTS.PANEL.CLOSE,
   })
 
@@ -17,33 +18,43 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     Record<FileUploadPanelName, { confirmed: boolean; editable: boolean }>
   >({
     reportInfo: { confirmed: false, editable: true },
+    minimumDBH: { confirmed: false, editable: false },
     attachments: { confirmed: false, editable: false },
   })
 
   const runModelEnabled = ref(false)
+
+  // Sequential panel order (attachments is excluded - always accessible)
+  const sequentialPanelOrder: FileUploadPanelName[] = [
+    CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO,
+    CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH,
+  ]
+
+  // Update runModelEnabled based on sequential panels + files uploaded
+  const updateRunModelEnabled = () => {
+    const sequentialPanelsConfirmed = sequentialPanelOrder.every(
+      (panel) => panelState.value[panel].confirmed,
+    )
+    const filesUploaded = polygonFileInfo.value !== null && layerFileInfo.value !== null
+    runModelEnabled.value = sequentialPanelsConfirmed && filesUploaded
+  }
 
   // Method to handle confirm action for each panel
   const confirmPanel = (panelName: FileUploadPanelName) => {
     panelState.value[panelName].confirmed = true
     panelState.value[panelName].editable = false
 
-    // Enable the next panel's confirm and clear buttons
-    const panelOrder: FileUploadPanelName[] = [
-      CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO,
-      CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS,
-    ]
-    const currentIndex = panelOrder.indexOf(panelName)
-    if (currentIndex !== -1 && currentIndex < panelOrder.length - 1) {
+    // Enable the next sequential panel
+    const currentIndex = sequentialPanelOrder.indexOf(panelName)
+    if (currentIndex !== -1 && currentIndex < sequentialPanelOrder.length - 1) {
       // The next panel opens automatically, switching to the editable.
-      const nextPanel = panelOrder[currentIndex + 1]
+      const nextPanel = sequentialPanelOrder[currentIndex + 1]
       panelOpenStates.value[nextPanel] = CONSTANTS.PANEL.OPEN
       panelState.value[nextPanel].editable = true
     }
 
-    // Check if all panels are confirmed to enable the 'Run Model' button
-    runModelEnabled.value = panelOrder.every(
-      (panel) => panelState.value[panel].confirmed,
-    )
+    // Check if run model should be enabled
+    updateRunModelEnabled()
   }
 
   // Method to handle edit action for each panel
@@ -51,16 +62,12 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     panelState.value[panelName].confirmed = false
     panelState.value[panelName].editable = true
 
-    // Disable all subsequent panels
-    const panelOrder: FileUploadPanelName[] = [
-      CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO,
-      CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS,
-    ]
-    const currentIndex = panelOrder.indexOf(panelName)
+    // Disable all subsequent sequential panels
+    const currentIndex = sequentialPanelOrder.indexOf(panelName)
     if (currentIndex !== -1) {
-      for (let i = currentIndex + 1; i < panelOrder.length; i++) {
+      for (let i = currentIndex + 1; i < sequentialPanelOrder.length; i++) {
         // All of the next panels are automatically closed, uneditable, and unconfirmed
-        const nextPanel = panelOrder[i]
+        const nextPanel = sequentialPanelOrder[i]
         panelState.value[nextPanel].confirmed = false
         panelState.value[nextPanel].editable = false
         panelOpenStates.value[nextPanel] = CONSTANTS.PANEL.CLOSE
@@ -137,6 +144,11 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const isUploadingLayer = ref<boolean>(false)
   const isDeletingFile = ref<boolean>(false)
 
+  // Watch file info changes to update runModelEnabled
+  watch([polygonFileInfo, layerFileInfo], () => {
+    updateRunModelEnabled()
+  })
+
   // Set uploaded file info
   const setPolygonFileInfo = (info: UploadedFileInfo | null) => {
     polygonFileInfo.value = info
@@ -151,10 +163,12 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     // Reset panel states
     panelOpenStates.value = {
       reportInfo: CONSTANTS.PANEL.OPEN,
+      minimumDBH: CONSTANTS.PANEL.CLOSE,
       attachments: CONSTANTS.PANEL.CLOSE,
     }
     panelState.value = {
       reportInfo: { confirmed: false, editable: true },
+      minimumDBH: { confirmed: false, editable: false },
       attachments: { confirmed: false, editable: false },
     }
     runModelEnabled.value = false
@@ -197,27 +211,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isDeletingFile.value = false
   }
 
-  /**
-   * Restore store state from parsed projection parameters
-   * @param params Parsed projection parameters from the backend
-   * @param isViewMode If true, sets all panels to confirmed and non-editable
-   */
-  const restoreFromProjectionParams = (
-    params: ParsedProjectionParameters,
-    isViewMode: boolean = false,
-  ) => {
-    // Restore report info from parameters
-    reportTitle.value = params.reportTitle
-
-    // Restore age/year range settings
-    startingAge.value = params.ageStart
-    finishingAge.value = params.ageEnd
-    ageIncrement.value = params.ageIncrement
-    startYear.value = params.yearStart
-    endYear.value = params.yearEnd
-    yearIncrement.value = params.ageIncrement
-
-    // Determine selectedAgeYearRange based on what values exist
+  const restoreAgeYearRange = (params: ParsedProjectionParameters) => {
     const hasAge = params.ageStart !== null || params.ageEnd !== null
     const hasYear = params.yearStart !== null || params.yearEnd !== null
     if (hasAge) {
@@ -225,12 +219,9 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     } else if (hasYear) {
       selectedAgeYearRange.value = CONSTANTS.AGE_YEAR_RANGE.YEAR
     }
+  }
 
-    specificYear.value = params.forceYear
-
-    // Restore execution options
-    const options = params.selectedExecutionOptions
-
+  const restoreExecutionOptions = (options: string[]) => {
     isForwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.ForwardGrowEnabled)
     isBackwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.BackGrowEnabled)
     isByLayerEnabled.value = options.includes(ExecutionOptionsEnum.DoSummarizeProjectionByLayer)
@@ -242,63 +233,93 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     incSecondaryHeight.value = options.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)
     isComputedMAIEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
     isCulminationValuesEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)
+  }
 
-    // Determine projection type
+  const restoreProjectionTypeAndSpeciesGroups = (options: string[]) => {
     if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)) {
       projectionType.value = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
     } else if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)) {
       projectionType.value = CONSTANTS.PROJECTION_TYPE.VOLUME
     }
-
-    // Initialize species groups based on projection type
     initializeSpeciesGroups()
-    if (projectionType.value) {
-      updateSpeciesGroupsForProjectionType(projectionType.value)
-    }
+    updateSpeciesGroupsForProjectionType(projectionType.value)
+  }
 
-    // Restore utilization levels (Minimum DBH Limit by Species Group) from saved utils
-    if (params.utils && Array.isArray(params.utils) && params.utils.length > 0) {
-      // Create a map of species code to utilization value
-      const utilsMap: Record<string, UtilizationClassSetEnum> = {}
-      for (const util of params.utils) {
-        const utilObj = util as { s: string; u: string }
-        if (utilObj.s && utilObj.u) {
-          // Map the utilization string to enum value
-          utilsMap[utilObj.s] = utilObj.u as UtilizationClassSetEnum
-        }
+  const restoreUtilizationLevels = (params: ParsedProjectionParameters) => {
+    if (!Array.isArray(params.utils) || params.utils.length === 0) return
+    const utilsMap: Record<string, UtilizationClassSetEnum> = {}
+    for (const util of params.utils) {
+      const utilObj = util as { s: string; u: string }
+      if (utilObj.s && utilObj.u) {
+        utilsMap[utilObj.s] = utilObj.u as UtilizationClassSetEnum
       }
-
-      // Apply utilization levels to fileUploadSpeciesGroup
-      // Create a new array to ensure Vue reactivity triggers watchers
-      fileUploadSpeciesGroup.value = fileUploadSpeciesGroup.value.map((group) => ({
-        ...group,
-        minimumDBHLimit: utilsMap[group.group] || group.minimumDBHLimit,
-      }))
     }
+    fileUploadSpeciesGroup.value = fileUploadSpeciesGroup.value.map((group) => ({
+      ...group,
+      minimumDBHLimit: utilsMap[group.group] || group.minimumDBHLimit,
+    }))
+  }
 
-    // Set panel states based on view/edit mode
+  const applyEditModePanelStates = (params: ParsedProjectionParameters) => {
+    // Infer panel confirmed states from saved data without extra fields:
+    // - reportInfo: confirmed if reportTitle is set (required field for confirmation)
+    // - minimumDBH: confirmed if utils are present (reportInfo saves utils=[]; minimumDBH saves full utils)
+    const isReportInfoConfirmed = params.reportTitle !== null
+    const isMinimumDBHConfirmed = Array.isArray(params.utils) && params.utils.length > 0
+    // Only the first uncompleted panel should be open; confirmed panels are closed
+    panelOpenStates.value = {
+      reportInfo: isReportInfoConfirmed ? CONSTANTS.PANEL.CLOSE : CONSTANTS.PANEL.OPEN,
+      minimumDBH: isReportInfoConfirmed && !isMinimumDBHConfirmed ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
+      attachments: CONSTANTS.PANEL.CLOSE,
+    }
+    panelState.value = {
+      reportInfo: { confirmed: isReportInfoConfirmed, editable: !isReportInfoConfirmed },
+      minimumDBH: {
+        confirmed: isMinimumDBHConfirmed,
+        editable: isReportInfoConfirmed && !isMinimumDBHConfirmed,
+      },
+      attachments: { confirmed: false, editable: false },
+    }
+    runModelEnabled.value = false
+  }
+
+  /**
+   * Restore store state from parsed projection parameters
+   * @param params Parsed projection parameters from the backend
+   * @param isViewMode If true, sets all panels to confirmed and non-editable
+   */
+  const restoreFromProjectionParams = (
+    params: ParsedProjectionParameters,
+    isViewMode: boolean = false,
+  ) => {
+    reportTitle.value = params.reportTitle
+    startingAge.value = params.ageStart
+    finishingAge.value = params.ageEnd
+    ageIncrement.value = params.ageIncrement
+    startYear.value = params.yearStart
+    endYear.value = params.yearEnd
+    yearIncrement.value = params.ageIncrement
+    specificYear.value = params.forceYear
+
+    restoreAgeYearRange(params)
+    restoreExecutionOptions(params.selectedExecutionOptions)
+    restoreProjectionTypeAndSpeciesGroups(params.selectedExecutionOptions)
+    restoreUtilizationLevels(params)
+
     if (isViewMode) {
-      // In view mode, all panels are confirmed and not editable
       panelOpenStates.value = {
         reportInfo: CONSTANTS.PANEL.OPEN,
+        minimumDBH: CONSTANTS.PANEL.OPEN,
         attachments: CONSTANTS.PANEL.OPEN,
       }
       panelState.value = {
         reportInfo: { confirmed: true, editable: false },
+        minimumDBH: { confirmed: true, editable: false },
         attachments: { confirmed: true, editable: false },
       }
       runModelEnabled.value = false
     } else {
-      // In edit mode, only first panel is open and editable (same as new projection)
-      panelOpenStates.value = {
-        reportInfo: CONSTANTS.PANEL.OPEN,
-        attachments: CONSTANTS.PANEL.CLOSE,
-      }
-      panelState.value = {
-        reportInfo: { confirmed: false, editable: true },
-        attachments: { confirmed: false, editable: false },
-      }
-      runModelEnabled.value = false
+      applyEditModePanelStates(params)
     }
   }
 
@@ -310,6 +331,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     runModelEnabled,
     confirmPanel,
     editPanel,
+    updateRunModelEnabled,
     // report info
     selectedAgeYearRange,
     startingAge,

@@ -363,39 +363,6 @@
       </v-row>
     </v-container>
   </div>
-  <div
-    class="ml-4 mt-10"
-    v-else-if="
-      !isModelParametersMode &&
-      appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
-    "
-  >
-    <div class="ml-n4 mt-n5">
-      <span class="min-dbh-limit-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">Minimum DBH Limit by Species Group</span>
-    </div>
-    <v-container fluid class="ml-n10 mt-5">
-      <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index">
-        <v-col class="min-dbh-limit-species-group-list-container" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
-          {{ `${group.group}` }}
-        </v-col>
-        <v-col cols="8" class="ml-n5">
-          <v-slider
-            v-model="fileUploadUtilizationSliderValues[index]"
-            :min="0"
-            :max="4"
-            :ticks="utilizationSliderTickLabels"
-            show-ticks="always"
-            step="1"
-            thumb-size="12"
-            track-size="7"
-            track-color="transparent"
-            :disabled="isMinDBHDeactivated"
-            @update:model-value="updateFileUploadMinDBH(index, $event)"
-          ></v-slider>
-        </v-col>
-      </v-row>
-    </v-container>
-  </div>
 </template>
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
@@ -460,14 +427,10 @@ const emit = defineEmits([
 ])
 
 const utilizationSliderValues = ref<number[]>([]) // in Model Parameter mode
-const fileUploadUtilizationSliderValues = ref<number[]>([])
 
 const utilizationClassOptions = OPTIONS.utilizationClassOptions
 
 const speciesGroups = computed(() => modelParameterStore.speciesGroups)
-const fileUploadSpeciesGroups = computed(
-  () => fileUploadStore.fileUploadSpeciesGroup,
-)
 
 const selectedAgeYearRange = ref<string>(
   props.selectedAgeYearRange || DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
@@ -774,42 +737,6 @@ watch(
   { immediate: true, deep: true, flush: 'sync' },
 )
 
-// Watch fileUploadSpeciesGroups for changes and sync utilization sliderValues (with immediate: true for initial load)
-watch(
-  fileUploadSpeciesGroups,
-  (newGroups) => {
-    fileUploadUtilizationSliderValues.value = newGroups.map((group) =>
-      utilizationClassOptions.findIndex(
-        (opt) => opt.value === group.minimumDBHLimit,
-      ),
-    )
-  },
-  { immediate: true, deep: true, flush: 'sync' },
-)
-
-// Watch fileUploadStore projectionType to update species groups and slider values when projection type changes
-// Only apply default values for new projections - existing projections have their utils restored from backend
-watch(
-  () => fileUploadStore.projectionType,
-  (newType, oldType) => {
-    // Skip if this is an initial load (oldType is null) for existing projections (view/edit mode)
-    // Only update species groups when user explicitly changes projection type in create mode
-    if (oldType === null && appStore.viewMode !== CONSTANTS.PROJECTION_VIEW_MODE.CREATE) {
-      return
-    }
-
-    // Update species groups based on projection type
-    fileUploadStore.updateSpeciesGroupsForProjectionType(newType)
-    // Update slider values when projection type changes
-    fileUploadUtilizationSliderValues.value = fileUploadSpeciesGroups.value.map(
-      (group) =>
-        utilizationClassOptions.findIndex(
-          (opt) => opt.value === group.minimumDBHLimit,
-        ),
-    )
-  },
-)
-
 // Watch for projectionType to manage objects in the 'Volumes Reported' and 'Mimimum DBH Limit by Species Group' states
 watch(localProjectionType, (newVal) => {
   if (newVal === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
@@ -953,15 +880,6 @@ const updateMinDBH = (index: number, value: number) => {
   }
 }
 
-// Update minimum DBH limit in file upload store based on slider value
-const updateFileUploadMinDBH = (index: number, value: number) => {
-  if (fileUploadSpeciesGroups.value[index]) {
-    const enumValue = utilizationClassOptions[value]?.value
-    if (enumValue !== undefined) {
-      fileUploadSpeciesGroups.value[index].minimumDBHLimit = enumValue
-    }
-  }
-}
 </script>
 <style scoped>
 .include-in-report-label {

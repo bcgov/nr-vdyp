@@ -92,21 +92,25 @@
       </template>
     </template>
     <template v-else>
-      <div class="tabs-with-download">
-        <AppTabs
-          v-model:currentTab="fileUploadActiveTab"
-          :tabs="fileUploadTabs"
-        />
+      <div class="file-upload-header">
         <AppButton
           label="Download Report"
           :icon-src="DownloadIcon"
           variant="primary"
           :is-disabled="!isDownloadReady"
-          class="download-report-button"
           @click="handleDownloadReport"
         />
       </div>
       <template v-if="isFileUploadPanelsVisible">
+        <ParameterSelectionProgressBar
+          :sections="fileUploadProgressSections"
+          :percentage="fileUploadPercentage"
+          :completedCount="fileUploadCompletedCount"
+          :projectionStatus="appStore.currentProjectionStatus"
+          class="panel-spacing"
+        />
+        <ReportInfoPanel class="panel-spacing" />
+        <MinimumDBHPanel class="panel-spacing" />
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
           v-if="!appStore.isReadOnly || isRunning"
@@ -141,6 +145,8 @@ import {
   StandInfoPanel,
   ReportInfoPanel,
   AttachmentsPanel,
+  MinimumDBHPanel,
+  ParameterSelectionProgressBar,
   RunProjectionButtonPanel
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
@@ -172,7 +178,6 @@ const fileOperationMessage = computed(() => {
   return ''
 })
 const modelParamActiveTab = ref(0)
-const fileUploadActiveTab = ref(0)
 
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
@@ -212,15 +217,6 @@ const modelParamTabs = computed<Tab[]>(() => [
   },
 ])
 
-const fileUploadTabs = computed<Tab[]>(() => [
-  {
-    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.FILE_UPLOAD,
-    component: ReportInfoPanel,
-    tabname: null,
-    disabled: false,
-  },
-])
-
 const isModelParameterPanelsVisible = computed(() => {
   return (
     appStore.modelSelection ===
@@ -231,11 +227,56 @@ const isModelParameterPanelsVisible = computed(() => {
 })
 
 const isFileUploadPanelsVisible = computed(() => {
-  return (
-    appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD &&
-    fileUploadActiveTab.value ===
-      CONSTANTS.FILE_UPLOAD_TAB_INDEX.PARAM_SELECTION
-  )
+  return appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
+})
+
+const fileUploadPrerequisitesDone = computed(
+  () =>
+    fileUploadStore.panelState.reportInfo.confirmed &&
+    fileUploadStore.panelState.minimumDBH.confirmed,
+)
+
+const uploadedFilesCount = computed(() => {
+  let count = 0
+  if (fileUploadStore.polygonFileInfo !== null) count++
+  if (fileUploadStore.layerFileInfo !== null) count++
+  return count
+})
+
+const fileUploadProgressSections = computed(() => [
+  {
+    label: 'Report Details',
+    completed: fileUploadStore.panelState.reportInfo.confirmed,
+  },
+  {
+    label: 'Minimum DBH',
+    completed: fileUploadStore.panelState.minimumDBH.confirmed,
+  },
+  {
+    label: 'File Upload',
+    completed:
+      fileUploadPrerequisitesDone.value && uploadedFilesCount.value === 2,
+  },
+])
+
+// Each pre-section contributes 33%, file upload contributes 17% per file (total 34%)
+// but only when both prerequisites (Report Details + Minimum DBH) are confirmed.
+const fileUploadPercentage = computed(() => {
+  let pct = 0
+  if (fileUploadStore.panelState.reportInfo.confirmed) pct += 33
+  if (fileUploadStore.panelState.minimumDBH.confirmed) pct += 33
+  if (fileUploadPrerequisitesDone.value) {
+    pct += uploadedFilesCount.value * 17
+  }
+  return pct
+})
+
+const fileUploadCompletedCount = computed(() => {
+  let count = 0
+  if (fileUploadStore.panelState.reportInfo.confirmed) count++
+  if (fileUploadStore.panelState.minimumDBH.confirmed) count++
+  if (fileUploadPrerequisitesDone.value && uploadedFilesCount.value === 2) count++
+  return count
 })
 
 /**
@@ -366,6 +407,16 @@ const runModelHandler = async () => {
     } else if (
       appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
     ) {
+      // Validate files are uploaded before running
+      if (!fileUploadStore.polygonFileInfo) {
+        notificationStore.showErrorMessage(MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING)
+        return
+      }
+      if (!fileUploadStore.layerFileInfo) {
+        notificationStore.showErrorMessage(MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING)
+        return
+      }
+
       const response = await runProjectionFileUpload()
       console.debug('Full response:', response)
 
@@ -605,6 +656,15 @@ h3 {
 
 .panel-spacing {
   margin-top: var(--layout-margin-medium);
+}
+
+.file-upload-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.file-upload-header :deep(.button-icon-img) {
+  filter: brightness(0) invert(1);
 }
 
 .tabs-with-download {
