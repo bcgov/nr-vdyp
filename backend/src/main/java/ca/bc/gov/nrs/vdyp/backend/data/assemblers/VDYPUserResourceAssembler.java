@@ -26,6 +26,8 @@ public class VDYPUserResourceAssembler {
 		entity.setUserTypeCode(utra.toEntity(model.getUserTypeCode()));
 		entity.setFirstName(model.getFirstName());
 		entity.setLastName(model.getLastName());
+		entity.setDisplayName(model.getDisplayName());
+		entity.setEmail(model.getEmail());
 
 		return entity;
 	}
@@ -40,6 +42,9 @@ public class VDYPUserResourceAssembler {
 		model.setUserTypeCode(utra.toModel(entity.getUserTypeCode()));
 		model.setFirstName(entity.getFirstName());
 		model.setLastName(entity.getLastName());
+		model.setDisplayName(entity.getDisplayName());
+		model.setEmail(entity.getEmail());
+
 		return model;
 	}
 }
