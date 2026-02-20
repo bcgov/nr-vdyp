@@ -43,6 +43,8 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const confirmPanel = (panelName: FileUploadPanelName) => {
     panelState.value[panelName].confirmed = true
     panelState.value[panelName].editable = false
+    // Close the confirmed panel
+    panelOpenStates.value[panelName] = CONSTANTS.PANEL.CLOSE
 
     // Enable the next sequential panel
     const currentIndex = sequentialPanelOrder.indexOf(panelName)
@@ -51,6 +53,11 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
       const nextPanel = sequentialPanelOrder[currentIndex + 1]
       panelOpenStates.value[nextPanel] = CONSTANTS.PANEL.OPEN
       panelState.value[nextPanel].editable = true
+    }
+
+    // When the last sequential panel (minimumDBH) is confirmed, open the attachments panel
+    if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH) {
+      panelOpenStates.value[CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS] = CONSTANTS.PANEL.OPEN
     }
 
     // Check if run model should be enabled
@@ -268,11 +275,12 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     // - minimumDBH: confirmed if utils are present (reportInfo saves utils=[]; minimumDBH saves full utils)
     const isReportInfoConfirmed = params.reportTitle !== null
     const isMinimumDBHConfirmed = Array.isArray(params.utils) && params.utils.length > 0
-    // Only the first uncompleted panel should be open; confirmed panels are closed
+    // Only the first uncompleted panel should be open; confirmed panels are closed.
+    // Attachments opens when both prerequisites (reportInfo + minimumDBH) are confirmed.
     panelOpenStates.value = {
       reportInfo: isReportInfoConfirmed ? CONSTANTS.PANEL.CLOSE : CONSTANTS.PANEL.OPEN,
       minimumDBH: isReportInfoConfirmed && !isMinimumDBHConfirmed ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
-      attachments: CONSTANTS.PANEL.CLOSE,
+      attachments: isReportInfoConfirmed && isMinimumDBHConfirmed ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
     }
     panelState.value = {
       reportInfo: { confirmed: isReportInfoConfirmed, editable: !isReportInfoConfirmed },
