@@ -90,13 +90,16 @@ public class VDYPUserService {
 				if (!userType.isSystemUser()) {
 					String firstName = jwt.getClaim("given_name");
 					String lastName = jwt.getClaim("family_name");
-					// FIXME VDYP-847 Record email and Display Name to our system
+					String displayName = jwt.getClaim("display_name");
+					String email = jwt.getClaim("email");
 
 					VDYPUserModel newUser = new VDYPUserModel();
 					newUser.setUserTypeCode(userType);
 					newUser.setOidcGUID(oidcId);
 					newUser.setFirstName(firstName);
 					newUser.setLastName(lastName);
+					newUser.setDisplayName(displayName);
+					newUser.setEmail(email);
 
 					logger.debug(
 							"Creating new user with oidcId {}, firstName {}, lastName {}, usertypeCode {}", oidcId,
@@ -105,13 +108,7 @@ public class VDYPUserService {
 
 					return createUser(newUser);
 				} else {
-					// TODO should I let the system create a user for the system user? Is there any harm?
-					VDYPUserModel newUser = new VDYPUserModel();
-					newUser.setUserTypeCode(userType);
-					newUser.setOidcGUID(oidcId);
-					newUser.setFirstName("System");
-					newUser.setLastName("");
-					userOption = Optional.of(assembler.toEntity(newUser));
+					return getSystemUser();
 				}
 			}
 			return assembler.toModel(userOption.get());
@@ -122,7 +119,6 @@ public class VDYPUserService {
 
 	public VDYPUserModel getSystemUser() {
 		if (systemUserCache == null) {
-			logger.debug("System user cache miss, loading system user");
 			systemUserCache = new VDYPUserModel();
 			systemUserCache.setOidcGUID("system");
 			systemUserCache.setFirstName("System");

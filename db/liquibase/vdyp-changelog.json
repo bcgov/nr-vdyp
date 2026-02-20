@@ -487,6 +487,27 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_08_00",
+        "author": "pminter",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_08_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_08/00/ddl/tables/app-vdyp.vdyp_user.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ]
+      }
     }
   ]
 }

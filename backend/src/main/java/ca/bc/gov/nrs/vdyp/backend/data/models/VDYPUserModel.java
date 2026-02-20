@@ -11,6 +11,8 @@ public class VDYPUserModel {
 	private UserTypeCodeModel userTypeCode;
 	private String firstName;
 	private String lastName;
+	private String displayName;
+	private String email;
 
 	public final String getVdypUserGUID() {
 		return vdypUserGUID;
@@ -32,6 +34,14 @@ public class VDYPUserModel {
 		return lastName;
 	}
 
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
 	public void setVdypUserGUID(String vdypUserGUID) {
 		this.vdypUserGUID = vdypUserGUID;
 	}
@@ -50,6 +60,14 @@ public class VDYPUserModel {
 
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	@Override
