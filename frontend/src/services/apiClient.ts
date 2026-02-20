@@ -92,8 +92,8 @@ export const apiClient = {
    * @param options Optional Axios request configuration.
    * @returns The Axios promise for the created projection.
    */
-  createProjection: (parameters: Parameters, modelParameters?: ModelParameters, options?: AxiosRequestConfig) => {
-    return projectionApiInstance.createProjection(parameters, modelParameters, options)
+  createProjection: (parameters: Parameters, modelParameters?: ModelParameters, reportDescription?: string | null, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.createProjection(parameters, modelParameters, reportDescription, options)
   },
 
   /**
@@ -118,12 +118,14 @@ export const apiClient = {
     projectionGUID: string,
     parameters: Parameters,
     modelParameters?: ModelParameters,
+    reportDescription?: string | null,
     options?: AxiosRequestConfig,
   ) => {
     return projectionApiInstance.updateProjectionParams(
       projectionGUID,
       parameters,
       modelParameters,
+      reportDescription,
       options,
     )
   },

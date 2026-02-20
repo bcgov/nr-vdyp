@@ -194,7 +194,6 @@ export const buildProjectionParameters = (
     selectedDebugOptions: selectedDebugOptions,
     excludedDebugOptions: excludedDebugOptions,
     reportTitle: fileUploadStore.reportTitle,
-    reportDesc: fileUploadStore.reportDescription,
     combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
     metadataToOutput: MetadataToOutputEnum.VERSION,
     utils: fileUploadStore.fileUploadSpeciesGroup.map(
@@ -244,6 +243,7 @@ export const revertPanelToSaved = async (panelName: FileUploadPanelName): Promis
   const projectionModel = await getProjectionById(projectionGUID)
   const params = parseProjectionParams(projectionModel.projectionParameters)
   fileUploadStore.restoreFromProjectionParams(params, false)
+  fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
   fileUploadStore.updateRunModelEnabled()
 
   // Keep the cancelled panel open and editable so the user can continue editing
@@ -282,7 +282,7 @@ export const saveProjectionOnPanelConfirm = async (
     panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO
   ) {
     // Create mode + first panel: create projection with params only (no files yet)
-    const result = await projServiceCreateProjection(projectionParameters)
+    const result = await projServiceCreateProjection(projectionParameters, undefined, fileUploadStore.reportDescription)
     appStore.setCurrentProjectionGUID(result.projectionGUID)
     appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
   } else if (appStore.viewMode === PROJECTION_VIEW_MODE.EDIT) {
@@ -292,7 +292,7 @@ export const saveProjectionOnPanelConfirm = async (
     }
 
     // Update projection parameters
-    await updateProjectionParams(projectionGUID, projectionParameters)
+    await updateProjectionParams(projectionGUID, projectionParameters, fileUploadStore.reportDescription)
 
     // Note: Files are now uploaded immediately when selected in the AttachmentsPanel,
     // so no file upload handling is needed here. This function only updates parameters.

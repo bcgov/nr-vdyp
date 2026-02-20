@@ -529,7 +529,6 @@ export const buildProjectionParameters = (
     yearStart: null,
     yearEnd: null,
     reportTitle: modelParameterStore.reportTitle,
-    reportDesc: modelParameterStore.reportDescription,
     outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions,
     excludedExecutionOptions,
@@ -594,6 +593,7 @@ export const createProjection = async (
   createProjectionFunc: (
     parameters: Parameters,
     modelParameters: ModelParameters,
+    reportDescription?: string | null,
   ) => Promise<ProjectionModel> = projServiceCreateProjection,
 ): Promise<ProjectionModel> => {
   const projectionParameters = buildProjectionParameters(modelParameterStore)
@@ -602,6 +602,7 @@ export const createProjection = async (
   const result = await createProjectionFunc(
     projectionParameters,
     modelParameters,
+    modelParameterStore.reportDescription,
   )
   return result
 }
@@ -694,6 +695,6 @@ export const saveProjectionOnPanelConfirm = async (
 
     const projectionParameters = buildProjectionParameters(modelParameterStore)
     const modelParameters = buildModelParameters(modelParameterStore)
-    await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters)
+    await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters, modelParameterStore.reportDescription)
   }
 }

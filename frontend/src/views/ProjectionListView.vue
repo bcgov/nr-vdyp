@@ -267,6 +267,7 @@ const loadFileSetInfo = async (
  * Restores model parameter state from a projection
  */
 const restoreInputModelParamsState = (
+  projectionModel: Awaited<ReturnType<typeof getProjectionById>>,
   modelParameters: string | null | undefined,
   params: ReturnType<typeof parseProjectionParams>,
   isViewMode: boolean,
@@ -283,6 +284,7 @@ const restoreInputModelParamsState = (
   }
 
   modelParameterStore.restoreFromProjectionParams(params, isViewMode)
+  modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
 }
 
 /**
@@ -296,6 +298,7 @@ const restoreFileUploadState = async (
 ) => {
   fileUploadStore.resetStore()
   fileUploadStore.restoreFromProjectionParams(params, isViewMode)
+  fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
 
   const polygonFileSetGUID = projectionModel.polygonFileSet?.projectionFileSetGUID
   const layerFileSetGUID = projectionModel.layerFileSet?.projectionFileSetGUID
@@ -336,7 +339,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     )
 
     if (isInputModelParams) {
-      restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode)
+      restoreInputModelParamsState(projectionModel, projectionModel.modelParameters, params, isViewMode)
     } else {
       await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode)
     }
