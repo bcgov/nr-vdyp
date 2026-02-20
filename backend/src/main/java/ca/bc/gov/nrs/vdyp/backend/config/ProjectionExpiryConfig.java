@@ -9,8 +9,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ProjectionExpiryConfig {
 
-	@ConfigProperty(name = "vdyp.projection.expiry.days", defaultValue = "30")
-	int daysUntilExpiry;
+	private final int daysUntilExpiry;
+
+	public ProjectionExpiryConfig(
+			@ConfigProperty(name = "vdyp.projection.expiry.days", defaultValue = "30") int daysUntilExpiry
+	) {
+		this.daysUntilExpiry = daysUntilExpiry;
+	}
 
 	public int daysUntilExpiry() {
 		return daysUntilExpiry;
