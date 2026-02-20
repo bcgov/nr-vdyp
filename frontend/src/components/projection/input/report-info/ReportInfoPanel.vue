@@ -68,6 +68,7 @@
               :specificYear="currentStore.specificYear"
               :projectionType="currentStore.projectionType"
               :reportTitle="currentStore.reportTitle"
+              :reportDescription="currentStore.reportDescription"
               :isDisabled="isInputDisabled"
               :isModelParametersMode="isModelParametersMode"
               @update:selectedAgeYearRange="handleSelectedAgeYearRangeUpdate"
@@ -97,6 +98,7 @@
               @update:specificYear="handleSpecificYearUpdate"
               @update:projectionType="handleProjectionTypeUpdate"
               @update:reportTitle="handleReportTitleUpdate"
+              @update:reportDescription="handleReportDescriptionUpdate"
             />
             <ActionPanel
               v-if="!isReadOnly"
@@ -302,6 +304,10 @@ const handleProjectionTypeUpdate = (value: string | null) => {
 
 const handleReportTitleUpdate = (value: string | null) => {
   currentStore.value.reportTitle = value
+}
+
+const handleReportDescriptionUpdate = (value: string | null) => {
+  currentStore.value.reportDescription = value
 }
 
 const validateComparison = (): boolean => {
@@ -569,6 +575,7 @@ const onClear = () => {
   currentStore.value.incSecondaryHeight = false
   currentStore.value.specificYear = null
   currentStore.value.reportTitle = null
+  currentStore.value.reportDescription = null
   currentStore.value.projectionType = null
 }
 

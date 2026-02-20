@@ -214,6 +214,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   const projectionType = ref<string | null>(null)
   const reportTitle = ref<string | null>(null)
+  const reportDescription = ref<string | null>(null)
 
   //
   const referenceYear = ref<number | null>(null)
@@ -288,6 +289,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     specificYear.value = null
     projectionType.value = null
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
+    reportDescription.value = null
     referenceYear.value = null
   }
 
@@ -520,6 +522,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     specificYear,
     projectionType,
     reportTitle,
+    reportDescription,
     //
     referenceYear,
     // restore functions

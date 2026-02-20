@@ -102,6 +102,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
 
   const projectionType = ref<string | null>(null)
   const reportTitle = ref<string | null>(null)
+  const reportDescription = ref<string | null>(null)
 
   // species groups for utilization levels
   const fileUploadSpeciesGroup = ref<FileUploadSpeciesGroup[]>([])
@@ -195,6 +196,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     specificYear.value = null
     projectionType.value = null
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
+    reportDescription.value = null
 
     // Reset species groups
     fileUploadSpeciesGroup.value = []
@@ -354,6 +356,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     specificYear,
     projectionType,
     reportTitle,
+    reportDescription,
     // species groups
     fileUploadSpeciesGroup,
     initializeSpeciesGroups,

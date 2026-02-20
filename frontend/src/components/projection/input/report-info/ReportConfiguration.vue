@@ -2,7 +2,7 @@
   <div class="mb-5">
     <v-row>
       <v-col cols="7">
-        <label class="bcds-text-field-label" for="reportTitle">Report Title</label>
+        <label class="bcds-text-field-label" for="reportTitle">Report Title (Required)</label>
         <v-text-field
           id="reportTitle"
           type="string"
@@ -16,19 +16,46 @@
       </v-col>
       <v-col class="col-space-2" />
       <v-col cols="3" class="projection-type-container">
-        <label class="bcds-select-label" for="projection-type-select">Projection Type</label>
-        <v-select
+        <label class="bcds-radio-label" for="projection-type-select">Projection Type</label>
+        <v-radio-group
           id="projection-type-select"
-          :items="OPTIONS.projectionTypeOptions"
           v-model="localProjectionType"
-          item-title="label"
-          item-value="value"
-          hide-details="auto"
-          persistent-placeholder
-          placeholder="Select..."
+          inline
+          hide-details
           :disabled="isDisabled"
-          append-inner-icon="mdi-chevron-down"
-        ></v-select>
+        >
+          <v-radio
+            :key="OPTIONS.projectionTypeOptions[0].value"
+            :label="OPTIONS.projectionTypeOptions[0].label"
+            :value="OPTIONS.projectionTypeOptions[0].value"
+          ></v-radio>
+          <v-radio
+            :key="OPTIONS.projectionTypeOptions[1].value"
+            :label="OPTIONS.projectionTypeOptions[1].label"
+            :value="OPTIONS.projectionTypeOptions[1].value"
+          ></v-radio>
+        </v-radio-group>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col cols="12">
+        <div class="bcds-textarea" :data-disabled="isDisabled || undefined">
+          <label class="bcds-textarea-label" for="reportDescription">Description</label>
+          <div class="bcds-textarea-container">
+            <textarea
+              id="reportDescription"
+              class="bcds-textarea-input"
+              v-model="localReportDescription"
+              placeholder="Provide a description of this Projection..."
+              :disabled="isDisabled"
+              :maxlength="500"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="bcds-textarea-description">
+            <span class="counter">{{ reportDescriptionLength }}/500</span>
+          </div>
+        </div>
       </v-col>
     </v-row>
   </div>
@@ -398,6 +425,7 @@ const props = defineProps<{
   specificYear: string | null
   projectionType: string | null
   reportTitle: string | null
+  reportDescription: string | null
   isDisabled: boolean
   isModelParametersMode: boolean
 }>()
@@ -424,6 +452,7 @@ const emit = defineEmits([
   'update:specificYear',
   'update:projectionType',
   'update:reportTitle',
+  'update:reportDescription',
 ])
 
 const utilizationSliderValues = ref<number[]>([]) // in Model Parameter mode
@@ -457,6 +486,11 @@ const localIncSecondaryHeight = ref<boolean>(props.incSecondaryHeight)
 const localSpecificYear = ref<string | null>(props.specificYear)
 const localProjectionType = ref<string | null>(props.projectionType)
 const localReportTitle = ref<string | null>(props.reportTitle)
+const localReportDescription = ref<string | null>(props.reportDescription)
+
+const reportDescriptionLength = computed(() => {
+  return localReportDescription.value ? localReportDescription.value.length : 0
+})
 
 // Watch props for changes (Prop -> Local State)
 watch(
@@ -634,6 +668,12 @@ watch(
     localReportTitle.value = newVal
   },
 )
+watch(
+  () => props.reportDescription,
+  (newVal) => {
+    localReportDescription.value = newVal
+  },
+)
 
 // Watch local state for changes (Local State -> Parent Emit)
 watch(selectedAgeYearRange, (newVal) =>
@@ -711,6 +751,7 @@ watch(localProjectionType, (newVal) => {
   }
 })
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
+watch(localReportDescription, (newVal) => emit('update:reportDescription', newVal))
 
 const isCulminationValuesEligible = (
   _startingAge: string | null,
