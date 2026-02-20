@@ -20,6 +20,7 @@ public class ProjectionModel {
 	private CalculationEngineCodeModel calculationEngineCode;
 	private ProjectionStatusCodeModel projectionStatusCode;
 	private OffsetDateTime lastUpdatedDate;
+	private OffsetDateTime createDate;
 	private String reportTitle;
 	private String reportDescription;
 
@@ -69,6 +70,10 @@ public class ProjectionModel {
 
 	public OffsetDateTime getLastUpdatedDate() {
 		return lastUpdatedDate;
+	}
+
+	public OffsetDateTime getCreateDate() {
+		return createDate;
 	}
 
 	public OffsetDateTime getExpiryDate() {
@@ -130,6 +135,10 @@ public class ProjectionModel {
 
 	public void setLastUpdatedDate(OffsetDateTime lastUpdatedDate) {
 		this.lastUpdatedDate = lastUpdatedDate;
+	}
+
+	public void setCreateDate(OffsetDateTime createDate) {
+		this.createDate = createDate;
 	}
 
 	public void setReportDescription(String reportDescription) {

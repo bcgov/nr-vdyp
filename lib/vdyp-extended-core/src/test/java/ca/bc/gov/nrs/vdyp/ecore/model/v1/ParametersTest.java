@@ -19,6 +19,20 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProgressFrequency.FrequencyKind;
 public class ParametersTest {
 
 	@Test
+	void testReportTitle() {
+		Parameters p = new Parameters();
+		assertNull(p.getReportTitle());
+		p.reportTitle("Test Report");
+		assertEquals("Test Report", p.getReportTitle());
+		assertNull(p.getReportDesc());
+		p.setReportDesc("Test Report Description");
+		assertEquals("Test Report Description", p.getReportDesc());
+		assertNull(p.getCopyTitle());
+		p.setCopyTitle("Copied From");
+		assertEquals("Copied From", p.getCopyTitle());
+	}
+
+	@Test
 	void testProgressFrequency() {
 
 		assertNull(new ProgressFrequency().getIntValue());
