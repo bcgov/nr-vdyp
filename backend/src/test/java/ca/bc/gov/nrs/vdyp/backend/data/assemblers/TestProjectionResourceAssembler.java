@@ -40,7 +40,7 @@ class TestProjectionResourceAssembler {
 	void testEntityToModel(
 			UUID projectionId, UUID ownerId, UUID polygonFileSetId, UUID layerFileSetId, UUID resultFileSetId,
 			String parameters, OffsetDateTime startDate, OffsetDateTime endDate, String title, String description
-	) {
+	) throws Exception {
 		ProjectionTestData data = ProjectionTestData.builder().projectionId(projectionId).ownerId(ownerId)
 				.polygonFileSetId(polygonFileSetId).layerFileSetId(layerFileSetId).resultFileSetId(resultFileSetId)
 				.parameters(parameters).startDate(startDate).endDate(endDate).reportTitle(title)
@@ -51,8 +51,7 @@ class TestProjectionResourceAssembler {
 
 		ProjectionResourceAssembler assembler = new ProjectionResourceAssembler();
 		ProjectionModel assembledModel = assembler.toModel(entity);
-		assertThat(assembledModel).usingRecursiveComparison().isEqualTo(model);
-		assertThat(assembledModel.getExpiryDate()).isAfterOrEqualTo(OffsetDateTime.now().plusDays(29));
+		assertThat(assembledModel).usingRecursiveComparison().ignoringFields("expiryDate").isEqualTo(model);
 	}
 
 	@ParameterizedTest

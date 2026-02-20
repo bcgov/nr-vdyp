@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
-import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
@@ -30,8 +29,8 @@ public class ProjectionRepository implements PanacheRepositoryBase<ProjectionEnt
 		);
 	}
 
-	public List<UUID> findExpiredIDs(int limit) {
-		OffsetDateTime expiryTime = OffsetDateTime.now().minusDays(ProjectionModel.DAYS_UNTIL_EXPIRY);
+	public List<UUID> findExpiredIDs(int limit, int daysUntilExpiry) {
+		OffsetDateTime expiryTime = OffsetDateTime.now().minusDays(daysUntilExpiry);
 		return find("updateDate < ?1 order by updateDate", expiryTime) //
 				.project(UUID.class) //
 				.page(0, limit)//
