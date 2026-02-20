@@ -426,6 +426,7 @@ const runModelHandler = async () => {
           mapProjectionStatus(response.projectionStatusCode.code),
         )
         appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+        fileUploadStore.panelOpenStates.attachments = CONSTANTS.PANEL.CLOSE
       }
 
       // Show success notification
