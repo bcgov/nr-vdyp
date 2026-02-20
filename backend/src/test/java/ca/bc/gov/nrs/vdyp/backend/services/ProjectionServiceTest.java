@@ -1098,4 +1098,151 @@ class ProjectionServiceTest {
 		verify(fileSetService).deleteFileSetById(results.getProjectionFileSetGUID());
 		verify(batchMappingService).deleteMappingsForProjection(entity);
 	}
+
+	ObjectMapper mapper = new ObjectMapper();
+
+	@Test
+	void duplicateProjection_nullModelParameters_callsCopyFileSets()
+			throws ProjectionServiceException, JsonProcessingException {
+		UUID projectionId = UUID.randomUUID();
+		UUID newProjectionId = UUID.randomUUID();
+
+		UUID ownerId = UUID.randomUUID();
+		VDYPUserModel actingUser = user(ownerId);
+		VDYPUserEntity ownerEntity = userEntity(ownerId);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
+
+		String reportTitle = "Test Report";
+
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+		Parameters parameters = new Parameters();
+		parameters.setReportTitle(reportTitle);
+		entity.setProjectionParameters(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(parameters));
+
+		ProjectionEntity newEntity = projectionEntity(newProjectionId, ownerId);
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.RUNNING);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(repository.findByIdOptional(newProjectionId)).thenReturn(Optional.of(newEntity));
+
+		// file set map
+		UUID polyId = UUID.randomUUID();
+		UUID layerId = UUID.randomUUID();
+		UUID resultsId = UUID.randomUUID();
+
+		var fileSetMap = new HashMap<FileSetTypeCodeModel, ProjectionFileSetModel>();
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.POLYGON),
+				fileSetModel(polyId, ownerId, FileSetTypeCodeModel.POLYGON)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.LAYER),
+				fileSetModel(layerId, ownerId, FileSetTypeCodeModel.LAYER)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.RESULTS),
+				fileSetModel(resultsId, ownerId, FileSetTypeCodeModel.RESULTS)
+		);
+
+		when(fileSetService.createFileSetForNewProjection(actingUser)).thenReturn(fileSetMap);
+
+		ProjectionFileSetEntity polyFileSetEntity = fileSetEntity(polyId);
+		ProjectionFileSetEntity layerFileSetEntity = fileSetEntity(layerId);
+
+		when(em.find(ProjectionFileSetEntity.class, polyId)).thenReturn(polyFileSetEntity);
+		when(em.find(ProjectionFileSetEntity.class, layerId)).thenReturn(layerFileSetEntity);
+		when(em.find(ProjectionFileSetEntity.class, resultsId)).thenReturn(fileSetEntity(resultsId));
+
+		newEntity.setPolygonFileSet(polyFileSetEntity);
+		newEntity.setLayerFileSet(layerFileSetEntity);
+		// Simulate DB-generated ID / app-assigned ID
+		doAnswer(inv -> {
+			ProjectionEntity e = inv.getArgument(0, ProjectionEntity.class);
+			e.setProjectionGUID(newProjectionId);
+			return null;
+		}).when(repository).persist(any(ProjectionEntity.class));
+
+		ProjectionModel model = service.duplicateProjection(projectionId, user(ownerId));
+
+		assertNotNull(model);
+		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
+		assertEquals(reportTitle + " - COPY", model.getReportTitle());
+
+		verify(fileSetService).duplicateFilesFromTo(any(), eq(polyFileSetEntity));
+		verify(fileSetService).duplicateFilesFromTo(any(), eq(layerFileSetEntity));
+	}
+
+	@Test
+	void duplicateProjection_allNullParams_completes() throws ProjectionServiceException {
+		UUID projectionId = UUID.randomUUID();
+		UUID newProjectionId = UUID.randomUUID();
+
+		UUID ownerId = UUID.randomUUID();
+		VDYPUserEntity ownerEntity = userEntity(ownerId);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
+
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+		ProjectionEntity newEntity = projectionEntity(newProjectionId, ownerId);
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.READY);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(repository.findByIdOptional(newProjectionId)).thenReturn(Optional.of(newEntity));
+
+		// Simulate DB-generated ID / app-assigned ID
+		doAnswer(inv -> {
+			ProjectionEntity e = inv.getArgument(0, ProjectionEntity.class);
+			e.setProjectionGUID(newProjectionId);
+			return null;
+		}).when(repository).persist(any(ProjectionEntity.class));
+
+		ProjectionModel model = service.duplicateProjection(projectionId, user(ownerId));
+
+		assertNotNull(model);
+		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
+	}
+
+	@Test
+	void duplicateProjection_providedModelParams_doesNotCopyFiles()
+			throws ProjectionServiceException, JsonProcessingException {
+		UUID projectionId = UUID.randomUUID();
+		UUID newProjectionId = UUID.randomUUID();
+
+		UUID ownerId = UUID.randomUUID();
+		VDYPUserEntity ownerEntity = userEntity(ownerId);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
+
+		String reportTitle = "Test Report";
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+		Parameters parameters = new Parameters();
+		parameters.setReportTitle(reportTitle);
+		entity.setProjectionParameters(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(parameters));
+		entity.setModelParameters("{\"species\":[{\"code\":\"AC\",\"percent\":100.0}]}");
+
+		ProjectionEntity newEntity = projectionEntity(newProjectionId, ownerId);
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.READY);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(repository.findByIdOptional(newProjectionId)).thenReturn(Optional.of(newEntity));
+
+		// Simulate DB-generated ID / app-assigned ID
+		doAnswer(inv -> {
+			ProjectionEntity e = inv.getArgument(0, ProjectionEntity.class);
+			e.setProjectionGUID(newProjectionId);
+			return null;
+		}).when(repository).persist(any(ProjectionEntity.class));
+
+		ProjectionModel model = service.duplicateProjection(projectionId, user(ownerId));
+
+		assertNotNull(model);
+		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
+	}
 }

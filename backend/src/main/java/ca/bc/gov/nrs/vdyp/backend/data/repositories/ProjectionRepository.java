@@ -36,4 +36,9 @@ public class ProjectionRepository implements PanacheRepositoryBase<ProjectionEnt
 				.page(0, limit)//
 				.list();
 	}
+
+	public long countCopyTitle(String title) {
+		String titlePattern = "%\"copyTitle\" : \"" + title + "\"%";
+		return count("projectionParameters like :titlePattern", Parameters.with("titlePattern", titlePattern));
+	}
 }

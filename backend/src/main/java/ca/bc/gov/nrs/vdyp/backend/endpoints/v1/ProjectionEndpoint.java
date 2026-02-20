@@ -63,7 +63,7 @@ public class ProjectionEndpoint implements Endpoint {
 
 	private final CurrentVDYPUser currentUser;
 
-	private static ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private final Client client;
 
@@ -295,6 +295,17 @@ public class ProjectionEndpoint implements Endpoint {
 	public Response cancelProjection(@PathParam("projectionGUID") UUID projectionGUID)
 			throws ProjectionServiceException {
 		var started = projectionService.cancelBatchProjection(currentUser.getUser(), projectionGUID);
+		return Response.status(Status.OK).entity(started).build();
+	}
+
+	@POST
+	@Authenticated
+	@Path("/{projectionGUID}/duplicate")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(name = "Duplicate A Projection", description = "Duplicates the inputs of an existing projection.")
+	public Response duplicateProjection(@PathParam("projectionGUID") UUID projectionGUID)
+			throws ProjectionServiceException {
+		var started = projectionService.duplicateProjection(projectionGUID, currentUser.getUser());
 		return Response.status(Status.OK).entity(started).build();
 	}
 
