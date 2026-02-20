@@ -113,9 +113,9 @@
         <MinimumDBHPanel class="panel-spacing" />
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
-          v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
           :showCancelButton="isRunning"
+          :disabledText="fileUploadDisabledText"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -277,6 +277,16 @@ const fileUploadCompletedCount = computed(() => {
   if (fileUploadStore.panelState.minimumDBH.confirmed) count++
   if (fileUploadPrerequisitesDone.value && uploadedFilesCount.value === 2) count++
   return count
+})
+
+const fileUploadDisabledText = computed(() => {
+  if (!appStore.isDraft) {
+    return `This projection may not be run with a status of ${appStore.currentProjectionStatus}`
+  }
+  if (!fileUploadStore.runModelEnabled) {
+    return 'The projection cannot be run until all sections are complete'
+  }
+  return ''
 })
 
 /**
