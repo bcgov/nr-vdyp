@@ -162,6 +162,7 @@ jobs:
             --set backend.env.COMS_BASE_URL=${{ vars.COMS_BASE_URL }} \
             --set backend.env.CORS_FRONTEND_BASE_URL=${{ vars.CORS_FRONTEND_BASE_URL }} \
             --set backend.env.BATCH_BASE_URL=${{ vars.BATCH_BASE_URL }} \
+            --set backend.env.VDYP_PROJECTION_EXPIRY_DAYS=${{ vars.VDYP_PROJECTION_EXPIRY_DAYS }} \
             --set batch.env.BATCH_DB_USER=${{ vars.BATCH_DB_USERNAME }} \
             --set batch.env.BATCH_DB_DATABASE=${{ vars.BATCH_DB_DATABASE }} \
             --set batch.env.VDYP_BASE_URL=${{ vars.VDYP_BASE_URL }} \

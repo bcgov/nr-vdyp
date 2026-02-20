@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -25,6 +26,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +46,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import ca.bc.gov.nrs.vdyp.backend.config.ProjectionExpiryConfig;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
@@ -83,6 +86,8 @@ class ProjectionServiceTest {
 	ProjectionBatchMappingService batchMappingService;
 	@Mock
 	VDYPUserService userService;
+	@Mock
+	ProjectionExpiryConfig expiryConfig;
 	ProjectionResourceAssembler assembler;
 
 	ProjectionService service;
@@ -93,7 +98,7 @@ class ProjectionServiceTest {
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, userService, new ObjectMapper()
+				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig
 		);
 	}
 
@@ -133,6 +138,7 @@ class ProjectionServiceTest {
 
 		when(repository.findByOwner(doesNotExist)).thenReturn(List.of(entityResult));
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		List<ProjectionModel> results = service.getAllProjectionsForUser(doesNotExist.toString());
 
 		assertNotNull(results);
@@ -326,6 +332,7 @@ class ProjectionServiceTest {
 		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
 		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.getProjectionByID(projectionId, user(ownerId));
 
 		assertNotNull(model);
@@ -368,6 +375,7 @@ class ProjectionServiceTest {
 
 		ModelParameters modelParameters = null;
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId));
 
 		assertThat(model.getReportTitle()).isEqualTo("New Title");
@@ -410,7 +418,7 @@ class ProjectionServiceTest {
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, userService, failingMapper
+				calculationEngineCodeLookup, userService, failingMapper, expiryConfig
 		);
 
 		UUID projectionId = UUID.randomUUID();
@@ -608,6 +616,7 @@ class ProjectionServiceTest {
 			return null;
 		}).when(repository).persist(any(ProjectionEntity.class));
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.createNewProjection(actingUser, params, modelParamsJson);
 
 		assertNotNull(model);
@@ -952,6 +961,7 @@ class ProjectionServiceTest {
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.RUNNING))
 				.thenReturn(statusCode(ProjectionStatusCodeModel.RUNNING));
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.startBatchProjection(actingUser, projectionGUID);
 		assertEquals(ProjectionStatusCodeModel.RUNNING, model.getProjectionStatusCode().getCode());
 
@@ -991,6 +1001,7 @@ class ProjectionServiceTest {
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT))
 				.thenReturn(statusCode(ProjectionStatusCodeModel.DRAFT));
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID);
 		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
 
@@ -999,7 +1010,8 @@ class ProjectionServiceTest {
 
 	@Test
 	void cleanupExpiredProjections_doesNothing_whenNoExpiredProjections() {
-		when(repository.findExpiredIDs(anyInt())).thenReturn(List.of());
+		when(expiryConfig.daysUntilExpiry()).thenReturn(15);
+		when(repository.findExpiredIDs(anyInt(), eq(15))).thenReturn(List.of());
 		service.cleanupExpiredProjections();
 
 		verify(repository, never()).delete(any());
@@ -1029,7 +1041,8 @@ class ProjectionServiceTest {
 		entity.setLayerFileSet(layer);
 		entity.setResultFileSet(results);
 
-		when(repository.findExpiredIDs(anyInt())).thenReturn(List.of(expiredId1)).thenReturn(List.of());
+		when(expiryConfig.daysUntilExpiry()).thenReturn(15);
+		when(repository.findExpiredIDs(anyInt(), eq(15))).thenReturn(List.of(expiredId1)).thenReturn(List.of());
 		when(userService.getSystemUser()).thenReturn(systemUser);
 		when(repository.findByIdOptional(expiredId1)).thenReturn(Optional.of(entity));
 		when(repository.countUsesFileSet(fsId)).thenReturn(0L);
@@ -1070,7 +1083,8 @@ class ProjectionServiceTest {
 		entity.setLayerFileSet(layer);
 		entity.setResultFileSet(results);
 
-		when(repository.findExpiredIDs(anyInt())).thenReturn(List.of(expiredId1, expiredId2))
+		when(expiryConfig.daysUntilExpiry()).thenReturn(15);
+		when(repository.findExpiredIDs(anyInt(), eq(15))).thenReturn(List.of(expiredId1, expiredId2))
 				.thenReturn(List.of(expiredId1));
 		when(userService.getSystemUser()).thenReturn(systemUser);
 		when(repository.findByIdOptional(expiredId1)).thenReturn(Optional.empty());
