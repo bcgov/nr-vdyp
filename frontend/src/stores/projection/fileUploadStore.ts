@@ -68,8 +68,10 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const editPanel = (panelName: FileUploadPanelName) => {
     panelState.value[panelName].confirmed = false
     panelState.value[panelName].editable = true
+    // Open the panel being edited
+    panelOpenStates.value[panelName] = CONSTANTS.PANEL.OPEN
 
-    // Disable all subsequent sequential panels
+    // Disable all subsequent sequential panels and close them
     const currentIndex = sequentialPanelOrder.indexOf(panelName)
     if (currentIndex !== -1) {
       for (let i = currentIndex + 1; i < sequentialPanelOrder.length; i++) {
@@ -80,6 +82,9 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
         panelOpenStates.value[nextPanel] = CONSTANTS.PANEL.CLOSE
       }
     }
+
+    // Also close the attachments panel (not in sequentialPanelOrder but must close when editing prerequisites)
+    panelOpenStates.value[CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS] = CONSTANTS.PANEL.CLOSE
 
     // Disable 'Run Model' button
     runModelEnabled.value = false
