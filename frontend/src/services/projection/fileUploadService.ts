@@ -194,7 +194,7 @@ export const buildProjectionParameters = (
     selectedDebugOptions: selectedDebugOptions,
     excludedDebugOptions: excludedDebugOptions,
     reportTitle: fileUploadStore.reportTitle,
-    reportDescription: fileUploadStore.reportDescription,
+    reportDesc: fileUploadStore.reportDescription,
     combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
     metadataToOutput: MetadataToOutputEnum.VERSION,
     utils: fileUploadStore.fileUploadSpeciesGroup.map(

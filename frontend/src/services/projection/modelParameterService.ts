@@ -529,7 +529,7 @@ export const buildProjectionParameters = (
     yearStart: null,
     yearEnd: null,
     reportTitle: modelParameterStore.reportTitle,
-    reportDescription: modelParameterStore.reportDescription,
+    reportDesc: modelParameterStore.reportDescription,
     outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions,
     excludedExecutionOptions,
