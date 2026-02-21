@@ -29,6 +29,7 @@
           :key="index"
           class="section-label"
           :class="{ 'section-complete': section.completed }"
+          :style="{ left: `${(index / sections.length) * 100}%` }"
         >
           {{ section.label }}
         </span>
@@ -119,11 +120,11 @@ const progressColor = computed(() => {
 
 .step-text {
   font: var(--typography-bold-small-body);
-  color: var(--typography-color-primary);
+  color: var(--theme-primary-blue);
 }
 
 .percentage-text {
-  font: var(--typography-bold-small-body);
+  font: var(--typography-regular-small-body);
   color: var(--typography-color-secondary);
 }
 
@@ -134,15 +135,15 @@ const progressColor = computed(() => {
 }
 
 .status-icon {
-  width: 26px;
-  height: 26px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 }
 
 .status-text {
-  font-size: 24pt;
+  font-size: 14pt;
   font-weight: bold;
   line-height: 1;
 }
@@ -168,17 +169,19 @@ const progressColor = computed(() => {
 }
 
 .section-labels {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 1.5em;
 }
 
 .section-label {
+  position: absolute;
   font: var(--typography-regular-small-body);
-  color: var(--typography-color-secondary);
+  font-weight: bold;
+  color: var(--theme-primary-blue);
 }
 
 .section-complete {
   font-weight: bold;
-  color: var(--typography-color-primary);
+  color: var(--theme-primary-blue);
 }
 </style>

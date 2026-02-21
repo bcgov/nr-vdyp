@@ -18,41 +18,68 @@
           {{ CONSTANTS.HEADER_SELECTION.MODEL_PARAMETER_SELECTION }}
         </h3>
         <h3 v-else>{{ CONSTANTS.HEADER_SELECTION.FILE_UPLOAD }}</h3>
-        <v-menu v-if="isRunning">
-          <template #activator="{ props }">
-            <button v-bind="props" class="running-status-menu-button">
-              <img
-                :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
-                alt="Running"
-                class="running-status-icon"
-              />
-              <span class="running-status-text">Running</span>
-              <v-icon size="small">mdi-chevron-down</v-icon>
-            </button>
-          </template>
-          <v-list class="running-status-menu-list">
-            <v-list-item
-              class="running-status-menu-item"
-              @click="cancelRunHandler"
-            >
-              <div class="running-menu-item-content">
+        <div class="header-right-section">
+          <v-menu v-if="isRunning">
+            <template #activator="{ props }">
+              <button v-bind="props" class="running-status-menu-button">
                 <img
-                  src="@/assets/icons/Cancel_Icon_Menu.png"
-                  alt="Cancel"
-                  class="running-menu-icon"
+                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
+                  alt="Running"
+                  class="running-status-icon"
                 />
-                <span class="running-menu-text">Cancel</span>
-              </div>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-        <div v-else-if="isReady" class="ready-status-container">
-          <img
-            :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
-            alt="Ready"
-            class="ready-status-icon"
+                <span class="running-status-text">Running</span>
+                <v-icon size="small">mdi-chevron-down</v-icon>
+              </button>
+            </template>
+            <v-list class="running-status-menu-list">
+              <v-list-item
+                class="running-status-menu-item"
+                @click="cancelRunHandler"
+              >
+                <div class="running-menu-item-content">
+                  <img
+                    src="@/assets/icons/Cancel_Icon_Menu.png"
+                    alt="Cancel"
+                    class="running-menu-icon"
+                  />
+                  <span class="running-menu-text">Cancel</span>
+                </div>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+          <div v-else-if="isReady" class="ready-status-container">
+            <img
+              :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
+              alt="Ready"
+              class="ready-status-icon"
+            />
+            <span class="ready-status-text">Ready</span>
+          </div>
+          <div v-else-if="isDraft" class="draft-status-container">
+            <img
+              :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.DRAFT)"
+              alt="Draft"
+              class="draft-status-icon"
+            />
+            <span class="draft-status-text">Draft</span>
+          </div>
+          <div v-else-if="isFailed" class="failed-status-container">
+            <img
+              :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.FAILED)"
+              alt="Failed"
+              class="failed-status-icon"
+            />
+            <span class="failed-status-text">Failed</span>
+          </div>
+          <AppButton
+            v-if="appStore.modelSelection !== CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
+            label="Download Report"
+            :icon-src="DownloadIcon"
+            variant="primary"
+            :is-disabled="!isDownloadReady"
+            class="header-download-report-button"
+            @click="handleDownloadReport"
           />
-          <span class="ready-status-text">Ready</span>
         </div>
       </div>
     </div>
@@ -92,15 +119,6 @@
       </template>
     </template>
     <template v-else>
-      <div class="file-upload-header">
-        <AppButton
-          label="Download Report"
-          :icon-src="DownloadIcon"
-          variant="primary"
-          :is-disabled="!isDownloadReady"
-          @click="handleDownloadReport"
-        />
-      </div>
       <template v-if="isFileUploadPanelsVisible">
         <ParameterSelectionProgressBar
           :sections="fileUploadProgressSections"
@@ -188,6 +206,8 @@ const notificationStore = useNotificationStore()
 
 const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
 const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
+const isDraft = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.DRAFT)
+const isFailed = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED)
 const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
 
 const modelParamTabs = computed<Tab[]>(() => [
@@ -602,15 +622,15 @@ h3 {
 }
 
 .running-status-icon {
-  width: 16px;
-  height: 16px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 }
 
 .running-status-text {
-  font: var(--typography-bold-h5);
+  font: var(--typography-bold-h4);
   color: var(--support-border-color-warning);
 }
 
@@ -653,28 +673,69 @@ h3 {
 }
 
 .ready-status-icon {
-  width: 16px;
-  height: 16px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 }
 
 .ready-status-text {
-  font: var(--typography-bold-h5);
+  font: var(--typography-bold-h4);
   color: var(--support-border-color-success);
+}
+
+.draft-status-container {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+}
+
+.draft-status-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.draft-status-text {
+  font: var(--typography-bold-h4);
+  color: var(--typography-color-secondary);
+}
+
+.failed-status-container {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+}
+
+.failed-status-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.failed-status-text {
+  font: var(--typography-bold-h4);
+  color: var(--support-border-color-error);
 }
 
 .panel-spacing {
   margin-top: var(--layout-margin-medium);
 }
 
-.file-upload-header {
+.header-right-section {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: var(--layout-padding-small);
 }
 
-.file-upload-header :deep(.button-icon-img) {
+.header-download-report-button :deep(.button-icon-img) {
   filter: brightness(0) invert(1);
 }
 
