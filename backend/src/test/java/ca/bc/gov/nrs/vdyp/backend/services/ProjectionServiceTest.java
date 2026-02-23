@@ -641,6 +641,77 @@ class ProjectionServiceTest {
 		assertThat(persisted.getProjectionParameters()).isNotBlank();
 	}
 
+	@Test
+	void createNewProjection_setsEmptyDescription_whenReportDescriptionIsNull() throws Exception {
+		UUID ownerId = UUID.randomUUID();
+		VDYPUserModel actingUser = user(ownerId);
+
+		VDYPUserEntity ownerEntity = userEntity(ownerId);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
+
+		Parameters params = new Parameters();
+
+		var draftStatus = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		draftStatus.setCode(ProjectionStatusCodeModel.DRAFT);
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT)).thenReturn(draftStatus);
+
+		var engine = new ca.bc.gov.nrs.vdyp.backend.data.entities.CalculationEngineCodeEntity();
+		engine.setCode(CalculationEngineCodeModel.VDYP8);
+		when(calculationEngineCodeLookup.requireEntity(CalculationEngineCodeModel.VDYP8)).thenReturn(engine);
+
+		var fileSetMap = new HashMap<FileSetTypeCodeModel, ProjectionFileSetModel>();
+		UUID polyId = UUID.randomUUID();
+		UUID layerId = UUID.randomUUID();
+		UUID resultsId = UUID.randomUUID();
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.POLYGON),
+				fileSetModel(polyId, ownerId, FileSetTypeCodeModel.POLYGON)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.LAYER),
+				fileSetModel(layerId, ownerId, FileSetTypeCodeModel.LAYER)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.RESULTS),
+				fileSetModel(resultsId, ownerId, FileSetTypeCodeModel.RESULTS)
+		);
+		when(fileSetService.createFileSetForNewProjection(actingUser)).thenReturn(fileSetMap);
+		when(em.find(ProjectionFileSetEntity.class, polyId)).thenReturn(fileSetEntity(polyId));
+		when(em.find(ProjectionFileSetEntity.class, layerId)).thenReturn(fileSetEntity(layerId));
+		when(em.find(ProjectionFileSetEntity.class, resultsId)).thenReturn(fileSetEntity(resultsId));
+		doAnswer(inv -> {
+			ProjectionEntity e = inv.getArgument(0, ProjectionEntity.class);
+			e.setProjectionGUID(UUID.randomUUID());
+			return null;
+		}).when(repository).persist(any(ProjectionEntity.class));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		service.createNewProjection(actingUser, params, null, null);
+
+		ArgumentCaptor<ProjectionEntity> captor = ArgumentCaptor.forClass(ProjectionEntity.class);
+		verify(repository).persist(captor.capture());
+		assertThat(captor.getValue().getReportDescription()).isEqualTo("");
+	}
+
+	@Test
+	void editProjectionParameters_setsEmptyDescription_whenReportDescriptionIsNull() throws Exception {
+		UUID projectionId = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.DRAFT);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		Parameters params = new Parameters();
+		ProjectionModel model = service.editProjectionParameters(projectionId, params, null, null, user(ownerId));
+
+		assertThat(model.getReportDescription()).isEqualTo("");
+	}
+
 	// ==============================
 	// addProjectionFile
 	// ==============================
