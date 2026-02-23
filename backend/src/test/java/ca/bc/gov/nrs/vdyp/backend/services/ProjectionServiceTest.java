@@ -47,7 +47,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import ca.bc.gov.nrs.vdyp.backend.config.ProjectionExpiryConfig;
+import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ProjectionEndpoint;
+import jakarta.ws.rs.core.Response;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
@@ -1315,5 +1318,104 @@ class ProjectionServiceTest {
 
 		assertNotNull(model);
 		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - createEmptyProjection
+	// ==========================================================
+
+	@Test
+	void endpoint_createEmptyProjection_returnsCreated_andPassesReportDescription() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		Parameters params = new Parameters();
+		String reportDescription = "My report description";
+
+		ProjectionModel created = new ProjectionModel();
+		created.setProjectionGUID(UUID.randomUUID().toString());
+		when(mockService.createNewProjection(actingUser, params, null, reportDescription)).thenReturn(created);
+
+		Response response = endpoint.createEmptyProjection(params, null, reportDescription);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
+		assertThat(response.getEntity()).isSameAs(created);
+		verify(mockService).createNewProjection(actingUser, params, null, reportDescription);
+	}
+
+	@Test
+	void endpoint_createEmptyProjection_returnsCreated_whenReportDescriptionIsNull() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		Parameters params = new Parameters();
+
+		ProjectionModel created = new ProjectionModel();
+		created.setProjectionGUID(UUID.randomUUID().toString());
+		when(mockService.createNewProjection(actingUser, params, null, null)).thenReturn(created);
+
+		Response response = endpoint.createEmptyProjection(params, null, null);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
+		verify(mockService).createNewProjection(actingUser, params, null, null);
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - editProjectionParameters
+	// ==========================================================
+
+	@Test
+	void endpoint_editProjectionParameters_returnsOk_andPassesReportDescription() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		Parameters params = new Parameters();
+		String reportDescription = "Updated description";
+
+		ProjectionModel updated = new ProjectionModel();
+		updated.setProjectionGUID(projectionGUID.toString());
+		when(mockService.editProjectionParameters(projectionGUID, params, null, reportDescription, actingUser))
+				.thenReturn(updated);
+
+		Response response = endpoint.editProjectionParameters(projectionGUID, params, null, reportDescription);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		assertThat(response.getEntity()).isSameAs(updated);
+		verify(mockService).editProjectionParameters(projectionGUID, params, null, reportDescription, actingUser);
+	}
+
+	@Test
+	void endpoint_editProjectionParameters_returnsOk_whenReportDescriptionIsNull() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		Parameters params = new Parameters();
+
+		ProjectionModel updated = new ProjectionModel();
+		updated.setProjectionGUID(projectionGUID.toString());
+		when(mockService.editProjectionParameters(projectionGUID, params, null, null, actingUser)).thenReturn(updated);
+
+		Response response = endpoint.editProjectionParameters(projectionGUID, params, null, null);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		verify(mockService).editProjectionParameters(projectionGUID, params, null, null, actingUser);
 	}
 }
