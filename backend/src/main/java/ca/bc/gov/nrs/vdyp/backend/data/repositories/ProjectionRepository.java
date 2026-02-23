@@ -32,9 +32,8 @@ public class ProjectionRepository implements PanacheRepositoryBase<ProjectionEnt
 	public List<UUID> findExpiredIDs(int limit, int daysUntilExpiry) {
 		OffsetDateTime expiryTime = OffsetDateTime.now().minusDays(daysUntilExpiry);
 		return find("updateDate < ?1 order by updateDate", expiryTime) //
-				.project(UUID.class) //
 				.page(0, limit)//
-				.list();
+				.stream().map(ProjectionEntity::getProjectionGUID).toList();
 	}
 
 	public long countCopyTitle(String title) {
