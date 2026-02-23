@@ -12,7 +12,7 @@
     />
     <v-expansion-panels v-model="panelOpenStates[panelName]">
       <v-expansion-panel hide-actions>
-        <v-expansion-panel-title>
+        <v-expansion-panel-title class="attachments-panel-title">
           <v-row no-gutters class="expander-header">
             <v-col cols="auto" class="expansion-panel-icon-col">
               <v-icon class="expansion-panel-icon">{{
@@ -515,6 +515,11 @@ const handleDialogClose = () => {}
 
 <style>
 /* Attachments Panel Card - BC Government Design Standards */
+
+/* Match collapsed height with other panels that have an Edit button */
+.attachments-panel-title {
+  min-height: 57.01px !important;
+}
 
 /* File Input Label - BC Government Design Standards */
 .bcds-file-input-label {

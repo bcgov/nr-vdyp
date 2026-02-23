@@ -32,8 +32,8 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text mt-n2">
-          <v-container fluid class="mt-n2">
+        <v-expansion-panel-text class="expansion-panel-text ml-n6">
+          <v-container fluid>
             <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index">
               <v-col class="min-dbh-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
                 {{ group.group }}

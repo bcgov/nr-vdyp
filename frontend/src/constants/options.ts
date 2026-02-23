@@ -42,8 +42,8 @@ export const ecoZoneOptions = [
 ]
 
 export const ageYearRangeOptions = [
-  { label: 'Age Range', value: CONSTANTS.AGE_YEAR_RANGE.AGE },
-  { label: 'Year Range', value: CONSTANTS.AGE_YEAR_RANGE.YEAR },
+  { label: 'Age', value: CONSTANTS.AGE_YEAR_RANGE.AGE },
+  { label: 'Year', value: CONSTANTS.AGE_YEAR_RANGE.YEAR },
 ]
 
 export const projectionTypeOptions = [

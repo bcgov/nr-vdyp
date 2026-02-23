@@ -64,7 +64,8 @@
     v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD"
   >
     <v-row>
-      <v-col cols="12" class="age-year-range-container mb-n8">
+      <v-col cols="auto" class="age-year-range-container">
+        <div class="numeric-range-value-label">Numeric Range Value</div>
         <v-radio-group
           v-model="selectedAgeYearRange"
           inline
@@ -78,9 +79,137 @@
           ></v-radio>
         </v-radio-group>
       </v-col>
+      <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
+        <v-col cols="2">
+          <AppSpinField
+            label="Starting Age"
+            :model-value="localStartingAge"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_STEP"
+            :persistent-placeholder="true"
+            placeholder=""
+            :hideDetails="true"
+            :disabled="isDisabled"
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_DECIMAL_NUM"
+            data-testid="starting-age"
+            @update:modelValue="handleStartingAgeInput"
+          />
+        </v-col>
+        <v-col class="col-space-3" />
+        <v-col cols="2" class="ml-2">
+          <AppSpinField
+            label="Finishing Age"
+            :model-value="localFinishingAge"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_STEP"
+            :persistent-placeholder="true"
+            placeholder=""
+            :hideDetails="true"
+            :disabled="isDisabled"
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_DECIMAL_NUM"
+            data-testid="finishing-age"
+            @update:modelValue="handleFinishingAgeInput"
+          />
+        </v-col>
+        <v-col class="col-space-3" />
+        <v-col cols="2" class="ml-2">
+          <AppSpinField
+            label="Increment"
+            :model-value="localAgeIncrement"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_STEP"
+            :persistent-placeholder="true"
+            placeholder=""
+            :hideDetails="true"
+            :disabled="isDisabled"
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_DECIMAL_NUM"
+            data-testid="age-increment"
+            @update:modelValue="handleAgeIncrementInput"
+          />
+        </v-col>
+      </template>
+      <template v-else>
+        <v-col cols="2">
+          <AppSpinField
+            label="Starting Year"
+            :model-value="localStartYear"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_STEP"
+            :persistent-placeholder="true"
+            placeholder=""
+            :hideDetails="true"
+            :disabled="isDisabled"
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_DECIMAL_NUM"
+            data-testid="start-year"
+            @update:modelValue="handleStartYearInput"
+          />
+        </v-col>
+        <v-col class="col-space-3" />
+        <v-col cols="2" class="ml-2">
+          <AppSpinField
+            label="Finishing Year"
+            :model-value="localEndYear"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_STEP"
+            :persistent-placeholder="true"
+            placeholder=""
+            :hideDetails="true"
+            :disabled="isDisabled"
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_DECIMAL_NUM"
+            data-testid="end-year"
+            @update:modelValue="handleEndYearInput"
+          />
+        </v-col>
+        <v-col class="col-space-3" />
+        <v-col cols="2" class="ml-2">
+          <AppSpinField
+            label="Increment"
+            :model-value="localYearIncrement"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_STEP"
+            :persistent-placeholder="true"
+            placeholder=""
+            :hideDetails="true"
+            :disabled="isDisabled"
+            :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+            :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_DECIMAL_NUM"
+            data-testid="year-increment"
+            @update:modelValue="handleYearIncrementInput"
+          />
+        </v-col>
+      </template>
+      <v-col class="col-space-3" />
+      <v-col cols="2">
+        <AppSpinField
+          label="Include Specific Year"
+          :model-value="localSpecificYear"
+          :min="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_MIN"
+          :max="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_MAX"
+          :step="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_STEP"
+          :persistent-placeholder="true"
+          placeholder=""
+          :hideDetails="true"
+          :disabled="isSpecificYearDeactivated"
+          :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+          :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_DECIMAL_NUM"
+          data-testid="specific-year"
+          @update:modelValue="handleSpecificYearInput"
+        />
+      </v-col>
     </v-row>
   </div>
-  <div>
+  <div v-if="appStore.modelSelection !== CONSTANTS.MODEL_SELECTION.FILE_UPLOAD">
     <v-row>
       <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
         <v-col cols="2">
@@ -216,7 +345,7 @@
   </div>
   <div class="ml-4 mt-7">
     <div class="ml-n4">
-      <span class="include-in-report-label" :class="{ 'include-in-report-disabled': isDisabled }">Include in Report</span>
+      <span class="include-in-report-label" :class="{ 'include-in-report-disabled': isDisabled }">{{ appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD ? 'Include the following values in the Report' : 'Include in Report' }}</span>
     </div>
     <v-row class="ml-n6">
       <v-col cols="12" style="padding-top: 1px">
@@ -270,7 +399,7 @@
         </template>
         <template v-else>
           <v-row>
-            <v-col cols="2" class="by-layer-container">
+            <v-col cols="auto" class="by-layer-container">
               <v-checkbox
                 v-model="localIsByLayerEnabled"
                 label="By Layer"
@@ -279,8 +408,7 @@
                 data-testid="is-by-layer-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col class="col-space-3" />
-            <v-col cols="2" class="by-species-file-upload-container">
+            <v-col cols="auto" class="by-species-file-upload-container">
               <v-checkbox
                 v-model="localIsBySpeciesEnabled"
                 label="By Species"
@@ -289,8 +417,16 @@
                 data-testid="is-by-species-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col class="col-space-3" />
-            <v-col cols="2" class="projection-mode-container">
+            <v-col cols="auto" class="secondary-species-height-file-upload-container" style="padding-left: 0px;">
+              <v-checkbox
+                v-model="localIncSecondaryHeight"
+                label="Secondary Species Height"
+                hide-details
+                :disabled="isincSecondaryHeightDeactivated"
+                data-testid="inc-secondary-height"
+              ></v-checkbox>
+            </v-col>
+            <v-col cols="auto" class="projection-mode-container">
               <v-checkbox
                 v-model="localIsProjectionModeEnabled"
                 label="Projection Mode"
@@ -299,8 +435,7 @@
                 data-testid="is-projection-mode-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col class="col-space-3" />
-            <v-col cols="2" class="ml-2">
+            <v-col cols="auto" class="ml-2">
               <v-checkbox
                 v-model="localIsPolygonIDEnabled"
                 label="Polygon ID"
@@ -309,8 +444,7 @@
                 data-testid="is-polygon-id-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col class="col-space-3" />
-            <v-col cols="2" class="ml-1">
+            <v-col cols="auto" class="ml-1">
               <v-checkbox
                 v-model="localIsCurrentYearEnabled"
                 label="Current Year"
@@ -319,43 +453,13 @@
                 data-testid="is-current-year-enabled"
               ></v-checkbox>
             </v-col>
-          </v-row>
-          <v-row class="mt-1">
-            <v-col cols="2" class="reference-year-container">
+            <v-col cols="auto" class="reference-year-container">
               <v-checkbox
                 v-model="localIsReferenceYearEnabled"
                 label="Reference Year"
                 hide-details
                 :disabled="isReferenceYearDeactivated"
                 data-testid="is-reference-year-enabled"
-              ></v-checkbox>
-            </v-col>
-            <v-col class="col-space-3" />
-            <v-col cols="2" class="specific-year-container">
-              <AppSpinField
-                label="Specific Year"
-                :model-value="localSpecificYear"
-                :min="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_MIN"
-                :max="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_MAX"
-                :step="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_STEP"
-                :persistent-placeholder="true"
-                placeholder=""
-                :hideDetails="true"
-                :disabled="isSpecificYearDeactivated"
-                :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
-                :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.SPECIFIC_YEAR_DECIMAL_NUM"
-                data-testid="specific-year"
-                @update:modelValue="handleSpecificYearInput"
-              />
-            </v-col>
-            <v-col class="col-space-3" />
-            <v-col cols="2" class="secondary-species-height-file-upload-container" style="padding-left: 0px;">
-              <v-checkbox
-                v-model="localIncSecondaryHeight"
-                label="Secondary Species Height"
-                hide-details
-                :disabled="isincSecondaryHeightDeactivated"
-                data-testid="inc-secondary-height"
               ></v-checkbox>
             </v-col>
           </v-row>
@@ -981,6 +1085,16 @@ const updateMinDBH = (index: number, value: number) => {
 
 .secondary-species-height-container {
   padding-left: 34px;
+}
+
+.numeric-range-value-label {
+  display: block;
+  color: var(--typography-color-secondary);
+  font-family: var(--typography-font-families-bc-sans);
+  font-weight: var(--typography-font-weights-regular);
+  font-size: var(--typography-font-size-body);
+  line-height: 1.5;
+  padding-bottom: 2px;
 }
 
 .age-year-range-container {
