@@ -146,6 +146,7 @@ import {
   deleteFileFromFileSet,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
+import { ensureProjectionExists } from '@/services/projection/fileUploadService'
 
 const form = ref<HTMLFormElement>()
 const fileUploadStore = useFileUploadStore()
@@ -302,12 +303,6 @@ const validateLayerFile = async (file: File): Promise<boolean> => {
 
 // Upload polygon file immediately when selected
 const uploadPolygonFile = async (file: File) => {
-  const projectionGUID = appStore.getCurrentProjectionGUID
-  if (!projectionGUID) {
-    notificationStore.showErrorMessage(PROJECTION_ERR.MISSING_GUID, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
-    return
-  }
-
   // Validate the file first
   const isValid = await validatePolygonFile(file)
   if (!isValid) {
@@ -318,6 +313,9 @@ const uploadPolygonFile = async (file: File) => {
 
   fileUploadStore.isUploadingPolygon = true
   try {
+    // Ensure projection exists (creates one if not yet created)
+    const projectionGUID = await ensureProjectionExists(fileUploadStore)
+
     const projectionModel = await getProjectionById(projectionGUID)
     if (!projectionModel.polygonFileSet?.projectionFileSetGUID) {
       throw new Error('Polygon file set not found')
@@ -364,12 +362,6 @@ const uploadPolygonFile = async (file: File) => {
 
 // Upload layer file immediately when selected
 const uploadLayerFile = async (file: File) => {
-  const projectionGUID = appStore.getCurrentProjectionGUID
-  if (!projectionGUID) {
-    notificationStore.showErrorMessage(PROJECTION_ERR.MISSING_GUID, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
-    return
-  }
-
   // Validate the file first
   const isValid = await validateLayerFile(file)
   if (!isValid) {
@@ -380,6 +372,9 @@ const uploadLayerFile = async (file: File) => {
 
   fileUploadStore.isUploadingLayer = true
   try {
+    // Ensure projection exists (creates one if not yet created)
+    const projectionGUID = await ensureProjectionExists(fileUploadStore)
+
     const projectionModel = await getProjectionById(projectionGUID)
     if (!projectionModel.layerFileSet?.projectionFileSetGUID) {
       throw new Error('Layer file set not found')

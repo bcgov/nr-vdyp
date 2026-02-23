@@ -252,13 +252,36 @@ export const revertPanelToSaved = async (panelName: FileUploadPanelName): Promis
 }
 
 /**
+ * Ensures a projection exists in the backend. If no projection GUID is stored,
+ * creates a new projection with the current store parameters and stores the GUID.
+ * Used by the AttachmentsPanel so files can be uploaded before other panels are confirmed.
+ *
+ * @param fileUploadStore The store containing file upload parameters.
+ * @returns The projection GUID (existing or newly created).
+ * @throws Error if projection creation fails.
+ */
+export const ensureProjectionExists = async (
+  fileUploadStore: ReturnType<typeof useFileUploadStore>,
+): Promise<string> => {
+  const appStore = useAppStore()
+  const existingGUID = appStore.getCurrentProjectionGUID
+  if (existingGUID) return existingGUID
+
+  const baseParams = buildProjectionParameters(fileUploadStore)
+  const projectionParameters = { ...baseParams, utils: [] }
+  const result = await projServiceCreateProjection(projectionParameters, undefined, fileUploadStore.reportDescription)
+  appStore.setCurrentProjectionGUID(result.projectionGUID)
+  appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
+  return result.projectionGUID
+}
+
+/**
  * Saves the projection when a panel's Next button is clicked (File Upload mode).
  *
- * - CREATE mode + first panel (reportInfo): Creates a new projection with parameters only (no files),
+ * - reportInfo panel (no GUID yet): Creates a new projection with parameters only (no files),
  *   stores the GUID, and switches to EDIT mode.
- * - EDIT mode + reportInfo: Updates the existing projection parameters.
- * - EDIT mode + attachments: Updates projection parameters and handles file uploads
- *   (deletes old files, uploads new files if provided).
+ * - reportInfo panel (GUID exists, e.g. created via file upload): Updates the existing projection.
+ * - Other panels in EDIT mode: Updates the existing projection parameters.
  *
  * @param fileUploadStore The store containing file upload parameters and files.
  * @param panelName The name of the panel being confirmed.
@@ -277,14 +300,17 @@ export const saveProjectionOnPanelConfirm = async (
     ? { ...baseParams, utils: [] }
     : baseParams
 
-  if (
-    appStore.viewMode === PROJECTION_VIEW_MODE.CREATE &&
-    panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO
-  ) {
-    // Create mode + first panel: create projection with params only (no files yet)
-    const result = await projServiceCreateProjection(projectionParameters, undefined, fileUploadStore.reportDescription)
-    appStore.setCurrentProjectionGUID(result.projectionGUID)
-    appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
+  if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO) {
+    const existingGUID = appStore.getCurrentProjectionGUID
+    if (existingGUID) {
+      // Projection already exists (e.g. created via file upload) — update it
+      await updateProjectionParams(existingGUID, projectionParameters, fileUploadStore.reportDescription)
+    } else {
+      // No projection yet — create one
+      const result = await projServiceCreateProjection(projectionParameters, undefined, fileUploadStore.reportDescription)
+      appStore.setCurrentProjectionGUID(result.projectionGUID)
+      appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
+    }
   } else if (appStore.viewMode === PROJECTION_VIEW_MODE.EDIT) {
     const projectionGUID = appStore.getCurrentProjectionGUID
     if (!projectionGUID) {

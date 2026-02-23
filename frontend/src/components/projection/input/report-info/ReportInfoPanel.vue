@@ -536,10 +536,7 @@ const onConfirm = async () => {
 }
 
 const onEdit = () => {
-  // this panel has already been confirmed.
-  if (isConfirmed.value) {
-    currentStore.value.editPanel(panelName.value)
-  }
+  onHeaderEdit()
 }
 
 const onCancel = async () => {
