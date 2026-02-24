@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card class="elevation-0">
     <AppMessageDialog
       :dialog="messageDialog.dialog"
       :title="messageDialog.title"
@@ -513,7 +513,7 @@ const handleDialogClose = () => {}
 
 /* Match collapsed height with other panels that have an Edit button */
 .attachments-panel-title {
-  min-height: 57.01px !important;
+  min-height: 48px !important;
 }
 
 /* File Input Label - BC Government Design Standards */

@@ -3,7 +3,7 @@
     <div class="progress-instruction-text">
       Complete the following sections to run the projections model. You may return to any section and make edits if needed.
     </div>
-    <v-card class="progress-bar-card" elevation="1">
+    <v-card class="progress-bar-card" elevation="0">
       <div class="progress-header">
         <span class="step-text">Step {{ completedCount }} of {{ totalSections }} Complete</span>
         <template v-if="showStatus">
@@ -183,5 +183,18 @@ const progressColor = computed(() => {
 .section-complete {
   font-weight: bold;
   color: var(--theme-primary-blue);
+}
+
+@media (max-width: 600px) {
+  .section-labels {
+    display: flex;
+    justify-content: space-between;
+    height: auto;
+  }
+
+  .section-label {
+    position: static;
+    font-size: 11px;
+  }
 }
 </style>

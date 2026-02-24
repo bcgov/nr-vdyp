@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card class="elevation-0">
     <v-expansion-panels v-model="panelOpenStates[panelName]">
       <v-expansion-panel hide-actions>
         <v-expansion-panel-title>
@@ -12,7 +12,7 @@
               }}</v-icon>
             </v-col>
             <v-col>
-              <span class="text-h6">Minimum DBH Limit by Species Group</span>
+              <span class="text-h6">{{ panelTitle }}</span>
             </v-col>
             <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
               <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
@@ -34,11 +34,11 @@
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text ml-n6">
           <v-container fluid>
-            <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index">
-              <v-col class="min-dbh-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
+            <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index" class="min-dbh-row">
+              <v-col v-bind="mobile ? { cols: 'auto' } : {}" class="min-dbh-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
                 {{ group.group }}
               </v-col>
-              <v-col cols="8" class="ml-n5">
+              <v-col cols="10" sm="8" :class="mobile ? 'min-dbh-slider-col-mobile' : 'ml-n5'">
                 <v-slider
                   v-model="fileUploadUtilizationSliderValues[index]"
                   :min="0"
@@ -73,6 +73,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useDisplay } from 'vuetify'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { AppButton } from '@/components'
@@ -82,11 +83,18 @@ import { saveProjectionOnPanelConfirm, revertPanelToSaved } from '@/services/pro
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { PROJECTION_ERR } from '@/constants/message'
 
+const { mobile } = useDisplay()
 const appStore = useAppStore()
 const fileUploadStore = useFileUploadStore()
 const notificationStore = useNotificationStore()
 
 const panelName = CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH
+
+const panelTitle = computed(() =>
+  mobile.value
+    ? 'Minimum DBH Limit by Species Group (cm+)'
+    : 'Minimum DBH Limit by Species Group',
+)
 
 const panelOpenStates = computed(() => fileUploadStore.panelOpenStates)
 
@@ -135,12 +143,17 @@ const utilizationClassOptions = OPTIONS.utilizationClassOptions
 const fileUploadSpeciesGroups = computed(() => fileUploadStore.fileUploadSpeciesGroup)
 const fileUploadUtilizationSliderValues = ref<number[]>([])
 
-const utilizationSliderTickLabels = utilizationClassOptions.reduce(
-  (acc, opt) => {
-    acc[opt.index] = opt.label
-    return acc
-  },
-  {} as Record<number, string>,
+// On mobile, strip the " cm+" suffix from tick labels because there is not
+// enough horizontal space to display the full labels without overlap.
+// The "(cm+)" is appended to the panel header title instead (TAC #2).
+const utilizationSliderTickLabels = computed(() =>
+  utilizationClassOptions.reduce(
+    (acc, opt) => {
+      acc[opt.index] = mobile.value ? opt.label.replace(' cm+', '') : opt.label
+      return acc
+    },
+    {} as Record<number, string>,
+  ),
 )
 
 // Watch fileUploadSpeciesGroups for changes and sync utilization sliderValues
@@ -217,8 +230,8 @@ const onCancel = async () => {
 <style scoped>
 .min-dbh-species-group-label {
   max-width: 5%;
-  padding-top: 0px;
-  padding-left: 20px;
+  padding-top: 15px !important;
+  padding-left: 20px !important;
 }
 
 .min-dbh-disabled {
@@ -228,5 +241,58 @@ const onCancel = async () => {
 .edit-button-col {
   display: flex;
   align-items: center;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top) {
+  padding: 2px 4px;
+  gap: 2px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
+  font-size: 18px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .button-label) {
+  font-size: 11px;
+}
+
+/* Vuetify mobile=true covers xs through md (< 1280px) */
+@media (max-width: 1279px) {
+  .min-dbh-row {
+    flex-wrap: nowrap !important;
+  }
+
+  .min-dbh-species-group-label {
+    max-width: none !important;
+    white-space: nowrap;
+  }
+
+  .min-dbh-slider-col-mobile {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+}
+
+/* lg+ (>= 1280px): Vuetify mobile=false, slider uses ml-n5 class */
+@media (min-width: 1280px) {
+  .ml-n5 {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+}
+
+/* xs only: tighter padding for very small screens */
+@media (max-width: 600px) {
+  .min-dbh-species-group-label {
+    padding-left: 8px !important;
+  }
+
+  .min-dbh-slider-col-mobile {
+    margin-left: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
 }
 </style>

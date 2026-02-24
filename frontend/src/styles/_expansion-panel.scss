@@ -56,6 +56,8 @@
 /* Expansion panel text/content area */
 .v-expansion-panel-text {
   padding: var(--layout-padding-medium);
+  padding-left: 0px !important;
+  padding-right: 0px !important;
   color: var(--typography-color-primary);
 }
 

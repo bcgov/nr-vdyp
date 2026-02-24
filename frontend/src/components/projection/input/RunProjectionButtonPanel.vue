@@ -78,7 +78,7 @@ const cancelRun = () => {
  * Styling based on BC Gov Design Standards - Using Design Tokens
  */
 .input-model-param-run-model-card {
-  padding: var(--layout-padding-medium) !important;
+  padding: var(--layout-padding-small) !important;
   margin-top: var(--layout-margin-medium) !important;
   background-color: var(--surface-color-background-light-gray);
   border: var(--layout-border-width-small) solid

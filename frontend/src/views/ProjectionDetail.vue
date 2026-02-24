@@ -19,57 +19,59 @@
         </h3>
         <h3 v-else>{{ CONSTANTS.HEADER_SELECTION.FILE_UPLOAD }}</h3>
         <div class="header-right-section">
-          <v-menu v-if="isRunning">
-            <template #activator="{ props }">
-              <button v-bind="props" class="running-status-menu-button">
-                <img
-                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
-                  alt="Running"
-                  class="running-status-icon"
-                />
-                <span class="running-status-text">Running</span>
-                <v-icon size="small">mdi-chevron-down</v-icon>
-              </button>
-            </template>
-            <v-list class="running-status-menu-list">
-              <v-list-item
-                class="running-status-menu-item"
-                @click="cancelRunHandler"
-              >
-                <div class="running-menu-item-content">
+          <div class="status-section">
+            <v-menu v-if="isRunning">
+              <template #activator="{ props }">
+                <button v-bind="props" class="running-status-menu-button">
                   <img
-                    src="@/assets/icons/Cancel_Icon_Menu.png"
-                    alt="Cancel"
-                    class="running-menu-icon"
+                    :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
+                    alt="Running"
+                    class="running-status-icon"
                   />
-                  <span class="running-menu-text">Cancel</span>
-                </div>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-          <div v-else-if="isReady" class="ready-status-container">
-            <img
-              :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
-              alt="Ready"
-              class="ready-status-icon"
-            />
-            <span class="ready-status-text">Ready</span>
-          </div>
-          <div v-else-if="isDraft" class="draft-status-container">
-            <img
-              :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.DRAFT)"
-              alt="Draft"
-              class="draft-status-icon"
-            />
-            <span class="draft-status-text">Draft</span>
-          </div>
-          <div v-else-if="isFailed" class="failed-status-container">
-            <img
-              :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.FAILED)"
-              alt="Failed"
-              class="failed-status-icon"
-            />
-            <span class="failed-status-text">Failed</span>
+                  <span class="running-status-text">Running</span>
+                  <v-icon size="small">mdi-chevron-down</v-icon>
+                </button>
+              </template>
+              <v-list class="running-status-menu-list">
+                <v-list-item
+                  class="running-status-menu-item"
+                  @click="cancelRunHandler"
+                >
+                  <div class="running-menu-item-content">
+                    <img
+                      src="@/assets/icons/Cancel_Icon_Menu.png"
+                      alt="Cancel"
+                      class="running-menu-icon"
+                    />
+                    <span class="running-menu-text">Cancel</span>
+                  </div>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+            <div v-else-if="isReady" class="ready-status-container">
+              <img
+                :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
+                alt="Ready"
+                class="ready-status-icon"
+              />
+              <span class="ready-status-text">Ready</span>
+            </div>
+            <div v-else-if="isDraft" class="draft-status-container">
+              <img
+                :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.DRAFT)"
+                alt="Draft"
+                class="draft-status-icon"
+              />
+              <span class="draft-status-text">Draft</span>
+            </div>
+            <div v-else-if="isFailed" class="failed-status-container">
+              <img
+                :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.FAILED)"
+                alt="Failed"
+                class="failed-status-icon"
+              />
+              <span class="failed-status-text">Failed</span>
+            </div>
           </div>
           <AppButton
             v-if="appStore.modelSelection !== CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
@@ -735,6 +737,11 @@ h3 {
   gap: var(--layout-padding-small);
 }
 
+.status-section {
+  display: flex;
+  align-items: center;
+}
+
 .header-download-report-button :deep(.button-icon-img) {
   filter: brightness(0) invert(1);
 }
@@ -751,5 +758,35 @@ h3 {
 
 .download-report-button :deep(.button-icon-img) {
   filter: brightness(0) invert(1);
+}
+
+@media (max-width: 600px) {
+  .model-selection-header {
+    flex-wrap: wrap;
+    gap: var(--layout-margin-small);
+  }
+
+  .header-right-section {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 540px) {
+  .model-selection-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--layout-margin-small);
+    align-items: center;
+  }
+
+  .header-right-section {
+    display: contents;
+  }
+
+  .header-download-report-button {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
 }
 </style>
