@@ -710,13 +710,13 @@ public class Polygon implements Comparable<Polygon> {
 			var primaryLayer = getPrimaryLayer();
 			if (primaryLayer != null) {
 				if (primaryLayer.getBasalArea() == null) {
-					context.getErrorLog().addMessage(
+					context.logError(
 							"Layer {0} Warning: VRI Inventory Standard but basal area value missing on primary layer; will be estimated",
 							primaryLayer
 					);
 				}
 				if (primaryLayer.getTreesPerHectare() == null) {
-					context.getErrorLog().addMessage(
+					context.logError(
 							"Layer {0} Warning: VRI Inventory Standard but trees-per-hectare value missing on primary layer; will be estimated",
 							primaryLayer
 					);
@@ -725,13 +725,13 @@ public class Polygon implements Comparable<Polygon> {
 			var veteranLayer = getVeteranLayer();
 			if (veteranLayer != null) {
 				if (veteranLayer.getBasalArea() == null) {
-					context.getErrorLog().addMessage(
+					context.logError(
 							"Layer {0} Warning: VRI Inventory Standard but basal area value missing on veteran layer; will be estimated",
 							veteranLayer
 					);
 				}
 				if (veteranLayer.getTreesPerHectare() == null) {
-					context.getErrorLog().addMessage(
+					context.logError(
 							"Layer {0} Warning: VRI Inventory Standard but trees-per-hectare value missing on veteran layer; will be estimated",
 							veteranLayer
 					);

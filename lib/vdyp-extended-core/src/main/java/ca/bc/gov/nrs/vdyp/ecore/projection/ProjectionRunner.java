@@ -26,7 +26,6 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.AbstractPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.ecore.projection.output.IMessageLog;
 
 public class ProjectionRunner implements Closeable {
 
@@ -136,9 +135,8 @@ public class ProjectionRunner implements Closeable {
 						}
 
 					} catch (PolygonExecutionException e) {
-						IMessageLog errorLog = context.getErrorLog();
 						for (ValidationMessage m : e.getValidationMessages()) {
-							errorLog.addMessage(m.getKind().template, m.getArgs());
+							context.logError(m.getKind().template, m.getArgs());
 						}
 
 						if (e.getCause() instanceof PolygonValidationException pve) {
@@ -146,13 +144,12 @@ public class ProjectionRunner implements Closeable {
 						}
 					}
 				} catch (PolygonValidationException e) {
-					IMessageLog errorLog = context.getErrorLog();
 					for (ValidationMessage m : e.getValidationMessages()) {
-						errorLog.addMessage(m.getKind().template, m.getArgs());
+						context.logError(m.getKind().template, m.getArgs());
 					}
 
 					for (var message : polygon.getMessages()) {
-						errorLog.addMessage(message.toString());
+						context.logError(message.toString());
 					}
 				}
 			}
@@ -226,8 +223,12 @@ public class ProjectionRunner implements Closeable {
 		return context.getProgressLog().getAsStream();
 	}
 
+	public int getErrorLogCount() {
+		return context.getErrorLogCount();
+	}
+
 	public InputStream getErrorStream() {
-		return context.getErrorLog().getAsStream();
+		return context.getErrorLogStream();
 	}
 
 	public ProjectionContext getContext() {
