@@ -1,5 +1,5 @@
 <template>
-  <v-card class="elevation-4">
+  <v-card class="elevation-0">
     <AppMessageDialog
       :dialog="messageDialog.dialog"
       :title="messageDialog.title"
