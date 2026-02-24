@@ -1,7 +1,10 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,9 +12,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +22,8 @@ import ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
-import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchRangeInputStream;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
@@ -93,6 +93,8 @@ public class BatchProjectionService {
 
 				// Store intermediate results
 				storeChunkIntermediateResults(runner, outputPartitionDir, batchProjectionId, polygonRecordCount);
+
+				updateChunkMetaDataFromRunner(runner, chunkMetadata);
 
 				String result = String.format(
 						"Chunk projection completed for %d records in partition %s. Results stored", polygonRecordCount,
@@ -270,6 +272,10 @@ public class BatchProjectionService {
 		}
 
 		logger.trace("=== END DEBUG: Chunk Input Data ===");
+	}
+
+	private void updateChunkMetaDataFromRunner(ProjectionRunner runner, BatchChunkMetadata chunkMetadata) {
+		chunkMetadata.setErrorCount(runner.getErrorLogCount());
 	}
 
 	/**
