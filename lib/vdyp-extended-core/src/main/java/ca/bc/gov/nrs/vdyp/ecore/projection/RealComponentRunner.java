@@ -132,10 +132,18 @@ public class RealComponentRunner implements ComponentRunner {
 					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
 					Vdyp7Constants.FORWARD_CONTROL_FILE_NAME
 			);
+			Path standControlFilePath = Path.of(
+					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
+					Vdyp7Constants.STAND_FORWARD_CONTROL_FILE_NAME
+			);
 
 			Optional<Path> inputDir = Optional.empty();
 			Optional<Path> outputDir = Optional.empty();
-			forwardApplication.doMain(inputDir, outputDir, controlFilePath.toAbsolutePath().toString());
+			forwardApplication.doMain(
+					inputDir, outputDir, //
+					controlFilePath.toAbsolutePath().toString(), //
+					standControlFilePath.toAbsolutePath().toString() //
+			);
 
 			state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, Optional.empty());
 

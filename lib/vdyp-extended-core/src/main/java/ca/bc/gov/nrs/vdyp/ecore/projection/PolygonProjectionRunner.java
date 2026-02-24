@@ -9,12 +9,16 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -49,6 +53,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
+import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
@@ -753,6 +758,8 @@ public class PolygonProjectionRunner {
 
 					generateYearToGrowFile(executionFolder, measurementYear, yearsToGrowForward);
 
+					generateStandControlFile(executionFolder, yearsToGrowForward);
+
 					componentRunner.runForward(polygon, projectionType, state);
 
 					logger.debug(
@@ -949,6 +956,21 @@ public class PolygonProjectionRunner {
 		} catch (IOException e) {
 			throw new PolygonExecutionException(e);
 		}
+	}
+
+	private Path generateStandControlFile(Path executionFolder, int yearsToGrow) throws PolygonExecutionException {
+		Path path = Path.of(executionFolder.toString(), Vdyp7Constants.STAND_FORWARD_CONTROL_FILE_NAME);
+		try (var os = new FileOutputStream(path.toFile()); var writer = new ControlFileWriter(os)) {
+			writer.writeComment("Automatically generated control file for a specific stand");
+			writer.writeEntry(
+					ControlKey.VTROL.sequence.get(),
+					Stream.of(yearsToGrow, 2, 2, 3, 1, 1).map(i -> Integer.toString(i))
+							.map(s -> StringUtils.leftPad(s, 4)).collect(Collectors.joining(""))
+			);
+		} catch (IOException e) {
+			throw new PolygonExecutionException(e);
+		}
+		return path;
 	}
 
 	static void rewriteTargetYearToBackControlFile(
