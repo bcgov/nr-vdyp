@@ -23,6 +23,8 @@ public class BatchChunkMetadata {
 	private final long layerStartByte; // Start byte offset of layer data records in this chunk
 	private final int layerRecordCount; // Number of layer data records matching polygon feature IDs in this chunk
 
+	private int errorCount; // Number of errors encountered while processing this chunk
+
 	public BatchChunkMetadata(
 			@NonNull String partitionName, @NonNull String jobBaseDir, long polygonStartByte, int polygonRecordCount,
 			long layerStartByte, int layerRecordCount
@@ -64,5 +66,13 @@ public class BatchChunkMetadata {
 		return "ChunkMetadata{" + "partitionName='" + partitionName + '\'' + ", jobBaseDir='" + jobBaseDir + '\''
 				+ ", polygonStartByte=" + polygonStartByte + ", polygonRecordCount=" + polygonRecordCount
 				+ ", layerStartByte=" + layerStartByte + ", layerRecordCount=" + layerRecordCount + '}';
+	}
+
+	public void setErrorCount(int errorLogCount) {
+		this.errorCount = errorLogCount;
+	}
+
+	public int getErrorCount() {
+		return errorCount;
 	}
 }
