@@ -752,4 +752,16 @@ h3 {
 .download-report-button :deep(.button-icon-img) {
   filter: brightness(0) invert(1);
 }
+
+@media (max-width: 600px) {
+  .model-selection-header {
+    flex-wrap: wrap;
+    gap: var(--layout-margin-small);
+  }
+
+  .header-right-section {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="mb-5">
     <v-row>
-      <v-col cols="7">
+      <v-col cols="12" sm="7">
         <label class="bcds-text-field-label" for="reportTitle">Report Title (Required)</label>
         <v-text-field
           id="reportTitle"
@@ -14,8 +14,8 @@
           class="report-title-text-field"
         ></v-text-field>
       </v-col>
-      <v-col class="col-space-2" />
-      <v-col cols="3" class="projection-type-container">
+      <v-col class="col-space-2 d-none d-sm-flex" />
+      <v-col cols="12" sm="3" class="projection-type-container">
         <label class="bcds-radio-label" for="projection-type-select">Projection Type</label>
         <v-radio-group
           id="projection-type-select"
@@ -64,7 +64,7 @@
     v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD"
   >
     <v-row>
-      <v-col cols="auto" class="age-year-range-container">
+      <v-col cols="12" sm="auto" class="age-year-range-container">
         <div class="numeric-range-value-label">Numeric Range Value</div>
         <v-radio-group
           v-model="selectedAgeYearRange"
@@ -80,7 +80,7 @@
         </v-radio-group>
       </v-col>
       <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
-        <v-col cols="2">
+        <v-col cols="4" sm="2">
           <AppSpinField
             label="Starting Age"
             :model-value="localStartingAge"
@@ -97,8 +97,8 @@
             @update:modelValue="handleStartingAgeInput"
           />
         </v-col>
-        <v-col class="col-space-3" />
-        <v-col cols="2" class="ml-2">
+        <v-col class="col-space-3 d-none d-sm-flex" />
+        <v-col cols="4" sm="2" class="ml-sm-2">
           <AppSpinField
             label="Finishing Age"
             :model-value="localFinishingAge"
@@ -115,8 +115,8 @@
             @update:modelValue="handleFinishingAgeInput"
           />
         </v-col>
-        <v-col class="col-space-3" />
-        <v-col cols="2" class="ml-2">
+        <v-col class="col-space-3 d-none d-sm-flex" />
+        <v-col cols="4" sm="2" class="ml-sm-2">
           <AppSpinField
             label="Increment"
             :model-value="localAgeIncrement"
@@ -135,7 +135,7 @@
         </v-col>
       </template>
       <template v-else>
-        <v-col cols="2">
+        <v-col cols="4" sm="2">
           <AppSpinField
             label="Starting Year"
             :model-value="localStartYear"
@@ -152,8 +152,8 @@
             @update:modelValue="handleStartYearInput"
           />
         </v-col>
-        <v-col class="col-space-3" />
-        <v-col cols="2" class="ml-2">
+        <v-col class="col-space-3 d-none d-sm-flex" />
+        <v-col cols="4" sm="2" class="ml-sm-2">
           <AppSpinField
             label="Finishing Year"
             :model-value="localEndYear"
@@ -170,8 +170,8 @@
             @update:modelValue="handleEndYearInput"
           />
         </v-col>
-        <v-col class="col-space-3" />
-        <v-col cols="2" class="ml-2">
+        <v-col class="col-space-3 d-none d-sm-flex" />
+        <v-col cols="4" sm="2" class="ml-sm-2">
           <AppSpinField
             label="Increment"
             :model-value="localYearIncrement"
@@ -189,8 +189,8 @@
           />
         </v-col>
       </template>
-      <v-col class="col-space-3" />
-      <v-col cols="2">
+      <v-col class="col-space-3 d-none d-sm-flex" />
+      <v-col cols="4" sm="2">
         <AppSpinField
           label="Include Specific Year"
           :model-value="localSpecificYear"
@@ -435,7 +435,7 @@
                 data-testid="is-projection-mode-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col cols="auto" class="ml-2">
+            <v-col cols="auto" class="polygon-id-container">
               <v-checkbox
                 v-model="localIsPolygonIDEnabled"
                 label="Polygon ID"
@@ -444,7 +444,7 @@
                 data-testid="is-polygon-id-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col cols="auto" class="ml-1">
+            <v-col cols="auto" class="current-year-container">
               <v-checkbox
                 v-model="localIsCurrentYearEnabled"
                 label="Current Year"
@@ -1071,6 +1071,12 @@ const updateMinDBH = (index: number, value: number) => {
   padding-top: 16px;
 }
 
+@media (max-width: 600px) {
+  .projection-type-container {
+    padding-top: 0;
+  }
+}
+
 .computed-mai-container {
   padding-left: 8px;
 }
@@ -1123,5 +1129,26 @@ const updateMinDBH = (index: number, value: number) => {
 
 .secondary-species-height-file-upload-container {
   margin-left: 21px;
+}
+
+.polygon-id-container {
+  margin-left: 8px;
+}
+
+.current-year-container {
+  margin-left: 4px;
+}
+
+@media (max-width: 911px) {
+  .by-layer-container,
+  .by-species-file-upload-container,
+  .secondary-species-height-file-upload-container,
+  .projection-mode-container,
+  .polygon-id-container,
+  .current-year-container,
+  .reference-year-container {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
 }
 </style>

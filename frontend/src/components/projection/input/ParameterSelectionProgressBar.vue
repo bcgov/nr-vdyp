@@ -184,4 +184,17 @@ const progressColor = computed(() => {
   font-weight: bold;
   color: var(--theme-primary-blue);
 }
+
+@media (max-width: 600px) {
+  .section-labels {
+    display: flex;
+    justify-content: space-between;
+    height: auto;
+  }
+
+  .section-label {
+    position: static;
+    font-size: 11px;
+  }
+}
 </style>
