@@ -359,7 +359,7 @@
             <v-col cols="2" class="computed-mai-container">
               <v-checkbox
                 v-model="localIsComputedMAIEnabled"
-                label="Computed MAI"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI
                 hide-details
                 :disabled="isComputedMAIDeactivated"
                 data-testid="is-computed-mai-enabled"
@@ -369,7 +369,7 @@
             <v-col cols="2" class="culmination-values-container">
               <v-checkbox
                 v-model="localIsCulminationValuesEnabled"
-                label="Culmination Values"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES
                 hide-details
                 :disabled="isCulminationValuesDeactivated"
                 data-testid="is-culmination-values-enabled"
@@ -379,7 +379,7 @@
             <v-col cols="2" class="by-species-container">
               <v-checkbox
                 v-model="localIsBySpeciesEnabled"
-                label="By Species"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES
                 hide-details
                 :disabled="isBySpeciesDeactivated"
                 data-testid="is-by-species-enabled"
@@ -389,7 +389,7 @@
             <v-col cols="3" class="secondary-species-height-container">
               <v-checkbox
                 v-model="localIncSecondaryHeight"
-                label="Secondary Species Height"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.SECD_SPCZ_HEIGHT
                 hide-details
                 :disabled="isincSecondaryHeightDeactivated"
                 data-testid="inc-secondary-height"
@@ -402,7 +402,7 @@
             <v-col cols="auto" class="by-layer-container">
               <v-checkbox
                 v-model="localIsByLayerEnabled"
-                label="By Layer"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.BY_LAYER
                 hide-details
                 :disabled="isByLayerDeactivated"
                 data-testid="is-by-layer-enabled"
@@ -411,7 +411,7 @@
             <v-col cols="auto" class="by-species-file-upload-container">
               <v-checkbox
                 v-model="localIsBySpeciesEnabled"
-                label="By Species"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES
                 hide-details
                 :disabled="isBySpeciesDeactivated"
                 data-testid="is-by-species-enabled"
@@ -420,7 +420,7 @@
             <v-col cols="auto" class="secondary-species-height-file-upload-container" style="padding-left: 0px;">
               <v-checkbox
                 v-model="localIncSecondaryHeight"
-                label="Secondary Species Height"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.SECD_SPCZ_HEIGHT
                 hide-details
                 :disabled="isincSecondaryHeightDeactivated"
                 data-testid="inc-secondary-height"
@@ -429,7 +429,7 @@
             <v-col cols="auto" class="projection-mode-container">
               <v-checkbox
                 v-model="localIsProjectionModeEnabled"
-                label="Projection Mode"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.PRJECTION_MODE
                 hide-details
                 :disabled="isProjectionModeDeactivated"
                 data-testid="is-projection-mode-enabled"
@@ -438,7 +438,7 @@
             <v-col cols="auto" class="ml-2">
               <v-checkbox
                 v-model="localIsPolygonIDEnabled"
-                label="Polygon ID"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.POLYGON_ID
                 hide-details
                 :disabled="isPolygonIDDeactivated"
                 data-testid="is-polygon-id-enabled"
@@ -447,7 +447,7 @@
             <v-col cols="auto" class="ml-1">
               <v-checkbox
                 v-model="localIsCurrentYearEnabled"
-                label="Current Year"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.CURRENT_YEAR
                 hide-details
                 :disabled="isCurrentYearDeactivated"
                 data-testid="is-current-year-enabled"
@@ -456,7 +456,7 @@
             <v-col cols="auto" class="reference-year-container">
               <v-checkbox
                 v-model="localIsReferenceYearEnabled"
-                label="Reference Year"
+                :label=CONSTANTS.INCLUDE_IN_REPORT.REFERENCE_YEAR
                 hide-details
                 :disabled="isReferenceYearDeactivated"
                 data-testid="is-reference-year-enabled"

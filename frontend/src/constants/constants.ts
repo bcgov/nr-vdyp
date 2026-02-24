@@ -47,6 +47,18 @@ export const MINIMUM_DBH_LIMITS = Object.freeze({
   CM22_5: '22.5 cm+',
 })
 
+export const INCLUDE_IN_REPORT = Object.freeze({
+  COMPUTED_MAI: 'Computed MAI',
+  CULMINATION_VALUES: 'Culmination Values',
+  BY_SPECIES: 'By Species',
+  SECD_SPCZ_HEIGHT: 'Secondary Species Height',
+  BY_LAYER: 'By Layer',
+  PRJECTION_MODE: 'Projection Mode',
+  POLYGON_ID: 'Polygon ID',
+  CURRENT_YEAR: 'Current Year',
+  REFERENCE_YEAR: 'Reference Year',
+})
+
 export const PROJECTION_TYPE = Object.freeze({
   VOLUME: 'Volume',
   CFS_BIOMASS: 'CFS Biomass',
