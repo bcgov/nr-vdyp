@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
@@ -25,7 +26,7 @@ public abstract class VdypFileTasklet implements Tasklet {
 		this.vdypClient = vdypClient;
 	}
 
-	abstract void performVdypFileOperation() throws BatchException;
+	abstract void performVdypFileOperation(StepExecution stepExecution) throws BatchException;
 
 	@Override
 	public RepeatStatus execute(@NonNull StepContribution contribution, ChunkContext chunkContext)
@@ -41,7 +42,7 @@ public abstract class VdypFileTasklet implements Tasklet {
 		jobTimestamp = params.getString(BatchConstants.Job.TIMESTAMP);
 		projectionGUID = params.getString(BatchConstants.GuidInput.PROJECTION_GUID);
 
-		performVdypFileOperation();
+		performVdypFileOperation(stepExecution);
 
 		return RepeatStatus.FINISHED;
 
