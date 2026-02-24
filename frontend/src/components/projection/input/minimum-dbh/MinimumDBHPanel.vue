@@ -243,6 +243,19 @@ const onCancel = async () => {
   align-items: center;
 }
 
+.edit-button-col :deep(.bcds-button.icon-top) {
+  padding: 2px 4px;
+  gap: 2px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
+  font-size: 18px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .button-label) {
+  font-size: 11px;
+}
+
 /* Vuetify mobile=true covers xs through md (< 1280px) */
 @media (max-width: 1279px) {
   .min-dbh-row {

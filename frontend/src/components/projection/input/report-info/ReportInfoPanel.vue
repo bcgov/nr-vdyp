@@ -578,4 +578,22 @@ const onClear = () => {
 
 const handleDialogClose = () => {}
 </script>
-<style scoped />
+<style scoped>
+.edit-button-col {
+  display: flex;
+  align-items: center;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top) {
+  padding: 2px 4px;
+  gap: 2px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
+  font-size: 18px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .button-label) {
+  font-size: 11px;
+}
+</style>
