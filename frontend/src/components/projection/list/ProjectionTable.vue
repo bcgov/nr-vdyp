@@ -292,7 +292,7 @@ const handleRowClick = (event: MouseEvent, projection: Projection) => {
   border-radius: var(--layout-border-radius-medium);
   font: var(--typography-regular-small-body);
   white-space: normal;
-  max-width: 400px;
+  max-width: 700px;
   min-width: 150px;
   width: max-content;
   box-shadow: var(--surface-shadow-small);

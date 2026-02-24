@@ -310,7 +310,7 @@ const createLayerData = (
       CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
     (isBlank(modelParameterStore.crownClosure) ||
       modelParameterStore.crownClosure === 0)
-      ? DEFAULTS.CROWN_CLOSURE_DEFAULT_4PROJ
+      ? DEFAULTS.DEFAULT_VALUES.CROWN_CLOSURE
       : modelParameterStore.crownClosure
 
   const basalArea =
@@ -318,14 +318,14 @@ const createLayerData = (
     modelParameterStore.siteSpeciesValues ===
       CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
       ? modelParameterStore.basalArea
-      : DEFAULTS.BASAL_AREA_DEFAULT_4PROJ
+      : DEFAULTS.DEFAULT_VALUES.BASAL_AREA
 
   const treesPerHectare =
     modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA &&
     modelParameterStore.siteSpeciesValues ===
       CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
       ? modelParameterStore.treesPerHectare
-      : DEFAULTS.TPH_DEFAULT_4PROJ
+      : DEFAULTS.DEFAULT_VALUES.TPH
 
   const row = [
     featureId, // FEATURE_ID
@@ -593,6 +593,7 @@ export const createProjection = async (
   createProjectionFunc: (
     parameters: Parameters,
     modelParameters: ModelParameters,
+    reportDescription?: string | null,
   ) => Promise<ProjectionModel> = projServiceCreateProjection,
 ): Promise<ProjectionModel> => {
   const projectionParameters = buildProjectionParameters(modelParameterStore)
@@ -601,6 +602,7 @@ export const createProjection = async (
   const result = await createProjectionFunc(
     projectionParameters,
     modelParameters,
+    modelParameterStore.reportDescription,
   )
   return result
 }
@@ -693,6 +695,6 @@ export const saveProjectionOnPanelConfirm = async (
 
     const projectionParameters = buildProjectionParameters(modelParameterStore)
     const modelParameters = buildModelParameters(modelParameterStore)
-    await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters)
+    await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters, modelParameterStore.reportDescription)
   }
 }

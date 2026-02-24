@@ -3,6 +3,7 @@ import { useAppStore } from '@/stores/projection/appStore'
 import { CONSTANTS } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
 import type { FileUploadSpeciesGroup } from '@/interfaces/interfaces'
+import type { FileUploadPanelName } from '@/types/types'
 import {
   OutputFormatEnum,
   ExecutionOptionsEnum,
@@ -16,6 +17,8 @@ import {
   createProjection as projServiceCreateProjection,
   runProjection as projServiceRunProjection,
   updateProjectionParams,
+  getProjectionById,
+  parseProjectionParams,
 } from '@/services/projectionService'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
@@ -223,13 +226,62 @@ export const runProjectionFileUpload = async (
 }
 
 /**
+ * Reverts the file upload store to the last saved projection state from the backend.
+ * Called when the user clicks Cancel while editing a panel in File Upload mode.
+ * The cancelled panel is forced back to open and editable so the user can continue editing.
+ *
+ * @param panelName The panel whose Cancel button was clicked.
+ * @throws Error if the revert operation fails.
+ */
+export const revertPanelToSaved = async (panelName: FileUploadPanelName): Promise<void> => {
+  const appStore = useAppStore()
+  const fileUploadStore = useFileUploadStore()
+
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) return
+
+  const projectionModel = await getProjectionById(projectionGUID)
+  const params = parseProjectionParams(projectionModel.projectionParameters)
+  fileUploadStore.restoreFromProjectionParams(params, false)
+  fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
+  fileUploadStore.updateRunModelEnabled()
+
+  // Keep the cancelled panel open and editable so the user can continue editing
+  fileUploadStore.panelOpenStates[panelName] = CONSTANTS.PANEL.OPEN
+  fileUploadStore.panelState[panelName] = { confirmed: false, editable: true }
+}
+
+/**
+ * Ensures a projection exists in the backend. If no projection GUID is stored,
+ * creates a new projection with the current store parameters and stores the GUID.
+ * Used by the AttachmentsPanel so files can be uploaded before other panels are confirmed.
+ *
+ * @param fileUploadStore The store containing file upload parameters.
+ * @returns The projection GUID (existing or newly created).
+ * @throws Error if projection creation fails.
+ */
+export const ensureProjectionExists = async (
+  fileUploadStore: ReturnType<typeof useFileUploadStore>,
+): Promise<string> => {
+  const appStore = useAppStore()
+  const existingGUID = appStore.getCurrentProjectionGUID
+  if (existingGUID) return existingGUID
+
+  const baseParams = buildProjectionParameters(fileUploadStore)
+  const projectionParameters = { ...baseParams, utils: [] }
+  const result = await projServiceCreateProjection(projectionParameters, undefined, fileUploadStore.reportDescription)
+  appStore.setCurrentProjectionGUID(result.projectionGUID)
+  appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
+  return result.projectionGUID
+}
+
+/**
  * Saves the projection when a panel's Next button is clicked (File Upload mode).
  *
- * - CREATE mode + first panel (reportInfo): Creates a new projection with parameters only (no files),
+ * - reportInfo panel (no GUID yet): Creates a new projection with parameters only (no files),
  *   stores the GUID, and switches to EDIT mode.
- * - EDIT mode + reportInfo: Updates the existing projection parameters.
- * - EDIT mode + attachments: Updates projection parameters and handles file uploads
- *   (deletes old files, uploads new files if provided).
+ * - reportInfo panel (GUID exists, e.g. created via file upload): Updates the existing projection.
+ * - Other panels in EDIT mode: Updates the existing projection parameters.
  *
  * @param fileUploadStore The store containing file upload parameters and files.
  * @param panelName The name of the panel being confirmed.
@@ -241,15 +293,24 @@ export const saveProjectionOnPanelConfirm = async (
 ): Promise<void> => {
   const appStore = useAppStore()
 
-  if (
-    appStore.viewMode === PROJECTION_VIEW_MODE.CREATE &&
-    panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO
-  ) {
-    // Create mode + first panel: create projection with params only (no files yet)
-    const projectionParameters = buildProjectionParameters(fileUploadStore)
-    const result = await projServiceCreateProjection(projectionParameters)
-    appStore.setCurrentProjectionGUID(result.projectionGUID)
-    appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
+  // When confirming reportInfo, omit utils so that minimumDBH completion can be inferred
+  // on restore (utils present = minimumDBH confirmed; utils empty = only reportInfo confirmed).
+  const baseParams = buildProjectionParameters(fileUploadStore)
+  const projectionParameters = panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO
+    ? { ...baseParams, utils: [] }
+    : baseParams
+
+  if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO) {
+    const existingGUID = appStore.getCurrentProjectionGUID
+    if (existingGUID) {
+      // Projection already exists (e.g. created via file upload) — update it
+      await updateProjectionParams(existingGUID, projectionParameters, fileUploadStore.reportDescription)
+    } else {
+      // No projection yet — create one
+      const result = await projServiceCreateProjection(projectionParameters, undefined, fileUploadStore.reportDescription)
+      appStore.setCurrentProjectionGUID(result.projectionGUID)
+      appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
+    }
   } else if (appStore.viewMode === PROJECTION_VIEW_MODE.EDIT) {
     const projectionGUID = appStore.getCurrentProjectionGUID
     if (!projectionGUID) {
@@ -257,8 +318,7 @@ export const saveProjectionOnPanelConfirm = async (
     }
 
     // Update projection parameters
-    const projectionParameters = buildProjectionParameters(fileUploadStore)
-    await updateProjectionParams(projectionGUID, projectionParameters)
+    await updateProjectionParams(projectionGUID, projectionParameters, fileUploadStore.reportDescription)
 
     // Note: Files are now uploaded immediately when selected in the AttachmentsPanel,
     // so no file upload handling is needed here. This function only updates parameters.

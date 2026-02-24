@@ -18,41 +18,68 @@
           {{ CONSTANTS.HEADER_SELECTION.MODEL_PARAMETER_SELECTION }}
         </h3>
         <h3 v-else>{{ CONSTANTS.HEADER_SELECTION.FILE_UPLOAD }}</h3>
-        <v-menu v-if="isRunning">
-          <template #activator="{ props }">
-            <button v-bind="props" class="running-status-menu-button">
-              <img
-                :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
-                alt="Running"
-                class="running-status-icon"
-              />
-              <span class="running-status-text">Running</span>
-              <v-icon size="small">mdi-chevron-down</v-icon>
-            </button>
-          </template>
-          <v-list class="running-status-menu-list">
-            <v-list-item
-              class="running-status-menu-item"
-              @click="cancelRunHandler"
-            >
-              <div class="running-menu-item-content">
+        <div class="header-right-section">
+          <v-menu v-if="isRunning">
+            <template #activator="{ props }">
+              <button v-bind="props" class="running-status-menu-button">
                 <img
-                  src="@/assets/icons/Cancel_Icon_Menu.png"
-                  alt="Cancel"
-                  class="running-menu-icon"
+                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
+                  alt="Running"
+                  class="running-status-icon"
                 />
-                <span class="running-menu-text">Cancel</span>
-              </div>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-        <div v-else-if="isReady" class="ready-status-container">
-          <img
-            :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
-            alt="Ready"
-            class="ready-status-icon"
+                <span class="running-status-text">Running</span>
+                <v-icon size="small">mdi-chevron-down</v-icon>
+              </button>
+            </template>
+            <v-list class="running-status-menu-list">
+              <v-list-item
+                class="running-status-menu-item"
+                @click="cancelRunHandler"
+              >
+                <div class="running-menu-item-content">
+                  <img
+                    src="@/assets/icons/Cancel_Icon_Menu.png"
+                    alt="Cancel"
+                    class="running-menu-icon"
+                  />
+                  <span class="running-menu-text">Cancel</span>
+                </div>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+          <div v-else-if="isReady" class="ready-status-container">
+            <img
+              :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
+              alt="Ready"
+              class="ready-status-icon"
+            />
+            <span class="ready-status-text">Ready</span>
+          </div>
+          <div v-else-if="isDraft" class="draft-status-container">
+            <img
+              :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.DRAFT)"
+              alt="Draft"
+              class="draft-status-icon"
+            />
+            <span class="draft-status-text">Draft</span>
+          </div>
+          <div v-else-if="isFailed" class="failed-status-container">
+            <img
+              :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.FAILED)"
+              alt="Failed"
+              class="failed-status-icon"
+            />
+            <span class="failed-status-text">Failed</span>
+          </div>
+          <AppButton
+            v-if="appStore.modelSelection !== CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
+            label="Download Report"
+            :icon-src="DownloadIcon"
+            variant="primary"
+            :is-disabled="!isDownloadReady"
+            class="header-download-report-button"
+            @click="handleDownloadReport"
           />
-          <span class="ready-status-text">Ready</span>
         </div>
       </div>
     </div>
@@ -92,26 +119,21 @@
       </template>
     </template>
     <template v-else>
-      <div class="tabs-with-download">
-        <AppTabs
-          v-model:currentTab="fileUploadActiveTab"
-          :tabs="fileUploadTabs"
-        />
-        <AppButton
-          label="Download Report"
-          :icon-src="DownloadIcon"
-          variant="primary"
-          :is-disabled="!isDownloadReady"
-          class="download-report-button"
-          @click="handleDownloadReport"
-        />
-      </div>
       <template v-if="isFileUploadPanelsVisible">
+        <ParameterSelectionProgressBar
+          :sections="fileUploadProgressSections"
+          :percentage="fileUploadPercentage"
+          :completedCount="fileUploadCompletedCount"
+          :projectionStatus="appStore.currentProjectionStatus"
+          class="panel-spacing"
+        />
+        <ReportInfoPanel class="panel-spacing" />
+        <MinimumDBHPanel class="panel-spacing" />
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
-          v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
           :showCancelButton="isRunning"
+          :disabledText="fileUploadDisabledText"
           cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -141,6 +163,8 @@ import {
   StandInfoPanel,
   ReportInfoPanel,
   AttachmentsPanel,
+  MinimumDBHPanel,
+  ParameterSelectionProgressBar,
   RunProjectionButtonPanel
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
@@ -172,7 +196,6 @@ const fileOperationMessage = computed(() => {
   return ''
 })
 const modelParamActiveTab = ref(0)
-const fileUploadActiveTab = ref(0)
 
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
@@ -183,6 +206,8 @@ const notificationStore = useNotificationStore()
 
 const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
 const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
+const isDraft = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.DRAFT)
+const isFailed = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED)
 const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
 
 const modelParamTabs = computed<Tab[]>(() => [
@@ -212,15 +237,6 @@ const modelParamTabs = computed<Tab[]>(() => [
   },
 ])
 
-const fileUploadTabs = computed<Tab[]>(() => [
-  {
-    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.FILE_UPLOAD,
-    component: ReportInfoPanel,
-    tabname: null,
-    disabled: false,
-  },
-])
-
 const isModelParameterPanelsVisible = computed(() => {
   return (
     appStore.modelSelection ===
@@ -231,11 +247,66 @@ const isModelParameterPanelsVisible = computed(() => {
 })
 
 const isFileUploadPanelsVisible = computed(() => {
-  return (
-    appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD &&
-    fileUploadActiveTab.value ===
-      CONSTANTS.FILE_UPLOAD_TAB_INDEX.PARAM_SELECTION
-  )
+  return appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
+})
+
+const fileUploadPrerequisitesDone = computed(
+  () =>
+    fileUploadStore.panelState.reportInfo.confirmed &&
+    fileUploadStore.panelState.minimumDBH.confirmed,
+)
+
+const uploadedFilesCount = computed(() => {
+  let count = 0
+  if (fileUploadStore.polygonFileInfo !== null) count++
+  if (fileUploadStore.layerFileInfo !== null) count++
+  return count
+})
+
+const fileUploadProgressSections = computed(() => [
+  {
+    label: 'Report Details',
+    completed: fileUploadStore.panelState.reportInfo.confirmed,
+  },
+  {
+    label: 'Minimum DBH',
+    completed: fileUploadStore.panelState.minimumDBH.confirmed,
+  },
+  {
+    label: 'File Upload',
+    completed:
+      fileUploadPrerequisitesDone.value && uploadedFilesCount.value === 2,
+  },
+])
+
+// Each pre-section contributes 33%, file upload contributes 17% per file (total 34%)
+// but only when both prerequisites (Report Details + Minimum DBH) are confirmed.
+const fileUploadPercentage = computed(() => {
+  let pct = 0
+  if (fileUploadStore.panelState.reportInfo.confirmed) pct += 33
+  if (fileUploadStore.panelState.minimumDBH.confirmed) pct += 33
+  if (fileUploadPrerequisitesDone.value) {
+    pct += uploadedFilesCount.value * 17
+  }
+  return pct
+})
+
+const fileUploadCompletedCount = computed(() => {
+  let count = 0
+  if (fileUploadStore.panelState.reportInfo.confirmed) count++
+  if (fileUploadStore.panelState.minimumDBH.confirmed) count++
+  if (fileUploadPrerequisitesDone.value && uploadedFilesCount.value === 2) count++
+  return count
+})
+
+const fileUploadDisabledText = computed(() => {
+  if (!appStore.isDraft) {
+    return `This projection may not be run with a status of ${appStore.currentProjectionStatus}`
+  }
+  if (!fileUploadStore.runModelEnabled) {
+    return 'The projection cannot be run until all sections are complete'
+  }
+  return ''
 })
 
 /**
@@ -366,6 +437,16 @@ const runModelHandler = async () => {
     } else if (
       appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
     ) {
+      // Validate files are uploaded before running
+      if (!fileUploadStore.polygonFileInfo) {
+        notificationStore.showErrorMessage(MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING)
+        return
+      }
+      if (!fileUploadStore.layerFileInfo) {
+        notificationStore.showErrorMessage(MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING)
+        return
+      }
+
       const response = await runProjectionFileUpload()
       console.debug('Full response:', response)
 
@@ -375,6 +456,7 @@ const runModelHandler = async () => {
           mapProjectionStatus(response.projectionStatusCode.code),
         )
         appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+        fileUploadStore.panelOpenStates.attachments = CONSTANTS.PANEL.CLOSE
       }
 
       // Show success notification
@@ -540,15 +622,15 @@ h3 {
 }
 
 .running-status-icon {
-  width: 16px;
-  height: 16px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 }
 
 .running-status-text {
-  font: var(--typography-bold-h5);
+  font: var(--typography-bold-h4);
   color: var(--support-border-color-warning);
 }
 
@@ -591,20 +673,70 @@ h3 {
 }
 
 .ready-status-icon {
-  width: 16px;
-  height: 16px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 }
 
 .ready-status-text {
-  font: var(--typography-bold-h5);
+  font: var(--typography-bold-h4);
   color: var(--support-border-color-success);
+}
+
+.draft-status-container {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+}
+
+.draft-status-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.draft-status-text {
+  font: var(--typography-bold-h4);
+  color: var(--typography-color-secondary);
+}
+
+.failed-status-container {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+}
+
+.failed-status-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.failed-status-text {
+  font: var(--typography-bold-h4);
+  color: var(--support-border-color-error);
 }
 
 .panel-spacing {
   margin-top: var(--layout-margin-medium);
+}
+
+.header-right-section {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-small);
+}
+
+.header-download-report-button :deep(.button-icon-img) {
+  filter: brightness(0) invert(1);
 }
 
 .tabs-with-download {

@@ -102,9 +102,10 @@ export const getUserProjections = async (): Promise<ProjectionModel[]> => {
 export const createProjection = async (
   parameters: Parameters,
   modelParameters?: ModelParameters,
+  reportDescription?: string | null,
 ): Promise<ProjectionModel> => {
   try {
-    const response = await apiClient.createProjection(parameters, modelParameters)
+    const response = await apiClient.createProjection(parameters, modelParameters, reportDescription)
     return response.data
   } catch (error) {
     console.error('Error creating projection:', error)
@@ -174,12 +175,14 @@ export const updateProjectionParams = async (
   projectionGUID: string,
   parameters: Parameters,
   modelParameters?: ModelParameters,
+  reportDescription?: string | null,
 ): Promise<ProjectionModel> => {
   try {
     const response = await apiClient.updateProjectionParams(
       projectionGUID,
       parameters,
       modelParameters,
+      reportDescription,
     )
     return response.data
   } catch (error) {

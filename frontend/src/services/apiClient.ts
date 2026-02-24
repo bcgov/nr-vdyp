@@ -9,14 +9,6 @@ import type { Parameters, ModelParameters } from '@/services/vdyp-api/'
 import axiosInstance from '@/services/axiosInstance'
 import type { AxiosRequestConfig } from 'axios'
 
-// TODO: Remove this flag and test data when CRUD is complete
-const USE_TEST_PROJECTION_DATA = false
-
-const fetchTestProjectionData = async () => {
-  const response = await fetch('/test-data/projections.json')
-  return response.json()
-}
-
 // Create API instances with the provided axiosInstance.
 const helpApiInstance = new GetHelpApi(undefined, undefined, axiosInstance)
 const rootApiInstance = new GetRootApi(undefined, undefined, axiosInstance)
@@ -90,17 +82,6 @@ export const apiClient = {
    * @returns The Axios promise for the list of user projections.
    */
   getUserProjections: async (options?: AxiosRequestConfig) => {
-    // TODO: Remove test data logic when CRUD is complete
-    if (USE_TEST_PROJECTION_DATA) {
-      const data = await fetchTestProjectionData()
-      return {
-        data,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {},
-      }
-    }
     return projectionApiInstance.getUserProjections(options)
   },
 
@@ -111,8 +92,8 @@ export const apiClient = {
    * @param options Optional Axios request configuration.
    * @returns The Axios promise for the created projection.
    */
-  createProjection: (parameters: Parameters, modelParameters?: ModelParameters, options?: AxiosRequestConfig) => {
-    return projectionApiInstance.createProjection(parameters, modelParameters, options)
+  createProjection: (parameters: Parameters, modelParameters?: ModelParameters, reportDescription?: string | null, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.createProjection(parameters, modelParameters, reportDescription, options)
   },
 
   /**
@@ -137,12 +118,14 @@ export const apiClient = {
     projectionGUID: string,
     parameters: Parameters,
     modelParameters?: ModelParameters,
+    reportDescription?: string | null,
     options?: AxiosRequestConfig,
   ) => {
     return projectionApiInstance.updateProjectionParams(
       projectionGUID,
       parameters,
       modelParameters,
+      reportDescription,
       options,
     )
   },

@@ -19,6 +19,8 @@
   color: var(--typography-color-primary);
   padding: var(--layout-padding-medium);
   min-height: 48px;
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 .v-expansion-panel-title:hover {

@@ -12,7 +12,7 @@
     />
     <v-expansion-panels v-model="panelOpenStates[panelName]">
       <v-expansion-panel hide-actions>
-        <v-expansion-panel-title>
+        <v-expansion-panel-title class="attachments-panel-title">
           <v-row no-gutters class="expander-header">
             <v-col cols="auto" class="expansion-panel-icon-col">
               <v-icon class="expansion-panel-icon">{{
@@ -22,7 +22,7 @@
               }}</v-icon>
             </v-col>
             <v-col>
-              <span class="text-h6">Attachments</span>
+              <span class="text-h6">File Upload</span>
             </v-col>
           </v-row>
         </v-expansion-panel-title>
@@ -122,14 +122,6 @@
                 </template>
               </v-col>
             </v-row>
-            <ActionPanel
-              v-if="!isReadOnly"
-              :isConfirmEnabled="isConfirmEnabled"
-              :isConfirmed="isConfirmed"
-              @clear="onClear"
-              @confirm="onConfirm"
-              @edit="onEdit"
-            />
           </v-form>
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -142,12 +134,10 @@ import { ref, computed, watch } from 'vue'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { AppMessageDialog } from '@/components'
-import { ActionPanel } from '@/components/projection'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR, FILE_REMOVAL_DIALOG } from '@/constants/message'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { fileUploadValidation } from '@/validation'
-import { saveProjectionOnPanelConfirm } from '@/services/projection/fileUploadService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import {
@@ -156,6 +146,7 @@ import {
   deleteFileFromFileSet,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
+import { ensureProjectionExists } from '@/services/projection/fileUploadService'
 
 const form = ref<HTMLFormElement>()
 const fileUploadStore = useFileUploadStore()
@@ -183,17 +174,9 @@ const messageDialog = ref<MessageDialog>({
 const panelName = CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS
 
 const panelOpenStates = computed(() => fileUploadStore.panelOpenStates)
-const isConfirmEnabled = computed(
-  () => !isReadOnly.value && fileUploadStore.panelState[panelName].editable,
-)
-const isConfirmed = computed(
-  () => fileUploadStore.panelState[panelName].confirmed,
-)
 
-// Determine if inputs should be disabled (read-only mode or not editable)
-const isInputDisabled = computed(
-  () => isReadOnly.value || !fileUploadStore.panelState[panelName].editable,
-)
+// File Upload panel is always interactable - only disabled in read-only mode
+const isInputDisabled = computed(() => isReadOnly.value)
 
 const MAX_DISPLAY_ERR_ITEMS = 2
 
@@ -320,12 +303,6 @@ const validateLayerFile = async (file: File): Promise<boolean> => {
 
 // Upload polygon file immediately when selected
 const uploadPolygonFile = async (file: File) => {
-  const projectionGUID = appStore.getCurrentProjectionGUID
-  if (!projectionGUID) {
-    notificationStore.showErrorMessage(PROJECTION_ERR.MISSING_GUID, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
-    return
-  }
-
   // Validate the file first
   const isValid = await validatePolygonFile(file)
   if (!isValid) {
@@ -336,6 +313,9 @@ const uploadPolygonFile = async (file: File) => {
 
   fileUploadStore.isUploadingPolygon = true
   try {
+    // Ensure projection exists (creates one if not yet created)
+    const projectionGUID = await ensureProjectionExists(fileUploadStore)
+
     const projectionModel = await getProjectionById(projectionGUID)
     if (!projectionModel.polygonFileSet?.projectionFileSetGUID) {
       throw new Error('Polygon file set not found')
@@ -382,12 +362,6 @@ const uploadPolygonFile = async (file: File) => {
 
 // Upload layer file immediately when selected
 const uploadLayerFile = async (file: File) => {
-  const projectionGUID = appStore.getCurrentProjectionGUID
-  if (!projectionGUID) {
-    notificationStore.showErrorMessage(PROJECTION_ERR.MISSING_GUID, PROJECTION_ERR.FILE_UPLOAD_FAILED_TITLE)
-    return
-  }
-
   // Validate the file first
   const isValid = await validateLayerFile(file)
   if (!isValid) {
@@ -398,6 +372,9 @@ const uploadLayerFile = async (file: File) => {
 
   fileUploadStore.isUploadingLayer = true
   try {
+    // Ensure projection exists (creates one if not yet created)
+    const projectionGUID = await ensureProjectionExists(fileUploadStore)
+
     const projectionModel = await getProjectionById(projectionGUID)
     if (!projectionModel.layerFileSet?.projectionFileSetGUID) {
       throw new Error('Layer file set not found')
@@ -528,61 +505,16 @@ const removeLayerFile = async () => {
   }
 }
 
-// Validate that both files are uploaded
-const validateFilesUploaded = (): boolean => {
-  if (!fileUploadStore.polygonFileInfo) {
-    showErrorDialog(MESSAGE.MSG_DIALOG_TITLE.MISSING_FILE, MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING)
-    return false
-  }
-  if (!fileUploadStore.layerFileInfo) {
-    showErrorDialog(MESSAGE.MSG_DIALOG_TITLE.MISSING_FILE, MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING)
-    return false
-  }
-  return true
-}
-
-const onConfirm = async () => {
-  // Validate that both files are uploaded
-  if (!validateFilesUploaded()) return
-
-  if (form.value) {
-    form.value.validate()
-  } else {
-    console.warn('Form reference is null. Validation skipped.')
-  }
-
-  // Save projection (update parameters) before confirming the panel
-  // Note: Files are already uploaded immediately, so we just update params
-  appStore.isSavingProjection = true
-  try {
-    await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
-  } catch (error) {
-    console.error('Error saving projection:', error)
-    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
-    return
-  } finally {
-    appStore.isSavingProjection = false
-  }
-
-  if (!isConfirmed.value) {
-    fileUploadStore.confirmPanel(panelName)
-  }
-}
-
-const onEdit = () => {
-  if (isConfirmed.value) {
-    fileUploadStore.editPanel(panelName)
-  }
-}
-
-const onClear = () => {
-}
-
 const handleDialogClose = () => {}
 </script>
 
 <style>
 /* Attachments Panel Card - BC Government Design Standards */
+
+/* Match collapsed height with other panels that have an Edit button */
+.attachments-panel-title {
+  min-height: 57.01px !important;
+}
 
 /* File Input Label - BC Government Design Standards */
 .bcds-file-input-label {
