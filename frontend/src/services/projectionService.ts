@@ -6,6 +6,7 @@ import {
   deleteProjection as apiDeleteProjection,
   runProjection as apiRunProjection,
   cancelProjection as apiCancelProjection,
+  duplicateProjection as apiDuplicateProjection,
   deleteFileFromFileSet as apiDeleteFileFromFileSet,
   getFileSetFiles as apiGetFileSetFiles,
   getFileForDownload as apiGetFileForDownload,
@@ -196,6 +197,23 @@ export const cancelProjection = async (
     return await apiCancelProjection(projectionGUID)
   } catch (error) {
     console.error('Error cancelling projection:', error)
+    throw error
+  }
+}
+
+/**
+ * Duplicates a projection by sending a duplicate request to the backend.
+ * The copy will have "COPY" appended to its name, status set to Draft, and no results.
+ * @param projectionGUID The projection GUID to duplicate
+ * @returns A promise that resolves to the newly created duplicate ProjectionModel
+ */
+export const duplicateProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    return await apiDuplicateProjection(projectionGUID)
+  } catch (error) {
+    console.error('Error duplicating projection:', error)
     throw error
   }
 }
@@ -440,6 +458,7 @@ export const parseProjectionParams = (
     combineAgeYearRange: null,
     progressFrequency: null,
     reportTitle: null,
+    copyTitle: null,
   }
 
   if (!parametersJson) {
@@ -474,6 +493,7 @@ export const parseProjectionParams = (
       combineAgeYearRange: parsed.combineAgeYearRange ?? null,
       progressFrequency: parsed.progressFrequency ?? null,
       reportTitle: parsed.reportTitle ?? null,
+      copyTitle: parsed.copyTitle ?? null,
     }
   } catch {
     console.error('Error parsing projection parameters JSON')

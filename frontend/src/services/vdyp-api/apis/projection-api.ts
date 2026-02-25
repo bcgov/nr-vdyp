@@ -587,6 +587,46 @@ export const ProjectionApiAxiosParamCreator = function (
     },
 
     /**
+     * Duplicate a projection (copy inputs, reset status to Draft)
+     * @POST /api/v8/projection/{projectionGUID}/duplicate
+     */
+    duplicateProjection: async (
+      projectionGUID: string,
+      options: AxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      if (projectionGUID === null || projectionGUID === undefined) {
+        throw new Error(
+          'Required parameter projectionGUID was null or undefined.',
+        )
+      }
+      const localVarPath = `/api/v8/projection/${encodeURIComponent(projectionGUID)}/duplicate`
+      const localVarUrlObj = new URL(localVarPath, env.VITE_API_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+      const localVarRequestOptions: AxiosRequestConfig = {
+        method: 'POST',
+        ...baseOptions,
+        ...options,
+      }
+      const localVarHeaderParameter = {} as Record<string, string>
+
+      const headersFromBaseOptions = baseOptions?.headers ?? {}
+      localVarRequestOptions.headers = {
+        ...localVarHeaderParameter,
+        ...headersFromBaseOptions,
+        ...options.headers,
+      }
+
+      return {
+        url:
+          localVarUrlObj.pathname + localVarUrlObj.search + localVarUrlObj.hash,
+        options: localVarRequestOptions,
+      }
+    },
+
+    /**
      * Stream the results ZIP file for a projection via backend proxy
      * @GET /api/v8/projection/{projectionGUID}/resultZip
      */
@@ -1027,6 +1067,32 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
       }
     },
 
+    async duplicateProjection(
+      projectionGUID: string,
+      options?: AxiosRequestConfig,
+    ): Promise<
+      (
+        axios?: AxiosInstance,
+        basePath?: string,
+      ) => Promise<AxiosResponse<ProjectionModel>>
+    > {
+      const localVarAxiosArgs =
+        await ProjectionApiAxiosParamCreator(configuration).duplicateProjection(
+          projectionGUID,
+          options,
+        )
+      return (
+        axios: AxiosInstance = globalAxios,
+        basePath: string = BASE_PATH,
+      ) => {
+        const axiosRequestArgs: AxiosRequestConfig = {
+          ...localVarAxiosArgs.options,
+          url: basePath + localVarAxiosArgs.url,
+        }
+        return axios.request(axiosRequestArgs)
+      }
+    },
+
     async streamResultsZip(
       projectionGUID: string,
       options?: AxiosRequestConfig,
@@ -1213,6 +1279,15 @@ export const ProjectionApiFactory = function (
         .then((request) => request(axios, basePath))
     },
 
+    async duplicateProjection(
+      projectionGUID: string,
+      options?: AxiosRequestConfig,
+    ): Promise<AxiosResponse<ProjectionModel>> {
+      return ProjectionApiFp(configuration)
+        .duplicateProjection(projectionGUID, options)
+        .then((request) => request(axios, basePath))
+    },
+
     async streamResultsZip(
       projectionGUID: string,
       options?: AxiosRequestConfig,
@@ -1388,6 +1463,18 @@ export class ProjectionApi extends BaseAPI {
   ): Promise<AxiosResponse<ProjectionModel>> {
     return ProjectionApiFp(this.configuration)
       .cancelProjection(projectionGUID, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   * Duplicate a projection (copy inputs, reset status to Draft)
+   */
+  public async duplicateProjection(
+    projectionGUID: string,
+    options?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<ProjectionModel>> {
+    return ProjectionApiFp(this.configuration)
+      .duplicateProjection(projectionGUID, options)
       .then((request) => request(this.axios, this.basePath))
   }
 

@@ -151,6 +151,16 @@ export const apiClient = {
   },
 
   /**
+   * Duplicates a projection (copies inputs, resets status to Draft).
+   * @param projectionGUID The projection GUID to duplicate.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the newly created duplicate ProjectionModel.
+   */
+  duplicateProjection: (projectionGUID: string, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.duplicateProjection(projectionGUID, options)
+  },
+
+  /**
    * Deletes a projection.
    * @param projectionGUID The projection GUID.
    * @param options Optional Axios request configuration.

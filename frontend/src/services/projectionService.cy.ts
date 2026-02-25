@@ -9,6 +9,7 @@ import {
   transformProjection,
   streamResultsZip,
   createProjection,
+  duplicateProjection,
   updateProjectionParams,
   updateProjectionParamsWithModel,
   fetchUserProjections,
@@ -460,6 +461,31 @@ describe('projectionService Unit Tests', () => {
       cy.stub(apiClient, 'createProjection').rejects(mockError)
 
       createProjection(mockParameters)
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(error).to.equal(mockError)
+        })
+    })
+  })
+
+  describe('duplicateProjection', () => {
+    it('should duplicate projection and return the model', () => {
+      const mockDuplicate = { ...mockProjectionModel, projectionGUID: 'guid-copy' }
+      cy.stub(apiClient, 'duplicateProjection').resolves({ data: mockDuplicate })
+
+      cy.wrap(duplicateProjection('guid-test')).then((result: any) => {
+        expect(apiClient.duplicateProjection).to.be.calledOnceWith('guid-test')
+        expect(result.projectionGUID).to.equal('guid-copy')
+      })
+    })
+
+    it('should throw error when API fails', () => {
+      const mockError = new Error('Duplicate failed')
+      cy.stub(apiClient, 'duplicateProjection').rejects(mockError)
+
+      duplicateProjection('guid-test')
         .then(() => {
           throw new Error('Test should have failed but succeeded unexpectedly')
         })

@@ -88,6 +88,7 @@ export interface ParsedProjectionParameters {
   combineAgeYearRange: string | null
   progressFrequency: string | null
   reportTitle: string | null
+  copyTitle: string | null
 }
 
 export interface UploadedFileInfo {

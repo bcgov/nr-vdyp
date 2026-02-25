@@ -118,6 +118,9 @@
           @runModel="runModelHandler"
           @cancelRun="cancelRunHandler"
         />
+        <p v-if="duplicatedFromText" class="duplicated-from-note panel-spacing">
+          {{ duplicatedFromText }}
+        </p>
       </template>
     </template>
     <template v-else>
@@ -141,6 +144,9 @@
           @runModel="runModelHandler"
           @cancelRun="cancelRunHandler"
         />
+        <p v-if="duplicatedFromText" class="duplicated-from-note panel-spacing">
+          {{ duplicatedFromText }}
+        </p>
       </template>
     </template>
   </v-container>
@@ -211,6 +217,17 @@ const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PR
 const isDraft = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.DRAFT)
 const isFailed = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED)
 const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
+
+const duplicatedFromText = computed(() => {
+  const info = appStore.duplicatedFromInfo
+  if (!info) return ''
+  const date = new Date(info.duplicatedAt)
+  const month = date.toLocaleString('en-US', { month: 'short' })
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `*This Projection was duplicated from ${info.originalName} on ${month} ${day} at ${hours}:${minutes}.`
+})
 
 const modelParamTabs = computed<Tab[]>(() => [
   {
@@ -505,7 +522,7 @@ const cancelRunHandler = async () => {
     const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
 
     if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
-      // Projection is no longer running — update state and show appropriate message
+      // Projection is no longer running - update state and show appropriate message
       updateProjectionState(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
 
       if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
@@ -729,6 +746,14 @@ h3 {
 
 .panel-spacing {
   margin-top: var(--layout-margin-medium);
+}
+
+.duplicated-from-note {
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-secondary);
+  font-style: italic;
+  margin: var(--layout-margin-small) 0 0 0;
+  padding: 0;
 }
 
 .header-right-section {

@@ -174,6 +174,7 @@ export const PROGRESS_MSG = Object.freeze({
   RUNNING_PROJECTION: 'Running Projection...',
   SAVING_PROJECTION: 'Saving Projection...',
   CANCELLING_PROJECTION: 'Cancelling Projection...',
+  DUPLICATING_PROJECTION: 'Duplicating Projection...',
   DOWNLOADING_PROJECTION: 'Downloading Projection...',
   LOADING_RESULTS: 'Loading Projection Results...',
   UPLOADING_FILE: 'Uploading File...',
@@ -197,6 +198,9 @@ export const SUCCESS_MSG = Object.freeze({
   DOWNLOAD_SUCCESS: (fileName: string) =>
     `${fileName} was successfully downloaded to your device`,
   DOWNLOAD_SUCCESS_TITLE: 'Download Complete',
+  PROJECTION_DUPLICATED: (title: string) =>
+    `Projection "${title}" has been successfully duplicated.`,
+  PROJECTION_DUPLICATED_TITLE: 'Projection Duplicated',
 })
 
 export const PROJECTION_ERR = Object.freeze({
@@ -224,6 +228,8 @@ export const PROJECTION_ERR = Object.freeze({
   DOWNLOAD_FAILED_TITLE: 'Download Failed',
   RESULTS_LOAD_FAILED: 'Failed to load projection results. Please try downloading the report instead.',
   RESULTS_LOAD_FAILED_TITLE: 'Results Load Failed',
+  DUPLICATE_FAILED: 'Failed to duplicate the projection. Please try again later.',
+  DUPLICATE_FAILED_TITLE: 'Projection Duplicate Failed',
 })
 
 export const FILE_REMOVAL_DIALOG = Object.freeze({

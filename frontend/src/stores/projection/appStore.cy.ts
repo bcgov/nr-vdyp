@@ -33,6 +33,10 @@ describe('App Store Unit Tests', () => {
     it('should initialize isSavingProjection as false', () => {
       expect(appStore.isSavingProjection).to.be.false
     })
+
+    it('should initialize duplicatedFromInfo as null', () => {
+      expect(appStore.duplicatedFromInfo).to.be.null
+    })
   })
 
   describe('Getters', () => {
@@ -148,6 +152,27 @@ describe('App Store Unit Tests', () => {
     })
   })
 
+  describe('setDuplicatedFromInfo', () => {
+    it('should set duplicatedFromInfo with an object', () => {
+      const info = { originalName: 'My Projection', duplicatedAt: '2024-01-15T10:00:00' }
+      appStore.setDuplicatedFromInfo(info)
+      expect(appStore.duplicatedFromInfo).to.deep.equal(info)
+    })
+
+    it('should clear duplicatedFromInfo when set to null', () => {
+      appStore.setDuplicatedFromInfo({ originalName: 'My Projection', duplicatedAt: '2024-01-15T10:00:00' })
+      appStore.setDuplicatedFromInfo(null)
+      expect(appStore.duplicatedFromInfo).to.be.null
+    })
+
+    it('should overwrite existing duplicatedFromInfo', () => {
+      appStore.setDuplicatedFromInfo({ originalName: 'First', duplicatedAt: '2024-01-01T00:00:00' })
+      const newInfo = { originalName: 'Second', duplicatedAt: '2024-06-01T00:00:00' }
+      appStore.setDuplicatedFromInfo(newInfo)
+      expect(appStore.duplicatedFromInfo).to.deep.equal(newInfo)
+    })
+  })
+
   describe('resetForNewProjection', () => {
     it('should reset viewMode to CREATE', () => {
       appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
@@ -173,11 +198,18 @@ describe('App Store Unit Tests', () => {
       expect(appStore.isSavingProjection).to.be.false
     })
 
+    it('should reset duplicatedFromInfo to null', () => {
+      appStore.setDuplicatedFromInfo({ originalName: 'My Projection', duplicatedAt: '2024-01-15T10:00:00' })
+      appStore.resetForNewProjection()
+      expect(appStore.duplicatedFromInfo).to.be.null
+    })
+
     it('should reset all fields together', () => {
       appStore.setViewMode(PROJECTION_VIEW_MODE.VIEW)
       appStore.setCurrentProjectionGUID('guid-xyz')
       appStore.setCurrentProjectionStatus(PROJECTION_STATUS.FAILED)
       appStore.isSavingProjection = true
+      appStore.setDuplicatedFromInfo({ originalName: 'My Projection', duplicatedAt: '2024-01-15T10:00:00' })
 
       appStore.resetForNewProjection()
 
@@ -185,6 +217,7 @@ describe('App Store Unit Tests', () => {
       expect(appStore.currentProjectionGUID).to.be.null
       expect(appStore.currentProjectionStatus).to.equal(PROJECTION_STATUS.DRAFT)
       expect(appStore.isSavingProjection).to.be.false
+      expect(appStore.duplicatedFromInfo).to.be.null
     })
   })
 })

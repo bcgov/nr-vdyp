@@ -303,10 +303,10 @@ export const saveProjectionOnPanelConfirm = async (
   if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO) {
     const existingGUID = appStore.getCurrentProjectionGUID
     if (existingGUID) {
-      // Projection already exists (e.g. created via file upload) — update it
+      // Projection already exists (e.g. created via file upload) - update it
       await updateProjectionParams(existingGUID, projectionParameters, fileUploadStore.reportDescription)
     } else {
-      // No projection yet — create one
+      // No projection yet - create one
       const result = await projServiceCreateProjection(projectionParameters, undefined, fileUploadStore.reportDescription)
       appStore.setCurrentProjectionGUID(result.projectionGUID)
       appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
