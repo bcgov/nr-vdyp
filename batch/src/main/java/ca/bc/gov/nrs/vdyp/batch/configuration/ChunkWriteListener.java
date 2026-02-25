@@ -34,20 +34,27 @@ public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>
 		var items = chunk.getItems();
 		BatchChunkMetadata meta = items.get(0); // this is assuming the Chuck size of 1
 
-		ExecutionContext stepContext = stepExecution.getExecutionContext();
+		ExecutionContext jobCtx = stepExecution.getJobExecution().getExecutionContext();
 
-		int polygonsProcessed = stepContext.getInt("polygonsProcessed", 0);
+		synchronized (jobCtx) {
 
-		polygonsProcessed += meta.getPolygonRecordCount();
+			int polygonsProcessed = jobCtx.getInt("polygonsProcessed", 0);
+			polygonsProcessed += meta.getPolygonRecordCount();
+			jobCtx.putInt("polygonsProcessed", polygonsProcessed);
 
-		stepContext.putInt("polygonsProcessed", polygonsProcessed);
+			int projectionErrors = jobCtx.getInt("projectionErrors", 0);
+			projectionErrors += meta.getErrorCount();
+			jobCtx.putInt("projectionErrors", projectionErrors);
 
-		int projectionErrors = stepContext.getInt("projectionErrors", 0);
+			int skippedPolygons = jobCtx.getInt("skippedPolygons", 0);
+			skippedPolygons += meta.getSkippedPolygonCount();
+			jobCtx.putInt("skippedPolygons", skippedPolygons);
 
-		projectionErrors += meta.getErrorCount();
+			int progressVersion = jobCtx.getInt("progressVersion", 0);
+			progressVersion += 1;
+			jobCtx.putInt("progressVersion", progressVersion);
 
-		stepContext.putInt("projectionErrors", projectionErrors);
-
+		}
 	}
 
 }

@@ -24,6 +24,7 @@ public class BatchChunkMetadata {
 	private final int layerRecordCount; // Number of layer data records matching polygon feature IDs in this chunk
 
 	private int errorCount; // Number of errors encountered while processing this chunk
+	private int skippedPolygonCount; // Number of errors encountered while processing this chunk
 
 	public BatchChunkMetadata(
 			@NonNull String partitionName, @NonNull String jobBaseDir, long polygonStartByte, int polygonRecordCount,
@@ -37,10 +38,12 @@ public class BatchChunkMetadata {
 		this.layerRecordCount = layerRecordCount;
 	}
 
+	@NonNull
 	public String getPartitionName() {
 		return partitionName;
 	}
 
+	@NonNull
 	public String getJobBaseDir() {
 		return jobBaseDir;
 	}
@@ -73,6 +76,14 @@ public class BatchChunkMetadata {
 	}
 
 	public int getErrorCount() {
+		return errorCount;
+	}
+
+	public void setSkippedPolygonCount(int errorLogCount) {
+		this.errorCount = errorLogCount;
+	}
+
+	public int getSkippedPolygonCount() {
 		return errorCount;
 	}
 }

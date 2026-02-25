@@ -276,6 +276,7 @@ public class BatchProjectionService {
 
 	private void updateChunkMetaDataFromRunner(ProjectionRunner runner, BatchChunkMetadata chunkMetadata) {
 		chunkMetadata.setErrorCount(runner.getErrorLogCount());
+		chunkMetadata.setSkippedPolygonCount(runner.getLastRunPolygonsSkipped());
 	}
 
 	/**

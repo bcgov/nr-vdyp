@@ -58,6 +58,8 @@ public class ProjectionRunner implements Closeable {
 		this.context = new ProjectionContext(kind, projectionId, parameters, isTrialRun);
 	}
 
+	int nPolygonsProcessed = 0;
+	int nPolygonsSkipped = 0;
 	public void run(Map<String, InputStream> streams)
 			throws ProjectionRequestValidationException, YieldTableGenerationException {
 
@@ -83,8 +85,8 @@ public class ProjectionRunner implements Closeable {
 			String lastMapsheet = "";
 			String lastMaintainer = "";
 
-			int nPolygonsProcessed = 0;
-			int nPolygonsSkipped = 0;
+			nPolygonsProcessed = 0;
+			nPolygonsSkipped = 0;
 
 			while (polygonStream.hasNextPolygon()) {
 				try {
@@ -233,6 +235,18 @@ public class ProjectionRunner implements Closeable {
 
 	public ProjectionContext getContext() {
 		return context;
+	}
+
+	public int getLastRunPolygonsSeen() {
+		return nPolygonsProcessed + nPolygonsSkipped;
+	}
+
+	public int getLastRunPolygonsProcessed() {
+		return nPolygonsProcessed;
+	}
+
+	public int getLastRunPolygonsSkipped() {
+		return nPolygonsSkipped;
 	}
 
 	@Override
