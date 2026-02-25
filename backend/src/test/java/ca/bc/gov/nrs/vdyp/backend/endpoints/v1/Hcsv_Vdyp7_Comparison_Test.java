@@ -490,7 +490,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 			assertThat(
 					result,
 					(Matcher<? super ResultYieldTable>) hasSpecificEntry(
-							"2086846",
+							"11126564",
 							hasSpecificEntry(
 									"1",
 									hasSpecificEntry(
@@ -499,7 +499,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 													hasSpecificEntry(
 															"PRJ_TPH",
 															VdypMatchers
-																	.parseAs(closeTo(458.86f, 0.02f), ValueParser.FLOAT)
+																	.parseAs(closeTo(99.09f, 0.02f), ValueParser.FLOAT)
 													)
 											)
 									)
