@@ -388,7 +388,7 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     if (params.copyTitle) {
       appStore.setDuplicatedFromInfo({
         originalName: params.copyTitle,
-        duplicatedAt: projectionModel.lastUpdatedDate || new Date().toISOString(),
+        duplicatedAt: projectionModel.createDate || new Date().toISOString(),
       })
     } else {
       appStore.setDuplicatedFromInfo(null)
