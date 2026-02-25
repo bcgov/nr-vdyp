@@ -2,47 +2,66 @@ package ca.bc.gov.nrs.vdyp.batch.client.vdyp;
 
 import java.util.Collections;
 
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.web.client.RestClient;
 
 @Configuration
 public class VdypRestClientConfig {
 	@Bean
-	RestClient vdypBackendRestClient(
+	RestClient vdypBackendFastRestClient(
 			OAuth2AuthorizedClientManager oauth2AuthorizedClientManager, VdypProperties vdypProperties
 	) {
-		return RestClient.builder().baseUrl(vdypProperties.baseUrl())
+		return RestClient.builder().baseUrl(vdypProperties.baseUrl()).requestFactory(fastRequestFactory())
 				.requestInterceptor(bearerInterceptor(oauth2AuthorizedClientManager, vdypProperties)).build();
 	}
 
 	@Bean
-	OAuth2AuthorizedClientManager oauth2AuthorizedClientManager(
-			ClientRegistrationRepository clientRegistrationRepository,
-			OAuth2AuthorizedClientService authorizedClientService
+	RestClient vdypBackendReliableRestClient(
+			OAuth2AuthorizedClientManager oauth2AuthorizedClientManager, VdypProperties vdypProperties
 	) {
-		OAuth2AuthorizedClientProvider provider = OAuth2AuthorizedClientProviderBuilder.builder().clientCredentials()
-				.build();
+		return RestClient.builder().baseUrl(vdypProperties.baseUrl()).requestFactory(reliableRequestFactory())
+				.requestInterceptor(bearerInterceptor(oauth2AuthorizedClientManager, vdypProperties)).build();
+	}
 
-		var manager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
-				clientRegistrationRepository, authorizedClientService
-		);
-		manager.setAuthorizedClientProvider(provider);
-		return manager;
+	private HttpComponentsClientHttpRequestFactory fastRequestFactory() {
+		return requestFactory(Timeout.ofSeconds(2));
+	}
+
+	private HttpComponentsClientHttpRequestFactory reliableRequestFactory() {
+		// uploads can take a while; pick something sane
+		return requestFactory(Timeout.ofSeconds(60));
+	}
+
+	private HttpComponentsClientHttpRequestFactory requestFactory(Timeout responseTimeout) {
+		ConnectionConfig connectionConfig = ConnectionConfig.custom().setConnectTimeout(Timeout.ofSeconds(2)).build();
+
+		PoolingHttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+				.setDefaultConnectionConfig(connectionConfig).build();
+
+		RequestConfig requestConfig = RequestConfig.custom().setResponseTimeout(responseTimeout).build();
+
+		CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(cm)
+				.setDefaultRequestConfig(requestConfig).build();
+
+		return new HttpComponentsClientHttpRequestFactory(httpClient);
 	}
 
 	ClientHttpRequestInterceptor bearerInterceptor(
