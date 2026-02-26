@@ -37,6 +37,7 @@ import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -408,14 +409,17 @@ class BatchControllerTest {
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
 		assertEquals("STARTED", response.getBody().get(BatchConstants.Job.STATUS));
 		assertEquals(true, response.getBody().get("isRunning"));
-		assertEquals(2L, response.getBody().get("totalPartitions"));
-		assertEquals(1L, response.getBody().get("completedPartitions"));
+		assertEquals(0, response.getBody().get("polygonsProcessed"));
+		assertEquals(0, response.getBody().get("polygonsSkipped"));
+		assertEquals(0, response.getBody().get("errorCount"));
 	}
 
 	@Test
 	void testGetJobStatus_WithCompletedJob_ReturnsNotRunning() throws NoSuchJobException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
+
+		ExecutionContext executionContext = new ExecutionContext();
 
 		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
@@ -430,6 +434,7 @@ class BatchControllerTest {
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
 		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
 		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptySet());
+		when(jobExecution.getExecutionContext()).thenReturn(executionContext);
 
 		ResponseEntity<Map<String, Object>> response = batchController.getJobStatus(jobGuid);
 
@@ -449,8 +454,10 @@ class BatchControllerTest {
 		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
 				.toJobParameters();
 		JobExecution realExecution = new JobExecution(realInstance, executionId, realParams);
+
 		realExecution.setStatus(BatchStatus.FAILED);
 		realExecution.setStartTime(LocalDateTime.now());
+		realExecution.setExecutionContext(new ExecutionContext());
 
 		// Create failed step executions
 		StepExecution step1 = new StepExecution("workerStep:partition0", realExecution);
@@ -469,8 +476,10 @@ class BatchControllerTest {
 
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
-		assertEquals(2L, response.getBody().get("totalPartitions"));
-		assertEquals(2L, response.getBody().get("completedPartitions")); // Both failed and completed count
+
+		assertEquals(0, response.getBody().get("polygonsProcessed"));
+		assertEquals(0, response.getBody().get("polygonsSkipped"));
+		assertEquals(0, response.getBody().get("errorCount"));
 	}
 
 	@Test
