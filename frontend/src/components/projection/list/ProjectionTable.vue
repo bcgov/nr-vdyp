@@ -3,6 +3,17 @@
     <table class="projections-table">
       <thead>
         <tr>
+          <!-- Checkbox column header -->
+          <th class="table-header checkbox-header" @click.stop>
+            <input
+              type="checkbox"
+              class="table-checkbox"
+              :checked="isAllSelected"
+              :indeterminate="isIndeterminate"
+              :aria-label="isAllSelected ? 'Deselect all projections' : 'Select all projections'"
+              @change="handleSelectAll"
+            />
+          </th>
           <th
             v-for="header in headers"
             :key="header.key"
@@ -27,7 +38,7 @@
       <tbody>
         <!-- Empty state when no projections -->
         <tr v-if="projections.length === 0" class="empty-state-row">
-          <td :colspan="headers.length + 1" class="empty-state-cell">
+          <td :colspan="headers.length + 2" class="empty-state-cell">
             <div class="empty-state-content">
               <span class="empty-state-message">
                 No projections found. Create a new projection to build your history.
@@ -40,8 +51,19 @@
           v-for="projection in projections"
           :key="projection.projectionGUID"
           class="table-row clickable-row"
+          :class="{ 'row-selected': selectedGUIDs.includes(projection.projectionGUID) }"
           @click="handleRowClick($event, projection)"
         >
+          <!-- Checkbox cell -->
+          <td class="table-cell checkbox-cell" @click.stop>
+            <input
+              type="checkbox"
+              class="table-checkbox"
+              :checked="selectedGUIDs.includes(projection.projectionGUID)"
+              :aria-label="`Select projection ${projection.title}`"
+              @change="handleCheckboxChange(projection.projectionGUID)"
+            />
+          </td>
           <td class="table-cell">
             <span class="cell-content cell-with-tooltip tooltip-right" :data-tooltip="projection.title">{{
               projection.title
@@ -96,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Projection, TableHeader } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { PROJECTION_USER_ACTION, SORT_ORDER } from '@/constants/constants'
@@ -107,9 +130,10 @@ interface Props {
   headers: TableHeader[]
   sortBy: string
   sortOrder: SortOrder
+  selectedGUIDs: string[]
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'sort', key: string): void
@@ -120,19 +144,46 @@ const emit = defineEmits<{
   (e: 'cancel', projectionGUID: string): void
   (e: 'delete', projectionGUID: string): void
   (e: 'rowClick', projection: Projection): void
+  (e: 'selectionChange', selectedGUIDs: string[]): void
 }>()
+
+const isAllSelected = computed(() =>
+  props.projections.length > 0 && props.projections.every(p => props.selectedGUIDs.includes(p.projectionGUID))
+)
+
+const isIndeterminate = computed(() =>
+  props.selectedGUIDs.length > 0 && !isAllSelected.value
+)
 
 const handleSort = (key: string) => {
   emit('sort', key)
 }
 
 const handleRowClick = (event: MouseEvent, projection: Projection) => {
-  // Don't trigger row click if clicking on the actions cell or its children
   const target = event.target as HTMLElement
-  if (target.closest('.actions-cell')) {
+  if (target.closest('.actions-cell') || target.closest('.checkbox-cell')) {
     return
   }
   emit('rowClick', projection)
+}
+
+const handleCheckboxChange = (projectionGUID: string) => {
+  const current = [...props.selectedGUIDs]
+  const idx = current.indexOf(projectionGUID)
+  if (idx === -1) {
+    current.push(projectionGUID)
+  } else {
+    current.splice(idx, 1)
+  }
+  emit('selectionChange', current)
+}
+
+const handleSelectAll = () => {
+  if (isAllSelected.value) {
+    emit('selectionChange', [])
+  } else {
+    emit('selectionChange', props.projections.map(p => p.projectionGUID))
+  }
 }
 </script>
 
@@ -184,6 +235,12 @@ const handleRowClick = (event: MouseEvent, projection: Projection) => {
   background-color: #eceae8;
 }
 
+.checkbox-header {
+  width: 44px;
+  text-align: center;
+  padding: var(--layout-padding-small);
+}
+
 .header-content {
   display: flex;
   align-items: center;
@@ -210,12 +267,29 @@ const handleRowClick = (event: MouseEvent, projection: Projection) => {
   background-color: var(--surface-color-background-light-gray);
 }
 
+.table-row.row-selected {
+  background-color: #dce9f5 !important;
+}
+
 .table-cell {
   padding: var(--layout-padding-medium);
   font: var(--typography-regular-body);
   color: var(--typography-color-primary);
   vertical-align: middle;
   position: relative;
+}
+
+.checkbox-cell {
+  width: 44px;
+  text-align: center;
+  padding: var(--layout-padding-small);
+}
+
+.table-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--theme-primary-color, #003366);
 }
 
 .cell-content {
@@ -236,42 +310,47 @@ const handleRowClick = (event: MouseEvent, projection: Projection) => {
 
 /* Column widths - table-layout: fixed requires width on th/td */
 .table-header:nth-child(1),
-.table-cell:nth-child(1) {  /* Projection Title - accommodate ~20 characters */
-  width: 180px;
+.table-cell:nth-child(1) {  /* Checkbox */
+  width: 44px;
 }
 
 .table-header:nth-child(2),
-.table-cell:nth-child(2) {  /* Description - accommodate ~30 characters */
-  width: 270px;
+.table-cell:nth-child(2) {  /* Projection Title */
+  width: 180px;
 }
 
 .table-header:nth-child(3),
-.table-cell:nth-child(3) {  /* Method */
-  width: 160px;
+.table-cell:nth-child(3) {  /* Description */
+  width: 270px;
 }
 
 .table-header:nth-child(4),
-.table-cell:nth-child(4) {  /* Projection Type */
-  width: 130px;
+.table-cell:nth-child(4) {  /* Method */
+  width: 160px;
 }
 
 .table-header:nth-child(5),
-.table-cell:nth-child(5) {  /* Last Updated */
+.table-cell:nth-child(5) {  /* Projection Type */
   width: 130px;
 }
 
 .table-header:nth-child(6),
-.table-cell:nth-child(6) {  /* Expiration */
-  width: 100px;
+.table-cell:nth-child(6) {  /* Last Updated */
+  width: 130px;
 }
 
 .table-header:nth-child(7),
-.table-cell:nth-child(7) {  /* Status */
-  width: 110px;
+.table-cell:nth-child(7) {  /* Expiration */
+  width: 100px;
 }
 
 .table-header:nth-child(8),
-.table-cell:nth-child(8) {  /* Actions */
+.table-cell:nth-child(8) {  /* Status */
+  width: 110px;
+}
+
+.table-header:nth-child(9),
+.table-cell:nth-child(9) {  /* Actions */
   width: 50px;
 }
 

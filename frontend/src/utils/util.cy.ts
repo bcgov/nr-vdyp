@@ -14,14 +14,17 @@ import {
   increaseItemBySpinButton,
   decrementItemBySpinButton,
   downloadFile,
+  downloadURL,
   extractZipFileName,
   checkZipForErrors,
   sanitizeFileName,
   convertToNumberSafely,
   extractLeadingNumber,
+  addExecutionOptionsFromMappings,
 } from '@/utils/util'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
+import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 
 describe('Util Functions Unit Tests', () => {
   describe('trimValue', () => {
@@ -155,10 +158,10 @@ describe('Util Functions Unit Tests', () => {
 
   describe('getStatusIcon', () => {
     it('should return icon URL for valid statuses', () => {
-      expect(getStatusIcon('Draft')).to.include('Draft_Icon.png')
-      expect(getStatusIcon('Ready')).to.include('Ready_Icon.png')
-      expect(getStatusIcon('Running')).to.include('Running_Icon.png')
-      expect(getStatusIcon('Failed')).to.include('Failed_Icon.png')
+      expect(getStatusIcon('Draft')).to.include('Draft_Icon_Status.png')
+      expect(getStatusIcon('Ready')).to.include('Ready_Icon_Status.png')
+      expect(getStatusIcon('Running')).to.include('Running_Icon_Status.png')
+      expect(getStatusIcon('Failed')).to.include('Failed_Icon_Status.png')
     })
 
     it('should return empty string for unknown status', () => {
@@ -282,6 +285,37 @@ describe('Util Functions Unit Tests', () => {
       cy.get('@click').should('have.been.called')
       cy.get('@remove').should('have.been.called')
       cy.get('@revokeObjectURL').should('have.been.calledWith', 'mock-url')
+    })
+  })
+
+  describe('downloadURL', () => {
+    it('should trigger a file download with a URL string', () => {
+      const url = 'mock-url'
+      const fileName = 'test.txt'
+
+      let mockAnchor: HTMLAnchorElement | null = null
+      const originalCreateElement = document.createElement.bind(document)
+
+      cy.stub(document, 'createElement').callsFake((tagName: string) => {
+        const element = originalCreateElement(tagName)
+        if (tagName === 'a') {
+          mockAnchor = element as HTMLAnchorElement
+          cy.spy(mockAnchor, 'click').as('click')
+          cy.spy(mockAnchor, 'remove').as('remove')
+        }
+        return element
+      }).as('createElement')
+
+      cy.stub(URL, 'revokeObjectURL').as('revokeObjectURL')
+      cy.spy(document.body, 'appendChild').as('appendChild')
+
+      downloadURL(url, fileName)
+
+      cy.get('@createElement').should('have.been.calledWith', 'a')
+      cy.get('@appendChild').should('have.been.called')
+      cy.get('@click').should('have.been.called')
+      cy.get('@remove').should('have.been.called')
+      cy.get('@revokeObjectURL').should('have.been.calledWith', url)
     })
   })
 
@@ -433,6 +467,51 @@ describe('Util Functions Unit Tests', () => {
     it('should ignore subsequent non-numeric characters', () => {
       expect(extractLeadingNumber('12.34abc')).to.equal(12.34)
       expect(extractLeadingNumber('-10.5xyz')).to.equal(-10.5)
+    })
+  })
+
+  describe('addExecutionOptionsFromMappings', () => {
+    it('should add option to selected when flag is true', () => {
+      const selected: ExecutionOptionsEnum[] = []
+      const excluded: ExecutionOptionsEnum[] = []
+      addExecutionOptionsFromMappings(selected, excluded, [
+        { flag: true, option: ExecutionOptionsEnum.BackGrowEnabled },
+      ])
+      expect(selected).to.deep.equal([ExecutionOptionsEnum.BackGrowEnabled])
+      expect(excluded).to.be.empty
+    })
+
+    it('should add option to excluded when flag is false', () => {
+      const selected: ExecutionOptionsEnum[] = []
+      const excluded: ExecutionOptionsEnum[] = []
+      addExecutionOptionsFromMappings(selected, excluded, [
+        { flag: false, option: ExecutionOptionsEnum.ForwardGrowEnabled },
+      ])
+      expect(selected).to.be.empty
+      expect(excluded).to.deep.equal([ExecutionOptionsEnum.ForwardGrowEnabled])
+    })
+
+    it('should handle multiple mappings correctly', () => {
+      const selected: ExecutionOptionsEnum[] = []
+      const excluded: ExecutionOptionsEnum[] = []
+      addExecutionOptionsFromMappings(selected, excluded, [
+        { flag: true, option: ExecutionOptionsEnum.BackGrowEnabled },
+        { flag: false, option: ExecutionOptionsEnum.ForwardGrowEnabled },
+        { flag: true, option: ExecutionOptionsEnum.DoSaveIntermediateFiles },
+      ])
+      expect(selected).to.deep.equal([
+        ExecutionOptionsEnum.BackGrowEnabled,
+        ExecutionOptionsEnum.DoSaveIntermediateFiles,
+      ])
+      expect(excluded).to.deep.equal([ExecutionOptionsEnum.ForwardGrowEnabled])
+    })
+
+    it('should not modify arrays when mappings is empty', () => {
+      const selected: ExecutionOptionsEnum[] = []
+      const excluded: ExecutionOptionsEnum[] = []
+      addExecutionOptionsFromMappings(selected, excluded, [])
+      expect(selected).to.be.empty
+      expect(excluded).to.be.empty
     })
   })
 })

@@ -64,7 +64,7 @@ describe('Projection Store Unit Tests', () => {
     })
   })
 
-  describe('handleZipResponse — valid ZIP', () => {
+  describe('handleZipResponse - valid ZIP', () => {
     it('should populate errorMessages from ErrorLog.txt', async () => {
       const blob = await makeValidZip({ [CONSTANTS.FILE_NAME.ERROR_TXT]: 'err1\nerr2' })
       await store.handleZipResponse(blob, 'output.zip')
@@ -105,7 +105,7 @@ describe('Projection Store Unit Tests', () => {
     })
   })
 
-  describe('handleZipResponse — resets state before processing', () => {
+  describe('handleZipResponse - resets state before processing', () => {
     it('should replace errorMessages on subsequent calls', async () => {
       const blob1 = await makeValidZip({ [CONSTANTS.FILE_NAME.ERROR_TXT]: 'old error' })
       await store.handleZipResponse(blob1, 'first.zip')
@@ -136,7 +136,7 @@ describe('Projection Store Unit Tests', () => {
     })
   })
 
-  describe('handleZipResponse — optional DebugLog.txt', () => {
+  describe('handleZipResponse - optional DebugLog.txt', () => {
     it('should populate debugMessages when DebugLog.txt is present', async () => {
       const blob = await makeValidZip({
         [CONSTANTS.FILE_NAME.DEBUG_TXT]: 'debug line 1\ndebug line 2',
@@ -152,7 +152,7 @@ describe('Projection Store Unit Tests', () => {
     })
   })
 
-  describe('handleZipResponse — YieldTable.txt (INPUT_MODEL_PARAMETERS only)', () => {
+  describe('handleZipResponse - YieldTable.txt (INPUT_MODEL_PARAMETERS only)', () => {
     it('should populate txtYieldLines when modelSelection is INPUT_MODEL_PARAMETERS', async () => {
       appStore.setModelSelection(CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
       const blob = await makeValidZip({
@@ -179,7 +179,7 @@ describe('Projection Store Unit Tests', () => {
     })
   })
 
-  describe('handleZipResponse — missing required files', () => {
+  describe('handleZipResponse - missing required files', () => {
     const makeZipWithout = async (missingFile: string): Promise<Blob> => {
       const zip = new JSZip()
       const required: Record<string, string> = {
@@ -239,7 +239,7 @@ describe('Projection Store Unit Tests', () => {
     })
   })
 
-  describe('handleZipResponse — CRLF line endings', () => {
+  describe('handleZipResponse - CRLF line endings', () => {
     it('should split errorMessages correctly with CRLF', async () => {
       const blob = await makeValidZip({
         [CONSTANTS.FILE_NAME.ERROR_TXT]: 'err1\r\nerr2',
