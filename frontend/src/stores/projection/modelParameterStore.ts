@@ -214,6 +214,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   const projectionType = ref<string | null>(null)
   const reportTitle = ref<string | null>(null)
+  const copyTitle = ref<string | null>(null)
+  const reportDescription = ref<string | null>(null)
 
   //
   const referenceYear = ref<number | null>(null)
@@ -288,6 +290,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     specificYear.value = null
     projectionType.value = null
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
+    copyTitle.value = null
+    reportDescription.value = null
     referenceYear.value = null
   }
 
@@ -365,6 +369,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     isViewMode: boolean = false,
   ) => {
     reportTitle.value = params.reportTitle
+    copyTitle.value = params.copyTitle
     startingAge.value = params.ageStart
     finishingAge.value = params.ageEnd
     ageIncrement.value = params.ageIncrement
@@ -520,6 +525,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     specificYear,
     projectionType,
     reportTitle,
+    copyTitle,
+    reportDescription,
     //
     referenceYear,
     // restore functions

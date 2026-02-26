@@ -78,9 +78,12 @@ backend:
     QUARKUS_OIDC_AUTH_SERVER_URL: ~
     VDYP_DB_SECRET_NAME: crunchy-postgres-test-pguser-app-vdyp
     VDYP_PROXY_DB_SECRET_NAME: crunchy-postgres-test-pguser-proxy-vdyp-rest
+    COMS_BASE_URL: ~
     CORS_FRONTEND_BASE_URL: ~
     OIDC_CLIENT_SECRET_SECRET_NAME: vdyp-oidc
     OIDC_CLIENT_SECRET_SECRET_KEY: client-secret
+    BATCH_BASE_URL: ~
+    VDYP_PROJECTION_EXPIRY_DAYS: ~
 
 frontend:
   fullnameOverride: "vdyp-ui-test"
@@ -126,7 +129,9 @@ frontend:
     enabled: false # enable it in PRODUCTION for having pod disruption budget.
     minAvailable: 1 # the minimum number of pods that must be available during the disruption budget.
   env:
+    BACKEND_URL: ~
     VITE_SSO_AUTH_SERVER_URL: ~
+    VITE_SSO_TOKEN_ISSUER: ~
     VITE_SSO_CLIENT_ID: ~
     VITE_SSO_REALM: ~
     VITE_SSO_REDIRECT_URI: ~
@@ -196,6 +201,7 @@ backup:
         requests:
           cpu: 20m
           memory: 128Mi
+
 coms:
   enabled: true
   db_secret: crunchy-postgres-test-pguser-coms
@@ -256,3 +262,4 @@ batch:
     SPRING_PROFILES_ACTIVE: "test"
     BATCH_DB_USER: ~
     BATCH_DB_DATABASE: ~
+    VDYP_BASE_URL: ~

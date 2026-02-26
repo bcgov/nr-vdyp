@@ -102,9 +102,10 @@ export const getUserProjections = async (): Promise<ProjectionModel[]> => {
 export const createProjection = async (
   parameters: Parameters,
   modelParameters?: ModelParameters,
+  reportDescription?: string | null,
 ): Promise<ProjectionModel> => {
   try {
-    const response = await apiClient.createProjection(parameters, modelParameters)
+    const response = await apiClient.createProjection(parameters, modelParameters, reportDescription)
     return response.data
   } catch (error) {
     console.error('Error creating projection:', error)
@@ -147,6 +148,23 @@ export const cancelProjection = async (
 }
 
 /**
+ * Duplicates a projection (copies inputs, resets status to Draft).
+ * @param projectionGUID The projection GUID to duplicate.
+ * @returns A promise that resolves to the newly created duplicate ProjectionModel.
+ */
+export const duplicateProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.duplicateProjection(projectionGUID)
+    return response.data
+  } catch (error) {
+    console.error('Error duplicating projection:', error)
+    throw error
+  }
+}
+
+/**
  * Fetches a projection by its GUID.
  * @param projectionGUID The projection GUID.
  * @returns A promise that resolves to the ProjectionModel.
@@ -174,12 +192,14 @@ export const updateProjectionParams = async (
   projectionGUID: string,
   parameters: Parameters,
   modelParameters?: ModelParameters,
+  reportDescription?: string | null,
 ): Promise<ProjectionModel> => {
   try {
     const response = await apiClient.updateProjectionParams(
       projectionGUID,
       parameters,
       modelParameters,
+      reportDescription,
     )
     return response.data
   } catch (error) {

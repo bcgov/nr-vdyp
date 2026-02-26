@@ -69,6 +69,16 @@ describe('Message Handler Unit Tests', () => {
       cy.get('@consoleInfo').should('be.calledWith', null)
       cy.get('@showSuccessMessage').should('be.calledWith', null)
     })
+
+    it('should pass successTitle to notification store', () => {
+      messageResult(true, 'Success!', 'Failure!', null, 'Success Title')
+      cy.get('@showSuccessMessage').should('be.calledWith', 'Success!', 'Success Title')
+    })
+
+    it('should pass failTitle to notification store', () => {
+      messageResult(false, 'Success!', 'Failure!', null, '', 'Fail Title')
+      cy.get('@showWarningMessage').should('be.calledWith', 'Failure!', 'Fail Title')
+    })
   })
 
   context('logInfoMessage', () => {
@@ -111,6 +121,11 @@ describe('Message Handler Unit Tests', () => {
       logInfoMessage('')
       cy.get('@consoleInfo').should('be.calledWith', '')
       cy.get('@showInfoMessage').should('be.calledWith', '')
+    })
+
+    it('should pass title to notification', () => {
+      logInfoMessage('Info message', null, false, false, 'Test Title')
+      cy.get('@showInfoMessage').should('be.calledWith', 'Info message', 'Test Title')
     })
   })
 
@@ -188,10 +203,10 @@ describe('Message Handler Unit Tests', () => {
   })
 
   context('Edge Cases', () => {
-    it('should handle invalid message type', () => {
-      logInfoMessage('Test', 'INVALID_TYPE')
-      cy.get('@consoleInfo').should('be.calledWith', 'Test (INVALID_TYPE)')
-      cy.get('@showInfoMessage').should('be.calledWith', 'Test')
+    it('should append optional message string to console output', () => {
+      logInfoMessage('Test message', 'optional detail')
+      cy.get('@consoleInfo').should('be.calledWith', 'Test message (optional detail)')
+      cy.get('@showInfoMessage').should('be.calledWith', 'Test message')
     })
 
     it('should handle both console and notification disabled', () => {

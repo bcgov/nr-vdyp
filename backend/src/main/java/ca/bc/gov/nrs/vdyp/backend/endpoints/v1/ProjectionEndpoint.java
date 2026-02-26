@@ -63,7 +63,7 @@ public class ProjectionEndpoint implements Endpoint {
 
 	private final CurrentVDYPUser currentUser;
 
-	private static ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private final Client client;
 
@@ -210,9 +210,11 @@ public class ProjectionEndpoint implements Endpoint {
 			) Parameters parameters,
 			@RestForm(value = ParameterNames.MODEL_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
-			) ModelParameters modelParameters
+			) ModelParameters modelParameters, //
+			@RestForm("reportDescription") String reportDescription
 	) throws ProjectionServiceException {
-		var created = projectionService.createNewProjection(currentUser.getUser(), parameters, modelParameters);
+		var created = projectionService
+				.createNewProjection(currentUser.getUser(), parameters, modelParameters, reportDescription);
 		return Response.status(Status.CREATED).entity(created).build();
 	}
 
@@ -241,10 +243,11 @@ public class ProjectionEndpoint implements Endpoint {
 			) Parameters parameters,
 			@RestForm(value = ParameterNames.MODEL_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
-			) ModelParameters modelParameters
+			) ModelParameters modelParameters, @RestForm("reportDescription") String reportDescription
 	) throws ProjectionServiceException {
-		var created = projectionService
-				.editProjectionParameters(projectionGUID, parameters, modelParameters, currentUser.getUser());
+		var created = projectionService.editProjectionParameters(
+				projectionGUID, parameters, modelParameters, reportDescription, currentUser.getUser()
+		);
 		return Response.status(Status.OK).entity(created).build();
 	}
 
@@ -295,6 +298,17 @@ public class ProjectionEndpoint implements Endpoint {
 	public Response cancelProjection(@PathParam("projectionGUID") UUID projectionGUID)
 			throws ProjectionServiceException {
 		var started = projectionService.cancelBatchProjection(currentUser.getUser(), projectionGUID);
+		return Response.status(Status.OK).entity(started).build();
+	}
+
+	@POST
+	@Authenticated
+	@Path("/{projectionGUID}/duplicate")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(name = "Duplicate A Projection", description = "Duplicates the inputs of an existing projection.")
+	public Response duplicateProjection(@PathParam("projectionGUID") UUID projectionGUID)
+			throws ProjectionServiceException {
+		var started = projectionService.duplicateProjection(projectionGUID, currentUser.getUser());
 		return Response.status(Status.OK).entity(started).build();
 	}
 

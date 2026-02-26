@@ -125,6 +125,16 @@ export function useProjectionLoader() {
         mapProjectionStatus(projectionModel.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT),
       )
 
+      // Set or clear duplicated-from info based on copyTitle in projectionParameters
+      if (params.copyTitle) {
+        appStore.setDuplicatedFromInfo({
+          originalName: params.copyTitle,
+          duplicatedAt: projectionModel.createDate || new Date().toISOString(),
+        })
+      } else {
+        appStore.setDuplicatedFromInfo(null)
+      }
+
       if (isInputModelParams) {
         restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode)
       } else {

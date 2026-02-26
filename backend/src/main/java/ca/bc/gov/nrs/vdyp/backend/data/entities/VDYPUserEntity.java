@@ -37,6 +37,12 @@ public class VDYPUserEntity extends AuditableEntity {
 	@Column(name = "last_name", length = 50)
 	private String lastName;
 
+	@Column(name = "display_name", length = 250)
+	private String displayName;
+
+	@Column(name = "email", length = 255)
+	private String email;
+
 	public UUID getVdypUserGUID() {
 		return vdypUserGUID;
 	}
@@ -57,6 +63,14 @@ public class VDYPUserEntity extends AuditableEntity {
 		return lastName;
 	}
 
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
 	public void setVdypUserGUID(UUID vdypUserGUID) {
 		this.vdypUserGUID = vdypUserGUID;
 	}
@@ -75,5 +89,13 @@ public class VDYPUserEntity extends AuditableEntity {
 
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 }

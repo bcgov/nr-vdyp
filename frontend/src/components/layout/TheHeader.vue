@@ -90,6 +90,8 @@ const skipToMain = () => {
   flex-direction: row;
   align-items: center;
   gap: var(--layout-padding-medium);
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .bcds-header > .bcds-header--container > ul.bcds-header--skiplinks {
@@ -135,6 +137,9 @@ const skipToMain = () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
 }
 
 .bcds-header--separator {
@@ -142,5 +147,35 @@ const skipToMain = () => {
   margin-left: 10px;
   width: 1px;
   height: 22px;
+}
+
+/* Mobile responsive header */
+@media (max-width: 480px) {
+  .bcds-header {
+    padding: 0 0.5rem;
+  }
+
+  .bcds-header > .bcds-header--container {
+    gap: 0.5rem;
+  }
+
+  .bcds-header--left {
+    gap: 0.5rem;
+  }
+
+  .bcds-header--actions {
+    gap: 0.25rem;
+  }
+
+  .bcds-header--separator {
+    margin-left: 4px;
+  }
+}
+
+/* Very narrow screens (e.g. Galaxy Z Fold 5 at 344px) */
+@media (max-width: 360px) {
+  .bcds-header--separator {
+    display: none;
+  }
 }
 </style>

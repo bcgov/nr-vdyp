@@ -51,6 +51,12 @@ export const INCLUDE_IN_REPORT = Object.freeze({
   COMPUTED_MAI: 'Computed MAI',
   CULMINATION_VALUES: 'Culmination Values',
   BY_SPECIES: 'By Species',
+  SECD_SPCZ_HEIGHT: 'Secondary Species Height',
+  BY_LAYER: 'By Layer',
+  PRJECTION_MODE: 'Projection Mode',
+  POLYGON_ID: 'Polygon ID',
+  CURRENT_YEAR: 'Current Year',
+  REFERENCE_YEAR: 'Reference Year',
 })
 
 export const PROJECTION_TYPE = Object.freeze({
@@ -60,7 +66,6 @@ export const PROJECTION_TYPE = Object.freeze({
 
 export const SPECIAL_INDICATORS = Object.freeze({
   NA: 'N/A',
-  NOT_USED: '<Not Used>',
   COMPUTED: 'Computed',
 })
 
@@ -73,6 +78,7 @@ export const MODEL_PARAMETER_PANEL = Object.freeze({
 
 export const FILE_UPLOAD_PANEL = Object.freeze({
   REPORT_INFO: 'reportInfo',
+  MINIMUM_DBH: 'minimumDBH',
   ATTACHMENTS: 'attachments',
 })
 
@@ -144,11 +150,6 @@ export const CONTINUOUS_INC_DEC = Object.freeze({
   INTERVAL: 100, // (e.g., 100ms)
 })
 
-export const SPIN_BUTTON = Object.freeze({
-  UP: '▲',
-  DOWN: '▼',
-})
-
 export const NOTIFICATION = Object.freeze({
   SHOW_TIME: 5000, // in milliseconds (5 sec)
 })
@@ -184,9 +185,6 @@ export const MODEL_PARAM_TAB_NAME = Object.freeze({
 
 export const FILE_UPLOAD_TAB_NAME = Object.freeze({
   FILE_UPLOAD: 'Parameter Selection',
-  MODEL_REPORT: 'Model Report',
-  VIEW_LOG_FILE: 'View Log File',
-  VIEW_ERROR_MESSAGES: 'View Error Messages',
 })
 
 export const MODEL_PARAM_TAB_INDEX = {
@@ -198,9 +196,6 @@ export const MODEL_PARAM_TAB_INDEX = {
 
 export const FILE_UPLOAD_TAB_INDEX = {
   PARAM_SELECTION: 0,
-  MODEL_REPORT: 1,
-  VIEW_LOG_FILE: 2,
-  VIEW_ERROR_MESSAGES: 3,
 }
 
 export const FILE_NAME = Object.freeze({
@@ -268,6 +263,7 @@ export const PANEL_ACTION = Object.freeze({
   CLEAR: 'clear',
   CONFIRM: 'confirm',
   EDIT: 'edit',
+  CANCEL: 'cancel',
 })
 
 export const REPORTING_ACTION = Object.freeze({

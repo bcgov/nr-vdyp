@@ -314,24 +314,24 @@ describe('File Upload Validation Unit Tests', () => {
   context('validate layer header with quotes', () => {
     it('should handle double-quoted column names', async () => {
       const quotedHeader = '"FEATURE_ID","MAP_ID","POLYGON_NUMBER","ORG_UNIT"'
-      const file = createFile(quotedHeader, 'polygon.csv', 'text/csv')
-      const result = await validatePolygonDuplicateColumns(file)
+      const file = createFile(quotedHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerDuplicateColumns(file)
       expect(result.isValid).to.be.true
       expect(result.duplicates).to.deep.equal([])
     })
 
     it('should handle single-quoted column names', async () => {
       const quotedHeader = "'FEATURE_ID','MAP_ID','POLYGON_NUMBER','ORG_UNIT'"
-      const file = createFile(quotedHeader, 'polygon.csv', 'text/csv')
-      const result = await validatePolygonDuplicateColumns(file)
+      const file = createFile(quotedHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerDuplicateColumns(file)
       expect(result.isValid).to.be.true
       expect(result.duplicates).to.deep.equal([])
     })
 
     it('should handle mixed quoted and unquoted columns', async () => {
       const mixedHeader = '"COL1",COL2,"COL3",COL4'
-      const file = createFile(mixedHeader, 'polygon.csv', 'text/csv')
-      const result = await validatePolygonDuplicateColumns(file)
+      const file = createFile(mixedHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerDuplicateColumns(file)
       expect(result.isValid).to.be.true
       expect(result.duplicates).to.deep.equal([])
     })

@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -25,6 +26,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +46,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import ca.bc.gov.nrs.vdyp.backend.config.ProjectionExpiryConfig;
+import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ProjectionEndpoint;
+import jakarta.ws.rs.core.Response;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
@@ -83,6 +89,8 @@ class ProjectionServiceTest {
 	ProjectionBatchMappingService batchMappingService;
 	@Mock
 	VDYPUserService userService;
+	@Mock
+	ProjectionExpiryConfig expiryConfig;
 	ProjectionResourceAssembler assembler;
 
 	ProjectionService service;
@@ -93,7 +101,7 @@ class ProjectionServiceTest {
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, userService, new ObjectMapper()
+				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig
 		);
 	}
 
@@ -133,6 +141,7 @@ class ProjectionServiceTest {
 
 		when(repository.findByOwner(doesNotExist)).thenReturn(List.of(entityResult));
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		List<ProjectionModel> results = service.getAllProjectionsForUser(doesNotExist.toString());
 
 		assertNotNull(results);
@@ -326,6 +335,7 @@ class ProjectionServiceTest {
 		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
 		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.getProjectionByID(projectionId, user(ownerId));
 
 		assertNotNull(model);
@@ -368,9 +378,12 @@ class ProjectionServiceTest {
 
 		ModelParameters modelParameters = null;
 
-		ProjectionModel model = service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+		ProjectionModel model = service
+				.editProjectionParameters(projectionId, params, modelParameters, "Test Description", user(ownerId));
 
 		assertThat(model.getReportTitle()).isEqualTo("New Title");
+		assertThat(model.getReportDescription()).isEqualTo("Test Description");
 	}
 
 	@Test
@@ -393,7 +406,7 @@ class ProjectionServiceTest {
 
 		assertThrows(
 				ProjectionStateException.class,
-				() -> service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId))
+				() -> service.editProjectionParameters(projectionId, params, modelParameters, "", user(ownerId))
 		);
 	}
 
@@ -410,7 +423,7 @@ class ProjectionServiceTest {
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, userService, failingMapper
+				calculationEngineCodeLookup, userService, failingMapper, expiryConfig
 		);
 
 		UUID projectionId = UUID.randomUUID();
@@ -433,7 +446,7 @@ class ProjectionServiceTest {
 
 		assertThrows(
 				ProjectionServiceException.class,
-				() -> service.editProjectionParameters(projectionId, params, modelParameters, user(ownerId))
+				() -> service.editProjectionParameters(projectionId, params, modelParameters, null, user(ownerId))
 		);
 	}
 
@@ -608,7 +621,8 @@ class ProjectionServiceTest {
 			return null;
 		}).when(repository).persist(any(ProjectionEntity.class));
 
-		ProjectionModel model = service.createNewProjection(actingUser, params, modelParamsJson);
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+		ProjectionModel model = service.createNewProjection(actingUser, params, modelParamsJson, "Test Description");
 
 		assertNotNull(model);
 
@@ -618,9 +632,7 @@ class ProjectionServiceTest {
 		ProjectionEntity persisted = captor.getValue();
 		assertThat(persisted.getOwnerUser()).isSameAs(ownerEntity);
 		assertThat(persisted.getReportTitle()).isEqualTo("My Report");
-
-		// NOTE: your current code sets description = title. This asserts current behavior.
-		assertThat(persisted.getReportDescription()).isEqualTo("My Report");
+		assertThat(persisted.getReportDescription()).isEqualTo("Test Description");
 
 		assertThat(persisted.getProjectionStatusCode()).isSameAs(draftStatus);
 		assertThat(persisted.getCalculationEngineCode()).isSameAs(engine);
@@ -630,6 +642,77 @@ class ProjectionServiceTest {
 		assertThat(persisted.getResultFileSet().getProjectionFileSetGUID()).isEqualTo(resultsId);
 
 		assertThat(persisted.getProjectionParameters()).isNotBlank();
+	}
+
+	@Test
+	void createNewProjection_setsEmptyDescription_whenReportDescriptionIsNull() throws Exception {
+		UUID ownerId = UUID.randomUUID();
+		VDYPUserModel actingUser = user(ownerId);
+
+		VDYPUserEntity ownerEntity = userEntity(ownerId);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
+
+		Parameters params = new Parameters();
+
+		var draftStatus = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		draftStatus.setCode(ProjectionStatusCodeModel.DRAFT);
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT)).thenReturn(draftStatus);
+
+		var engine = new ca.bc.gov.nrs.vdyp.backend.data.entities.CalculationEngineCodeEntity();
+		engine.setCode(CalculationEngineCodeModel.VDYP8);
+		when(calculationEngineCodeLookup.requireEntity(CalculationEngineCodeModel.VDYP8)).thenReturn(engine);
+
+		var fileSetMap = new HashMap<FileSetTypeCodeModel, ProjectionFileSetModel>();
+		UUID polyId = UUID.randomUUID();
+		UUID layerId = UUID.randomUUID();
+		UUID resultsId = UUID.randomUUID();
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.POLYGON),
+				fileSetModel(polyId, ownerId, FileSetTypeCodeModel.POLYGON)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.LAYER),
+				fileSetModel(layerId, ownerId, FileSetTypeCodeModel.LAYER)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.RESULTS),
+				fileSetModel(resultsId, ownerId, FileSetTypeCodeModel.RESULTS)
+		);
+		when(fileSetService.createFileSetForNewProjection(actingUser)).thenReturn(fileSetMap);
+		when(em.find(ProjectionFileSetEntity.class, polyId)).thenReturn(fileSetEntity(polyId));
+		when(em.find(ProjectionFileSetEntity.class, layerId)).thenReturn(fileSetEntity(layerId));
+		when(em.find(ProjectionFileSetEntity.class, resultsId)).thenReturn(fileSetEntity(resultsId));
+		doAnswer(inv -> {
+			ProjectionEntity e = inv.getArgument(0, ProjectionEntity.class);
+			e.setProjectionGUID(UUID.randomUUID());
+			return null;
+		}).when(repository).persist(any(ProjectionEntity.class));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		service.createNewProjection(actingUser, params, null, null);
+
+		ArgumentCaptor<ProjectionEntity> captor = ArgumentCaptor.forClass(ProjectionEntity.class);
+		verify(repository).persist(captor.capture());
+		assertThat(captor.getValue().getReportDescription()).isEqualTo("");
+	}
+
+	@Test
+	void editProjectionParameters_setsEmptyDescription_whenReportDescriptionIsNull() throws Exception {
+		UUID projectionId = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.DRAFT);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		Parameters params = new Parameters();
+		ProjectionModel model = service.editProjectionParameters(projectionId, params, null, null, user(ownerId));
+
+		assertThat(model.getReportDescription()).isEqualTo("");
 	}
 
 	// ==============================
@@ -952,6 +1035,7 @@ class ProjectionServiceTest {
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.RUNNING))
 				.thenReturn(statusCode(ProjectionStatusCodeModel.RUNNING));
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.startBatchProjection(actingUser, projectionGUID);
 		assertEquals(ProjectionStatusCodeModel.RUNNING, model.getProjectionStatusCode().getCode());
 
@@ -991,6 +1075,7 @@ class ProjectionServiceTest {
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT))
 				.thenReturn(statusCode(ProjectionStatusCodeModel.DRAFT));
 
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID);
 		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
 
@@ -999,7 +1084,8 @@ class ProjectionServiceTest {
 
 	@Test
 	void cleanupExpiredProjections_doesNothing_whenNoExpiredProjections() {
-		when(repository.findExpiredIDs(anyInt())).thenReturn(List.of());
+		when(expiryConfig.daysUntilExpiry()).thenReturn(15);
+		when(repository.findExpiredIDs(anyInt(), eq(15))).thenReturn(List.of());
 		service.cleanupExpiredProjections();
 
 		verify(repository, never()).delete(any());
@@ -1029,7 +1115,8 @@ class ProjectionServiceTest {
 		entity.setLayerFileSet(layer);
 		entity.setResultFileSet(results);
 
-		when(repository.findExpiredIDs(anyInt())).thenReturn(List.of(expiredId1)).thenReturn(List.of());
+		when(expiryConfig.daysUntilExpiry()).thenReturn(15);
+		when(repository.findExpiredIDs(anyInt(), eq(15))).thenReturn(List.of(expiredId1)).thenReturn(List.of());
 		when(userService.getSystemUser()).thenReturn(systemUser);
 		when(repository.findByIdOptional(expiredId1)).thenReturn(Optional.of(entity));
 		when(repository.countUsesFileSet(fsId)).thenReturn(0L);
@@ -1070,7 +1157,8 @@ class ProjectionServiceTest {
 		entity.setLayerFileSet(layer);
 		entity.setResultFileSet(results);
 
-		when(repository.findExpiredIDs(anyInt())).thenReturn(List.of(expiredId1, expiredId2))
+		when(expiryConfig.daysUntilExpiry()).thenReturn(15);
+		when(repository.findExpiredIDs(anyInt(), eq(15))).thenReturn(List.of(expiredId1, expiredId2))
 				.thenReturn(List.of(expiredId1));
 		when(userService.getSystemUser()).thenReturn(systemUser);
 		when(repository.findByIdOptional(expiredId1)).thenReturn(Optional.empty());
@@ -1083,5 +1171,251 @@ class ProjectionServiceTest {
 		verify(fileSetService).deleteFileSetById(layer.getProjectionFileSetGUID());
 		verify(fileSetService).deleteFileSetById(results.getProjectionFileSetGUID());
 		verify(batchMappingService).deleteMappingsForProjection(entity);
+	}
+
+	ObjectMapper mapper = new ObjectMapper();
+
+	@Test
+	void duplicateProjection_nullModelParameters_callsCopyFileSets()
+			throws ProjectionServiceException, JsonProcessingException {
+		UUID projectionId = UUID.randomUUID();
+		UUID newProjectionId = UUID.randomUUID();
+
+		UUID ownerId = UUID.randomUUID();
+		VDYPUserModel actingUser = user(ownerId);
+		VDYPUserEntity ownerEntity = userEntity(ownerId);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
+
+		String reportTitle = "Test Report";
+
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+		Parameters parameters = new Parameters();
+		parameters.setReportTitle(reportTitle);
+		entity.setProjectionParameters(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(parameters));
+
+		ProjectionEntity newEntity = projectionEntity(newProjectionId, ownerId);
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.RUNNING);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(repository.findByIdOptional(newProjectionId)).thenReturn(Optional.of(newEntity));
+
+		// file set map
+		UUID polyId = UUID.randomUUID();
+		UUID layerId = UUID.randomUUID();
+		UUID resultsId = UUID.randomUUID();
+
+		var fileSetMap = new HashMap<FileSetTypeCodeModel, ProjectionFileSetModel>();
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.POLYGON),
+				fileSetModel(polyId, ownerId, FileSetTypeCodeModel.POLYGON)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.LAYER),
+				fileSetModel(layerId, ownerId, FileSetTypeCodeModel.LAYER)
+		);
+		fileSetMap.put(
+				fileSetTypeCodeModel(FileSetTypeCodeModel.RESULTS),
+				fileSetModel(resultsId, ownerId, FileSetTypeCodeModel.RESULTS)
+		);
+
+		when(fileSetService.createFileSetForNewProjection(actingUser)).thenReturn(fileSetMap);
+
+		ProjectionFileSetEntity polyFileSetEntity = fileSetEntity(polyId);
+		ProjectionFileSetEntity layerFileSetEntity = fileSetEntity(layerId);
+
+		when(em.find(ProjectionFileSetEntity.class, polyId)).thenReturn(polyFileSetEntity);
+		when(em.find(ProjectionFileSetEntity.class, layerId)).thenReturn(layerFileSetEntity);
+		when(em.find(ProjectionFileSetEntity.class, resultsId)).thenReturn(fileSetEntity(resultsId));
+
+		newEntity.setPolygonFileSet(polyFileSetEntity);
+		newEntity.setLayerFileSet(layerFileSetEntity);
+		// Simulate DB-generated ID / app-assigned ID
+		doAnswer(inv -> {
+			ProjectionEntity e = inv.getArgument(0, ProjectionEntity.class);
+			e.setProjectionGUID(newProjectionId);
+			return null;
+		}).when(repository).persist(any(ProjectionEntity.class));
+
+		ProjectionModel model = service.duplicateProjection(projectionId, user(ownerId));
+
+		assertNotNull(model);
+		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
+		assertEquals(reportTitle + " - COPY", model.getReportTitle());
+
+		verify(fileSetService).duplicateFilesFromTo(any(), eq(polyFileSetEntity));
+		verify(fileSetService).duplicateFilesFromTo(any(), eq(layerFileSetEntity));
+	}
+
+	@Test
+	void duplicateProjection_allNullParams_completes() throws ProjectionServiceException {
+		UUID projectionId = UUID.randomUUID();
+		UUID newProjectionId = UUID.randomUUID();
+
+		UUID ownerId = UUID.randomUUID();
+		VDYPUserEntity ownerEntity = userEntity(ownerId);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
+
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+		ProjectionEntity newEntity = projectionEntity(newProjectionId, ownerId);
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.READY);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(repository.findByIdOptional(newProjectionId)).thenReturn(Optional.of(newEntity));
+
+		// Simulate DB-generated ID / app-assigned ID
+		doAnswer(inv -> {
+			ProjectionEntity e = inv.getArgument(0, ProjectionEntity.class);
+			e.setProjectionGUID(newProjectionId);
+			return null;
+		}).when(repository).persist(any(ProjectionEntity.class));
+
+		ProjectionModel model = service.duplicateProjection(projectionId, user(ownerId));
+
+		assertNotNull(model);
+		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
+	}
+
+	@Test
+	void duplicateProjection_providedModelParams_doesNotCopyFiles()
+			throws ProjectionServiceException, JsonProcessingException {
+		UUID projectionId = UUID.randomUUID();
+		UUID newProjectionId = UUID.randomUUID();
+
+		UUID ownerId = UUID.randomUUID();
+		VDYPUserEntity ownerEntity = userEntity(ownerId);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
+
+		String reportTitle = "Test Report";
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+		Parameters parameters = new Parameters();
+		parameters.setReportTitle(reportTitle);
+		entity.setProjectionParameters(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(parameters));
+		entity.setModelParameters("{\"species\":[{\"code\":\"AC\",\"percent\":100.0}]}");
+
+		ProjectionEntity newEntity = projectionEntity(newProjectionId, ownerId);
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.READY);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(repository.findByIdOptional(newProjectionId)).thenReturn(Optional.of(newEntity));
+
+		// Simulate DB-generated ID / app-assigned ID
+		doAnswer(inv -> {
+			ProjectionEntity e = inv.getArgument(0, ProjectionEntity.class);
+			e.setProjectionGUID(newProjectionId);
+			return null;
+		}).when(repository).persist(any(ProjectionEntity.class));
+
+		ProjectionModel model = service.duplicateProjection(projectionId, user(ownerId));
+
+		assertNotNull(model);
+		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - createEmptyProjection
+	// ==========================================================
+
+	@Test
+	void endpoint_createEmptyProjection_returnsCreated_andPassesReportDescription() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		Parameters params = new Parameters();
+		String reportDescription = "My report description";
+
+		ProjectionModel created = new ProjectionModel();
+		created.setProjectionGUID(UUID.randomUUID().toString());
+		when(mockService.createNewProjection(actingUser, params, null, reportDescription)).thenReturn(created);
+
+		Response response = endpoint.createEmptyProjection(params, null, reportDescription);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
+		assertThat(response.getEntity()).isSameAs(created);
+		verify(mockService).createNewProjection(actingUser, params, null, reportDescription);
+	}
+
+	@Test
+	void endpoint_createEmptyProjection_returnsCreated_whenReportDescriptionIsNull() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		Parameters params = new Parameters();
+
+		ProjectionModel created = new ProjectionModel();
+		created.setProjectionGUID(UUID.randomUUID().toString());
+		when(mockService.createNewProjection(actingUser, params, null, null)).thenReturn(created);
+
+		Response response = endpoint.createEmptyProjection(params, null, null);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
+		verify(mockService).createNewProjection(actingUser, params, null, null);
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - editProjectionParameters
+	// ==========================================================
+
+	@Test
+	void endpoint_editProjectionParameters_returnsOk_andPassesReportDescription() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		Parameters params = new Parameters();
+		String reportDescription = "Updated description";
+
+		ProjectionModel updated = new ProjectionModel();
+		updated.setProjectionGUID(projectionGUID.toString());
+		when(mockService.editProjectionParameters(projectionGUID, params, null, reportDescription, actingUser))
+				.thenReturn(updated);
+
+		Response response = endpoint.editProjectionParameters(projectionGUID, params, null, reportDescription);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		assertThat(response.getEntity()).isSameAs(updated);
+		verify(mockService).editProjectionParameters(projectionGUID, params, null, reportDescription, actingUser);
+	}
+
+	@Test
+	void endpoint_editProjectionParameters_returnsOk_whenReportDescriptionIsNull() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		Parameters params = new Parameters();
+
+		ProjectionModel updated = new ProjectionModel();
+		updated.setProjectionGUID(projectionGUID.toString());
+		when(mockService.editProjectionParameters(projectionGUID, params, null, null, actingUser)).thenReturn(updated);
+
+		Response response = endpoint.editProjectionParameters(projectionGUID, params, null, null);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		verify(mockService).editProjectionParameters(projectionGUID, params, null, null, actingUser);
 	}
 }

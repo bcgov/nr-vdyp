@@ -1,22 +1,37 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
+import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.fileSetEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.startsWith;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -26,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -52,13 +68,15 @@ class TestFileMappingService {
 	COMSClient comsClient;
 	@Mock
 	FileUpload fileUpload;
+	@Mock
+	HttpClient httpClient;
 
 	FileMappingService service;
 
 	@BeforeEach
 	void setUp() {
 		assembler = new FileMappingResourceAssembler();
-		service = new FileMappingService(repository, assembler, comsClient);
+		service = new FileMappingService(repository, assembler, comsClient, httpClient);
 	}
 
 	@Test
@@ -252,5 +270,92 @@ class TestFileMappingService {
 
 		assertThrows(ProjectionServiceException.class, () -> service.deleteFileMapping(fileMappingGuid));
 		verify(repository, never()).delete(any());
+	}
+
+	@Test
+	void duplicateFile_missingContentLength_throwsProjectionServiceException() throws Exception {
+		var file = new FileMappingModel();
+		file.setDownloadURL(new URI("https://example.com/file.bin").toURL());
+		file.setFilename("file.bin");
+		HttpResponse<InputStream> resp = (HttpResponse<InputStream>) mock(HttpResponse.class);
+
+		when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+		when(resp.statusCode()).thenReturn(200);
+		when(resp.headers()).thenReturn(HttpHeaders.of(Collections.emptyMap(), (k, v) -> true));
+
+		var ex = assertThrows(
+				ProjectionServiceException.class,
+				() -> service.duplicateFile(file, new ProjectionFileSetEntity(), "bucket")
+		);
+		assertTrue(ex.getMessage().contains("did not send Content-Length"));
+	}
+
+	@Test
+	void duplicateFileNamesForSet_returnsTrue() throws Exception {
+		// Arrange
+		var file = new FileMappingModel();
+		file.setDownloadURL(new URI("https://example.com/file.bin").toURL());
+		file.setFilename("file.bin");
+
+		ProjectionFileSetEntity fileSetEntity = fileSetEntity(UUID.randomUUID());
+		var bucketGuid = "bucket-123";
+
+		var bodyStream = new ByteArrayInputStream("abc".getBytes());
+		HttpResponse<InputStream> resp = (HttpResponse<InputStream>) mock(HttpResponse.class);
+		when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+		when(resp.statusCode()).thenReturn(200);
+		when(resp.headers()).thenReturn(HttpHeaders.of(Map.of("Content-Length", List.of("3")), (k, v) -> true));
+		when(resp.body()).thenReturn(bodyStream);
+
+		COMSObject comsObj = new COMSObject(
+				"3f1a19ad-f87b-40bc-a1f0-94e0e688d939", "/some/path", false, true, "bucket-123", "file.bin", null,
+				"tester", null, "tester", null, null, Set.of()
+		);
+		when(
+				comsClient.createObject(
+						eq(bucketGuid), anyString(), // content disposition
+						eq(3L), eq(jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM), any(InputStream.class)
+				)
+		).thenReturn(comsObj);
+
+		// Let persistFileMapping run real logic, but mock repository and assembler
+		var expectedEntity = new FileMappingEntity();
+		expectedEntity.setComsObjectGUID(UUID.fromString(comsObj.id()));
+		expectedEntity.setProjectionFileSet(fileSetEntity);
+		expectedEntity.setFilename("file.bin");
+
+		ArgumentCaptor<FileMappingEntity> entityCaptor = ArgumentCaptor.forClass(FileMappingEntity.class);
+		doNothing().when(repository).persist(entityCaptor.capture());
+
+		// Act
+		service.duplicateFile(file, fileSetEntity, bucketGuid);
+
+		// Assert
+		var persisted = entityCaptor.getValue();
+		assertEquals(UUID.fromString(comsObj.id()), persisted.getComsObjectGUID());
+		assertSame(fileSetEntity, persisted.getProjectionFileSet());
+		assertEquals("file.bin", persisted.getFilename());
+
+		verify(comsClient).createObject(
+				eq(bucketGuid), anyString(), eq(3L), eq(jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM),
+				any(InputStream.class)
+		);
+	}
+
+	@Test
+	void duplicateFile_httpThrows_wrapsInProjectionServiceException() throws Exception {
+		var file = new FileMappingModel();
+		file.setDownloadURL(new URI("https://example.com/file.bin").toURL());
+		file.setFilename("file.bin");
+
+		when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+				.thenThrow(new IOException("boom"));
+
+		var ex = assertThrows(
+				ProjectionServiceException.class,
+				() -> service.duplicateFile(file, new ProjectionFileSetEntity(), "bucket")
+		);
+		assertTrue(ex.getMessage().contains("Error duplicating file in COMS"));
+		assertNotNull(ex.getCause());
 	}
 }

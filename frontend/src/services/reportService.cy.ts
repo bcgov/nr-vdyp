@@ -13,6 +13,18 @@ describe('Report Service Unit Tests', () => {
       const saveAsStub = cy.stub().as('saveAsStub')
       downloadTextFile(testData, 'test.txt', saveAsStub)
       cy.get('@saveAsStub').should('have.been.calledOnce')
+      cy.get('@saveAsStub').then((stub: any) => {
+        const [blob, filename] = stub.firstCall.args
+        expect(blob).to.be.instanceOf(Blob)
+        expect(blob.type).to.equal('text/plain;charset=utf-8;')
+        expect(filename).to.equal('test.txt')
+      })
+    })
+
+    it('should not call saveAs when data is null', () => {
+      const saveAsStub = cy.stub().as('saveAsStub')
+      downloadTextFile(null as any, 'test.txt', saveAsStub)
+      cy.get('@saveAsStub').should('not.have.been.called')
     })
 
     it('should log a warning when data is empty', () => {
@@ -34,6 +46,18 @@ describe('Report Service Unit Tests', () => {
       const saveAsStub = cy.stub().as('saveAsStub')
       downloadCSVFile(testData, 'test.csv', saveAsStub)
       cy.get('@saveAsStub').should('have.been.calledOnce')
+      cy.get('@saveAsStub').then((stub: any) => {
+        const [blob, filename] = stub.firstCall.args
+        expect(blob).to.be.instanceOf(Blob)
+        expect(blob.type).to.equal('text/csv;charset=utf-8;')
+        expect(filename).to.equal('test.csv')
+      })
+    })
+
+    it('should not call saveAs when data is null', () => {
+      const saveAsStub = cy.stub().as('saveAsStub')
+      downloadCSVFile(null as any, 'test.csv', saveAsStub)
+      cy.get('@saveAsStub').should('not.have.been.called')
     })
 
     it('should log a warning when CSV data is empty', () => {
@@ -55,6 +79,18 @@ describe('Report Service Unit Tests', () => {
       const printJSStub = cy.stub().as('printJSStub')
       printReport(testData, printJSStub)
       cy.get('@printJSStub').should('have.been.calledOnce')
+      cy.get('@printJSStub').then((stub: any) => {
+        const [options] = stub.firstCall.args
+        expect(options.type).to.equal('raw-html')
+        expect(options.style).to.include('@page')
+        expect(options.printable).to.be.a('string')
+      })
+    })
+
+    it('should not call printJS when data is null', () => {
+      const printJSStub = cy.stub().as('printJSStub')
+      printReport(null as any, printJSStub)
+      cy.get('@printJSStub').should('not.have.been.called')
     })
 
     it('should log a warning when data is empty', () => {

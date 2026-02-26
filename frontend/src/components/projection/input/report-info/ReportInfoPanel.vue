@@ -1,5 +1,5 @@
 <template>
-  <v-card class="elevation-4">
+  <v-card class="elevation-0">
     <AppMessageDialog
       :dialog="messageDialog.dialog"
       :title="messageDialog.title"
@@ -22,7 +22,23 @@
               }}</v-icon>
             </v-col>
             <v-col>
-              <span class="text-h6">Report Information</span>
+              <span class="text-h6">{{ panelTitle }}</span>
+            </v-col>
+            <v-col cols="auto" v-if="isFileUploadMode && !isReadOnly" class="edit-button-col">
+              <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
+                <template #activator="{ props: tooltipProps }">
+                  <span v-bind="tooltipProps">
+                    <AppButton
+                      label="Edit"
+                      variant="tertiary"
+                      mdi-name="mdi-pencil-outline"
+                      iconPosition="top"
+                      :isDisabled="!isHeaderEditActive"
+                      @click="onHeaderEdit"
+                    />
+                  </span>
+                </template>
+              </v-tooltip>
             </v-col>
           </v-row>
         </v-expansion-panel-title>
@@ -52,6 +68,7 @@
               :specificYear="currentStore.specificYear"
               :projectionType="currentStore.projectionType"
               :reportTitle="currentStore.reportTitle"
+              :reportDescription="currentStore.reportDescription"
               :isDisabled="isInputDisabled"
               :isModelParametersMode="isModelParametersMode"
               @update:selectedAgeYearRange="handleSelectedAgeYearRangeUpdate"
@@ -81,14 +98,19 @@
               @update:specificYear="handleSpecificYearUpdate"
               @update:projectionType="handleProjectionTypeUpdate"
               @update:reportTitle="handleReportTitleUpdate"
+              @update:reportDescription="handleReportDescriptionUpdate"
             />
             <ActionPanel
               v-if="!isReadOnly"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
+              :hideClearButton="isFileUploadMode"
+              :hideEditButton="isFileUploadMode"
+              :showCancelButton="isFileUploadMode"
               @clear="onClear"
               @confirm="onConfirm"
               @edit="onEdit"
+              @cancel="onCancel"
             />
           </v-form>
         </v-expansion-panel-text>
@@ -103,6 +125,7 @@ import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import {
   AppMessageDialog,
+  AppButton,
 } from '@/components'
 import {
   ActionPanel,
@@ -111,9 +134,10 @@ import {
 import { CONSTANTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
 import type { MessageDialog } from '@/interfaces/interfaces'
+import type { FileUploadPanelName } from '@/types/types'
 import { reportInfoValidation } from '@/validation'
 import { saveProjectionOnPanelConfirm as saveModelParamProjection } from '@/services/projection/modelParameterService'
-import { saveProjectionOnPanelConfirm as saveFileUploadProjection } from '@/services/projection/fileUploadService'
+import { saveProjectionOnPanelConfirm as saveFileUploadProjection, revertPanelToSaved } from '@/services/projection/fileUploadService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const form = ref<HTMLFormElement>()
@@ -165,6 +189,38 @@ const isModelParametersMode = computed(
     appStore.modelSelection ===
     CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
 )
+
+const isFileUploadMode = computed(
+  () => appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD,
+)
+
+const panelTitle = computed(() => {
+  return isFileUploadMode.value ? 'Report Details' : 'Report Information'
+})
+
+const isHeaderEditActive = computed(() => {
+  if (!isFileUploadMode.value) return false
+  const status = appStore.currentProjectionStatus
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) return false
+  return isConfirmed.value && !currentStore.value.panelState[panelName.value].editable
+})
+
+const editTooltipText = computed(() => {
+  const status = appStore.currentProjectionStatus
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
+    return `This section may not be edited with a status of ${status}`
+  }
+  if (isConfirmed.value && !currentStore.value.panelState[panelName.value].editable) {
+    return 'Click Edit to make changes to this section'
+  }
+  return ''
+})
+
+const onHeaderEdit = () => {
+  if (isConfirmed.value) {
+    currentStore.value.editPanel(panelName.value)
+  }
+}
 
 const handleSelectedAgeYearRangeUpdate = (value: string) => {
   currentStore.value.selectedAgeYearRange = value
@@ -248,6 +304,10 @@ const handleProjectionTypeUpdate = (value: string | null) => {
 
 const handleReportTitleUpdate = (value: string | null) => {
   currentStore.value.reportTitle = value
+}
+
+const handleReportDescriptionUpdate = (value: string | null) => {
+  currentStore.value.reportDescription = value
 }
 
 const validateComparison = (): boolean => {
@@ -476,9 +536,18 @@ const onConfirm = async () => {
 }
 
 const onEdit = () => {
-  // this panel has already been confirmed.
-  if (isConfirmed.value) {
-    currentStore.value.editPanel(panelName.value)
+  onHeaderEdit()
+}
+
+const onCancel = async () => {
+  appStore.isSavingProjection = true
+  try {
+    await revertPanelToSaved(panelName.value as FileUploadPanelName)
+  } catch (error) {
+    console.error('Error reverting panel to saved state:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+  } finally {
+    appStore.isSavingProjection = false
   }
 }
 
@@ -503,9 +572,28 @@ const onClear = () => {
   currentStore.value.incSecondaryHeight = false
   currentStore.value.specificYear = null
   currentStore.value.reportTitle = null
+  currentStore.value.reportDescription = null
   currentStore.value.projectionType = null
 }
 
 const handleDialogClose = () => {}
 </script>
-<style scoped />
+<style scoped>
+.edit-button-col {
+  display: flex;
+  align-items: center;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top) {
+  padding: 2px 4px;
+  gap: 2px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
+  font-size: 18px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .button-label) {
+  font-size: 11px;
+}
+</style>

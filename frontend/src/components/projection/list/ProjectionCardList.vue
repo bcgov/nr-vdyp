@@ -37,7 +37,7 @@
     </v-select>
 
     <!-- Empty state when no projections -->
-    <v-card v-if="projections.length === 0" class="empty-state-card" elevation="1">
+    <v-card v-if="projections.length === 0" class="empty-state-card" elevation="0">
       <div class="empty-state-content">
         <span class="empty-state-message">
           No projections found. Create a new projection to build your history.
@@ -50,7 +50,7 @@
       v-for="projection in projections"
       :key="projection.projectionGUID"
       class="projection-card clickable-card"
-      elevation="1"
+      elevation="0"
       @click="handleCardClick($event, projection)"
     >
       <!-- Header Section with gray background -->
@@ -250,6 +250,7 @@ const handleCardClick = (event: MouseEvent, projection: Projection) => {
   display: flex;
   flex-direction: column;
   gap: var(--layout-margin-small);
+  width: 100%;
 }
 
 .sort-dropdown {

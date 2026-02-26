@@ -34,6 +34,7 @@ import org.slf4j.MDC;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.backend.config.ProjectionExpiryConfig;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
@@ -91,6 +92,7 @@ public class ProjectionService {
 	private final CalculationEngineCodeLookup calclationEngineLookup;
 	private final VDYPUserService userService;
 	private final ObjectMapper objectMapper;
+	private final ProjectionExpiryConfig expiryConfig;
 
 	private static final String FILE_SET_IDENTIFIER = "file set";
 	private static final String FILE_IDENTIFIER = "file";
@@ -105,7 +107,7 @@ public class ProjectionService {
 			EntityManager em, ProjectionResourceAssembler assembler, ProjectionRepository repository,
 			ProjectionFileSetService fileSetService, ProjectionBatchMappingService batchMappingService,
 			ProjectionStatusCodeLookup statusLookup, CalculationEngineCodeLookup calclationEngineLookup,
-			VDYPUserService userService, ObjectMapper objectMapper
+			VDYPUserService userService, ObjectMapper objectMapper, ProjectionExpiryConfig expiryConfig
 	) {
 		this.em = em;
 		this.assembler = assembler;
@@ -116,6 +118,7 @@ public class ProjectionService {
 		this.calclationEngineLookup = calclationEngineLookup;
 		this.userService = userService;
 		this.objectMapper = objectMapper;
+		this.expiryConfig = expiryConfig;
 	}
 
 	static {
@@ -324,21 +327,28 @@ public class ProjectionService {
 		zipOut.closeEntry();
 	}
 
+	private ProjectionModel toModelWithExpiry(ProjectionEntity entity) {
+		var model = assembler.toModel(entity);
+		model.setExpiryDate(expiryConfig.expiryFrom(model.getLastUpdatedDate()));
+		return model;
+	}
+
 	public List<ProjectionModel> getAllProjectionsForUser(String vdypUserId) {
 		if (vdypUserId == null)
 			return Collections.emptyList();
 		UUID vdypUserGuid = UUID.fromString(vdypUserId);
-		return repository.findByOwner(vdypUserGuid).stream().map(assembler::toModel).toList();
+		return repository.findByOwner(vdypUserGuid).stream().map(this::toModelWithExpiry).toList();
 	}
 
 	@Transactional
-	public ProjectionModel
-			createNewProjection(VDYPUserModel actingUser, Parameters params, ModelParameters modelParameters)
-					throws ProjectionServiceException {
+	public ProjectionModel createNewProjection(
+			VDYPUserModel actingUser, Parameters params, ModelParameters modelParameters, String reportDescription
+	) throws ProjectionServiceException {
 		try {
 			ProjectionEntity entity = new ProjectionEntity();
 			entity.setOwnerUser(em.find(VDYPUserEntity.class, UUID.fromString(actingUser.getVdypUserGUID())));
 			extractConvenienceParameters(params, entity);
+			entity.setReportDescription(reportDescription != null ? reportDescription : "");
 
 			entity.setProjectionParameters(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params));
 
@@ -370,17 +380,18 @@ public class ProjectionService {
 			// Start Date and End Date should be null as they are about running the projection
 
 			repository.persist(entity);
-			return assembler.toModel(entity);
+			return toModelWithExpiry(entity);
 		} catch (JsonProcessingException e) {
 			throw new ProjectionServiceException("Invalid parameter JSON", e);
 		}
 	}
 
 	private static void extractConvenienceParameters(Parameters params, ProjectionEntity model) {
-		// extract the report Title and description from the parameters
-		// leave report title in for processing, remove description
-		model.setReportTitle(params.getReportTitle());
-		model.setReportDescription(params.getReportTitle()); // TODO update params to be able to read a description
+		if (params != null) {
+			// extract the report Title and description from the parameters
+			// leave report title in for processing, remove description
+			model.setReportTitle(params.getReportTitle());
+		}
 	}
 
 	public ProjectionEntity getProjectionEntity(UUID projectionGuid) throws ProjectionServiceException {
@@ -428,7 +439,7 @@ public class ProjectionService {
 			entity.setStartDate(OffsetDateTime.now());
 		}
 
-		return assembler.toModel(entity);
+		return toModelWithExpiry(entity);
 	}
 
 	@Transactional
@@ -441,7 +452,7 @@ public class ProjectionService {
 		batchMappingService.cancelProjection(entity);
 		entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
 
-		return assembler.toModel(entity);
+		return toModelWithExpiry(entity);
 	}
 
 	public enum ProjectionAction {
@@ -494,18 +505,21 @@ public class ProjectionService {
 			throws ProjectionServiceException {
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
-		return assembler.toModel(entity);
+		return toModelWithExpiry(entity);
 	}
 
 	@Transactional
 	public ProjectionModel editProjectionParameters(
-			UUID projectionGUID, Parameters params, ModelParameters modelParameters, VDYPUserModel actingUser
+			UUID projectionGUID, Parameters params, ModelParameters modelParameters, String reportDescription,
+			VDYPUserModel actingUser
 	) throws ProjectionServiceException {
 		ProjectionEntity existingEntity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(existingEntity, actingUser, ProjectionAction.UPDATE);
 		checkProjectionStatusPermitsAction(existingEntity, ProjectionAction.UPDATE);
 
 		extractConvenienceParameters(params, existingEntity);
+
+		existingEntity.setReportDescription(reportDescription != null ? reportDescription : "");
 		try {
 			// Update the parameters of import
 			existingEntity
@@ -519,7 +533,7 @@ public class ProjectionService {
 					UUID.fromString(actingUser.getVdypUserGUID())
 			);
 		}
-		return assembler.toModel(existingEntity);
+		return toModelWithExpiry(existingEntity);
 	}
 
 	@Transactional
@@ -534,7 +548,7 @@ public class ProjectionService {
 
 		entity.setProjectionStatusCode(status);
 		entity.setEndDate(OffsetDateTime.now());
-		return assembler.toModel(entity);
+		return toModelWithExpiry(entity);
 	}
 
 	@Transactional
@@ -664,7 +678,8 @@ public class ProjectionService {
 		VDYPUserModel systemUser = userService.getSystemUser();
 		Set<UUID> failedIds = new HashSet<>();
 		while (true) {
-			List<UUID> expiredProjections = repository.findExpiredIDs(BATCH_DELETE_LIMIT);
+			List<UUID> expiredProjections = repository
+					.findExpiredIDs(BATCH_DELETE_LIMIT, expiryConfig.daysUntilExpiry());
 
 			List<UUID> attemptIds = expiredProjections.stream().filter(id -> !failedIds.contains(id)).toList();
 			if (attemptIds.isEmpty()) {
@@ -681,5 +696,41 @@ public class ProjectionService {
 				}
 			}
 		}
+	}
+
+	@Transactional
+	public ProjectionModel duplicateProjection(UUID projectionGUID, VDYPUserModel actingUser)
+			throws ProjectionServiceException {
+		ProjectionModel newProjection;
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.READ);
+		try {
+			Parameters parameters = null;
+			ModelParameters modelParameters = null;
+			if (entity.getProjectionParameters() != null) {
+				parameters = objectMapper.readValue(entity.getProjectionParameters(), Parameters.class);
+				long numCopies = repository.countCopyTitle(parameters.getReportTitle());
+				parameters.setCopyTitle(parameters.getReportTitle());
+				parameters.setReportTitle(
+						parameters.getReportTitle() + " - COPY" + (numCopies > 0 ? "" + (numCopies + 1) : "")
+				);
+			}
+			if (entity.getModelParameters() != null) {
+				modelParameters = objectMapper.readValue(entity.getModelParameters(), ModelParameters.class);
+			}
+
+			newProjection = createNewProjection(actingUser, parameters, modelParameters, entity.getReportDescription());
+			ProjectionEntity newEntity = getProjectionEntity(UUID.fromString(newProjection.getProjectionGUID()));
+
+			// If this is not a manual input projection copy the input files if they exist
+			if (modelParameters == null) {
+				fileSetService.duplicateFilesFromTo(entity.getPolygonFileSet(), newEntity.getPolygonFileSet());
+				fileSetService.duplicateFilesFromTo(entity.getLayerFileSet(), newEntity.getLayerFileSet());
+			}
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Failed to duplicate projection", e);
+		}
+		return newProjection;
 	}
 }

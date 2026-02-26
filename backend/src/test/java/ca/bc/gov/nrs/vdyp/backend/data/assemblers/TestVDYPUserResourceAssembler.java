@@ -23,14 +23,18 @@ class TestVDYPUserResourceAssembler {
 	}
 
 	static Stream<Arguments> modelEntityData() {
-		return Stream.of(Arguments.of(UUID.randomUUID(), "TestingID", "ADMIN", "John", "Doe"));
+		return Stream
+				.of(Arguments.of(UUID.randomUUID(), "TestingID", "ADMIN", "John", "Doe", "John Doe", "jdoe@email.org"));
 	}
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testEntityToModel(UUID userId, String oidcId, String userTypeCode, String firstName, String lastName) {
+	void testEntityToModel(
+			UUID userId, String oidcId, String userTypeCode, String firstName, String lastName, String displayName,
+			String email
+	) {
 		VDYPUserTestData data = VDYPUserTestData.builder().userId(userId).oidcId(oidcId).userTypeCode(userTypeCode)
-				.firstName(firstName).lastName(lastName);
+				.firstName(firstName).lastName(lastName).displayName(displayName).email(email);
 
 		VDYPUserModel model = data.buildModel();
 		VDYPUserEntity entity = data.buildEntity();
@@ -42,9 +46,12 @@ class TestVDYPUserResourceAssembler {
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testModelToEntity(UUID userId, String oidcId, String userTypeCode, String firstName, String lastName) {
+	void testModelToEntity(
+			UUID userId, String oidcId, String userTypeCode, String firstName, String lastName, String displayName,
+			String email
+	) {
 		VDYPUserTestData data = VDYPUserTestData.builder().userId(userId).oidcId(oidcId).userTypeCode(userTypeCode)
-				.firstName(firstName).lastName(lastName);
+				.firstName(firstName).lastName(lastName).displayName(displayName).email(email);
 
 		VDYPUserModel model = data.buildModel();
 		VDYPUserEntity entity = data.buildEntity();
@@ -60,6 +67,8 @@ class TestVDYPUserResourceAssembler {
 		private String userTypeCode;
 		private String firstName;
 		private String lastName;
+		private String displayName;
+		private String email;
 
 		public static TestVDYPUserResourceAssembler.VDYPUserTestData builder() {
 			return new TestVDYPUserResourceAssembler.VDYPUserTestData();
@@ -90,6 +99,16 @@ class TestVDYPUserResourceAssembler {
 			return this;
 		}
 
+		public TestVDYPUserResourceAssembler.VDYPUserTestData displayName(String displayName) {
+			this.displayName = displayName;
+			return this;
+		}
+
+		public TestVDYPUserResourceAssembler.VDYPUserTestData email(String email) {
+			this.email = email;
+			return this;
+		}
+
 		public VDYPUserEntity buildEntity() {
 			VDYPUserEntity data = new VDYPUserEntity();
 			data.setVdypUserGUID(userId);
@@ -101,6 +120,8 @@ class TestVDYPUserResourceAssembler {
 			}
 			data.setFirstName(firstName);
 			data.setLastName(lastName);
+			data.setDisplayName(displayName);
+			data.setEmail(email);
 			return data;
 		}
 
@@ -116,6 +137,8 @@ class TestVDYPUserResourceAssembler {
 			}
 			data.setFirstName(firstName);
 			data.setLastName(lastName);
+			data.setDisplayName(displayName);
+			data.setEmail(email);
 			return data;
 		}
 	}

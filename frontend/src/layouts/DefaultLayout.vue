@@ -30,5 +30,8 @@ console.log(`Build Numer: ${BUILD_NUMBER}`)
   flex-direction: column;
   flex: none;
   margin-bottom: 0px;
+  min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 </style>

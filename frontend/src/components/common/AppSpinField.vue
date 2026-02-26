@@ -1,39 +1,41 @@
 <template>
-  <div style="position: relative; width: 100%">
+  <div style="width: 100%">
     <span class="bcds-text-field-label" v-html="label"></span>
-    <v-text-field
-      type="text"
-      v-model="localValue"
-      :max="max"
-      :min="min"
-      :step="step"
-      :persistent-placeholder="persistentPlaceholder"
-      :placeholder="placeholder"
-      :hide-details="hideDetails"
-      :style="customStyle"
-      :disabled="disabled"
-      @update:modelValue="handleUpdateModelValue"
-      @keydown="handleKeyDown"
-    ></v-text-field>
-    <!-- Spin Buttons -->
-    <div class="spin-box">
-      <div
-        class="spin-up-arrow-button"
-        @mousedown="startIncrement"
-        @mouseup="stopIncrement"
-        @mouseleave="stopIncrement"
-        :class="{ disabled: disabled }"
-      >
-        <!-- CSS triangle instead of text -->
-      </div>
-      <div
-        class="spin-down-arrow-button"
-        @mousedown="startDecrement"
-        @mouseup="stopDecrement"
-        @mouseleave="stopDecrement"
-        :class="{ disabled: disabled }"
-      >
-        <!-- CSS triangle instead of text -->
+    <div class="spin-field-wrapper">
+      <v-text-field
+        type="text"
+        v-model="localValue"
+        :max="max"
+        :min="min"
+        :step="step"
+        :persistent-placeholder="persistentPlaceholder"
+        :placeholder="placeholder"
+        :hide-details="hideDetails"
+        :style="customStyle"
+        :disabled="disabled"
+        @update:modelValue="handleUpdateModelValue"
+        @keydown="handleKeyDown"
+      ></v-text-field>
+      <!-- Spin Buttons -->
+      <div class="spin-box">
+        <div
+          class="spin-up-arrow-button"
+          @mousedown="startIncrement"
+          @mouseup="stopIncrement"
+          @mouseleave="stopIncrement"
+          :class="{ disabled: disabled }"
+        >
+          <!-- CSS triangle instead of text -->
+        </div>
+        <div
+          class="spin-down-arrow-button"
+          @mousedown="startDecrement"
+          @mouseup="stopDecrement"
+          @mouseleave="stopDecrement"
+          :class="{ disabled: disabled }"
+        >
+          <!-- CSS triangle instead of text -->
+        </div>
       </div>
     </div>
   </div>
@@ -177,8 +179,13 @@ const handleKeyDown = (event: KeyboardEvent) => {
 <style scoped>
 /* Spin box styles are defined in src/styles/_spin-field.scss */
 
-/* Position adjustment for spin-box when label is outside v-text-field */
-.spin-box {
-  top: calc(50% + 12px); /* Offset by half of label height (~24px) */
+/*
+ * The inner wrapper establishes a new positioning context for the spin-box
+ * that only covers the v-text-field, excluding the external label above it.
+ * This lets the SCSS rule (top: 50% + transform: translateY(-50%)) center
+ * the spin-box within the input area regardless of label line count.
+ */
+.spin-field-wrapper {
+  position: relative;
 }
 </style>
