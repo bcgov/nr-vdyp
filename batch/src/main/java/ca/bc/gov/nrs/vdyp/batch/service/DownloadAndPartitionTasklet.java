@@ -17,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @Component
 @StepScope
@@ -67,7 +68,8 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 			int totalPolygons = inputPartitioner
 					.partitionCsvFiles(polygonPath, layerPath, partitions.intValue(), jobBaseDir, jobGuid);
 
-			stepExecution.getJobExecution().getExecutionContext().putInt("totalPolygonRecords", totalPolygons);
+			stepExecution.getJobExecution().getExecutionContext()
+					.putInt(BatchConstants.Job.TOTAL_POLYGONS, totalPolygons);
 		} catch (Exception e) {
 			throw BatchPartitionException
 					.handlePartitionFailure(e, "Could not fetch and partition input files", jobGuid, logger);

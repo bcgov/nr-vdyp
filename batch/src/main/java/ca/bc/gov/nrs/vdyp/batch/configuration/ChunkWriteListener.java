@@ -9,6 +9,7 @@ import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>, StepExecutionListener {
 	private StepExecution stepExecution;
@@ -33,17 +34,17 @@ public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>
 
 		ExecutionContext stepCtx = stepExecution.getExecutionContext();
 
-		int polygonsProcessed = stepCtx.getInt("polygonsProcessed", 0);
+		int polygonsProcessed = stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
 		polygonsProcessed += meta.getPolygonRecordCount();
-		stepCtx.putInt("polygonsProcessed", polygonsProcessed);
+		stepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, polygonsProcessed);
 
-		int projectionErrors = stepCtx.getInt("projectionErrors", 0);
+		int projectionErrors = stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
 		projectionErrors += meta.getErrorCount();
-		stepCtx.putInt("projectionErrors", projectionErrors);
+		stepCtx.putInt(BatchConstants.Job.PROJECTION_ERRORS, projectionErrors);
 
-		int polygonsSkipped = stepCtx.getInt("polygonsSkipped", 0);
+		int polygonsSkipped = stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
 		polygonsSkipped += meta.getSkippedPolygonCount();
-		stepCtx.putInt("polygonsSkipped", polygonsSkipped);
+		stepCtx.putInt(BatchConstants.Job.POLYGONS_SKIPPED, polygonsSkipped);
 
 	}
 
