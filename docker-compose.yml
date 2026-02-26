@@ -161,7 +161,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.5"
+          cpus: "5.0"
           memory: 1G
   
   vdyp-ui:
