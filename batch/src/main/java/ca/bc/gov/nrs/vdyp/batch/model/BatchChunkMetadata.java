@@ -79,11 +79,11 @@ public class BatchChunkMetadata {
 		return errorCount;
 	}
 
-	public void setSkippedPolygonCount(int errorLogCount) {
-		this.errorCount = errorLogCount;
+	public void setSkippedPolygonCount(int skippedPolygonCount) {
+		this.skippedPolygonCount = skippedPolygonCount;
 	}
 
 	public int getSkippedPolygonCount() {
-		return errorCount;
+		return skippedPolygonCount;
 	}
 }
