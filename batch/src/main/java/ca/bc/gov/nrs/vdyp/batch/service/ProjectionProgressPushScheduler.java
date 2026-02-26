@@ -32,7 +32,7 @@ public class ProjectionProgressPushScheduler {
 	private final VdypClient vdypClient;
 	private final ThreadPoolTaskExecutor progressExecutor;
 
-	private final static Map<String, Integer> lastProgressHashByProjection = new HashMap<>();
+	private final Map<String, Integer> lastProgressHashByProjection = new HashMap<>();
 
 	public ProjectionProgressPushScheduler(
 			JobExplorer jobExplorer, VdypClient vdypClient,
@@ -40,7 +40,7 @@ public class ProjectionProgressPushScheduler {
 	) {
 		this.jobExplorer = jobExplorer;
 		this.vdypClient = vdypClient;
-		this.progressExecutor = (ThreadPoolTaskExecutor) executor;
+		this.progressExecutor = executor;
 	}
 
 	/**
@@ -63,17 +63,17 @@ public class ProjectionProgressPushScheduler {
 				continue;
 
 			currentlyRunningProjectionGUIDs.add(projectionGUID);
-			int totalPolygons = job.getExecutionContext().getInt("totalPolygonRecords", 0);
+			int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
 			int polygonsProcessed = 0;
 			int errorCount = 0;
 			int polygonsSkipped = 0;
 			for (StepExecution step : job.getStepExecutions()) {
-				if (step.getStepName().startsWith("workerStep:")) {
+				if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
 					// If you have multiple steps, you may want to filter by step name prefix
 					ExecutionContext stepCtx = step.getExecutionContext();
-					polygonsProcessed += stepCtx.getInt("polygonsProcessed", 0);
-					errorCount += stepCtx.getInt("projectionErrors", 0);
-					polygonsSkipped += stepCtx.getInt("polygonsSkipped", 0);
+					polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
+					errorCount += stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
+					polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
 				}
 			}
 
@@ -81,21 +81,18 @@ public class ProjectionProgressPushScheduler {
 			Triple<Integer, Integer, Integer> checkTriple = Triple.of(polygonsProcessed, errorCount, polygonsSkipped);
 			int newHash = checkTriple.hashCode();
 			Integer previousHash = lastProgressHashByProjection.put(projectionGUID, newHash);
-			if (previousHash != null && previousHash == newHash) {
-				continue;
+			if (previousHash == null || previousHash != newHash) {
+				VDYPProjectionProgressUpdate payload = new VDYPProjectionProgressUpdate(
+						totalPolygons, polygonsProcessed, errorCount, polygonsSkipped
+				);
+				progressExecutor.execute(() -> {
+					try {
+						vdypClient.pushProgress(projectionGUID, payload);
+					} catch (Exception logMe) {
+						logger.error("Error pushing progress to VDYP", logMe);
+					}
+				});
 			}
-
-			VDYPProjectionProgressUpdate payload = new VDYPProjectionProgressUpdate(
-					totalPolygons, polygonsProcessed, errorCount, polygonsSkipped
-			);
-			progressExecutor.execute(() -> {
-				try {
-					vdypClient.pushProgress(projectionGUID, payload);
-				} catch (Exception logMe) {
-					logger.error("Error pushing progress to VDYP", logMe);
-				}
-			});
-
 		}
 
 		// Clean up any projections that are no longer running to prevent memory leak in the map

@@ -15,8 +15,11 @@ public final class BatchConstants {
 		public static final String BASE_DIR = "jobBaseDir";
 		public static final String BASE_FOLDER_PREFIX = "vdyp-batch";
 		public static final String IS_RUNNING = "isRunning";
-		public static final String TOTAL_PARTITIONS = "totalPartitions";
-		public static final String COMPLETED_PARTITIONS = "completedPartitions";
+		public static final String WORKER_STEP_NAME = "workerStep";
+		public static final String TOTAL_POLYGONS = "totalPolygonRecords";
+		public static final String POLYGONS_PROCESSED = "polygonsProcessed";
+		public static final String POLYGONS_SKIPPED = "polygonsSkipped";
+		public static final String PROJECTION_ERRORS = "projectionErrors";
 
 		private Job() {
 		}
