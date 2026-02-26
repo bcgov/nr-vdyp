@@ -248,11 +248,11 @@ describe('ProjectionCardList.vue', () => {
   })
 
   describe('Running status actions', () => {
-    it('shows Cancel and Delete buttons only', () => {
+    it('shows Cancel button only', () => {
       mountComponent([createProjection({ status: 'Running' })])
 
       cy.get('.button-label').contains('Cancel').should('exist')
-      cy.get('.button-label').contains('Delete').should('exist')
+      cy.get('.button-label').contains('Delete').should('not.exist')
       cy.get('.button-label').contains('View').should('not.exist')
       cy.get('.button-label').contains('Edit').should('not.exist')
       cy.get('.button-label').contains('Duplicate').should('not.exist')
@@ -305,7 +305,7 @@ describe('ProjectionCardList.vue', () => {
       mountComponent([createProjection({ status: 'Running' })])
 
       cy.get('img[alt="Cancel"]').should('exist')
-      cy.get('img[alt="Delete"]').should('exist')
+      cy.get('img[alt="Delete"]').should('not.exist')
     })
   })
 
@@ -344,12 +344,50 @@ describe('ProjectionCardList.vue', () => {
     })
   })
 
+  describe('card click (rowClick)', () => {
+    it('emits rowClick when clicking on card body', () => {
+      const onRowClickSpy = cy.spy().as('rowClickSpy')
+      const projection = createProjection({ projectionGUID: 'guid-click', title: 'Clickable Card' })
+      mountComponent([projection], 'lastUpdated_desc', { onRowClick: onRowClickSpy })
+
+      cy.get('.card-header-section').click()
+      cy.get('@rowClickSpy').should('have.been.calledOnce')
+      cy.get('@rowClickSpy').should('have.been.calledWith', projection)
+    })
+
+    it('does not emit rowClick when clicking on action buttons area', () => {
+      const onRowClickSpy = cy.spy().as('rowClickSpy')
+      mountComponent([createProjection({ status: 'Draft' })], 'lastUpdated_desc', {
+        onRowClick: onRowClickSpy,
+      })
+
+      cy.get('.card-actions').click({ force: true })
+      cy.get('@rowClickSpy').should('not.have.been.called')
+    })
+  })
+
   describe('empty state', () => {
     it('renders no cards when projections array is empty', () => {
       mountComponent([])
 
       cy.get('.projection-card').should('have.length', 0)
       cy.get('.sort-dropdown').should('exist')
+    })
+
+    it('shows empty state card with message when projections array is empty', () => {
+      mountComponent([])
+
+      cy.get('.empty-state-card').should('exist')
+      cy.get('.empty-state-message').should(
+        'contain.text',
+        'No projections found. Create a new projection to build your history.',
+      )
+    })
+
+    it('does not show empty state card when projections exist', () => {
+      mountComponent([createProjection()])
+
+      cy.get('.empty-state-card').should('not.exist')
     })
   })
 

@@ -341,6 +341,36 @@ describe('apiActions Unit Tests', () => {
     })
   })
 
+  context('duplicateProjection', () => {
+    it('should duplicate a projection successfully', () => {
+      const projectionGUID = 'test-guid-123'
+      const mockProjection = { projectionGUID: 'new-guid-456', status: 'DRAFT' }
+      const mockResponse = { data: mockProjection }
+
+      cy.stub(apiClient, 'duplicateProjection').resolves(mockResponse)
+
+      cy.wrap(apiActions.duplicateProjection(projectionGUID)).then((result) => {
+        expect(apiClient.duplicateProjection).to.be.calledOnceWith(projectionGUID)
+        expect(result).to.deep.equal(mockProjection)
+      })
+    })
+
+    it('should handle error when duplicating a projection', () => {
+      const mockError = new Error('Duplicate failed')
+      cy.stub(apiClient, 'duplicateProjection').rejects(mockError)
+
+      apiActions
+        .duplicateProjection('test-guid-123')
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(apiClient.duplicateProjection).to.be.calledOnce
+          expect(error).to.equal(mockError)
+        })
+    })
+  })
+
   context('getProjection', () => {
     it('should fetch a projection successfully', () => {
       const projectionGUID = 'test-guid-123'

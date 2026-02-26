@@ -713,7 +713,7 @@ public class ProjectionService {
 				long numCopies = repository.countCopyTitle(parameters.getReportTitle());
 				parameters.setCopyTitle(parameters.getReportTitle());
 				parameters.setReportTitle(
-						parameters.getReportTitle() + " - COPY" + (numCopies > 0 ? "" + (numCopies - 1) : "")
+						parameters.getReportTitle() + " - COPY" + (numCopies > 0 ? "" + (numCopies + 1) : "")
 				);
 			}
 			if (entity.getModelParameters() != null) {

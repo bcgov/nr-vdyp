@@ -3,6 +3,7 @@
 import {
   validateRequiredFields,
   validateRange,
+  validatePreConfirmFields,
 } from '@/validation/siteInfoValidation'
 import { CONSTANTS } from '@/constants'
 
@@ -128,6 +129,11 @@ describe('Site Info Validation Unit Tests', () => {
       )
       expect(aboveMaxResult.isValid).to.be.false
       expect(aboveMaxResult.errorType).to.equal('spzAge')
+
+      // Non-numeric
+      const nonNumericResult = validateRange('abc', null, null)
+      expect(nonNumericResult.isValid).to.be.false
+      expect(nonNumericResult.errorType).to.equal('spzAge')
     })
 
     it('should validate spzHeight range correctly', () => {
@@ -208,6 +214,45 @@ describe('Site Info Validation Unit Tests', () => {
       const nonNumericResult = validateRange(null, null, 'abc')
       expect(nonNumericResult.isValid).to.be.false
       expect(nonNumericResult.errorType).to.equal('bha50SiteIndex')
+    })
+  })
+
+  context('validatePreConfirmFields', () => {
+    it('should return false with errorType siteIndex when siteSpeciesValues is not Supplied or Computed', () => {
+      const nullResult = validatePreConfirmFields(null, 'SBS')
+      expect(nullResult.isValid).to.be.false
+      expect(nullResult.errorType).to.equal('siteIndex')
+
+      const unknownResult = validatePreConfirmFields('Unknown', 'SBS')
+      expect(unknownResult.isValid).to.be.false
+      expect(unknownResult.errorType).to.equal('siteIndex')
+    })
+
+    it('should return false with errorType becZone when siteSpeciesValues is valid but becZone is null or empty', () => {
+      const nullBecResult = validatePreConfirmFields(
+        CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
+        null,
+      )
+      expect(nullBecResult.isValid).to.be.false
+      expect(nullBecResult.errorType).to.equal('becZone')
+
+      const emptyBecResult = validatePreConfirmFields(
+        CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+        '',
+      )
+      expect(emptyBecResult.isValid).to.be.false
+      expect(emptyBecResult.errorType).to.equal('becZone')
+    })
+
+    it('should return true when siteSpeciesValues and becZone are both valid', () => {
+      expect(
+        validatePreConfirmFields(CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED, 'SBS')
+          .isValid,
+      ).to.be.true
+      expect(
+        validatePreConfirmFields(CONSTANTS.SITE_SPECIES_VALUES.COMPUTED, 'CWH')
+          .isValid,
+      ).to.be.true
     })
   })
 })

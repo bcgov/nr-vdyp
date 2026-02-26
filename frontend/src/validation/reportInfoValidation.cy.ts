@@ -5,6 +5,8 @@ import {
   validateRequiredFields,
   validateAgeRange,
   validateYearRange,
+  validateReportTitle,
+  validateProjectionType,
 } from '@/validation/reportInfoValidation'
 import { CONSTANTS } from '@/constants'
 
@@ -50,33 +52,57 @@ describe('Report Info Validation Unit Tests', () => {
     })
 
     it('should return false and errorType "startingAge" for out of range startingAge', () => {
-      const result = validateAgeRange(
+      const resultBelowMin = validateAgeRange(
         String(CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN - 1),
         String(CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX),
         String(CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN),
       )
-      expect(result.isValid).to.be.false
-      expect(result.errorType).to.equal('startingAge')
+      expect(resultBelowMin.isValid).to.be.false
+      expect(resultBelowMin.errorType).to.equal('startingAge')
+
+      const resultAboveMax = validateAgeRange(
+        String(CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX + 1),
+        String(CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX),
+        String(CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN),
+      )
+      expect(resultAboveMax.isValid).to.be.false
+      expect(resultAboveMax.errorType).to.equal('startingAge')
     })
 
     it('should return false and errorType "finishingAge" for out of range finishingAge', () => {
-      const result = validateAgeRange(
+      const resultBelowMin = validateAgeRange(
+        String(CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN),
+        String(CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN - 1),
+        String(CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN),
+      )
+      expect(resultBelowMin.isValid).to.be.false
+      expect(resultBelowMin.errorType).to.equal('finishingAge')
+
+      const resultAboveMax = validateAgeRange(
         String(CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN),
         String(CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX + 1),
         String(CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN),
       )
-      expect(result.isValid).to.be.false
-      expect(result.errorType).to.equal('finishingAge')
+      expect(resultAboveMax.isValid).to.be.false
+      expect(resultAboveMax.errorType).to.equal('finishingAge')
     })
 
     it('should return false and errorType "ageIncrement" for out of range ageIncrement', () => {
-      const result = validateAgeRange(
+      const resultBelowMin = validateAgeRange(
         String(CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN),
         String(CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX),
         String(CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN - 1),
       )
-      expect(result.isValid).to.be.false
-      expect(result.errorType).to.equal('ageIncrement')
+      expect(resultBelowMin.isValid).to.be.false
+      expect(resultBelowMin.errorType).to.equal('ageIncrement')
+
+      const resultAboveMax = validateAgeRange(
+        String(CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN),
+        String(CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX),
+        String(CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX + 1),
+      )
+      expect(resultAboveMax.isValid).to.be.false
+      expect(resultAboveMax.errorType).to.equal('ageIncrement')
     })
 
     it('should return true when null values are provided', () => {
@@ -96,37 +122,91 @@ describe('Report Info Validation Unit Tests', () => {
     })
 
     it('should return false and errorType "startYear" for out of range startYear', () => {
-      const result = validateYearRange(
+      const resultBelowMin = validateYearRange(
         String(CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN - 1),
         String(CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX),
         String(CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN),
       )
-      expect(result.isValid).to.be.false
-      expect(result.errorType).to.equal('startYear')
+      expect(resultBelowMin.isValid).to.be.false
+      expect(resultBelowMin.errorType).to.equal('startYear')
+
+      const resultAboveMax = validateYearRange(
+        String(CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX + 1),
+        String(CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX),
+        String(CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN),
+      )
+      expect(resultAboveMax.isValid).to.be.false
+      expect(resultAboveMax.errorType).to.equal('startYear')
     })
 
     it('should return false and errorType "endYear" for out of range endYear', () => {
-      const result = validateYearRange(
+      const resultBelowMin = validateYearRange(
+        String(CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN),
+        String(CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN - 1),
+        String(CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN),
+      )
+      expect(resultBelowMin.isValid).to.be.false
+      expect(resultBelowMin.errorType).to.equal('endYear')
+
+      const resultAboveMax = validateYearRange(
         String(CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN),
         String(CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX + 1),
         String(CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN),
       )
-      expect(result.isValid).to.be.false
-      expect(result.errorType).to.equal('endYear')
+      expect(resultAboveMax.isValid).to.be.false
+      expect(resultAboveMax.errorType).to.equal('endYear')
     })
 
     it('should return false and errorType "yearIncrement" for out of range yearIncrement', () => {
-      const result = validateYearRange(
+      const resultBelowMin = validateYearRange(
         String(CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN),
         String(CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX),
         String(CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN - 1),
       )
-      expect(result.isValid).to.be.false
-      expect(result.errorType).to.equal('yearIncrement')
+      expect(resultBelowMin.isValid).to.be.false
+      expect(resultBelowMin.errorType).to.equal('yearIncrement')
+
+      const resultAboveMax = validateYearRange(
+        String(CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN),
+        String(CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX),
+        String(CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX + 1),
+      )
+      expect(resultAboveMax.isValid).to.be.false
+      expect(resultAboveMax.errorType).to.equal('yearIncrement')
     })
 
     it('should return true when null values are provided', () => {
       expect(validateYearRange(null, null, null).isValid).to.be.true
+    })
+  })
+
+  context('validateReportTitle', () => {
+    it('should return true when report title is provided', () => {
+      expect(validateReportTitle('My Report').isValid).to.be.true
+    })
+
+    it('should return false when report title is null', () => {
+      expect(validateReportTitle(null).isValid).to.be.false
+    })
+
+    it('should return false when report title is empty or whitespace', () => {
+      expect(validateReportTitle('').isValid).to.be.false
+      expect(validateReportTitle('   ').isValid).to.be.false
+    })
+  })
+
+  context('validateProjectionType', () => {
+    it('should return true when projection type is provided', () => {
+      expect(validateProjectionType('AGE').isValid).to.be.true
+    })
+
+    it('should return false when projection type is null', () => {
+      expect(validateProjectionType(null).isValid).to.be.false
+    })
+
+    it('should return false when projection type is empty or whitespace', () => {
+      expect(validateProjectionType('').isValid).to.be.false
+      expect(validateProjectionType('   ').isValid).to.be.false
     })
   })
 })

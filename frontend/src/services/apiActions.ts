@@ -148,6 +148,23 @@ export const cancelProjection = async (
 }
 
 /**
+ * Duplicates a projection (copies inputs, resets status to Draft).
+ * @param projectionGUID The projection GUID to duplicate.
+ * @returns A promise that resolves to the newly created duplicate ProjectionModel.
+ */
+export const duplicateProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.duplicateProjection(projectionGUID)
+    return response.data
+  } catch (error) {
+    console.error('Error duplicating projection:', error)
+    throw error
+  }
+}
+
+/**
  * Fetches a projection by its GUID.
  * @param projectionGUID The projection GUID.
  * @returns A promise that resolves to the ProjectionModel.

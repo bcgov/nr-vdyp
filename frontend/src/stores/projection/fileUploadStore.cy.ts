@@ -24,6 +24,7 @@ const makeParsedParams = (overrides: Partial<ParsedProjectionParameters> = {}): 
   combineAgeYearRange: null,
   progressFrequency: null,
   reportTitle: null,
+  copyTitle: null,
   ...overrides,
 })
 
@@ -172,7 +173,7 @@ describe('File Upload Store Unit Tests', () => {
     it('should set runModelEnabled to false when editing a panel', () => {
       store.setPolygonFileInfo({ filename: 'poly.csv', fileMappingGUID: 'poly-guid', fileSetGUID: 'set-1' })
       store.setLayerFileInfo({ filename: 'layer.csv', fileMappingGUID: 'layer-guid', fileSetGUID: 'set-1' })
-      // watch is async — call explicitly to sync state before asserting
+      // watch is async - call explicitly to sync state before asserting
       store.updateRunModelEnabled()
       expect(store.runModelEnabled).to.be.true
 
@@ -237,7 +238,7 @@ describe('File Upload Store Unit Tests', () => {
       expect(store.runModelEnabled).to.be.true
 
       store.setPolygonFileInfo(null)
-      // watch is async — call explicitly to sync state before asserting
+      // watch is async - call explicitly to sync state before asserting
       store.updateRunModelEnabled()
 
       expect(store.runModelEnabled).to.be.false

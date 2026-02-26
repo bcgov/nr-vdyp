@@ -49,6 +49,7 @@ export interface ProjectionModel {
   endDate: string | null
   calculationEngineCode: CalculationEngineCodeModel
   projectionStatusCode: ProjectionStatusCodeModel
+  createDate: string | null
   lastUpdatedDate: string | null
   reportTitle: string | null
   reportDescription: string | null

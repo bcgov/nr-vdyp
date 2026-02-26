@@ -31,22 +31,23 @@ describe('Stand Information Validation Unit Tests', () => {
     })
 
     it('should return false for percentStockableArea out of range', () => {
-      expect(
-        validateRange(
-          String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN - 1),
-          null,
-          null,
-          null,
-        ).isValid,
-      ).to.be.false
-      expect(
-        validateRange(
-          String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX + 1),
-          null,
-          null,
-          null,
-        ).isValid,
-      ).to.be.false
+      const resultBelowMin = validateRange(
+        String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN - 1),
+        null,
+        null,
+        null,
+      )
+      expect(resultBelowMin.isValid).to.be.false
+      expect(resultBelowMin.errorType).to.equal('percentStockableArea')
+
+      const resultAboveMax = validateRange(
+        String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX + 1),
+        null,
+        null,
+        null,
+      )
+      expect(resultAboveMax.isValid).to.be.false
+      expect(resultAboveMax.errorType).to.equal('percentStockableArea')
     })
 
     it('should return true for null value', () => {
@@ -54,47 +55,79 @@ describe('Stand Information Validation Unit Tests', () => {
     })
 
     it('should return false for negative percentStockableArea', () => {
-      expect(validateRange('-10', null, null, null).isValid).to.be.false
+      const result = validateRange('-10', null, null, null)
+      expect(result.isValid).to.be.false
+      expect(result.errorType).to.equal('percentStockableArea')
     })
 
-    it('should return false for invalid basalArea', () => {
-      expect(
-        validateRange(
-          null,
-          String(CONSTANTS.NUM_INPUT_LIMITS.BASAL_AREA_MAX + 1),
-          null,
-          null,
-        ).isValid,
-      ).to.be.false
+    it('should return false for basalArea above maximum', () => {
+      const result = validateRange(
+        null,
+        String(CONSTANTS.NUM_INPUT_LIMITS.BASAL_AREA_MAX + 1),
+        null,
+        null,
+      )
+      expect(result.isValid).to.be.false
+      expect(result.errorType).to.equal('basalArea')
     })
 
-    it('should return false for invalid treesPerHectare', () => {
-      expect(
-        validateRange(
-          null,
-          null,
-          String(CONSTANTS.NUM_INPUT_LIMITS.TPH_MAX + 1),
-          null,
-        ).isValid,
-      ).to.be.false
+    it('should return false for basalArea below minimum', () => {
+      const result = validateRange(
+        null,
+        String(CONSTANTS.NUM_INPUT_LIMITS.BASAL_AREA_MIN / 2),
+        null,
+        null,
+      )
+      expect(result.isValid).to.be.false
+      expect(result.errorType).to.equal('basalArea')
     })
 
-    it('should return false for invalid crownClosure', () => {
-      expect(
-        validateRange(
-          null,
-          null,
-          null,
-          String(CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX + 1),
-        ).isValid,
-      ).to.be.false
+    it('should return false for treesPerHectare above maximum', () => {
+      const result = validateRange(
+        null,
+        null,
+        String(CONSTANTS.NUM_INPUT_LIMITS.TPH_MAX + 1),
+        null,
+      )
+      expect(result.isValid).to.be.false
+      expect(result.errorType).to.equal('treesPerHectare')
+    })
+
+    it('should return false for treesPerHectare below minimum', () => {
+      const result = validateRange(
+        null,
+        null,
+        String(CONSTANTS.NUM_INPUT_LIMITS.TPH_MIN / 2),
+        null,
+      )
+      expect(result.isValid).to.be.false
+      expect(result.errorType).to.equal('treesPerHectare')
+    })
+
+    it('should return false for crownClosure above maximum', () => {
+      const result = validateRange(
+        null,
+        null,
+        null,
+        String(CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX + 1),
+      )
+      expect(result.isValid).to.be.false
+      expect(result.errorType).to.equal('crownClosure')
     })
   })
 
   context('validateBALimits', () => {
-    it('should return true for invalid inputs', () => {
+    it('should return true for missing inputs', () => {
       expect(validateBALimits(null, null, null, null)).to.be.true
       expect(validateBALimits('H', 'CWH', null, '10.0')).to.be.true
+    })
+
+    it('should return true for basal area within limit', () => {
+      expect(validateBALimits('H', 'CWH', '30', '10')).to.be.true
+    })
+
+    it('should return false for basal area exceeding limit', () => {
+      expect(validateBALimits('H', 'CWH', '50', '10')).to.be.false
     })
   })
 
@@ -125,6 +158,23 @@ describe('Stand Information Validation Unit Tests', () => {
         becZone,
       )
       expect(result).to.include('Trees/ha is less than a likely minimum')
+    })
+
+    it('should return error message for TPH above maximum', () => {
+      const basalArea = '5.0'
+      const tph = '4000'
+      const spzHeight = '10.0'
+      const species = 'AC'
+      const becZone = 'CWH'
+
+      const result = validateTPHLimits(
+        basalArea,
+        tph,
+        spzHeight,
+        species,
+        becZone,
+      )
+      expect(result).to.include('Trees/ha is above a likely maximum')
     })
 
     it('should return null for invalid inputs', () => {
