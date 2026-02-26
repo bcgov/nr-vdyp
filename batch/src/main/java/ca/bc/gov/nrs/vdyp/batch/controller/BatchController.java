@@ -288,6 +288,10 @@ public class BatchController {
 				.filter(se -> se.getStepName().startsWith("workerStep:")) //
 				.mapToInt(se -> se.getExecutionContext().getInt("polygonsProcessed", 0)) //
 				.sum();
+		int polygonsSkipped = jobExecution.getStepExecutions().stream() //
+				.filter(se -> se.getStepName().startsWith("workerStep:")) //
+				.mapToInt(se -> se.getExecutionContext().getInt("polygonsSkipped", 0)) //
+				.sum();
 		int projectionErrors = jobExecution.getStepExecutions().stream() //
 				.filter(se -> se.getStepName().startsWith("workerStep:")) //
 				.mapToInt(se -> se.getExecutionContext().getInt("projectionErrors", 0)) //
@@ -301,6 +305,7 @@ public class BatchController {
 		response.put(BatchConstants.Job.IS_RUNNING, isRunning);
 		response.put("errorCount", projectionErrors);
 		response.put("polygonsProcessed", polygonsProcessed);
+		response.put("polygonsSkipped", polygonsSkipped);
 		response.put("totalPolygonRecords", totalPolygons);
 
 		if (jobExecution.getStartTime() != null) {
@@ -314,7 +319,7 @@ public class BatchController {
 
 		logger.debug(
 				"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}", jobGuid,
-				jobExecution.getStatus(), isRunning, totalPartitions, completedPartitions
+				jobExecution.getStatus(), isRunning
 		);
 
 		return ResponseEntity.ok(response);
