@@ -8,9 +8,14 @@ import {
   isProjectionReadOnly,
   transformProjection,
   streamResultsZip,
+  createProjection,
+  duplicateProjection,
+  updateProjectionParams,
+  updateProjectionParamsWithModel,
+  fetchUserProjections,
 } from '@/services/projectionService'
 import apiClient from '@/services/apiClient'
-import type { ProjectionModel } from '@/services/vdyp-api'
+import type { ProjectionModel, Parameters } from '@/services/vdyp-api'
 
 // Local implementations for testing
 const sortProjections = (
@@ -270,6 +275,18 @@ describe('ProjectionListService Unit Tests', () => {
 })
 
 describe('projectionService Unit Tests', () => {
+  const mockProjectionModel = {
+    projectionGUID: 'guid-test',
+    reportTitle: 'Test Title',
+    reportDescription: 'Test Description',
+    projectionStatusCode: { code: 'DRAFT', description: '', displayOrder: 0 },
+    lastUpdatedDate: '2024-01-01',
+    expiryDate: '2024-07-01',
+    projectionParameters: null,
+  } as unknown as ProjectionModel
+
+  const mockParameters = {} as Parameters
+
   describe('mapProjectionStatus', () => {
     it('should map known status codes correctly', () => {
       expect(mapProjectionStatus('DRAFT')).to.equal(PROJECTION_STATUS.DRAFT)
@@ -292,6 +309,11 @@ describe('projectionService Unit Tests', () => {
       expect(result.outputFormat).to.be.null
     })
 
+    it('should return null reportTitle in defaults', () => {
+      const result = parseProjectionParams(null)
+      expect(result.reportTitle).to.be.null
+    })
+
     it('should parse valid JSON string', () => {
       const json = JSON.stringify({
         ageStart: 10,
@@ -304,6 +326,18 @@ describe('projectionService Unit Tests', () => {
       expect(result.selectedExecutionOptions).to.deep.equal([
         'DoIncludeProjectedMOFVolumes',
       ])
+    })
+
+    it('should parse reportTitle from valid JSON', () => {
+      const json = JSON.stringify({ reportTitle: 'My Report Title' })
+      const result = parseProjectionParams(json)
+      expect(result.reportTitle).to.equal('My Report Title')
+    })
+
+    it('should return null for missing reportTitle in JSON', () => {
+      const json = JSON.stringify({ ageStart: 10 })
+      const result = parseProjectionParams(json)
+      expect(result.reportTitle).to.be.null
     })
 
     it('should return defaults for invalid JSON', () => {
@@ -354,6 +388,210 @@ describe('projectionService Unit Tests', () => {
       expect(result.title).to.equal('')
       expect(result.description).to.equal('')
       expect(result.status).to.equal(PROJECTION_STATUS.DRAFT)
+    })
+  })
+
+  describe('fetchUserProjections', () => {
+    it('should fetch, transform and return projections', () => {
+      cy.stub(apiClient, 'getUserProjections').resolves({ data: [mockProjectionModel] })
+
+      cy.wrap(fetchUserProjections()).then((result: any) => {
+        expect(apiClient.getUserProjections).to.be.calledOnce
+        expect(result).to.have.length(1)
+        expect(result[0].projectionGUID).to.equal('guid-test')
+        expect(result[0].title).to.equal('Test Title')
+        expect(result[0].description).to.equal('Test Description')
+      })
+    })
+
+    it('should return empty array when no projections exist', () => {
+      cy.stub(apiClient, 'getUserProjections').resolves({ data: [] })
+
+      cy.wrap(fetchUserProjections()).then((result: any) => {
+        expect(result).to.have.length(0)
+      })
+    })
+
+    it('should throw error when API fails', () => {
+      const mockError = new Error('Fetch failed')
+      cy.stub(apiClient, 'getUserProjections').rejects(mockError)
+
+      fetchUserProjections()
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(error).to.equal(mockError)
+        })
+    })
+  })
+
+  describe('createProjection', () => {
+    it('should create projection and return the model', () => {
+      cy.stub(apiClient, 'createProjection').resolves({ data: mockProjectionModel })
+
+      cy.wrap(createProjection(mockParameters)).then((result: any) => {
+        expect(apiClient.createProjection).to.be.calledOnce
+        expect(result.projectionGUID).to.equal('guid-test')
+      })
+    })
+
+    it('should pass reportDescription to apiClient', () => {
+      cy.stub(apiClient, 'createProjection').resolves({ data: mockProjectionModel })
+
+      cy.wrap(createProjection(mockParameters, undefined, 'My description')).then(() => {
+        expect(apiClient.createProjection).to.be.calledWith(
+          mockParameters,
+          undefined,
+          'My description',
+        )
+      })
+    })
+
+    it('should pass null reportDescription when explicitly provided as null', () => {
+      cy.stub(apiClient, 'createProjection').resolves({ data: mockProjectionModel })
+
+      cy.wrap(createProjection(mockParameters, undefined, null)).then(() => {
+        expect(apiClient.createProjection).to.be.calledWith(mockParameters, undefined, null)
+      })
+    })
+
+    it('should throw error when API fails', () => {
+      const mockError = new Error('Create failed')
+      cy.stub(apiClient, 'createProjection').rejects(mockError)
+
+      createProjection(mockParameters)
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(error).to.equal(mockError)
+        })
+    })
+  })
+
+  describe('duplicateProjection', () => {
+    it('should duplicate projection and return the model', () => {
+      const mockDuplicate = { ...mockProjectionModel, projectionGUID: 'guid-copy' }
+      cy.stub(apiClient, 'duplicateProjection').resolves({ data: mockDuplicate })
+
+      cy.wrap(duplicateProjection('guid-test')).then((result: any) => {
+        expect(apiClient.duplicateProjection).to.be.calledOnceWith('guid-test')
+        expect(result.projectionGUID).to.equal('guid-copy')
+      })
+    })
+
+    it('should throw error when API fails', () => {
+      const mockError = new Error('Duplicate failed')
+      cy.stub(apiClient, 'duplicateProjection').rejects(mockError)
+
+      duplicateProjection('guid-test')
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(error).to.equal(mockError)
+        })
+    })
+  })
+
+  describe('updateProjectionParams', () => {
+    it('should update projection and return the fetched model', () => {
+      cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+      cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
+
+      cy.wrap(updateProjectionParams('guid-test', mockParameters)).then((result: any) => {
+        expect(apiClient.updateProjectionParams).to.be.calledOnce
+        expect(apiClient.getProjection).to.be.calledWith('guid-test')
+        expect(result.projectionGUID).to.equal('guid-test')
+      })
+    })
+
+    it('should pass reportDescription to apiClient', () => {
+      cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+      cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
+
+      cy.wrap(updateProjectionParams('guid-test', mockParameters, 'Updated desc')).then(() => {
+        expect(apiClient.updateProjectionParams).to.be.calledWith(
+          'guid-test',
+          mockParameters,
+          undefined,
+          'Updated desc',
+        )
+      })
+    })
+
+    it('should call getProjection after updateProjectionParams', () => {
+      cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+      cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
+
+      cy.wrap(updateProjectionParams('guid-test', mockParameters, 'desc')).then(() => {
+        expect(apiClient.getProjection).to.be.calledWith('guid-test')
+      })
+    })
+
+    it('should throw error when API fails', () => {
+      const mockError = new Error('Update failed')
+      cy.stub(apiClient, 'updateProjectionParams').rejects(mockError)
+
+      updateProjectionParams('guid-test', mockParameters)
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(error).to.equal(mockError)
+        })
+    })
+  })
+
+  describe('updateProjectionParamsWithModel', () => {
+    it('should update projection with model and return the fetched model', () => {
+      cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+      cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
+
+      cy.wrap(updateProjectionParamsWithModel('guid-test', mockParameters)).then((result: any) => {
+        expect(apiClient.updateProjectionParams).to.be.calledOnce
+        expect(apiClient.getProjection).to.be.calledWith('guid-test')
+        expect(result.projectionGUID).to.equal('guid-test')
+      })
+    })
+
+    it('should pass reportDescription to apiClient', () => {
+      cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+      cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
+
+      cy.wrap(
+        updateProjectionParamsWithModel('guid-test', mockParameters, undefined, 'Model desc'),
+      ).then(() => {
+        expect(apiClient.updateProjectionParams).to.be.calledWith(
+          'guid-test',
+          mockParameters,
+          undefined,
+          'Model desc',
+        )
+      })
+    })
+
+    it('should call getProjection after updateProjectionParams', () => {
+      cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+      cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
+
+      cy.wrap(updateProjectionParamsWithModel('guid-test', mockParameters)).then(() => {
+        expect(apiClient.getProjection).to.be.calledWith('guid-test')
+      })
+    })
+
+    it('should throw error when API fails', () => {
+      const mockError = new Error('Update with model failed')
+      cy.stub(apiClient, 'updateProjectionParams').rejects(mockError)
+
+      updateProjectionParamsWithModel('guid-test', mockParameters)
+        .then(() => {
+          throw new Error('Test should have failed but succeeded unexpectedly')
+        })
+        .catch((error: Error) => {
+          expect(error).to.equal(mockError)
+        })
     })
   })
 

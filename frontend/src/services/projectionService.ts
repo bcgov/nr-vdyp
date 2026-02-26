@@ -6,6 +6,7 @@ import {
   deleteProjection as apiDeleteProjection,
   runProjection as apiRunProjection,
   cancelProjection as apiCancelProjection,
+  duplicateProjection as apiDuplicateProjection,
   deleteFileFromFileSet as apiDeleteFileFromFileSet,
   getFileSetFiles as apiGetFileSetFiles,
   getFileForDownload as apiGetFileForDownload,
@@ -140,6 +141,7 @@ export const fetchUserProjections = async (): Promise<Projection[]> => {
 export const createProjection = async (
   parameters: Parameters,
   modelParameters?: ModelParameters,
+  reportDescription?: string | null,
 ): Promise<ProjectionModel> => {
   try {
     const parametersJson = JSON.stringify(parameters)
@@ -150,7 +152,7 @@ export const createProjection = async (
       console.log('ModelParameters:', JSON.stringify(modelParameters))
     }
 
-    const projectionModel = await apiCreateProjection(parameters, modelParameters)
+    const projectionModel = await apiCreateProjection(parameters, modelParameters, reportDescription)
 
     console.log('=== createProjection Backend Response ===')
     console.log('projectionParameters:', projectionModel.projectionParameters)
@@ -200,6 +202,23 @@ export const cancelProjection = async (
 }
 
 /**
+ * Duplicates a projection by sending a duplicate request to the backend.
+ * The copy will have "COPY" appended to its name, status set to Draft, and no results.
+ * @param projectionGUID The projection GUID to duplicate
+ * @returns A promise that resolves to the newly created duplicate ProjectionModel
+ */
+export const duplicateProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    return await apiDuplicateProjection(projectionGUID)
+  } catch (error) {
+    console.error('Error duplicating projection:', error)
+    throw error
+  }
+}
+
+/**
  * Fetches a projection by its GUID
  * @param projectionGUID The projection GUID
  * @returns A promise that resolves to the ProjectionModel
@@ -225,12 +244,13 @@ export const getProjectionById = async (
 export const updateProjectionParams = async (
   projectionGUID: string,
   parameters: Parameters,
+  reportDescription?: string | null,
 ): Promise<ProjectionModel> => {
   try {
     console.log('=== updateProjectionParams ===')
     console.log('org projectionParameters:', JSON.stringify(parameters))
 
-    const updatedProjection = await apiUpdateProjectionParams(projectionGUID, parameters)
+    const updatedProjection = await apiUpdateProjectionParams(projectionGUID, parameters, undefined, reportDescription)
     console.log('updated projectionParameters:', updatedProjection.projectionParameters)
 
     const projectionModel = await apiGetProjection(projectionGUID)
@@ -259,6 +279,7 @@ export const updateProjectionParamsWithModel = async (
   projectionGUID: string,
   parameters: Parameters,
   modelParameters?: ModelParameters,
+  reportDescription?: string | null,
 ): Promise<ProjectionModel> => {
   try {
     console.log('=== updateProjectionParamsWithModel ===')
@@ -267,7 +288,7 @@ export const updateProjectionParamsWithModel = async (
     console.log('org modelParameters:', JSON.stringify(modelParameters))
 
     // Step 1: Update projection parameters and model parameters
-    const updatedProjection = await apiUpdateProjectionParams(projectionGUID, parameters, modelParameters)
+    const updatedProjection = await apiUpdateProjectionParams(projectionGUID, parameters, modelParameters, reportDescription)
     console.log('updated projectionParameters:', updatedProjection.projectionParameters)
     console.log('updated modelParameters:', updatedProjection.modelParameters)
 
@@ -437,6 +458,7 @@ export const parseProjectionParams = (
     combineAgeYearRange: null,
     progressFrequency: null,
     reportTitle: null,
+    copyTitle: null,
   }
 
   if (!parametersJson) {
@@ -471,6 +493,7 @@ export const parseProjectionParams = (
       combineAgeYearRange: parsed.combineAgeYearRange ?? null,
       progressFrequency: parsed.progressFrequency ?? null,
       reportTitle: parsed.reportTitle ?? null,
+      copyTitle: parsed.copyTitle ?? null,
     }
   } catch {
     console.error('Error parsing projection parameters JSON')

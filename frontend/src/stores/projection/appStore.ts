@@ -20,6 +20,9 @@ export const useAppStore = defineStore('appStore', () => {
   // Saving state for progress indicator
   const isSavingProjection = ref(false)
 
+  // Duplicate origin info: set when navigating to a newly duplicated projection
+  const duplicatedFromInfo = ref<{ originalName: string; duplicatedAt: string } | null>(null)
+
   const getModelSelection = computed(() => modelSelection.value)
   const getViewMode = computed(() => viewMode.value)
   const getCurrentProjectionGUID = computed(() => currentProjectionGUID.value)
@@ -43,12 +46,17 @@ export const useAppStore = defineStore('appStore', () => {
     currentProjectionStatus.value = status
   }
 
+  const setDuplicatedFromInfo = (info: { originalName: string; duplicatedAt: string } | null) => {
+    duplicatedFromInfo.value = info
+  }
+
   // Reset state for new projection creation
   const resetForNewProjection = () => {
     viewMode.value = PROJECTION_VIEW_MODE.CREATE
     currentProjectionGUID.value = null
     currentProjectionStatus.value = PROJECTION_STATUS.DRAFT
     isSavingProjection.value = false
+    duplicatedFromInfo.value = null
   }
 
   return {
@@ -67,6 +75,8 @@ export const useAppStore = defineStore('appStore', () => {
     setCurrentProjectionGUID,
     setCurrentProjectionStatus,
     isSavingProjection,
+    duplicatedFromInfo,
+    setDuplicatedFromInfo,
     resetForNewProjection,
   }
 })

@@ -51,6 +51,6 @@
 
 /* Tab window styling */
 .v-window.v-theme--defaultTheme.v-tabs-window {
-  box-shadow: var(--surface-shadow-medium);
+  box-shadow: none;
   border-radius: var(--layout-border-radius-none);
 }

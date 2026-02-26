@@ -25,7 +25,7 @@ A dropdown menu component that displays different action options based on the pr
 **Menu items by status:**
 - **Draft**: Edit, Duplicate, Delete
 - **Ready**: View, Duplicate, Download, Delete
-- **Running**: Cancel, Delete
+- **Running**: Cancel
 - **Failed**: Edit, Duplicate, Download, Delete
         `,
       },
@@ -124,7 +124,7 @@ export const Running: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Running status shows: Cancel, Delete',
+        story: 'Running status shows: Cancel',
       },
     },
   },

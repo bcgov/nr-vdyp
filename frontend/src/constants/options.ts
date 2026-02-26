@@ -42,24 +42,13 @@ export const ecoZoneOptions = [
 ]
 
 export const ageYearRangeOptions = [
-  { label: 'Age Range', value: CONSTANTS.AGE_YEAR_RANGE.AGE },
-  { label: 'Year Range', value: CONSTANTS.AGE_YEAR_RANGE.YEAR },
+  { label: 'Age', value: CONSTANTS.AGE_YEAR_RANGE.AGE },
+  { label: 'Year', value: CONSTANTS.AGE_YEAR_RANGE.YEAR },
 ]
 
 export const projectionTypeOptions = [
   { label: 'Volume', value: CONSTANTS.PROJECTION_TYPE.VOLUME },
   { label: 'CFS Biomass', value: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS },
-]
-
-export const modelSelectionOptions = [
-  {
-    label: 'File Upload',
-    value: CONSTANTS.MODEL_SELECTION.FILE_UPLOAD,
-  },
-  {
-    label: 'Manual Input',
-    value: CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
-  },
 ]
 
 // Utilization class options with (slider) index, label, and enum value mapping

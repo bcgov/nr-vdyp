@@ -144,3 +144,48 @@ export const SinglePage: Story = {
   },
 }
 
+// totalItems = 0  ->  totalPages = 0, both arrows disabled, no page buttons
+export const EmptyState: Story = {
+  render: (args) => ({
+    components: { ProjectionPagination },
+    setup() {
+      const currentPage = ref(args.currentPage)
+      const itemsPerPage = ref(args.itemsPerPage)
+
+      const handlePageChange = (page: number) => {
+        currentPage.value = page
+      }
+
+      const handleItemsPerPageChange = (value: number) => {
+        itemsPerPage.value = value
+        currentPage.value = 1
+      }
+
+      return { args, currentPage, itemsPerPage, handlePageChange, handleItemsPerPageChange }
+    },
+    template: `
+      <ProjectionPagination
+        :current-page="currentPage"
+        :items-per-page="itemsPerPage"
+        :total-items="args.totalItems"
+        :items-per-page-options="args.itemsPerPageOptions"
+        @update:current-page="handlePageChange"
+        @update:items-per-page="handleItemsPerPageChange"
+      />
+    `,
+  }),
+  args: {
+    currentPage: 1,
+    itemsPerPage: 10,
+    totalItems: 0,
+    itemsPerPageOptions: [10, 20, 50, 100],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'No items available (totalItems = 0): both arrows are disabled and no page number buttons are rendered.',
+      },
+    },
+  },
+}

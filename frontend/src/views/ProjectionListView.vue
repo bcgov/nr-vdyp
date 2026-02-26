@@ -29,6 +29,21 @@
       </v-menu>
     </div>
 
+    <!-- Bulk Action Bar (visible when checkboxes are selected in table view) -->
+    <ProjectionBulkActionBar
+      v-if="!isCardView"
+      :is-visible="selectedGUIDs.length > 0"
+      :selected-count="selectedGUIDs.length"
+      :can-download="canBulkDownload"
+      :can-cancel="canBulkCancel"
+      :can-delete="canBulkDelete"
+      @close="clearSelection"
+      @download="handleBulkDownload"
+      @duplicate="handleBulkDuplicate"
+      @cancel="handleBulkCancel"
+      @delete="handleBulkDelete"
+    />
+
     <!-- Desktop/Tablet Table View (above 1025px) -->
     <ProjectionTable
       v-if="!isCardView"
@@ -36,6 +51,7 @@
       :headers="headers"
       :sort-by="sortBy"
       :sort-order="sortOrder"
+      :selectedGUIDs="selectedGUIDs"
       @sort="sortColumn"
       @view="handleView"
       @edit="handleEdit"
@@ -44,6 +60,7 @@
       @cancel="handleCancel"
       @delete="handleDelete"
       @rowClick="handleRowClick"
+      @selectionChange="handleSelectionChange"
     />
 
     <!-- Mobile Card View (1025px and below) -->
@@ -80,6 +97,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import JSZip from 'jszip'
 import { useRouter } from 'vue-router'
 import type { Projection, TableHeader, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
@@ -88,11 +106,12 @@ import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_S
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { downloadFile, sanitizeFileName } from '@/utils/util'
 import { AppButton, AppProgressCircular } from '@/components'
-import { ProjectionTable, ProjectionCardList, ProjectionPagination } from '@/components/projection'
+import { ProjectionTable, ProjectionCardList, ProjectionPagination, ProjectionBulkActionBar } from '@/components/projection'
 import {
   fetchUserProjections,
   deleteProjectionWithFiles,
   cancelProjection,
+  duplicateProjection,
   getProjectionById,
   transformProjection,
   parseProjectionParams,
@@ -126,6 +145,9 @@ const error = ref<string | null>(null)
 // Progress state
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
+
+// Bulk selection state
+const selectedGUIDs = ref<string[]>([])
 
 // Load projections from API
 const loadProjections = async () => {
@@ -177,6 +199,22 @@ const cardSortBy = ref<string>(PAGINATION.DEFAULT_CARD_SORT_BY)
 const isCardView = computed(() => windowWidth.value <= BREAKPOINT.CARD_VIEW)
 const newProjectionLabel = computed(() => windowWidth.value <= 360 ? 'Projection' : 'New Projection')
 console.log(`windowWidth: ${windowWidth.value}px`)
+
+// Selected projections (full objects) from the full projections list
+const selectedProjections = computed<Projection[]>(() =>
+  projections.value.filter(p => selectedGUIDs.value.includes(p.projectionGUID))
+)
+
+// Bulk action button enable states (based on current frontend status)
+const canBulkDownload = computed(() =>
+  selectedProjections.value.some(p => p.status === PROJECTION_STATUS.READY || p.status === PROJECTION_STATUS.FAILED)
+)
+const canBulkCancel = computed(() =>
+  selectedProjections.value.some(p => p.status === PROJECTION_STATUS.RUNNING)
+)
+const canBulkDelete = computed(() =>
+  selectedProjections.value.some(p => p.status !== PROJECTION_STATUS.RUNNING)
+)
 
 const sortedProjections = computed(() => {
   const sorted = [...projections.value].sort((a, b) => {
@@ -239,6 +277,14 @@ const handleCardSort = (value: string) => {
   sortOrder.value = order as SortOrder
 }
 
+const clearSelection = () => {
+  selectedGUIDs.value = []
+}
+
+const handleSelectionChange = (guids: string[]) => {
+  selectedGUIDs.value = guids
+}
+
 /**
  * Loads file set files and applies the file info to the store
  */
@@ -267,6 +313,7 @@ const loadFileSetInfo = async (
  * Restores model parameter state from a projection
  */
 const restoreInputModelParamsState = (
+  projectionModel: Awaited<ReturnType<typeof getProjectionById>>,
   modelParameters: string | null | undefined,
   params: ReturnType<typeof parseProjectionParams>,
   isViewMode: boolean,
@@ -283,6 +330,7 @@ const restoreInputModelParamsState = (
   }
 
   modelParameterStore.restoreFromProjectionParams(params, isViewMode)
+  modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
 }
 
 /**
@@ -296,6 +344,7 @@ const restoreFileUploadState = async (
 ) => {
   fileUploadStore.resetStore()
   fileUploadStore.restoreFromProjectionParams(params, isViewMode)
+  fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
 
   const polygonFileSetGUID = projectionModel.polygonFileSet?.projectionFileSetGUID
   const layerFileSetGUID = projectionModel.layerFileSet?.projectionFileSetGUID
@@ -335,8 +384,18 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
       mapProjectionStatus(projectionModel.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT),
     )
 
+    // Set or clear duplicated-from info based on copyTitle in projectionParameters
+    if (params.copyTitle) {
+      appStore.setDuplicatedFromInfo({
+        originalName: params.copyTitle,
+        duplicatedAt: projectionModel.createDate || new Date().toISOString(),
+      })
+    } else {
+      appStore.setDuplicatedFromInfo(null)
+    }
+
     if (isInputModelParams) {
-      restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode)
+      restoreInputModelParamsState(projectionModel, projectionModel.modelParameters, params, isViewMode)
     } else {
       await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode)
     }
@@ -369,8 +428,29 @@ const handleEdit = async (projectionGUID: string) => {
   }
 }
 
-const handleDuplicate = (projectionGUID: string) => {
-  console.log('Duplicate projection:', projectionGUID)
+/**
+ * Duplicates a single projection and refreshes the list
+ */
+const handleDuplicate = async (projectionGUID: string) => {
+  const projection = projections.value.find(p => p.projectionGUID === projectionGUID)
+  const originalName = projection?.title || 'Projection'
+
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.DUPLICATING_PROJECTION
+  try {
+    await duplicateProjection(projectionGUID)
+
+    notificationStore.showSuccessMessage(
+      SUCCESS_MSG.PROJECTION_DUPLICATED(originalName),
+      SUCCESS_MSG.PROJECTION_DUPLICATED_TITLE,
+    )
+    await loadProjections()
+  } catch (err) {
+    console.error('Error duplicating projection:', err)
+    notificationStore.showErrorMessage(PROJECTION_ERR.DUPLICATE_FAILED, PROJECTION_ERR.DUPLICATE_FAILED_TITLE)
+  } finally {
+    isProgressVisible.value = false
+  }
 }
 
 const handleDownload = async (projectionGUID: string) => {
@@ -413,7 +493,7 @@ const handleDelete = async (projectionGUID: string) => {
     progressMessage.value = PROGRESS_MSG.DELETING_PROJECTION
     try {
       await deleteProjectionWithFiles(projectionGUID)
-      notificationStore.showSuccessMessage(SUCCESS_MSG.PROJECTION_DELETED, 'Projection deleted')
+      notificationStore.showSuccessMessage(SUCCESS_MSG.PROJECTION_DELETED, SUCCESS_MSG.PROJECTION_DELETED_TITLE)
       // Refresh the projections list
       await loadProjections()
     } catch (err) {
@@ -442,7 +522,7 @@ const handleCancel = async (projectionGUID: string) => {
     const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT)
 
     if (latestStatus !== PROJECTION_STATUS.RUNNING) {
-      // Projection is no longer running — update the single item and show appropriate message
+      // Projection is no longer running - update the single item and show appropriate message
       updateProjectionInList(latestProjection)
 
       if (latestStatus === PROJECTION_STATUS.READY) {
@@ -490,6 +570,236 @@ const handleNewProjection = (type: (typeof PROJECTION_INPUT_METHOD)[keyof typeof
     fileUploadStore.resetStore()
   }
   router.push(ROUTE_PATH.PROJECTION_DETAIL)
+}
+
+// ============================================================================
+// Bulk Actions
+// ============================================================================
+
+/**
+ * Downloads all selected projections' result zips.
+ * If only 1 zip is downloaded, it is saved directly without re-zipping.
+ * If 2 or more zips are downloaded, they are merged into a single zip file.
+ */
+const handleBulkDownload = async () => {
+  if (selectedGUIDs.value.length === 0) return
+
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.DOWNLOADING_PROJECTION
+
+  try {
+    const downloaded: { zipBlob: Blob; title: string }[] = []
+
+    for (const guid of selectedGUIDs.value) {
+      const projection = projections.value.find(p => p.projectionGUID === guid)
+      try {
+        const { zipBlob } = await streamResultsZip(guid)
+        downloaded.push({ zipBlob, title: projection?.title || guid })
+      } catch (err) {
+        console.error(`Error downloading projection ${guid}:`, err)
+      }
+    }
+
+    if (downloaded.length === 0) {
+      notificationStore.showErrorMessage(
+        PROJECTION_ERR.DOWNLOAD_FAILED('Projections'),
+        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+      )
+      return
+    }
+
+    let fileName: string
+    let fileBlob: Blob
+
+    if (downloaded.length === 1) {
+      // Single result - download the backend zip directly without re-zipping
+      fileName = sanitizeFileName(`${downloaded[0].title}_All Files`) + '.zip'
+      fileBlob = downloaded[0].zipBlob
+    } else {
+      // Multiple results - wrap each backend zip as-is into a single master zip
+      const masterZip = new JSZip()
+      for (const { zipBlob, title } of downloaded) {
+        masterZip.file(sanitizeFileName(`${title}_All Files`) + '.zip', zipBlob)
+      }
+      const now = new Date()
+      const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+      fileName = `VDYP_Projections_All Files_${dateStr}.zip`
+      fileBlob = await masterZip.generateAsync({ type: 'blob' })
+    }
+
+    downloadFile(fileBlob, fileName)
+    notificationStore.showSuccessMessage(
+      SUCCESS_MSG.DOWNLOAD_SUCCESS(fileName),
+      SUCCESS_MSG.DOWNLOAD_SUCCESS_TITLE,
+    )
+  } catch (err) {
+    console.error('Error during bulk download:', err)
+    notificationStore.showErrorMessage(
+      PROJECTION_ERR.DOWNLOAD_FAILED('Projections'),
+      PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
+    )
+  } finally {
+    isProgressVisible.value = false
+  }
+}
+
+/**
+ * Duplicates all selected projections.
+ */
+const handleBulkDuplicate = async () => {
+  if (selectedGUIDs.value.length === 0) return
+
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.DUPLICATING_PROJECTION
+
+  let successCount = 0
+  let failCount = 0
+
+  try {
+    for (const guid of selectedGUIDs.value) {
+      try {
+        await duplicateProjection(guid)
+        successCount++
+      } catch (err) {
+        console.error(`Error duplicating projection ${guid}:`, err)
+        failCount++
+      }
+    }
+
+    if (successCount > 0) {
+      notificationStore.showSuccessMessage(
+        `${successCount} projection(s) duplicated successfully.`,
+        SUCCESS_MSG.PROJECTION_DUPLICATED_TITLE,
+      )
+    }
+    if (failCount > 0) {
+      notificationStore.showErrorMessage(
+        `${failCount} projection(s) could not be duplicated.`,
+        PROJECTION_ERR.DUPLICATE_FAILED_TITLE,
+      )
+    }
+
+    clearSelection()
+    await loadProjections()
+  } finally {
+    isProgressVisible.value = false
+  }
+}
+
+/**
+ * Cancels all selected projections that are Running (checks backend status).
+ */
+const handleBulkCancel = async () => {
+  if (selectedGUIDs.value.length === 0) return
+
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.CANCELLING_PROJECTION
+
+  let successCount = 0
+  let skipCount = 0
+
+  try {
+    for (const guid of selectedGUIDs.value) {
+      try {
+        // Check actual backend status
+        const latestProjection = await getProjectionById(guid)
+        const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT)
+
+        // Update frontend status if it differs
+        updateProjectionInList(latestProjection)
+
+        if (latestStatus !== PROJECTION_STATUS.RUNNING) {
+          skipCount++
+          continue
+        }
+
+        const cancelledProjection = await cancelProjection(guid)
+        updateProjectionInList(cancelledProjection)
+        successCount++
+      } catch (err) {
+        console.error(`Error cancelling projection ${guid}:`, err)
+      }
+    }
+
+    if (successCount > 0) {
+      notificationStore.showSuccessMessage(
+        `${successCount} projection(s) cancelled successfully.`,
+        SUCCESS_MSG.PROJECTION_CANCELLED_TITLE,
+      )
+    }
+    if (skipCount > 0) {
+      notificationStore.showInfoMessage(
+        `${skipCount} projection(s) were not running and could not be cancelled.`,
+        PROJECTION_ERR.CANCEL_NOT_RUNNING_TITLE,
+      )
+    }
+
+    clearSelection()
+  } finally {
+    isProgressVisible.value = false
+  }
+}
+
+/**
+ * Deletes all selected projections that are not Running (checks backend status).
+ */
+const handleBulkDelete = async () => {
+  if (selectedGUIDs.value.length === 0) return
+
+  const confirmed = await alertDialogStore.openDialog(
+    'Confirmation',
+    `Are you sure you want to delete ${selectedGUIDs.value.length} projection(s)? Once deleted, they will not be recoverable.`,
+    { variant: 'confirmation' },
+  )
+
+  if (!confirmed) return
+
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.DELETING_PROJECTION
+
+  let successCount = 0
+  let skipCount = 0
+
+  try {
+    for (const guid of selectedGUIDs.value) {
+      try {
+        // Check actual backend status
+        const latestProjection = await getProjectionById(guid)
+        const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT)
+
+        // Update frontend status if it differs
+        updateProjectionInList(latestProjection)
+
+        if (latestStatus === PROJECTION_STATUS.RUNNING) {
+          skipCount++
+          continue
+        }
+
+        await deleteProjectionWithFiles(guid)
+        successCount++
+      } catch (err) {
+        console.error(`Error deleting projection ${guid}:`, err)
+      }
+    }
+
+    if (successCount > 0) {
+      notificationStore.showSuccessMessage(
+        `${successCount} projection(s) deleted successfully.`,
+        SUCCESS_MSG.PROJECTION_DELETED_TITLE,
+      )
+    }
+    if (skipCount > 0) {
+      notificationStore.showWarningMessage(
+        `${skipCount} running projection(s) were skipped and could not be deleted.`,
+        'Running Projections Skipped',
+      )
+    }
+
+    clearSelection()
+    await loadProjections()
+  } finally {
+    isProgressVisible.value = false
+  }
 }
 
 // Window resize handler

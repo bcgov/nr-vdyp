@@ -2,14 +2,33 @@
   <v-card :class="computedCardClass" elevation="0">
     <v-card-actions :class="computedCardActionsClass">
       <v-spacer></v-spacer>
-      <AppButton
-        v-if="!showCancelButton"
-        label="Run Projection"
-        variant="primary"
-        class="ml-2"
-        :isDisabled="isDisabled"
-        @click="runModel"
-      />
+      <template v-if="!showCancelButton">
+        <v-tooltip
+          v-if="isDisabled && disabledText"
+          :text="disabledText"
+          location="top"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <span v-bind="tooltipProps" class="run-btn-tooltip-anchor">
+              <AppButton
+                label="Run Projection"
+                variant="primary"
+                class="ml-2"
+                :isDisabled="isDisabled"
+                @click="runModel"
+              />
+            </span>
+          </template>
+        </v-tooltip>
+        <AppButton
+          v-else
+          label="Run Projection"
+          variant="primary"
+          class="ml-2"
+          :isDisabled="isDisabled"
+          @click="runModel"
+        />
+      </template>
       <AppButton
         v-else
         label="Cancel Run"
@@ -30,8 +49,10 @@ const props = withDefaults(defineProps<{
   showCancelButton?: boolean
   cardClass?: string
   cardActionsClass?: string
+  disabledText?: string
 }>(), {
   showCancelButton: false,
+  disabledText: '',
 })
 
 const emit = defineEmits(['runModel', 'cancelRun'])
@@ -57,7 +78,7 @@ const cancelRun = () => {
  * Styling based on BC Gov Design Standards - Using Design Tokens
  */
 .input-model-param-run-model-card {
-  padding: var(--layout-padding-medium) !important;
+  padding: var(--layout-padding-small) !important;
   margin-top: var(--layout-margin-medium) !important;
   background-color: var(--surface-color-background-light-gray);
   border: var(--layout-border-width-small) solid
@@ -91,5 +112,9 @@ const cancelRun = () => {
 .card-actions {
   padding-right: 0px !important;
   margin-right: var(--layout-margin-xsmall) !important;
+}
+
+.run-btn-tooltip-anchor {
+  display: inline-flex;
 }
 </style>

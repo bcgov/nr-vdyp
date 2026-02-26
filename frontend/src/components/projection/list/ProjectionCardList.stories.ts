@@ -88,7 +88,7 @@ A mobile-friendly card list component for displaying projections. This component
 - Action buttons vary based on projection status:
   - **Draft**: Edit, Duplicate, Delete
   - **Ready**: View, Duplicate, Download, Delete
-  - **Running**: Cancel, Delete
+  - **Running**: Cancel
   - **Failed**: Edit, Duplicate, Download, Delete
 
 **Responsive behavior:**
@@ -125,6 +125,7 @@ export const Default: Story = {
         @download="args.download"
         @cancel="args.cancel"
         @delete="args.delete"
+        @row-click="args.rowClick"
       />
     `,
   }),
@@ -164,6 +165,7 @@ export const SingleDraftCard: Story = {
         @download="args.download"
         @cancel="args.cancel"
         @delete="args.delete"
+        @row-click="args.rowClick"
       />
     `,
   }),
@@ -203,6 +205,7 @@ export const SingleReadyCard: Story = {
         @download="args.download"
         @cancel="args.cancel"
         @delete="args.delete"
+        @row-click="args.rowClick"
       />
     `,
   }),
@@ -242,6 +245,7 @@ export const SingleRunningCard: Story = {
         @download="args.download"
         @cancel="args.cancel"
         @delete="args.delete"
+        @row-click="args.rowClick"
       />
     `,
   }),
@@ -253,7 +257,7 @@ export const SingleRunningCard: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Single Running card showing Cancel and Delete actions.',
+        story: 'Single Running card showing Cancel action only.',
       },
     },
   },
@@ -281,6 +285,7 @@ export const SingleFailedCard: Story = {
         @download="args.download"
         @cancel="args.cancel"
         @delete="args.delete"
+        @row-click="args.rowClick"
       />
     `,
   }),
@@ -320,6 +325,7 @@ export const LongDescription: Story = {
         @download="args.download"
         @cancel="args.cancel"
         @delete="args.delete"
+        @row-click="args.rowClick"
       />
     `,
   }),
@@ -371,6 +377,7 @@ export const EmptyList: Story = {
         @download="args.download"
         @cancel="args.cancel"
         @delete="args.delete"
+        @row-click="args.rowClick"
       />
     `,
   }),
@@ -382,7 +389,7 @@ export const EmptyList: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Empty state showing only the sort dropdown with no cards.',
+        story: 'Empty state showing the sort dropdown and an empty state card with the message "No projections found. Create a new projection to build your history."',
       },
     },
   },

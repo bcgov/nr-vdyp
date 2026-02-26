@@ -1,0 +1,128 @@
+/************** TEXTAREA - BC Gov Design Standards ****************/
+
+/* TextArea Component - BC Design Standards Alignment */
+
+/* TextArea wrapper */
+.bcds-textarea {
+  flex-direction: column;
+  align-self: stretch;
+  max-width: -moz-available;
+  max-width: -webkit-fill-available;
+}
+
+/* Label above the textarea */
+.bcds-textarea-label {
+  display: block;
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-primary);
+  font-size: var(--typography-font-size-label);
+  font-weight: var(--typography-font-weights-regular);
+  line-height: 1.5;
+  padding: var(--layout-padding-xsmall) var(--layout-padding-none);
+  padding-bottom: 4px;
+  margin-bottom: 0;
+}
+
+/* TextArea container (the input box) */
+.bcds-textarea-container {
+  color: var(--typography-color-primary);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--layout-margin-small);
+  background: var(--surface-color-forms-default);
+  box-sizing: border-box;
+  border: var(--layout-border-width-small) solid
+    var(--surface-color-border-default);
+  border-radius: var(--layout-border-radius-medium);
+  padding: var(--layout-padding-small) 12px;
+}
+
+/* TextArea input element */
+.bcds-textarea-input {
+  font: var(--typography-regular-body);
+  font-size: var(--typography-font-size-body);
+  padding: var(--layout-padding-none);
+  color: var(--typography-color-primary);
+  border: none;
+  flex-grow: 1;
+  resize: vertical;
+  min-height: 60px;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+}
+
+.bcds-textarea-input::placeholder {
+  color: var(--typography-color-placeholder);
+}
+
+/* Description and character count slot below the textarea */
+.bcds-textarea-description {
+  display: grid;
+  gap: var(--layout-margin-medium);
+  padding: var(--layout-padding-xsmall) var(--layout-padding-none);
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-secondary);
+}
+
+/* Description text */
+.bcds-textarea-description > .text {
+  justify-self: flex-start;
+  grid-row: 1;
+}
+
+/* Character counter */
+.bcds-textarea-description > .counter {
+  justify-self: flex-end;
+  grid-row: 1;
+  font-size: var(--typography-font-size-label);
+}
+
+/* Focused state */
+.bcds-textarea-container:focus-within {
+  border-radius: var(--layout-border-radius-large);
+  border: var(--layout-border-width-small) solid
+    var(--surface-color-border-active);
+  outline: solid var(--layout-border-width-medium)
+    var(--surface-color-border-active);
+  outline-offset: var(--layout-margin-hair);
+}
+
+/* Hover state */
+.bcds-textarea-container:hover {
+  border-color: var(--surface-color-border-dark);
+}
+
+/* Disabled state */
+.bcds-textarea[data-disabled] .bcds-textarea-container,
+.bcds-textarea[data-disabled] .bcds-textarea-input {
+  background: var(--surface-color-forms-disabled);
+  color: var(--typography-color-placeholder);
+  cursor: not-allowed;
+}
+
+.bcds-textarea[data-disabled] .bcds-textarea-label {
+  color: var(--typography-color-disabled);
+}
+
+/* Invalid/Error state */
+.bcds-textarea[data-invalid] .bcds-textarea-container {
+  border-radius: var(--layout-border-radius-medium);
+  border: var(--layout-border-width-small) solid
+    var(--support-border-color-danger);
+  background: var(--surface-color-forms-default);
+}
+
+/* Read-only state */
+.bcds-textarea[data-readonly] .bcds-textarea-container,
+.bcds-textarea[data-readonly] .bcds-textarea-input {
+  background: var(--surface-color-forms-disabled);
+}
+
+/* Error message */
+.bcds-textarea-error {
+  display: flex;
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-danger);
+}

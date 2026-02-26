@@ -23,6 +23,7 @@ export type PanelName =
 
 export type FileUploadPanelName =
   | typeof FILE_UPLOAD_PANEL.REPORT_INFO
+  | typeof FILE_UPLOAD_PANEL.MINIMUM_DBH
   | typeof FILE_UPLOAD_PANEL.ATTACHMENTS
 
 export type PanelState = typeof PANEL.OPEN | typeof PANEL.CLOSE

@@ -210,9 +210,11 @@ public class ProjectionEndpoint implements Endpoint {
 			) Parameters parameters,
 			@RestForm(value = ParameterNames.MODEL_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
-			) ModelParameters modelParameters
+			) ModelParameters modelParameters, //
+			@RestForm("reportDescription") String reportDescription
 	) throws ProjectionServiceException {
-		var created = projectionService.createNewProjection(currentUser.getUser(), parameters, modelParameters);
+		var created = projectionService
+				.createNewProjection(currentUser.getUser(), parameters, modelParameters, reportDescription);
 		return Response.status(Status.CREATED).entity(created).build();
 	}
 
@@ -241,10 +243,11 @@ public class ProjectionEndpoint implements Endpoint {
 			) Parameters parameters,
 			@RestForm(value = ParameterNames.MODEL_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
-			) ModelParameters modelParameters
+			) ModelParameters modelParameters, @RestForm("reportDescription") String reportDescription
 	) throws ProjectionServiceException {
-		var created = projectionService
-				.editProjectionParameters(projectionGUID, parameters, modelParameters, currentUser.getUser());
+		var created = projectionService.editProjectionParameters(
+				projectionGUID, parameters, modelParameters, reportDescription, currentUser.getUser()
+		);
 		return Response.status(Status.OK).entity(created).build();
 	}
 

@@ -1,5 +1,19 @@
+import { mount } from 'cypress/vue'
+import { createVuetify } from 'vuetify'
+import { h } from 'vue'
+import { VApp } from 'vuetify/components'
+import 'vuetify/styles'
 import ProjectionActionsMenu from './ProjectionActionsMenu.vue'
 import type { ProjectionStatus } from '@/interfaces/interfaces'
+
+const vuetify = createVuetify({
+  defaults: {
+    VMenu: {
+      scrollStrategy: 'none',
+      transition: false,
+    },
+  },
+})
 
 describe('ProjectionActionsMenu.vue', () => {
   const mountComponent = (
@@ -7,9 +21,18 @@ describe('ProjectionActionsMenu.vue', () => {
     title: string = 'Test Projection',
     eventHandlers: Record<string, Cypress.Agent<sinon.SinonSpy>> = {},
   ) => {
-    return cy.mount(ProjectionActionsMenu, {
-      props: { status, title, ...eventHandlers },
-    })
+    return mount(
+      {
+        render() {
+          return h(VApp, {}, [h(ProjectionActionsMenu, { status, title, ...eventHandlers })])
+        },
+      },
+      {
+        global: {
+          plugins: [vuetify],
+        },
+      },
+    )
   }
 
   const openMenu = () => {
@@ -126,17 +149,17 @@ describe('ProjectionActionsMenu.vue', () => {
   })
 
   describe('Running status', () => {
-    it('shows Cancel and Delete menu items only', () => {
+    it('shows Cancel menu item only', () => {
       mountComponent('Running')
       openMenu()
 
       cy.contains('.menu-text', 'Cancel').should('be.visible')
-      cy.contains('.menu-text', 'Delete').should('be.visible')
 
       cy.contains('.menu-text', 'View').should('not.exist')
       cy.contains('.menu-text', 'Edit').should('not.exist')
       cy.contains('.menu-text', 'Duplicate').should('not.exist')
       cy.contains('.menu-text', 'Download').should('not.exist')
+      cy.contains('.menu-text', 'Delete').should('not.exist')
     })
 
     it('emits cancel event when Cancel is clicked', () => {
@@ -177,10 +200,10 @@ describe('ProjectionActionsMenu.vue', () => {
       cy.contains('.menu-text', 'Delete').should('be.visible')
     })
 
-    it('is available for Running status', () => {
+    it('is not available for Running status', () => {
       mountComponent('Running')
       openMenu()
-      cy.contains('.menu-text', 'Delete').should('be.visible')
+      cy.contains('.menu-text', 'Delete').should('not.exist')
     })
 
     it('is available for Failed status', () => {

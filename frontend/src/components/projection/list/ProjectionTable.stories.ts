@@ -1,7 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import ProjectionTable from './ProjectionTable.vue'
 import type { Projection, TableHeader } from '@/interfaces/interfaces'
+
+const createSortHandler = (sortBy: Ref<string>, sortOrder: Ref<'asc' | 'desc'>) => {
+  return (key: string) => {
+    if (sortBy.value === key) {
+      sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+    } else {
+      sortBy.value = key
+      sortOrder.value = 'asc'
+    }
+  }
+}
 
 const sampleProjections: Projection[] = [
   {
@@ -79,6 +90,10 @@ const meta: Meta<typeof ProjectionTable> = {
       options: ['asc', 'desc'],
       description: 'Current sort order (ascending or descending).',
     },
+    selectedGUIDs: {
+      control: { type: 'object' },
+      description: 'Array of projection GUIDs currently selected for bulk actions.',
+    },
   },
   parameters: {
     docs: {
@@ -87,6 +102,7 @@ const meta: Meta<typeof ProjectionTable> = {
 A desktop table component for displaying projections. This component is used in the ProjectionListView when the screen width is above 1025px.
 
 **Features:**
+- Checkbox column for bulk row selection (header checkbox selects/deselects all)
 - Sortable columns with visual indicators
 - Hover tooltips showing full content for truncated cells
 - Status icons for each projection state
@@ -96,7 +112,14 @@ A desktop table component for displaying projections. This component is used in 
   - **Running**: Cancel, Delete
   - **Failed**: Edit, Duplicate, Download, Delete
 
+**Events:**
+- \`sort\` - emitted when a sortable header is clicked
+- \`rowClick\` - emitted when a row is clicked (excluding checkbox/actions cells)
+- \`selectionChange\` - emitted with updated array of selected GUIDs when checkboxes change
+- \`view\`, \`edit\`, \`duplicate\`, \`download\`, \`cancel\`, \`delete\` - action menu events
+
 **Column widths are fixed:**
+- Checkbox: 44px
 - Projection Title: 180px
 - Description: 270px
 - Method: 160px
@@ -121,17 +144,15 @@ export const Default: Story = {
     setup() {
       const currentSortBy = ref(args.sortBy)
       const currentSortOrder = ref<'asc' | 'desc'>(args.sortOrder)
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
 
-      const handleSort = (key: string) => {
-        if (currentSortBy.value === key) {
-          currentSortOrder.value = currentSortOrder.value === 'asc' ? 'desc' : 'asc'
-        } else {
-          currentSortBy.value = key
-          currentSortOrder.value = 'asc'
-        }
+      const handleSort = createSortHandler(currentSortBy, currentSortOrder)
+
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
       }
 
-      return { args, currentSortBy, currentSortOrder, handleSort }
+      return { args, currentSortBy, currentSortOrder, currentSelectedGUIDs, handleSort, handleSelectionChange }
     },
     template: `
       <ProjectionTable
@@ -139,7 +160,10 @@ export const Default: Story = {
         :headers="args.headers"
         :sort-by="currentSortBy"
         :sort-order="currentSortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
         @sort="handleSort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
         @view="args.view"
         @edit="args.edit"
         @duplicate="args.duplicate"
@@ -154,6 +178,7 @@ export const Default: Story = {
     headers: tableHeaders,
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
+    selectedGUIDs: [],
   },
   parameters: {
     docs: {
@@ -170,17 +195,15 @@ export const SortedByTitle: Story = {
     setup() {
       const currentSortBy = ref(args.sortBy)
       const currentSortOrder = ref<'asc' | 'desc'>(args.sortOrder)
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
 
-      const handleSort = (key: string) => {
-        if (currentSortBy.value === key) {
-          currentSortOrder.value = currentSortOrder.value === 'asc' ? 'desc' : 'asc'
-        } else {
-          currentSortBy.value = key
-          currentSortOrder.value = 'asc'
-        }
+      const handleSort = createSortHandler(currentSortBy, currentSortOrder)
+
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
       }
 
-      return { args, currentSortBy, currentSortOrder, handleSort }
+      return { args, currentSortBy, currentSortOrder, currentSelectedGUIDs, handleSort, handleSelectionChange }
     },
     template: `
       <ProjectionTable
@@ -188,7 +211,10 @@ export const SortedByTitle: Story = {
         :headers="args.headers"
         :sort-by="currentSortBy"
         :sort-order="currentSortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
         @sort="handleSort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
         @view="args.view"
         @edit="args.edit"
         @duplicate="args.duplicate"
@@ -203,6 +229,7 @@ export const SortedByTitle: Story = {
     headers: tableHeaders,
     sortBy: 'title',
     sortOrder: 'asc',
+    selectedGUIDs: [],
   },
   parameters: {
     docs: {
@@ -217,7 +244,11 @@ export const SingleDraftRow: Story = {
   render: (args) => ({
     components: { ProjectionTable },
     setup() {
-      return { args }
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
+      }
+      return { args, currentSelectedGUIDs, handleSelectionChange }
     },
     template: `
       <ProjectionTable
@@ -225,7 +256,10 @@ export const SingleDraftRow: Story = {
         :headers="args.headers"
         :sort-by="args.sortBy"
         :sort-order="args.sortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
         @sort="args.sort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
         @view="args.view"
         @edit="args.edit"
         @duplicate="args.duplicate"
@@ -240,6 +274,7 @@ export const SingleDraftRow: Story = {
     headers: tableHeaders,
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
+    selectedGUIDs: [],
   },
   parameters: {
     docs: {
@@ -254,7 +289,11 @@ export const SingleReadyRow: Story = {
   render: (args) => ({
     components: { ProjectionTable },
     setup() {
-      return { args }
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
+      }
+      return { args, currentSelectedGUIDs, handleSelectionChange }
     },
     template: `
       <ProjectionTable
@@ -262,7 +301,10 @@ export const SingleReadyRow: Story = {
         :headers="args.headers"
         :sort-by="args.sortBy"
         :sort-order="args.sortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
         @sort="args.sort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
         @view="args.view"
         @edit="args.edit"
         @duplicate="args.duplicate"
@@ -277,6 +319,7 @@ export const SingleReadyRow: Story = {
     headers: tableHeaders,
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
+    selectedGUIDs: [],
   },
   parameters: {
     docs: {
@@ -291,7 +334,11 @@ export const SingleRunningRow: Story = {
   render: (args) => ({
     components: { ProjectionTable },
     setup() {
-      return { args }
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
+      }
+      return { args, currentSelectedGUIDs, handleSelectionChange }
     },
     template: `
       <ProjectionTable
@@ -299,7 +346,10 @@ export const SingleRunningRow: Story = {
         :headers="args.headers"
         :sort-by="args.sortBy"
         :sort-order="args.sortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
         @sort="args.sort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
         @view="args.view"
         @edit="args.edit"
         @duplicate="args.duplicate"
@@ -314,6 +364,7 @@ export const SingleRunningRow: Story = {
     headers: tableHeaders,
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
+    selectedGUIDs: [],
   },
   parameters: {
     docs: {
@@ -328,7 +379,11 @@ export const SingleFailedRow: Story = {
   render: (args) => ({
     components: { ProjectionTable },
     setup() {
-      return { args }
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
+      }
+      return { args, currentSelectedGUIDs, handleSelectionChange }
     },
     template: `
       <ProjectionTable
@@ -336,7 +391,10 @@ export const SingleFailedRow: Story = {
         :headers="args.headers"
         :sort-by="args.sortBy"
         :sort-order="args.sortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
         @sort="args.sort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
         @view="args.view"
         @edit="args.edit"
         @duplicate="args.duplicate"
@@ -351,6 +409,7 @@ export const SingleFailedRow: Story = {
     headers: tableHeaders,
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
+    selectedGUIDs: [],
   },
   parameters: {
     docs: {
@@ -361,11 +420,121 @@ export const SingleFailedRow: Story = {
   },
 }
 
+export const SomeRowsSelected: Story = {
+  render: (args) => ({
+    components: { ProjectionTable },
+    setup() {
+      const currentSortBy = ref(args.sortBy)
+      const currentSortOrder = ref<'asc' | 'desc'>(args.sortOrder)
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
+
+      const handleSort = createSortHandler(currentSortBy, currentSortOrder)
+
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
+      }
+
+      return { args, currentSortBy, currentSortOrder, currentSelectedGUIDs, handleSort, handleSelectionChange }
+    },
+    template: `
+      <ProjectionTable
+        :projections="args.projections"
+        :headers="args.headers"
+        :sort-by="currentSortBy"
+        :sort-order="currentSortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
+        @sort="handleSort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
+        @view="args.view"
+        @edit="args.edit"
+        @duplicate="args.duplicate"
+        @download="args.download"
+        @cancel="args.cancel"
+        @delete="args.delete"
+      />
+    `,
+  }),
+  args: {
+    projections: sampleProjections,
+    headers: tableHeaders,
+    sortBy: 'lastUpdated',
+    sortOrder: 'desc',
+    selectedGUIDs: [
+      '63c26de0-f6f3-42c2-bbb2-3c2b1e60d033',
+      '63c26de0-f6f3-42c2-ccc2-3c2b1e60d033',
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Two of four rows pre-selected, showing highlighted row background and indeterminate state on the header checkbox.',
+      },
+    },
+  },
+}
+
+export const AllRowsSelected: Story = {
+  render: (args) => ({
+    components: { ProjectionTable },
+    setup() {
+      const currentSortBy = ref(args.sortBy)
+      const currentSortOrder = ref<'asc' | 'desc'>(args.sortOrder)
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
+
+      const handleSort = createSortHandler(currentSortBy, currentSortOrder)
+
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
+      }
+
+      return { args, currentSortBy, currentSortOrder, currentSelectedGUIDs, handleSort, handleSelectionChange }
+    },
+    template: `
+      <ProjectionTable
+        :projections="args.projections"
+        :headers="args.headers"
+        :sort-by="currentSortBy"
+        :sort-order="currentSortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
+        @sort="handleSort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
+        @view="args.view"
+        @edit="args.edit"
+        @duplicate="args.duplicate"
+        @download="args.download"
+        @cancel="args.cancel"
+        @delete="args.delete"
+      />
+    `,
+  }),
+  args: {
+    projections: sampleProjections,
+    headers: tableHeaders,
+    sortBy: 'lastUpdated',
+    sortOrder: 'desc',
+    selectedGUIDs: sampleProjections.map((p) => p.projectionGUID),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'All rows selected, showing all row highlights and the header checkbox in a fully checked state.',
+      },
+    },
+  },
+}
+
 export const LongContent: Story = {
   render: (args) => ({
     components: { ProjectionTable },
     setup() {
-      return { args }
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
+      }
+      return { args, currentSelectedGUIDs, handleSelectionChange }
     },
     template: `
       <ProjectionTable
@@ -373,7 +542,10 @@ export const LongContent: Story = {
         :headers="args.headers"
         :sort-by="args.sortBy"
         :sort-order="args.sortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
         @sort="args.sort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
         @view="args.view"
         @edit="args.edit"
         @duplicate="args.duplicate"
@@ -400,6 +572,7 @@ export const LongContent: Story = {
     headers: tableHeaders,
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
+    selectedGUIDs: [],
   },
   parameters: {
     docs: {
@@ -417,6 +590,7 @@ export const ManyRows: Story = {
     setup() {
       const currentSortBy = ref(args.sortBy)
       const currentSortOrder = ref<'asc' | 'desc'>(args.sortOrder)
+      const currentSelectedGUIDs = ref<string[]>(args.selectedGUIDs ?? [])
 
       const handleSort = (key: string) => {
         if (currentSortBy.value === key) {
@@ -427,7 +601,11 @@ export const ManyRows: Story = {
         }
       }
 
-      return { args, currentSortBy, currentSortOrder, handleSort }
+      const handleSelectionChange = (guids: string[]) => {
+        currentSelectedGUIDs.value = guids
+      }
+
+      return { args, currentSortBy, currentSortOrder, currentSelectedGUIDs, handleSort, handleSelectionChange }
     },
     template: `
       <ProjectionTable
@@ -435,7 +613,10 @@ export const ManyRows: Story = {
         :headers="args.headers"
         :sort-by="currentSortBy"
         :sort-order="currentSortOrder"
+        :selectedGUIDs="currentSelectedGUIDs"
         @sort="handleSort"
+        @rowClick="args.rowClick"
+        @selectionChange="handleSelectionChange"
         @view="args.view"
         @edit="args.edit"
         @duplicate="args.duplicate"
@@ -492,6 +673,7 @@ export const ManyRows: Story = {
     headers: tableHeaders,
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
+    selectedGUIDs: [],
   },
   parameters: {
     docs: {
@@ -514,7 +696,10 @@ export const EmptyTable: Story = {
         :headers="args.headers"
         :sort-by="args.sortBy"
         :sort-order="args.sortOrder"
+        :selectedGUIDs="args.selectedGUIDs ?? []"
         @sort="args.sort"
+        @rowClick="args.rowClick"
+        @selectionChange="() => {}"
         @view="args.view"
         @edit="args.edit"
         @duplicate="args.duplicate"
@@ -529,11 +714,12 @@ export const EmptyTable: Story = {
     headers: tableHeaders,
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
+    selectedGUIDs: [],
   },
   parameters: {
     docs: {
       description: {
-        story: 'Empty table showing only headers with no data rows.',
+        story: 'Empty table showing headers and the "No projections found" empty state message.',
       },
     },
   },
