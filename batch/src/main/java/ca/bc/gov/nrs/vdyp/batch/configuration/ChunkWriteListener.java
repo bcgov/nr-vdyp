@@ -34,27 +34,20 @@ public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>
 		var items = chunk.getItems();
 		BatchChunkMetadata meta = items.get(0); // this is assuming the Chuck size of 1
 
-		ExecutionContext jobCtx = stepExecution.getJobExecution().getExecutionContext();
+		ExecutionContext stepCtx = stepExecution.getExecutionContext();
 
-		synchronized (jobCtx) {
+		int polygonsProcessed = stepCtx.getInt("polygonsProcessed", 0);
+		polygonsProcessed += meta.getPolygonRecordCount();
+		stepCtx.putInt("polygonsProcessed", polygonsProcessed);
 
-			int polygonsProcessed = jobCtx.getInt("polygonsProcessed", 0);
-			polygonsProcessed += meta.getPolygonRecordCount();
-			jobCtx.putInt("polygonsProcessed", polygonsProcessed);
+		int projectionErrors = stepCtx.getInt("projectionErrors", 0);
+		projectionErrors += meta.getErrorCount();
+		stepCtx.putInt("projectionErrors", projectionErrors);
 
-			int projectionErrors = jobCtx.getInt("projectionErrors", 0);
-			projectionErrors += meta.getErrorCount();
-			jobCtx.putInt("projectionErrors", projectionErrors);
+		int polygonsSkipped = stepCtx.getInt("polygonsSkipped", 0);
+		polygonsSkipped += meta.getSkippedPolygonCount();
+		stepCtx.putInt("polygonsSkipped", polygonsSkipped);
 
-			int skippedPolygons = jobCtx.getInt("skippedPolygons", 0);
-			skippedPolygons += meta.getSkippedPolygonCount();
-			jobCtx.putInt("skippedPolygons", skippedPolygons);
-
-			int progressVersion = jobCtx.getInt("progressVersion", 0);
-			progressVersion += 1;
-			jobCtx.putInt("progressVersion", progressVersion);
-
-		}
 	}
 
 }
