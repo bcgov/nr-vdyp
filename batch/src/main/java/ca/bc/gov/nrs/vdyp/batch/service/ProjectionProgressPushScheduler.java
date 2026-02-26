@@ -38,20 +38,17 @@ public class ProjectionProgressPushScheduler {
 			JobExplorer jobExplorer, VdypClient vdypClient,
 			@Qualifier("backendProgressExecutor") ThreadPoolTaskExecutor executor
 	) {
-		logger.info(
-				"Initializing ProjectionProgressPushScheduler with executor: {}", executor.getClass().getSimpleName()
-		);
 		this.jobExplorer = jobExplorer;
 		this.vdypClient = vdypClient;
 		this.progressExecutor = (ThreadPoolTaskExecutor) executor;
 	}
 
+	/**
+	 * Iterates over all currentlyRunning "VdypFetchAndPartitionJob" job executions, extracts progress information from
+	 * their execution contexts, and pushes updates to VDYP if there are changes since the last push.
+	 */
 	@Scheduled(fixedDelayString = "${vdyp.progress.push.delay:60000}")
 	public void pushProgress() {
-		logger.info(
-				"Starting scheduled task to push projection progress updates to VDYP. Active threads: {}, Queue size: {}",
-				progressExecutor.getActiveCount(), progressExecutor.getThreadPoolExecutor().getQueue().size()
-		);
 		// If the progressExecutor queue is full, it means we're already pushing progress updates, so skip this run to
 		// avoid piling up updates.
 		if (progressExecutor.getThreadPoolExecutor().getQueue().remainingCapacity() == 0) {
@@ -61,12 +58,10 @@ public class ProjectionProgressPushScheduler {
 		Set<String> currentlyRunningProjectionGUIDs = new HashSet<>();
 		// for each projection that changed:
 		for (JobExecution job : jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")) {
-			logger.info("JobID: {} Current job state: {}", job.getJobId(), job.getStatus());
 			String projectionGUID = job.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
 			if (Strings.isNullOrEmpty(projectionGUID))
 				continue;
 
-			logger.info("JobID: {} Projection GUID: {}", job.getJobId(), projectionGUID);
 			currentlyRunningProjectionGUIDs.add(projectionGUID);
 			int totalPolygons = job.getExecutionContext().getInt("totalPolygonRecords", 0);
 			int polygonsProcessed = 0;
@@ -87,10 +82,6 @@ public class ProjectionProgressPushScheduler {
 			int newHash = checkTriple.hashCode();
 			Integer previousHash = lastProgressHashByProjection.put(projectionGUID, newHash);
 			if (previousHash != null && previousHash == newHash) {
-				logger.warn(
-						"No change in progress for projection {}, skipping push. Polygons Processed: {}, Errors: {}, Polygons Skipped: {}",
-						projectionGUID, polygonsProcessed, errorCount, polygonsSkipped
-				);
 				continue;
 			}
 
@@ -99,11 +90,6 @@ public class ProjectionProgressPushScheduler {
 			);
 			progressExecutor.execute(() -> {
 				try {
-					logger.info(
-							"Pushing projection progress update to VDYP {} Polygons Processed: {}, Errors: {}, Polygons Skipped: {}",
-							projectionGUID, payload.polygonsProcessed(), payload.projectionErrors(),
-							payload.polygonsSkipped()
-					);
 					vdypClient.pushProgress(projectionGUID, payload);
 				} catch (Exception logMe) {
 					logger.error("Error pushing progress to VDYP", logMe);

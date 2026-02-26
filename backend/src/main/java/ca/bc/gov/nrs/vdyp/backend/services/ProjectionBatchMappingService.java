@@ -97,10 +97,6 @@ public class ProjectionBatchMappingService {
 				entity.setPolygonCount(progressUpdate.totalPolygons());
 				entity.setErrorCount(progressUpdate.projectionErrors());
 				entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());
-				logger.info("Updating projection progress for projection {}", projectionEntity.getProjectionGUID());
-				logger.info("total Polygon count {}", entity.getPolygonCount());
-				logger.info("error count {}", entity.getErrorCount());
-				logger.info("completed polygon count{}", entity.getCompletedPolygonCount());
 			} else {
 				throw new ProjectionServiceException(
 						"No batch mapping found for projection GUID: " + projectionEntity.getProjectionGUID()

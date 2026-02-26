@@ -285,7 +285,6 @@ public class ProjectionEndpoint implements Endpoint {
 	public Response updateCompleteProjectionProgress(
 			@PathParam("projectionGUID") UUID projectionGUID, ProjectionProgressUpdate progressUpdate
 	) throws ProjectionServiceException {
-		logger.info("Received update progress for projection {} {}", projectionGUID, progressUpdate);
 		projectionService.updateProgress(currentUser.getUser(), projectionGUID, progressUpdate);
 		return Response.status(Status.OK).build();
 	}
