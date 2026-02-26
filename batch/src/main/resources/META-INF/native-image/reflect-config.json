@@ -8559,12 +8559,20 @@
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
   },
-  {
-    "name": "ca.bc.gov.nrs.vdyp.common.ControlKey",
-    "allDeclaredFields": true,
-    "allDeclaredMethods": true,
-    "allDeclaredConstructors": true,
-    "allPublicMethods": true,
-    "allPublicFields": true
-  }
+	{
+		"name": "ca.bc.gov.nrs.vdyp.common.ControlKey",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
+	}
 ]

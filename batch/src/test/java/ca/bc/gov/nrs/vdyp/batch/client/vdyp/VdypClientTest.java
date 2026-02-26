@@ -40,12 +40,13 @@ class VdypClientTest {
 
 	@Mock(answer = Answers.RETURNS_DEEP_STUBS)
 	private RestClient restClient;
+	private RestClient fastRestClient;
 
 	private VdypClient client;
 
 	@BeforeEach
 	void setUp() {
-		client = new VdypClient(restClient);
+		client = new VdypClient(restClient, fastRestClient);
 	}
 
 	@Test

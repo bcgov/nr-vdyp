@@ -26,6 +26,7 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
@@ -140,12 +141,14 @@ class DownloadAndPartitionTaskletTest {
 		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
 				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()).addLong(BatchConstants.Partition.NUMBER, 4L)
 				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
+		ExecutionContext executionContext = new ExecutionContext();
 		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
 		when(details.polygonFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(polygonFileSetGuid.toString()));
 		when(details.layerFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(layerFileSetGuid.toString()));
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getExecutionContext()).thenReturn(executionContext);
 		when(vdypClient.getFileSetFiles(any(), matches(polygonFileSetGuid.toString()))).thenReturn(
 				List.of(new FileMappingDetails(polygonFileSetGuid.toString(), polygonComsObjectGuid.toString()))
 		);

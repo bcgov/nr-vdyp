@@ -16,6 +16,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
+import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -83,5 +84,30 @@ public class ProjectionBatchMappingService {
 				.listByProjectionGUID(projectionEntity.getProjectionGUID());
 
 		entityList.forEach(e -> repository.delete(e));
+	}
+
+	@Transactional
+	public void updateProgress(ProjectionEntity projectionEntity, ProjectionProgressUpdate progressUpdate)
+			throws ProjectionServiceException {
+		try {
+			Optional<ProjectionBatchMappingEntity> entityOpt = repository
+					.findByProjectionGUID(projectionEntity.getProjectionGUID());
+			if (entityOpt.isPresent()) {
+				ProjectionBatchMappingEntity entity = entityOpt.get();
+				entity.setPolygonCount(progressUpdate.totalPolygons());
+				entity.setErrorCount(progressUpdate.projectionErrors());
+				entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());
+				logger.info("Updating projection progress for projection {}", projectionEntity.getProjectionGUID());
+				logger.info("total Polygon count {}", entity.getPolygonCount());
+				logger.info("error count {}", entity.getErrorCount());
+				logger.info("completed polygon count{}", entity.getCompletedPolygonCount());
+			} else {
+				throw new ProjectionServiceException(
+						"No batch mapping found for projection GUID: " + projectionEntity.getProjectionGUID()
+				);
+			}
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Error updating projection batch progress", e);
+		}
 	}
 }

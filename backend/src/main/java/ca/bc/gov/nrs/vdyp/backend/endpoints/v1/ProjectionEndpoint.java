@@ -22,6 +22,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
+import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
@@ -36,6 +37,7 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -270,6 +272,22 @@ public class ProjectionEndpoint implements Endpoint {
 	public Response runProjection(@PathParam("projectionGUID") UUID projectionGUID) throws ProjectionServiceException {
 		var started = projectionService.startBatchProjection(currentUser.getUser(), projectionGUID);
 		return Response.status(Status.OK).entity(started).build();
+	}
+
+	@PATCH
+	@Authenticated
+	@Path("/{projectionGUID}/progress")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Update Progress of a running projection", description = "(System Only) Updates the progress of a running projection."
+	)
+	public Response updateCompleteProjectionProgress(
+			@PathParam("projectionGUID") UUID projectionGUID, ProjectionProgressUpdate progressUpdate
+	) throws ProjectionServiceException {
+		logger.info("Received update progress for projection {} {}", projectionGUID, progressUpdate);
+		projectionService.updateProgress(currentUser.getUser(), projectionGUID, progressUpdate);
+		return Response.status(Status.OK).build();
 	}
 
 	@POST

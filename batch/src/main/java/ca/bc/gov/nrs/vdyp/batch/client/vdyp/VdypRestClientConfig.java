@@ -14,22 +14,49 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.web.client.RestClient;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 public class VdypRestClientConfig {
 	@Bean
-	RestClient vdypBackendFastRestClient(
-			OAuth2AuthorizedClientManager oauth2AuthorizedClientManager, VdypProperties vdypProperties
+	OAuth2AuthorizedClientManager oauth2AuthorizedClientManager(
+			ClientRegistrationRepository clientRegistrationRepository,
+			OAuth2AuthorizedClientService authorizedClientService
 	) {
-		return RestClient.builder().baseUrl(vdypProperties.baseUrl()).requestFactory(fastRequestFactory())
+		OAuth2AuthorizedClientProvider provider = OAuth2AuthorizedClientProviderBuilder.builder().clientCredentials()
+				.build();
+
+		var manager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+				clientRegistrationRepository, authorizedClientService
+		);
+		manager.setAuthorizedClientProvider(provider);
+		return manager;
+	}
+
+	@Bean
+	RestClient vdypBackendFastRestClient(
+			OAuth2AuthorizedClientManager oauth2AuthorizedClientManager, VdypProperties vdypProperties,
+			ObjectMapper objectMapper
+	) {
+		var jacksonConverter = new MappingJackson2HttpMessageConverter(objectMapper);
+		return RestClient.builder().messageConverters(converters -> {
+			converters.add(0, jacksonConverter);
+		}).baseUrl(vdypProperties.baseUrl()).requestFactory(fastRequestFactory())
 				.requestInterceptor(bearerInterceptor(oauth2AuthorizedClientManager, vdypProperties)).build();
 	}
 
