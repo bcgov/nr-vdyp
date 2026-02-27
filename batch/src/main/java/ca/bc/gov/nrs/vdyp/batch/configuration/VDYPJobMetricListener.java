@@ -54,10 +54,10 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 
 		// Finalize job metrics - only count worker steps (partitioned steps)
 		long totalRead = jobExecution.getStepExecutions().stream()
-				.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:"))
+				.filter(stepExecution -> stepExecution.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME))
 				.mapToLong(StepExecution::getReadCount).sum();
 		long totalWritten = jobExecution.getStepExecutions().stream()
-				.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:"))
+				.filter(stepExecution -> stepExecution.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME))
 				.mapToLong(StepExecution::getWriteCount).sum();
 
 		logger.debug(

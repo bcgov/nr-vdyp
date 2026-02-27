@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @Component
 @StepScope
@@ -31,7 +33,7 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 	}
 
 	@Override
-	void performVdypFileOperation() throws BatchException {
+	void performVdypFileOperation(StepExecution stepExecution) throws BatchException {
 		try {
 			if (jobGuid == null || baseDir == null || partitions == null || projectionGUID == null) {
 				throw new IllegalArgumentException("Missing required job parameters for COMS download mode.");
@@ -63,7 +65,11 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 			comsFileService.fetchObjectToFile(UUID.fromString(polygonGuidStr), polygonPath);
 			comsFileService.fetchObjectToFile(UUID.fromString(layerGuidStr), layerPath);
 
-			inputPartitioner.partitionCsvFiles(polygonPath, layerPath, partitions.intValue(), jobBaseDir, jobGuid);
+			int totalPolygons = inputPartitioner
+					.partitionCsvFiles(polygonPath, layerPath, partitions.intValue(), jobBaseDir, jobGuid);
+
+			stepExecution.getJobExecution().getExecutionContext()
+					.putInt(BatchConstants.Job.TOTAL_POLYGONS, totalPolygons);
 		} catch (Exception e) {
 			throw BatchPartitionException
 					.handlePartitionFailure(e, "Could not fetch and partition input files", jobGuid, logger);

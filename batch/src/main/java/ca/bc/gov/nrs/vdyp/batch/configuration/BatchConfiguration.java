@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.ItemWriteListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.Step;
@@ -131,7 +132,8 @@ public class BatchConfiguration {
 			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
 			DynamicPartitionHandler dynamicPartitionHandler
 	) {
-		return new StepBuilder("masterStep", jobRepository).partitioner("workerStep", dynamicPartitioner)
+		return new StepBuilder("masterStep", jobRepository)
+				.partitioner(BatchConstants.Job.WORKER_STEP_NAME, dynamicPartitioner)
 				.partitionHandler(dynamicPartitionHandler).build();
 	}
 
@@ -151,7 +153,8 @@ public class BatchConfiguration {
 			BatchRetryPolicy retryPolicy, BatchSkipPolicy skipPolicy, PlatformTransactionManager transactionManager,
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
 			BatchProjectionService batchProjectionService, ItemStreamReader<BatchChunkMetadata> partitionReader,
-			BatchItemWriter partitionWriter, BatchItemProcessor batchItemProcessor
+			BatchItemWriter partitionWriter, BatchItemProcessor batchItemProcessor,
+			ChunkWriteListener chunkWriteListener
 	) {
 
 		// Spring Batch chunk size must be 1 because each BatchChunkMetadata represents a chunk of records
@@ -161,7 +164,9 @@ public class BatchConfiguration {
 				stepChunkSize, batchProperties.getReader().getDefaultChunkSize()
 		);
 
-		return new StepBuilder("workerStep", jobRepository)
+		return new StepBuilder(
+				BatchConstants.Job.WORKER_STEP_NAME, jobRepository
+		)
 				.<BatchChunkMetadata, BatchChunkMetadata>chunk(stepChunkSize, transactionManager)
 				.reader(partitionReader).processor(batchItemProcessor).writer(partitionWriter).listener(partitionWriter)
 				.listener(retryPolicy).listener(skipPolicy).faultTolerant().retryPolicy(retryPolicy)
@@ -217,7 +222,15 @@ public class BatchConfiguration {
 
 						return stepExecution.getExitStatus();
 					}
-				}).build();
+				}).listener((StepExecutionListener) chunkWriteListener) //
+				.listener((ItemWriteListener<? super BatchChunkMetadata>) chunkWriteListener) //
+				.build();
+	}
+
+	@Bean
+	@StepScope
+	public ChunkWriteListener chunkWriteListener() {
+		return new ChunkWriteListener();
 	}
 
 	/**
@@ -265,6 +278,7 @@ public class BatchConfiguration {
 			BatchJobExecutionListener loggingListener, VDYPJobMetricListener metricListener,
 			VDYPJobFailedListener vdypJobFailedListener, Step fetchAndPartitionFilesStep, Step masterStep,
 			Step postProcessingStep, Step persistResultFileStep, PlatformTransactionManager transactionManager
+
 	) {
 		return new JobBuilder("VdypFetchAndPartitionJob", jobRepository) //
 				.incrementer(new RunIdIncrementer()) //

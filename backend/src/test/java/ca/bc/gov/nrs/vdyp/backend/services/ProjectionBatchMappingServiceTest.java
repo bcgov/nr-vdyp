@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.projectionEntity;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
@@ -27,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
+import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 
 @ExtendWith(MockitoExtension.class)
@@ -148,5 +150,37 @@ class ProjectionBatchMappingServiceTest {
 		// Verify delete called
 		verify(repository, never()).delete(any());
 		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void updateProgress_projectionHasNoMapping_throwsException() {
+		// Arrange
+		UUID projectionGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
+
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(1, 1, 1, 1);
+		// Act
+		assertThrows(ProjectionServiceException.class, () -> service.updateProgress(projectionEntity, update));
+	}
+
+	@Test
+	void updateProgress_projectionHasMapping_updatesCorrectly() throws ProjectionServiceException {
+		// Arrange
+		UUID projectionGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
+
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(100, 10, 20, 30);
+		// Act
+		service.updateProgress(projectionEntity, update);
+		assertEquals(100, mappingEntity.getPolygonCount());
+		assertEquals(20, mappingEntity.getErrorCount());
+		assertEquals(10, mappingEntity.getCompletedPolygonCount());
 	}
 }

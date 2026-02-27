@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +31,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,20 +51,20 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import ca.bc.gov.nrs.vdyp.backend.config.ProjectionExpiryConfig;
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
-import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ProjectionEndpoint;
-import jakarta.ws.rs.core.Response;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionRepository;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ProjectionEndpoint;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionNotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
@@ -71,6 +73,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import jakarta.persistence.EntityManager;
+import jakarta.ws.rs.core.Response;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectionServiceTest {
@@ -1417,5 +1420,42 @@ class ProjectionServiceTest {
 
 		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
 		verify(mockService).editProjectionParameters(projectionGUID, params, null, null, actingUser);
+	}
+
+	@Test
+	void enrichModel_nullModel_doesNothing() {
+		ProjectionModel model = service.toRichModel(null, null);
+		assertNull(model);
+	}
+
+	@Test
+	void enrichModel_nullMapping_getsAModel() {
+		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), UUID.randomUUID());
+		ProjectionModel model = service.toRichModel(entity, null);
+		assertNotNull(model);
+		assertEquals(entity.getProjectionGUID(), UUID.fromString(model.getProjectionGUID()));
+		assertNull(model.getBatchMapping());
+	}
+
+	@Test
+	void enrichModel_withMappingThatDoesNotContianProjection_getsAModel() {
+		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), UUID.randomUUID());
+		Map<UUID, ProjectionBatchMappingModel> batchMappings = new HashMap<>();
+		ProjectionModel model = service.toRichModel(entity, batchMappings);
+		assertNotNull(model);
+		assertEquals(entity.getProjectionGUID(), UUID.fromString(model.getProjectionGUID()));
+		assertNull(model.getBatchMapping());
+	}
+
+	@Test
+	void enrichModel_withMappingContainsProjection_getsAModelWithMapping() {
+		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), UUID.randomUUID());
+		Map<UUID, ProjectionBatchMappingModel> batchMappings = new HashMap<>();
+		ProjectionBatchMappingModel mapping = batchMappingModel(UUID.randomUUID());
+		batchMappings.put(entity.getProjectionGUID(), mapping);
+		ProjectionModel model = service.toRichModel(entity, batchMappings);
+		assertNotNull(model);
+		assertEquals(entity.getProjectionGUID(), UUID.fromString(model.getProjectionGUID()));
+		assertEquals(mapping, model.getBatchMapping());
 	}
 }

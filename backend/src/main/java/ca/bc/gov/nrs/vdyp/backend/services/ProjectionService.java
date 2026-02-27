@@ -54,6 +54,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
+import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
@@ -329,7 +330,19 @@ public class ProjectionService {
 
 	private ProjectionModel toModelWithExpiry(ProjectionEntity entity) {
 		var model = assembler.toModel(entity);
-		model.setExpiryDate(expiryConfig.expiryFrom(model.getLastUpdatedDate()));
+		if (model != null)
+			model.setExpiryDate(expiryConfig.expiryFrom(model.getLastUpdatedDate()));
+		return model;
+	}
+
+	protected ProjectionModel
+			toRichModel(ProjectionEntity entity, Map<UUID, ProjectionBatchMappingModel> batchMappings) {
+		var model = toModelWithExpiry(entity);
+		if (model != null && batchMappings != null && batchMappings.containsKey(entity.getProjectionGUID())) {
+			ProjectionBatchMappingModel batchMappingModel = batchMappings.get(entity.getProjectionGUID());
+			batchMappingModel.setProjection(null);
+			model.setBatchMapping(batchMappingModel);
+		}
 		return model;
 	}
 
@@ -337,7 +350,10 @@ public class ProjectionService {
 		if (vdypUserId == null)
 			return Collections.emptyList();
 		UUID vdypUserGuid = UUID.fromString(vdypUserId);
-		return repository.findByOwner(vdypUserGuid).stream().map(this::toModelWithExpiry).toList();
+		List<ProjectionEntity> entities = repository.findByOwner(vdypUserGuid);
+		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
+
+		return entities.stream().map(e -> toRichModel(e, batchMappings)).toList();
 	}
 
 	@Transactional
@@ -456,7 +472,7 @@ public class ProjectionService {
 	}
 
 	public enum ProjectionAction {
-		READ, UPDATE, DELETE, STORE_RESULTS, COMPLETE_PROJECTION, CANCEL
+		READ, UPDATE, DELETE, STORE_RESULTS, COMPLETE_PROJECTION, UPDATE_PROGRESS, CANCEL
 	}
 
 	public void checkUserCanPerformAction(ProjectionEntity entity, VDYPUserModel actingUser, ProjectionAction action)
@@ -470,7 +486,7 @@ public class ProjectionService {
 				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 			}
 			break;
-		case COMPLETE_PROJECTION, STORE_RESULTS:
+		case COMPLETE_PROJECTION, STORE_RESULTS, UPDATE_PROGRESS:
 			// these actions are only performed by the system the endpoint cannot be called by a different kidn of user
 			throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 		default:
@@ -486,7 +502,7 @@ public class ProjectionService {
 			ProjectionStatusCodeModel.RUNNING,
 			Set.of(
 					ProjectionAction.READ, ProjectionAction.COMPLETE_PROJECTION, ProjectionAction.STORE_RESULTS,
-					ProjectionAction.CANCEL
+					ProjectionAction.CANCEL, ProjectionAction.UPDATE_PROGRESS
 			), //
 			ProjectionStatusCodeModel.READY, Set.of(ProjectionAction.DELETE, ProjectionAction.READ),
 			ProjectionStatusCodeModel.FAILED, Set.of(ProjectionAction.DELETE, ProjectionAction.READ)
@@ -505,7 +521,10 @@ public class ProjectionService {
 			throws ProjectionServiceException {
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
-		return toModelWithExpiry(entity);
+
+		Map<UUID, ProjectionBatchMappingModel> batchMappingModelMap = this
+				.getBatchMappingsForProjections(List.of(entity));
+		return toRichModel(entity, batchMappingModelMap);
 	}
 
 	@Transactional
@@ -549,6 +568,15 @@ public class ProjectionService {
 		entity.setProjectionStatusCode(status);
 		entity.setEndDate(OffsetDateTime.now());
 		return toModelWithExpiry(entity);
+	}
+
+	@Transactional
+	public void updateProgress(VDYPUserModel actingUser, UUID projectionGUID, ProjectionProgressUpdate progressUpdate)
+			throws ProjectionServiceException {
+		ProjectionEntity entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE_PROGRESS);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE_PROGRESS);
+		batchMappingService.updateProgress(entity, progressUpdate);
 	}
 
 	@Transactional
@@ -732,5 +760,11 @@ public class ProjectionService {
 			throw new ProjectionServiceException("Failed to duplicate projection", e);
 		}
 		return newProjection;
+	}
+
+	private Map<UUID, ProjectionBatchMappingModel>
+			getBatchMappingsForProjections(List<ProjectionEntity> projectionEntities) {
+		List<UUID> projectionGuids = projectionEntities.stream().map(ProjectionEntity::getProjectionGUID).toList();
+		return batchMappingService.getLatestBatchMappingsForProjections(projectionGuids);
 	}
 }

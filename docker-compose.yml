@@ -124,7 +124,7 @@ services:
       KC_SERVERURL: ${COMS_KEYCLOAK_SERVER_URL}
       KC_PUBLICKEY: ${COMS_KEYCLOAK_PUBLIC_KEY}
 
-      SERVER_LOGLEVEL: debug
+      SERVER_LOGLEVEL: info
 
   vdyp-backend:
     depends_on:
@@ -161,7 +161,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.5"
+          cpus: "18.0"
           memory: 1G
   
   vdyp-ui:
