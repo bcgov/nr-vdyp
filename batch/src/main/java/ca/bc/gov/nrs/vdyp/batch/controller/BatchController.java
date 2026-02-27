@@ -317,10 +317,7 @@ public class BatchController {
 
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-		logger.debug(
-				"[GUID: {}] Job status: {}, Running: {}", jobGuid,
-				jobExecution.getStatus(), isRunning
-		);
+		logger.debug("[GUID: {}] Job status: {}, Running: {}", jobGuid, jobExecution.getStatus(), isRunning);
 
 		return ResponseEntity.ok(response);
 	}

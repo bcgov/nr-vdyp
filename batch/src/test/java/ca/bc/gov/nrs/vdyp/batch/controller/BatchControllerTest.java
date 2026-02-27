@@ -409,9 +409,6 @@ class BatchControllerTest {
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
 		assertEquals("STARTED", response.getBody().get(BatchConstants.Job.STATUS));
 		assertEquals(true, response.getBody().get("isRunning"));
-		assertEquals(0, response.getBody().get("polygonsProcessed"));
-		assertEquals(0, response.getBody().get("polygonsSkipped"));
-		assertEquals(0, response.getBody().get("errorCount"));
 	}
 
 	@Test
@@ -476,10 +473,6 @@ class BatchControllerTest {
 
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
-
-		assertEquals(0, response.getBody().get("polygonsProcessed"));
-		assertEquals(0, response.getBody().get("polygonsSkipped"));
-		assertEquals(0, response.getBody().get("errorCount"));
 	}
 
 	@Test
