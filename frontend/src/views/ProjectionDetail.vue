@@ -152,8 +152,8 @@
   </v-container>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useProjectionLoader } from '@/composables/useProjectionLoader'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -179,6 +179,7 @@ import {
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE } from '@/constants'
+import { loadProjectionSession, clearProjectionSession, saveExistingProjectionSession } from '@/utils/projectionSession'
 import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runProjection } from '@/services/projection/modelParameterService'
@@ -193,7 +194,6 @@ import {
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 import { DownloadIcon, MenuIcon } from '@/assets/'
 
-const route = useRoute()
 const router = useRouter()
 const { isLoading: isProjectionLoading, loadProjection } = useProjectionLoader()
 
@@ -388,27 +388,38 @@ const fetchAndPopulateResults = async (showMessage: boolean = true) => {
 }
 
 onMounted(async () => {
-  const { projectionGUID, viewMode } = route.params as { projectionGUID: string; viewMode: string }
+  if (!appStore.currentProjectionGUID) {
+    const sessionCtx = loadProjectionSession()
 
-  // Browser refresh handling: re-fetch projection data if stores are empty but route has params
-  const isCreateMode = viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE
-  const needsReload = !isCreateMode && projectionGUID && !appStore.currentProjectionGUID
-
-  if (needsReload) {
-    isProgressVisible.value = true
-    progressMessage.value = MESSAGE.PROGRESS_MSG.LOADING_PROJECTION
-
-    const success = await loadProjection(projectionGUID, viewMode as typeof appStore.viewMode)
-
-    isProgressVisible.value = false
-
-    if (!success) {
-      notificationStore.showErrorMessage(
-        MESSAGE.PROJECTION_ERR.LOAD_FAILED,
-        MESSAGE.PROJECTION_ERR.LOAD_FAILED_TITLE,
-      )
+    if (!sessionCtx) {
+      // No session context — direct URL access with no store data, redirect to list
       router.replace(CONSTANTS.ROUTE_PATH.PROJECTION_LIST)
       return
+    }
+
+    if (sessionCtx.type === CONSTANTS.PROJECTION_SESSION_CTX.EXISTING_TYPE) {
+      // Browser refresh on a view/edit projection — re-fetch from backend
+      isProgressVisible.value = true
+      progressMessage.value = MESSAGE.PROGRESS_MSG.LOADING_PROJECTION
+
+      const success = await loadProjection(sessionCtx.g, sessionCtx.m as typeof appStore.viewMode)
+
+      isProgressVisible.value = false
+
+      if (!success) {
+        clearProjectionSession()
+        notificationStore.showErrorMessage(
+          MESSAGE.PROJECTION_ERR.LOAD_FAILED,
+          MESSAGE.PROJECTION_ERR.LOAD_FAILED_TITLE,
+        )
+        router.replace(CONSTANTS.ROUTE_PATH.PROJECTION_LIST)
+        return
+      }
+    } else {
+      // type === CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE: browser refresh of an unsaved new projection
+      // Restore model selection from session so the correct empty form is shown
+      appStore.setModelSelection(sessionCtx.ms)
+      appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.CREATE)
     }
   }
 
@@ -424,6 +435,25 @@ onMounted(async () => {
   if (isReady.value && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
     fetchAndPopulateResults(false)
   }
+})
+
+// Keep session in sync when projection GUID or viewMode changes.
+// This handles the case where a new projection gets its first GUID after being saved
+// (CREATE -> EDIT transition), ensuring a subsequent browser refresh can re-fetch correctly.
+watch(
+  [() => appStore.currentProjectionGUID, () => appStore.viewMode],
+  ([guid, mode]) => {
+    if (guid && mode !== CONSTANTS.PROJECTION_VIEW_MODE.CREATE) {
+      saveExistingProjectionSession(guid, mode)
+    }
+  },
+)
+
+// Clear session when navigating away so stale data doesn't persist to a new session.
+// NOTE: onBeforeRouteLeave does NOT fire on browser refresh, so the session correctly
+// persists across refreshes while still being cleaned up on normal navigation.
+onBeforeRouteLeave(() => {
+  clearProjectionSession()
 })
 
 const handleError = (error: any) => {

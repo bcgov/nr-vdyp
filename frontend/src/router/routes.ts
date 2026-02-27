@@ -13,13 +13,9 @@ export const routes: Array<RouteRecordRaw> = [
     component: ProjectionListView,
   },
   {
-    path: `${ROUTE_PATH.PROJECTION_DETAIL}/:projectionGUID/:viewMode`,
+    path: ROUTE_PATH.PROJECTION_DETAIL,
     name: 'ProjectionDetail',
     component: ProjectionDetail,
-  },
-  {
-    path: ROUTE_PATH.PROJECTION_DETAIL,
-    redirect: ROUTE_PATH.PROJECTION_LIST,
   },
   {
     path: '/auth-info',

@@ -102,7 +102,8 @@ import { useRouter } from 'vue-router'
 import type { Projection, TableHeader, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
-import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, buildProjectionDetailPath } from '@/constants/constants'
+import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH } from '@/constants/constants'
+import { saveExistingProjectionSession, saveNewProjectionSession } from '@/utils/projectionSession'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { downloadFile, sanitizeFileName } from '@/utils/util'
 import { AppButton, AppProgressCircular } from '@/components'
@@ -296,7 +297,8 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
     const success = await loadProjection(projectionGUID, viewMode)
 
     if (success) {
-      router.push(buildProjectionDetailPath(projectionGUID, viewMode))
+      saveExistingProjectionSession(projectionGUID, viewMode)
+      router.push(ROUTE_PATH.PROJECTION_DETAIL)
     } else {
       notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
     }
@@ -468,7 +470,12 @@ const handleNewProjection = (type: (typeof PROJECTION_INPUT_METHOD)[keyof typeof
     // Reset file upload store
     fileUploadStore.resetStore()
   }
-  router.push(buildProjectionDetailPath('new', PROJECTION_VIEW_MODE.CREATE))
+  saveNewProjectionSession(
+    type === PROJECTION_INPUT_METHOD.INPUT_MODEL_PARAMETERS
+      ? MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      : MODEL_SELECTION.FILE_UPLOAD
+  )
+  router.push(ROUTE_PATH.PROJECTION_DETAIL)
 }
 
 // ============================================================================

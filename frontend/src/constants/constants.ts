@@ -259,6 +259,12 @@ export const PROJECTION_INPUT_METHOD = Object.freeze({
   FILE_UPLOAD: 'fileUpload',
 })
 
+export const PROJECTION_SESSION_CTX = Object.freeze({
+  KEY: 'vdyp-projection-ctx',
+  NEW_TYPE: 'new', // new (unsaved) projection
+  EXISTING_TYPE: 'existing', // existing projection (view/edit)
+})
+
 export const PANEL_ACTION = Object.freeze({
   CLEAR: 'clear',
   CONFIRM: 'confirm',
@@ -276,9 +282,6 @@ export const ROUTE_PATH = Object.freeze({
   PROJECTION_LIST: '/',
   PROJECTION_DETAIL: '/projection-detail',
 })
-
-export const buildProjectionDetailPath = (projectionGUID: string, viewMode: string): string =>
-  `${ROUTE_PATH.PROJECTION_DETAIL}/${projectionGUID}/${viewMode}`
 
 export const BREAKPOINT = Object.freeze({
   CARD_VIEW: 1025,
