@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
@@ -105,5 +107,12 @@ public class ProjectionBatchMappingService {
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error updating projection batch progress", e);
 		}
+	}
+
+	public Map<UUID, ProjectionBatchMappingModel> getLatestBatchMappingsForProjections(List<UUID> projectionGUIDs) {
+		Map<UUID, ProjectionBatchMappingEntity> latestEntities = repository
+				.findLatestByProjectionGUIDs(projectionGUIDs);
+		return latestEntities.entrySet().stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, entry -> assembler.toModel(entry.getValue())));
 	}
 }

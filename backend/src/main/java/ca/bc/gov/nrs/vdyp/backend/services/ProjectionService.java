@@ -334,11 +334,24 @@ public class ProjectionService {
 		return model;
 	}
 
+	private ProjectionModel enrichModel(ProjectionEntity entity, Map<UUID, ProjectionBatchMappingModel> batchMappings) {
+		var model = toModelWithExpiry(entity);
+		if (batchMappings != null && batchMappings.containsKey(entity.getProjectionGUID())) {
+			ProjectionBatchMappingModel batchMappingModel = batchMappings.get(entity.getProjectionGUID());
+			batchMappingModel.setProjection(null);
+			model.setBatchMapping(batchMappingModel);
+		}
+		return model;
+	}
+
 	public List<ProjectionModel> getAllProjectionsForUser(String vdypUserId) {
 		if (vdypUserId == null)
 			return Collections.emptyList();
 		UUID vdypUserGuid = UUID.fromString(vdypUserId);
-		return repository.findByOwner(vdypUserGuid).stream().map(this::toModelWithExpiry).toList();
+		List<ProjectionEntity> entities = repository.findByOwner(vdypUserGuid);
+		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
+
+		return entities.stream().map(e -> enrichModel(e, batchMappings)).toList();
 	}
 
 	@Transactional
@@ -506,7 +519,10 @@ public class ProjectionService {
 			throws ProjectionServiceException {
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
-		return toModelWithExpiry(entity);
+
+		Map<UUID, ProjectionBatchMappingModel> batchMappingModelMap = this
+				.getBatchMappingsForProjections(List.of(entity));
+		return enrichModel(entity, batchMappingModelMap);
 	}
 
 	@Transactional
@@ -555,7 +571,6 @@ public class ProjectionService {
 	@Transactional
 	public void updateProgress(VDYPUserModel actingUser, UUID projectionGUID, ProjectionProgressUpdate progressUpdate)
 			throws ProjectionServiceException {
-		logger.info("Updating progress for projection {}: {}", projectionGUID, progressUpdate);
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE_PROGRESS);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE_PROGRESS);
@@ -743,5 +758,11 @@ public class ProjectionService {
 			throw new ProjectionServiceException("Failed to duplicate projection", e);
 		}
 		return newProjection;
+	}
+
+	private Map<UUID, ProjectionBatchMappingModel>
+			getBatchMappingsForProjections(List<ProjectionEntity> projectionEntities) {
+		List<UUID> projectionGuids = projectionEntities.stream().map(ProjectionEntity::getProjectionGUID).toList();
+		return batchMappingService.getLatestBatchMappingsForProjections(projectionGuids);
 	}
 }

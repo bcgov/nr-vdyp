@@ -24,6 +24,7 @@ public class ProjectionModel {
 	private OffsetDateTime createDate;
 	private String reportTitle;
 	private String reportDescription;
+	private ProjectionBatchMappingModel batchMapping;
 
 	public String getProjectionGUID() {
 		return projectionGUID;
@@ -151,6 +152,14 @@ public class ProjectionModel {
 
 	public void setReportTitle(String reportTitle) {
 		this.reportTitle = reportTitle;
+	}
+
+	public void setBatchMapping(ProjectionBatchMappingModel batchMapping) {
+		this.batchMapping = batchMapping;
+	}
+
+	public ProjectionBatchMappingModel getBatchMapping() {
+		return batchMapping;
 	}
 
 }
