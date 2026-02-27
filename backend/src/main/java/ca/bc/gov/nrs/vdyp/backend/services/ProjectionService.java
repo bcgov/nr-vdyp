@@ -330,13 +330,15 @@ public class ProjectionService {
 
 	private ProjectionModel toModelWithExpiry(ProjectionEntity entity) {
 		var model = assembler.toModel(entity);
-		model.setExpiryDate(expiryConfig.expiryFrom(model.getLastUpdatedDate()));
+		if (model != null)
+			model.setExpiryDate(expiryConfig.expiryFrom(model.getLastUpdatedDate()));
 		return model;
 	}
 
-	private ProjectionModel enrichModel(ProjectionEntity entity, Map<UUID, ProjectionBatchMappingModel> batchMappings) {
+	protected ProjectionModel
+			toRichModel(ProjectionEntity entity, Map<UUID, ProjectionBatchMappingModel> batchMappings) {
 		var model = toModelWithExpiry(entity);
-		if (batchMappings != null && batchMappings.containsKey(entity.getProjectionGUID())) {
+		if (model != null && batchMappings != null && batchMappings.containsKey(entity.getProjectionGUID())) {
 			ProjectionBatchMappingModel batchMappingModel = batchMappings.get(entity.getProjectionGUID());
 			batchMappingModel.setProjection(null);
 			model.setBatchMapping(batchMappingModel);
@@ -351,7 +353,7 @@ public class ProjectionService {
 		List<ProjectionEntity> entities = repository.findByOwner(vdypUserGuid);
 		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
 
-		return entities.stream().map(e -> enrichModel(e, batchMappings)).toList();
+		return entities.stream().map(e -> toRichModel(e, batchMappings)).toList();
 	}
 
 	@Transactional
@@ -522,7 +524,7 @@ public class ProjectionService {
 
 		Map<UUID, ProjectionBatchMappingModel> batchMappingModelMap = this
 				.getBatchMappingsForProjections(List.of(entity));
-		return enrichModel(entity, batchMappingModelMap);
+		return toRichModel(entity, batchMappingModelMap);
 	}
 
 	@Transactional
