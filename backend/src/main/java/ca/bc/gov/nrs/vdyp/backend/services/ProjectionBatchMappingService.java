@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -64,17 +63,16 @@ public class ProjectionBatchMappingService {
 	@Transactional
 	public void cancelProjection(ProjectionEntity projectionEntity) throws ProjectionServiceException {
 		try {
-			Optional<ProjectionBatchMappingEntity> entityOpt = repository
-					.findByProjectionGUID(projectionEntity.getProjectionGUID());
-			if (entityOpt.isPresent()) {
-				ProjectionBatchMappingEntity entity = entityOpt.get();
-				batchClient.stopBatchJob(entity.getBatchJobGUID());
-				repository.delete(entity);
-			} else {
-				throw new ProjectionServiceException(
-						"No batch mapping found for projection GUID: " + projectionEntity.getProjectionGUID()
-				);
-			}
+			ProjectionBatchMappingEntity entity = repository.findByProjectionGUID(projectionEntity.getProjectionGUID())
+					.orElseThrow(
+							() -> new ProjectionServiceException(
+									"No batch mapping found for projection GUID: "
+											+ projectionEntity.getProjectionGUID()
+							)
+					);
+
+			batchClient.stopBatchJob(entity.getBatchJobGUID());
+			repository.delete(entity);
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error cancelling projection batch process", e);
 		}
@@ -92,18 +90,16 @@ public class ProjectionBatchMappingService {
 	public void updateProgress(ProjectionEntity projectionEntity, ProjectionProgressUpdate progressUpdate)
 			throws ProjectionServiceException {
 		try {
-			Optional<ProjectionBatchMappingEntity> entityOpt = repository
-					.findByProjectionGUID(projectionEntity.getProjectionGUID());
-			if (entityOpt.isPresent()) {
-				ProjectionBatchMappingEntity entity = entityOpt.get();
-				entity.setPolygonCount(progressUpdate.totalPolygons());
-				entity.setErrorCount(progressUpdate.projectionErrors());
-				entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());
-			} else {
-				throw new ProjectionServiceException(
-						"No batch mapping found for projection GUID: " + projectionEntity.getProjectionGUID()
-				);
-			}
+			ProjectionBatchMappingEntity entity = repository.findByProjectionGUID(projectionEntity.getProjectionGUID())
+					.orElseThrow(
+							() -> new ProjectionServiceException(
+									"No batch mapping found for projection GUID: "
+											+ projectionEntity.getProjectionGUID()
+							)
+					);
+			entity.setPolygonCount(progressUpdate.totalPolygons());
+			entity.setErrorCount(progressUpdate.projectionErrors());
+			entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error updating projection batch progress", e);
 		}
