@@ -180,7 +180,7 @@ import {
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import { loadProjectionSession, clearProjectionSession, saveExistingProjectionSession } from '@/utils/projectionSession'
-import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip } from '@/services/projectionService'
+import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip, isProjectionReadOnly } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runProjection } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
@@ -387,40 +387,61 @@ const fetchAndPopulateResults = async (showMessage: boolean = true) => {
   }
 }
 
+/**
+ * Restores projection state on browser refresh by reading the session context.
+ * Returns false if navigation has been redirected and onMounted should abort.
+ */
+const restoreFromSession = async (): Promise<boolean> => {
+  const sessionCtx = loadProjectionSession()
+
+  if (!sessionCtx) {
+    // No session context — direct URL access with no store data, redirect to list
+    notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.NO_SESSION, MESSAGE.PROJECTION_ERR.NO_SESSION_TITLE)
+    router.replace(CONSTANTS.ROUTE_PATH.PROJECTION_LIST)
+    return false
+  }
+
+  if (sessionCtx.type !== CONSTANTS.PROJECTION_SESSION_CTX.EXISTING_TYPE) {
+    // New (unsaved) projection refresh — restore model selection and show empty form
+    appStore.setModelSelection(sessionCtx.ms)
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.CREATE)
+    return true
+  }
+
+  // Existing projection refresh — re-fetch from backend
+  isProgressVisible.value = true
+  progressMessage.value = MESSAGE.PROGRESS_MSG.LOADING_PROJECTION
+
+  const success = await loadProjection(sessionCtx.g, sessionCtx.m as typeof appStore.viewMode)
+
+  isProgressVisible.value = false
+
+  if (!success) {
+    clearProjectionSession()
+    notificationStore.showErrorMessage(MESSAGE.PROJECTION_ERR.LOAD_FAILED, MESSAGE.PROJECTION_ERR.LOAD_FAILED_TITLE)
+    router.replace(CONSTANTS.ROUTE_PATH.PROJECTION_LIST)
+    return false
+  }
+
+  // Guard against sessionStorage viewMode manipulation:
+  // Verify the requested viewMode is valid for the actual status returned by the backend.
+  // READY/RUNNING projections are read-only; force VIEW mode if 'edit' was requested.
+  if (isProjectionReadOnly(appStore.currentProjectionStatus) &&
+      appStore.viewMode !== CONSTANTS.PROJECTION_VIEW_MODE.VIEW) {
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+    notificationStore.showWarningMessage(
+      MESSAGE.PROJECTION_ERR.VIEW_MODE_FORCED,
+      MESSAGE.PROJECTION_ERR.VIEW_MODE_FORCED_TITLE,
+    )
+  }
+
+  return true
+}
+
 onMounted(async () => {
   if (!appStore.currentProjectionGUID) {
-    const sessionCtx = loadProjectionSession()
-
-    if (!sessionCtx) {
-      // No session context — direct URL access with no store data, redirect to list
-      router.replace(CONSTANTS.ROUTE_PATH.PROJECTION_LIST)
-      return
-    }
-
-    if (sessionCtx.type === CONSTANTS.PROJECTION_SESSION_CTX.EXISTING_TYPE) {
-      // Browser refresh on a view/edit projection — re-fetch from backend
-      isProgressVisible.value = true
-      progressMessage.value = MESSAGE.PROGRESS_MSG.LOADING_PROJECTION
-
-      const success = await loadProjection(sessionCtx.g, sessionCtx.m as typeof appStore.viewMode)
-
-      isProgressVisible.value = false
-
-      if (!success) {
-        clearProjectionSession()
-        notificationStore.showErrorMessage(
-          MESSAGE.PROJECTION_ERR.LOAD_FAILED,
-          MESSAGE.PROJECTION_ERR.LOAD_FAILED_TITLE,
-        )
-        router.replace(CONSTANTS.ROUTE_PATH.PROJECTION_LIST)
-        return
-      }
-    } else {
-      // type === CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE: browser refresh of an unsaved new projection
-      // Restore model selection from session so the correct empty form is shown
-      appStore.setModelSelection(sessionCtx.ms)
-      appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.CREATE)
-    }
+    const shouldContinue = await restoreFromSession()
+    if (!shouldContinue) return
   }
 
   // Only initialize species groups for new projections

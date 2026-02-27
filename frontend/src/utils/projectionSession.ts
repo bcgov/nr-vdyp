@@ -28,15 +28,46 @@ export const saveNewProjectionSession = (modelSelection: string): void => {
   sessionStorage.setItem(PROJ_CTX_KEY, btoa(JSON.stringify(ctx)))
 }
 
+// Allowlists used to validate sessionStorage values against manipulation.
+// 'create' is intentionally excluded from VALID_EXISTING_VIEW_MODES -
+// existing projections can never be in create mode.
+const VALID_MODEL_SELECTIONS = new Set<string>(Object.values(CONSTANTS.MODEL_SELECTION))
+const VALID_EXISTING_VIEW_MODES = new Set<string>([
+  CONSTANTS.PROJECTION_VIEW_MODE.VIEW,
+  CONSTANTS.PROJECTION_VIEW_MODE.EDIT,
+])
+
 /**
- * Loads the projection session context saved before navigation.
- * Returns null if no session exists or if parsing fails.
+ * Type guard that validates all fields of a parsed session context object.
+ * Returns false if any field is missing, the wrong type, or not in the allowlist.
+ * This prevents manipulated sessionStorage values from reaching the store.
+ */
+const isValidCtx = (parsed: unknown): parsed is ProjectionSessionCtx => {
+  if (!parsed || typeof parsed !== 'object') return false
+  const c = parsed as Record<string, unknown>
+
+  if (c.type === CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE) {
+    return typeof c.ms === 'string' && VALID_MODEL_SELECTIONS.has(c.ms)
+  }
+
+  if (c.type === CONSTANTS.PROJECTION_SESSION_CTX.EXISTING_TYPE) {
+    return typeof c.g === 'string' && c.g.trim().length > 0 &&
+           typeof c.m === 'string' && VALID_EXISTING_VIEW_MODES.has(c.m)
+  }
+
+  return false
+}
+
+/**
+ * Loads and validates the projection session context saved before navigation.
+ * Returns null if no session exists, parsing fails, or any field fails validation.
  */
 export const loadProjectionSession = (): ProjectionSessionCtx | null => {
   try {
     const raw = sessionStorage.getItem(PROJ_CTX_KEY)
     if (!raw) return null
-    return JSON.parse(atob(raw)) as ProjectionSessionCtx
+    const parsed: unknown = JSON.parse(atob(raw))
+    return isValidCtx(parsed) ? parsed : null
   } catch {
     return null
   }
