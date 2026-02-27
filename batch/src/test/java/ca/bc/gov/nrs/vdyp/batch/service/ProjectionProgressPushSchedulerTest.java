@@ -1,7 +1,9 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,8 +45,6 @@ class ProjectionProgressPushSchedulerTest {
 	ThreadPoolExecutor threadPoolExecutor;
 	@Mock
 	BlockingQueue<Runnable> queue;
-	@Mock
-	JobParameters jobParameters;
 
 	ProjectionProgressPushScheduler scheduler;
 
@@ -59,6 +59,7 @@ class ProjectionProgressPushSchedulerTest {
 	void pushProgress_noTaskCapacity_returnsWithoutCalling() {
 		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(0);
 		scheduler.pushProgress();
+		verify(jobExplorer, never()).findJobInstancesByJobName(any(), anyInt(), anyInt());
 	}
 
 	@Test
@@ -66,7 +67,6 @@ class ProjectionProgressPushSchedulerTest {
 		var params = new HashMap<String, JobParameter<?>>();
 
 		params.put(BatchConstants.GuidInput.PROJECTION_GUID, new JobParameter<>("test-guid", String.class, true));
-		;
 		JobParameters jobParameters = new JobParameters(params);
 
 		JobExecution job = new JobExecution(1L, jobParameters);

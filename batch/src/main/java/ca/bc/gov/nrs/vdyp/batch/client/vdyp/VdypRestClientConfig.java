@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -53,10 +52,7 @@ public class VdypRestClientConfig {
 			OAuth2AuthorizedClientManager oauth2AuthorizedClientManager, VdypProperties vdypProperties,
 			ObjectMapper objectMapper
 	) {
-		var jacksonConverter = new MappingJackson2HttpMessageConverter(objectMapper);
-		return RestClient.builder().messageConverters(converters -> {
-			converters.add(0, jacksonConverter);
-		}).baseUrl(vdypProperties.baseUrl()).requestFactory(fastRequestFactory())
+		return RestClient.builder().baseUrl(vdypProperties.baseUrl()).requestFactory(fastRequestFactory())
 				.requestInterceptor(bearerInterceptor(oauth2AuthorizedClientManager, vdypProperties)).build();
 	}
 
