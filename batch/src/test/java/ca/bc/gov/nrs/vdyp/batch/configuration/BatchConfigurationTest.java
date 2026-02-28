@@ -93,6 +93,9 @@ class BatchConfigurationTest {
 	private BatchProjectionService batchProjectionService;
 
 	@Mock
+	private ChunkWriteListener chunkWriteListener;
+
+	@Mock
 	private ObjectMapper objectMapper;
 
 	@TempDir
@@ -146,7 +149,7 @@ class BatchConfigurationTest {
 
 		Step result = configuration.workerStep(
 				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, batchProjectionService,
-				itemReader, partitionWriter, projectionProcessor
+				itemReader, partitionWriter, projectionProcessor, chunkWriteListener
 		);
 
 		assertNotNull(result);

@@ -280,7 +280,7 @@ public class PolygonProjectionRunner {
 				} else {
 					if (oFipResult.isPresent()) {
 						polygon.disableProjectionsOfType(projectionType);
-						context.getErrorLog().addMessage(
+						context.logError(
 								ErrorMessageUtils.BuildVDYPApplicationErrorMessage(
 										VdypApplicationIdentifier.FIP_START, polygon, "running", oFipResult.get()
 								)
@@ -354,7 +354,7 @@ public class PolygonProjectionRunner {
 						}
 					}
 
-					context.getErrorLog().addMessage(
+					context.logError(
 							ErrorMessageUtils.BuildVDYPApplicationErrorMessage(
 									VdypApplicationIdentifier.VRI_START, polygon, "running", oVriResult.get()
 							)

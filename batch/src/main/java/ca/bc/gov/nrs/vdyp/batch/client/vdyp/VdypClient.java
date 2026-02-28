@@ -12,22 +12,26 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+
 @Component
 public class VdypClient {
-	private final RestClient vdypBackendRestClient;
+	private final RestClient vdypBackendReliableRestClient;
+	private final RestClient vdypBackendFastRestClient;
 
-	public VdypClient(RestClient vdypBackendRestClient) {
-		this.vdypBackendRestClient = vdypBackendRestClient;
+	public VdypClient(RestClient vdypBackendReliableRestClient, RestClient vdypBackendFastRestClient) {
+		this.vdypBackendReliableRestClient = vdypBackendReliableRestClient;
+		this.vdypBackendFastRestClient = vdypBackendFastRestClient;
 	}
 
 	public VdypProjectionDetails getProjectionDetails(String projectionGUID) {
-		return vdypBackendRestClient.get()
+		return vdypBackendReliableRestClient.get()
 				.uri(uriBuilder -> uriBuilder.path("/api/v8/projection/{projectionGUID}").build(projectionGUID))
 				.retrieve().body(VdypProjectionDetails.class);
 	}
 
 	public List<FileMappingDetails> getFileSetFiles(String projectionGUID, String fileSetGUID) {
-		return vdypBackendRestClient.get()
+		return vdypBackendReliableRestClient.get()
 				.uri(
 						uriBuilder -> uriBuilder.path("/api/v8/projection/{projectionGUID}/fileset/{fileSetGUID}")
 								.build(projectionGUID, fileSetGUID)
@@ -41,7 +45,7 @@ public class VdypClient {
 		MultiValueMap<String, Object> form = new LinkedMultiValueMap<>();
 		form.add("file", fileResource);
 
-		vdypBackendRestClient.post()
+		vdypBackendReliableRestClient.post()
 				.uri(
 						b -> b.path("/api/v8/projection/{projectionGUID}/fileset/{fileSetGUID}/file")
 								.build(projectionGUID, fileSetGUID)
@@ -53,7 +57,7 @@ public class VdypClient {
 	}
 
 	public void markComplete(String projectionGUID, boolean success) {
-		vdypBackendRestClient.post() //
+		vdypBackendReliableRestClient.post() //
 				.uri(
 						b -> b.path("/api/v8/projection/{projectionGUID}/complete") //
 								.queryParam("success", success) //
@@ -62,4 +66,11 @@ public class VdypClient {
 				.retrieve() //
 				.body(Void.class);
 	}
+
+	public void pushProgress(String projectionGUID, VDYPProjectionProgressUpdate payload) {
+		vdypBackendFastRestClient.patch()
+				.uri(b -> b.path("/api/v8/projection/{projectionGUID}/progress").build(projectionGUID))
+				.contentType(MediaType.APPLICATION_JSON).body(payload).retrieve().body(Void.class);
+	}
+
 }

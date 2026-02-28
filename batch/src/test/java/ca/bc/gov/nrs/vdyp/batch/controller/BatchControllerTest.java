@@ -37,6 +37,7 @@ import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -386,12 +387,25 @@ class BatchControllerTest {
 		JobExecution realExecution = new JobExecution(realInstance, executionId, realParams);
 		realExecution.setStatus(BatchStatus.STARTED);
 		realExecution.setStartTime(LocalDateTime.now());
+		ExecutionContext jobContext = new ExecutionContext();
+		jobContext.putInt(BatchConstants.Job.TOTAL_POLYGONS, 10);
+		realExecution.setExecutionContext(jobContext);
 
 		// Create step executions
 		StepExecution step1 = new StepExecution("workerStep:partition0", realExecution);
 		StepExecution step2 = new StepExecution("workerStep:partition1", realExecution);
 		step1.setStatus(BatchStatus.COMPLETED);
 		step2.setStatus(BatchStatus.STARTED);
+		ExecutionContext stepContext1 = new ExecutionContext();
+		ExecutionContext stepContext2 = new ExecutionContext();
+		stepContext1.putInt(BatchConstants.Job.PROJECTION_ERRORS, 1);
+		stepContext1.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 2);
+		stepContext1.putInt(BatchConstants.Job.POLYGONS_SKIPPED, 3);
+		step1.setExecutionContext(stepContext1);
+		stepContext2.putInt(BatchConstants.Job.PROJECTION_ERRORS, 1);
+		stepContext2.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 2);
+		stepContext2.putInt(BatchConstants.Job.POLYGONS_SKIPPED, 3);
+		step2.setExecutionContext(stepContext2);
 		realExecution.addStepExecutions(List.of(step1, step2));
 
 		// Mock finding job execution
@@ -408,14 +422,18 @@ class BatchControllerTest {
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
 		assertEquals("STARTED", response.getBody().get(BatchConstants.Job.STATUS));
 		assertEquals(true, response.getBody().get("isRunning"));
-		assertEquals(2L, response.getBody().get("totalPartitions"));
-		assertEquals(1L, response.getBody().get("completedPartitions"));
+		assertEquals(10, response.getBody().get(BatchConstants.Job.TOTAL_POLYGONS));
+		assertEquals(2, response.getBody().get(BatchConstants.Job.PROJECTION_ERRORS));
+		assertEquals(4, response.getBody().get(BatchConstants.Job.POLYGONS_PROCESSED));
+		assertEquals(6, response.getBody().get(BatchConstants.Job.POLYGONS_SKIPPED));
 	}
 
 	@Test
 	void testGetJobStatus_WithCompletedJob_ReturnsNotRunning() throws NoSuchJobException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
+
+		ExecutionContext executionContext = new ExecutionContext();
 
 		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
@@ -430,6 +448,7 @@ class BatchControllerTest {
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
 		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
 		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptySet());
+		when(jobExecution.getExecutionContext()).thenReturn(executionContext);
 
 		ResponseEntity<Map<String, Object>> response = batchController.getJobStatus(jobGuid);
 
@@ -449,14 +468,29 @@ class BatchControllerTest {
 		JobParameters realParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
 				.toJobParameters();
 		JobExecution realExecution = new JobExecution(realInstance, executionId, realParams);
+
 		realExecution.setStatus(BatchStatus.FAILED);
 		realExecution.setStartTime(LocalDateTime.now());
+		realExecution.setExecutionContext(new ExecutionContext());
+		ExecutionContext jobContext = new ExecutionContext();
+		jobContext.putInt(BatchConstants.Job.TOTAL_POLYGONS, 10);
+		realExecution.setExecutionContext(jobContext);
 
 		// Create failed step executions
 		StepExecution step1 = new StepExecution("workerStep:partition0", realExecution);
 		StepExecution step2 = new StepExecution("workerStep:partition1", realExecution);
 		step1.setStatus(BatchStatus.FAILED);
 		step2.setStatus(BatchStatus.COMPLETED);
+		ExecutionContext stepContext1 = new ExecutionContext();
+		ExecutionContext stepContext2 = new ExecutionContext();
+		stepContext1.putInt(BatchConstants.Job.PROJECTION_ERRORS, 1);
+		stepContext1.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 2);
+		stepContext1.putInt(BatchConstants.Job.POLYGONS_SKIPPED, 3);
+		step1.setExecutionContext(stepContext1);
+		stepContext2.putInt(BatchConstants.Job.PROJECTION_ERRORS, 1);
+		stepContext2.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 2);
+		stepContext2.putInt(BatchConstants.Job.POLYGONS_SKIPPED, 3);
+		step2.setExecutionContext(stepContext2);
 		realExecution.addStepExecutions(List.of(step1, step2));
 
 		// Mock finding job execution
@@ -469,8 +503,10 @@ class BatchControllerTest {
 
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
-		assertEquals(2L, response.getBody().get("totalPartitions"));
-		assertEquals(2L, response.getBody().get("completedPartitions")); // Both failed and completed count
+		assertEquals(10, response.getBody().get(BatchConstants.Job.TOTAL_POLYGONS));
+		assertEquals(2, response.getBody().get(BatchConstants.Job.PROJECTION_ERRORS));
+		assertEquals(4, response.getBody().get(BatchConstants.Job.POLYGONS_PROCESSED));
+		assertEquals(6, response.getBody().get(BatchConstants.Job.POLYGONS_SKIPPED));
 	}
 
 	@Test

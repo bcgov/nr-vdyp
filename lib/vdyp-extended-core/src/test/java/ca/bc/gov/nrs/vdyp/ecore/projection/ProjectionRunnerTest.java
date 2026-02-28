@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -217,6 +218,17 @@ public class ProjectionRunnerTest {
 		String progressLog = new String(progressStream.readAllBytes());
 		assertThat(progressLog.contains("Processing Polygon 13919428:"), is(true));
 		assertThat(progressLog.contains("Processing Polygon 13919429:"), is(true));
+	}
+
+	@Test
+	void getErrorLogCount_returnsErrorLogCount_FromContext() throws AbstractProjectionRequestException {
+		params = new Parameters().ageStart(0).ageEnd(190).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
+		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
+		assertEquals(0, unit.getErrorLogCount());
+		assertEquals(0, unit.getLastRunPolygonsProcessed());
+		assertEquals(0, unit.getLastRunPolygonsSeen());
+		assertEquals(0, unit.getLastRunPolygonsSkipped());
 	}
 
 }

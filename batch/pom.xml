@@ -10,7 +10,7 @@
     <artifactId>vdyp-batch</artifactId>
     <name>Variable Density Yield Project - Batch</name>
     <properties>
-        <spring-boot.version>3.5.5</spring-boot.version>
+			<spring-boot.version>3.5.11</spring-boot.version>
         <!-- Default: enable Spring Boot repackaging (JVM mode) -->
         <skipSpringBootRepackage>false</skipSpringBootRepackage>
     </properties>
@@ -81,11 +81,6 @@
         </dependency>
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-web</artifactId>
-			</dependency>
-
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-security</artifactId>
 			</dependency>
 
@@ -140,7 +135,11 @@
 				<artifactId>spring-security-test</artifactId>
 				<scope>test</scope>
 			</dependency>
-    </dependencies>
+			<dependency>
+				<groupId>org.apache.httpcomponents.client5</groupId>
+				<artifactId>httpclient5</artifactId>
+			</dependency>
+		</dependencies>
     <build>
         <plugins>
             <!-- Maven Compiler Plugin with -parameters flag -->

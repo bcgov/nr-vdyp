@@ -284,23 +284,29 @@ public class BatchController {
 
 		// Count total partitions and completed partitions
 
-		long totalPartitions = jobExecution.getStepExecutions().stream()
-				.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:")).count();
-
-		long completedPartitions = jobExecution.getStepExecutions().stream()
-				.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:"))
-				.filter(
-						stepExecution -> stepExecution.getStatus().isUnsuccessful()
-								|| stepExecution.getStatus() == org.springframework.batch.core.BatchStatus.COMPLETED
-				).count();
+		int polygonsProcessed = jobExecution.getStepExecutions().stream() //
+				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) //
+				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0)) //
+				.sum();
+		int polygonsSkipped = jobExecution.getStepExecutions().stream() //
+				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) //
+				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0)) //
+				.sum();
+		int projectionErrors = jobExecution.getStepExecutions().stream() //
+				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) //
+				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.PROJECTION_ERRORS, 0)) //
+				.sum();
+		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
 
 		response.put(BatchConstants.Job.GUID, jobGuid);
 		response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 		response.put(BatchConstants.Job.NAME, jobExecution.getJobInstance().getJobName());
 		response.put(BatchConstants.Job.STATUS, jobExecution.getStatus().toString());
 		response.put(BatchConstants.Job.IS_RUNNING, isRunning);
-		response.put(BatchConstants.Job.TOTAL_PARTITIONS, totalPartitions);
-		response.put(BatchConstants.Job.COMPLETED_PARTITIONS, completedPartitions);
+		response.put(BatchConstants.Job.PROJECTION_ERRORS, projectionErrors);
+		response.put(BatchConstants.Job.POLYGONS_PROCESSED, polygonsProcessed);
+		response.put(BatchConstants.Job.POLYGONS_SKIPPED, polygonsSkipped);
+		response.put(BatchConstants.Job.TOTAL_POLYGONS, totalPolygons);
 
 		if (jobExecution.getStartTime() != null) {
 			response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime());
@@ -311,10 +317,7 @@ public class BatchController {
 
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-		logger.debug(
-				"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}", jobGuid,
-				jobExecution.getStatus(), isRunning, totalPartitions, completedPartitions
-		);
+		logger.debug("[GUID: {}] Job status: {}, Running: {}", jobGuid, jobExecution.getStatus(), isRunning);
 
 		return ResponseEntity.ok(response);
 	}

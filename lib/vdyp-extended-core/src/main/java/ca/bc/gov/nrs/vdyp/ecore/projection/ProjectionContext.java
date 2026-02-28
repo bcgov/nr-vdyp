@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -59,6 +60,7 @@ public class ProjectionContext {
 	private Path executionFolder;
 
 	private final IMessageLog progressLog;
+	private int errorLogCount;
 	private final IMessageLog errorLog;
 	private List<YieldTable> yieldTableList = new ArrayList<>();
 
@@ -87,6 +89,7 @@ public class ProjectionContext {
 
 		var loggingParams = LoggingParameters.of(params);
 
+		errorLogCount = 0;
 		if (loggingParams.doEnableErrorLogging()) {
 			errorLog = new MessageLog(Level.ERROR);
 		} else {
@@ -323,8 +326,17 @@ public class ProjectionContext {
 		return progressLog;
 	}
 
-	public IMessageLog getErrorLog() {
-		return errorLog;
+	public int getErrorLogCount() {
+		return errorLogCount;
+	}
+
+	public void logError(String message, Object... args) {
+		errorLogCount++;
+		errorLog.addMessage(message, args);
+	}
+
+	public InputStream getErrorLogStream() {
+		return errorLog.getAsStream();
 	}
 
 	public void createYieldTables() throws YieldTableGenerationException {
