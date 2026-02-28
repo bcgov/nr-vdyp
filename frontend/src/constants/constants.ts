@@ -259,6 +259,12 @@ export const PROJECTION_INPUT_METHOD = Object.freeze({
   FILE_UPLOAD: 'fileUpload',
 })
 
+export const PROJECTION_SESSION_CTX = Object.freeze({
+  KEY: 'vdyp-projection-ctx',
+  NEW_TYPE: 'new', // new (unsaved) projection
+  EXISTING_TYPE: 'existing', // existing projection (view/edit)
+})
+
 export const PANEL_ACTION = Object.freeze({
   CLEAR: 'clear',
   CONFIRM: 'confirm',

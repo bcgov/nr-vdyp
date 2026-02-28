@@ -103,6 +103,7 @@ import type { Projection, TableHeader, SortOption } from '@/interfaces/interface
 import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
 import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, MODEL_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH } from '@/constants/constants'
+import { saveExistingProjectionSession, saveNewProjectionSession } from '@/utils/projectionSession'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { downloadFile, sanitizeFileName } from '@/utils/util'
 import { AppButton, AppProgressCircular } from '@/components'
@@ -114,10 +115,8 @@ import {
   duplicateProjection,
   getProjectionById,
   transformProjection,
-  parseProjectionParams,
   isProjectionReadOnly,
   mapProjectionStatus,
-  getFileSetFiles,
   streamResultsZip,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
@@ -125,10 +124,7 @@ import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
-import {
-  ExecutionOptionsEnum,
-  type ModelParameters,
-} from '@/services/vdyp-api'
+import { useProjectionLoader } from '@/composables/useProjectionLoader'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -277,86 +273,14 @@ const handleCardSort = (value: string) => {
   sortOrder.value = order as SortOrder
 }
 
+const { loadProjection } = useProjectionLoader()
+
 const clearSelection = () => {
   selectedGUIDs.value = []
 }
 
 const handleSelectionChange = (guids: string[]) => {
   selectedGUIDs.value = guids
-}
-
-/**
- * Loads file set files and applies the file info to the store
- */
-const loadFileSetInfo = async (
-  projectionGUID: string,
-  fileSetGUID: string,
-  defaultName: string,
-  setFileInfo: (info: { filename: string; fileMappingGUID: string; fileSetGUID: string }) => void,
-) => {
-  try {
-    const files = await getFileSetFiles(projectionGUID, fileSetGUID)
-    if (files.length > 0) {
-      const file = files[0]
-      setFileInfo({
-        filename: file.filename || defaultName,
-        fileMappingGUID: file.fileMappingGUID,
-        fileSetGUID,
-      })
-    }
-  } catch (err) {
-    console.error(`Error loading ${defaultName.toLowerCase()} info:`, err)
-  }
-}
-
-/**
- * Restores model parameter state from a projection
- */
-const restoreInputModelParamsState = (
-  projectionModel: Awaited<ReturnType<typeof getProjectionById>>,
-  modelParameters: string | null | undefined,
-  params: ReturnType<typeof parseProjectionParams>,
-  isViewMode: boolean,
-) => {
-  modelParameterStore.resetStore()
-
-  if (modelParameters) {
-    try {
-      const modelParams: ModelParameters = JSON.parse(modelParameters)
-      modelParameterStore.restoreFromModelParameters(modelParams)
-    } catch (err) {
-      console.error('Error parsing modelParameters:', err)
-    }
-  }
-
-  modelParameterStore.restoreFromProjectionParams(params, isViewMode)
-  modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
-}
-
-/**
- * Restores file upload state from a projection
- */
-const restoreFileUploadState = async (
-  projectionGUID: string,
-  projectionModel: Awaited<ReturnType<typeof getProjectionById>>,
-  params: ReturnType<typeof parseProjectionParams>,
-  isViewMode: boolean,
-) => {
-  fileUploadStore.resetStore()
-  fileUploadStore.restoreFromProjectionParams(params, isViewMode)
-  fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
-
-  const polygonFileSetGUID = projectionModel.polygonFileSet?.projectionFileSetGUID
-  const layerFileSetGUID = projectionModel.layerFileSet?.projectionFileSetGUID
-
-  await Promise.all([
-    polygonFileSetGUID
-      ? loadFileSetInfo(projectionGUID, polygonFileSetGUID, 'Polygon File', fileUploadStore.setPolygonFileInfo)
-      : Promise.resolve(),
-    layerFileSetGUID
-      ? loadFileSetInfo(projectionGUID, layerFileSetGUID, 'Layer File', fileUploadStore.setLayerFileInfo)
-      : Promise.resolve(),
-  ])
 }
 
 /**
@@ -369,38 +293,15 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
   progressMessage.value = PROGRESS_MSG.LOADING_PROJECTION
 
   try {
-    const projectionModel = await getProjectionById(projectionGUID)
-    const params = parseProjectionParams(projectionModel.projectionParameters)
+    const viewMode = isViewMode ? PROJECTION_VIEW_MODE.VIEW : PROJECTION_VIEW_MODE.EDIT
+    const success = await loadProjection(projectionGUID, viewMode)
 
-    const isInputModelParams = params.selectedExecutionOptions.includes(ExecutionOptionsEnum.DoEnableProjectionReport)
-    const method = isInputModelParams
-      ? MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-      : MODEL_SELECTION.FILE_UPLOAD
-
-    appStore.setModelSelection(method)
-    appStore.setViewMode(isViewMode ? PROJECTION_VIEW_MODE.VIEW : PROJECTION_VIEW_MODE.EDIT)
-    appStore.setCurrentProjectionGUID(projectionGUID)
-    appStore.setCurrentProjectionStatus(
-      mapProjectionStatus(projectionModel.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT),
-    )
-
-    // Set or clear duplicated-from info based on copyTitle in projectionParameters
-    if (params.copyTitle) {
-      appStore.setDuplicatedFromInfo({
-        originalName: params.copyTitle,
-        duplicatedAt: projectionModel.createDate || new Date().toISOString(),
-      })
+    if (success) {
+      saveExistingProjectionSession(projectionGUID, viewMode)
+      router.push(ROUTE_PATH.PROJECTION_DETAIL)
     } else {
-      appStore.setDuplicatedFromInfo(null)
+      notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
     }
-
-    if (isInputModelParams) {
-      restoreInputModelParamsState(projectionModel, projectionModel.modelParameters, params, isViewMode)
-    } else {
-      await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode)
-    }
-
-    router.push(ROUTE_PATH.PROJECTION_DETAIL)
   } catch (err) {
     console.error('Error loading projection:', err)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
@@ -569,6 +470,11 @@ const handleNewProjection = (type: (typeof PROJECTION_INPUT_METHOD)[keyof typeof
     // Reset file upload store
     fileUploadStore.resetStore()
   }
+  saveNewProjectionSession(
+    type === PROJECTION_INPUT_METHOD.INPUT_MODEL_PARAMETERS
+      ? MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      : MODEL_SELECTION.FILE_UPLOAD
+  )
   router.push(ROUTE_PATH.PROJECTION_DETAIL)
 }
 

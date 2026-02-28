@@ -230,6 +230,10 @@ export const PROJECTION_ERR = Object.freeze({
   RESULTS_LOAD_FAILED_TITLE: 'Results Load Failed',
   DUPLICATE_FAILED: 'Failed to duplicate the projection. Please try again later.',
   DUPLICATE_FAILED_TITLE: 'Projection Duplicate Failed',
+  VIEW_MODE_FORCED: 'This projection is read-only in its current status and has been opened in view-only mode.',
+  VIEW_MODE_FORCED_TITLE: 'View Only',
+  NO_SESSION: 'No projection was selected. Please select a projection from the list.',
+  NO_SESSION_TITLE: 'No Projection Selected',
 })
 
 export const FILE_REMOVAL_DIALOG = Object.freeze({
