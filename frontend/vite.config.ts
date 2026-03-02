@@ -36,6 +36,23 @@ export default defineConfig(({ mode }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
+    optimizeDeps: {
+      include: [
+        'vuetify/components/VBtn',
+        'vuetify/components/VSnackbar',
+        'vuetify/components/VTextField',
+        'vuetify/components/VDialog',
+        'vuetify/components/VCard',
+        'vuetify/components/VSelect',
+        'vuetify/components/VList',
+        'vuetify/components/VMenu',
+        'vuetify/components/VTabs',
+        'vuetify/components/VProgressCircular',
+        'vuetify/components/VSlider',
+        'vuetify/components/VExpansionPanel',
+        'vuetify/components/VIcon',
+      ],
+    },
     server: {
       proxy: {
         // Proxy API requests to the backend
