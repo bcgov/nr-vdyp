@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
@@ -36,8 +37,12 @@ public class ProjectionRepository implements PanacheRepositoryBase<ProjectionEnt
 				.stream().map(ProjectionEntity::getProjectionGUID).toList();
 	}
 
-	public long countCopyTitle(String title) {
+	public long countCopyTitle(VDYPUserModel actingUser, String title) {
 		String titlePattern = "%\"copyTitle\" : \"" + title + "\"%";
-		return count("projectionParameters like :titlePattern", Parameters.with("titlePattern", titlePattern));
+		return count(
+				"projectionParameters like :titlePattern and ownerUser.vdypUserGUID = :ownerId",
+				Parameters.with("titlePattern", titlePattern)
+						.and("ownerId", UUID.fromString(actingUser.getVdypUserGUID()))
+		);
 	}
 }

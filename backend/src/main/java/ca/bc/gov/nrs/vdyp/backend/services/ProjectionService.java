@@ -738,7 +738,7 @@ public class ProjectionService {
 			ModelParameters modelParameters = null;
 			if (entity.getProjectionParameters() != null) {
 				parameters = objectMapper.readValue(entity.getProjectionParameters(), Parameters.class);
-				long numCopies = repository.countCopyTitle(parameters.getReportTitle());
+				long numCopies = repository.countCopyTitle(actingUser, parameters.getReportTitle());
 				parameters.setCopyTitle(parameters.getReportTitle());
 				parameters.setReportTitle(
 						parameters.getReportTitle() + " - COPY" + (numCopies > 0 ? "" + (numCopies + 1) : "")
