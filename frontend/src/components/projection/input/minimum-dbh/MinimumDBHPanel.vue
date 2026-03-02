@@ -297,11 +297,11 @@ const onCancel = async () => {
 }
 
 /* Ensure DBH tick label values remain visible when the slider is in disabled/read-only mode. */
-:deep(.v-input--disabled) {
-  opacity: 1 !important;
-}
-
 :deep(.v-input--disabled .v-slider__container) {
   opacity: 0.75;
+}
+
+:deep(.v-slider-track__tick-label) {
+  color: rgba(0, 0, 0, 0.87) !important;
 }
 </style>
