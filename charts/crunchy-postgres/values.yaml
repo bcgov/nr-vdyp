@@ -68,7 +68,14 @@ pgBackRest:
       storageClassName: netapp-file-backup
       storage: #{DB_BACKUP_VOLUME_SIZE}#
     configuration:
-      secretName: "#{S3_ENVIRONMENT}#-postgres-s3-secret"
+      secretName: "#{ENV}#-postgres-s3-secret"
+    s3:
+      bucket:  #{DB_BACKUP_S3_BUCKET}#
+      endpoint:  #{DB_BACKUP_S3_ENDPOINT}#
+      region: "ca-central-1"
+      directoryName: vdyp-pgbackrest-#{ENV}#
+      key: #{DB_BACKUP_S3_KEY}#
+      key-secret: #{DB_BACKUP_S3_KEY_SECRET}#
 
   repoHost:
     requests:
