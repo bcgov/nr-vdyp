@@ -51,7 +51,11 @@
                   track-color="transparent"
                   :disabled="isMinDBHDeactivated"
                   @update:model-value="updateFileUploadMinDBH(index, $event)"
-                ></v-slider>
+                >
+                  <template #tick-label="{ tick }">
+                    <span class="min-dbh-tick-label">{{ tick.label }}</span>
+                  </template>
+                </v-slider>
               </v-col>
             </v-row>
           </v-container>
@@ -296,12 +300,12 @@ const onCancel = async () => {
   }
 }
 
-/* Ensure DBH tick label values remain visible when the slider is in disabled/read-only mode. */
+/* Ensure DBH tick label values remain visible when the slider is in disabled/read-only mode */
 :deep(.v-input--disabled .v-slider__container) {
   opacity: 0.75;
 }
 
-:deep(.v-slider-track__tick-label) {
-  color: rgba(0, 0, 0, 0.87) !important;
+.min-dbh-tick-label {
+  color: rgba(0, 0, 0, 0.87);
 }
 </style>
