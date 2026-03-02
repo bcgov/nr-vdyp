@@ -32,8 +32,8 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text ml-n6">
-          <v-container fluid>
+        <v-expansion-panel-text class="expansion-panel-text ml-n6 mt-2">
+          <v-container fluid class="mb-n9">
             <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index" class="min-dbh-row">
               <v-col v-bind="mobile ? { cols: 'auto' } : {}" class="min-dbh-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
                 {{ group.group }}
@@ -92,7 +92,7 @@ const panelName = CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH
 
 const panelTitle = computed(() =>
   mobile.value
-    ? 'Minimum DBH Limit by Species Group (cm+)'
+    ? 'Min DBH by Species Group (cm+)'
     : 'Minimum DBH Limit by Species Group',
 )
 
@@ -294,5 +294,10 @@ const onCancel = async () => {
     padding-left: 4px;
     padding-right: 4px;
   }
+}
+
+/* Ensure DBH tick label values remain visible when the slider is in disabled/read-only mode. */
+:deep(.v-input--disabled .v-slider__container) {
+  opacity: 0.75;
 }
 </style>

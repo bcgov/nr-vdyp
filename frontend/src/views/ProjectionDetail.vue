@@ -456,6 +456,12 @@ onMounted(async () => {
   if (isReady.value && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
     fetchAndPopulateResults(false)
   }
+
+  // Prevent auto-focus on the Download Report button when the page loads
+  await nextTick()
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur()
+  }
 })
 
 // Keep session in sync when projection GUID or viewMode changes.
@@ -867,6 +873,10 @@ h3 {
 }
 
 @media (max-width: 600px) {
+  h3 {
+    font-size: 24px;
+  }
+
   .model-selection-header {
     flex-wrap: wrap;
     gap: var(--layout-margin-small);
@@ -875,6 +885,21 @@ h3 {
   .header-right-section {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .running-status-icon,
+  .ready-status-icon,
+  .draft-status-icon,
+  .failed-status-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .running-status-text,
+  .ready-status-text,
+  .draft-status-text,
+  .failed-status-text {
+    font-size: 16px;
   }
 }
 
