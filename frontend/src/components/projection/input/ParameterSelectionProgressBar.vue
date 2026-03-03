@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="progress-instruction-text">
-      Complete the following sections to run the projections model. You may return to any section and make edits if needed.
+      Complete the following sections to run a projection. You may return to any section and make edits if necessary.
     </div>
     <v-card class="progress-bar-card" elevation="0">
       <div class="progress-header">

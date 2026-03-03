@@ -50,6 +50,10 @@
   opacity: 0.5;
 }
 
+.v-input--disabled .v-slider__container {
+  opacity: 0.75;
+}
+
 /* Slider ticks styling */
 .v-slider-track__tick {
   height: var(--layout-padding-none);

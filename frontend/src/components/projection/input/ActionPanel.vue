@@ -1,5 +1,5 @@
 <template>
-  <v-card-actions class="mt-5 pr-0">
+  <v-card-actions class="pr-0">
     <v-spacer></v-spacer>
     <AppButton
       v-if="!hideClearButton"

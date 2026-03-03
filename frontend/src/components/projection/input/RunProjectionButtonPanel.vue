@@ -117,4 +117,16 @@ const cancelRun = () => {
 .run-btn-tooltip-anchor {
   display: inline-flex;
 }
+
+@media (max-width: 600px) {
+  .file-upload-run-model-card {
+    padding: var(--layout-padding-xsmall) var(--layout-padding-small) !important;
+    margin-top: var(--layout-margin-small) !important;
+  }
+
+  .input-model-param-run-model-card {
+    padding: var(--layout-padding-xsmall) var(--layout-padding-small) !important;
+    margin-top: var(--layout-margin-small) !important;
+  }
+}
 </style>
