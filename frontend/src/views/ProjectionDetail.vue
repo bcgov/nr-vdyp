@@ -708,6 +708,7 @@ const handleDownloadReport = async () => {
 
 h3 {
   font: var(--typography-bold-h3);
+  font-size: 24px;
   color: var(--typography-color-primary);
 }
 
@@ -873,10 +874,6 @@ h3 {
 }
 
 @media (max-width: 600px) {
-  h3 {
-    font-size: 24px;
-  }
-
   .model-selection-header {
     flex-wrap: wrap;
     gap: var(--layout-margin-small);
