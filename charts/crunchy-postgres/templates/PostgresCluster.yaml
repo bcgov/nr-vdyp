@@ -163,7 +163,7 @@ spec:
             incremental: {{ .Values.pgBackRest.repos.schedulesOffset.incremental }}
           s3:
             bucket:  {{ .Values.pgBackRest.repos.s3.bucket }}
-            endpoint:  {{ .Values.pgBackRest.repos.s3.endpoint }}
+            endpoint:  nrs.objectstore.gov.bc.ca
             region: {{ .Values.pgBackRest.repos.s3.region}}
 
 
