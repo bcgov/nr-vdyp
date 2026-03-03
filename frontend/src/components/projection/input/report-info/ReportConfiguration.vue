@@ -1,7 +1,7 @@
 <template>
-  <div class="report-top-section mt-2" :class="{ 'file-upload-top-section': appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD }">
+  <div class="report-top-section mt-4" :class="{ 'file-upload-top-section': appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD }">
     <v-row>
-      <v-col cols="12" sm="7">
+      <v-col cols="12" sm="6">
         <label class="bcds-text-field-label" for="reportTitle">Report Title (Required)</label>
         <v-text-field
           id="reportTitle"
@@ -15,7 +15,7 @@
         ></v-text-field>
       </v-col>
       <v-col class="col-space-2 d-none d-sm-flex" />
-      <v-col cols="12" sm="3" class="projection-type-container">
+      <v-col cols="12" sm="4" class="projection-type-container">
         <label class="bcds-radio-label" for="projection-type-select">Projection Type</label>
         <v-radio-group
           id="projection-type-select"
@@ -38,7 +38,7 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-col cols="12" class="mt-n1">
+      <v-col cols="12" class="mt-n2">
         <div class="bcds-textarea" :data-disabled="isDisabled || undefined">
           <label class="bcds-textarea-label" for="reportDescription">Description</label>
           <div class="bcds-textarea-container">
@@ -60,7 +60,7 @@
     </v-row>
   </div>
   <div
-    class="ml-n2 mt-n7 file-upload-numeric-range-section"
+    class="ml-n2 mt-n8 file-upload-numeric-range-section"
     v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD"
   >
     <v-row>
@@ -81,7 +81,7 @@
         </v-radio-group>
       </v-col>
       <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
-        <v-col cols="4" sm="2" class="spin-field-col">
+        <v-col cols="6" sm="2" class="spin-field-col">
           <AppSpinField
             label="Starting Age"
             :model-value="localStartingAge"
@@ -99,7 +99,7 @@
           />
         </v-col>
         <v-col class="col-space-3 d-none d-sm-flex" />
-        <v-col cols="4" sm="2" class="ml-sm-2 spin-field-col">
+        <v-col cols="6" sm="2" class="ml-sm-2 spin-field-col">
           <AppSpinField
             label="Finishing Age"
             :model-value="localFinishingAge"
@@ -117,7 +117,7 @@
           />
         </v-col>
         <v-col class="col-space-3 d-none d-sm-flex" />
-        <v-col cols="4" sm="2" class="ml-sm-2 spin-field-col">
+        <v-col cols="6" sm="2" class="ml-sm-2 spin-field-col">
           <AppSpinField
             label="Increment"
             :model-value="localAgeIncrement"
@@ -136,7 +136,7 @@
         </v-col>
       </template>
       <template v-else>
-        <v-col cols="4" sm="2" class="spin-field-col">
+        <v-col cols="6" sm="2" class="spin-field-col">
           <AppSpinField
             label="Starting Year"
             :model-value="localStartYear"
@@ -154,7 +154,7 @@
           />
         </v-col>
         <v-col class="col-space-3 d-none d-sm-flex" />
-        <v-col cols="4" sm="2" class="ml-sm-2 spin-field-col">
+        <v-col cols="6" sm="2" class="ml-sm-2 spin-field-col">
           <AppSpinField
             label="Finishing Year"
             :model-value="localEndYear"
@@ -172,7 +172,7 @@
           />
         </v-col>
         <v-col class="col-space-3 d-none d-sm-flex" />
-        <v-col cols="4" sm="2" class="ml-sm-2 spin-field-col">
+        <v-col cols="6" sm="2" class="ml-sm-2 spin-field-col">
           <AppSpinField
             label="Increment"
             :model-value="localYearIncrement"
@@ -190,8 +190,8 @@
           />
         </v-col>
       </template>
-      <v-col class="col-space-3 d-none d-sm-flex" />
-      <v-col cols="4" sm="2" class="spin-field-col">
+      <v-col class="col-space-3 d-none d-md-flex" />
+      <v-col cols="6" sm="2" md="2" class="spin-field-col-isy">
         <AppSpinField
           label="Include Specific Year"
           :model-value="localSpecificYear"
@@ -344,7 +344,7 @@
       </v-col>
     </v-row>
   </div>
-  <div class="ml-4 mt-7 mb-3">
+  <div class="ml-4 mt-5 mb-3">
     <div class="ml-n4 include-in-report-header">
       <span class="include-in-report-label" :class="{ 'include-in-report-disabled': isDisabled }">{{ appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD ? 'Include following values in Report' : 'Include in Report' }}</span>
     </div>
@@ -1028,10 +1028,6 @@ const updateMinDBH = (index: number, value: number) => {
 
 </script>
 <style scoped>
-.report-top-section {
-  /* margin-bottom: 20px; */
-}
-
 .include-in-report-label {
   display: block;
   color: var(--typography-color-secondary);
@@ -1093,6 +1089,19 @@ const updateMinDBH = (index: number, value: number) => {
   .spin-field-col {
     padding-top: 0 !important;
   }
+
+  .spin-field-col-isy {
+    padding-top: 0 !important;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 900px) {
+  .spin-field-col {
+    padding-bottom: 0px !important;
+  }
+  .spin-field-col-isy {
+    padding-top: 0px !important;
+  }
 }
 
 .computed-mai-container {
@@ -1116,13 +1125,15 @@ const updateMinDBH = (index: number, value: number) => {
   color: var(--typography-color-secondary);
   font-family: var(--typography-font-families-bc-sans);
   font-weight: var(--typography-font-weights-regular);
-  font-size: var(--typography-font-size-body);
+  font-size: var(--typography-font-size-label);
   line-height: 1.5;
   padding-bottom: 2px;
 }
 
 .age-year-range-container {
+  margin-top: 2px;
   margin-left: 6px;
+  margin-right: 70px;
 }
 
 .by-layer-container {

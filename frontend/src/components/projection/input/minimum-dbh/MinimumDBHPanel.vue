@@ -33,7 +33,7 @@
           </v-row>
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text ml-n6 mt-2">
-          <v-container fluid class="mb-n9">
+          <v-container fluid class="mb-n3">
             <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index" class="min-dbh-row">
               <v-col v-bind="mobile ? { cols: 'auto' } : {}" class="min-dbh-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
                 {{ group.group }}
@@ -56,10 +56,10 @@
                   thumb-size="12"
                   track-size="7"
                   track-color="transparent"
+                  hide-details
                   :disabled="isMinDBHDeactivated"
                   @update:model-value="updateFileUploadMinDBH(index, $event)"
                 ></v-slider>
-
               </v-col>
             </v-row>
           </v-container>
@@ -225,7 +225,7 @@ const onCancel = async () => {
 <style scoped>
 .min-dbh-species-group-label {
   max-width: 5%;
-  padding-top: 15px !important;
+  padding-top: 18px !important;
   padding-left: 20px !important;
 }
 
@@ -258,14 +258,20 @@ const onCancel = async () => {
   }
 
   .min-dbh-species-group-label {
-    max-width: none !important;
+    flex: 0 0 3rem !important;
+    width: 3rem !important;
+    max-width: 3rem !important;
+    padding-right: 0 !important;
     white-space: nowrap;
+    overflow: hidden;
   }
 
   .min-dbh-slider-col-mobile {
     flex: 1 1 0 !important;
     width: auto !important;
     max-width: 100% !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
   }
 }
 
@@ -275,6 +281,8 @@ const onCancel = async () => {
     flex: 1 1 0 !important;
     width: auto !important;
     max-width: 100% !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
   }
 }
 
@@ -298,7 +306,7 @@ const onCancel = async () => {
   height: 1.2rem;
   margin-inline: 6px;
   margin-top: -4px;
-  margin-bottom: 2px;
+  margin-bottom: -4px;
   overflow: visible;
 }
 
