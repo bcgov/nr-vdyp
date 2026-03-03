@@ -291,19 +291,29 @@ const onCancel = async () => {
   }
 }
 
+/* Labels are absolutely positioned at 0/25/50/75/100% of the track.
+   margin-inline mirrors the slider's thumb-radius inset (thumb-size / 2 = 6px). */
 .min-dbh-label-row {
-  display: flex;
-  justify-content: space-between;
-  margin-inline: 8px;
+  position: relative;
+  height: 1.2rem;
+  margin-inline: 6px;
   margin-top: -4px;
-  padding-bottom: 4px;
+  margin-bottom: 2px;
+  overflow: visible;
 }
 
 .min-dbh-label-item {
+  position: absolute;
   font-size: var(--typography-font-size-label);
   color: rgba(0, 0, 0, 0.87);
   white-space: nowrap;
 }
+
+.min-dbh-label-item:nth-child(1) { left: 0; }
+.min-dbh-label-item:nth-child(2) { left: 25%;  transform: translateX(-50%); }
+.min-dbh-label-item:nth-child(3) { left: 50%;  transform: translateX(-50%); }
+.min-dbh-label-item:nth-child(4) { left: 75%;  transform: translateX(-50%); }
+.min-dbh-label-item:nth-child(5) { right: 0; }
 
 .min-dbh-labels-muted .min-dbh-label-item {
   opacity: 0.6;
