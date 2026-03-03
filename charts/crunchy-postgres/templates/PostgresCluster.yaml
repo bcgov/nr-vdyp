@@ -140,6 +140,8 @@ spec:
 
         repo2-s3-uri-style: {{ .Values.pgBackRest.s3UriStyle }}
         repo2-path: /pgbackrest/postgres-operator/{{.Values.pgBackRest.repos.s3.directoryName}}/repo2
+        repo2-s3-key-file: /etc/pgbackrest/conf.d/repo2-s3-key
+        repo2-s3-key-secret-file: /etc/pgbackrest/conf.d/repo2-s3-key-secret
         db-timeout: {{ .Values.pgBackRest.timeout | quote}}
 
 
