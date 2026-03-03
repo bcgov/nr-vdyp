@@ -164,7 +164,7 @@ spec:
             endpoint:  nrs.objectstore.gov.bc.ca
             region: {{ .Values.pgBackRest.repos.s3.region}}
           configuration:
-            secret:
+            - secret:
               name: {{ .Values.pgBackRest.repos.configuration.secretName }}
 
 
