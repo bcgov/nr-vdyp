@@ -75,7 +75,7 @@ pgBackRest:
       region: "ca-central-1"
       directoryName: vdyp-pgbackrest-#{ENV}#
       key: #{DB_BACKUP_S3_KEY}#
-      key-secret: #{DB_BACKUP_S3_KEY_SECRET}#
+      secret: #{DB_BACKUP_S3_KEY_SECRET}#
 
   repoHost:
     requests:
