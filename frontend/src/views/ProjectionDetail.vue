@@ -884,6 +884,9 @@ h3 {
     justify-content: space-between;
   }
 
+}
+
+@media (max-width: 1280px) {
   .running-status-icon,
   .ready-status-icon,
   .draft-status-icon,
