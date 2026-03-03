@@ -109,6 +109,9 @@ spec:
       {{ if .Values.pgBackRest.image }}
       image: {{ .Values.pgBackRest.image }}
       {{ end }}
+      configuration:
+        - secret:
+            name: {{ .Values.pgBackRest.repos.configuration.secretName }}
 
       global:
         # hardcoding repo1 until we solution allowing multiple repos
@@ -138,9 +141,6 @@ spec:
         repo2-s3-uri-style: {{ .Values.pgBackRest.s3UriStyle }}
         repo2-path: /pgbackrest/postgres-operator/{{.Values.pgBackRest.repos.s3.directoryName}}/repo2
         db-timeout: {{ .Values.pgBackRest.timeout | quote}}
-        configuration:
-          - secret:
-            name: {{ .Values.pgBackRest.repos.configuration.secretName }}
 
 
       repos:
