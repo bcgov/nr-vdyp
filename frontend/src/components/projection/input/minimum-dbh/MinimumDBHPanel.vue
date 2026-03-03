@@ -39,11 +39,18 @@
                 {{ group.group }}
               </v-col>
               <v-col cols="10" sm="8" :class="mobile ? 'min-dbh-slider-col-mobile' : 'ml-n5'">
+                <!-- Labels rendered outside Vuetify's slider DOM to avoid non-visibility on an mobile device web browser -->
+                <div class="min-dbh-label-row" :class="{ 'min-dbh-labels-muted': isMinDBHDeactivated }">
+                  <span
+                    v-for="opt in utilizationClassOptions"
+                    :key="opt.index"
+                    class="min-dbh-label-item"
+                  >{{ mobile ? opt.label.replace(' cm+', '') : opt.label }}</span>
+                </div>
                 <v-slider
                   v-model="fileUploadUtilizationSliderValues[index]"
                   :min="0"
                   :max="4"
-                  :ticks="utilizationSliderTickLabels"
                   show-ticks="always"
                   step="1"
                   thumb-size="12"
@@ -51,11 +58,8 @@
                   track-color="transparent"
                   :disabled="isMinDBHDeactivated"
                   @update:model-value="updateFileUploadMinDBH(index, $event)"
-                >
-                  <template #tick-label="{ tick }">
-                    <span class="min-dbh-tick-label">{{ tick.label }}</span>
-                  </template>
-                </v-slider>
+                ></v-slider>
+
               </v-col>
             </v-row>
           </v-container>
@@ -146,19 +150,6 @@ const onHeaderEdit = () => {
 const utilizationClassOptions = OPTIONS.utilizationClassOptions
 const fileUploadSpeciesGroups = computed(() => fileUploadStore.fileUploadSpeciesGroup)
 const fileUploadUtilizationSliderValues = ref<number[]>([])
-
-// On mobile, strip the " cm+" suffix from tick labels because there is not
-// enough horizontal space to display the full labels without overlap.
-// The "(cm+)" is appended to the panel header title instead (TAC #2).
-const utilizationSliderTickLabels = computed(() =>
-  utilizationClassOptions.reduce(
-    (acc, opt) => {
-      acc[opt.index] = mobile.value ? opt.label.replace(' cm+', '') : opt.label
-      return acc
-    },
-    {} as Record<number, string>,
-  ),
-)
 
 // Watch fileUploadSpeciesGroups for changes and sync utilization sliderValues
 watch(
@@ -300,12 +291,21 @@ const onCancel = async () => {
   }
 }
 
-/* Ensure DBH tick label values remain visible when the slider is in disabled/read-only mode */
-:deep(.v-input--disabled .v-slider__container) {
-  opacity: 0.75;
+.min-dbh-label-row {
+  display: flex;
+  justify-content: space-between;
+  margin-inline: 8px;
+  margin-top: -4px;
+  padding-bottom: 4px;
 }
 
-.min-dbh-tick-label {
+.min-dbh-label-item {
+  font-size: var(--typography-font-size-label);
   color: rgba(0, 0, 0, 0.87);
+  white-space: nowrap;
+}
+
+.min-dbh-labels-muted .min-dbh-label-item {
+  opacity: 0.6;
 }
 </style>
