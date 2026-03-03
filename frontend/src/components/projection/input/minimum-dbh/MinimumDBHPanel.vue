@@ -32,23 +32,31 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text ml-n6">
-          <v-container fluid>
+        <v-expansion-panel-text class="expansion-panel-text ml-n6 mt-2">
+          <v-container fluid class="mb-n3">
             <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index" class="min-dbh-row">
               <v-col v-bind="mobile ? { cols: 'auto' } : {}" class="min-dbh-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
                 {{ group.group }}
               </v-col>
               <v-col cols="10" sm="8" :class="mobile ? 'min-dbh-slider-col-mobile' : 'ml-n5'">
+                <!-- Labels rendered outside Vuetify's slider DOM to avoid non-visibility on an mobile device web browser -->
+                <div class="min-dbh-label-row" :class="{ 'min-dbh-labels-muted': isMinDBHDeactivated }">
+                  <span
+                    v-for="opt in utilizationClassOptions"
+                    :key="opt.index"
+                    class="min-dbh-label-item"
+                  >{{ mobile ? opt.label.replace(' cm+', '') : opt.label }}</span>
+                </div>
                 <v-slider
                   v-model="fileUploadUtilizationSliderValues[index]"
                   :min="0"
                   :max="4"
-                  :ticks="utilizationSliderTickLabels"
                   show-ticks="always"
                   step="1"
                   thumb-size="12"
                   track-size="7"
                   track-color="transparent"
+                  hide-details
                   :disabled="isMinDBHDeactivated"
                   @update:model-value="updateFileUploadMinDBH(index, $event)"
                 ></v-slider>
@@ -92,7 +100,7 @@ const panelName = CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH
 
 const panelTitle = computed(() =>
   mobile.value
-    ? 'Minimum DBH Limit by Species Group (cm+)'
+    ? 'Min DBH by Species Group (cm+)'
     : 'Minimum DBH Limit by Species Group',
 )
 
@@ -142,19 +150,6 @@ const onHeaderEdit = () => {
 const utilizationClassOptions = OPTIONS.utilizationClassOptions
 const fileUploadSpeciesGroups = computed(() => fileUploadStore.fileUploadSpeciesGroup)
 const fileUploadUtilizationSliderValues = ref<number[]>([])
-
-// On mobile, strip the " cm+" suffix from tick labels because there is not
-// enough horizontal space to display the full labels without overlap.
-// The "(cm+)" is appended to the panel header title instead (TAC #2).
-const utilizationSliderTickLabels = computed(() =>
-  utilizationClassOptions.reduce(
-    (acc, opt) => {
-      acc[opt.index] = mobile.value ? opt.label.replace(' cm+', '') : opt.label
-      return acc
-    },
-    {} as Record<number, string>,
-  ),
-)
 
 // Watch fileUploadSpeciesGroups for changes and sync utilization sliderValues
 watch(
@@ -230,7 +225,7 @@ const onCancel = async () => {
 <style scoped>
 .min-dbh-species-group-label {
   max-width: 5%;
-  padding-top: 15px !important;
+  padding-top: 18px !important;
   padding-left: 20px !important;
 }
 
@@ -263,14 +258,20 @@ const onCancel = async () => {
   }
 
   .min-dbh-species-group-label {
-    max-width: none !important;
+    flex: 0 0 3rem !important;
+    width: 3rem !important;
+    max-width: 3rem !important;
+    padding-right: 0 !important;
     white-space: nowrap;
+    overflow: hidden;
   }
 
   .min-dbh-slider-col-mobile {
     flex: 1 1 0 !important;
     width: auto !important;
     max-width: 100% !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
   }
 }
 
@@ -280,6 +281,8 @@ const onCancel = async () => {
     flex: 1 1 0 !important;
     width: auto !important;
     max-width: 100% !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
   }
 }
 
@@ -294,5 +297,33 @@ const onCancel = async () => {
     padding-left: 4px;
     padding-right: 4px;
   }
+}
+
+/* Labels are absolutely positioned at 0/25/50/75/100% of the track.
+   margin-inline mirrors the slider's thumb-radius inset (thumb-size / 2 = 6px). */
+.min-dbh-label-row {
+  position: relative;
+  height: 1.2rem;
+  margin-inline: 6px;
+  margin-top: -4px;
+  margin-bottom: -4px;
+  overflow: visible;
+}
+
+.min-dbh-label-item {
+  position: absolute;
+  font-size: var(--typography-font-size-label);
+  color: rgba(0, 0, 0, 0.87);
+  white-space: nowrap;
+}
+
+.min-dbh-label-item:nth-child(1) { left: 0; }
+.min-dbh-label-item:nth-child(2) { left: 25%;  transform: translateX(-50%); }
+.min-dbh-label-item:nth-child(3) { left: 50%;  transform: translateX(-50%); }
+.min-dbh-label-item:nth-child(4) { left: 75%;  transform: translateX(-50%); }
+.min-dbh-label-item:nth-child(5) { right: 0; }
+
+.min-dbh-labels-muted .min-dbh-label-item {
+  opacity: 0.6;
 }
 </style>
