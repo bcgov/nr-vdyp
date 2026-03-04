@@ -2,7 +2,6 @@
   <v-tabs
     :model-value="localCurrentTab"
     @update:model-value="handleTabUpdate"
-    :hideSlider="true"
     :centerActive="true"
     :showArrows="true"
     :key="tabKey"

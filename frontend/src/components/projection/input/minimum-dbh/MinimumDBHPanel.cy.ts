@@ -33,10 +33,16 @@ const mountPanel = (
 
 describe('<MinimumDBHPanel />', () => {
   describe('Panel structure', () => {
-    it('renders the panel title "Minimum DBH Limit by Species Group"', () => {
+    it('renders the desktop panel title "Minimum DBH Limit by Species Group" on wide viewports', () => {
+      cy.viewport(1280, 800)
       mountPanel()
-      // Both desktop and mobile titles start with this string
       cy.contains('.text-h6', 'Minimum DBH Limit by Species Group').should('exist')
+    })
+
+    it('renders the mobile panel title "Min DBH by Species Group (cm+)" on narrow viewports', () => {
+      cy.viewport(600, 800)
+      mountPanel()
+      cy.contains('.text-h6', 'Min DBH by Species Group (cm+)').should('exist')
     })
 
     it('panel content is not in the DOM when initially closed', () => {
@@ -197,6 +203,52 @@ describe('<MinimumDBHPanel />', () => {
         'have.length',
         BIZCONSTANTS.SPECIES_GROUPS.length,
       )
+    })
+  })
+
+  describe('Label row (labels rendered outside slider)', () => {
+    it('renders a label row for each species group', () => {
+      mountPanel((fu) => {
+        fu.initializeSpeciesGroups()
+        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
+      })
+      cy.get('.min-dbh-label-row').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
+    })
+
+    it('renders 5 label items per row', () => {
+      mountPanel((fu) => {
+        fu.initializeSpeciesGroups()
+        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
+      })
+      cy.get('.min-dbh-label-row').first().find('.min-dbh-label-item').should('have.length', 5)
+    })
+
+    it('label rows have min-dbh-labels-muted class when panel is not editable', () => {
+      // Default: editable=false -> isMinDBHDeactivated=true
+      mountPanel((fu) => {
+        fu.initializeSpeciesGroups()
+        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
+      })
+      cy.get('.min-dbh-label-row.min-dbh-labels-muted').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
+    })
+
+    it('label rows do NOT have min-dbh-labels-muted class when panel is editable', () => {
+      mountPanel((fu) => {
+        fu.initializeSpeciesGroups()
+        fu.confirmPanel('reportInfo') // makes minimumDBH editable
+        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
+      })
+      cy.get('.min-dbh-label-row.min-dbh-labels-muted').should('not.exist')
+    })
+
+    it('label rows have min-dbh-labels-muted class when projectionType is CFS Biomass', () => {
+      mountPanel((fu) => {
+        fu.initializeSpeciesGroups()
+        fu.confirmPanel('reportInfo') // makes minimumDBH editable
+        fu.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
+      })
+      cy.get('.min-dbh-label-row.min-dbh-labels-muted').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
     })
   })
 
