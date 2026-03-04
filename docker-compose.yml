@@ -51,6 +51,21 @@ services:
         "--searchPath=/liquibase/",
         "update"
       ]
+  # migrate batch database on startup
+  batch-liquibase:
+    depends_on:
+      postgres-liquibase:
+        condition: service_completed_successfully        # wait for DB readiness
+    build:
+      context: ./db/liquibase
+      dockerfile: Dockerfile
+    command:
+      [
+        "--url=jdbc:postgresql://db:5432/${BATCH_DB_NAME}?user=${BATCH_DB_USER}&password=${BATCH_DB_PASSWORD}&currentSchema=batch",
+        "--changelog-file=batch-changelog.json",
+        "--searchPath=/liquibase/",
+        "update"
+      ]
   s3:
     image: minio/minio
     restart: unless-stopped
@@ -148,7 +163,7 @@ services:
 
   vdyp-batch:
     depends_on:
-      vdyp-liquibase:
+      batch-liquibase:
         condition: service_completed_successfully        # wait for DB migrations
 
     build:

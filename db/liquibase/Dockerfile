@@ -3,6 +3,7 @@ FROM liquibase/liquibase:5.0.1
 COPY ./scripts ./scripts
 COPY ./vdyp-changelog.json .
 COPY ./postgres-changelog.json .
+COPY ./batch-changelog.json .
 
 # Install Postgres client utilities
 USER root
