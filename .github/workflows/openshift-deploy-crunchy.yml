@@ -51,6 +51,10 @@ jobs:
           VDYP_DB_USER: ${{ vars.VDYP_DB_ROLE}}
           VDYP_PROXY_DB_USER: ${{ vars.VDYP_PROXY_DB_ROLE}}
           VDYP_DB_NAME: ${{ vars.VDYP_DB_DATABASE}}
+          DB_BACKUP_S3_BUCKET: ${{ vars.OBJECTSTORAGE_BUCKET}}
+          DB_BACKUP_S3_ENDPOINT: ${{ vars.OBJECTSTORAGE_ENDPOINT}}
+          DB_BACKUP_S3_KEY: ${{ vars.OBJECTSTORAGE_ACCESSKEYID}}
+          DB_BACKUP_S3_KEY_SECRET: ${{ secrets.OBJECTSTORAGE_SECRETACCESSKEY}}
           #S3_ENVIRONMENT: ${{ inputs.ENVIRONMENT_NAME == 'dev' && 'dev'  || (inputs.ENVIRONMENT_NAME == 'test' && 'tst' || (inputs.ENVIRONMENT_NAME == 'prod' && 'prd' || inputs.ENVIRONMENT_NAME)) }}
 
       - name: install helm
