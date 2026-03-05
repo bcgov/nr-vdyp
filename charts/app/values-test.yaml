@@ -260,6 +260,5 @@ batch:
     enabled: true
   env:
     SPRING_PROFILES_ACTIVE: "test"
-    BATCH_DB_USER: ~
-    BATCH_DB_DATABASE: ~
+    BATCH_DB_SECRET_NAME: crunchy-postgres-test-pguser-batch
     VDYP_BASE_URL: ~

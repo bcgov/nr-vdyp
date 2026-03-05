@@ -93,6 +93,8 @@ jobs:
           VDYP_ADMIN_USER: ${{ vars.VDYP_DB_ROLE}}
           VDYP_DB_NAME: ${{ vars.VDYP_DB_DATABASE}}
           POSTGRES_ADMIN_USER: postgres
+          BATCH_ADMIN_USER: ${{ vars.BATCH_DB_ROLE}}
+
 
       - name: install helm
         run: |

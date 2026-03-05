@@ -5,7 +5,7 @@
 # Stage 1: Build Stage (GraalVM Native Image)
 # ===========================
 # Use GraalVM with Native Image support for building
-FROM ghcr.io/graalvm/native-image-community:21 AS build
+FROM ghcr.io/graalvm/native-image-community:21@sha256:faed0fd6809b138254bdd6c7046e56894f4d9566ecbc7b0952aab43e65e16e0e AS build
 
 # Set working directory
 WORKDIR /project
