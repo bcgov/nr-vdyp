@@ -5,6 +5,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -53,6 +54,11 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 			);
 
 			app.process();
+		} catch (Exception e) {
+			try (var exOut = new PrintWriter(Files.newBufferedWriter(outputDir.resolve(EXCEPTION_FILE_NAME)))) {
+				exOut.println(e.getClass().getCanonicalName());
+				exOut.println(e.getMessage());
+			}
 		}
 
 		assertOutputs(outputState, expectedDir);
