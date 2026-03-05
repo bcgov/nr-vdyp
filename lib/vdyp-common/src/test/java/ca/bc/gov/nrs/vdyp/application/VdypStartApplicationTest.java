@@ -33,6 +33,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication.CombinedPolygonStream;
+import ca.bc.gov.nrs.vdyp.application.VdypStartApplication.Strictness;
 import ca.bc.gov.nrs.vdyp.application.test.TestLayer;
 import ca.bc.gov.nrs.vdyp.application.test.TestPolygon;
 import ca.bc.gov.nrs.vdyp.application.test.TestSite;
@@ -45,6 +46,7 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
@@ -72,6 +74,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 class VdypStartApplicationTest {
@@ -1424,7 +1427,49 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testLowResult() throws Exception {
+		void testLowResultStrict() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			try (TestStartApplication app = new TestStartApplication(controlMap, false)) {
+
+				var bec = Utils.getBec("CWH", controlMap);
+
+				var layer = TestLayer.build(lb -> {
+					lb.polygonIdentifier(polygonId);
+					lb.layerType(LayerType.PRIMARY);
+					lb.crownClosure(82.8000031f);
+					lb.addSpecies(sb -> {
+						sb.genus("B", controlMap);
+						sb.percentGenus(33f);
+						sb.addSp64Distribution("B", 100f);
+					});
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+						sb.percentGenus(67f);
+						sb.addSp64Distribution("H", 100f);
+						sb.addSite(ib -> {
+							ib.ageTotal(85f);
+							ib.height(7f); // Altered this in the debugger while running VDYP7
+							ib.siteIndex(28.6000004f);
+							ib.yearsToBreastHeight(5.4000001f);
+							ib.yearsAtBreastHeightAuto();
+							ib.siteCurveNumber(34);
+						});
+					});
+				});
+
+				var ex = assertThrows(
+						BaseAreaLowException.class,
+						() -> app.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f)
+				);
+
+				assertThat(ex, hasProperty("value", present(is(0.0f))));
+				assertThat(ex, hasProperty("threshold", present(is(0.05f))));
+			}
+		}
+
+		@Test
+		void testLowResultAdjust() throws Exception {
 			controlMap = TestUtils.loadControlMap();
 			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
 			try (TestStartApplication app = new TestStartApplication(controlMap, false)) {
@@ -1456,10 +1501,50 @@ class VdypStartApplicationTest {
 				});
 
 				var result = assertDoesNotThrow(
-						() -> app.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f)
+						() -> app.estimatePrimaryBaseAreaAdjust(layer, bec, 1f, 79.5999985f, 3.13497972f)
 				);
 
 				assertThat(result, is(0.05f));
+			}
+		}
+
+		@Test
+		void testLowResultLenient() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			try (TestStartApplication app = new TestStartApplication(controlMap, false)) {
+
+				var bec = Utils.getBec("CWH", controlMap);
+
+				var layer = TestLayer.build(lb -> {
+					lb.polygonIdentifier(polygonId);
+					lb.layerType(LayerType.PRIMARY);
+					lb.crownClosure(82.8000031f);
+					lb.addSpecies(sb -> {
+						sb.genus("B", controlMap);
+						sb.percentGenus(33f);
+						sb.addSp64Distribution("B", 100f);
+					});
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+						sb.percentGenus(67f);
+						sb.addSp64Distribution("H", 100f);
+						sb.addSite(ib -> {
+							ib.ageTotal(85f);
+							ib.height(7f); // Altered this in the debugger while running VDYP7
+							ib.siteIndex(28.6000004f);
+							ib.yearsToBreastHeight(5.4000001f);
+							ib.yearsAtBreastHeightAuto();
+							ib.siteCurveNumber(34);
+						});
+					});
+				});
+
+				var result = assertDoesNotThrow(
+						() -> app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f, Strictness.LENIENT)
+				);
+
+				assertThat(result, is(0.0f));
 			}
 		}
 
