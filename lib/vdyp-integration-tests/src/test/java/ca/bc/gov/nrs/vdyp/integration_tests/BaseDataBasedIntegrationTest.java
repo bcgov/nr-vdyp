@@ -258,6 +258,7 @@ public abstract class BaseDataBasedIntegrationTest {
 						firstMissingUnexpected
 								.orElseGet(() -> new LineMatchError(constLineNumber, expectedLine, testLine))
 				);
+				continue;
 			}
 			if (!compare.test(testLine, expectedLine)) {
 				firstMismatch = Optional
