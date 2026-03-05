@@ -1362,7 +1362,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		};
 	}
 
-	VriPolygon processBatc(VriPolygon poly) throws FatalProcessingException {
+	VriPolygon processBatc(VriPolygon poly) throws FatalProcessingException, BaseAreaLowException {
 
 		try {
 			VriLayer primaryLayer = getPrimaryLayer(poly);
@@ -1375,13 +1375,15 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			final float primaryBreastHeightAge = getLayerBreastHeightAge(primaryLayer).orElseThrow();
 
 			// EMP040
-			final float initialPrimaryBaseArea = this
-					.estimatePrimaryBaseArea(primaryLayer, bec, poly.getYieldFactor(), primaryBreastHeightAge, 0.0f);
+			// In VDYP7 Low BA error code here gets propagated up and leads to the polygon being skipped.
+			final float initialPrimaryBaseArea = this.estimatePrimaryBaseAreaStrict(
+					primaryLayer, bec, poly.getYieldFactor(), primaryBreastHeightAge, 0.0f
+			);
 
 			final Optional<Float> veteranBaseArea = veteranLayer.map(VriLayer::getCrownClosure) // BAV
 					.map(ccV -> ccV * initialPrimaryBaseArea / primaryLayer.getCrownClosure());
 
-			final float primaryBaseArea = this.estimatePrimaryBaseArea(
+			final float primaryBaseArea = this.estimatePrimaryBaseAreaStrict(
 					primaryLayer, bec, poly.getYieldFactor(), primaryBreastHeightAge, veteranBaseArea.orElse(0.0f) // BAP
 			);
 

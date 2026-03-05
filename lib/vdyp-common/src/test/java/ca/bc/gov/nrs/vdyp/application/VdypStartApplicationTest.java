@@ -1341,7 +1341,7 @@ class VdypStartApplicationTest {
 					});
 				});
 
-				var result = app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f);
+				var result = app.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f);
 
 				assertThat(result, closeTo(62.6653595f));
 			}
@@ -1379,7 +1379,7 @@ class VdypStartApplicationTest {
 					});
 				});
 
-				var result = app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f);
+				var result = app.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f);
 
 				assertThat(result, closeTo(23.1988659f));
 			}
@@ -1417,7 +1417,7 @@ class VdypStartApplicationTest {
 					});
 				});
 
-				var result = app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f);
+				var result = app.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f);
 
 				assertThat(result, closeTo(37.6110077f));
 			}
@@ -1456,7 +1456,7 @@ class VdypStartApplicationTest {
 				});
 
 				var result = assertDoesNotThrow(
-						() -> app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f)
+						() -> app.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f)
 				);
 
 				assertThat(result, is(0.05f));

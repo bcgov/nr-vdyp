@@ -213,7 +213,17 @@ public class RealComponentRunner implements ComponentRunner {
 
 			if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
 
-				for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
+				var unsortedLayerInfos = polygon.getReportingInfo().getLayerReportingInfos().values();
+				// Try to line the ordering up with VDYP7 to make comparison/debugging easier.
+				// Shouldn't slow things down too much but we can probably have an option to disable it to speed things
+				// up.
+				var sortedLayerInfos = ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST.stream()
+						.map(
+								type -> unsortedLayerInfos.stream().filter(li -> li.getProcessedAsVDYP7Layer() == type)
+										.findFirst()
+						).filter(Optional::isPresent).map(Optional::get).toList();
+
+				for (var layerReportingInfo : sortedLayerInfos) {
 
 					var layer = layerReportingInfo.getLayer();
 					if (state.layerWasProjected(layer)) {
