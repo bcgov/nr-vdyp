@@ -44,6 +44,7 @@ export const buildExecutionOptions = (
     ExecutionOptionsEnum.DoEnableProgressLogging,
     ExecutionOptionsEnum.DoEnableErrorLogging,
     ExecutionOptionsEnum.DoEnableDebugLogging,
+    ExecutionOptionsEnum.ForwardGrowEnabled,
   ]
 
   const excludedExecutionOptions: ExecutionOptionsEnum[] = [
@@ -60,6 +61,7 @@ export const buildExecutionOptions = (
     ExecutionOptionsEnum.ReportIncludeVolumeMAI,
     ExecutionOptionsEnum.ReportIncludeSpeciesComp,
     ExecutionOptionsEnum.ReportIncludeCulminationValues,
+    ExecutionOptionsEnum.BackGrowEnabled,
   ]
 
   const optionMappings = [
@@ -72,14 +74,6 @@ export const buildExecutionOptions = (
         fileUploadStore.projectionType ===
         CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
       option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    },
-    {
-      flag: fileUploadStore.isForwardGrowEnabled,
-      option: ExecutionOptionsEnum.ForwardGrowEnabled,
-    },
-    {
-      flag: fileUploadStore.isBackwardGrowEnabled,
-      option: ExecutionOptionsEnum.BackGrowEnabled,
     },
     {
       flag: fileUploadStore.isByLayerEnabled,

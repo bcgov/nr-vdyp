@@ -83,6 +83,7 @@ describe('buildExecutionOptions', () => {
       ExecutionOptionsEnum.DoEnableProgressLogging,
       ExecutionOptionsEnum.DoEnableErrorLogging,
       ExecutionOptionsEnum.DoEnableDebugLogging,
+      ExecutionOptionsEnum.ForwardGrowEnabled,
     ]
     alwaysSelected.forEach((opt) => expect(selectedExecutionOptions).to.include(opt))
   })
@@ -114,18 +115,16 @@ describe('buildExecutionOptions', () => {
     expect(excludedExecutionOptions).to.not.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
   })
 
-  it('should add ForwardGrowEnabled to selected when isForwardGrowEnabled is true', () => {
-    const store = createMockFileUploadStore({ isForwardGrowEnabled: true })
-    const { selectedExecutionOptions } = buildExecutionOptions(store)
+  it('should always include ForwardGrowEnabled in selected regardless of isForwardGrowEnabled', () => {
+    const storeEnabled = createMockFileUploadStore({ isForwardGrowEnabled: true })
+    const { selectedExecutionOptions: selected1, excludedExecutionOptions: excluded1 } = buildExecutionOptions(storeEnabled)
+    expect(selected1).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
+    expect(excluded1).to.not.include(ExecutionOptionsEnum.ForwardGrowEnabled)
 
-    expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
-  })
-
-  it('should add ForwardGrowEnabled to excluded when isForwardGrowEnabled is false', () => {
-    const store = createMockFileUploadStore({ isForwardGrowEnabled: false })
-    const { excludedExecutionOptions } = buildExecutionOptions(store)
-
-    expect(excludedExecutionOptions).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
+    const storeDisabled = createMockFileUploadStore({ isForwardGrowEnabled: false })
+    const { selectedExecutionOptions: selected2, excludedExecutionOptions: excluded2 } = buildExecutionOptions(storeDisabled)
+    expect(selected2).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
+    expect(excluded2).to.not.include(ExecutionOptionsEnum.ForwardGrowEnabled)
   })
 
   it('should add DoSummarizeProjectionByLayer to selected and ByPolygon to excluded when isByLayerEnabled', () => {
