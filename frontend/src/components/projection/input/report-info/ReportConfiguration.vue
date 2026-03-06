@@ -25,7 +25,9 @@
           id="projection-type-select"
           v-model="localProjectionType"
           inline
-          hide-details
+          :hide-details="projectionTypeError ? 'auto' : true"
+          :error="!!projectionTypeError"
+          :error-messages="projectionTypeError"
           :disabled="isDisabled"
         >
           <v-radio
@@ -98,6 +100,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_DECIMAL_NUM"
+            :errorMessages="startingAgeError"
             data-testid="starting-age"
             @update:modelValue="handleStartingAgeInput"
           />
@@ -115,6 +118,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_DECIMAL_NUM"
+            :errorMessages="finishingAgeError"
             data-testid="finishing-age"
             @update:modelValue="handleFinishingAgeInput"
           />
@@ -132,6 +136,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_DECIMAL_NUM"
+            :errorMessages="ageIncrementError"
             data-testid="age-increment"
             @update:modelValue="handleAgeIncrementInput"
           />
@@ -151,6 +156,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_DECIMAL_NUM"
+            :errorMessages="startYearError"
             data-testid="start-year"
             @update:modelValue="handleStartYearInput"
           />
@@ -168,6 +174,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_DECIMAL_NUM"
+            :errorMessages="endYearError"
             data-testid="end-year"
             @update:modelValue="handleEndYearInput"
           />
@@ -185,6 +192,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_DECIMAL_NUM"
+            :errorMessages="yearIncrementError"
             data-testid="year-increment"
             @update:modelValue="handleYearIncrementInput"
           />
@@ -225,6 +233,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_DECIMAL_NUM"
+            :errorMessages="startingAgeError"
             data-testid="starting-age"
             @update:modelValue="handleStartingAgeInput"
           />
@@ -243,6 +252,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_DECIMAL_NUM"
+            :errorMessages="finishingAgeError"
             data-testid="finishing-age"
             @update:modelValue="handleFinishingAgeInput"
           />
@@ -261,6 +271,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_DECIMAL_NUM"
+            :errorMessages="ageIncrementError"
             data-testid="age-increment"
             @update:modelValue="handleAgeIncrementInput"
           />
@@ -280,6 +291,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_DECIMAL_NUM"
+            :errorMessages="startYearError"
             data-testid="start-year"
             @update:modelValue="handleStartYearInput"
           />
@@ -298,6 +310,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_DECIMAL_NUM"
+            :errorMessages="endYearError"
             data-testid="end-year"
             @update:modelValue="handleEndYearInput"
           />
@@ -316,6 +329,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_DECIMAL_NUM"
+            :errorMessages="yearIncrementError"
             data-testid="year-increment"
             @update:modelValue="handleYearIncrementInput"
           />
@@ -496,8 +510,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
+import { ref, watch, computed, type Ref } from 'vue'
+import { BIZCONSTANTS, CONSTANTS, DEFAULTS, MESSAGE, OPTIONS } from '@/constants'
+import { reportInfoValidation } from '@/validation'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
@@ -597,6 +612,13 @@ const reportDescriptionLength = computed(() => {
 })
 
 const titleError = ref<string>('')
+const projectionTypeError = ref<string>('')
+const startingAgeError = ref<string>('')
+const finishingAgeError = ref<string>('')
+const ageIncrementError = ref<string>('')
+const startYearError = ref<string>('')
+const endYearError = ref<string>('')
+const yearIncrementError = ref<string>('')
 
 const validateTitle = (): boolean => {
   if (!localReportTitle.value || localReportTitle.value.trim() === '') {
@@ -607,7 +629,137 @@ const validateTitle = (): boolean => {
   return true
 }
 
-defineExpose({ validateTitle })
+const validateNumericRange = (
+  value: string | null,
+  min: number,
+  max: number,
+  requiredMsg: string,
+  rangeMsg: string,
+  errorRef: Ref<string>,
+): boolean => {
+  if (value === null || value.trim() === '') {
+    errorRef.value = requiredMsg
+    return false
+  }
+  const num = Number.parseFloat(value)
+  if (num < min || num > max) {
+    errorRef.value = rangeMsg
+    return false
+  }
+  return true
+}
+
+const validateAgeFields = (): boolean => {
+  const { STARTING_AGE_MIN, STARTING_AGE_MAX, FINISHING_AGE_MIN, FINISHING_AGE_MAX, AGE_INC_MIN, AGE_INC_MAX } =
+    CONSTANTS.NUM_INPUT_LIMITS
+  const { RPT_VLD_START_AGE_RNG, RPT_VLD_START_FNSH_RNG, RPT_VLD_AGE_INC_RNG, RPT_VLD_COMP_FNSH_AGE } =
+    MESSAGE.MDL_PRM_INPUT_ERR
+
+  let isValid = validateNumericRange(
+    localStartingAge.value,
+    STARTING_AGE_MIN,
+    STARTING_AGE_MAX,
+    'Starting Age is required.',
+    RPT_VLD_START_AGE_RNG(STARTING_AGE_MIN, STARTING_AGE_MAX),
+    startingAgeError,
+  )
+  isValid =
+    validateNumericRange(
+      localFinishingAge.value,
+      FINISHING_AGE_MIN,
+      FINISHING_AGE_MAX,
+      'Finishing Age is required.',
+      RPT_VLD_START_FNSH_RNG(FINISHING_AGE_MIN, FINISHING_AGE_MAX),
+      finishingAgeError,
+    ) && isValid
+  isValid =
+    validateNumericRange(
+      localAgeIncrement.value,
+      AGE_INC_MIN,
+      AGE_INC_MAX,
+      'Increment is required.',
+      RPT_VLD_AGE_INC_RNG(AGE_INC_MIN, AGE_INC_MAX),
+      ageIncrementError,
+    ) && isValid
+
+  if (localStartingAge.value !== null && localStartingAge.value.trim() !== '' &&
+      localFinishingAge.value !== null && localFinishingAge.value.trim() !== '') {
+    if (!reportInfoValidation.validateComparison(localStartingAge.value, localFinishingAge.value).isValid) {
+      finishingAgeError.value = RPT_VLD_COMP_FNSH_AGE
+      isValid = false
+    }
+  }
+
+  return isValid
+}
+
+const validateYearFields = (): boolean => {
+  const { START_YEAR_MIN, START_YEAR_MAX, END_YEAR_MIN, END_YEAR_MAX, YEAR_INC_MIN, YEAR_INC_MAX } =
+    CONSTANTS.NUM_INPUT_LIMITS
+  const { RPT_VLD_START_YEAR_RNG, RPT_VLD_END_YEAR_RNG, RPT_VLD_YEAR_INC_RNG, RPT_VLD_COMP_END_YEAR } =
+    MESSAGE.MDL_PRM_INPUT_ERR
+
+  let isValid = validateNumericRange(
+    localStartYear.value,
+    START_YEAR_MIN,
+    START_YEAR_MAX,
+    'Start Year is required.',
+    RPT_VLD_START_YEAR_RNG(START_YEAR_MIN, START_YEAR_MAX),
+    startYearError,
+  )
+  isValid =
+    validateNumericRange(
+      localEndYear.value,
+      END_YEAR_MIN,
+      END_YEAR_MAX,
+      'End Year is required.',
+      RPT_VLD_END_YEAR_RNG(END_YEAR_MIN, END_YEAR_MAX),
+      endYearError,
+    ) && isValid
+  isValid =
+    validateNumericRange(
+      localYearIncrement.value,
+      YEAR_INC_MIN,
+      YEAR_INC_MAX,
+      'Increment is required.',
+      RPT_VLD_YEAR_INC_RNG(YEAR_INC_MIN, YEAR_INC_MAX),
+      yearIncrementError,
+    ) && isValid
+
+  if (localStartYear.value !== null && localStartYear.value.trim() !== '' &&
+      localEndYear.value !== null && localEndYear.value.trim() !== '') {
+    if (!reportInfoValidation.validateComparison(localStartYear.value, localEndYear.value).isValid) {
+      endYearError.value = RPT_VLD_COMP_END_YEAR
+      isValid = false
+    }
+  }
+
+  return isValid
+}
+
+const validateFields = (): boolean => {
+  projectionTypeError.value = ''
+  startingAgeError.value = ''
+  finishingAgeError.value = ''
+  ageIncrementError.value = ''
+  startYearError.value = ''
+  endYearError.value = ''
+  yearIncrementError.value = ''
+
+  let isValid = true
+
+  if (!localProjectionType.value || localProjectionType.value.trim() === '') {
+    projectionTypeError.value = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_PROJECTION_TYPE_REQ
+    isValid = false
+  }
+
+  const rangeValid =
+    selectedAgeYearRange.value === CONSTANTS.AGE_YEAR_RANGE.AGE ? validateAgeFields() : validateYearFields()
+
+  return isValid && rangeValid
+}
+
+defineExpose({ validateTitle, validateFields })
 
 // Watch props for changes (Prop -> Local State)
 watch(
@@ -1002,26 +1154,32 @@ const utilizationSliderTickLabels = utilizationClassOptions.reduce(
 
 const handleStartingAgeInput = (value: string | null) => {
   localStartingAge.value = value
+  startingAgeError.value = ''
 }
 
 const handleFinishingAgeInput = (value: string | null) => {
   localFinishingAge.value = value
+  finishingAgeError.value = ''
 }
 
 const handleAgeIncrementInput = (value: string | null) => {
   localAgeIncrement.value = value
+  ageIncrementError.value = ''
 }
 
 const handleStartYearInput = (value: string | null) => {
   localStartYear.value = value
+  startYearError.value = ''
 }
 
 const handleEndYearInput = (value: string | null) => {
   localEndYear.value = value
+  endYearError.value = ''
 }
 
 const handleYearIncrementInput = (value: string | null) => {
   localYearIncrement.value = value
+  yearIncrementError.value = ''
 }
 
 const handleSpecificYearInput = (value: string | null) => {
