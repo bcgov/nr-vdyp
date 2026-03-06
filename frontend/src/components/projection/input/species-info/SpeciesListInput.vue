@@ -22,45 +22,46 @@
           ></v-select>
         </v-col>
         <v-col cols="6" class="pt-2">
-          <div style="position: relative; width: 100%">
-            <label class="bcds-text-field-label" :for="`species-percent-${index}`">Species #{{ index + 1 }} Percent</label>
-            <v-text-field
-              :id="`species-percent-${index}`"
-              type="text"
-              v-model="item.percent"
-              :max="max"
-              :min="min"
-              :step="step"
-              :rules="[validatePercent]"
-              persistent-placeholder
-              placeholder="Select..."
-              data-testid="species-percent"
-              @update:focused="handlePercentBlur"
-              @update:modelValue="handlePercentInput(index)"
-              @keydown="handleSpeciesPercentKeyDown($event, index)"
-              :disabled="!isConfirmEnabled"
-            ></v-text-field>
-            <div class="spin-box">
-              <div
-                class="spin-up-arrow-button"
-                @mousedown="startIncrement(index)"
-                @mouseup="stopIncrement"
-                @mouseout="handleIncMouseout"
-                :class="{ disabled: !isConfirmEnabled }"
-              >
-                <!-- CSS triangle instead of text -->
+          <label class="bcds-text-field-label" :for="`species-percent-${index}`">Species #{{ index + 1 }} Percent</label>
+          <v-text-field
+            :id="`species-percent-${index}`"
+            type="text"
+            v-model="item.percent"
+            :max="max"
+            :min="min"
+            :step="step"
+            :rules="[validatePercent]"
+            persistent-placeholder
+            placeholder="Select..."
+            data-testid="species-percent"
+            @update:focused="handlePercentBlur"
+            @update:modelValue="handlePercentInput(index)"
+            @keydown="handleSpeciesPercentKeyDown($event, index)"
+            :disabled="!isConfirmEnabled"
+          >
+            <template #append-inner>
+              <div class="spin-box">
+                <div
+                  class="spin-up-arrow-button"
+                  @mousedown="startIncrement(index)"
+                  @mouseup="stopIncrement"
+                  @mouseout="handleIncMouseout"
+                  :class="{ disabled: !isConfirmEnabled }"
+                >
+                  <!-- CSS triangle instead of text -->
+                </div>
+                <div
+                  class="spin-down-arrow-button"
+                  @mousedown="startDecrement(index)"
+                  @mouseup="stopDecrement"
+                  @mouseout="handleDecMouseout"
+                  :class="{ disabled: !isConfirmEnabled }"
+                >
+                  <!-- CSS triangle instead of text -->
+                </div>
               </div>
-              <div
-                class="spin-down-arrow-button"
-                @mousedown="startDecrement(index)"
-                @mouseup="stopDecrement"
-                @mouseout="handleDecMouseout"
-                :class="{ disabled: !isConfirmEnabled }"
-              >
-                <!-- CSS triangle instead of text -->
-              </div>
-            </div>
-          </div>
+            </template>
+          </v-text-field>
         </v-col>
       </v-row>
       <div class="hr-line mb-1"></div>

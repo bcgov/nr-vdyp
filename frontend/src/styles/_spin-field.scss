@@ -1,11 +1,7 @@
 /************** Spin Box for Text Field - Native Number Input Style ****************/
 
-/* Custom spin box container positioned inside text field */
+/* Custom spin box container inside v-text-field append-inner slot */
 .spin-box {
-  position: absolute;
-  right: 8px; /* Align with native spinner position */
-  top: 50%; /* Center vertically */
-  transform: translateY(-50%); /* Center adjustment */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -14,7 +10,6 @@
   width: 16px;
   height: 22px;
   background-color: transparent;
-  z-index: 1;
 }
 
 /* Spin button hover state - Native style */
