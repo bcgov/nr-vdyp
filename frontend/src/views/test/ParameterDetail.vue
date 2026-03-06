@@ -50,18 +50,3 @@ onMounted(async () => {
   }
 })
 </script>
-<style scoped>
-.file-upload-run-model-card {
-  padding-bottom: 16px !important;
-  background-color: #f6f6f6;
-  border-top: 1px solid #0000001f;
-  border-top-left-radius: 0px;
-  border-top-right-radius: 0px;
-  border-bottom-left-radius: 3px;
-  border-bottom-right-radius: 3px;
-  display: flex;
-  justify-content: end;
-  align-items: end;
-  text-align: end;
-}
-</style>

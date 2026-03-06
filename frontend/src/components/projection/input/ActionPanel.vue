@@ -69,4 +69,9 @@ const onEdit = () => emit(PANEL_ACTION.EDIT)
 const onCancel = () => emit(PANEL_ACTION.CANCEL)
 </script>
 
-<style scoped />
+<style scoped>
+.v-card-actions {
+  padding: 0rem;
+  min-height: auto;
+}
+</style>

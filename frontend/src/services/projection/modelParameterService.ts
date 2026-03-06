@@ -16,12 +16,13 @@ import {
   updateProjectionParamsWithModel,
   getProjectionById,
   deleteAllFilesFromFileSet,
+  parseProjectionParams,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
-import type { CSVRowType } from '@/types/types'
+import type { CSVRowType, PanelName } from '@/types/types'
 import type { SpeciesGroup, SpeciesList } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
 import { isBlank, addExecutionOptionsFromMappings } from '@/utils/util'
@@ -665,7 +666,7 @@ export const runProjection = async (): Promise<ProjectionModel> => {
 /**
  * Saves the projection when a panel's Next button is clicked (Manual Input mode).
  *
- * - CREATE mode + first panel (speciesInfo): Creates a new projection with projection parameters and model parameters,
+ * - CREATE mode + first panel (detailsInfo): Creates a new projection with projection parameters and model parameters,
  *   stores the GUID, and switches to EDIT mode.
  * - EDIT mode (any panel): Updates the existing projection parameters and model parameters.
  *
@@ -681,7 +682,7 @@ export const saveProjectionOnPanelConfirm = async (
 
   if (
     appStore.viewMode === PROJECTION_VIEW_MODE.CREATE &&
-    panelName === CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO
+    panelName === CONSTANTS.MODEL_PARAMETER_PANEL.DETAILS_INFO
   ) {
     // Create mode + first panel: create projection
     const result = await createProjection(modelParameterStore)
@@ -698,4 +699,45 @@ export const saveProjectionOnPanelConfirm = async (
     const modelParameters = buildModelParameters(modelParameterStore)
     await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters, modelParameterStore.reportDescription)
   }
+}
+
+/**
+ * Reverts the model parameter store to the last saved projection state from the backend.
+ * Called when the user clicks Cancel while editing a panel in Manual Input mode.
+ * The cancelled panel is forced back to open and editable so the user can continue editing.
+ *
+ * Unlike File Upload mode, Manual Input also restores model parameters (species, site, stand info)
+ * from the projectionModel.modelParameters JSON field via restoreFromModelParameters.
+ *
+ * @param panelName The panel whose Cancel button was clicked.
+ * @throws Error if the revert operation fails.
+ */
+export const revertPanelToSaved = async (panelName: PanelName): Promise<void> => {
+  const appStore = useAppStore()
+  const modelParameterStore = useModelParameterStore()
+
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) return
+
+  const projectionModel = await getProjectionById(projectionGUID)
+  const params = parseProjectionParams(projectionModel.projectionParameters)
+
+  // Restore species, site, and stand data from modelParameters JSON (Manual Input only)
+  if (projectionModel.modelParameters) {
+    try {
+      const modelParams: ModelParameters = JSON.parse(projectionModel.modelParameters)
+      modelParameterStore.restoreFromModelParameters(modelParams)
+    } catch (err) {
+      console.error('Error parsing modelParameters during revert:', err)
+    }
+  }
+
+  // Restore projection params with isViewMode=true to preserve all other panels as confirmed.
+  // (isViewMode=false would reset all panels to CREATE mode, losing confirmed states.)
+  modelParameterStore.restoreFromProjectionParams(params, true)
+  modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
+
+  // Keep the cancelled panel open and editable so the user can continue editing
+  modelParameterStore.panelOpenStates[panelName] = CONSTANTS.PANEL.OPEN
+  modelParameterStore.panelState[panelName] = { confirmed: false, editable: true }
 }

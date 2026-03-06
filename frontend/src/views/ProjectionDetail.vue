@@ -106,6 +106,7 @@
         />
       </div>
       <template v-if="isModelParameterPanelsVisible">
+        <SpeciesInfoPanel class="panel-spacing" />
         <SiteInfoPanel class="panel-spacing" />
         <StandInfoPanel class="panel-spacing" />
         <ReportInfoPanel class="panel-spacing" />
@@ -113,7 +114,6 @@
           v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
           :showCancelButton="isRunning"
-          cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
           @cancelRun="cancelRunHandler"
@@ -139,7 +139,6 @@
           :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
           :showCancelButton="isRunning"
           :disabledText="fileUploadDisabledText"
-          cardClass="input-model-param-run-model-card"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
           @cancelRun="cancelRunHandler"
@@ -172,6 +171,7 @@ import {
   SiteInfoPanel,
   StandInfoPanel,
   ReportInfoPanel,
+  ReportDetailsPanel,
   AttachmentsPanel,
   MinimumDBHPanel,
   ParameterSelectionProgressBar,
@@ -238,7 +238,7 @@ const duplicatedFromText = computed(() => {
 const modelParamTabs = computed<Tab[]>(() => [
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.MODEL_PARAM_SELECTION,
-    component: SpeciesInfoPanel,
+    component: ReportDetailsPanel,
     tabname: null,
     disabled: false,
   },
@@ -777,6 +777,7 @@ h3 {
   align-items: center;
   gap: var(--layout-padding-xsmall);
   padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  padding-right: 0px;
 }
 
 .ready-status-icon {
@@ -797,6 +798,7 @@ h3 {
   align-items: center;
   gap: var(--layout-padding-xsmall);
   padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  padding-right: 0px;
 }
 
 .draft-status-icon {
@@ -817,6 +819,7 @@ h3 {
   align-items: center;
   gap: var(--layout-padding-xsmall);
   padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  padding-right: 0px;
 }
 
 .failed-status-icon {
@@ -847,7 +850,7 @@ h3 {
 .header-right-section {
   display: flex;
   align-items: center;
-  gap: var(--layout-padding-small);
+  gap: var(--layout-padding-medium);
 }
 
 .status-section {

@@ -16,6 +16,7 @@ export type MessageType =
   | typeof MESSAGE_TYPE.WARNING
 
 export type PanelName =
+  | typeof MODEL_PARAMETER_PANEL.DETAILS_INFO
   | typeof MODEL_PARAMETER_PANEL.SPECIES_INFO
   | typeof MODEL_PARAMETER_PANEL.SITE_INFO
   | typeof MODEL_PARAMETER_PANEL.STAND_INFO

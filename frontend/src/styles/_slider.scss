@@ -58,3 +58,7 @@
 .v-slider-track__tick {
   height: var(--layout-padding-none);
 }
+
+.v-slider.v-input--horizontal {
+  margin-inline: 0px 0px;
+}

@@ -80,8 +80,11 @@ describe('File Upload Store Unit Tests', () => {
       expect(store.incSecondaryHeight).to.be.false
     })
 
-    it('should initialize projectionType, reportTitle, reportDescription as null', () => {
-      expect(store.projectionType).to.be.null
+    it('should initialize projectionType to the default value', () => {
+      expect(store.projectionType).to.equal(DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE)
+    })
+
+    it('should initialize reportTitle and reportDescription as null', () => {
       expect(store.reportTitle).to.be.null
       expect(store.reportDescription).to.be.null
     })

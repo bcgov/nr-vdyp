@@ -42,9 +42,10 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text mt-n2">
+        <v-expansion-panel-text class="expansion-panel-text">
           <v-form ref="form">
             <ReportConfiguration
+              ref="reportConfigRef"
               :selectedAgeYearRange="currentStore.selectedAgeYearRange"
               :startingAge="currentStore.startingAge"
               :finishingAge="currentStore.finishingAge"
@@ -127,6 +128,7 @@ import {
   AppMessageDialog,
   AppButton,
 } from '@/components'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import {
   ActionPanel,
   ReportConfiguration,
@@ -141,11 +143,13 @@ import { saveProjectionOnPanelConfirm as saveFileUploadProjection, revertPanelTo
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const form = ref<HTMLFormElement>()
+const reportConfigRef = ref<{ validateTitle: () => boolean } | null>(null)
 
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const fileUploadStore = useFileUploadStore()
 const notificationStore = useNotificationStore()
+const alertDialogStore = useAlertDialogStore()
 
 const messageDialog = ref<MessageDialog>({
   dialog: false,
@@ -216,8 +220,37 @@ const editTooltipText = computed(() => {
   return ''
 })
 
-const onHeaderEdit = () => {
+const hasMinimumDBHUnsavedChanges = (): boolean => {
+  if (!isFileUploadMode.value) return false
+  const minDBHState = fileUploadStore.panelState[CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH]
+  if (!minDBHState.editable) return false
+  const current = fileUploadStore.fileUploadSpeciesGroup
+  const saved = fileUploadStore.savedSpeciesGroups
+  if (current.length !== saved.length) return true
+  return current.some((g, i) => g.minimumDBHLimit !== saved[i]?.minimumDBHLimit)
+}
+
+const onHeaderEdit = async () => {
   if (isConfirmed.value) {
+    if (isFileUploadMode.value && hasMinimumDBHUnsavedChanges()) {
+      const proceed = await alertDialogStore.openDialog(
+        MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+        MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+        { variant: 'warning' },
+      )
+      if (!proceed) return
+
+      appStore.isSavingProjection = true
+      try {
+        await revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH)
+      } catch (error) {
+        console.error('Error reverting MinimumDBH panel to saved state:', error)
+        notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+        return
+      } finally {
+        appStore.isSavingProjection = false
+      }
+    }
     currentStore.value.editPanel(panelName.value)
   }
 }
@@ -386,19 +419,10 @@ const validateRequiredFields = (): boolean => {
 }
 
 const validateReportTitleField = (): boolean => {
-  const result = reportInfoValidation.validateReportTitle(
-    currentStore.value.reportTitle,
-  )
-  if (!result.isValid) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_REPORT_TITLE_REQ,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      variant: 'error',
-    }
+  if (reportConfigRef.value) {
+    return reportConfigRef.value.validateTitle()
   }
-  return result.isValid
+  return reportInfoValidation.validateReportTitle(currentStore.value.reportTitle).isValid
 }
 
 const validateProjectionTypeField = (): boolean => {

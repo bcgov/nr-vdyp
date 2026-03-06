@@ -31,7 +31,7 @@
             <v-row class="file-upload-row">
               <v-col cols="6" class="file-upload-col file-upload-col-left">
                 <span
-                  class="bcds-file-input-label"
+                  class="bcds-file-input-label file-upload-label"
                   :class="{ 'bcds-file-input-label--disabled': isReadOnly }"
                 >
                   {{ isReadOnly ? 'Polygon File' : 'Select Polygon File' }}
@@ -77,7 +77,7 @@
               </v-col>
               <v-col cols="6" class="file-upload-col file-upload-col-right">
                 <span
-                  class="bcds-file-input-label"
+                  class="bcds-file-input-label file-upload-label"
                   :class="{ 'bcds-file-input-label--disabled': isReadOnly }"
                 >
                   {{ isReadOnly ? 'Layer File' : 'Select Layer File' }}
@@ -726,5 +726,9 @@ const handleDialogClose = () => {}
 
 .uploaded-file-delete-btn:hover {
   color: var(--icons-color-danger);
+}
+
+.file-upload-label {
+  padding-top: 0px;
 }
 </style>

@@ -22,10 +22,6 @@ import {
 import { useAppStore } from '@/stores/projection/appStore'
 import apiClient from '@/services/apiClient'
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
 const createMockFileUploadStore = (overrides: Record<string, unknown> = {}) =>
   ({
     projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
@@ -62,10 +58,6 @@ const mockProjectionModel = {
   projectionParameters: null,
 }
 
-// ============================================================================
-// buildDebugOptions
-// ============================================================================
-
 describe('buildDebugOptions', () => {
   it('should always return the four standard debug options as selected', () => {
     const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
@@ -77,10 +69,6 @@ describe('buildDebugOptions', () => {
     expect(excludedDebugOptions).to.have.length(0)
   })
 })
-
-// ============================================================================
-// buildExecutionOptions
-// ============================================================================
 
 describe('buildExecutionOptions', () => {
   it('should always include the fixed selected options', () => {
@@ -156,10 +144,6 @@ describe('buildExecutionOptions', () => {
     expect(excludedExecutionOptions).to.include(ExecutionOptionsEnum.DoSummarizeProjectionByLayer)
   })
 })
-
-// ============================================================================
-// buildProjectionParameters
-// ============================================================================
 
 describe('buildProjectionParameters', () => {
   it('should set ageStart/ageEnd and null yearStart/yearEnd in AGE range mode', () => {
@@ -238,17 +222,12 @@ describe('buildProjectionParameters', () => {
   })
 })
 
-// ============================================================================
-// runProjectionFileUpload
-// ============================================================================
-
 describe('runProjectionFileUpload', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
   it('should throw when no projection GUID is set', () => {
-    // appStore starts with no GUID
     return runProjectionFileUpload()
       .then(() => {
         throw new Error('Test should have failed but succeeded unexpectedly')
@@ -270,10 +249,6 @@ describe('runProjectionFileUpload', () => {
     })
   })
 })
-
-// ============================================================================
-// ensureProjectionExists
-// ============================================================================
 
 describe('ensureProjectionExists', () => {
   beforeEach(() => {
@@ -303,10 +278,6 @@ describe('ensureProjectionExists', () => {
     })
   })
 })
-
-// ============================================================================
-// saveProjectionOnPanelConfirm
-// ============================================================================
 
 describe('saveProjectionOnPanelConfirm', () => {
   beforeEach(() => {
@@ -358,7 +329,6 @@ describe('saveProjectionOnPanelConfirm', () => {
   it('should throw when confirming a non-reportInfo panel with no GUID in EDIT mode', () => {
     const appStore = useAppStore()
     appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
-    // no GUID set
 
     return saveProjectionOnPanelConfirm(createMockFileUploadStore(), CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH)
       .then(() => {
