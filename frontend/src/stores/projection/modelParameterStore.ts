@@ -443,13 +443,9 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
    * Restore species list from model parameters
    */
   const restoreSpeciesListFromParams = (species: ModelParameters['species']) => {
-    if (!species || species.length === 0) {
-      return
-    }
-
     speciesList.value = []
     for (let i = 0; i < 6; i++) {
-      if (i < species.length) {
+      if (species && i < species.length) {
         speciesList.value.push({
           species: species[i].code,
           percent: formatPercentValue(species[i].percent),

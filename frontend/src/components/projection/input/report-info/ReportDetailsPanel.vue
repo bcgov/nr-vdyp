@@ -118,13 +118,16 @@ import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { AppButton } from '@/components'
 import { ActionPanel } from '@/components/projection'
-import { CONSTANTS, OPTIONS } from '@/constants'
-import { saveProjectionOnPanelConfirm, revertPanelToSaved } from '@/services/projection/modelParameterService'
+import { CONSTANTS, MESSAGE, OPTIONS } from '@/constants'
+import { saveProjectionOnPanelConfirm, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
+import type { PanelName } from '@/types/types'
 import { PROJECTION_ERR } from '@/constants/message'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const notificationStore = useNotificationStore()
+const alertDialogStore = useAlertDialogStore()
 
 const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.DETAILS_INFO
 const panelOpenStates = computed(() => modelParameterStore.panelOpenStates)
@@ -156,8 +159,41 @@ const editTooltipText = computed(() => {
   return ''
 })
 
-const onHeaderEdit = () => {
+const getEditablePanel = (): string | null => {
+  const panelsToCheck = [
+    CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+    CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
+    CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
+    CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO,
+  ]
+  return panelsToCheck.find((p) => modelParameterStore.panelState[p].editable) ?? null
+}
+
+const onHeaderEdit = async () => {
   if (isConfirmed.value) {
+    const editablePanel = getEditablePanel()
+    if (editablePanel) {
+      const hasChanges = await hasPanelUnsavedChanges(editablePanel, modelParameterStore)
+      if (hasChanges) {
+        const proceed = await alertDialogStore.openDialog(
+          MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+          MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+          { variant: 'warning' },
+        )
+        if (!proceed) return
+
+        appStore.isSavingProjection = true
+        try {
+          await revertPanelToSaved(editablePanel as PanelName)
+        } catch (error) {
+          console.error('Error reverting panel to saved state:', error)
+          notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+          return
+        } finally {
+          appStore.isSavingProjection = false
+        }
+      }
+    }
     modelParameterStore.editPanel(panelName)
   }
 }

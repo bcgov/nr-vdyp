@@ -8,6 +8,8 @@ import {
   runProjectionFileUpload,
   ensureProjectionExists,
   saveProjectionOnPanelConfirm,
+  hasMinimumDBHUnsavedChanges,
+  revertPanelToSaved,
 } from '@/services/projection/fileUploadService'
 import { CONSTANTS } from '@/constants'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
@@ -20,6 +22,7 @@ import {
   MetadataToOutputEnum,
 } from '@/services/vdyp-api'
 import { useAppStore } from '@/stores/projection/appStore'
+import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import apiClient from '@/services/apiClient'
 
 const createMockFileUploadStore = (overrides: Record<string, unknown> = {}) =>
@@ -336,5 +339,123 @@ describe('saveProjectionOnPanelConfirm', () => {
       .catch((error: Error) => {
         expect(error.message).to.equal(PROJECTION_ERR.MISSING_GUID)
       })
+  })
+})
+
+describe('hasMinimumDBHUnsavedChanges', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('should return false when no projectionGUID is set', () => {
+    const store = createMockFileUploadStore({
+      fileUploadSpeciesGroup: [{ group: 'F', minimumDBHLimit: '7.5+' }],
+    })
+    cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', false)
+  })
+
+  it('should return false when minimumDBHLimit matches the volume default (no utils saved)', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+
+    const projParams = JSON.stringify({
+      selectedExecutionOptions: [ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes],
+      utils: [],
+    })
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: { ...mockProjectionModel, projectionParameters: projParams },
+    })
+
+    const store = createMockFileUploadStore({
+      fileUploadSpeciesGroup: [{ group: 'F', minimumDBHLimit: '7.5+' }],
+    })
+    cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', false)
+  })
+
+  it('should return true when minimumDBHLimit differs from the volume default (no utils saved)', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+
+    const projParams = JSON.stringify({
+      selectedExecutionOptions: [ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes],
+      utils: [],
+    })
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: { ...mockProjectionModel, projectionParameters: projParams },
+    })
+
+    const store = createMockFileUploadStore({
+      fileUploadSpeciesGroup: [{ group: 'F', minimumDBHLimit: '12.5+' }],
+    })
+    cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', true)
+  })
+
+  it('should return false when minimumDBHLimit matches the saved utils value', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+
+    const projParams = JSON.stringify({
+      selectedExecutionOptions: [ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes],
+      utils: [{ s: 'F', u: '12.5+' }],
+    })
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: { ...mockProjectionModel, projectionParameters: projParams },
+    })
+
+    const store = createMockFileUploadStore({
+      fileUploadSpeciesGroup: [{ group: 'F', minimumDBHLimit: '12.5+' }],
+    })
+    cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', false)
+  })
+
+  it('should return true when minimumDBHLimit differs from the saved utils value', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+
+    const projParams = JSON.stringify({
+      selectedExecutionOptions: [ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes],
+      utils: [{ s: 'F', u: '12.5+' }],
+    })
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: { ...mockProjectionModel, projectionParameters: projParams },
+    })
+
+    const store = createMockFileUploadStore({
+      fileUploadSpeciesGroup: [{ group: 'F', minimumDBHLimit: '7.5+' }],
+    })
+    cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', true)
+  })
+})
+
+describe('revertPanelToSaved', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('should return early without error when no projectionGUID is set', () => {
+    cy.wrap(revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO as any)).then(() => {
+      const fileUploadStore = useFileUploadStore()
+      expect(fileUploadStore.panelState.reportInfo.confirmed).to.be.false
+    })
+  })
+
+  it('should keep the cancelled panel open and editable after revert', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+
+    const projParams = JSON.stringify({
+      selectedExecutionOptions: [],
+      utils: [],
+    })
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: { ...mockProjectionModel, projectionParameters: projParams, reportDescription: 'saved desc' },
+    })
+
+    cy.wrap(revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH as any)).then(() => {
+      const fileUploadStore = useFileUploadStore()
+      expect(fileUploadStore.panelOpenStates.minimumDBH).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(fileUploadStore.panelState.minimumDBH.confirmed).to.be.false
+      expect(fileUploadStore.panelState.minimumDBH.editable).to.be.true
+    })
   })
 })

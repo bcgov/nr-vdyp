@@ -125,7 +125,7 @@ import { PROJECTION_ERR } from '@/constants/message'
 import type { FileUploadPanelName } from '@/types/types'
 import { reportInfoValidation } from '@/validation'
 import { saveProjectionOnPanelConfirm as saveModelParamProjection } from '@/services/projection/modelParameterService'
-import { saveProjectionOnPanelConfirm as saveFileUploadProjection, revertPanelToSaved } from '@/services/projection/fileUploadService'
+import { saveProjectionOnPanelConfirm as saveFileUploadProjection, revertPanelToSaved, hasMinimumDBHUnsavedChanges } from '@/services/projection/fileUploadService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const form = ref<HTMLFormElement>()
@@ -200,37 +200,36 @@ const editTooltipText = computed(() => {
   return ''
 })
 
-const hasMinimumDBHUnsavedChanges = (): boolean => {
-  if (!isFileUploadMode.value) return false
+const handleMinimumDBHRevert = async (): Promise<boolean> => {
   const minDBHState = fileUploadStore.panelState[CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH]
-  if (!minDBHState.editable) return false
-  const current = fileUploadStore.fileUploadSpeciesGroup
-  const saved = fileUploadStore.savedSpeciesGroups
-  if (current.length !== saved.length) return true
-  return current.some((g, i) => g.minimumDBHLimit !== saved[i]?.minimumDBHLimit)
+  if (!minDBHState.editable) return true
+
+  const hasChanges = await hasMinimumDBHUnsavedChanges(fileUploadStore)
+  if (!hasChanges) return true
+
+  const proceed = await alertDialogStore.openDialog(
+    MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+    MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+    { variant: 'warning' },
+  )
+  if (!proceed) return false
+
+  appStore.isSavingProjection = true
+  try {
+    await revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH)
+  } catch (error) {
+    console.error('Error reverting MinimumDBH panel to saved state:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+    return false
+  } finally {
+    appStore.isSavingProjection = false
+  }
+  return true
 }
 
 const onHeaderEdit = async () => {
   if (isConfirmed.value) {
-    if (isFileUploadMode.value && hasMinimumDBHUnsavedChanges()) {
-      const proceed = await alertDialogStore.openDialog(
-        MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
-        MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
-        { variant: 'warning' },
-      )
-      if (!proceed) return
-
-      appStore.isSavingProjection = true
-      try {
-        await revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH)
-      } catch (error) {
-        console.error('Error reverting MinimumDBH panel to saved state:', error)
-        notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
-        return
-      } finally {
-        appStore.isSavingProjection = false
-      }
-    }
+    if (isFileUploadMode.value && !(await handleMinimumDBHRevert())) return
     currentStore.value.editPanel(panelName.value)
   }
 }

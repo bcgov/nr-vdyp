@@ -17,6 +17,8 @@ import {
   buildModelParameters,
   createProjection,
   saveProjectionOnPanelConfirm,
+  hasPanelUnsavedChanges,
+  revertPanelToSaved,
 } from '@/services/projection/modelParameterService'
 import { CONSTANTS } from '@/constants'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
@@ -28,6 +30,7 @@ import {
   MetadataToOutputEnum,
 } from '@/services/vdyp-api'
 import { useAppStore } from '@/stores/projection/appStore'
+import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import apiClient from '@/services/apiClient'
 
 const createMockModelParameterStore = (overrides: Record<string, unknown> = {}) =>
@@ -567,6 +570,128 @@ describe('saveProjectionOnPanelConfirm', () => {
     const store = createMockModelParameterStore()
     cy.wrap(saveProjectionOnPanelConfirm(store, CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO)).then(() => {
       expect(apiClient.createProjection).to.not.be.called
+    })
+  })
+})
+
+const createSavedModelParams = (overrides: Record<string, any> = {}) => ({
+  species: [],
+  derivedBy: CONSTANTS.DERIVED_BY.VOLUME,
+  becZone: 'CWH',
+  ecoZone: null,
+  siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+  siteSpecies: 'FD',
+  ageYears: CONSTANTS.AGE_TYPE.TOTAL,
+  speciesAge: null,
+  speciesHeight: null,
+  bha50SiteIndex: null,
+  stockable: null,
+  cc: null,
+  BA: null,
+  TPH: null,
+  minDBHLimit: '7.5 cm+',
+  currentDiameter: null,
+  ...overrides,
+})
+
+describe('hasPanelUnsavedChanges', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('should return false when no projectionGUID is set', () => {
+    cy.wrap(
+      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO, createMockModelParameterStore()),
+    ).should('equal', false)
+  })
+
+  it('should return false for unknown panel name', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: { ...mockProjectionModel, modelParameters: JSON.stringify(createSavedModelParams()) },
+    })
+    cy.wrap(hasPanelUnsavedChanges('unknownPanel', createMockModelParameterStore())).should('equal', false)
+  })
+
+  it('should return false for SPECIES_INFO when no modelParameters are saved', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: { ...mockProjectionModel, modelParameters: null },
+    })
+    cy.wrap(
+      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO, createMockModelParameterStore()),
+    ).should('equal', false)
+  })
+
+  it('should return false for SPECIES_INFO when nothing has changed', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: { ...mockProjectionModel, modelParameters: JSON.stringify(createSavedModelParams()) },
+    })
+    cy.wrap(
+      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO, createMockModelParameterStore()),
+    ).should('equal', false)
+  })
+
+  it('should return true for SPECIES_INFO when derivedBy has changed', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: {
+        ...mockProjectionModel,
+        modelParameters: JSON.stringify(createSavedModelParams({ derivedBy: CONSTANTS.DERIVED_BY.BASAL_AREA })),
+      },
+    })
+    cy.wrap(
+      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO, createMockModelParameterStore()),
+    ).should('equal', true)
+  })
+
+  it('should return true for STAND_INFO when percentStockableArea has changed', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: {
+        ...mockProjectionModel,
+        modelParameters: JSON.stringify(createSavedModelParams({ stockable: 90 })),
+      },
+    })
+    cy.wrap(
+      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO, createMockModelParameterStore()),
+    ).should('equal', true)
+  })
+})
+
+describe('revertPanelToSaved', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('should return early without error when no projectionGUID is set', () => {
+    cy.wrap(revertPanelToSaved(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO as any)).then(() => {
+      const modelStore = useModelParameterStore()
+      expect(modelStore.panelState.speciesInfo.confirmed).to.be.false
+    })
+  })
+
+  it('should open and set the cancelled panel back to editable after revert', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: {
+        ...mockProjectionModel,
+        modelParameters: JSON.stringify(createSavedModelParams()),
+        reportDescription: null,
+      },
+    })
+    cy.wrap(revertPanelToSaved(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO as any)).then(() => {
+      const modelStore = useModelParameterStore()
+      expect(modelStore.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(modelStore.panelState.speciesInfo.confirmed).to.be.false
+      expect(modelStore.panelState.speciesInfo.editable).to.be.true
     })
   })
 })

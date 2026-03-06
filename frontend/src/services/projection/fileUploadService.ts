@@ -1,6 +1,6 @@
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAppStore } from '@/stores/projection/appStore'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, DEFAULTS } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
 import type { FileUploadSpeciesGroup } from '@/interfaces/interfaces'
 import type { FileUploadPanelName } from '@/types/types'
@@ -218,6 +218,51 @@ export const runProjectionFileUpload = async (
     throw new Error(PROJECTION_ERR.MISSING_GUID)
   }
   return await projServiceRunProjection(projectionGUID)
+}
+
+/**
+ * Checks whether the Minimum DBH panel's current data differs from the last saved state in the backend.
+ * Fetches the projection from the backend, parses the utils from projectionParameters,
+ * and compares the resulting utilization values against the current fileUploadSpeciesGroup.
+ *
+ * @param fileUploadStore The store containing file upload parameters.
+ * @returns True if any species group's minimumDBHLimit differs from the saved state.
+ */
+export const hasMinimumDBHUnsavedChanges = async (
+  fileUploadStore: ReturnType<typeof useFileUploadStore>,
+): Promise<boolean> => {
+  const appStore = useAppStore()
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) return false
+
+  const projectionModel = await getProjectionById(projectionGUID)
+  const savedParams = parseProjectionParams(projectionModel.projectionParameters)
+
+  // Determine the saved projection type to derive correct defaults
+  const isSavedCFSBiomass = savedParams.selectedExecutionOptions.includes(
+    ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+  )
+  const defaultMap = isSavedCFSBiomass
+    ? DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP
+    : DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP
+
+  // Build saved utilization map from backend utils (backend returns {s, u} shape)
+  const utilsMap: Record<string, string> = {}
+  for (const util of savedParams.utils) {
+    const utilObj = util as { s: string; u: string }
+    if (utilObj.s && utilObj.u) {
+      utilsMap[utilObj.s] = utilObj.u
+    }
+  }
+
+  const hasUtils = savedParams.utils.length > 0
+
+  return fileUploadStore.fileUploadSpeciesGroup.some((group) => {
+    const savedValue = hasUtils
+      ? (utilsMap[group.group] ?? defaultMap[group.group])
+      : defaultMap[group.group]
+    return group.minimumDBHLimit !== savedValue
+  })
 }
 
 /**
