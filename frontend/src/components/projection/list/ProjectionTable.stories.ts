@@ -68,7 +68,7 @@ const tableHeaders: TableHeader[] = [
 ]
 
 const meta: Meta<typeof ProjectionTable> = {
-  title: 'components/projection-list/ProjectionTable',
+  title: 'components/projection/list/ProjectionTable',
   component: ProjectionTable,
   tags: ['autodocs'],
   argTypes: {

@@ -58,7 +58,7 @@ const sortOptions: SortOption[] = [
 ]
 
 const meta: Meta<typeof ProjectionCardList> = {
-  title: 'components/projection-list/ProjectionCardList',
+  title: 'components/projection/list/ProjectionCardList',
   component: ProjectionCardList,
   tags: ['autodocs'],
   argTypes: {

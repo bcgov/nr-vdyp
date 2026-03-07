@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import ProjectionBulkActionBar from './ProjectionBulkActionBar.vue'
 
 const meta: Meta<typeof ProjectionBulkActionBar> = {
-  title: 'components/projection-list/ProjectionBulkActionBar',
+  title: 'components/projection/list/ProjectionBulkActionBar',
   component: ProjectionBulkActionBar,
   tags: ['autodocs'],
   argTypes: {

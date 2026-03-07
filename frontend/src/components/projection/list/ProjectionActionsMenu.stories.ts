@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import ProjectionActionsMenu from './ProjectionActionsMenu.vue'
 
 const meta: Meta<typeof ProjectionActionsMenu> = {
-  title: 'components/projection-list/ProjectionActionsMenu',
+  title: 'components/projection/list/ProjectionActionsMenu',
   component: ProjectionActionsMenu,
   tags: ['autodocs'],
   argTypes: {
