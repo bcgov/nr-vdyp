@@ -16,15 +16,16 @@ import {
   updateProjectionParamsWithModel,
   getProjectionById,
   deleteAllFilesFromFileSet,
+  parseProjectionParams,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
-import type { CSVRowType } from '@/types/types'
-import type { SpeciesGroup, SpeciesList } from '@/interfaces/interfaces'
+import type { CSVRowType, PanelName } from '@/types/types'
+import type { SpeciesGroup, SpeciesList, ParsedProjectionParameters } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
-import { isBlank, addExecutionOptionsFromMappings } from '@/utils/util'
+import { isBlank, addExecutionOptionsFromMappings, numEq, strEq } from '@/utils/util'
 
 /**
  * Generates a unique 9-digit or 10-digit feature ID using the current timestamp and random values.
@@ -665,7 +666,7 @@ export const runProjection = async (): Promise<ProjectionModel> => {
 /**
  * Saves the projection when a panel's Next button is clicked (Manual Input mode).
  *
- * - CREATE mode + first panel (speciesInfo): Creates a new projection with projection parameters and model parameters,
+ * - CREATE mode + first panel (detailsInfo): Creates a new projection with projection parameters and model parameters,
  *   stores the GUID, and switches to EDIT mode.
  * - EDIT mode (any panel): Updates the existing projection parameters and model parameters.
  *
@@ -681,7 +682,7 @@ export const saveProjectionOnPanelConfirm = async (
 
   if (
     appStore.viewMode === PROJECTION_VIEW_MODE.CREATE &&
-    panelName === CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO
+    panelName === CONSTANTS.MODEL_PARAMETER_PANEL.DETAILS_INFO
   ) {
     // Create mode + first panel: create projection
     const result = await createProjection(modelParameterStore)
@@ -698,4 +699,147 @@ export const saveProjectionOnPanelConfirm = async (
     const modelParameters = buildModelParameters(modelParameterStore)
     await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters, modelParameterStore.reportDescription)
   }
+}
+
+const hasSpeciesInfoChanges = (store: any, saved: ModelParameters): boolean => {
+  if (!strEq(store.derivedBy, saved.derivedBy)) return true
+  const storeSpecies = (store.speciesList as SpeciesList[]).filter((s) => s.species !== null)
+  const savedSpecies = (saved.species || []).filter((s) => s.code !== null)
+  if (storeSpecies.length !== savedSpecies.length) return true
+  for (let i = 0; i < storeSpecies.length; i++) {
+    if (storeSpecies[i].species !== savedSpecies[i].code) return true
+    if (!numEq(storeSpecies[i].percent, savedSpecies[i].percent)) return true
+  }
+  return false
+}
+
+const hasSiteInfoChanges = (store: any, saved: ModelParameters): boolean => {
+  if (!strEq(store.becZone, saved.becZone)) return true
+  if (!strEq(store.ecoZone, saved.ecoZone)) return true
+  if (!strEq(store.siteSpeciesValues, saved.siteIndex)) return true
+  if (!strEq(store.ageType, saved.ageYears)) return true
+  if (!numEq(store.spzAge, saved.speciesAge)) return true
+  if (!numEq(store.spzHeight, saved.speciesHeight)) return true
+  if (!numEq(store.bha50SiteIndex, saved.bha50SiteIndex)) return true
+  return false
+}
+
+const hasStandInfoChanges = (store: any, saved: ModelParameters): boolean => {
+  if (!numEq(store.percentStockableArea, saved.stockable)) return true
+  if (!numEq(store.crownClosure, saved.cc)) return true
+  if (!numEq(store.basalArea, saved.BA)) return true
+  if (!numEq(store.treesPerHectare, saved.TPH)) return true
+  return false
+}
+
+const hasReportInfoChanges = (
+  store: any,
+  savedParams: ParsedProjectionParameters,
+  savedDescription: string | null,
+): boolean => {
+  if (!numEq(store.startingAge, savedParams.ageStart)) return true
+  if (!numEq(store.finishingAge, savedParams.ageEnd)) return true
+  if (!numEq(store.ageIncrement, savedParams.ageIncrement)) return true
+  if (!strEq(store.reportTitle, savedParams.reportTitle)) return true
+  if (!strEq(store.reportDescription, savedDescription)) return true
+  const opts = savedParams.selectedExecutionOptions
+  if (store.isForwardGrowEnabled !== opts.includes(ExecutionOptionsEnum.ForwardGrowEnabled)) return true
+  if (store.isBackwardGrowEnabled !== opts.includes(ExecutionOptionsEnum.BackGrowEnabled)) return true
+  if (store.isComputedMAIEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)) return true
+  if (store.isCulminationValuesEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)) return true
+  if (store.isBySpeciesEnabled !== opts.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)) return true
+  if (store.incSecondaryHeight !== opts.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)) return true
+  const savedProjectionType = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+    ? CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+    : CONSTANTS.PROJECTION_TYPE.VOLUME
+  if (!strEq(store.projectionType, savedProjectionType)) return true
+  return false
+}
+
+/**
+ * Checks whether the given panel's current data differs from the last saved state in the backend.
+ * Fetches the projection from the backend, parses both modelParameters and projectionParameters,
+ * and compares the relevant fields for the specified panel.
+ *
+ * @param panelName The panel to check for unsaved changes.
+ * @param modelParameterStore The store containing model parameters.
+ * @returns True if any field in the panel differs from the saved state.
+ */
+export const hasPanelUnsavedChanges = async (
+  panelName: string,
+  modelParameterStore: any,
+): Promise<boolean> => {
+  const appStore = useAppStore()
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) return false
+
+  const projectionModel = await getProjectionById(projectionGUID)
+
+  let savedModelParams: ModelParameters | null = null
+  if (projectionModel.modelParameters) {
+    try {
+      savedModelParams = JSON.parse(projectionModel.modelParameters) as ModelParameters
+    } catch {
+      return false
+    }
+  }
+
+  const savedParams = parseProjectionParams(projectionModel.projectionParameters)
+
+  switch (panelName) {
+    case CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO:
+      return savedModelParams ? hasSpeciesInfoChanges(modelParameterStore, savedModelParams) : false
+    case CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO:
+      return savedModelParams ? hasSiteInfoChanges(modelParameterStore, savedModelParams) : false
+    case CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO:
+      return savedModelParams ? hasStandInfoChanges(modelParameterStore, savedModelParams) : false
+    case CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO:
+      return hasReportInfoChanges(modelParameterStore, savedParams, projectionModel.reportDescription ?? null)
+    default:
+      return false
+  }
+}
+
+/**
+ * Reverts the model parameter store to the last saved projection state from the backend.
+ * Called when the user clicks Cancel while editing a panel in Manual Input mode.
+ * The cancelled panel is forced back to open and editable so the user can continue editing.
+ *
+ * Unlike File Upload mode, Manual Input also restores model parameters (species, site, stand info)
+ * from the projectionModel.modelParameters JSON field via restoreFromModelParameters.
+ *
+ * @param panelName The panel whose Cancel button was clicked.
+ * @throws Error if the revert operation fails.
+ */
+export const revertPanelToSaved = async (panelName: PanelName): Promise<void> => {
+  const appStore = useAppStore()
+  const modelParameterStore = useModelParameterStore()
+
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) return
+
+  const projectionModel = await getProjectionById(projectionGUID)
+  const params = parseProjectionParams(projectionModel.projectionParameters)
+
+  // Restore species, site, and stand data from modelParameters JSON (Manual Input only).
+  // Always call restoreFromModelParameters so that fields are reset to the saved state
+  // (or to empty defaults if no modelParameters exist yet).
+  let modelParams: ModelParameters = { species: [], derivedBy: null, becZone: null, ecoZone: null, siteIndex: null, siteSpecies: null, ageYears: null, speciesAge: null, speciesHeight: null, bha50SiteIndex: null, stockable: null, cc: null, BA: null, TPH: null, minDBHLimit: null, currentDiameter: null }
+  if (projectionModel.modelParameters) {
+    try {
+      modelParams = JSON.parse(projectionModel.modelParameters) as ModelParameters
+    } catch (err) {
+      console.error('Error parsing modelParameters during revert:', err)
+    }
+  }
+  modelParameterStore.restoreFromModelParameters(modelParams)
+
+  // Restore projection params with isViewMode=true to preserve all other panels as confirmed.
+  // (isViewMode=false would reset all panels to CREATE mode, losing confirmed states.)
+  modelParameterStore.restoreFromProjectionParams(params, true)
+  modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
+
+  // Keep the cancelled panel open and editable so the user can continue editing
+  modelParameterStore.panelOpenStates[panelName] = CONSTANTS.PANEL.OPEN
+  modelParameterStore.panelState[panelName] = { confirmed: false, editable: true }
 }

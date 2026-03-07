@@ -1,15 +1,5 @@
 <template>
   <v-card class="elevation-0">
-    <AppMessageDialog
-      :dialog="messageDialog.dialog"
-      :title="messageDialog.title"
-      :message="messageDialog.message"
-      :dialogWidth="messageDialog.dialogWidth"
-      :btnLabel="messageDialog.btnLabel"
-      :variant="messageDialog.variant"
-      @update:dialog="(value) => (messageDialog.dialog = value)"
-      @close="handleDialogClose"
-    />
     <v-expansion-panels v-model="panelOpenStates[panelName]">
       <v-expansion-panel hide-actions>
         <v-expansion-panel-title>
@@ -42,9 +32,10 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text mt-n2">
+        <v-expansion-panel-text class="expansion-panel-text">
           <v-form ref="form">
             <ReportConfiguration
+              ref="reportConfigRef"
               :selectedAgeYearRange="currentStore.selectedAgeYearRange"
               :startingAge="currentStore.startingAge"
               :finishingAge="currentStore.finishingAge"
@@ -123,35 +114,28 @@ import { ref, computed } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
-import {
-  AppMessageDialog,
-  AppButton,
-} from '@/components'
+import { AppButton } from '@/components'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import {
   ActionPanel,
   ReportConfiguration,
 } from '@/components/projection'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
-import type { MessageDialog } from '@/interfaces/interfaces'
 import type { FileUploadPanelName } from '@/types/types'
 import { reportInfoValidation } from '@/validation'
 import { saveProjectionOnPanelConfirm as saveModelParamProjection } from '@/services/projection/modelParameterService'
-import { saveProjectionOnPanelConfirm as saveFileUploadProjection, revertPanelToSaved } from '@/services/projection/fileUploadService'
+import { saveProjectionOnPanelConfirm as saveFileUploadProjection, revertPanelToSaved, hasMinimumDBHUnsavedChanges } from '@/services/projection/fileUploadService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const form = ref<HTMLFormElement>()
+const reportConfigRef = ref<{ validateTitle: () => boolean; validateFields: () => boolean } | null>(null)
 
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const fileUploadStore = useFileUploadStore()
 const notificationStore = useNotificationStore()
-
-const messageDialog = ref<MessageDialog>({
-  dialog: false,
-  title: '',
-  message: '',
-})
+const alertDialogStore = useAlertDialogStore()
 
 const currentStore = computed(() => {
   return appStore.modelSelection ===
@@ -216,8 +200,36 @@ const editTooltipText = computed(() => {
   return ''
 })
 
-const onHeaderEdit = () => {
+const handleMinimumDBHRevert = async (): Promise<boolean> => {
+  const minDBHState = fileUploadStore.panelState[CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH]
+  if (!minDBHState.editable) return true
+
+  const hasChanges = await hasMinimumDBHUnsavedChanges(fileUploadStore)
+  if (!hasChanges) return true
+
+  const proceed = await alertDialogStore.openDialog(
+    MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+    MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+    { variant: 'warning' },
+  )
+  if (!proceed) return false
+
+  appStore.isSavingProjection = true
+  try {
+    await revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH)
+  } catch (error) {
+    console.error('Error reverting MinimumDBH panel to saved state:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+    return false
+  } finally {
+    appStore.isSavingProjection = false
+  }
+  return true
+}
+
+const onHeaderEdit = async () => {
   if (isConfirmed.value) {
+    if (isFileUploadMode.value && !(await handleMinimumDBHRevert())) return
     currentStore.value.editPanel(panelName.value)
   }
 }
@@ -310,202 +322,16 @@ const handleReportDescriptionUpdate = (value: string | null) => {
   currentStore.value.reportDescription = value
 }
 
-const validateComparison = (): boolean => {
-  if (
-    currentStore.value.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
-  ) {
-    const result = reportInfoValidation.validateComparison(
-      currentStore.value.startingAge,
-      currentStore.value.finishingAge,
-    )
-    if (!result.isValid) {
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-        message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-        variant: 'error',
-      }
-    }
-    return result.isValid
-  } else {
-    const result = reportInfoValidation.validateComparison(
-      currentStore.value.startYear,
-      currentStore.value.endYear,
-    )
-    if (!result.isValid) {
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-        message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_END_YEAR,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-        variant: 'error',
-      }
-    }
-    return result.isValid
-  }
-}
-
-const validateRequiredFields = (): boolean => {
-  if (
-    currentStore.value.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
-  ) {
-    const result = reportInfoValidation.validateRequiredFields(
-      currentStore.value.startingAge,
-      currentStore.value.finishingAge,
-      currentStore.value.ageIncrement,
-    )
-    if (!result.isValid) {
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-        message: MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS_AGE,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-        variant: 'error',
-      }
-    }
-    return result.isValid
-  } else {
-    const result = reportInfoValidation.validateRequiredFields(
-      currentStore.value.startYear,
-      currentStore.value.endYear,
-      currentStore.value.yearIncrement,
-    )
-    if (!result.isValid) {
-      const message = MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS_YEAR
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-        message: message,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-        variant: 'error',
-      }
-    }
-    return result.isValid
-  }
-}
-
 const validateReportTitleField = (): boolean => {
-  const result = reportInfoValidation.validateReportTitle(
-    currentStore.value.reportTitle,
-  )
-  if (!result.isValid) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_REPORT_TITLE_REQ,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      variant: 'error',
-    }
+  if (reportConfigRef.value) {
+    return reportConfigRef.value.validateTitle()
   }
-  return result.isValid
-}
-
-const validateProjectionTypeField = (): boolean => {
-  const result = reportInfoValidation.validateProjectionType(
-    currentStore.value.projectionType,
-  )
-  if (!result.isValid) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_PROJECTION_TYPE_REQ,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      variant: 'error',
-    }
-  }
-  return result.isValid
-}
-
-const validateRange = (): boolean => {
-  if (
-    currentStore.value.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
-  ) {
-    const result = reportInfoValidation.validateAgeRange(
-      currentStore.value.startingAge,
-      currentStore.value.finishingAge,
-      currentStore.value.ageIncrement,
-    )
-    if (!result.isValid) {
-      let message = ''
-      switch (result.errorType) {
-        case 'startingAge':
-          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
-            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
-          )
-          break
-        case 'finishingAge':
-          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
-            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
-            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
-          )
-          break
-        case 'ageIncrement':
-          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
-            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
-            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
-          )
-          break
-      }
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-        message: message,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-        variant: 'error',
-      }
-    }
-    return result.isValid
-  } else {
-    const result = reportInfoValidation.validateYearRange(
-      currentStore.value.startYear,
-      currentStore.value.endYear,
-      currentStore.value.yearIncrement,
-    )
-
-    if (!result.isValid) {
-      let message = ''
-
-      switch (result.errorType) {
-        case 'startYear':
-          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_YEAR_RNG(
-            CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN,
-            CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX,
-          )
-          break
-        case 'endYear':
-          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_END_YEAR_RNG(
-            CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN,
-            CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX,
-          )
-          break
-        case 'yearIncrement':
-          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_YEAR_INC_RNG(
-            CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN,
-            CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX,
-          )
-          break
-      }
-
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-        message: message,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-        variant: 'error',
-      }
-    }
-    return result.isValid
-  }
+  return reportInfoValidation.validateReportTitle(currentStore.value.reportTitle).isValid
 }
 
 const onConfirm = async () => {
   if (!validateReportTitleField()) return
-  if (!validateProjectionTypeField()) return
-  if (!validateComparison()) return
-  if (!validateRequiredFields()) return
-  if (!validateRange()) return
+  if (reportConfigRef.value && !reportConfigRef.value.validateFields()) return
 
   if (form.value) {
     form.value.validate()
@@ -576,7 +402,6 @@ const onClear = () => {
   currentStore.value.projectionType = null
 }
 
-const handleDialogClose = () => {}
 </script>
 <style scoped>
 .edit-button-col {

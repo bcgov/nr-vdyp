@@ -137,8 +137,10 @@ export function useProjectionLoader() {
 
       if (isInputModelParams) {
         restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode)
+        modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
       } else {
         await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode)
+        fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
       }
 
       return true

@@ -58,7 +58,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits(['runModel', 'cancelRun'])
 
 const computedCardClass = computed(
-  () => props.cardClass ?? 'file-upload-run-model-card',
+  () => props.cardClass ?? 'run-projection-card',
 )
 
 const computedCardActionsClass = computed(
@@ -77,32 +77,15 @@ const cancelRun = () => {
 /*
  * Styling based on BC Gov Design Standards - Using Design Tokens
  */
-.input-model-param-run-model-card {
+.run-projection-card {
   padding: var(--layout-padding-small) !important;
   margin-top: var(--layout-margin-medium) !important;
-  background-color: var(--surface-color-background-light-gray);
   border: var(--layout-border-width-small) solid
     var(--surface-color-border-default);
   border-top-left-radius: 0px;
   border-top-right-radius: 0px;
   border-bottom-left-radius: var(--layout-border-radius-large);
   border-bottom-right-radius: var(--layout-border-radius-large);
-  display: flex;
-  justify-content: end;
-  align-items: end;
-  text-align: end;
-}
-
-.file-upload-run-model-card {
-  padding: var(--layout-padding-medium) !important;
-  margin-top: var(--layout-margin-medium) !important;
-  background-color: var(--surface-color-background-light-gray);
-  border-top: var(--layout-border-width-small) solid
-    var(--surface-color-border-default);
-  border-top-left-radius: 0px;
-  border-top-right-radius: 0px;
-  border-bottom-left-radius: var(--layout-border-radius-small);
-  border-bottom-right-radius: var(--layout-border-radius-small);
   display: flex;
   justify-content: end;
   align-items: end;
@@ -119,12 +102,7 @@ const cancelRun = () => {
 }
 
 @media (max-width: 600px) {
-  .file-upload-run-model-card {
-    padding: var(--layout-padding-xsmall) var(--layout-padding-small) !important;
-    margin-top: var(--layout-margin-small) !important;
-  }
-
-  .input-model-param-run-model-card {
+  .run-projection-card {
     padding: var(--layout-padding-xsmall) var(--layout-padding-small) !important;
     margin-top: var(--layout-margin-small) !important;
   }

@@ -1,8 +1,11 @@
 <template>
-  <div class="report-top-section mt-4" :class="{ 'file-upload-top-section': appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD }">
-    <v-row>
+  <div
+    v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD"
+    class="report-top-section file-upload-top-section"
+  >
+    <v-row no-gutters class="form-fields-row">
       <v-col cols="12" sm="6">
-        <label class="bcds-text-field-label" for="reportTitle">Report Title (Required)</label>
+        <label class="bcds-text-field-label report-title-label" for="reportTitle">Report Title (Required)</label>
         <v-text-field
           id="reportTitle"
           type="string"
@@ -11,17 +14,20 @@
           persistent-placeholder
           placeholder="Enter a report title..."
           :disabled="isDisabled"
-          class="report-title-text-field"
+          :error="!!titleError"
+          :error-messages="titleError"
+          @blur="validateTitle"
         ></v-text-field>
       </v-col>
-      <v-col class="col-space-2 d-none d-sm-flex" />
       <v-col cols="12" sm="4" class="projection-type-container">
         <label class="bcds-radio-label" for="projection-type-select">Projection Type</label>
         <v-radio-group
           id="projection-type-select"
           v-model="localProjectionType"
           inline
-          hide-details
+          :hide-details="projectionTypeError ? 'auto' : true"
+          :error="!!projectionTypeError"
+          :error-messages="projectionTypeError"
           :disabled="isDisabled"
         >
           <v-radio
@@ -37,8 +43,8 @@
         </v-radio-group>
       </v-col>
     </v-row>
-    <v-row>
-      <v-col cols="12" class="mt-n2">
+    <v-row class="mt-fields">
+      <v-col cols="12">
         <div class="bcds-textarea" :data-disabled="isDisabled || undefined">
           <label class="bcds-textarea-label" for="reportDescription">Description</label>
           <div class="bcds-textarea-container">
@@ -60,10 +66,10 @@
     </v-row>
   </div>
   <div
-    class="ml-n2 mt-n8 file-upload-numeric-range-section"
+    class="mt-n8 file-upload-numeric-range-section"
     v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD"
   >
-    <v-row>
+    <v-row no-gutters class="form-fields-row">
       <v-col cols="12" sm="auto" class="age-year-range-container">
         <div class="numeric-range-value-label">Numeric Range Value</div>
         <v-radio-group
@@ -81,7 +87,7 @@
         </v-radio-group>
       </v-col>
       <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
-        <v-col cols="6" sm="2" class="spin-field-col">
+        <v-col cols="6" sm="2" class="spin-field-col starting-age-year-mobile">
           <AppSpinField
             label="Starting Age"
             :model-value="localStartingAge"
@@ -94,12 +100,12 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_DECIMAL_NUM"
+            :errorMessages="startingAgeError"
             data-testid="starting-age"
             @update:modelValue="handleStartingAgeInput"
           />
         </v-col>
-        <v-col class="col-space-3 d-none d-sm-flex" />
-        <v-col cols="6" sm="2" class="ml-sm-2 spin-field-col">
+        <v-col cols="6" sm="2" class="spin-field-col">
           <AppSpinField
             label="Finishing Age"
             :model-value="localFinishingAge"
@@ -112,12 +118,12 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_DECIMAL_NUM"
+            :errorMessages="finishingAgeError"
             data-testid="finishing-age"
             @update:modelValue="handleFinishingAgeInput"
           />
         </v-col>
-        <v-col class="col-space-3 d-none d-sm-flex" />
-        <v-col cols="6" sm="2" class="ml-sm-2 spin-field-col">
+        <v-col cols="6" sm="2" class="spin-field-col">
           <AppSpinField
             label="Increment"
             :model-value="localAgeIncrement"
@@ -130,6 +136,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_DECIMAL_NUM"
+            :errorMessages="ageIncrementError"
             data-testid="age-increment"
             @update:modelValue="handleAgeIncrementInput"
           />
@@ -149,12 +156,12 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_DECIMAL_NUM"
+            :errorMessages="startYearError"
             data-testid="start-year"
             @update:modelValue="handleStartYearInput"
           />
         </v-col>
-        <v-col class="col-space-3 d-none d-sm-flex" />
-        <v-col cols="6" sm="2" class="ml-sm-2 spin-field-col">
+        <v-col cols="6" sm="2" class="spin-field-col">
           <AppSpinField
             label="Finishing Year"
             :model-value="localEndYear"
@@ -167,12 +174,12 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_DECIMAL_NUM"
+            :errorMessages="endYearError"
             data-testid="end-year"
             @update:modelValue="handleEndYearInput"
           />
         </v-col>
-        <v-col class="col-space-3 d-none d-sm-flex" />
-        <v-col cols="6" sm="2" class="ml-sm-2 spin-field-col">
+        <v-col cols="6" sm="2" class="spin-field-col">
           <AppSpinField
             label="Increment"
             :model-value="localYearIncrement"
@@ -185,12 +192,12 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_DECIMAL_NUM"
+            :errorMessages="yearIncrementError"
             data-testid="year-increment"
             @update:modelValue="handleYearIncrementInput"
           />
         </v-col>
       </template>
-      <v-col class="col-space-3 d-none d-md-flex" />
       <v-col cols="6" sm="2" md="2" class="spin-field-col-isy">
         <AppSpinField
           label="Include Specific Year"
@@ -226,6 +233,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_DECIMAL_NUM"
+            :errorMessages="startingAgeError"
             data-testid="starting-age"
             @update:modelValue="handleStartingAgeInput"
           />
@@ -244,6 +252,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_DECIMAL_NUM"
+            :errorMessages="finishingAgeError"
             data-testid="finishing-age"
             @update:modelValue="handleFinishingAgeInput"
           />
@@ -262,6 +271,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_DECIMAL_NUM"
+            :errorMessages="ageIncrementError"
             data-testid="age-increment"
             @update:modelValue="handleAgeIncrementInput"
           />
@@ -281,6 +291,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_DECIMAL_NUM"
+            :errorMessages="startYearError"
             data-testid="start-year"
             @update:modelValue="handleStartYearInput"
           />
@@ -299,6 +310,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_DECIMAL_NUM"
+            :errorMessages="endYearError"
             data-testid="end-year"
             @update:modelValue="handleEndYearInput"
           />
@@ -317,6 +329,7 @@
             :disabled="isDisabled"
             :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
             :decimalAllowNumber="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_DECIMAL_NUM"
+            :errorMessages="yearIncrementError"
             data-testid="year-increment"
             @update:modelValue="handleYearIncrementInput"
           />
@@ -344,12 +357,12 @@
       </v-col>
     </v-row>
   </div>
-  <div class="ml-4 mt-5 mb-3">
+  <div class="ml-4 mt-5 mb-3 include-in-report-container-mobile">
     <div class="ml-n4 include-in-report-header">
       <span class="include-in-report-label" :class="{ 'include-in-report-disabled': isDisabled }">{{ appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD ? 'Include following values in Report' : 'Include in Report' }}</span>
     </div>
-    <v-row class="ml-n6">
-      <v-col cols="12" style="padding-top: 1px">
+    <v-row class="ml-n7">
+      <v-col cols="12" class="include-in-report-checkboxes">
         <template
           v-if="
             appStore.modelSelection ===
@@ -399,8 +412,8 @@
           </v-row>
         </template>
         <template v-else>
-          <v-row>
-            <v-col cols="auto" class="by-layer-container">
+          <v-row no-gutters class="form-fields-row file-upload-checkboxes-row">
+            <v-col cols="auto">
               <v-checkbox
                 v-model="localIsByLayerEnabled"
                 :label=CONSTANTS.INCLUDE_IN_REPORT.BY_LAYER
@@ -409,7 +422,7 @@
                 data-testid="is-by-layer-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col cols="auto" class="by-species-file-upload-container">
+            <v-col cols="auto">
               <v-checkbox
                 v-model="localIsBySpeciesEnabled"
                 :label=CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES
@@ -418,7 +431,7 @@
                 data-testid="is-by-species-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col cols="auto" class="secondary-species-height-file-upload-container" style="padding-left: 0px;">
+            <v-col cols="auto">
               <v-checkbox
                 v-model="localIncSecondaryHeight"
                 :label=CONSTANTS.INCLUDE_IN_REPORT.SECD_SPCZ_HEIGHT
@@ -427,7 +440,7 @@
                 data-testid="inc-secondary-height"
               ></v-checkbox>
             </v-col>
-            <v-col cols="auto" class="projection-mode-container">
+            <v-col cols="auto">
               <v-checkbox
                 v-model="localIsProjectionModeEnabled"
                 :label=CONSTANTS.INCLUDE_IN_REPORT.PRJECTION_MODE
@@ -436,7 +449,7 @@
                 data-testid="is-projection-mode-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col cols="auto" class="polygon-id-container">
+            <v-col cols="auto">
               <v-checkbox
                 v-model="localIsPolygonIDEnabled"
                 :label=CONSTANTS.INCLUDE_IN_REPORT.POLYGON_ID
@@ -445,7 +458,7 @@
                 data-testid="is-polygon-id-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col cols="auto" class="current-year-container">
+            <v-col cols="auto">
               <v-checkbox
                 v-model="localIsCurrentYearEnabled"
                 :label=CONSTANTS.INCLUDE_IN_REPORT.CURRENT_YEAR
@@ -454,7 +467,7 @@
                 data-testid="is-current-year-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col cols="auto" class="reference-year-container">
+            <v-col cols="auto">
               <v-checkbox
                 v-model="localIsReferenceYearEnabled"
                 :label=CONSTANTS.INCLUDE_IN_REPORT.REFERENCE_YEAR
@@ -497,8 +510,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
+import { ref, watch, computed, type Ref } from 'vue'
+import { BIZCONSTANTS, CONSTANTS, DEFAULTS, MESSAGE, OPTIONS } from '@/constants'
+import { reportInfoValidation } from '@/validation'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
@@ -596,6 +610,156 @@ const localReportDescription = ref<string | null>(props.reportDescription)
 const reportDescriptionLength = computed(() => {
   return localReportDescription.value ? localReportDescription.value.length : 0
 })
+
+const titleError = ref<string>('')
+const projectionTypeError = ref<string>('')
+const startingAgeError = ref<string>('')
+const finishingAgeError = ref<string>('')
+const ageIncrementError = ref<string>('')
+const startYearError = ref<string>('')
+const endYearError = ref<string>('')
+const yearIncrementError = ref<string>('')
+
+const validateTitle = (): boolean => {
+  if (!localReportTitle.value || localReportTitle.value.trim() === '') {
+    titleError.value = 'Report Title is required.'
+    return false
+  }
+  titleError.value = ''
+  return true
+}
+
+const validateNumericRange = (
+  value: string | null,
+  min: number,
+  max: number,
+  requiredMsg: string,
+  rangeMsg: string,
+  errorRef: Ref<string>,
+): boolean => {
+  if (value === null || value.trim() === '') {
+    errorRef.value = requiredMsg
+    return false
+  }
+  const num = Number.parseFloat(value)
+  if (num < min || num > max) {
+    errorRef.value = rangeMsg
+    return false
+  }
+  return true
+}
+
+const validateAgeFields = (): boolean => {
+  const { STARTING_AGE_MIN, STARTING_AGE_MAX, FINISHING_AGE_MIN, FINISHING_AGE_MAX, AGE_INC_MIN, AGE_INC_MAX } =
+    CONSTANTS.NUM_INPUT_LIMITS
+  const { RPT_VLD_START_AGE_RNG, RPT_VLD_START_FNSH_RNG, RPT_VLD_AGE_INC_RNG, RPT_VLD_COMP_FNSH_AGE } =
+    MESSAGE.MDL_PRM_INPUT_ERR
+
+  let isValid = validateNumericRange(
+    localStartingAge.value,
+    STARTING_AGE_MIN,
+    STARTING_AGE_MAX,
+    'Starting Age is required.',
+    RPT_VLD_START_AGE_RNG(STARTING_AGE_MIN, STARTING_AGE_MAX),
+    startingAgeError,
+  )
+  isValid =
+    validateNumericRange(
+      localFinishingAge.value,
+      FINISHING_AGE_MIN,
+      FINISHING_AGE_MAX,
+      'Finishing Age is required.',
+      RPT_VLD_START_FNSH_RNG(FINISHING_AGE_MIN, FINISHING_AGE_MAX),
+      finishingAgeError,
+    ) && isValid
+  isValid =
+    validateNumericRange(
+      localAgeIncrement.value,
+      AGE_INC_MIN,
+      AGE_INC_MAX,
+      'Increment is required.',
+      RPT_VLD_AGE_INC_RNG(AGE_INC_MIN, AGE_INC_MAX),
+      ageIncrementError,
+    ) && isValid
+
+  if (localStartingAge.value !== null && localStartingAge.value.trim() !== '' &&
+      localFinishingAge.value !== null && localFinishingAge.value.trim() !== '') {
+    if (!reportInfoValidation.validateComparison(localStartingAge.value, localFinishingAge.value).isValid) {
+      finishingAgeError.value = RPT_VLD_COMP_FNSH_AGE
+      isValid = false
+    }
+  }
+
+  return isValid
+}
+
+const validateYearFields = (): boolean => {
+  const { START_YEAR_MIN, START_YEAR_MAX, END_YEAR_MIN, END_YEAR_MAX, YEAR_INC_MIN, YEAR_INC_MAX } =
+    CONSTANTS.NUM_INPUT_LIMITS
+  const { RPT_VLD_START_YEAR_RNG, RPT_VLD_END_YEAR_RNG, RPT_VLD_YEAR_INC_RNG, RPT_VLD_COMP_END_YEAR } =
+    MESSAGE.MDL_PRM_INPUT_ERR
+
+  let isValid = validateNumericRange(
+    localStartYear.value,
+    START_YEAR_MIN,
+    START_YEAR_MAX,
+    'Start Year is required.',
+    RPT_VLD_START_YEAR_RNG(START_YEAR_MIN, START_YEAR_MAX),
+    startYearError,
+  )
+  isValid =
+    validateNumericRange(
+      localEndYear.value,
+      END_YEAR_MIN,
+      END_YEAR_MAX,
+      'End Year is required.',
+      RPT_VLD_END_YEAR_RNG(END_YEAR_MIN, END_YEAR_MAX),
+      endYearError,
+    ) && isValid
+  isValid =
+    validateNumericRange(
+      localYearIncrement.value,
+      YEAR_INC_MIN,
+      YEAR_INC_MAX,
+      'Increment is required.',
+      RPT_VLD_YEAR_INC_RNG(YEAR_INC_MIN, YEAR_INC_MAX),
+      yearIncrementError,
+    ) && isValid
+
+  if (localStartYear.value !== null && localStartYear.value.trim() !== '' &&
+      localEndYear.value !== null && localEndYear.value.trim() !== '') {
+    if (!reportInfoValidation.validateComparison(localStartYear.value, localEndYear.value).isValid) {
+      endYearError.value = RPT_VLD_COMP_END_YEAR
+      isValid = false
+    }
+  }
+
+  return isValid
+}
+
+const validateFields = (): boolean => {
+  projectionTypeError.value = ''
+  startingAgeError.value = ''
+  finishingAgeError.value = ''
+  ageIncrementError.value = ''
+  startYearError.value = ''
+  endYearError.value = ''
+  yearIncrementError.value = ''
+
+  let isValid = true
+
+  if (!localProjectionType.value || localProjectionType.value.trim() === '') {
+    projectionTypeError.value = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_PROJECTION_TYPE_REQ
+    isValid = false
+  }
+
+  const rangeValid =
+    selectedAgeYearRange.value === CONSTANTS.AGE_YEAR_RANGE.AGE ? validateAgeFields() : validateYearFields()
+
+  return isValid && rangeValid
+}
+
+defineExpose({ validateTitle, validateFields })
 
 // Watch props for changes (Prop -> Local State)
 watch(
@@ -990,26 +1154,32 @@ const utilizationSliderTickLabels = utilizationClassOptions.reduce(
 
 const handleStartingAgeInput = (value: string | null) => {
   localStartingAge.value = value
+  startingAgeError.value = ''
 }
 
 const handleFinishingAgeInput = (value: string | null) => {
   localFinishingAge.value = value
+  finishingAgeError.value = ''
 }
 
 const handleAgeIncrementInput = (value: string | null) => {
   localAgeIncrement.value = value
+  ageIncrementError.value = ''
 }
 
 const handleStartYearInput = (value: string | null) => {
   localStartYear.value = value
+  startYearError.value = ''
 }
 
 const handleEndYearInput = (value: string | null) => {
   localEndYear.value = value
+  endYearError.value = ''
 }
 
 const handleYearIncrementInput = (value: string | null) => {
   localYearIncrement.value = value
+  yearIncrementError.value = ''
 }
 
 const handleSpecificYearInput = (value: string | null) => {
@@ -1043,6 +1213,10 @@ const updateMinDBH = (index: number, value: number) => {
   color: var(--typography-color-disabled) !important;
 }
 
+.include-in-report-checkboxes {
+  padding-top: 1px; padding-bottom: 16px
+}
+
 .min-dbh-limit-species-group-label {
   display: block;
   color: var(--typography-color-secondary);
@@ -1064,44 +1238,8 @@ const updateMinDBH = (index: number, value: number) => {
   color: var(--typography-color-disabled) !important;
 }
 
-.report-title-text-field {
-  max-width: 97.5% !important
-}
-
 .projection-type-container {
-  padding-top: 16px;
-}
-
-@media (max-width: 600px) {
-  .projection-type-container {
-    padding-top: 0;
-  }
-
-  .report-top-section {
-    margin-bottom: 8px;
-  }
-
-  .file-upload-numeric-range-section {
-    padding-top: 4px;
-    padding-bottom: 4px;
-  }
-
-  .spin-field-col {
-    padding-top: 0 !important;
-  }
-
-  .spin-field-col-isy {
-    padding-top: 0 !important;
-  }
-}
-
-@media (min-width: 600px) and (max-width: 900px) {
-  .spin-field-col {
-    padding-bottom: 0px !important;
-  }
-  .spin-field-col-isy {
-    padding-top: 0px !important;
-  }
+  margin-top: 13px;
 }
 
 .computed-mai-container {
@@ -1132,66 +1270,76 @@ const updateMinDBH = (index: number, value: number) => {
 
 .age-year-range-container {
   margin-top: 2px;
-  margin-left: 6px;
-  margin-right: 70px;
-}
-
-.by-layer-container {
-  padding-left: 8px;
-}
-
-.reference-year-container {
-  padding-left: 8px;
-}
-
-.by-species-file-upload-container {
-  padding-left: 17px;
 }
 
 .specific-year-container {
   margin-left: 5px;
 }
 
-.projection-mode-container {
-  margin-left: 14px;
+.mt-fields {
+  margin-top: 0;
+  padding-bottom: 12px;
 }
 
-.secondary-species-height-file-upload-container {
-  margin-left: 21px;
+.report-title-label {
+  padding-top: 0px;
 }
 
-.polygon-id-container {
-  margin-left: 8px;
+@media (min-width: 768px) and (max-width: 912px) {
+  .file-upload-checkboxes-row {
+    row-gap: 16px;
+  }
 }
 
-.current-year-container {
-  margin-left: 4px;
-}
+@media (max-width: 600px) {
+  .projection-type-container {
+    margin-top: 0;
+  }
 
-@media (max-width: 853px) {
-  .file-upload-top-section {
-    margin-left: -8px;
+  .mt-fields {
+    margin-top: -8px;
+    padding-bottom: 0px;
   }
 
   .age-year-range-container {
-    margin-left: 0;
+    margin-top: -2px;
+  }
+
+  .report-top-section {
+    margin-bottom: 8px;
+  }
+
+  .file-upload-numeric-range-section {
+    padding-top: 4px;
+    padding-bottom: 0px;
+  }
+
+  .spin-field-col {
+    margin-top: -8px;
+    padding-top: 0 !important;
+  }
+
+  .spin-field-col-isy {
+    padding-top: 0 !important;
+  }
+
+  .starting-age-year-mobile {
+    margin-top: -12px;
+  }
+
+  .include-in-report-container-mobile {
+    margin-top: 16px !important;
   }
 }
 
-@media (max-width: 911px) {
-  .by-layer-container,
-  .by-species-file-upload-container,
-  .secondary-species-height-file-upload-container,
-  .projection-mode-container,
-  .polygon-id-container,
-  .current-year-container,
-  .reference-year-container {
-    padding-left: 0 !important;
-    margin-left: 0 !important;
+@media (min-width: 600px) and (max-width: 900px) {
+  .spin-field-col {
+    padding-bottom: 0px !important;
   }
-
-  .include-in-report-header {
-    margin-left: -24px !important;
+  .spin-field-col-isy {
+    padding-top: 0px !important;
   }
 }
+
+
 </style>

@@ -526,6 +526,54 @@ export const sanitizeFileName = (name: string) => {
 }
 
 /**
+ * Normalizes a string or number value to a number for comparison.
+ * Returns null for null, undefined, empty string, or NaN inputs.
+ *
+ * @param v - The value to normalize (string, number, null, or undefined)
+ * @returns {number | null} Parsed number or null
+ * @example
+ *   normalizeNum("100.0") // 100
+ *   normalizeNum(100)     // 100
+ *   normalizeNum(null)    // null
+ *   normalizeNum("")      // null
+ */
+export const normalizeNum = (v: string | number | null | undefined): number | null => {
+  if (v === null || v === undefined || v === '') return null
+  const n = typeof v === 'number' ? v : Number.parseFloat(String(v))
+  return Number.isNaN(n) ? null : n
+}
+
+/**
+ * Compares two values for numeric equality, handling mixed string/number types and null.
+ *
+ * @param a - Store value (string or null)
+ * @param b - Saved value (string, number, or null)
+ * @returns {boolean} True if both values represent the same number (or both null)
+ * @example
+ *   numEq("100.0", 100)  // true
+ *   numEq(null, null)    // true
+ *   numEq("1", null)     // false
+ */
+export const numEq = (a: string | null | undefined, b: string | number | null | undefined): boolean => {
+  return normalizeNum(a) === normalizeNum(b)
+}
+
+/**
+ * Compares two nullable strings for equality, treating undefined as null.
+ *
+ * @param a - First string or null/undefined
+ * @param b - Second string or null/undefined
+ * @returns {boolean} True if both values are equal (null-safe)
+ * @example
+ *   strEq("AT", "AT")  // true
+ *   strEq(null, null)  // true
+ *   strEq(null, "AT")  // false
+ */
+export const strEq = (a: string | null | undefined, b: string | null | undefined): boolean => {
+  return (a ?? null) === (b ?? null)
+}
+
+/**
  * Adds execution options to selected or excluded arrays based on flag mappings.
  *
  * @param selected - Array for selected options.

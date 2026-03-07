@@ -17,7 +17,7 @@
             <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
               <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
                 <template #activator="{ props: tooltipProps }">
-                  <span v-bind="tooltipProps">
+                  <span v-bind="tooltipProps" class="edit-activator-span">
                     <AppButton
                       label="Edit"
                       variant="tertiary"
@@ -32,13 +32,13 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text ml-n6 mt-2">
-          <v-container fluid class="mb-n3">
-            <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index" class="min-dbh-row">
+        <v-expansion-panel-text class="expansion-panel-text">
+          <v-container fluid class="min-dbh-container">
+            <v-row v-for="(group, index) in fileUploadSpeciesGroups" :key="index" no-gutters class="form-fields-row min-dbh-row">
               <v-col v-bind="mobile ? { cols: 'auto' } : {}" class="min-dbh-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
                 {{ group.group }}
               </v-col>
-              <v-col cols="10" sm="8" :class="mobile ? 'min-dbh-slider-col-mobile' : 'ml-n5'">
+              <v-col cols="10" sm="8" :class="mobile ? 'min-dbh-slider-col-mobile' : 'min-dbh-slider-col'">
                 <!-- Labels rendered outside Vuetify's slider DOM to avoid non-visibility on an mobile device web browser -->
                 <div class="min-dbh-label-row" :class="{ 'min-dbh-labels-muted': isMinDBHDeactivated }">
                   <span
@@ -224,9 +224,9 @@ const onCancel = async () => {
 
 <style scoped>
 .min-dbh-species-group-label {
-  max-width: 5%;
-  padding-top: 18px !important;
-  padding-left: 20px !important;
+  flex: 0 0 1.5rem;
+  width: 3rem;
+  padding-top: 15px !important;
 }
 
 .min-dbh-disabled {
@@ -236,6 +236,10 @@ const onCancel = async () => {
 .edit-button-col {
   display: flex;
   align-items: center;
+}
+
+.edit-activator-span {
+  display: inline-flex;
 }
 
 .edit-button-col :deep(.bcds-button.icon-top) {
@@ -251,60 +255,13 @@ const onCancel = async () => {
   font-size: 11px;
 }
 
-/* Vuetify mobile=true covers xs through md (< 1280px) */
-@media (max-width: 1279px) {
-  .min-dbh-row {
-    flex-wrap: nowrap !important;
-  }
-
-  .min-dbh-species-group-label {
-    flex: 0 0 3rem !important;
-    width: 3rem !important;
-    max-width: 3rem !important;
-    padding-right: 0 !important;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-
-  .min-dbh-slider-col-mobile {
-    flex: 1 1 0 !important;
-    width: auto !important;
-    max-width: 100% !important;
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-  }
+.min-dbh-row + .min-dbh-row {
+  margin-top: 6px;
 }
 
-/* lg+ (>= 1280px): Vuetify mobile=false, slider uses ml-n5 class */
-@media (min-width: 1280px) {
-  .ml-n5 {
-    flex: 1 1 0 !important;
-    width: auto !important;
-    max-width: 100% !important;
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-  }
-}
-
-/* xs only: tighter padding for very small screens */
-@media (max-width: 600px) {
-  .min-dbh-species-group-label {
-    padding-left: 8px !important;
-  }
-
-  .min-dbh-slider-col-mobile {
-    margin-left: 0;
-    padding-left: 4px;
-    padding-right: 4px;
-  }
-}
-
-/* Labels are absolutely positioned at 0/25/50/75/100% of the track.
-   margin-inline mirrors the slider's thumb-radius inset (thumb-size / 2 = 6px). */
 .min-dbh-label-row {
   position: relative;
   height: 1.2rem;
-  margin-inline: 6px;
   margin-top: -4px;
   margin-bottom: -4px;
   overflow: visible;
@@ -326,4 +283,54 @@ const onCancel = async () => {
 .min-dbh-labels-muted .min-dbh-label-item {
   opacity: 0.6;
 }
+
+.min-dbh-container {
+  padding: 0px 0px 12px 0px;
+}
+
+@media (min-width: 1280px) {
+  .min-dbh-slider-col {
+    flex: 0 0 35% !important;
+    width: 35% !important;
+    max-width: 35% !important;
+  }
+}
+
+@media (max-width: 1279px) {
+  .min-dbh-row {
+    flex-wrap: nowrap !important;
+  }
+
+  .min-dbh-slider-col-mobile {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .min-dbh-species-group-label {
+    padding-left: 0px !important;
+  }
+
+  .min-dbh-slider-col-mobile {
+    margin-left: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .min-dbh-row + .min-dbh-row {
+    margin-top: 6px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .min-dbh-slider-col-mobile {
+    flex: 0 0 35% !important;
+    width: 35% !important;
+    max-width: 35% !important;
+  }
+}
+
+
 </style>

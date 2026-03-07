@@ -101,7 +101,7 @@ const progressColor = computed(() => {
 
 <style scoped>
 .progress-bar-card {
-  padding: var(--layout-padding-large);
+  padding: var(--layout-padding-medium);
   border: 1px solid var(--surface-color-border-default);
 }
 

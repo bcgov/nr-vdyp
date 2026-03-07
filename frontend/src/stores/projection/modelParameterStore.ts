@@ -10,7 +10,8 @@ import type { ModelParameters } from '@/services/vdyp-api'
 export const useModelParameterStore = defineStore('modelParameter', () => {
   // panel open
   const panelOpenStates = ref<Record<PanelName, PanelState>>({
-    speciesInfo: CONSTANTS.PANEL.OPEN,
+    detailsInfo: CONSTANTS.PANEL.OPEN,
+    speciesInfo: CONSTANTS.PANEL.CLOSE,
     siteInfo: CONSTANTS.PANEL.CLOSE,
     standInfo: CONSTANTS.PANEL.CLOSE,
     reportInfo: CONSTANTS.PANEL.CLOSE,
@@ -20,7 +21,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const panelState = ref<
     Record<PanelName, { confirmed: boolean; editable: boolean }>
   >({
-    speciesInfo: { confirmed: false, editable: true },
+    detailsInfo: { confirmed: false, editable: true },
+    speciesInfo: { confirmed: false, editable: false },
     siteInfo: { confirmed: false, editable: false },
     standInfo: { confirmed: false, editable: false },
     reportInfo: { confirmed: false, editable: false },
@@ -48,6 +50,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Enable the next panel's confirm and clear buttons
     const panelOrder: PanelName[] = [
+      CONSTANTS.MODEL_PARAMETER_PANEL.DETAILS_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
@@ -55,7 +58,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     ]
     const currentIndex = panelOrder.indexOf(panelName)
     if (currentIndex !== -1 && currentIndex < panelOrder.length - 1) {
-      // The next panel opens automatically, switching to the editable.
+      // The current panel closes and the next panel opens automatically, switching to the editable.
+      panelOpenStates.value[panelName] = CONSTANTS.PANEL.CLOSE
       const nextPanel = panelOrder[currentIndex + 1]
       panelOpenStates.value[nextPanel] = CONSTANTS.PANEL.OPEN
       panelState.value[nextPanel].editable = true
@@ -71,9 +75,11 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const editPanel = (panelName: PanelName) => {
     panelState.value[panelName].confirmed = false
     panelState.value[panelName].editable = true
+    panelOpenStates.value[panelName] = CONSTANTS.PANEL.OPEN
 
     // Disable all subsequent panels
     const panelOrder: PanelName[] = [
+      CONSTANTS.MODEL_PARAMETER_PANEL.DETAILS_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
@@ -212,7 +218,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const incSecondaryHeight = ref<boolean>(false)
   const specificYear = ref<string | null>(null)
 
-  const projectionType = ref<string | null>(null)
+  const projectionType = ref<string | null>(DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE)
   const reportTitle = ref<string | null>(null)
   const copyTitle = ref<string | null>(null)
   const reportDescription = ref<string | null>(null)
@@ -224,13 +230,15 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const resetStore = () => {
     // Reset panel states
     panelOpenStates.value = {
-      speciesInfo: CONSTANTS.PANEL.OPEN,
+      detailsInfo: CONSTANTS.PANEL.OPEN,
+      speciesInfo: CONSTANTS.PANEL.CLOSE,
       siteInfo: CONSTANTS.PANEL.CLOSE,
       standInfo: CONSTANTS.PANEL.CLOSE,
       reportInfo: CONSTANTS.PANEL.CLOSE,
     }
     panelState.value = {
-      speciesInfo: { confirmed: false, editable: true },
+      detailsInfo: { confirmed: false, editable: true },
+      speciesInfo: { confirmed: false, editable: false },
       siteInfo: { confirmed: false, editable: false },
       standInfo: { confirmed: false, editable: false },
       reportInfo: { confirmed: false, editable: false },
@@ -288,7 +296,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     isReferenceYearEnabled.value = false
     incSecondaryHeight.value = false
     specificYear.value = null
-    projectionType.value = null
+    projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
     copyTitle.value = null
     reportDescription.value = null
@@ -337,30 +345,41 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   }
 
   /**
-   * Set panel states for view or edit mode
+   * Infer and apply panel state for edit mode from currently populated store values.
+   * Each panel is confirmed only if its required field is set AND all prior panels are confirmed.
    */
-  const setPanelStatesForMode = (isViewMode: boolean) => {
-    const openState = isViewMode ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE
-    const confirmed = isViewMode
-    const editable = !isViewMode
-
+  const restoreEditModePanelState = () => {
+    const det = reportTitle.value !== null && reportTitle.value.trim() !== ''
+    const spe = det && speciesGroups.value.length > 0
+    const sit = spe && becZone.value !== null
+    const sta = sit && percentStockableArea.value !== null
+    const rep = sta && startingAge.value !== null
+    const detOpen = !det
+    const speOpen = det && !spe
+    const sitOpen = spe && !sit
+    const staOpen = sit && !sta
+    const repOpen = sta && !rep
     panelOpenStates.value = {
-      speciesInfo: CONSTANTS.PANEL.OPEN,
-      siteInfo: openState,
-      standInfo: openState,
-      reportInfo: openState,
+      detailsInfo: detOpen ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
+      speciesInfo: speOpen ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
+      siteInfo: sitOpen ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
+      standInfo: staOpen ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
+      reportInfo: repOpen ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
     }
     panelState.value = {
-      speciesInfo: { confirmed, editable },
-      siteInfo: { confirmed, editable: false },
-      standInfo: { confirmed, editable: false },
-      reportInfo: { confirmed, editable: false },
+      detailsInfo: { confirmed: det, editable: detOpen },
+      speciesInfo: { confirmed: spe, editable: speOpen },
+      siteInfo: { confirmed: sit, editable: sitOpen },
+      standInfo: { confirmed: sta, editable: staOpen },
+      reportInfo: { confirmed: rep, editable: repOpen },
     }
-    runModelEnabled.value = false
+    runModelEnabled.value = rep
   }
 
   /**
-   * Restore store state from parsed projection parameters
+   * Restore store state from parsed projection parameters.
+   * In view mode, all panels open and confirmed.
+   * In edit mode, infers confirmed status from populated data and opens only the first incomplete panel.
    * @param params Parsed projection parameters from the backend
    * @param isViewMode If true, sets all panels to confirmed and non-editable
    */
@@ -381,7 +400,25 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       referenceYear.value = new Date().getFullYear()
     }
 
-    setPanelStatesForMode(isViewMode)
+    if (isViewMode) {
+      panelOpenStates.value = {
+        detailsInfo: CONSTANTS.PANEL.OPEN,
+        speciesInfo: CONSTANTS.PANEL.OPEN,
+        siteInfo: CONSTANTS.PANEL.OPEN,
+        standInfo: CONSTANTS.PANEL.OPEN,
+        reportInfo: CONSTANTS.PANEL.OPEN,
+      }
+      panelState.value = {
+        detailsInfo: { confirmed: true, editable: false },
+        speciesInfo: { confirmed: true, editable: false },
+        siteInfo: { confirmed: true, editable: false },
+        standInfo: { confirmed: true, editable: false },
+        reportInfo: { confirmed: true, editable: false },
+      }
+      runModelEnabled.value = false
+    } else {
+      restoreEditModePanelState()
+    }
   }
 
   /**
@@ -406,13 +443,9 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
    * Restore species list from model parameters
    */
   const restoreSpeciesListFromParams = (species: ModelParameters['species']) => {
-    if (!species || species.length === 0) {
-      return
-    }
-
     speciesList.value = []
     for (let i = 0; i < 6; i++) {
-      if (i < species.length) {
+      if (species && i < species.length) {
         speciesList.value.push({
           species: species[i].code,
           percent: formatPercentValue(species[i].percent),

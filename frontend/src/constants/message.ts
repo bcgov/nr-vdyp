@@ -241,3 +241,8 @@ export const FILE_REMOVAL_DIALOG = Object.freeze({
   POLYGON_MESSAGE: (filename: string) => `Do you wish to remove polygon file: ${filename} from this projection?`,
   LAYER_MESSAGE: (filename: string) => `Do you wish to remove layer file: ${filename} from this projection?`,
 })
+
+export const UNSAVED_CHANGES_DIALOG = Object.freeze({
+  TITLE: 'Unsaved Changes',
+  MESSAGE: 'You have unsaved changes that will be lost if you navigate away. Do you wish to continue?',
+})

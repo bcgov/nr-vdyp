@@ -18,6 +18,16 @@ body {
   border-top: 1px solid var(--surface-color-border-default);
 }
 
+.form-fields-row {
+  column-gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .form-fields-row {
+    row-gap: 16px;
+  }
+}
+
 .col-space-1 {
   max-width: 1%;
 }

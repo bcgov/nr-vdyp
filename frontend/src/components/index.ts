@@ -2,7 +2,6 @@ export { default as AppAlertDialog } from './common/AppAlertDialog.vue'
 export { default as AppDialogDragger } from './common/AppDialogDragger.vue'
 export { default as AppMessageDialog } from './common/AppMessageDialog.vue'
 export { default as AppNotification } from './common/AppNotification.vue'
-export { default as AppRunModelButtonPanel } from './common/AppRunModelButtonPanel.vue'
 export { default as AppSpinField } from './common/AppSpinField.vue'
 
 export { default as AppButton } from './core/AppButton.vue'

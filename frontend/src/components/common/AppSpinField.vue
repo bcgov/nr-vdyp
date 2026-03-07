@@ -10,39 +10,44 @@
         :step="step"
         :persistent-placeholder="persistentPlaceholder"
         :placeholder="placeholder"
-        :hide-details="hideDetails"
+        :hide-details="hasError ? 'auto' : hideDetails"
+        :error="hasError"
+        :error-messages="errorMessages"
         :style="customStyle"
         :disabled="disabled"
         @update:modelValue="handleUpdateModelValue"
         @keydown="handleKeyDown"
-      ></v-text-field>
-      <!-- Spin Buttons -->
-      <div class="spin-box">
-        <div
-          class="spin-up-arrow-button"
-          @mousedown="startIncrement"
-          @mouseup="stopIncrement"
-          @mouseleave="stopIncrement"
-          :class="{ disabled: disabled }"
-        >
-          <!-- CSS triangle instead of text -->
-        </div>
-        <div
-          class="spin-down-arrow-button"
-          @mousedown="startDecrement"
-          @mouseup="stopDecrement"
-          @mouseleave="stopDecrement"
-          :class="{ disabled: disabled }"
-        >
-          <!-- CSS triangle instead of text -->
-        </div>
-      </div>
+      >
+        <template #append-inner>
+          <!-- Spin Buttons -->
+          <div class="spin-box">
+            <div
+              class="spin-up-arrow-button"
+              @mousedown="startIncrement"
+              @mouseup="stopIncrement"
+              @mouseleave="stopIncrement"
+              :class="{ disabled: disabled }"
+            >
+              <!-- CSS triangle instead of text -->
+            </div>
+            <div
+              class="spin-down-arrow-button"
+              @mousedown="startDecrement"
+              @mouseup="stopDecrement"
+              @mouseleave="stopDecrement"
+              :class="{ disabled: disabled }"
+            >
+              <!-- CSS triangle instead of text -->
+            </div>
+          </div>
+        </template>
+      </v-text-field>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, type PropType } from 'vue'
+import { ref, watch, computed, type PropType } from 'vue'
 import type { Density, Variant } from '@/types/types'
 import { CONSTANTS } from '@/constants'
 import {
@@ -84,9 +89,19 @@ const props = defineProps({
     type: Number,
     default: 2,
   },
+  errorMessages: {
+    type: [String, Array] as PropType<string | string[]>,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+const hasError = computed(() => {
+  const msgs = props.errorMessages
+  if (Array.isArray(msgs)) return msgs.some((m) => !!m)
+  return !!msgs
+})
 
 const localValue = ref<string | null>(props.modelValue)
 
@@ -159,8 +174,24 @@ const updateValue = (action: 'increment' | 'decrement') => {
   emit('update:modelValue', localValue.value)
 }
 
+const filterNumeric = (value: string): string => {
+  const allowDecimal = props.decimalAllowNumber > 0
+  let filtered = allowDecimal ? value.replaceAll(/[^\d.]/g, '') : value.replaceAll(/\D/g, '')
+  if (allowDecimal) {
+    const parts = filtered.split('.')
+    if (parts.length > 2) {
+      filtered = parts[0] + '.' + parts.slice(1).join('')
+    }
+  }
+  return filtered
+}
+
 const handleUpdateModelValue = (newValue: string) => {
-  emit('update:modelValue', newValue)
+  const filtered = filterNumeric(newValue)
+  if (filtered !== newValue) {
+    localValue.value = filtered
+  }
+  emit('update:modelValue', filtered)
 }
 
 const handleKeyDown = (event: KeyboardEvent) => {
@@ -172,6 +203,13 @@ const handleKeyDown = (event: KeyboardEvent) => {
   } else if (event.key === 'ArrowDown') {
     event.preventDefault()
     updateValue('decrement')
+  } else {
+    const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'Home', 'End', 'ArrowLeft', 'ArrowRight']
+    if (allowedKeys.includes(event.key)) return
+    if (event.ctrlKey || event.metaKey) return
+    if (/^\d$/.test(event.key)) return
+    if (event.key === '.' && props.decimalAllowNumber > 0) return
+    event.preventDefault()
   }
 }
 </script>
@@ -179,12 +217,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
 <style scoped>
 /* Spin box styles are defined in src/styles/_spin-field.scss */
 
-/*
- * The inner wrapper establishes a new positioning context for the spin-box
- * that only covers the v-text-field, excluding the external label above it.
- * This lets the SCSS rule (top: 50% + transform: translateY(-50%)) center
- * the spin-box within the input area regardless of label line count.
- */
 .spin-field-wrapper {
   position: relative;
 }
