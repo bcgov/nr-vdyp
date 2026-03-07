@@ -126,4 +126,33 @@ describe('AppSpinField.vue', () => {
     cy.get('.spin-down-arrow-button').trigger('mouseup')
     cy.get('@updateSpy').should('have.been.calledWith', '10.00')
   })
+
+  it('shows error message when errorMessages is provided', () => {
+    cy.mountWithVuetify(AppSpinField, {
+      props: {
+        ...props,
+        errorMessages: 'Value is required',
+      },
+    })
+
+    cy.get('.v-messages').should('contain.text', 'Value is required')
+  })
+
+  it('increments and decrements via ArrowUp/ArrowDown keys', () => {
+    cy.mountWithVuetify(AppSpinField, { props })
+
+    cy.get('input').trigger('keydown', { key: 'ArrowUp' })
+    cy.get('input').should('have.value', '11.00')
+
+    cy.get('input').trigger('keydown', { key: 'ArrowDown' })
+    cy.get('input').should('have.value', '10.00')
+  })
+
+  it('filters out non-numeric characters on direct input', () => {
+    cy.mountWithVuetify(AppSpinField, { props })
+
+    cy.get('input').clear()
+    cy.get('input').type('abc12.5xyz')
+    cy.get('input').should('have.value', '12.5')
+  })
 })

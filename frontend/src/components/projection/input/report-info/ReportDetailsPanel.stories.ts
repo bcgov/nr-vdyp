@@ -113,3 +113,56 @@ export const PanelCollapsed: Story = {
     },
   },
 }
+
+export const ProjectionRunning: Story = {
+  render: () => ({
+    components: { ReportDetailsPanel },
+    setup() {
+      const modelStore = useModelParameterStore()
+      const appStore = useAppStore()
+
+      appStore.setViewMode('create')
+      appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.RUNNING
+      modelStore.panelOpenStates.detailsInfo = CONSTANTS.PANEL.OPEN
+      modelStore.panelState.detailsInfo.confirmed = true
+      modelStore.panelState.detailsInfo.editable = false
+      modelStore.reportTitle = 'Sample Forest Projection 2024'
+      modelStore.projectionType = CONSTANTS.PROJECTION_TYPE.VOLUME
+      modelStore.reportDescription = 'North-east sector stand inventory.'
+    },
+    template: '<ReportDetailsPanel />',
+  }),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Projection is currently running — the Edit button in the header is disabled and shows a tooltip explaining that editing is not available during this status.',
+      },
+    },
+  },
+}
+
+export const TitleValidationError: Story = {
+  render: () => ({
+    components: { ReportDetailsPanel },
+    setup() {
+      const modelStore = useModelParameterStore()
+      const appStore = useAppStore()
+
+      appStore.setViewMode('create')
+      modelStore.panelOpenStates.detailsInfo = CONSTANTS.PANEL.OPEN
+      modelStore.panelState.detailsInfo.confirmed = false
+      modelStore.panelState.detailsInfo.editable = true
+      modelStore.reportTitle = null
+      modelStore.projectionType = CONSTANTS.PROJECTION_TYPE.VOLUME
+      modelStore.reportDescription = ''
+    },
+    template: '<ReportDetailsPanel />',
+  }),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Edit mode with no title entered. Click "Next" or blur the title field to trigger the "Report Title is required." validation error.',
+      },
+    },
+  },
+}
