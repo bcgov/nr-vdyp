@@ -12,9 +12,9 @@
               }}</v-icon>
             </v-col>
             <v-col>
-              <span class="text-h6">{{ panelTitle }}</span>
+              <span class="text-h6">Report Details</span>
             </v-col>
-            <v-col cols="auto" v-if="isFileUploadMode && !isReadOnly" class="edit-button-col">
+            <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
               <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
                 <template #activator="{ props: tooltipProps }">
                   <span v-bind="tooltipProps">
@@ -36,32 +36,25 @@
           <v-form ref="form">
             <ReportConfiguration
               ref="reportConfigRef"
-              :selectedAgeYearRange="currentStore.selectedAgeYearRange"
-              :startingAge="currentStore.startingAge"
-              :finishingAge="currentStore.finishingAge"
-              :ageIncrement="currentStore.ageIncrement"
-              :startYear="currentStore.startYear"
-              :endYear="currentStore.endYear"
-              :yearIncrement="currentStore.yearIncrement"
-              :isForwardGrowEnabled="currentStore.isForwardGrowEnabled"
-              :isBackwardGrowEnabled="currentStore.isBackwardGrowEnabled"
-              :isComputedMAIEnabled="currentStore.isComputedMAIEnabled"
-              :isCulminationValuesEnabled="
-                currentStore.isCulminationValuesEnabled
-              "
-              :isBySpeciesEnabled="currentStore.isBySpeciesEnabled"
-              :isByLayerEnabled="currentStore.isByLayerEnabled"
-              :isProjectionModeEnabled="currentStore.isProjectionModeEnabled"
-              :isPolygonIDEnabled="currentStore.isPolygonIDEnabled"
-              :isCurrentYearEnabled="currentStore.isCurrentYearEnabled"
-              :isReferenceYearEnabled="currentStore.isReferenceYearEnabled"
-              :incSecondaryHeight="currentStore.incSecondaryHeight"
-              :specificYear="currentStore.specificYear"
-              :projectionType="currentStore.projectionType"
-              :reportTitle="currentStore.reportTitle"
-              :reportDescription="currentStore.reportDescription"
+              :selectedAgeYearRange="fileUploadStore.selectedAgeYearRange"
+              :startingAge="fileUploadStore.startingAge"
+              :finishingAge="fileUploadStore.finishingAge"
+              :ageIncrement="fileUploadStore.ageIncrement"
+              :startYear="fileUploadStore.startYear"
+              :endYear="fileUploadStore.endYear"
+              :yearIncrement="fileUploadStore.yearIncrement"
+              :isBySpeciesEnabled="fileUploadStore.isBySpeciesEnabled"
+              :isByLayerEnabled="fileUploadStore.isByLayerEnabled"
+              :isProjectionModeEnabled="fileUploadStore.isProjectionModeEnabled"
+              :isPolygonIDEnabled="fileUploadStore.isPolygonIDEnabled"
+              :isCurrentYearEnabled="fileUploadStore.isCurrentYearEnabled"
+              :isReferenceYearEnabled="fileUploadStore.isReferenceYearEnabled"
+              :incSecondaryHeight="fileUploadStore.incSecondaryHeight"
+              :specificYear="fileUploadStore.specificYear"
+              :projectionType="fileUploadStore.projectionType"
+              :reportTitle="fileUploadStore.reportTitle"
+              :reportDescription="fileUploadStore.reportDescription"
               :isDisabled="isInputDisabled"
-              :isModelParametersMode="isModelParametersMode"
               @update:selectedAgeYearRange="handleSelectedAgeYearRangeUpdate"
               @update:startingAge="handleStartingAgeUpdate"
               @update:finishingAge="handleFinishingAgeUpdate"
@@ -69,22 +62,12 @@
               @update:startYear="handleStartYearUpdate"
               @update:endYear="handleEndYearUpdate"
               @update:yearIncrement="handleYearIncrementUpdate"
-              @update:isForwardGrowEnabled="handleIsForwardGrowEnabledUpdate"
-              @update:isBackwardGrowEnabled="handleIsBackwardGrowEnabledUpdate"
-              @update:isComputedMAIEnabled="handleIsComputedMAIEnabledUpdate"
-              @update:isCulminationValuesEnabled="
-                handleIsCulminationValuesEnabledUpdate
-              "
               @update:isBySpeciesEnabled="handleIsBySpeciesEnabledUpdate"
               @update:isByLayerEnabled="handleIsByLayerEnabledUpdate"
-              @update:isProjectionModeEnabled="
-                handleIsProjectionModeEnabledUpdate
-              "
+              @update:isProjectionModeEnabled="handleIsProjectionModeEnabledUpdate"
               @update:isPolygonIDEnabled="handleIsPolygonIDEnabledUpdate"
               @update:isCurrentYearEnabled="handleIsCurrentYearEnabledUpdate"
-              @update:isReferenceYearEnabled="
-                handleIsReferenceYearEnabledUpdate
-              "
+              @update:isReferenceYearEnabled="handleIsReferenceYearEnabledUpdate"
               @update:incSecondaryHeight="handleIncSecondaryHeightUpdate"
               @update:specificYear="handleSpecificYearUpdate"
               @update:projectionType="handleProjectionTypeUpdate"
@@ -95,12 +78,10 @@
               v-if="!isReadOnly"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
-              :hideClearButton="isFileUploadMode"
-              :hideEditButton="isFileUploadMode"
-              :showCancelButton="isFileUploadMode"
-              @clear="onClear"
+              :hideClearButton="true"
+              :hideEditButton="true"
+              :showCancelButton="true"
               @confirm="onConfirm"
-              @edit="onEdit"
               @cancel="onCancel"
             />
           </v-form>
@@ -112,7 +93,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
-import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { AppButton } from '@/components'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
@@ -124,7 +104,6 @@ import { CONSTANTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
 import type { FileUploadPanelName } from '@/types/types'
 import { reportInfoValidation } from '@/validation'
-import { saveProjectionOnPanelConfirm as saveModelParamProjection } from '@/services/projection/modelParameterService'
 import { saveProjectionOnPanelConfirm as saveFileUploadProjection, revertPanelToSaved, hasMinimumDBHUnsavedChanges } from '@/services/projection/fileUploadService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
@@ -132,61 +111,32 @@ const form = ref<HTMLFormElement>()
 const reportConfigRef = ref<{ validateTitle: () => boolean; validateFields: () => boolean } | null>(null)
 
 const appStore = useAppStore()
-const modelParameterStore = useModelParameterStore()
 const fileUploadStore = useFileUploadStore()
 const notificationStore = useNotificationStore()
 const alertDialogStore = useAlertDialogStore()
 
-const currentStore = computed(() => {
-  return appStore.modelSelection ===
-    CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-    ? modelParameterStore
-    : fileUploadStore
-})
-
-const panelName = computed(() => {
-  return appStore.modelSelection ===
-    CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-    ? CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO
-    : CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO
-})
-
-const panelOpenStates = computed(() => currentStore.value.panelOpenStates)
+const panelName = CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO
+const panelOpenStates = computed(() => fileUploadStore.panelOpenStates)
 
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
 
 const isConfirmEnabled = computed(
-  () => !isReadOnly.value && currentStore.value.panelState[panelName.value].editable,
+  () => !isReadOnly.value && fileUploadStore.panelState[panelName].editable,
 )
 const isConfirmed = computed(
-  () => currentStore.value.panelState[panelName.value].confirmed,
+  () => fileUploadStore.panelState[panelName].confirmed,
 )
 
 // Determine if inputs should be disabled (read-only mode or not editable)
 const isInputDisabled = computed(
-  () => isReadOnly.value || !currentStore.value.panelState[panelName.value].editable,
+  () => isReadOnly.value || !fileUploadStore.panelState[panelName].editable,
 )
-
-const isModelParametersMode = computed(
-  () =>
-    appStore.modelSelection ===
-    CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
-)
-
-const isFileUploadMode = computed(
-  () => appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD,
-)
-
-const panelTitle = computed(() => {
-  return isFileUploadMode.value ? 'Report Details' : 'Report Information'
-})
 
 const isHeaderEditActive = computed(() => {
-  if (!isFileUploadMode.value) return false
   const status = appStore.currentProjectionStatus
   if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) return false
-  return isConfirmed.value && !currentStore.value.panelState[panelName.value].editable
+  return isConfirmed.value && !fileUploadStore.panelState[panelName].editable
 })
 
 const editTooltipText = computed(() => {
@@ -194,7 +144,7 @@ const editTooltipText = computed(() => {
   if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
     return `This section may not be edited with a status of ${status}`
   }
-  if (isConfirmed.value && !currentStore.value.panelState[panelName.value].editable) {
+  if (isConfirmed.value && !fileUploadStore.panelState[panelName].editable) {
     return 'Click Edit to make changes to this section'
   }
   return ''
@@ -229,104 +179,91 @@ const handleMinimumDBHRevert = async (): Promise<boolean> => {
 
 const onHeaderEdit = async () => {
   if (isConfirmed.value) {
-    if (isFileUploadMode.value && !(await handleMinimumDBHRevert())) return
-    currentStore.value.editPanel(panelName.value)
+    if (!(await handleMinimumDBHRevert())) return
+    fileUploadStore.editPanel(panelName)
   }
 }
 
+// Common update handlers
 const handleSelectedAgeYearRangeUpdate = (value: string) => {
-  currentStore.value.selectedAgeYearRange = value
+  fileUploadStore.selectedAgeYearRange = value
 }
 
 const handleStartingAgeUpdate = (value: string | null) => {
-  currentStore.value.startingAge = value
+  fileUploadStore.startingAge = value
 }
 
 const handleFinishingAgeUpdate = (value: string | null) => {
-  currentStore.value.finishingAge = value
+  fileUploadStore.finishingAge = value
 }
 
 const handleAgeIncrementUpdate = (value: string | null) => {
-  currentStore.value.ageIncrement = value
+  fileUploadStore.ageIncrement = value
 }
 
 const handleStartYearUpdate = (value: string | null) => {
-  currentStore.value.startYear = value
+  fileUploadStore.startYear = value
 }
 
 const handleEndYearUpdate = (value: string | null) => {
-  currentStore.value.endYear = value
+  fileUploadStore.endYear = value
 }
 
 const handleYearIncrementUpdate = (value: string | null) => {
-  currentStore.value.yearIncrement = value
+  fileUploadStore.yearIncrement = value
 }
 
-const handleIsForwardGrowEnabledUpdate = (value: boolean) => {
-  currentStore.value.isForwardGrowEnabled = value
-}
-
-const handleIsBackwardGrowEnabledUpdate = (value: boolean) => {
-  currentStore.value.isBackwardGrowEnabled = value
-}
-
-const handleIsComputedMAIEnabledUpdate = (value: boolean) => {
-  currentStore.value.isComputedMAIEnabled = value
-}
-
-const handleIsCulminationValuesEnabledUpdate = (value: boolean) => {
-  currentStore.value.isCulminationValuesEnabled = value
-}
-
+// Common update handlers (shared checkboxes)
 const handleIsBySpeciesEnabledUpdate = (value: boolean) => {
-  currentStore.value.isBySpeciesEnabled = value
-}
-
-const handleIsByLayerEnabledUpdate = (value: boolean) => {
-  currentStore.value.isByLayerEnabled = value
-}
-
-const handleIsProjectionModeEnabledUpdate = (value: boolean) => {
-  currentStore.value.isProjectionModeEnabled = value
-}
-
-const handleIsPolygonIDEnabledUpdate = (value: boolean) => {
-  currentStore.value.isPolygonIDEnabled = value
-}
-
-const handleIsCurrentYearEnabledUpdate = (value: boolean) => {
-  currentStore.value.isCurrentYearEnabled = value
-}
-
-const handleIsReferenceYearEnabledUpdate = (value: boolean) => {
-  currentStore.value.isReferenceYearEnabled = value
+  fileUploadStore.isBySpeciesEnabled = value
 }
 
 const handleIncSecondaryHeightUpdate = (value: boolean) => {
-  currentStore.value.incSecondaryHeight = value
+  fileUploadStore.incSecondaryHeight = value
+}
+
+// File Upload specific update handlers
+const handleIsByLayerEnabledUpdate = (value: boolean) => {
+  fileUploadStore.isByLayerEnabled = value
+}
+
+const handleIsProjectionModeEnabledUpdate = (value: boolean) => {
+  fileUploadStore.isProjectionModeEnabled = value
+}
+
+const handleIsPolygonIDEnabledUpdate = (value: boolean) => {
+  fileUploadStore.isPolygonIDEnabled = value
+}
+
+const handleIsCurrentYearEnabledUpdate = (value: boolean) => {
+  fileUploadStore.isCurrentYearEnabled = value
+}
+
+const handleIsReferenceYearEnabledUpdate = (value: boolean) => {
+  fileUploadStore.isReferenceYearEnabled = value
 }
 
 const handleSpecificYearUpdate = (value: string | null) => {
-  currentStore.value.specificYear = value
+  fileUploadStore.specificYear = value
 }
 
 const handleProjectionTypeUpdate = (value: string | null) => {
-  currentStore.value.projectionType = value
+  fileUploadStore.projectionType = value
 }
 
 const handleReportTitleUpdate = (value: string | null) => {
-  currentStore.value.reportTitle = value
+  fileUploadStore.reportTitle = value
 }
 
 const handleReportDescriptionUpdate = (value: string | null) => {
-  currentStore.value.reportDescription = value
+  fileUploadStore.reportDescription = value
 }
 
 const validateReportTitleField = (): boolean => {
   if (reportConfigRef.value) {
     return reportConfigRef.value.validateTitle()
   }
-  return reportInfoValidation.validateReportTitle(currentStore.value.reportTitle).isValid
+  return reportInfoValidation.validateReportTitle(fileUploadStore.reportTitle).isValid
 }
 
 const onConfirm = async () => {
@@ -342,11 +279,7 @@ const onConfirm = async () => {
   // Save projection (create or update) before confirming the panel
   appStore.isSavingProjection = true
   try {
-    if (isModelParametersMode.value) {
-      await saveModelParamProjection(modelParameterStore, panelName.value)
-    } else {
-      await saveFileUploadProjection(fileUploadStore, panelName.value)
-    }
+    await saveFileUploadProjection(fileUploadStore, panelName)
   } catch (error) {
     console.error('Error saving projection:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
@@ -357,18 +290,14 @@ const onConfirm = async () => {
 
   // this panel is not in a confirmed state
   if (!isConfirmed.value) {
-    currentStore.value.confirmPanel(panelName.value)
+    fileUploadStore.confirmPanel(panelName)
   }
-}
-
-const onEdit = () => {
-  onHeaderEdit()
 }
 
 const onCancel = async () => {
   appStore.isSavingProjection = true
   try {
-    await revertPanelToSaved(panelName.value as FileUploadPanelName)
+    await revertPanelToSaved(panelName as FileUploadPanelName)
   } catch (error) {
     console.error('Error reverting panel to saved state:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
@@ -376,32 +305,6 @@ const onCancel = async () => {
     appStore.isSavingProjection = false
   }
 }
-
-const onClear = () => {
-  currentStore.value.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
-  currentStore.value.startingAge = null
-  currentStore.value.finishingAge = null
-  currentStore.value.ageIncrement = null
-  currentStore.value.startYear = null
-  currentStore.value.endYear = null
-  currentStore.value.yearIncrement = null
-  currentStore.value.isForwardGrowEnabled = false
-  currentStore.value.isBackwardGrowEnabled = false
-  currentStore.value.isComputedMAIEnabled = false
-  currentStore.value.isCulminationValuesEnabled = false
-  currentStore.value.isBySpeciesEnabled = false
-  currentStore.value.isByLayerEnabled = false
-  currentStore.value.isProjectionModeEnabled = false
-  currentStore.value.isPolygonIDEnabled = false
-  currentStore.value.isCurrentYearEnabled = false
-  currentStore.value.isReferenceYearEnabled = false
-  currentStore.value.incSecondaryHeight = false
-  currentStore.value.specificYear = null
-  currentStore.value.reportTitle = null
-  currentStore.value.reportDescription = null
-  currentStore.value.projectionType = null
-}
-
 </script>
 <style scoped>
 .edit-button-col {

@@ -6,6 +6,7 @@ export { default as SpeciesInfoPanel } from './input/species-info/SpeciesInfoPan
 export { default as SiteInfoPanel } from './input/site-info/SiteInfoPanel.vue'
 export { default as StandInfoPanel } from './input/stand-info/StandInfoPanel.vue'
 export { default as ReportInfoPanel } from './input/report-info/ReportInfoPanel.vue'
+export { default as ReportSettingsPanel } from './input/report-info/ReportSettingsPanel.vue'
 export { default as ReportDetailsPanel } from './input/report-info/ReportDetailsPanel.vue'
 export { default as AttachmentsPanel } from './input/attachments/AttachmentsPanel.vue'
 export { default as MinimumDBHPanel } from './input/minimum-dbh/MinimumDBHPanel.vue'

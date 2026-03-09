@@ -109,7 +109,7 @@
         <SpeciesInfoPanel class="panel-spacing" />
         <SiteInfoPanel class="panel-spacing" />
         <StandInfoPanel class="panel-spacing" />
-        <ReportInfoPanel class="panel-spacing" />
+        <ReportSettingsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
           v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
@@ -171,6 +171,7 @@ import {
   SiteInfoPanel,
   StandInfoPanel,
   ReportInfoPanel,
+  ReportSettingsPanel,
   ReportDetailsPanel,
   AttachmentsPanel,
   MinimumDBHPanel,
