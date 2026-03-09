@@ -132,7 +132,7 @@
           :projectionStatus="appStore.currentProjectionStatus"
           class="panel-spacing"
         />
-        <ReportInfoPanel class="panel-spacing" />
+        <ReportConfigPanel class="panel-spacing" />
         <MinimumDBHPanel class="panel-spacing" />
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
@@ -170,8 +170,8 @@ import {
   SpeciesInfoPanel,
   SiteInfoPanel,
   StandInfoPanel,
-  ReportInfoPanel,
   ReportSettingsPanel,
+  ReportConfigPanel,
   ReportDetailsPanel,
   AttachmentsPanel,
   MinimumDBHPanel,
