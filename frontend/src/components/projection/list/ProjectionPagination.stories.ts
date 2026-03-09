@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import ProjectionPagination from './ProjectionPagination.vue'
 
 const meta: Meta<typeof ProjectionPagination> = {
-  title: 'components/projection-list/ProjectionPagination',
+  title: 'components/projection/list/ProjectionPagination',
   component: ProjectionPagination,
   tags: ['autodocs'],
   argTypes: {

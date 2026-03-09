@@ -3,7 +3,7 @@ import ReportingActions from './ReportingActions.vue'
 import { REPORTING_TAB } from '@/constants/constants'
 
 const meta: Meta<typeof ReportingActions> = {
-  title: 'components/projection-reporting/ReportingActions',
+  title: 'components/projection/reporting/ReportingActions',
   component: ReportingActions,
   tags: ['autodocs'],
   argTypes: {

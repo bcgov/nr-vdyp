@@ -317,6 +317,20 @@ describe('Model Parameter Store Unit Tests', () => {
 
       expect(store.selectedAgeYearRange).to.equal(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
     })
+
+    it('should reset reportTitle to default value', () => {
+      store.reportTitle = 'Custom Title'
+      store.resetStore()
+
+      expect(store.reportTitle).to.equal(DEFAULTS.DEFAULT_VALUES.REPORT_TITLE)
+    })
+
+    it('should reset ageType to default value', () => {
+      store.ageType = 'SomeType'
+      store.resetStore()
+
+      expect(store.ageType).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_TYPE)
+    })
   })
 
   describe('restoreFromProjectionParams (view mode)', () => {

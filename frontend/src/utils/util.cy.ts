@@ -21,6 +21,9 @@ import {
   convertToNumberSafely,
   extractLeadingNumber,
   addExecutionOptionsFromMappings,
+  normalizeNum,
+  numEq,
+  strEq,
 } from '@/utils/util'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
@@ -467,6 +470,48 @@ describe('Util Functions Unit Tests', () => {
     it('should ignore subsequent non-numeric characters', () => {
       expect(extractLeadingNumber('12.34abc')).to.equal(12.34)
       expect(extractLeadingNumber('-10.5xyz')).to.equal(-10.5)
+    })
+  })
+
+  describe('normalizeNum', () => {
+    it('should normalize string and number values to number', () => {
+      expect(normalizeNum('100.0')).to.equal(100)
+      expect(normalizeNum(100)).to.equal(100)
+      expect(normalizeNum('0')).to.equal(0)
+    })
+
+    it('should return null for null, undefined, empty string, or NaN', () => {
+      expect(normalizeNum(null)).to.be.null
+      expect(normalizeNum(undefined)).to.be.null
+      expect(normalizeNum('')).to.be.null
+      expect(normalizeNum(Number.NaN)).to.be.null
+    })
+  })
+
+  describe('numEq', () => {
+    it('should return true for numerically equal values', () => {
+      expect(numEq('100.0', 100)).to.be.true
+      expect(numEq('0', 0)).to.be.true
+      expect(numEq(null, null)).to.be.true
+    })
+
+    it('should return false for unequal or mismatched null values', () => {
+      expect(numEq('1', null)).to.be.false
+      expect(numEq(null, 0)).to.be.false
+      expect(numEq('1', 2)).to.be.false
+    })
+  })
+
+  describe('strEq', () => {
+    it('should return true for equal strings and null/null', () => {
+      expect(strEq('AT', 'AT')).to.be.true
+      expect(strEq(null, null)).to.be.true
+      expect(strEq(undefined, null)).to.be.true
+    })
+
+    it('should return false for different strings or null mismatch', () => {
+      expect(strEq(null, 'AT')).to.be.false
+      expect(strEq('AT', 'BT')).to.be.false
     })
   })
 

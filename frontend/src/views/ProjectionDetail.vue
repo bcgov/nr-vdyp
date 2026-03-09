@@ -872,6 +872,20 @@ h3 {
   right: 0;
 }
 
+@media (max-width: 1023px) {
+  .tabs-with-download {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-margin-small);
+  }
+
+  .download-report-button {
+    position: static;
+    align-self: flex-end;
+    order: -1;
+  }
+}
+
 .download-report-button :deep(.button-icon-img) {
   filter: brightness(0) invert(1);
 }

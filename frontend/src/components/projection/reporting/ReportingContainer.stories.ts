@@ -5,7 +5,7 @@ import { REPORTING_TAB } from '@/constants/constants'
 import type { ReportingTab } from '@/types/types'
 
 const meta: Meta<typeof ReportingContainer> = {
-  title: 'components/projection-reporting/ReportingContainer',
+  title: 'components/projection/reporting/ReportingContainer',
   component: ReportingContainer,
   tags: ['autodocs'],
   argTypes: {

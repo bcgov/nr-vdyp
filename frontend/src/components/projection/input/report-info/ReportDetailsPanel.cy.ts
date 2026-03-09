@@ -207,4 +207,84 @@ describe('<ReportDetailsPanel />', () => {
       cy.contains('button', 'Clear').should('not.exist')
     })
   })
+
+  describe('Edit button in header', () => {
+    it('is visible in non-read-only (create) mode', () => {
+      mountPanel()
+      cy.get('.edit-button-col').should('exist')
+    })
+
+    it('is not visible in read-only (view) mode', () => {
+      mountPanel((_, app) => {
+        app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
+      })
+      cy.get('.edit-button-col').should('not.exist')
+    })
+
+    it('is disabled when the panel is not yet confirmed', () => {
+      mountPanel((modelStore) => {
+        modelStore.panelState.detailsInfo.confirmed = false
+        modelStore.panelState.detailsInfo.editable = true
+      })
+      cy.contains('button', 'Edit').should('be.disabled')
+    })
+
+    it('is enabled when the panel is confirmed and not editable', () => {
+      mountPanel((modelStore) => {
+        modelStore.panelState.detailsInfo.confirmed = true
+        modelStore.panelState.detailsInfo.editable = false
+      })
+      cy.contains('button', 'Edit').should('not.be.disabled')
+    })
+
+    it('is disabled when the projection status is RUNNING', () => {
+      mountPanel((modelStore, appStore) => {
+        modelStore.panelState.detailsInfo.confirmed = true
+        modelStore.panelState.detailsInfo.editable = false
+        appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.RUNNING
+      })
+      cy.contains('button', 'Edit').should('be.disabled')
+    })
+
+    it('is disabled when the projection status is READY', () => {
+      mountPanel((modelStore, appStore) => {
+        modelStore.panelState.detailsInfo.confirmed = true
+        modelStore.panelState.detailsInfo.editable = false
+        appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.READY
+      })
+      cy.contains('button', 'Edit').should('be.disabled')
+    })
+
+    it('clicking Edit makes the panel editable', () => {
+      const { modelStore } = mountPanel((modelStore) => {
+        modelStore.panelState.detailsInfo.confirmed = true
+        modelStore.panelState.detailsInfo.editable = false
+      })
+      cy.contains('button', 'Edit').click({ force: true })
+      cy.then(() => {
+        expect(modelStore.panelState.detailsInfo.editable).to.be.true
+      })
+    })
+  })
+
+  describe('Confirm and cancel behavior', () => {
+    it('clicking "Next" with an empty title shows a validation error and does not confirm', () => {
+      const { modelStore } = mountPanel((modelStore) => {
+        modelStore.reportTitle = null
+      })
+      cy.contains('button', 'Next').click()
+      cy.contains('Report Title is required.').should('exist')
+      cy.then(() => {
+        expect(modelStore.panelState.detailsInfo.confirmed).to.be.false
+      })
+    })
+
+    it('clicking "Next" with a whitespace-only title shows a validation error', () => {
+      mountPanel((modelStore) => {
+        modelStore.reportTitle = '   '
+      })
+      cy.contains('button', 'Next').click()
+      cy.contains('Report Title is required.').should('exist')
+    })
+  })
 })

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import ProjectionStatusBadge from './ProjectionStatusBadge.vue'
 
 const meta: Meta<typeof ProjectionStatusBadge> = {
-  title: 'Components/projection-list/ProjectionStatusBadge',
+  title: 'Components/projection/list/ProjectionStatusBadge',
   component: ProjectionStatusBadge,
   tags: ['autodocs'],
   argTypes: {
