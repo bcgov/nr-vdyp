@@ -1063,6 +1063,8 @@ watch(localProjectionType, (newVal) => {
         (opt) => opt.value === group.minimumDBHLimit,
       ),
     )
+    // Uncheck By Species when CFS Biomass is selected
+    localIsBySpeciesEnabled.value = false
   }
 
   // Update File Upload store projection type (this will trigger automatic species group updates)
@@ -1114,7 +1116,7 @@ const isCulminationValuesDeactivated = computed(() => {
   )
 })
 const isBySpeciesDeactivated = computed(() => {
-  return props.isDisabled
+  return props.isDisabled || isCFOBiomassSelected.value
 })
 const isByLayerDeactivated = computed(() => {
   return props.isDisabled

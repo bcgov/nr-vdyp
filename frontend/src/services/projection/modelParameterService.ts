@@ -794,7 +794,7 @@ export const hasPanelUnsavedChanges = async (
     case CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO:
       return savedModelParams ? hasStandInfoChanges(modelParameterStore, savedModelParams) : false
     case CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO:
-      return hasReportInfoChanges(modelParameterStore, savedParams, projectionModel.reportDescription ?? null)
+      return hasReportInfoChanges(modelParameterStore, savedParams, projectionModel.reportDescription || null)
     default:
       return false
   }

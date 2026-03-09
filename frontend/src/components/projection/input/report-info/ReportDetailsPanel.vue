@@ -219,7 +219,12 @@ watch(() => modelParameterStore.reportDescription, (v) => { localReportDescripti
 
 // Sync local -> store
 watch(localReportTitle, (v) => { modelParameterStore.reportTitle = v })
-watch(localProjectionType, (v) => { modelParameterStore.projectionType = v })
+watch(localProjectionType, (v) => {
+  modelParameterStore.projectionType = v
+  if (v === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+    modelParameterStore.isBySpeciesEnabled = false
+  }
+})
 watch(localReportDescription, (v) => { modelParameterStore.reportDescription = v })
 
 const validateTitle = () => {
