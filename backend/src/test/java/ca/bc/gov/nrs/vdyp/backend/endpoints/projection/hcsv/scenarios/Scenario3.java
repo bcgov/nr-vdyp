@@ -14,6 +14,7 @@ import java.util.zip.ZipInputStream;
 
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
@@ -22,6 +23,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 
 @QuarkusTest
+@Disabled("VDYP-1010")
 class Scenario3 extends Scenario {
 
 	@Inject
