@@ -11,6 +11,11 @@
   margin-bottom: 0;
 }
 
+/* Disabled manual label above radio group */
+.bcds-radio-label--disabled {
+  color: var(--typography-color-disabled) !important;
+}
+
 /* Radio Group Container */
 .v-radio-group {
   display: flex;

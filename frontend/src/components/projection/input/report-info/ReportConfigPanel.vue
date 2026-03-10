@@ -53,7 +53,7 @@
                   ></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="4" class="projection-type-container">
-                  <label class="bcds-radio-label" for="projection-type-select">Projection Type</label>
+                  <label class="bcds-radio-label" :class="{ 'bcds-radio-label--disabled': isInputDisabled }" for="projection-type-select">Projection Type</label>
                   <v-radio-group
                     id="projection-type-select"
                     v-model="localProjectionType"
@@ -102,7 +102,7 @@
             <div class="mt-n8 file-upload-numeric-range-section">
               <v-row no-gutters class="form-fields-row">
                 <v-col cols="12" sm="auto" class="age-year-range-container">
-                  <div class="numeric-range-value-label">Numeric Range Value</div>
+                  <div class="numeric-range-value-label numeric-range-value-label-mobile" :class="{ 'numeric-range-value-label--disabled': isInputDisabled }">Numeric Range Value</div>
                   <v-radio-group
                     v-model="localSelectedAgeYearRange"
                     inline
@@ -248,10 +248,10 @@
                 </v-col>
               </v-row>
             </div>
-            <!-- Include following values in Report -->
-            <div class="ml-4 mt-5 mb-3 include-in-report-container-mobile">
+            <!-- Include the following values in the Report -->
+            <div class="ml-4 mb-3 include-in-report-container include-in-report-container-mobile">
               <div class="ml-n4 include-in-report-header">
-                <span class="include-in-report-label" :class="{ 'include-in-report-disabled': isInputDisabled }">Include following values in Report</span>
+                <span class="include-in-report-label" :class="{ 'include-in-report-disabled': isInputDisabled }">Include the following values in the Report</span>
               </div>
               <v-row class="ml-n7">
                 <v-col cols="12" class="include-in-report-checkboxes">
@@ -360,7 +360,7 @@ const fileUploadStore = useFileUploadStore()
 const notificationStore = useNotificationStore()
 const alertDialogStore = useAlertDialogStore()
 
-const panelName = CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO
+const panelName = CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG
 const panelOpenStates = computed(() => fileUploadStore.panelOpenStates)
 
 const isReadOnly = computed(() => appStore.isReadOnly)
@@ -391,7 +391,7 @@ const editTooltipText = computed(() => {
   return ''
 })
 
-// Local state — initialized from store, kept in sync via watchers
+// Local state - initialized from store, kept in sync via watchers
 const localReportTitle = ref<string | null>(fileUploadStore.reportTitle)
 const localReportDescription = ref<string | null>(fileUploadStore.reportDescription)
 const localProjectionType = ref<string | null>(fileUploadStore.projectionType)
@@ -714,12 +714,11 @@ const onCancel = async () => {
 .include-in-report-label {
   display: block;
   color: var(--typography-color-secondary);
-  font-family: var(--typography-font-families-bc-sans);
   font-weight: var(--typography-font-weights-regular);
-  font-size: var(--typography-font-size-body);
+  font-size: var(--typography-font-size-label);
   line-height: 1.5;
-  padding-bottom: 2px;
-  margin-bottom: 12px;
+  padding-bottom: 4px;
+  margin-bottom: 10px;
 }
 
 .include-in-report-disabled {
@@ -731,7 +730,7 @@ const onCancel = async () => {
 }
 
 .projection-type-container {
-  margin-top: 13px;
+  margin-top: 11px;
 }
 
 .numeric-range-value-label {
@@ -741,11 +740,21 @@ const onCancel = async () => {
   font-weight: var(--typography-font-weights-regular);
   font-size: var(--typography-font-size-label);
   line-height: 1.5;
-  padding-bottom: 2px;
+  padding-bottom: 9px;
+}
+
+.numeric-range-value-label--disabled {
+  color: var(--typography-color-disabled) !important;
 }
 
 .age-year-range-container {
-  margin-top: 2px;
+  margin-top: 0px;
+}
+
+.spin-field-col,
+.spin-field-col-isy {
+  min-width: 170px;
+  max-width: 170px;
 }
 
 .mt-fields {
@@ -755,6 +764,10 @@ const onCancel = async () => {
 
 .report-title-label {
   padding-top: 0px;
+}
+
+.include-in-report-container {
+  margin-top: 16px !important;
 }
 
 @media (min-width: 768px) and (max-width: 912px) {
@@ -770,6 +783,10 @@ const onCancel = async () => {
 
   .mt-fields {
     margin-top: -8px;
+    padding-bottom: 0px;
+  }
+
+  .numeric-range-value-label-mobile {
     padding-bottom: 0px;
   }
 

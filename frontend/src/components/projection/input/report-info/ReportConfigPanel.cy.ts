@@ -45,7 +45,7 @@ describe('<ReportConfigPanel />', () => {
 
     it('panel content is not in the DOM when the panel is closed', () => {
       mountPanel((fu) => {
-        fu.panelOpenStates.reportInfo = CONSTANTS.PANEL.CLOSE
+        fu.panelOpenStates.reportConfig = CONSTANTS.PANEL.CLOSE
       })
       cy.get('#reportTitle').should('not.exist')
     })
@@ -59,7 +59,7 @@ describe('<ReportConfigPanel />', () => {
 
     it('shows mdi-chevron-down when the panel is closed', () => {
       mountPanel((fu) => {
-        fu.panelOpenStates.reportInfo = CONSTANTS.PANEL.CLOSE
+        fu.panelOpenStates.reportConfig = CONSTANTS.PANEL.CLOSE
       })
       cy.get('.expansion-panel-icon').should('have.class', 'mdi-chevron-down')
     })
@@ -120,7 +120,7 @@ describe('<ReportConfigPanel />', () => {
 
     it('renders "Include following values in Report" section', () => {
       mountPanel()
-      cy.contains('.include-in-report-label', 'Include following values in Report').should('exist')
+      cy.contains('.include-in-report-label', 'Include the following values in the Report').should('exist')
     })
 
     it('renders all checkboxes in "Include following values in Report"', () => {
@@ -167,7 +167,7 @@ describe('<ReportConfigPanel />', () => {
 
     it('inputs are disabled when panel is not editable', () => {
       mountPanel((fu) => {
-        fu.panelState.reportInfo.editable = false
+        fu.panelState.reportConfig.editable = false
       })
       cy.get('#reportTitle').should('be.disabled')
       cy.get('#reportDescription').should('be.disabled')
@@ -237,24 +237,24 @@ describe('<ReportConfigPanel />', () => {
 
     it('is disabled when the panel is not yet confirmed', () => {
       mountPanel((fu) => {
-        fu.panelState.reportInfo.confirmed = false
-        fu.panelState.reportInfo.editable = true
+        fu.panelState.reportConfig.confirmed = false
+        fu.panelState.reportConfig.editable = true
       })
       cy.contains('button', 'Edit').should('be.disabled')
     })
 
     it('is enabled when the panel is confirmed and not editable', () => {
       mountPanel((fu) => {
-        fu.panelState.reportInfo.confirmed = true
-        fu.panelState.reportInfo.editable = false
+        fu.panelState.reportConfig.confirmed = true
+        fu.panelState.reportConfig.editable = false
       })
       cy.contains('button', 'Edit').should('not.be.disabled')
     })
 
     it('is disabled when projection status is RUNNING', () => {
       mountPanel((fu, app) => {
-        fu.panelState.reportInfo.confirmed = true
-        fu.panelState.reportInfo.editable = false
+        fu.panelState.reportConfig.confirmed = true
+        fu.panelState.reportConfig.editable = false
         app.setCurrentProjectionStatus(PROJECTION_STATUS.RUNNING)
       })
       cy.contains('button', 'Edit').should('be.disabled')
@@ -262,8 +262,8 @@ describe('<ReportConfigPanel />', () => {
 
     it('is disabled when projection status is READY', () => {
       mountPanel((fu, app) => {
-        fu.panelState.reportInfo.confirmed = true
-        fu.panelState.reportInfo.editable = false
+        fu.panelState.reportConfig.confirmed = true
+        fu.panelState.reportConfig.editable = false
         app.setCurrentProjectionStatus(PROJECTION_STATUS.READY)
       })
       cy.contains('button', 'Edit').should('be.disabled')
@@ -293,7 +293,7 @@ describe('<ReportConfigPanel />', () => {
 
     it('"Next" and "Cancel" are disabled when the panel is not editable', () => {
       mountPanel((fu) => {
-        fu.panelState.reportInfo.editable = false
+        fu.panelState.reportConfig.editable = false
       })
       cy.contains('button', 'Next').should('be.disabled')
       cy.contains('button', 'Cancel').should('be.disabled')

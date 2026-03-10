@@ -19,6 +19,7 @@
   font-weight: var(--typography-font-weights-regular);
   line-height: 1.5;
   padding: var(--layout-padding-xsmall) var(--layout-padding-none);
+  padding-top: 0px;
   padding-bottom: 4px;
   margin-bottom: 0;
 }
@@ -177,7 +178,8 @@
 }
 
 /* Disabled state - label color (label comes before v-text-field in HTML) */
-.bcds-text-field-label:has(+ .v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete)) {
+.bcds-text-field-label:has(+ .v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete)),
+.bcds-text-field-label:has(+ .spin-field-wrapper .v-text-field.v-input--disabled:not(.v-select):not(.v-autocomplete)) {
   color: var(--typography-color-disabled) !important;
 }
 

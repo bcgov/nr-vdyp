@@ -8,7 +8,7 @@ import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-a
 export const useFileUploadStore = defineStore('fileUploadStore', () => {
   // panel open
   const panelOpenStates = ref<Record<FileUploadPanelName, PanelState>>({
-    reportInfo: CONSTANTS.PANEL.OPEN,
+    reportConfig: CONSTANTS.PANEL.OPEN,
     minimumDBH: CONSTANTS.PANEL.CLOSE,
     attachments: CONSTANTS.PANEL.CLOSE,
   })
@@ -17,7 +17,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const panelState = ref<
     Record<FileUploadPanelName, { confirmed: boolean; editable: boolean }>
   >({
-    reportInfo: { confirmed: false, editable: true },
+    reportConfig: { confirmed: false, editable: true },
     minimumDBH: { confirmed: false, editable: false },
     attachments: { confirmed: false, editable: false },
   })
@@ -26,7 +26,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
 
   // Sequential panel order (attachments is excluded - always accessible)
   const sequentialPanelOrder: FileUploadPanelName[] = [
-    CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO,
+    CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG,
     CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH,
   ]
 
@@ -181,12 +181,12 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const resetStore = () => {
     // Reset panel states
     panelOpenStates.value = {
-      reportInfo: CONSTANTS.PANEL.OPEN,
+      reportConfig: CONSTANTS.PANEL.OPEN,
       minimumDBH: CONSTANTS.PANEL.CLOSE,
       attachments: CONSTANTS.PANEL.CLOSE,
     }
     panelState.value = {
-      reportInfo: { confirmed: false, editable: true },
+      reportConfig: { confirmed: false, editable: true },
       minimumDBH: { confirmed: false, editable: false },
       attachments: { confirmed: false, editable: false },
     }
@@ -284,19 +284,19 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
 
   const applyEditModePanelStates = (params: ParsedProjectionParameters) => {
     // Infer panel confirmed states from saved data without extra fields:
-    // - reportInfo: confirmed if reportTitle is set (required field for confirmation)
-    // - minimumDBH: confirmed if utils are present (reportInfo saves utils=[]; minimumDBH saves full utils)
+    // - reportConfig: confirmed if reportTitle is set (required field for confirmation)
+    // - minimumDBH: confirmed if utils are present (reportConfig saves utils=[]; minimumDBH saves full utils)
     const isReportInfoConfirmed = params.reportTitle !== null
     const isMinimumDBHConfirmed = Array.isArray(params.utils) && params.utils.length > 0
     // Only the first uncompleted panel should be open; confirmed panels are closed.
-    // Attachments opens when both prerequisites (reportInfo + minimumDBH) are confirmed.
+    // Attachments opens when both prerequisites (reportConfig + minimumDBH) are confirmed.
     panelOpenStates.value = {
-      reportInfo: isReportInfoConfirmed ? CONSTANTS.PANEL.CLOSE : CONSTANTS.PANEL.OPEN,
+      reportConfig: isReportInfoConfirmed ? CONSTANTS.PANEL.CLOSE : CONSTANTS.PANEL.OPEN,
       minimumDBH: isReportInfoConfirmed && !isMinimumDBHConfirmed ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
       attachments: isReportInfoConfirmed && isMinimumDBHConfirmed ? CONSTANTS.PANEL.OPEN : CONSTANTS.PANEL.CLOSE,
     }
     panelState.value = {
-      reportInfo: { confirmed: isReportInfoConfirmed, editable: !isReportInfoConfirmed },
+      reportConfig: { confirmed: isReportInfoConfirmed, editable: !isReportInfoConfirmed },
       minimumDBH: {
         confirmed: isMinimumDBHConfirmed,
         editable: isReportInfoConfirmed && !isMinimumDBHConfirmed,
@@ -333,12 +333,12 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
 
     if (isViewMode) {
       panelOpenStates.value = {
-        reportInfo: CONSTANTS.PANEL.OPEN,
+        reportConfig: CONSTANTS.PANEL.OPEN,
         minimumDBH: CONSTANTS.PANEL.OPEN,
         attachments: CONSTANTS.PANEL.OPEN,
       }
       panelState.value = {
-        reportInfo: { confirmed: true, editable: false },
+        reportConfig: { confirmed: true, editable: false },
         minimumDBH: { confirmed: true, editable: false },
         attachments: { confirmed: true, editable: false },
       }

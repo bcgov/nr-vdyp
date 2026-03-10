@@ -245,7 +245,7 @@ const {
   crownClosure,
 } = storeToRefs(modelParameterStore)
 
-const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO
+const panelName = CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO
 const isConfirmEnabled = computed(
   () => !isReadOnly.value && modelParameterStore.panelState[panelName].editable,
 )

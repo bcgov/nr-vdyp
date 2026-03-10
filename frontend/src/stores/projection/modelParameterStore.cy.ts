@@ -39,19 +39,19 @@ describe('Model Parameter Store Unit Tests', () => {
 
   describe('Initial State', () => {
     it('should open detailsInfo panel and close all others', () => {
-      expect(store.panelOpenStates.detailsInfo).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.CLOSE)
       expect(store.panelOpenStates.siteInfo).to.equal(CONSTANTS.PANEL.CLOSE)
       expect(store.panelOpenStates.standInfo).to.equal(CONSTANTS.PANEL.CLOSE)
-      expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(store.panelOpenStates.reportSettings).to.equal(CONSTANTS.PANEL.CLOSE)
     })
 
     it('should set detailsInfo as editable and all others as non-editable', () => {
-      expect(store.panelState.detailsInfo).to.deep.equal({ confirmed: false, editable: true })
+      expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })
       expect(store.panelState.speciesInfo).to.deep.equal({ confirmed: false, editable: false })
       expect(store.panelState.siteInfo).to.deep.equal({ confirmed: false, editable: false })
       expect(store.panelState.standInfo).to.deep.equal({ confirmed: false, editable: false })
-      expect(store.panelState.reportInfo).to.deep.equal({ confirmed: false, editable: false })
+      expect(store.panelState.reportSettings).to.deep.equal({ confirmed: false, editable: false })
     })
 
     it('should initialize runModelEnabled as false', () => {
@@ -104,22 +104,22 @@ describe('Model Parameter Store Unit Tests', () => {
 
   describe('confirmPanel', () => {
     it('should mark detailsInfo as confirmed and close it', () => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
 
-      expect(store.panelState.detailsInfo.confirmed).to.be.true
-      expect(store.panelState.detailsInfo.editable).to.be.false
-      expect(store.panelOpenStates.detailsInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(store.panelState.reportDetails.confirmed).to.be.true
+      expect(store.panelState.reportDetails.editable).to.be.false
+      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.CLOSE)
     })
 
     it('should open speciesInfo and make it editable when detailsInfo is confirmed', () => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
 
       expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelState.speciesInfo.editable).to.be.true
     })
 
     it('should open siteInfo when speciesInfo is confirmed', () => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
       store.confirmPanel('speciesInfo')
 
       expect(store.panelOpenStates.siteInfo).to.equal(CONSTANTS.PANEL.OPEN)
@@ -127,7 +127,7 @@ describe('Model Parameter Store Unit Tests', () => {
     })
 
     it('should open standInfo when siteInfo is confirmed', () => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
       store.confirmPanel('speciesInfo')
       store.confirmPanel('siteInfo')
 
@@ -136,18 +136,18 @@ describe('Model Parameter Store Unit Tests', () => {
     })
 
     it('should not enable runModelEnabled when only some panels are confirmed', () => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
       store.confirmPanel('speciesInfo')
 
       expect(store.runModelEnabled).to.be.false
     })
 
     it('should enable runModelEnabled when all panels are confirmed', () => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
       store.confirmPanel('speciesInfo')
       store.confirmPanel('siteInfo')
       store.confirmPanel('standInfo')
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportSettings')
 
       expect(store.runModelEnabled).to.be.true
     })
@@ -155,25 +155,25 @@ describe('Model Parameter Store Unit Tests', () => {
 
   describe('editPanel', () => {
     beforeEach(() => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
       store.confirmPanel('speciesInfo')
       store.confirmPanel('siteInfo')
       store.confirmPanel('standInfo')
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportSettings')
     })
 
     it('should unconfirm detailsInfo and open it for editing', () => {
-      store.editPanel('detailsInfo')
+      store.editPanel('reportDetails')
 
-      expect(store.panelState.detailsInfo.confirmed).to.be.false
-      expect(store.panelState.detailsInfo.editable).to.be.true
-      expect(store.panelOpenStates.detailsInfo).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(store.panelState.reportDetails.confirmed).to.be.false
+      expect(store.panelState.reportDetails.editable).to.be.true
+      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
     })
 
     it('should disable all subsequent panels when editing detailsInfo', () => {
-      store.editPanel('detailsInfo')
+      store.editPanel('reportDetails')
 
-      const subsequentPanels = ['speciesInfo', 'siteInfo', 'standInfo', 'reportInfo'] as const
+      const subsequentPanels = ['speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const
       subsequentPanels.forEach((panel) => {
         expect(store.panelState[panel].confirmed).to.be.false
         expect(store.panelState[panel].editable).to.be.false
@@ -195,8 +195,8 @@ describe('Model Parameter Store Unit Tests', () => {
       expect(store.panelState.standInfo.confirmed).to.be.false
       expect(store.panelState.standInfo.editable).to.be.true
       expect(store.panelOpenStates.standInfo).to.equal(CONSTANTS.PANEL.OPEN)
-      expect(store.panelState.reportInfo.confirmed).to.be.false
-      expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(store.panelState.reportSettings.confirmed).to.be.false
+      expect(store.panelOpenStates.reportSettings).to.equal(CONSTANTS.PANEL.CLOSE)
     })
   })
 
@@ -261,28 +261,28 @@ describe('Model Parameter Store Unit Tests', () => {
 
   describe('resetStore', () => {
     it('should reset panel open states to initial values', () => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
       store.resetStore()
 
-      expect(store.panelOpenStates.detailsInfo).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.CLOSE)
     })
 
     it('should reset panel confirmed/editable states', () => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
       store.confirmPanel('speciesInfo')
       store.resetStore()
 
-      expect(store.panelState.detailsInfo).to.deep.equal({ confirmed: false, editable: true })
+      expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })
       expect(store.panelState.speciesInfo).to.deep.equal({ confirmed: false, editable: false })
     })
 
     it('should reset runModelEnabled to false', () => {
-      store.confirmPanel('detailsInfo')
+      store.confirmPanel('reportDetails')
       store.confirmPanel('speciesInfo')
       store.confirmPanel('siteInfo')
       store.confirmPanel('standInfo')
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportSettings')
       expect(store.runModelEnabled).to.be.true
 
       store.resetStore()
@@ -368,21 +368,21 @@ describe('Model Parameter Store Unit Tests', () => {
     })
 
     it('should open all panels in view mode', () => {
-      const panels = ['detailsInfo', 'speciesInfo', 'siteInfo', 'standInfo', 'reportInfo'] as const
+      const panels = ['reportDetails', 'speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const
       panels.forEach((panel) => {
         expect(store.panelOpenStates[panel]).to.equal(CONSTANTS.PANEL.OPEN)
       })
     })
 
     it('should confirm all panels but keep them non-editable in view mode', () => {
-      const panels = ['detailsInfo', 'speciesInfo', 'siteInfo', 'standInfo', 'reportInfo'] as const
+      const panels = ['reportDetails', 'speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const
       panels.forEach((panel) => {
         expect(store.panelState[panel]).to.deep.equal({ confirmed: true, editable: false })
       })
     })
 
-    it('should keep runModelEnabled false in view mode', () => {
-      expect(store.runModelEnabled).to.be.false
+    it('should keep runModelEnabled true in view mode', () => {
+      expect(store.runModelEnabled).to.be.true
     })
   })
 
@@ -390,14 +390,14 @@ describe('Model Parameter Store Unit Tests', () => {
     it('should open detailsInfo when reportTitle is null', () => {
       store.restoreFromProjectionParams(makeParsedParams({ reportTitle: null }), false)
 
-      expect(store.panelOpenStates.detailsInfo).to.equal(CONSTANTS.PANEL.OPEN)
-      expect(store.panelState.detailsInfo.confirmed).to.be.false
+      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(store.panelState.reportDetails.confirmed).to.be.false
     })
 
     it('should confirm detailsInfo and open speciesInfo when only reportTitle is set', () => {
       store.restoreFromProjectionParams(makeParsedParams({ reportTitle: 'Title' }), false)
 
-      expect(store.panelState.detailsInfo.confirmed).to.be.true
+      expect(store.panelState.reportDetails.confirmed).to.be.true
       expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelState.speciesInfo.editable).to.be.true
     })

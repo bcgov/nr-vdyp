@@ -1,12 +1,12 @@
 <template>
   <v-card class="elevation-0">
-    <v-expansion-panels v-model="panelOpenStates.detailsInfo">
+    <v-expansion-panels v-model="panelOpenStates.reportDetails">
       <v-expansion-panel hide-actions>
         <v-expansion-panel-title class="details-panel-title">
           <v-row no-gutters class="expander-header">
             <v-col cols="auto" class="expansion-panel-icon-col">
               <v-icon class="expansion-panel-icon">{{
-                panelOpenStates.detailsInfo === CONSTANTS.PANEL.OPEN
+                panelOpenStates.reportDetails === CONSTANTS.PANEL.OPEN
                   ? 'mdi-chevron-up'
                   : 'mdi-chevron-down'
               }}</v-icon>
@@ -52,7 +52,7 @@
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="4" class="projection-type-col">
-                <label class="bcds-radio-label" for="manualProjectionType">
+                <label class="bcds-radio-label projection-type-label projection-type-label-mobile" :class="{ 'bcds-radio-label--disabled': isInputDisabled }" for="manualProjectionType">
                   Projection Type
                 </label>
                 <v-radio-group
@@ -72,7 +72,7 @@
               </v-col>
             </v-row>
             <v-row class="mt-fields">
-              <v-col cols="12">
+              <v-col cols="12" class="description-textarea-col">
                 <div class="bcds-textarea" :data-disabled="isInputDisabled || undefined">
                   <label class="bcds-textarea-label" for="manualReportDescription">
                     Description
@@ -88,7 +88,7 @@
                       rows="3"
                     ></textarea>
                   </div>
-                  <div class="bcds-textarea-description">
+                  <div class="bcds-textarea-description description-counter">
                     <span class="counter">{{ descriptionLength }}/500</span>
                   </div>
                 </div>
@@ -96,6 +96,7 @@
             </v-row>
             <ActionPanel
               v-if="!isReadOnly"
+              class="action-panel"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               :hideClearButton="true"
@@ -129,7 +130,7 @@ const modelParameterStore = useModelParameterStore()
 const notificationStore = useNotificationStore()
 const alertDialogStore = useAlertDialogStore()
 
-const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.DETAILS_INFO
+const panelName = CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS
 const panelOpenStates = computed(() => modelParameterStore.panelOpenStates)
 
 const isReadOnly = computed(() => appStore.isReadOnly)
@@ -161,10 +162,10 @@ const editTooltipText = computed(() => {
 
 const getEditablePanel = (): string | null => {
   const panelsToCheck = [
-    CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
-    CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
-    CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
-    CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS,
   ]
   return panelsToCheck.find((p) => modelParameterStore.panelState[p].editable) ?? null
 }
@@ -302,21 +303,41 @@ const onCancel = async () => {
 }
 
 .projection-type-col {
-  margin-top: 13px;
+  margin-top: 0px;
+}
+
+.projection-type-label {
+  padding-bottom: 8px;
 }
 
 .mt-fields {
   margin-top: 0;
-  padding-bottom: 12px;
+  padding-bottom: 0px;
 }
 
 .report-title-label {
   padding-top: 0px;
 }
 
+.description-textarea-col {
+  padding-bottom: 6px;
+}
+
+.description-counter {
+  padding-bottom: 0px;
+}
+
+.action-panel {
+  margin-top: 16px;
+}
+
 @media (max-width: 600px) {
   .projection-type-col {
     margin-top: 0;
+  }
+
+  .projection-type-label-mobile {
+    padding-bottom: 0px;
   }
 
   .mt-fields {

@@ -160,7 +160,7 @@ const {
   totalSpeciesGroupPercent,
 } = storeToRefs(modelParameterStore)
 
-const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO
+const panelName = CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO
 const isConfirmEnabled = computed(
   () => !isReadOnly.value && modelParameterStore.panelState[panelName].editable,
 )

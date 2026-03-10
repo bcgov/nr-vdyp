@@ -290,7 +290,7 @@ describe('saveProjectionOnPanelConfirm', () => {
     cy.stub(apiClient, 'createProjection').resolves({ data: { ...mockProjectionModel, projectionGUID: 'created-guid' } })
 
     const mockStore = createMockFileUploadStore()
-    cy.wrap(saveProjectionOnPanelConfirm(mockStore, CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO)).then(() => {
+    cy.wrap(saveProjectionOnPanelConfirm(mockStore, CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG)).then(() => {
       expect(apiClient.createProjection).to.be.calledOnce
 
       const appStore = useAppStore()
@@ -308,13 +308,13 @@ describe('saveProjectionOnPanelConfirm', () => {
     appStore.setCurrentProjectionGUID('existing-guid')
 
     const mockStore = createMockFileUploadStore()
-    cy.wrap(saveProjectionOnPanelConfirm(mockStore, CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO)).then(() => {
+    cy.wrap(saveProjectionOnPanelConfirm(mockStore, CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG)).then(() => {
       expect(apiClient.updateProjectionParams).to.be.calledOnce
       expect(apiClient.createProjection).to.not.be.called
     })
   })
 
-  it('should update params when confirming a non-reportInfo panel in EDIT mode', () => {
+  it('should update params when confirming a non-reportConfig panel in EDIT mode', () => {
     cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
     cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
 
@@ -328,7 +328,7 @@ describe('saveProjectionOnPanelConfirm', () => {
     })
   })
 
-  it('should throw when confirming a non-reportInfo panel with no GUID in EDIT mode', () => {
+  it('should throw when confirming a non-reportConfig panel with no GUID in EDIT mode', () => {
     const appStore = useAppStore()
     appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
 
@@ -433,9 +433,9 @@ describe('revertPanelToSaved', () => {
   })
 
   it('should return early without error when no projectionGUID is set', () => {
-    cy.wrap(revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO as any)).then(() => {
+    cy.wrap(revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG as any)).then(() => {
       const fileUploadStore = useFileUploadStore()
-      expect(fileUploadStore.panelState.reportInfo.confirmed).to.be.false
+      expect(fileUploadStore.panelState.reportConfig.confirmed).to.be.false
     })
   })
 

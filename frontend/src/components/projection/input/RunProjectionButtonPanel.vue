@@ -3,6 +3,14 @@
     <v-card-actions :class="computedCardActionsClass">
       <v-spacer></v-spacer>
       <template v-if="!showCancelButton">
+        <AppButton
+          v-if="showRevertCancelButton"
+          label="Cancel"
+          variant="tertiary"
+          class="ml-2"
+          :isDisabled="isRevertCancelDisabled"
+          @click="revertCancel"
+        />
         <v-tooltip
           v-if="isDisabled && disabledText"
           :text="disabledText"
@@ -21,7 +29,7 @@
           </template>
         </v-tooltip>
         <AppButton
-          v-else
+          v-else-if="!isDisabled || !disabledText"
           label="Run Projection"
           variant="primary"
           class="ml-2"
@@ -47,15 +55,19 @@ import AppButton from '@/components/core/AppButton.vue'
 const props = withDefaults(defineProps<{
   isDisabled: boolean
   showCancelButton?: boolean
+  showRevertCancelButton?: boolean
+  isRevertCancelDisabled?: boolean
   cardClass?: string
   cardActionsClass?: string
   disabledText?: string
 }>(), {
   showCancelButton: false,
+  showRevertCancelButton: false,
+  isRevertCancelDisabled: true,
   disabledText: '',
 })
 
-const emit = defineEmits(['runModel', 'cancelRun'])
+const emit = defineEmits(['runModel', 'cancelRun', 'revertCancel'])
 
 const computedCardClass = computed(
   () => props.cardClass ?? 'run-projection-card',
@@ -71,6 +83,10 @@ const runModel = () => {
 
 const cancelRun = () => {
   emit('cancelRun')
+}
+
+const revertCancel = () => {
+  emit('revertCancel')
 }
 </script>
 <style scoped>

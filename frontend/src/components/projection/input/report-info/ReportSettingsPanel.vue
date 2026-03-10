@@ -2,7 +2,7 @@
   <v-card class="elevation-0">
     <v-expansion-panels v-model="panelOpenStates[panelName]">
       <v-expansion-panel hide-actions>
-        <v-expansion-panel-title>
+        <v-expansion-panel-title class="settings-panel-title">
           <v-row no-gutters class="expander-header">
             <v-col cols="auto" class="expansion-panel-icon-col">
               <v-icon class="expansion-panel-icon">{{
@@ -12,18 +12,35 @@
               }}</v-icon>
             </v-col>
             <v-col>
-              <span class="text-h6">Report Information</span>
+              <span class="text-h6">Report Settings</span>
+            </v-col>
+            <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
+              <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
+                <template #activator="{ props: tooltipProps }">
+                  <span v-bind="tooltipProps">
+                    <AppButton
+                      label="Edit"
+                      variant="tertiary"
+                      mdi-name="mdi-pencil-outline"
+                      iconPosition="top"
+                      :isDisabled="!isHeaderEditActive"
+                      @click="onHeaderEdit"
+                    />
+                  </span>
+                </template>
+              </v-tooltip>
             </v-col>
           </v-row>
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
           <v-form ref="form">
-            <div>
-              <v-row>
+            <!-- Top row: age/year fields + include-in-report section -->
+            <div class="report-top-row">
+              <div class="age-year-fields">
                 <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
-                  <v-col cols="2">
+                  <div class="field-col">
                     <AppSpinField
-                      label="Starting Age"
+                      label="Starting Age (Required)"
                       :model-value="localStartingAge"
                       :min="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN"
                       :max="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX"
@@ -38,11 +55,10 @@
                       data-testid="starting-age"
                       @update:modelValue="handleStartingAgeInput"
                     />
-                  </v-col>
-                  <v-col class="col-space-3" />
-                  <v-col cols="2" class="ml-2">
+                  </div>
+                  <div class="field-col">
                     <AppSpinField
-                      label="Finishing Age"
+                      label="Finishing Age (Required)"
                       :model-value="localFinishingAge"
                       :min="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN"
                       :max="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX"
@@ -57,11 +73,10 @@
                       data-testid="finishing-age"
                       @update:modelValue="handleFinishingAgeInput"
                     />
-                  </v-col>
-                  <v-col class="col-space-3" />
-                  <v-col cols="2" class="ml-2">
+                  </div>
+                  <div class="field-col">
                     <AppSpinField
-                      label="Increment"
+                      label="Increment (Required)"
                       :model-value="localAgeIncrement"
                       :min="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN"
                       :max="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX"
@@ -76,12 +91,12 @@
                       data-testid="age-increment"
                       @update:modelValue="handleAgeIncrementInput"
                     />
-                  </v-col>
+                  </div>
                 </template>
                 <template v-else>
-                  <v-col cols="2">
+                  <div class="field-col">
                     <AppSpinField
-                      label="Start Year"
+                      label="Start Year (Required)"
                       :model-value="localStartYear"
                       :min="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN"
                       :max="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX"
@@ -96,11 +111,10 @@
                       data-testid="start-year"
                       @update:modelValue="handleStartYearInput"
                     />
-                  </v-col>
-                  <v-col class="col-space-3" />
-                  <v-col cols="2" class="ml-2">
+                  </div>
+                  <div class="field-col">
                     <AppSpinField
-                      label="End Year"
+                      label="End Year (Required)"
                       :model-value="localEndYear"
                       :min="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN"
                       :max="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX"
@@ -115,11 +129,10 @@
                       data-testid="end-year"
                       @update:modelValue="handleEndYearInput"
                     />
-                  </v-col>
-                  <v-col class="col-space-3" />
-                  <v-col cols="2" class="ml-2">
+                  </div>
+                  <div class="field-col">
                     <AppSpinField
-                      label="Increment"
+                      label="Increment (Required)"
                       :model-value="localYearIncrement"
                       :min="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN"
                       :max="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX"
@@ -134,100 +147,86 @@
                       data-testid="year-increment"
                       @update:modelValue="handleYearIncrementInput"
                     />
-                  </v-col>
+                  </div>
                 </template>
-                <v-col class="col-space-3" />
-                <v-col class="pl-8">
-                  <v-row class="pt-11">
-                    <v-checkbox
-                      v-model="localIsForwardGrowEnabled"
-                      label="Forward"
-                      hide-details
-                      :disabled="isInputDisabled"
-                      data-testid="is-forward-grow-enabled"
-                    ></v-checkbox>
-                    <v-col class="col-space-3" />
-                    <v-checkbox
-                      v-model="localIsBackwardGrowEnabled"
-                      label="Backward"
-                      hide-details
-                      :disabled="isInputDisabled"
-                      data-testid="is-backward-grow-enabled"
-                    ></v-checkbox>
-                  </v-row>
-                </v-col>
-              </v-row>
-            </div>
-            <div class="ml-4 mt-5 mb-3 include-in-report-container-mobile">
-              <div class="ml-n4 include-in-report-header">
-                <span class="include-in-report-label" :class="{ 'include-in-report-disabled': isInputDisabled }">Include in Report</span>
               </div>
-              <v-row class="ml-n7">
-                <v-col cols="12" class="include-in-report-checkboxes">
-                  <v-row>
-                    <v-col cols="2" class="computed-mai-container">
-                      <v-checkbox
-                        v-model="localIsComputedMAIEnabled"
-                        :label=CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI
-                        hide-details
-                        :disabled="isComputedMAIDeactivated"
-                        data-testid="is-computed-mai-enabled"
-                      ></v-checkbox>
-                    </v-col>
-                    <v-col class="col-space-3" />
-                    <v-col cols="2" class="culmination-values-container">
-                      <v-checkbox
-                        v-model="localIsCulminationValuesEnabled"
-                        :label=CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES
-                        hide-details
-                        :disabled="isCulminationValuesDeactivated"
-                        data-testid="is-culmination-values-enabled"
-                      ></v-checkbox>
-                    </v-col>
-                    <v-col class="col-space-3" />
-                    <v-col cols="2" class="by-species-container">
-                      <v-checkbox
-                        v-model="localIsBySpeciesEnabled"
-                        :label=CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES
-                        hide-details
-                        :disabled="isBySpeciesDeactivated"
-                        data-testid="is-by-species-enabled"
-                      ></v-checkbox>
-                    </v-col>
-                    <v-col class="col-space-3" />
-                    <v-col cols="3" class="secondary-species-height-container">
-                      <v-checkbox
-                        v-model="localIncSecondaryHeight"
-                        :label=CONSTANTS.INCLUDE_IN_REPORT.SECD_SPCZ_HEIGHT
-                        hide-details
-                        :disabled="isIncSecondaryHeightDeactivated"
-                        data-testid="inc-secondary-height"
-                      ></v-checkbox>
-                    </v-col>
-                  </v-row>
-                </v-col>
-              </v-row>
-            </div>
-            <div class="ml-4 mt-10">
-              <div class="ml-n4 mt-n5">
-                <span class="min-dbh-limit-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">Minimum DBH Limit by Species Group</span>
-              </div>
-              <v-container fluid class="ml-n10 mt-5">
-                <v-row v-for="(group, index) in speciesGroups" :key="index">
-                  <v-col class="min-dbh-limit-species-group-list-container" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
-                    {{ `${group.group}` }}
+              <!-- Include the following values in the Report -->
+              <div class="include-in-report-section">
+                <span class="include-in-report-label include-in-report-label-mobile" :class="{ 'include-in-report-disabled': isInputDisabled }">
+                  Include the following values in the Report
+                </span>
+                <v-row no-gutters class="form-fields-row report-settings-checkboxes-row">
+                  <v-col cols="auto">
+                    <v-checkbox
+                      v-model="localIsComputedMAIEnabled"
+                      :label="CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI"
+                      hide-details
+                      :disabled="isComputedMAIDeactivated"
+                      data-testid="is-computed-mai-enabled"
+                    ></v-checkbox>
                   </v-col>
-                  <v-col cols="8" class="ml-n5">
+                  <v-col cols="auto">
+                    <v-checkbox
+                      v-model="localIsCulminationValuesEnabled"
+                      :label="CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES"
+                      hide-details
+                      :disabled="isCulminationValuesDeactivated"
+                      data-testid="is-culmination-values-enabled"
+                    ></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto">
+                    <v-checkbox
+                      v-model="localIsBySpeciesEnabled"
+                      :label="CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES"
+                      hide-details
+                      :disabled="isBySpeciesDeactivated"
+                      data-testid="is-by-species-enabled"
+                    ></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto">
+                    <v-checkbox
+                      v-model="localIncSecondaryHeight"
+                      :label="CONSTANTS.INCLUDE_IN_REPORT.SECD_SPCZ_HEIGHT"
+                      hide-details
+                      :disabled="isIncSecondaryHeightDeactivated"
+                      data-testid="inc-secondary-height"
+                    ></v-checkbox>
+                  </v-col>
+                </v-row>
+              </div>
+            </div>
+
+            <!-- Minimum DBH Limit section -->
+            <div class="min-dbh-section">
+              <div class="min-dbh-header-row">
+                <span class="min-dbh-limit-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
+                  {{ mobile ? 'Min DBH by Species Group (cm+)' : 'Minimum DBH Limit by Species Group' }}
+                </span>
+              </div>
+              <v-container fluid class="min-dbh-container">
+                <v-row v-for="(group, index) in speciesGroups" :key="index" no-gutters class="form-fields-row min-dbh-row">
+                  <v-col v-bind="mobile ? { cols: 'auto' } : {}" class="min-dbh-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
+                    {{ group.group }}
+                  </v-col>
+                  <v-col cols="10" sm="8" :class="mobile ? 'min-dbh-slider-col-mobile' : 'min-dbh-slider-col'">
+                    <!-- Labels rendered outside Vuetify's slider DOM to avoid non-visibility on a mobile device web browser -->
+                    <div class="min-dbh-label-row" :class="{ 'min-dbh-labels-muted': isMinDBHDeactivated }">
+                      <span
+                        v-for="opt in utilizationClassOptions"
+                        :key="opt.index"
+                        class="min-dbh-label-item"
+                      >{{ mobile ? opt.label.replace(' cm+', '') : opt.label }}</span>
+                    </div>
                     <v-slider
                       v-model="utilizationSliderValues[index]"
                       :min="0"
                       :max="4"
-                      :ticks="utilizationSliderTickLabels"
                       show-ticks="always"
                       step="1"
                       thumb-size="12"
                       track-size="7"
                       track-color="transparent"
+                      hide-details
                       :disabled="isMinDBHDeactivated"
                       @update:model-value="updateMinDBH(index, $event)"
                     ></v-slider>
@@ -235,17 +234,6 @@
                 </v-row>
               </v-container>
             </div>
-            <ActionPanel
-              v-if="!isReadOnly"
-              :isConfirmEnabled="isConfirmEnabled"
-              :isConfirmed="isConfirmed"
-              :hideClearButton="false"
-              :hideEditButton="false"
-              :showCancelButton="false"
-              @clear="onClear"
-              @confirm="onConfirm"
-              @edit="onEdit"
-            />
           </v-form>
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -254,35 +242,94 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed, type Ref } from 'vue'
+import { useDisplay } from 'vuetify'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS, MESSAGE, OPTIONS } from '@/constants'
 import { reportInfoValidation } from '@/validation'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
-import { AppSpinField } from '@/components'
-import { ActionPanel } from '@/components/projection'
+import { AppButton, AppSpinField } from '@/components'
 import { useNotificationStore } from '@/stores/common/notificationStore'
-import { saveProjectionOnPanelConfirm as saveModelParamProjection } from '@/services/projection/modelParameterService'
+import { saveProjectionOnPanelConfirm as saveModelParamProjection, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import { PROJECTION_ERR } from '@/constants/message'
+import type { PanelName } from '@/types/types'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
+
+const { mobile } = useDisplay()
 
 const form = ref<HTMLFormElement>()
 
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 const notificationStore = useNotificationStore()
+const alertDialogStore = useAlertDialogStore()
 
-const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO
+const panelName = CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS
 const panelOpenStates = computed(() => modelParameterStore.panelOpenStates)
 
 const isReadOnly = computed(() => appStore.isReadOnly)
-const isConfirmEnabled = computed(
-  () => !isReadOnly.value && modelParameterStore.panelState[panelName].editable,
-)
 const isConfirmed = computed(
   () => modelParameterStore.panelState[panelName].confirmed,
 )
 const isInputDisabled = computed(
   () => isReadOnly.value || !modelParameterStore.panelState[panelName].editable,
 )
+
+// Edit button in header
+const isHeaderEditActive = computed(() => {
+  const status = appStore.currentProjectionStatus
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) return false
+  return isConfirmed.value && !modelParameterStore.panelState[panelName].editable
+})
+
+const editTooltipText = computed(() => {
+  const status = appStore.currentProjectionStatus
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
+    return `This section may not be edited with a status of ${status}`
+  }
+  if (isConfirmed.value && !modelParameterStore.panelState[panelName].editable) {
+    return 'Click Edit to make changes to this section'
+  }
+  return ''
+})
+
+const getEditablePanel = (): string | null => {
+  const panelsToCheck = [
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS,
+    CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
+  ]
+  return panelsToCheck.find((p) => modelParameterStore.panelState[p].editable) ?? null
+}
+
+const onHeaderEdit = async () => {
+  if (isConfirmed.value) {
+    const editablePanel = getEditablePanel()
+    if (editablePanel) {
+      const hasChanges = await hasPanelUnsavedChanges(editablePanel, modelParameterStore)
+      if (hasChanges) {
+        const proceed = await alertDialogStore.openDialog(
+          MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+          MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+          { variant: 'warning' },
+        )
+        if (!proceed) return
+
+        appStore.isSavingProjection = true
+        try {
+          await revertPanelToSaved(editablePanel as PanelName)
+        } catch (error) {
+          console.error('Error reverting panel to saved state:', error)
+          notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+          return
+        } finally {
+          appStore.isSavingProjection = false
+        }
+      }
+    }
+    modelParameterStore.editPanel(panelName)
+  }
+}
 
 // Local state
 const selectedAgeYearRange = ref<string>(
@@ -294,8 +341,6 @@ const localAgeIncrement = ref<string | null>(modelParameterStore.ageIncrement)
 const localStartYear = ref<string | null>(modelParameterStore.startYear)
 const localEndYear = ref<string | null>(modelParameterStore.endYear)
 const localYearIncrement = ref<string | null>(modelParameterStore.yearIncrement)
-const localIsForwardGrowEnabled = ref<boolean>(modelParameterStore.isForwardGrowEnabled)
-const localIsBackwardGrowEnabled = ref<boolean>(modelParameterStore.isBackwardGrowEnabled)
 const localIsComputedMAIEnabled = ref<boolean>(modelParameterStore.isComputedMAIEnabled)
 const localIsCulminationValuesEnabled = ref<boolean>(modelParameterStore.isCulminationValuesEnabled)
 const localIsBySpeciesEnabled = ref<boolean>(modelParameterStore.isBySpeciesEnabled)
@@ -314,13 +359,6 @@ const utilizationSliderValues = ref<number[]>([])
 const utilizationClassOptions = OPTIONS.utilizationClassOptions
 const speciesGroups = computed(() => modelParameterStore.speciesGroups)
 
-const utilizationSliderTickLabels = utilizationClassOptions.reduce(
-  (acc, opt) => {
-    acc[opt.index] = opt.label
-    return acc
-  },
-  {} as Record<number, string>,
-)
 
 const isCFOBiomassSelected = computed(() => {
   return modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
@@ -350,7 +388,6 @@ const isCulminationValuesDeactivated = computed(() => {
   )
 })
 
-// Computed deactivated states
 const isBySpeciesDeactivated = computed(() => {
   return isInputDisabled.value || isCFOBiomassSelected.value
 })
@@ -431,16 +468,6 @@ watch(() => modelParameterStore.startYear, (newVal) => { localStartYear.value = 
 watch(() => modelParameterStore.endYear, (newVal) => { localEndYear.value = newVal })
 watch(() => modelParameterStore.yearIncrement, (newVal) => { localYearIncrement.value = newVal })
 
-watch(() => modelParameterStore.isForwardGrowEnabled, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(localIsForwardGrowEnabled.value)) {
-    localIsForwardGrowEnabled.value = newVal
-  }
-})
-watch(() => modelParameterStore.isBackwardGrowEnabled, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(localIsBackwardGrowEnabled.value)) {
-    localIsBackwardGrowEnabled.value = newVal
-  }
-})
 watch(() => modelParameterStore.isComputedMAIEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(localIsComputedMAIEnabled.value)) {
     localIsComputedMAIEnabled.value = newVal
@@ -451,7 +478,6 @@ watch(() => modelParameterStore.isCulminationValuesEnabled, (newVal) => {
     localIsCulminationValuesEnabled.value = newVal
   }
 })
-
 watch(() => modelParameterStore.isBySpeciesEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(localIsBySpeciesEnabled.value)) {
     localIsBySpeciesEnabled.value = newVal
@@ -471,16 +497,6 @@ watch(localStartYear, (newVal) => { modelParameterStore.startYear = newVal })
 watch(localEndYear, (newVal) => { modelParameterStore.endYear = newVal })
 watch(localYearIncrement, (newVal) => { modelParameterStore.yearIncrement = newVal })
 
-watch(localIsForwardGrowEnabled, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.isForwardGrowEnabled)) {
-    modelParameterStore.isForwardGrowEnabled = newVal
-  }
-})
-watch(localIsBackwardGrowEnabled, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.isBackwardGrowEnabled)) {
-    modelParameterStore.isBackwardGrowEnabled = newVal
-  }
-})
 watch(localIsComputedMAIEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.isComputedMAIEnabled)) {
     modelParameterStore.isComputedMAIEnabled = newVal
@@ -491,7 +507,6 @@ watch(localIsCulminationValuesEnabled, (newVal) => {
     modelParameterStore.isCulminationValuesEnabled = newVal
   }
 })
-
 watch(localIsBySpeciesEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.isBySpeciesEnabled)) {
     modelParameterStore.isBySpeciesEnabled = newVal
@@ -677,9 +692,9 @@ const validateFields = (): boolean => {
   return isValid && rangeValid
 }
 
-const onConfirm = async () => {
-  if (!validateTitle()) return
-  if (!validateFields()) return
+const onConfirm = async (): Promise<boolean> => {
+  if (!validateTitle()) return false
+  if (!validateFields()) return false
 
   if (form.value) {
     form.value.validate()
@@ -693,7 +708,7 @@ const onConfirm = async () => {
   } catch (error) {
     console.error('Error saving projection:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
-    return
+    return false
   } finally {
     appStore.isSavingProjection = false
   }
@@ -701,87 +716,217 @@ const onConfirm = async () => {
   if (!isConfirmed.value) {
     modelParameterStore.confirmPanel(panelName)
   }
+  return true
 }
 
-const onEdit = () => {
-  if (isConfirmed.value) {
-    modelParameterStore.editPanel(panelName)
-  }
-}
-
-const onClear = () => {
-  modelParameterStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
-  modelParameterStore.startingAge = null
-  modelParameterStore.finishingAge = null
-  modelParameterStore.ageIncrement = null
-  modelParameterStore.startYear = null
-  modelParameterStore.endYear = null
-  modelParameterStore.yearIncrement = null
-  modelParameterStore.isForwardGrowEnabled = false
-  modelParameterStore.isBackwardGrowEnabled = false
-  modelParameterStore.isComputedMAIEnabled = false
-  modelParameterStore.isCulminationValuesEnabled = false
-  modelParameterStore.isBySpeciesEnabled = false
-  modelParameterStore.incSecondaryHeight = false
-  modelParameterStore.reportTitle = null
-  modelParameterStore.reportDescription = null
-  modelParameterStore.projectionType = null
-}
+defineExpose({ onConfirm })
 </script>
 <style scoped>
+/* Top row: age/year fields + include in report section */
+.report-top-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 0px;
+}
+
+.age-year-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.field-col {
+  min-width: 170px;
+  max-width: 170px;
+  flex: 0 0 auto;
+}
+
+.include-in-report-section {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+}
+
 .include-in-report-label {
   display: block;
   color: var(--typography-color-secondary);
-  font-family: var(--typography-font-families-bc-sans);
   font-weight: var(--typography-font-weights-regular);
-  font-size: var(--typography-font-size-body);
+  font-size: var(--typography-font-size-label);
   line-height: 1.5;
-  padding-bottom: 2px;
-  margin-bottom: 12px;
+  padding-bottom: 4px;
+  margin-bottom: 7px;
 }
 
 .include-in-report-disabled {
   color: var(--typography-color-disabled) !important;
 }
 
-.include-in-report-checkboxes {
-  padding-top: 1px; padding-bottom: 16px
+/* Minimum DBH section */
+.min-dbh-section {
+  margin-top: 16px;
+}
+
+.min-dbh-header-row {
+  margin-bottom: 8px;
 }
 
 .min-dbh-limit-species-group-label {
   display: block;
   color: var(--typography-color-secondary);
-  font-family: var(--typography-font-families-bc-sans);
   font-weight: var(--typography-font-weights-regular);
-  font-size: var(--typography-font-size-body);
+  font-size: var(--typography-font-size-label);
   line-height: 1.5;
-  padding-bottom: 2px;
-  margin-bottom: 12px;
 }
 
-.min-dbh-limit-species-group-list-container {
-  max-width: 5%;
-  padding-top: 0px;
-  padding-left: 20px
+.min-dbh-container {
+  padding: 0px 0px 0px 0px;
+}
+
+.min-dbh-species-group-label {
+  flex: 0 0 1.5rem;
+  width: 3rem;
+  padding-top: 15px !important;
+}
+
+.min-dbh-row + .min-dbh-row {
+  margin-top: 6px;
+}
+
+.min-dbh-label-row {
+  position: relative;
+  height: 1.2rem;
+  margin-top: -4px;
+  margin-bottom: -4px;
+  overflow: visible;
+}
+
+.min-dbh-label-item {
+  position: absolute;
+  font-size: var(--typography-font-size-label);
+  color: rgba(0, 0, 0, 0.87);
+  white-space: nowrap;
+}
+
+.min-dbh-label-item:nth-child(1) { left: 0; }
+.min-dbh-label-item:nth-child(2) { left: 25%;  transform: translateX(-50%); }
+.min-dbh-label-item:nth-child(3) { left: 50%;  transform: translateX(-50%); }
+.min-dbh-label-item:nth-child(4) { left: 75%;  transform: translateX(-50%); }
+.min-dbh-label-item:nth-child(5) { right: 0; }
+
+.min-dbh-labels-muted .min-dbh-label-item {
+  opacity: 0.6;
 }
 
 .min-dbh-disabled {
   color: var(--typography-color-disabled) !important;
 }
 
-.computed-mai-container {
-  padding-left: 8px;
+/* Edit button in header */
+.edit-button-col {
+  display: flex;
+  align-items: center;
 }
 
-.culmination-values-container {
-  padding-left: 17px;
+.edit-button-col :deep(.bcds-button.icon-top) {
+  padding: 2px 4px;
+  gap: 2px;
 }
 
-.by-species-container {
-  padding-left: 26px;
+.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
+  font-size: 18px;
 }
 
-.secondary-species-height-container {
-  padding-left: 34px;
+.edit-button-col :deep(.bcds-button.icon-top .button-label) {
+  font-size: 11px;
+}
+
+.expansion-panel-icon-col {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+}
+
+.expansion-panel-icon {
+  color: var(--typography-color-primary);
+}
+
+.expander-header {
+  align-items: center;
+}
+
+/* Desktop (>=960px): slider col makes group+slider total 50% of row width */
+.min-dbh-slider-col {
+  flex: 0 0 calc(50% - 3rem) !important;
+  width: calc(50% - 3rem) !important;
+  max-width: calc(50% - 3rem) !important;
+}
+
+@media (max-width: 1279px) {
+  .min-dbh-row {
+    flex-wrap: nowrap !important;
+  }
+
+  /* Mobile (<960px): full width by default */
+  .min-dbh-slider-col-mobile {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Tablet/large mobile (768-1024px): slider col makes group+slider total 50% */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .include-in-report-label-mobile {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+  }
+
+  .min-dbh-slider-col-mobile {
+    flex: 0 0 calc(50% - 3rem) !important;
+    width: calc(50% - 3rem) !important;
+    max-width: calc(50% - 3rem) !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 912px) {
+  .report-settings-checkboxes-row {
+    row-gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .field-col {
+    min-width: 170px;
+    max-width: calc(50% - 8px);
+  }
+
+  .include-in-report-label-mobile {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+  }
+
+  /* Allow include-in-report section to take full width so checkboxes wrap */
+  .include-in-report-section {
+    flex-shrink: 1;
+    min-width: 0;
+    flex-basis: 100%;
+  }
+
+  .min-dbh-species-group-label {
+    padding-left: 0px !important;
+  }
+
+  .min-dbh-slider-col-mobile {
+    margin-left: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .min-dbh-row + .min-dbh-row {
+    margin-top: 6px;
+  }
 }
 </style>

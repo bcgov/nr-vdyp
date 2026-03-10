@@ -109,14 +109,17 @@
         <SpeciesInfoPanel class="panel-spacing" />
         <SiteInfoPanel class="panel-spacing" />
         <StandInfoPanel class="panel-spacing" />
-        <ReportSettingsPanel class="panel-spacing" />
+        <ReportSettingsPanel ref="reportSettingsPanelRef" class="panel-spacing" />
         <RunProjectionButtonPanel
           v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
           :showCancelButton="isRunning"
+          :showRevertCancelButton="!isRunning"
+          :isRevertCancelDisabled="isCancelDisabled"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
           @cancelRun="cancelRunHandler"
+          @revertCancel="onRevertCancel"
         />
         <p v-if="duplicatedFromText" class="duplicated-from-note panel-spacing">
           {{ duplicatedFromText }}
@@ -194,9 +197,13 @@ import {
 } from '@/utils/util'
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 import { DownloadIcon, MenuIcon } from '@/assets/'
+import { revertPanelToSaved } from '@/services/projection/modelParameterService'
+import type { PanelName } from '@/types/types'
 
 const router = useRouter()
 const { isLoading: isProjectionLoading, loadProjection } = useProjectionLoader()
+
+const reportSettingsPanelRef = ref<{ onConfirm: () => Promise<boolean> }>()
 
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
@@ -224,6 +231,23 @@ const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PR
 const isDraft = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.DRAFT)
 const isFailed = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED)
 const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
+
+// Cancel button for ReportSettings panel: enabled when user is actively editing that panel
+const isCancelDisabled = computed(() =>
+  !modelParameterStore.panelState[CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS].editable,
+)
+
+const onRevertCancel = async () => {
+  appStore.isSavingProjection = true
+  try {
+    await revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS as PanelName)
+  } catch (error) {
+    console.error('Error reverting report settings to saved state:', error)
+    notificationStore.showErrorMessage(MESSAGE.PROJECTION_ERR.LOAD_FAILED, MESSAGE.PROJECTION_ERR.LOAD_FAILED_TITLE)
+  } finally {
+    appStore.isSavingProjection = false
+  }
+}
 
 const duplicatedFromText = computed(() => {
   const info = appStore.duplicatedFromInfo
@@ -278,7 +302,7 @@ const isFileUploadPanelsVisible = computed(() => {
 
 const fileUploadPrerequisitesDone = computed(
   () =>
-    fileUploadStore.panelState.reportInfo.confirmed &&
+    fileUploadStore.panelState.reportConfig.confirmed &&
     fileUploadStore.panelState.minimumDBH.confirmed,
 )
 
@@ -292,7 +316,7 @@ const uploadedFilesCount = computed(() => {
 const fileUploadProgressSections = computed(() => [
   {
     label: 'Report Details',
-    completed: fileUploadStore.panelState.reportInfo.confirmed,
+    completed: fileUploadStore.panelState.reportConfig.confirmed,
   },
   {
     label: 'Minimum DBH',
@@ -309,7 +333,7 @@ const fileUploadProgressSections = computed(() => [
 // but only when both prerequisites (Report Details + Minimum DBH) are confirmed.
 const fileUploadPercentage = computed(() => {
   let pct = 0
-  if (fileUploadStore.panelState.reportInfo.confirmed) pct += 33
+  if (fileUploadStore.panelState.reportConfig.confirmed) pct += 33
   if (fileUploadStore.panelState.minimumDBH.confirmed) pct += 33
   if (fileUploadPrerequisitesDone.value) {
     pct += uploadedFilesCount.value * 17
@@ -319,7 +343,7 @@ const fileUploadPercentage = computed(() => {
 
 const fileUploadCompletedCount = computed(() => {
   let count = 0
-  if (fileUploadStore.panelState.reportInfo.confirmed) count++
+  if (fileUploadStore.panelState.reportConfig.confirmed) count++
   if (fileUploadStore.panelState.minimumDBH.confirmed) count++
   if (fileUploadPrerequisitesDone.value && uploadedFilesCount.value === 2) count++
   return count
@@ -396,20 +420,20 @@ const restoreFromSession = async (): Promise<boolean> => {
   const sessionCtx = loadProjectionSession()
 
   if (!sessionCtx) {
-    // No session context — direct URL access with no store data, redirect to list
+    // No session context - direct URL access with no store data, redirect to list
     notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.NO_SESSION, MESSAGE.PROJECTION_ERR.NO_SESSION_TITLE)
     router.replace(CONSTANTS.ROUTE_PATH.PROJECTION_LIST)
     return false
   }
 
   if (sessionCtx.type !== CONSTANTS.PROJECTION_SESSION_CTX.EXISTING_TYPE) {
-    // New (unsaved) projection refresh — restore model selection and show empty form
+    // New (unsaved) projection refresh - restore model selection and show empty form
     appStore.setModelSelection(sessionCtx.ms)
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.CREATE)
     return true
   }
 
-  // Existing projection refresh — re-fetch from backend
+  // Existing projection refresh - re-fetch from backend
   isProgressVisible.value = true
   progressMessage.value = MESSAGE.PROGRESS_MSG.LOADING_PROJECTION
 
@@ -512,6 +536,13 @@ const handleError = (error: any) => {
 }
 
 const runModelHandler = async () => {
+  // For Manual Input: validate and save ReportSettings before running
+  // (ReportSettingsPanel has no Next button, so validation happens at run time)
+  if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
+    const isValid = await reportSettingsPanelRef.value?.onConfirm()
+    if (!isValid) return
+  }
+
   try {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_PROJECTION
