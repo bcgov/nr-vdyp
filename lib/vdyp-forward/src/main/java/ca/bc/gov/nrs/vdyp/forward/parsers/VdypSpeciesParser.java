@@ -182,7 +182,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 						var inferredTotalAge = iTotalAge;
 						var inferredYearsToBreastHeight = iYearsToBreastHeight;
 						var inferYearsAtBreastHeight = (yearsAtBreastHeight == null || yearsAtBreastHeight.isNaN()
-								|| yearsAtBreastHeight <= 0f);
+								|| yearsAtBreastHeight <= 0f) && (inferredTotalAge > inferredYearsToBreastHeight);
 
 						var calculatedDH = dominantHeight;
 						if (overrideSpeciesDH && siteCurveNumber > 0 && dominantHeight > 0) {

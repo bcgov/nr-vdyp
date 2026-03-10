@@ -4,7 +4,10 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.asFloat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.controlMapHasEntry;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notANumber;
+import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.IOException;
 import java.util.List;
@@ -206,6 +209,37 @@ class BankTest {
 						sb.addSite(ib -> {
 							ib.yearsToBreastHeight(6f);
 							ib.height(20f);
+						});
+					});
+				});
+			});
+
+			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			assertThat(pLayer, notNullValue());
+
+			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
+
+			assertThat(bank.yearsAtBreastHeight[1], asFloat(notANumber()));
+		}
+
+		@Test
+		void testTotalLessThanYTBH() throws ProcessingException {
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Blah", 2025);
+				pb.percentAvailable(90f);
+				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.forestInventoryZone("");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+
+						sb.addSite(ib -> {
+							ib.yearsToBreastHeight(6f);
+							ib.ageTotal(3.5f);
+							ib.height(0.5f);
 						});
 					});
 				});
