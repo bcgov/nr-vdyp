@@ -118,6 +118,44 @@ class ForwardSpeciesParserTest {
 	}
 
 	@Test
+	void testYABHNotInferredWhenTotalAgeLessThanYTBH() throws Exception {
+
+		var parser = new VdypSpeciesParser().reportSIHeight();
+
+		Map<String, Object> controlMap = new HashMap<>();
+
+		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), "test.dat");
+		TestUtils.populateControlMapGenusReal(controlMap);
+
+		var fileResolver = TestUtils.fileResolverContext(
+				"test.dat",
+				TestUtils.makeInputStream(
+						"01002 S000002 00     1970 P 15 L  L  100.0     0.0     0.0     0.0 14.63 0.650  3.0  -9.0  6.30 0 14",
+						"01002 S000001 00     1970"
+				)
+		);
+
+		parser.modify(controlMap, fileResolver);
+
+		var parserFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name());
+
+		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
+
+		@SuppressWarnings("unchecked")
+		var stream = ((StreamingParserFactory<Collection<VdypSpecies>>) parserFactory).get();
+
+		assertThat(stream, instanceOf(StreamingParser.class));
+
+		var genera = assertNext(stream);
+
+		// check for the passed in yabh to have been used as the height since the total age is less than the years to
+		// breast height
+		assertThat(genera.stream().findFirst().get().getSite().get().getYearsAtBreastHeight(), present(is(Float.NaN)));
+
+		assertEmpty(stream);
+	}
+
+	@Test
 	void testParseOneGenusOverrideDH() throws Exception {
 
 		var parser = new VdypSpeciesParser().reportSIHeight();
