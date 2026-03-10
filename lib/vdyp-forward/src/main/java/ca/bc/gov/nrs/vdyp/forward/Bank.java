@@ -198,7 +198,8 @@ class Bank {
 			yearsToBreastHeight[index] = s.getYearsToBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
 			yearsAtBreastHeight[index] = s.getYearsAtBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
 			if (Float.isNaN(yearsAtBreastHeight[index]) && ageTotals[index] != VdypEntity.MISSING_FLOAT_VALUE
-					&& yearsToBreastHeight[index] != VdypEntity.MISSING_FLOAT_VALUE) {
+					&& yearsToBreastHeight[index] != VdypEntity.MISSING_FLOAT_VALUE
+					&& ageTotals[index] >= yearsToBreastHeight[index]) {
 				yearsAtBreastHeight[index] = ageTotals[index] - yearsToBreastHeight[index];
 			}
 			siteCurveNumbers[index] = s.getSiteCurveNumber().orElse(VdypEntity.MISSING_INTEGER_VALUE);
