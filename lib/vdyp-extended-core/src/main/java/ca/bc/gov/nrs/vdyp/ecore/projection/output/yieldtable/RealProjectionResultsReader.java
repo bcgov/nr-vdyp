@@ -73,7 +73,7 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 				vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
 			}
 
-			if (projectionResultsByYear.size() == 0) {
+			if (projectionResultsByYear.isEmpty()) {
 				recordPolygonProjectionInformationMissing(polygon);
 			}
 
