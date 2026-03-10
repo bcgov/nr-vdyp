@@ -79,14 +79,12 @@ public final class BatchUtils {
 		if (csvLine == null || csvLine.isEmpty()) {
 			return null;
 		}
-
+		String field = csvLine;
 		// Quick path for unquoted fields (most common case)
 		int commaIndex = csvLine.indexOf(',');
-		if (commaIndex == -1) {
-			return null; // No comma found, not a valid CSV line
+		if (commaIndex > 0) {
+			field = csvLine.substring(0, commaIndex).trim();
 		}
-
-		String field = csvLine.substring(0, commaIndex).trim();
 
 		// Handle quoted fields: remove surrounding quotes and unescape doubled quotes
 		if (field.length() >= 2 && field.charAt(0) == '"' && field.charAt(field.length() - 1) == '"') {
