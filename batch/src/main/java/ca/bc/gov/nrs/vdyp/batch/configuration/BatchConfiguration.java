@@ -164,9 +164,7 @@ public class BatchConfiguration {
 				stepChunkSize, batchProperties.getReader().getDefaultChunkSize()
 		);
 
-		return new StepBuilder(
-				BatchConstants.Job.WORKER_STEP_NAME, jobRepository
-		)
+		return new StepBuilder(BatchConstants.Job.WORKER_STEP_NAME, jobRepository)
 				.<BatchChunkMetadata, BatchChunkMetadata>chunk(stepChunkSize, transactionManager)
 				.reader(partitionReader).processor(batchItemProcessor).writer(partitionWriter).listener(partitionWriter)
 				.listener(retryPolicy).listener(skipPolicy).faultTolerant().retryPolicy(retryPolicy)
