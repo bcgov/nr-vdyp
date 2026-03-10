@@ -67,64 +67,87 @@ public final class BatchUtils {
 	}
 
 	/**
+	 * Extracts the first field from a CSV line, handling both quoted and unquoted fields.
+	 *
+	 * Supports standard CSV quoting: - Unquoted: "value,other" -> "value" - Quoted: ""value"",other" -> "value" - With
+	 * spaces: " value ,other" -> "value"
+	 *
+	 * @param csvLine The CSV line to parse
+	 * @return The first field trimmed, or null if the line is null/empty or has no comma separator
+	 */
+	private static String extractFirstField(String csvLine) {
+		if (csvLine == null || csvLine.isEmpty()) {
+			return null;
+		}
+
+		// Quick path for unquoted fields (most common case)
+		int commaIndex = csvLine.indexOf(',');
+		if (commaIndex == -1) {
+			return null; // No comma found, not a valid CSV line
+		}
+
+		String field = csvLine.substring(0, commaIndex).trim();
+
+		// Handle quoted fields: remove surrounding quotes and unescape doubled quotes
+		if (field.length() >= 2 && field.charAt(0) == '"' && field.charAt(field.length() - 1) == '"') {
+			field = field.substring(1, field.length() - 1).replace("\"\"", "\"");
+		}
+
+		return field.isEmpty() ? null : field;
+	}
+
+	/**
 	 * Determines if a line is a header line.
+	 *
+	 * Handles both quoted and unquoted headers. Checks if the first field matches known header keywords.
 	 */
 	public static boolean isHeaderLine(String line) {
 		if (line == null || line.trim().isEmpty()) {
 			return true; // Treat empty lines as headers (skip them)
 		}
 
-		String upperLine = line.toUpperCase();
-		// check if it starts with header keywords
-		return upperLine.startsWith("FEATURE") || upperLine.startsWith("TABLE") || upperLine.startsWith("POLYGON")
-				|| upperLine.contains("LAYER_ID") || upperLine.contains("SPECIES_CODE");
+		String firstField = extractFirstField(line);
+		if (firstField == null) {
+			return true; // Treat lines without comma as headers
+		}
+
+		String upperField = firstField.toUpperCase();
+		// Check if it starts with header keywords
+		return upperField.startsWith("FEATURE") || upperField.startsWith("TABLE") || upperField.startsWith("POLYGON")
+				|| upperField.contains("LAYER_ID") || upperField.contains("SPECIES_CODE");
 	}
 
 	/**
 	 * Extract FEATURE_ID from the first field of a CSV line.
+	 *
+	 * Handles both quoted and unquoted values from any valid CSV file.
 	 *
 	 * @param csvLine The CSV line to parse
 	 * @return The FEATURE_ID as a String, or null if the line is null/empty. Callers MUST check for null before using
 	 *         the returned value.
 	 */
 	public static String extractFeatureId(String csvLine) {
-		if (csvLine == null || csvLine.trim().isEmpty()) {
-			return null;
-		}
-
-		int commaIndex = csvLine.indexOf(',');
-		if (commaIndex == -1) {
-			// No comma found, not a valid line return null
-			return null;
-		} else {
-			// Extract first field before comma
-			return csvLine.substring(0, commaIndex).trim();
-		}
+		return extractFirstField(csvLine);
 	}
 
 	/**
-	 * Extract FEATURE_ID from the first field of a CSV line as an Integer to allow for numeric comaprisons.
+	 * Extract FEATURE_ID from the first field of a CSV line as a Long for numeric comparisons.
+	 *
+	 * Handles both quoted and unquoted values from any valid CSV file.
 	 *
 	 * @param csvLine The CSV line to parse
-	 * @return The FEATURE_ID as a Integer, or null if the line is null/empty. Callers MUST check for null before using
-	 *         the returned value.
+	 * @return The FEATURE_ID as a Long, or null if the line is null/empty or the first field is not a valid number.
+	 *         Callers MUST check for null before using the returned value.
 	 */
 	public static Long extractFeatureIdLong(String csvLine) {
-		if (csvLine == null || csvLine.trim().isEmpty()) {
+		String field = extractFirstField(csvLine);
+		if (field == null) {
 			return null;
 		}
-
-		int commaIndex = csvLine.indexOf(',');
-		if (commaIndex == -1) {
-			// No comma found, not a valid line return null
+		try {
+			return Long.valueOf(field);
+		} catch (NumberFormatException e) {
 			return null;
-		} else {
-			try {
-				// Extract first field before comma
-				return Long.valueOf(csvLine.substring(0, commaIndex).trim());
-			} catch (NumberFormatException e) {
-				return null;
-			}
 		}
 	}
 
