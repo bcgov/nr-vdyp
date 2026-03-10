@@ -8,7 +8,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 
 public interface VdypForwardDefaultingParser extends ValueParser<Float> {
-
 	/**
 	 * Parser for non-negative single precision floats with default -9.0. -9.0 results in an
 	 * VdypEntity.MISSING_FLOAT_VALUE being returned. All other negative values, and those greater than Float.MAX_VALUE,
@@ -53,7 +52,7 @@ public interface VdypForwardDefaultingParser extends ValueParser<Float> {
 					|| result.compareTo(min) < (includeMin ? 0 : 1))) {
 				return Optional.of(
 						String.format(
-								"{} must be between {} ({}) and {} ({})", name, min,
+								"%s must be between %s (%s) and %s (%s)", name, min,
 								includeMin ? "inclusive" : "exclusive", max, includeMax ? "inclusive" : "exclusive"
 						)
 				);
