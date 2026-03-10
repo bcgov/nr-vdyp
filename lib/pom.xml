@@ -45,16 +45,9 @@
 			<plugin>
 				<groupId>net.revelc.code.formatter</groupId>
 				<artifactId>formatter-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>format</goal>
-						</goals>
-						<configuration>
-							<configFile>eclipse/formatter.xml</configFile>
-						</configuration>
-					</execution>
-				</executions>
+				<configuration>
+					<configFile>eclipse/formatter.xml</configFile>
+				</configuration>
 			</plugin>
 
 			<plugin>
