@@ -10,6 +10,14 @@ import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 public interface VdypForwardDefaultingParser extends ValueParser<Float> {
 
 	/**
+	 * Parser for single precision floats with default -9.0. -9.0 results in an VdypEntity.MISSING_FLOAT_VALUE being
+	 * returned. Allow for small negative values as found when reference year has trees below breast height
+	 */
+	public static final ValueParser<Float> FLOAT_WITH_DEFAULT_ALLOW_SMALL_NEG = rangeSilentWithDefaulting(
+			FLOAT, -8.9f, true, Float.MAX_VALUE, true, -9.0f, VdypEntity.MISSING_FLOAT_VALUE, "non-negative float"
+	);
+
+	/**
 	 * Parser for non-negative single precision floats with default -9.0. -9.0 results in an
 	 * VdypEntity.MISSING_FLOAT_VALUE being returned. All other negative values, and those greater than Float.MAX_VALUE,
 	 * result in an error.
@@ -53,7 +61,7 @@ public interface VdypForwardDefaultingParser extends ValueParser<Float> {
 					|| result.compareTo(min) < (includeMin ? 0 : 1))) {
 				return Optional.of(
 						String.format(
-								"{} must be between {} ({}) and {} ({})", name, min,
+								"%s must be between %s (%s) and %s (%s)", name, min,
 								includeMin ? "inclusive" : "exclusive", max, includeMax ? "inclusive" : "exclusive"
 						)
 				);

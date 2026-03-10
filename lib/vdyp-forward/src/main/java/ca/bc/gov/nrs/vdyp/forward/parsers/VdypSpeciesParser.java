@@ -99,7 +99,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 					.value(6, SITE_INDEX, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
 					.value(6, DOMINANT_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
 					.value(6, TOTAL_AGE, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, AGE_AT_BREAST_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
+					.value(6, AGE_AT_BREAST_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT_ALLOW_SMALL_NEG)
 					.value(6, YEARS_TO_BREAST_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
 					.value(2, IS_PRIMARY_SPECIES, ControlledValueParser.optional(ValueParser.LOGICAL_0_1))
 					.value(3, SITE_CURVE_NUMBER, VdypForwardDefaultingParser.INTEGER_WITH_DEFAULT);
@@ -183,6 +183,10 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 						var inferredYearsToBreastHeight = iYearsToBreastHeight;
 						var inferYearsAtBreastHeight = (yearsAtBreastHeight == null || yearsAtBreastHeight.isNaN()
 								|| yearsAtBreastHeight <= 0f);
+
+						if (inferYearsAtBreastHeight) {
+							// inferYearsAtBreastHeight = (inferredTotalAge > inferredYearsToBreastHeight);
+						}
 
 						var calculatedDH = dominantHeight;
 						if (overrideSpeciesDH && siteCurveNumber > 0 && dominantHeight > 0) {
