@@ -59,9 +59,14 @@ public class BaseAreaLowException extends LayerValueLowException {
 
 	@Override
 	public Optional<Integer> getIpassCode(VdypApplicationIdentifier app) {
-		if (app == VdypApplicationIdentifier.VRI_START)
+		switch (app) {
+		case FIP_START:
+			return Optional.of(-12);
+		case VRI_START:
 			return Optional.of(-7);
-		return Optional.empty();
+		default:
+			return Optional.empty();
+		}
 	}
 
 }
