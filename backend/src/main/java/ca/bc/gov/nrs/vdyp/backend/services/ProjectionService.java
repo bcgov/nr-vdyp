@@ -505,7 +505,7 @@ public class ProjectionService {
 					ProjectionAction.CANCEL, ProjectionAction.UPDATE_PROGRESS
 			), //
 			ProjectionStatusCodeModel.READY, Set.of(ProjectionAction.DELETE, ProjectionAction.READ),
-			ProjectionStatusCodeModel.FAILED, Set.of(ProjectionAction.DELETE, ProjectionAction.READ)
+			ProjectionStatusCodeModel.FAILED, Set.of(ProjectionAction.UPDATE, ProjectionAction.DELETE, ProjectionAction.READ)
 	);
 
 	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
