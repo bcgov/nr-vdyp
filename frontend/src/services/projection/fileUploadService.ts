@@ -318,9 +318,9 @@ export const ensureProjectionExists = async (
 /**
  * Saves the projection when a panel's Next button is clicked (File Upload mode).
  *
- * - reportInfo panel (no GUID yet): Creates a new projection with parameters only (no files),
+ * - reportConfig panel (no GUID yet): Creates a new projection with parameters only (no files),
  *   stores the GUID, and switches to EDIT mode.
- * - reportInfo panel (GUID exists, e.g. created via file upload): Updates the existing projection.
+ * - reportConfig panel (GUID exists, e.g. created via file upload): Updates the existing projection.
  * - Other panels in EDIT mode: Updates the existing projection parameters.
  *
  * @param fileUploadStore The store containing file upload parameters and files.
@@ -333,14 +333,14 @@ export const saveProjectionOnPanelConfirm = async (
 ): Promise<void> => {
   const appStore = useAppStore()
 
-  // When confirming reportInfo, omit utils so that minimumDBH completion can be inferred
-  // on restore (utils present = minimumDBH confirmed; utils empty = only reportInfo confirmed).
+  // When confirming reportConfig, omit utils so that minimumDBH completion can be inferred
+  // on restore (utils present = minimumDBH confirmed; utils empty = only reportConfig confirmed).
   const baseParams = buildProjectionParameters(fileUploadStore)
-  const projectionParameters = panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO
+  const projectionParameters = panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG
     ? { ...baseParams, utils: [] }
     : baseParams
 
-  if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO) {
+  if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG) {
     const existingGUID = appStore.getCurrentProjectionGUID
     if (existingGUID) {
       // Projection already exists (e.g. created via file upload) - update it

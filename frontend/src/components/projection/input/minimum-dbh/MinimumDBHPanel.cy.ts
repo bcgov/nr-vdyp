@@ -90,7 +90,7 @@ describe('<MinimumDBHPanel />', () => {
     it('is enabled when the panel is confirmed and not currently editable', () => {
       mountPanel((fu) => {
         // Confirm both sequential panels; minimumDBH becomes confirmed+closed
-        fu.confirmPanel('reportInfo')
+        fu.confirmPanel('reportConfig')
         fu.confirmPanel('minimumDBH')
         // Re-open the panel so the title row with the Edit button is visible
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
@@ -100,7 +100,7 @@ describe('<MinimumDBHPanel />', () => {
 
     it('is disabled when projection status is RUNNING (even if confirmed)', () => {
       mountPanel((fu, app) => {
-        fu.confirmPanel('reportInfo')
+        fu.confirmPanel('reportConfig')
         fu.confirmPanel('minimumDBH')
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
         app.setCurrentProjectionStatus(PROJECTION_STATUS.RUNNING)
@@ -110,7 +110,7 @@ describe('<MinimumDBHPanel />', () => {
 
     it('is disabled when projection status is READY (even if confirmed)', () => {
       mountPanel((fu, app) => {
-        fu.confirmPanel('reportInfo')
+        fu.confirmPanel('reportConfig')
         fu.confirmPanel('minimumDBH')
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
         app.setCurrentProjectionStatus(PROJECTION_STATUS.READY)
@@ -167,7 +167,7 @@ describe('<MinimumDBHPanel />', () => {
     it('species labels do NOT have the disabled class when panel is editable', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportInfo') // makes minimumDBH editable
+        fu.confirmPanel('reportConfig') // makes minimumDBH editable
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.get('.min-dbh-species-group-label.min-dbh-disabled').should('not.exist')
@@ -176,7 +176,7 @@ describe('<MinimumDBHPanel />', () => {
     it('sliders are enabled when panel is editable and projection type is not CFS Biomass', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportInfo') // makes minimumDBH editable
+        fu.confirmPanel('reportConfig') // makes minimumDBH editable
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.get('.v-slider.v-input--disabled').should('not.exist')
@@ -185,7 +185,7 @@ describe('<MinimumDBHPanel />', () => {
     it('sliders are disabled when projectionType is CFS Biomass (regardless of editable state)', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportInfo') // makes minimumDBH editable
+        fu.confirmPanel('reportConfig') // makes minimumDBH editable
         fu.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
@@ -195,7 +195,7 @@ describe('<MinimumDBHPanel />', () => {
     it('species labels have disabled class when projectionType is CFS Biomass', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportInfo') // makes minimumDBH editable
+        fu.confirmPanel('reportConfig') // makes minimumDBH editable
         fu.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
@@ -235,7 +235,7 @@ describe('<MinimumDBHPanel />', () => {
     it('label rows do NOT have min-dbh-labels-muted class when panel is editable', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportInfo') // makes minimumDBH editable
+        fu.confirmPanel('reportConfig') // makes minimumDBH editable
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.get('.min-dbh-label-row.min-dbh-labels-muted').should('not.exist')
@@ -244,7 +244,7 @@ describe('<MinimumDBHPanel />', () => {
     it('label rows have min-dbh-labels-muted class when projectionType is CFS Biomass', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportInfo') // makes minimumDBH editable
+        fu.confirmPanel('reportConfig') // makes minimumDBH editable
         fu.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
@@ -293,9 +293,9 @@ describe('<MinimumDBHPanel />', () => {
     it('"Next" and "Cancel" are enabled when the panel is editable', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportInfo') // opens minimumDBH and makes it editable
+        fu.confirmPanel('reportConfig') // opens minimumDBH and makes it editable
       })
-      // minimumDBH is now open (confirmPanel('reportInfo') opens it)
+      // minimumDBH is now open (confirmPanel('reportConfig') opens it)
       cy.contains('button', 'Next').should('not.be.disabled')
       cy.contains('button', 'Cancel').should('not.be.disabled')
     })

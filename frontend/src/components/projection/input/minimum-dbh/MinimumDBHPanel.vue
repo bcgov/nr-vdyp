@@ -288,12 +288,11 @@ const onCancel = async () => {
   padding: 0px 0px 12px 0px;
 }
 
-@media (min-width: 1280px) {
-  .min-dbh-slider-col {
-    flex: 0 0 35% !important;
-    width: 35% !important;
-    max-width: 35% !important;
-  }
+/* Desktop (>=960px): slider col makes group+slider total 50% of row width */
+.min-dbh-slider-col {
+  flex: 0 0 calc(50% - 3rem) !important;
+  width: calc(50% - 3rem) !important;
+  max-width: calc(50% - 3rem) !important;
 }
 
 @media (max-width: 1279px) {
@@ -301,10 +300,20 @@ const onCancel = async () => {
     flex-wrap: nowrap !important;
   }
 
+  /* Mobile (<960px): full width by default */
   .min-dbh-slider-col-mobile {
     flex: 1 1 0 !important;
     width: auto !important;
     max-width: 100% !important;
+  }
+}
+
+/* Tablet/large mobile (768-1024px): slider col makes group+slider total 50% */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .min-dbh-slider-col-mobile {
+    flex: 0 0 calc(50% - 3rem) !important;
+    width: calc(50% - 3rem) !important;
+    max-width: calc(50% - 3rem) !important;
   }
 }
 
@@ -323,14 +332,4 @@ const onCancel = async () => {
     margin-top: 6px;
   }
 }
-
-@media (min-width: 768px) and (max-width: 1024px) {
-  .min-dbh-slider-col-mobile {
-    flex: 0 0 35% !important;
-    width: 35% !important;
-    max-width: 35% !important;
-  }
-}
-
-
 </style>

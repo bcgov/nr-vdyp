@@ -69,16 +69,16 @@ export const SPECIAL_INDICATORS = Object.freeze({
   COMPUTED: 'Computed',
 })
 
-export const MODEL_PARAMETER_PANEL = Object.freeze({
-  DETAILS_INFO: 'detailsInfo',
+export const MANUAL_INPUT_PANEL = Object.freeze({
+  REPORT_DETAILS: 'reportDetails',
   SPECIES_INFO: 'speciesInfo',
   SITE_INFO: 'siteInfo',
   STAND_INFO: 'standInfo',
-  REPORT_INFO: 'reportInfo',
+  REPORT_SETTINGS: 'reportSettings',
 })
 
 export const FILE_UPLOAD_PANEL = Object.freeze({
-  REPORT_INFO: 'reportInfo',
+  REPORT_CONFIG: 'reportConfig',
   MINIMUM_DBH: 'minimumDBH',
   ATTACHMENTS: 'attachments',
 })
@@ -184,19 +184,11 @@ export const MODEL_PARAM_TAB_NAME = Object.freeze({
   VIEW_ERROR_MESSAGES: 'View Error Messages',
 })
 
-export const FILE_UPLOAD_TAB_NAME = Object.freeze({
-  FILE_UPLOAD: 'Parameter Selection',
-})
-
 export const MODEL_PARAM_TAB_INDEX = {
   PARAM_SELECTION: 0,
   MODEL_REPORT: 1,
   VIEW_LOG_FILE: 2,
   VIEW_ERROR_MESSAGES: 3,
-}
-
-export const FILE_UPLOAD_TAB_INDEX = {
-  PARAM_SELECTION: 0,
 }
 
 export const FILE_NAME = Object.freeze({

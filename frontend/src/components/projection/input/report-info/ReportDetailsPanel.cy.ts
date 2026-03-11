@@ -45,7 +45,7 @@ describe('<ReportDetailsPanel />', () => {
 
     it('panel content is not in the DOM when the panel is closed', () => {
       mountPanel((modelStore) => {
-        modelStore.panelOpenStates.detailsInfo = CONSTANTS.PANEL.CLOSE
+        modelStore.panelOpenStates.reportDetails = CONSTANTS.PANEL.CLOSE
       })
       cy.get('#manualReportTitle').should('not.exist')
     })
@@ -59,7 +59,7 @@ describe('<ReportDetailsPanel />', () => {
 
     it('shows mdi-chevron-down when the panel is closed', () => {
       mountPanel((modelStore) => {
-        modelStore.panelOpenStates.detailsInfo = CONSTANTS.PANEL.CLOSE
+        modelStore.panelOpenStates.reportDetails = CONSTANTS.PANEL.CLOSE
       })
       cy.get('.expansion-panel-icon').should('have.class', 'mdi-chevron-down')
     })
@@ -125,7 +125,7 @@ describe('<ReportDetailsPanel />', () => {
 
     it('inputs are disabled when panel is not editable', () => {
       mountPanel((modelStore) => {
-        modelStore.panelState.detailsInfo.editable = false
+        modelStore.panelState.reportDetails.editable = false
       })
       cy.get('#manualReportTitle').should('be.disabled')
       cy.get('#manualReportDescription').should('be.disabled')
@@ -196,7 +196,7 @@ describe('<ReportDetailsPanel />', () => {
 
     it('"Next" and "Cancel" are disabled when the panel is not editable', () => {
       mountPanel((modelStore) => {
-        modelStore.panelState.detailsInfo.editable = false
+        modelStore.panelState.reportDetails.editable = false
       })
       cy.contains('button', 'Next').should('be.disabled')
       cy.contains('button', 'Cancel').should('be.disabled')
@@ -223,24 +223,24 @@ describe('<ReportDetailsPanel />', () => {
 
     it('is disabled when the panel is not yet confirmed', () => {
       mountPanel((modelStore) => {
-        modelStore.panelState.detailsInfo.confirmed = false
-        modelStore.panelState.detailsInfo.editable = true
+        modelStore.panelState.reportDetails.confirmed = false
+        modelStore.panelState.reportDetails.editable = true
       })
       cy.contains('button', 'Edit').should('be.disabled')
     })
 
     it('is enabled when the panel is confirmed and not editable', () => {
       mountPanel((modelStore) => {
-        modelStore.panelState.detailsInfo.confirmed = true
-        modelStore.panelState.detailsInfo.editable = false
+        modelStore.panelState.reportDetails.confirmed = true
+        modelStore.panelState.reportDetails.editable = false
       })
       cy.contains('button', 'Edit').should('not.be.disabled')
     })
 
     it('is disabled when the projection status is RUNNING', () => {
       mountPanel((modelStore, appStore) => {
-        modelStore.panelState.detailsInfo.confirmed = true
-        modelStore.panelState.detailsInfo.editable = false
+        modelStore.panelState.reportDetails.confirmed = true
+        modelStore.panelState.reportDetails.editable = false
         appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.RUNNING
       })
       cy.contains('button', 'Edit').should('be.disabled')
@@ -248,8 +248,8 @@ describe('<ReportDetailsPanel />', () => {
 
     it('is disabled when the projection status is READY', () => {
       mountPanel((modelStore, appStore) => {
-        modelStore.panelState.detailsInfo.confirmed = true
-        modelStore.panelState.detailsInfo.editable = false
+        modelStore.panelState.reportDetails.confirmed = true
+        modelStore.panelState.reportDetails.editable = false
         appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.READY
       })
       cy.contains('button', 'Edit').should('be.disabled')
@@ -257,12 +257,12 @@ describe('<ReportDetailsPanel />', () => {
 
     it('clicking Edit makes the panel editable', () => {
       const { modelStore } = mountPanel((modelStore) => {
-        modelStore.panelState.detailsInfo.confirmed = true
-        modelStore.panelState.detailsInfo.editable = false
+        modelStore.panelState.reportDetails.confirmed = true
+        modelStore.panelState.reportDetails.editable = false
       })
       cy.contains('button', 'Edit').click({ force: true })
       cy.then(() => {
-        expect(modelStore.panelState.detailsInfo.editable).to.be.true
+        expect(modelStore.panelState.reportDetails.editable).to.be.true
       })
     })
   })
@@ -275,7 +275,7 @@ describe('<ReportDetailsPanel />', () => {
       cy.contains('button', 'Next').click()
       cy.contains('Report Title is required.').should('exist')
       cy.then(() => {
-        expect(modelStore.panelState.detailsInfo.confirmed).to.be.false
+        expect(modelStore.panelState.reportDetails.confirmed).to.be.false
       })
     })
 

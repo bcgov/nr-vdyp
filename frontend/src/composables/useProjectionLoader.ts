@@ -100,7 +100,7 @@ export function useProjectionLoader() {
 
   /**
    * Loads a projection by GUID and populates all stores.
-   * Does NOT navigate — caller is responsible for navigation.
+   * Does NOT navigate - caller is responsible for navigation.
    */
   const loadProjection = async (projectionGUID: string, viewMode: ProjectionViewMode): Promise<boolean> => {
     isLoading.value = true

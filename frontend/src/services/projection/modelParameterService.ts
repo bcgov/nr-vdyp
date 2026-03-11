@@ -422,6 +422,8 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
     ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
     ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+    // Manual Input projections are forward-only by nature
+    ExecutionOptionsEnum.ForwardGrowEnabled,
   ]
 
   const excludedExecutionOptions: ExecutionOptionsEnum[] = [
@@ -436,6 +438,8 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
     ExecutionOptionsEnum.DoIncludeProjectionFiles,
     ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
+    // Manual Input projections do not support backward growth
+    ExecutionOptionsEnum.BackGrowEnabled,
   ]
 
   const optionMappings = [
@@ -449,14 +453,6 @@ const buildExecutionOptions = (
         modelParameterStore.projectionType ===
         CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
       option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    },
-    {
-      flag: modelParameterStore.isForwardGrowEnabled,
-      option: ExecutionOptionsEnum.ForwardGrowEnabled,
-    },
-    {
-      flag: modelParameterStore.isBackwardGrowEnabled,
-      option: ExecutionOptionsEnum.BackGrowEnabled,
     },
     {
       flag: modelParameterStore.isComputedMAIEnabled,
@@ -666,7 +662,7 @@ export const runProjection = async (): Promise<ProjectionModel> => {
 /**
  * Saves the projection when a panel's Next button is clicked (Manual Input mode).
  *
- * - CREATE mode + first panel (detailsInfo): Creates a new projection with projection parameters and model parameters,
+ * - CREATE mode + first panel (reportDetails): Creates a new projection with projection parameters and model parameters,
  *   stores the GUID, and switches to EDIT mode.
  * - EDIT mode (any panel): Updates the existing projection parameters and model parameters.
  *
@@ -682,7 +678,7 @@ export const saveProjectionOnPanelConfirm = async (
 
   if (
     appStore.viewMode === PROJECTION_VIEW_MODE.CREATE &&
-    panelName === CONSTANTS.MODEL_PARAMETER_PANEL.DETAILS_INFO
+    panelName === CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS
   ) {
     // Create mode + first panel: create projection
     const result = await createProjection(modelParameterStore)
@@ -743,8 +739,6 @@ const hasReportInfoChanges = (
   if (!strEq(store.reportTitle, savedParams.reportTitle)) return true
   if (!strEq(store.reportDescription, savedDescription)) return true
   const opts = savedParams.selectedExecutionOptions
-  if (store.isForwardGrowEnabled !== opts.includes(ExecutionOptionsEnum.ForwardGrowEnabled)) return true
-  if (store.isBackwardGrowEnabled !== opts.includes(ExecutionOptionsEnum.BackGrowEnabled)) return true
   if (store.isComputedMAIEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)) return true
   if (store.isCulminationValuesEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)) return true
   if (store.isBySpeciesEnabled !== opts.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)) return true
@@ -787,14 +781,14 @@ export const hasPanelUnsavedChanges = async (
   const savedParams = parseProjectionParams(projectionModel.projectionParameters)
 
   switch (panelName) {
-    case CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO:
+    case CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO:
       return savedModelParams ? hasSpeciesInfoChanges(modelParameterStore, savedModelParams) : false
-    case CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO:
+    case CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO:
       return savedModelParams ? hasSiteInfoChanges(modelParameterStore, savedModelParams) : false
-    case CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO:
+    case CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO:
       return savedModelParams ? hasStandInfoChanges(modelParameterStore, savedModelParams) : false
-    case CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO:
-      return hasReportInfoChanges(modelParameterStore, savedParams, projectionModel.reportDescription || null)
+    case CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS:
+      return hasReportInfoChanges(modelParameterStore, savedParams, projectionModel.reportDescription ?? null)
     default:
       return false
   }
@@ -838,6 +832,22 @@ export const revertPanelToSaved = async (panelName: PanelName): Promise<void> =>
   // (isViewMode=false would reset all panels to CREATE mode, losing confirmed states.)
   modelParameterStore.restoreFromProjectionParams(params, true)
   modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
+
+  // Close all panels except the cancelled panel.
+  // restoreFromProjectionParams with isViewMode=true opens all panels, so we should close the
+  // ones the user was not editing to avoid them auto-opening on Cancel.
+  const allPanelNames: PanelName[] = [
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS as PanelName,
+    CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO as PanelName,
+    CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO as PanelName,
+    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO as PanelName,
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS as PanelName,
+  ]
+  for (const panel of allPanelNames) {
+    if (panel !== panelName) {
+      modelParameterStore.panelOpenStates[panel] = CONSTANTS.PANEL.CLOSE
+    }
+  }
 
   // Keep the cancelled panel open and editable so the user can continue editing
   modelParameterStore.panelOpenStates[panelName] = CONSTANTS.PANEL.OPEN

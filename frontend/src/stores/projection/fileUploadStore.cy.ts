@@ -37,14 +37,14 @@ describe('File Upload Store Unit Tests', () => {
   })
 
   describe('Initial State', () => {
-    it('should open reportInfo panel and close others', () => {
-      expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.OPEN)
+    it('should open reportConfig panel and close others', () => {
+      expect(store.panelOpenStates.reportConfig).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelOpenStates.minimumDBH).to.equal(CONSTANTS.PANEL.CLOSE)
       expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.CLOSE)
     })
 
-    it('should set reportInfo as editable and others as non-editable', () => {
-      expect(store.panelState.reportInfo).to.deep.equal({ confirmed: false, editable: true })
+    it('should set reportConfig as editable and others as non-editable', () => {
+      expect(store.panelState.reportConfig).to.deep.equal({ confirmed: false, editable: true })
       expect(store.panelState.minimumDBH).to.deep.equal({ confirmed: false, editable: false })
       expect(store.panelState.attachments).to.deep.equal({ confirmed: false, editable: false })
     })
@@ -105,30 +105,30 @@ describe('File Upload Store Unit Tests', () => {
   })
 
   describe('confirmPanel', () => {
-    it('should mark reportInfo as confirmed and close it', () => {
-      store.confirmPanel('reportInfo')
+    it('should mark reportConfig as confirmed and close it', () => {
+      store.confirmPanel('reportConfig')
 
-      expect(store.panelState.reportInfo.confirmed).to.be.true
-      expect(store.panelState.reportInfo.editable).to.be.false
-      expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(store.panelState.reportConfig.confirmed).to.be.true
+      expect(store.panelState.reportConfig.editable).to.be.false
+      expect(store.panelOpenStates.reportConfig).to.equal(CONSTANTS.PANEL.CLOSE)
     })
 
-    it('should open minimumDBH and make it editable when reportInfo is confirmed', () => {
-      store.confirmPanel('reportInfo')
+    it('should open minimumDBH and make it editable when reportConfig is confirmed', () => {
+      store.confirmPanel('reportConfig')
 
       expect(store.panelOpenStates.minimumDBH).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelState.minimumDBH.editable).to.be.true
     })
 
     it('should open attachments panel when minimumDBH (last sequential panel) is confirmed', () => {
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
 
       expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.OPEN)
     })
 
     it('should not enable runModelEnabled when panels confirmed but no files uploaded', () => {
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
 
       expect(store.runModelEnabled).to.be.false
@@ -137,7 +137,7 @@ describe('File Upload Store Unit Tests', () => {
     it('should enable runModelEnabled when all sequential panels confirmed and both files uploaded', () => {
       store.setPolygonFileInfo({ filename: 'poly.csv', fileMappingGUID: 'poly-guid', fileSetGUID: 'set-1' })
       store.setLayerFileInfo({ filename: 'layer.csv', fileMappingGUID: 'layer-guid', fileSetGUID: 'set-1' })
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
 
       expect(store.runModelEnabled).to.be.true
@@ -147,20 +147,20 @@ describe('File Upload Store Unit Tests', () => {
   describe('editPanel', () => {
     beforeEach(() => {
       // Fully confirm both sequential panels first
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
     })
 
-    it('should unconfirm reportInfo and open it for editing', () => {
-      store.editPanel('reportInfo')
+    it('should unconfirm reportConfig and open it for editing', () => {
+      store.editPanel('reportConfig')
 
-      expect(store.panelState.reportInfo.confirmed).to.be.false
-      expect(store.panelState.reportInfo.editable).to.be.true
-      expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(store.panelState.reportConfig.confirmed).to.be.false
+      expect(store.panelState.reportConfig.editable).to.be.true
+      expect(store.panelOpenStates.reportConfig).to.equal(CONSTANTS.PANEL.OPEN)
     })
 
-    it('should close and disable subsequent sequential panels when editing reportInfo', () => {
-      store.editPanel('reportInfo')
+    it('should close and disable subsequent sequential panels when editing reportConfig', () => {
+      store.editPanel('reportConfig')
 
       expect(store.panelState.minimumDBH.confirmed).to.be.false
       expect(store.panelState.minimumDBH.editable).to.be.false
@@ -168,7 +168,7 @@ describe('File Upload Store Unit Tests', () => {
     })
 
     it('should close the attachments panel when editing any sequential panel', () => {
-      store.editPanel('reportInfo')
+      store.editPanel('reportConfig')
 
       expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.CLOSE)
     })
@@ -180,7 +180,7 @@ describe('File Upload Store Unit Tests', () => {
       store.updateRunModelEnabled()
       expect(store.runModelEnabled).to.be.true
 
-      store.editPanel('reportInfo')
+      store.editPanel('reportConfig')
 
       expect(store.runModelEnabled).to.be.false
     })
@@ -204,7 +204,7 @@ describe('File Upload Store Unit Tests', () => {
     })
 
     it('should be false when only panels are confirmed but no files', () => {
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
 
       expect(store.runModelEnabled).to.be.false
@@ -218,7 +218,7 @@ describe('File Upload Store Unit Tests', () => {
     })
 
     it('should be false when only polygon file is set (layer missing)', () => {
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
       store.setPolygonFileInfo({ filename: 'p.csv', fileMappingGUID: 'p-guid', fileSetGUID: 'set-1' })
 
@@ -226,7 +226,7 @@ describe('File Upload Store Unit Tests', () => {
     })
 
     it('should be false when only layer file is set (polygon missing)', () => {
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
       store.setLayerFileInfo({ filename: 'l.csv', fileMappingGUID: 'l-guid', fileSetGUID: 'set-1' })
 
@@ -236,7 +236,7 @@ describe('File Upload Store Unit Tests', () => {
     it('should become false again when a file is removed after being enabled', () => {
       store.setPolygonFileInfo({ filename: 'p.csv', fileMappingGUID: 'p-guid', fileSetGUID: 'set-1' })
       store.setLayerFileInfo({ filename: 'l.csv', fileMappingGUID: 'l-guid', fileSetGUID: 'set-1' })
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
       expect(store.runModelEnabled).to.be.true
 
@@ -332,20 +332,20 @@ describe('File Upload Store Unit Tests', () => {
 
   describe('resetStore', () => {
     it('should reset panel open states', () => {
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.resetStore()
 
-      expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(store.panelOpenStates.reportConfig).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelOpenStates.minimumDBH).to.equal(CONSTANTS.PANEL.CLOSE)
       expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.CLOSE)
     })
 
     it('should reset panel confirmed/editable states', () => {
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
       store.resetStore()
 
-      expect(store.panelState.reportInfo).to.deep.equal({ confirmed: false, editable: true })
+      expect(store.panelState.reportConfig).to.deep.equal({ confirmed: false, editable: true })
       expect(store.panelState.minimumDBH).to.deep.equal({ confirmed: false, editable: false })
       expect(store.panelState.attachments).to.deep.equal({ confirmed: false, editable: false })
     })
@@ -353,7 +353,7 @@ describe('File Upload Store Unit Tests', () => {
     it('should reset runModelEnabled to false', () => {
       store.setPolygonFileInfo({ filename: 'p.csv', fileMappingGUID: 'p-guid', fileSetGUID: 'set-1' })
       store.setLayerFileInfo({ filename: 'l.csv', fileMappingGUID: 'l-guid', fileSetGUID: 'set-1' })
-      store.confirmPanel('reportInfo')
+      store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
       expect(store.runModelEnabled).to.be.true
 
@@ -441,13 +441,13 @@ describe('File Upload Store Unit Tests', () => {
     })
 
     it('should open all panels in view mode', () => {
-      expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(store.panelOpenStates.reportConfig).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelOpenStates.minimumDBH).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.OPEN)
     })
 
     it('should confirm all panels but keep them non-editable in view mode', () => {
-      expect(store.panelState.reportInfo).to.deep.equal({ confirmed: true, editable: false })
+      expect(store.panelState.reportConfig).to.deep.equal({ confirmed: true, editable: false })
       expect(store.panelState.minimumDBH).to.deep.equal({ confirmed: true, editable: false })
       expect(store.panelState.attachments).to.deep.equal({ confirmed: true, editable: false })
     })
@@ -458,22 +458,22 @@ describe('File Upload Store Unit Tests', () => {
   })
 
   describe('restoreFromProjectionParams (edit mode)', () => {
-    it('should open reportInfo and close others when reportTitle is null', () => {
+    it('should open reportConfig and close others when reportTitle is null', () => {
       store.restoreFromProjectionParams(makeParsedParams({ reportTitle: null }), false)
 
-      expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(store.panelOpenStates.reportConfig).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelOpenStates.minimumDBH).to.equal(CONSTANTS.PANEL.CLOSE)
       expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.CLOSE)
-      expect(store.panelState.reportInfo.confirmed).to.be.false
+      expect(store.panelState.reportConfig.confirmed).to.be.false
     })
 
-    it('should confirm reportInfo and open minimumDBH when only reportTitle is set', () => {
+    it('should confirm reportConfig and open minimumDBH when only reportTitle is set', () => {
       store.restoreFromProjectionParams(
         makeParsedParams({ reportTitle: 'My Title', utils: [] }),
         false,
       )
 
-      expect(store.panelState.reportInfo.confirmed).to.be.true
+      expect(store.panelState.reportConfig.confirmed).to.be.true
       expect(store.panelOpenStates.minimumDBH).to.equal(CONSTANTS.PANEL.OPEN)
       expect(store.panelState.minimumDBH.editable).to.be.true
       expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.CLOSE)
@@ -488,7 +488,7 @@ describe('File Upload Store Unit Tests', () => {
         false,
       )
 
-      expect(store.panelState.reportInfo.confirmed).to.be.true
+      expect(store.panelState.reportConfig.confirmed).to.be.true
       expect(store.panelState.minimumDBH.confirmed).to.be.true
       expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.OPEN)
     })

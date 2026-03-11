@@ -525,7 +525,7 @@ describe('saveProjectionOnPanelConfirm', () => {
     cy.stub(apiClient, 'createProjection').resolves({ data: { ...mockProjectionModel, projectionGUID: 'created-guid' } })
 
     const store = createMockModelParameterStore()
-    cy.wrap(saveProjectionOnPanelConfirm(store, CONSTANTS.MODEL_PARAMETER_PANEL.DETAILS_INFO)).then(() => {
+    cy.wrap(saveProjectionOnPanelConfirm(store, CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS)).then(() => {
       expect(apiClient.createProjection).to.be.calledOnce
 
       const appStore = useAppStore()
@@ -543,7 +543,7 @@ describe('saveProjectionOnPanelConfirm', () => {
     appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
 
     const store = createMockModelParameterStore()
-    cy.wrap(saveProjectionOnPanelConfirm(store, CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO)).then(() => {
+    cy.wrap(saveProjectionOnPanelConfirm(store, CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO)).then(() => {
       expect(apiClient.updateProjectionParams).to.be.calledOnce
     })
   })
@@ -554,7 +554,7 @@ describe('saveProjectionOnPanelConfirm', () => {
 
     return saveProjectionOnPanelConfirm(
       createMockModelParameterStore(),
-      CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
+      CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
     )
       .then(() => {
         throw new Error('Test should have failed but succeeded unexpectedly')
@@ -568,7 +568,7 @@ describe('saveProjectionOnPanelConfirm', () => {
     cy.stub(apiClient, 'createProjection').resolves({ data: mockProjectionModel })
 
     const store = createMockModelParameterStore()
-    cy.wrap(saveProjectionOnPanelConfirm(store, CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO)).then(() => {
+    cy.wrap(saveProjectionOnPanelConfirm(store, CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO)).then(() => {
       expect(apiClient.createProjection).to.not.be.called
     })
   })
@@ -601,7 +601,7 @@ describe('hasPanelUnsavedChanges', () => {
 
   it('should return false when no projectionGUID is set', () => {
     cy.wrap(
-      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO, createMockModelParameterStore()),
+      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO, createMockModelParameterStore()),
     ).should('equal', false)
   })
 
@@ -621,7 +621,7 @@ describe('hasPanelUnsavedChanges', () => {
       data: { ...mockProjectionModel, modelParameters: null },
     })
     cy.wrap(
-      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO, createMockModelParameterStore()),
+      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO, createMockModelParameterStore()),
     ).should('equal', false)
   })
 
@@ -632,7 +632,7 @@ describe('hasPanelUnsavedChanges', () => {
       data: { ...mockProjectionModel, modelParameters: JSON.stringify(createSavedModelParams()) },
     })
     cy.wrap(
-      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO, createMockModelParameterStore()),
+      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO, createMockModelParameterStore()),
     ).should('equal', false)
   })
 
@@ -646,7 +646,7 @@ describe('hasPanelUnsavedChanges', () => {
       },
     })
     cy.wrap(
-      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO, createMockModelParameterStore()),
+      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO, createMockModelParameterStore()),
     ).should('equal', true)
   })
 
@@ -660,7 +660,7 @@ describe('hasPanelUnsavedChanges', () => {
       },
     })
     cy.wrap(
-      hasPanelUnsavedChanges(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO, createMockModelParameterStore()),
+      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO, createMockModelParameterStore()),
     ).should('equal', true)
   })
 })
@@ -671,7 +671,7 @@ describe('revertPanelToSaved', () => {
   })
 
   it('should return early without error when no projectionGUID is set', () => {
-    cy.wrap(revertPanelToSaved(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO as any)).then(() => {
+    cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO as any)).then(() => {
       const modelStore = useModelParameterStore()
       expect(modelStore.panelState.speciesInfo.confirmed).to.be.false
     })
@@ -687,7 +687,7 @@ describe('revertPanelToSaved', () => {
         reportDescription: null,
       },
     })
-    cy.wrap(revertPanelToSaved(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO as any)).then(() => {
+    cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO as any)).then(() => {
       const modelStore = useModelParameterStore()
       expect(modelStore.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.OPEN)
       expect(modelStore.panelState.speciesInfo.confirmed).to.be.false

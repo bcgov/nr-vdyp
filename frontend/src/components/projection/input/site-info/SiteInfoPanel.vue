@@ -296,7 +296,7 @@ const {
   bha50SiteIndex,
 } = storeToRefs(modelParameterStore)
 
-const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO
+const panelName = CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO
 const isConfirmEnabled = computed(
   () => !isReadOnly.value && modelParameterStore.panelState[panelName].editable,
 )
