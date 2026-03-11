@@ -274,6 +274,7 @@ export const REPORTING_ACTION = Object.freeze({
 export const ROUTE_PATH = Object.freeze({
   PROJECTION_LIST: '/',
   PROJECTION_DETAIL: '/projection-detail',
+  UNAUTHORIZED: '/unauthorized',
 })
 
 export const BREAKPOINT = Object.freeze({
