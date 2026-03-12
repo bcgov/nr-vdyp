@@ -68,7 +68,7 @@ export const useProjectionStore = defineStore('projectionStore', () => {
       // Load the report if it exists the CSV otherwise
       if (
         appStore.modelSelection ===
-        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+        CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
       ){
         const textReportFile = zip.file(CONSTANTS.FILE_NAME.YIELD_TABLE_TXT)
         if (textReportFile) {

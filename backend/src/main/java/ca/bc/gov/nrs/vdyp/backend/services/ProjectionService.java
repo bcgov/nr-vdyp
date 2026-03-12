@@ -505,7 +505,8 @@ public class ProjectionService {
 					ProjectionAction.CANCEL, ProjectionAction.UPDATE_PROGRESS
 			), //
 			ProjectionStatusCodeModel.READY, Set.of(ProjectionAction.DELETE, ProjectionAction.READ),
-			ProjectionStatusCodeModel.FAILED, Set.of(ProjectionAction.DELETE, ProjectionAction.READ)
+			ProjectionStatusCodeModel.FAILED,
+			Set.of(ProjectionAction.UPDATE, ProjectionAction.DELETE, ProjectionAction.READ)
 	);
 
 	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
@@ -552,6 +553,12 @@ public class ProjectionService {
 					UUID.fromString(actingUser.getVdypUserGUID())
 			);
 		}
+
+		// If the projection was in FAILED status, reset it to DRAFT so it can be re-run
+		if (ProjectionStatusCodeModel.FAILED.equals(existingEntity.getProjectionStatusCode().getCode())) {
+			existingEntity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
+		}
+
 		return toModelWithExpiry(existingEntity);
 	}
 

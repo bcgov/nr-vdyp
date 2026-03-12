@@ -17,6 +17,7 @@ import {
   getProjectionById,
   deleteAllFilesFromFileSet,
   parseProjectionParams,
+  mapProjectionStatus,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -693,7 +694,8 @@ export const saveProjectionOnPanelConfirm = async (
 
     const projectionParameters = buildProjectionParameters(modelParameterStore)
     const modelParameters = buildModelParameters(modelParameterStore)
-    await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters, modelParameterStore.reportDescription)
+    const result = await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters, modelParameterStore.reportDescription)
+    appStore.setCurrentProjectionStatus(mapProjectionStatus(result.projectionStatusCode.code))
   }
 }
 

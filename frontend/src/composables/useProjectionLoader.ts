@@ -9,7 +9,7 @@ import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import {
-  MODEL_SELECTION,
+  METHOD_SELECTION,
   PROJECTION_STATUS,
   PROJECTION_VIEW_MODE
 } from '@/constants/constants'
@@ -115,8 +115,8 @@ export function useProjectionLoader() {
         ExecutionOptionsEnum.DoEnableProjectionReport,
       )
       const method = isInputModelParams
-        ? MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-        : MODEL_SELECTION.FILE_UPLOAD
+        ? METHOD_SELECTION.MANUAL_INPUT
+        : METHOD_SELECTION.FILE_UPLOAD
 
       appStore.setModelSelection(method)
       appStore.setViewMode(viewMode)

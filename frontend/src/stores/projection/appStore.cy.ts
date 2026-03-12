@@ -15,7 +15,7 @@ describe('App Store Unit Tests', () => {
 
   describe('Initial State', () => {
     it('should initialize modelSelection with the default value', () => {
-      expect(appStore.modelSelection).to.equal(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
+      expect(appStore.modelSelection).to.equal(DEFAULTS.DEFAULT_VALUES.METHOD_SELECTION)
     })
 
     it('should initialize viewMode as CREATE', () => {
@@ -41,7 +41,7 @@ describe('App Store Unit Tests', () => {
 
   describe('Getters', () => {
     it('getModelSelection should return current modelSelection', () => {
-      expect(appStore.getModelSelection).to.equal(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
+      expect(appStore.getModelSelection).to.equal(DEFAULTS.DEFAULT_VALUES.METHOD_SELECTION)
     })
 
     it('getViewMode should return current viewMode', () => {

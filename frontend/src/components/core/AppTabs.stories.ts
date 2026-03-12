@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import AppTabs from './AppTabs.vue'
-import { MODEL_PARAM_TAB_NAME, REPORTING_TAB } from '@/constants/constants'
+import { MANUAL_INPUT_TAB_NAME, REPORTING_TAB } from '@/constants/constants'
 import { action } from 'storybook/actions'
 
 const meta: Meta<typeof AppTabs> = {
@@ -91,25 +91,25 @@ export const WithInitialTab: Story = {
     currentTab: 0,
     tabs: [
       {
-        label: MODEL_PARAM_TAB_NAME.MODEL_PARAM_SELECTION,
+        label: MANUAL_INPUT_TAB_NAME.MODEL_PARAM_SELECTION,
         component: 'SpeciesInfoPanel',
         tabname: null,
         disabled: false,
       },
       {
-        label: MODEL_PARAM_TAB_NAME.MODEL_REPORT,
+        label: MANUAL_INPUT_TAB_NAME.MODEL_REPORT,
         component: 'ReportingContainer',
         tabname: REPORTING_TAB.MODEL_REPORT,
         disabled: false,
       },
       {
-        label: MODEL_PARAM_TAB_NAME.VIEW_LOG_FILE,
+        label: MANUAL_INPUT_TAB_NAME.VIEW_LOG_FILE,
         component: 'ReportingContainer',
         tabname: REPORTING_TAB.VIEW_LOG_FILE,
         disabled: false,
       },
       {
-        label: MODEL_PARAM_TAB_NAME.VIEW_ERROR_MESSAGES,
+        label: MANUAL_INPUT_TAB_NAME.VIEW_ERROR_MESSAGES,
         component: 'ReportingContainer',
         tabname: REPORTING_TAB.VIEW_ERR_MSG,
         disabled: false,

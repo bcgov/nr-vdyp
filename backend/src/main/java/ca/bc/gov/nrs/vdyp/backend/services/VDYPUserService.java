@@ -87,6 +87,10 @@ public class VDYPUserService {
 			if (userOption.isEmpty()) {
 				Set<String> roles = identity.getRoles();
 				UserTypeCodeModel userType = userTypeLookup.getUserTypeCodeFromExternalRoles(roles);
+				if (userType == null) {
+					logger.debug("No valid role found");
+					return null;
+				}
 				if (!userType.isSystemUser()) {
 					String firstName = jwt.getClaim("given_name");
 					String lastName = jwt.getClaim("family_name");

@@ -16,7 +16,7 @@ import type { ProjectionModel, Parameters, FileMappingModel, ModelParameters } f
 import type { Projection, ProjectionStatus, ParsedProjectionParameters } from '@/interfaces/interfaces'
 import {
   FILE_NAME,
-  MODEL_SELECTION,
+  METHOD_SELECTION,
   PROJECTION_STATUS,
   PROJECTION_TYPE,
 } from '@/constants/constants'
@@ -74,9 +74,9 @@ const getMethod = (parameters: Record<string, unknown>): string => {
     | string[]
     | undefined
   if (selectedOptions?.includes(ExecutionOptionsEnum.DoEnableProjectionReport)) {
-    return MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+    return METHOD_SELECTION.MANUAL_INPUT
   }
-  return MODEL_SELECTION.FILE_UPLOAD
+  return METHOD_SELECTION.FILE_UPLOAD
 }
 
 /**

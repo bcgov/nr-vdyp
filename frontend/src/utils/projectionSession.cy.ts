@@ -48,26 +48,26 @@ describe('projectionSession Unit Tests', () => {
 
   describe('saveNewProjectionSession', () => {
     it('should save new projection context to sessionStorage', () => {
-      saveNewProjectionSession(CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
+      saveNewProjectionSession(CONSTANTS.METHOD_SELECTION.FILE_UPLOAD)
 
       const raw = sessionStorage.getItem(PROJ_CTX_KEY)
       expect(raw).to.not.be.null
 
       const ctx = JSON.parse(atob(raw!))
-      expect(ctx).to.deep.equal({ type: CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE, ms: CONSTANTS.MODEL_SELECTION.FILE_UPLOAD })
+      expect(ctx).to.deep.equal({ type: CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE, ms: CONSTANTS.METHOD_SELECTION.FILE_UPLOAD })
     })
 
     it('should overwrite existing session when called after saveExistingProjectionSession', () => {
       saveExistingProjectionSession('guid-123', CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
-      saveNewProjectionSession(CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
+      saveNewProjectionSession(CONSTANTS.METHOD_SELECTION.FILE_UPLOAD)
 
       const raw = sessionStorage.getItem(PROJ_CTX_KEY)
       const ctx = JSON.parse(atob(raw!))
-      expect(ctx).to.deep.equal({ type: CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE, ms: CONSTANTS.MODEL_SELECTION.FILE_UPLOAD })
+      expect(ctx).to.deep.equal({ type: CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE, ms: CONSTANTS.METHOD_SELECTION.FILE_UPLOAD })
     })
 
     it('should store value as base64-encoded JSON', () => {
-      saveNewProjectionSession(CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+      saveNewProjectionSession(CONSTANTS.METHOD_SELECTION.MANUAL_INPUT)
 
       const raw = sessionStorage.getItem(PROJ_CTX_KEY)
       expect(() => atob(raw!)).to.not.throw()
@@ -88,10 +88,10 @@ describe('projectionSession Unit Tests', () => {
     })
 
     it('should load and return new projection context', () => {
-      saveNewProjectionSession(CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
+      saveNewProjectionSession(CONSTANTS.METHOD_SELECTION.FILE_UPLOAD)
 
       const ctx = loadProjectionSession()
-      expect(ctx).to.deep.equal({ type: CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE, ms: CONSTANTS.MODEL_SELECTION.FILE_UPLOAD })
+      expect(ctx).to.deep.equal({ type: CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE, ms: CONSTANTS.METHOD_SELECTION.FILE_UPLOAD })
     })
 
     it('should return null when sessionStorage contains invalid base64', () => {
@@ -158,7 +158,7 @@ describe('projectionSession Unit Tests', () => {
     })
 
     it('should cause loadProjectionSession to return null after clearing', () => {
-      saveNewProjectionSession(CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
+      saveNewProjectionSession(CONSTANTS.METHOD_SELECTION.FILE_UPLOAD)
       clearProjectionSession()
 
       expect(loadProjectionSession()).to.be.null

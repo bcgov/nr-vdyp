@@ -6,9 +6,10 @@ import type {
 } from 'axios'
 import { useAuthStore } from '@/stores/common/authStore'
 import { handleTokenValidation } from '@/services/keycloak'
-import { AXIOS } from '@/constants/constants'
+import { AXIOS, ROUTE_PATH } from '@/constants/constants'
 import { logErrorMessage } from '@/utils/messageHandler'
 import { AXIOS_INST_ERR } from '@/constants/message'
+import { router } from '@/router'
 
 const axiosInstance: AxiosInstance = axios.create({
   headers: {
@@ -52,6 +53,11 @@ axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error) => {
     const originalRequest = error.config
+    if (error.response?.status === 403) {
+      router.replace(ROUTE_PATH.UNAUTHORIZED)
+      return
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
       const authStore = useAuthStore()

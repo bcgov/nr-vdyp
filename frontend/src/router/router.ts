@@ -1,12 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from './routes'
+import { useAuthStore } from '@/stores/common/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const hash = to.hash || ''
   if (
     hash.includes('code=') &&
@@ -26,9 +27,18 @@ router.beforeEach((to, from, next) => {
       path: to.path + newHash,
       replace: true,
     })
-  } else {
-    next()
+    return
   }
+
+  if (to.name !== 'Unauthorized') {
+    const authStore = useAuthStore()
+    if (authStore.authenticated && authStore.getAllRoles().length === 0) {
+      next({ name: 'Unauthorized' })
+      return
+    }
+  }
+
+  next()
 })
 
 export default router

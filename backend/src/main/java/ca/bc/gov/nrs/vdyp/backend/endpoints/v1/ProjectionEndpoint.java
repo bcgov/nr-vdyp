@@ -29,7 +29,7 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationExc
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import io.quarkus.security.Authenticated;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -189,7 +189,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@GET
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/me")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(name = "Get Projection List", description = "Get all projections for the current user.")
@@ -199,7 +199,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@POST
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/new")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces({ MediaType.APPLICATION_JSON })
@@ -221,7 +221,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@GET
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN", "SYSTEM" })
 	@Path("/{projectionGUID}")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(name = "Get Projection Details", description = "Get all the details of an existing projection")
@@ -231,7 +231,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@PUT
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/params")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces({ MediaType.APPLICATION_JSON })
@@ -254,7 +254,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@DELETE
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(name = "Delete Projection", description = "Delete an existing projection.")
@@ -265,7 +265,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@POST
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/run")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(name = "Run a Projection", description = "Send a Projection to the processing engine to be run.")
@@ -275,7 +275,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@PATCH
-	@Authenticated
+	@RolesAllowed("SYSTEM")
 	@Path("/{projectionGUID}/progress")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Consumes({ MediaType.APPLICATION_JSON })
@@ -290,7 +290,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@POST
-	@Authenticated
+	@RolesAllowed("SYSTEM")
 	@Path("/{projectionGUID}/complete")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(
@@ -308,7 +308,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@POST
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/cancel")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(name = "Cancel A Projection", description = "Cancels a running projection.")
@@ -319,7 +319,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@POST
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/duplicate")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(name = "Duplicate A Projection", description = "Duplicates the inputs of an existing projection.")
@@ -330,7 +330,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@GET
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN", "SYSTEM" })
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}")
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_JSON })
@@ -346,7 +346,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@GET
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/resultZip")
 	@Produces("application/zip")
 	@Tag(name = "Results Zip", description = "Stream the results ZIP from s3 storage to prevent CORS issues")
@@ -394,7 +394,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@POST
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN", "SYSTEM" })
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file")
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_JSON })
@@ -411,7 +411,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@GET
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}")
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_JSON })
@@ -427,7 +427,7 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@DELETE
-	@Authenticated
+	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}")
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_JSON })

@@ -168,23 +168,23 @@ export const MESSAGE_TYPE = Object.freeze({
 })
 
 export const HEADER_SELECTION = Object.freeze({
-  MODEL_PARAMETER_SELECTION: 'Manual Input',
+  MANUAL_INPUT: 'Manual Input',
   FILE_UPLOAD: 'File Upload',
 })
 
-export const MODEL_SELECTION = Object.freeze({
+export const METHOD_SELECTION = Object.freeze({
   FILE_UPLOAD: 'File Upload',
-  INPUT_MODEL_PARAMETERS: 'Manual Input',
+  MANUAL_INPUT: 'Manual Input',
 })
 
-export const MODEL_PARAM_TAB_NAME = Object.freeze({
+export const MANUAL_INPUT_TAB_NAME = Object.freeze({
   MODEL_PARAM_SELECTION: 'Parameter Selection',
   MODEL_REPORT: 'Model Report',
   VIEW_LOG_FILE: 'View Log File',
   VIEW_ERROR_MESSAGES: 'View Error Messages',
 })
 
-export const MODEL_PARAM_TAB_INDEX = {
+export const MANUAL_INPUT_TAB_INDEX = {
   PARAM_SELECTION: 0,
   MODEL_REPORT: 1,
   VIEW_LOG_FILE: 2,
@@ -274,6 +274,7 @@ export const REPORTING_ACTION = Object.freeze({
 export const ROUTE_PATH = Object.freeze({
   PROJECTION_LIST: '/',
   PROJECTION_DETAIL: '/projection-detail',
+  UNAUTHORIZED: '/unauthorized',
 })
 
 export const BREAKPOINT = Object.freeze({
