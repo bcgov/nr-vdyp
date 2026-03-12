@@ -13,9 +13,9 @@
       </router-link>
       <div id="modelSelectionCard" class="model-selection-header">
         <h3
-          v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
+          v-if="appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT"
         >
-          {{ CONSTANTS.HEADER_SELECTION.MODEL_PARAMETER_SELECTION }}
+          {{ CONSTANTS.HEADER_SELECTION.MANUAL_INPUT }}
         </h3>
         <h3 v-else>{{ CONSTANTS.HEADER_SELECTION.FILE_UPLOAD }}</h3>
         <div class="header-right-section">
@@ -74,7 +74,7 @@
             </div>
           </div>
           <AppButton
-            v-if="appStore.modelSelection !== CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
+            v-if="appStore.modelSelection !== CONSTANTS.METHOD_SELECTION.MANUAL_INPUT"
             label="Download Report"
             :icon-src="DownloadIcon"
             variant="primary"
@@ -88,7 +88,7 @@
     <template
       v-if="
         appStore.modelSelection ===
-        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+        CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
       "
     >
       <div class="tabs-with-download">
@@ -262,25 +262,25 @@ const duplicatedFromText = computed(() => {
 
 const modelParamTabs = computed<Tab[]>(() => [
   {
-    label: CONSTANTS.MODEL_PARAM_TAB_NAME.MODEL_PARAM_SELECTION,
+    label: CONSTANTS.MANUAL_INPUT_TAB_NAME.MODEL_PARAM_SELECTION,
     component: ReportDetailsPanel,
     tabname: null,
     disabled: false,
   },
   {
-    label: CONSTANTS.MODEL_PARAM_TAB_NAME.MODEL_REPORT,
+    label: CONSTANTS.MANUAL_INPUT_TAB_NAME.MODEL_REPORT,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
     disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
   {
-    label: CONSTANTS.MODEL_PARAM_TAB_NAME.VIEW_LOG_FILE,
+    label: CONSTANTS.MANUAL_INPUT_TAB_NAME.VIEW_LOG_FILE,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
     disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
   {
-    label: CONSTANTS.MODEL_PARAM_TAB_NAME.VIEW_ERROR_MESSAGES,
+    label: CONSTANTS.MANUAL_INPUT_TAB_NAME.VIEW_ERROR_MESSAGES,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
     disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
@@ -290,14 +290,14 @@ const modelParamTabs = computed<Tab[]>(() => [
 const isModelParameterPanelsVisible = computed(() => {
   return (
     appStore.modelSelection ===
-      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS &&
+      CONSTANTS.METHOD_SELECTION.MANUAL_INPUT &&
     modelParamActiveTab.value ===
-      CONSTANTS.MODEL_PARAM_TAB_INDEX.PARAM_SELECTION
+      CONSTANTS.MANUAL_INPUT_TAB_INDEX.PARAM_SELECTION
   )
 })
 
 const isFileUploadPanelsVisible = computed(() => {
-  return appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
+  return appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD
 })
 
 const fileUploadPrerequisitesDone = computed(
@@ -368,8 +368,8 @@ const enableTabsAndNavigate = async (hasErrors: boolean, showMessage: boolean = 
   await nextTick()
   setTimeout(() => {
     modelParamActiveTab.value = hasErrors
-      ? CONSTANTS.MODEL_PARAM_TAB_INDEX.VIEW_ERROR_MESSAGES
-      : CONSTANTS.MODEL_PARAM_TAB_INDEX.MODEL_REPORT
+      ? CONSTANTS.MANUAL_INPUT_TAB_INDEX.VIEW_ERROR_MESSAGES
+      : CONSTANTS.MANUAL_INPUT_TAB_INDEX.MODEL_REPORT
   }, 100)
 
   if (showMessage) {
@@ -471,14 +471,14 @@ onMounted(async () => {
 
   // Only initialize species groups for new projections
   // For existing projections (view/edit), the values are already restored from the backend
-  if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD) {
+  if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE && appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD) {
     fileUploadStore.initializeSpeciesGroups()
   }
 
   // For READY Input Model Parameters projections, automatically fetch and display results
   // File Upload projections do not have reporting tabs; users download the ZIP instead
   // Skip showing result messages when navigating from the list view
-  if (isReady.value && appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
+  if (isReady.value && appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
     fetchAndPopulateResults(false)
   }
 
@@ -519,7 +519,7 @@ const handleError = (error: any) => {
       handleApiError(
         error,
         appStore.modelSelection ===
-          CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+          CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
           ? MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL
           : MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL,
       )
@@ -528,7 +528,7 @@ const handleError = (error: any) => {
     handleApiError(
       error,
       appStore.modelSelection ===
-        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+        CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
         ? MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL
         : MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL,
     )
@@ -538,7 +538,7 @@ const handleError = (error: any) => {
 const runModelHandler = async () => {
   // For Manual Input: validate and save ReportSettings before running
   // (ReportSettingsPanel has no Next button, so validation happens at run time)
-  if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
+  if (appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
     const isValid = await reportSettingsPanelRef.value?.onConfirm()
     if (!isValid) return
   }
@@ -551,7 +551,7 @@ const runModelHandler = async () => {
 
     if (
       appStore.modelSelection ===
-      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
     ) {
       const response = await runProjection()
       console.debug('Full response:', response)
@@ -573,7 +573,7 @@ const runModelHandler = async () => {
         MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
       )
     } else if (
-      appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
+      appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD
     ) {
       // Validate files are uploaded before running
       if (!fileUploadStore.polygonFileInfo) {
@@ -647,7 +647,7 @@ const cancelRunHandler = async () => {
       if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
         notificationStore.showInfoMessage(MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED, MESSAGE.PROJECTION_ERR.CANCEL_ALREADY_COMPLETED_TITLE)
         isProgressVisible.value = false
-        if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
+        if (appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
           await fetchAndPopulateResults()
         }
         return
@@ -681,7 +681,7 @@ const handleDownloadReport = async () => {
   }
 
   const reportTitle =
-    appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+    appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
       ? modelParameterStore.reportTitle
       : fileUploadStore.reportTitle
   const zipFileName = sanitizeFileName(`${reportTitle || 'Projection'}_All Files`) + '.zip'

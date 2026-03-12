@@ -31,7 +31,7 @@ export const saveNewProjectionSession = (modelSelection: string): void => {
 // Allowlists used to validate sessionStorage values against manipulation.
 // 'create' is intentionally excluded from VALID_EXISTING_VIEW_MODES -
 // existing projections can never be in create mode.
-const VALID_MODEL_SELECTIONS = new Set<string>(Object.values(CONSTANTS.MODEL_SELECTION))
+const VALID_METHOD_SELECTIONS = new Set<string>(Object.values(CONSTANTS.METHOD_SELECTION))
 const VALID_EXISTING_VIEW_MODES = new Set<string>([
   CONSTANTS.PROJECTION_VIEW_MODE.VIEW,
   CONSTANTS.PROJECTION_VIEW_MODE.EDIT,
@@ -47,7 +47,7 @@ const isValidCtx = (parsed: unknown): parsed is ProjectionSessionCtx => {
   const c = parsed as Record<string, unknown>
 
   if (c.type === CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE) {
-    return typeof c.ms === 'string' && VALID_MODEL_SELECTIONS.has(c.ms)
+    return typeof c.ms === 'string' && VALID_METHOD_SELECTIONS.has(c.ms)
   }
 
   if (c.type === CONSTANTS.PROJECTION_SESSION_CTX.EXISTING_TYPE) {

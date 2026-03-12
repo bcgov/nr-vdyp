@@ -6,7 +6,7 @@ import type { ProjectionViewMode } from '@/types/types'
 import type { ProjectionStatus } from '@/interfaces/interfaces'
 
 export const useAppStore = defineStore('appStore', () => {
-  const modelSelection = ref<string>(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
+  const modelSelection = ref<string>(DEFAULTS.DEFAULT_VALUES.METHOD_SELECTION)
 
   // View mode: 'view' for read-only, 'edit' for editing, 'create' for new projection
   const viewMode = ref<ProjectionViewMode>(PROJECTION_VIEW_MODE.CREATE)

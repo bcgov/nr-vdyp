@@ -152,9 +152,9 @@ describe('Projection Store Unit Tests', () => {
     })
   })
 
-  describe('handleZipResponse - YieldTable.txt (INPUT_MODEL_PARAMETERS only)', () => {
-    it('should populate txtYieldLines when modelSelection is INPUT_MODEL_PARAMETERS', async () => {
-      appStore.setModelSelection(CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+  describe('handleZipResponse - YieldTable.txt (MANUAL_INPUT only)', () => {
+    it('should populate txtYieldLines when modelSelection is MANUAL_INPUT', async () => {
+      appStore.setModelSelection(CONSTANTS.METHOD_SELECTION.MANUAL_INPUT)
       const blob = await makeValidZip({
         [CONSTANTS.FILE_NAME.YIELD_TABLE_TXT]: 'txt line 1\ntxt line 2',
       })
@@ -163,7 +163,7 @@ describe('Projection Store Unit Tests', () => {
     })
 
     it('should NOT populate txtYieldLines when modelSelection is FILE_UPLOAD', async () => {
-      appStore.setModelSelection(CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
+      appStore.setModelSelection(CONSTANTS.METHOD_SELECTION.FILE_UPLOAD)
       const blob = await makeValidZip({
         [CONSTANTS.FILE_NAME.YIELD_TABLE_TXT]: 'should be ignored',
       })
@@ -171,8 +171,8 @@ describe('Projection Store Unit Tests', () => {
       expect(store.txtYieldLines).to.deep.equal([])
     })
 
-    it('should leave txtYieldLines empty when YieldTable.txt is absent (INPUT_MODEL_PARAMETERS)', async () => {
-      appStore.setModelSelection(CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+    it('should leave txtYieldLines empty when YieldTable.txt is absent (MANUAL_INPUT)', async () => {
+      appStore.setModelSelection(CONSTANTS.METHOD_SELECTION.MANUAL_INPUT)
       const blob = await makeValidZip()
       await store.handleZipResponse(blob, 'output.zip')
       expect(store.txtYieldLines).to.deep.equal([])

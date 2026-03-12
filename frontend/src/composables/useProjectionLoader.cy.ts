@@ -3,7 +3,7 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { useProjectionLoader } from '@/composables/useProjectionLoader'
 import { useAppStore } from '@/stores/projection/appStore'
-import { MODEL_SELECTION, PROJECTION_STATUS, PROJECTION_VIEW_MODE } from '@/constants/constants'
+import { METHOD_SELECTION, PROJECTION_STATUS, PROJECTION_VIEW_MODE } from '@/constants/constants'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 import apiClient from '@/services/apiClient'
 
@@ -64,7 +64,7 @@ describe('useProjectionLoader Unit Tests', () => {
       const { loadProjection } = useProjectionLoader()
       const appStore = useAppStore()
       cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
-        expect(appStore.modelSelection).to.equal(MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+        expect(appStore.modelSelection).to.equal(METHOD_SELECTION.MANUAL_INPUT)
       })
     })
 
@@ -151,7 +151,7 @@ describe('useProjectionLoader Unit Tests', () => {
       const { loadProjection } = useProjectionLoader()
       const appStore = useAppStore()
       cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
-        expect(appStore.modelSelection).to.equal(MODEL_SELECTION.FILE_UPLOAD)
+        expect(appStore.modelSelection).to.equal(METHOD_SELECTION.FILE_UPLOAD)
       })
     })
 
