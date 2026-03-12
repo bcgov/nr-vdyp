@@ -107,6 +107,23 @@ class VDYPUserServiceTest {
 	}
 
 	@Test
+	void ensureVDYPUserFromSecurityIdentity_returnsNull_whenNoValidRoleFound() {
+		when(identity.isAnonymous()).thenReturn(false);
+		when(identity.getPrincipal()).thenReturn(jwt);
+		when(jwt.getName()).thenReturn("1234567890@fakeid");
+
+		when(userRepository.findByOIDC("1234567890@fakeid")).thenReturn(Optional.empty());
+
+		Set<String> roles = Set.of("UnknownRole");
+		when(identity.getRoles()).thenReturn(roles);
+		when(userTypeLookup.getUserTypeCodeFromExternalRoles(roles)).thenReturn(null);
+
+		VDYPUserModel result = service.ensureVDYPUserFromSecurityIdentity(identity);
+
+		assertThat(result).isNull();
+	}
+
+	@Test
 	void ensureVDYPUserFromSecurityIdentity_createsNewUser_whenNotFoundByOidc() {
 		// identity + jwt basics
 		when(identity.isAnonymous()).thenReturn(false);
