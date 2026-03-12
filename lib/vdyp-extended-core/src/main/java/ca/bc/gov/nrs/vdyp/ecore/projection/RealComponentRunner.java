@@ -132,10 +132,18 @@ public class RealComponentRunner implements ComponentRunner {
 					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
 					Vdyp7Constants.FORWARD_CONTROL_FILE_NAME
 			);
+			Path standControlFilePath = Path.of(
+					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
+					Vdyp7Constants.STAND_FORWARD_CONTROL_FILE_NAME
+			);
 
 			Optional<Path> inputDir = Optional.empty();
 			Optional<Path> outputDir = Optional.empty();
-			forwardApplication.doMain(inputDir, outputDir, controlFilePath.toAbsolutePath().toString());
+			forwardApplication.doMain(
+					inputDir, outputDir, //
+					controlFilePath.toAbsolutePath().toString(), //
+					standControlFilePath.toAbsolutePath().toString() //
+			);
 
 			state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, Optional.empty());
 
@@ -205,7 +213,17 @@ public class RealComponentRunner implements ComponentRunner {
 
 			if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
 
-				for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
+				var unsortedLayerInfos = polygon.getReportingInfo().getLayerReportingInfos().values();
+				// Try to line the ordering up with VDYP7 to make comparison/debugging easier.
+				// Shouldn't slow things down too much but we can probably have an option to disable it to speed things
+				// up.
+				var sortedLayerInfos = ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST.stream()
+						.map(
+								type -> unsortedLayerInfos.stream().filter(li -> li.getProcessedAsVDYP7Layer() == type)
+										.findFirst()
+						).filter(Optional::isPresent).map(Optional::get).toList();
+
+				for (var layerReportingInfo : sortedLayerInfos) {
 
 					var layer = layerReportingInfo.getLayer();
 					if (state.layerWasProjected(layer)) {

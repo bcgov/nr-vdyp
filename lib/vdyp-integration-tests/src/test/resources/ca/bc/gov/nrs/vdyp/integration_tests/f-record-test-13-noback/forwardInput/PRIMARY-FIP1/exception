@@ -1,0 +1,2 @@
+ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException
+Estimated base area of 0 was lower than expected 0.05

@@ -56,6 +56,16 @@ import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
  */
 public class ForwardControlVariables {
 
+	// NOTE:
+	//
+	// The grow target can be set here or via the growth file if it is -1 here. When extended core is running VDYP
+	// Forward a
+	// single stand at a time this makes no difference and VDYP 7 and 8 may choose differently as to which mechanism to
+	// use
+	//
+	// See ca.bc.gov.nrs.vdyp.ecore.projection.RealComponentRunner.runForward
+	// and vdyp7controlwrite.for:createvdyp7control
+
 	private static final int MAX_CONTROL_VARIABLE_VALUES = 10;
 	private static final int DEFAULT_CONTROL_VARIABLE_VALUE = 0;
 

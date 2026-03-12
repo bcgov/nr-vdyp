@@ -480,7 +480,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
-	@Disabled("VDYP-899")
+	@Disabled("VDYP-945")
 	void test899_F13() throws IOException, ResourceParseException {
 
 		logger.info("Starting vdyp-899-F13");
@@ -491,7 +491,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 			assertThat(
 					result,
 					(Matcher<? super ResultYieldTable>) hasSpecificEntry(
-							"2086846",
+							"11126564",
 							hasSpecificEntry(
 									"1",
 									hasSpecificEntry(
@@ -500,7 +500,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 													hasSpecificEntry(
 															"PRJ_TPH",
 															VdypMatchers
-																	.parseAs(closeTo(458.86f, 0.02f), ValueParser.FLOAT)
+																	.parseAs(closeTo(99.09f, 0.02f), ValueParser.FLOAT)
 													)
 											)
 									)
