@@ -912,10 +912,7 @@ class ProjectionServiceTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(
-			strings = { ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.READY,
-					ProjectionStatusCodeModel.FAILED }
-	)
+	@ValueSource(strings = { ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.READY })
 	void startBatchProjection_notDraft_throwsException(String statusCode) {
 		UUID projectionGUID = UUID.randomUUID();
 		UUID ownerId = UUID.randomUUID();

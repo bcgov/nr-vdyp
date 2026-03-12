@@ -552,6 +552,12 @@ public class ProjectionService {
 					UUID.fromString(actingUser.getVdypUserGUID())
 			);
 		}
+
+		// If the projection was in FAILED status, reset it to DRAFT so it can be re-run
+		if (ProjectionStatusCodeModel.FAILED.equals(existingEntity.getProjectionStatusCode().getCode())) {
+			existingEntity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
+		}
+
 		return toModelWithExpiry(existingEntity);
 	}
 

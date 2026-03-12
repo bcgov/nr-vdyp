@@ -19,6 +19,7 @@ import {
   updateProjectionParams,
   getProjectionById,
   parseProjectionParams,
+  mapProjectionStatus,
 } from '@/services/projectionService'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
@@ -343,8 +344,9 @@ export const saveProjectionOnPanelConfirm = async (
   if (panelName === CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG) {
     const existingGUID = appStore.getCurrentProjectionGUID
     if (existingGUID) {
-      // Projection already exists (e.g. created via file upload) - update it
-      await updateProjectionParams(existingGUID, projectionParameters, fileUploadStore.reportDescription)
+      // Projection already exists - update it
+      const result = await updateProjectionParams(existingGUID, projectionParameters, fileUploadStore.reportDescription)
+      appStore.setCurrentProjectionStatus(mapProjectionStatus(result.projectionStatusCode.code))
     } else {
       // No projection yet - create one
       const result = await projServiceCreateProjection(projectionParameters, undefined, fileUploadStore.reportDescription)
@@ -357,10 +359,8 @@ export const saveProjectionOnPanelConfirm = async (
       throw new Error(PROJECTION_ERR.MISSING_GUID)
     }
 
-    // Update projection parameters
-    await updateProjectionParams(projectionGUID, projectionParameters, fileUploadStore.reportDescription)
-
-    // Note: Files are now uploaded immediately when selected in the AttachmentsPanel,
-    // so no file upload handling is needed here. This function only updates parameters.
+    // Update projection parameters and sync status
+    const result = await updateProjectionParams(projectionGUID, projectionParameters, fileUploadStore.reportDescription)
+    appStore.setCurrentProjectionStatus(mapProjectionStatus(result.projectionStatusCode.code))
   }
 }
