@@ -42,6 +42,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
@@ -485,20 +486,26 @@ public class YieldTable implements Closeable {
 									.setFirstYearYieldsDisplayed(layer, rowContext.getCurrentTableYear());
 						}
 
-						if (writer.isCurrentlyWritingCategory(Category.SPECIES_MOFVOLUME)) {
+						if (writer.isCurrentlyWritingCategory(Category.SPECIES_MOFVOLUME)
+								&& !layer.getDoSuppressPerHAYields()) {
 							int spIndex = 1;
-							for (Species sp64 : layer.getSp64sByPercent()) {
-
-								var mofBiomassFactor = BecZoneMethods
-										.mofBiomassCoefficient(layer.getPolygon().getBecZone(), sp64.getSpeciesCode());
-
-								var speciesVolumeDetails = getProjectionLayerSpeciesVolumes(
-										rowContext, polygonProjectionsByYear, sp64, targetAge, mofBiomassFactor
-								);
-
-								writer.recordPerSpeciesVolumeInfo(
-										spIndex++, speciesVolumeDetails.getLeft(), speciesVolumeDetails.getRight()
-								);
+							var vdypLayer = getProjectedLayer(polygonProjectionsByYear, targetAge, layer);
+							if (vdypLayer != null) {
+								for (Species sp64 : layer.getSp64sByPercent()) {
+									var vdypSpecies = vdypLayer.getSpeciesBySp0(sp64.getStand().getSp0Code());
+									if (vdypSpecies != null) {
+										var mofBiomassFactor = BecZoneMethods.mofBiomassCoefficient(
+												layer.getPolygon().getBecZone(), sp64.getSpeciesCode()
+										);
+										var speciesVolumeDetails = getProjectionLayerSpeciesVolumes(
+												sp64, vdypSpecies, mofBiomassFactor
+										);
+										writer.recordPerSpeciesVolumeInfo(
+												spIndex++, speciesVolumeDetails.getLeft(),
+												speciesVolumeDetails.getRight()
+										);
+									}
+								}
 							}
 						}
 					}
@@ -582,6 +589,7 @@ public class YieldTable implements Closeable {
 			writer.endRecord(rowContext);
 		}
 	}
+
 
 	private double addSafe(double x, double y) {
 		return (x < 0) ? y : x + y;
@@ -1216,6 +1224,31 @@ public class YieldTable implements Closeable {
 	}
 
 	/**
+	 * Get the projected layer for the given input layer and target age.
+	 * 
+	 * @param polygonProjectionsByYear a map of projected polygons by calendar year
+	 * @param targetAge                the target age for which to retrieve the projected layer
+	 * @param layer                    the input layer for which to find the corresponding projected layer
+	 * @return the projected layer corresponding to the input layer and target age, or null if no such layer exists
+	 * @throws StandYieldCalculationException if an error occurs while retrieving the projected layer
+	 */
+	private VdypLayer getProjectedLayer(Map<Integer, VdypPolygon> polygonProjectionsByYear, int targetAge, Layer layer)
+			throws StandYieldCalculationException {
+		VdypLayer vdypLayer = null;
+		Integer calendarYear = getCalendarYear(layer, targetAge);
+
+		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
+
+		if (projectedPolygon != null) {
+
+			LayerType layerType = getLayerType(layer.getAssignedProjectionType());
+
+			vdypLayer = projectedPolygon.getLayers().get(layerType);
+		}
+		return vdypLayer;
+	}
+
+	/**
 	 * V7Ext_GetProjectedLayerSpeciesVolumes
 	 * <p>
 	 * Obtains the yields summarized at the layer species for a specific stand total age.
@@ -1223,19 +1256,18 @@ public class YieldTable implements Closeable {
 	 * Note that certain layers may not have been processed. As a result, those layers may result in no volumes despite
 	 * the presence of volumes on other layers.
 	 *
-	 * @param rowContext               the yield table row for which the information is being generated
-	 * @param polygonProjectionsByYear the results of the projection
-	 * @param sp64                     the sp64 in question
-	 * @param ageToRequest             the target age of the species
-	 * @param mofBiomassFactor         the factor by which to reduce the MoF biomass value
+	 * @param sp64             the sp64 in question
+	 * @param vdypSpecies      the projected VdypSpecies for the given sp64, layer and target age. This is required as
+	 *                         the VdypSpecies contains the volume information by utilization class which is required to
+	 *                         perform the MoF biomass calculation.
+	 * @param mofBiomassFactor the factor by which to reduce the MoF biomass value
 	 *
 	 * @return a VolumeInfo record containing the volume information for the given species and age.
 	 * @throws StandYieldCalculationException when a failure occurs during yield calculations
 	 */
 	private Pair<EntityVolumeDetails /* volume */, EntityVolumeDetails /* MoF biomass */>
 			getProjectionLayerSpeciesVolumes(
-					YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, Species sp64,
-					int ageToRequest, double mofBiomassFactor
+					Species sp64, VdypSpecies vdypSpecies, double mofBiomassFactor
 			) throws StandYieldCalculationException {
 
 		EntityVolumeDetails volumeDetails = null;
@@ -1248,75 +1280,59 @@ public class YieldTable implements Closeable {
 		double totalBiomassDW = 0.0;
 		double totalBiomassDWB = 0.0;
 
-		Layer layer = sp64.getStand().getLayer();
-		if (!layer.getDoSuppressPerHAYields()) {
+		var percentageRatio = sp64.getSpeciesPercent() / sp64.getStand().getSpeciesGroup().getSpeciesPercent();
 
-			var percentageRatio = sp64.getSpeciesPercent() / sp64.getStand().getSpeciesGroup().getSpeciesPercent();
+		// TODO: determine whether the presence of duplicates alters this (vdyp7volumes 1351 - 1360).
 
-			// TODO: determine whether the presence of duplicates alters this (vdyp7volumes 1351 - 1360).
-
-			Integer calendarYear = getCalendarYear(layer, ageToRequest);
-
-			var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
-
-			if (projectedPolygon != null) {
-
-				LayerType layerType = getLayerType(layer.getAssignedProjectionType());
-
-				var vdypLayer = projectedPolygon.getLayers().get(layerType);
-				var vdypSpecies = vdypLayer.getSpeciesBySp0(sp64.getStand().getSp0Code());
-
-				float wholeStemVolumeFloat = vdypSpecies.getWholeStemVolumeByUtilization().get(UtilizationClass.ALL);
-				Double wholeStemVolume = null;
-				if (wholeStemVolumeFloat != Vdyp7Constants.EMPTY_DECIMAL) {
-					wholeStemVolume = Double.valueOf(wholeStemVolumeFloat) * percentageRatio;
-				}
-
-				float cuVolumeFloat = vdypSpecies.getCloseUtilizationVolumeByUtilization().get(UtilizationClass.ALL);
-				Double cuVolume = null;
-				if (cuVolumeFloat != Vdyp7Constants.EMPTY_DECIMAL) {
-					cuVolume = Double.valueOf(cuVolumeFloat) * percentageRatio;
-				}
-
-				float cuVolumeLessDecayFloat = vdypSpecies.getCloseUtilizationVolumeNetOfDecayByUtilization()
-						.get(UtilizationClass.ALL);
-				Double cuVolumeLessDecay = null;
-				if (cuVolumeLessDecayFloat != Vdyp7Constants.EMPTY_DECIMAL) {
-					cuVolumeLessDecay = Double.valueOf(cuVolumeLessDecayFloat) * percentageRatio;
-				}
-
-				float cuVolumeLessDecayWasteFloat = vdypSpecies
-						.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization().get(UtilizationClass.ALL);
-				Double cuVolumeLessDecayWaste = null;
-				if (cuVolumeLessDecayWasteFloat != Vdyp7Constants.EMPTY_DECIMAL) {
-					cuVolumeLessDecayWaste = Double.valueOf(cuVolumeLessDecayWasteFloat) * percentageRatio;
-				}
-
-				float cuVolumeLessDecayWasteBreakageFloat = vdypSpecies
-						.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization().get(UtilizationClass.ALL);
-				Double cuVolumeLessDecayWasteBreakage = null;
-				if (cuVolumeLessDecayWasteBreakageFloat != Vdyp7Constants.EMPTY_DECIMAL) {
-					cuVolumeLessDecayWasteBreakage = Double.valueOf(cuVolumeLessDecayWasteBreakageFloat)
-							* percentageRatio;
-				}
-
-				totalBiomassWS = addSafe(totalBiomassWS, wholeStemVolume * mofBiomassFactor);
-				totalBiomassCU = addSafe(totalBiomassCU, cuVolume * mofBiomassFactor);
-				totalBiomassD = addSafe(totalBiomassD, cuVolumeLessDecay * mofBiomassFactor);
-				totalBiomassDW = addSafe(totalBiomassDW, cuVolumeLessDecayWaste * mofBiomassFactor);
-				totalBiomassDWB = addSafe(totalBiomassDWB, cuVolumeLessDecayWasteBreakage * mofBiomassFactor);
-
-				volumeDetails = new EntityVolumeDetails(
-						wholeStemVolume, cuVolume, cuVolumeLessDecay, cuVolumeLessDecayWaste,
-						cuVolumeLessDecayWasteBreakage
-				);
-
-				mofBiomassDetails = new EntityVolumeDetails(
-						totalBiomassWS, totalBiomassCU, totalBiomassD, cuVolumeLessDecayWaste, totalBiomassDWB
-				);
-
-				detailsComputed = true;
+		if (vdypSpecies != null) {
+			float wholeStemVolumeFloat = vdypSpecies.getWholeStemVolumeByUtilization().get(UtilizationClass.ALL);
+			Double wholeStemVolume = null;
+			if (wholeStemVolumeFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+				wholeStemVolume = Double.valueOf(wholeStemVolumeFloat) * percentageRatio;
 			}
+
+			float cuVolumeFloat = vdypSpecies.getCloseUtilizationVolumeByUtilization().get(UtilizationClass.ALL);
+			Double cuVolume = null;
+			if (cuVolumeFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+				cuVolume = Double.valueOf(cuVolumeFloat) * percentageRatio;
+			}
+
+			float cuVolumeLessDecayFloat = vdypSpecies.getCloseUtilizationVolumeNetOfDecayByUtilization()
+					.get(UtilizationClass.ALL);
+			Double cuVolumeLessDecay = null;
+			if (cuVolumeLessDecayFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+				cuVolumeLessDecay = Double.valueOf(cuVolumeLessDecayFloat) * percentageRatio;
+			}
+
+			float cuVolumeLessDecayWasteFloat = vdypSpecies.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization()
+					.get(UtilizationClass.ALL);
+			Double cuVolumeLessDecayWaste = null;
+			if (cuVolumeLessDecayWasteFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+				cuVolumeLessDecayWaste = Double.valueOf(cuVolumeLessDecayWasteFloat) * percentageRatio;
+			}
+
+			float cuVolumeLessDecayWasteBreakageFloat = vdypSpecies
+					.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization().get(UtilizationClass.ALL);
+			Double cuVolumeLessDecayWasteBreakage = null;
+			if (cuVolumeLessDecayWasteBreakageFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+				cuVolumeLessDecayWasteBreakage = Double.valueOf(cuVolumeLessDecayWasteBreakageFloat) * percentageRatio;
+			}
+
+			totalBiomassWS = addSafe(totalBiomassWS, wholeStemVolume * mofBiomassFactor);
+			totalBiomassCU = addSafe(totalBiomassCU, cuVolume * mofBiomassFactor);
+			totalBiomassD = addSafe(totalBiomassD, cuVolumeLessDecay * mofBiomassFactor);
+			totalBiomassDW = addSafe(totalBiomassDW, cuVolumeLessDecayWaste * mofBiomassFactor);
+			totalBiomassDWB = addSafe(totalBiomassDWB, cuVolumeLessDecayWasteBreakage * mofBiomassFactor);
+
+			volumeDetails = new EntityVolumeDetails(
+					wholeStemVolume, cuVolume, cuVolumeLessDecay, cuVolumeLessDecayWaste, cuVolumeLessDecayWasteBreakage
+			);
+
+			mofBiomassDetails = new EntityVolumeDetails(
+					totalBiomassWS, totalBiomassCU, totalBiomassD, cuVolumeLessDecayWaste, totalBiomassDWB
+			);
+
+			detailsComputed = true;
 		}
 
 		if (!detailsComputed) {
