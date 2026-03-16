@@ -590,7 +590,6 @@ public class YieldTable implements Closeable {
 		}
 	}
 
-
 	private double addSafe(double x, double y) {
 		return (x < 0) ? y : x + y;
 	}
@@ -1225,7 +1224,7 @@ public class YieldTable implements Closeable {
 
 	/**
 	 * Get the projected layer for the given input layer and target age.
-	 * 
+	 *
 	 * @param polygonProjectionsByYear a map of projected polygons by calendar year
 	 * @param targetAge                the target age for which to retrieve the projected layer
 	 * @param layer                    the input layer for which to find the corresponding projected layer
@@ -1266,9 +1265,8 @@ public class YieldTable implements Closeable {
 	 * @throws StandYieldCalculationException when a failure occurs during yield calculations
 	 */
 	private Pair<EntityVolumeDetails /* volume */, EntityVolumeDetails /* MoF biomass */>
-			getProjectionLayerSpeciesVolumes(
-					Species sp64, VdypSpecies vdypSpecies, double mofBiomassFactor
-			) throws StandYieldCalculationException {
+			getProjectionLayerSpeciesVolumes(Species sp64, VdypSpecies vdypSpecies, double mofBiomassFactor)
+					throws StandYieldCalculationException {
 
 		EntityVolumeDetails volumeDetails = null;
 		EntityVolumeDetails mofBiomassDetails = null;
