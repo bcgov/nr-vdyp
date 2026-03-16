@@ -164,6 +164,11 @@ jobs:
             --set backend.env.BATCH_BASE_URL=${{ vars.BATCH_BASE_URL }} \
             --set backend.env.VDYP_PROJECTION_EXPIRY_DAYS=${{ vars.VDYP_PROJECTION_EXPIRY_DAYS }} \
             --set batch.env.VDYP_BASE_URL=${{ vars.VDYP_BASE_URL }} \
+            --set batch.env.BATCH_SYSTEM_LOGGING_LEVEL=${{ vars.BATCH_SYSTEM_LOGGING_LEVEL }} \
+            --set batch.env.VDYP_SYSTEM_LOGGING_LEVEL=${{ vars.VDYP_SYSTEM_LOGGING_LEVEL }} \
+            --set batch.env.BATCH_DEFAULT_PARTITION_NUMBER=${{ vars.BATCH_DEFAULT_PARTITION_NUMBER }} \
+            --set batch.env.BATCH_THREAD_POOL_SIZE=${{ vars.BATCH_THREAD_POOL_SIZE }} \
+            --set batch.env.BATCH_DB_CONNECITON_POOL_SIZE=${{ vars.BATCH_DB_CONNECITON_POOL_SIZE }} \
             --set frontend.env.BACKEND_URL=${{ vars.BACKEND_URL }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
             --set frontend.env.VITE_SSO_CLIENT_ID=${{ secrets.VITE_SSO_CLIENT_ID }} \
