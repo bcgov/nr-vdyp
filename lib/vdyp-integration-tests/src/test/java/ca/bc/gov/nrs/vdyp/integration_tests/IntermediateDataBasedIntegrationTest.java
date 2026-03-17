@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.vdyp.integration_tests;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,6 +72,8 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		map.put(Data.GrowTo, "grow.dat");
 		DATA_FILENAMES = Collections.unmodifiableMap(map);
 	}
+
+	protected static final String EXCEPTION_FILE_NAME = "exception";
 
 	protected static final String POLYGON_OUTPUT_NAME = "poly.dat";
 	protected static final String SPECIES_OUTPUT_NAME = "spec.dat";
@@ -386,22 +391,30 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 	}
 
 	protected void assertOutputs(State outputState, Path expectedDir) throws IOException {
-		assertFileExists(outputDir.resolve(POLYGON_OUTPUT_NAME));
-		assertFileExists(outputDir.resolve(SPECIES_OUTPUT_NAME));
-		assertFileExists(outputDir.resolve(UTILIZATION_OUTPUT_NAME));
+		if (Files.exists(outputDir.resolve(EXCEPTION_FILE_NAME))) {
+			assertTrue(Files.exists(expectedDir.resolve(EXCEPTION_FILE_NAME)), "Unexpected exception thrown");
+			assertFileMatches(
+					outputDir.resolve(EXCEPTION_FILE_NAME), expectedDir.resolve(EXCEPTION_FILE_NAME), String::equals
+			);
+		} else {
+			assertFalse(Files.exists(expectedDir.resolve(EXCEPTION_FILE_NAME)), "Expected exception was not thrown");
+			assertFileExists(outputDir.resolve(POLYGON_OUTPUT_NAME));
+			assertFileExists(outputDir.resolve(SPECIES_OUTPUT_NAME));
+			assertFileExists(outputDir.resolve(UTILIZATION_OUTPUT_NAME));
 
-		assertFileMatches(
-				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
-				this::polygonLinesMatch
-		);
-		assertFileMatches(
-				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
-				this::specLinesMatch
-		);
-		assertFileMatches(
-				outputDir.resolve(UTILIZATION_OUTPUT_NAME),
-				expectedDir.resolve(fileName(outputState, Data.Utilization)), this::utilLinesMatch
-		);
+			assertFileMatches(
+					outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
+					this::polygonLinesMatch
+			);
+			assertFileMatches(
+					outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
+					this::specLinesMatch
+			);
+			assertFileMatches(
+					outputDir.resolve(UTILIZATION_OUTPUT_NAME),
+					expectedDir.resolve(fileName(outputState, Data.Utilization)), this::utilLinesMatch
+			);
+		}
 	}
 
 }

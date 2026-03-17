@@ -44,6 +44,7 @@ import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
@@ -531,11 +532,113 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	static final float MINIMUM_BASAL_AREA = 0.05f;
 
-	// EMP040
-	protected float estimatePrimaryBaseArea(
+	enum Strictness {
+		/**
+		 * Prefer to throw an exception
+		 */
+		STRICT,
+		/**
+		 * Prefer to tweak values to work and log a warning
+		 */
+		ADJUST,
+		/**
+		 * Prefer to accept values as they are and log a warning
+		 */
+		LENIENT
+	}
+
+	/**
+	 * Estimate the basal area yield for the primary layer. Ensures that it does not go below the allowable minimum.
+	 *
+	 * @param layer             The layer
+	 * @param bec               BEC zone of the polygon
+	 * @param yieldFactor       Yield factor of the polygon
+	 * @param breastHeightAge   Breast height age
+	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @param crownClosure      Crown closure percentage
+	 * @return The basal area.
+	 */
+	protected float estimatePrimaryBaseAreaAdjust(
 			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
 			float crownClosure
 	) {
+		try {
+			return estimatePrimaryBaseArea(
+					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure, Strictness.ADJUST
+			);
+		} catch (BaseAreaLowException e) {
+			throw new IllegalStateException("This should never happen", e);
+		}
+	}
+
+	/**
+	 * Estimate the basal area yield for the primary layer. Throws an exception if the computed BA is below the
+	 * allowable minimum
+	 *
+	 * @param layer             The layer
+	 * @param bec               BEC zone of the polygon
+	 * @param yieldFactor       Yield factor of the polygon
+	 * @param breastHeightAge   Breast height age
+	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @param crownClosure      Crown closure percentage
+	 * @return The basal area.
+	 * @throws BaseAreaLowException if the computed BA is below the allowable minimum
+	 */
+	protected float estimatePrimaryBaseAreaStrict(
+			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
+			float crownClosure
+	) throws BaseAreaLowException {
+		return estimatePrimaryBaseArea(
+				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure, Strictness.STRICT
+		);
+	}
+
+	/**
+	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Throws an exception if the
+	 * computed BA is below the allowable minimum
+	 *
+	 * @param layer             The layer
+	 * @param bec               BEC zone of the polygon
+	 * @param yieldFactor       Yield factor of the polygon
+	 * @param breastHeightAge   Breast height age
+	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @return The basal area.
+	 * @throws BaseAreaLowException if the computed BA is below the allowable minimum
+	 */
+	protected float estimatePrimaryBaseAreaStrict(
+			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
+	) throws BaseAreaLowException {
+		return estimatePrimaryBaseArea(layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, Strictness.STRICT);
+	}
+
+	/**
+	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Ensures that it does not go below
+	 * the allowable minimum.
+	 *
+	 * @param layer             The layer
+	 * @param bec               BEC zone of the polygon
+	 * @param yieldFactor       Yield factor of the polygon
+	 * @param breastHeightAge   Breast height age
+	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @return The basal area.
+	 */
+	protected float estimatePrimaryBaseAreaAdjust(
+			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
+	) {
+		try {
+			return estimatePrimaryBaseArea(
+					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, Strictness.ADJUST
+			);
+		} catch (BaseAreaLowException e) {
+			throw new IllegalArgumentException("This should not happen", e);
+		}
+	}
+
+	// EMP040
+	protected float estimatePrimaryBaseArea(
+			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
+			float crownClosure, Strictness basalAreaMinimum
+	) throws BaseAreaLowException {
 		boolean lowCrownClosure = layer.getCrownClosure() < LOW_CROWN_CLOSURE;
 		crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : crownClosure;
 
@@ -614,15 +717,38 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		baseArea *= yieldFactor;
 
 		// This is to prevent underflow errors in later calculations
-		// VDYP7 returned an error code in parallel with the modified result but the error was ignored.
-		// For VDYP8 we log a warning.
-		if (baseArea < MINIMUM_BASAL_AREA) {
-			log.atWarn().setMessage("Estimated basal area {} is too low. Increasing to {}.").addArgument(baseArea)
+		// VDYP7 returned an error code in parallel with the modified result
+
+		switch (basalAreaMinimum) {
+		case ADJUST:
+			if (baseArea < MINIMUM_BASAL_AREA) {
+				log.atWarn().setMessage("Estimated basal area {} is too low. Increasing to {}.").addArgument(baseArea)
+						.addArgument(MINIMUM_BASAL_AREA).log();
+				baseArea = MINIMUM_BASAL_AREA;
+			}
+			break;
+		case LENIENT:
+			log.atWarn().setMessage("Estimated basal area {} is too low.").addArgument(baseArea)
 					.addArgument(MINIMUM_BASAL_AREA).log();
-			baseArea = MINIMUM_BASAL_AREA;
+			break;
+		case STRICT:
+			Utils.throwIfPresent(
+					BaseAreaLowException
+							.check(layer.getLayerType(), "Estimated base area", Optional.of(baseArea), 0.05f)
+			);
+			break;
 		}
 
 		return baseArea;
+	}
+
+	protected float estimatePrimaryBaseArea(
+			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
+			Strictness basalAreaMinimum
+	) throws BaseAreaLowException {
+		return estimatePrimaryBaseArea(
+				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, layer.getCrownClosure(), basalAreaMinimum
+		);
 	}
 
 	protected abstract float getYieldFactor(P polygon);
@@ -645,14 +771,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		// TODO implement accessor for VRI and FIP Site. InputSite interface?
 		return getPrimarySite(layer).flatMap(
 				site -> Utils.mapBoth(site.getAgeTotal(), site.getYearsToBreastHeight(), (at, ytbh) -> at - ytbh)
-		);
-	}
-
-	protected float estimatePrimaryBaseArea(
-			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
-	) {
-		return estimatePrimaryBaseArea(
-				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, layer.getCrownClosure()
 		);
 	}
 
@@ -877,11 +995,13 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 		breastHeightAge = max(5.0f, breastHeightAge);
 		// EMP040
-		float baseAreaTop = estimatePrimaryBaseArea(
+		float baseAreaTop = estimatePrimaryBaseAreaAdjust(
 				primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosureTop
 		);
 		// EMP040
-		float baseAreaHat = estimatePrimaryBaseArea(primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosure);
+		float baseAreaHat = estimatePrimaryBaseAreaAdjust(
+				primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosure
+		);
 
 		float percentYield;
 		if (baseAreaTop > 0f && baseAreaHat > 0f) {
