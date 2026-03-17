@@ -398,12 +398,10 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/start")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(
-			name = "Start a direct file upload for a FileSet",
-			description = "(System Only) Creates a placeholder object in COMS and registers it in the DB. The caller should then PUT the file content directly to COMS and call the /complete endpoint."
+			name = "Start a direct file upload for a FileSet", description = "(System Only) Creates a placeholder object in COMS and registers it in the DB. The caller should then PUT the file content directly to COMS and call the /complete endpoint."
 	)
 	public Response startFileSetFileUpload(
-			@PathParam("projectionGUID") UUID projectionGUID,
-			@PathParam("fileSetGUID") UUID fileSetGUID,
+			@PathParam("projectionGUID") UUID projectionGUID, @PathParam("fileSetGUID") UUID fileSetGUID,
 			@QueryParam("filename") String filename
 	) throws ProjectionServiceException {
 		var created = projectionService.startFileSetFileUpload(projectionGUID, fileSetGUID, filename);
@@ -415,12 +413,10 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}/complete")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(
-			name = "Complete a direct file upload for a FileSet",
-			description = "(System Only) Confirms that a direct COMS upload has finished and returns the final file mapping record."
+			name = "Complete a direct file upload for a FileSet", description = "(System Only) Confirms that a direct COMS upload has finished and returns the final file mapping record."
 	)
 	public Response completeFileSetFileUpload(
-			@PathParam("projectionGUID") UUID projectionGUID,
-			@PathParam("fileSetGUID") UUID fileSetGUID,
+			@PathParam("projectionGUID") UUID projectionGUID, @PathParam("fileSetGUID") UUID fileSetGUID,
 			@PathParam("fileMappingGUID") UUID fileMappingGUID
 	) throws ProjectionServiceException {
 		var result = projectionService.completeFileSetFileUpload(projectionGUID, fileSetGUID, fileMappingGUID);

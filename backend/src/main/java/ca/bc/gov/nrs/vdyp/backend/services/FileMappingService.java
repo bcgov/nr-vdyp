@@ -197,8 +197,9 @@ public class FileMappingService {
 		}
 	}
 
-	public FileMappingModel createPlaceholderFile(String comsBucketGUID, ProjectionFileSetEntity projectionFileSetEntity, String filename)
-			throws ProjectionServiceException {
+	public FileMappingModel createPlaceholderFile(
+			String comsBucketGUID, ProjectionFileSetEntity projectionFileSetEntity, String filename
+	) throws ProjectionServiceException {
 		try {
 			String contentDisposition = buildContentDisposition(filename);
 			byte[] placeholder = new byte[] { 0 };
