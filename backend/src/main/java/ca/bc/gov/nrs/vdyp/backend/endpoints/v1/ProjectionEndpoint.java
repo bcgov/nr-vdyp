@@ -394,6 +394,40 @@ public class ProjectionEndpoint implements Endpoint {
 	}
 
 	@POST
+	@RolesAllowed("SYSTEM")
+	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/start")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Start a direct file upload for a FileSet",
+			description = "(System Only) Creates a placeholder object in COMS and registers it in the DB. The caller should then PUT the file content directly to COMS and call the /complete endpoint."
+	)
+	public Response startFileSetFileUpload(
+			@PathParam("projectionGUID") UUID projectionGUID,
+			@PathParam("fileSetGUID") UUID fileSetGUID,
+			@QueryParam("filename") String filename
+	) throws ProjectionServiceException {
+		var created = projectionService.startFileSetFileUpload(projectionGUID, fileSetGUID, filename);
+		return Response.status(Status.CREATED).entity(created).build();
+	}
+
+	@POST
+	@RolesAllowed("SYSTEM")
+	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}/complete")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Complete a direct file upload for a FileSet",
+			description = "(System Only) Confirms that a direct COMS upload has finished and returns the final file mapping record."
+	)
+	public Response completeFileSetFileUpload(
+			@PathParam("projectionGUID") UUID projectionGUID,
+			@PathParam("fileSetGUID") UUID fileSetGUID,
+			@PathParam("fileMappingGUID") UUID fileMappingGUID
+	) throws ProjectionServiceException {
+		var result = projectionService.completeFileSetFileUpload(projectionGUID, fileSetGUID, fileMappingGUID);
+		return Response.status(Status.OK).entity(result).build();
+	}
+
+	@POST
 	@RolesAllowed({ "USER", "ADMIN", "SYSTEM" })
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file")
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })

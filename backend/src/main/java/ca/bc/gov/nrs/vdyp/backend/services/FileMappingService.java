@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -193,6 +194,24 @@ public class FileMappingService {
 			throw new ProjectionServiceException("Thread interrupted during COMS duplication", e);
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error duplicating file in COMS", e);
+		}
+	}
+
+	public FileMappingModel createPlaceholderFile(String comsBucketGUID, ProjectionFileSetEntity projectionFileSetEntity, String filename)
+			throws ProjectionServiceException {
+		try {
+			String contentDisposition = buildContentDisposition(filename);
+			byte[] placeholder = new byte[] { 0 };
+			InputStream placeholderStream = new ByteArrayInputStream(placeholder);
+			COMSObject createObjectResponse = comsClient.createObject(
+					comsBucketGUID, contentDisposition, placeholder.length, MediaType.APPLICATION_OCTET_STREAM,
+					placeholderStream
+			);
+			UUID objectGUID = UUID.fromString(createObjectResponse.id());
+			FileMappingEntity entity = persistFileMapping(objectGUID, projectionFileSetEntity, filename);
+			return assembler.toModel(entity);
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Error creating placeholder file in COMS", e);
 		}
 	}
 
