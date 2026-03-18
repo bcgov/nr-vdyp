@@ -826,6 +826,99 @@ class ProjectionServiceTest {
 	}
 
 	@Test
+	void startFileSetFileUpload_nullFileSet_throwsException() {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.startFileSetFileUpload(projectionGUID, null, "result.zip")
+		);
+	}
+
+	@Test
+	void startFileSetFileUpload_invalidFileSet_throwsException() {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.startFileSetFileUpload(projectionGUID, UUID.randomUUID(), "result.zip")
+		);
+	}
+
+	@Test
+	void startFileSetFileUpload_resultFileSet_callsFileSetService() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		UUID resultFileSetGUID = entity.getResultFileSet().getProjectionFileSetGUID();
+		FileMappingModel expected = fileMappingModel(UUID.randomUUID(), UUID.randomUUID());
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(fileSetService.startFileSetFileUpload(resultFileSetGUID, "result.zip")).thenReturn(expected);
+
+		FileMappingModel result = service.startFileSetFileUpload(projectionGUID, resultFileSetGUID, "result.zip");
+
+		assertNotNull(result);
+		verify(fileSetService).startFileSetFileUpload(resultFileSetGUID, "result.zip");
+	}
+
+	@Test
+	void completeFileSetFileUpload_invalidFileSet_throwsException() {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.completeFileSetFileUpload(projectionGUID, UUID.randomUUID(), UUID.randomUUID())
+		);
+	}
+
+	@Test
+	void completeFileSetFileUpload_resultFileSet_callsFileSetService() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		UUID fileMappingGUID = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
+		entity.setPolygonFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setLayerFileSet(fileSetEntity(UUID.randomUUID()));
+		entity.setResultFileSet(fileSetEntity(UUID.randomUUID()));
+
+		UUID resultFileSetGUID = entity.getResultFileSet().getProjectionFileSetGUID();
+		FileMappingModel expected = fileMappingModel(fileMappingGUID, UUID.randomUUID());
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(fileSetService.getFileMappingById(fileMappingGUID)).thenReturn(expected);
+
+		FileMappingModel result = service.completeFileSetFileUpload(projectionGUID, resultFileSetGUID, fileMappingGUID);
+
+		assertNotNull(result);
+		verify(fileSetService).getFileMappingById(fileMappingGUID);
+	}
+
+	@Test
 	void deleteProjectionFile_validInput_callsFileSetService() throws ProjectionServiceException {
 		UUID projectionGUID = UUID.randomUUID();
 		UUID ownerId = UUID.randomUUID();
@@ -1395,6 +1488,48 @@ class ProjectionServiceTest {
 		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
 		assertThat(response.getEntity()).isSameAs(updated);
 		verify(mockService).editProjectionParameters(projectionGUID, params, null, reportDescription, actingUser);
+	}
+
+	@Test
+	void endpoint_startFileSetFileUpload_returnsCreated() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		UUID fileSetGUID = UUID.randomUUID();
+		String filename = "result.zip";
+
+		FileMappingModel model = fileMappingModel(UUID.randomUUID(), UUID.randomUUID());
+		when(mockService.startFileSetFileUpload(projectionGUID, fileSetGUID, filename)).thenReturn(model);
+
+		Response response = endpoint.startFileSetFileUpload(projectionGUID, fileSetGUID, filename);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
+		assertThat(response.getEntity()).isSameAs(model);
+		verify(mockService).startFileSetFileUpload(projectionGUID, fileSetGUID, filename);
+	}
+
+	@Test
+	void endpoint_completeFileSetFileUpload_returnsOk() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		UUID fileSetGUID = UUID.randomUUID();
+		UUID fileMappingGUID = UUID.randomUUID();
+
+		FileMappingModel model = fileMappingModel(fileMappingGUID, UUID.randomUUID());
+		when(mockService.completeFileSetFileUpload(projectionGUID, fileSetGUID, fileMappingGUID)).thenReturn(model);
+
+		Response response = endpoint.completeFileSetFileUpload(projectionGUID, fileSetGUID, fileMappingGUID);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		assertThat(response.getEntity()).isSameAs(model);
+		verify(mockService).completeFileSetFileUpload(projectionGUID, fileSetGUID, fileMappingGUID);
 	}
 
 	@Test

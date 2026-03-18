@@ -105,6 +105,64 @@ class VdypClientTest {
 	}
 
 	@Test
+	void startFileSetFileUpload_buildsExpectedUri_andReturnsBody() {
+		String projectionGuid = "proj-123";
+		String fileSetGuid = "fs-456";
+		String filename = "result.zip";
+
+		FileMappingDetails expected = mock(FileMappingDetails.class);
+
+		var req = mock(RestClient.RequestBodyUriSpec.class);
+		var resp = mock(RestClient.ResponseSpec.class);
+		when(restClient.post()).thenReturn(req);
+		when(req.uri(ArgumentMatchers.<Function<UriBuilder, URI>>any())).thenReturn(req);
+		when(req.retrieve()).thenReturn(resp);
+		when(resp.body(FileMappingDetails.class)).thenReturn(expected);
+
+		FileMappingDetails actual = client.startFileSetFileUpload(projectionGuid, fileSetGuid, filename);
+
+		assertSame(expected, actual);
+
+		@SuppressWarnings("unchecked")
+		ArgumentCaptor<Function<UriBuilder, URI>> uriCaptor = ArgumentCaptor.forClass(Function.class);
+		verify(req).uri(uriCaptor.capture());
+
+		URI built = uriCaptor.getValue().apply(new DefaultUriBuilderFactory(BASE_URL).builder());
+		assertEquals(
+				BASE_URL + "/api/v8/projection/" + projectionGuid + "/fileset/" + fileSetGuid
+						+ "/file/start?filename=" + filename,
+				built.toString()
+		);
+	}
+
+	@Test
+	void completeFileSetFileUpload_buildsExpectedUri() {
+		String projectionGuid = "proj-123";
+		String fileSetGuid = "fs-456";
+		String fileMappingGuid = "fm-789";
+
+		var req = mock(RestClient.RequestBodyUriSpec.class);
+		var resp = mock(RestClient.ResponseSpec.class);
+		when(restClient.post()).thenReturn(req);
+		when(req.uri(ArgumentMatchers.<Function<UriBuilder, URI>>any())).thenReturn(req);
+		when(req.retrieve()).thenReturn(resp);
+		when(resp.body(Void.class)).thenReturn(null);
+
+		client.completeFileSetFileUpload(projectionGuid, fileSetGuid, fileMappingGuid);
+
+		@SuppressWarnings("unchecked")
+		ArgumentCaptor<Function<UriBuilder, URI>> uriCaptor = ArgumentCaptor.forClass(Function.class);
+		verify(req).uri(uriCaptor.capture());
+
+		URI built = uriCaptor.getValue().apply(new DefaultUriBuilderFactory(BASE_URL).builder());
+		assertEquals(
+				BASE_URL + "/api/v8/projection/" + projectionGuid + "/fileset/" + fileSetGuid + "/file/"
+						+ fileMappingGuid + "/complete",
+				built.toString()
+		);
+	}
+
+	@Test
 	void uploadFileToFileSet_buildsUri_andSendsMultipart(@TempDir Path tempDir) throws Exception {
 		String projectionGuid = "proj-123";
 		String fileSetGuid = "fs-456";
