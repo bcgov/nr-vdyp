@@ -527,6 +527,11 @@ const handleBulkDownload = async () => {
   progressMessage.value = PROGRESS_MSG.DOWNLOADING_PROJECTION
 
   try {
+    // FILE_UPLOAD: each result is downloaded individually via downloadURL() instead of being
+    // fetched into memory and re-zipped. Reasons:
+    //   - CORS: fetch() on cross-origin COMS presigned URLs is blocked; downloadURL() (browser navigate) is not.
+    //   - Memory: files go directly to disk without passing through browser memory.
+    // MANUAL_INPUT: blobs are streamed from the backend and merged into a single master zip.
     const manualDownloaded: { zipBlob: Blob; title: string }[] = []
     let fileUploadSuccessCount = 0
 
