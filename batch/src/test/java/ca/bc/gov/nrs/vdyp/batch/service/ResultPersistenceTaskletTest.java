@@ -155,6 +155,8 @@ class ResultPersistenceTaskletTest {
 	@Test
 	void testExecute_filesExist_emptyFileSetCallsVDYPClient() throws Exception {
 		UUID resultFileSetGuid = UUID.randomUUID();
+		UUID placeholderComsObjectGuid = UUID.randomUUID();
+		UUID placeholderFileMappingGuid = UUID.randomUUID();
 
 		jobParameters = new JobParametersBuilder() //
 				.addString(BatchConstants.Job.GUID, "job-123") //
@@ -169,9 +171,13 @@ class ResultPersistenceTaskletTest {
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));
 		when(vdypClient.getFileSetFiles(any(), matches(resultFileSetGuid.toString()))).thenReturn(List.of());
 
-		doNothing().when(vdypClient).uploadFileToFileSet(
-				matches(projectionGuid.toString()), matches(resultFileSetGuid.toString()), any(Path.class)
+		FileMappingDetails placeholder = new FileMappingDetails(
+				placeholderFileMappingGuid.toString(), placeholderComsObjectGuid.toString()
 		);
+		when(vdypClient.startFileSetFileUpload(
+				matches(projectionGuid.toString()), matches(resultFileSetGuid.toString()), any(String.class)
+		)).thenReturn(placeholder);
+		doNothing().when(comsFileService).updateStoredObject(eq(placeholderComsObjectGuid), any(Path.class));
 
 		Path finalZipPath = BatchUtils.getFinalZipName(tempDir, jobParameters.getString(BatchConstants.Job.TIMESTAMP));
 		Files.createFile(finalZipPath); // ← makes Files.exists(...) return true
@@ -180,7 +186,12 @@ class ResultPersistenceTaskletTest {
 
 		// Assert
 		assertEquals(RepeatStatus.FINISHED, status);
-		verify(vdypClient)
-				.uploadFileToFileSet(eq(projectionGuid.toString()), eq(resultFileSetGuid.toString()), any(Path.class));
+		verify(vdypClient).startFileSetFileUpload(
+				eq(projectionGuid.toString()), eq(resultFileSetGuid.toString()), any(String.class)
+		);
+		verify(comsFileService).updateStoredObject(eq(placeholderComsObjectGuid), any(Path.class));
+		verify(vdypClient).completeFileSetFileUpload(
+				projectionGuid.toString(), resultFileSetGuid.toString(), placeholderFileMappingGuid.toString()
+		);
 	}
 }
