@@ -367,8 +367,8 @@ class TestFileMappingService {
 
 		UUID objectGuid = UUID.randomUUID();
 		COMSObject createdObject = new COMSObject(
-				objectGuid.toString(), "vdyp/fileset/x/placeholder", false, true, "bucket-id", "result.zip", null,
-				null, null, null, null, null, Set.of()
+				objectGuid.toString(), "vdyp/fileset/x/placeholder", false, true, "bucket-id", "result.zip", null, null,
+				null, null, null, null, Set.of()
 		);
 		when(
 				comsClient.createObject(

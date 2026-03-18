@@ -129,8 +129,8 @@ class VdypClientTest {
 
 		URI built = uriCaptor.getValue().apply(new DefaultUriBuilderFactory(BASE_URL).builder());
 		assertEquals(
-				BASE_URL + "/api/v8/projection/" + projectionGuid + "/fileset/" + fileSetGuid
-						+ "/file/start?filename=" + filename,
+				BASE_URL + "/api/v8/projection/" + projectionGuid + "/fileset/" + fileSetGuid + "/file/start?filename="
+						+ filename,
 				built.toString()
 		);
 	}
