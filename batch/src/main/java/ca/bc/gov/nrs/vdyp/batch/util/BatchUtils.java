@@ -194,6 +194,15 @@ public final class BatchUtils {
 		return jobBasePath.resolve(finalZipName);
 	}
 
+	public static String buildResultZipFileName(String reportTitle) {
+		String base = (reportTitle != null && !reportTitle.isBlank()) ? reportTitle : "Projection";
+		String sanitized = (base + "_All Files")
+				.replaceAll("[^a-zA-Z0-9._\\-]", "_")
+				.replaceAll("_+", "_")
+				.replaceAll("(^_)|(_$)", "");
+		return sanitized + ".zip";
+	}
+
 	public static void confirmDirectoryExists(Path dirPath) throws IOException {
 		if (!Files.exists(dirPath)) {
 			throw new IOException("Directory does not exist: " + dirPath);

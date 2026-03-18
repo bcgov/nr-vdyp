@@ -107,7 +107,7 @@ class ComsClientTest {
 		when(mockResponseSpec.body(String.class)).thenReturn("ok");
 
 		// Act
-		client.updateObject(objectId, file);
+		client.updateObject(objectId, file, "upload.txt");
 
 		// Assert URI
 		@SuppressWarnings("unchecked")
