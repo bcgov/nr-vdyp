@@ -56,7 +56,8 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 			if (resultFiles.isEmpty()) {
 				// No result file yet: register a placeholder in Backend/COMS, upload directly, then confirm.
 				String filename = finalZipPath.getFileName().toString();
-				FileMappingDetails placeholder = vdypClient.startFileSetFileUpload(projectionGUID, resultFileSetGUID, filename);
+				FileMappingDetails placeholder = vdypClient
+						.startFileSetFileUpload(projectionGUID, resultFileSetGUID, filename);
 				comsFileService.updateStoredObject(UUID.fromString(placeholder.comsObjectGuid()), finalZipPath);
 				vdypClient.completeFileSetFileUpload(projectionGUID, resultFileSetGUID, placeholder.fileMappingGuid());
 			} else {

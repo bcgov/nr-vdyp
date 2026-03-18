@@ -174,9 +174,11 @@ class ResultPersistenceTaskletTest {
 		FileMappingDetails placeholder = new FileMappingDetails(
 				placeholderFileMappingGuid.toString(), placeholderComsObjectGuid.toString()
 		);
-		when(vdypClient.startFileSetFileUpload(
-				matches(projectionGuid.toString()), matches(resultFileSetGuid.toString()), any(String.class)
-		)).thenReturn(placeholder);
+		when(
+				vdypClient.startFileSetFileUpload(
+						matches(projectionGuid.toString()), matches(resultFileSetGuid.toString()), any(String.class)
+				)
+		).thenReturn(placeholder);
 		doNothing().when(comsFileService).updateStoredObject(eq(placeholderComsObjectGuid), any(Path.class));
 
 		Path finalZipPath = BatchUtils.getFinalZipName(tempDir, jobParameters.getString(BatchConstants.Job.TIMESTAMP));
