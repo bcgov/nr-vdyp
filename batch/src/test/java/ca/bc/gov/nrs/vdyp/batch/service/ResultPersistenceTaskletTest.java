@@ -181,7 +181,8 @@ class ResultPersistenceTaskletTest {
 						matches(projectionGuid.toString()), matches(resultFileSetGuid.toString()), any(String.class)
 				)
 		).thenReturn(placeholder);
-		doNothing().when(comsFileService).updateStoredObject(eq(placeholderComsObjectGuid), any(Path.class), any(String.class));
+		doNothing().when(comsFileService)
+				.updateStoredObject(eq(placeholderComsObjectGuid), any(Path.class), any(String.class));
 
 		Path finalZipPath = BatchUtils.getFinalZipName(tempDir, jobParameters.getString(BatchConstants.Job.TIMESTAMP));
 		Files.createFile(finalZipPath); // ← makes Files.exists(...) return true

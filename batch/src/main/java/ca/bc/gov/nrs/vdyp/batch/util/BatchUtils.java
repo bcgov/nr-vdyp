@@ -196,9 +196,7 @@ public final class BatchUtils {
 
 	public static String buildResultZipFileName(String reportTitle) {
 		String base = (reportTitle != null && !reportTitle.isBlank()) ? reportTitle : "Projection";
-		String sanitized = (base + "_All Files")
-				.replaceAll("[^a-zA-Z0-9._\\-]", "_")
-				.replaceAll("_+", "_")
+		String sanitized = (base + "_All Files").replaceAll("[^a-zA-Z0-9._\\-]", "_").replaceAll("_+", "_")
 				.replaceAll("(^_)|(_$)", "");
 		return sanitized + ".zip";
 	}
