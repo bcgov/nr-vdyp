@@ -39,6 +39,21 @@ public class VdypClient {
 				});
 	}
 
+	public FileMappingDetails startFileSetFileUpload(String projectionGUID, String fileSetGUID, String filename) {
+		return vdypBackendReliableRestClient.post()
+				.uri(
+						b -> b.path("/api/v8/projection/{projectionGUID}/fileset/{fileSetGUID}/file/start")
+								.queryParam("filename", filename).build(projectionGUID, fileSetGUID)
+				).retrieve().body(FileMappingDetails.class);
+	}
+
+	public void completeFileSetFileUpload(String projectionGUID, String fileSetGUID, String fileMappingGUID) {
+		vdypBackendReliableRestClient.post().uri(
+				b -> b.path("/api/v8/projection/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}/complete")
+						.build(projectionGUID, fileSetGUID, fileMappingGUID)
+		).retrieve().body(Void.class);
+	}
+
 	public void uploadFileToFileSet(String projectionGUID, String fileSetGUID, Path filePath) {
 		Resource fileResource = new FileSystemResource(filePath);
 

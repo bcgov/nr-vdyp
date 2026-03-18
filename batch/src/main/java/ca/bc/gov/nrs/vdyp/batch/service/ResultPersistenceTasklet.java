@@ -52,9 +52,14 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 				throw new IOException("Could not find expected result zip file at: " + finalZipPath);
 			}
 
+			String resultFileSetGUID = projectionDetails.resultFileSet().guid();
 			if (resultFiles.isEmpty()) {
-				// no results for this fileset yet add the results through the vdyp client
-				vdypClient.uploadFileToFileSet(projectionGUID, projectionDetails.resultFileSet().guid(), finalZipPath);
+				// No result file yet: register a placeholder in Backend/COMS, upload directly, then confirm.
+				String filename = finalZipPath.getFileName().toString();
+				FileMappingDetails placeholder = vdypClient
+						.startFileSetFileUpload(projectionGUID, resultFileSetGUID, filename);
+				comsFileService.updateStoredObject(UUID.fromString(placeholder.comsObjectGuid()), finalZipPath);
+				vdypClient.completeFileSetFileUpload(projectionGUID, resultFileSetGUID, placeholder.fileMappingGuid());
 			} else {
 				comsFileService.updateStoredObject(UUID.fromString(resultFiles.get(0).comsObjectGuid()), finalZipPath);
 			}
