@@ -1311,8 +1311,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 				float dominantHeightD;
 				try {
-					dominantHeightD = (float) SiteIndex2Height.indexToHeight(
-							siteCurve, ageD, SiteIndexAgeType.SI_AT_BREAST, siteIndex, ageD, yeastToBreastHeight
+					dominantHeightD = (float) SiteIndex2Height.ageSiteIndexToHeight(
+							siteCurve, ageD, SiteIndexAgeType.SI_AT_BREAST, siteIndex, yeastToBreastHeight
 					);
 				} catch (CommonCalculatorException e) {
 					throw new FatalProcessingException(e);

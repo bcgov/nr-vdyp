@@ -1982,6 +1982,43 @@ public class SiteIndex2Height {
 		return height;
 	}
 
+	/**
+	 * Given site index and age, computes site height.
+	 * <ul>
+	 * <li><code>age</code> can be given as total age or breast height age
+	 * <li>if total age is given, years2BreastHeight must be the number of years to breast height
+	 * <li>all heights input/output are in metres.
+	 * <li>site index must be based on breast height age 50
+	 * <li>where breast height age is less than 0, a quadratic function is used
+	 * </ul>
+	 * 
+	 * equivalent to:
+	 * <ul>
+	 * <li>sindexdll <code>Sindex_AgeSIToHt</code>
+	 * <li>vdypsi <code>SiteTool_AgeSIToHt</code>
+	 * <li>vdypsi <code>SiteTool_FOR_AgeSIToHt</code>
+	 * </ul>
+	 *
+	 * @param cuIndex            the index of the site curve
+	 * @param age                the current age, of type <code>ageType</code>
+	 * @param ageType            one of SI_AT_TOTAL or SI_AT_BREAST
+	 * @param siteIndex          the site index
+	 * @param years2BreastHeight if <code>ageType</code> is SI_AT_TOTAL, this value must be supplied and indicates years
+	 *                           to breast height
+	 * @returns as described
+	 * @throws LessThan13Exception site index < 1.3m
+	 * @throws CurveErrorException when cuIndex does not identify a known curve. error codes (returned as height value):
+	 */
+	public static double ageSiteIndexToHeight(
+			SiteIndexEquation cuIndex, double age, SiteIndexAgeType ageType, double siteIndex,
+			double yearsToBreastHeight
+	) throws CommonCalculatorException {
+
+		return indexToHeight(cuIndex, age, ageType, siteIndex, yearsToBreastHeight, DEFAULT_PI);
+	}
+
+	private static final double DEFAULT_PI = 0.5;
+
 	public static double giSi2Ht(SiteIndexEquation cuIndex, double age, double siteIndex)
 			throws CommonCalculatorException {
 		double si2ht;
