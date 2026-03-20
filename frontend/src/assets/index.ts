@@ -20,3 +20,4 @@ export { default as PolygonsProcessedIcon } from './icons/Polygons_Processed_ico
 export { default as FailedIcon20px } from './icons/Failed_Icon_20px.png'
 export { default as ErrorCountIcon } from './icons/Error_Count_Icon.png'
 export { default as DraftIcon20px } from './icons/Draft_Icon_20px.png'
+export { default as CancelIcon20px } from './icons/Cancelled_Icon_20px.png'
