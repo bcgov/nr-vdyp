@@ -11,6 +11,7 @@ const mountBar = (props: {
   completedPolygonCount?: number | null
   errorCount?: number | null
   startDate?: string | null
+  endDate?: string | null
 }) =>
   mount(ProjectionRunProgressBar, {
     global: { plugins: [vuetify] },
@@ -20,6 +21,7 @@ const mountBar = (props: {
       completedPolygonCount: 500,
       errorCount: 3,
       startDate: null,
+      endDate: null,
       ...props,
     },
   })
