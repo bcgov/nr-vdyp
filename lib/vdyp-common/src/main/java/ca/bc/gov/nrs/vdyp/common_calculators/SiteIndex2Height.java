@@ -1991,7 +1991,7 @@ public class SiteIndex2Height {
 	 * <li>site index must be based on breast height age 50
 	 * <li>where breast height age is less than 0, a quadratic function is used
 	 * </ul>
-	 * 
+	 *
 	 * equivalent to:
 	 * <ul>
 	 * <li>sindexdll <code>Sindex_AgeSIToHt</code>
