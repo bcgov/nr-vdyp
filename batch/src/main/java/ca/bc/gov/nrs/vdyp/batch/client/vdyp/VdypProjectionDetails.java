@@ -6,7 +6,8 @@ public record VdypProjectionDetails(
 		@JsonProperty("projectionGUID") String projectionGuid, //
 		VdypProjectionFileSet polygonFileSet, //
 		VdypProjectionFileSet layerFileSet, //
-		VdypProjectionFileSet resultFileSet //
+		VdypProjectionFileSet resultFileSet, //
+		String reportTitle //
 ) {
 	public record VdypProjectionFileSet(@JsonProperty("projectionFileSetGUID") String guid) {
 	}

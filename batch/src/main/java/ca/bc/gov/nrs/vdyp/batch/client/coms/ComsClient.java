@@ -29,15 +29,18 @@ public class ComsClient {
 		return mapper.readValue(jsonStringUrl, String.class);
 	}
 
-	public void updateObject(String objectId, Path filePath) throws IOException {
+	public void updateObject(String objectId, Path filePath, String filename) throws IOException {
 
 		long contentLength = Files.size(filePath);
 
 		String resolvedContentType = Files.probeContentType(filePath);
+		String safe = filename == null ? "upload.bin" : filename.replace("\"", "");
+		String contentDisposition = "attachment; filename=\"" + safe + "\"";
 
 		comsRestClient.put() //
 				.uri(uriBuilder -> uriBuilder.path("/object/{objectId}").build(objectId)) //
 				.headers(headers -> {
+					headers.set(HttpHeaders.CONTENT_DISPOSITION, contentDisposition);
 					headers.set(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
 					headers.set(HttpHeaders.CONTENT_TYPE, resolvedContentType);
 				}) //

@@ -427,10 +427,12 @@ export const downloadFile = (blob: Blob, fileName: string) => {
  *   const fileBlob = new Blob(["sample content"], { type: "application/octet-stream" });
  *   downloadFile(fileBlob, "example.zip"); // Downloads "example.zip"
  */
-export const downloadURL = (url: string, fileName: string) => {
+export const downloadURL = (url: string, fileName?: string) => {
   const a = document.createElement('a')
   a.href = url
-  a.download = fileName
+  if (fileName) {
+    a.download = fileName
+  }
   document.body.appendChild(a)
   a.click()
   a.remove()
