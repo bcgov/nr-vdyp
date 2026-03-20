@@ -732,18 +732,67 @@ const handleBulkDelete = async () => {
   }
 }
 
+// ============================================================================
+// Running projections polling
+// ============================================================================
+
+let pollingTimer: ReturnType<typeof setInterval> | null = null
+
+const stopPolling = () => {
+  if (pollingTimer !== null) {
+    clearInterval(pollingTimer)
+    pollingTimer = null
+  }
+}
+
+const pollRunningProjections = async () => {
+  const runningProjections = projections.value.filter(p => p.status === PROJECTION_STATUS.RUNNING)
+  if (runningProjections.length === 0) {
+    stopPolling()
+    return
+  }
+
+  for (const projection of runningProjections) {
+    try {
+      const latest = await getProjectionById(projection.projectionGUID)
+      const latestStatus = mapProjectionStatus(latest.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT)
+      if (latestStatus !== PROJECTION_STATUS.RUNNING) {
+        updateProjectionInList(latest)
+      }
+    } catch (err) {
+      console.error(`Error polling projection ${projection.projectionGUID}:`, err)
+    }
+  }
+
+  // Stop polling if no more running projections after updates
+  if (!projections.value.some(p => p.status === PROJECTION_STATUS.RUNNING)) {
+    stopPolling()
+  }
+}
+
+const startPollingIfNeeded = () => {
+  if (projections.value.some(p => p.status === PROJECTION_STATUS.RUNNING)) {
+    stopPolling()
+    pollingTimer = setInterval(pollRunningProjections, 5_000) // poll running projections status every 5 seconds
+  } else {
+    stopPolling()
+  }
+}
+
 // Window resize handler
 const handleResize = () => {
   windowWidth.value = window.innerWidth
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', handleResize)
-  loadProjections()
+  await loadProjections()
+  startPollingIfNeeded()
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  stopPolling()
 })
 </script>
 
