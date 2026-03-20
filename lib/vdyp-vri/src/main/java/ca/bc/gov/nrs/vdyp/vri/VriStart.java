@@ -1295,7 +1295,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
-	private Increase findIncreaseForYoungMode(
+	Increase findIncreaseForYoungMode(
 			BecDefinition bec, VriLayer primaryLayer, SiteIndexEquation siteCurve, float primaryBreastHeightAge0,
 			float siteIndex, float yeastToBreastHeight, float baseAreaTarget, float heightTarget, float ageTarget,
 			float dominantHeight0, int moreYears, float primaryHeight
