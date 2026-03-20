@@ -10,6 +10,7 @@ export { default as ReportDetailsPanel } from './input/report-info/ReportDetails
 export { default as AttachmentsPanel } from './input/attachments/AttachmentsPanel.vue'
 export { default as MinimumDBHPanel } from './input/minimum-dbh/MinimumDBHPanel.vue'
 export { default as ParameterSelectionProgressBar } from './input/ParameterSelectionProgressBar.vue'
+export { default as ProjectionRunProgressBar } from './input/ProjectionRunProgressBar.vue'
 export { default as ProjectionActionsMenu } from './list/ProjectionActionsMenu.vue'
 export { default as ProjectionBulkActionBar } from './list/ProjectionBulkActionBar.vue'
 export { default as RunProjectionButtonPanel } from './input/RunProjectionButtonPanel.vue'
