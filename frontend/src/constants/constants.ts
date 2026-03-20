@@ -262,6 +262,10 @@ export const PROJECTION_SESSION_CTX = Object.freeze({
   EXISTING_TYPE: 'existing', // existing projection (view/edit)
 })
 
+export const AUTH_SESSION = Object.freeze({
+  KEY: 'vdyp-auth-user',
+})
+
 export const PANEL_ACTION = Object.freeze({
   CLEAR: 'clear',
   CONFIRM: 'confirm',
