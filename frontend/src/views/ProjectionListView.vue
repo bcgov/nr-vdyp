@@ -105,7 +105,7 @@ import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/o
 import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, METHOD_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH } from '@/constants/constants'
 import { saveExistingProjectionSession, saveNewProjectionSession } from '@/utils/projectionSession'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
-import { downloadFile, sanitizeFileName } from '@/utils/util'
+import { downloadFile, downloadURL, sanitizeFileName } from '@/utils/util'
 import { AppButton, AppProgressCircular } from '@/components'
 import { ProjectionTable, ProjectionCardList, ProjectionPagination, ProjectionBulkActionBar } from '@/components/projection'
 import {
@@ -118,6 +118,7 @@ import {
   isProjectionReadOnly,
   mapProjectionStatus,
   streamResultsZip,
+  getResultsDownloadUrl,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -363,9 +364,14 @@ const handleDownload = async (projectionGUID: string) => {
   progressMessage.value = PROGRESS_MSG.DOWNLOADING_PROJECTION
 
   try {
-    // Stream the results zip via backend proxy and download with custom filename
-    const { zipBlob } = await streamResultsZip(projectionGUID)
-    downloadFile(zipBlob, zipFileName)
+    if (projection?.method === METHOD_SELECTION.FILE_UPLOAD) {
+      const comsUrl = await getResultsDownloadUrl(projectionGUID)
+      downloadURL(comsUrl)
+    } else {
+      // For manual-input projections, stream through backend proxy as before
+      const { zipBlob } = await streamResultsZip(projectionGUID)
+      downloadFile(zipBlob, zipFileName)
+    }
 
     notificationStore.showSuccessMessage(
       SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),
@@ -482,10 +488,37 @@ const handleNewProjection = (type: (typeof PROJECTION_INPUT_METHOD)[keyof typeof
 // Bulk Actions
 // ============================================================================
 
+const downloadFileUploadProjection = async (guid: string): Promise<void> => {
+  const comsUrl = await getResultsDownloadUrl(guid)
+  downloadURL(comsUrl)
+}
+
+const buildManualMasterZip = async (
+  manualDownloaded: { zipBlob: Blob; title: string }[],
+  fileUploadSuccessCount: number,
+): Promise<{ fileBlob: Blob; fileName: string }> => {
+  if (manualDownloaded.length === 1 && fileUploadSuccessCount === 0) {
+    return {
+      fileName: sanitizeFileName(`${manualDownloaded[0].title}_All Files`) + '.zip',
+      fileBlob: manualDownloaded[0].zipBlob,
+    }
+  }
+  const masterZip = new JSZip()
+  for (const { zipBlob, title } of manualDownloaded) {
+    masterZip.file(sanitizeFileName(`${title}_All Files`) + '.zip', zipBlob)
+  }
+  const now = new Date()
+  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+  return {
+    fileName: `VDYP_Projections_All Files_${dateStr}.zip`,
+    fileBlob: await masterZip.generateAsync({ type: 'blob' }),
+  }
+}
+
 /**
  * Downloads all selected projections' result zips.
- * If only 1 zip is downloaded, it is saved directly without re-zipping.
- * If 2 or more zips are downloaded, they are merged into a single zip file.
+ * FILE_UPLOAD projections are each triggered as individual browser downloads via COMS presigned URLs.
+ * MANUAL_INPUT projections are streamed through the backend and merged into a single master zip.
  */
 const handleBulkDownload = async () => {
   if (selectedGUIDs.value.length === 0) return
@@ -494,56 +527,47 @@ const handleBulkDownload = async () => {
   progressMessage.value = PROGRESS_MSG.DOWNLOADING_PROJECTION
 
   try {
-    const downloaded: { zipBlob: Blob; title: string }[] = []
+    // FILE_UPLOAD: each result is downloaded individually via downloadURL() instead of being
+    // fetched into memory and re-zipped. Reasons:
+    //   - CORS: fetch() on cross-origin COMS presigned URLs is blocked; downloadURL() (browser navigate) is not.
+    //   - Memory: files go directly to disk without passing through browser memory.
+    // MANUAL_INPUT: blobs are streamed from the backend and merged into a single master zip.
+    const manualDownloaded: { zipBlob: Blob; title: string }[] = []
+    let fileUploadSuccessCount = 0
 
     for (const guid of selectedGUIDs.value) {
       const projection = projections.value.find(p => p.projectionGUID === guid)
       try {
-        const { zipBlob } = await streamResultsZip(guid)
-        downloaded.push({ zipBlob, title: projection?.title || guid })
+        if (projection?.method === METHOD_SELECTION.FILE_UPLOAD) {
+          await downloadFileUploadProjection(guid)
+          fileUploadSuccessCount++
+        } else {
+          const { zipBlob } = await streamResultsZip(guid)
+          manualDownloaded.push({ zipBlob, title: projection?.title || guid })
+        }
       } catch (err) {
         console.error(`Error downloading projection ${guid}:`, err)
       }
     }
 
-    if (downloaded.length === 0) {
-      notificationStore.showErrorMessage(
-        PROJECTION_ERR.DOWNLOAD_FAILED('Projections'),
-        PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-      )
+    if (manualDownloaded.length > 0) {
+      const { fileBlob, fileName } = await buildManualMasterZip(manualDownloaded, fileUploadSuccessCount)
+      downloadFile(fileBlob, fileName)
+    }
+
+    const totalSuccess = fileUploadSuccessCount + manualDownloaded.length
+    if (totalSuccess === 0) {
+      notificationStore.showErrorMessage(PROJECTION_ERR.DOWNLOAD_FAILED('Projections'), PROJECTION_ERR.DOWNLOAD_FAILED_TITLE)
       return
     }
 
-    let fileName: string
-    let fileBlob: Blob
-
-    if (downloaded.length === 1) {
-      // Single result - download the backend zip directly without re-zipping
-      fileName = sanitizeFileName(`${downloaded[0].title}_All Files`) + '.zip'
-      fileBlob = downloaded[0].zipBlob
-    } else {
-      // Multiple results - wrap each backend zip as-is into a single master zip
-      const masterZip = new JSZip()
-      for (const { zipBlob, title } of downloaded) {
-        masterZip.file(sanitizeFileName(`${title}_All Files`) + '.zip', zipBlob)
-      }
-      const now = new Date()
-      const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-      fileName = `VDYP_Projections_All Files_${dateStr}.zip`
-      fileBlob = await masterZip.generateAsync({ type: 'blob' })
-    }
-
-    downloadFile(fileBlob, fileName)
     notificationStore.showSuccessMessage(
-      SUCCESS_MSG.DOWNLOAD_SUCCESS(fileName),
+      SUCCESS_MSG.DOWNLOAD_SUCCESS(`${totalSuccess} projection(s)`),
       SUCCESS_MSG.DOWNLOAD_SUCCESS_TITLE,
     )
   } catch (err) {
     console.error('Error during bulk download:', err)
-    notificationStore.showErrorMessage(
-      PROJECTION_ERR.DOWNLOAD_FAILED('Projections'),
-      PROJECTION_ERR.DOWNLOAD_FAILED_TITLE,
-    )
+    notificationStore.showErrorMessage(PROJECTION_ERR.DOWNLOAD_FAILED('Projections'), PROJECTION_ERR.DOWNLOAD_FAILED_TITLE)
   } finally {
     isProgressVisible.value = false
   }

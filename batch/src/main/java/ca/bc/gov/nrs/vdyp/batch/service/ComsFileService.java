@@ -24,7 +24,7 @@ public class ComsFileService {
 		presignedFileFetcher.downloadToFile(url, target);
 	}
 
-	public void updateStoredObject(UUID objectId, Path path) throws IOException {
-		comsClient.updateObject(objectId.toString(), path);
+	public void updateStoredObject(UUID objectId, Path path, String filename) throws IOException {
+		comsClient.updateObject(objectId.toString(), path, filename);
 	}
 }

@@ -659,6 +659,23 @@ public class ProjectionService {
 		return getProjectionByID(projectionGUID, user);
 	}
 
+	@Transactional
+	public FileMappingModel startFileSetFileUpload(UUID projectionGUID, UUID fileSetGUID, String filename)
+			throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		validateIdentifier(fileSetGUID, FILE_ADD_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, FILE_ADD_ERROR);
+		return fileSetService.startFileSetFileUpload(fileSetGUID, filename);
+	}
+
+	public FileMappingModel completeFileSetFileUpload(UUID projectionGUID, UUID fileSetGUID, UUID fileMappingGUID)
+			throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		validateIdentifier(fileSetGUID, FILE_ADD_ERROR, FILE_SET_IDENTIFIER, projectionGUID);
+		validateFileSetIsForProjection(entity, fileSetGUID, FILE_ADD_ERROR);
+		return fileSetService.getFileMappingById(fileMappingGUID);
+	}
+
 	private void validateFileSetIsForProjection(ProjectionEntity entity, UUID fileSetGUID, String message)
 			throws ProjectionServiceException {
 		if (!fileSetGUID.equals(entity.getPolygonFileSet().getProjectionFileSetGUID())

@@ -184,20 +184,20 @@ import {
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import { loadProjectionSession, clearProjectionSession, saveExistingProjectionSession } from '@/utils/projectionSession'
-import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip, isProjectionReadOnly } from '@/services/projectionService'
+import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip, getResultsDownloadUrl, isProjectionReadOnly } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
-import { runProjection } from '@/services/projection/modelParameterService'
+import { runProjection, revertPanelToSaved } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
 import {
   delay,
   getStatusIcon,
   downloadFile,
+  downloadURL,
   sanitizeFileName,
   checkZipForErrors,
 } from '@/utils/util'
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 import { DownloadIcon, MenuIcon } from '@/assets/'
-import { revertPanelToSaved } from '@/services/projection/modelParameterService'
 import type { PanelName } from '@/types/types'
 
 const router = useRouter()
@@ -690,9 +690,14 @@ const handleDownloadReport = async () => {
   progressMessage.value = MESSAGE.PROGRESS_MSG.DOWNLOADING_PROJECTION
 
   try {
-    // Stream the results zip via backend proxy and download with custom filename
-    const { zipBlob } = await streamResultsZip(projectionGUID)
-    downloadFile(zipBlob, zipFileName)
+    if (appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD) {
+      const comsUrl = await getResultsDownloadUrl(projectionGUID)
+      downloadURL(comsUrl)
+    } else {
+      // For manual-input projections, stream through backend proxy as before
+      const { zipBlob } = await streamResultsZip(projectionGUID)
+      downloadFile(zipBlob, zipFileName)
+    }
 
     notificationStore.showSuccessMessage(
       MESSAGE.SUCCESS_MSG.DOWNLOAD_SUCCESS(zipFileName),

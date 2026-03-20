@@ -358,4 +358,40 @@ class TestFileMappingService {
 		assertTrue(ex.getMessage().contains("Error duplicating file in COMS"));
 		assertNotNull(ex.getCause());
 	}
+
+	@Test
+	void createPlaceholderFile_persistsEntityAndReturnsModel() throws Exception {
+		UUID fileSetGUID = UUID.randomUUID();
+		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
+		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
+
+		UUID objectGuid = UUID.randomUUID();
+		COMSObject createdObject = new COMSObject(
+				objectGuid.toString(), "vdyp/fileset/x/placeholder", false, true, "bucket-id", "result.zip", null, null,
+				null, null, null, null, Set.of()
+		);
+		when(
+				comsClient.createObject(
+						eq("bucket-id"), anyString(), anyLong(), eq(MediaType.APPLICATION_OCTET_STREAM), any()
+				)
+		).thenReturn(createdObject);
+
+		FileMappingModel result = service.createPlaceholderFile("bucket-id", fileSetEntity, "result.zip");
+
+		assertNotNull(result);
+		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
+		assertEquals("result.zip", result.getFilename());
+		verify(repository).persist(any(FileMappingEntity.class));
+	}
+
+	@Test
+	void createPlaceholderFile_comsThrows_wrapsInProjectionServiceException() {
+		when(comsClient.createObject(any(), any(), anyLong(), any(), any()))
+				.thenThrow(new RuntimeException("COMS error"));
+
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.createPlaceholderFile("bucket-id", new ProjectionFileSetEntity(), "result.zip")
+		);
+	}
 }

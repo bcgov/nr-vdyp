@@ -352,6 +352,37 @@ class ProjectionFileSetServiceTest {
 	}
 
 	@Test
+	void startFileSetFileUpload_callsFileMappingService() throws Exception {
+		UUID fileSetGuid = UUID.randomUUID();
+		var entity = fileSetEntity(fileSetGuid);
+		String filename = "result.zip";
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+		COMSBucket bucket = new COMSBucket("bucket", "bucket-name", "coms-bucket-id", "region", "endpoint", "key");
+		when(comsClient.searchForBucket(any(), any(), any(), any())).thenReturn(List.of(bucket));
+
+		FileMappingModel expected = new FileMappingModel();
+		when(fileMappingService.createPlaceholderFile("coms-bucket-id", entity, filename)).thenReturn(expected);
+
+		FileMappingModel result = service.startFileSetFileUpload(fileSetGuid, filename);
+
+		assertNotNull(result);
+		verify(fileMappingService).createPlaceholderFile("coms-bucket-id", entity, filename);
+	}
+
+	@Test
+	void getFileMappingById_delegatesToFileMappingService() throws Exception {
+		UUID fileMappingGuid = UUID.randomUUID();
+		FileMappingModel expected = new FileMappingModel();
+		when(fileMappingService.getFileById(fileMappingGuid, false)).thenReturn(expected);
+
+		FileMappingModel result = service.getFileMappingById(fileMappingGuid);
+
+		assertNotNull(result);
+		verify(fileMappingService).getFileById(fileMappingGuid, false);
+	}
+
+	@Test
 	void duplicateFilesFromTo_callsFileMappingService() throws Exception {
 		UUID fromFileSetGuid = UUID.randomUUID();
 		UUID toFileSetGuid = UUID.randomUUID();

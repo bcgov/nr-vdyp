@@ -63,6 +63,16 @@ spec:
               value: {{ .Values.coms.env.BASICAUTH_PASSWORD | quote }}
             - name: VDYP_BASE_URL
               value: {{ .Values.frontend.env.BACKEND_URL | quote }}
+            - name: BATCH_SYSTEM_LOGGING_LEVEL
+              value: {{ .Values.batch.env.BATCH_SYSTEM_LOGGING_LEVEL | quote }}
+            - name: VDYP_SYSTEM_LOGGING_LEVEL
+              value: {{ .Values.batch.env.VDYP_SYSTEM_LOGGING_LEVEL | quote }}
+            - name: BATCH_DEFAULT_PARTITION_NUMBER
+              value: {{ .Values.batch.env.BATCH_DEFAULT_PARTITION_NUMBER | quote }}
+            - name: BATCH_THREAD_POOL_SIZE
+              value: {{ .Values.batch.env.BATCH_THREAD_POOL_SIZE | quote }}
+            - name: BATCH_DB_CONNECITON_POOL_SIZE
+              value: {{ .Values.batch.env.BATCH_DB_CONNECITON_POOL_SIZE | quote }}
             - name: KEYCLOAK_CLIENT_ID
               value: {{ .Values.frontend.env.VITE_SSO_CLIENT_ID | quote }}
             - name: KEYCLOAK_CLIENT_SECRET
@@ -124,7 +134,6 @@ spec:
             timeoutSeconds: 10
           resources:
             limits:
-              cpu: 1250m
               memory: 1Gi
             requests:
               cpu: 50m

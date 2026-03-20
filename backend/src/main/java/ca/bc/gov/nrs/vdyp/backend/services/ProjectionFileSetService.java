@@ -135,6 +135,14 @@ public class ProjectionFileSetService {
 
 	}
 
+	@Transactional
+	public FileMappingModel startFileSetFileUpload(UUID fileSetGUID, String filename)
+			throws ProjectionServiceException {
+		var entity = getProjectionFileSetEntity(fileSetGUID);
+		String bucketID = getCOMSBucketGUID(fileSetGUID, true);
+		return fileMappingService.createPlaceholderFile(bucketID, entity, filename);
+	}
+
 	private String getBucketPrefix(UUID fileSetGUID) {
 		return String.format("vdyp/fileset/%s", fileSetGUID);
 	}
@@ -196,6 +204,10 @@ public class ProjectionFileSetService {
 
 		// Ask file mapping service for the file
 		return fileMappingService.getFileById(fileGUID, true);
+	}
+
+	public FileMappingModel getFileMappingById(UUID fileMappingGUID) throws ProjectionServiceException {
+		return fileMappingService.getFileById(fileMappingGUID, false);
 	}
 
 	public List<FileMappingModel> getAllFiles(UUID fileSetGUID, VDYPUserModel actingUser, boolean download)

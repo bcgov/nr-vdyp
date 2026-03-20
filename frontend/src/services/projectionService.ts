@@ -511,8 +511,33 @@ export const isProjectionReadOnly = (status: ProjectionStatus): boolean => {
 }
 
 // ============================================================================
-// Stream Results Zip
+// Results Zip Download
 // ============================================================================
+
+/**
+ * Returns the direct COMS presigned download URL for the result ZIP of a projection.
+ * For file-upload projections this should be used instead of streamResultsZip to avoid
+ * loading the entire file through the backend (which can OOM for large results).
+ * @param projectionGUID The projection GUID
+ * @returns A promise that resolves to the presigned download URL string
+ */
+export const getResultsDownloadUrl = async (projectionGUID: string): Promise<string> => {
+  const projectionModel = await apiGetProjection(projectionGUID)
+  const resultFileSetGUID = projectionModel.resultFileSet.projectionFileSetGUID
+  const resultFiles = await apiGetFileSetFiles(projectionGUID, resultFileSetGUID)
+  if (resultFiles.length === 0) {
+    throw new Error('No result files found for projection ' + projectionGUID)
+  }
+  const fileWithUrl = await apiGetFileForDownload(
+    projectionGUID,
+    resultFileSetGUID,
+    resultFiles[0].fileMappingGUID,
+  )
+  if (!fileWithUrl.downloadURL) {
+    throw new Error('No download URL available for projection ' + projectionGUID)
+  }
+  return fileWithUrl.downloadURL
+}
 
 /**
  * Streams the results ZIP file for a projection via backend proxy.
