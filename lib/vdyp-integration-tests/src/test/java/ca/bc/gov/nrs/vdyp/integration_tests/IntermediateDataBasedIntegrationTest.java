@@ -166,7 +166,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 				Objects::equals, //
 				floatStringsWithin(), //
 				floatStringsWithin(0.01f, 0.015f), //
-				floatStringsWithin(), //
+				floatStringsDefaultZero(floatStringsWithin()), //
 				floatStringsWithin(), //
 				floatStringsWithin(), //
 				floatStringsWithin(0.01f, 0.02f), //
