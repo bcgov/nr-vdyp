@@ -1295,7 +1295,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
-	private Increase findIncreaseForYoungMode(
+	Increase findIncreaseForYoungMode(
 			BecDefinition bec, VriLayer primaryLayer, SiteIndexEquation siteCurve, float primaryBreastHeightAge0,
 			float siteIndex, float yeastToBreastHeight, float baseAreaTarget, float heightTarget, float ageTarget,
 			float dominantHeight0, int moreYears, float primaryHeight
@@ -1311,8 +1311,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 				float dominantHeightD;
 				try {
-					dominantHeightD = (float) SiteIndex2Height.indexToHeight(
-							siteCurve, ageD, SiteIndexAgeType.SI_AT_BREAST, siteIndex, ageD, yeastToBreastHeight
+					dominantHeightD = (float) SiteIndex2Height.ageSiteIndexToHeight(
+							siteCurve, ageD, SiteIndexAgeType.SI_AT_BREAST, siteIndex, yeastToBreastHeight
 					);
 				} catch (CommonCalculatorException e) {
 					throw new FatalProcessingException(e);

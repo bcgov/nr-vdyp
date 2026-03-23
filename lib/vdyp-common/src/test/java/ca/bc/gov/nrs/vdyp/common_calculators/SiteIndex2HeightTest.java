@@ -513,4 +513,11 @@ class SiteIndex2HeightTest {
 
 		assertThat(actualResult, closeTo(expectedResult, ERROR_TOLERANCE));
 	}
+
+	@Test
+	void testAgeSiteIndexToHeight() throws Exception {
+		double expectedResult = 5.9321888215726197;
+		double actualResult = SiteIndex2Height.ageSiteIndexToHeight(SI_PLI_THROWER, 38.0, SI_AT_BREAST, 7.36, 12.0);
+		assertThat(actualResult, closeTo(expectedResult, ERROR_TOLERANCE));
+	}
 }

@@ -468,7 +468,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 													hasSpecificEntry(
 															"PRJ_VOL_DW",
 															VdypMatchers
-																	.parseAs(closeTo(9.9627f, 0.02f), ValueParser.FLOAT)
+																	.parseAs(closeTo(6.3569f, 0.02f), ValueParser.FLOAT)
 													)
 											)
 									)
