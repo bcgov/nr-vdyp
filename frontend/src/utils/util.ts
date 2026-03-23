@@ -576,6 +576,20 @@ export const strEq = (a: string | null | undefined, b: string | null | undefined
 }
 
 /**
+ * Formats a number with thousands separators (commas).
+ *
+ * @param value - The number to format (number or null)
+ * @returns {string} Formatted number string with commas (e.g., 1,234,567), or "0" if null
+ * @example
+ *   formatNumber(1234567) // "1,234,567"
+ *   formatNumber(0)       // "0"
+ *   formatNumber(null)    // "0"
+ */
+export const formatNumber = (value: number | null): string => {
+  return (value ?? 0).toLocaleString()
+}
+
+/**
  * Adds execution options to selected or excluded arrays based on flag mappings.
  *
  * @param selected - Array for selected options.

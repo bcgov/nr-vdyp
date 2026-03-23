@@ -37,6 +37,15 @@ export interface ProjectionStatusCodeModel {
   code: string
 }
 
+export interface BatchMappingModel {
+  projectionBatchMappingGUID: string
+  batchJobGUID: string
+  polygonCount: number | null
+  completedPolygonCount: number | null
+  errorCount: number | null
+  warningCount: number | null
+}
+
 export interface ProjectionModel {
   projectionGUID: string
   ownerUser: VDYPUserModel
@@ -54,4 +63,5 @@ export interface ProjectionModel {
   reportTitle: string | null
   reportDescription: string | null
   expiryDate: string | null
+  batchMapping: BatchMappingModel | null
 }

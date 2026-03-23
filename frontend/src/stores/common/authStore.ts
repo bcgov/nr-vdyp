@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { logout as keycloakLogout } from '@/services/keycloak'
 import type { User } from '@/interfaces/interfaces'
+import { saveAuthSession, loadAuthSession, clearAuthSession } from '@/utils/authSession'
 
 export const useAuthStore = defineStore('authStore', () => {
   const authenticated = ref<boolean>(false)
@@ -10,37 +11,20 @@ export const useAuthStore = defineStore('authStore', () => {
   const setUser = (newUser: User) => {
     user.value = newUser
     authenticated.value = true
-    sessionStorage.setItem('authUser', JSON.stringify(newUser))
+    saveAuthSession(newUser)
   }
 
   const clearUser = () => {
     user.value = null
     authenticated.value = false
-    sessionStorage.removeItem('authUser')
+    clearAuthSession()
   }
 
   const loadUserFromStorage = () => {
-    const storedUser = sessionStorage.getItem('authUser')
+    const storedUser = loadAuthSession()
     if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser)
-        if (
-          parsedUser &&
-          typeof parsedUser === 'object' &&
-          parsedUser.accessToken &&
-          parsedUser.refToken &&
-          parsedUser.idToken
-        ) {
-          user.value = parsedUser
-          authenticated.value = true
-        } else {
-          console.warn('Invalid user data in sessionStorage')
-          clearUser()
-        }
-      } catch (error) {
-        console.error('Failed to parse user from sessionStorage:', error)
-        clearUser()
-      }
+      user.value = storedUser
+      authenticated.value = true
     }
   }
 

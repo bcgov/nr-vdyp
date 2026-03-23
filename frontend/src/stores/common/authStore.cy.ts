@@ -2,6 +2,9 @@
 
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '@/stores/common/authStore'
+import { CONSTANTS } from '@/constants'
+
+const AUTH_SESSION_KEY = btoa(CONSTANTS.AUTH_SESSION.KEY)
 
 describe('Auth Store Unit Tests', () => {
   let authStore: ReturnType<typeof useAuthStore>
@@ -23,9 +26,9 @@ describe('Auth Store Unit Tests', () => {
     expect(authStore.user).to.deep.equal(user)
     expect(authStore.authenticated).to.be.true
 
-    cy.wrap(sessionStorage.getItem('authUser')).should(
+    cy.wrap(sessionStorage.getItem(AUTH_SESSION_KEY)).should(
       'equal',
-      JSON.stringify(user),
+      btoa(JSON.stringify(user)),
     )
   })
 
@@ -35,7 +38,7 @@ describe('Auth Store Unit Tests', () => {
     expect(authStore.user).to.be.null
     expect(authStore.authenticated).to.be.false
 
-    cy.wrap(sessionStorage.getItem('authUser')).should('be.null')
+    cy.wrap(sessionStorage.getItem(AUTH_SESSION_KEY)).should('be.null')
   })
 
   it('should load user from sessionStorage', () => {
@@ -44,7 +47,7 @@ describe('Auth Store Unit Tests', () => {
       refToken: 'refresh_token',
       idToken: 'id_token',
     }
-    sessionStorage.setItem('authUser', JSON.stringify(user))
+    sessionStorage.setItem(AUTH_SESSION_KEY, btoa(JSON.stringify(user)))
 
     authStore.loadUserFromStorage()
 
@@ -53,18 +56,12 @@ describe('Auth Store Unit Tests', () => {
   })
 
   it('should not load user if sessionStorage has invalid data', () => {
-    sessionStorage.setItem('authUser', 'invalid json')
-
-    cy.spy(console, 'error').as('consoleError')
+    sessionStorage.setItem(AUTH_SESSION_KEY, 'invalid json')
 
     authStore.loadUserFromStorage()
 
     expect(authStore.user).to.be.null
     expect(authStore.authenticated).to.be.false
-    cy.get('@consoleError').should(
-      'have.been.calledWithMatch',
-      'Failed to parse user from sessionStorage',
-    )
   })
 
   it('should parse a valid ID token', () => {
@@ -229,7 +226,7 @@ describe('Auth Store Unit Tests', () => {
   })
 
   it('should not load user if sessionStorage is empty', () => {
-    sessionStorage.removeItem('authUser')
+    sessionStorage.removeItem(AUTH_SESSION_KEY)
     authStore.loadUserFromStorage()
 
     expect(authStore.user).to.be.null
@@ -253,9 +250,9 @@ describe('Auth Store Unit Tests', () => {
 
     expect(authStore.user).to.deep.equal(updatedUser)
     expect(authStore.authenticated).to.be.true
-    cy.wrap(sessionStorage.getItem('authUser')).should(
+    cy.wrap(sessionStorage.getItem(AUTH_SESSION_KEY)).should(
       'equal',
-      JSON.stringify(updatedUser),
+      btoa(JSON.stringify(updatedUser)),
     )
   })
 

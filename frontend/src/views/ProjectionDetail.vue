@@ -19,43 +19,86 @@
         </h3>
         <h3 v-else>{{ CONSTANTS.HEADER_SELECTION.FILE_UPLOAD }}</h3>
         <div class="header-right-section">
-          <div class="status-section">
-            <v-menu v-if="isRunning">
-              <template #activator="{ props }">
-                <button v-bind="props" class="running-status-menu-button">
-                  <img
-                    :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
-                    alt="Running"
-                    class="running-status-icon"
-                  />
-                  <span class="running-status-text">Running</span>
-                  <v-icon size="small">mdi-chevron-down</v-icon>
-                </button>
-              </template>
-              <v-list class="running-status-menu-list">
-                <v-list-item
-                  class="running-status-menu-item"
-                  @click="cancelRunHandler"
-                >
-                  <div class="running-menu-item-content">
+          <!-- Manual Input mode: status badge -->
+          <template v-if="appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT">
+            <div class="status-section">
+              <v-menu v-if="isRunning">
+                <template #activator="{ props }">
+                  <button v-bind="props" class="running-status-menu-button">
                     <img
-                      src="@/assets/icons/Cancel_Icon_Menu.png"
-                      alt="Cancel"
-                      class="running-menu-icon"
+                      :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
+                      alt="Running"
+                      class="running-status-icon"
                     />
-                    <span class="running-menu-text">Cancel</span>
-                  </div>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-            <div v-else-if="isReady" class="ready-status-container">
-              <img
-                :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
-                alt="Ready"
-                class="ready-status-icon"
-              />
-              <span class="ready-status-text">Ready</span>
+                    <span class="running-status-text">Running</span>
+                    <v-icon size="small">mdi-chevron-down</v-icon>
+                  </button>
+                </template>
+                <v-list class="running-status-menu-list">
+                  <v-list-item
+                    class="running-status-menu-item"
+                    @click="cancelRunHandler"
+                  >
+                    <div class="running-menu-item-content">
+                      <img
+                        src="@/assets/icons/Cancel_Icon_Menu.png"
+                        alt="Cancel"
+                        class="running-menu-icon"
+                      />
+                      <span class="running-menu-text">Cancel</span>
+                    </div>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+              <div v-else-if="isReady" class="ready-status-container">
+                <img
+                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
+                  alt="Ready"
+                  class="ready-status-icon"
+                />
+                <span class="ready-status-text">Ready</span>
+              </div>
+              <div v-else-if="isDraft" class="draft-status-container">
+                <img
+                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.DRAFT)"
+                  alt="Draft"
+                  class="draft-status-icon"
+                />
+                <span class="draft-status-text">Draft</span>
+              </div>
+              <div v-else-if="isFailed" class="failed-status-container">
+                <img
+                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.FAILED)"
+                  alt="Failed"
+                  class="failed-status-icon"
+                />
+                <span class="failed-status-text">Failed</span>
+              </div>
             </div>
+          </template>
+
+          <!-- File Upload mode: action buttons in header -->
+          <template v-else>
+            <!-- RunProgressBar visible: Cancel (Running) or Download (Ready) -->
+            <template v-if="isRunProgressBarVisible">
+              <AppButton
+                v-if="isRunning"
+                label="Cancel"
+                variant="secondary"
+                mdi-name="mdi-stop-circle-outline"
+                class="header-cancel-button"
+                @click="cancelRunHandler"
+              />
+              <AppButton
+                v-else-if="isReady"
+                label="Download Report"
+                :icon-src="DownloadIcon"
+                variant="primary"
+                class="header-download-report-button"
+                @click="handleDownloadReport"
+              />
+            </template>
+            <!-- Draft: show Draft status badge -->
             <div v-else-if="isDraft" class="draft-status-container">
               <img
                 :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.DRAFT)"
@@ -64,24 +107,7 @@
               />
               <span class="draft-status-text">Draft</span>
             </div>
-            <div v-else-if="isFailed" class="failed-status-container">
-              <img
-                :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.FAILED)"
-                alt="Failed"
-                class="failed-status-icon"
-              />
-              <span class="failed-status-text">Failed</span>
-            </div>
-          </div>
-          <AppButton
-            v-if="appStore.modelSelection !== CONSTANTS.METHOD_SELECTION.MANUAL_INPUT"
-            label="Download Report"
-            :icon-src="DownloadIcon"
-            variant="primary"
-            :is-disabled="!isDownloadReady"
-            class="header-download-report-button"
-            @click="handleDownloadReport"
-          />
+          </template>
         </div>
       </div>
     </div>
@@ -128,7 +154,20 @@
     </template>
     <template v-else>
       <template v-if="isFileUploadPanelsVisible">
+        <!-- Running/Ready/Failed/Cancelled: show the run progress bar with tiles -->
+        <ProjectionRunProgressBar
+          v-if="isRunProgressBarVisible"
+          :status="appStore.currentProjectionStatus"
+          :polygonCount="batchPolygonCount"
+          :completedPolygonCount="batchCompletedPolygonCount"
+          :errorCount="batchErrorCount"
+          :startDate="runStartDate"
+          :endDate="runEndDate"
+          class="panel-spacing"
+        />
+        <!-- Draft: show the section-completion progress bar -->
         <ParameterSelectionProgressBar
+          v-else
           :sections="fileUploadProgressSections"
           :percentage="fileUploadPercentage"
           :completedCount="fileUploadCompletedCount"
@@ -139,8 +178,9 @@
         <MinimumDBHPanel class="panel-spacing" />
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
+          v-if="!isRunProgressBarVisible"
           :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
-          :showCancelButton="isRunning"
+          :showCancelButton="false"
           :disabledText="fileUploadDisabledText"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -154,7 +194,7 @@
   </v-container>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useProjectionLoader } from '@/composables/useProjectionLoader'
 import { useAppStore } from '@/stores/projection/appStore'
@@ -179,6 +219,7 @@ import {
   AttachmentsPanel,
   MinimumDBHPanel,
   ParameterSelectionProgressBar,
+  ProjectionRunProgressBar,
   RunProjectionButtonPanel
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
@@ -230,7 +271,77 @@ const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.
 const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
 const isDraft = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.DRAFT)
 const isFailed = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED)
+const isCancelled = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.CANCELLED)
 const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
+
+// Shown for File Upload mode when projection has been run (Running/Ready/Failed/Cancelled)
+const isRunProgressBarVisible = computed(
+  () =>
+    appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD &&
+    (isRunning.value || isReady.value || isFailed.value || isCancelled.value),
+)
+
+// Batch mapping data updated via polling
+const batchPolygonCount = ref<number | null>(null)
+const batchCompletedPolygonCount = ref<number | null>(null)
+const batchErrorCount = ref<number | null>(null)
+const runStartDate = ref<string | null>(null)
+const runEndDate = ref<string | null>(null)
+
+// Polling
+let pollingTimer: ReturnType<typeof setInterval> | null = null
+
+const stopPolling = () => {
+  if (pollingTimer !== null) {
+    clearInterval(pollingTimer)
+    pollingTimer = null
+  }
+}
+
+const pollProjectionProgress = async () => {
+  const projectionGUID = appStore.currentProjectionGUID
+  if (!projectionGUID) return
+  try {
+    const projection = await getProjectionById(projectionGUID)
+    const bm = projection.batchMapping
+    if (bm) {
+      batchPolygonCount.value = bm.polygonCount
+      batchCompletedPolygonCount.value = bm.completedPolygonCount
+      batchErrorCount.value = bm.errorCount
+    }
+    if (projection.startDate) {
+      runStartDate.value = projection.startDate
+    }
+    const latestStatus = mapProjectionStatus(projection.projectionStatusCode?.code ?? '')
+    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
+      stopPolling()
+      if (projection.endDate) runEndDate.value = projection.endDate
+      appStore.setCurrentProjectionStatus(latestStatus)
+      if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
+        appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+        // ManualInput results are shown in reporting tabs; fetch them as soon as the job completes
+        // so the user does not need to navigate away and back.
+        if (appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
+          fetchAndPopulateResults(false)
+        }
+      } else {
+        // FAILED or CANCELLED: keep EDIT mode so panels remain interactive (Edit buttons visible)
+        appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
+      }
+    }
+  } catch (error) {
+    console.error('Error polling projection progress:', error)
+  }
+}
+
+const startPolling = () => {
+  stopPolling()
+  pollingTimer = setInterval(pollProjectionProgress, 5_000) // poll projection progress (polygon counts, status) every 5 seconds
+}
+
+onUnmounted(() => {
+  stopPolling()
+})
 
 // Cancel button for ReportSettings panel: enabled when user is actively editing that panel
 const isCancelDisabled = computed(() =>
@@ -463,6 +574,24 @@ const restoreFromSession = async (): Promise<boolean> => {
   return true
 }
 
+const fetchBatchData = async (guid: string) => {
+  try {
+    const projection = await getProjectionById(guid)
+    if (projection.batchMapping) {
+      batchPolygonCount.value = projection.batchMapping.polygonCount
+      batchCompletedPolygonCount.value = projection.batchMapping.completedPolygonCount
+      batchErrorCount.value = projection.batchMapping.errorCount
+    }
+    if (projection.startDate) runStartDate.value = projection.startDate
+    const fetchedStatus = mapProjectionStatus(projection.projectionStatusCode?.code ?? '')
+    if (projection.endDate && fetchedStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
+      runEndDate.value = projection.endDate
+    }
+  } catch (error) {
+    console.error('Error fetching initial batch data:', error)
+  }
+}
+
 onMounted(async () => {
   if (!appStore.currentProjectionGUID) {
     const shouldContinue = await restoreFromSession()
@@ -475,11 +604,14 @@ onMounted(async () => {
     fileUploadStore.initializeSpeciesGroups()
   }
 
-  // For READY Input Model Parameters projections, automatically fetch and display results
-  // File Upload projections do not have reporting tabs; users download the ZIP instead
-  // Skip showing result messages when navigating from the list view
-  if (isReady.value && appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
-    fetchAndPopulateResults(false)
+  const guid = appStore.currentProjectionGUID
+  if (guid && (isRunning.value || isReady.value || isFailed.value)) {
+    await fetchBatchData(guid)
+    if (isRunning.value) {
+      startPolling()
+    } else if (isReady.value && appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
+      fetchAndPopulateResults(false)
+    }
   }
 
   // Prevent auto-focus on the Download Report button when the page loads
@@ -505,8 +637,26 @@ watch(
 // NOTE: onBeforeRouteLeave does NOT fire on browser refresh, so the session correctly
 // persists across refreshes while still being cleaned up on normal navigation.
 onBeforeRouteLeave(() => {
+  stopPolling()
   clearProjectionSession()
 })
+
+// Transition from CANCELLED -> DRAFT when the user begins editing panels or files.
+// This clears the RunProgressBar and restores the ParameterSelectionProgressBar.
+watch(
+  [
+    () => fileUploadStore.panelState.reportConfig.confirmed,
+    () => fileUploadStore.panelState.minimumDBH.confirmed,
+    () => fileUploadStore.polygonFileInfo,
+    () => fileUploadStore.layerFileInfo,
+  ],
+  () => {
+    if (isCancelled.value) {
+      appStore.setCurrentProjectionStatus(CONSTANTS.PROJECTION_STATUS.DRAFT)
+      appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
+    }
+  },
+)
 
 const handleError = (error: any) => {
   if (error.response && error.response.data) {
@@ -535,6 +685,67 @@ const handleError = (error: any) => {
   }
 }
 
+const runManualInputProjection = async () => {
+  const response = await runProjection()
+  console.debug('Full response:', response)
+
+  if (response && response.projectionStatusCode) {
+    appStore.setCurrentProjectionStatus(
+      mapProjectionStatus(response.projectionStatusCode.code),
+    )
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+    if (response.startDate) runStartDate.value = response.startDate
+    runEndDate.value = null // clear any stale endDate from a previous run
+    startPolling()
+  }
+
+  logSuccessMessage(
+    MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED,
+    null,
+    false,
+    false,
+    MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
+  )
+}
+
+const runFileUploadProjection = async () => {
+  if (!fileUploadStore.polygonFileInfo) {
+    notificationStore.showErrorMessage(MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING)
+    return
+  }
+  if (!fileUploadStore.layerFileInfo) {
+    notificationStore.showErrorMessage(MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING)
+    return
+  }
+
+  const response = await runProjectionFileUpload()
+  console.debug('Full response:', response)
+
+  if (response && response.projectionStatusCode) {
+    appStore.setCurrentProjectionStatus(
+      mapProjectionStatus(response.projectionStatusCode.code),
+    )
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+    fileUploadStore.panelOpenStates.attachments = CONSTANTS.PANEL.CLOSE
+    if (response.batchMapping) {
+      batchPolygonCount.value = response.batchMapping.polygonCount
+      batchCompletedPolygonCount.value = response.batchMapping.completedPolygonCount
+      batchErrorCount.value = response.batchMapping.errorCount
+    }
+    if (response.startDate) runStartDate.value = response.startDate
+    runEndDate.value = null // clear any stale endDate from a previous run
+    startPolling()
+  }
+
+  logSuccessMessage(
+    MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED,
+    null,
+    false,
+    false,
+    MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
+  )
+}
+
 const runModelHandler = async () => {
   // For Manual Input: validate and save ReportSettings before running
   // (ReportSettingsPanel has no Next button, so validation happens at run time)
@@ -549,62 +760,10 @@ const runModelHandler = async () => {
 
     await delay(500)
 
-    if (
-      appStore.modelSelection ===
-      CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
-    ) {
-      const response = await runProjection()
-      console.debug('Full response:', response)
-
-      // Update status to RUNNING and switch to VIEW mode
-      if (response && response.projectionStatusCode) {
-        appStore.setCurrentProjectionStatus(
-          mapProjectionStatus(response.projectionStatusCode.code),
-        )
-        appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
-      }
-
-      // Show success notification
-      logSuccessMessage(
-        MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED,
-        null,
-        false,
-        false,
-        MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
-      )
-    } else if (
-      appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD
-    ) {
-      // Validate files are uploaded before running
-      if (!fileUploadStore.polygonFileInfo) {
-        notificationStore.showErrorMessage(MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING)
-        return
-      }
-      if (!fileUploadStore.layerFileInfo) {
-        notificationStore.showErrorMessage(MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING)
-        return
-      }
-
-      const response = await runProjectionFileUpload()
-      console.debug('Full response:', response)
-
-      // Update status to RUNNING and switch to VIEW mode
-      if (response && response.projectionStatusCode) {
-        appStore.setCurrentProjectionStatus(
-          mapProjectionStatus(response.projectionStatusCode.code),
-        )
-        appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
-        fileUploadStore.panelOpenStates.attachments = CONSTANTS.PANEL.CLOSE
-      }
-
-      // Show success notification
-      logSuccessMessage(
-        MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED,
-        null,
-        false,
-        false,
-        MESSAGE.SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
-      )
+    if (appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
+      await runManualInputProjection()
+    } else if (appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD) {
+      await runFileUploadProjection()
     }
   } catch (error) {
     handleError(error)
@@ -618,9 +777,9 @@ const updateProjectionState = (status: string) => {
   const mappedStatus = mapProjectionStatus(status)
   appStore.setCurrentProjectionStatus(mappedStatus)
 
-  if (mappedStatus === CONSTANTS.PROJECTION_STATUS.READY || mappedStatus === CONSTANTS.PROJECTION_STATUS.FAILED) {
+  if (mappedStatus === CONSTANTS.PROJECTION_STATUS.READY) {
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
-  } else if (mappedStatus === CONSTANTS.PROJECTION_STATUS.DRAFT) {
+  } else if (mappedStatus === CONSTANTS.PROJECTION_STATUS.DRAFT || mappedStatus === CONSTANTS.PROJECTION_STATUS.FAILED) {
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
   }
 }
@@ -661,7 +820,12 @@ const cancelRunHandler = async () => {
 
     await cancelProjection(projectionGUID)
 
-    appStore.setCurrentProjectionStatus(CONSTANTS.PROJECTION_STATUS.DRAFT)
+    stopPolling()
+
+    runEndDate.value = new Date().toISOString()
+    appStore.setCurrentProjectionStatus(CONSTANTS.PROJECTION_STATUS.CANCELLED)
+    // Keep EDIT mode so panels remain interactive; RunProgressBar stays visible
+    // until the user actually edits a panel or file (watcher below handles transition)
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
 
     notificationStore.showSuccessMessage(MESSAGE.SUCCESS_MSG.PROJECTION_CANCELLED, MESSAGE.SUCCESS_MSG.PROJECTION_CANCELLED_TITLE)
@@ -893,6 +1057,15 @@ h3 {
 .status-section {
   display: flex;
   align-items: center;
+}
+
+.header-cancel-button {
+  border-color: var(--support-border-color-danger) !important;
+  color: var(--support-border-color-danger) !important;
+}
+
+.header-cancel-button :deep(.v-icon) {
+  color: var(--support-border-color-danger);
 }
 
 .header-download-report-button :deep(.button-icon-img) {

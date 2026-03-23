@@ -219,6 +219,10 @@ export const PROJECTION_STATUS = Object.freeze({
   READY: 'Ready', // complete
   RUNNING: 'Running',
   FAILED: 'Failed',
+  // Frontend-only transient UI state: backend has no CANCELLED status code.
+  // After cancellation the backend immediately returns DRAFT.
+  // It is never sent to or received from the backend, and is lost on page refresh or navigation.
+  CANCELLED: 'Cancelled',
 })
 
 export const PROJECTION_LIST_HEADER_KEY = Object.freeze({
@@ -256,6 +260,10 @@ export const PROJECTION_SESSION_CTX = Object.freeze({
   KEY: 'vdyp-projection-ctx',
   NEW_TYPE: 'new', // new (unsaved) projection
   EXISTING_TYPE: 'existing', // existing projection (view/edit)
+})
+
+export const AUTH_SESSION = Object.freeze({
+  KEY: 'vdyp-auth-user',
 })
 
 export const PANEL_ACTION = Object.freeze({
