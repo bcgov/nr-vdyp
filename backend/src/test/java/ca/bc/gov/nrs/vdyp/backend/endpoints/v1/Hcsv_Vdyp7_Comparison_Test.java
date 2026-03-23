@@ -480,7 +480,6 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
-	@Disabled("VDYP-945")
 	void test899_F13() throws IOException, ResourceParseException {
 
 		logger.info("Starting vdyp-899-F13");
