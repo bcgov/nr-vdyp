@@ -773,7 +773,7 @@ const pollRunningProjections = async () => {
 const startPollingIfNeeded = () => {
   if (projections.value.some(p => p.status === PROJECTION_STATUS.RUNNING)) {
     stopPolling()
-    pollingTimer = setInterval(pollRunningProjections, 5_000) // poll running projections status every 5 seconds
+    pollingTimer = setInterval(pollRunningProjections, 120_000) // poll running projections status every 2 minutes
   } else {
     stopPolling()
   }
