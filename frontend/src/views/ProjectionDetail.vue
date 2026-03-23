@@ -319,6 +319,11 @@ const pollProjectionProgress = async () => {
       appStore.setCurrentProjectionStatus(latestStatus)
       if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
         appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+        // ManualInput results are shown in reporting tabs; fetch them as soon as the job completes
+        // so the user does not need to navigate away and back.
+        if (appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
+          fetchAndPopulateResults(false)
+        }
       } else {
         // FAILED or CANCELLED: keep EDIT mode so panels remain interactive (Edit buttons visible)
         appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
@@ -599,20 +604,14 @@ onMounted(async () => {
     fileUploadStore.initializeSpeciesGroups()
   }
 
-  // For READY Input Model Parameters projections, automatically fetch and display results
-  // File Upload projections do not have reporting tabs; users download the ZIP instead
-  // Skip showing result messages when navigating from the list view
-  if (isReady.value && appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
-    fetchAndPopulateResults(false)
-  }
-
-  // Fetch batch data for File Upload projections that have been run
   const guid = appStore.currentProjectionGUID
-  if (appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD && guid &&
-      (isRunning.value || isReady.value || isFailed.value)) {
+  if (guid && (isRunning.value || isReady.value || isFailed.value)) {
     await fetchBatchData(guid)
-    // Only start polling when still Running
-    if (isRunning.value) startPolling()
+    if (isRunning.value) {
+      startPolling()
+    } else if (isReady.value && appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
+      fetchAndPopulateResults(false)
+    }
   }
 
   // Prevent auto-focus on the Download Report button when the page loads
@@ -695,6 +694,9 @@ const runManualInputProjection = async () => {
       mapProjectionStatus(response.projectionStatusCode.code),
     )
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+    if (response.startDate) runStartDate.value = response.startDate
+    runEndDate.value = null // clear any stale endDate from a previous run
+    startPolling()
   }
 
   logSuccessMessage(
