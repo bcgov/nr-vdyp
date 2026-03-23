@@ -3540,6 +3540,65 @@ class VriStartTest {
 			control.verify();
 		}
 
+		@Test
+		void testFindIncreaseForYoungModeF13() throws Exception {
+			final var control = EasyMock.createControl();
+
+			final VriStart app = new VriStart();
+
+			final MockFileResolver resolver = dummyInput();
+
+			TestUtils.populateControlMapBecReal(controlMap);
+			TestUtils.populateControlMapFromResource(controlMap, new BasalAreaYieldParser(), "YLDBA407.COE");
+			TestUtils.populateControlMapFromResource(controlMap, new UpperBoundsParser(), "PCT_407.coe");
+
+			final var bec = Utils.getBec("SBPS", controlMap);
+			final var poly = VriPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 1987);
+				pb.biogeoclimaticZone(bec);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.crownClosure(70f);
+					lb.utilization(7.5f);
+					lb.empiricalRelationshipParameterIndex(112);
+					lb.addSpecies(sb -> {
+						sb.genus("PL", controlMap);
+						sb.addSp64Distribution("PLI", 100);
+						sb.percentGenus(100);
+					});
+				});
+				pb.yieldFactor(1.0f);
+			});
+			final var layer = poly.getLayers().get(LayerType.PRIMARY);
+			final var curve = SiteIndexEquation.SI_PLI_THROWER;
+
+			final float primaryBreastHeightAge0 = 38.0f;
+			final float siteIndex = 7.36f;
+			final float yeastToBreastHeight = 12.0f;
+			final float baseAreaTarget = 2.0f;
+			final float heightTarget = 6.0f;
+			final float ageTarget = 5.0f;
+			final float dominantHeight0 = 0;
+			final int moreYears = 80;
+			final float primaryHeight = 6.0f;
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			final var result = app.findIncreaseForYoungMode(
+					bec, layer, curve, primaryBreastHeightAge0, siteIndex, yeastToBreastHeight, baseAreaTarget,
+					heightTarget, ageTarget, dominantHeight0, moreYears, primaryHeight
+			);
+
+			app.close();
+
+			control.verify();
+
+			assertThat(result.ageIncrease(), is(11f));
+			assertThat(result.dominantHeight(), closeTo(7.31528282f));
+		}
+
 	}
 
 	@Nested
