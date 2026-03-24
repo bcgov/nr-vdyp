@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
@@ -306,8 +305,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		}
 		return percentTotal;
 	}
-
-	public abstract S copySpecies(S toCopy, Consumer<BaseVdypSpecies.Builder<S, I, ?>> config);
 
 	/**
 	 * Returns the primary, and secondary if present species records as a one or two element list.

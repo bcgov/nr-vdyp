@@ -512,7 +512,7 @@ class VdypStartApplicationTest {
 	protected VdypStartApplication getTestUnit(IMocksControl control) {
 
 		VdypStartApplication mock = EasyMock.createMockBuilder(VdypStartApplication.class)//
-				.addMockedMethods("getControlFileParser", "process", "getId", "copySpecies")//
+				.addMockedMethods("getControlFileParser", "getId", "process")//
 				.createMock(control);
 		EasyMock.expect(mock.getId()).andStubReturn(VdypApplicationIdentifier.FIP_START);
 		return mock;
