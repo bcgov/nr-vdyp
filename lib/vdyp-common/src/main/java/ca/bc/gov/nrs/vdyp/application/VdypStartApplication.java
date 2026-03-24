@@ -230,11 +230,9 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @throws IOException
 	 */
 	public void init(FileSystemFileResolver resolver, Map<String, Object> controlMap) throws IOException {
-
 		setControlMap(controlMap);
 		closeVriWriter();
 		vriWriter = createWriter(resolver, controlMap);
-		computers = new ComputationMethods(estimationMethods, getId());
 	}
 
 	protected VdypOutputWriter createWriter(FileSystemFileResolver resolver, Map<String, Object> controlMap)
@@ -255,6 +253,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		this.controlMap = controlMap;
 		this.estimationMethods = new EstimationMethods(new ResolvedControlMapImpl(controlMap));
 		this.debugModes = Utils.parsedControl(controlMap, ControlKey.DEBUG_SWITCHES, DebugSettings.class);
+		this.computers = new ComputationMethods(estimationMethods, getId());
 	}
 
 	protected <T> StreamingParser<T> getStreamingParser(ControlKey key) throws ProcessingException {
