@@ -13,6 +13,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -34,6 +36,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
+
+import ca.bc.gov.nrs.api.helpers.ResultEvaluator;
 import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.ecore.io.read.ParamsReader;
@@ -58,10 +64,12 @@ class Hcsv_Vdyp7_Comparison_Test {
 	private static final Logger logger = LoggerFactory.getLogger(Hcsv_Vdyp7_Comparison_Test.class);
 
 	private final TestHelper testHelper;
+	private final ResultEvaluator evaluator;
 
 	@Inject
-	Hcsv_Vdyp7_Comparison_Test(TestHelper testHelper) {
+	Hcsv_Vdyp7_Comparison_Test(TestHelper testHelper, ResultEvaluator evaluator) {
 		this.testHelper = testHelper;
+		this.evaluator = evaluator;
 	}
 
 	@BeforeEach
@@ -509,6 +517,61 @@ class Hcsv_Vdyp7_Comparison_Test {
 			);
 		});
 
+	}
+
+	@Test
+	void test1014() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+
+		logger.info("Starting test1014");
+
+		Map<String, List<String>> paramMap = new HashMap<>();
+		var parameters = new Parameters();
+		try (
+				InputStream paramStream = MainTest.class.getResourceAsStream("vdyp-1014/input/parms.txt");
+				InputStreamReader reader = new InputStreamReader(paramStream);
+				BufferedReader bufReader = new BufferedReader(reader); var lines = bufReader.lines();
+		) {
+			ParamsReader.parseParameters(paramMap, lines);
+			ParamsReader.parseParameters(parameters, paramMap);
+		}
+
+		// Included to generate JSON text of parameters as needed
+		// ObjectMapper mapper = new ObjectMapper();
+		// String serializedParametersText = mapper.writeValueAsString(parameters);
+
+		try (
+				InputStream polyStream = MainTest.class.getResourceAsStream("vdyp-1014/input/VDYP7_INPUT_POLY.csv");
+				InputStream layerStream = MainTest.class.getResourceAsStream("vdyp-1014/input/VDYP7_INPUT_LAYER.csv");
+		) {
+
+			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
+					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
+					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
+					.post("/projection/hcsv?trialRun=false") //
+					.then().statusCode(201) //
+					.and().contentType("application/octet-stream") //
+					.and().header("content-disposition", Matchers.startsWith("attachment;filename=\"vdyp-output-")) //
+					.extract().body().asInputStream();
+
+			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
+			ZipEntry entry1 = zipFile.getNextEntry();
+			assertEquals("YieldTable.csv", entry1.getName());
+			String vdyp8YieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry1));
+			assertThat(vdyp8YieldTableContent, not(emptyString()));
+			try (
+					CSVReader vdyp7Stream = new CSVReader(
+							new InputStreamReader(
+									MainTest.class.getResourceAsStream("vdyp-1014/output/VDYP7YieldTable.csv")
+							)
+					); CSVReader vdyp8Stream = new CSVReader(new StringReader(vdyp8YieldTableContent));
+			) {
+				Pattern ignorePattern = Pattern.compile(
+						"PRJ_LOREY_HT|PRJ_DIAMETER|PRJ_TPH|PRJ_BA|PRJ_DOM_HT|PRJ_VOL_WS|PRJ_VOL_CU|PRJ_VOL_D|PRJ_VOL_DW|PRJ_VOL_DWB|PRJ_SP1_VOL_WS|PRJ_SP1_VOL_CU|PRJ_SP1_VOL_D|PRJ_SP1_VOL_DW|PRJ_SP1_VOL_DWB|PRJ_SP2_VOL_WS|PRJ_SP2_VOL_CU|PRJ_SP2_VOL_D|PRJ_SP2_VOL_DW|PRJ_SP2_VOL_DWB|PRJ_SP3_VOL_WS|PRJ_SP3_VOL_CU|PRJ_SP3_VOL_D|PRJ_SP3_VOL_DW|PRJ_SP3_VOL_DWB|PRJ_SP4_VOL_WS|PRJ_SP4_VOL_CU|PRJ_SP4_VOL_D|PRJ_SP4_VOL_DW|PRJ_SP4_VOL_DWB|PRJ_SP5_VOL_WS|PRJ_SP5_VOL_CU|PRJ_SP5_VOL_D|PRJ_SP5_VOL_DW|PRJ_SP5_VOL_DWB|PRJ_SP6_VOL_WS|PRJ_SP6_VOL_CU|PRJ_SP6_VOL_D|PRJ_SP6_VOL_DW|PRJ_SP6_VOL_DWB|SPECIES_1_PCNT|SPECIES_2_PCNT|SPECIES_3_PCNT|SPECIES_4_PCNT|SPECIES_5_PCNT|SPECIES_6_PCNT|PRJ_PCNT_STOCK"
+				);
+				evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
+			}
+		}
 	}
 
 }
