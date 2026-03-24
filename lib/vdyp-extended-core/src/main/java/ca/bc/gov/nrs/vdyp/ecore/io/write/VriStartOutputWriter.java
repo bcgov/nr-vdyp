@@ -192,7 +192,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 					LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3934 - 3950 - always write "P" for the layer
 													// code.
 					totalAgeText, //
-					format(sp0.getDominantHeight(), 5, 2), //
+					format(standDominantHeight, 5, 2), //
 					format(sp0.getSiteIndex(), 5, 2), //
 					sp0.getSpeciesCode(), //
 					stand.getSpeciesByPercent().get(0).getSpeciesCode(), //
