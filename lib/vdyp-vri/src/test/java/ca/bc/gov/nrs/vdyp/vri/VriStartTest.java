@@ -1,11 +1,22 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.*;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasPrimaryLayer;
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasVeteranLayer;
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertOnlyPrimaryLayer;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isBec;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isPolyId;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllAndBiggest;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -4397,7 +4408,6 @@ class VriStartTest {
 			app.init(resolver, controlMap);
 
 			// Run the process
-
 			var result = assertDoesNotThrow(() -> app.processBatn(poly));
 
 			// Assertions

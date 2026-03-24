@@ -1,6 +1,9 @@
 package ca.bc.gov.nrs.vdyp.vri.model;
 
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -20,7 +23,7 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 	private final Optional<Float> baseArea; // VRIL/BAL
 	private final Optional<Float> treesPerHectare; // VRIL/TPHL
 	private final float utilization; // VRIL/UTLL
-	protected Optional<String> primaryGenus; // FIPL_1C/JPRIME_L1 ISPP
+	protected final Optional<String> primaryGenus; // FIPL_1C/JPRIME_L1 ISPP
 	private final Optional<String> secondaryGenus; // FIPL_1C/JPRIME_L1 ISPS
 	private final Optional<Integer> empiricalRelationshipParameterIndex; // INXL1/GRPBA1
 	private final float ageIncrease; // YOUNG1/AGE_INCR
@@ -58,8 +61,38 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 		return utilization;
 	}
 
-	public void setPrimaryGenusForCalculation(Optional<String> primaryGenus) {
-		this.primaryGenus = primaryGenus;
+	/**
+	 * Genus used for VRIStart validation. This differs from primary genus under strange circumstances where the genus
+	 * with the highest forested land percentage may not have sufficient detail for VRIStart to pass. This is used to
+	 * mimic the behavior seen in VDYP7 in which all species are checked for potentially valid data not just the primary
+	 * species. To completely mimic VDYP& we do not want to update the chosen Primary Species in the Layer
+	 */
+	Optional<String> calculationGenus = Optional.empty();
+
+	public void setCalculationGenus(Optional<String> calculationGenus) {
+		this.calculationGenus = calculationGenus;
+	}
+
+	public Optional<String> getCalculationGenus() {
+		return this.calculationGenus;
+	}
+
+	@Computed
+	public Optional<VriSite> getCalculationSite() {
+		return getCalculationGenus().or(this::getPrimaryGenus).map(this.getSites()::get);
+	}
+
+	public List<VriSite> getPriorityOrderedSites() {
+		var result = new LinkedList<VriSite>();
+		Optional<VriSite> primarySite = getPrimarySite();
+		for (VriSpecies species : this.getSpecies().values()) {
+			VriSite check = species.getSite().orElse(null);
+			if (!Objects.equals(primarySite.orElse(null), check)) {
+				result.addLast(check);
+			}
+		}
+		primarySite.ifPresent(result::addFirst);
+		return result;
 	}
 
 	@Override

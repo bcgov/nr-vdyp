@@ -6,7 +6,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anEmptyMap;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
@@ -59,68 +58,6 @@ class VdypLayerTest {
 		assertThat(result, hasProperty("yearsToBreastHeight", present(is(2f))));
 		assertThat(result, hasProperty("height", present(is(10f))));
 		assertThat(result, hasProperty("species", aMapWithSize(1)));
-	}
-
-	@Test
-	void testGetPriorityOrderedSites() {
-		var result = VdypLayer.build(builder -> {
-			builder.polygonIdentifier("Test", 2024);
-			builder.layerType(LayerType.PRIMARY);
-
-			builder.primaryGenus("PL");
-
-			builder.addSpecies(sb -> {
-				sb.genus("AC", 1);
-				sb.percentGenus(45);
-				sb.volumeGroup(-1);
-				sb.decayGroup(-1);
-				sb.breakageGroup(-1);
-				sb.addSite(ib -> {
-					ib.height(10f);
-					ib.ageTotal(42f);
-					ib.yearsToBreastHeight(2f);
-					ib.yearsAtBreastHeightAuto();
-					ib.siteCurveNumber(0);
-				});
-			});
-			builder.addSpecies(sb -> {
-				sb.genus("PL", 12);
-				sb.percentGenus(45);
-				sb.volumeGroup(-1);
-				sb.decayGroup(-1);
-				sb.breakageGroup(-1);
-				sb.addSite(ib -> {
-					ib.height(10f);
-					ib.ageTotal(42f);
-					ib.yearsToBreastHeight(2f);
-					ib.yearsAtBreastHeightAuto();
-					ib.siteCurveNumber(0);
-				});
-			});
-			builder.addSpecies(sb -> {
-				sb.genus("B", 8);
-				sb.percentGenus(10);
-				sb.volumeGroup(-1);
-				sb.decayGroup(-1);
-				sb.breakageGroup(-1);
-				sb.addSite(ib -> {
-					ib.height(10f);
-					ib.ageTotal(42f);
-					ib.yearsToBreastHeight(2f);
-					ib.yearsAtBreastHeightAuto();
-					ib.siteCurveNumber(0);
-				});
-			});
-		});
-
-		List<VdypSite> sites = result.getPriorityOrderedSites();
-		assertThat(
-				sites, contains(
-						hasProperty("siteGenus", is("PL")), //
-						hasProperty("siteGenus", is("AC")), //
-						hasProperty("siteGenus", is("B"))
-				)
-		);
 	}
 
 	@Test
