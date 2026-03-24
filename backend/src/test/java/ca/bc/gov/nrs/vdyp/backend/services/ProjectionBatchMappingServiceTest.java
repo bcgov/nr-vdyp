@@ -161,7 +161,7 @@ class ProjectionBatchMappingServiceTest {
 
 		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
 
-		ProjectionProgressUpdate update = new ProjectionProgressUpdate(1, 1, 1, 1);
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(null, 1, 1, 1, 1);
 		// Act
 		assertThrows(ProjectionServiceException.class, () -> service.updateProgress(projectionEntity, update));
 	}
@@ -171,12 +171,14 @@ class ProjectionBatchMappingServiceTest {
 		// Arrange
 		UUID projectionGuid = UUID.randomUUID();
 
+		UUID batchJobGuid = UUID.randomUUID();
 		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
 		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setBatchJobGUID(batchJobGuid);
 
 		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
 
-		ProjectionProgressUpdate update = new ProjectionProgressUpdate(100, 10, 20, 30);
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 30);
 		// Act
 		service.updateProgress(projectionEntity, update);
 		assertEquals(100, mappingEntity.getPolygonCount());
