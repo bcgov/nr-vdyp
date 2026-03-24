@@ -3375,7 +3375,6 @@ public class ForwardProcessingEngine {
 
 		var primarySpecies = primarySecondarySpecies.get(0);
 		int highestPercentageIndex = findBankSpeciesIndex(bank, primarySpecies.getGenus());
-		float highestPercentage = primarySpecies.getPercentGenus();
 
 		Optional<Integer> secondarySpeciesIndex = primarySecondarySpecies.size() > 1
 				? Optional.of(findBankSpeciesIndex(bank, primarySecondarySpecies.get(1).getGenus())) : Optional.empty();
