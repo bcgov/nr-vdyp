@@ -10,10 +10,10 @@ public class FieldFormatter {
 	private static final String DOUBLE_FORMAT = "%." + DOUBLE_PRECISION + "f";
 
 	static String format(Double d) {
-		if (d != null) {
+		if (d != null && !d.isNaN()) {
 			return String.format(FieldFormatter.DOUBLE_FORMAT, d);
 		} else {
-			return "";
+			return null;
 		}
 	}
 
