@@ -20,6 +20,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
@@ -3380,7 +3381,7 @@ public class ForwardProcessingEngine {
 				? Optional.of(findBankSpeciesIndex(bank, primarySecondarySpecies.get(1).getGenus())) : Optional.empty();
 
 		try {
-			int inventoryTypeGroup = fps.computers.findItg(primarySecondarySpecies);
+			int inventoryTypeGroup = ComputationMethods.findItg(primarySecondarySpecies);
 
 			int basalAreaGroup1 = 0;
 

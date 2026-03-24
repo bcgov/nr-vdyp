@@ -326,7 +326,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @throws ProcessingException
 	 */
 	protected int findItg(List<S> primarySecondary) throws UnsupportedSpeciesException {
-		return computers.findItg(primarySecondary);
+		return ComputationMethods.findItg(primarySecondary);
 	}
 
 	public int findEmpiricalRelationshipParameterIndex(String specAlias, BecDefinition bec, int itg) {

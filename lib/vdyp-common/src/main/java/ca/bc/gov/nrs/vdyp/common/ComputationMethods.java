@@ -547,7 +547,7 @@ public class ComputationMethods {
 	 * @return
 	 * @throws ProcessingException
 	 */
-	public int findItg(List<? extends BaseVdypSpecies<?>> primarySecondary) throws UnsupportedSpeciesException {
+	public static int findItg(List<? extends BaseVdypSpecies<?>> primarySecondary) throws UnsupportedSpeciesException {
 		var primary = primarySecondary.get(0);
 
 		if (primary.getPercentGenus() > 79.999) { // Copied from VDYP7
