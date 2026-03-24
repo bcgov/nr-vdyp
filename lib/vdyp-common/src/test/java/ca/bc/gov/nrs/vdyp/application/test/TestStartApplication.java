@@ -92,7 +92,7 @@ public class TestStartApplication
 	}
 
 	@Override
-	protected TestSpecies copySpecies(TestSpecies toCopy, Consumer<Builder<TestSpecies, TestSite, ?>> config) {
+	public TestSpecies copySpecies(TestSpecies toCopy, Consumer<Builder<TestSpecies, TestSite, ?>> config) {
 		return null;
 	}
 

@@ -16,14 +16,11 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -35,6 +32,7 @@ import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
@@ -90,7 +88,7 @@ import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
  * @param <I> input site class
  */
 public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, D extends DebugSettings>
-		extends VdypApplication implements AutoCloseable {
+		extends VdypApplication implements AutoCloseable, SpeciesCopier<S, I> {
 
 	private static final Logger log = LoggerFactory.getLogger(VdypStartApplication.class);
 
@@ -186,6 +184,9 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected VdypOutputWriter vriWriter;
 
+	/** The computation instance used by this engine */
+	protected ComputationMethods computers;
+
 	protected Map<String, Object> controlMap = new HashMap<>();
 
 	public EstimationMethods estimationMethods;
@@ -233,6 +234,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		setControlMap(controlMap);
 		closeVriWriter();
 		vriWriter = createWriter(resolver, controlMap);
+		computers = new ComputationMethods(estimationMethods, getId());
 	}
 
 	protected VdypOutputWriter createWriter(FileSystemFileResolver resolver, Map<String, Object> controlMap)
@@ -306,81 +308,14 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return percentTotal;
 	}
 
-	protected abstract S copySpecies(S toCopy, Consumer<BaseVdypSpecies.Builder<S, I, ?>> config);
+	public abstract S copySpecies(S toCopy, Consumer<BaseVdypSpecies.Builder<S, I, ?>> config);
 
 	/**
 	 * Returns the primary, and secondary if present species records as a one or two element list.
 	 */
 	protected List<S> findPrimarySpecies(Collection<S> allSpecies) {
 		var sp0Lookup = Utils.expectParsedControl(controlMap, ControlKey.SP0_DEF, GenusDefinitionMap.class);
-		final Comparator<BaseVdypSpecies<?>> percentGenusDescending = Utils.compareWithFallback(
-				// Sort first by percent
-				Utils.compareUsing(BaseVdypSpecies<?>::getPercentGenus).reversed(),
-				// Resolve ties using SP0 preference order which is equal to index.
-				Utils.compareUsing(spec -> sp0Lookup.getByAlias(spec.getGenus()).getIndex())
-		);
-		final Comparator<BaseVdypSpecies<?>> percentGenusDescendingFudged = (sp1, sp2) -> {
-			int i1 = sp0Lookup.getByAlias(sp1.getGenus()).getIndex();
-			int i2 = sp0Lookup.getByAlias(sp2.getGenus()).getIndex();
-			float adjustmentFactor = i1 < i2 ? 0.9995f : 1.0005f;
-			return (int) Math.signum(sp2.getPercentGenus() * adjustmentFactor - sp1.getPercentGenus());
-		};
-
-		final Comparator<BaseVdypSpecies<?>> comparatorToUse;
-
-		final var speciesGroupPreferenceMode = this.getDebugModes().getSpeciesGroupPreference();
-		switch (speciesGroupPreferenceMode) {
-		case DEFAULT:
-			comparatorToUse = percentGenusDescending;
-			break;
-		case USE_PREFERRED_WITHIN_TOLERANCE:
-			comparatorToUse = percentGenusDescendingFudged;
-			break;
-		default:
-			throw new IllegalStateException(
-					MessageFormat.format("Debug flag 22 value of {0} is unknown", speciesGroupPreferenceMode)
-			);
-		}
-
-		if (allSpecies.isEmpty()) {
-			throw new IllegalArgumentException("Can not find primary species as there are no species");
-		}
-		var result = new ArrayList<S>(2);
-
-		// Start with a deep copy of the species map so there are no side effects from
-		// the manipulation this method does.
-		var combined = new HashMap<String, S>(allSpecies.size());
-		allSpecies.stream().forEach(spec -> combined.put(spec.getGenus(), copySpecies(spec, x -> {
-		})));
-
-		for (var combinationGroup : PRIMARY_SPECIES_TO_COMBINE) {
-			var groupSpecies = combinationGroup.stream().map(combined::get).filter(Objects::nonNull).toList();
-			if (groupSpecies.size() < 2) {
-				continue;
-			}
-			var groupPrimary = copySpecies(
-					// groupSpecies.size() is at least 2 so findFirst will not be empty
-					groupSpecies.stream().sorted(percentGenusDescending).findFirst().orElseThrow(), builder -> {
-						var total = (float) groupSpecies.stream().mapToDouble(BaseVdypSpecies::getPercentGenus).sum();
-						builder.percentGenus(total);
-					}
-			);
-			combinationGroup.forEach(combined::remove);
-			combined.put(groupPrimary.getGenus(), groupPrimary);
-		}
-
-		assert !combined.isEmpty();
-
-		if (combined.size() == 1) {
-			// There's only one
-			result.addAll(combined.values());
-		} else {
-			combined.values().stream().sorted(comparatorToUse).limit(2).forEach(result::add);
-		}
-
-		assert !result.isEmpty();
-		assert result.size() <= 2;
-		return result;
+		return computers.findPrimarySpecies(allSpecies, sp0Lookup, getDebugModes(), this);
 	}
 
 	/**
@@ -391,127 +326,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @throws ProcessingException
 	 */
 	protected int findItg(List<S> primarySecondary) throws UnsupportedSpeciesException {
-		var primary = primarySecondary.get(0);
-
-		if (primary.getPercentGenus() > 79.999) { // Copied from VDYP7
-			if (ITG_PURE.containsKey(primary.getGenus()))
-				return ITG_PURE.get(primary.getGenus());
-			else
-				throw new UnsupportedSpeciesException(primary.getGenus());
-		}
-		assert primarySecondary.size() == 2;
-
-		var secondary = primarySecondary.get(1);
-
-		assert !primary.getGenus().equals(secondary.getGenus());
-
-		switch (primary.getGenus()) {
-		case "F":
-			switch (secondary.getGenus()) {
-			case "C", "Y":
-				return 2;
-			case "B", "H":
-				return 3;
-			case "S":
-				return 4;
-			case "PL", "PA":
-				return 5;
-			case "PY":
-				return 6;
-			case "L", "PW":
-				return 7;
-			default:
-				return 8;
-			}
-		case "C", "Y":
-			switch (secondary.getGenus()) {
-			case "C", "Y":
-				return 10;
-			case "H", "B", "S":
-				return 11;
-			default:
-				return 10;
-			}
-		case "B":
-			switch (secondary.getGenus()) {
-			case "C", "Y", "H":
-				return 19;
-			default:
-				return 20;
-			}
-		case "H":
-			switch (secondary.getGenus()) {
-			case "C", "Y":
-				return 14;
-			case "B":
-				return 15;
-			case "S":
-				return 16;
-			default:
-				if (HARDWOODS.contains(secondary.getGenus())) {
-					return 17;
-				}
-				return 13;
-			}
-		case "S":
-			switch (secondary.getGenus()) {
-			case "C", "Y", "H":
-				return 23;
-			case "B":
-				return 24;
-			case "PL":
-				return 25;
-			default:
-				if (HARDWOODS.contains(secondary.getGenus())) {
-					return 26;
-				}
-				return 22;
-			}
-		case "PW":
-			return 27;
-		case "PL", "PA":
-			switch (secondary.getGenus()) {
-			case "PL", "PA":
-				return 28;
-			case "F", "PW", "L", "PY":
-				return 29;
-			default:
-				if (HARDWOODS.contains(secondary.getGenus())) {
-					return 31;
-				}
-				return 30;
-			}
-		case "PY":
-			return 32;
-		case "L":
-			switch (secondary.getGenus()) {
-			case "F":
-				return 33;
-			default:
-				return 34;
-			}
-		case "AC":
-			if (HARDWOODS.contains(secondary.getGenus())) {
-				return 36;
-			}
-			return 35;
-		case "D":
-			if (HARDWOODS.contains(secondary.getGenus())) {
-				return 38;
-			}
-			return 37;
-		case "MB":
-			return 39;
-		case "E":
-			return 40;
-		case "AT":
-			if (HARDWOODS.contains(secondary.getGenus())) {
-				return 42;
-			}
-			return 41;
-		default:
-			throw new UnsupportedSpeciesException(primary.getGenus());
-		}
+		return computers.findItg(primarySecondary);
 	}
 
 	public int findEmpiricalRelationshipParameterIndex(String specAlias, BecDefinition bec, int itg) {

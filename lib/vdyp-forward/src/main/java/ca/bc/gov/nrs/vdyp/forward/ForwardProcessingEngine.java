@@ -9,7 +9,6 @@ import static java.lang.Math.max;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,7 +45,6 @@ import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
-import ca.bc.gov.nrs.vdyp.model.CommonData;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -65,6 +63,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
@@ -260,7 +259,7 @@ public class ForwardProcessingEngine {
 		}
 
 		if (lastStepInclusive.ge(ExecutionStep.DETERMINE_POLYGON_RANKINGS)) {
-			determinePolygonRankings(CommonData.PRIMARY_SPECIES_TO_COMBINE);
+			determinePolygonRankings();
 		}
 
 		// SITEADD (TODO: SITEADDU when NDEBUG 11 > 0)
@@ -3356,7 +3355,7 @@ public class ForwardProcessingEngine {
 	 * @param lps the bank on which to operate
 	 * @return as described
 	 */
-	void determinePolygonRankings(Collection<List<String>> speciesToCombine) {
+	void determinePolygonRankings() {
 
 		LayerProcessingState lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
@@ -3365,44 +3364,23 @@ public class ForwardProcessingEngine {
 			throw new IllegalArgumentException("Can not find primary species as there are no species");
 		}
 
-		float[] percentages = Arrays.copyOf(bank.percentagesOfForestedLand, bank.percentagesOfForestedLand.length);
+		var primarySecondarySpecies = fps.computers.findPrimarySpecies(
+				buildCoverageSpecies(lps), fps.fcm.getGenusDefinitionMap(), fps.fcm.getDebugSettings(),
+				(toCopy, config) -> VdypSpecies.build(builder -> {
+					builder.copy(toCopy);
+					config.accept(builder);
+				})
+		);
 
-		for (var speciesPair : speciesToCombine) {
-			combinePercentages(bank.speciesNames, speciesPair, percentages);
-		}
+		var primarySpecies = primarySecondarySpecies.get(0);
+		int highestPercentageIndex = findBankSpeciesIndex(bank, primarySpecies.getGenus());
+		float highestPercentage = primarySpecies.getPercentGenus();
 
-		float highestPercentage = 0.0f;
-		int highestPercentageIndex = -1;
-		float secondHighestPercentage = 0.0f;
-		int secondHighestPercentageIndex = -1;
-		for (int i : lps.getIndices()) {
-
-			if (percentages[i] > highestPercentage) {
-
-				secondHighestPercentageIndex = highestPercentageIndex;
-				secondHighestPercentage = highestPercentage;
-				highestPercentageIndex = i;
-				highestPercentage = percentages[i];
-
-			} else if (percentages[i] > secondHighestPercentage) {
-
-				secondHighestPercentageIndex = i;
-				secondHighestPercentage = percentages[i];
-			}
-
-			// TODO: implement NDEBUG22 = 1 logic
-		}
-
-		if (highestPercentageIndex == -1) {
-			throw new IllegalStateException("There are no species with covering percentage > 0");
-		}
-
-		String primaryGenusName = bank.speciesNames[highestPercentageIndex];
-		Optional<String> secondaryGenusName = secondHighestPercentageIndex != -1
-				? Optional.of(bank.speciesNames[secondHighestPercentageIndex]) : Optional.empty();
+		Optional<Integer> secondarySpeciesIndex = primarySecondarySpecies.size() > 1
+				? Optional.of(findBankSpeciesIndex(bank, primarySecondarySpecies.get(1).getGenus())) : Optional.empty();
 
 		try {
-			int inventoryTypeGroup = findInventoryTypeGroup(primaryGenusName, secondaryGenusName, highestPercentage);
+			int inventoryTypeGroup = fps.computers.findItg(primarySecondarySpecies);
 
 			int basalAreaGroup1 = 0;
 
@@ -3423,10 +3401,8 @@ public class ForwardProcessingEngine {
 
 			lps.setSpeciesRankingDetails(
 					new SpeciesRankingDetails(
-							highestPercentageIndex,
-							secondHighestPercentageIndex != -1 ? Optional.of(secondHighestPercentageIndex)
-									: Optional.empty(),
-							inventoryTypeGroup, basalAreaGroup1, basalAreaGroup3
+							highestPercentageIndex, secondarySpeciesIndex, inventoryTypeGroup, basalAreaGroup1,
+							basalAreaGroup3
 					)
 			);
 		} catch (ProcessingException e) {
@@ -3435,6 +3411,35 @@ public class ForwardProcessingEngine {
 
 			throw new IllegalStateException(e);
 		}
+	}
+
+	private List<VdypSpecies> buildCoverageSpecies(LayerProcessingState lps) {
+		Bank bank = lps.getBank();
+		VdypLayer layer = fps.getCurrentPolygon().getLayers().get(LayerType.PRIMARY);
+
+		return Arrays.stream(lps.getIndices()).mapToObj(i -> {
+			var source = layer.getSpecies().get(bank.speciesNames[i]);
+			if (source == null) {
+				throw new IllegalStateException(
+						MessageFormat.format("Missing species {0} in primary layer", bank.speciesNames[i])
+				);
+			}
+
+			return VdypSpecies.build(builder -> {
+				builder.copy(source);
+				builder.percentGenus(bank.percentagesOfForestedLand[i]);
+			});
+		}).toList();
+	}
+
+	private static int findBankSpeciesIndex(Bank bank, String genus) {
+		for (int i : bank.getIndices()) {
+			if (genus.equals(bank.speciesNames[i])) {
+				return i;
+			}
+		}
+
+		throw new IllegalStateException(MessageFormat.format("Species {0} was not found in the bank", genus));
 	}
 
 	/**
@@ -3489,135 +3494,6 @@ public class ForwardProcessingEngine {
 			}
 			percentages[higherPercentageIndex] = percentages[higherPercentageIndex] + percentages[lowerPercentageIndex];
 			percentages[lowerPercentageIndex] = 0.0f;
-		}
-	}
-
-	// ITGFIND
-	/**
-	 * Find Inventory type group (ITG) for the given primary and secondary (if given) genera.
-	 *
-	 * @param primarySp0           the genus of the primary species
-	 * @param optionalSecondarySp0 the genus of the primary species, which may be empty
-	 * @param primaryPercentage    the percentage covered by the primary species
-	 * @return as described
-	 * @throws ProcessingException if primaryGenus is not a known genus
-	 */
-	static int findInventoryTypeGroup(String primarySp0, Optional<String> optionalSecondarySp0, float primaryPercentage)
-			throws ProcessingException {
-
-		if (primaryPercentage > 79.999 /* Copied from VDYP7 */) {
-
-			Integer recordedInventoryTypeGroup = CommonData.ITG_PURE.get(primarySp0);
-			if (recordedInventoryTypeGroup == null) {
-				throw new ProcessingException("Unrecognized primary species: " + primarySp0);
-			}
-
-			return recordedInventoryTypeGroup;
-		}
-
-		String secondaryGenus = optionalSecondarySp0.isPresent() ? optionalSecondarySp0.get() : "";
-
-		switch (primarySp0) {
-		case "F":
-			switch (secondaryGenus) {
-			case "C", "Y":
-				return 2;
-			case "B", "H":
-				return 3;
-			case "S":
-				return 4;
-			case "PL", "PA":
-				return 5;
-			case "PY":
-				return 6;
-			case "L", "PW":
-				return 7;
-			default:
-				return 8;
-			}
-		case "C", "Y":
-			switch (secondaryGenus) {
-			case "H", "B", "S":
-				return 11;
-			default:
-				return 10;
-			}
-		case "H":
-			switch (secondaryGenus) {
-			case "C", "Y":
-				return 14;
-			case "B":
-				return 15;
-			case "S":
-				return 16;
-			default:
-				return 13;
-			}
-		case "B":
-			switch (secondaryGenus) {
-			case "C", "Y", "H":
-				return 19;
-			default:
-				return 20;
-			}
-		case "S":
-			switch (secondaryGenus) {
-			case "C", "Y", "H":
-				return 23;
-			case "B":
-				return 24;
-			case "PL":
-				return 25;
-			default:
-				if (CommonData.HARDWOODS.contains(secondaryGenus)) {
-					return 26;
-				}
-				return 22;
-			}
-		case "PW":
-			return 27;
-		case "PL", "PA":
-			switch (secondaryGenus) {
-			case "PL", "PA":
-				return 28;
-			case "F", "PW", "L", "PY":
-				return 29;
-			default:
-				if (CommonData.HARDWOODS.contains(secondaryGenus)) {
-					return 31;
-				}
-				return 30;
-			}
-		case "PY":
-			return 32;
-		case "L":
-			switch (secondaryGenus) {
-			case "F":
-				return 33;
-			default:
-				return 34;
-			}
-		case "AC":
-			if (CommonData.HARDWOODS.contains(secondaryGenus)) {
-				return 36;
-			}
-			return 35;
-		case "D":
-			if (CommonData.HARDWOODS.contains(secondaryGenus)) {
-				return 38;
-			}
-			return 37;
-		case "MB":
-			return 39;
-		case "E":
-			return 40;
-		case "AT":
-			if (CommonData.HARDWOODS.contains(secondaryGenus)) {
-				return 42;
-			}
-			return 41;
-		default:
-			throw new ProcessingException("Unrecognized primary species: " + primarySp0);
 		}
 	}
 }
