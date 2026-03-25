@@ -11,6 +11,9 @@ on:
       tag:
         required: true
         type: string
+      ref:
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       target_environment:
@@ -22,6 +25,11 @@ on:
       tag:
         description: Tag to deploy; use SemVer or PR Number
         required: true
+        type: string
+      ref:
+        description: Git ref to deploy from
+        required: false
+        default: 'main'
         type: string
 
 concurrency:
@@ -35,5 +43,5 @@ jobs:
     secrets: inherit
     with:
       target_environment: ${{ inputs.target_environment }}
-      ref:  ${{ github.ref }}
+      ref: ${{ inputs.ref || 'main' }}
       tag: ${{ inputs.tag }}
