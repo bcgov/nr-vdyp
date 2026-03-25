@@ -12,6 +12,10 @@ on:
         description: Release tag to apply to the existing images
         required: true
         type: string
+      chart_github_ref:
+        description: Github Ref of the Chart to deploy
+        required: false
+        type: string
       target_environment:
         description: Target environment to deploy to
         required: true
@@ -63,3 +67,4 @@ jobs:
     with:
       target_environment: ${{ inputs.target_environment }}
       tag: ${{ inputs.release_tag }}
+      ref: ${{ inputs.chart_github_ref }}
