@@ -28,7 +28,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: promote-${{ inputs.target_environment }}
@@ -37,6 +36,8 @@ concurrency:
 jobs:
   tag-builds:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     strategy:
       matrix:
         component-name: [
@@ -53,10 +54,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN}}
 
       - name: Tag relevant images
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+          RELEAS_ETAG: ${{ inputs.release_tag }}
         run: |
-          docker pull ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:${{ inputs.source_tag }}
-          docker tag ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:${{ inputs.source_tag }} ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:${{ inputs.release_tag }}
-          docker push ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:${{ inputs.release_tag }}
+          docker pull ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:$SOURCE_TAG
+          docker tag ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:$SOURCE_TAG ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:$RELEASE_TAG
+          docker push ghcr.io/${{ github.repository }}/${{ matrix.component-name }}:$RELEASE_TAG
 
   # include additional steps for DLV, PRD
   # rename to deploy-wftst, rename environment to tst
