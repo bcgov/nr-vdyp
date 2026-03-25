@@ -97,6 +97,14 @@ public class ProjectionBatchMappingService {
 											+ projectionEntity.getProjectionGUID()
 							)
 					);
+			if (progressUpdate.batchJobGUID() != null
+					&& !progressUpdate.batchJobGUID().equals(entity.getBatchJobGUID())) {
+				logger.warn(
+						"Ignoring progress update from stale batch job {} for projection {} (current job: {})",
+						progressUpdate.batchJobGUID(), projectionEntity.getProjectionGUID(), entity.getBatchJobGUID()
+				);
+				return;
+			}
 			entity.setPolygonCount(progressUpdate.totalPolygons());
 			entity.setErrorCount(progressUpdate.projectionErrors());
 			entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());

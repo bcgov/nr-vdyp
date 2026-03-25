@@ -62,6 +62,8 @@ public class ProjectionProgressPushScheduler {
 			if (Strings.isNullOrEmpty(projectionGUID))
 				continue;
 
+			String batchJobGUID = job.getJobParameters().getString(BatchConstants.Job.GUID);
+
 			currentlyRunningProjectionGUIDs.add(projectionGUID);
 			int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
 			int polygonsProcessed = 0;
@@ -83,7 +85,7 @@ public class ProjectionProgressPushScheduler {
 			Integer previousHash = lastProgressHashByProjection.put(projectionGUID, newHash);
 			if (previousHash == null || previousHash != newHash) {
 				VDYPProjectionProgressUpdate payload = new VDYPProjectionProgressUpdate(
-						totalPolygons, polygonsProcessed, errorCount, polygonsSkipped
+						batchJobGUID, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped
 				);
 				progressExecutor.execute(() -> {
 					try {
