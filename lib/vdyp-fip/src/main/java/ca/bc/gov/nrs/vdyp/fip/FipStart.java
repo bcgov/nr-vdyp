@@ -1054,10 +1054,10 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	}
 
 	@Override
-	protected FipSpecies
-			copySpecies(FipSpecies toCopy, Consumer<BaseVdypSpecies.Builder<FipSpecies, FipSite, ?>> config) {
+	public FipSpecies copySpecies(FipSpecies toCopy, Consumer<BaseVdypSpecies.Builder<FipSpecies, FipSite, ?>> config) {
 		return FipSpecies.build(builder -> {
 			builder.copy(toCopy);
+			config.accept(builder);
 		});
 	}
 

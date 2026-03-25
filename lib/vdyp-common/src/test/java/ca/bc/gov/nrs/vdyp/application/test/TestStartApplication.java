@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.application.test;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -92,7 +94,8 @@ public class TestStartApplication
 	}
 
 	@Override
-	protected TestSpecies copySpecies(TestSpecies toCopy, Consumer<Builder<TestSpecies, TestSite, ?>> config) {
+	public TestSpecies copySpecies(TestSpecies toCopy, Consumer<Builder<TestSpecies, TestSite, ?>> config) {
+		fail();
 		return null;
 	}
 
