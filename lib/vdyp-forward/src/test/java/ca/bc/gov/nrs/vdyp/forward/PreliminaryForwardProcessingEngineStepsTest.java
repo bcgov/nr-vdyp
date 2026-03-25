@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -22,7 +21,6 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.model.CommonData;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
@@ -74,29 +72,10 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 			ForwardProcessingEngine.calculateCoverages(lps);
-			fpe.determinePolygonRankings(CommonData.PRIMARY_SPECIES_TO_COMBINE);
+			fpe.determinePolygonRankings();
 
 			assertThat(lps.getPrimarySpeciesIndex(), is(3));
 			assertThat(lps.getSecondarySpeciesIndex(), is(4));
-			assertThat(lps.getInventoryTypeGroup(), is(37));
-			assertThat(lps.getPrimarySpeciesGroupNumber(), is(1));
-			assertThat(lps.getPrimarySpeciesStratumNumber(), is(1));
-		}
-		{
-			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-			fpe.fps.setPolygon(polygon);
-			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
-
-			var speciesToCombine = Arrays
-					.asList(Arrays.asList(lps.getBank().speciesNames[3], lps.getBank().speciesNames[4]));
-
-			ForwardProcessingEngine.calculateCoverages(lps);
-			fpe.determinePolygonRankings(speciesToCombine);
-
-			// The test-specific speciesToCombine will combine 3 & 4 into 3 (leaving 4 at 0.0), promoting 2 to
-			// secondary.
-			assertThat(lps.getPrimarySpeciesIndex(), is(3));
-			assertThat(lps.getSecondarySpeciesIndex(), is(2));
 			assertThat(lps.getInventoryTypeGroup(), is(37));
 			assertThat(lps.getPrimarySpeciesGroupNumber(), is(1));
 			assertThat(lps.getPrimarySpeciesStratumNumber(), is(1));
