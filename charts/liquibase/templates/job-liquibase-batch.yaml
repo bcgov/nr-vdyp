@@ -68,7 +68,9 @@ spec:
               liquibase \
                 --changelog-file=batch-changelog.json \
                 --log-level={{ .Values.liquibase.logLevel }} \
-                --url="jdbc:postgresql://${ENV_DB_HOST}:${ENV_DB_PORT}/${ENV_DB_DBNAME}?user=${ENV_DB_USER}&password=${ENV_DB_PASSWORD}&currentSchema=${ENV_DB_DBNAME}" \
+                --url="jdbc:postgresql://${ENV_DB_HOST}:${ENV_DB_PORT}/${ENV_DB_DBNAME}?currentSchema=${ENV_DB_DBNAME}" \
+                --username="${ENV_DB_USER}" \
+                --password="${ENV_DB_PASSWORD}" \
                 {{- range .Values.liquibase.extraArgs }}
                 {{ . }} \
                 {{- end }}
