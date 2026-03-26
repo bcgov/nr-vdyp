@@ -339,19 +339,22 @@ class LayerProcessingState {
 		primarySpeciesAgeToBreastHeight = details.primarySpeciesAgeToBreastHeight();
 
 		// Store these values into bank if not already set - VHDOM1 lines 182 - 186
-		if (bank.dominantHeights[primarySpeciesIndex] <= 0.0) {
+		if (Float.isNaN(bank.dominantHeights[primarySpeciesIndex])
+				|| bank.dominantHeights[primarySpeciesIndex] <= 0.0) {
 			bank.dominantHeights[primarySpeciesIndex] = primarySpeciesDominantHeight;
 		}
-		if (bank.siteIndices[primarySpeciesIndex] <= 0.0) {
+		if (Float.isNaN(bank.siteIndices[primarySpeciesIndex]) || bank.siteIndices[primarySpeciesIndex] <= 0.0) {
 			bank.siteIndices[primarySpeciesIndex] = primarySpeciesSiteIndex;
 		}
-		if (bank.ageTotals[primarySpeciesIndex] <= 0.0) {
+		if (Float.isNaN(bank.ageTotals[primarySpeciesIndex]) || bank.ageTotals[primarySpeciesIndex] <= 0.0) {
 			bank.ageTotals[primarySpeciesIndex] = primarySpeciesTotalAge;
 		}
-		if (bank.yearsAtBreastHeight[primarySpeciesIndex] <= 0.0) {
+		if (Float.isNaN(bank.yearsAtBreastHeight[primarySpeciesIndex])
+				|| bank.yearsAtBreastHeight[primarySpeciesIndex] <= 0.0) {
 			bank.yearsAtBreastHeight[primarySpeciesIndex] = primarySpeciesAgeAtBreastHeight;
 		}
-		if (bank.yearsToBreastHeight[primarySpeciesIndex] <= 0.0) {
+		if (Float.isNaN(bank.yearsToBreastHeight[primarySpeciesIndex])
+				|| bank.yearsToBreastHeight[primarySpeciesIndex] <= 0.0) {
 			bank.yearsToBreastHeight[primarySpeciesIndex] = primarySpeciesAgeToBreastHeight;
 		}
 
