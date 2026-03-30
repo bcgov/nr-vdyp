@@ -82,8 +82,9 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 
 	protected static final Pattern POLY_LINE_MATCHER = Pattern
 			.compile("^(.{25}) (.{4}) (.{1})(.{6})(.{3})(.{3})(.{3})$", Pattern.MULTILINE);
-	protected static final Pattern UTIL_LINE_MATCHER = Pattern
-			.compile("^(.{27})(?:(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{6}))?$", Pattern.MULTILINE);
+	protected static final Pattern UTIL_LINE_MATCHER = Pattern.compile(
+			"^(.{25}) (.)(?:(.{3})(.{6})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{6}))?$", Pattern.MULTILINE
+	);
 	protected static final Pattern SPEC_LINE_MATCHER = Pattern.compile(
 			"^(.{25}) (.?) (?:(.{2}) (.{2}) (.{3})(.{5})(.{8})(.{8})(.{8})(.{6})(.{6})(.{6})(.{6})(.{6})(.{2})(.{3}))?$",
 			Pattern.MULTILINE
@@ -165,12 +166,14 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 				String::equals, //
 				Objects::equals, //
 				floatStringsWithin(), //
-				floatStringsWithin(0.01f, 0.015f), //
+				Objects::equals, //
+				floatStringsWithin(), //
+				floatStringsWithin(0.01f, 0.02f), //
+				floatStringsDefaultZero(floatStringsWithin()), //
 				floatStringsDefaultZero(floatStringsWithin()), //
 				floatStringsWithin(), //
 				floatStringsWithin(), //
 				floatStringsWithin(0.01f, 0.02f), //
-				floatStringsWithin(), //
 				floatStringsWithin(), //
 				floatStringsDefaultZero(floatStringsWithin(0.1f, 0.2f)) //
 		);
@@ -178,6 +181,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		if (actualMatch.groupCount() != expectedMatch.groupCount()) {
 			return false;
 		}
+
 		for (int i = 0; i < expectedMatch.groupCount(); i++) {
 			if (!checks.get(i).test(actualMatch.group(i + 1), expectedMatch.group(i + 1))) {
 				System.out.println(
@@ -260,7 +264,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 	}
 
 	protected BiPredicate<String, String> floatStringsWithin() {
-		return floatStringsWithin(0.015f, 0.01f);
+		return floatStringsWithin(0.010f, 0.015f);
 	}
 
 	protected BiPredicate<String, String> floatStringsDefaultZero(BiPredicate<String, String> test) {
