@@ -51,8 +51,7 @@ class SpeciesVolumeComparisonTest {
 				continue;
 			}
 
-			for (Map.Entry<String, Map<String, Map<String, String>>> layerEntry : featureEntry.getValue()
-					.entrySet()) {
+			for (Map.Entry<String, Map<String, Map<String, String>>> layerEntry : featureEntry.getValue().entrySet()) {
 				String layerId = layerEntry.getKey();
 
 				if (!vdyp8Table.get(featureId).containsKey(layerId)) {
@@ -67,8 +66,9 @@ class SpeciesVolumeComparisonTest {
 					Map<String, String> vdyp8Row = vdyp8Table.get(featureId).get(layerId).get(year);
 					if (vdyp8Row == null) {
 						mismatches.add(
-								String.format("VDYP8 is missing year %s for featureId %s layerId %s", year,
-										featureId, layerId)
+								String.format(
+										"VDYP8 is missing year %s for featureId %s layerId %s", year, featureId, layerId
+								)
 						);
 						continue;
 					}
@@ -122,8 +122,10 @@ class SpeciesVolumeComparisonTest {
 		} else {
 			logger.warn("{} mismatch(es) found:", mismatches.size());
 			mismatches.forEach(logger::warn);
-			fail(mismatches.size() + " PRJ_SP*_VOL_* column(s) differ by more than " + TOLERANCE_PCT
-					+ "%:\n" + String.join("\n", mismatches));
+			fail(
+					mismatches.size() + " PRJ_SP*_VOL_* column(s) differ by more than " + TOLERANCE_PCT + "%:\n"
+							+ String.join("\n", mismatches)
+			);
 		}
 	}
 }
