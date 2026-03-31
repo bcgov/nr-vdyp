@@ -272,7 +272,6 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 		assertThat(fpe.fps.getPrimaryLayerProcessingState().getBank().siteIndices[4], is((float) expectedValue));
 	}
 
-
 	@Test
 	/** ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES */
 	void testEstimateMissingYearsToBreastHeightValues()
