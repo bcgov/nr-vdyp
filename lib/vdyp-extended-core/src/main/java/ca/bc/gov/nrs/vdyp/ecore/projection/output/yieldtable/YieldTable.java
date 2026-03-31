@@ -1080,7 +1080,7 @@ public class YieldTable implements Closeable {
 			// understand how this mechanism works.
 		}
 
-		// TODO FIXME PETER why are we assuuming if the input age and height were null that we shouldn't use projected
+		// Why are we assuuming if the input age and height were null that we shouldn't use projected
 		// versions......
 		Double siteIndex = species.getSiteIndex();
 		Double speciesTotalAge = layerYields.speciesAge();

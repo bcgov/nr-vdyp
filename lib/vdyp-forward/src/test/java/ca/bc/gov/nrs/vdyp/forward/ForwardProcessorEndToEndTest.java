@@ -263,9 +263,6 @@ class ForwardProcessorEndToEndTest {
 			assertEquals(s7.getAgeTotal(), s8.getAgeTotal());
 			assertEquals(s7.getYearsAtBreastHeight(), s8.getYearsAtBreastHeight());
 			assertEquals(s7.getHeight(), s8.getHeight());
-			if (!s7.getYearsToBreastHeight().orElse(Float.NaN).equals(s8.getYearsToBreastHeight().orElse(Float.NaN))) {
-				boolean bp = true;
-			}
 			assertEquals(s7.getYearsToBreastHeight(), s8.getYearsToBreastHeight());
 			assertEquals(s7.getLayerType(), s8.getLayerType());
 			assertEquals(s7.getSiteCurveNumber(), s8.getSiteCurveNumber());

@@ -549,13 +549,13 @@ class ForwardProcessingEngineTest {
 			int secondarySlot = fixture.slot("L");
 			float sourceSiteIndex = 13.4f;
 			// uses real expecterd value later
-			float expected = Float.NaN; /// current behavior is dropping this value but that is ok to fix when we know
-										/// we have matched VDYP7
-			float realExpected = (float) SiteTool.convertSiteIndexBetweenCurves(
-					SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(secondarySlot)), sourceSiteIndex,
-					SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(primarySlot))
-			);
-
+			float expected = Float.NaN; // current behavior is dropping this value but that is ok to fix when we know
+										// we have matched VDYP7
+			/*
+			 * float realExpected = (float) SiteTool.convertSiteIndexBetweenCurves(
+			 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(secondarySlot)), sourceSiteIndex,
+			 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(primarySlot)) );
+			 */
 			fixture.bank.siteIndices[primarySlot] = Float.NaN;
 			fixture.bank.siteIndices[secondarySlot] = sourceSiteIndex;
 			fixture.bank.siteIndices[fixture.slot("H")] = 16.1f;
@@ -572,13 +572,12 @@ class ForwardProcessingEngineTest {
 			int appliesPrimarySlot = applies.slot("F");
 			int appliesSecondarySlot = applies.slot("L");
 			float appliesSourceSiteIndex = 13.4f;
-			float expected = Float.NaN; /// current behavior is dropping this value but that is ok to fix when we know
-			/// we have matched VDYP7
-			float realExpected = (float) SiteTool.convertSiteIndexBetweenCurves(
-					SiteIndexEquation.getByIndex(applies.lps.getSiteCurveNumber(appliesSecondarySlot)),
-					appliesSourceSiteIndex,
-					SiteIndexEquation.getByIndex(applies.lps.getSiteCurveNumber(appliesPrimarySlot))
-			);
+			/*
+			 * float realExpected = (float) SiteTool.convertSiteIndexBetweenCurves(
+			 * SiteIndexEquation.getByIndex(applies.lps.getSiteCurveNumber(appliesSecondarySlot)),
+			 * appliesSourceSiteIndex, SiteIndexEquation.getByIndex(applies.lps.getSiteCurveNumber(appliesPrimarySlot))
+			 * );
+			 */
 
 			applies.bank.siteIndices[appliesPrimarySlot] = Float.NaN;
 			applies.bank.siteIndices[appliesSecondarySlot] = appliesSourceSiteIndex;
