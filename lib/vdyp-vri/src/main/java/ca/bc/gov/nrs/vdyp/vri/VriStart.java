@@ -461,7 +461,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		// TPH_L1
 		var primaryLayerDensity = requirePositive(primaryLayer.getTreesPerHectare(), "Primary layer trees per hectare");
 
-		var primarySiteIn = require(primaryLayer.getCalculationSite(), "Primary site for primary layer");
+		var primarySiteIn = require(primaryLayer.getPrimarySite(), "Primary site for primary layer");
+
+		var calculationSite = require(primaryLayer.getCalculationSite(), "Calculation site for primary layer");
 
 		var primarySpeciesPercent = require(primaryLayer.getPrimarySpeciesRecord(), "Primary species for primary layer")
 				.getFractionGenus();
@@ -472,12 +474,15 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var primarySpeciesDensity = primarySpeciesPercent * primaryLayerDensity;
 
 		// HDL1 or HT_L1
-		float leadHeight = requirePositive(primarySiteIn.getHeight(), "Height for primary layer");
+		float leadHeight = requirePositive(calculationSite.getHeight(), "Height for primary layer");
 
 		// HLPL1
 		// EMP050 Method 1
+		// Note: this seems to be what happens in VDY7. All the values credited with calculationSite are actullly
+		// assigned to a common variable for the layer
+		// Confirmation of this behaviro is asssigned to FIXME VDYP-1048
 		var primaryHeight = estimationMethods.primaryHeightFromLeadHeight(
-				leadHeight, primarySiteIn.getSiteGenus(), bec.getRegion(), primarySpeciesDensity
+				leadHeight, calculationSite.getSiteGenus(), bec.getRegion(), primarySpeciesDensity
 		);
 
 		float layerQuadMeanDiameter = quadMeanDiameter(primaryBaseArea, primaryLayerDensity);
@@ -848,7 +853,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		if (veteranLayer != null) {
 			Utils.throwIfPresent(
 					HeightLowException.check(
-							LayerType.VETERAN, veteranLayer.getPrimarySite().flatMap(VriSite::getHeight),
+							LayerType.VETERAN, veteranLayer.getCalculationSite().flatMap(VriSite::getHeight),
 							veteranMinHeight
 					)
 			);
