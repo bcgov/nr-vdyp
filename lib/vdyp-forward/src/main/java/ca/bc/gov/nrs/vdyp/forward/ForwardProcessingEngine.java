@@ -265,7 +265,7 @@ public class ForwardProcessingEngine {
 			determinePolygonRankings();
 		}
 
-		// SITEADD (TODO: SITEADDU when NDEBUG 11 > 0)
+		// SITEADD
 		if (lastStepInclusive.ge(ExecutionStep.ESTIMATE_MISSING_SITE_INDICES)) {
 			if (plps.getFps().fcm.getDebugSettings().getValue(11) == 0) {
 				estimateMissingSiteIndices(plps);
@@ -3280,6 +3280,9 @@ public class ForwardProcessingEngine {
 
 					float movedSiteIndex = Float.NaN;
 					float usableSiteIndex = Float.NaN;
+					// FIXME VDYP-1047 Once we are confident we have accurate numberss per VDYP7 we should fix this
+					// purposeful error replace unusedSetUsableSiteINdex references with usableSiteIndex
+					float unusedSetUsableSiteIndex = Float.NaN;
 
 					for (int ii = 0; ii <= nSpecies; ii++) {
 
@@ -3319,7 +3322,7 @@ public class ForwardProcessingEngine {
 								double mapped = SiteTool
 										.convertSiteIndexBetweenCurves(fromCurve, spSiteIndex, pspSiteCurve);
 								if (mapped > 0.0) {
-									usableSiteIndex = (float) mapped;
+									unusedSetUsableSiteIndex = (float) mapped;
 									break;
 								}
 							} catch (NoAnswerException e) {
@@ -3332,7 +3335,7 @@ public class ForwardProcessingEngine {
 						}
 					}
 
-					if (Float.isNaN(usableSiteIndex) && movedSiteIndex > 0.0f) {
+					if (Float.isNaN(unusedSetUsableSiteIndex) && movedSiteIndex > 0.0f) {
 						usableSiteIndex = movedSiteIndex;
 					}
 
@@ -3432,8 +3435,8 @@ public class ForwardProcessingEngine {
 
 					try {
 						bank.dominantHeights[spIndex] = lps.getFps().estimators.leadHeightFromPrimaryHeight(
-								bank.loreyHeights[spIndex][0], bank.speciesNames[spIndex], lps.getBecZone().getRegion(),
-								bank.treesPerHectare[spIndex][0]
+								bank.loreyHeights[spIndex][UC_ALL_INDEX], bank.speciesNames[spIndex],
+								lps.getBecZone().getRegion(), bank.treesPerHectare[spIndex][UC_ALL_INDEX]
 						);
 
 					} catch (Exception e) {

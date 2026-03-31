@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
@@ -69,6 +70,9 @@ class ForwardProcessorEndToEndTest {
 
 	@Test
 	void test() throws IOException, ResourceParseException, ProcessingException, ValueParseException {
+
+		ForwardDebugSettings debugSwitches = new ForwardDebugSettings(new Integer[25]);
+		debugSwitches.setValue(11, 0);
 
 		ForwardProcessor fp = new ForwardProcessor();
 
@@ -123,6 +127,7 @@ class ForwardProcessorEndToEndTest {
 		);
 		vdyp8ControlMap
 				.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
+		vdyp8ControlMap.put(ControlKey.DEBUG_SWITCHES.name(), debugSwitches);
 
 		FileResolver vdyp7InputResolver = TestUtils.fileResolver(TestUtils.class);
 
@@ -161,6 +166,7 @@ class ForwardProcessorEndToEndTest {
 		);
 		vdyp7ControlMap
 				.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
+		vdyp7ControlMap.put(ControlKey.DEBUG_SWITCHES.name(), debugSwitches);
 
 		try (
 				var vdyp8Reader = new ForwardDataStreamReader(vdyp8ControlMap);
@@ -257,6 +263,9 @@ class ForwardProcessorEndToEndTest {
 			assertEquals(s7.getAgeTotal(), s8.getAgeTotal());
 			assertEquals(s7.getYearsAtBreastHeight(), s8.getYearsAtBreastHeight());
 			assertEquals(s7.getHeight(), s8.getHeight());
+			if (!s7.getYearsToBreastHeight().orElse(Float.NaN).equals(s8.getYearsToBreastHeight().orElse(Float.NaN))) {
+				boolean bp = true;
+			}
 			assertEquals(s7.getYearsToBreastHeight(), s8.getYearsToBreastHeight());
 			assertEquals(s7.getLayerType(), s8.getLayerType());
 			assertEquals(s7.getSiteCurveNumber(), s8.getSiteCurveNumber());
