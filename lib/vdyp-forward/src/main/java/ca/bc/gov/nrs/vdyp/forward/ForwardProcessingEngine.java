@@ -3260,7 +3260,7 @@ public class ForwardProcessingEngine {
 
 		// TODO these slots and values deserve names and documentation. For now, the Fortran code and the above mapping
 		// notes are the best guide to their meaning.
-		for (int debugSlot = 11; debugSlot <= 25; debugSlot++) {
+		for (int debugSlot = 11; debugSlot <= 20; debugSlot++) {
 			int choice = fds.getValue(debugSlot);
 
 			if (choice == 0) {
