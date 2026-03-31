@@ -3578,16 +3578,7 @@ public class ForwardProcessingEngine {
 			}
 		}
 
-		/*
-		 * public record PrimarySpeciesDetails( float primarySpeciesDominantHeight, float primarySpeciesSiteIndex, float
-		 * primarySpeciesTotalAge, float primarySpeciesAgeAtBreastHeight, float primarySpeciesAgeToBreastHeight ) {
-		 *
-		 * }
-		 */
-
 		// Fill in L1COM3 equivalents from the primary species.
-		// Comment: exact object unclear. I believe these are fields on LayerProcessingState, since the Java
-		// version of SITEADD only wrote bank.siteIndices[0] and did not expose the other L1COM3 fields.
 		lps.setPrimarySpeciesDetails(
 				new PrimarySpeciesDetails(
 						bank.dominantHeights[pspIndex], bank.siteIndices[pspIndex], bank.ageTotals[pspIndex],
@@ -3596,10 +3587,7 @@ public class ForwardProcessingEngine {
 		);
 
 		// Fill in SC for primary species, equivalent to INXSCV(0,1) = INXSCV(IPOSP,1)
-		// Comment: exact target unclear. I believe site curve number 0 is stored on LayerProcessingState or Bank.
-		// lps.setSiteCurveNumber(0, lps.getSiteCurveNumber(pspIndex));
-
-		// Preserve behavior from existing SITEADD translation: set bank.siteIndices[0] from primary species.
+		bank.siteCurveNumbers[0] = bank.siteCurveNumbers[pspIndex];
 		bank.siteIndices[0] = bank.siteIndices[pspIndex];
 
 		if (Float.isNaN(bank.yearsAtBreastHeight[pspIndex]) || bank.yearsAtBreastHeight[pspIndex] <= 0.0f
