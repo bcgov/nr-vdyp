@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -248,14 +247,7 @@ public class Layer implements Comparable<Layer> {
 	 * equivalent to: vdyp7intpolystats.c - V7Int_ResortSpeciesArrays (sp64sByPercent sort, lines 1208-1219)
 	 */
 	public List<Species> getSp64sByPercent() {
-		return IntStream.range(0, sp64s.size()).boxed().sorted((i, j) -> {
-			long pi = Math.round(sp64s.get(i).getSpeciesPercent());
-			long pj = Math.round(sp64s.get(j).getSpeciesPercent());
-			if (pi != pj) {
-				return Long.compare(pj, pi);
-			}
-			return Integer.compare(i, j);
-		}).map(sp64s::get).toList();
+		return sp64s.stream().sorted(new Species.ByDecreasingPercentageStableComparator()).toList();
 	}
 
 	public List<Species> getSp64sByName() {
