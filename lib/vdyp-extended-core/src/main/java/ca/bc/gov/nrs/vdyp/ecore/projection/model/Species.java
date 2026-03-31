@@ -942,6 +942,24 @@ public class Species implements Comparable<Species> {
 		}
 	}
 
+	/**
+	 * Sorts species by decreasing percentage, treating values within 0.001 of each other as equal. Equal elements
+	 * preserve their insertion order when used with a stable sort.
+	 */
+	public static class ByDecreasingPercentageStableComparator implements Comparator<Species> {
+
+		private static final double SIGNIFICANT = 0.001;
+
+		@Override
+		public int compare(Species o1, Species o2) {
+			double diff = o1.getSpeciesPercent() - o2.getSpeciesPercent();
+			if (Math.abs(diff) > SIGNIFICANT) {
+				return diff < 0 ? 1 : -1;
+			}
+			return 0;
+		}
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof Species that) {

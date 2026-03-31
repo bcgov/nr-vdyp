@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.api.helpers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
@@ -16,10 +17,12 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 	private static final long serialVersionUID = 1L;
 
 	public ResultYieldTable(String yieldTableContent) {
+		this(new StringReader(yieldTableContent));
+	}
 
-		CSVReader reader = new CSVReaderBuilder(new StringReader(yieldTableContent)).build();
-		try {
-			List<String[]> myEntries = reader.readAll();
+	public ResultYieldTable(Reader reader) {
+		try (CSVReader csvReader = new CSVReaderBuilder(reader).build()) {
+			List<String[]> myEntries = csvReader.readAll();
 			if (myEntries.size() > 1) {
 
 				var rowIterator = myEntries.iterator();
