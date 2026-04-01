@@ -535,10 +535,6 @@ class Hcsv_Vdyp7_Comparison_Test {
 			ParamsReader.parseParameters(parameters, paramMap);
 		}
 
-		// Included to generate JSON text of parameters as needed
-		// ObjectMapper mapper = new ObjectMapper();
-		// String serializedParametersText = mapper.writeValueAsString(parameters);
-
 		try (
 				InputStream polyStream = MainTest.class.getResourceAsStream("vdyp-1014/input/VDYP7_INPUT_POLY.csv");
 				InputStream layerStream = MainTest.class.getResourceAsStream("vdyp-1014/input/VDYP7_INPUT_LAYER.csv");

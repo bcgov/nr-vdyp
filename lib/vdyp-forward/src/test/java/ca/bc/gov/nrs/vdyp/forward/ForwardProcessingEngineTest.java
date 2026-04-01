@@ -543,7 +543,7 @@ class ForwardProcessingEngineTest {
 		}
 
 		@Test
-		void testChoice1MovesSiteIndexFromSecondarySpeciesToPrimarySpecies() throws Exception {
+		void testChoice1MovesSiteIndexFromSecondarySpeciesToPrimarySpecies() {
 			var fixture = createFixture();
 			int primarySlot = fixture.slot("F");
 			int secondarySlot = fixture.slot("L");

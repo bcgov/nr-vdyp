@@ -1713,15 +1713,15 @@ public class ForwardProcessingEngine {
 		float nonPrimaryLhAdjustment = fps.fcm.getCompVarAdjustments().getLoreyHeightOther();
 
 		for (int i : lps.getIndices()) {
-			if (i != primarySpeciesIndex && bank.basalAreas[i][UC_ALL_INDEX] > 0.0f) {
-				if (! (dhEnd == dhStart && lhChangeStrategy != LoreyHeightChangeStrategy.NORMAL)) {
-					float spLhEstimate1 = estimateNonPrimarySpeciesLoreyHeight(i, dhStart, pspLhStart);
-					float spLhEstimate2 = estimateNonPrimarySpeciesLoreyHeight(i, dhEnd, pspLhEnd);
+			if (i != primarySpeciesIndex && bank.basalAreas[i][UC_ALL_INDEX] > 0.0f
+					&& ! (dhEnd == dhStart && lhChangeStrategy != LoreyHeightChangeStrategy.NORMAL)) {
+				float spLhEstimate1 = estimateNonPrimarySpeciesLoreyHeight(i, dhStart, pspLhStart);
+				float spLhEstimate2 = estimateNonPrimarySpeciesLoreyHeight(i, dhEnd, pspLhEnd);
 
-					float otherF = (bank.loreyHeights[i][UC_ALL_INDEX] - 1.3f) / (spLhEstimate1 - 1.3f);
-					otherF = 1.0f + (otherF - 1.0f) * nonPrimaryLhAdjustment;
-					bank.loreyHeights[i][UC_ALL_INDEX] = 1.3f + (spLhEstimate2 - 1.3f) * otherF;
-				}
+				float otherF = (bank.loreyHeights[i][UC_ALL_INDEX] - 1.3f) / (spLhEstimate1 - 1.3f);
+				otherF = 1.0f + (otherF - 1.0f) * nonPrimaryLhAdjustment;
+				bank.loreyHeights[i][UC_ALL_INDEX] = 1.3f + (spLhEstimate2 - 1.3f) * otherF;
+
 			}
 		}
 	}
