@@ -185,7 +185,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 								|| yearsAtBreastHeight <= 0f) && (inferredTotalAge > inferredYearsToBreastHeight);
 
 						var calculatedDH = dominantHeight;
-						if (overrideSpeciesDH && siteCurveNumber > 0 && dominantHeight > 0) {
+						if (overrideSpeciesDH && siteCurveNumber > 0) {
 							// VDYP7loaddata.for lines 1337 -1356
 							/*
 							 * 2003/02/10 Replace the VDYP7 generated Dom Height with a value generated directly from
