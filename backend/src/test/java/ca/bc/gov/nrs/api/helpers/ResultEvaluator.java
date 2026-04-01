@@ -191,9 +191,7 @@ public class ResultEvaluator {
 		logger.info("Exact match failure feature ids ({})", exactMatchFailureFeatureIDs.size());
 		logger.info("Tolerance failure feature ids ({})", toleranceFailureFeatureIDs.size());
 		logger.info("Missing value failure feature ids ({})", missingFailureFeatureIDs.size());
-		errorFeaturesByFirstFailureType.entrySet().stream().sorted(
-				(a, b) -> b.getValue().size() - a.getValue().size()
-		)
+		errorFeaturesByFirstFailureType.entrySet().stream().sorted((a, b) -> b.getValue().size() - a.getValue().size()) //
 				.forEach(
 						e -> logger.info("Feature IDs with first failure type {} ({})", e.getKey(), e.getValue().size())
 				);
