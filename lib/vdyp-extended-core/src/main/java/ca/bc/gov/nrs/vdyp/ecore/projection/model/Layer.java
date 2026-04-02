@@ -241,8 +241,13 @@ public class Layer implements Comparable<Layer> {
 		return sp64s;
 	}
 
+	/**
+	 * Returns the SP64 species list sorted by decreasing percent, with insertion order preserved for equal percentages.
+	 *
+	 * equivalent to: vdyp7intpolystats.c - V7Int_ResortSpeciesArrays (sp64sByPercent sort, lines 1208-1219)
+	 */
 	public List<Species> getSp64sByPercent() {
-		return sp64s.stream().sorted(new Species.ByDecreasingPercentageComparator()).toList();
+		return sp64s.stream().sorted(new Species.ByDecreasingPercentageStableComparator()).toList();
 	}
 
 	public List<Species> getSp64sByName() {
