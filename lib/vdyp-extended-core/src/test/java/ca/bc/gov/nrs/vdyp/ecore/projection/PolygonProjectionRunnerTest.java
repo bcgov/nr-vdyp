@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.same;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
@@ -16,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.easymock.Capture;
+import org.easymock.EasyMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -84,6 +89,10 @@ public class PolygonProjectionRunnerTest {
 	}
 
 	void addStand(String speciesCode, double percent, double age, double height) {
+		addStand(layer, speciesCode, percent, age, height);
+	}
+
+	void addStand(Layer layer, String speciesCode, double percent, double age, double height) {
 		var stand = new Stand.Builder().layer(layer).sp0Code(VdypMethods.getVDYP7Species(speciesCode)).build();
 		var sp0 = new Species.Builder().stand(stand).speciesCode(VdypMethods.getVDYP7Species(speciesCode))
 				.speciesPercent(0).build();
@@ -145,6 +154,63 @@ public class PolygonProjectionRunnerTest {
 		var content = new String(yieldTable.getAsStream().readAllBytes());
 		assertThat(content.length(), is(0));
 		assertThat(progress.length(), is(0));
+	}
+
+	@Test
+	void testTooYoungFIPStartFallthroughVRIWithVeteran() throws AbstractProjectionRequestException, IOException {
+
+		var em = EasyMock.createControl();
+		var layer2 = new Layer.Builder().layerId("2").polygon(polygon).doSuppressPerHAYields(false)
+				.crownClosure((short) 20).vdyp7LayerCode(ProjectionTypeCode.VETERAN).build();
+
+		Capture<PolygonProjectionState> captureState = EasyMock.newCapture();
+
+		polygon.getLayers().put(layer2.getLayerId(), layer2);
+
+		addStand("PL", 100.0, 8.0, 1.0);
+		addStand(layer2, "MB", 100.0, 70.0, 15.0);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		layer2.setAssignedProjectionType(ProjectionTypeCode.VETERAN);
+
+		polygon.doCompleteDefinition(context);
+		ComponentRunner componentRunner = em.mock(ComponentRunner.class);
+
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+
+		// Try to run Primary with FIP and fail
+		componentRunner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			captureState.getValue().setProcessingResults(
+					ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY,
+					Optional.of(new ResultBaseAreaLowException(LayerType.PRIMARY, Optional.of(0f), Optional.of(0.5f)))
+			);
+			return null;
+		}).once();
+
+		// Run Primary with VRI
+		componentRunner.runVriStart(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			captureState.getValue()
+					.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			return null;
+		}).once();
+
+		// Go straight to VRI for Veteran
+		componentRunner.runVriStart(same(polygon), same(ProjectionTypeCode.VETERAN), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			captureState.getValue()
+					.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.VETERAN, Optional.empty());
+			return null;
+		}).once();
+
+		em.replay();
+
+		unit.buildPolygonProjectionExecutionStructure();
+		unit.performInitialProcessing();
+
+		em.verify();
+
 	}
 
 	@Test
