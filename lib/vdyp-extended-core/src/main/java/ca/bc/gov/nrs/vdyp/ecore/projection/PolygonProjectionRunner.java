@@ -169,7 +169,7 @@ public class PolygonProjectionRunner {
 		generateYieldTablesForPolygon();
 	}
 
-	private void buildPolygonProjectionExecutionStructure() throws PolygonExecutionException {
+	void buildPolygonProjectionExecutionStructure() throws PolygonExecutionException {
 
 		try {
 			Path executionFolderPath = Path.of(context.getExecutionFolder().toString(), polygon.toString());
@@ -208,7 +208,7 @@ public class PolygonProjectionRunner {
 	 *
 	 * @throws PolygonExecutionException to report a range of errors that may be encountered in this step.
 	 */
-	private void performInitialProcessing() throws PolygonExecutionException {
+	void performInitialProcessing() throws PolygonExecutionException {
 
 		logger.info("{}: performing initial processing", polygon);
 
