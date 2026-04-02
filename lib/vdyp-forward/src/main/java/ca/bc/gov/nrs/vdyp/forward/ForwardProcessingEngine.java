@@ -4,6 +4,7 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
+import static ca.bc.gov.nrs.vdyp.model.VdypEntity.MISSING_FLOAT_VALUE;
 import static java.lang.Math.max;
 
 import java.io.IOException;
@@ -33,6 +34,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
@@ -263,9 +265,13 @@ public class ForwardProcessingEngine {
 			determinePolygonRankings();
 		}
 
-		// SITEADD (TODO: SITEADDU when NDEBUG 11 > 0)
+		// SITEADD
 		if (lastStepInclusive.ge(ExecutionStep.ESTIMATE_MISSING_SITE_INDICES)) {
-			estimateMissingSiteIndices(plps);
+			if (plps.getFps().fcm.getDebugSettings().getValue(11) == 0) {
+				estimateMissingSiteIndices(plps);
+			} else {
+				estimateMissingSiteIndicesAndAgesExtended(plps, plps.getFps().fcm.getDebugSettings());
+			}
 		}
 
 		if (lastStepInclusive.ge(ExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES)) {
@@ -1707,15 +1713,15 @@ public class ForwardProcessingEngine {
 		float nonPrimaryLhAdjustment = fps.fcm.getCompVarAdjustments().getLoreyHeightOther();
 
 		for (int i : lps.getIndices()) {
-			if (i != primarySpeciesIndex && bank.basalAreas[i][UC_ALL_INDEX] > 0.0f) {
-				if (! (dhEnd == dhStart && lhChangeStrategy != LoreyHeightChangeStrategy.NORMAL)) {
-					float spLhEstimate1 = estimateNonPrimarySpeciesLoreyHeight(i, dhStart, pspLhStart);
-					float spLhEstimate2 = estimateNonPrimarySpeciesLoreyHeight(i, dhEnd, pspLhEnd);
+			if (i != primarySpeciesIndex && bank.basalAreas[i][UC_ALL_INDEX] > 0.0f
+					&& ! (dhEnd == dhStart && lhChangeStrategy != LoreyHeightChangeStrategy.NORMAL)) {
+				float spLhEstimate1 = estimateNonPrimarySpeciesLoreyHeight(i, dhStart, pspLhStart);
+				float spLhEstimate2 = estimateNonPrimarySpeciesLoreyHeight(i, dhEnd, pspLhEnd);
 
-					float otherF = (bank.loreyHeights[i][UC_ALL_INDEX] - 1.3f) / (spLhEstimate1 - 1.3f);
-					otherF = 1.0f + (otherF - 1.0f) * nonPrimaryLhAdjustment;
-					bank.loreyHeights[i][UC_ALL_INDEX] = 1.3f + (spLhEstimate2 - 1.3f) * otherF;
-				}
+				float otherF = (bank.loreyHeights[i][UC_ALL_INDEX] - 1.3f) / (spLhEstimate1 - 1.3f);
+				otherF = 1.0f + (otherF - 1.0f) * nonPrimaryLhAdjustment;
+				bank.loreyHeights[i][UC_ALL_INDEX] = 1.3f + (spLhEstimate2 - 1.3f) * otherF;
+
 			}
 		}
 	}
@@ -3219,6 +3225,375 @@ public class ForwardProcessingEngine {
 
 		// Finally, set bank.siteIndices[0] to that of the primary species.
 		bank.siteIndices[0] = pspSiteIndex;
+	}
+
+	/**
+	 * estimateMissingSiteIndicesAndAgesExtended (Formerly SITEADDU)
+	 * <p>
+	 * Augments missing site indices, ages, years-to-breast-height, and dominant heights using a sequence of
+	 * debug-controlled strategies.
+	 * <p>
+	 * This is an expanded version of SITEADD. In the original Fortran, options 11-25 are read from NDEBUG(11..25), and
+	 * processing continues until an option value of 0 is encountered.
+	 * <p>
+	 * Notes on object mapping:
+	 * <ul>
+	 * <li>bank.siteIndices[] ~= SIL1S(*)</li>
+	 * <li>bank.dominantHeights[] ~= HDL1S(*)</li>
+	 * <li>bank.totalAges[] ~= AGETOTL1S(*)</li>
+	 * <li>bank.breastHeightAges[] ~= AGEBHL1S(*)</li>
+	 * <li>bank.yearsToBreastHeight[] ~= YTBHL1S(*)</li>
+	 * <li>lps.getSiteCurveNumber(i) ~= INXSCV(i,1)</li>
+	 * </ul>
+	 *
+	 * @param lps the layer processing state
+	 * @throws ProcessingException on serious calculation failures
+	 */
+	static void estimateMissingSiteIndicesAndAgesExtended(LayerProcessingState lps, ForwardDebugSettings fds)
+			throws ProcessingException {
+
+		Bank bank = lps.getBank();
+
+		int pspIndex = lps.getPrimarySpeciesIndex();
+		int nSpecies = lps.getNSpecies(); // Should correspond to NSPL1.
+		SiteIndexEquation pspSiteCurve = SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(pspIndex));
+
+		// TODO these slots and values deserve names and documentation. For now, the Fortran code and the above mapping
+		// notes are the best guide to their meaning.
+		for (int debugSlot = 11; debugSlot <= 20; debugSlot++) {
+			int choice = fds.getValue(debugSlot);
+
+			if (choice == 0) {
+				break;
+			}
+
+			if (choice == 1 || (choice == 15 && !Float.isNaN(bank.ageTotals[pspIndex])
+					&& bank.ageTotals[pspIndex] > 0.0f && bank.ageTotals[pspIndex] < 30.0f)) {
+
+				/*
+				 * Assign primary site index from conversion of another site index. If that doesn't work, directly move
+				 * a site index. Order to check: secondary species first, then species order.
+				 */
+
+				if (Float.isNaN(bank.siteIndices[pspIndex]) && nSpecies > 1) {
+					int secondarySpeciesIndex = lps.hasSecondarySpeciesIndex() ? lps.getSecondarySpeciesIndex() : -1;
+
+					float movedSiteIndex = Float.NaN;
+					float usableSiteIndex = Float.NaN;
+					// FIXME VDYP-1047 Once we are confident we have accurate numberss per VDYP7 we should fix this
+					// purposeful error replace unusedSetUsableSiteINdex references with usableSiteIndex
+					float unusedSetUsableSiteIndex = Float.NaN;
+
+					for (int ii = 0; ii <= nSpecies; ii++) {
+
+						int spIndex;
+						if (ii == 0) {
+							spIndex = secondarySpeciesIndex;
+						} else {
+							spIndex = ii;
+						}
+
+						if (spIndex == secondarySpeciesIndex && ii == 0 && spIndex < 0) {
+							continue;
+						}
+
+						if (spIndex == secondarySpeciesIndex && ii != 0) {
+							continue;
+						}
+
+						if (spIndex == pspIndex) {
+							continue;
+						}
+
+						int spCurveNo = lps.getSiteCurveNumber(spIndex);
+						if (spCurveNo <= 0) {
+							continue;
+						}
+
+						float spSiteIndex = bank.siteIndices[spIndex];
+						if (spSiteIndex > 0.0f) {
+							if (Float.isNaN(movedSiteIndex)) {
+								movedSiteIndex = spSiteIndex;
+							}
+
+							SiteIndexEquation fromCurve = SiteIndexEquation.getByIndex(spCurveNo);
+
+							try {
+								double mapped = SiteTool
+										.convertSiteIndexBetweenCurves(fromCurve, spSiteIndex, pspSiteCurve);
+								if (mapped > 0.0) {
+									unusedSetUsableSiteIndex = (float) mapped;
+									break;
+								}
+							} catch (NoAnswerException e) {
+								// Fortran just keeps searching. No warning there.
+							} catch (CurveErrorException | SpeciesErrorException e) {
+								throw new ProcessingException(
+										"Failed converting site index to primary species curve", e
+								);
+							}
+						}
+					}
+
+					if (Float.isNaN(unusedSetUsableSiteIndex) && movedSiteIndex > 0.0f) {
+						usableSiteIndex = movedSiteIndex;
+					}
+
+					if (usableSiteIndex > 0.0f) {
+						bank.siteIndices[pspIndex] = usableSiteIndex;
+					}
+				}
+
+			} else if (choice == 2) {
+
+				// Use primary site index to set all other site indices where possible.
+				if (bank.siteIndices[pspIndex] > 0.0f && nSpecies > 1) {
+					float pspSiteIndex = bank.siteIndices[pspIndex];
+
+					for (int spIndex : lps.getIndices()) {
+						if (spIndex == pspIndex || bank.siteIndices[spIndex] > 0.0f) {
+							continue;
+						}
+
+						SiteIndexEquation spCurve = SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex));
+
+						try {
+							double mapped = SiteTool.convertSiteIndexBetweenCurves(pspSiteCurve, pspSiteIndex, spCurve);
+							if (mapped > 0.0) {
+								bank.siteIndices[spIndex] = (float) mapped;
+							}
+						} catch (NoAnswerException e) {
+							// Fortran silently ignores failure here.
+						} catch (CurveErrorException | SpeciesErrorException e) {
+							throw new ProcessingException(
+									"Failed converting primary site index to another species curve", e
+							);
+						}
+					}
+				}
+
+			} else if (choice == 3) {
+				// When 2 of (TOTAGE, BHAGE, YTBH) are present, fill in the 3rd with algebra.
+				for (int spIndex : lps.getIndices()) {
+
+					Reference<Double> totalAge = new Reference<>(
+							Float.isNaN(bank.ageTotals[spIndex]) ? -9.0 : bank.ageTotals[spIndex]
+					);
+					Reference<Double> bhAge = new Reference<>(
+							Float.isNaN(bank.yearsAtBreastHeight[spIndex]) ? -9.0 : bank.yearsAtBreastHeight[spIndex]
+					);
+					Reference<Double> ytbh = new Reference<>(
+							Float.isNaN(bank.yearsToBreastHeight[spIndex]) ? -9.0 : bank.yearsToBreastHeight[spIndex]
+					);
+					SiteTool.fillInAgeTripletWithoutCorrection(totalAge, bhAge, ytbh);
+
+					bank.ageTotals[spIndex] = totalAge.get().floatValue();
+					if (bank.ageTotals[spIndex] <= 0.0f)
+						bank.ageTotals[spIndex] = MISSING_FLOAT_VALUE;
+					bank.yearsAtBreastHeight[spIndex] = bhAge.get().floatValue();
+					if (bank.yearsAtBreastHeight[spIndex] <= 0.0f)
+						bank.yearsAtBreastHeight[spIndex] = MISSING_FLOAT_VALUE;
+					bank.yearsToBreastHeight[spIndex] = ytbh.get().floatValue();
+					if (bank.yearsToBreastHeight[spIndex] <= 0.0f)
+						bank.yearsToBreastHeight[spIndex] = MISSING_FLOAT_VALUE;
+				}
+
+			} else if (choice == 4) {
+
+				// Move total age from non-primary to primary species. Try secondary first, then any species.
+				if (Float.isNaN(bank.ageTotals[pspIndex]) || bank.ageTotals[pspIndex] <= 0.0f) {
+
+					int secondarySpeciesIndex = lps.hasSecondarySpeciesIndex() ? lps.getSecondarySpeciesIndex() : -1;
+
+					if (secondarySpeciesIndex > 0 && bank.ageTotals[secondarySpeciesIndex] > 0.0f) {
+						bank.ageTotals[pspIndex] = bank.ageTotals[secondarySpeciesIndex];
+					} else {
+						for (int spIndex : lps.getIndices()) {
+							if (spIndex != pspIndex && bank.ageTotals[spIndex] > 0.0f) {
+								bank.ageTotals[pspIndex] = bank.ageTotals[spIndex];
+								break;
+							}
+						}
+					}
+				}
+
+			} else if (choice == 5 || choice == 6) {
+
+				/*
+				 * Estimate dominant height from Lorey height. case 5 is primary species, case 6 non primary species
+				 */
+				for (int spIndex : lps.getIndices()) {
+					if (!Float.isNaN(bank.dominantHeights[spIndex]) && bank.dominantHeights[spIndex] > 0.0f) {
+						continue;
+					}
+
+					boolean applies = (choice == 5 && spIndex == pspIndex) || (choice == 6 && spIndex != pspIndex);
+
+					if (!applies) {
+						continue;
+					}
+
+					try {
+						bank.dominantHeights[spIndex] = lps.getFps().estimators.leadHeightFromPrimaryHeight(
+								bank.loreyHeights[spIndex][UC_ALL_INDEX], bank.speciesNames[spIndex],
+								lps.getBecZone().getRegion(), bank.treesPerHectare[spIndex][UC_ALL_INDEX]
+						);
+
+					} catch (Exception e) {
+						throw new ProcessingException("Failed estimating dominant height from Lorey height", e);
+					}
+				}
+
+			} else if (choice >= 7 && choice <= 10) {
+
+				/*
+				 * Estimate SI from dominant height and age. 7 primary species, total age 8 primary species, BH age 9
+				 * non-primary species, total age 10 non-primary species, BH age
+				 */
+				boolean ageAtBreastHeight = (choice == 8 || choice == 10);
+
+				for (int spIndex : lps.getIndices()) {
+
+					if (bank.siteIndices[spIndex] > 0.0f) {
+						continue;
+					}
+
+					boolean applies = (spIndex == pspIndex && choice <= 8) || (spIndex != pspIndex && choice > 8);
+
+					if (!applies) {
+						continue;
+					}
+
+					if (Float.isNaN(bank.dominantHeights[spIndex]) || bank.dominantHeights[spIndex] <= 0.0f) {
+						continue;
+					}
+
+					float age = ageAtBreastHeight ? bank.yearsAtBreastHeight[spIndex] : bank.ageTotals[spIndex];
+
+					if (Float.isNaN(age) || age <= 0.0f) {
+						continue;
+					}
+
+					try {
+						double siteIndex = SiteTool.heightAndAgeToSiteIndex(
+								SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)), age,
+								ageAtBreastHeight ? SiteIndexAgeType.SI_AT_BREAST : SiteIndexAgeType.SI_AT_TOTAL,
+								bank.dominantHeights[spIndex], SiteIndexEstimationType.SI_EST_DIRECT
+						);
+
+						if (siteIndex > 0.0) {
+							bank.siteIndices[spIndex] = (float) siteIndex;
+
+							if (Float.isNaN(bank.yearsToBreastHeight[spIndex])
+									|| bank.yearsToBreastHeight[spIndex] <= 0.0f) {
+								double ytbh = SiteTool.yearsToBreastHeight(
+										SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)), siteIndex
+								);
+								if (ytbh > 0.0) {
+									bank.yearsToBreastHeight[spIndex] = (float) ytbh;
+								}
+							}
+						}
+
+					} catch (Exception e) {
+						throw new ProcessingException("Failed estimating site index from height and age", e);
+					}
+				}
+
+			} else if (choice == 11 || choice == 12) {
+
+				/*
+				 * Estimate ages from dominant height and SI.
+				 */
+				for (int spIndex : lps.getIndices()) {
+
+					boolean applies = (choice == 11 && spIndex == pspIndex) || (choice == 12 && spIndex != pspIndex);
+
+					if (!applies) {
+						continue;
+					}
+
+					if (Float.isNaN(bank.siteIndices[spIndex]) || bank.siteIndices[spIndex] <= 0.0f) {
+						continue;
+					}
+					if (Float.isNaN(bank.dominantHeights[spIndex]) || bank.dominantHeights[spIndex] <= 1.3f) {
+						continue;
+					}
+					try {
+						// TODO I have changed this pretty considerably from VDYP7 make sure it is acceptable
+						if (Float.isNaN(bank.yearsAtBreastHeight[spIndex])
+								|| bank.yearsAtBreastHeight[spIndex] <= 0.0f) {
+							bank.yearsAtBreastHeight[spIndex] = (float) SiteTool.heightAndSiteIndexToAge(
+									SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)),
+									bank.dominantHeights[spIndex], SiteIndexAgeType.SI_AT_BREAST,
+									bank.siteIndices[spIndex], bank.yearsToBreastHeight[spIndex]
+							);
+						}
+						if (Float.isNaN(bank.ageTotals[spIndex]) || bank.ageTotals[spIndex] <= 0.0f) {
+							bank.ageTotals[spIndex] = (float) SiteTool.heightAndSiteIndexToAge(
+									SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)),
+									bank.dominantHeights[spIndex], SiteIndexAgeType.SI_AT_TOTAL,
+									bank.siteIndices[spIndex], bank.yearsToBreastHeight[spIndex]
+							);
+						} else {
+							bank.yearsAtBreastHeight[spIndex] = bank.ageTotals[spIndex]
+									- bank.yearsToBreastHeight[spIndex];
+						}
+
+					} catch (Exception e) {
+						throw new ProcessingException("Failed estimating ages from height and site index", e);
+					}
+
+				}
+
+			} else if (choice == 13 || choice == 14) {
+
+				// Calculate YTBH from SI.
+				for (int spIndex : lps.getIndices()) {
+
+					boolean applies = (choice == 13 && spIndex == pspIndex) || (choice == 14 && spIndex != pspIndex);
+
+					if (!applies) {
+						continue;
+					}
+
+					if (Float.isNaN(bank.siteIndices[spIndex]) || bank.siteIndices[spIndex] <= 0.0f) {
+						continue;
+					}
+					if (bank.yearsToBreastHeight[spIndex] > 0.0f) {
+						continue;
+					}
+
+					try {
+						double ytbh = SiteTool.yearsToBreastHeight(
+								SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)), bank.siteIndices[spIndex]
+						);
+						if (ytbh > 0.0) {
+							bank.yearsToBreastHeight[spIndex] = (float) ytbh;
+						}
+					} catch (Exception e) {
+						throw new ProcessingException("Failed estimating years to breast height from site index", e);
+					}
+				}
+			}
+		}
+
+		// Fill in L1COM3 equivalents from the primary species.
+		lps.setPrimarySpeciesDetails(
+				new PrimarySpeciesDetails(
+						bank.dominantHeights[pspIndex], bank.siteIndices[pspIndex], bank.ageTotals[pspIndex],
+						bank.yearsAtBreastHeight[pspIndex], bank.yearsToBreastHeight[pspIndex]
+				)
+		);
+
+		// Fill in SC for primary species, equivalent to INXSCV(0,1) = INXSCV(IPOSP,1)
+		bank.siteCurveNumbers[0] = bank.siteCurveNumbers[pspIndex];
+		bank.siteIndices[0] = bank.siteIndices[pspIndex];
+
+		if (Float.isNaN(bank.yearsAtBreastHeight[pspIndex]) || bank.yearsAtBreastHeight[pspIndex] <= 0.0f
+				|| Float.isNaN(bank.siteIndices[pspIndex]) || bank.siteIndices[pspIndex] <= 0.0f) {
+			throw new ProcessingException("Primary species lacks BH age or site index");
+		}
 	}
 
 	/**

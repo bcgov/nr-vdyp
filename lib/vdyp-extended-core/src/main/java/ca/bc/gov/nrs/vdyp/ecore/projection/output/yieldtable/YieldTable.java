@@ -1080,9 +1080,10 @@ public class YieldTable implements Closeable {
 			// understand how this mechanism works.
 		}
 
+		// Why are we assuuming if the input age and height were null that we shouldn't use projected
+		// versions......
 		Double siteIndex = species.getSiteIndex();
-		Double speciesTotalAge = species.getTotalAge() == null ? null : layerYields.speciesAge();
-		Double dominantHeight = species.getDominantHeight() == null ? null : layerYields.dominantHeight();
+		Double dominantHeight = layerYields.dominantHeight();
 		double loreyHeight = layerYields.loreyHeight();
 		Double diameter = layer.getDoSuppressPerHAYields() ? null : layerYields.diameter();
 		Double treesPerHectare = layer.getDoSuppressPerHAYields() ? null : layerYields.treesPerHectare() * factor;
@@ -1092,12 +1093,6 @@ public class YieldTable implements Closeable {
 				&& (!species.getTotalAge().equals(stand.getSpeciesGroup().getTotalAge())
 						|| !species.getSiteIndex().equals(stand.getSpeciesGroup().getSiteIndex()) || !species
 								.getYearsToBreastHeight().equals(stand.getSpeciesGroup().getYearsToBreastHeight()))) {
-
-			// Determine the age of the stand based on the difference between
-			// the SP0 starting total age and the SP64 starting total age and the
-			// age we are projecting to.
-
-			speciesTotalAge += (species.getTotalAge() - stand.getSpeciesGroup().getTotalAge());
 
 			// Compute a species height at that new age.
 

@@ -343,6 +343,7 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 			super.adapt(baseSource);
 
 			if (baseSource instanceof VdypLayer source) {
+				primarySp0 = source.primarySp0;
 				loreyHeightByUtilization = new UtilizationVector(source.loreyHeightByUtilization);
 				baseAreaByUtilization = new UtilizationVector(source.baseAreaByUtilization);
 				treesPerHectareByUtilization = new UtilizationVector(source.treesPerHectareByUtilization);

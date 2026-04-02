@@ -19,6 +19,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
@@ -255,6 +256,8 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		controlMap.put(ControlKey.SITE_CURVE_NUMBERS.name(), siteCurveMap);
 
+		setSiteEstimationModeToSimple();
+
 		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
@@ -356,6 +359,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 				"01002 S000001 00     1970"
 		);
 
+		setSiteEstimationModeToSimple();
 		try (var reader = new ForwardDataStreamReader(controlMap);) {
 
 			var polygon = reader.readNextPolygon().orElseThrow();
@@ -366,8 +370,16 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 			assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesDominantHeight(), is(22.950302f));
 			assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesSiteIndex(), is(34.0f));
 			assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesTotalAge(), is(22.0f));
-			assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesAgeAtBreastHeight(), is(Float.NaN));
 			assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesAgeToBreastHeight(), is(7.7f));
+			// SITEADDU fills the age triplet
+			assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesAgeAtBreastHeight(), is(Float.NaN));
 		}
 	}
+
+	private static void setSiteEstimationModeToSimple() {
+		ForwardDebugSettings mockDebugSettings = new ForwardDebugSettings(new Integer[25]);
+		mockDebugSettings.setValue(11, 0);
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), mockDebugSettings);
+	}
+
 }

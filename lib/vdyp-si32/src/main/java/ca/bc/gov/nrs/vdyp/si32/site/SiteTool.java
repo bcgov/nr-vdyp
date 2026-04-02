@@ -661,6 +661,26 @@ public class SiteTool {
 	 */
 	public static int
 			fillInAgeTriplet(Reference<Double> rTotalAge, Reference<Double> rBreastHeightAge, Reference<Double> rYTBH) {
+		return fillInAgeTriplet(rTotalAge, rBreastHeightAge, rYTBH, 0.5f);
+	}
+
+	public static int fillInAgeTripletWithoutCorrection(
+			Reference<Double> rTotalAge, Reference<Double> rBreastHeightAge, Reference<Double> rYTBH
+	) {
+		return fillInAgeTriplet(rTotalAge, rBreastHeightAge, rYTBH, 0.0f);
+	}
+
+	/**
+	 *
+	 * @param rTotalAge
+	 * @param rBreastHeightAge
+	 * @param rYTBH
+	 * @param correction
+	 * @return
+	 */
+	public static int fillInAgeTriplet(
+			Reference<Double> rTotalAge, Reference<Double> rBreastHeightAge, Reference<Double> rYTBH, float correction
+	) {
 
 		int rtrnCode = 0;
 
@@ -671,11 +691,12 @@ public class SiteTool {
 			// Note that because BHAge can be negative, we must use the less restrictive test of not being equal to
 
 			if (rTotalAge.get() >= 0.0 && rBreastHeightAge.get() != -9.0 && rYTBH.get() < 0.0 /* unknown */) {
-				rYTBH.set(rTotalAge.get() - rBreastHeightAge.get() + 0.5);
+				rYTBH.set(rTotalAge.get() - rBreastHeightAge.get() + correction);
 			} else if (rTotalAge.get() >= 0.0 && rBreastHeightAge.get() == -9.0 /* unknown */ && rYTBH.get() >= 0.0) {
-				rBreastHeightAge.set(rTotalAge.get() - rYTBH.get() + 0.5);
+				rBreastHeightAge.set(rTotalAge.get() - rYTBH.get() + correction);
+
 			} else if (rTotalAge.get() < 0.0 /* unknown */ && rBreastHeightAge.get() != -9.0 && rYTBH.get() >= 0.0) {
-				rTotalAge.set(rBreastHeightAge.get() + rYTBH.get() - 0.5);
+				rTotalAge.set(rBreastHeightAge.get() + rYTBH.get() - correction);
 			}
 		}
 

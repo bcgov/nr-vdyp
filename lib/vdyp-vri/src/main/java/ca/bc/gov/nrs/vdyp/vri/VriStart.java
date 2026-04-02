@@ -463,6 +463,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		var primarySiteIn = require(primaryLayer.getPrimarySite(), "Primary site for primary layer");
 
+		var calculationSite = require(primaryLayer.getCalculationSite(), "Calculation site for primary layer");
+
 		var primarySpeciesPercent = require(primaryLayer.getPrimarySpeciesRecord(), "Primary species for primary layer")
 				.getFractionGenus();
 
@@ -472,12 +474,15 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var primarySpeciesDensity = primarySpeciesPercent * primaryLayerDensity;
 
 		// HDL1 or HT_L1
-		float leadHeight = requirePositive(primarySiteIn.getHeight(), "Height for primary layer");
+		float leadHeight = requirePositive(calculationSite.getHeight(), "Height for primary layer");
 
 		// HLPL1
 		// EMP050 Method 1
+		// Note: this seems to be what happens in VDY7. All the values credited with calculationSite are actullly
+		// assigned to a common variable for the layer
+		// Confirmation of this behaviro is asssigned to FIXME VDYP-1048
 		var primaryHeight = estimationMethods.primaryHeightFromLeadHeight(
-				leadHeight, primarySiteIn.getSiteGenus(), bec.getRegion(), primarySpeciesDensity
+				leadHeight, calculationSite.getSiteGenus(), bec.getRegion(), primarySpeciesDensity
 		);
 
 		float layerQuadMeanDiameter = quadMeanDiameter(primaryBaseArea, primaryLayerDensity);
@@ -485,7 +490,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		lBuilder.baseAreaByUtilization(primaryBaseArea);
 		lBuilder.treesPerHectareByUtilization(primaryLayerDensity);
 		lBuilder.empiricalRelationshipParameterIndex(primaryLayer.getEmpiricalRelationshipParameterIndex());
-
+		lBuilder.primaryGenus(primaryLayer.getPrimaryGenus());
 		lBuilder.adaptSpecies(primaryLayer, (sBuilder, vriSpec) -> {
 			var vriSite = vriSpec.getSite();
 
@@ -848,7 +853,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		if (veteranLayer != null) {
 			Utils.throwIfPresent(
 					HeightLowException.check(
-							LayerType.VETERAN, veteranLayer.getPrimarySite().flatMap(VriSite::getHeight),
+							LayerType.VETERAN, veteranLayer.getCalculationSite().flatMap(VriSite::getHeight),
 							veteranMinHeight
 					)
 			);
@@ -888,7 +893,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				}
 			}
 			if (missingValues.isEmpty()) {
-				layer.setPrimaryGenusForCalculation(Optional.of(site.getSiteGenus()));
+				layer.setCalculationGenus(Optional.of(site.getSiteGenus()));
 				break;
 			}
 		}
@@ -908,11 +913,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 	protected PolygonMode checkPolygonForMode(VriPolygon polygon, BecDefinition bec) throws ProcessingException {
 		VriLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
-		Optional<VriSite> primarySite = primaryLayer.getPrimarySite();
-		var ageTotal = primarySite.flatMap(VriSite::getAgeTotal);
-		var height = primarySite.flatMap(VriSite::getHeight);
-		var siteIndex = primarySite.flatMap(VriSite::getSiteIndex);
-		var yearsToBreastHeight = primarySite.flatMap(VriSite::getYearsToBreastHeight);
+		Optional<VriSite> calculationSite = primaryLayer.getCalculationSite();
+		var ageTotal = calculationSite.flatMap(VriSite::getAgeTotal);
+		var height = calculationSite.flatMap(VriSite::getHeight);
+		var siteIndex = calculationSite.flatMap(VriSite::getSiteIndex);
+		var yearsToBreastHeight = calculationSite.flatMap(VriSite::getYearsToBreastHeight);
 		var baseArea = primaryLayer.getBaseArea();
 		var treesPerHectare = primaryLayer.getTreesPerHectare();
 		var crownClosure = primaryLayer.getCrownClosure();
@@ -932,8 +937,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			});
 			polygon.setMode(Optional.of(mode));
 			Optional<Float> primaryBreastHeightAge = Utils.mapBoth(
-					primaryLayer.getPrimarySite().flatMap(VriSite::getAgeTotal),
-					primaryLayer.getPrimarySite().flatMap(VriSite::getYearsToBreastHeight), (at, ytbh) -> at - ytbh
+					primaryLayer.getCalculationSite().flatMap(VriSite::getAgeTotal),
+					primaryLayer.getCalculationSite().flatMap(VriSite::getYearsToBreastHeight), (at, ytbh) -> at - ytbh
 			);
 			log.atDebug().setMessage("Polygon mode {} checks").addArgument(mode).log();
 			switch (mode) {
@@ -1210,16 +1215,16 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var bec = poly.getBiogeoclimaticZone();
 
 		var primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
-		var primarySite = primaryLayer.getPrimarySite().orElseThrow();
+		var calculationSite = primaryLayer.getCalculationSite().orElseThrow();
 		try {
-			SiteIndexEquation siteCurve = getSiteCurveNumber(bec, primarySite);
+			SiteIndexEquation siteCurve = getSiteCurveNumber(bec, calculationSite);
 
-			float primaryAgeTotal = primarySite.getAgeTotal().orElseThrow(); // AGETOT_L1
-			float primaryYearsToBreastHeight = primarySite.getYearsToBreastHeight().orElseThrow(); // YTBH_L1
+			float primaryAgeTotal = calculationSite.getAgeTotal().orElseThrow(); // AGETOT_L1
+			float primaryYearsToBreastHeight = calculationSite.getYearsToBreastHeight().orElseThrow(); // YTBH_L1
 
 			float primaryBreastHeightAge0 = primaryAgeTotal - primaryYearsToBreastHeight; // AGEBH0
 
-			float siteIndex = primarySite.getSiteIndex().orElseThrow(); // SID
+			float siteIndex = calculationSite.getSiteIndex().orElseThrow(); // SID
 			float yeastToBreastHeight = primaryYearsToBreastHeight; // YTBHD
 
 			Map<String, Float> minimaMap = Utils.expectParsedControl(controlMap, ControlKey.MINIMA, Map.class);
@@ -1249,7 +1254,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 			int moreYears = Math.max(80, (int) (130 - primaryAgeTotal));
 
-			float primaryHeight = primarySite.getHeight().orElseThrow(); // HT_L1
+			float primaryHeight = calculationSite.getHeight().orElseThrow(); // HT_L1
 
 			final Increase inc = findIncreaseForYoungMode(
 					bec, primaryLayer, siteCurve, primaryBreastHeightAge0, siteIndex, yeastToBreastHeight,
@@ -1417,18 +1422,20 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, PreprocessEstimatedBaseAreaLowException {
 
 		final VriLayer primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
-		final VriSite primarySite = primaryLayer.getPrimarySite().orElseThrow(
-				() -> new FatalProcessingException("Primary layer, " + primaryLayer + ", does not have a primary site")
+		final VriSite calculationSite = primaryLayer.getCalculationSite().orElseThrow(
+				() -> new FatalProcessingException(
+						"Primary layer, " + primaryLayer + ", does not have a calculation site"
+				)
 		);
 		final Optional<VriLayer> veteranLayer = Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 		BecDefinition bec = poly.getBiogeoclimaticZone();
 
-		final float primaryHeight = primarySite.getHeight().orElseThrow(
-				() -> new FatalProcessingException("Primary site, " + primarySite + ", does not have a height")
+		final float primaryHeight = calculationSite.getHeight().orElseThrow(
+				() -> new FatalProcessingException("Primary site, " + calculationSite + ", does not have a height")
 		);
-		final float primaryBreastHeightAge = primarySite.getYearsAtBreastHeight().orElseThrow(
+		final float primaryBreastHeightAge = calculationSite.getYearsAtBreastHeight().orElseThrow(
 				() -> new FatalProcessingException(
-						"Primary site, " + primarySite + ", does not have a breast height age"
+						"Primary site, " + calculationSite + ", does not have a breast height age"
 				)
 		);
 		final Optional<Float> veteranBaseArea = veteranLayer.flatMap(VriLayer::getBaseArea);

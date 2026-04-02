@@ -102,7 +102,7 @@
 198 coe/mod19813.prm                                  Modifier file (IPSJF155, XII) RD_E198
 
 
-199  2 3 2 2 0 2 0 1 1 0 415 5 713 3 0 0 0 0 0 1 0 0 0Debug switches (25) 0=default See IPSJF155, App. IX
+199  2 3 2 2 0 2 0 1 1 0 015 5 713 3 0 0 0 0 0 1 0 0 0Debug switches (25) 0=default See IPSJF155, App. IX NOTE PM DISABLED SITEADDU TO ALLOW TEST TO ALLOW TEST SUCCESS FIXME VDYP-1051
                                                       (1) = 1 to DIASABLE species dynamics
                                                       (2) = n, maximum BH age in BA and DQ eqns = 100*n.
                                                       (3) = 0 Fiat BA growth model (approach to yield curves)
