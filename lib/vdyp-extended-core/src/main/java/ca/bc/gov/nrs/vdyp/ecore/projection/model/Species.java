@@ -58,6 +58,7 @@ public class Species implements Comparable<Species> {
 	private Double suppliedDominantHeight;
 	private Double suppliedSiteIndex;
 
+	private int standSuppliedOrderIndex;
 	// The number of duplicates of this species.
 
 	private Integer nDuplicates = 0;
@@ -128,13 +129,17 @@ public class Species implements Comparable<Species> {
 		return nDuplicates;
 	}
 
+	public int getStandSuppliedOrderIndex() {
+		return standSuppliedOrderIndex;
+	}
+
 	public Map<Integer, Double> getPercentsPerDuplicate() {
 		return percentsPerDuplicate;
 	}
 
 	// MUTABLE field setters
 
-	void setTotalAge(Double totalAge) {
+	public void setTotalAge(Double totalAge) {
 		stand.getLayer().getPolygon().ensureUnlocked();
 
 		this.totalAge = totalAge;
@@ -143,7 +148,7 @@ public class Species implements Comparable<Species> {
 		}
 	}
 
-	void setSiteIndex(Double siteIndex) {
+	public void setSiteIndex(Double siteIndex) {
 		stand.getLayer().getPolygon().ensureUnlocked();
 
 		this.siteIndex = siteIndex;
@@ -183,6 +188,10 @@ public class Species implements Comparable<Species> {
 		stand.getLayer().getPolygon().ensureUnlocked();
 
 		this.siteCurve = siteCurve;
+	}
+
+	void setStandSuppliedOrderIndex(int standSuppliedOrderIndex) {
+		this.standSuppliedOrderIndex = standSuppliedOrderIndex;
 	}
 
 	/**
@@ -245,6 +254,11 @@ public class Species implements Comparable<Species> {
 
 		public Builder siteCurve(SiteIndexEquation siteCurve) {
 			species.setSiteCurve(siteCurve);
+			return this;
+		}
+
+		public Builder standSuppliedOrderIndex(int index) {
+			species.setStandSuppliedOrderIndex(index);
 			return this;
 		}
 
@@ -938,6 +952,20 @@ public class Species implements Comparable<Species> {
 				return -1;
 			} else {
 				return o1.getSpeciesCode().compareTo(o2.getSpeciesCode());
+			}
+		}
+	}
+
+	public static class ByDecreasingPercentageInStandComparator implements Comparator<Species> {
+
+		@Override
+		public int compare(Species o1, Species o2) {
+			if (o1.getSpeciesPercent() < o2.getSpeciesPercent()) {
+				return 1;
+			} else if (o1.getSpeciesPercent() > o2.getSpeciesPercent()) {
+				return -1;
+			} else {
+				return o1.getStandSuppliedOrderIndex() - o2.getStandSuppliedOrderIndex();
 			}
 		}
 	}

@@ -585,6 +585,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				.speciesPercent(speciesPercent) //
 				.totalAge(totalAge) //
 				.dominantHeight(dominantHeight) //
+				.standSuppliedOrderIndex(stand.getSpecies().size()) //
 				.build();
 
 		if (sp64 != null) {
