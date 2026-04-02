@@ -266,6 +266,12 @@ public class PolygonProjectionRunner {
 						doRetryUsingVriStart = FipStartProcessingResult.doRetryUsingVriStart(spe);
 
 						doRetryUsingVriStart |= handleFipError(polygon, spe, layer);
+
+						// If a layer fails in FIP in a way that causes it to fail over to VRI, subsequent layers should
+						// go straight to VRI
+						// This is a bit odd but it's what VDYP 7 does. See VDYP-1052
+						initialGrowthModel = GrowthModelCode.VRI;
+						initialProcessingMode = ProcessingModeCode.VRI_VriYoung;
 					} else {
 						polygon.addMessage(
 								new PolygonMessage.Builder().polygon(polygon)
