@@ -1305,7 +1305,7 @@ class YieldTableTest {
 
 	@Test
 	void testGetUnprojectedStandYieldsInfersAgeAndHeightFromStandSiteData()
-			throws AbstractProjectionRequestException, StandYieldCalculationException {
+			throws AbstractProjectionRequestException {
 
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_PLI_NIGHGI97, 42.0, 10.0);
@@ -1320,7 +1320,7 @@ class YieldTableTest {
 
 	@Test
 	void testGetUnprojectedStandYieldsReturnsZeroesWhenStandMissing()
-			throws AbstractProjectionRequestException, StandYieldCalculationException {
+			throws AbstractProjectionRequestException {
 
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var layerYields = yieldTable.getUnprojectedStandYields(null, 2020);
@@ -1332,7 +1332,7 @@ class YieldTableTest {
 
 	@Test
 	void testGetUnprojectedStandYieldsReturnsZeroesWhenStandAgeUnavailable()
-			throws AbstractProjectionRequestException, StandYieldCalculationException {
+			throws AbstractProjectionRequestException {
 
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var stand = buildStandWithProjectionSiteData(2020, null, SiteIndexEquation.SI_PLI_NIGHGI97, 42.0, 10.0);
@@ -1346,7 +1346,7 @@ class YieldTableTest {
 
 	@Test
 	void testGetUnprojectedStandYieldsReturnsZeroesWhenSiteCurveUnavailable()
-			throws AbstractProjectionRequestException, StandYieldCalculationException {
+			throws AbstractProjectionRequestException {
 
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_NO_EQUATION, 42.0, 10.0);
