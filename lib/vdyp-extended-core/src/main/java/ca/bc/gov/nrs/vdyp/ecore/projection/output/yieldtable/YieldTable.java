@@ -1495,8 +1495,7 @@ public class YieldTable implements Closeable {
 
 			layerYields = new LayerYields(
 					false, false /* not dominant */, null, calendarYear, speciesAge, dominantHeight, 0.0, 0.0, 0.0, 0.0,
-					0.0, 0.0, 0.0,
-					0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
+					0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
 			);
 		}
 
