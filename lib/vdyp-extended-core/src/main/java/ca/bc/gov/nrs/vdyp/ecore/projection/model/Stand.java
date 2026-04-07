@@ -29,7 +29,7 @@ public class Stand implements Comparable<Stand> {
 	private List<Species> sp64s = new ArrayList<Species>();
 
 	/** The individual species (VDYP7: Sp64) of the species group, ordered by decreasing percentage */
-	private TreeSet<Species> sp64sByPercentage = new TreeSet<>(new Species.ByDecreasingPercentageComparator());
+	private TreeSet<Species> sp64sByPercentage = new TreeSet<>(new Species.ByDecreasingPercentageInStandComparator());
 
 	private Stand() {
 	}
