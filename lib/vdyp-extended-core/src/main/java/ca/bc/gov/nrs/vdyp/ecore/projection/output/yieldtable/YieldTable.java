@@ -16,6 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndex2Height;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
@@ -440,7 +444,12 @@ public class YieldTable implements Closeable {
 						&& !rowContext.isPolygonTable()) {
 					var layerSp0sByPercent = layer.getSp0sByPercent();
 					if (layerSp0sByPercent.size() > 1) {
-						var secondarySp0 = layerSp0sByPercent.get(1);
+						// prefer the layer determined leading SP0
+						var secondarySp0 = layer.determineLeadingSp0(1);
+						if (secondarySp0 == null) {
+							// if unavailable get the second highest percent sp0
+							secondarySp0 = layerSp0sByPercent.get(1);
+						}
 						if (!secondarySp0.getSpeciesByPercent().isEmpty()) {
 							var secondarySp64 = secondarySp0.getSpeciesByPercent().get(0);
 							var speciesGrowthDetails = getProjectedLayerSpeciesGrowthInfo(
@@ -1080,8 +1089,6 @@ public class YieldTable implements Closeable {
 			// understand how this mechanism works.
 		}
 
-		// Why are we assuuming if the input age and height were null that we shouldn't use projected
-		// versions......
 		Double siteIndex = species.getSiteIndex();
 		Double speciesTotalAge = species.getTotalAge() == null ? null : layerYields.speciesAge();
 		Double dominantHeight = species.getDominantHeight() == null ? null : layerYields.dominantHeight();
@@ -1454,8 +1461,41 @@ public class YieldTable implements Closeable {
 							).build()
 			);
 
+			/*
+			 * If there are no yields projected VDYP7 still tries to infer age and height data for species. This means
+			 * that dominant height for primary and secondary species that had that data initially provided should
+			 * always have SiteINdex based heights in Yield tables. This may be a valid case in that the chosen stand is
+			 * simply too small at the year requested to have volumes projected.
+			 */
+			double dominantHeight = 0.0;
+			double speciesAge = 0.0;
+			if (stand != null) {
+				Integer standAge = stand.determineSpeciesAgeAtYear(calendarYear);
+				if (standAge != null && standAge > 0
+						&& stand.getSpeciesGroup().getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION) {
+					try {
+						speciesAge = standAge;
+						dominantHeight = SiteIndex2Height.ageSiteIndexToHeight(
+								stand.getSpeciesGroup().getSiteCurve(), speciesAge, SiteIndexAgeType.SI_AT_TOTAL,
+								stand.getSpeciesGroup().getSiteIndex(), stand.getSpeciesGroup().getYearsToBreastHeight()
+						);
+					} catch (CommonCalculatorException ex) {
+						throw new StandYieldCalculationException(ex);
+					}
+				}
+				/*
+				 * 2004/02/29 According to Cam's e-mail, if we compute an invalid height, ensure we keep a nominal
+				 * height around so that the species at least exists above ground.
+				 *
+				 */
+				if (dominantHeight < 0.0) {
+					dominantHeight = 0.1;
+				}
+			}
+
 			layerYields = new LayerYields(
-					false, false /* not dominant */, null, calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+					false, false /* not dominant */, null, calendarYear, speciesAge, dominantHeight, 0.0, 0.0, 0.0, 0.0,
+					0.0, 0.0, 0.0,
 					0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
 			);
 		}
