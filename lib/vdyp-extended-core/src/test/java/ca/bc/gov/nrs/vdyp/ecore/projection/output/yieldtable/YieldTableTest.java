@@ -1252,4 +1252,50 @@ class YieldTableTest {
 		assertThat(content, containsString("PRJ_TOTAL_AGE"));
 		assertThat(content, containsString("SPECIES_1_CODE"));
 	}
+
+	@Test
+	void testCopyPredictedSIAndHeightIfNotInputCopiesPredictedValuesToStandAndLeadingSpecies()
+			throws AbstractProjectionRequestException {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = testHelper.buildStandWithLeadingSpecies();
+			var leadingSpecies = stand.getSpeciesByPercent().get(0);
+
+			yieldTable.copyPredictedSIAndHeightIfNotInput(stand, testHelper.predictedLayerYields(75.0, 24.5, 18.2));
+
+			assertThat(stand.getSpeciesGroup().getTotalAge(), is(75.0));
+			assertThat(stand.getSpeciesGroup().getDominantHeight(), is(24.5));
+			assertThat(stand.getSpeciesGroup().getSiteIndex(), is(18.2));
+			assertThat(leadingSpecies.getTotalAge(), is(75.0));
+			assertThat(leadingSpecies.getDominantHeight(), is(24.5));
+			assertThat(leadingSpecies.getSiteIndex(), is(18.2));
+		}
+	}
+
+	@Test
+	void testCopyPredictedSIAndHeightIfNotInputDoesNotOverwriteSuppliedValues()
+			throws AbstractProjectionRequestException {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = testHelper.buildStandWithLeadingSpecies();
+			var leadingSpecies = stand.getSpeciesByPercent().get(0);
+
+			stand.getSpeciesGroup().setTotalAge(50.0);
+			stand.getSpeciesGroup().setDominantHeight(10.0);
+			stand.getSpeciesGroup().setSiteIndex(12.0);
+			leadingSpecies.setTotalAge(45.0);
+			leadingSpecies.setDominantHeight(9.0);
+			leadingSpecies.setSiteIndex(11.0);
+
+			yieldTable.copyPredictedSIAndHeightIfNotInput(stand, testHelper.predictedLayerYields(75.0, 24.5, 18.2));
+
+			assertThat(stand.getSpeciesGroup().getTotalAge(), is(50.0));
+			assertThat(stand.getSpeciesGroup().getDominantHeight(), is(10.0));
+			assertThat(stand.getSpeciesGroup().getSiteIndex(), is(12.0));
+			assertThat(leadingSpecies.getTotalAge(), is(45.0));
+			assertThat(leadingSpecies.getDominantHeight(), is(9.0));
+			assertThat(leadingSpecies.getSiteIndex(), is(11.0));
+		}
+	}
+
 }
