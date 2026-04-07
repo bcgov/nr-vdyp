@@ -179,6 +179,24 @@ public class Stand implements Comparable<Stand> {
 		}
 	}
 
+	/**
+	 * determineSpeciesAgeAtYear Compliments VDYP7 V7Int_DetermineSpeciesAgeAtYear from vdyp7intutils.c Determines the
+	 * species age at the calendar year provided using simple math
+	 * 
+	 * @param year the calendar year to check
+	 * @return the age of the species at that year
+	 */
+	public Integer determineSpeciesAgeAtYear(double year) {
+		Integer standAge = null;
+		if (getSpeciesGroup().getTotalAge() != null) {
+			var measurementYear = layer.getPolygon().getMeasurementYear();
+			var measurementAge = Math.round(getSpeciesGroup().getTotalAge());
+			if (measurementYear > 0 && measurementAge > 0) {
+				standAge = (int) (measurementAge + (year - measurementYear));
+			}
+		}
+		return standAge;
+	}
 	@Override
 	public int hashCode() {
 		return layer.hashCode() * 17 + sp0.hashCode();
