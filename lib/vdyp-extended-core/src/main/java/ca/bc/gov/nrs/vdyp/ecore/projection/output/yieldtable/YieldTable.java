@@ -1461,42 +1461,7 @@ public class YieldTable implements Closeable {
 							).build()
 			);
 
-			/*
-			 * If there are no yields projected VDYP7 still tries to infer age and height data for species. This means
-			 * that dominant height for primary and secondary species that had that data initially provided should
-			 * always have SiteINdex based heights in Yield tables. This may be a valid case in that the chosen stand is
-			 * simply too small at the year requested to have volumes projected.
-			 */
-			double dominantHeight = 0.0;
-			double speciesAge = 0.0;
-			if (stand != null) {
-				Integer standAge = stand.determineSpeciesAgeAtYear(calendarYear);
-				if (standAge != null && standAge > 0
-						&& stand.getSpeciesGroup().getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION) {
-					try {
-						speciesAge = standAge;
-						dominantHeight = SiteIndex2Height.ageSiteIndexToHeight(
-								stand.getSpeciesGroup().getSiteCurve(), speciesAge, SiteIndexAgeType.SI_AT_TOTAL,
-								stand.getSpeciesGroup().getSiteIndex(), stand.getSpeciesGroup().getYearsToBreastHeight()
-						);
-					} catch (CommonCalculatorException ex) {
-						throw new StandYieldCalculationException(ex);
-					}
-				}
-				/*
-				 * 2004/02/29 According to Cam's e-mail, if we compute an invalid height, ensure we keep a nominal
-				 * height around so that the species at least exists above ground.
-				 *
-				 */
-				if (dominantHeight < 0.0) {
-					dominantHeight = 0.1;
-				}
-			}
-
-			layerYields = new LayerYields(
-					false, false /* not dominant */, null, calendarYear, speciesAge, dominantHeight, 0.0, 0.0, 0.0, 0.0,
-					0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
-			);
+			layerYields = getUnprojectedStandYields(stand, calendarYear);
 		}
 
 		copyPredictedSIAndHeightIfNotInput(stand, layerYields);
@@ -1504,6 +1469,38 @@ public class YieldTable implements Closeable {
 		// TODO: handle "doReprojectHeight".
 
 		return layerYields;
+	}
+
+	LayerYields getUnprojectedStandYields(Stand stand, int calendarYear) throws StandYieldCalculationException {
+		double dominantHeight = 0.0;
+		double speciesAge = 0.0;
+
+		if (stand != null) {
+			Integer standAge = stand.determineSpeciesAgeAtYear(calendarYear);
+			if (standAge != null && standAge > 0
+					&& stand.getSpeciesGroup().getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION) {
+				try {
+					speciesAge = standAge;
+					dominantHeight = SiteIndex2Height.ageSiteIndexToHeight(
+							stand.getSpeciesGroup().getSiteCurve(), speciesAge, SiteIndexAgeType.SI_AT_TOTAL,
+							stand.getSpeciesGroup().getSiteIndex(), stand.getSpeciesGroup().getYearsToBreastHeight()
+					);
+				} catch (CommonCalculatorException ex) {
+					throw new StandYieldCalculationException(ex);
+				}
+			}
+
+			dominantHeight = clampInvalidDominantHeight(dominantHeight);
+		}
+
+		return new LayerYields(
+				false, false /* not dominant */, null, calendarYear, speciesAge, dominantHeight, 0.0, 0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
+		);
+	}
+
+	double clampInvalidDominantHeight(double dominantHeight) {
+		return dominantHeight < 0.0 ? 0.1 : dominantHeight;
 	}
 
 	/**
