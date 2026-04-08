@@ -30,11 +30,20 @@ import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
+import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.LayerYields;
+import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
@@ -270,5 +279,35 @@ public class TestHelper {
 		}
 
 		return reader;
+	}
+
+	public YieldTable buildUnitYieldTable(String projectionId) throws AbstractProjectionRequestException {
+		var parameters = new Parameters().yearStart(2025).yearEnd(2030)
+				.outputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, projectionId, parameters, false);
+		return YieldTable.of(context);
+	}
+
+	public Stand buildStandWithLeadingSpecies() {
+		var polygon = new Polygon.Builder().build();
+		var layer = new Layer.Builder().polygon(polygon).layerId("Test").build();
+		var stand = new Stand.Builder().layer(layer).sp0Code("P").build();
+
+		var sp0 = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100.0).build();
+		stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
+		layer.addStand(stand);
+
+		var leadingSpecies = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100.0).build();
+		stand.addSp64(leadingSpecies);
+		layer.addSp64(leadingSpecies);
+
+		return stand;
+	}
+
+	public LayerYields predictedLayerYields(double speciesAge, double dominantHeight, double siteIndex) {
+		return new LayerYields(
+				true, true, "P", 2030, speciesAge, dominantHeight, 0.0, siteIndex, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0, 100.0, 0
+		);
 	}
 }
