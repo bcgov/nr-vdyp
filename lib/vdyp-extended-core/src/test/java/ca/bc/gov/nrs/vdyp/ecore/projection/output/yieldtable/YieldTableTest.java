@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.api.helpers.TestProjectionResultsReader;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
@@ -42,7 +44,10 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionStageCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
@@ -1296,6 +1301,115 @@ class YieldTableTest {
 			assertThat(leadingSpecies.getDominantHeight(), is(9.0));
 			assertThat(leadingSpecies.getSiteIndex(), is(11.0));
 		}
+	}
+
+	@Test
+	void testGetUnprojectedStandYieldsInfersAgeAndHeightFromStandSiteData() throws AbstractProjectionRequestException {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_PLI_NIGHGI97, 42.0, 10.0);
+
+			var layerYields = yieldTable.getUnprojectedStandYields(stand, 2020);
+
+			assertFalse(layerYields.bYieldsPredicted());
+			assertThat(layerYields.speciesAge(), is(42.0));
+			assertThat(layerYields.dominantHeight(), closeTo(34.94531, 0.00001));
+		}
+	}
+
+	@Test
+	void testGetUnprojectedStandYieldsReturnsZeroesWhenStandMissing() throws AbstractProjectionRequestException {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var layerYields = yieldTable.getUnprojectedStandYields(null, 2020);
+
+			assertThat(layerYields.speciesAge(), is(0.0));
+			assertThat(layerYields.dominantHeight(), is(0.0));
+		}
+	}
+
+	@Test
+	void testGetUnprojectedStandYieldsReturnsZeroesWhenStandAgeUnavailable() throws AbstractProjectionRequestException {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildStandWithProjectionSiteData(2020, null, SiteIndexEquation.SI_PLI_NIGHGI97, 42.0, 10.0);
+
+			var layerYields = yieldTable.getUnprojectedStandYields(stand, 2020);
+
+			assertThat(layerYields.speciesAge(), is(0.0));
+			assertThat(layerYields.dominantHeight(), is(0.0));
+		}
+	}
+
+	@Test
+	void testGetUnprojectedStandYieldsReturnsZeroesWhenSiteCurveUnavailable()
+			throws AbstractProjectionRequestException {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_NO_EQUATION, 42.0, 10.0);
+
+			var layerYields = yieldTable.getUnprojectedStandYields(stand, 2020);
+
+			assertThat(layerYields.speciesAge(), is(0.0));
+			assertThat(layerYields.dominantHeight(), is(0.0));
+		}
+	}
+
+	@Test
+	void testGetUnprojectedStandYieldsWrapsSiteIndexCalculationExceptions() throws AbstractProjectionRequestException {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_PLI_NIGHGI97, 1.2, 10.0);
+
+			var exception = assertThrows(
+					StandYieldCalculationException.class, () -> yieldTable.getUnprojectedStandYields(stand, 2020)
+			);
+
+			assertThat(exception.getCause(), Matchers.instanceOf(CommonCalculatorException.class));
+		}
+	}
+
+	@Test
+	void testClampInvalidDominantHeightUsesNominalHeightForNegativeValues() throws AbstractProjectionRequestException {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			assertThat(yieldTable.clampInvalidDominantHeight(-1.0), is(0.1));
+			assertThat(yieldTable.clampInvalidDominantHeight(2.5), is(2.5));
+		}
+	}
+
+	private Stand buildStandWithProjectionSiteData(
+			Integer referenceYear, Double totalAge, SiteIndexEquation siteCurve, Double siteIndex,
+			Double yearsToBreastHeight
+	) {
+		var polygonBuilder = new Polygon.Builder();
+		if (referenceYear != null) {
+			polygonBuilder.referenceYear(referenceYear);
+		}
+
+		var polygon = polygonBuilder.build();
+		var layer = new Layer.Builder().polygon(polygon).layerId("Test").build();
+		var stand = new Stand.Builder().layer(layer).sp0Code("P").build();
+
+		var speciesGroupBuilder = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100.0);
+		if (totalAge != null) {
+			speciesGroupBuilder.totalAge(totalAge);
+		}
+		if (siteCurve != null) {
+			speciesGroupBuilder.siteCurve(siteCurve);
+		}
+		if (siteIndex != null) {
+			speciesGroupBuilder.siteIndex(siteIndex);
+		}
+
+		stand.addSpeciesGroup(speciesGroupBuilder.build(), layer.getSp0sAsSupplied().size());
+		layer.addStand(stand);
+
+		if (yearsToBreastHeight != null) {
+			stand.getSpeciesGroup().setYearsToBreastHeight(yearsToBreastHeight);
+		}
+
+		return stand;
 	}
 
 }
