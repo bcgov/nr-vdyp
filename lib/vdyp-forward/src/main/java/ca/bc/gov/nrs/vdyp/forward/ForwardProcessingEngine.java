@@ -477,7 +477,7 @@ public class ForwardProcessingEngine {
 			}
 		}
 
-		if (tphEndSum < 0.0f) {
+		if (tphEndSum <= 0.0f) {
 			throw new ProcessingException(
 					MessageFormat.format(
 							"During processing of primary layer of {0}, trees-per-hectare was calculated to be negative ({1})",
@@ -695,7 +695,7 @@ public class ForwardProcessingEngine {
 			// species in the polygon (UC All)
 
 			if (debugSetting1Value == SpeciesDynamics.NONE || bank.getNSpecies() == 1
-					|| (basalArea.delta() == 0.0 || quadMeanDiameter.delta() == 0.0)) {
+					|| (basalArea.delta() == 0.0 && quadMeanDiameter.delta() == 0.0)) {
 
 				// (5b) This is the NO SPECIES DYNAMICS section
 				growUsingNoSpeciesDynamics(basalArea.rate(), tph.factor());
@@ -813,7 +813,7 @@ public class ForwardProcessingEngine {
 		Bank bank = lps.getBank();
 		Region polygonRegion = fps.getCurrentBecZone().getRegion();
 
-		if (quadMeanDiameter.delta() == 0 || basalArea.delta() == 0 || lps.getNSpecies() == 1) {
+		if ( (quadMeanDiameter.delta() == 0 && basalArea.delta() == 0) || lps.getNSpecies() == 1) {
 			return false /* no solution available */;
 		}
 
@@ -997,7 +997,7 @@ public class ForwardProcessingEngine {
 
 				if (estIsAboveActual) {
 					if (rs1[i] <= 0.0f) {
-						cjLow = -cjOther;
+						cjLow = 0.0f;
 						cjHigh = adjustmentParametersByStage[stage].cjMax;
 						if (!adjustmentParametersByStage[stage].canCrossZero) {
 							cjHigh = Math.min(cjHigh, -rs1[i]);
@@ -1036,7 +1036,7 @@ public class ForwardProcessingEngine {
 			}
 		}
 
-		if (stage + 1 == NSTAGES) {
+		if (stage == NSTAGES) {
 			// Finished all stages and no viable solution found.
 			return false;
 		}
