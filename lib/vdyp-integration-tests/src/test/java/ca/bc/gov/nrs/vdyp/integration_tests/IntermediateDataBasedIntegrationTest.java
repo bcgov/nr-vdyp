@@ -16,12 +16,15 @@ import java.util.function.IntUnaryOperator;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import io.github.classgraph.ClassGraph;
 
@@ -419,6 +422,36 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 					expectedDir.resolve(fileName(outputState, Data.Utilization)), this::utilLinesMatch
 			);
 		}
+	}
+
+	@AfterEach
+	void restoreSiteCurves() {
+		// TODO See VDYP-732
+		VdypMethods.clear();
+	}
+
+	// This should be the same as in PolygonProjectionRunner but we can't access that directly without forming a
+	// circular dependency
+	static final Map<SiteIndexEquation, SiteIndexEquation> CURVES_TO_REMAP = new EnumMap<>(SiteIndexEquation.class);
+
+	static {
+		CURVES_TO_REMAP.put(SiteIndexEquation.SI_ACB_HUANG, SiteIndexEquation.SI_SW_GOUDIE_NATAC);
+		CURVES_TO_REMAP.put(SiteIndexEquation.SI_SW_GOUDIE_PLAAC, SiteIndexEquation.SI_SW_GOUDIE_NATAC);
+	}
+
+	/**
+	 * Apply site curve remapping if appropriate to match the state when running inside the extended core if appropriate
+	 * for the test. The site curve mapping will be returned to normal after the test.
+	 *
+	 * @param testDir
+	 */
+	protected void remapSiteCurves(Path testDir) {
+		// If the test represents the intermediate processing happening as part of Extended Core/VDYP7Console running,
+		// apply the same site curve remapping
+		if (Files.exists(testDir.resolve("forwardInput"))) {
+			VdypMethods.remapCurrentSICurves(CURVES_TO_REMAP);
+		}
+		// Otherwise leave the site curves alone as they would be in a stand alone run.
 	}
 
 }
