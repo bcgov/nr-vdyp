@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
-import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.same;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -215,6 +214,10 @@ public class PolygonProjectionRunnerTest {
 
 	@Test
 	void testValidFIPStart() throws AbstractProjectionRequestException, IOException {
+		layer = new Layer.Builder().layerId("1").polygon(polygon).doSuppressPerHAYields(false).crownClosure((short) 20)
+				.vdyp7LayerCode(ProjectionTypeCode.PRIMARY).estimatedSiteIndexSpecies("PL").estimatedSiteIndex(5.0)
+				.build();
+		polygon.getLayers().put(layer.getLayerId(), layer);
 		addStand("PL", 100.0, 8.0, 10.0);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
 		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);

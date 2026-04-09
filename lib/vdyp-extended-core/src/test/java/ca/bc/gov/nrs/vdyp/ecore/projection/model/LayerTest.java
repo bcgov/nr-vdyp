@@ -208,11 +208,6 @@ public class LayerTest {
 							List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "si", 25.0))
 					),
 					Arguments.of(
-							// Species Supplied Age and Height Estimate
-							Map.of("growthModelCode", GrowthModelCode.VRI),
-							List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "h", 10.0))
-					),
-					Arguments.of(
 							// Species Supplied Age and Height Estimate Older Leading sp64
 							Map.of("growthModelCode", GrowthModelCode.VRI),
 							List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0))
@@ -511,7 +506,7 @@ public class LayerTest {
 	void testDoCompleteSiteSpeciesInfo() throws PolygonValidationException {
 		layer = new Layer.Builder().layerId("TEST").crownClosure((short) 3).treesPerHectare(12.0).basalArea(0.8656)
 				.polygon(polygon).build();
-		Map<String, Object> params = Map.of("sp64", "FD", "perc", 50.0, "age", 200.0, "h", 27.0);
+		Map<String, Object> params = Map.of("sp64", "FD", "perc", 50.0, "age", 200.0);
 		Map<String, Object> params2 = Map.of("sp64", "LW", "perc", 30.0, "age", 100.0, "h", 15.0);
 		Map<String, Object> params3 = Map.of("sp64", "PY", "perc", 20.0);
 

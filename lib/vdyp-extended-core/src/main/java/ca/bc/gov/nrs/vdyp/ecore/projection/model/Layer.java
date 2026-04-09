@@ -1303,8 +1303,8 @@ public class Layer implements Comparable<Layer> {
 
 		Species speciesGroup = stand.getSpeciesGroup();
 
-		if (siteSpecies.getTotalAge() != null && siteSpecies.getDominantHeight() != null
-				&& siteSpecies.getSiteIndex() != null) {
+		if (siteSpecies.getTotalAge() != null && //
+				(siteSpecies.getDominantHeight() != null || siteSpecies.getSiteIndex() != null)) {
 
 			logger.debug("{}: leading site species {} already has site information", this, siteSpecies);
 		} else {
