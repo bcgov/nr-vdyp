@@ -1375,15 +1375,12 @@ public class YieldTable implements Closeable {
 				)
 		);
 
-		Validate.isTrue(
-				rowContext.getPolygonProjectionState().layerWasProjected(layer),
-				MessageFormat.format("YieldTable.obtainStandYield(): layer {0} must have been projected", layer)
-		);
-
 		LayerYields layerYields;
 
 		Integer calendarYear = getCalendarYear(layer, ageToRequest);
-
+		if (!rowContext.getPolygonProjectionState().layerWasProjected(layer)) {
+			return getUnprojectedStandYields(stand, calendarYear);
+		}
 		var projectionType = layer.getAssignedProjectionType();
 		LayerType layerType = getLayerType(projectionType);
 
