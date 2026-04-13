@@ -96,7 +96,7 @@ class Hcsv_44GrpATest extends BaseHttpProjectionRequestTest {
 				)
 		);
 		var csvEntryContent = zipEntries.get("YieldTable.csv");
-		assertThat(csvEntryContent.length(), greaterThan(0));
+		assertThat(csvEntryContent, not(emptyString()));
 	}
 
 	// Enable if you want to run the entire 44grpa polygon set. It takes a long time.
