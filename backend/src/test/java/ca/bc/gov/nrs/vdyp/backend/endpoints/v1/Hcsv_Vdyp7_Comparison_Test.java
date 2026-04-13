@@ -111,16 +111,16 @@ class Hcsv_Vdyp7_Comparison_Test {
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
 						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
-				)
-				.post("/projection/hcsv?trialRun=false")
-				.then().statusCode(201)
-				.extract().body().asInputStream();
+				).post("/projection/hcsv?trialRun=false").then().statusCode(201).extract().body().asInputStream();
 
 		ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 		ZipEntry entry = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry.getName());
 		String yieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry));
-		logger.info("YieldTable content (first 500 chars):\n{}", yieldTableContent.substring(0, Math.min(500, yieldTableContent.length())));
+		logger.info(
+				"YieldTable content (first 500 chars):\n{}",
+				yieldTableContent.substring(0, Math.min(500, yieldTableContent.length()))
+		);
 
 		while ( (entry = zipFile.getNextEntry()) != null) {
 			String entryContent = new String(TestHelper.readZipEntry(zipFile, entry));
