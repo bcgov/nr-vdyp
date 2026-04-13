@@ -299,8 +299,8 @@ public class ComputationMethods {
 				// EMP093
 				estimationMethods.estimateNetDecayVolume(
 						spec.getGenus(), bec.getRegion(), UtilizationClass.ALL, adjustDecayUtil, spec.getDecayGroup(),
-						vdypLayer.getComputedYearsAtBreastHeight(0.5f).orElse(0f), quadMeanDiameterUtil, closeVolumeUtil,
-						closeVolumeNetDecayUtil
+						vdypLayer.getComputedYearsAtBreastHeight(0.5f).orElse(0f), quadMeanDiameterUtil,
+						closeVolumeUtil, closeVolumeNetDecayUtil
 				);
 
 				// EMP094
