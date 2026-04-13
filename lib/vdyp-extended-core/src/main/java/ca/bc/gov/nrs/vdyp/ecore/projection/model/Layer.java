@@ -925,10 +925,12 @@ public class Layer implements Comparable<Layer> {
 	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
 		var leadingSp64 = this.sp64s.get(0);
 		try {
-			return SiteTool.ageAndSiteIndexToHeight(
-					leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, leadingSp64.getSiteIndex(),
-					leadingSp64.getYearsToBreastHeight()
-			);
+			if (leadingSp64.getSiteIndex() != null && leadingSp64.getYearsToBreastHeight() != null) {
+				return SiteTool.ageAndSiteIndexToHeight(
+						leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, leadingSp64.getSiteIndex(),
+						leadingSp64.getYearsToBreastHeight()
+				);
+			}
 		} catch (CommonCalculatorException e) {
 			logger.warn(
 					"{}: saw CommonCalculatorException during calculation of dominant height from age {},"
@@ -936,8 +938,8 @@ public class Layer implements Comparable<Layer> {
 					this, targetAge, leadingSp64.getSiteIndex(), leadingSp64.getYearsToBreastHeight()
 			);
 
-			return null;
 		}
+		return null;
 	}
 
 	/**
