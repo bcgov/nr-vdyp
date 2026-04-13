@@ -298,14 +298,14 @@ public class ComputationMethods {
 
 				// EMP093
 				estimationMethods.estimateNetDecayVolume(
-						spec.getGenus(), bec.getRegion(), UtilizationClass.ALL, adjustCloseUtil, spec.getDecayGroup(),
+						spec.getGenus(), bec.getRegion(), UtilizationClass.ALL, adjustDecayUtil, spec.getDecayGroup(),
 						vdypLayer.getComputedYearsAtBreastHeight().orElse(0f), quadMeanDiameterUtil, closeVolumeUtil,
 						closeVolumeNetDecayUtil
 				);
 
 				// EMP094
 				estimationMethods.estimateNetDecayAndWasteVolume(
-						bec.getRegion(), UtilizationClass.ALL, adjustCloseUtil, spec.getGenus(), loreyHeightSpec,
+						bec.getRegion(), UtilizationClass.ALL, adjustDecayWasteUtil, spec.getGenus(), loreyHeightSpec,
 						quadMeanDiameterUtil, closeVolumeUtil, closeVolumeNetDecayUtil, closeVolumeNetDecayWasteUtil
 				);
 
