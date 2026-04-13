@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv._44grpA;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -95,7 +97,7 @@ class Hcsv_44GrpATest extends BaseHttpProjectionRequestTest {
 				)
 		);
 		var csvEntryContent = zipEntries.get("YieldTable.csv");
-		assertThat(csvEntryContent.length(), is(0));
+		assertThat(csvEntryContent, not(emptyString()));
 	}
 
 	// Enable if you want to run the entire 44grpa polygon set. It takes a long time.

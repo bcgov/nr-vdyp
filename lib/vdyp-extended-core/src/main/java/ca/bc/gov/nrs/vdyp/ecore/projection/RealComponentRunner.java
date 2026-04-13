@@ -226,52 +226,41 @@ public class RealComponentRunner implements ComponentRunner {
 				for (var layerReportingInfo : sortedLayerInfos) {
 
 					var layer = layerReportingInfo.getLayer();
-					if (state.layerWasProjected(layer)) {
 
-						doGenerateDetailedTableHeader = true;
+					doGenerateDetailedTableHeader = true;
 
-						var projectionResults = getProjectionResults(
-								polygon, layerReportingInfo.getProcessedAsVDYP7Layer(), state
+					var projectionResults = getProjectionResults(
+							polygon, layerReportingInfo.getProcessedAsVDYP7Layer(), state
+					);
+					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+							|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
+
+						yieldTable.generateYieldTableForPolygonLayer(
+								polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
 						);
-						if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
-								|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
+						doGenerateDetailedTableHeader = false;
 
-							yieldTable.generateYieldTableForPolygonLayer(
+						logger.debug("{}: generated yield table", layerReportingInfo.getLayer());
+					}
+
+					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+						if (!layerReportingInfo.isDeadStemLayer()) {
+
+							yieldTable.generateCfsBiomassTableForPolygonLayer(
 									polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
 							);
 							doGenerateDetailedTableHeader = false;
 
-							logger.debug("{}: generated yield table", layerReportingInfo.getLayer());
+							logger.debug("{}: generated CFS biomass table", layer);
+						} else {
+							polygon.addMessage(
+									new PolygonMessage.Builder().layer(layer)
+											.details(
+													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+													PolygonMessageKind.NO_YIELD_TABLE_FOR_DEAD_LAYER
+											).build()
+							);
 						}
-
-						if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-							if (!layerReportingInfo.isDeadStemLayer()) {
-
-								yieldTable.generateCfsBiomassTableForPolygonLayer(
-										polygon, projectionResults, state, layerReportingInfo,
-										doGenerateDetailedTableHeader
-								);
-								doGenerateDetailedTableHeader = false;
-
-								logger.debug("{}: generated CFS biomass table", layer);
-							} else {
-								polygon.addMessage(
-										new PolygonMessage.Builder().layer(layer)
-												.details(
-														ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-														PolygonMessageKind.NO_YIELD_TABLE_FOR_DEAD_LAYER
-												).build()
-								);
-							}
-						}
-					} else {
-						polygon.addMessage(
-								new PolygonMessage.Builder().layer(layer)
-										.details(
-												ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
-												PolygonMessageKind.LAYER_NOT_PROJECTED
-										).build()
-						);
 					}
 				}
 			}

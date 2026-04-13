@@ -4,7 +4,9 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,6 +17,7 @@ import java.util.Optional;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -355,7 +358,7 @@ class ForwardProcessingEngineTest {
 		}
 
 		@Test
-		void testPartialFailTwoSpeciesNoGrowthDQ() throws ProcessingException {
+		void testPartialFailTwoSpeciesNoGrowth() throws ProcessingException {
 
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2020);
@@ -371,7 +374,7 @@ class ForwardProcessingEngineTest {
 
 			var dh = Change.delta(35.3f, 0.17338027f);
 			var dq = Change.delta(30.998875f, 0.0f); // No Growth
-			var ba = Change.delta(45.386444f, 0.1f); // No Growth
+			var ba = Change.delta(45.386444f, 0.0f); // No Growth
 			var tph = Change.range(601.3737f, 594.1138f);
 
 			fpe.growLoreyHeights(
@@ -388,8 +391,8 @@ class ForwardProcessingEngineTest {
 
 			// Leads to no dynamics method being used
 			fpe.growUsingNoSpeciesDynamics(
-					EasyMock.eq(0.002f, 0.001f), // No Growth
-					EasyMock.eq(tph.factor(), 0.01f)
+					EasyMock.eq(0.000f, 0.000f), // No Growth
+					EasyMock.eq(tph.factor(), 0.00f)
 			);
 			EasyMock.expectLastCall().once();
 
@@ -435,10 +438,57 @@ class ForwardProcessingEngineTest {
 					)
 			).andReturn(false).once(); // No Growth will result in failure
 
-			// Leads to no dynamics method being used
-			fpe.growUsingNoSpeciesDynamics(
-					EasyMock.eq(0.0f, 0.01f), // No Growth
-					EasyMock.eq(tph.factor(), 0.01f)
+			// Leads to Full species dynamics method being used
+			fpe.growUsingFullSpeciesDynamics(
+					EasyMock.same(ba), EasyMock.same(dq), EasyMock.eq(tph.start(), 0.01f), EasyMock.eq(30.0f, 0.01f)
+			);
+			EasyMock.expectLastCall().once();
+
+			em.replay();
+
+			// Dynamics mode 2, Partial
+			fpe.growSpecies(
+					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+			);
+
+			em.verify();
+		}
+
+		@Test
+		void testPartialFailTwoSpeciesNoGrowthDQ() throws ProcessingException {
+
+			var layer = VdypLayer.build(lb -> {
+				lb.polygonIdentifier("Test", 2020);
+				lb.layerType(LayerType.PRIMARY);
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("S", controlMap);
+				});
+			});
+			Bank bank = new Bank(layer, null, x -> true);
+
+			var dh = Change.delta(35.3f, 0.17338027f);
+			var dq = Change.delta(30.998875f, 0.0f); // No Growth
+			var ba = Change.delta(45.386444f, 0.1f); // No Growth
+			var tph = Change.range(601.3737f, 594.1138f);
+
+			fpe.growLoreyHeights(
+					EasyMock.same(lps), EasyMock.eq(dh.start(), 0.01f), EasyMock.eq(dh.end(), 0.01f),
+					EasyMock.eq(400f, 0.01f), EasyMock.eq(395.17108f, 0.01f), EasyMock.eq(31.0f, 0.01f)
+			);
+			EasyMock.expectLastCall().once();
+
+			EasyMock.expect(
+					fpe.growUsingPartialSpeciesDynamics(
+							EasyMock.same(ba), EasyMock.same(dq), EasyMock.eq(tph.start(), 0.01f), EasyMock.anyObject()
+					)
+			).andReturn(false).once(); // No Growth will result in failure
+
+			// Leads to Full species dynamics method being used
+			fpe.growUsingFullSpeciesDynamics(
+					EasyMock.same(ba), EasyMock.same(dq), EasyMock.eq(tph.start(), 0.01f), EasyMock.eq(30.0f, 0.01f)
 			);
 			EasyMock.expectLastCall().once();
 
@@ -935,6 +985,182 @@ class ForwardProcessingEngineTest {
 			private int slot(String genus) {
 				return slots.get(genus);
 			}
+		}
+	}
+
+	@Nested
+	class Grow5SpeciesBaDqTph {
+		Map<String, Object> controlMap;
+		ForwardDataStreamReader forwardDataStreamReader;
+
+		@BeforeEach
+		void setup() throws IOException, ResourceParseException, ValueParseException, ProcessingException {
+			var parser = new ForwardControlParser();
+			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
+			forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
+		}
+
+		@AfterEach
+		void teardown() throws ProcessingException {
+			forwardDataStreamReader.close();
+		}
+
+		@Test
+		void testGrowUsingPartialSpeciesDynamicsReturnsFalseWhenNoGrowthInBaAndDq() throws ProcessingException {
+
+			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+
+			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
+
+			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
+			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			Bank bank = lps.getBank();
+
+			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
+			float dqStart = bank.quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
+			float tphStart = bank.treesPerHectare[0][UtilizationClass.ALL.ordinal()];
+
+			assertFalse(
+					fpe.growUsingPartialSpeciesDynamics(
+							Change.delta(baStart, 0.0f), Change.delta(dqStart, 0.0f), tphStart,
+							loreyHeightsAtStart(bank)
+					)
+			);
+		}
+
+		@Test
+		void testGrowUsingPartialSpeciesDynamicsAttemptsSolutionWhenOnlyDqHasNoGrowth() throws ProcessingException {
+
+			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+
+			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
+
+			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
+			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			Bank bank = lps.getBank();
+
+			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
+			float dqStart = bank.quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
+			float tphStart = bank.treesPerHectare[0][UtilizationClass.ALL.ordinal()];
+
+			assertTrue(
+					fpe.growUsingPartialSpeciesDynamics(
+							Change.delta(baStart, 0.351852179f), Change.delta(dqStart, 0.0f), tphStart,
+							loreyHeightsAtStart(bank)
+					)
+			);
+		}
+
+		@Test
+		void testGrowUsingPartialSpeciesDynamicsReturnsFalseWhenNoSolutionCanBeFound() throws ProcessingException {
+
+			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+
+			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
+
+			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
+			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			Bank bank = lps.getBank();
+
+			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
+			float dqStart = bank.quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
+			float tphStart = bank.treesPerHectare[0][UtilizationClass.ALL.ordinal()];
+
+			assertFalse(
+					fpe.growUsingPartialSpeciesDynamics(
+							Change.delta(baStart, 0.0f), Change.delta(dqStart, 7.4f - dqStart), tphStart,
+							loreyHeightsAtStart(bank)
+					)
+			);
+		}
+
+		@Test
+		void testGrowUsingPartialSpeciesDynamicsReturnsFalseForSingleSpecies() throws ProcessingException {
+
+			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+
+			VdypPolygon polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2020);
+				pb.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+				pb.forestInventoryZone(" ");
+				pb.mode(PolygonMode.START);
+				pb.percentAvailable(100.0f);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+						sb.baseArea(1.0f);
+						sb.treesPerHectare(100.0f);
+						sb.quadMeanDiameter(20.0f);
+						sb.loreyHeight(15.0f);
+					});
+				});
+			});
+
+			fpe.fps.setPolygon(polygon);
+
+			assertFalse(
+					fpe.growUsingPartialSpeciesDynamics(
+							Change.delta(1.0f, 0.1f), Change.delta(20.0f, 0.5f), 100.0f, new float[] { 15.0f, 15.0f }
+					)
+			);
+		}
+
+		private float[] loreyHeightsAtStart(Bank bank) {
+			float[] result = new float[bank.getNSpecies() + 1];
+			for (int i = 0; i <= bank.getNSpecies(); i++) {
+				result[i] = bank.loreyHeights[i][UtilizationClass.ALL.ordinal()];
+			}
+			return result;
+		}
+	}
+
+	@Nested
+	class Grow6TreesPerHectare {
+		Map<String, Object> controlMap;
+		ForwardDataStreamReader forwardDataStreamReader;
+
+		@BeforeEach
+		void setup() throws IOException, ResourceParseException, ValueParseException, ProcessingException {
+			var parser = new ForwardControlParser();
+			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
+			forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
+		}
+
+		@AfterEach
+		void teardown() throws ProcessingException {
+			forwardDataStreamReader.close();
+		}
+
+		@Test
+		void testThrowsWhenSpeciesTreesPerHectareSumsToZero() throws ProcessingException {
+
+			IMocksControl em = EasyMock.createControl();
+			ForwardProcessingEngine fpe = EasyMock.partialMockBuilder(ForwardProcessingEngine.class)
+					.addMockedMethod("growSpecies").withConstructor(controlMap).createMock(em);
+
+			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
+
+			fpe.growSpecies(
+					EasyMock.anyObject(), EasyMock.anyInt(), EasyMock.eq(ExecutionStep.GROW_6_LAYER_TPH2),
+					EasyMock.anyObject(), EasyMock.anyObject(), EasyMock.anyObject(), EasyMock.anyObject(),
+					EasyMock.anyObject(), EasyMock.anyFloat(), EasyMock.anyFloat(), EasyMock.anyFloat(),
+					EasyMock.anyObject()
+			);
+			EasyMock.expectLastCall().andAnswer(() -> {
+				Bank bank = fpe.fps.getPrimaryLayerProcessingState().getBank();
+				for (int i : bank.getIndices()) {
+					bank.treesPerHectare[i][UtilizationClass.ALL.ordinal()] = 0.0f;
+				}
+				return null;
+			}).once();
+
+			em.replay();
+
+			assertThrows(ProcessingException.class, () -> fpe.processPolygon(polygon, ExecutionStep.GROW_6_LAYER_TPH2));
+
+			em.verify();
 		}
 	}
 }

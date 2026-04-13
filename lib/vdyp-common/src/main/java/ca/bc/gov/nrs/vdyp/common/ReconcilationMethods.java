@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.*;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.abs;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.sqrt;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -49,7 +50,7 @@ public class ReconcilationMethods {
 		if (abs(baSum - baseAreaUtil.getAll()) > 0.00003 * baSum) {
 			throw new ProcessingException(
 					MessageFormat.format(
-							"Computed base areas for {}+ components do not sum to expected total",
+							"Computed base areas for {0}+ components do not sum to expected total",
 							UtilizationClass.U75TO125.lowBound
 					)
 			);
