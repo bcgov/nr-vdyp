@@ -831,9 +831,9 @@ public class YieldTable implements Closeable {
 			logger.debug("{}: per-hectare projected values were suppressed", layer);
 		}
 
-		if (!layer.getDoSuppressPerHAYields() && layerWasProcessed) {
+		if (!layer.getDoSuppressPerHAYields() && !layerWasProcessed) {
 			if (treesPerHectare == Vdyp7Constants.EMPTY_DECIMAL) {
-				treesPerHectare = layer.getTreesPerHectare();
+				treesPerHectare = Utils.safeGet(layer.getTreesPerHectare());
 				logger.debug(
 						"{}: non-processed layer => using reference trees-per-hectare {}", layer,
 						layer.getTreesPerHectare()
@@ -841,7 +841,7 @@ public class YieldTable implements Closeable {
 			}
 
 			if (basalArea == Vdyp7Constants.EMPTY_DECIMAL) {
-				basalArea = layer.getBasalArea();
+				basalArea = Utils.safeGet(layer.getBasalArea());
 				logger.debug("{}: non-processed layer => using reference basal area {}", layer, layer.getBasalArea());
 			}
 		}
@@ -1490,9 +1490,14 @@ public class YieldTable implements Closeable {
 			dominantHeight = clampInvalidDominantHeight(dominantHeight);
 		}
 
+		double unprojectedBasalArea = Vdyp7Constants.EMPTY_DECIMAL;
+		double unprojectedTph = Vdyp7Constants.EMPTY_DECIMAL;
+		double unprojectedDiameter = Vdyp7Constants.EMPTY_DECIMAL;
+
 		return new LayerYields(
-				false, false /* not dominant */, null, calendarYear, speciesAge, dominantHeight, 0.0, 0.0, 0.0, 0.0,
-				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
+				false, false /* not dominant */, null, calendarYear, speciesAge, dominantHeight, 0.0, 0.0,
+				unprojectedDiameter, unprojectedTph, 0.0, 0.0, 0.0, 0.0, 0.0, unprojectedBasalArea,
+				unprojectedBasalArea, unprojectedBasalArea, 0.0, 0
 		);
 	}
 
