@@ -524,10 +524,10 @@ public class LayerTest {
 	@Test
 	void testdetermineLeadingSiteSpeciesHeightReturnsNullIfNoLeadingSpeciesSI() throws PolygonValidationException {
 		layer = new Layer.Builder().layerId("TEST").polygon(polygon).build();
-		Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0);
+		Map<String, Object> spParams = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0);
 
 		Stand stand = addStand(layer, "PL");
-		addSpecies(layer, stand, params);
+		addSpecies(layer, stand, spParams);
 
 		layer.doBuildSiteSpecies();
 		layer.doCompleteSiteSpeciesSiteIndexInfo(context);
