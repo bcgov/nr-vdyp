@@ -53,6 +53,11 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 	}
 
 	@Computed
+	public Optional<Float> getComputedYearsAtBreastHeight(float offset) {
+		return this.getPrimarySite().flatMap(s -> s.getComputedYearsAtBreastHeight(offset));
+	}
+
+	@Computed
 	public Optional<Float> getAgeTotal() {
 		return this.getPrimarySite().flatMap(BaseVdypSite::getAgeTotal);
 	}
