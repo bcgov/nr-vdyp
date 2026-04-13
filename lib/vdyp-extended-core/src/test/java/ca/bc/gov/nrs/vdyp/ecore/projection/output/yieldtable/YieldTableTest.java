@@ -471,7 +471,9 @@ class YieldTableTest {
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON, //
 				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+
 		);
+		testHelper.addExcludedOptions(parameters, Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		parameters.setYearStart(2025);
 		parameters.setYearEnd(2030);
 
@@ -532,11 +534,14 @@ class YieldTableTest {
 		Files.write(csvFilePath, csvContent);
 		logger.info("Resulting CSV file written to " + csvFilePath);
 
-		var vdyp8ResultYieldTable = new ResultYieldTable(new String(csvContent));
+		var stringContent = new String(csvContent);
+		var vdyp8ResultYieldTable = new ResultYieldTable(stringContent);
 
 		// FIXME this unit test needs to be updated to not fail when the current year changes SEE VDYP-897
+		var string7Content = Files
+				.readString(Path.of(resourceFolderPath.toString(), "vdyp7_Output_YldTbl-do-suppress.csv"));
 		var vdyp7ResultYieldTable = new ResultYieldTable(
-				Files.readString(Path.of(resourceFolderPath.toString(), "vdyp7_Output_YldTbl-do-suppress.csv"))
+				string7Content
 		);
 
 		ResultYieldTable.compareWithTolerance(vdyp7ResultYieldTable, vdyp8ResultYieldTable, 0.01);
