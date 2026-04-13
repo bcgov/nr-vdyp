@@ -925,7 +925,8 @@ public class Layer implements Comparable<Layer> {
 	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
 		var leadingSp64 = this.sp64s.get(0);
 		try {
-			if (leadingSp64.getSiteIndex() != null && leadingSp64.getYearsToBreastHeight() != null) {
+			// Only need to confirm SI is not null because Y2BH will not be null if SI is not null
+			if (leadingSp64.getSiteIndex() != null) {
 				return SiteTool.ageAndSiteIndexToHeight(
 						leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, leadingSp64.getSiteIndex(),
 						leadingSp64.getYearsToBreastHeight()

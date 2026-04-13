@@ -520,4 +520,20 @@ public class LayerTest {
 
 		assertThat(sp64.getTotalAge(), is(100.0));
 	}
+
+	@Test
+	void testdetermineLeadingSiteSpeciesHeightReturnsNullIfNoLeadingSpeciesSI() throws PolygonValidationException {
+		layer = new Layer.Builder().layerId("TEST").polygon(polygon).build();
+		Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0);
+
+		Stand stand = addStand(layer, "PL");
+		addSpecies(layer, stand, params);
+
+		layer.doBuildSiteSpecies();
+		layer.doCompleteSiteSpeciesSiteIndexInfo(context);
+
+		assertNull(layer.determineLeadingSiteSpeciesHeight(110));
+
+	}
+
 }
