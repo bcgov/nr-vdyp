@@ -480,7 +480,7 @@ public class ForwardProcessingEngine {
 		if (tphEndSum <= 0.0f) {
 			throw new ProcessingException(
 					MessageFormat.format(
-							"During processing of primary layer of {0}, trees-per-hectare was calculated to be negative ({1})",
+							"During processing of primary layer of {0}, trees-per-hectare was calculated to be zero or negative ({1})",
 							fps.getCompactPolygonIdentifier(), tphEndSum
 					)
 			);
