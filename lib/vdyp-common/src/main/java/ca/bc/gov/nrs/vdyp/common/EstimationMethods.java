@@ -320,7 +320,7 @@ public class EstimationMethods {
 		if (quadMeanDiameter1 < dqMinSp) {
 			quadMeanDiameter1 = dqMinSp;
 			treesPerHectare1 = BaseAreaTreeDensityDiameter.treesPerHectare(baseArea1, quadMeanDiameter1);
-			treesPerHectare2 = standTreesPerHectare - treesPerHectare2;
+			treesPerHectare2 = standTreesPerHectare - treesPerHectare1;
 			quadMeanDiameter2 = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea2, treesPerHectare2);
 		}
 		if (quadMeanDiameter1 > dqMaxSp) {
@@ -328,7 +328,7 @@ public class EstimationMethods {
 
 			quadMeanDiameter1 = dqMaxSp;
 			treesPerHectare1 = BaseAreaTreeDensityDiameter.treesPerHectare(baseArea1, quadMeanDiameter1);
-			treesPerHectare2 = standTreesPerHectare - treesPerHectare2;
+			treesPerHectare2 = standTreesPerHectare - treesPerHectare1;
 
 			if (treesPerHectare2 > 0f && baseArea2 > 0f) {
 				quadMeanDiameter2 = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea2, treesPerHectare2);
