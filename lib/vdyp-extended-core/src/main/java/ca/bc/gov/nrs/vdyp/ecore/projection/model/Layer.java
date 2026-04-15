@@ -902,7 +902,7 @@ public class Layer implements Comparable<Layer> {
 
 		Species species = null;
 
-		if (nthLeading < unsortedSiteSpecies.size()) {
+		if (unsortedSiteSpecies != null && nthLeading < unsortedSiteSpecies.size()) {
 
 			Stand stand = determineLeadingSp0(nthLeading);
 			if (stand != null && stand.getSpeciesByPercent().size() > 0) {
