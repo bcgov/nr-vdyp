@@ -11,6 +11,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllAndBiggest;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -1603,12 +1604,12 @@ class VriStartTest {
 
 				app.applyDqBySpecies(layer, baseAreaTotal, baseAreaPerSpecies, diameterPerSpecies);
 
-				assertThat(layer.getQuadraticMeanDiameterByUtilization(), coe(-1, 0f, 10.3879948f, 0f, 0f, 0f, 0f));
-				assertThat(layer.getTreesPerHectareByUtilization(), coe(-1, 0f, 748.4021f, 0f, 0f, 0f, 0f));
+				assertThat(layer.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(10.3879948f));
+				assertThat(layer.getTreesPerHectareByUtilization(), utilizationAllOnly(748.4021f));
 
 				var spec = layer.getSpecies().get("C");
-				assertThat(spec.getQuadraticMeanDiameterByUtilization(), coe(-1, 0f, 8.88676834f, 0f, 0f, 0f, 0f));
-				assertThat(spec.getTreesPerHectareByUtilization(), coe(-1, 0f, 204.522324f, 0f, 0f, 0f, 0f));
+				assertThat(spec.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(8.88676834f));
+				assertThat(spec.getTreesPerHectareByUtilization(), utilizationAllOnly(204.522324f));
 
 				// Total is correct and one of the individual species is correct. No need to check the other 4.
 
@@ -1680,17 +1681,95 @@ class VriStartTest {
 
 				app.getDqBySpecies(layer, Region.INTERIOR);
 
-				assertThat(
-						layer.getQuadraticMeanDiameterByUtilization(), coe(-1, 0f, 10.3879948f, 0f, 0f, 0f, 10.3879948f)
-				);
-				assertThat(layer.getTreesPerHectareByUtilization(), coe(-1, 0f, 748.4021f, 0f, 0f, 0f, 748.4021f));
+				assertThat(layer.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(10.3879948f));
+				assertThat(layer.getTreesPerHectareByUtilization(), utilizationAllOnly(748.4021f));
 
 				var spec = layer.getSpecies().get("C");
-				assertThat(spec.getQuadraticMeanDiameterByUtilization(), coe(-1, 0f, 8.88676834f, 0f, 0f, 0f, 0f));
-				assertThat(spec.getTreesPerHectareByUtilization(), coe(-1, 0f, 204.522324f, 0f, 0f, 0f, 0f));
+				assertThat(spec.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(8.88676834f));
+				assertThat(spec.getTreesPerHectareByUtilization(), utilizationAllOnly(204.522324f));
 
 				// Total is correct and one of the individual species is correct. No need to check the other 4.
 
+			}
+
+			@Test
+			void testVDYP842Primary() throws ProcessingException {
+
+				controlMap = VriTestUtils.loadControlMap();
+				VriStart app = new VriStart();
+				ApplicationTestUtils.setControlMap(app, controlMap);
+
+				VdypLayer layer = VdypLayer.build((lb) -> {
+					lb.polygonIdentifier("Test", 2024);
+					lb.layerType(LayerType.PRIMARY);
+					lb.baseAreaByUtilization(66.666664f);
+					lb.treesPerHectareByUtilization(1286.6666f);
+					lb.quadraticMeanDiameterByUtilization(25.6848125f);
+					lb.loreyHeightByUtilization(11.236668f);
+					lb.empiricalRelationshipParameterIndex(117);
+					lb.inventoryTypeGroup(28);
+					lb.addSpecies(sb -> {
+						sb.genus("PL", controlMap);
+						sb.percentGenus(85);
+						sb.volumeGroup(55);
+						sb.decayGroup(46);
+						sb.breakageGroup(24);
+						sb.loreyHeight(11.4126329f);
+						sb.baseArea(56.6666641f);
+					});
+					lb.addSpecies(sb -> {
+						sb.genus("S", controlMap);
+						sb.percentGenus(15);
+						sb.volumeGroup(70);
+						sb.decayGroup(58);
+						sb.breakageGroup(30);
+						sb.loreyHeight(10.2395248f);
+						sb.baseArea(10.0f);
+					});
+				});
+
+				app.getDqBySpecies(layer, Region.INTERIOR);
+
+				// Correct values from debugging VDYP7
+				assertThat(
+						"Layer", layer,
+						hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(25.2116508f))
+				);
+				assertThat(
+						"Layer", layer, hasProperty("treesPerHectareByUtilization", utilizationAllOnly(1335.41516f))
+				);
+
+				var spec = layer.getSpecies().get("PL");
+				assertThat(
+						"Species PL", spec,
+						hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(25.437809f))
+				);
+				assertThat(
+						"Species PL", spec, hasProperty("treesPerHectareByUtilization", utilizationAllOnly(1115.00903f))
+				);
+
+				spec = layer.getSpecies().get("S");
+				assertThat(
+						"Species S", spec,
+						hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(24.0349503f))
+				);
+				assertThat(
+						"Species S", spec, hasProperty("treesPerHectareByUtilization", utilizationAllOnly(220.406128f))
+				);
+
+				// Confirm that this manifests the same problem as the integration tests
+				/*
+				 * assertThat( layer.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(20.55077f) );
+				 * assertThat(layer.getTreesPerHectareByUtilization(), utilizationAllOnly(2009.8455f));
+				 *
+				 * var spec = layer.getSpecies().get("PL"); assertThat(spec.getQuadraticMeanDiameterByUtilization(),
+				 * utilizationAllOnly(20.716232f)); assertThat(spec.getTreesPerHectareByUtilization(),
+				 * utilizationAllOnly(1681.1879f));
+				 *
+				 * spec = layer.getSpecies().get("S"); assertThat(spec.getQuadraticMeanDiameterByUtilization(),
+				 * utilizationAllOnly(19.682632f)); assertThat(spec.getTreesPerHectareByUtilization(),
+				 * utilizationAllOnly(328.65765f));
+				 */
 			}
 		}
 	}
