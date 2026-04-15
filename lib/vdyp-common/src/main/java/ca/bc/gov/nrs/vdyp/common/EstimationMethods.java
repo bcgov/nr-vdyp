@@ -299,7 +299,6 @@ public class EstimationMethods {
 		return quadMeanDiameter1;
 	}
 
-	@SuppressWarnings({ "java:S1226", "java:S1854" })
 	float estimateQuadMeanDiameterClampResult(
 			ComponentSizeLimits limits, float standTreesPerHectare, float minQuadMeanDiameter, float loreyHeightSpec,
 			float baseArea1, float baseArea2, float quadMeanDiameter1, float treesPerHectare2, float quadMeanDiameter2
