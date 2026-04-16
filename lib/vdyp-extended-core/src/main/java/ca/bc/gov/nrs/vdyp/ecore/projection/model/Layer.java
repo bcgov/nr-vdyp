@@ -925,11 +925,12 @@ public class Layer implements Comparable<Layer> {
 	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
 		var leadingSp64 = this.sp64s.get(0);
 		try {
-			// Only need to confirm SI is not null because Y2BH will not be null if SI is not null
-			if (leadingSp64.getSiteIndex() != null) {
+			Double siteIndex = leadingSp64.getSiteIndex();
+			Double y2bh = leadingSp64.getYearsToBreastHeight();
+
+			if (siteIndex != null && y2bh != null) {
 				return SiteTool.ageAndSiteIndexToHeight(
-						leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, leadingSp64.getSiteIndex(),
-						leadingSp64.getYearsToBreastHeight()
+						leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, y2bh
 				);
 			}
 		} catch (CommonCalculatorException e) {

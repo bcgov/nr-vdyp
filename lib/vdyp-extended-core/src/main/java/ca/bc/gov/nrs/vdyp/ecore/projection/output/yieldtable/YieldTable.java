@@ -1475,7 +1475,9 @@ public class YieldTable implements Closeable {
 		if (stand != null) {
 			Integer standAge = stand.determineSpeciesAgeAtYear(calendarYear);
 			if (standAge != null && standAge > 0
-					&& stand.getSpeciesGroup().getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION) {
+					&& stand.getSpeciesGroup().getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION
+					&& stand.getSpeciesGroup().getSiteIndex() != null
+					&& stand.getSpeciesGroup().getYearsToBreastHeight() != null) {
 				try {
 					speciesAge = standAge;
 					dominantHeight = SiteIndex2Height.ageSiteIndexToHeight(
