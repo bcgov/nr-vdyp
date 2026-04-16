@@ -256,6 +256,7 @@ public class EstimationMethods {
 		float loreyHeightSpec = spLoreyHeight;
 		float loreyHeight1 = max(4f, loreyHeightSpec);
 		float loreyHeight2 = (standLoreyHeight - loreyHeightSpec * spFraction) / fractionOther;
+		loreyHeight2 = max(4f, loreyHeight2);
 		float loreyHeightRatio = clamp( (loreyHeight1 - 3f) / (loreyHeight2 - 3f), 0.05f, 20f);
 
 		float r = exp(a0 + a1 * log(loreyHeightRatio) + a2 * log(standQuadMeanDiameter));
