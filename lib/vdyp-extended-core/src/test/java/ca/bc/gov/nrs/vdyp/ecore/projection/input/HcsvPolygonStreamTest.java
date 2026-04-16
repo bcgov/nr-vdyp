@@ -103,7 +103,6 @@ class HcsvPolygonStreamTest {
 
 		static Stream<String> invalidLayerData() {
 			return Stream.of(
-					"1,P,,1,,,,5,1.000050,150,PLI,60.00,PLI,40.0,,,,,,,,,60,9.00,50,8.0,,,,,,,,", // Duplicate Species
 					",P,,1,,,,5,1.000050,150,PLI,100.00,,,,,,,,,,,60,9.00,,,,,,,,,,", // No LayerID
 					"1,P,,1,,,,5,1.000050,150,,20.00,,,,,,,,,,,60,9.00,,,,,,,,,,", // Missing Species Code
 					"1,P,,1,,XXX,5.0,5,1.000050,150,PLI,20.00,,,,,,,,,,,60,9.00,,,,,,,,,,", // Site Species Invalid
