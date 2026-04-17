@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
@@ -526,4 +528,55 @@ public class LayerTest {
 
 	}
 
+	@Nested
+	class LayerInfoProcessedAsVDYP7Layer {
+		private LayerReportingInfo layerReportingInfo;
+
+		@BeforeEach
+		void setup() {
+			polygon = new Polygon.Builder().referenceYear(2020).build();
+			layer = new Layer.Builder().layerId("TEST").polygon(polygon).build();
+			layerReportingInfo = new LayerReportingInfo.Builder().layer(layer).build();
+		}
+
+		@ParameterizedTest
+		@ValueSource(strings = { "P", "V", "Y", "R", "D" })
+		void testProcessedAsLayerSetReturns(String layerCode) {
+
+			ProjectionTypeCode processedAsLayerType = ProjectionTypeCode.fromVdyp7LayerTypeText(layerCode);
+			layer = new Layer.Builder().layerId("TEST").polygon(polygon).vdyp7LayerCode(processedAsLayerType).build();
+			layerReportingInfo = new LayerReportingInfo.Builder().layer(layer).build();
+			assertEquals(processedAsLayerType, layerReportingInfo.getProcessedAsVDYP7Layer());
+		}
+
+		@Test
+		void testPrimaryLayerProcessedAsVDYP7Primary() {
+			polygon.setPrimaryLayer(layer);
+			assertEquals(ProjectionTypeCode.PRIMARY, layerReportingInfo.getProcessedAsVDYP7Layer());
+		}
+
+		@Test
+		void testResidualLayerProcessedAsVDYP7Primary() {
+			polygon.setResidualLayer(layer);
+			assertEquals(ProjectionTypeCode.RESIDUAL, layerReportingInfo.getProcessedAsVDYP7Layer());
+		}
+
+		@Test
+		void testDeadLayerProcessedAsVDYP7Primary() {
+			polygon.setDeadLayer(layer);
+			assertEquals(ProjectionTypeCode.DEAD, layerReportingInfo.getProcessedAsVDYP7Layer());
+		}
+
+		@Test
+		void testRegenLayerProcessedAsVDYP7Primary() {
+			polygon.setRegenerationLayer(layer);
+			assertEquals(ProjectionTypeCode.REGENERATION, layerReportingInfo.getProcessedAsVDYP7Layer());
+		}
+
+		@Test
+		void testVeteranLayerProcessedAsVDYP7Primary() {
+			polygon.setVeteranLayer(layer);
+			assertEquals(ProjectionTypeCode.VETERAN, layerReportingInfo.getProcessedAsVDYP7Layer());
+		}
+	}
 }

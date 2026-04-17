@@ -51,6 +51,8 @@ public class LayerReportingInfo {
 				processedAsLayerType = ProjectionTypeCode.REGENERATION;
 			} else if (layer.getPolygon().getResidualLayer() == layer) {
 				processedAsLayerType = ProjectionTypeCode.RESIDUAL;
+			} else if (layer.getPolygon().getDeadLayer() == layer) {
+				processedAsLayerType = ProjectionTypeCode.DEAD;
 			} else {
 				processedAsLayerType = ProjectionTypeCode.UNKNOWN;
 			}
