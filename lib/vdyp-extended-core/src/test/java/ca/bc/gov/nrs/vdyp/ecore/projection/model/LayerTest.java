@@ -170,16 +170,6 @@ public class LayerTest {
 		assertThrows(IllegalStateException.class, () -> addStand(layer, "PL"));
 	}
 
-	@Test
-	void testDuplicateSpecies() {
-		layer = buildLayer(Map.of());
-		Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0);
-
-		Stand stand = addStand(layer, "PL");
-		addSpecies(layer, stand, params);
-		assertThrows(IllegalStateException.class, () -> addSpecies(layer, stand, params));
-	}
-
 	@Nested
 	class EstimatedSiteIndex {
 

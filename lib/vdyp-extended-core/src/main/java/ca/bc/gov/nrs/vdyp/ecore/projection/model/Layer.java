@@ -430,12 +430,6 @@ public class Layer implements Comparable<Layer> {
 	}
 
 	public void addSp64(Species speciesInstance) {
-		if (sp64s.contains(speciesInstance)) {
-			throw new IllegalStateException(
-					MessageFormat.format("Attempt to add a Species {0} already in Layer {1}", speciesInstance, this)
-			);
-		}
-
 		sp64s.add(speciesInstance);
 	}
 
