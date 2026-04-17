@@ -664,6 +664,7 @@ public class Polygon implements Comparable<Polygon> {
 
 		// Assign the projection type of each of the layers. This is set at construction time to
 		// UNKNOWN.
+		mergeLayers();
 
 		for (Layer layer : getLayers().values()) {
 			layer.doCompleteDefinition();
