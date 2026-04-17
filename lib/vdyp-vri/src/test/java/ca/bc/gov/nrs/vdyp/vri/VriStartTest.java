@@ -35,6 +35,7 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -833,7 +834,7 @@ class VriStartTest {
 
 				VriStart app = new VriStart();
 
-				var result = app.findInterval(xInterval, errorFunc);
+				var result = app.findInterval(xInterval, errorFunc, (i, x) -> false);
 
 				app.close();
 
@@ -850,7 +851,7 @@ class VriStartTest {
 
 				VriStart app = new VriStart();
 
-				var result = app.findInterval(xInterval, errorFunc);
+				var result = app.findInterval(xInterval, errorFunc, (i, x) -> false);
 
 				app.close();
 
@@ -874,7 +875,7 @@ class VriStartTest {
 
 				app.close();
 
-				var result = app.findInterval(xInterval, errorFunc);
+				var result = app.findInterval(xInterval, errorFunc, (i, x) -> false);
 
 				var evaluated = result.evaluate(errorFunc);
 				assertTrue(
@@ -896,7 +897,7 @@ class VriStartTest {
 
 				app.close();
 
-				var result = app.findInterval(xInterval, errorFunc);
+				var result = app.findInterval(xInterval, errorFunc, (i, x) -> false);
 
 				var evaluated = result.evaluate(errorFunc);
 				assertTrue(
@@ -918,7 +919,9 @@ class VriStartTest {
 
 				app.close();
 
-				assertThrows(NoBracketingException.class, () -> app.findInterval(xInterval, errorFunc));
+				assertThrows(
+						NoBracketingException.class, () -> app.findInterval(xInterval, errorFunc, (i, x) -> false)
+				);
 
 			}
 
