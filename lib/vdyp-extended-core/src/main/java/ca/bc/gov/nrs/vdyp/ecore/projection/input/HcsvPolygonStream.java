@@ -596,14 +596,17 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 			// to the total for that sp64.
 
 			sp64.addDuplicate(newSp64);
+
+			// The duplicate could have added details that allow undefined fields to be calculated so calculate here
+			sp64.calculateUndefinedFieldValues(context);
+
+			stand.getSpeciesGroup().addDuplicate(newSp64);
 		} else {
 			// The new sp64 is new to the layer.
-
 			sp64 = newSp64;
 
 			// If no stand exists in the layer for this sp0, add one, and make the
 			// new species the species group for the stand.
-
 			if (isNewStand) {
 				Species sp0 = new Species.Builder().stand(stand) //
 						.speciesCode(speciesCode) //
@@ -612,12 +615,15 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
 				layer.addStand(stand);
 			}
+			// only add sp64 to the stand if it was not a duplicate
+			sp64.calculateUndefinedFieldValues(context);
+			stand.addSp64(sp64);
 		}
 
-		sp64.calculateUndefinedFieldValues(context);
-
-		stand.addSp64(sp64);
-		layer.addSp64(sp64);
+		// this is different than vdyp7 but the way we do sp0s by percent is to sort the list after the fact
+		// if the holder of the duplicate that will make the ssort drag that sp64 up in the order and will skew the
+		// results in the yield table
+		layer.addSp64(newSp64);
 
 		return sp64;
 	}
