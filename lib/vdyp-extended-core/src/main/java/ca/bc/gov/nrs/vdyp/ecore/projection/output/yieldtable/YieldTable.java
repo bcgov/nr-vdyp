@@ -1324,8 +1324,7 @@ public class YieldTable implements Closeable {
 	private Pair<EntityVolumeDetails /* volume */, EntityVolumeDetails /* MoF biomass */>
 			getProjectionLayerSpeciesVolumes(
 					Species sp64, VdypSpecies vdypSpecies, double mofBiomassFactor, int duplicateOccurrenceIndex
-			)
-					throws StandYieldCalculationException {
+			) throws StandYieldCalculationException {
 
 		EntityVolumeDetails volumeDetails = null;
 		EntityVolumeDetails mofBiomassDetails = null;
