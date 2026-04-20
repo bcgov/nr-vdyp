@@ -1590,6 +1590,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			double x;
 			if (ex.isExitEarly()) {
 				x = ex.getLo();
+				// Note that in this case we don't call handleRootForQuadMeanDiameterFractionalErrorException to
+				// potentially error out. This is how VDYP 7 works although I'm not sure why.
 			} else {
 				// Decide if we want to propagate the exception or try to come up with something anyway.
 				handleRootForQuadMeanDiameterFractionalErrorException(ex);
@@ -1599,7 +1601,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				x = bestOf(errorFunc, 0, -0.1, 0.1);
 			}
 			// Invoke the function again to set the species map via
-			errorFunc.value(x);
+			var error = errorFunc.value(x);
+			log.atWarn().setMessage(
+					"Failed to reconcile total DQ/TPH for species with layer.  Using a distribution that has an error of {}."
+			).addArgument(error).log();
 
 			return (float) x;
 
@@ -1728,7 +1733,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		double currentX = x1; // XX
 		double currentF = f1; // FF
-		// the "last" variables are set once the first time SZERO is called, then left uninitialized on subsequent 
+		// the "last" variables are set once the first time SZERO is called, then left uninitialized on subsequent
 		// calls which has them preserve state over multiple iterations.
 		double lastX = x2; // XL
 		double lastF = f2; // FL
