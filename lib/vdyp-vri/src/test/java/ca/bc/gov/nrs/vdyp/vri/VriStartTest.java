@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.vri;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasPrimaryLayer;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasVeteranLayer;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertOnlyPrimaryLayer;
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isBec;
@@ -50,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.CouldNotFindBracketingIntervalException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
@@ -81,6 +83,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
+import ca.bc.gov.nrs.vdyp.vri.VriStart.Interval;
 import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
@@ -886,10 +889,19 @@ class VriStartTest {
 			}
 
 			@ParameterizedTest
-			@ValueSource(floats = { 1, -1, 20, -20 })
-			void testTwoRoots(float a) throws Exception {
+			@CsvSource(
+				{ "1, 0", "-1, 0", "20, 0", "-20, 0", "1, 0.25", "-1, 0.25", "20, 0.25", "-20, 0.25", "1, -0.25",
+						"-1, -0.25", "20, -0.25", "-20, -0.25", "1, 10", "-1, 10", "20, 10", "-20, 10", "1, -10",
+						"-1, -10", "20, -10", "-20, -10" }
+			)
+			void testTwoRoots(float a, float b) throws Exception {
 
-				UnivariateFunction errorFunc = x -> a * (x * x - 0.5);
+				assumeThat(
+						"Fixing VDYP-942 broke the case where the starting interval exactly stradles two roots on a symetric function which shouldn't be relevant to VDYP",
+						b, not(0f)
+				);
+
+				UnivariateFunction errorFunc = x -> a * ( (x + b) * (x + b) - 0.5);
 
 				var xInterval = new VriStart.Interval(-1, 1);
 
@@ -897,7 +909,7 @@ class VriStartTest {
 
 				app.close();
 
-				var result = app.findInterval(xInterval, errorFunc, (i, x) -> false);
+				Interval result = assertDoesNotThrow(() -> app.findInterval(xInterval, errorFunc, (i, x) -> false));
 
 				var evaluated = result.evaluate(errorFunc);
 				assertTrue(
@@ -919,10 +931,34 @@ class VriStartTest {
 
 				app.close();
 
-				assertThrows(
-						NoBracketingException.class, () -> app.findInterval(xInterval, errorFunc, (i, x) -> false)
+				var ex = assertThrows(
+						CouldNotFindBracketingIntervalException.class,
+						() -> app.findInterval(xInterval, errorFunc, (i, x) -> false)
 				);
 
+				assertThat(ex, hasProperty("exitEarly", is(false)));
+			}
+
+			@Test
+			void testFailEarly() throws Exception {
+
+				// Should find the root, but it will take a a few tries.
+				UnivariateFunction errorFunc = x -> (Math.exp(x) - 0.0001);
+
+				var xInterval = new VriStart.Interval(-1, 1);
+
+				VriStart app = new VriStart();
+
+				app.close();
+
+				var ex = assertThrows(
+						CouldNotFindBracketingIntervalException.class,
+						() -> app.findInterval(
+								xInterval, errorFunc, (i, x) -> i > 3 // Exit on the third iteration
+						)
+				);
+
+				assertThat(ex, hasProperty("exitEarly", is(true)));
 			}
 
 		}
@@ -1696,7 +1732,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testVDYP842Primary() throws ProcessingException {
+			void testVDYP942Primary() throws ProcessingException {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -1760,19 +1796,6 @@ class VriStartTest {
 						"Species S", spec, hasProperty("treesPerHectareByUtilization", utilizationAllOnly(220.406128f))
 				);
 
-				// Confirm that this manifests the same problem as the integration tests
-				/*
-				 * assertThat( layer.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(20.55077f) );
-				 * assertThat(layer.getTreesPerHectareByUtilization(), utilizationAllOnly(2009.8455f));
-				 *
-				 * var spec = layer.getSpecies().get("PL"); assertThat(spec.getQuadraticMeanDiameterByUtilization(),
-				 * utilizationAllOnly(20.716232f)); assertThat(spec.getTreesPerHectareByUtilization(),
-				 * utilizationAllOnly(1681.1879f));
-				 *
-				 * spec = layer.getSpecies().get("S"); assertThat(spec.getQuadraticMeanDiameterByUtilization(),
-				 * utilizationAllOnly(19.682632f)); assertThat(spec.getTreesPerHectareByUtilization(),
-				 * utilizationAllOnly(328.65765f));
-				 */
 			}
 		}
 	}
