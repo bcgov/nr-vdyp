@@ -861,7 +861,6 @@ public class Layer implements Comparable<Layer> {
 	 * @return as described
 	 */
 	public Stand determineLeadingSp0(Integer nthLeading) {
-
 		Stand stand = null;
 		if (siteSpecies != null) {
 			if (nthLeading < siteSpecies.size()) {

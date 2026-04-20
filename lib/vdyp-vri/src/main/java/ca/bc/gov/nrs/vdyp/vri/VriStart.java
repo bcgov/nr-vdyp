@@ -426,7 +426,18 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var resultVeteranLayer = resultPoly.getLayers().get(LayerType.VETERAN);
 		var bec = sourcePoly.getBiogeoclimaticZone();
 
-		getDqBySpecies(resultPrimaryLayer, bec.getRegion());
+		if (resultPrimaryLayer.getSpecies().size() == 1) {
+			// if there is only one species then the diameter and trees per hectare come directly from the layer, no
+			// reconciliation
+			for (var spec : resultPrimaryLayer.getSpecies().values()) {
+				spec.getQuadraticMeanDiameterByUtilization()
+						.setAll(resultPrimaryLayer.getQuadraticMeanDiameterByUtilization().getAll());
+				spec.getTreesPerHectareByUtilization()
+						.setAll(resultPrimaryLayer.getTreesPerHectareByUtilization().getAll());
+			}
+		} else {
+			getDqBySpecies(resultPrimaryLayer, bec.getRegion());
+		}
 
 		estimateSmallComponents(sourcePoly, resultPrimaryLayer);
 
@@ -550,7 +561,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		float sumBaseAreaLoreyHeight = 0;
 		// find aggregate lorey height
 		if (species.size() == 1) {
-			sumBaseAreaLoreyHeight = primaryBaseArea;
+			sumBaseAreaLoreyHeight = primaryBaseArea * primaryHeight;
 		} else {
 			for (var spec : species) {
 				float specBaseArea = spec.getBaseAreaByUtilization().getAll();
