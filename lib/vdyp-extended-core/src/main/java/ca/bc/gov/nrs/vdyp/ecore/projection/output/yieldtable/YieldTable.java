@@ -476,18 +476,14 @@ public class YieldTable implements Closeable {
 					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
 				}
 
-				// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
 				writer.recordSiteInformation(
 						percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
 						secondaryHeight
 				);
-				// }
 
 				if (growthDetails != null && volumeDetails != null) {
 
-					// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
 					writer.recordGrowthDetails(growthDetails, volumeDetails);
-					// }
 					if (!rowContext.isPolygonTable()) {
 						if (rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
 								&& growthDetails.basalArea() != null) {
