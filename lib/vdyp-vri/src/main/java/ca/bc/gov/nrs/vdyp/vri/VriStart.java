@@ -598,17 +598,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		resultsPerSpecies.putAll(initialDqEstimate);
 
-		if (layer.getSpecies().size() == 1) {
-			layer.getSpeciesByIndex(1)
-					.setQuadraticMeanDiameterByUtilization(Utils.utilizationVector(quadMeanDiameterTotal));
-			layer.getSpeciesByIndex(1).setTreesPerHectareByUtilization(Utils.utilizationVector(treeDensityTotal));
-		} else {
-
-			findRootForQuadMeanDiameterFractionalError(
-					-0.6f, 0.5f, resultsPerSpecies, initialDqEstimate, baseAreaPerSpecies, minPerSpecies, maxPerSpecies,
-					treeDensityTotal
-			);
-		}
+		findRootForQuadMeanDiameterFractionalError(
+				-0.6f, 0.5f, resultsPerSpecies, initialDqEstimate, baseAreaPerSpecies, minPerSpecies, maxPerSpecies,
+				treeDensityTotal
+		);
 
 		applyDqBySpecies(layer, baseAreaTotal, baseAreaPerSpecies, resultsPerSpecies);
 	}
