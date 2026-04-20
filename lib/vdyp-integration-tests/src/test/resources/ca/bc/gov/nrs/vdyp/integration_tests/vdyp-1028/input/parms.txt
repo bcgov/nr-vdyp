@@ -9,8 +9,7 @@
 -ip $(TestDir)\VDYP7_INPUT_POLY.csv
 -il $(TestDir)\VDYP7_INPUT_LAYER.csv
 #-o $(TestDir)\Output\Output-Before.csv
--o $(TestDir)\Output\Console-YldTbl.csv
--e $(TestDir)\Output\Error-092G010-6-After.log
+-o $(TestDir)\Output_YldTbl.csv
 #-d $(TestDir)\Logs\debug.log
 #-l $(TestDir)\Logs\Log-$(IDE).log
 -v7log $(TestDir)\Logs\V7Log-After.log
