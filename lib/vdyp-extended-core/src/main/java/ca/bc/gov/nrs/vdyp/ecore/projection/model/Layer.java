@@ -430,12 +430,6 @@ public class Layer implements Comparable<Layer> {
 	}
 
 	public void addSp64(Species speciesInstance) {
-		if (sp64s.contains(speciesInstance)) {
-			throw new IllegalStateException(
-					MessageFormat.format("Attempt to add a Species {0} already in Layer {1}", speciesInstance, this)
-			);
-		}
-
 		sp64s.add(speciesInstance);
 	}
 
@@ -867,7 +861,6 @@ public class Layer implements Comparable<Layer> {
 	 * @return as described
 	 */
 	public Stand determineLeadingSp0(Integer nthLeading) {
-
 		Stand stand = null;
 		if (siteSpecies != null) {
 			if (nthLeading < siteSpecies.size()) {
@@ -902,7 +895,7 @@ public class Layer implements Comparable<Layer> {
 
 		Species species = null;
 
-		if (nthLeading < unsortedSiteSpecies.size()) {
+		if (unsortedSiteSpecies != null && nthLeading < unsortedSiteSpecies.size()) {
 
 			Stand stand = determineLeadingSp0(nthLeading);
 			if (stand != null && stand.getSpeciesByPercent().size() > 0) {
@@ -925,10 +918,14 @@ public class Layer implements Comparable<Layer> {
 	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
 		var leadingSp64 = this.sp64s.get(0);
 		try {
-			return SiteTool.ageAndSiteIndexToHeight(
-					leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, leadingSp64.getSiteIndex(),
-					leadingSp64.getYearsToBreastHeight()
-			);
+			Double siteIndex = leadingSp64.getSiteIndex();
+			Double y2bh = leadingSp64.getYearsToBreastHeight();
+
+			if (siteIndex != null && y2bh != null) {
+				return SiteTool.ageAndSiteIndexToHeight(
+						leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, y2bh
+				);
+			}
 		} catch (CommonCalculatorException e) {
 			logger.warn(
 					"{}: saw CommonCalculatorException during calculation of dominant height from age {},"
@@ -936,8 +933,8 @@ public class Layer implements Comparable<Layer> {
 					this, targetAge, leadingSp64.getSiteIndex(), leadingSp64.getYearsToBreastHeight()
 			);
 
-			return null;
 		}
+		return null;
 	}
 
 	/**

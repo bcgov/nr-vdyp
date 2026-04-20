@@ -65,7 +65,7 @@ class HcsvReportingInfoRuntimeStructureTest {
 			inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStream);
 		}
 
-		String projectionId = "TEST";// TODO ProjectionService.buildProjectionId(ProjectionRequestKind.HCSV);
+		String projectionId = "TEST";
 
 		var parameters = new Parameters().ageStart(100).ageEnd(400);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, projectionId, parameters, false);

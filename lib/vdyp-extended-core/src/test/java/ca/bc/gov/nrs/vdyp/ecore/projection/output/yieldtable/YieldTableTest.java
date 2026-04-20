@@ -73,6 +73,46 @@ class YieldTableTest {
 	}
 
 	@Test
+	void testDetermineSpeciesProjectionFactorWithoutDuplicates() {
+
+		var polygon = new Polygon.Builder().build();
+		var layer = new Layer.Builder().polygon(polygon).layerId("1").build();
+		var stand = new Stand.Builder().sp0Code("P").layer(layer).build();
+
+		var sp0 = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(0.0).build();
+		stand.addSpeciesGroup(sp0, 0);
+
+		var unit = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(60.0).build();
+		var other = new Species.Builder().stand(stand).speciesCode("SX").speciesPercent(40.0).build();
+		stand.addSp64(unit);
+		stand.addSp64(other);
+
+		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 0), closeTo(0.6, 0.00001));
+	}
+
+	@Test
+	void testDetermineSpeciesProjectionFactorWithDuplicatesUsesOccurrenceOrder() {
+
+		var polygon = new Polygon.Builder().build();
+		var layer = new Layer.Builder().polygon(polygon).layerId("1").build();
+		var stand = new Stand.Builder().sp0Code("P").layer(layer).build();
+
+		var sp0 = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(0.0).build();
+		stand.addSpeciesGroup(sp0, 0);
+
+		var unit = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(60.0).build();
+		stand.addSp64(unit);
+
+		var duplicate = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(40.0).build();
+		unit.addDuplicate(duplicate);
+		stand.getSpeciesGroup().addDuplicate(duplicate);
+
+		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 0), closeTo(0.6, 0.00001));
+		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 1), closeTo(0.4, 0.00001));
+		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 2), closeTo(0.6, 0.00001));
+	}
+
+	@Test
 	void testGenerateYieldTableFramework() throws AbstractProjectionRequestException, IOException {
 
 		var parameters = testHelper.addSelectedOptions(
@@ -471,7 +511,9 @@ class YieldTableTest {
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON, //
 				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+
 		);
+		testHelper.addExcludedOptions(parameters, Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		parameters.setYearStart(2025);
 		parameters.setYearEnd(2030);
 
@@ -532,12 +574,13 @@ class YieldTableTest {
 		Files.write(csvFilePath, csvContent);
 		logger.info("Resulting CSV file written to " + csvFilePath);
 
-		var vdyp8ResultYieldTable = new ResultYieldTable(new String(csvContent));
+		var stringContent = new String(csvContent);
+		var vdyp8ResultYieldTable = new ResultYieldTable(stringContent);
 
 		// FIXME this unit test needs to be updated to not fail when the current year changes SEE VDYP-897
-		var vdyp7ResultYieldTable = new ResultYieldTable(
-				Files.readString(Path.of(resourceFolderPath.toString(), "vdyp7_Output_YldTbl-do-suppress.csv"))
-		);
+		var string7Content = Files
+				.readString(Path.of(resourceFolderPath.toString(), "vdyp7_Output_YldTbl-do-suppress.csv"));
+		var vdyp7ResultYieldTable = new ResultYieldTable(string7Content);
 
 		ResultYieldTable.compareWithTolerance(vdyp7ResultYieldTable, vdyp8ResultYieldTable, 0.01);
 	}

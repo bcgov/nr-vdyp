@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -475,18 +476,14 @@ public class YieldTable implements Closeable {
 					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
 				}
 
-				// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
 				writer.recordSiteInformation(
 						percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
 						secondaryHeight
 				);
-				// }
 
 				if (growthDetails != null && volumeDetails != null) {
 
-					// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
 					writer.recordGrowthDetails(growthDetails, volumeDetails);
-					// }
 					if (!rowContext.isPolygonTable()) {
 						if (rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
 								&& growthDetails.basalArea() != null) {
@@ -500,14 +497,18 @@ public class YieldTable implements Closeable {
 							int spIndex = 1;
 							var vdypLayer = getProjectedLayer(polygonProjectionsByYear, targetAge, layer);
 							if (vdypLayer != null) {
-								for (Species sp64 : layer.getSp64sByPercent()) {
+								Map<Species, Integer> duplicateOccurrencesBySpecies = new IdentityHashMap<>();
+								var specByPercent = layer.getSp64sByPercent();
+								for (Species sp64 : specByPercent) {
+									int duplicateOccurrenceIndex = duplicateOccurrencesBySpecies.getOrDefault(sp64, 0);
+									duplicateOccurrencesBySpecies.put(sp64, duplicateOccurrenceIndex + 1);
 									var vdypSpecies = vdypLayer.getSpeciesBySp0(sp64.getStand().getSp0Code());
 									if (vdypSpecies != null) {
 										var mofBiomassFactor = BecZoneMethods.mofBiomassCoefficient(
 												layer.getPolygon().getBecZone(), sp64.getSpeciesCode()
 										);
 										var speciesVolumeDetails = getProjectionLayerSpeciesVolumes(
-												sp64, vdypSpecies, mofBiomassFactor
+												sp64, vdypSpecies, mofBiomassFactor, duplicateOccurrenceIndex
 										);
 										writer.recordPerSpeciesVolumeInfo(
 												spIndex++, speciesVolumeDetails.getLeft(),
@@ -831,9 +832,9 @@ public class YieldTable implements Closeable {
 			logger.debug("{}: per-hectare projected values were suppressed", layer);
 		}
 
-		if (!layer.getDoSuppressPerHAYields() && layerWasProcessed) {
+		if (!layer.getDoSuppressPerHAYields() && !layerWasProcessed) {
 			if (treesPerHectare == Vdyp7Constants.EMPTY_DECIMAL) {
-				treesPerHectare = layer.getTreesPerHectare();
+				treesPerHectare = Utils.safeGet(layer.getTreesPerHectare());
 				logger.debug(
 						"{}: non-processed layer => using reference trees-per-hectare {}", layer,
 						layer.getTreesPerHectare()
@@ -841,7 +842,7 @@ public class YieldTable implements Closeable {
 			}
 
 			if (basalArea == Vdyp7Constants.EMPTY_DECIMAL) {
-				basalArea = layer.getBasalArea();
+				basalArea = Utils.safeGet(layer.getBasalArea());
 				logger.debug("{}: non-processed layer => using reference basal area {}", layer, layer.getBasalArea());
 			}
 		}
@@ -1074,20 +1075,7 @@ public class YieldTable implements Closeable {
 
 		var layerYields = obtainStandYield(rowContext, polygonProjectionsByYear, layer, stand, targetAge);
 
-		double factor;
-		if (species.getSpeciesPercent() > 0 && stand.getSpeciesGroup().getSpeciesPercent() > 0) {
-			factor = species.getSpeciesPercent() / stand.getSpeciesGroup().getSpeciesPercent();
-		} else {
-			factor = 1.0;
-		}
-
-		if (species.getNDuplicates() > 1 && species.getSpeciesPercent() > 0) {
-			// TODO handle duplicates. The original VDYP7 code appears to be stateful
-			// - subsequent calls to this method for the same species will adjust
-			// "factor" proportionally to the percentage of that duplicate. But ultimately
-			// the calling code doesn't call once per duplicate, so I don't
-			// understand how this mechanism works.
-		}
+		double factor = determineSpeciesProjectionFactor(species, 0);
 
 		Double siteIndex = species.getSiteIndex();
 		Double speciesTotalAge = species.getTotalAge() == null ? null : layerYields.speciesAge();
@@ -1230,6 +1218,64 @@ public class YieldTable implements Closeable {
 	}
 
 	/**
+	 * VDYP7 rotates duplicate SP64 percentages statefully across repeated calls for the same merged species. In Java we
+	 * emit duplicate layer entries explicitly, so callers pass the zero-based occurrence of the duplicate being
+	 * rendered.
+	 */
+	static double determineSpeciesProjectionFactor(Species species, int duplicateOccurrenceIndex) {
+
+		Validate.notNull(species, "species");
+
+		var standSpeciesPercent = species.getStand().getSpeciesGroup().getSpeciesPercent();
+		if (species.getSpeciesPercent() <= 0.0 || standSpeciesPercent <= 0.0) {
+			return 1.0;
+		}
+
+		double factor = species.getSpeciesPercent() / standSpeciesPercent;
+		if (species.getNDuplicates() <= 0) {
+			return factor;
+		}
+
+		double suppliedPercent = determineSuppliedSpeciesPercent(species, duplicateOccurrenceIndex);
+		if (suppliedPercent <= 0.0) {
+			logger.debug(
+					"{}: unable to determine supplied duplicate percent for occurrence {}; using aggregate percent {}",
+					species, duplicateOccurrenceIndex, species.getSpeciesPercent()
+			);
+			return factor;
+		}
+
+		return factor * suppliedPercent / species.getSpeciesPercent();
+	}
+
+	private static double determineSuppliedSpeciesPercent(Species species, int duplicateOccurrenceIndex) {
+
+		int duplicateCount = species.getNDuplicates();
+		int suppliedCount = duplicateCount + 1;
+		int normalizedOccurrenceIndex = Math.floorMod(duplicateOccurrenceIndex, suppliedCount);
+
+		double summedDuplicatePercents = 0.0;
+		for (int i = 0; i < duplicateCount; i++) {
+			var duplicatePercent = species.getPercentsPerDuplicate().get(i);
+			if (duplicatePercent == null) {
+				return species.getSpeciesPercent();
+			}
+			summedDuplicatePercents += duplicatePercent;
+		}
+
+		if (normalizedOccurrenceIndex == 0) {
+			return species.getSpeciesPercent() - summedDuplicatePercents;
+		}
+
+		var duplicatePercent = species.getPercentsPerDuplicate().get(normalizedOccurrenceIndex - 1);
+		if (duplicatePercent == null) {
+			return species.getSpeciesPercent();
+		}
+
+		return duplicatePercent;
+	}
+
+	/**
 	 * Get the projected layer for the given input layer and target age.
 	 *
 	 * @param polygonProjectionsByYear a map of projected polygons by calendar year
@@ -1272,8 +1318,9 @@ public class YieldTable implements Closeable {
 	 * @throws StandYieldCalculationException when a failure occurs during yield calculations
 	 */
 	private Pair<EntityVolumeDetails /* volume */, EntityVolumeDetails /* MoF biomass */>
-			getProjectionLayerSpeciesVolumes(Species sp64, VdypSpecies vdypSpecies, double mofBiomassFactor)
-					throws StandYieldCalculationException {
+			getProjectionLayerSpeciesVolumes(
+					Species sp64, VdypSpecies vdypSpecies, double mofBiomassFactor, int duplicateOccurrenceIndex
+			) throws StandYieldCalculationException {
 
 		EntityVolumeDetails volumeDetails = null;
 		EntityVolumeDetails mofBiomassDetails = null;
@@ -1285,9 +1332,7 @@ public class YieldTable implements Closeable {
 		double totalBiomassDW = 0.0;
 		double totalBiomassDWB = 0.0;
 
-		var percentageRatio = sp64.getSpeciesPercent() / sp64.getStand().getSpeciesGroup().getSpeciesPercent();
-
-		// TODO: determine whether the presence of duplicates alters this (vdyp7volumes 1351 - 1360).
+		var percentageRatio = determineSpeciesProjectionFactor(sp64, duplicateOccurrenceIndex);
 
 		if (vdypSpecies != null) {
 			float wholeStemVolumeFloat = vdypSpecies.getWholeStemVolumeByUtilization().get(UtilizationClass.ALL);
@@ -1375,15 +1420,12 @@ public class YieldTable implements Closeable {
 				)
 		);
 
-		Validate.isTrue(
-				rowContext.getPolygonProjectionState().layerWasProjected(layer),
-				MessageFormat.format("YieldTable.obtainStandYield(): layer {0} must have been projected", layer)
-		);
-
 		LayerYields layerYields;
 
 		Integer calendarYear = getCalendarYear(layer, ageToRequest);
-
+		if (!rowContext.getPolygonProjectionState().layerWasProjected(layer)) {
+			return getUnprojectedStandYields(stand, calendarYear);
+		}
 		var projectionType = layer.getAssignedProjectionType();
 		LayerType layerType = getLayerType(projectionType);
 
@@ -1478,7 +1520,9 @@ public class YieldTable implements Closeable {
 		if (stand != null) {
 			Integer standAge = stand.determineSpeciesAgeAtYear(calendarYear);
 			if (standAge != null && standAge > 0
-					&& stand.getSpeciesGroup().getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION) {
+					&& stand.getSpeciesGroup().getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION
+					&& stand.getSpeciesGroup().getSiteIndex() != null
+					&& stand.getSpeciesGroup().getYearsToBreastHeight() != null) {
 				try {
 					speciesAge = standAge;
 					dominantHeight = SiteIndex2Height.ageSiteIndexToHeight(
@@ -1493,9 +1537,14 @@ public class YieldTable implements Closeable {
 			dominantHeight = clampInvalidDominantHeight(dominantHeight);
 		}
 
+		double unprojectedBasalArea = Vdyp7Constants.EMPTY_DECIMAL;
+		double unprojectedTph = Vdyp7Constants.EMPTY_DECIMAL;
+		double unprojectedDiameter = Vdyp7Constants.EMPTY_DECIMAL;
+
 		return new LayerYields(
-				false, false /* not dominant */, null, calendarYear, speciesAge, dominantHeight, 0.0, 0.0, 0.0, 0.0,
-				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
+				false, false /* not dominant */, null, calendarYear, speciesAge, dominantHeight, 0.0, 0.0,
+				unprojectedDiameter, unprojectedTph, 0.0, 0.0, 0.0, 0.0, 0.0, unprojectedBasalArea,
+				unprojectedBasalArea, unprojectedBasalArea, 0.0, 0
 		);
 	}
 

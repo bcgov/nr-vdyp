@@ -86,6 +86,49 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void testSpecVolError() throws IOException {
+
+		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "spec-vol-error");
+
+		Parameters parameters = testHelper.addSelectedOptions(
+				new Parameters().ageStart(0).ageEnd(250).ageIncrement(10),
+				Parameters.ExecutionOption.FORWARD_GROW_ENABLED,
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER,
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES,
+				Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION,
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE,
+				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE,
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES,
+				Parameters.ExecutionOption.DO_DELAY_EXECUTION_FOLDER_DELETION
+		);
+
+		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when()
+				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON)
+				.multiPart(
+						ParameterNames.HCSV_POLYGON_INPUT_DATA,
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv").toFile()
+				)
+				.multiPart(
+						ParameterNames.HCSV_LAYERS_INPUT_DATA,
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
+				).post("/projection/hcsv?trialRun=false").then().statusCode(201).extract().body().asInputStream();
+
+		ZipInputStream zipFile = new ZipInputStream(zipInputStream);
+		ZipEntry entry = zipFile.getNextEntry();
+		assertEquals("YieldTable.csv", entry.getName());
+		String yieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry));
+		logger.info(
+				"YieldTable content (first 500 chars):\n{}",
+				yieldTableContent.substring(0, Math.min(500, yieldTableContent.length()))
+		);
+
+		while ( (entry = zipFile.getNextEntry()) != null) {
+			String entryContent = new String(TestHelper.readZipEntry(zipFile, entry));
+			logger.info("Entry: {} ({} bytes)", entry.getName(), entryContent.length());
+		}
+	}
+
+	@Test
 	void testVdyp8VersusVdyp7YieldTables() throws IOException {
 
 		logger.info("Starting testVdyp8VersusVdyp7YieldTables");
@@ -103,6 +146,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
 				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
 		);
+		testHelper.addExcludedOptions(parameters, Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		parameters.ageStart(0).ageEnd(250).ageIncrement(25);
 
 		// Included to generate JSON text of parameters as needed

@@ -1,1 +1,120 @@
-{"ageStart":0,"ageEnd":250,"ageIncrement":10,"yearStart":null,"yearEnd":null,"forceYear":null,"outputFormat":"CSVYieldTable","selectedExecutionOptions":["doIncludeFileHeader","doIncludeAgeRowsInYieldTable","doIncludeYearRowsInYieldTable","doIncludeColumnHeadersInYieldTable","doAllowBasalAreaAndTreesPerHectareValueSubstitution","doEnableProgressLogging","doEnableErrorLogging","doEnableDebugLogging","doIncludeProjectedMOFVolumes","forwardGrowEnabled","backGrowEnabled","doSummarizeProjectionByLayer","doIncludePolygonRecordIdInYieldTable"],"excludedExecutionOptions":["doSaveIntermediateFiles","allowAggressiveValueEstimation","doIncludeProjectionFiles","doDelayExecutionFolderDeletion","doIncludeProjectedMOFBiomass","reportIncludeWholeStemVolume","reportIncludeCloseUtilizationVolume","reportIncludeNetDecayVolume","reportIncludeNDWasteVolume","reportIncludeNDWasteBrkgVolume","reportIncludeVolumeMAI","reportIncludeSpeciesComp","reportIncludeCulminationValues","doIncludeProjectedCFSBiomass","doSummarizeProjectionByPolygon","doIncludeSpeciesProjection","doIncludeProjectionModeInYieldTable","doForceCurrentYearInclusionInYieldTables","doForceReferenceYearInclusionInYieldTables"],"selectedDebugOptions":["doIncludeDebugTimestamps","doIncludeDebugEntryExit","doIncludeDebugIndentBlocks","doIncludeDebugRoutineNames"],"excludedDebugOptions":[],"combineAgeYearRange":"intersect","metadataToOutput":"VERSION","utils":[{"speciesName":"AC","utilizationClass":"7.5+"},{"speciesName":"AT","utilizationClass":"7.5+"},{"speciesName":"B","utilizationClass":"7.5+"},{"speciesName":"C","utilizationClass":"7.5+"},{"speciesName":"D","utilizationClass":"7.5+"},{"speciesName":"E","utilizationClass":"7.5+"},{"speciesName":"F","utilizationClass":"7.5+"},{"speciesName":"H","utilizationClass":"7.5+"},{"speciesName":"L","utilizationClass":"7.5+"},{"speciesName":"MB","utilizationClass":"7.5+"},{"speciesName":"PA","utilizationClass":"7.5+"},{"speciesName":"PL","utilizationClass":"7.5+"},{"speciesName":"PW","utilizationClass":"7.5+"},{"speciesName":"PY","utilizationClass":"7.5+"},{"speciesName":"S","utilizationClass":"7.5+"},{"speciesName":"Y","utilizationClass":"7.5+"}]}
+{
+	"ageStart": 0,
+	"ageEnd": 250,
+	"ageIncrement": 10,
+	"yearStart": null,
+	"yearEnd": null,
+	"forceYear": null,
+	"outputFormat": "CSVYieldTable",
+	"selectedExecutionOptions": [
+		"doIncludeFileHeader",
+		"doIncludeAgeRowsInYieldTable",
+		"doIncludeYearRowsInYieldTable",
+		"doIncludeColumnHeadersInYieldTable",
+		"doEnableProgressLogging",
+		"doEnableErrorLogging",
+		"doEnableDebugLogging",
+		"doIncludeProjectedMOFVolumes",
+		"forwardGrowEnabled",
+		"backGrowEnabled",
+		"doSummarizeProjectionByLayer",
+		"doIncludePolygonRecordIdInYieldTable"
+	],
+	"excludedExecutionOptions": [
+		"doAllowBasalAreaAndTreesPerHectareValueSubstitution",
+		"doSaveIntermediateFiles",
+		"allowAggressiveValueEstimation",
+		"doIncludeProjectionFiles",
+		"doDelayExecutionFolderDeletion",
+		"doIncludeProjectedMOFBiomass",
+		"reportIncludeWholeStemVolume",
+		"reportIncludeCloseUtilizationVolume",
+		"reportIncludeNetDecayVolume",
+		"reportIncludeNDWasteVolume",
+		"reportIncludeNDWasteBrkgVolume",
+		"reportIncludeVolumeMAI",
+		"reportIncludeSpeciesComp",
+		"reportIncludeCulminationValues",
+		"doIncludeProjectedCFSBiomass",
+		"doSummarizeProjectionByPolygon",
+		"doIncludeSpeciesProjection",
+		"doIncludeProjectionModeInYieldTable",
+		"doForceCurrentYearInclusionInYieldTables",
+		"doForceReferenceYearInclusionInYieldTables"
+	],
+	"selectedDebugOptions": [
+		"doIncludeDebugTimestamps",
+		"doIncludeDebugEntryExit",
+		"doIncludeDebugIndentBlocks",
+		"doIncludeDebugRoutineNames"
+	],
+	"excludedDebugOptions": [],
+	"combineAgeYearRange": "intersect",
+	"metadataToOutput": "VERSION",
+	"utils": [
+		{
+			"s": "AC",
+			"u": "7.5+"
+		},
+		{
+			"s": "AT",
+			"u": "7.5+"
+		},
+		{
+			"s": "B",
+			"u": "7.5+"
+		},
+		{
+			"s": "C",
+			"u": "7.5+"
+		},
+		{
+			"s": "D",
+			"u": "7.5+"
+		},
+		{
+			"s": "E",
+			"u": "7.5+"
+		},
+		{
+			"s": "F",
+			"u": "7.5+"
+		},
+		{
+			"s": "H",
+			"u": "7.5+"
+		},
+		{
+			"s": "L",
+			"u": "7.5+"
+		},
+		{
+			"s": "MB",
+			"u": "7.5+"
+		},
+		{
+			"s": "PA",
+			"u": "7.5+"
+		},
+		{
+			"s": "PL",
+			"u": "7.5+"
+		},
+		{
+			"s": "PW",
+			"u": "7.5+"
+		},
+		{
+			"s": "PY",
+			"u": "7.5+"
+		},
+		{
+			"s": "S",
+			"u": "7.5+"
+		},
+		{
+			"s": "Y",
+			"u": "7.5+"
+		}
+	]
+}

@@ -132,7 +132,7 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 			currentRecord.setTreesPerHectare(growthDetails.treesPerHectare());
 		}
 
-		if (containsValue(growthDetails.basalArea())) {
+		if (containsNonNegValue(growthDetails.basalArea())) {
 			currentRecord.setBasalArea(growthDetails.basalArea());
 		}
 
@@ -183,6 +183,10 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 
 	private boolean containsValue(Double value) {
 		return value != null && value > 0;
+	}
+
+	private boolean containsNonNegValue(Double value) {
+		return value != null && value >= 0;
 	}
 
 	protected void recordPerSpeciesVolumeInfo(int spIndex, EntityVolumeDetails volume, EntityVolumeDetails mofBiomass) {
