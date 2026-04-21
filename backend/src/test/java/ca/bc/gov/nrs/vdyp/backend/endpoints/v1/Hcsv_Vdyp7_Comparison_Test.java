@@ -620,4 +620,35 @@ class Hcsv_Vdyp7_Comparison_Test {
 		}
 	}
 
+	@Test
+	void test899_V11() throws IOException, ResourceParseException {
+
+		logger.info("Starting vdyp-899-V11");
+
+		runIntTestData("v-record-test-11-noback", result -> {
+			result.entrySet();
+
+			assertThat(
+					result,
+					(Matcher<? super ResultYieldTable>) hasSpecificEntry(
+							"13725409",
+							hasSpecificEntry(
+									"1",
+									hasSpecificEntry(
+											"2023",
+											Matchers.allOf(
+													hasSpecificEntry(
+															"PRJ_TPH",
+															VdypMatchers
+																	.parseAs(closeTo(185.39f, 0.01f), ValueParser.FLOAT)
+													)
+											)
+									)
+							)
+					)
+			);
+		});
+
+	}
+
 }

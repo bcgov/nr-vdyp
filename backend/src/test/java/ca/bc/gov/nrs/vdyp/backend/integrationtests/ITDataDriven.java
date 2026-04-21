@@ -149,10 +149,17 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 
 	// FIXME Workaround for VDYP-804
 	static final Pattern BASE_804_AFFECTED = Pattern.compile("PRJ_SCND_HT");
+<<<<<<< feature/VDYP-1028
 	// Layers are not output in the same order, when dealing with multi table issues this makes sure actual releavent
 	// values match
 	static final Pattern MULTI_TABLE_ISSUES = Pattern.compile("TABLE_NUM");
 	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_804_AFFECTED, MULTI_TABLE_ISSUES)
+=======
+	// FIXME Workaround for VDYP-897
+	static final Pattern BASE_897_AFFECTED = Pattern.compile("PRJ_MODE");
+
+	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_804_AFFECTED, BASE_897_AFFECTED)
+>>>>>>> main
 			.asMatchPredicate();
 
 }

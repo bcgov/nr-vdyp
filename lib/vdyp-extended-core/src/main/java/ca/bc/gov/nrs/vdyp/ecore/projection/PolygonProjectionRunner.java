@@ -125,16 +125,7 @@ public class PolygonProjectionRunner {
 	 */
 	// Adapts VDYP7 V7Ext_InitializeExtended
 	public static void initializeSiteIndexCurves() {
-		// TODO See VDYP-732
-		for (String key : VdypMethods.getSpeciesNames()) {
-			for (var region : SpeciesRegion.values()) {
-				var curve = VdypMethods.getCurrentSICurve(key, region);
-				var newCurve = CURVES_TO_REMAP.get(curve);
-				if (newCurve != null) {
-					VdypMethods.setCurrentSICurve(key, region, newCurve);
-				}
-			}
-		}
+		VdypMethods.remapCurrentSICurves(CURVES_TO_REMAP);
 	}
 
 	/**

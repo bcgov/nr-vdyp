@@ -36,6 +36,8 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 
 		doSkip(testDir, "testVriStart");
 
+		remapSiteCurves(testDir);
+
 		Path ioControlFile = createIoControlFile(
 				inputState, dataDir, false, Data.Polygon, Data.Layer, Data.Site, Data.Species
 		);

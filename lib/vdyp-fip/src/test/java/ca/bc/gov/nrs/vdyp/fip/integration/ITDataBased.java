@@ -35,6 +35,8 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 
 		doSkip(testDir, "testFipStart");
 
+		remapSiteCurves(testDir);
+
 		Path baseControlFile = copyResource(TestUtils.class, "FIPSTART.CTR", testConfigDir);
 
 		Path testControlFile = dataDir.resolve("control.ctl");

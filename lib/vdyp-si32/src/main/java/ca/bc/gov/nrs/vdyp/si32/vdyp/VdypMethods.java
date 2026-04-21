@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -330,6 +331,25 @@ public class VdypMethods {
 		}
 
 		return oldCurve;
+	}
+
+	/**
+	 * Forces all site curves into the cache and applies remapping.
+	 *
+	 */
+	// Adapts VDYP7 V7Ext_InitializeExtended
+	public static void remapCurrentSICurves(Map<SiteIndexEquation, SiteIndexEquation> remapping) {
+		// TODO See VDYP-732
+
+		for (String key : VdypMethods.getSpeciesNames()) {
+			for (var region : SpeciesRegion.values()) {
+				var curve = VdypMethods.getCurrentSICurve(key, region);
+				var newCurve = remapping.get(curve);
+				if (newCurve != null) {
+					VdypMethods.setCurrentSICurve(key, region, newCurve);
+				}
+			}
+		}
 	}
 
 	/**

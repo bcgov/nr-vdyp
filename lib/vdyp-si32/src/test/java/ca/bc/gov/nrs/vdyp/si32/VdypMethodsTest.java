@@ -2,8 +2,17 @@ package ca.bc.gov.nrs.vdyp.si32;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies;
@@ -187,4 +196,76 @@ class VdypMethodsTest {
 		assertThat(VdypMethods.getVDYP7SpeciesIndex("ZZZ"), equalTo(SP0Name.UNKNOWN));
 		assertThat(VdypMethods.getVDYP7SpeciesIndex(null), equalTo(SP0Name.UNKNOWN));
 	}
+
+	static final Map<SiteIndexEquation, SiteIndexEquation> CURVES_TO_REMAP = new EnumMap<>(SiteIndexEquation.class);
+
+	static {
+		CURVES_TO_REMAP.put(SiteIndexEquation.SI_ACB_HUANG, SiteIndexEquation.SI_SW_GOUDIE_NATAC);
+		CURVES_TO_REMAP.put(SiteIndexEquation.SI_SW_GOUDIE_PLAAC, SiteIndexEquation.SI_SW_GOUDIE_NATAC);
+	}
+
+	static List<Arguments> toRemap() {
+		var result = new ArrayList<Arguments>();
+		VdypMethods.clear();
+		for (var species : VdypMethods.getSpeciesNames()) {
+			for (var region : SpeciesRegion.values()) {
+				var curve = VdypMethods.getCurrentSICurve(species, region);
+				if (CURVES_TO_REMAP.containsKey(curve)) {
+					result.add(Arguments.of(species, region, curve, CURVES_TO_REMAP.get(curve)));
+				}
+			}
+		}
+		return result;
+	}
+
+	static List<Arguments> dontRemap() {
+		var result = new ArrayList<Arguments>();
+		VdypMethods.clear();
+		for (var species : VdypMethods.getSpeciesNames()) {
+			for (var region : SpeciesRegion.values()) {
+				var curve = VdypMethods.getCurrentSICurve(species, region);
+				if (!CURVES_TO_REMAP.containsKey(curve)) {
+					result.add(Arguments.of(species, region, curve));
+				}
+			}
+		}
+		return result;
+	}
+
+	@ParameterizedTest
+	@MethodSource("toRemap")
+	void testRemapSiteCurves(
+			String species, SpeciesRegion region, SiteIndexEquation oldCurve, SiteIndexEquation newCurve
+	) {
+		VdypMethods.clear();
+		VdypMethods.getSpeciesNames();
+
+		var oldResult = VdypMethods.getCurrentSICurve(species, region);
+		assertThat("Without remapping", oldResult, is(oldCurve));
+		try {
+			VdypMethods.remapCurrentSICurves(CURVES_TO_REMAP);
+			var newResult = VdypMethods.getCurrentSICurve(species, region);
+			assertThat("With remapping", newResult, is(newCurve));
+		} finally {
+			VdypMethods.clear();
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("dontRemap")
+	void testRemapSiteCurvesDoesnAffectOtherCurves(String species, SpeciesRegion region, SiteIndexEquation oldCurve) {
+		VdypMethods.clear();
+		VdypMethods.getSpeciesNames();
+
+		var oldResult = VdypMethods.getCurrentSICurve(species, region);
+		assertThat("Without remapping", oldResult, is(oldCurve));
+		try {
+			VdypMethods.remapCurrentSICurves(CURVES_TO_REMAP);
+			var newResult = VdypMethods.getCurrentSICurve(species, region);
+			assertThat("With remapping", newResult, is(oldCurve));
+		} finally {
+			VdypMethods.clear();
+		}
+	}
+
 }
