@@ -166,6 +166,38 @@ public class PolygonProjectionState {
 		this.processingModeByProjectionType.put(projectionType, processingMode);
 	}
 
+	/**
+	 * modifyAllProjectionTypeGrowthModels This mimics behavior in VDYP7 that forces all remaining layers for a polygon
+	 * to try the fallthrough growthmodel (AND PROCESSING MODE CODE) despite not necessarily having failed the check
+	 * themselves.
+	 *
+	 * Determinination of if this is erroneous behavior should be the result of VDYP-1052
+	 *
+	 * @param growthModel    the growth model code to try for remaining projection types
+	 * @param processingMode the processsingMode to use for remaining projection types
+	 */
+	public void modifyAllProjectionTypeGrowthModels(GrowthModelCode growthModel, ProcessingModeCode processingMode) {
+		for (ProjectionTypeCode projectionType : this.growthModelByProjectionType.keySet()) {
+			if (this.growthModelByProjectionType.get(projectionType) == null) {
+				throw new IllegalStateException(
+						this.getClass().getName()
+								+ ".ProjectionState.modifyGrowthModel: growthModel has not been set for projectionType "
+								+ projectionType
+				);
+			}
+			if (this.processingModeByProjectionType.get(projectionType) == null) {
+				throw new IllegalStateException(
+						this.getClass().getName()
+								+ ".ProjectionState.modifyGrowthModel: processingMode has not been set for projectionType "
+								+ projectionType
+				);
+			}
+
+			this.growthModelByProjectionType.put(projectionType, growthModel);
+			this.processingModeByProjectionType.put(projectionType, processingMode);
+		}
+	}
+
 	public GrowthModelCode getGrowthModel(ProjectionTypeCode projectionType) {
 		if (growthModelByProjectionType.get(projectionType) == null) {
 			throw new IllegalStateException(

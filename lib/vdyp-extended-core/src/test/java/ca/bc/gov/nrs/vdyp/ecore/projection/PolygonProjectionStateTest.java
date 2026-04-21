@@ -50,6 +50,22 @@ public class PolygonProjectionStateTest {
 
 		assertThat(unit.getGrowthModel(ProjectionTypeCode.PRIMARY), is(GrowthModelCode.VRI));
 		assertThat(unit.getProcessingMode(ProjectionTypeCode.PRIMARY), is(ProcessingModeCode.VRI_VriStart));
+
+		unit.setGrowthModel(ProjectionTypeCode.VETERAN, GrowthModelCode.FIP, ProcessingModeCode.FIP_FipStart);
+		unit.setGrowthModel(ProjectionTypeCode.DEAD, GrowthModelCode.FIP, ProcessingModeCode.FIP_FipStart);
+
+		assertThat(unit.getGrowthModel(ProjectionTypeCode.VETERAN), is(GrowthModelCode.FIP));
+		assertThat(unit.getProcessingMode(ProjectionTypeCode.VETERAN), is(ProcessingModeCode.FIP_FipStart));
+		assertThat(unit.getGrowthModel(ProjectionTypeCode.DEAD), is(GrowthModelCode.FIP));
+		assertThat(unit.getProcessingMode(ProjectionTypeCode.DEAD), is(ProcessingModeCode.FIP_FipStart));
+
+		unit.modifyAllProjectionTypeGrowthModels(GrowthModelCode.VRI, ProcessingModeCode.VRI_VriYoung);
+
+		assertThat(unit.getGrowthModel(ProjectionTypeCode.VETERAN), is(GrowthModelCode.VRI));
+		assertThat(unit.getProcessingMode(ProjectionTypeCode.VETERAN), is(ProcessingModeCode.VRI_VriYoung));
+		assertThat(unit.getGrowthModel(ProjectionTypeCode.DEAD), is(GrowthModelCode.VRI));
+		assertThat(unit.getProcessingMode(ProjectionTypeCode.DEAD), is(ProcessingModeCode.VRI_VriYoung));
+
 	}
 
 	@Test
