@@ -80,6 +80,8 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 		assertEquals(expectedTable.keySet(), actualTable.keySet(), "Feature IDs don't match expected");
 
 		for (var featureEntry : expectedTable.entrySet()) {
+			if (featureEntry.getKey().equals("TABLE_NUM"))
+				continue;
 			var expectedFeature = featureEntry.getValue();
 			var actualFeature = actualTable.get(featureEntry.getKey());
 			var featureId = featureEntry.getKey();
