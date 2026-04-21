@@ -694,7 +694,10 @@ public class ForwardProcessingEngine {
 			// Calculate the basal area, trees-per-hectare and quad-mean-diameter for all
 			// species in the polygon (UC All)
 
-			if (debugSetting1Value == SpeciesDynamics.NONE || bank.getNSpecies() == 1
+			// VDYP7 (vgrow1.for line 186): when PARTIAL dynamics (GRSPpart) fails,
+			// fall back to NO dynamics, not FULL dynamics.
+			if (debugSetting1Value == SpeciesDynamics.NONE || debugSetting1Value == SpeciesDynamics.PARTIAL
+					|| bank.getNSpecies() == 1
 					|| (basalArea.delta() == 0.0 && quadMeanDiameter.delta() == 0.0)) {
 
 				// (5b) This is the NO SPECIES DYNAMICS section
