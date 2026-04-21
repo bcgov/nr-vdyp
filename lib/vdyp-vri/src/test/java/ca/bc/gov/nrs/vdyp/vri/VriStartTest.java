@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.vri;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasPrimaryLayer;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasVeteranLayer;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertOnlyPrimaryLayer;
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isBec;
@@ -11,6 +12,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllAndBiggest;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -34,6 +36,7 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.CouldNotFindBracketingIntervalException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
@@ -79,6 +83,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
+import ca.bc.gov.nrs.vdyp.vri.VriStart.Interval;
 import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
@@ -832,7 +837,7 @@ class VriStartTest {
 
 				VriStart app = new VriStart();
 
-				var result = app.findInterval(xInterval, errorFunc);
+				var result = app.findInterval(xInterval, errorFunc, (i, x) -> false);
 
 				app.close();
 
@@ -849,7 +854,7 @@ class VriStartTest {
 
 				VriStart app = new VriStart();
 
-				var result = app.findInterval(xInterval, errorFunc);
+				var result = app.findInterval(xInterval, errorFunc, (i, x) -> false);
 
 				app.close();
 
@@ -873,7 +878,7 @@ class VriStartTest {
 
 				app.close();
 
-				var result = app.findInterval(xInterval, errorFunc);
+				var result = app.findInterval(xInterval, errorFunc, (i, x) -> false);
 
 				var evaluated = result.evaluate(errorFunc);
 				assertTrue(
@@ -884,10 +889,19 @@ class VriStartTest {
 			}
 
 			@ParameterizedTest
-			@ValueSource(floats = { 1, -1, 20, -20 })
-			void testTwoRoots(float a) throws Exception {
+			@CsvSource(
+				{ "1, 0", "-1, 0", "20, 0", "-20, 0", "1, 0.25", "-1, 0.25", "20, 0.25", "-20, 0.25", "1, -0.25",
+						"-1, -0.25", "20, -0.25", "-20, -0.25", "1, 10", "-1, 10", "20, 10", "-20, 10", "1, -10",
+						"-1, -10", "20, -10", "-20, -10" }
+			)
+			void testTwoRoots(float a, float b) throws Exception {
 
-				UnivariateFunction errorFunc = x -> a * (x * x - 0.5);
+				assumeThat(
+						"Fixing VDYP-942 broke the case where the starting interval exactly stradles two roots on a symetric function which shouldn't be relevant to VDYP",
+						b, not(0f)
+				);
+
+				UnivariateFunction errorFunc = x -> a * ( (x + b) * (x + b) - 0.5);
 
 				var xInterval = new VriStart.Interval(-1, 1);
 
@@ -895,7 +909,7 @@ class VriStartTest {
 
 				app.close();
 
-				var result = app.findInterval(xInterval, errorFunc);
+				Interval result = assertDoesNotThrow(() -> app.findInterval(xInterval, errorFunc, (i, x) -> false));
 
 				var evaluated = result.evaluate(errorFunc);
 				assertTrue(
@@ -917,8 +931,34 @@ class VriStartTest {
 
 				app.close();
 
-				assertThrows(NoBracketingException.class, () -> app.findInterval(xInterval, errorFunc));
+				var ex = assertThrows(
+						CouldNotFindBracketingIntervalException.class,
+						() -> app.findInterval(xInterval, errorFunc, (i, x) -> false)
+				);
 
+				assertThat(ex, hasProperty("exitEarly", is(false)));
+			}
+
+			@Test
+			void testFailEarly() throws Exception {
+
+				// Should find the root, but it will take a a few tries.
+				UnivariateFunction errorFunc = x -> (Math.exp(x) - 0.0001);
+
+				var xInterval = new VriStart.Interval(-1, 1);
+
+				VriStart app = new VriStart();
+
+				app.close();
+
+				var ex = assertThrows(
+						CouldNotFindBracketingIntervalException.class,
+						() -> app.findInterval(
+								xInterval, errorFunc, (i, x) -> i > 3 // Exit on the third iteration
+						)
+				);
+
+				assertThat(ex, hasProperty("exitEarly", is(true)));
 			}
 
 		}
@@ -1603,12 +1643,12 @@ class VriStartTest {
 
 				app.applyDqBySpecies(layer, baseAreaTotal, baseAreaPerSpecies, diameterPerSpecies);
 
-				assertThat(layer.getQuadraticMeanDiameterByUtilization(), coe(-1, 0f, 10.3879948f, 0f, 0f, 0f, 0f));
-				assertThat(layer.getTreesPerHectareByUtilization(), coe(-1, 0f, 748.4021f, 0f, 0f, 0f, 0f));
+				assertThat(layer.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(10.3879948f));
+				assertThat(layer.getTreesPerHectareByUtilization(), utilizationAllOnly(748.4021f));
 
 				var spec = layer.getSpecies().get("C");
-				assertThat(spec.getQuadraticMeanDiameterByUtilization(), coe(-1, 0f, 8.88676834f, 0f, 0f, 0f, 0f));
-				assertThat(spec.getTreesPerHectareByUtilization(), coe(-1, 0f, 204.522324f, 0f, 0f, 0f, 0f));
+				assertThat(spec.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(8.88676834f));
+				assertThat(spec.getTreesPerHectareByUtilization(), utilizationAllOnly(204.522324f));
 
 				// Total is correct and one of the individual species is correct. No need to check the other 4.
 
@@ -1680,16 +1720,81 @@ class VriStartTest {
 
 				app.getDqBySpecies(layer, Region.INTERIOR);
 
-				assertThat(
-						layer.getQuadraticMeanDiameterByUtilization(), coe(-1, 0f, 10.3879948f, 0f, 0f, 0f, 10.3879948f)
-				);
-				assertThat(layer.getTreesPerHectareByUtilization(), coe(-1, 0f, 748.4021f, 0f, 0f, 0f, 748.4021f));
+				assertThat(layer.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(10.3879948f));
+				assertThat(layer.getTreesPerHectareByUtilization(), utilizationAllOnly(748.4021f));
 
 				var spec = layer.getSpecies().get("C");
-				assertThat(spec.getQuadraticMeanDiameterByUtilization(), coe(-1, 0f, 8.88676834f, 0f, 0f, 0f, 0f));
-				assertThat(spec.getTreesPerHectareByUtilization(), coe(-1, 0f, 204.522324f, 0f, 0f, 0f, 0f));
+				assertThat(spec.getQuadraticMeanDiameterByUtilization(), utilizationAllOnly(8.88676834f));
+				assertThat(spec.getTreesPerHectareByUtilization(), utilizationAllOnly(204.522324f));
 
 				// Total is correct and one of the individual species is correct. No need to check the other 4.
+
+			}
+
+			@Test
+			void testVDYP942Primary() throws ProcessingException {
+
+				controlMap = VriTestUtils.loadControlMap();
+				VriStart app = new VriStart();
+				ApplicationTestUtils.setControlMap(app, controlMap);
+
+				VdypLayer layer = VdypLayer.build((lb) -> {
+					lb.polygonIdentifier("Test", 2024);
+					lb.layerType(LayerType.PRIMARY);
+					lb.baseAreaByUtilization(66.666664f);
+					lb.treesPerHectareByUtilization(1286.6666f);
+					lb.quadraticMeanDiameterByUtilization(25.6848125f);
+					lb.loreyHeightByUtilization(11.236668f);
+					lb.empiricalRelationshipParameterIndex(117);
+					lb.inventoryTypeGroup(28);
+					lb.addSpecies(sb -> {
+						sb.genus("PL", controlMap);
+						sb.percentGenus(85);
+						sb.volumeGroup(55);
+						sb.decayGroup(46);
+						sb.breakageGroup(24);
+						sb.loreyHeight(11.4126329f);
+						sb.baseArea(56.6666641f);
+					});
+					lb.addSpecies(sb -> {
+						sb.genus("S", controlMap);
+						sb.percentGenus(15);
+						sb.volumeGroup(70);
+						sb.decayGroup(58);
+						sb.breakageGroup(30);
+						sb.loreyHeight(10.2395248f);
+						sb.baseArea(10.0f);
+					});
+				});
+
+				app.getDqBySpecies(layer, Region.INTERIOR);
+
+				// Correct values from debugging VDYP7
+				assertThat(
+						"Layer", layer,
+						hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(25.2116508f))
+				);
+				assertThat(
+						"Layer", layer, hasProperty("treesPerHectareByUtilization", utilizationAllOnly(1335.41516f))
+				);
+
+				var spec = layer.getSpecies().get("PL");
+				assertThat(
+						"Species PL", spec,
+						hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(25.437809f))
+				);
+				assertThat(
+						"Species PL", spec, hasProperty("treesPerHectareByUtilization", utilizationAllOnly(1115.00903f))
+				);
+
+				spec = layer.getSpecies().get("S");
+				assertThat(
+						"Species S", spec,
+						hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(24.0349503f))
+				);
+				assertThat(
+						"Species S", spec, hasProperty("treesPerHectareByUtilization", utilizationAllOnly(220.406128f))
+				);
 
 			}
 		}

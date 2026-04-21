@@ -21,6 +21,11 @@
 			<artifactId>vdyp-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-si32</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>

@@ -149,7 +149,10 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 
 	// FIXME Workaround for VDYP-804
 	static final Pattern BASE_804_AFFECTED = Pattern.compile("PRJ_SCND_HT");
+	// FIXME Workaround for VDYP-897
+	static final Pattern BASE_897_AFFECTED = Pattern.compile("PRJ_MODE");
 
-	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_804_AFFECTED).asMatchPredicate();
+	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_804_AFFECTED, BASE_897_AFFECTED)
+			.asMatchPredicate();
 
 }

@@ -687,8 +687,39 @@ public class VdypMatchers {
 		};
 	}
 
+	public static Matcher<Coefficients> utilizationOneClass(UtilizationClass uc, float component) {
+		return new TypeSafeDiagnosingMatcher<Coefficients>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("A utilization vector with ").appendValue(uc.className)
+						.appendText(" class close to ").appendValue(component);
+			}
+
+			@Override
+			protected boolean matchesSafely(Coefficients item, Description mismatchDescription) {
+				if (item.size() != 6 || item.getIndexFrom() != -1) {
+					mismatchDescription.appendText("Was not a utilization vector");
+					return false;
+				}
+
+				if (!closeTo(component).matches(item.getCoe(uc.index))) {
+					mismatchDescription.appendText("had ").appendValue(uc.className).appendText(" that ");
+					closeTo(component).describeMismatch(item.getCoe(uc.index), mismatchDescription);
+					return false;
+				}
+				return true;
+			}
+
+		};
+	}
+
 	public static Matcher<Coefficients> utilizationAllAndBiggest(float all) {
 		return utilization(0f, all, 0f, 0f, 0f, all);
+	}
+
+	public static Matcher<Coefficients> utilizationAllOnly(float all) {
+		return utilizationOneClass(UtilizationClass.ALL, all);
 	}
 
 	public static Matcher<Coefficients> utilizationHeight(float small, float all) {
