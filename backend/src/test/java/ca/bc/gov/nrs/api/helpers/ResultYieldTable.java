@@ -109,9 +109,6 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 					);
 
 					for (var field : expectedRow.entrySet()) {
-						if (ignoredFields.test(field.getKey())) {
-							continue;
-						}
 						var fieldId = yearId + ":" + field.getKey();
 						var expectedField = field.getValue();
 						var actualField = actualRow.get(field.getKey());
