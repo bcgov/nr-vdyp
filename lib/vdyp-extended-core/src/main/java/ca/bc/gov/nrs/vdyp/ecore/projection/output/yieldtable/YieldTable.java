@@ -461,7 +461,7 @@ public class YieldTable implements Closeable {
 					}
 				}
 
-				Double dominantHeight = null;
+				Double dominantHeight = growthDetails != null ? growthDetails.dominantHeight() : null;
 				if (rowContext.isPolygonTable()) {
 					var primaryLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
 					if (primaryLayer != null) {
@@ -472,7 +472,8 @@ public class YieldTable implements Closeable {
 								polygon
 						);
 					}
-				} else {
+				} else if (rowContext.getLayerReportingInfo()
+						.getProcessedAsVDYP7Layer() != ProjectionTypeCode.VETERAN) {
 					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
 				}
 
