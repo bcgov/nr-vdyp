@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.CouldNotFindBracketingIntervalException;
 import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
@@ -426,7 +428,18 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var resultVeteranLayer = resultPoly.getLayers().get(LayerType.VETERAN);
 		var bec = sourcePoly.getBiogeoclimaticZone();
 
-		getDqBySpecies(resultPrimaryLayer, bec.getRegion());
+		if (resultPrimaryLayer.getSpecies().size() == 1) {
+			// if there is only one species then the diameter and trees per hectare come directly from the layer, no
+			// reconciliation
+			for (var spec : resultPrimaryLayer.getSpecies().values()) {
+				spec.getQuadraticMeanDiameterByUtilization()
+						.setAll(resultPrimaryLayer.getQuadraticMeanDiameterByUtilization().getAll());
+				spec.getTreesPerHectareByUtilization()
+						.setAll(resultPrimaryLayer.getTreesPerHectareByUtilization().getAll());
+			}
+		} else {
+			getDqBySpecies(resultPrimaryLayer, bec.getRegion());
+		}
 
 		estimateSmallComponents(sourcePoly, resultPrimaryLayer);
 
@@ -550,7 +563,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		float sumBaseAreaLoreyHeight = 0;
 		// find aggregate lorey height
 		if (species.size() == 1) {
-			sumBaseAreaLoreyHeight = primaryBaseArea;
+			sumBaseAreaLoreyHeight = primaryBaseArea * primaryHeight;
 		} else {
 			for (var spec : species) {
 				float specBaseArea = spec.getBaseAreaByUtilization().getAll();
@@ -1577,17 +1590,25 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			double x = doSolve(min, max, errorFunc);
 
 			return (float) x;
-		} catch (NoBracketingException ex) {
+		} catch (CouldNotFindBracketingIntervalException ex) {
+			double x;
+			if (ex.isExitEarly()) {
+				x = ex.getLo();
+				// Note that in this case we don't call handleRootForQuadMeanDiameterFractionalErrorException to
+				// potentially error out. This is how VDYP 7 works although I'm not sure why.
+			} else {
+				// Decide if we want to propagate the exception or try to come up with something anyway.
+				handleRootForQuadMeanDiameterFractionalErrorException(ex);
 
-			// Decide if we want to propagate the exception or try to come up with something anyway.
-			handleRootForQuadMeanDiameterFractionalErrorException(ex);
+				// Try three values and take the least bad option.
 
-			// Try three values and take the least bad option.
-
-			double x = bestOf(errorFunc, 0, -0.1, 0.1);
-
+				x = bestOf(errorFunc, 0, -0.1, 0.1);
+			}
 			// Invoke the function again to set the species map via
-			errorFunc.value(x);
+			var error = errorFunc.value(x);
+			log.atWarn().setMessage(
+					"Failed to reconcile total DQ/TPH for species with layer.  Using a distribution that has an error of {}."
+			).addArgument(error).log();
 
 			return (float) x;
 
@@ -1639,7 +1660,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		// The Fortran solver library, $ZERO, included an ability to search for a better interval if given one where
 		// the function values at the end points have the same sign. This replicates that.
-		interval = findInterval(new Interval(min, max), errorFunc);
+		interval = findInterval(new Interval(min, max), errorFunc, (i, x) -> i >= 2 && x > 20);
 
 		double x = solver.solve(100, errorFunc, interval.start(), interval.end(), interval.mid());
 		return x;
@@ -1704,17 +1725,30 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	 * @param func
 	 * @return an interval for parameters to func
 	 */
-	public Interval findInterval(Interval intervalInit, UnivariateFunction func) {
+	public Interval findInterval(Interval intervalInit, UnivariateFunction func, BiPredicate<Integer, Double> breakIf) {
 
 		var interval = intervalInit;
 		// Try 40 times before giving up.
 
-		double currentX = interval.start();
-		double lastX = interval.end();
-		double lastF = func.value(lastX);
-		double currentF = func.value(currentX);
+		double x1 = interval.start();
+		double x2 = interval.end();
+		double f1 = func.value(x1);
+		double f2 = func.value(x2);
+
+		double currentX = x1; // XX
+		double currentF = f1; // FF
+		// the "last" variables are set once the first time SZERO is called, then left uninitialized on subsequent
+		// calls which has them preserve state over multiple iterations.
+		double lastX = x2; // XL
+		double lastF = f2; // FL
 		int i;
 		for (i = 0; i < 40; i++) {
+
+			currentX = x1; // XX
+			currentF = f1; // FF
+			if (breakIf.test(i, x1)) {
+				throw new CouldNotFindBracketingIntervalException(currentX, lastX, currentF, lastF, i, true);
+			}
 
 			if (currentF * lastF <= 0) {
 				var newInterval = new Interval(Math.min(currentX, lastX), Math.max(currentX, lastX));
@@ -1724,7 +1758,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 			double tp = currentF / lastF;
 
-			if (tp >= 1) {
+			if (tp > 1) {
 				double temp = currentX;
 				currentX = lastX;
 				lastX = temp;
@@ -1736,20 +1770,24 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			if (Math.abs(currentF) >= 8 * Math.abs(lastF - currentF)) {
 				tp = 8;
 			} else {
-				tp = Math.max(0.25 * i, currentF / (lastF - currentF));
+				tp = Math.max(0.25 * (i + 1), currentF / (lastF - currentF));
 			}
 
 			lastF = currentF;
-			double oppositeX = lastX;
+			double oppositeX = lastX; // XO
 			lastX = currentX;
 			if (currentX == oppositeX) {
 				oppositeX = 1.03125 * currentX + (0.001 * Math.signum(currentX));
 			}
 			currentX += tp * (currentX - oppositeX);
-			currentF = func.value(currentX);
+
+			x1 = currentX;
+
+			// In the original Fortran this would happen in the subroutine calling SZERO
+			f1 = func.value(x1);
 		}
 
-		throw new NoBracketingException(currentX, lastX, currentF, lastF);
+		throw new CouldNotFindBracketingIntervalException(currentX, lastX, currentF, lastF, i - 1, false);
 	}
 
 	@Override

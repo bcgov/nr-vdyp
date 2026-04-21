@@ -461,7 +461,7 @@ public class YieldTable implements Closeable {
 					}
 				}
 
-				Double dominantHeight = null;
+				Double dominantHeight = growthDetails != null ? growthDetails.dominantHeight() : null;
 				if (rowContext.isPolygonTable()) {
 					var primaryLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
 					if (primaryLayer != null) {
@@ -472,22 +472,19 @@ public class YieldTable implements Closeable {
 								polygon
 						);
 					}
-				} else {
+				} else if (rowContext.getLayerReportingInfo()
+						.getProcessedAsVDYP7Layer() != ProjectionTypeCode.VETERAN) {
 					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
 				}
 
-				// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
 				writer.recordSiteInformation(
 						percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
 						secondaryHeight
 				);
-				// }
 
 				if (growthDetails != null && volumeDetails != null) {
 
-					// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
 					writer.recordGrowthDetails(growthDetails, volumeDetails);
-					// }
 					if (!rowContext.isPolygonTable()) {
 						if (rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
 								&& growthDetails.basalArea() != null) {

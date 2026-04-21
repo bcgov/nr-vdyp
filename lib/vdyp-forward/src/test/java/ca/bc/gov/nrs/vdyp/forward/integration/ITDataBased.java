@@ -38,6 +38,8 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 
 		doSkip(testDir, "testVdypForward");
 
+		remapSiteCurves(testDir);
+
 		Path baseControlFile = copyResource(TestUtils.class, "VDYP.CTR", testConfigDir);
 
 		Path testControlFile = dataDir.resolve("control.ctl");
