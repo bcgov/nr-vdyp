@@ -439,9 +439,7 @@ class ForwardProcessingEngineTest {
 			).andReturn(false).once(); // Partial dynamics failure
 
 			// Leads to No species dynamics method being used
-			fpe.growUsingNoSpeciesDynamics(
-					EasyMock.eq(ba.rate(), 0.01f), EasyMock.eq(tph.factor(), 0.01f)
-			);
+			fpe.growUsingNoSpeciesDynamics(EasyMock.eq(ba.rate(), 0.01f), EasyMock.eq(tph.factor(), 0.01f));
 			EasyMock.expectLastCall().once();
 
 			em.replay();
@@ -487,9 +485,7 @@ class ForwardProcessingEngineTest {
 			).andReturn(false).once(); // Partial dynamics failure
 
 			// Leads to No species dynamics method being used
-			fpe.growUsingNoSpeciesDynamics(
-					EasyMock.eq(ba.rate(), 0.01f), EasyMock.eq(tph.factor(), 0.01f)
-			);
+			fpe.growUsingNoSpeciesDynamics(EasyMock.eq(ba.rate(), 0.01f), EasyMock.eq(tph.factor(), 0.01f));
 			EasyMock.expectLastCall().once();
 
 			em.replay();

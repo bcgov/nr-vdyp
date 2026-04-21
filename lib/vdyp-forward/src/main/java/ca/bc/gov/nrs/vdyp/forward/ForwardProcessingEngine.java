@@ -697,8 +697,7 @@ public class ForwardProcessingEngine {
 			// VDYP7 (vgrow1.for line 186): when PARTIAL dynamics (GRSPpart) fails,
 			// fall back to NO dynamics, not FULL dynamics.
 			if (debugSetting1Value == SpeciesDynamics.NONE || debugSetting1Value == SpeciesDynamics.PARTIAL
-					|| bank.getNSpecies() == 1
-					|| (basalArea.delta() == 0.0 && quadMeanDiameter.delta() == 0.0)) {
+					|| bank.getNSpecies() == 1 || (basalArea.delta() == 0.0 && quadMeanDiameter.delta() == 0.0)) {
 
 				// (5b) This is the NO SPECIES DYNAMICS section
 				growUsingNoSpeciesDynamics(basalArea.rate(), tph.factor());
