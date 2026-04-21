@@ -152,7 +152,7 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 	// Layers are not output in the same order, when dealing with multi table issues this makes sure actual releavent
 	// values match
 	static final Pattern MULTI_TABLE_ISSUES = Pattern.compile("TABLE_NUM");
-	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_804_AFFECTED/* , MULTI_TABLE_ISSUES */)
+	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_804_AFFECTED, MULTI_TABLE_ISSUES)
 			.asMatchPredicate();
 
 }
