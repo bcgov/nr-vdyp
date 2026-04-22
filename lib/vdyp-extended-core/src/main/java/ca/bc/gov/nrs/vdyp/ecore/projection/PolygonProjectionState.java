@@ -177,24 +177,10 @@ public class PolygonProjectionState {
 	 * @param processingMode the processsingMode to use for remaining projection types
 	 */
 	public void modifyAllProjectionTypeGrowthModels(GrowthModelCode growthModel, ProcessingModeCode processingMode) {
-		for (ProjectionTypeCode projectionType : this.growthModelByProjectionType.keySet()) {
-			if (this.growthModelByProjectionType.get(projectionType) == null) {
-				throw new IllegalStateException(
-						this.getClass().getName()
-								+ ".ProjectionState.modifyGrowthModel: growthModel has not been set for projectionType "
-								+ projectionType
-				);
-			}
-			if (this.processingModeByProjectionType.get(projectionType) == null) {
-				throw new IllegalStateException(
-						this.getClass().getName()
-								+ ".ProjectionState.modifyGrowthModel: processingMode has not been set for projectionType "
-								+ projectionType
-				);
-			}
-
-			this.growthModelByProjectionType.put(projectionType, growthModel);
-			this.processingModeByProjectionType.put(projectionType, processingMode);
+		for (Map.Entry<ProjectionTypeCode, GrowthModelCode> projectionTypeEntry : this.growthModelByProjectionType
+				.entrySet()) {
+			this.growthModelByProjectionType.put(projectionTypeEntry.getKey(), growthModel);
+			this.processingModeByProjectionType.put(projectionTypeEntry.getKey(), processingMode);
 		}
 	}
 
