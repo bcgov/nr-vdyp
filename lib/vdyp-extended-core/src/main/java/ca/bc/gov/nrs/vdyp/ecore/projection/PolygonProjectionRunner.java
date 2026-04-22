@@ -55,7 +55,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
-import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 
 /**
@@ -276,7 +275,7 @@ public class PolygonProjectionRunner {
 
 				if (doRetryUsingVriStart) {
 					logger.debug("{}: falling through to VRI Model", polygon);
-					state.modifyGrowthModel(projectionType, GrowthModelCode.VRI, ProcessingModeCode.VRI_VriYoung);
+					state.modifyAllProjectionTypeGrowthModels(GrowthModelCode.VRI, ProcessingModeCode.VRI_VriYoung);
 					// VRI and FIP share a projectionStageCode
 					state.resetProcessingResults(ProjectionStageCode.Initial, projectionType);
 				} else {
