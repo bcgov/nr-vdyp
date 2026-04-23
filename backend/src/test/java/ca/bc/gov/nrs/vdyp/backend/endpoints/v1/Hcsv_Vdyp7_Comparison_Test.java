@@ -621,6 +621,89 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void test1023() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+		logger.info("Starting vdyp-1023");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1023/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1023", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void test1026() throws IOException, ResourceParseException, CsvException {
+		logger.info("Starting vdyp-1026");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1026/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1026", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void test1027() throws IOException, ResourceParseException, CsvException {
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1027/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1027", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testVeteranDiameter() throws IOException, ResourceParseException, IOException {
+
+		logger.info("Starting veteran_diameter");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("veteran_diameter/output/Output_YldTbl.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("veteran_diameter", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void test1029() throws IOException, ResourceParseException, CsvException {
+
+		logger.info("Starting vdyp-1029");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1029/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1029", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void test1030() throws IOException, ResourceParseException, CsvException {
+
+		logger.info("Starting vdyp-1030");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1030/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1030", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void test899_V11() throws IOException, ResourceParseException {
 
 		logger.info("Starting vdyp-899-V11");
