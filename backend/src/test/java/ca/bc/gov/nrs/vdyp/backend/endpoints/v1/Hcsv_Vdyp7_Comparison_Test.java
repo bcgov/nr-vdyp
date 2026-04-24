@@ -222,13 +222,6 @@ class Hcsv_Vdyp7_Comparison_Test {
 		Assert.assertTrue(outputSeen);
 	}
 
-	@Test
-	void test1026() throws IOException, ResourceParseException {
-		runIntTestData("vdyp-1026", result -> {
-			result.entrySet();
-		});
-	}
-
 	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
 	// PRJ_SCND_HT was included in IGNORE_COLUMNS_EXCEPT_LH due to VDYP-804 and is
 	// unrelated to VDYP-604.
