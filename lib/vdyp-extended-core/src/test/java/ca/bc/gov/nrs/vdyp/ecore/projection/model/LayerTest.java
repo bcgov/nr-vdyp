@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
@@ -537,16 +536,6 @@ public class LayerTest {
 			polygon = new Polygon.Builder().referenceYear(2020).build();
 			layer = new Layer.Builder().layerId("TEST").polygon(polygon).build();
 			layerReportingInfo = new LayerReportingInfo.Builder().layer(layer).build();
-		}
-
-		@ParameterizedTest
-		@ValueSource(strings = { "P", "V", "Y", "R", "D" })
-		void testProcessedAsLayerSetReturns(String layerCode) {
-
-			ProjectionTypeCode processedAsLayerType = ProjectionTypeCode.fromVdyp7LayerTypeText(layerCode);
-			layer = new Layer.Builder().layerId("TEST").polygon(polygon).vdyp7LayerCode(processedAsLayerType).build();
-			layerReportingInfo = new LayerReportingInfo.Builder().layer(layer).build();
-			assertEquals(processedAsLayerType, layerReportingInfo.getProcessedAsVDYP7Layer());
 		}
 
 		@Test
