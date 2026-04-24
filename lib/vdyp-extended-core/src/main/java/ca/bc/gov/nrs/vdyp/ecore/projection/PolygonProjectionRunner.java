@@ -304,6 +304,15 @@ public class PolygonProjectionRunner {
 					logger.debug(
 							"{}: performed VRI Model successfully for projection type {}", polygon, projectionType
 					);
+
+					// There is a function in VDYP7 that accesses the results from the start application to extract what
+					// mode was used and sets for use by all future projection types. That is reflected here The
+					// RealCompomentRunner is setting this value in the state (See vdyp7core_getfipvriprocessinginfo
+					// vdyp7intperform.c ~1500 NOTE: the other values read out are set in the state already on a per
+					// projection type basis
+					initialGrowthModel = state.getGrowthModel(projectionType);
+					initialProcessingMode = state.getProcessingMode(projectionType);
+					state.modifyAllProjectionTypeGrowthModels(initialGrowthModel, initialProcessingMode);
 				} else {
 
 					var vriResult = oVriResult.get();

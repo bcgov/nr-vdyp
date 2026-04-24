@@ -1347,7 +1347,8 @@ public class Polygon implements Comparable<Polygon> {
 					- regenerationPercentStockable;
 			residualPercentStockable = primaryPercentStockable;
 
-			if (primaryBasalArea != null && residualBasalArea != null) {
+			if (primaryBasalArea != null && residualBasalArea != null //
+					&& primaryBasalArea > 0.0 && residualBasalArea > 0.0) {
 
 				primaryPercentStockable *= (primaryBasalArea / (primaryBasalArea + residualBasalArea));
 				residualPercentStockable *= (residualBasalArea / (primaryBasalArea + residualBasalArea));

@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations;
 
+import ca.bc.gov.nrs.vdyp.model.PolygonMode;
+
 /**
  * Lists all possible processing modes when running one of the two stand models.
  */
@@ -63,5 +65,25 @@ public enum ProcessingModeCode {
 
 	public static ProcessingModeCode getDefault() {
 		return VRI_Default;
+	}
+
+	public static ProcessingModeCode translatePolygonMode(GrowthModelCode model, PolygonMode mode) {
+		switch (mode) {
+		case BATC -> {
+			return VRI_CrownClosure;
+		}
+		case BATN -> {
+			return VRI_Minimal;
+		}
+		case START -> {
+			return model == GrowthModelCode.FIP ? FIP_FipStart : VRI_VriStart;
+		}
+		case YOUNG -> {
+			return model == GrowthModelCode.FIP ? FIP_FipYoung : VRI_VriYoung;
+		}
+		default -> {
+			return model == GrowthModelCode.FIP ? FIP_DoNotProcess : VRI_DoNotProcess;
+		}
+		}
 	}
 }
