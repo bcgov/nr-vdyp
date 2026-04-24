@@ -85,7 +85,6 @@ public class LayerReportingInfo {
 			lri.layer = layer;
 
 			if (layer.getVdyp7LayerCode() != null) {
-				lri.processedAsLayerType = layer.getVdyp7LayerCode();
 				lri.isDeadStemLayer = layer.getVdyp7LayerCode() == ProjectionTypeCode.DEAD;
 			}
 
