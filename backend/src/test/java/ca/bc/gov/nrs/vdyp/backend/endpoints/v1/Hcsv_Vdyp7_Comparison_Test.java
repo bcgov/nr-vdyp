@@ -692,6 +692,20 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void testVeteranCodedAsResidual() throws IOException, ResourceParseException, IOException {
+
+		logger.info("Starting vet-coded-res");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vet-coded-res/output/Output_YldTbl.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vet-coded-res", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void test1030() throws IOException, ResourceParseException, CsvException {
 
 		logger.info("Starting vdyp-1030");
