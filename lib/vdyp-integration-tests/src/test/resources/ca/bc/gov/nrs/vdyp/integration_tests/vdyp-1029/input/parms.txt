@@ -6,10 +6,10 @@
 -ofmt csvyieldtable
 
 
--ip $(TestDir)\InputFiles\VDYP7_INPUT_POLY.csv
--il $(TestDir)\InputFiles\VDYP7_INPUT_LAYER.csv
+-ip $(TestDir)\VDYP7_INPUT_POLY.csv
+-il $(TestDir)\VDYP7_INPUT_LAYER.csv
 #-o $(TestDir)\Output\Output-Before.csv
--o $(TestDir)\Output\Console-YldTbl.csv
+-o $(TestDir)\VDYP7YieldTable.csv
 -e $(TestDir)\Output\Error-092G010-6-After.log
 #-d $(TestDir)\Logs\debug.log
 #-l $(TestDir)\Logs\Log-$(IDE).log

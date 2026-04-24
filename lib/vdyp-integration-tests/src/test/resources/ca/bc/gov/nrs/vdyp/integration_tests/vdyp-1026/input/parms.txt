@@ -30,7 +30,7 @@
 -back No
 -forward Yes
 -includeprojmode Yes
-#-secondarySpcsHt Yes
+-secondarySpcsHt Yes
 
 -util AC=7.5  
 -util AT=7.5   
@@ -51,8 +51,8 @@
 
 #-filterforpolygonid    17585871
 #-filterforpolygon    4
-#-forceyear 2023
-#-forcerefyear Yes
+-forceyear 2023
+-forcerefyear Yes
 #-forceCrntYear Yes
 #-yearstart 1961
 #-yearend 2061
