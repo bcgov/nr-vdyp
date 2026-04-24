@@ -63,7 +63,6 @@ public class RealComponentRunner implements ComponentRunner {
 		}
 	}
 
-
 	@Override
 	public void runVriStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
