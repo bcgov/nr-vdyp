@@ -916,7 +916,11 @@ public class Layer implements Comparable<Layer> {
 	 * @return as described. If an error occurs during calculation, <code>null</code> is returned.
 	 */
 	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
-		var leadingSp64 = this.sp64s.get(0);
+		// changed from simple leading sp64 to leading sp0 sp64 because VDYP7 appears to use that here.
+		// this is potentially inconsistent with other leading species choices in this case the difference occurs when
+		// species are combined
+		// There are other places where the combines species percentage is ignored.....
+		var leadingSp64 = getSp0sByPercent().get(0).getSpecies().get(0);
 		try {
 			Double siteIndex = leadingSp64.getSiteIndex();
 			Double y2bh = leadingSp64.getYearsToBreastHeight();

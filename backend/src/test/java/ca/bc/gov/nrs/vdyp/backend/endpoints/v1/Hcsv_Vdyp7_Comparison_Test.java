@@ -663,6 +663,36 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void testStartModeCarry() throws IOException, ResourceParseException {
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("start-mode-carry/output/VDYP7YieldTable.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("start-mode-carry", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testCombinedDomHeight() throws IOException, ResourceParseException {
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("combined-sp0-dominant-height/output/VDYP7YieldTable.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("combined-sp0-dominant-height", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void testVeteranDiameter() throws ResourceParseException, IOException {
 
 		logger.info("Starting veteran_diameter");
