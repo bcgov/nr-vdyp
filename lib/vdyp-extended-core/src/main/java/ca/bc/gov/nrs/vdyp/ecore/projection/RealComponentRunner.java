@@ -21,6 +21,8 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.NullProjectionResultsReader;
@@ -52,6 +54,10 @@ public class RealComponentRunner implements ComponentRunner {
 			);
 			fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
 			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
+			state.modifyGrowthModel(
+					projectionTypeCode, GrowthModelCode.FIP,
+					ProcessingModeCode.translatePolygonMode(GrowthModelCode.FIP, fipStartApplication.getModeUsed())
+			);
 		} catch (Throwable t) {
 			throwInterpretedException(VdypApplicationIdentifier.FIP_START, polygon, projectionTypeCode, state, t);
 		}
@@ -68,6 +74,10 @@ public class RealComponentRunner implements ComponentRunner {
 			);
 			vriStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
 			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
+			state.modifyGrowthModel(
+					projectionTypeCode, GrowthModelCode.VRI,
+					ProcessingModeCode.translatePolygonMode(GrowthModelCode.VRI, vriStartApplication.getModeUsed())
+			);
 
 		} catch (Throwable t) {
 			throwInterpretedException(VdypApplicationIdentifier.VRI_START, polygon, projectionTypeCode, state, t);

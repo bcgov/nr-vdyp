@@ -43,19 +43,7 @@ public class LayerReportingInfo {
 
 	public ProjectionTypeCode getProcessedAsVDYP7Layer() {
 		if (processedAsLayerType == null) {
-			if (layer.getPolygon().getPrimaryLayer() == layer) {
-				processedAsLayerType = ProjectionTypeCode.PRIMARY;
-			} else if (layer.getPolygon().getVeteranLayer() == layer) {
-				processedAsLayerType = ProjectionTypeCode.VETERAN;
-			} else if (layer.getPolygon().getRegenerationLayer() == layer) {
-				processedAsLayerType = ProjectionTypeCode.REGENERATION;
-			} else if (layer.getPolygon().getResidualLayer() == layer) {
-				processedAsLayerType = ProjectionTypeCode.RESIDUAL;
-			} else if (layer.getPolygon().getDeadLayer() == layer) {
-				processedAsLayerType = ProjectionTypeCode.DEAD;
-			} else {
-				processedAsLayerType = ProjectionTypeCode.UNKNOWN;
-			}
+			processedAsLayerType = layer.determineProjectionType(layer.getPolygon());
 		}
 		return processedAsLayerType;
 	}
@@ -97,7 +85,6 @@ public class LayerReportingInfo {
 			lri.layer = layer;
 
 			if (layer.getVdyp7LayerCode() != null) {
-				lri.processedAsLayerType = layer.getVdyp7LayerCode();
 				lri.isDeadStemLayer = layer.getVdyp7LayerCode() == ProjectionTypeCode.DEAD;
 			}
 

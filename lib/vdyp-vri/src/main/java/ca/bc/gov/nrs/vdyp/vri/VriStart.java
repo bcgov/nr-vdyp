@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.solvers.BrentSolver;
-import org.apache.commons.math3.exception.NoBracketingException;
 import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -372,6 +371,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			preProcessedPolygon = polygon;
 			break;
 		}
+		modeUsed = mode;
 
 		AtomicInteger veteranWarnings = new AtomicInteger(0);
 		try {

@@ -1,30 +1,22 @@
-#-ini C:\VDYP7Test\VDYP.ini 
--ini $(InstallDir)\VDYP_CFG\VDYP.ini
-#-c   C:\VDYP7Test\VDYP_CFG\
--c   $(InstallDir)\VDYP_CFG\
+-ini C:\VDYP7Test\VDYP.ini 
+-c   C:\VDYP7Test\VDYP_CFG\
 
 -ifmt hcsv
 #-ofmt YieldTable
 -ofmt csvyieldtable
 
 
-#-ip $(TestDir)\InputFiles\VDYP7_INPUT_POLY.csv
--ip $(InputFileDir)\VDYP7_INPUT_POLY.csv
-#-il $(TestDir)\InputFiles\VDYP7_INPUT_LAYER.csv
--il $(InputFileDir)\VDYP7_INPUT_LAYER.csv
+-ip $(TestDir)\VDYP7_INPUT_POLY.csv
+-il $(TestDir)\VDYP7_INPUT_LAYER.csv
 #-o $(TestDir)\Output\Output-Before.csv
-#-o $(TestDir)\Output\Console-YldTbl-092G010-6-After.csv
--o $(OutputFileDir)\Output_YldTbl.csv
-#-e $(TestDir)\Output\Error-092G010-6-After.log
--e $(OutputFileDir)\Output_Error.txt
+-o $(TestDir)\Output_YldTbl.csv
 #-d $(TestDir)\Logs\debug.log
 #-l $(TestDir)\Logs\Log-$(IDE).log
--l $(OutputFileDir)\Output_Log.txt
-#-v7log $(TestDir)\Logs\V7Log-After.log
+-v7log $(TestDir)\Logs\V7Log-After.log
 
-#-dbg Yes
-#-dbgCfg $(TestDir)/VDYP7LoggingConfig.txt
-#-v7save Yes
+-dbg Yes
+-dbgCfg $(TestDir)/VDYP7LoggingConfig.txt
+-v7save Yes
 
 
 -back No
@@ -49,19 +41,19 @@
 -util S=7.5  
 -util Y=7.5
 
-#-filterforpolygonid    17585871
+#-filterforpolygonid    8489341
 #-filterforpolygon    4
 -forceyear 2023
 -forcerefyear Yes
-#-forceCrntYear Yes
+-forceCrntYear Yes
 #-yearstart 1961
 #-yearend 2061
 -agestart 0
 -ageend 250
 -inc 10
 
-#-includeagerows Yes 
-#-allowbatphsub Yes
+-includeagerows Yes 
+-allowbatphsub Yes
 #-PROGRESSFREQUENCY 500 
 -yieldtableincpolyid  Yes
 -projectedByLayer Yes

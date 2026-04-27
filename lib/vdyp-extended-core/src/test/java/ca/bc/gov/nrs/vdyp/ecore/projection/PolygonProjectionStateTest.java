@@ -2,18 +2,24 @@ package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 
 public class PolygonProjectionStateTest {
 	PolygonProjectionState unit;
@@ -125,5 +131,25 @@ public class PolygonProjectionStateTest {
 				IllegalStateException.class, () -> unit.setExecutionFolder(Path.of("Different", "Execution", "Path"))
 		);
 		assertThat(unit.getExecutionFolder(), is(Path.of("Test", "Execution", "Path")));
+	}
+
+	public static Stream<Arguments> tranlationModeCode() {
+		return Stream.of(
+				Arguments.of(ProcessingModeCode.FIP_FipStart, PolygonMode.START, GrowthModelCode.FIP),
+				Arguments.of(ProcessingModeCode.FIP_FipYoung, PolygonMode.YOUNG, GrowthModelCode.FIP),
+				Arguments.of(ProcessingModeCode.VRI_VriStart, PolygonMode.START, GrowthModelCode.VRI),
+				Arguments.of(ProcessingModeCode.VRI_VriYoung, PolygonMode.YOUNG, GrowthModelCode.VRI),
+				Arguments.of(ProcessingModeCode.VRI_Minimal, PolygonMode.BATN, GrowthModelCode.VRI),
+				Arguments.of(ProcessingModeCode.FIP_DoNotProcess, PolygonMode.DONT_PROCESS, GrowthModelCode.FIP),
+				Arguments.of(ProcessingModeCode.VRI_DoNotProcess, PolygonMode.DONT_PROCESS, GrowthModelCode.VRI)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("tranlationModeCode")
+	void testProcessingModeCodeTranslation(
+			ProcessingModeCode mode, PolygonMode polygonMode, GrowthModelCode growthMode
+	) {
+		assertEquals(mode, ProcessingModeCode.translatePolygonMode(growthMode, polygonMode));
 	}
 }

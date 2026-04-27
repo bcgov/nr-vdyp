@@ -143,8 +143,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES, //
 				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
 				Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION, //
-				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
-				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE
 		);
 		testHelper.addExcludedOptions(parameters, Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		parameters.ageStart(0).ageEnd(250).ageIncrement(25);
@@ -220,13 +219,6 @@ class Hcsv_Vdyp7_Comparison_Test {
 			outputSeen = true;
 		}
 		Assert.assertTrue(outputSeen);
-	}
-
-	@Test
-	void test1026() throws IOException, ResourceParseException {
-		runIntTestData("vdyp-1026", result -> {
-			result.entrySet();
-		});
 	}
 
 	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
@@ -617,6 +609,117 @@ class Hcsv_Vdyp7_Comparison_Test {
 				);
 				evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
 			}
+		}
+	}
+
+	@Test
+	void test1023() throws IOException, ResourceParseException {
+		logger.info("Starting vdyp-1023");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1023/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1023", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void test1026() throws IOException, ResourceParseException {
+		logger.info("Starting vdyp-1026");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1026/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1026", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void test1027() throws IOException, ResourceParseException {
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1027/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1027", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void test1028a() throws IOException, ResourceParseException {
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1028a/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1028a", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.02, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testVeteranDiameter() throws ResourceParseException, IOException {
+
+		logger.info("Starting veteran_diameter");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("veteran_diameter/output/Output_YldTbl.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("veteran_diameter", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	@Disabled
+	void test1029() throws IOException, ResourceParseException {
+
+		logger.info("Starting vdyp-1029");
+		// TODO ignoring TPH until fixed
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM|PRJ_DOM_HT|PRJ_SITE_INDEX");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1029/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1029", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testVeteranCodedAsResidual() throws ResourceParseException, IOException {
+
+		logger.info("Starting vet-coded-res");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vet-coded-res/output/Output_YldTbl.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vet-coded-res", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void test1030() throws IOException, ResourceParseException {
+
+		logger.info("Starting vdyp-1030");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1030/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1030", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
 		}
 	}
 

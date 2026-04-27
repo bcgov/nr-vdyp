@@ -166,6 +166,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			log.atInfo().setMessage("Skipping polygon with mode {}").addArgument(mode).log();
 			return Optional.empty();
 		}
+		modeUsed = mode;
 
 		// IP_IN = IP_IN+1
 		// if (IP_IN .gt. MAXPOLY) go to 200

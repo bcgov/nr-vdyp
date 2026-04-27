@@ -69,6 +69,7 @@ import ca.bc.gov.nrs.vdyp.model.InputLayer;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -123,6 +124,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	public void setDebugModes(D newDebugModes) {
 		debugModes = Optional.of(newDebugModes);
+	}
+
+	protected PolygonMode modeUsed = PolygonMode.DONT_PROCESS;
+
+	public PolygonMode getModeUsed() {
+		return modeUsed;
 	}
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");

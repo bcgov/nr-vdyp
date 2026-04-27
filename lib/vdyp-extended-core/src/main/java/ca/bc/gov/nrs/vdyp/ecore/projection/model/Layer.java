@@ -1013,7 +1013,7 @@ public class Layer implements Comparable<Layer> {
 	public ProjectionTypeCode determineProjectionType(Polygon polygon) {
 
 		var projectionType = this.getAssignedProjectionType();
-		if (projectionType == ProjectionTypeCode.UNKNOWN) {
+		if (projectionType == null || projectionType == ProjectionTypeCode.UNKNOWN) {
 			if (this == polygon.getDeadLayer()) {
 				projectionType = ProjectionTypeCode.DEAD;
 			} else if (this == polygon.getPrimaryLayer() || this == polygon.getTargetedPrimaryLayer()) {
