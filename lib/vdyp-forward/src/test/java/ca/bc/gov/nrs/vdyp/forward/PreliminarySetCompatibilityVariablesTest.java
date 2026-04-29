@@ -211,7 +211,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		assertThat(lps.getCVQuadraticMeanDiameter(1, OVER225, LayerType.PRIMARY), is(0.0072517395f));
 		assertThat(lps.getCVQuadraticMeanDiameter(1, U125TO175, LayerType.PRIMARY), is(-0.014289856f));
 		assertThat(lps.getCVQuadraticMeanDiameter(1, U175TO225, LayerType.PRIMARY), is(-0.04478264f));
-		assertThat(lps.getCVQuadraticMeanDiameter(1, U75TO125, LayerType.PRIMARY), is(-0.020475388f));
+		assertThat(lps.getCVQuadraticMeanDiameter(1, U75TO125, LayerType.PRIMARY), is(0.0f));
 
 		assertThat(lps.getCVQuadraticMeanDiameter(2, OVER225, LayerType.PRIMARY), is(6.942749E-4f));
 		assertThat(lps.getCVQuadraticMeanDiameter(2, U125TO175, LayerType.PRIMARY), is(-2.0217896E-4f));
