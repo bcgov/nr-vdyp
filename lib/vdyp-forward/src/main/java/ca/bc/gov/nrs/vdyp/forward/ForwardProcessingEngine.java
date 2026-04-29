@@ -1840,14 +1840,15 @@ public class ForwardProcessingEngine {
 
 		float dqYieldStart = fps.estimators.estimateQuadMeanDiameterYield(
 				coefficientsWeightedBySpeciesAndDecayBec, maxBreastHeightAge, dhStart, pspYabhStart, veteranBaStart,
-				dqLimit
+				dqUpperBound
 		);
 
 		float dhEnd = dhStart + dhDelta;
 		float pspYabhEnd = pspYabhStart + 1.0f;
 
 		float dqYieldEnd = fps.estimators.estimateQuadMeanDiameterYield(
-				coefficientsWeightedBySpeciesAndDecayBec, maxBreastHeightAge, dhEnd, pspYabhEnd, veteranBaEnd, dqLimit
+				coefficientsWeightedBySpeciesAndDecayBec, maxBreastHeightAge, dhEnd, pspYabhEnd, veteranBaEnd,
+				dqUpperBound
 		);
 
 		float dqYieldGrowth = dqYieldEnd - dqYieldStart;
