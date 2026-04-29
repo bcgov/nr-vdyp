@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
-import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
@@ -25,7 +24,6 @@ class SpeciesVolumeComparisonTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(SpeciesVolumeComparisonTest.class);
 
-	// private static final String RESOURCE_BASE = "test-data/vdyp7-comparison/1poly-1st/";
 	private static final String RESOURCE_BASE = "test-data/vdyp7-comparison/";
 	private static final String RESOURCE_VDYP7 = RESOURCE_BASE + "vdyp7_Output_YldTbl.csv";
 	private static final String RESOURCE_INPUT_POLY = RESOURCE_BASE + "projection_spec_vol_errorPoly.csv";
@@ -38,7 +36,7 @@ class SpeciesVolumeComparisonTest {
 	private static final int MAX_SPECIES = 6;
 
 	@Test
-	void compareSpeciesVolumes_vdyp1026() throws AbstractProjectionRequestException, Exception {
+	void compareSpeciesVolumes_vdyp1026() throws Exception {
 		ResultYieldTable vdyp7Table = new ResultYieldTable(
 				new InputStreamReader(getClass().getClassLoader().getResourceAsStream(RESOURCE_VDYP7))
 		);
@@ -51,21 +49,21 @@ class SpeciesVolumeComparisonTest {
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.FORWARD_GROW_ENABLED);
 
-		ProjectionRunner runner = new ProjectionRunner(ProjectionRequestKind.HCSV, "VDYP1026", params, false);
+		try (ProjectionRunner runner = new ProjectionRunner(ProjectionRequestKind.HCSV, "VDYP1026", params, false)) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA,
+							getClass().getClassLoader().getResourceAsStream(RESOURCE_INPUT_POLY),
+							ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							getClass().getClassLoader().getResourceAsStream(RESOURCE_INPUT_LAYER)
+					)
+			);
 
-		runner.run(
-				Map.of(
-						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						getClass().getClassLoader().getResourceAsStream(RESOURCE_INPUT_POLY),
-						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						getClass().getClassLoader().getResourceAsStream(RESOURCE_INPUT_LAYER)
-				)
-		);
+			String vdyp8Csv = new String(runner.getContext().getYieldTables().get(0).getAsStream().readAllBytes());
+			ResultYieldTable vdyp8Table = new ResultYieldTable(new StringReader(vdyp8Csv));
 
-		String vdyp8Csv = new String(runner.getContext().getYieldTables().get(0).getAsStream().readAllBytes());
-		ResultYieldTable vdyp8Table = new ResultYieldTable(new StringReader(vdyp8Csv));
-
-		assertSpeciesVolumesMatch(vdyp7Table, vdyp8Table);
+			assertSpeciesVolumesMatch(vdyp7Table, vdyp8Table);
+		}
 	}
 
 	private void assertSpeciesVolumesMatch(ResultYieldTable vdyp7Table, ResultYieldTable vdyp8Table) {
