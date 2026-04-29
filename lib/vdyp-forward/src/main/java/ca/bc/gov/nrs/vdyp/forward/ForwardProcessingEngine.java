@@ -2679,7 +2679,7 @@ public class ForwardProcessingEngine {
 				float adjustedQmd = quadMeanDiameters.getCoe(uc.index);
 
 				float qmdCvValue;
-				if (growthDetails.allowCalculation(() -> originalQmd < B_BASE_MIN)) {
+				if (growthDetails.allowCalculation(() -> bank.basalAreas[s][uc.ordinal()] < B_BASE_MIN)) {
 					qmdCvValue = 0.0f;
 				} else if (originalQmd > 0 && adjustedQmd > 0) {
 					qmdCvValue = originalQmd - adjustedQmd;
