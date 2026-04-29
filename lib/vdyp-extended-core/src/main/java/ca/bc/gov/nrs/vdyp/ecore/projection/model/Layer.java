@@ -920,7 +920,7 @@ public class Layer implements Comparable<Layer> {
 		// this is potentially inconsistent with other leading species choices in this case the difference occurs when
 		// species are combined
 		// There are other places where the combines species percentage is ignored.....
-		var leadingSp64 = getSp0sByPercent().get(0).getSpecies().get(0);
+		var leadingSp64 = getSp0sByPercent().get(0).getSpeciesByPercent().get(0);
 		try {
 			Double siteIndex = leadingSp64.getSiteIndex();
 			Double y2bh = leadingSp64.getYearsToBreastHeight();
