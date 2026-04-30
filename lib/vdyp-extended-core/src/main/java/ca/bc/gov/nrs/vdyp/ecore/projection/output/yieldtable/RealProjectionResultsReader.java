@@ -17,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
+import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
 public class RealProjectionResultsReader implements ProjectionResultsReader {
@@ -68,6 +69,8 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 			while (vdypPolygon.isPresent()
 					&& expectedPolygonIdentifier.getBase().equals(vdypPolygon.get().getPolygonIdentifier().getBase())) {
 
+				doLoadProjectionResultsProcessing(vdypPolygon.get());
+
 				projectionResultsByYear.put(vdypPolygon.get().getPolygonIdentifier().getYear(), vdypPolygon.get());
 
 				vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
@@ -90,6 +93,54 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 		}
 
 		return projectionResultsByYear;
+	}
+
+	/**
+	 * Perform load data results transforms on data coming from forward or back Sum the species utilization vectors at
+	 * each utilization class for the layer utlization class instead of trusting the layer utilization values provided
+	 * from forward (or back)
+	 *
+	 * vdyp7loaddataresults.for Potentially a side effect but from lines 1927 - 2362 the utilization for each util class
+	 * is first summed on a per species per year so that small represents all including small, and 7.5 index represents
+	 * all and 12.5 represents 12.5+ etc
+	 *
+	 * This is apparently added to the layer utilization amounts for each utilization class for the layer. There are
+	 * cases where the output from forward appears to have some rounding errors in it and doing this prevents those from
+	 * being summed together. This code does not sum the util classes because that action is performed on read where
+	 * needed in VDYP8 instad
+	 *
+	 * @param polygon
+	 */
+	private static void doLoadProjectionResultsProcessing(VdypPolygon polygon) {
+		for (var entry : polygon.getLayers().entrySet()) {
+			var layer = entry.getValue();
+			for (UtilizationClass uc : UtilizationClass.values()) {
+				float ucTPH = 0.0f;
+				float ucVolWS = 0.0f;
+				float ucVolCU = 0.0f;
+				float ucVolD = 0.0f;
+				float ucVolDW = 0.0f;
+				float ucVolDWB = 0.0f;
+				float ucBA = 0.0f;
+				for (var specEntry : layer.getSpecies().entrySet()) {
+					var species = specEntry.getValue();
+					ucTPH += species.getTreesPerHectareByUtilization().get(uc);
+					ucVolWS += species.getWholeStemVolumeByUtilization().get(uc);
+					ucVolCU += species.getCloseUtilizationVolumeByUtilization().get(uc);
+					ucVolD += species.getCloseUtilizationVolumeNetOfDecayByUtilization().get(uc);
+					ucVolDW += species.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization().get(uc);
+					ucVolDWB += species.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization().get(uc);
+					ucBA += species.getBaseAreaByUtilization().get(uc);
+				}
+				layer.getTreesPerHectareByUtilization().set(uc, ucTPH);
+				layer.getWholeStemVolumeByUtilization().set(uc, ucVolWS);
+				layer.getCloseUtilizationVolumeByUtilization().set(uc, ucVolCU);
+				layer.getCloseUtilizationVolumeNetOfDecayByUtilization().set(uc, ucVolD);
+				layer.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization().set(uc, ucVolDW);
+				layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization().set(uc, ucVolDWB);
+				layer.getBaseAreaByUtilization().set(uc, ucBA);
+			}
+		}
 	}
 
 	private static void recordPolygonProjectionInformationMissing(Polygon polygon) {
