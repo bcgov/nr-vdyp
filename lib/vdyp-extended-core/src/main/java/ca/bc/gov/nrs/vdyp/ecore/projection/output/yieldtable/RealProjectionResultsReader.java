@@ -108,7 +108,7 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 	 * cases where the output from forward appears to have some rounding errors in it and doing this prevents those from
 	 * being summed together. This code does not sum the util classes because that action is performed on read where
 	 * needed in VDYP8 instad
-	 * 
+	 *
 	 * @param polygon
 	 */
 	private static void doLoadProjectionResultsProcessing(VdypPolygon polygon) {
