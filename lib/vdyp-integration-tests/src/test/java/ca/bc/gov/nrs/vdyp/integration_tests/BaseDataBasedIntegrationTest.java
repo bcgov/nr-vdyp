@@ -149,16 +149,13 @@ public abstract class BaseDataBasedIntegrationTest {
 		Path skip = testDir.resolve("skip");
 
 		if (Files.exists(skip)) {
-			Files.readAllLines(skip).stream()
-					.map(SKIP_ENTRY_PATTERN::matcher)
-					.filter(Matcher::find)
-					.filter(m -> m.group("test").equals(test))
-					.findAny()
-					.ifPresent(
+			Files.readAllLines(skip).stream().map(SKIP_ENTRY_PATTERN::matcher).filter(Matcher::find)
+					.filter(m -> m.group("test").equals(test)).findAny().ifPresent(
 							m -> Assumptions.assumeFalse(
-									true, "Skipping for " + test + Optional.ofNullable(m.group("comment"))
-											.map(comment -> ": " + comment)
-											.orElse("")
+									true,
+									"Skipping for " + test
+											+ Optional.ofNullable(m.group("comment")).map(comment -> ": " + comment)
+													.orElse("")
 							)
 					);
 

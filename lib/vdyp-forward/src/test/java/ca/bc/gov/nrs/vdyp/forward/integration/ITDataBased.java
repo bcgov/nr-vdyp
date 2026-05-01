@@ -72,7 +72,8 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 					expectedDir.resolve(fileName(outputState, Data.Compatibility)), String::equals
 			);
 		} else if (Files.size(expectedDir.resolve(fileName(outputState, Data.Compatibility))) >= 0) {
-			// FIXME VDYP-653 Forward isn't producing the Compatibility Variables file, which doesn't seem to break anything but is different from VDYP 7
+			// FIXME VDYP-653 Forward isn't producing the Compatibility Variables file, which doesn't seem to break
+			// anything but is different from VDYP 7
 
 		}
 
