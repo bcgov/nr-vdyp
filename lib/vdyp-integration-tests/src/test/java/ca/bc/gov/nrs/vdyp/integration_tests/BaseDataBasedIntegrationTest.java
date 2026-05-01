@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.BiPredicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -141,13 +143,25 @@ public abstract class BaseDataBasedIntegrationTest {
 		}
 	}
 
+	static Pattern SKIP_ENTRY_PATTERN = Pattern.compile("^(?<test>\\w+)(?:\\s+(?<comment>.*)?)$");
+
 	public void doSkip(Path testDir, String test) throws IOException {
 		Path skip = testDir.resolve("skip");
 
 		if (Files.exists(skip)) {
-			boolean doSkip = Files.readAllLines(skip).stream().map(line -> line.split(" ")[0])
-					.anyMatch(toSkip -> toSkip.equals(test));
-			Assumptions.assumeFalse(doSkip, "Skipping for " + test);
+			Files.readAllLines(skip).stream()
+					.map(SKIP_ENTRY_PATTERN::matcher)
+					.filter(Matcher::find)
+					.filter(m -> m.group("test").equals(test))
+					.findAny()
+					.ifPresent(
+							m -> Assumptions.assumeFalse(
+									true, "Skipping for " + test + Optional.ofNullable(m.group("comment"))
+											.map(comment -> ": " + comment)
+											.orElse("")
+							)
+					);
+
 		}
 	}
 
