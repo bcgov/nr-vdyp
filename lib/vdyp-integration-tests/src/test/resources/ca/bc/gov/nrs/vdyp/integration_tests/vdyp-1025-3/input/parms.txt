@@ -1,0 +1,68 @@
+-ini C:\Program Files\VDYP7\VDYP_CFG\VDYP.ini 
+#reads VDYP7 INI
+-c   C:\Program Files\VDYP7\VDYP_CFG\
+
+-ifmt hcsv
+#-ofmt YieldTable
+-ofmt csvyieldtable
+
+
+-ip VDYP7_INPUT_POLY.csv
+-il VDYP7_INPUT_LAYER.csv
+#-o Output-Before.csv
+-o Console-YldTbl-092G010-6-After.csv
+-e Error-092G010-6-After.log
+#-l Log-$(IDE).log
+#-v7log V7Log-After.log
+
+-dbg No
+-dbgCfg VDYP7LoggingConfig.txt
+# -v7save No
+
+
+-back No
+-forward Yes
+-includeprojmode Yes
+
+-util AC=7.5  
+-util AT=7.5   
+-util B=7.5   
+-util C=7.5   
+-util D=7.5  
+-util E=7.5  
+-util F=7.5   
+-util H=7.5    
+-util L=7.5   
+-util MB=7.5  
+-util PA=7.5 
+-util PL=7.5   
+-util PW=7.5 
+-util PY=7.5  
+-util S=7.5  
+-util Y=7.5
+
+#-filterforpolygonid    17585871
+#-filterforpolygon    4
+-forceyear 2023
+-forcerefyear Yes
+-forceCrntYear Yes
+#-yearstart 1961
+#-yearend 2061
+-agestart 0
+-ageend 250
+-inc 10
+
+-includeagerows Yes 
+-allowbatphsub No
+#-PROGRESSFREQUENCY 500 
+-yieldtableincpolyid  Yes
+-projectedByLayer Yes
+-projectedBySpecies Yes
+-projectedVolumes Yes
+#-projectedCFSBiomass Yes
+
+#-metadata none
+#-metadata minident
+#-metadata version
+#-metadata main
+#-metadata all
