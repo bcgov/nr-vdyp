@@ -1767,6 +1767,7 @@ public class Polygon implements Comparable<Polygon> {
 						if (rankCode == null && candidate.doesHeightExceed(Vdyp7Constants.MIN_VETERAN_LAYER_HEIGHT)
 								&& !candidate.getSp0sAsSupplied().isEmpty()) {
 							veteranLayer = candidate;
+							veteranLayer.setAssignedProjectionType(ProjectionTypeCode.VETERAN);
 							break;
 						}
 					}
@@ -1836,6 +1837,8 @@ public class Polygon implements Comparable<Polygon> {
 									&& candidate.doesHeightExceed(Vdyp7Constants.MIN_VETERAN_LAYER_HEIGHT)) {
 
 								selectedVeteranLayer = candidate;
+								selectedVeteranLayer.setAssignedProjectionType(ProjectionTypeCode.VETERAN);
+
 								break;
 							} else {
 								logger.debug(
