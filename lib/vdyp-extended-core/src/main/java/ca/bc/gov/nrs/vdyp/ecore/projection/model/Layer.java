@@ -917,10 +917,8 @@ public class Layer implements Comparable<Layer> {
 	 */
 	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
 		// changed from simple leading sp64 to leading sp0 sp64 because VDYP7 appears to use that here.
-		// this is potentially inconsistent with other leading species choices in this case the difference occurs when
-		// species are combined
-		// There are other places where the combines species percentage is ignored.....
-		var leadingSp64 = getSp0sByPercent().get(0).getSpeciesByPercent().get(0);
+		// Uses combined species to determine total percent
+		var leadingSp64 = siteSpecies.get(0).getStand().getSpeciesByPercent().get(0);
 		try {
 			Double siteIndex = leadingSp64.getSiteIndex();
 			Double y2bh = leadingSp64.getYearsToBreastHeight();
