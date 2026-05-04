@@ -1299,7 +1299,7 @@ public class Polygon implements Comparable<Polygon> {
 		Layer regenerationLayer = getRegenerationLayer();
 		Layer residualLayer = getResidualLayer();
 
-		if (polygonPercentStockable == null) {
+		if (polygonPercentStockable == null || polygonPercentStockable <= 0.0) {
 			polygonPercentStockable = 85.0; /*
 											 * where does this come from??? PM 05-25: Seems like default max poly
 											 * stockability
