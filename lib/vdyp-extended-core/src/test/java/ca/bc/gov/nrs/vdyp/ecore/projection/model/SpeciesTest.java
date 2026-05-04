@@ -175,6 +175,17 @@ class SpeciesTest {
 		}
 
 		@Test
+		void testExactlyMissingValueYearsAtBreastHeight() {
+			var unit = baseConfig(new Species.Builder()).yearsToBreastHeight(15.5).totalAge(6.0).build();
+
+			unit.calculateUndefinedFieldValues(null);
+
+			assertThat(unit.getAgeAtBreastHeight(), closeTo(-8.8, 0.0001));
+			assertThat(unit.getYearsToBreastHeight(), closeTo(15.3, 0.0001));
+
+		}
+
+		@Test
 		void testMinimalYearsToBreastHeight() {
 			var unit = baseConfig(new Species.Builder()).totalAge(42.0).yearsToBreastHeight(21.0).build();
 

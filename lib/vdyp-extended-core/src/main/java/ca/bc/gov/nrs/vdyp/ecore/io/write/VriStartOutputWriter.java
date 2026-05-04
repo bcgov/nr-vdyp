@@ -70,14 +70,13 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 	 */
 	public void writePolygon(Polygon polygon, ProjectionTypeCode projectionType, PolygonProjectionState state)
 			throws IOException {
-
 		writeFormat(
 				polygonFile, //
 				POLY_FORMAT, //
 
 				polygon.buildPolygonDescriptor(), //
 				polygon.getBecZone() == null ? "" : polygon.getBecZone(), //
-				format(polygon.determineStockabilityByProjectionType(projectionType), 4, 0), //
+				format((double) Math.round(polygon.determineStockabilityByProjectionType(projectionType)), 4, 0), //
 				state.getProcessingMode(projectionType).value, //
 				polygon.getNonProductiveDescriptor() == null ? "" : polygon.getNonProductiveDescriptor(), //
 				format(polygon.getYieldFactor(), 5, 2) //

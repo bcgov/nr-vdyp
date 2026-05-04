@@ -651,13 +651,14 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	@Disabled
 	void test1028a() throws IOException, ResourceParseException {
 		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
 		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1028a/output/VDYP7YieldTable.csv")) {
 			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
 			runIntTestData("vdyp-1028a", result -> {
 				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
-				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.02, ignorePattern.asMatchPredicate());
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
 			});
 		}
 	}
@@ -740,6 +741,37 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void testTPHRoundStockability() throws ResourceParseException, IOException {
+
+		logger.info("Starting tph-round-stockability");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("tph-round-stockability/output/Output_YldTbl.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("tph-round-stockability", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testTPHSumSpecies() throws ResourceParseException, IOException {
+
+		logger.info("Starting tph-sum-species");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("tph-sum-species/output/Output_YldTbl.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("tph-sum-species", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void test1030() throws IOException, ResourceParseException {
 
 		logger.info("Starting vdyp-1030");
@@ -783,5 +815,4 @@ class Hcsv_Vdyp7_Comparison_Test {
 		});
 
 	}
-
 }

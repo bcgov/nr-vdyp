@@ -572,7 +572,14 @@ public class Species implements Comparable<Species> {
 				var computedTotalAgeRef = new Reference<Double>(totalAge);
 
 				SiteTool.fillInAgeTriplet(computedTotalAgeRef, ageAtBreastHeightRef, yearsToBreastHeightRef);
-
+				/**
+				 * 2003/12/02 According to Cam's Dec. 2, 2003 e-mail, if the computed BHAge works out to exactly -9.0,
+				 * we will add 0.2 to avoid the special flag of -9.0
+				 */
+				if (ageAtBreastHeightRef.get() == Vdyp7Constants.EMPTY_DECIMAL) {
+					ageAtBreastHeightRef.set(ageAtBreastHeightRef.get() + 0.2f);
+					yearsToBreastHeight -= 0.2f;
+				}
 				setAgeAtBreastHeight(ageAtBreastHeightRef.get());
 
 				keepTrying = true;
