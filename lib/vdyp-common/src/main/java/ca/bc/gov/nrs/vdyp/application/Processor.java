@@ -79,7 +79,7 @@ public abstract class Processor<DS extends DebugSettings> {
 	 */
 	protected Set<Pass> getAllPasses() {
 		return EnumSet.allOf(Pass.class);
-	};
+	}
 
 	/**
 	 * Log the settings of the pass set
