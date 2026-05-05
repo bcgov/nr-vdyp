@@ -36,7 +36,7 @@ export class FileUploadValidator extends ValidationBase {
     if (finishingAge !== null) {
       return (
         finishingAge >= CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN &&
-        finishingAge <= CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX
+        finishingAge <= CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX_FILE_UPLOAD
       )
     }
     return true

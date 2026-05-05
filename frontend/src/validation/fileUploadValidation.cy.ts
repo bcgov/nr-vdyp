@@ -52,7 +52,7 @@ describe('File Upload Validation Unit Tests', () => {
       expect(
         validateRange(
           CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-          CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+          CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX_FILE_UPLOAD,
           CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
         ).isValid,
       ).to.be.true
@@ -61,7 +61,7 @@ describe('File Upload Validation Unit Tests', () => {
     it('should return false and errorType "startingAge" for out of range startingAge', () => {
       const result = validateRange(
         CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN - 1,
-        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX_FILE_UPLOAD,
         CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
       )
       expect(result.isValid).to.be.false
@@ -71,7 +71,7 @@ describe('File Upload Validation Unit Tests', () => {
     it('should return false and errorType "finishingAge" for out of range finishingAge', () => {
       const result = validateRange(
         CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX + 1,
+        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX_FILE_UPLOAD + 1,
         CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
       )
       expect(result.isValid).to.be.false
@@ -81,7 +81,7 @@ describe('File Upload Validation Unit Tests', () => {
     it('should return false and errorType "ageIncrement" for out of range ageIncrement', () => {
       const result = validateRange(
         CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX_FILE_UPLOAD,
         CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN - 1,
       )
       expect(result.isValid).to.be.false

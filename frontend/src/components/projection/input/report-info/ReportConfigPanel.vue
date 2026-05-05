@@ -141,7 +141,7 @@
                       label="Finishing Age"
                       :model-value="localFinishingAge"
                       :min="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN"
-                      :max="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX"
+                      :max="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX_FILE_UPLOAD"
                       :step="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_STEP"
                       :persistent-placeholder="true"
                       placeholder=""
@@ -454,7 +454,7 @@ const validateNumericRange = (
 }
 
 const validateAgeFields = (): boolean => {
-  const { STARTING_AGE_MIN, STARTING_AGE_MAX, FINISHING_AGE_MIN, FINISHING_AGE_MAX, AGE_INC_MIN, AGE_INC_MAX } =
+  const { STARTING_AGE_MIN, STARTING_AGE_MAX, FINISHING_AGE_MIN, FINISHING_AGE_MAX_FILE_UPLOAD, AGE_INC_MIN, AGE_INC_MAX } =
     CONSTANTS.NUM_INPUT_LIMITS
   const { RPT_VLD_START_AGE_RNG, RPT_VLD_START_FNSH_RNG, RPT_VLD_AGE_INC_RNG, RPT_VLD_COMP_FNSH_AGE } =
     MESSAGE.MDL_PRM_INPUT_ERR
@@ -464,8 +464,8 @@ const validateAgeFields = (): boolean => {
     'Starting Age is required.', RPT_VLD_START_AGE_RNG(STARTING_AGE_MIN, STARTING_AGE_MAX), startingAgeError,
   )
   isValid = validateNumericRange(
-    localFinishingAge.value, FINISHING_AGE_MIN, FINISHING_AGE_MAX,
-    'Finishing Age is required.', RPT_VLD_START_FNSH_RNG(FINISHING_AGE_MIN, FINISHING_AGE_MAX), finishingAgeError,
+    localFinishingAge.value, FINISHING_AGE_MIN, FINISHING_AGE_MAX_FILE_UPLOAD,
+    'Finishing Age is required.', RPT_VLD_START_FNSH_RNG(FINISHING_AGE_MIN, FINISHING_AGE_MAX_FILE_UPLOAD), finishingAgeError,
   ) && isValid
   isValid = validateNumericRange(
     localAgeIncrement.value, AGE_INC_MIN, AGE_INC_MAX,
