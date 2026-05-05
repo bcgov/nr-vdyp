@@ -193,7 +193,7 @@ export const SUCCESS_MSG = Object.freeze({
   PROJECTION_CANCELLED: 'Projection has been successfully cancelled.',
   PROJECTION_CANCELLED_TITLE: 'Projection Cancelled',
   BATCH_PROJECTION_STARTED:
-    'Projection has been submitted for batch processing. You can check the status in the Projection List.',
+    'Projection has been submitted for processing. You can check the status in the Projection List.',
   BATCH_PROJECTION_STARTED_TITLE: 'Projection Started',
   DOWNLOAD_SUCCESS: (fileName: string) =>
     `${fileName} was successfully downloaded to your device`,
