@@ -105,7 +105,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const isComputedMAIEnabled = ref<boolean>(false)
   const isCulminationValuesEnabled = ref<boolean>(false)
   const isBySpeciesEnabled = ref<boolean>(false)
-  const isByLayerEnabled = ref<boolean>(false)
   const isProjectionModeEnabled = ref<boolean>(false)
   const isPolygonIDEnabled = ref<boolean>(false)
   const isCurrentYearEnabled = ref<boolean>(false)
@@ -205,7 +204,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isComputedMAIEnabled.value = false
     isCulminationValuesEnabled.value = false
     isBySpeciesEnabled.value = false
-    isByLayerEnabled.value = false
     isProjectionModeEnabled.value = false
     isPolygonIDEnabled.value = false
     isCurrentYearEnabled.value = false
@@ -246,7 +244,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const restoreExecutionOptions = (options: string[]) => {
     isForwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.ForwardGrowEnabled)
     isBackwardGrowEnabled.value = options.includes(ExecutionOptionsEnum.BackGrowEnabled)
-    isByLayerEnabled.value = options.includes(ExecutionOptionsEnum.DoSummarizeProjectionByLayer)
     isBySpeciesEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)
     isPolygonIDEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable)
     isProjectionModeEnabled.value = options.includes(ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable)
@@ -370,7 +367,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isComputedMAIEnabled,
     isCulminationValuesEnabled,
     isBySpeciesEnabled,
-    isByLayerEnabled,
     isProjectionModeEnabled,
     isPolygonIDEnabled,
     isCurrentYearEnabled,

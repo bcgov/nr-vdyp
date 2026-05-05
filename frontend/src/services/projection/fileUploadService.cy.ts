@@ -30,7 +30,6 @@ const createMockFileUploadStore = (overrides: Record<string, unknown> = {}) =>
     projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
     isForwardGrowEnabled: false,
     isBackwardGrowEnabled: false,
-    isByLayerEnabled: false,
     isBySpeciesEnabled: false,
     isProjectionModeEnabled: false,
     isPolygonIDEnabled: false,
@@ -130,20 +129,11 @@ describe('buildExecutionOptions', () => {
     expect(excluded2).to.not.include(ExecutionOptionsEnum.ForwardGrowEnabled)
   })
 
-  it('should add DoSummarizeProjectionByLayer to selected and ByPolygon to excluded when isByLayerEnabled', () => {
-    const store = createMockFileUploadStore({ isByLayerEnabled: true })
-    const { selectedExecutionOptions, excludedExecutionOptions } = buildExecutionOptions(store)
+  it('should always include DoSummarizeProjectionByLayer in selected and DoSummarizeProjectionByPolygon in excluded', () => {
+    const { selectedExecutionOptions, excludedExecutionOptions } = buildExecutionOptions(createMockFileUploadStore())
 
     expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoSummarizeProjectionByLayer)
     expect(excludedExecutionOptions).to.include(ExecutionOptionsEnum.DoSummarizeProjectionByPolygon)
-  })
-
-  it('should add DoSummarizeProjectionByPolygon to selected and ByLayer to excluded when not isByLayerEnabled', () => {
-    const store = createMockFileUploadStore({ isByLayerEnabled: false })
-    const { selectedExecutionOptions, excludedExecutionOptions } = buildExecutionOptions(store)
-
-    expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoSummarizeProjectionByPolygon)
-    expect(excludedExecutionOptions).to.include(ExecutionOptionsEnum.DoSummarizeProjectionByLayer)
   })
 })
 
