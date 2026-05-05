@@ -1299,7 +1299,7 @@ public class Polygon implements Comparable<Polygon> {
 		Layer regenerationLayer = getRegenerationLayer();
 		Layer residualLayer = getResidualLayer();
 
-		if (polygonPercentStockable == null) {
+		if (polygonPercentStockable == null || polygonPercentStockable <= 0.0) {
 			polygonPercentStockable = 85.0; /*
 											 * where does this come from??? PM 05-25: Seems like default max poly
 											 * stockability
@@ -1767,6 +1767,7 @@ public class Polygon implements Comparable<Polygon> {
 						if (rankCode == null && candidate.doesHeightExceed(Vdyp7Constants.MIN_VETERAN_LAYER_HEIGHT)
 								&& !candidate.getSp0sAsSupplied().isEmpty()) {
 							veteranLayer = candidate;
+							veteranLayer.setAssignedProjectionType(ProjectionTypeCode.VETERAN);
 							break;
 						}
 					}
@@ -1836,6 +1837,8 @@ public class Polygon implements Comparable<Polygon> {
 									&& candidate.doesHeightExceed(Vdyp7Constants.MIN_VETERAN_LAYER_HEIGHT)) {
 
 								selectedVeteranLayer = candidate;
+								selectedVeteranLayer.setAssignedProjectionType(ProjectionTypeCode.VETERAN);
+
 								break;
 							} else {
 								logger.debug(

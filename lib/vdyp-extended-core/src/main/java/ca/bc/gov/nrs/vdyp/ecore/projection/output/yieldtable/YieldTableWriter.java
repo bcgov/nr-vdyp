@@ -128,7 +128,7 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 			currentRecord.setDiameter(growthDetails.diameter());
 		}
 
-		if (containsValue(growthDetails.treesPerHectare())) {
+		if (containsNonNegValue(growthDetails.treesPerHectare())) {
 			currentRecord.setTreesPerHectare(growthDetails.treesPerHectare());
 		}
 

@@ -1113,7 +1113,8 @@ public class YieldTable implements Closeable {
 
 			var projectionYear = layer.determineYearAtAge(targetAge);
 
-			if (projectionYear >= measurementYear && dominantHeight < species.getSuppliedDominantHeight()) {
+			if (projectionYear >= measurementYear
+					&& (Double.isNaN(dominantHeight) || dominantHeight < species.getSuppliedDominantHeight())) {
 
 				logger.debug(
 						"Projected dominant height ({}) in {} is less than supplied dominant height ({}) on or after to measurement year {}."

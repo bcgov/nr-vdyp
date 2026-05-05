@@ -5,7 +5,6 @@ import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasVeteranLayer;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertOnlyPrimaryLayer;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isBec;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isPolyId;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
@@ -31,12 +30,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.exception.NoBracketingException;
 import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -230,7 +227,7 @@ class VriStartTest {
 			controlMap.put(ControlKey.MINIMA.name(), Utils.constMap(map -> {
 				map.put(VriControlParser.MINIMUM_BASE_AREA, 0f);
 				map.put(VriControlParser.MINIMUM_HEIGHT, 6f);
-				map.put(VriControlParser.MINIMUM_PREDICTED_BASE_AREA, 14f); // Set this high for test
+				map.put(VriControlParser.MINIMUM_PREDICTED_BASE_AREA, 20f); // Set this high for test
 			}));
 
 			var baYieldMap = new MatrixMap2Impl<>(

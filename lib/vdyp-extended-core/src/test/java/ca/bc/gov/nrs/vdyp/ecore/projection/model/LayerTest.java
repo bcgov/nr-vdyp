@@ -522,6 +522,7 @@ public class LayerTest {
 
 		layer.doBuildSiteSpecies();
 		layer.doCompleteSiteSpeciesSiteIndexInfo(context);
+		layer.doSortSiteSpecies(GrowthModelCode.VRI);
 
 		assertNull(layer.determineLeadingSiteSpeciesHeight(110));
 

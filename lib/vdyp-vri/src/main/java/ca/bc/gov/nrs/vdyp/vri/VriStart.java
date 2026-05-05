@@ -1140,7 +1140,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		float bap;
 		if (ageBH.map(abh -> abh >= 1).orElse(false)) {
 			bap = this.estimateBaseAreaYield(
-					height.get(), ageBH.get(), Optional.empty(), false, species, bec, baseAreaGroup.get()
+					height.get(), ageBH.get(), Optional.empty(), true, species, bec, baseAreaGroup.get()
 			);
 		} else {
 			bap = 0;
