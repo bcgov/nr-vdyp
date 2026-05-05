@@ -72,7 +72,6 @@ describe('File Upload Store Unit Tests', () => {
       expect(store.isComputedMAIEnabled).to.be.false
       expect(store.isCulminationValuesEnabled).to.be.false
       expect(store.isBySpeciesEnabled).to.be.false
-      expect(store.isByLayerEnabled).to.be.false
       expect(store.isProjectionModeEnabled).to.be.false
       expect(store.isPolygonIDEnabled).to.be.false
       expect(store.isCurrentYearEnabled).to.be.false
@@ -519,7 +518,6 @@ describe('File Upload Store Unit Tests', () => {
     const allOptions = [
       ExecutionOptionsEnum.ForwardGrowEnabled,
       ExecutionOptionsEnum.BackGrowEnabled,
-      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
       ExecutionOptionsEnum.DoIncludeSpeciesProjection,
       ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
       ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
@@ -543,10 +541,6 @@ describe('File Upload Store Unit Tests', () => {
 
     it('should set isBackwardGrowEnabled', () => {
       expect(store.isBackwardGrowEnabled).to.be.true
-    })
-
-    it('should set isByLayerEnabled', () => {
-      expect(store.isByLayerEnabled).to.be.true
     })
 
     it('should set isBySpeciesEnabled', () => {
