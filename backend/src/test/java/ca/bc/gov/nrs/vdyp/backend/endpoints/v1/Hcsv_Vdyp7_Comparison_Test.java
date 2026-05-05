@@ -711,12 +711,11 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
-	@Disabled
 	void test1029() throws IOException, ResourceParseException {
 
 		logger.info("Starting vdyp-1029");
 		// TODO ignoring TPH until fixed
-		Pattern ignorePattern = Pattern.compile("TABLE_NUM|PRJ_DOM_HT|PRJ_SITE_INDEX");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
 		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1029/output/VDYP7YieldTable.csv")) {
 			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
 			runIntTestData("vdyp-1029", result -> {
@@ -815,4 +814,54 @@ class Hcsv_Vdyp7_Comparison_Test {
 		});
 
 	}
+
+	@Test
+	@Disabled
+	void testCompare7And8() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+
+		logger.info("Starting testCompare7And8");
+
+		try (
+				CSVReader vdyp7Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class
+										.getResourceAsStream("secheight/output/Console-YldTbl-092G010-6-After.csv")
+						)
+				);
+				CSVReader vdyp8Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class.getResourceAsStream("secheight/output/finalsortedVDYP8.csv")
+						)
+				);
+		) {
+			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
+		}
+
+	}
+
+	@Test
+	@Disabled
+	void testCompare44MapSheet() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+
+		logger.info("Starting testCompare7And8");
+
+		try (
+				CSVReader vdyp7Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class.getResourceAsStream("secheight/output/44MapSheetYieldTable7.csv")
+						)
+				);
+				CSVReader vdyp8Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class.getResourceAsStream("secheight/output/44mapsheetyieldTable8.csv")
+						)
+				);
+		) {
+			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
+		}
+
+	}
+
 }
