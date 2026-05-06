@@ -807,7 +807,7 @@ public class YieldTable implements Closeable {
 			int totalAge
 	) throws StandYieldCalculationException {
 
-		var leadingSpeciesSp0 = layer.determineLeadingSp0(0);
+		var leadingSpeciesSp0 = layer.getSp0sByPercent().get(0);
 		var layerWasProcessed = rowContext.getPolygonProjectionState()
 				.didRunProjection(layer.getAssignedProjectionType());
 
