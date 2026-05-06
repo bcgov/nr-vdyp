@@ -714,11 +714,41 @@ class Hcsv_Vdyp7_Comparison_Test {
 	void test1029() throws IOException, ResourceParseException {
 
 		logger.info("Starting vdyp-1029");
-		// TODO ignoring TPH until fixed
 		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
 		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1029/output/VDYP7YieldTable.csv")) {
 			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
 			runIntTestData("vdyp-1029", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testMinDQExpansion() throws IOException, ResourceParseException {
+
+		logger.info("Starting min-expand-dq");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("min-expand-dq/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("min-expand-dq", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testNegBHAGEInputToForward() throws IOException, ResourceParseException {
+
+		logger.info("Starting neg-bh-age-input");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("neg-bh-age-input/output/VDYP7YieldTable.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("neg-bh-age-input", result -> {
 				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
 				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
 			});
