@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.back.processing_state;
 import java.util.Map;
 import java.util.Optional;
 
+import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -30,8 +31,7 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
 
 	public BackProcessingState(Map<String, Object> controlMap) throws ProcessingException {
-		super(controlMap);
-		// TODO Auto-generated constructor stub
+		super(controlMap, VdypApplicationIdentifier.VDYP_BACK);
 	}
 
 	@Override

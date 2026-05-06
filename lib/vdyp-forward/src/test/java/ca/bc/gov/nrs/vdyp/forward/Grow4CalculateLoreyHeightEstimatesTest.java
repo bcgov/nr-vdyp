@@ -63,7 +63,7 @@ class Grow4CalculateLoreyHeightEstimatesTest {
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		float dhStart = 35.3f;
 		float dhEnd = 35.473381f;
@@ -91,7 +91,7 @@ class Grow4CalculateLoreyHeightEstimatesTest {
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		float dhStart = 35.3f;
 		float dhEnd = 35.3f;
@@ -99,7 +99,7 @@ class Grow4CalculateLoreyHeightEstimatesTest {
 		float pspTphEnd = 287.107788f;
 		float pspLhStart = 33.7439995f;
 
-		fpe.fps.fcm.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 2);
+		fpe.fps.controlMap.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 2);
 
 		fpe.growLoreyHeights(lps, dhStart, dhEnd, pspTphStart, pspTphEnd, pspLhStart);
 

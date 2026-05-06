@@ -28,7 +28,7 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 	private static final String UNSET_CV_BASAL_AREAS = "unset cvBasalAreas";
 
 	/** The containing ForwardProcessingState */
-	private final ProcessingState<RCM, Self> ps;
+	protected final ProcessingState<RCM, Self> ps;
 
 	/** The containing polygon of the layer on which the Processor is operating */
 	private final VdypPolygon polygon;

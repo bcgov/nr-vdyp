@@ -6,7 +6,6 @@ import java.util.Optional;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
-import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
@@ -18,13 +17,13 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 public abstract class ProcessingState<RCM extends ResolvedControlMap, LS extends LayerProcessingState<RCM, LS>> {
 
 	/** The control map defining the context of the execution */
-	final RCM controlMap;
+	public final RCM controlMap;
 
 	/** The estimators instance used by this engine */
-	final EstimationMethods estimators;
+	public final EstimationMethods estimators;
 
 	/** The computation instance used by this engine */
-	final ComputationMethods computers;
+	public final ComputationMethods computers;
 
 	/** The polygon on which the Processor is currently operating */
 	private VdypPolygon polygon;
@@ -35,10 +34,10 @@ public abstract class ProcessingState<RCM extends ResolvedControlMap, LS extends
 	/** The processing state of the veteran layer of <code>polygon</code> */
 	private Optional<LS> vlps;
 
-	protected ProcessingState(Map<String, Object> controlMap) throws ProcessingException {
+	protected ProcessingState(Map<String, Object> controlMap, VdypApplicationIdentifier appId) {
 		this.controlMap = resolveControlMap(controlMap);
 		this.estimators = new EstimationMethods(this.controlMap);
-		this.computers = new ComputationMethods(estimators, VdypApplicationIdentifier.VDYP_FORWARD);
+		this.computers = new ComputationMethods(estimators, appId);
 	}
 
 	protected abstract RCM resolveControlMap(Map<String, Object> controlMap);

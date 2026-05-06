@@ -3,12 +3,13 @@ package ca.bc.gov.nrs.vdyp.forward;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
-import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
@@ -19,6 +20,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
+import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
 class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> {
@@ -38,12 +40,6 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 	private static final String UNSET_INVENTORY_TYPE_GROUP = "unset inventoryTypeGroup";
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardLayerProcessingState.class);
-
-	/** The containing ForwardProcessingState */
-	private final ForwardProcessingState fps;
-
-	/** The type of Layer being processed */
-	private final LayerType layerType;
 
 	// L1COM1, L1COM4 and L1COM5 - these common blocks mirror BANK1, BANK2 and BANK3 and are initialized
 	// when copied to "active" in ForwardProcessingEngine.
@@ -112,19 +108,18 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 	// MNSP - MSPL1, MSPLV
 	// TODO
 
-	public ForwardLayerProcessingState(ForwardProcessingState fps, VdypLayer layer) {
+	public ForwardLayerProcessingState(ForwardProcessingState fps, VdypLayer layer) throws ProcessingException {
 
-		this.fps = fps;
-		this.layerType = layer.getLayerType();
+		super(fps, fps.getCurrentPolygon(), layer.getLayerType());
 
 		bank = new Bank(
 				layer, fps.getCurrentBecZone(),
 				s -> s.getBaseAreaByUtilization().get(UtilizationClass.ALL) >= ForwardProcessingEngine.MIN_BASAL_AREA
 		);
 
-		var volumeEquationGroupMatrix = this.fps.fcm.getVolumeEquationGroups();
-		var decayEquationGroupMatrix = this.fps.fcm.getDecayEquationGroups();
-		var breakageEquationGroupMatrix = this.fps.fcm.getBreakageEquationGroups();
+		var volumeEquationGroupMatrix = this.ps.controlMap.getVolumeEquationGroups();
+		var decayEquationGroupMatrix = this.ps.controlMap.getDecayEquationGroups();
+		var breakageEquationGroupMatrix = this.ps.controlMap.getBreakageEquationGroups();
 
 		volumeEquationGroups = new int[bank.getNSpecies() + 1];
 		decayEquationGroups = new int[bank.getNSpecies() + 1];
@@ -147,20 +142,8 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 		}
 	}
 
-	public LayerType getLayerType() {
-		return layerType;
-	}
-
-	public int getNSpecies() {
-		return bank.getNSpecies();
-	}
-
 	public int[] getIndices() {
 		return bank.getIndices();
-	}
-
-	public BecDefinition getBecZone() {
-		return bank.getBecZone();
 	}
 
 	public int getPrimarySpeciesIndex() {
@@ -196,10 +179,7 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 		return logger;
 	}
 
-	public ForwardProcessingState getFps() {
-		return fps;
-	}
-
+	@Override
 	public Bank getBank() {
 		return bank;
 	}
@@ -329,7 +309,7 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 
 		// Normally, these values may only be set only once. However, during grow(), if the
 		// control variable UPDATE_DURING_GROWTH_6 has value "1" then updates are allowed.
-		if (arePrimarySpeciesDetailsSet && fps.fcm.getForwardControlVariables()
+		if (arePrimarySpeciesDetailsSet && ps.controlMap.getForwardControlVariables()
 				.getControlVariable(ControlVariable.UPDATE_DURING_GROWTH_6) != 1) {
 			throw new IllegalStateException(PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY);
 		}
@@ -380,30 +360,12 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 		// primarySpeciesAgeToBreastHeight of course doesn't change.
 	}
 
-	public void setCompatibilityVariableDetails(
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume,
-			MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea,
-			MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter,
-			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
-	) {
-		if (areCompatibilityVariablesSet) {
-			throw new IllegalStateException(COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY);
-		}
-
-		this.cvVolume = cvVolume;
-		this.cvBasalArea = cvBasalArea;
-		this.cvQuadraticMeanDiameter = cvQuadraticMeanDiameter;
-		this.cvPrimaryLayerSmall = cvPrimaryLayerSmall;
-
-		areCompatibilityVariablesSet = true;
-	}
-
 	/**
 	 * CVADJ1 - adjust the values of the compatibility variables after one year of growth.
 	 */
 	public void updateCompatibilityVariablesAfterGrowth() {
 
-		var compVarAdjustments = fps.fcm.getCompVarAdjustments();
+		var compVarAdjustments = ps.controlMap.getCompVarAdjustments();
 
 		for (int i : getIndices()) {
 			for (UtilizationClassVariable sucv : UtilizationClassVariable.values()) {
@@ -434,44 +396,12 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 		}
 	}
 
-	public float
-			getCVVolume(int speciesIndex, UtilizationClass uc, VolumeVariable volumeVariable, LayerType layerType) {
-		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_VOLUMES);
-		}
-
-		return cvVolume[speciesIndex].get(uc, volumeVariable, layerType);
-	}
-
-	public float getCVBasalArea(int speciesIndex, UtilizationClass uc, LayerType layerType) {
-		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
-		}
-
-		return cvBasalArea[speciesIndex].get(uc, layerType);
-	}
-
-	public float getCVQuadraticMeanDiameter(int speciesIndex, UtilizationClass uc, LayerType layerType) {
-		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
-		}
-
-		return cvQuadraticMeanDiameter[speciesIndex].get(uc, layerType);
-	}
-
-	public float getCVSmall(int speciesIndex, UtilizationClassVariable variable) {
-		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
-		}
-
-		return cvPrimaryLayerSmall[speciesIndex].get(variable);
-	}
-
+	@Override
 	protected VdypLayer updateLayerFromBank() {
 
 		VdypLayer updatedLayer = bank.buildLayerFromBank();
 
-		if (layerType.equals(LayerType.PRIMARY)) {
+		if (getLayerType().equals(LayerType.PRIMARY)) {
 			// Inject the compatibility variable values.
 			for (int i = 1; i < getNSpecies() + 1; i++) {
 				VdypSpecies species = updatedLayer.getSpeciesBySp0(bank.speciesNames[i]);
@@ -483,5 +413,16 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 		}
 
 		return updatedLayer;
+	}
+
+	@Override
+	protected Predicate<VdypSpecies> getBankFilter() {
+		return s -> s.getBaseAreaByUtilization().get(UtilizationClass.ALL) >= ForwardProcessingEngine.MIN_BASAL_AREA;
+	}
+
+	@Override
+	protected void applyCompatibilityVariables(VdypSpecies species, int i) {
+		// TODO Auto-generated method stub
+		// Added this to the parent during the initial 443 development but can't remember why.  It will probably be important later. Making a note to remember to check at the end and delete it if it's not needed after all. 
 	}
 }

@@ -62,10 +62,10 @@ class Grow8PerSpeciesLoreyHeightTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.fps.fcm.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 0);
+		fpe.fps.controlMap.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 0);
 		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
 
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 
@@ -81,10 +81,10 @@ class Grow8PerSpeciesLoreyHeightTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.fps.fcm.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 2);
+		fpe.fps.controlMap.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 2);
 		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
 
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 

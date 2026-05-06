@@ -146,11 +146,11 @@ public class Bank {
 		return nSpecies;
 	}
 
-	int[] getIndices() {
+	public int[] getIndices() {
 		return indices;
 	}
 
-	BecDefinition getBecZone() {
+	public BecDefinition getBecZone() {
 		return becZone;
 	}
 
@@ -162,7 +162,7 @@ public class Bank {
 	 * @param layer a (presumably modified) version of the layer.
 	 * @throws ProcessingException
 	 */
-	void refreshBank(VdypLayer layer) throws ProcessingException {
+	public void refreshBank(VdypLayer layer) {
 
 		if (!this.layer.equals(layer)) {
 			throw new IllegalArgumentException(
@@ -196,11 +196,11 @@ public class Bank {
 			dominantHeights[index] = s.getHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
 			ageTotals[index] = s.getAgeTotal().orElse(VdypEntity.MISSING_FLOAT_VALUE);
 			yearsToBreastHeight[index] = s.getYearsToBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
-			if (ageTotals[index] != VdypEntity.MISSING_FLOAT_VALUE
-					&& yearsToBreastHeight[index] != VdypEntity.MISSING_FLOAT_VALUE) {
+			yearsAtBreastHeight[index] = s.getYearsAtBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
+			if (Float.isNaN(yearsAtBreastHeight[index]) && ageTotals[index] != VdypEntity.MISSING_FLOAT_VALUE
+					&& yearsToBreastHeight[index] != VdypEntity.MISSING_FLOAT_VALUE
+					&& ageTotals[index] >= yearsToBreastHeight[index]) {
 				yearsAtBreastHeight[index] = ageTotals[index] - yearsToBreastHeight[index];
-			} else {
-				yearsAtBreastHeight[index] = VdypEntity.MISSING_FLOAT_VALUE;
 			}
 			siteCurveNumbers[index] = s.getSiteCurveNumber().orElse(VdypEntity.MISSING_INTEGER_VALUE);
 			// percentForestedLand is output-only and so not assigned here.
@@ -365,7 +365,7 @@ public class Bank {
 	 *
 	 * @return as described
 	 */
-	VdypLayer buildLayerFromBank() {
+	public VdypLayer buildLayerFromBank() {
 
 		transferUtilizationsFromBank(0, layer);
 
@@ -391,6 +391,7 @@ public class Bank {
 				siteBuilder.siteCurveNumber(Utils.optInt(this.siteCurveNumbers[index]));
 				siteBuilder.siteIndex(Utils.optFloat(this.siteIndices[index]));
 				siteBuilder.yearsToBreastHeight(Utils.optFloat(this.yearsToBreastHeight[index]));
+				siteBuilder.yearsAtBreastHeight(Utils.optFloat(this.yearsAtBreastHeight[index]));
 			})), () -> {
 				VdypSite site = VdypSite.build(siteBuilder -> {
 					siteBuilder.polygonIdentifier(species.getPolygonIdentifier());
@@ -401,6 +402,7 @@ public class Bank {
 					siteBuilder.siteCurveNumber(Utils.optInt(this.siteCurveNumbers[index]));
 					siteBuilder.siteIndex(Utils.optFloat(this.siteIndices[index]));
 					siteBuilder.yearsToBreastHeight(Utils.optFloat(this.yearsToBreastHeight[index]));
+					siteBuilder.yearsAtBreastHeight(Utils.optFloat(this.yearsAtBreastHeight[index]));
 				});
 
 				speciesBuilder.addSite(site);

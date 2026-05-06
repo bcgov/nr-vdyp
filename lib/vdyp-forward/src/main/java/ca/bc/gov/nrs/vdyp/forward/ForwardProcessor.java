@@ -157,7 +157,7 @@ public class ForwardProcessor {
 				var outputWriter = Utils.map(outputFileResolver, ofr -> new VdypOutputWriter(controlMap, ofr));
 				var fpe = new ForwardProcessingEngine(controlMap, outputWriter);
 
-				try (var forwardDataStreamReader = new ForwardDataStreamReader(fpe.fps.fcm);) {
+				try (var forwardDataStreamReader = new ForwardDataStreamReader(fpe.fps.controlMap);) {
 					// Fetch the next polygon to process.
 					int nPolygonsProcessed = 0;
 					while (true) {
