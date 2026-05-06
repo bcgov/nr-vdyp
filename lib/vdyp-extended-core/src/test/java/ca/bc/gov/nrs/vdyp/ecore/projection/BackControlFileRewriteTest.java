@@ -34,11 +34,11 @@ class BackControlFileRewriteTest {
 			);
 
 			PolygonProjectionRunner
-					.rewriteTargetYearToBackControlFile(executionFolder, 9999, ProjectionTypeCode.PRIMARY);
+					.rewriteTargetYearToBackControlFile(executionFolder, 1970, 100, ProjectionTypeCode.PRIMARY);
 
 			String contents = Files.readString(controlFile);
 
-			assertTrue(contents.indexOf("9999") >= 0);
+			assertTrue(contents.indexOf("1870") >= 0);
 		} catch (IOException | PolygonExecutionException e) {
 			fail(e.getMessage());
 		}

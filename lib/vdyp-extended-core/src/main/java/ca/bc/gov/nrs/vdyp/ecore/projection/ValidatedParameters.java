@@ -537,7 +537,7 @@ public class ValidatedParameters {
 		DEFAULT.minAgeStart = 0;
 		DEFAULT.maxAgeStart = 600;
 		DEFAULT.minAgeEnd = 1;
-		DEFAULT.maxAgeEnd = 1000;
+		DEFAULT.maxAgeEnd = 2000;
 		DEFAULT.minYearStart = 1400;
 		DEFAULT.maxYearStart = 3250;
 		DEFAULT.minYearEnd = 1400;

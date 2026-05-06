@@ -54,7 +54,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
-import ca.bc.gov.nrs.vdyp.math.VdypMath;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 
 /**
@@ -735,10 +734,8 @@ public class PolygonProjectionRunner {
 			);
 			int endYear = adjustMeasurementYearAsNecessary(measurementYear, state.getEndAge(projectionType), standAge);
 
-			// Impose a limit of 400 years of projection, as is done in VDYP7.
-
-			int yearsToGrowForward = VdypMath.clamp(endYear - measurementYear, 0, 400);
-			int yearsToGrowBack = VdypMath.clamp(measurementYear - startYear, 0, 400);
+			int yearsToGrowForward = Math.max(endYear - measurementYear, 0);
+			int yearsToGrowBack = Math.max(measurementYear - startYear, 0);
 
 			if (yearsToGrowBack == 0 && yearsToGrowForward == 0) {
 				// vdyp7vdypmodel.for lines 278 - 282
@@ -763,7 +760,7 @@ public class PolygonProjectionRunner {
 
 					generateYearToGrowFile(executionFolder, measurementYear, yearsToGrowForward);
 
-					generateStandControlFile(executionFolder, yearsToGrowForward);
+					generateStandControlFile(executionFolder);
 
 					componentRunner.runForward(polygon, projectionType, state);
 
@@ -785,7 +782,9 @@ public class PolygonProjectionRunner {
 
 					// BACK read the backwards growth target value from entry 101 in the
 					// control file. Adjust the control file to contain this value.
-					rewriteTargetYearToBackControlFile(state.getExecutionFolder(), yearsToGrowBack, projectionType);
+					rewriteTargetYearToBackControlFile(
+							state.getExecutionFolder(), measurementYear, yearsToGrowBack, projectionType
+					);
 
 					componentRunner.runBack(polygon, projectionType, state);
 
@@ -963,14 +962,16 @@ public class PolygonProjectionRunner {
 		}
 	}
 
-	private Path generateStandControlFile(Path executionFolder, int yearsToGrow) throws PolygonExecutionException {
+	private Path generateStandControlFile(Path executionFolder) throws PolygonExecutionException {
 		Path path = Path.of(executionFolder.toString(), Vdyp7Constants.STAND_FORWARD_CONTROL_FILE_NAME);
 		try (var os = new FileOutputStream(path.toFile()); var writer = new ControlFileWriter(os)) {
 			writer.writeComment("Automatically generated control file for a specific stand");
+			// VTROL[1] = -1: per-polygon target year via vin_y1.dat, bypassing VDYP7's 1~400/1920~2400 range
+			// constraint.
 			writer.writeEntry(
 					ControlKey.VTROL.sequence.get(),
-					Stream.of(yearsToGrow, 2, 2, 3, 1, 1).map(i -> Integer.toString(i))
-							.map(s -> StringUtils.leftPad(s, 4)).collect(Collectors.joining(""))
+					Stream.of(-1, 2, 2, 3, 1, 1).map(i -> Integer.toString(i)).map(s -> StringUtils.leftPad(s, 4))
+							.collect(Collectors.joining(""))
 			);
 		} catch (IOException e) {
 			throw new PolygonExecutionException(e);
@@ -979,7 +980,7 @@ public class PolygonProjectionRunner {
 	}
 
 	static void rewriteTargetYearToBackControlFile(
-			Path executionFolder, int yearsToGrowBack, ProjectionTypeCode projectionType
+			Path executionFolder, int measurementYear, int yearsToGrowBack, ProjectionTypeCode projectionType
 	) throws PolygonExecutionException {
 
 		Path controlFilePath = Path
@@ -988,7 +989,8 @@ public class PolygonProjectionRunner {
 
 		try {
 			var controlFileContents = Files.readString(controlFilePath);
-			var newControlFileContents = controlFileContents.replace("%YR%", String.format("%4d", yearsToGrowBack));
+			var newControlFileContents = controlFileContents
+					.replace("%YR%", String.format("%4d", measurementYear - yearsToGrowBack));
 			Files.write(tempControlFilePath, newControlFileContents.getBytes());
 			Files.delete(controlFilePath);
 			Files.move(tempControlFilePath, controlFilePath);
