@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -23,6 +24,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
 class Grow8PerSpeciesLoreyHeightTest {
 
@@ -65,7 +67,8 @@ class Grow8PerSpeciesLoreyHeightTest {
 		fpe.fps.controlMap.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 0);
 		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
 
-		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
+				.getPrimaryLayerProcessingState();
 
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 
@@ -84,7 +87,8 @@ class Grow8PerSpeciesLoreyHeightTest {
 		fpe.fps.controlMap.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 2);
 		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
 
-		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
+				.getPrimaryLayerProcessingState();
 
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 

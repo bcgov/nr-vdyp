@@ -29,6 +29,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.SpeciesDynamics;
@@ -43,6 +44,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
@@ -1010,7 +1012,8 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
+					.getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
@@ -1033,7 +1036,8 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
+					.getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
@@ -1056,7 +1060,8 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
+					.getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];

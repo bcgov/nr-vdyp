@@ -21,6 +21,21 @@ import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 
 public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self extends LayerProcessingState<RCM, Self>> {
 
+	@FunctionalInterface
+	protected static interface SmallCVUpdate {
+		float apply(float previousValue, UtilizationClassVariable variable, int index);
+	}
+
+	@FunctionalInterface
+	protected static interface VolumeCVUpdate {
+		float apply(float previousValue, UtilizationClass uClass, VolumeVariable variable, int index);
+	}
+
+	@FunctionalInterface
+	protected static interface OtherCVUpdate {
+		float apply(float previousValue, UtilizationClass uClass, int index);
+	}
+
 	private static final Logger logger = LoggerFactory.getLogger(LayerProcessingState.class);
 
 	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
@@ -148,6 +163,54 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 		}
 
 		return cvPrimaryLayerSmall[speciesIndex].get(variable);
+	}
+
+	/**
+	 * Update each compatibility variable using the given methods. Each takes the existing value and identifying
+	 * enums/indices, and returns the updated value.
+	 *
+	 * @param smallUpdate update small component CVs
+	 * @param baUpdate    update basal area CVs
+	 * @param dqUpdate    update quadratic mean diameter CVs
+	 * @param volUpdate   update volume CVs
+	 */
+	protected void updateCompatibilityVariables(
+			SmallCVUpdate smallUpdate, OtherCVUpdate baUpdate, OtherCVUpdate dqUpdate, VolumeCVUpdate volUpdate
+	) {
+		for (int i : getIndices()) {
+			for (UtilizationClassVariable sucv : UtilizationClassVariable.values()) {
+				cvPrimaryLayerSmall[i].put(sucv, smallUpdate.apply(cvPrimaryLayerSmall[i].get(sucv), sucv, i));
+			}
+			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
+				cvBasalArea[i]
+						.put(uc, LayerType.PRIMARY, baUpdate.apply(cvBasalArea[i].get(uc, LayerType.PRIMARY), uc, i));
+				cvQuadraticMeanDiameter[i].put(
+						uc, LayerType.PRIMARY,
+						dqUpdate.apply(cvQuadraticMeanDiameter[i].get(uc, LayerType.PRIMARY), uc, i)
+				);
+
+				for (VolumeVariable vv : VolumeVariable.ALL) {
+					cvVolume[i].put(
+							uc, vv, LayerType.PRIMARY,
+							volUpdate.apply(cvVolume[i].get(uc, vv, LayerType.PRIMARY), uc, vv, i)
+					);
+				}
+			}
+		}
+	}
+
+	public int[] getIndices() {
+		return bank.getIndices();
+	}
+
+	protected void applyCompatibilityVariablesToSpecies(int i, VdypSpecies species) {
+		species.setCompatibilityVariables(
+				cvVolume[i], cvBasalArea[i], cvQuadraticMeanDiameter[i], cvPrimaryLayerSmall[i]
+		);
+	}
+
+	public Map<UtilizationClassVariable, Float>[] getCvPrimaryLayerSmall() {
+		return this.cvPrimaryLayerSmall;
 	}
 
 }

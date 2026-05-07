@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -11,19 +10,17 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
-class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> {
+public class ForwardLayerProcessingState
+		extends LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> {
 
 	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
 	private static final String PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY = "PrimarySpeciesDetails can be set once only";
@@ -47,7 +44,7 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 	/**
 	 * State of the layer during processing.
 	 */
-	private Bank bank;
+	public Bank bank;
 
 	// L1COM2 - equation groups. From the configuration, narrowed to the
 	// polygon's BEC zone.
@@ -94,14 +91,6 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 	private float primarySpeciesAgeAtBreastHeight; // AGEBHP
 	private float primarySpeciesAgeToBreastHeight; // YTBHP
 
-	// Compatibility Variables - LCV1 & LCVS
-	private boolean areCompatibilityVariablesSet = false;
-
-	private MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume;
-	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea;
-	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter;
-	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
-
 	// FRBASP0 - FR
 	// TODO
 
@@ -140,10 +129,6 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 			decayEquationGroups[i] = decayEquationGroupMatrix.get(speciesName, becZoneAlias);
 			breakageEquationGroups[i] = breakageEquationGroupMatrix.get(speciesName, becZoneAlias);
 		}
-	}
-
-	public int[] getIndices() {
-		return bank.getIndices();
 	}
 
 	public int getPrimarySpeciesIndex() {
@@ -210,22 +195,6 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 
 	public int[] getSiteCurveNumbers() {
 		return siteCurveNumbers;
-	}
-
-	public MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] getCvVolume() {
-		return cvVolume;
-	}
-
-	public MatrixMap2<UtilizationClass, LayerType, Float>[] getCvBasalArea() {
-		return cvBasalArea;
-	}
-
-	public MatrixMap2<UtilizationClass, LayerType, Float>[] getCvQuadraticMeanDiameter() {
-		return cvQuadraticMeanDiameter;
-	}
-
-	public Map<UtilizationClassVariable, Float>[] getCvPrimaryLayerSmall() {
-		return cvPrimaryLayerSmall;
 	}
 
 	/**
@@ -367,33 +336,13 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 
 		var compVarAdjustments = ps.controlMap.getCompVarAdjustments();
 
-		for (int i : getIndices()) {
-			for (UtilizationClassVariable sucv : UtilizationClassVariable.values()) {
-				cvPrimaryLayerSmall[i].put(
-						sucv,
-						cvPrimaryLayerSmall[i].get(sucv) * compVarAdjustments.getValue(UtilizationClass.SMALL, sucv)
-				);
-			}
-			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-				cvBasalArea[i].put(
-						uc, LayerType.PRIMARY,
-						cvBasalArea[i].get(uc, LayerType.PRIMARY)
-								* compVarAdjustments.getValue(uc, UtilizationClassVariable.BASAL_AREA)
-				);
-				cvQuadraticMeanDiameter[i].put(
-						uc, LayerType.PRIMARY,
-						cvQuadraticMeanDiameter[i].get(uc, LayerType.PRIMARY)
-								* compVarAdjustments.getValue(uc, UtilizationClassVariable.QUAD_MEAN_DIAMETER)
-				);
+		updateCompatibilityVariables(
+				(val, sucv, i) -> val * compVarAdjustments.getValue(UtilizationClass.SMALL, sucv),
+				(val, uc, i) -> val * compVarAdjustments.getValue(uc, UtilizationClassVariable.BASAL_AREA),
+				(val, uc, i) -> val * compVarAdjustments.getValue(uc, UtilizationClassVariable.QUAD_MEAN_DIAMETER),
+				(val, uc, vv, i) -> val * compVarAdjustments.getVolumeValue(uc, vv)
+		);
 
-				for (VolumeVariable vv : VolumeVariable.ALL) {
-					cvVolume[i].put(
-							uc, vv, LayerType.PRIMARY,
-							cvVolume[i].get(uc, vv, LayerType.PRIMARY) * compVarAdjustments.getVolumeValue(uc, vv)
-					);
-				}
-			}
-		}
 	}
 
 	@Override
@@ -406,9 +355,7 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 			for (int i = 1; i < getNSpecies() + 1; i++) {
 				VdypSpecies species = updatedLayer.getSpeciesBySp0(bank.speciesNames[i]);
 
-				species.setCompatibilityVariables(
-						cvVolume[i], cvBasalArea[i], cvQuadraticMeanDiameter[i], cvPrimaryLayerSmall[i]
-				);
+				applyCompatibilityVariablesToSpecies(i, species);
 			}
 		}
 
@@ -423,6 +370,7 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 	@Override
 	protected void applyCompatibilityVariables(VdypSpecies species, int i) {
 		// TODO Auto-generated method stub
-		// Added this to the parent during the initial 443 development but can't remember why.  It will probably be important later. Making a note to remember to check at the end and delete it if it's not needed after all. 
+		// Added this to the parent during the initial 443 development but can't remember why. It will probably be
+		// important later. Making a note to remember to check at the end and delete it if it's not needed after all.
 	}
 }
