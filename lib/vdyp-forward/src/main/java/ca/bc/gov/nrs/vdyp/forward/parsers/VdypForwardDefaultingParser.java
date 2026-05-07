@@ -17,6 +17,10 @@ public interface VdypForwardDefaultingParser extends ValueParser<Float> {
 			FLOAT, 0.0f, true, Float.MAX_VALUE, true, -9.0f, VdypEntity.MISSING_FLOAT_VALUE, "non-negative float"
 	);
 
+	public static final ValueParser<Float> ALLOW_NEG_FLOAT_WITH_DEFAULT = rangeSilentWithDefaulting(
+			FLOAT, -8.9f, true, Float.MAX_VALUE, true, -9.0f, VdypEntity.MISSING_FLOAT_VALUE, "non-negative float"
+	);
+
 	/**
 	 * Parser for non-negative integers with default -9. -9 results in VdypEntity.MISSING_INTEGER_VALUE being returned.
 	 * All other negative values, and those > Float.MAX_VALUE, result in an error.

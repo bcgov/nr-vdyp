@@ -46,6 +46,7 @@ export const buildExecutionOptions = (
     ExecutionOptionsEnum.DoEnableErrorLogging,
     ExecutionOptionsEnum.DoEnableDebugLogging,
     ExecutionOptionsEnum.ForwardGrowEnabled,
+    ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
   ]
 
   const excludedExecutionOptions: ExecutionOptionsEnum[] = [
@@ -63,6 +64,7 @@ export const buildExecutionOptions = (
     ExecutionOptionsEnum.ReportIncludeSpeciesComp,
     ExecutionOptionsEnum.ReportIncludeCulminationValues,
     ExecutionOptionsEnum.BackGrowEnabled,
+    ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
   ]
 
   const optionMappings = [
@@ -75,14 +77,6 @@ export const buildExecutionOptions = (
         fileUploadStore.projectionType ===
         CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
       option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    },
-    {
-      flag: fileUploadStore.isByLayerEnabled,
-      option: ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
-    },
-    {
-      flag: !fileUploadStore.isByLayerEnabled,
-      option: ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
     },
     {
       flag: fileUploadStore.isBySpeciesEnabled,

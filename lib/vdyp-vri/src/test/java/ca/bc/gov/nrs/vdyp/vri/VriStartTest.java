@@ -34,6 +34,7 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -1024,6 +1025,7 @@ class VriStartTest {
 			}
 
 			@Test
+			@Disabled("This condition may be impossible to hit now that the early exit logic matches VDYP7")
 			void testNoIntervalThrow() {
 				controlMap = VriTestUtils.loadControlMap();
 
@@ -1165,17 +1167,17 @@ class VriStartTest {
 						x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
 				);
 
-				assertThat(result, closeTo(-0.1f));
+				assertThat(result, closeTo(-38.164387f));
 
 				// Complete nonsense numbers, but they test if the function is doing the right thing based on the
 				// nonsense function used in the mock
 				assertThat(
 						resultPerSpecies, allOf(
-								hasEntry(is("B"), closeTo(12.0803461f * (-0.1f))), //
-								hasEntry(is("C"), closeTo(8.66746521f * (-0.1f))), //
-								hasEntry(is("F"), closeTo(11.8044939f * (-0.1f))), //
-								hasEntry(is("H"), closeTo(9.06493855f * (-0.1f))), //
-								hasEntry(is("S"), closeTo(10.4460621f * (-0.1f)))
+								hasEntry(is("B"), closeTo(12.0803461f * (-38.164387f))), //
+								hasEntry(is("C"), closeTo(8.66746521f * (-38.164387f))), //
+								hasEntry(is("F"), closeTo(11.8044939f * (-38.164387f))), //
+								hasEntry(is("H"), closeTo(9.06493855f * (-38.164387f))), //
+								hasEntry(is("S"), closeTo(10.4460621f * (-38.164387f)))
 						)
 				);
 

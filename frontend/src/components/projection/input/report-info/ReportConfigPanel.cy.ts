@@ -125,7 +125,6 @@ describe('<ReportConfigPanel />', () => {
 
     it('renders all checkboxes in "Include following values in Report"', () => {
       mountPanel()
-      cy.get('[data-testid="is-by-layer-enabled"]').should('exist')
       cy.get('[data-testid="is-by-species-enabled"]').should('exist')
       cy.get('[data-testid="inc-secondary-height"]').should('exist')
       cy.get('[data-testid="is-projection-mode-enabled"]').should('exist')

@@ -1575,17 +1575,14 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		final double tol = 0.00001;
 
-		UnivariateFunction errorFunc = x -> {
-			lastXes[1] = lastXes[0];
-			lastXes[0] = x;
-			lastFs[1] = lastFs[0];
-			lastFs[0] = this
-					.quadMeanDiameterFractionalError(x, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph);
-			return lastFs[0];
-		};
-
+		UnivariateFunction errorFunc = createQuadMeanDiameterFractionalErrorFunction(
+				resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph, lastXes, lastFs
+		);
 		debugModeExpandRootSearchWindow(getDebugModes().getExpandDiameterForTPHRecovery(), minDq, maxDq, errorFunc);
-
+		// If the search window was expanded we need to rebox the min and max values in the univariate function
+		errorFunc = createQuadMeanDiameterFractionalErrorFunction(
+				resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph, lastXes, lastFs
+		);
 		try {
 			double x = doSolve(min, max, errorFunc);
 
@@ -1632,6 +1629,20 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
+	private UnivariateFunction createQuadMeanDiameterFractionalErrorFunction(
+			Map<String, Float> resultPerSpecies, Map<String, Float> initialDqs, Map<String, Float> baseAreas,
+			Map<String, Float> minDq, Map<String, Float> maxDq, float tph, double[] lastXes, double[] lastFs
+	) {
+		return x -> {
+			lastXes[1] = lastXes[0];
+			lastXes[0] = x;
+			lastFs[1] = lastFs[0];
+			lastFs[0] = this
+					.quadMeanDiameterFractionalError(x, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph);
+			return lastFs[0];
+		};
+	}
+
 	void debugModeExpandRootSearchWindow(
 			Optional<Float> recoveryFactor, Map<String, Float> minDq, Map<String, Float> maxDq,
 			UnivariateFunction errorFunc
@@ -1660,7 +1671,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		// The Fortran solver library, $ZERO, included an ability to search for a better interval if given one where
 		// the function values at the end points have the same sign. This replicates that.
-		interval = findInterval(new Interval(min, max), errorFunc, (i, x) -> i >= 2 && x > 20);
+		interval = findInterval(new Interval(min, max), errorFunc, (i, x) -> i >= 2 && Math.abs(x) > 20);
 
 		double x = solver.solve(100, errorFunc, interval.start(), interval.end(), interval.mid());
 		return x;

@@ -36,6 +36,8 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
  */
 public class ValidatedParameters {
 
+	public static final int MAX_AGE_END = 2000;
+
 	public static final ValidatedParameters DEFAULT;
 
 	private OutputFormat outputFormat;
@@ -537,7 +539,7 @@ public class ValidatedParameters {
 		DEFAULT.minAgeStart = 0;
 		DEFAULT.maxAgeStart = 600;
 		DEFAULT.minAgeEnd = 1;
-		DEFAULT.maxAgeEnd = 1000;
+		DEFAULT.maxAgeEnd = MAX_AGE_END;
 		DEFAULT.minYearStart = 1400;
 		DEFAULT.maxYearStart = 3250;
 		DEFAULT.minYearEnd = 1400;

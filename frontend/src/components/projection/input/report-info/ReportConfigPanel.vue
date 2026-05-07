@@ -258,15 +258,6 @@
                   <v-row no-gutters class="form-fields-row file-upload-checkboxes-row">
                     <v-col cols="auto">
                       <v-checkbox
-                        v-model="localIsByLayerEnabled"
-                        :label=CONSTANTS.INCLUDE_IN_REPORT.BY_LAYER
-                        hide-details
-                        :disabled="isInputDisabled"
-                        data-testid="is-by-layer-enabled"
-                      ></v-checkbox>
-                    </v-col>
-                    <v-col cols="auto">
-                      <v-checkbox
                         v-model="localIsBySpeciesEnabled"
                         :label=CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES
                         hide-details
@@ -405,7 +396,6 @@ const localStartYear = ref<string | null>(fileUploadStore.startYear)
 const localEndYear = ref<string | null>(fileUploadStore.endYear)
 const localYearIncrement = ref<string | null>(fileUploadStore.yearIncrement)
 const localSpecificYear = ref<string | null>(fileUploadStore.specificYear)
-const localIsByLayerEnabled = ref<boolean>(fileUploadStore.isByLayerEnabled)
 const localIsBySpeciesEnabled = ref<boolean>(fileUploadStore.isBySpeciesEnabled)
 const localIncSecondaryHeight = ref<boolean>(fileUploadStore.incSecondaryHeight)
 const localIsProjectionModeEnabled = ref<boolean>(fileUploadStore.isProjectionModeEnabled)
@@ -558,7 +548,6 @@ watch(() => fileUploadStore.startYear, (v) => { localStartYear.value = v })
 watch(() => fileUploadStore.endYear, (v) => { localEndYear.value = v })
 watch(() => fileUploadStore.yearIncrement, (v) => { localYearIncrement.value = v })
 watch(() => fileUploadStore.specificYear, (v) => { localSpecificYear.value = v })
-watch(() => fileUploadStore.isByLayerEnabled, (v) => { localIsByLayerEnabled.value = v })
 watch(() => fileUploadStore.isBySpeciesEnabled, (v) => { localIsBySpeciesEnabled.value = v })
 watch(() => fileUploadStore.incSecondaryHeight, (v) => { localIncSecondaryHeight.value = v })
 watch(() => fileUploadStore.isProjectionModeEnabled, (v) => { localIsProjectionModeEnabled.value = v })
@@ -583,7 +572,6 @@ watch(localStartYear, (v) => { fileUploadStore.startYear = v })
 watch(localEndYear, (v) => { fileUploadStore.endYear = v })
 watch(localYearIncrement, (v) => { fileUploadStore.yearIncrement = v })
 watch(localSpecificYear, (v) => { fileUploadStore.specificYear = v })
-watch(localIsByLayerEnabled, (v) => { fileUploadStore.isByLayerEnabled = v })
 watch(localIsBySpeciesEnabled, (v) => { fileUploadStore.isBySpeciesEnabled = v })
 watch(localIncSecondaryHeight, (v) => { fileUploadStore.incSecondaryHeight = v })
 watch(localIsProjectionModeEnabled, (v) => { fileUploadStore.isProjectionModeEnabled = v })
