@@ -122,7 +122,8 @@ public class HelpService {
 						"ageEnd", //
 						"End Age", //
 						"<age>", //
-						"The ending age value for the Age Range for generated yield tables. Either -9 (not specified) or in the range 1..2000", //
+						"The ending age value for the Age Range for generated yield tables. Either -9 (not specified) or in the range 1.."
+								+ ValidatedParameters.MAX_AGE_END, //
 						"none"
 				)
 		);

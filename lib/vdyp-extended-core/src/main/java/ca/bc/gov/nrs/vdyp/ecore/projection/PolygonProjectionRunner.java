@@ -989,6 +989,8 @@ public class PolygonProjectionRunner {
 
 		try {
 			var controlFileContents = Files.readString(controlFilePath);
+			// VDYP7 Back treats VTROL[1] values <=400 as relative years; writing an absolute start year
+			// (measurementYear - yearsToGrowBack, always >=1400) ensures correct interpretation.
 			var newControlFileContents = controlFileContents
 					.replace("%YR%", String.format("%4d", measurementYear - yearsToGrowBack));
 			Files.write(tempControlFilePath, newControlFileContents.getBytes());
