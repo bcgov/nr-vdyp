@@ -1,24 +1,17 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_1;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_2;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_3;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_4;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_5;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
@@ -26,6 +19,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
@@ -59,7 +53,8 @@ class ForwardProcessorEndToEndTest {
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessorEndToEndTest.class);
 
-	private static Set<ForwardPass> vdypPassSet = new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5));
+	private static EnumSet<Pass> vdypPassSet = EnumSet
+			.of(Pass.PASS_1, Pass.PASS_2, Pass.PASS_3, Pass.PASS_4, Pass.PASS_5);
 
 	private int nEquals = 0;
 	private int nWithin1Percent = 0;
