@@ -501,6 +501,30 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     spzAge.value = toStringOrNull(params.speciesAge)
     spzHeight.value = toStringOrNull(params.speciesHeight)
     bha50SiteIndex.value = toStringOrNull(params.bha50SiteIndex)
+
+    if (siteIndexRows.value.length > 0) {
+      const primaryRow = siteIndexRows.value[0]
+      primaryRow.ageType = ageType.value ?? CONSTANTS.AGE_TYPE.TOTAL
+
+      if (siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED) {
+        primaryRow.bhaSiteIndex = bha50SiteIndex.value
+      } else if (!bha50SiteIndex.value) {
+        primaryRow.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
+        primaryRow.age = spzAge.value ?? DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+        primaryRow.height = spzHeight.value ?? DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+        primaryRow.bhaSiteIndex = null
+      } else if (!spzHeight.value) {
+        primaryRow.computedValue = CONSTANTS.COMPUTED_VALUE.HEIGHT
+        primaryRow.age = spzAge.value ?? DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+        primaryRow.height = null
+        primaryRow.bhaSiteIndex = bha50SiteIndex.value
+      } else if (!spzAge.value) {
+        primaryRow.computedValue = CONSTANTS.COMPUTED_VALUE.TOTAL_AGE
+        primaryRow.age = null
+        primaryRow.height = spzHeight.value ?? DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+        primaryRow.bhaSiteIndex = bha50SiteIndex.value
+      }
+    }
   }
 
   /**
