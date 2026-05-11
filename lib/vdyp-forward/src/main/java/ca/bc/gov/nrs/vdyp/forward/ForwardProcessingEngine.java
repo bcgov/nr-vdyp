@@ -794,6 +794,7 @@ public class ForwardProcessingEngine {
 	}
 
 	private static final float TREAT_AS_NO_GROWTH = 0.000001f;
+
 	/**
 	 * GRSPpart - calculate, using the "no species dynamics" algorithm, the basal area, trees-per-hectare and
 	 * quad-mean-diameter at the end of the growth period for all species in the current layer of the polygon.
