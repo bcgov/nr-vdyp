@@ -266,7 +266,7 @@ import type { SpeciesGroup, MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
 import { siteInfoValidation } from '@/validation'
-import { isZeroValue } from '@/utils/util'
+import { isZeroValue, isEmptyOrZero } from '@/utils/util'
 import { saveProjectionOnPanelConfirm } from '@/services/projection/modelParameterService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
@@ -477,13 +477,30 @@ const onConfirm = async () => {
   }
 
   // validation - required fields
-  const requiredResult = siteInfoValidation.validateRequiredFields(
-    siteSpeciesValues.value,
-    spzAge.value,
-    spzHeight.value,
-    bha50SiteIndex.value,
-  )
-  if (!requiredResult.isValid) {
+  let requiredValid = true
+  if (
+    showNewSiteIndicesFeature &&
+    siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
+    siteIndexRows.value.length > 0
+  ) {
+    // the field matching computedValue is intentionally null (Calc.) - skip it, validate the other two
+    const cv = siteIndexRows.value[0].computedValue
+    if (cv === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX) {
+      requiredValid = !isEmptyOrZero(spzAge.value) && !isEmptyOrZero(spzHeight.value)
+    } else if (cv === CONSTANTS.COMPUTED_VALUE.HEIGHT) {
+      requiredValid = !isEmptyOrZero(spzAge.value) && !isEmptyOrZero(bha50SiteIndex.value)
+    } else if (cv === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE) {
+      requiredValid = !isEmptyOrZero(spzHeight.value) && !isEmptyOrZero(bha50SiteIndex.value)
+    }
+  } else {
+    requiredValid = siteInfoValidation.validateRequiredFields(
+      siteSpeciesValues.value,
+      spzAge.value,
+      spzHeight.value,
+      bha50SiteIndex.value,
+    ).isValid
+  }
+  if (!requiredValid) {
     messageDialog.value = {
       dialog: true,
       title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
