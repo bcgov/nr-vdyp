@@ -793,6 +793,7 @@ public class ForwardProcessingEngine {
 		adjustmentParametersByStage[9] = adjustmentParametersByStage[4];
 	}
 
+	private static final float TREAT_AS_NO_GROWTH = 0.000001f;
 	/**
 	 * GRSPpart - calculate, using the "no species dynamics" algorithm, the basal area, trees-per-hectare and
 	 * quad-mean-diameter at the end of the growth period for all species in the current layer of the polygon.
@@ -946,6 +947,13 @@ public class ForwardProcessingEngine {
 				spDqEsts[i] = FloatMath.clamp(spDqEsts[i], dqLowerBoundBySpecies[i], dqUpperBoundBySpecies[i]);
 
 				rs1[i] = FloatMath.log( (spDqStart - 7.5f) / (spDqStartEsts[i] - 7.5f));
+
+				// rounding errors can result in very small rs1 values which alter the lower logic
+				// this rounding does not come from VDYP7 but does appear to bring more of our results
+				// in line with VDYP7. This could be fixed in FIXME: VDYP-1075
+				if (Math.abs(rs1[i]) < TREAT_AS_NO_GROWTH)
+					rs1[i] = 0f;
+
 				spTphEsts[i] = BaseAreaTreeDensityDiameter.treesPerHectare(baEndAll[i], spDqEsts[i]);
 				tphEst += spTphEsts[i];
 			}
