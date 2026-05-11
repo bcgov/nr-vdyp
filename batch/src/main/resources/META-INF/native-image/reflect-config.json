@@ -8574,5 +8574,45 @@
 		"allDeclaredConstructors": true,
 		"allPublicMethods": true,
 		"allPublicFields": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedEcoZone",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedSpecies",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedGenera",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.si32.cfs.CfsLiveConversionParams",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.si32.cfs.CfsDeadConversionParams",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
 	}
 ]
