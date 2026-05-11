@@ -1,10 +1,8 @@
-package ca.bc.gov.nrs.vdyp.forward;
+package ca.bc.gov.nrs.vdyp.processing_state;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.asFloat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.controlMapHasEntry;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notANumber;
 import static org.hamcrest.Matchers.notNullValue;
@@ -13,17 +11,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -32,26 +26,58 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
-import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class BankTest {
 
-	private ForwardControlParser parser;
 	private Map<String, Object> controlMap;
+	private VdypPolygon polygon;
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@BeforeEach
 	void before() throws IOException, ResourceParseException {
 
-		parser = new ForwardControlParser();
-		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
-		assertThat(controlMap, (Matcher) controlMapHasEntry(ControlKey.SP0_DEF, instanceOf(GenusDefinitionMap.class)));
+		controlMap = TestUtils.loadControlMap();
+
+		var bec = Utils.getBec("CDF", controlMap);
+
+		polygon = VdypPolygon.build(pb -> {
+			pb.polygonIdentifier("Test", 2024);
+
+			pb.percentAvailable(99f);
+			pb.biogeoclimaticZone(bec);
+			pb.forestInventoryZone("A");
+
+			pb.addLayer(lb -> {
+				lb.layerType(LayerType.PRIMARY);
+
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.baseArea(0.4f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("C", controlMap);
+					sb.baseArea(0.6f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("D", controlMap);
+					sb.baseArea(10f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.baseArea(50f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("S", controlMap);
+					sb.baseArea(99.9f);
+				});
+			});
+		});
+
 	}
 
 	@Test
 	void testConstruction() throws ProcessingException, IOException {
-
-		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());
@@ -110,14 +136,12 @@ class BankTest {
 	@Test
 	void testSetCopy() throws ProcessingException {
 
-		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
-
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());
 
 		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
 
-		pLayer = ForwardTestUtils.normalizeLayer(pLayer);
+		pLayer = ProcessingTestUtils.normalizeLayer(pLayer);
 		verifyBankMatchesLayer(bank, pLayer);
 
 		Bank ppsCopy = bank.copy();
@@ -313,8 +337,6 @@ class BankTest {
 	@Test
 	void testRemoveSmallLayers() throws ProcessingException {
 
-		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
-
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());
 
@@ -340,8 +362,6 @@ class BankTest {
 	@Test
 	void testCopyConstructor() throws ProcessingException {
 
-		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
-
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());
 
@@ -349,21 +369,19 @@ class BankTest {
 
 		Bank bankCopy = new Bank(bank);
 
-		pLayer = ForwardTestUtils.normalizeLayer(pLayer);
+		pLayer = ProcessingTestUtils.normalizeLayer(pLayer);
 		verifyBankMatchesLayer(bankCopy, pLayer);
 	}
 
 	@Test
 	void testLayerUpdate() throws ProcessingException {
 
-		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
-
 		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		assertThat(pLayer, notNullValue());
 
 		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
 
-		pLayer = ForwardTestUtils.normalizeLayer(pLayer);
+		pLayer = ProcessingTestUtils.normalizeLayer(pLayer);
 
 		verifyBankMatchesLayer(bank, pLayer);
 
