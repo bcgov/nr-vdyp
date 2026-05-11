@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
-import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters } from '@/interfaces/interfaces'
+import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
 import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-api'
 import type { ModelParameters } from '@/services/vdyp-api'
@@ -192,6 +192,21 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     // Update highestPercentSpecies and selectedSiteSpecies with the first siteSpecies in speciesGroups
     highestPercentSpecies.value = selectedSiteSpecies.value =
       speciesGroups.value.length > 0 ? speciesGroups.value[0].siteSpecies : null
+
+    // Sync siteIndexRows with updated speciesGroups, preserving existing row data
+    const existingRows = new Map(siteIndexRows.value.map((r) => [r.speciesCode, r]))
+    siteIndexRows.value = speciesGroups.value.map((group) => {
+      const existing = existingRows.get(group.siteSpecies)
+      if (existing) return existing
+      return {
+        speciesCode: group.siteSpecies,
+        computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
+        ageType: CONSTANTS.AGE_TYPE.TOTAL,
+        age: DEFAULTS.DEFAULT_VALUES.SPZ_AGE,
+        height: DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT,
+        bhaSiteIndex: null,
+      }
+    })
   }
 
   // site info
@@ -202,6 +217,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const spzAge = ref<string | null>(null)
   const spzHeight = ref<string | null>(null)
   const bha50SiteIndex = ref<string | null>(null)
+  const siteIndexRows = ref<SiteIndexSpeciesRow[]>([])
 
   // stand information
   const percentStockableArea = ref<string | null>(null)
@@ -282,6 +298,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     spzAge.value = null
     spzHeight.value = null
     bha50SiteIndex.value = null
+    siteIndexRows.value = []
 
     // Reset stand info
     percentStockableArea.value = null
@@ -544,6 +561,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     spzAge,
     spzHeight,
     bha50SiteIndex,
+    siteIndexRows,
     // stand info
     percentStockableArea,
     basalArea,

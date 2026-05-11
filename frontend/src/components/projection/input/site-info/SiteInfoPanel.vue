@@ -26,12 +26,12 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text mt-n2">
+        <v-expansion-panel-text class="expansion-panel-text">
           <v-form ref="form">
             <div>
-              <v-row>
+              <v-row no-gutters class="form-fields-row mb-4">
                 <v-col cols="6">
-                  <v-row class="mb-2">
+                  <v-row no-gutters class="form-fields-row">
                     <v-col cols="6">
                       <label class="bcds-select-label" for="bec-zone-select">BEC Zone</label>
                       <v-select
@@ -47,7 +47,6 @@
                         append-inner-icon="mdi-chevron-down"
                       ></v-select>
                     </v-col>
-                    <v-col class="col-space-6" />
                     <v-col>
                       <label class="bcds-select-label" for="eco-zone-select">Eco Zone</label>
                       <v-select
@@ -66,10 +65,9 @@
                     </v-col>
                   </v-row>
                 </v-col>
-                <v-col class="col-space-6" />
                 <v-col>
                   <v-row>
-                    <v-col cols="12">
+                    <v-col cols="12" sm="4" class="site-index-container">
                       <label class="bcds-radio-label" for="siteIndex">Site Index:</label>
                       <v-radio-group
                         id="siteIndex"
@@ -93,149 +91,154 @@
                   </v-row>
                 </v-col>
               </v-row>
-              <div clas0s="hr-line"></div>
-              <v-row class="mt-0">
-                <v-col cols="6">
-                  <v-row class="mb-2">
-                    <v-col cols="6">
-                      <label class="bcds-select-label" for="site-species-select">Site Species</label>
-                      <v-select
-                        id="site-species-select"
-                        :items="siteSpeciesOptions"
-                        v-model="selectedSiteSpecies"
-                        item-title="label"
-                        item-value="value"
-                        hide-details="auto"
-                        persistent-placeholder
-                        placeholder="Select..."
-                        data-testid="selected-site-species"
-                        disabled
-                        append-inner-icon="mdi-chevron-down"
-                      ></v-select>
-                    </v-col>
-                  </v-row>
-                </v-col>
-              </v-row>
-              <div class="hr-line"></div>
-              <v-row class="mt-1">
-                <v-col cols="auto">
-                  <label class="bcds-radio-label" for="ageYears">Age Years:</label>
-                  <v-radio-group
-                    id="ageYears"
-                    v-model="ageType"
-                    inline
-                    hide-details
-                    :disabled="isAgeTypeDisabled || !isConfirmEnabled"
-                  >
-                    <v-radio
-                      :key="OPTIONS.ageTypeOptions[0].value"
-                      :label="OPTIONS.ageTypeOptions[0].label"
-                      :value="OPTIONS.ageTypeOptions[0].value"
-                    ></v-radio>
-                    <v-radio
-                      :key="OPTIONS.ageTypeOptions[1].value"
-                      :label="OPTIONS.ageTypeOptions[1].label"
-                      :value="OPTIONS.ageTypeOptions[1].value"
-                    ></v-radio>
-                  </v-radio-group>
-                </v-col>
-              </v-row>
-              <v-row class="mt-0">
-                <v-col cols="6">
-                  <v-row class="mb-2">
-                    <v-col cols="6">
-                      <AppSpinField
-                        label="Years"
-                        :model-value="spzAge"
-                        :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX"
-                        :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN"
-                        :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_STEP"
-                        :persistent-placeholder="true"
-                        :placeholder="spzAgePlaceholder"
-                        :hideDetails="true"
-                        :disabled="isSpzAgeDisabled || !isConfirmEnabled"
-                        :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
-                        :decimalAllowNumber="
-                          CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_DECIMAL_NUM
-                        "
-                        data-testid="spz-age"
-                        @update:modelValue="handleSpzAgeUpdate"
-                      />
-                      <v-label
-                        v-show="isZeroValue(spzAge)"
-                        style="font-size: var(--typography-font-size-label)"
-                        >{{
-                          MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
-                        }}</v-label
-                      >
-                    </v-col>
-                    <v-col class="col-space-6" />
-                    <v-col>
-                      <AppSpinField
-                        label="Height in Meters"
-                        :model-value="spzHeight"
-                        :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MAX"
-                        :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MIN"
-                        :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_STEP"
-                        :persistent-placeholder="true"
-                        :placeholder="spzHeightPlaceholder"
-                        :hideDetails="true"
-                        :disabled="isSpzHeightDisabled || !isConfirmEnabled"
-                        :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
-                        :decimalAllowNumber="
-                          CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_DECIMAL_NUM
-                        "
-                        data-testid="spz-height"
-                        @update:modelValue="handleSpzHeightUpdate"
-                      />
-                      <v-label
-                        v-show="isZeroValue(spzHeight)"
-                        style="font-size: var(--typography-font-size-label)"
-                        >{{
-                          MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
-                        }}</v-label
-                      >
-                    </v-col>
-                  </v-row>
-                </v-col>
-                <v-col class="col-space-6" />
-                <v-col>
-                  <v-row>
-                    <v-col cols="6">
-                      <AppSpinField
-                        label="BHA 50 Site Index"
-                        :model-value="bha50SiteIndex"
-                        :max="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MAX"
-                        :min="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MIN"
-                        :step="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_STEP"
-                        :persistent-placeholder="true"
-                        :placeholder="bha50SiteIndexPlaceholder"
-                        :hideDetails="true"
-                        :disabled="
-                          isBHA50SiteIndexDisabled || !isConfirmEnabled
-                        "
-                        :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
-                        :decimalAllowNumber="
-                          CONSTANTS.NUM_INPUT_LIMITS
-                            .BHA50_SITE_INDEX_DECIMAL_NUM
-                        "
-                        data-testid="bha-50-site-index"
-                        @update:modelValue="handleBha50SiteIndexUpdate"
-                      />
-                      <v-label
-                        v-show="isZeroValue(bha50SiteIndex)"
-                        style="font-size: var(--typography-font-size-label)"
-                        >{{
-                          MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
-                        }}</v-label
-                      >
-                    </v-col>
-                  </v-row>
-                </v-col>
-              </v-row>
+              <template v-if="!showNewSiteIndicesFeature">
+                <div class="hr-line"></div>
+                <v-row class="mt-0">
+                  <v-col cols="6">
+                    <v-row>
+                      <v-col cols="6">
+                        <label class="bcds-select-label" for="site-species-select">Site Species</label>
+                        <v-select
+                          id="site-species-select"
+                          :items="siteSpeciesOptions"
+                          v-model="selectedSiteSpecies"
+                          item-title="label"
+                          item-value="value"
+                          hide-details="auto"
+                          persistent-placeholder
+                          placeholder="Select..."
+                          data-testid="selected-site-species"
+                          disabled
+                          append-inner-icon="mdi-chevron-down"
+                        ></v-select>
+                      </v-col>
+                    </v-row>
+                  </v-col>
+                </v-row>
+                <div class="hr-line"></div>
+                <v-row class="mt-1">
+                  <v-col cols="auto">
+                    <label class="bcds-radio-label" for="ageYears">Age Years:</label>
+                    <v-radio-group
+                      id="ageYears"
+                      v-model="ageType"
+                      inline
+                      hide-details
+                      :disabled="isAgeTypeDisabled || !isConfirmEnabled"
+                    >
+                      <v-radio
+                        :key="OPTIONS.ageTypeOptions[0].value"
+                        :label="OPTIONS.ageTypeOptions[0].label"
+                        :value="OPTIONS.ageTypeOptions[0].value"
+                      ></v-radio>
+                      <v-radio
+                        :key="OPTIONS.ageTypeOptions[1].value"
+                        :label="OPTIONS.ageTypeOptions[1].label"
+                        :value="OPTIONS.ageTypeOptions[1].value"
+                      ></v-radio>
+                    </v-radio-group>
+                  </v-col>
+                </v-row>
+                <v-row no-gutters class="form-fields-row mt-0">
+                  <v-col cols="6">
+                    <v-row no-gutters class="form-fields-row mb-2">
+                      <v-col cols="6">
+                        <AppSpinField
+                          label="Years"
+                          :model-value="spzAge"
+                          :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX"
+                          :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN"
+                          :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_STEP"
+                          :persistent-placeholder="true"
+                          :placeholder="spzAgePlaceholder"
+                          :hideDetails="true"
+                          :disabled="isSpzAgeDisabled || !isConfirmEnabled"
+                          :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                          :decimalAllowNumber="
+                            CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_DECIMAL_NUM
+                          "
+                          data-testid="spz-age"
+                          @update:modelValue="handleSpzAgeUpdate"
+                        />
+                        <v-label
+                          v-show="isZeroValue(spzAge)"
+                          style="font-size: var(--typography-font-size-label)"
+                          >{{
+                            MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
+                          }}</v-label
+                        >
+                      </v-col>
+                      <v-col>
+                        <AppSpinField
+                          label="Height in Meters"
+                          :model-value="spzHeight"
+                          :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MAX"
+                          :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MIN"
+                          :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_STEP"
+                          :persistent-placeholder="true"
+                          :placeholder="spzHeightPlaceholder"
+                          :hideDetails="true"
+                          :disabled="isSpzHeightDisabled || !isConfirmEnabled"
+                          :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                          :decimalAllowNumber="
+                            CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_DECIMAL_NUM
+                          "
+                          data-testid="spz-height"
+                          @update:modelValue="handleSpzHeightUpdate"
+                        />
+                        <v-label
+                          v-show="isZeroValue(spzHeight)"
+                          style="font-size: var(--typography-font-size-label)"
+                          >{{
+                            MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
+                          }}</v-label
+                        >
+                      </v-col>
+                    </v-row>
+                  </v-col>
+                  <v-col>
+                    <v-row>
+                      <v-col cols="6">
+                        <AppSpinField
+                          label="BHA 50 Site Index"
+                          :model-value="bha50SiteIndex"
+                          :max="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MAX"
+                          :min="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MIN"
+                          :step="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_STEP"
+                          :persistent-placeholder="true"
+                          :placeholder="bha50SiteIndexPlaceholder"
+                          :hideDetails="true"
+                          :disabled="
+                            isBHA50SiteIndexDisabled || !isConfirmEnabled
+                          "
+                          :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                          :decimalAllowNumber="
+                            CONSTANTS.NUM_INPUT_LIMITS
+                              .BHA50_SITE_INDEX_DECIMAL_NUM
+                          "
+                          data-testid="bha-50-site-index"
+                          @update:modelValue="handleBha50SiteIndexUpdate"
+                        />
+                        <v-label
+                          v-show="isZeroValue(bha50SiteIndex)"
+                          style="font-size: var(--typography-font-size-label)"
+                          >{{
+                            MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
+                          }}</v-label
+                        >
+                      </v-col>
+                    </v-row>
+                  </v-col>
+                </v-row>
+              </template>
+
+              <template v-else>
+                <SiteIndicesTable :is-confirm-enabled="isConfirmEnabled" />
+              </template>
             </div>
             <ActionPanel
               v-if="!isReadOnly"
+              class="mt-4"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
               @clear="onClear"
@@ -258,6 +261,7 @@ import { AppMessageDialog, AppSpinField } from '@/components'
 import {
   ActionPanel,
 } from '@/components/projection'
+import SiteIndicesTable from './SiteIndicesTable.vue'
 import type { SpeciesGroup, MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
@@ -265,6 +269,10 @@ import { siteInfoValidation } from '@/validation'
 import { isZeroValue } from '@/utils/util'
 import { saveProjectionOnPanelConfirm } from '@/services/projection/modelParameterService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
+
+import { env } from '@/env'
+
+const showNewSiteIndicesFeature = env.VITE_SITE_INDICES_TABLE_ENABLED === 'true'
 
 const form = ref<HTMLFormElement>()
 
@@ -294,6 +302,7 @@ const {
   spzAge,
   spzHeight,
   bha50SiteIndex,
+  siteIndexRows,
 } = storeToRefs(modelParameterStore)
 
 const panelName = CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO
@@ -376,6 +385,12 @@ const handleDerivedByChange = (
   handleSiteSpeciesValuesState(newSiteSpeciesValues)
 }
 
+watch(isConfirmEnabled, (enabled) => {
+  if (enabled && siteSpeciesValues.value === null) {
+    siteSpeciesValues.value = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+  }
+}, { immediate: true })
+
 watch(
   [derivedBy, selectedSiteSpecies, siteSpeciesValues],
   ([newDerivedBy, newSiteSpecies, newSiteSpeciesValues]) => {
@@ -404,7 +419,38 @@ const formattingValues = (): void => {
   }
 }
 
+const syncPrimaryRowToStore = () => {
+  const primaryRow = siteIndexRows.value[0]
+  if (!primaryRow) return
+
+  ageType.value = primaryRow.ageType
+
+  if (siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED) {
+    if (primaryRow.computedValue === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX) {
+      spzAge.value = primaryRow.age
+      spzHeight.value = primaryRow.height
+      bha50SiteIndex.value = ''
+    } else if (primaryRow.computedValue === CONSTANTS.COMPUTED_VALUE.HEIGHT) {
+      spzAge.value = primaryRow.age
+      spzHeight.value = null
+      bha50SiteIndex.value = primaryRow.bhaSiteIndex
+    } else if (primaryRow.computedValue === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE) {
+      spzAge.value = null
+      spzHeight.value = primaryRow.height
+      bha50SiteIndex.value = primaryRow.bhaSiteIndex
+    }
+  } else if (siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED) {
+    spzAge.value = null
+    spzHeight.value = null
+    bha50SiteIndex.value = primaryRow.bhaSiteIndex
+  }
+}
+
 const onConfirm = async () => {
+  if (showNewSiteIndicesFeature) {
+    syncPrimaryRowToStore()
+  }
+
   // validation - pre-confirm fields (Site Index selection, BEC Zone)
   const preConfirmResult = siteInfoValidation.validatePreConfirmFields(
     siteSpeciesValues.value,
@@ -537,9 +583,30 @@ const onClear = () => {
 
   spzAgePlaceholder.value = ''
   spzHeightPlaceholder.value = ''
+
+  if (showNewSiteIndicesFeature) {
+    siteIndexRows.value = siteIndexRows.value.map((row) => ({
+      ...row,
+      computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
+      ageType: CONSTANTS.AGE_TYPE.TOTAL,
+      age: DEFAULTS.DEFAULT_VALUES.SPZ_AGE,
+      height: DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT,
+      bhaSiteIndex: null,
+    }))
+  }
 }
 
 const handleDialogClose = () => {}
 </script>
 
-<style scoped />
+<style scoped>
+.site-index-container {
+  margin-top: 11px;
+}
+
+@media (max-width: 600px) {
+  .site-index-container {
+    margin-top: 0;
+  }
+}
+</style>

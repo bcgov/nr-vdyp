@@ -67,6 +67,13 @@ export const PROJECTION_TYPE = Object.freeze({
 export const SPECIAL_INDICATORS = Object.freeze({
   NA: 'N/A',
   COMPUTED: 'Computed',
+  CALC: 'Calc.',
+})
+
+export const COMPUTED_VALUE = Object.freeze({
+  HEIGHT: 'Height in Meters',
+  BHA_SITE_INDEX: 'BHA Site Index',
+  TOTAL_AGE: 'Total Age',
 })
 
 export const MANUAL_INPUT_PANEL = Object.freeze({

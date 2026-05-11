@@ -28,7 +28,7 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text mt-n2">
+        <v-expansion-panel-text class="expansion-panel-text">
           <v-form ref="form">
             <v-row style="height: 70px !important">
               <v-col cols="6">

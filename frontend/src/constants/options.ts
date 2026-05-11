@@ -33,6 +33,17 @@ export const ageTypeOptions = [
   { label: 'Breast', value: CONSTANTS.AGE_TYPE.BREAST },
 ]
 
+export const tableAgeTypeOptions = [
+  { label: 'Total Age', value: CONSTANTS.AGE_TYPE.TOTAL },
+  { label: 'Breast Height Age', value: CONSTANTS.AGE_TYPE.BREAST },
+]
+
+export const computedValueOptions = [
+  { label: 'Height in Meters', value: CONSTANTS.COMPUTED_VALUE.HEIGHT },
+  { label: 'BHA Site Index', value: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX },
+  { label: 'Total Age', value: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE },
+]
+
 export const ecoZoneOptions = [
   { label: 'Boreal Cordillera', value: '12' },
   { label: 'Boreal Plains', value: '9' },
