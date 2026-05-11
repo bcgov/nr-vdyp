@@ -187,7 +187,7 @@ watch(isSupplied, (supplied) => {
       row.ageType = CONSTANTS.AGE_TYPE.TOTAL
       row.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
       row.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
-      row.bhaSiteIndex = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
+      row.bhaSiteIndex = null
     })
   }
 })
