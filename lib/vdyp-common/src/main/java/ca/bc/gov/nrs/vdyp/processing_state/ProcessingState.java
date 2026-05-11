@@ -56,6 +56,14 @@ public abstract class ProcessingState<RCM extends ResolvedControlMap, LS extends
 		return Optional.ofNullable(polygon).flatMap(p -> Optional.ofNullable(p.getLayers().get(type)));
 	}
 
+	public EstimationMethods getEstimators() {
+		return estimators;
+	}
+
+	public ComputationMethods getComputers() {
+		return computers;
+	}
+
 	public void setPolygon(VdypPolygon polygon) throws ProcessingException {
 
 		this.polygon = polygon;

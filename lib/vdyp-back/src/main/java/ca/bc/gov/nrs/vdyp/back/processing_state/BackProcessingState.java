@@ -1,11 +1,15 @@
 package ca.bc.gov.nrs.vdyp.back.processing_state;
 
+import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
@@ -19,8 +23,15 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 	Optional<Float> baseAreaVeteran = Optional.empty(); // BACK1/BAV
 
 	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
-	private static final String UNSET_CV_VOLUMES = "unset cvVolumes";
-	private static final String UNSET_CV_BASAL_AREAS = "unset cvBasalAreas";
+
+	private static final Supplier<IllegalStateException> UNSET_CV_VOLUMES = unset("cvVolumes");
+	private static final Supplier<IllegalStateException> UNSET_CV_BASAL_AREAS = unset("cvBasalAreas");
+	private static final Supplier<IllegalStateException> UNSET_CV_QUAD_MEAN_DIAMETER = unset("cvQuadraticMeanDiameter");
+	private static final Supplier<IllegalStateException> UNSET_CV_SMALL = unset("cvSmall");
+	private static final Supplier<IllegalStateException> UNSET_LIMITS = unset("per species limits");
+	private static final Supplier<IllegalStateException> UNSET_FINAL_QUAD_MEAN_DIAMETER = unset(
+			"final quadratic mean diameters"
+	);
 
 	// Compatibility Variables - LCV1 & LCVS
 	private boolean areCompatibilityVariablesSet = false;
@@ -30,14 +41,17 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 	private Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter;
 	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
 
+	private Optional<ComponentSizeLimits[]> speciesLimits = Optional.empty();
+	private Optional<float[]> finalQuadraticMeanDiameters = Optional.empty();
+
 	public BackProcessingState(Map<String, Object> controlMap) throws ProcessingException {
 		super(controlMap, VdypApplicationIdentifier.VDYP_BACK);
 	}
 
 	@Override
 	public ForwardResolvedControlMap resolveControlMap(Map<String, Object> controlMap) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ForwardResolvedControlMapImpl(controlMap); // FIXME probably want to separate this or make it generic
+																// for processing apps
 	}
 
 	@Override
@@ -77,7 +91,7 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 
 	public float getCVVolume(int speciesIndex, UtilizationClass uc, VolumeVariable volumeVariable) {
 		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_VOLUMES);
+			throw UNSET_CV_VOLUMES.get();
 		}
 
 		return cvVolume[speciesIndex].get(uc, volumeVariable);
@@ -85,7 +99,7 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 
 	public float getCVBasalArea(int speciesIndex, UtilizationClass uc) {
 		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
+			throw UNSET_CV_BASAL_AREAS.get();
 		}
 
 		return cvBasalArea[speciesIndex].get(uc);
@@ -93,7 +107,7 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 
 	public float getCVQuadraticMeanDiameter(int speciesIndex, UtilizationClass uc) {
 		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
+			throw UNSET_CV_QUAD_MEAN_DIAMETER.get();
 		}
 
 		return cvQuadraticMeanDiameter[speciesIndex].get(uc);
@@ -101,9 +115,31 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 
 	public float getCVSmall(int speciesIndex, UtilizationClassVariable variable) {
 		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
+			throw UNSET_CV_SMALL.get();
 		}
 
 		return cvPrimaryLayerSmall[speciesIndex].get(variable);
 	}
+
+	public void setLimits(ComponentSizeLimits[] limits) {
+		this.speciesLimits = Optional.of(limits);
+	}
+
+	public ComponentSizeLimits getLimits(int speciesIndex) {
+		return this.speciesLimits.orElseThrow(UNSET_LIMITS)[speciesIndex];
+	}
+
+	public float getFinalQuadraticMeanDiameter(int speciesIndex) {
+		return this.finalQuadraticMeanDiameters.orElseThrow(UNSET_FINAL_QUAD_MEAN_DIAMETER)[speciesIndex];
+	}
+
+	protected static Supplier<IllegalStateException> unset(final String field) {
+		final String message = MessageFormat.format("unset {0}", field);
+		return () -> new IllegalStateException(message);
+	}
+
+	public void setFinalQuadMeanDiameters(float[] finalDiameters) {
+		finalQuadraticMeanDiameters = Optional.of(finalDiameters);
+	}
+
 }
