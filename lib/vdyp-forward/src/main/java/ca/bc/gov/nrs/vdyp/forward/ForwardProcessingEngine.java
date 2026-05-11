@@ -793,6 +793,8 @@ public class ForwardProcessingEngine {
 		adjustmentParametersByStage[9] = adjustmentParametersByStage[4];
 	}
 
+	private static final float TREAT_AS_NO_GROWTH = 0.000001f;
+
 	/**
 	 * GRSPpart - calculate, using the "no species dynamics" algorithm, the basal area, trees-per-hectare and
 	 * quad-mean-diameter at the end of the growth period for all species in the current layer of the polygon.
@@ -942,10 +944,11 @@ public class ForwardProcessingEngine {
 
 				float spDqStart = bank.quadMeanDiameters[i][UC_ALL_INDEX];
 
-				spDqEsts[i] = 7.5f + (spDqEndEsts[i] - 7.5f) * ( (spDqStart - 7.5f) / (spDqStartEsts[i] - 7.5f));
-				spDqEsts[i] = FloatMath.clamp(spDqEsts[i], dqLowerBoundBySpecies[i], dqUpperBoundBySpecies[i]);
+				compareSpeciesDQEstimates(
+						i, spDqStart, spDqEsts, spDqEndEsts, spDqStartEsts, dqLowerBoundBySpecies,
+						dqUpperBoundBySpecies, rs1
+				);
 
-				rs1[i] = FloatMath.log( (spDqStart - 7.5f) / (spDqStartEsts[i] - 7.5f));
 				spTphEsts[i] = BaseAreaTreeDensityDiameter.treesPerHectare(baEndAll[i], spDqEsts[i]);
 				tphEst += spTphEsts[i];
 			}
@@ -1095,6 +1098,37 @@ public class ForwardProcessingEngine {
 		}
 
 		return true /* was successful */;
+	}
+
+	/**
+	 * Extracted method for comparing a species estimated mean diameters and setting of potential error values
+	 *
+	 * @param speciesIdx            the index of the species in the following float arrays
+	 * @param spDqStart             an array of mean diameter at the start provided as data to method
+	 * @param spDqEsts              an array to hold estimated mean diameter populated by this function
+	 * @param spDqEndEsts           an array of estimated mean diameter at the end time
+	 * @param spDqStartEsts         an array of estimated mean diameter at the start time by species
+	 * @param dqLowerBoundBySpecies an array of lower bounds for mean diameters
+	 * @param dqUpperBoundBySpecies an array of upper bounds for mean diameters
+	 * @param rs1                   an array of differences between estiamtes and supplied mean diameters populated by
+	 *                              this function
+	 */
+	void compareSpeciesDQEstimates(
+			int speciesIdx, float spDqStart, float[] spDqEsts, float[] spDqEndEsts, float[] spDqStartEsts,
+			float[] dqLowerBoundBySpecies, float[] dqUpperBoundBySpecies, float[] rs1
+	) {
+		spDqEsts[speciesIdx] = 7.5f
+				+ (spDqEndEsts[speciesIdx] - 7.5f) * ( (spDqStart - 7.5f) / (spDqStartEsts[speciesIdx] - 7.5f));
+		spDqEsts[speciesIdx] = FloatMath
+				.clamp(spDqEsts[speciesIdx], dqLowerBoundBySpecies[speciesIdx], dqUpperBoundBySpecies[speciesIdx]);
+
+		rs1[speciesIdx] = FloatMath.log( (spDqStart - 7.5f) / (spDqStartEsts[speciesIdx] - 7.5f));
+
+		// rounding errors can result in very small rs1 values which alter the lower logic
+		// this rounding does not come from VDYP7 but does appear to bring more of our results
+		// in line with VDYP7. This could be fixed in FIXME: VDYP-1075
+		if (Math.abs(rs1[speciesIdx]) < TREAT_AS_NO_GROWTH)
+			rs1[speciesIdx] = 0f;
 	}
 
 	/**

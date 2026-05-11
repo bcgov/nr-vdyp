@@ -639,6 +639,19 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void test1026b() throws IOException, ResourceParseException {
+		logger.info("Starting vdyp-1026b");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1026b/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1026b", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void testDuplicateInYieldTableiNSuppliedOrder() throws IOException, ResourceParseException {
 		logger.info("Starting vdyp-1026a");
 		Pattern ignorePattern = Pattern.compile("TABLE_NUM");

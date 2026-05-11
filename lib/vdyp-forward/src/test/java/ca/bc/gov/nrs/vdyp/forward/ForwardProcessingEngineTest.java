@@ -4,6 +4,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -1103,6 +1104,25 @@ class ForwardProcessingEngineTest {
 			);
 		}
 
+		@Test
+		void compareSpeciesDQEstimatesRoundTOZero() throws ProcessingException, IOException, ResourceParseException {
+			float spDqStart = 25.727236f;
+			float[] spDqEsts = { 0f, 0f };
+			float[] spDqEndEsts = { 0f, 25.727236f };
+			float[] spDqStartEsts = { 0f, 25.727236f };
+			float[] dqLowerBoundBySpecies = { 0f, 25.596777f };
+			float[] dqUpperBoundBySpecies = { 0f, 25.727236f };
+			float[] rs1 = { 0f, 0f };
+			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+			int speciesIndex = 1;
+			fpe.compareSpeciesDQEstimates(
+					1, spDqStart, spDqEsts, spDqEndEsts, spDqStartEsts, dqLowerBoundBySpecies, dqUpperBoundBySpecies,
+					rs1
+			);
+			assertEquals(0.0f, rs1[speciesIndex]);
+			assertEquals(25.727236f, spDqEsts[speciesIndex]);
+		}
+
 		private float[] loreyHeightsAtStart(Bank bank) {
 			float[] result = new float[bank.getNSpecies() + 1];
 			for (int i = 0; i <= bank.getNSpecies(); i++) {
@@ -1159,4 +1179,5 @@ class ForwardProcessingEngineTest {
 			em.verify();
 		}
 	}
+
 }
