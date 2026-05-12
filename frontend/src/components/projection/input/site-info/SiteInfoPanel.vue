@@ -24,6 +24,22 @@
             <v-col>
               <span class="text-h6">Site Information</span>
             </v-col>
+            <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
+              <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
+                <template #activator="{ props: tooltipProps }">
+                  <span v-bind="tooltipProps">
+                    <AppButton
+                      label="Edit"
+                      variant="tertiary"
+                      mdi-name="mdi-pencil-outline"
+                      iconPosition="top"
+                      :isDisabled="!isHeaderEditActive"
+                      @click="onHeaderEdit"
+                    />
+                  </span>
+                </template>
+              </v-tooltip>
+            </v-col>
           </v-row>
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
@@ -238,12 +254,14 @@
             </div>
             <ActionPanel
               v-if="!isReadOnly"
-              class="mt-4"
+              class="action-panel"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
-              @clear="onClear"
+              :hideClearButton="true"
+              :hideEditButton="true"
+              :showCancelButton="true"
               @confirm="onConfirm"
-              @edit="onEdit"
+              @cancel="onCancel"
             />
           </v-form>
         </v-expansion-panel-text>
@@ -257,7 +275,7 @@ import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
-import { AppMessageDialog, AppSpinField } from '@/components'
+import { AppMessageDialog, AppSpinField, AppButton } from '@/components'
 import {
   ActionPanel,
 } from '@/components/projection'
@@ -267,8 +285,10 @@ import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
 import { siteInfoValidation } from '@/validation'
 import { isZeroValue, isEmptyOrZero } from '@/utils/util'
-import { saveProjectionOnPanelConfirm } from '@/services/projection/modelParameterService'
+import { saveProjectionOnPanelConfirm, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
+import type { PanelName } from '@/types/types'
 
 import { env } from '@/env'
 
@@ -279,6 +299,7 @@ const form = ref<HTMLFormElement>()
 const modelParameterStore = useModelParameterStore()
 const appStore = useAppStore()
 const notificationStore = useNotificationStore()
+const alertDialogStore = useAlertDialogStore()
 
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
@@ -446,114 +467,92 @@ const syncPrimaryRowToStore = () => {
   }
 }
 
-const onConfirm = async () => {
-  if (showNewSiteIndicesFeature) {
-    syncPrimaryRowToStore()
+const showMissingInfoDialog = (message: string) => {
+  messageDialog.value = {
+    dialog: true,
+    title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
+    message,
+    btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    variant: 'error',
   }
+}
 
-  // validation - pre-confirm fields (Site Index selection, BEC Zone)
-  const preConfirmResult = siteInfoValidation.validatePreConfirmFields(
-    siteSpeciesValues.value,
-    becZone.value,
-  )
-  if (!preConfirmResult.isValid) {
-    let message = ''
-    switch (preConfirmResult.errorType) {
-      case 'siteIndex':
-        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SITE_INDEX_REQ
-        break
-      case 'becZone':
-        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_BEC_ZONE_REQ
-        break
-    }
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
-      message: message,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      variant: 'error',
-    }
-    return
+const showInvalidInputDialog = (message: string) => {
+  messageDialog.value = {
+    dialog: true,
+    title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+    message,
+    btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    variant: 'error',
   }
+}
 
-  // validation - required fields
-  let requiredValid = true
+const getPreConfirmErrorMessage = (): string | null => {
+  const result = siteInfoValidation.validatePreConfirmFields(siteSpeciesValues.value, becZone.value)
+  if (result.isValid) return null
+  if (result.errorType === 'siteIndex') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SITE_INDEX_REQ
+  if (result.errorType === 'becZone') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_BEC_ZONE_REQ
+  return null
+}
+
+const isRequiredFieldsValid = (): boolean => {
   if (
     showNewSiteIndicesFeature &&
     siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
     siteIndexRows.value.length > 0
   ) {
-    // the field matching computedValue is intentionally null (Calc.) - skip it, validate the other two
+    // The field matching computedValue is intentionally null (Calc.) — skip it, validate the other two
     const cv = siteIndexRows.value[0].computedValue
-    if (cv === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX) {
-      requiredValid = !isEmptyOrZero(spzAge.value) && !isEmptyOrZero(spzHeight.value)
-    } else if (cv === CONSTANTS.COMPUTED_VALUE.HEIGHT) {
-      requiredValid = !isEmptyOrZero(spzAge.value) && !isEmptyOrZero(bha50SiteIndex.value)
-    } else if (cv === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE) {
-      requiredValid = !isEmptyOrZero(spzHeight.value) && !isEmptyOrZero(bha50SiteIndex.value)
-    }
-  } else {
-    requiredValid = siteInfoValidation.validateRequiredFields(
-      siteSpeciesValues.value,
-      spzAge.value,
-      spzHeight.value,
-      bha50SiteIndex.value,
-    ).isValid
+    if (cv === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
+      return !isEmptyOrZero(spzAge.value) && !isEmptyOrZero(spzHeight.value)
+    if (cv === CONSTANTS.COMPUTED_VALUE.HEIGHT)
+      return !isEmptyOrZero(spzAge.value) && !isEmptyOrZero(bha50SiteIndex.value)
+    if (cv === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE)
+      return !isEmptyOrZero(spzHeight.value) && !isEmptyOrZero(bha50SiteIndex.value)
   }
-  if (!requiredValid) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
-      message:
-        siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-          ? MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(
-              selectedSiteSpecies.value,
-            )
-          : MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(
-              selectedSiteSpecies.value,
-            ),
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      variant: 'error',
-    }
-    return
-  }
-
-  // validation - range
-  const rangeResult = siteInfoValidation.validateRange(
+  return siteInfoValidation.validateRequiredFields(
+    siteSpeciesValues.value,
     spzAge.value,
     spzHeight.value,
     bha50SiteIndex.value,
-  )
-  if (!rangeResult.isValid) {
-    let message = ''
+  ).isValid
+}
 
-    switch (rangeResult.errorType) {
-      case 'spzAge':
-        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG
-        break
-      case 'spzHeight':
-        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_HIGHT_RNG
-        break
-      case 'bha50SiteIndex':
-        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG
-        break
-    }
+const getRangeErrorMessage = (): string | null => {
+  const result = siteInfoValidation.validateRange(spzAge.value, spzHeight.value, bha50SiteIndex.value)
+  if (result.isValid) return null
+  if (result.errorType === 'spzAge') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG
+  if (result.errorType === 'spzHeight') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_HIGHT_RNG
+  if (result.errorType === 'bha50SiteIndex') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG
+  return null
+}
 
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: message,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      variant: 'error',
-    }
+const onConfirm = async () => {
+  if (showNewSiteIndicesFeature) syncPrimaryRowToStore()
+
+  const preConfirmError = getPreConfirmErrorMessage()
+  if (preConfirmError) {
+    showMissingInfoDialog(preConfirmError)
     return
   }
 
-  if (form.value) {
-    form.value.validate()
-  } else {
-    console.warn('Form reference is null. Validation skipped.')
+  if (!isRequiredFieldsValid()) {
+    showMissingInfoDialog(
+      siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+        ? MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(selectedSiteSpecies.value)
+        : MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(selectedSiteSpecies.value),
+    )
+    return
   }
+
+  const rangeError = getRangeErrorMessage()
+  if (rangeError) {
+    showInvalidInputDialog(rangeError)
+    return
+  }
+
+  if (form.value) form.value.validate()
+  else console.warn('Form reference is null. Validation skipped.')
 
   formattingValues()
 
@@ -569,47 +568,75 @@ const onConfirm = async () => {
     appStore.isSavingProjection = false
   }
 
-  // this panel is not in a confirmed state
-  if (!isConfirmed.value) {
-    modelParameterStore.confirmPanel(panelName)
-  }
+  if (!isConfirmed.value) modelParameterStore.confirmPanel(panelName)
 }
 
-const onEdit = () => {
-  // this panel has already been confirmed.
+// Edit button in header
+const isHeaderEditActive = computed(() => {
+  const status = appStore.currentProjectionStatus
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) return false
+  return isConfirmed.value && !modelParameterStore.panelState[panelName].editable
+})
+
+const editTooltipText = computed(() => {
+  const status = appStore.currentProjectionStatus
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
+    return `This section may not be edited with a status of ${status}`
+  }
+  if (isConfirmed.value && !modelParameterStore.panelState[panelName].editable) {
+    return 'Click Edit to make changes to this section'
+  }
+  return ''
+})
+
+const getEditablePanel = (): string | null => {
+  const panelsToCheck = [
+    CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS,
+  ]
+  return panelsToCheck.find((p) => modelParameterStore.panelState[p].editable) ?? null
+}
+
+const onHeaderEdit = async () => {
   if (isConfirmed.value) {
+    const editablePanel = getEditablePanel()
+    if (editablePanel) {
+      const hasChanges = await hasPanelUnsavedChanges(editablePanel, modelParameterStore)
+      if (hasChanges) {
+        const proceed = await alertDialogStore.openDialog(
+          MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+          MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+          { variant: 'warning' },
+        )
+        if (!proceed) return
+
+        appStore.isSavingProjection = true
+        try {
+          await revertPanelToSaved(editablePanel as PanelName)
+        } catch (error) {
+          console.error('Error reverting panel to saved state:', error)
+          notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+          return
+        } finally {
+          appStore.isSavingProjection = false
+        }
+      }
+    }
     modelParameterStore.editPanel(panelName)
   }
 }
 
-const onClear = () => {
-  becZone.value = null
-  ecoZone.value = null
-  selectedSiteSpecies.value = highestPercentSpecies.value
-  siteSpeciesValues.value = null
-  ageType.value = DEFAULTS.DEFAULT_VALUES.AGE_TYPE
-
-  spzAge.value = null
-  spzHeight.value = null
-  bha50SiteIndex.value = ''
-  bha50SiteIndexPlaceholder.value = ''
-
-  isBHA50SiteIndexDisabled.value = false
-  isSpzAgeDisabled.value = false
-  isSpzHeightDisabled.value = false
-
-  spzAgePlaceholder.value = ''
-  spzHeightPlaceholder.value = ''
-
-  if (showNewSiteIndicesFeature) {
-    siteIndexRows.value = siteIndexRows.value.map((row) => ({
-      ...row,
-      computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
-      ageType: CONSTANTS.AGE_TYPE.TOTAL,
-      age: DEFAULTS.DEFAULT_VALUES.SPZ_AGE,
-      height: DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT,
-      bhaSiteIndex: null,
-    }))
+const onCancel = async () => {
+  appStore.isSavingProjection = true
+  try {
+    await revertPanelToSaved(panelName)
+  } catch (error) {
+    console.error('Error reverting panel to saved state:', error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+  } finally {
+    appStore.isSavingProjection = false
   }
 }
 
@@ -617,6 +644,29 @@ const handleDialogClose = () => {}
 </script>
 
 <style scoped>
+/* Edit button in header */
+.edit-button-col {
+  display: flex;
+  align-items: center;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top) {
+  padding: 2px 4px;
+  gap: 2px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
+  font-size: 18px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .button-label) {
+  font-size: 11px;
+}
+
+.action-panel {
+  margin-top: 16px;
+}
+
 .site-index-container {
   margin-top: 11px;
 }
