@@ -1,11 +1,12 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexForestInventoryZone.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexForestInventoryZone.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexForestInventoryZone;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.ForestInventoryZone;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexForestInventoryZone;
 
 class FizCheckTest {
 

@@ -1,12 +1,13 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndexNames.SpeciesConversionParamsDetails;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexNames;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexNames.SpeciesConversionParamsDetails;
 
 class SiteIndexNamesTest {
 

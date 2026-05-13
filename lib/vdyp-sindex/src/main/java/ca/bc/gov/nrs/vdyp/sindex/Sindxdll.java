@@ -1,36 +1,29 @@
 package ca.bc.gov.nrs.vdyp.sindex;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.*;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies.*;
 
-import ca.bc.gov.nrs.vdyp.common.Reference;
-import ca.bc.gov.nrs.vdyp.common_calculators.AgeToAge;
-import ca.bc.gov.nrs.vdyp.common_calculators.Height2SiteIndex;
-import ca.bc.gov.nrs.vdyp.common_calculators.SiteClassCode2SiteIndex;
-import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndex2Age;
-import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndex2Height;
-import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndex2HeightSmoothed;
-import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndexNames;
-import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndexYears2BreastHeight;
-import ca.bc.gov.nrs.vdyp.common_calculators.SpecRMap;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.AgeTypeErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.ClassErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CodeErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.EstablishmentErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.ForestInventoryZoneException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.GrowthInterceptMaximumException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.GrowthInterceptMinimumException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.GrowthInterceptTotalException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstablishmentType;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.AgeToAge;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.Height2SiteIndex;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteClassCode2SiteIndex;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2Age;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2Height;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2HeightSmoothed;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexNames;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndexYears2BreastHeight;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SpecRMap;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEstablishmentType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEstimationType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.AgeTypeErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CodeErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.EstablishmentErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
 
 /**
  * Sindxdll.java Interface Module to the Sindex Library

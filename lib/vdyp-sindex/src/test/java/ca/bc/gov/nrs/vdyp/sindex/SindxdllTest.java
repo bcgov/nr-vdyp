@@ -1,10 +1,10 @@
 package ca.bc.gov.nrs.vdyp.sindex;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType.*;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.*;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstablishmentType.*;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType.*;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEstablishmentType.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEstimationType.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterAll;
@@ -12,19 +12,18 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.common.Reference;
-import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndexUtilities;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.AgeTypeErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.ClassErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CodeErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.EstablishmentErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndexUtilities;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.AgeTypeErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.ClassErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CodeErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.EstablishmentErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.LessThan13Exception;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
 class SindxdllTest {
 

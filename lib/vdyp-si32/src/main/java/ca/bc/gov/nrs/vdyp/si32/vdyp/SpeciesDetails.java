@@ -2,9 +2,9 @@ package ca.bc.gov.nrs.vdyp.si32.vdyp;
 
 import java.text.MessageFormat;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsTreeSpecies;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
 /**
  * Records all of the information regarding a particular CFS species.
