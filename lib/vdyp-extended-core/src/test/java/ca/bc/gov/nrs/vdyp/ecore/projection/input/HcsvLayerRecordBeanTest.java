@@ -31,7 +31,8 @@ class HcsvLayerRecordBeanTest {
 		// Old-format CSV (no per-species site index columns): estimatedSiteIndex is null for all species
 		// pos4-37 (34 fields): layer-level values, 2 species (PLI 60%, FD 40%), age/height for spp1+spp2
 		String row = "1,P,,,,,,5,1.0,150,PLI,60.0,FD,40.0,,,,,,,,,60,9.0,50,8.5,,,,,,,,";
-		List<HcsvLayerRecordBean.SpeciesDetails> details = parseFirstBean(LAYER_CSV_HEADER_LINE, row).getSpeciesDetails();
+		List<HcsvLayerRecordBean.SpeciesDetails> details = parseFirstBean(LAYER_CSV_HEADER_LINE, row)
+				.getSpeciesDetails();
 
 		assertThat(details.get(0).estimatedSiteIndex(), is(nullValue()));
 		assertThat(details.get(1).estimatedSiteIndex(), is(nullValue()));
