@@ -499,8 +499,10 @@ public class YieldTable implements Closeable {
 							var vdypLayer = getProjectedLayer(polygonProjectionsByYear, targetAge, layer);
 							if (vdypLayer != null) {
 								Map<Species, Integer> duplicateOccurrencesBySpecies = new IdentityHashMap<>();
-								var specByPercent = layer.getSp64sByPercent();
-								for (Species sp64 : specByPercent) {
+								// This seems to fix some Species Volume Tolerance bugs. It does not seem like it SHOULD
+								// be correct but it does currently match
+								var specAsSupplied = layer.getSp64sAsSupplied();
+								for (Species sp64 : specAsSupplied) {
 									int duplicateOccurrenceIndex = duplicateOccurrencesBySpecies.getOrDefault(sp64, 0);
 									duplicateOccurrencesBySpecies.put(sp64, duplicateOccurrenceIndex + 1);
 									var vdypSpecies = vdypLayer.getSpeciesBySp0(sp64.getStand().getSp0Code());
