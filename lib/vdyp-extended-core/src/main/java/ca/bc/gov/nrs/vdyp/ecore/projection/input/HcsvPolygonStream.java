@@ -502,6 +502,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		var speciesPercent = sp64Details.percent();
 		var totalAge = sp64Details.estimatedAge() == null ? null : Double.valueOf(sp64Details.estimatedAge());
 		var dominantHeight = sp64Details.estimatedHeight();
+		var siteIndex = sp64Details.estimatedSiteIndex();
 
 		String sp0Code = SiteTool.getSpeciesVDYP7Code(speciesCode);
 
@@ -585,6 +586,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				.speciesPercent(speciesPercent) //
 				.totalAge(totalAge) //
 				.dominantHeight(dominantHeight) //
+				.siteIndex(siteIndex) //
 				.standSuppliedOrderIndex(stand.getSpecies().size()) //
 				.build();
 

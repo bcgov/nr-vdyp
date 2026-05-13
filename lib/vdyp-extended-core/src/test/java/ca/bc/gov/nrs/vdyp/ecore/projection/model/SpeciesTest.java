@@ -18,6 +18,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
@@ -374,6 +375,50 @@ class SpeciesTest {
 			assertThat(unit.getSiteCurve(), is(collaborator.getSiteCurve()));
 			assertThat(unit.getPercentsPerDuplicate().size(), is(2));
 			assertThat(unit.getPercentsPerDuplicate().get(1), is(speciesPercent));
+		}
+	}
+
+	@Nested
+	class EquivalentSiteInfoSpeciesDetails {
+
+		Polygon polygon;
+		Layer layer;
+		Stand stand;
+
+		@BeforeEach
+		void setup() {
+			polygon = new Polygon.Builder().build();
+			layer = new Layer.Builder().polygon(polygon).layerId("Test").build();
+			stand = new Stand.Builder().sp0Code("P").layer(layer).build();
+		}
+
+		private HcsvLayerRecordBean.SpeciesDetails details(Double siteIndex) {
+			// age and height are null so only siteIndex is compared in equivalentSiteInfo
+			return new HcsvLayerRecordBean.SpeciesDetails(1, "PL", 100.0, null, null, siteIndex);
+		}
+
+		@Test
+		void testEquivalentWhenSiteIndexMatches() {
+			var unit = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100).siteIndex(20.0).build();
+			assertThat(unit.equivalentSiteInfo(details(20.0)), is(true));
+		}
+
+		@Test
+		void testEquivalentWhenSiteIndexNullInDetails() {
+			var unit = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100).siteIndex(20.0).build();
+			assertThat(unit.equivalentSiteInfo(details(null)), is(true));
+		}
+
+		@Test
+		void testEquivalentWhenSiteIndexNullInSpecies() {
+			var unit = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100).build();
+			assertThat(unit.equivalentSiteInfo(details(20.0)), is(true));
+		}
+
+		@Test
+		void testNotEquivalentWhenSiteIndexDiffers() {
+			var unit = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100).siteIndex(20.0).build();
+			assertThat(unit.equivalentSiteInfo(details(15.0)), is(false));
 		}
 	}
 }
