@@ -59,6 +59,9 @@
                     placeholder="Select Bec Zone"
                     :disabled="isInputDisabled"
                     append-inner-icon="mdi-chevron-down"
+                    :error="!!becZoneError"
+                    :error-messages="becZoneError"
+                    @update:modelValue="becZoneError = ''"
                   ></v-select>
                 </v-col>
                 <v-col cols="12" sm="6" md="3" class="eco-col">
@@ -301,6 +304,8 @@ const messageDialog = ref<MessageDialog>({
   message: '',
 })
 
+const becZoneError = ref<string>('')
+
 const {
   panelOpenStates,
   derivedBy,
@@ -520,6 +525,12 @@ const getRangeErrorMessage = (): string | null => {
 
 const onConfirm = async () => {
   if (showNewSiteIndicesFeature) syncPrimaryRowToStore()
+
+  if (!becZone.value) {
+    becZoneError.value = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_BEC_ZONE_REQ
+    return
+  }
+  becZoneError.value = ''
 
   const preConfirmError = getPreConfirmErrorMessage()
   if (preConfirmError) {
