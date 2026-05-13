@@ -1,15 +1,5 @@
 <template>
   <v-card class="elevation-0">
-    <AppMessageDialog
-      :dialog="messageDialog.dialog"
-      :title="messageDialog.title"
-      :message="messageDialog.message"
-      :dialogWidth="messageDialog.dialogWidth"
-      :btnLabel="messageDialog.btnLabel"
-      :variant="messageDialog.variant"
-      @update:dialog="(value) => (messageDialog.dialog = value)"
-      @close="handleDialogClose"
-    />
     <v-expansion-panels v-model="panelOpenStates.siteInfo">
       <v-expansion-panel hide-actions>
         <v-expansion-panel-title>
@@ -88,6 +78,7 @@
                     inline
                     hide-details
                     :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
+                    @update:modelValue="siteIndexError = ''"
                   >
                     <v-radio
                       :key="OPTIONS.siteSpeciesValuesOptions[0].value"
@@ -100,11 +91,12 @@
                       :value="OPTIONS.siteSpeciesValuesOptions[1].value"
                     ></v-radio>
                   </v-radio-group>
+                  <div v-if="siteIndexError" class="site-info-error">{{ siteIndexError }}</div>
                 </v-col>
               </v-row>
               <template v-if="!showNewSiteIndicesFeature">
                 <div class="hr-line"></div>
-                <v-row class="mt-0">
+                <v-row class="mt-0 mb-3">
                   <v-col cols="6">
                     <v-row>
                       <v-col cols="6">
@@ -241,9 +233,11 @@
                     </v-row>
                   </v-col>
                 </v-row>
+                <div v-if="siteFieldsError" class="site-info-error mt-2">{{ siteFieldsError }}</div>
               </template>
               <template v-else>
                 <SiteIndicesTable :is-confirm-enabled="isConfirmEnabled" />
+                <div v-if="siteFieldsError" class="site-info-error mt-2">{{ siteFieldsError }}</div>
               </template>
             </div>
             <ActionPanel
@@ -269,12 +263,12 @@ import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
-import { AppMessageDialog, AppSpinField, AppButton } from '@/components'
+import { AppSpinField, AppButton } from '@/components'
 import {
   ActionPanel,
 } from '@/components/projection'
 import SiteIndicesTable from './SiteIndicesTable.vue'
-import type { SpeciesGroup, MessageDialog } from '@/interfaces/interfaces'
+import type { SpeciesGroup, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
 import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR } from '@/constants/message'
 import { siteInfoValidation } from '@/validation'
@@ -298,13 +292,9 @@ const alertDialogStore = useAlertDialogStore()
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
 
-const messageDialog = ref<MessageDialog>({
-  dialog: false,
-  title: '',
-  message: '',
-})
-
 const becZoneError = ref<string>('')
+const siteIndexError = ref<string>('')
+const siteFieldsError = ref<string>('')
 
 const {
   panelOpenStates,
@@ -463,26 +453,6 @@ const syncPrimaryRowToStore = () => {
   }
 }
 
-const showMissingInfoDialog = (message: string) => {
-  messageDialog.value = {
-    dialog: true,
-    title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
-    message,
-    btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    variant: 'error',
-  }
-}
-
-const showInvalidInputDialog = (message: string) => {
-  messageDialog.value = {
-    dialog: true,
-    title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-    message,
-    btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    variant: 'error',
-  }
-}
-
 const getPreConfirmErrorMessage = (): string | null => {
   const result = siteInfoValidation.validatePreConfirmFields(siteSpeciesValues.value, becZone.value)
   if (result.isValid) return null
@@ -491,40 +461,96 @@ const getPreConfirmErrorMessage = (): string | null => {
   return null
 }
 
-const isRequiredFieldsValid = (): boolean => {
-  if (
-    showNewSiteIndicesFeature &&
-    siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
-    siteIndexRows.value.length > 0
-  ) {
-    // The field matching computedValue is intentionally null (Calc.) — skip it, validate the other two
-    const cv = siteIndexRows.value[0].computedValue
-    if (cv === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
-      return !isEmptyOrZero(spzAge.value) && !isEmptyOrZero(spzHeight.value)
-    if (cv === CONSTANTS.COMPUTED_VALUE.HEIGHT)
-      return !isEmptyOrZero(spzAge.value) && !isEmptyOrZero(bha50SiteIndex.value)
-    if (cv === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE)
-      return !isEmptyOrZero(spzHeight.value) && !isEmptyOrZero(bha50SiteIndex.value)
+const isRowDisabledInNewUI = (index: number): boolean =>
+  siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
+  derivedBy.value === CONSTANTS.DERIVED_BY.VOLUME &&
+  index > 0
+
+const getRequiredPairError = (
+  missingPrimary: boolean,
+  missingBha: boolean,
+  speciesCode: string,
+): string | null => {
+  if (missingBha && !missingPrimary) return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(speciesCode)
+  if (missingPrimary) return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(speciesCode)
+  return null
+}
+
+// The field matching computedValue is intentionally null (Calc.) - skip it, validate the other two
+const getComputedRowError = (row: SiteIndexSpeciesRow): string | null => {
+  const cv = row.computedValue
+  if (cv === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX) {
+    if (isEmptyOrZero(row.age) || isEmptyOrZero(row.height))
+      return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(row.speciesCode)
+  } else if (cv === CONSTANTS.COMPUTED_VALUE.HEIGHT) {
+    return getRequiredPairError(isEmptyOrZero(row.age), isEmptyOrZero(row.bhaSiteIndex), row.speciesCode)
+  } else if (cv === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE) {
+    return getRequiredPairError(isEmptyOrZero(row.height), isEmptyOrZero(row.bhaSiteIndex), row.speciesCode)
   }
-  return siteInfoValidation.validateRequiredFields(
-    siteSpeciesValues.value,
-    spzAge.value,
-    spzHeight.value,
-    bha50SiteIndex.value,
-  ).isValid
+  return null
+}
+
+const getNewUIRequiredError = (): string | null => {
+  const isComputed = siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+  for (let i = 0; i < siteIndexRows.value.length; i++) {
+    if (isRowDisabledInNewUI(i)) continue
+    const row = siteIndexRows.value[i]
+    if (isComputed) {
+      const err = getComputedRowError(row)
+      if (err) return err
+    } else if (isEmptyOrZero(row.bhaSiteIndex)) {
+      return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(row.speciesCode)
+    }
+  }
+  return null
+}
+
+const getRequiredFieldsErrorMessage = (): string | null => {
+  if (!showNewSiteIndicesFeature) {
+    // Old UI: COMPUTED needs Age + Height, SUPPLIED needs BHA
+    const result = siteInfoValidation.validateRequiredFields(
+      siteSpeciesValues.value,
+      spzAge.value,
+      spzHeight.value,
+      bha50SiteIndex.value,
+    )
+    if (result.isValid) return null
+    return siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      ? MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(selectedSiteSpecies.value)
+      : MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(selectedSiteSpecies.value)
+  }
+  return getNewUIRequiredError()
+}
+
+const getRangeErrorFromType = (errorType: string | undefined): string | null => {
+  if (errorType === 'spzAge') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG
+  if (errorType === 'spzHeight') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_HIGHT_RNG
+  if (errorType === 'bha50SiteIndex') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG
+  return null
+}
+
+const getNewUIRangeError = (): string | null => {
+  for (let i = 0; i < siteIndexRows.value.length; i++) {
+    if (isRowDisabledInNewUI(i)) continue
+    const row = siteIndexRows.value[i]
+    const result = siteInfoValidation.validateRange(row.age, row.height, row.bhaSiteIndex)
+    if (!result.isValid) return getRangeErrorFromType(result.errorType)
+  }
+  return null
 }
 
 const getRangeErrorMessage = (): string | null => {
+  if (showNewSiteIndicesFeature) return getNewUIRangeError()
   const result = siteInfoValidation.validateRange(spzAge.value, spzHeight.value, bha50SiteIndex.value)
   if (result.isValid) return null
-  if (result.errorType === 'spzAge') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG
-  if (result.errorType === 'spzHeight') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_HIGHT_RNG
-  if (result.errorType === 'bha50SiteIndex') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG
-  return null
+  return getRangeErrorFromType(result.errorType)
 }
 
 const onConfirm = async () => {
   if (showNewSiteIndicesFeature) syncPrimaryRowToStore()
+
+  siteIndexError.value = ''
+  siteFieldsError.value = ''
 
   if (!becZone.value) {
     becZoneError.value = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_BEC_ZONE_REQ
@@ -534,22 +560,19 @@ const onConfirm = async () => {
 
   const preConfirmError = getPreConfirmErrorMessage()
   if (preConfirmError) {
-    showMissingInfoDialog(preConfirmError)
+    siteIndexError.value = preConfirmError
     return
   }
 
-  if (!isRequiredFieldsValid()) {
-    showMissingInfoDialog(
-      siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-        ? MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(selectedSiteSpecies.value)
-        : MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(selectedSiteSpecies.value),
-    )
+  const requiredError = getRequiredFieldsErrorMessage()
+  if (requiredError) {
+    siteFieldsError.value = requiredError
     return
   }
 
   const rangeError = getRangeErrorMessage()
   if (rangeError) {
-    showInvalidInputDialog(rangeError)
+    siteFieldsError.value = rangeError
     return
   }
 
@@ -642,10 +665,17 @@ const onCancel = async () => {
   }
 }
 
-const handleDialogClose = () => {}
 </script>
 
 <style scoped>
+.site-info-error {
+  color: rgb(var(--v-theme-error));
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1rem;
+  white-space: pre-line;
+}
+
 /* Edit button in header */
 .edit-button-col {
   display: flex;
