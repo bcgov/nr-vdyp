@@ -122,7 +122,7 @@ describe('<SiteInfoPanel />', () => {
         openPanel(ms)
         as.viewMode = PROJECTION_VIEW_MODE.VIEW
       })
-      cy.contains('button', 'Clear').should('not.exist')
+      cy.contains('button', 'Cancel').should('not.exist')
       cy.contains('button', 'Next').should('not.exist')
     })
 
@@ -132,7 +132,7 @@ describe('<SiteInfoPanel />', () => {
         makeEditable(ms)
         as.viewMode = PROJECTION_VIEW_MODE.CREATE
       })
-      cy.contains('button', 'Clear').should('exist')
+      cy.contains('button', 'Cancel').should('exist')
       cy.contains('button', 'Next').should('exist')
     })
   })

@@ -1,15 +1,5 @@
 <template>
   <v-card class="elevation-0">
-    <AppMessageDialog
-      :dialog="messageDialog.dialog"
-      :title="messageDialog.title"
-      :message="messageDialog.message"
-      :dialogWidth="messageDialog.dialogWidth"
-      :btnLabel="messageDialog.btnLabel"
-      :variant="messageDialog.variant"
-      @update:dialog="(value) => (messageDialog.dialog = value)"
-      @close="handleDialogClose"
-    />
     <v-expansion-panels v-model="panelOpenStates[panelName]">
       <v-expansion-panel hide-actions>
         <v-expansion-panel-title class="attachments-panel-title">
@@ -73,6 +63,7 @@
                       <v-icon size="25">mdi-delete-forever</v-icon>
                     </v-btn>
                   </div>
+                  <div v-if="polygonFileError" class="file-upload-error">{{ polygonFileError }}</div>
                 </template>
               </v-col>
               <v-col cols="6" class="file-upload-col file-upload-col-right">
@@ -119,6 +110,7 @@
                       <v-icon size="25">mdi-delete-forever</v-icon>
                     </v-btn>
                   </div>
+                  <div v-if="layerFileError" class="file-upload-error">{{ layerFileError }}</div>
                 </template>
               </v-col>
             </v-row>
@@ -133,10 +125,8 @@
 import { ref, computed, watch } from 'vue'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAppStore } from '@/stores/projection/appStore'
-import { AppMessageDialog } from '@/components'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR, FILE_REMOVAL_DIALOG } from '@/constants/message'
-import type { MessageDialog } from '@/interfaces/interfaces'
 import { fileUploadValidation } from '@/validation'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
@@ -165,11 +155,8 @@ const layerUploadKey = ref(0)
 // Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
 
-const messageDialog = ref<MessageDialog>({
-  dialog: false,
-  title: '',
-  message: '',
-})
+const polygonFileError = ref<string>('')
+const layerFileError = ref<string>('')
 
 const panelName = CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS
 
@@ -191,17 +178,6 @@ const formatErrColumnList = (
     const displayed = columns.slice(0, maxItems).join(', ')
     const remaining = columns.length - maxItems
     return `${displayed}, and ${remaining} more ${errName} columns`
-  }
-}
-
-const showErrorDialog = (title: string, message: string) => {
-  messageDialog.value = {
-    dialog: true,
-    title,
-    message,
-    btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    dialogWidth: 500,
-    variant: 'error',
   }
 }
 
@@ -232,14 +208,11 @@ const buildHeaderErrorMessage = (details: {
   return message
 }
 
-const validateDuplicateColumns = async (
-  file: File | null,
+const getDuplicateColumnsError = async (
+  file: File,
   validateFn: (file: File) => Promise<{ isValid: boolean; duplicates: string[] }>,
   errorMessage: string,
-  dialogTitle: string,
-): Promise<boolean> => {
-  if (!file) return true
-
+): Promise<string | null> => {
   const result = await validateFn(file)
   if (!result.isValid) {
     let message = errorMessage
@@ -247,58 +220,68 @@ const validateDuplicateColumns = async (
       message += '\n\nDuplicate columns found:\n' +
         formatErrColumnList(result.duplicates, MAX_DISPLAY_ERR_ITEMS, 'duplicate')
     }
-    showErrorDialog(dialogTitle, message)
-    return false
+    return message
   }
-  return true
+  return null
 }
 
-const validateHeaderColumns = async (
-  file: File | null,
+const getHeaderColumnsError = async (
+  file: File,
   validateFn: (file: File) => Promise<{ isValid: boolean; details: any }>,
-  dialogTitle: string,
-): Promise<boolean> => {
-  if (!file) return true
-
+): Promise<string | null> => {
   const result = await validateFn(file)
   if (!result.isValid) {
-    const message = buildHeaderErrorMessage(result.details)
-    showErrorDialog(dialogTitle, message)
-    return false
+    return buildHeaderErrorMessage(result.details)
   }
-  return true
+  return null
 }
 
 const validatePolygonFile = async (file: File): Promise<boolean> => {
-  const duplicatesValid = await validateDuplicateColumns(
+  const duplicateError = await getDuplicateColumnsError(
     file,
     fileUploadValidation.validatePolygonDuplicateColumns,
     MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_DUPLICATE_COLUMNS,
-    MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_DUPLICATE_COLUMNS,
   )
-  if (!duplicatesValid) return false
+  if (duplicateError) {
+    polygonFileError.value = duplicateError
+    return false
+  }
 
-  return validateHeaderColumns(
+  const headerError = await getHeaderColumnsError(
     file,
     fileUploadValidation.validatePolygonHeader,
-    MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_HEADER_MISMATCH,
   )
+  if (headerError) {
+    polygonFileError.value = headerError
+    return false
+  }
+
+  polygonFileError.value = ''
+  return true
 }
 
 const validateLayerFile = async (file: File): Promise<boolean> => {
-  const duplicatesValid = await validateDuplicateColumns(
+  const duplicateError = await getDuplicateColumnsError(
     file,
     fileUploadValidation.validateLayerDuplicateColumns,
     MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_DUPLICATE_COLUMNS,
-    MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_DUPLICATE_COLUMNS,
   )
-  if (!duplicatesValid) return false
+  if (duplicateError) {
+    layerFileError.value = duplicateError
+    return false
+  }
 
-  return validateHeaderColumns(
+  const headerError = await getHeaderColumnsError(
     file,
     fileUploadValidation.validateLayerHeader,
-    MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_HEADER_MISMATCH,
   )
+  if (headerError) {
+    layerFileError.value = headerError
+    return false
+  }
+
+  layerFileError.value = ''
+  return true
 }
 
 // Upload polygon file immediately when selected
@@ -505,7 +488,6 @@ const removeLayerFile = async () => {
   }
 }
 
-const handleDialogClose = () => {}
 </script>
 
 <style>
@@ -730,5 +712,14 @@ const handleDialogClose = () => {}
 
 .file-upload-label {
   padding-top: 0px;
+}
+
+.file-upload-error {
+  color: rgb(var(--v-theme-error));
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1rem;
+  margin-top: 6px;
+  white-space: pre-line;
 }
 </style>
