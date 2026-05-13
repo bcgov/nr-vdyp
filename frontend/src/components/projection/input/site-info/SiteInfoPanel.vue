@@ -46,65 +46,57 @@
           <v-form ref="form">
             <div>
               <v-row no-gutters class="form-fields-row mb-4">
-                <v-col cols="6">
-                  <v-row no-gutters class="form-fields-row">
-                    <v-col cols="6">
-                      <label class="bcds-select-label" for="bec-zone-select">BEC Zone</label>
-                      <v-select
-                        id="bec-zone-select"
-                        :items="OPTIONS.becZoneOptions"
-                        v-model="becZone"
-                        item-title="label"
-                        item-value="value"
-                        hide-details="auto"
-                        persistent-placeholder
-                        placeholder="Select Bec Zone"
-                        :disabled="isInputDisabled"
-                        append-inner-icon="mdi-chevron-down"
-                      ></v-select>
-                    </v-col>
-                    <v-col>
-                      <label class="bcds-select-label" for="eco-zone-select">Eco Zone</label>
-                      <v-select
-                        id="eco-zone-select"
-                        :items="OPTIONS.ecoZoneOptions"
-                        v-model="ecoZone"
-                        item-title="label"
-                        item-value="value"
-                        clearable
-                        hide-details="auto"
-                        persistent-placeholder
-                        placeholder="Select Eco Zone"
-                        :disabled="isInputDisabled"
-                        append-inner-icon="mdi-chevron-down"
-                      ></v-select>
-                    </v-col>
-                  </v-row>
+                <v-col cols="12" sm="6" md="3" class="bec-col">
+                  <label class="bcds-select-label" for="bec-zone-select">BEC Zone (Required)</label>
+                  <v-select
+                    id="bec-zone-select"
+                    :items="OPTIONS.becZoneOptions"
+                    v-model="becZone"
+                    item-title="label"
+                    item-value="value"
+                    hide-details="auto"
+                    persistent-placeholder
+                    placeholder="Select Bec Zone"
+                    :disabled="isInputDisabled"
+                    append-inner-icon="mdi-chevron-down"
+                  ></v-select>
                 </v-col>
-                <v-col>
-                  <v-row>
-                    <v-col cols="12" sm="4" class="site-index-container">
-                      <label class="bcds-radio-label" for="siteIndex">Site Index:</label>
-                      <v-radio-group
-                        id="siteIndex"
-                        v-model="siteSpeciesValues"
-                        inline
-                        hide-details
-                        :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
-                      >
-                        <v-radio
-                          :key="OPTIONS.siteSpeciesValuesOptions[0].value"
-                          :label="OPTIONS.siteSpeciesValuesOptions[0].label"
-                          :value="OPTIONS.siteSpeciesValuesOptions[0].value"
-                        ></v-radio>
-                        <v-radio
-                          :key="OPTIONS.siteSpeciesValuesOptions[1].value"
-                          :label="OPTIONS.siteSpeciesValuesOptions[1].label"
-                          :value="OPTIONS.siteSpeciesValuesOptions[1].value"
-                        ></v-radio>
-                      </v-radio-group>
-                    </v-col>
-                  </v-row>
+                <v-col cols="12" sm="6" md="3" class="eco-col">
+                  <label class="bcds-select-label" for="eco-zone-select">Eco Zone</label>
+                  <v-select
+                    id="eco-zone-select"
+                    :items="OPTIONS.ecoZoneOptions"
+                    v-model="ecoZone"
+                    item-title="label"
+                    item-value="value"
+                    clearable
+                    hide-details="auto"
+                    persistent-placeholder
+                    placeholder="Select Eco Zone"
+                    :disabled="isInputDisabled"
+                    append-inner-icon="mdi-chevron-down"
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" md="6" class="site-index-container">
+                  <label class="bcds-radio-label" for="siteIndex">Site Index:</label>
+                  <v-radio-group
+                    id="siteIndex"
+                    v-model="siteSpeciesValues"
+                    inline
+                    hide-details
+                    :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
+                  >
+                    <v-radio
+                      :key="OPTIONS.siteSpeciesValuesOptions[0].value"
+                      :label="OPTIONS.siteSpeciesValuesOptions[0].label"
+                      :value="OPTIONS.siteSpeciesValuesOptions[0].value"
+                    ></v-radio>
+                    <v-radio
+                      :key="OPTIONS.siteSpeciesValuesOptions[1].value"
+                      :label="OPTIONS.siteSpeciesValuesOptions[1].label"
+                      :value="OPTIONS.siteSpeciesValuesOptions[1].value"
+                    ></v-radio>
+                  </v-radio-group>
                 </v-col>
               </v-row>
               <template v-if="!showNewSiteIndicesFeature">
@@ -247,7 +239,6 @@
                   </v-col>
                 </v-row>
               </template>
-
               <template v-else>
                 <SiteIndicesTable :is-confirm-enabled="isConfirmEnabled" />
               </template>
@@ -668,12 +659,79 @@ const handleDialogClose = () => {}
 }
 
 .site-index-container {
-  margin-top: 11px;
+  margin-top: 16px !important;
+}
+
+@media (min-width: 960px) {
+  .bec-col {
+    max-width: 375px;
+    flex: 0 0 360px !important;
+  }
+  .eco-col {
+    max-width: 230px;
+  }
+  .site-index-container {
+    flex: 1;
+  }
+}
+
+@media (max-width: 959px) {
+  .site-index-container {
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 959px) {
+  .bec-col {
+    max-width: calc(50% - 8px) !important;
+    flex-basis: calc(50% - 8px) !important;
+  }
+  .eco-col {
+    max-width: calc(50% - 8px) !important;
+    flex-basis: calc(50% - 8px) !important;
+  }
+  .site-index-container {
+    margin-top: 12px;
+  }
+}
+
+@media (min-width: 600px) {
+  .eco-col {
+    padding-left: 8px;
+  }
 }
 
 @media (max-width: 600px) {
   .site-index-container {
-    margin-top: 0;
+    margin-top: 0px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .bec-col :deep(.v-field__input),
+  .bec-col :deep(.v-select__selection-text) {
+    font-size: 0.91rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .bec-col :deep(.v-field__input),
+  .bec-col :deep(.v-select__selection-text) {
+    font-size: 0.87rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .bec-col :deep(.v-field__input),
+  .bec-col :deep(.v-select__selection-text) {
+    font-size: 0.83rem;
+  }
+}
+
+@media (max-width: 344px) {
+  .bec-col :deep(.v-field__input),
+  .bec-col :deep(.v-select__selection-text) {
+    font-size: 0.80rem;
   }
 }
 </style>

@@ -38,6 +38,11 @@ export const tableAgeTypeOptions = [
   { label: 'Breast Height Age', value: CONSTANTS.AGE_TYPE.BREAST },
 ]
 
+export const cardAgeTypeOptions = [
+  { label: 'Total', value: CONSTANTS.AGE_TYPE.TOTAL },
+  { label: 'Breast Height', value: CONSTANTS.AGE_TYPE.BREAST },
+]
+
 export const computedValueOptions = [
   { label: 'Height in Meters', value: CONSTANTS.COMPUTED_VALUE.HEIGHT },
   { label: 'BHA Site Index', value: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX },
