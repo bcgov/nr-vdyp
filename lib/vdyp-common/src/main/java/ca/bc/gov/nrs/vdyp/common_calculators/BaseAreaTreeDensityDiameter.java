@@ -12,6 +12,7 @@ public class BaseAreaTreeDensityDiameter {
 	 * π/4/10⁴ = π/(4 * 10⁴)
 	 */
 	public static final double PI_40K = (float) (Math.PI / 40_000);
+
 	/**
 	 * FT_BD - return an estimate of the number of trees per hectare based on a given base area (a) and quadratic mean
 	 * diameter (q) according to the formula
