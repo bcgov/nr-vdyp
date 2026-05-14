@@ -376,4 +376,5 @@ class SpeciesTest {
 			assertThat(unit.getPercentsPerDuplicate().get(1), is(speciesPercent));
 		}
 	}
+
 }
