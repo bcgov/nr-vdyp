@@ -284,8 +284,8 @@ public class Species implements Comparable<Species> {
 	/**
 	 * Determine if the Site information for this species is equivalent to that of <code>other</code>, a
 	 * <code>SpeciesDetails</code> instance. Note that SpeciesDetail does not contain a full set of Site information -
-	 * only age, dominant height and site index, and then only for certain species of a layer. Fields that are
-	 * <code>null</code> in either are considered equivalent.
+	 * only age and dominant height, and then only for certain species of a layer. Fields that are <code>other</code> in
+	 * either are considered equivalent.
 	 *
 	 * @param other the SpeciesDetails object to compare against
 	 * @return as described
@@ -294,8 +294,7 @@ public class Species implements Comparable<Species> {
 	public boolean equivalentSiteInfo(SpeciesDetails other) {
 
 		return equivalentSiteInfoValue(this.totalAge, other.estimatedAge())
-				&& equivalentSiteInfoValue(this.dominantHeight, other.estimatedHeight())
-				&& equivalentSiteInfoValue(this.siteIndex, other.estimatedSiteIndex());
+				&& equivalentSiteInfoValue(this.dominantHeight, other.estimatedHeight());
 	}
 
 	/**
