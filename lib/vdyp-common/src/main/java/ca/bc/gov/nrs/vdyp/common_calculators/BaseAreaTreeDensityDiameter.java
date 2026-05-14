@@ -1,7 +1,5 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.sqrt;
-
 /**
  * Converts between trees per hectare and quad mean diameter in a given base area
  */
@@ -13,8 +11,7 @@ public class BaseAreaTreeDensityDiameter {
 	/**
 	 * π/4/10⁴ = π/(4 * 10⁴)
 	 */
-	public static final float PI_40K = (float) (Math.PI / 40_000);
-
+	public static final double PI_40K = (float) (Math.PI / 40_000);
 	/**
 	 * FT_BD - return an estimate of the number of trees per hectare based on a given base area (a) and quadratic mean
 	 * diameter (q) according to the formula
@@ -27,6 +24,10 @@ public class BaseAreaTreeDensityDiameter {
 	 * @return as described. If baseArea or quadraticMeanDiameter is not positive, 0 is returned.
 	 */
 	public static float treesPerHectare(float baseArea, float quadraticMeanDiameter) {
+		return (float) treesPerHectare(baseArea, (double) quadraticMeanDiameter);
+	}
+
+	public static double treesPerHectare(double baseArea, double quadraticMeanDiameter) {
 		if (baseArea > 0 && quadraticMeanDiameter > 0f) {
 			return baseArea / PI_40K / (quadraticMeanDiameter * quadraticMeanDiameter);
 		}
@@ -47,10 +48,14 @@ public class BaseAreaTreeDensityDiameter {
 	 *         returned.
 	 */
 	public static float quadMeanDiameter(float baseArea, float treesPerHectare) {
-		if (baseArea > 1e6f || treesPerHectare > 1e6f || Float.isNaN(baseArea) || Float.isNaN(treesPerHectare)) {
+		return (float) quadMeanDiameter(baseArea, (double) treesPerHectare);
+	}
+
+	public static double quadMeanDiameter(double baseArea, double treesPerHectare) {
+		if (baseArea > 1e6f || treesPerHectare > 1e6f || Double.isNaN(baseArea) || Double.isNaN(treesPerHectare)) {
 			return 0f;
 		} else if (baseArea > 0f && treesPerHectare > 0f) {
-			return sqrt(baseArea / treesPerHectare / PI_40K);
+			return Math.sqrt(baseArea / treesPerHectare / PI_40K);
 		}
 		return 0f;
 
@@ -68,8 +73,12 @@ public class BaseAreaTreeDensityDiameter {
 	 * @return as described. If either parameter is NaN, 0f is returned.
 	 */
 	public static float basalArea(float quadraticMeanDiameter, float treesPerHectare) {
+		return (float) basalArea(quadraticMeanDiameter, (double) treesPerHectare);
+	}
 
-		if (Float.isNaN(quadraticMeanDiameter) || Float.isNaN(treesPerHectare)) {
+	public static double basalArea(double quadraticMeanDiameter, double treesPerHectare) {
+
+		if (Double.isNaN(quadraticMeanDiameter) || Double.isNaN(treesPerHectare)) {
 			return 0f;
 		} else {
 			// qmd is diameter in cm (per tree); qmd**2 is in cm**2. Multiplying by pi/4 converts

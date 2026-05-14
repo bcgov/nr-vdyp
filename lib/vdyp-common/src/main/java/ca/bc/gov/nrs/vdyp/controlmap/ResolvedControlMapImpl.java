@@ -11,6 +11,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
@@ -196,7 +197,7 @@ public class ResolvedControlMapImpl implements ResolvedControlMap {
 	}
 
 	@Override
-	public Map<String, Coefficients> getQuadMeanDiameterBySpeciesCoefficients() {
+	public Map<String, DoubleCoefficients> getQuadMeanDiameterBySpeciesCoefficients() {
 		return this.get(ControlKey.BY_SPECIES_DQ, Map.class);
 	}
 }

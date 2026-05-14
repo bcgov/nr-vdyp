@@ -181,6 +181,8 @@ public class ForwardProcessor {
 							nPolygonsProcessed += 1;
 						}
 					}
+				} catch (Exception e) {
+					logger.error(e.getMessage());
 				} finally {
 					Utils.ifPresent(outputWriter, VdypOutputWriter::close);
 				}
