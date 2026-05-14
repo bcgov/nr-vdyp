@@ -3,9 +3,9 @@ package ca.bc.gov.nrs.vdyp.model;
 import java.util.AbstractList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.BinaryOperator;
 import java.util.stream.DoubleStream;
 
+import ca.bc.gov.nrs.vdyp.common.DoubleBinaryOperator;
 import ca.bc.gov.nrs.vdyp.common.DoubleUnaryOperator;
 import ca.bc.gov.nrs.vdyp.common.IndexedDoubleBinaryOperator;
 import ca.bc.gov.nrs.vdyp.common.IndexedDoubleUnaryOperator;
@@ -118,7 +118,7 @@ public class DoubleCoefficients extends AbstractList<Double> implements List<Dou
 	 * @param coe2 must have the same size and index offset
 	 * @param op   operation to perform for each pair of coefficients
 	 */
-	public void pairwiseInPlace(DoubleCoefficients coe2, BinaryOperator op) {
+	public void pairwiseInPlace(DoubleCoefficients coe2, DoubleBinaryOperator op) {
 		pairwiseInPlace(coe2, (IndexedDoubleBinaryOperator) op);
 	}
 
@@ -156,7 +156,7 @@ public class DoubleCoefficients extends AbstractList<Double> implements List<Dou
 	 * @param coe2 must have the same size and index offset
 	 * @param op   operation to perform for each pair of coefficients
 	 */
-	public DoubleCoefficients pairwise(DoubleCoefficients coe2, BinaryOperator op) {
+	public DoubleCoefficients pairwise(DoubleCoefficients coe2, DoubleBinaryOperator op) {
 		return pairwise(coe2, (IndexedDoubleBinaryOperator) op);
 	}
 
