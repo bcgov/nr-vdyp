@@ -508,6 +508,32 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_10_00",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_10_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_10/00/ddl/tables/app-vdyp.projection.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection\" ALTER COLUMN model_parameters_json TYPE varchar(2000)"
+          }
+        ]
+      }
     }
   ]
 }
