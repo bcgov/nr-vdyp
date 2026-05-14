@@ -33,6 +33,12 @@ class HcsvPolygonStreamTest {
 	String layerFileHeader = LAYER_CSV_HEADER_LINE + "\n";
 	String defaultLayerPrefix = "13919428,14321067,093C090,94833422,";
 
+	// Standard header extended with the 13 new optional columns (positions 38-50)
+	static final String EXTENDED_LAYER_CSV_HEADER_LINE = LAYER_CSV_HEADER_LINE
+			+ ",EST_AGE_SPP3,EST_HEIGHT_SPP3,EST_AGE_SPP4,EST_HEIGHT_SPP4"
+			+ ",EST_AGE_SPP5,EST_HEIGHT_SPP5,EST_AGE_SPP6,EST_HEIGHT_SPP6"
+			+ ",EST_SITE_INDEX_SPP2,EST_SITE_INDEX_SPP3,EST_SITE_INDEX_SPP4,EST_SITE_INDEX_SPP5,EST_SITE_INDEX_SPP6";
+
 	@BeforeEach
 	void setup() throws AbstractProjectionRequestException {
 		p = new Parameters().ageStart(0).ageEnd(100);
@@ -170,6 +176,21 @@ class HcsvPolygonStreamTest {
 		}
 
 		@Test
+		void testNegativeSiteIndexSpp2RaisesValidationError() {
+			// EST_SITE_INDEX_SPP2=-1.0 is below the valid range [0, MAX_VALUE] and must cause an error
+			// pos4-50 (47 fields): standard fields + 13 new; pos46=-1.0
+			String hcsvLayerFileContents = EXTENDED_LAYER_CSV_HEADER_LINE + "\n" + defaultLayerPrefix
+					+ "1,P,,,,,,5,1.0,150,PLI,60.0,FD,40.0,,,,,,,,,60,9.0,50,8.5,,,,,,,,,,,,,,,,,-1.0,,,,\n";
+
+			HcsvPolygonStream unit = new HcsvPolygonStream(
+					context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()),
+					new ByteArrayInputStream(hcsvLayerFileContents.getBytes())
+			);
+
+			assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
+		}
+
+		@Test
 		void testDuplicateRank1Layers() throws PolygonValidationException {
 			String hcsvLayerFileContents = layerFileHeader + defaultLayerPrefix
 					+ "1,P,,1,,,,5,1.000050,150,PLI,100.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n" + defaultLayerPrefix
@@ -292,6 +313,22 @@ class HcsvPolygonStreamTest {
 
 		Polygon poly = unit.getNextPolygon();
 		assertThat(poly.getBecZone(), is(output));
+	}
+
+	@Test
+	void testExtendedColumnsWithValidSiteIndexSpp2ParsedWithoutErrors() throws PolygonValidationException {
+		// Provide EST_SITE_INDEX_SPP2=22.5 for FD (species 2) via the extended header columns.
+		// pos4-50 (47 fields): standard fields + 13 new optional fields; pos46=22.5
+		String hcsvLayerFileContents = EXTENDED_LAYER_CSV_HEADER_LINE + "\n" + defaultLayerPrefix
+				+ "1,P,,,,,,5,1.0,150,PLI,60.0,FD,40.0,,,,,,,,,60,9.0,50,8.5,,,,,,,,,,,,,,,,,22.5,,,,\n";
+
+		HcsvPolygonStream unit = new HcsvPolygonStream(
+				context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()),
+				new ByteArrayInputStream(hcsvLayerFileContents.getBytes())
+		);
+
+		Polygon poly = unit.getNextPolygon();
+		assertThat(poly.getMessages().size(), is(0));
 	}
 
 }

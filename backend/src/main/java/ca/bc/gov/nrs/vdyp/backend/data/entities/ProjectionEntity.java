@@ -41,7 +41,7 @@ public class ProjectionEntity extends AuditableEntity {
 
 	@Column(name = "projection_parameters_json", length = 3000)
 	private String projectionParameters;
-	@Column(name = "model_parameters_json", length = 2000)
+	@Column(name = "model_parameters_json", length = 5000)
 	private String modelParameters;
 	@Column(name = "start_date")
 	private OffsetDateTime startDate;

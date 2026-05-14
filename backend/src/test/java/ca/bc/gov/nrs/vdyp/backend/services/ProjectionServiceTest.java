@@ -444,7 +444,9 @@ class ProjectionServiceTest {
 		params.setReportTitle("Whatever");
 
 		ModelParameters modelParameters = new ModelParameters(
-				List.of(), "", "", "", "", "", "", "", "", "", 55.5f, 0f, 13f, 10000.0f, "7.4+", ""
+				List.of(), "", "", "", "", "", null, "", "", "", "", null, null, null, null, null, null, null, null,
+				null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+				55.5f, 0f, 13f, 10000.0f, "7.4+", ""
 		);
 
 		assertThrows(
