@@ -281,6 +281,73 @@ public class HcsvLayerRecordBean {
 	@CsvBindByPosition(position = 37)
 	private String closeUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment;
 
+	// Optional: age and height for species 3-6
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_AGE_SPP3")
+	@CsvBindByPosition(position = 38)
+	private String estimatedAgeSpp3;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_HEIGHT_SPP3")
+	@CsvBindByPosition(position = 39)
+	private String estimatedHeightSpp3;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_AGE_SPP4")
+	@CsvBindByPosition(position = 40)
+	private String estimatedAgeSpp4;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_HEIGHT_SPP4")
+	@CsvBindByPosition(position = 41)
+	private String estimatedHeightSpp4;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_AGE_SPP5")
+	@CsvBindByPosition(position = 42)
+	private String estimatedAgeSpp5;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_HEIGHT_SPP5")
+	@CsvBindByPosition(position = 43)
+	private String estimatedHeightSpp5;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_AGE_SPP6")
+	@CsvBindByPosition(position = 44)
+	private String estimatedAgeSpp6;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_HEIGHT_SPP6")
+	@CsvBindByPosition(position = 45)
+	private String estimatedHeightSpp6;
+
+	// Optional: per-species site index for species 2-6
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_SITE_INDEX_SPP2")
+	@CsvBindByPosition(position = 46)
+	private String estimatedSiteIndexSpp2;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_SITE_INDEX_SPP3")
+	@CsvBindByPosition(position = 47)
+	private String estimatedSiteIndexSpp3;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_SITE_INDEX_SPP4")
+	@CsvBindByPosition(position = 48)
+	private String estimatedSiteIndexSpp4;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_SITE_INDEX_SPP5")
+	@CsvBindByPosition(position = 49)
+	private String estimatedSiteIndexSpp5;
+
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "EST_SITE_INDEX_SPP6")
+	@CsvBindByPosition(position = 50)
+	private String estimatedSiteIndexSpp6;
+
 	public long getFeatureId() {
 		Validate.notNull(featureId, "HcsvLayerRecordBean.getFeatureId: featureId must not be null");
 		return CsvRecordBeanHelper.parseLongAcceptNull(featureId);
@@ -339,7 +406,8 @@ public class HcsvLayerRecordBean {
 	}
 
 	public record SpeciesDetails(
-			int layerSpeciesIndex, String speciesCode, double percent, Short estimatedAge, Double estimatedHeight
+			int layerSpeciesIndex, String speciesCode, double percent, Short estimatedAge, Double estimatedHeight,
+			Double estimatedSiteIndex
 	) {
 	}
 
@@ -354,36 +422,52 @@ public class HcsvLayerRecordBean {
 		var details = new ArrayList<SpeciesDetails>();
 
 		if (getSpeciesPercent1() != null) {
-			var speciesCode = getSpeciesCode1();
 			details.add(
 					new SpeciesDetails(
-							1, speciesCode, getSpeciesPercent1(), getEstimatedAgeSpp1(), getEstimatedHeightSpp1()
+							1, getSpeciesCode1(), getSpeciesPercent1(), getEstimatedAgeSpp1(), getEstimatedHeightSpp1(),
+							null
 					)
 			);
 		}
 		if (getSpeciesPercent2() != null) {
-			var speciesCode = getSpeciesCode2();
 			details.add(
 					new SpeciesDetails(
-							2, speciesCode, getSpeciesPercent2(), getEstimatedAgeSpp2(), getEstimatedHeightSpp2()
+							2, getSpeciesCode2(), getSpeciesPercent2(), getEstimatedAgeSpp2(), getEstimatedHeightSpp2(),
+							getEstimatedSiteIndexSpp2()
 					)
 			);
 		}
 		if (getSpeciesPercent3() != null) {
-			var speciesCode = getSpeciesCode3();
-			details.add(new SpeciesDetails(3, speciesCode, getSpeciesPercent3(), null, null));
+			details.add(
+					new SpeciesDetails(
+							3, getSpeciesCode3(), getSpeciesPercent3(), getEstimatedAgeSpp3(), getEstimatedHeightSpp3(),
+							getEstimatedSiteIndexSpp3()
+					)
+			);
 		}
 		if (getSpeciesPercent4() != null) {
-			var speciesCode = getSpeciesCode4();
-			details.add(new SpeciesDetails(4, speciesCode, getSpeciesPercent4(), null, null));
+			details.add(
+					new SpeciesDetails(
+							4, getSpeciesCode4(), getSpeciesPercent4(), getEstimatedAgeSpp4(), getEstimatedHeightSpp4(),
+							getEstimatedSiteIndexSpp4()
+					)
+			);
 		}
 		if (getSpeciesPercent5() != null) {
-			var speciesCode = getSpeciesCode5();
-			details.add(new SpeciesDetails(5, speciesCode, getSpeciesPercent5(), null, null));
+			details.add(
+					new SpeciesDetails(
+							5, getSpeciesCode5(), getSpeciesPercent5(), getEstimatedAgeSpp5(), getEstimatedHeightSpp5(),
+							getEstimatedSiteIndexSpp5()
+					)
+			);
 		}
 		if (getSpeciesPercent6() != null) {
-			var speciesCode = getSpeciesCode6();
-			details.add(new SpeciesDetails(6, speciesCode, getSpeciesPercent6(), null, null));
+			details.add(
+					new SpeciesDetails(
+							6, getSpeciesCode6(), getSpeciesPercent6(), getEstimatedAgeSpp6(), getEstimatedHeightSpp6(),
+							getEstimatedSiteIndexSpp6()
+					)
+			);
 		}
 
 		return details;
@@ -451,6 +535,58 @@ public class HcsvLayerRecordBean {
 
 	public Double getEstimatedHeightSpp2() {
 		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedHeightSpp2);
+	}
+
+	public Short getEstimatedAgeSpp3() {
+		return CsvRecordBeanHelper.parseShortAcceptNull(estimatedAgeSpp3);
+	}
+
+	public Double getEstimatedHeightSpp3() {
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedHeightSpp3);
+	}
+
+	public Short getEstimatedAgeSpp4() {
+		return CsvRecordBeanHelper.parseShortAcceptNull(estimatedAgeSpp4);
+	}
+
+	public Double getEstimatedHeightSpp4() {
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedHeightSpp4);
+	}
+
+	public Short getEstimatedAgeSpp5() {
+		return CsvRecordBeanHelper.parseShortAcceptNull(estimatedAgeSpp5);
+	}
+
+	public Double getEstimatedHeightSpp5() {
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedHeightSpp5);
+	}
+
+	public Short getEstimatedAgeSpp6() {
+		return CsvRecordBeanHelper.parseShortAcceptNull(estimatedAgeSpp6);
+	}
+
+	public Double getEstimatedHeightSpp6() {
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedHeightSpp6);
+	}
+
+	public Double getEstimatedSiteIndexSpp2() {
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedSiteIndexSpp2);
+	}
+
+	public Double getEstimatedSiteIndexSpp3() {
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedSiteIndexSpp3);
+	}
+
+	public Double getEstimatedSiteIndexSpp4() {
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedSiteIndexSpp4);
+	}
+
+	public Double getEstimatedSiteIndexSpp5() {
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedSiteIndexSpp5);
+	}
+
+	public Double getEstimatedSiteIndexSpp6() {
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(estimatedSiteIndexSpp6);
 	}
 
 	public Boolean getAdjustmentIndicatorInd() {
@@ -642,6 +778,34 @@ public class HcsvLayerRecordBean {
 			bvh.validateNumber(bean.estimatedHeightSpp1, n -> Double.parseDouble(n), "Estimated Height Spp 1");
 			bvh.validateNumber(bean.estimatedAgeSpp2, n -> Short.parseShort(n), "Estimated Age Spp 2");
 			bvh.validateNumber(bean.estimatedHeightSpp2, n -> Double.parseDouble(n), "Estimated Height Spp 2");
+			bvh.validateNumber(bean.estimatedAgeSpp3, n -> Short.parseShort(n), "Estimated Age Spp 3");
+			bvh.validateNumber(bean.estimatedHeightSpp3, n -> Double.parseDouble(n), "Estimated Height Spp 3");
+			bvh.validateNumber(bean.estimatedAgeSpp4, n -> Short.parseShort(n), "Estimated Age Spp 4");
+			bvh.validateNumber(bean.estimatedHeightSpp4, n -> Double.parseDouble(n), "Estimated Height Spp 4");
+			bvh.validateNumber(bean.estimatedAgeSpp5, n -> Short.parseShort(n), "Estimated Age Spp 5");
+			bvh.validateNumber(bean.estimatedHeightSpp5, n -> Double.parseDouble(n), "Estimated Height Spp 5");
+			bvh.validateNumber(bean.estimatedAgeSpp6, n -> Short.parseShort(n), "Estimated Age Spp 6");
+			bvh.validateNumber(bean.estimatedHeightSpp6, n -> Double.parseDouble(n), "Estimated Height Spp 6");
+			bvh.validateRange(
+					bean.estimatedSiteIndexSpp2, Double::parseDouble, Double::parseDouble, 0d, Double.MAX_VALUE,
+					"Estimated Site Index Spp 2"
+			);
+			bvh.validateRange(
+					bean.estimatedSiteIndexSpp3, Double::parseDouble, Double::parseDouble, 0d, Double.MAX_VALUE,
+					"Estimated Site Index Spp 3"
+			);
+			bvh.validateRange(
+					bean.estimatedSiteIndexSpp4, Double::parseDouble, Double::parseDouble, 0d, Double.MAX_VALUE,
+					"Estimated Site Index Spp 4"
+			);
+			bvh.validateRange(
+					bean.estimatedSiteIndexSpp5, Double::parseDouble, Double::parseDouble, 0d, Double.MAX_VALUE,
+					"Estimated Site Index Spp 5"
+			);
+			bvh.validateRange(
+					bean.estimatedSiteIndexSpp6, Double::parseDouble, Double::parseDouble, 0d, Double.MAX_VALUE,
+					"Estimated Site Index Spp 6"
+			);
 			bvh.validateNumber(
 					bean.loreyHeight75Adjustment, n -> Double.parseDouble(n), "Lorey Height 7.5cm+ Adjustment"
 			);
