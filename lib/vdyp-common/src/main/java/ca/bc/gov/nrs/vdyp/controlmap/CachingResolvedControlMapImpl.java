@@ -11,6 +11,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
@@ -49,7 +50,7 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	private final Optional<MatrixMap2<String, String, Integer>> volumeEquationGroups;
 	private final Optional<MatrixMap2<String, String, Integer>> decayEquationGroups;
 	private final Optional<MatrixMap2<String, String, Integer>> breakageEquationGroups;
-	private final Optional<Map<String, Coefficients>> quadMeanDiameterBySpeciesCoefficients;
+	private final Optional<Map<String, DoubleCoefficients>> quadMeanDiameterBySpeciesCoefficients;
 
 	private final Map<String, Object> controlMap;
 
@@ -258,8 +259,9 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	}
 
 	@Override
-	public Map<String, Coefficients> getQuadMeanDiameterBySpeciesCoefficients() {
+	public Map<String, DoubleCoefficients> getQuadMeanDiameterBySpeciesCoefficients() {
 		return quadMeanDiameterBySpeciesCoefficients
 				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterBySpeciesCoefficients"));
 	}
+
 }
