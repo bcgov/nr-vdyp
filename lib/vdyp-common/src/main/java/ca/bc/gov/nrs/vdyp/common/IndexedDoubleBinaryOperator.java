@@ -1,9 +1,11 @@
 package ca.bc.gov.nrs.vdyp.common;
 
 /**
- * Applies a doubleing point operator for a particular indexed location in a sequence
+ * Applies a double floating point operator for a particular indexed location in a sequence
  *
- * @author Kevin Smith, Vivid Solutions
+ * This class represents a Double interface of {@link IndexedFloatBinaryOperator}
+ *
+ * @author Peter Minter, Vivid Solutions
  *
  */
 @FunctionalInterface

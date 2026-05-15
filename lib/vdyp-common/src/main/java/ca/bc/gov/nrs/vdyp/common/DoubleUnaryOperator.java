@@ -3,7 +3,7 @@ package ca.bc.gov.nrs.vdyp.common;
 /**
  * See {@link java.util.function.DoubleUnaryOperator}
  *
- * @author Kevin Smith, Vivid Solutions
+ * @author Peter Minter, Vivid Solutions
  *
  */
 @FunctionalInterface

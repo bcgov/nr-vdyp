@@ -13,7 +13,13 @@ import ca.bc.gov.nrs.vdyp.common.IndexedDoubleUnaryOperator;
 /**
  * Fixed length list of doubles that can be accessed using an offset index
  *
- * @author Kevin Smith, Vivid Solutions
+ * This class serves as a more precise implementation of the {@link Coefficients} class. It was implemented in an effort
+ * to see if Java was losing precision from the coefficients read from control files.
+ *
+ * The implementations should remain in functionally equivalent, no edits should be made to one without edsiting the
+ * other. They do not share an interface because of the desired primitive nature of the values held in the vectors.
+ *
+ * @author Peter Minter, Vivid Solutions
  *
  */
 public class DoubleCoefficients extends AbstractList<Double> implements List<Double> {
