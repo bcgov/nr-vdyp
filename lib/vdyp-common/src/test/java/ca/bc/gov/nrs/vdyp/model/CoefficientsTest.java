@@ -1,162 +1,226 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.Test;
+import java.util.stream.Stream;
 
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import ca.bc.gov.nrs.vdyp.test.CoefficientsProvider;
+import ca.bc.gov.nrs.vdyp.test.DoubleCoefficientsProvider;
+import ca.bc.gov.nrs.vdyp.test.FloatCoefficientsProvider;
+
+/**
+ * Ensure that Coefficients and Double Coefficients are tests
+ */
 class CoefficientsTest {
+	private static final double EPSILION = 0.000001d;
 
-	@Test
-	void testGetCoe() {
-		var unit = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		assertThat(unit.getCoe(-1), is(2f));
-		assertThat(unit.getCoe(0), is(3f));
-		assertThat(unit.getCoe(1), is(4f));
+	static Stream<Arguments> coefficientTypes() {
+		// MAKE SURE BINARY AND UNARY OPERATORS MATCH
+		return Stream.of(
+				Arguments.of(
+						"float coefficients", new FloatCoefficientsProvider(
+								(x, y) -> x + y, //
+								x -> x * 2, //
+								(x, y, i) -> x + y + i, //
+								(x, i) -> x * 2 + i//
+						)
+				),
+				Arguments.of(
+						"double coefficients", new DoubleCoefficientsProvider(
+								(x, y) -> x + y, //
+								x -> x * 2, //
+								(x, y, i) -> x + y + i, //
+								(x, i) -> x * 2 + i
+						)
+				)
+		);
 	}
 
-	@Test
-	void testGetCoeOutOfBounds() {
-		var unit = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		assertThrows(ArrayIndexOutOfBoundsException.class, () -> unit.getCoe(-2));
-		assertThrows(ArrayIndexOutOfBoundsException.class, () -> unit.getCoe(2));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testGetCoe(String name, CoefficientsProvider<T> provider) {
+		var startIndex = -1;
+		var inputs = new double[] { 2d, 3d, 4d };
+		var unit = provider.create(inputs, startIndex);
+		assertThat(provider.getCoe(unit, -1), closeTo(2d, EPSILION));
+		assertThat(provider.getCoe(unit, 0), closeTo(3d, EPSILION));
+		assertThat(provider.getCoe(unit, 1), closeTo(4d, EPSILION));
 	}
 
-	@Test
-	void testPairwiseInPlace() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f, 7f }, -1);
-		unit1.pairwiseInPlace(unit2, (x, y) -> x + y);
-		assertThat(unit1, VdypMatchers.coe(-1, 7f, 9f, 11f));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testGetCoeOutOfBounds(String name, CoefficientsProvider<T> provider) {
+		var startIndex = -1;
+		var inputs = new double[] { 2d, 3d, 4d };
+		var unit = provider.create(inputs, startIndex);
+		assertThrows(ArrayIndexOutOfBoundsException.class, () -> provider.getCoe(unit, -2));
+		assertThrows(ArrayIndexOutOfBoundsException.class, () -> provider.getCoe(unit, 2));
 	}
 
-	@Test
-	void testPairwiseInPlaceIndexMissmatch() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f, 7f }, 0);
-		assertThrows(IllegalArgumentException.class, () -> unit1.pairwiseInPlace(unit2, (x, y) -> x + y));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseInPlace(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d, 7d }, -1);
+		provider.pairwiseInPlace(unit1, unit2);
+		provider.assertValues(unit1, -1, 7d, 9d, 11d);
 	}
 
-	@Test
-	void testPairwiseInPlaceSizeMissmatch() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f }, -1);
-		assertThrows(IllegalArgumentException.class, () -> unit1.pairwiseInPlace(unit2, (x, y) -> x + y));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseInPlaceIndexMismatch(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d, 7d }, 0);
+		assertThrows(IllegalArgumentException.class, () -> provider.pairwiseInPlace(unit1, unit2));
 	}
 
-	@Test
-	void testPairwiseInPlaceIndexed() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f, 7f }, -1);
-		unit1.pairwiseInPlace(unit2, (x, y, i) -> x + y + i);
-		assertThat(unit1, VdypMatchers.coe(-1, 6f, 9f, 12f));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseInPlaceSizeMismatch(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d }, -1);
+		assertThrows(IllegalArgumentException.class, () -> provider.pairwiseInPlace(unit1, unit2));
 	}
 
-	@Test
-	void testPairwiseInPlaceIndexedIndexMissmatch() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f, 7f }, 0);
-		assertThrows(IllegalArgumentException.class, () -> unit1.pairwiseInPlace(unit2, (x, y, i) -> x + y + i));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseInPlaceIndexed(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d, 7d }, -1);
+		provider.indexedPairwiseInPlace(unit1, unit2);
+		provider.assertValues(unit1, -1, 6d, 9d, 12d);
 	}
 
-	@Test
-	void testPairwiseInPlaceIndexedSizeMissmatch() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f }, -1);
-		assertThrows(IllegalArgumentException.class, () -> unit1.pairwiseInPlace(unit2, (x, y, i) -> x + y + i));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseInPlaceIndexedIndexMismatch(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d, 7d }, 0);
+		assertThrows(IllegalArgumentException.class, () -> provider.indexedPairwiseInPlace(unit1, unit2));
 	}
 
-	@Test
-	void testPairwise() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f, 7f }, -1);
-		var result = unit1.pairwise(unit2, (x, y) -> x + y);
-		assertThat(result, VdypMatchers.coe(-1, 7f, 9f, 11f));
-		assertThat(unit1, VdypMatchers.coe(-1, 2f, 3f, 4f));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseInPlaceIndexedSizeMismatch(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d }, -1);
+		assertThrows(IllegalArgumentException.class, () -> provider.indexedPairwiseInPlace(unit1, unit2));
 	}
 
-	@Test
-	void testPairwiseIndexMissmatch() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f, 7f }, 0);
-		assertThrows(IllegalArgumentException.class, () -> unit1.pairwise(unit2, (x, y) -> x + y));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwise(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d, 7d }, -1);
+		var result = provider.pairwise(unit1, unit2);
+		provider.assertValues(result, -1, 7d, 9d, 11d);
+		provider.assertValues(unit1, -1, 2d, 3d, 4d);
 	}
 
-	@Test
-	void testPairwiseSizeMissmatch() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f }, -1);
-		assertThrows(IllegalArgumentException.class, () -> unit1.pairwise(unit2, (x, y) -> x + y));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseIndexMismatch(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d, 7d }, 0);
+		assertThrows(IllegalArgumentException.class, () -> provider.pairwise(unit1, unit2));
 	}
 
-	@Test
-	void testPairwiseIndexed() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f, 7f }, -1);
-		var result = unit1.pairwise(unit2, (x, y, i) -> x + y + i);
-		assertThat(result, VdypMatchers.coe(-1, 6f, 9f, 12f));
-		assertThat(unit1, VdypMatchers.coe(-1, 2f, 3f, 4f));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseSizeMismatch(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d }, -1);
+		assertThrows(IllegalArgumentException.class, () -> provider.pairwise(unit1, unit2));
 	}
 
-	@Test
-	void testPairwiseIndexedIndexMissmatch() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f, 7f }, 0);
-		assertThrows(IllegalArgumentException.class, () -> unit1.pairwise(unit2, (x, y, i) -> x + y + i));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseIndexed(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d, 7d }, -1);
+		var result = provider.indexedPairwise(unit1, unit2);
+		provider.assertValues(result, -1, 6d, 9d, 12d);
+		provider.assertValues(unit1, -1, 2d, 3d, 4d);
 	}
 
-	@Test
-	void testPairwiseIndexedSizeMissmatch() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var unit2 = new Coefficients(new float[] { 5f, 6f }, -1);
-		assertThrows(IllegalArgumentException.class, () -> unit1.pairwise(unit2, (x, y, i) -> x + y + i));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseIndexedIndexMismatch(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d, 7d }, 0);
+		assertThrows(IllegalArgumentException.class, () -> provider.indexedPairwise(unit1, unit2));
 	}
 
-	@Test
-	void testScalarInPlace() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		unit1.scalarInPlace(x -> x * 2);
-		assertThat(unit1, VdypMatchers.coe(-1, 4f, 6f, 8f));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testPairwiseIndexedSizeMismatch(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var unit2 = provider.create(new double[] { 5d, 6d }, -1);
+		assertThrows(IllegalArgumentException.class, () -> provider.indexedPairwise(unit1, unit2));
 	}
 
-	@Test
-	void testScalarInPlaceIndexed() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		unit1.scalarInPlace((x, i) -> x * 2 + i);
-		assertThat(unit1, VdypMatchers.coe(-1, 3f, 6f, 9f));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testScalarInPlace(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		provider.scalarInPlace(unit1);
+		provider.assertValues(unit1, -1, 4d, 6d, 8d);
 	}
 
-	@Test
-	void testScalar() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var result = unit1.scalar(x -> x * 2);
-		assertThat(result, VdypMatchers.coe(-1, 4f, 6f, 8f));
-		assertThat(unit1, VdypMatchers.coe(-1, 2f, 3f, 4f));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testScalarInPlaceIndexed(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		provider.indexedScalarInPlace(unit1);
+		provider.assertValues(unit1, -1, 3d, 6d, 9d);
 	}
 
-	@Test
-	void testScalarIndexed() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		var result = unit1.scalar((x, i) -> x * 2 + i);
-		assertThat(result, VdypMatchers.coe(-1, 3f, 6f, 9f));
-		assertThat(unit1, VdypMatchers.coe(-1, 2f, 3f, 4f));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testScalar(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2d, 3d, 4d }, -1);
+		var result = provider.scalar(unit1);
+		provider.assertValues(result, -1, 4d, 6d, 8d);
+		provider.assertValues(unit1, -1, 2d, 3d, 4d);
 	}
 
-	@Test
-	void testScalarInPlaceSpecificIndex() {
-		var unit1 = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		unit1.scalarInPlace(1, x -> x * 2);
-		assertThat(unit1, VdypMatchers.coe(-1, 2f, 3f, 8f));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testScalarIndexed(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2f, 3f, 4f }, -1);
+		var result = provider.indexedScalar(unit1);
+		provider.assertValues(result, -1, 3d, 6d, 9d);
+		provider.assertValues(unit1, -1, 2d, 3d, 4d);
 	}
 
-	@Test
-	void testScalarInPlaceSpecificIndexOutOfBounds() {
-		var unit = new Coefficients(new float[] { 2f, 3f, 4f }, -1);
-		assertThrows(ArrayIndexOutOfBoundsException.class, () -> unit.scalarInPlace(-2, x -> x * 2));
-		assertThrows(ArrayIndexOutOfBoundsException.class, () -> unit.scalarInPlace(2, x -> x * 2));
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testScalarInPlaceSpecificIndex(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2f, 3f, 4f }, -1);
+		provider.scalarInPlace(1, unit1);
+		provider.assertValues(unit1, -1, 2d, 3d, 8d);
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testIndexedScalarInPlaceSpecificIndex(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2f, 3f, 4f }, -1);
+		provider.indexedScalarInPlace(1, unit1);
+		provider.assertValues(unit1, -1, 2d, 3d, 9d);
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("coefficientTypes")
+	<T> void testScalarInPlaceSpecificIndexOutOfBounds(String name, CoefficientsProvider<T> provider) {
+		var unit1 = provider.create(new double[] { 2f, 3f, 4f }, -1);
+		assertThrows(ArrayIndexOutOfBoundsException.class, () -> provider.scalarInPlace(-2, unit1));
+		assertThrows(ArrayIndexOutOfBoundsException.class, () -> provider.scalarInPlace(2, unit1));
 	}
 
 }

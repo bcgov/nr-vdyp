@@ -50,6 +50,7 @@ import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -536,6 +537,34 @@ public class VdypMatchers {
 	}
 
 	@SafeVarargs
+	public static Matcher<DoubleCoefficients> dcoe(int indexFrom, Matcher<Double>... contentsMatchers) {
+		return dcoe(indexFrom, contains(contentsMatchers));
+	}
+
+	public static Matcher<DoubleCoefficients>
+			dcoe(int indexFrom, Function<Double, Matcher<? super Double>> matcherGenerator, Double... contents) {
+		List<Matcher<? super Double>> contentsMatchers = Arrays.stream(contents).map(matcherGenerator).toList();
+		return dcoe(indexFrom, contains(contentsMatchers));
+	}
+
+	public static Matcher<DoubleCoefficients> dcoe(int indexFrom, Double... contents) {
+		return dcoe(indexFrom, VdypMatchers::closeTo, contents);
+	}
+
+	public static Matcher<DoubleCoefficients> dcoe(int indexFrom, Matcher<? super List<Double>> contentsMatcher) {
+		return describedAs(
+				"A DoubleCoefficients indexed from %0 that %1", //
+				allOf(
+						isA(DoubleCoefficients.class), //
+						hasProperty("indexFrom", is(indexFrom)), //
+						contentsMatcher
+				), //
+				indexFrom, //
+				contentsMatcher
+		);
+	}
+
+	@SafeVarargs
 	public static Matcher<Coefficients> coe(int indexFrom, Matcher<Float>... contentsMatchers) {
 		return coe(indexFrom, contains(contentsMatchers));
 	}
@@ -906,7 +935,6 @@ public class VdypMatchers {
 				expected.describeMismatch(result, mismatchDescription);
 				return false;
 			}
-
 		};
 	}
 
@@ -991,7 +1019,6 @@ public class VdypMatchers {
 			@SuppressWarnings("unchecked")
 			@Override
 			protected P featureValueOf(R actual) {
-
 				try {
 					return (P) actual.getClass().getMethod(property).invoke(actual);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
@@ -1037,5 +1064,4 @@ public class VdypMatchers {
 			};
 		};
 	}
-
 }

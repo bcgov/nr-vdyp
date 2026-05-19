@@ -1,8 +1,17 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.*;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.*;
-import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.*;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.OVER225;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U125TO175;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U175TO225;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U75TO125;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.BASAL_AREA;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.LOREY_HEIGHT;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.QUAD_MEAN_DIAMETER;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.WHOLE_STEM_VOLUME;
+import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL;
+import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY;
+import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE;
+import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.WHOLE_STEM_VOL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -51,7 +60,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 
 		assertThat(lps.getCVVolume(1, U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.0f));
 		assertThat(lps.getCVVolume(1, U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.0f));
-		assertThat(lps.getCVVolume(1, U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.0063979626f));
+		assertThat(lps.getCVVolume(1, U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.0063990355f));
 		assertThat(lps.getCVVolume(1, OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(-0.00016450882f));
 
 		assertThat(lps.getCVVolume(2, U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(-0.00024962425f));
@@ -59,7 +68,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		assertThat(lps.getCVVolume(2, U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(-0.000006198883f));
 		assertThat(lps.getCVVolume(2, OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.000024557114f));
 
-		assertThat(lps.getCVVolume(3, U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.0062299743f));
+		assertThat(lps.getCVVolume(3, U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.00623063f));
 		assertThat(lps.getCVVolume(3, U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.0010375977f));
 		assertThat(lps.getCVVolume(3, U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.0001244545f));
 		assertThat(lps.getCVVolume(3, OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.0000038146973f));
@@ -69,7 +78,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		assertThat(lps.getCVVolume(4, U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.00021290779f));
 		assertThat(lps.getCVVolume(4, OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(-0.0000059604645f));
 
-		assertThat(lps.getCVVolume(5, U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(-0.000882864f));
+		assertThat(lps.getCVVolume(5, U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(-8.8346004E-4F));
 		assertThat(lps.getCVVolume(5, U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(-0.0002478361f));
 		assertThat(lps.getCVVolume(5, U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(0.0008614063f));
 		assertThat(lps.getCVVolume(5, OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY), is(-0.0000052452087f));
@@ -160,7 +169,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 
 		assertThat(lps.getCVVolume(1, U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY), is(0.0f));
 		assertThat(lps.getCVVolume(1, U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY), is(-2.5427341E-4f));
-		assertThat(lps.getCVVolume(1, U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY), is(0.0023424625f));
+		assertThat(lps.getCVVolume(1, U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY), is(0.0023429394F));
 		assertThat(lps.getCVVolume(1, OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY), is(-7.033348E-5f));
 
 		assertThat(lps.getCVVolume(2, U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY), is(-2.9444695E-5f));
@@ -208,9 +217,9 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		assertThat(lps.getCVBasalArea(5, U175TO225, LayerType.PRIMARY), is(-7.364154E-5f));
 		assertThat(lps.getCVBasalArea(5, U75TO125, LayerType.PRIMARY), is(-1.289323E-5f));
 
-		assertThat(lps.getCVQuadraticMeanDiameter(1, OVER225, LayerType.PRIMARY), is(0.0072517395f));
+		assertThat(lps.getCVQuadraticMeanDiameter(1, OVER225, LayerType.PRIMARY), is(0.007255554F));
 		assertThat(lps.getCVQuadraticMeanDiameter(1, U125TO175, LayerType.PRIMARY), is(-0.014289856f));
-		assertThat(lps.getCVQuadraticMeanDiameter(1, U175TO225, LayerType.PRIMARY), is(-0.04478264f));
+		assertThat(lps.getCVQuadraticMeanDiameter(1, U175TO225, LayerType.PRIMARY), is(-0.044784546F));
 		assertThat(lps.getCVQuadraticMeanDiameter(1, U75TO125, LayerType.PRIMARY), is(0.0f));
 
 		assertThat(lps.getCVQuadraticMeanDiameter(2, OVER225, LayerType.PRIMARY), is(6.942749E-4f));
@@ -218,20 +227,20 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		assertThat(lps.getCVQuadraticMeanDiameter(2, U175TO225, LayerType.PRIMARY), is(6.008148E-4f));
 		assertThat(lps.getCVQuadraticMeanDiameter(2, U75TO125, LayerType.PRIMARY), is(-1.2207031E-4f));
 
-		assertThat(lps.getCVQuadraticMeanDiameter(3, OVER225, LayerType.PRIMARY), is(3.7002563E-4f));
+		assertThat(lps.getCVQuadraticMeanDiameter(3, OVER225, LayerType.PRIMARY), is(3.6621094E-4F));
 		assertThat(lps.getCVQuadraticMeanDiameter(3, U125TO175, LayerType.PRIMARY), is(-0.008190155f));
 		assertThat(lps.getCVQuadraticMeanDiameter(3, U175TO225, LayerType.PRIMARY), is(-0.0019168854f));
-		assertThat(lps.getCVQuadraticMeanDiameter(3, U75TO125, LayerType.PRIMARY), is(-0.008534431f));
+		assertThat(lps.getCVQuadraticMeanDiameter(3, U75TO125, LayerType.PRIMARY), is(-0.008535385F));
 
 		assertThat(lps.getCVQuadraticMeanDiameter(4, OVER225, LayerType.PRIMARY), is(-0.0010547638f));
 		assertThat(lps.getCVQuadraticMeanDiameter(4, U125TO175, LayerType.PRIMARY), is(-7.696152E-4f));
 		assertThat(lps.getCVQuadraticMeanDiameter(4, U175TO225, LayerType.PRIMARY), is(-0.0012798309f));
 		assertThat(lps.getCVQuadraticMeanDiameter(4, U75TO125, LayerType.PRIMARY), is(1.7547607E-4f));
 
-		assertThat(lps.getCVQuadraticMeanDiameter(5, OVER225, LayerType.PRIMARY), is(-2.3651123E-4f));
+		assertThat(lps.getCVQuadraticMeanDiameter(5, OVER225, LayerType.PRIMARY), is(-2.4032593E-4F));
 		assertThat(lps.getCVQuadraticMeanDiameter(5, U125TO175, LayerType.PRIMARY), is(9.880066E-4f));
-		assertThat(lps.getCVQuadraticMeanDiameter(5, U175TO225, LayerType.PRIMARY), is(-0.005466461f));
-		assertThat(lps.getCVQuadraticMeanDiameter(5, U75TO125, LayerType.PRIMARY), is(-7.972717E-4f));
+		assertThat(lps.getCVQuadraticMeanDiameter(5, U175TO225, LayerType.PRIMARY), is(-0.005464554F));
+		assertThat(lps.getCVQuadraticMeanDiameter(5, U75TO125, LayerType.PRIMARY), is(-7.9631805E-4F));
 
 		assertThat(lps.getCVSmall(1, BASAL_AREA), is(-2.1831444E-7f));
 		assertThat(lps.getCVSmall(1, QUAD_MEAN_DIAMETER), is(0.0f));
@@ -239,7 +248,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		assertThat(lps.getCVSmall(1, WHOLE_STEM_VOLUME), is(0.0f));
 
 		assertThat(lps.getCVSmall(2, BASAL_AREA), is(-4.496146E-5f));
-		assertThat(lps.getCVSmall(2, QUAD_MEAN_DIAMETER), is(0.0023670197f));
+		assertThat(lps.getCVSmall(2, QUAD_MEAN_DIAMETER), is(0.0023674965F));
 		assertThat(lps.getCVSmall(2, LOREY_HEIGHT), is(1.3113013E-6f));
 		assertThat(lps.getCVSmall(2, WHOLE_STEM_VOLUME), is(0.0010289619f));
 

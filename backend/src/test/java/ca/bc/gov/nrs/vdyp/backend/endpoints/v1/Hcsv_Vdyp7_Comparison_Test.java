@@ -652,6 +652,19 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void testManySpeciesCloseDiameter() throws IOException, ResourceParseException {
+		logger.info("Starting vdyp-1026c");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1026c/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1026c", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void testDuplicateInYieldTableiNSuppliedOrder() throws IOException, ResourceParseException {
 		logger.info("Starting vdyp-1026a");
 		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
@@ -868,6 +881,99 @@ class Hcsv_Vdyp7_Comparison_Test {
 					)
 			);
 		});
+
+	}
+
+	@Test
+	@Disabled
+	void testCompare7And8() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+
+		logger.info("Starting testCompare7And8");
+
+		try (
+				CSVReader vdyp7Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class
+										.getResourceAsStream("secheight/output/Console-YldTbl-092G010-6-After.csv")
+						)
+				);
+				CSVReader vdyp8Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class.getResourceAsStream("secheight/output/finalsortedVDYP8.csv")
+						)
+				);
+		) {
+			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
+		}
+
+	}
+
+	@Test
+	@Disabled
+	void testCompare44AMapSheet() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+
+		logger.info("Starting testCompare7And8");
+
+		try (
+				CSVReader vdyp7Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class.getResourceAsStream("secheight/output/44MapSheetYieldTable7.csv")
+						)
+				);
+				CSVReader vdyp8Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class.getResourceAsStream("secheight/output/44mapsheetyieldTable8.csv")
+						)
+				);
+		) {
+			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
+		}
+
+	}
+
+	@Test
+	@Disabled
+	void testCompareSmall() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+
+		logger.info("Starting testCompare7And8");
+
+		try (
+				CSVReader vdyp7Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class.getResourceAsStream("secheight/output/finalsortedVDYP7.csv")
+						)
+				);
+				CSVReader vdyp8Stream = new CSVReader(
+						new InputStreamReader(
+								MainTest.class.getResourceAsStream("secheight/output/finalsortedVDYP8.csv")
+						)
+				);
+		) {
+			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
+		}
+
+	}
+
+	@Test
+	@Disabled
+	void testCompare44BMapSheet() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+
+		logger.info("Starting testCompare7And8");
+
+		try (
+				CSVReader vdyp7Stream = new CSVReader(
+						new InputStreamReader(MainTest.class.getResourceAsStream("secheight/output/44bvdyp7.csv"))
+				);
+				CSVReader vdyp8Stream = new CSVReader(
+						new InputStreamReader(MainTest.class.getResourceAsStream("secheight/output/44bvdyp8.csv"))
+				);
+		) {
+			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
+		}
 
 	}
 

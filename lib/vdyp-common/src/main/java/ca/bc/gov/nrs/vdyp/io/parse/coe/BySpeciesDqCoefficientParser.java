@@ -15,7 +15,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapSubResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
-import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 
 /**
  * Parses a mapping from a Species to a list of three coefficients. Each row contains
@@ -42,7 +42,7 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
  * @author Kevin Smith, Vivid Solutions
  * @see ControlMapSubResourceParser
  */
-public class BySpeciesDqCoefficientParser implements ControlMapSubResourceParser<Map<String, Coefficients>> {
+public class BySpeciesDqCoefficientParser implements ControlMapSubResourceParser<Map<String, DoubleCoefficients>> {
 
 	public static final String COEFFICIENT_INDEX_KEY = "coefficientIndex";
 	public static final String COEFFICIENTS_KEY = "coefficients";
@@ -61,30 +61,30 @@ public class BySpeciesDqCoefficientParser implements ControlMapSubResourceParser
 			}
 
 		}.space(1).value(1, COEFFICIENT_INDEX_KEY, ValueParser.INTEGER).value(2, INDICATOR_KEY, ValueParser.INTEGER)
-				.multiValue(NUM_SPECIES, 9, COEFFICIENTS_KEY, ValueParser.FLOAT);
+				.multiValue(NUM_SPECIES, 9, COEFFICIENTS_KEY, ValueParser.DOUBLE);
 	}
 
 	LineParser lineParser;
 
 	@Override
-	public Map<String, Coefficients> parse(InputStream is, Map<String, Object> control)
+	public Map<String, DoubleCoefficients> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 
-		Map<String, Coefficients> result = new HashMap<>();
+		Map<String, DoubleCoefficients> result = new HashMap<>();
 
 		var sp0Aliases = GenusDefinitionParser.getSpeciesAliases(control);
 
 		lineParser.parse(is, result, (value, r, lineNumber) -> {
 			var index = (int) value.get(COEFFICIENT_INDEX_KEY);
 			@SuppressWarnings("unchecked")
-			var specCoefficients = (List<Float>) value.get(COEFFICIENTS_KEY);
+			var specCoefficients = (List<Double>) value.get(COEFFICIENTS_KEY);
 
 			var specIt = sp0Aliases.iterator();
 			var coeIt = specCoefficients.iterator();
-			HoldFirst<Float> firstSpecCoe = new HoldFirst<>();
+			HoldFirst<Double> firstSpecCoe = new HoldFirst<>();
 			while (specIt.hasNext()) {
 				var specAlias = specIt.next();
-				float coe;
+				double coe;
 				if (! (index == 0 || index == 1)) {
 					coe = firstSpecCoe.get(coeIt::next);
 				} else {
@@ -96,7 +96,8 @@ public class BySpeciesDqCoefficientParser implements ControlMapSubResourceParser
 						);
 					}
 				}
-				result.computeIfAbsent(specAlias, x -> Coefficients.empty(NUM_COEFFICIENTS, 0)).setCoe(index, coe);
+				result.computeIfAbsent(specAlias, x -> DoubleCoefficients.empty(NUM_COEFFICIENTS, 0))
+						.setCoe(index, coe);
 			}
 
 			return r;

@@ -6,6 +6,7 @@ import java.util.Optional;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
@@ -54,7 +55,7 @@ public interface ResolvedControlMap {
 	MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>> getHlNonPrimaryCoefficients();
 
 	/** 60 - BY_SPECIES_DQ */
-	Map<String, Coefficients> getQuadMeanDiameterBySpeciesCoefficients();
+	Map<String, DoubleCoefficients> getQuadMeanDiameterBySpeciesCoefficients();
 
 	/** 61 - SPECIES_COMPONENT_SIZE_LIMIT */
 	MatrixMap2<String, Region, ComponentSizeLimits> getComponentSizeLimits();

@@ -1,11 +1,10 @@
 package ca.bc.gov.nrs.vdyp.common;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.*;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.abs;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.sqrt;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.ratio;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -28,8 +27,9 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
-import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
+import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
+import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -213,7 +213,7 @@ public class EstimationMethods {
 			float standLoreyHeight // HL_TOT
 	) throws FatalProcessingException {
 
-		float c = 0.00441786467f;
+		double c = 0.00441786467;
 
 		float minQuadMeanDiameter = min(7.6f, standQuadMeanDiameter);
 
@@ -224,61 +224,63 @@ public class EstimationMethods {
 			return standQuadMeanDiameter;
 		}
 
-		var coeMap = controlMap.getQuadMeanDiameterBySpeciesCoefficients();
+		Map<String, DoubleCoefficients> coeMap = controlMap.getQuadMeanDiameterBySpeciesCoefficients();
 		var specAliases = controlMap.getGenusDefinitionMap().getAllGeneraAliases();
 
 		var specIt = specAliases.iterator();
 		var spec1 = specIt.next();
 
-		float a2 = coeMap.get(spec1).getCoe(2);
+		DoubleCoefficients cowMapResult = coeMap.get(spec1);
 
-		float fractionOther = 1f - spFraction; // FR_REST
+		double a2 = cowMapResult.getCoe(2);
 
-		float a0 = coeMap.get(spec1).getCoe(0);
-		float a1 = coeMap.get(spec1).getCoe(1);
+		double fractionOther = 1f - spFraction; // FR_REST
+
+		double a0 = cowMapResult.getCoe(0);
+		double a1 = cowMapResult.getCoe(1);
 
 		while (specIt.hasNext()) {
 			var specIAlias = specIt.next();
 			if (spAlias.equals(specIAlias)) {
-				float multI = 1f;
+				double multI = 1f;
 				a0 += multI * coeMap.get(specIAlias).getCoe(0);
 				a1 += multI * coeMap.get(specIAlias).getCoe(1);
 			} else {
 				float spIFraction = basalAreaFractionPerSpecies.getOrDefault(specIAlias, 0.0f);
 				if (spIFraction > 0f) {
-					float multI = -spIFraction / fractionOther;
+					double multI = -spIFraction / fractionOther;
 					a0 += multI * coeMap.get(specIAlias).getCoe(0);
 					a1 -= multI * coeMap.get(specIAlias).getCoe(1);
 				}
 			}
 		}
 
-		float loreyHeightSpec = spLoreyHeight;
-		float loreyHeight1 = max(4f, loreyHeightSpec);
-		float loreyHeight2 = (standLoreyHeight - loreyHeightSpec * spFraction) / fractionOther;
+		double loreyHeightSpec = spLoreyHeight;
+		double loreyHeight1 = max(4f, loreyHeightSpec);
+		double loreyHeight2 = (float) ( (standLoreyHeight - loreyHeightSpec * spFraction) / fractionOther);
 		loreyHeight2 = max(4f, loreyHeight2);
-		float loreyHeightRatio = clamp( (loreyHeight1 - 3f) / (loreyHeight2 - 3f), 0.05f, 20f);
+		double loreyHeightRatio = Math.min(Math.max( (loreyHeight1 - 3f) / (loreyHeight2 - 3f), 0.05f), 20f);
 
-		float r = exp(a0 + a1 * log(loreyHeightRatio) + a2 * log(standQuadMeanDiameter));
+		double r = Math.exp( (a0 + a1 * Math.log(loreyHeightRatio) + a2 * Math.log(standQuadMeanDiameter)));
 
-		float baseArea1 = spFraction * standBaseArea;
-		float baseArea2 = standBaseArea - baseArea1;
+		double baseArea1 = spFraction * standBaseArea;
+		double baseArea2 = standBaseArea - baseArea1;
 
-		float treesPerHectare1;
-		if (abs(r - 1f) < 0.0005) {
+		double treesPerHectare1;
+		if (Math.abs(r - 1f) < 0.0005) {
 			treesPerHectare1 = spFraction * standTreesPerHectare;
 		} else {
-			float aa = (r - 1f) * c;
-			float bb = c * (1f - r) * standTreesPerHectare + baseArea1 + baseArea2 * r;
-			float cc = -baseArea1 * standTreesPerHectare;
-			float term = bb * bb - 4 * aa * cc;
+			double aa = (r - 1f) * c;
+			double bb = c * (1f - r) * standTreesPerHectare + baseArea1 + baseArea2 * r;
+			double cc = -baseArea1 * standTreesPerHectare;
+			double term = bb * bb - 4 * aa * cc;
 			if (term <= 0f) {
 				throw new FatalProcessingException(
 						"Term for trees per hectare calculation when estimating quadratic mean diameter for species "
 								+ spAlias + " was " + term + " but should be positive."
 				);
 			}
-			treesPerHectare1 = (-bb + sqrt(term)) / (2f * aa);
+			treesPerHectare1 = ( (-bb + Math.sqrt(term)) / (2 * aa));
 			if (treesPerHectare1 <= 0f || treesPerHectare1 > standTreesPerHectare) {
 				throw new FatalProcessingException(
 						"Trees per hectare 1 for species " + spAlias + " was " + treesPerHectare1
@@ -288,16 +290,16 @@ public class EstimationMethods {
 			}
 		}
 
-		float quadMeanDiameter1 = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea1, treesPerHectare1);
-		float treesPerHectare2 = standTreesPerHectare - treesPerHectare1;
-		float quadMeanDiameter2 = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea2, treesPerHectare2);
+		double quadMeanDiameter1 = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea1, treesPerHectare1);
+		double treesPerHectare2 = (standTreesPerHectare - treesPerHectare1);
+		double quadMeanDiameter2 = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea2, treesPerHectare2);
 		var limits = getLimitsForHeightAndDiameter(spAlias, region);
 
 		quadMeanDiameter1 = estimateQuadMeanDiameterClampResult(
-				limits, standTreesPerHectare, minQuadMeanDiameter, loreyHeightSpec, baseArea1, baseArea2,
-				quadMeanDiameter1, treesPerHectare2, quadMeanDiameter2
+				limits, standTreesPerHectare, minQuadMeanDiameter, (float) loreyHeightSpec, (float) baseArea1,
+				(float) baseArea2, (float) quadMeanDiameter1, (float) treesPerHectare2, (float) quadMeanDiameter2
 		);
-		return quadMeanDiameter1;
+		return (float) quadMeanDiameter1;
 	}
 
 	float estimateQuadMeanDiameterClampResult(

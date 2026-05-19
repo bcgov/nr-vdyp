@@ -1,8 +1,19 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.controlMapHasEntry;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.dcoe;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasBec;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmEmpty;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -302,7 +313,7 @@ class FipControlParserTest {
 		assertThat(
 				result,
 				(Matcher) controlMapHasEntry(
-						ControlKey.BY_SPECIES_DQ, hasEntry(is("AT"), coe(0, -0.48275f, 0.19886f, 0.23162f))
+						ControlKey.BY_SPECIES_DQ, hasEntry(is("AT"), dcoe(0, -0.48275, 0.19886, 0.23162))
 				)
 		);
 	}
