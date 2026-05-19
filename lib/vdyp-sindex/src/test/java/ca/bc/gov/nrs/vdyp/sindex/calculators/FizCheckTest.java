@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.common_calculators;
+package ca.bc.gov.nrs.vdyp.sindex.calculators;
 
 import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexForestInventoryZone.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;

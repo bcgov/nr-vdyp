@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.common_calculators;
+package ca.bc.gov.nrs.vdyp.sindex.calculators;
 
 import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType.*;
 import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation.*;
