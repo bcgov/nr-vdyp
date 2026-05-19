@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,12 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.GrowthInterceptTotalException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndexUtilities;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndexYears2BreastHeight;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.GrowthInterceptTotalException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.LessThan13Exception;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
 
 class SiteIndexYears2BreastHeightTest {
 

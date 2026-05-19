@@ -26,7 +26,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
@@ -62,6 +61,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
 public class PolygonProjectionRunnerTest {
 	History history;

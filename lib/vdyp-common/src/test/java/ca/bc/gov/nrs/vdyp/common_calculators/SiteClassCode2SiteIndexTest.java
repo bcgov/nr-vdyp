@@ -1,14 +1,15 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.ClassErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.ForestInventoryZoneException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteClassCode2SiteIndex;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.ClassErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.ForestInventoryZoneException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
 
 class SiteClassCode2SiteIndexTest {
 	private static final char[] validSiteCl = { 'G', 'M', 'P', 'L' };

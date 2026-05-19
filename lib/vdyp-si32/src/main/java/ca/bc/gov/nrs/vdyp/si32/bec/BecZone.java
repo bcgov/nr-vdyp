@@ -4,9 +4,9 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-import ca.bc.gov.nrs.vdyp.model.EnumIterator;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
+import ca.bc.gov.nrs.vdyp.sindex.EnumIterator;
 
 /**
  * Identifies each of the BEC Zones known to the system.

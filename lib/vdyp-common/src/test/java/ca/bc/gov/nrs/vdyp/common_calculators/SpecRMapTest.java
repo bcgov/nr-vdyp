@@ -1,14 +1,15 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.*;
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CodeErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SpecRMap;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CodeErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 
 class SpecRMapTest {
 
