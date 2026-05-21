@@ -426,6 +426,8 @@ const formattingValues = (): void => {
   }
 }
 
+// New UI stores values in siteIndexRows per species, but validation and save use flat fields
+// (spzAge, spzHeight, bha50SiteIndex). This syncs the primary row into those fields before confirm.
 const syncPrimaryRowToStore = () => {
   const primaryRow = siteIndexRows.value[0]
   if (!primaryRow) return
@@ -436,7 +438,7 @@ const syncPrimaryRowToStore = () => {
     if (primaryRow.computedValue === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX) {
       spzAge.value = primaryRow.age
       spzHeight.value = primaryRow.height
-      bha50SiteIndex.value = ''
+      bha50SiteIndex.value = null
     } else if (primaryRow.computedValue === CONSTANTS.COMPUTED_VALUE.HEIGHT) {
       spzAge.value = primaryRow.age
       spzHeight.value = null
@@ -471,8 +473,8 @@ const getRequiredPairError = (
   missingBha: boolean,
   speciesCode: string,
 ): string | null => {
-  if (missingBha && !missingPrimary) return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(speciesCode)
-  if (missingPrimary) return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(speciesCode)
+  if (missingBha && !missingPrimary) return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL_NEW_UI(speciesCode)
+  if (missingPrimary) return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP_NEW_UI(speciesCode)
   return null
 }
 
@@ -481,7 +483,7 @@ const getComputedRowError = (row: SiteIndexSpeciesRow): string | null => {
   const cv = row.computedValue
   if (cv === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX) {
     if (isEmptyOrZero(row.age) || isEmptyOrZero(row.height))
-      return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(row.speciesCode)
+      return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP_NEW_UI(row.speciesCode)
   } else if (cv === CONSTANTS.COMPUTED_VALUE.HEIGHT) {
     return getRequiredPairError(isEmptyOrZero(row.age), isEmptyOrZero(row.bhaSiteIndex), row.speciesCode)
   } else if (cv === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE) {
@@ -499,7 +501,7 @@ const getNewUIRequiredError = (): string | null => {
       const err = getComputedRowError(row)
       if (err) return err
     } else if (isEmptyOrZero(row.bhaSiteIndex)) {
-      return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(row.speciesCode)
+      return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL_NEW_UI(row.speciesCode)
     }
   }
   return null
@@ -523,9 +525,15 @@ const getRequiredFieldsErrorMessage = (): string | null => {
 }
 
 const getRangeErrorFromType = (errorType: string | undefined): string | null => {
-  if (errorType === 'spzAge') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG
+  if (errorType === 'spzAge')
+    return showNewSiteIndicesFeature
+      ? MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG_NEW_UI
+      : MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG
   if (errorType === 'spzHeight') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_HIGHT_RNG
-  if (errorType === 'bha50SiteIndex') return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG
+  if (errorType === 'bha50SiteIndex')
+    return showNewSiteIndicesFeature
+      ? MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG_NEW_UI
+      : MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG
   return null
 }
 

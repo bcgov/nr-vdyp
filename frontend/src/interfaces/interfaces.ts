@@ -17,8 +17,8 @@ export interface SpeciesList {
 
 export interface SiteIndexSpeciesRow {
   speciesCode: string
-  computedValue: string
-  ageType: string
+  computedValue: string | null
+  ageType: string | null
   age: string | null
   height: string | null
   bhaSiteIndex: string | null

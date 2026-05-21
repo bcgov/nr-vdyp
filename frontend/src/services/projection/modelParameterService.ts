@@ -24,7 +24,7 @@ import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 import type { CSVRowType, PanelName } from '@/types/types'
-import type { SpeciesGroup, SpeciesList, ParsedProjectionParameters } from '@/interfaces/interfaces'
+import type { SpeciesGroup, SpeciesList, ParsedProjectionParameters, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
 import { isBlank, addExecutionOptionsFromMappings, numEq, strEq } from '@/utils/util'
 
@@ -561,6 +561,26 @@ export const buildModelParameters = (
       percent: item.percent,
     }))
 
+  const rows: SiteIndexSpeciesRow[] = modelParameterStore.siteIndexRows ?? []
+
+  const serializeRow = (row: SiteIndexSpeciesRow | undefined) => {
+    if (!row) return { compute: null, ageYears: null, age: null, height: null, si: null }
+    return {
+      compute: row.computedValue,
+      ageYears: row.ageType,
+      age: row.age,
+      height: row.height,
+      si: row.bhaSiteIndex,
+    }
+  }
+
+  const r0 = serializeRow(rows[0])
+  const r1 = serializeRow(rows[1])
+  const r2 = serializeRow(rows[2])
+  const r3 = serializeRow(rows[3])
+  const r4 = serializeRow(rows[4])
+  const r5 = serializeRow(rows[5])
+
   return {
     species,
     derivedBy: modelParameterStore.derivedBy,
@@ -568,10 +588,16 @@ export const buildModelParameters = (
     ecoZone: modelParameterStore.ecoZone,
     siteIndex: modelParameterStore.siteSpeciesValues,
     siteSpecies: modelParameterStore.selectedSiteSpecies || modelParameterStore.highestPercentSpecies,
-    ageYears: modelParameterStore.ageType,
-    speciesAge: modelParameterStore.spzAge ? modelParameterStore.spzAge : null,
-    speciesHeight: modelParameterStore.spzHeight ? modelParameterStore.spzHeight : null,
-    bha50SiteIndex: modelParameterStore.bha50SiteIndex ? modelParameterStore.bha50SiteIndex : null,
+    compute: r0.compute,
+    ageYears: r0.ageYears,
+    speciesAge: r0.age,
+    speciesHeight: r0.height,
+    bha50SiteIndex: r0.si,
+    compute2: r1.compute, ageYears2: r1.ageYears, age2: r1.age, height2: r1.height, si2: r1.si,
+    compute3: r2.compute, ageYears3: r2.ageYears, age3: r2.age, height3: r2.height, si3: r2.si,
+    compute4: r3.compute, ageYears4: r3.ageYears, age4: r3.age, height4: r3.height, si4: r3.si,
+    compute5: r4.compute, ageYears5: r4.ageYears, age5: r4.age, height5: r4.height, si5: r4.si,
+    compute6: r5.compute, ageYears6: r5.ageYears, age6: r5.age, height6: r5.height, si6: r5.si,
     stockable: modelParameterStore.percentStockableArea ? modelParameterStore.percentStockableArea : null,
     cc: modelParameterStore.crownClosure ? modelParameterStore.crownClosure : null,
     BA: modelParameterStore.basalArea ? modelParameterStore.basalArea : null,
@@ -711,6 +737,17 @@ const hasSpeciesInfoChanges = (store: any, saved: ModelParameters): boolean => {
   return false
 }
 
+type SavedPerSpeciesEntry = { compute: any; ageYears: any; age: any; height: any; si: any }
+
+const hasPerSpeciesRowChange = (row: SiteIndexSpeciesRow, s: SavedPerSpeciesEntry): boolean => {
+  if (!strEq(row.computedValue, s.compute)) return true
+  if (!strEq(row.ageType, s.ageYears)) return true
+  if (!numEq(row.age, s.age)) return true
+  if (!numEq(row.height, s.height)) return true
+  if (!numEq(row.bhaSiteIndex, s.si)) return true
+  return false
+}
+
 const hasSiteInfoChanges = (store: any, saved: ModelParameters): boolean => {
   if (!strEq(store.becZone, saved.becZone)) return true
   if (!strEq(store.ecoZone, saved.ecoZone)) return true
@@ -719,6 +756,18 @@ const hasSiteInfoChanges = (store: any, saved: ModelParameters): boolean => {
   if (!numEq(store.spzAge, saved.speciesAge)) return true
   if (!numEq(store.spzHeight, saved.speciesHeight)) return true
   if (!numEq(store.bha50SiteIndex, saved.bha50SiteIndex)) return true
+  const rows: SiteIndexSpeciesRow[] = store.siteIndexRows ?? []
+  if (!strEq(rows[0]?.computedValue, saved.compute)) return true
+  const savedPerSpecies: SavedPerSpeciesEntry[] = [
+    { compute: saved.compute2, ageYears: saved.ageYears2, age: saved.age2, height: saved.height2, si: saved.si2 },
+    { compute: saved.compute3, ageYears: saved.ageYears3, age: saved.age3, height: saved.height3, si: saved.si3 },
+    { compute: saved.compute4, ageYears: saved.ageYears4, age: saved.age4, height: saved.height4, si: saved.si4 },
+    { compute: saved.compute5, ageYears: saved.ageYears5, age: saved.age5, height: saved.height5, si: saved.si5 },
+    { compute: saved.compute6, ageYears: saved.ageYears6, age: saved.age6, height: saved.height6, si: saved.si6 },
+  ]
+  for (let i = 1; i < rows.length; i++) {
+    if (hasPerSpeciesRowChange(rows[i], savedPerSpecies[i - 1])) return true
+  }
   return false
 }
 
@@ -820,7 +869,16 @@ export const revertPanelToSaved = async (panelName: PanelName): Promise<void> =>
   // Restore species, site, and stand data from modelParameters JSON (Manual Input only).
   // Always call restoreFromModelParameters so that fields are reset to the saved state
   // (or to empty defaults if no modelParameters exist yet).
-  let modelParams: ModelParameters = { species: [], derivedBy: null, becZone: null, ecoZone: null, siteIndex: null, siteSpecies: null, ageYears: null, speciesAge: null, speciesHeight: null, bha50SiteIndex: null, stockable: null, cc: null, BA: null, TPH: null, minDBHLimit: null, currentDiameter: null }
+  let modelParams: ModelParameters = {
+    species: [], derivedBy: null, becZone: null, ecoZone: null, siteIndex: null, siteSpecies: null,
+    compute: null, ageYears: null, speciesAge: null, speciesHeight: null, bha50SiteIndex: null,
+    compute2: null, ageYears2: null, age2: null, height2: null, si2: null,
+    compute3: null, ageYears3: null, age3: null, height3: null, si3: null,
+    compute4: null, ageYears4: null, age4: null, height4: null, si4: null,
+    compute5: null, ageYears5: null, age5: null, height5: null, si5: null,
+    compute6: null, ageYears6: null, age6: null, height6: null, si6: null,
+    stockable: null, cc: null, BA: null, TPH: null, minDBHLimit: null, currentDiameter: null,
+  }
   if (projectionModel.modelParameters) {
     try {
       modelParams = JSON.parse(projectionModel.modelParameters) as ModelParameters
@@ -839,11 +897,11 @@ export const revertPanelToSaved = async (panelName: PanelName): Promise<void> =>
   // restoreFromProjectionParams with isViewMode=true opens all panels, so we should close the
   // ones the user was not editing to avoid them auto-opening on Cancel.
   const allPanelNames: PanelName[] = [
-    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS as PanelName,
-    CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO as PanelName,
-    CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO as PanelName,
-    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO as PanelName,
-    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS as PanelName,
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS,
+    CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS,
   ]
   for (const panel of allPanelNames) {
     if (panel !== panelName) {

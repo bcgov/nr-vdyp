@@ -100,6 +100,10 @@ describe('Model Parameter Store Unit Tests', () => {
       expect(store.finishingAge).to.be.null
       expect(store.reportTitle).to.be.null
     })
+
+    it('should initialize siteIndexRows as empty array', () => {
+      expect(store.siteIndexRows).to.deep.equal([])
+    })
   })
 
   describe('confirmPanel', () => {
@@ -257,6 +261,89 @@ describe('Model Parameter Store Unit Tests', () => {
       expect(store.speciesGroups).to.deep.equal([])
       expect(store.highestPercentSpecies).to.be.null
     })
+
+    it('should create siteIndexRows entries for each species group', () => {
+      store.speciesList[0] = { species: 'PL', percent: '60' }
+      store.speciesList[1] = { species: 'AC', percent: '40' }
+      store.updateSpeciesGroup()
+
+      expect(store.siteIndexRows).to.have.length(2)
+      expect(store.siteIndexRows[0].speciesCode).to.equal('PL')
+      expect(store.siteIndexRows[1].speciesCode).to.equal('AC')
+    })
+
+    it('should preserve existing siteIndexRow data when species are unchanged', () => {
+      store.speciesList[0] = { species: 'PL', percent: '100' }
+      store.updateSpeciesGroup()
+      store.siteIndexRows[0].bhaSiteIndex = '25.0'
+
+      store.updateSpeciesGroup()
+
+      expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('25.0')
+    })
+
+    it('should null out non-primary rows when Volume+Computed is active', () => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+      store.speciesList[0] = { species: 'PL', percent: '60' }
+      store.speciesList[1] = { species: 'AC', percent: '40' }
+      store.updateSpeciesGroup()
+
+      expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
+      expect(store.siteIndexRows[1].computedValue).to.be.null
+      expect(store.siteIndexRows[1].age).to.be.null
+      expect(store.siteIndexRows[1].height).to.be.null
+      expect(store.siteIndexRows[1].bhaSiteIndex).to.be.null
+    })
+
+    it('should set bhaSiteIndex default and null out other fields for all rows when Supplied is active', () => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      store.speciesList[0] = { species: 'PL', percent: '60' }
+      store.speciesList[1] = { species: 'AC', percent: '40' }
+      store.updateSpeciesGroup()
+
+      store.siteIndexRows.forEach((row) => {
+        expect(row.bhaSiteIndex).to.equal(DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX)
+        expect(row.computedValue).to.be.null
+        expect(row.age).to.be.null
+        expect(row.height).to.be.null
+      })
+    })
+  })
+
+  describe('isVolumeComputed and isSupplied', () => {
+    it('isVolumeComputed should be true when siteSpeciesValues is Computed and derivedBy is Volume', () => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+
+      expect(store.isVolumeComputed).to.be.true
+    })
+
+    it('isVolumeComputed should be false when derivedBy is not Volume', () => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+
+      expect(store.isVolumeComputed).to.be.false
+    })
+
+    it('isVolumeComputed should be false when siteSpeciesValues is Supplied even if derivedBy is Volume', () => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+
+      expect(store.isVolumeComputed).to.be.false
+    })
+
+    it('isSupplied should be true when siteSpeciesValues is Supplied', () => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+
+      expect(store.isSupplied).to.be.true
+    })
+
+    it('isSupplied should be false when siteSpeciesValues is Computed', () => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+
+      expect(store.isSupplied).to.be.false
+    })
   })
 
   describe('resetStore', () => {
@@ -330,6 +417,16 @@ describe('Model Parameter Store Unit Tests', () => {
       store.resetStore()
 
       expect(store.ageType).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_TYPE)
+    })
+
+    it('should reset siteIndexRows to empty array', () => {
+      store.speciesList[0] = { species: 'PL', percent: '100' }
+      store.updateSpeciesGroup()
+      expect(store.siteIndexRows).to.have.length.greaterThan(0)
+
+      store.resetStore()
+
+      expect(store.siteIndexRows).to.deep.equal([])
     })
   })
 
@@ -466,10 +563,36 @@ describe('Model Parameter Store Unit Tests', () => {
       becZone: 'CWH',
       ecoZone: 'MH',
       siteIndex: 'Supplied',
+      compute: null,
       ageYears: 'Total',
-      speciesAge: 50,
-      speciesHeight: 18.5,
-      bha50SiteIndex: 16.3,
+      speciesAge: '50',
+      speciesHeight: '18.5',
+      bha50SiteIndex: '16.3',
+      compute2: null,
+      ageYears2: null,
+      age2: null,
+      height2: null,
+      si2: null,
+      compute3: null,
+      ageYears3: null,
+      age3: null,
+      height3: null,
+      si3: null,
+      compute4: null,
+      ageYears4: null,
+      age4: null,
+      height4: null,
+      si4: null,
+      compute5: null,
+      ageYears5: null,
+      age5: null,
+      height5: null,
+      si5: null,
+      compute6: null,
+      ageYears6: null,
+      age6: null,
+      height6: null,
+      si6: null,
       stockable: 55,
       cc: 60,
       BA: 25,
@@ -524,6 +647,66 @@ describe('Model Parameter Store Unit Tests', () => {
       store.restoreFromModelParameters(makeModelParams())
 
       expect(store.referenceYear).to.equal(new Date().getFullYear())
+    })
+
+    it('should restore primary siteIndexRow with null computedValue in Supplied mode', () => {
+      store.restoreFromModelParameters(makeModelParams({ siteIndex: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED }))
+
+      expect(store.siteIndexRows[0].computedValue).to.be.null
+      expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('16.3')
+      expect(store.siteIndexRows[0].age).to.be.null
+      expect(store.siteIndexRows[0].height).to.be.null
+    })
+
+    it('should restore primary siteIndexRow with BHA_SITE_INDEX computed and null bhaSiteIndex', () => {
+      store.restoreFromModelParameters(makeModelParams({
+        siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+        compute: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
+      }))
+
+      expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
+      expect(store.siteIndexRows[0].bhaSiteIndex).to.be.null
+    })
+
+    it('should restore primary siteIndexRow with HEIGHT computed and null height', () => {
+      store.restoreFromModelParameters(makeModelParams({
+        siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+        compute: CONSTANTS.COMPUTED_VALUE.HEIGHT,
+      }))
+
+      expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.HEIGHT)
+      expect(store.siteIndexRows[0].height).to.be.null
+      expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('16.3')
+    })
+
+    it('should restore per-species rows using VDYP-1076 fields in Computed mode', () => {
+      store.restoreFromModelParameters(makeModelParams({
+        siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+        compute: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
+        compute2: CONSTANTS.COMPUTED_VALUE.HEIGHT,
+        ageYears2: CONSTANTS.AGE_TYPE.TOTAL,
+        age2: '50',
+        height2: null,
+        si2: '20.0',
+      }))
+
+      expect(store.siteIndexRows[1].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.HEIGHT)
+      expect(store.siteIndexRows[1].ageType).to.equal(CONSTANTS.AGE_TYPE.TOTAL)
+      expect(store.siteIndexRows[1].age).to.equal('50')
+      expect(store.siteIndexRows[1].height).to.be.null
+      expect(store.siteIndexRows[1].bhaSiteIndex).to.equal('20.0')
+    })
+
+    it('should restore per-species rows with provided si value in Supplied mode', () => {
+      store.restoreFromModelParameters(makeModelParams({
+        siteIndex: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
+        si2: '22.5',
+      }))
+
+      expect(store.siteIndexRows[1].computedValue).to.be.null
+      expect(store.siteIndexRows[1].bhaSiteIndex).to.equal('22.5')
+      expect(store.siteIndexRows[1].age).to.be.null
+      expect(store.siteIndexRows[1].height).to.be.null
     })
   })
 })

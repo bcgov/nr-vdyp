@@ -71,9 +71,9 @@ export const SPECIAL_INDICATORS = Object.freeze({
 })
 
 export const COMPUTED_VALUE = Object.freeze({
-  HEIGHT: 'Height in Meters',
-  BHA_SITE_INDEX: 'BHA Site Index',
-  TOTAL_AGE: 'Total Age',
+  HEIGHT: 'height',
+  BHA_SITE_INDEX: 'si',
+  TOTAL_AGE: 'age',
 })
 
 export const MANUAL_INPUT_PANEL = Object.freeze({

@@ -5,7 +5,7 @@ import 'vuetify/styles'
 import SiteInfoPanel from './SiteInfoPanel.vue'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, MESSAGE } from '@/constants'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 
 const vuetify = createVuetify()
@@ -134,6 +134,128 @@ describe('<SiteInfoPanel />', () => {
       })
       cy.contains('button', 'Cancel').should('exist')
       cy.contains('button', 'Next').should('exist')
+    })
+  })
+
+  describe('Header Edit button', () => {
+    it('renders Edit button in the header when not in read-only mode', () => {
+      mountPanel((ms) => openPanel(ms))
+      cy.get('.edit-button-col').should('exist')
+    })
+
+    it('does not render Edit button in read-only mode', () => {
+      mountPanel((ms, as) => {
+        openPanel(ms)
+        as.viewMode = PROJECTION_VIEW_MODE.VIEW
+      })
+      cy.get('.edit-button-col').should('not.exist')
+    })
+  })
+
+  describe('Confirm validation errors (new UI)', () => {
+    it('shows BEC Zone error when BEC Zone is not selected', () => {
+      mountPanel((ms) => {
+        openPanel(ms)
+        makeEditable(ms)
+        ms.becZone = null
+        ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      })
+      cy.contains('button', 'Next').click()
+      cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_BEC_ZONE_REQ).should('be.visible')
+    })
+
+    it('shows Site Index error when Site Index is not selected', () => {
+      // mountPanel setup runs before component mount; the component's immediate watcher
+      // resets siteSpeciesValues from null -> COMPUTED on mount, so we override after mount.
+      const { modelStore } = mountPanel((ms) => {
+        openPanel(ms)
+        makeEditable(ms)
+        ms.becZone = 'SBS'
+      })
+      cy.then(() => { modelStore.siteSpeciesValues = null })
+      cy.contains('button', 'Next').click()
+      cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SITE_INDEX_REQ).should('be.visible')
+    })
+
+    it('shows required error when Supplied and BHA Site Index is missing', () => {
+      // siteSpeciesValues is set to SUPPLIED before mount so the store's isSupplied watcher
+      // fires while siteIndexRows is still empty (no rows nulled out).
+      // siteIndexRows is assigned after mount to avoid any mount-phase reactive ordering issues.
+      const { modelStore } = mountPanel((ms) => {
+        openPanel(ms)
+        makeEditable(ms)
+        ms.becZone = 'SBS'
+        ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      })
+      cy.then(() => {
+        modelStore.siteIndexRows = [{
+          speciesCode: 'FD',
+          computedValue: null,
+          ageType: CONSTANTS.AGE_TYPE.TOTAL,
+          age: null,
+          height: null,
+          bhaSiteIndex: null,
+        }]
+      })
+      cy.contains('button', 'Next').click()
+      cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL_NEW_UI('FD')).should('be.visible')
+    })
+
+    it('shows required error when Computed and Age/Height are missing', () => {
+      mountPanel((ms) => {
+        openPanel(ms)
+        makeEditable(ms)
+        ms.becZone = 'SBS'
+        ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+        ms.siteIndexRows = [{
+          speciesCode: 'FD',
+          computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
+          ageType: CONSTANTS.AGE_TYPE.TOTAL,
+          age: null,
+          height: null,
+          bhaSiteIndex: null,
+        }]
+      })
+      cy.contains('button', 'Next').click()
+      cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP_NEW_UI('FD')).should('be.visible')
+    })
+
+    it('shows age range error when Age is out of range', () => {
+      mountPanel((ms) => {
+        openPanel(ms)
+        makeEditable(ms)
+        ms.becZone = 'SBS'
+        ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+        ms.siteIndexRows = [{
+          speciesCode: 'FD',
+          computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
+          ageType: CONSTANTS.AGE_TYPE.TOTAL,
+          age: '501',
+          height: '25.0',
+          bhaSiteIndex: null,
+        }]
+      })
+      cy.contains('button', 'Next').click()
+      cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG_NEW_UI).should('be.visible')
+    })
+
+    it('shows BHA Site Index range error when BHA Site Index is out of range', () => {
+      mountPanel((ms) => {
+        openPanel(ms)
+        makeEditable(ms)
+        ms.becZone = 'SBS'
+        ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+        ms.siteIndexRows = [{
+          speciesCode: 'FD',
+          computedValue: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE,
+          ageType: CONSTANTS.AGE_TYPE.TOTAL,
+          age: null,
+          height: '25.0',
+          bhaSiteIndex: '61',
+        }]
+      })
+      cy.contains('button', 'Next').click()
+      cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG_NEW_UI).should('be.visible')
     })
   })
 

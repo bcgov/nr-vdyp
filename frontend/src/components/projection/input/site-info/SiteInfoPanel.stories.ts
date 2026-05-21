@@ -38,6 +38,7 @@ export const EditableComputed: Story = {
 
       modelStore.becZone = 'CWH'
       modelStore.ecoZone = null
+      modelStore.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
       modelStore.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
       modelStore.highestPercentSpecies = 'FD'
       modelStore.selectedSiteSpecies = 'FD'
@@ -105,6 +106,7 @@ export const Confirmed: Story = {
 
       modelStore.becZone = 'CWH'
       modelStore.ecoZone = '7'
+      modelStore.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
       modelStore.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
       modelStore.highestPercentSpecies = 'FD'
       modelStore.selectedSiteSpecies = 'FD'
@@ -138,6 +140,7 @@ export const ReadOnly: Story = {
 
       modelStore.becZone = 'SBS'
       modelStore.ecoZone = '9'
+      modelStore.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
       modelStore.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
       modelStore.highestPercentSpecies = 'S'
       modelStore.selectedSiteSpecies = 'S'
@@ -149,6 +152,41 @@ export const ReadOnly: Story = {
     docs: {
       description: {
         story: 'Read-only (view) mode - all inputs are disabled and the ActionPanel is hidden entirely.',
+      },
+    },
+  },
+}
+
+export const ComputedVolume: Story = {
+  render: () => ({
+    components: { SiteInfoPanel },
+    setup() {
+      const modelStore = useModelParameterStore()
+      const appStore = useAppStore()
+
+      appStore.setViewMode('create')
+      modelStore.panelOpenStates.siteInfo = CONSTANTS.PANEL.OPEN
+      modelStore.panelState.siteInfo.editable = true
+      modelStore.panelState.siteInfo.confirmed = false
+
+      modelStore.becZone = 'CWH'
+      modelStore.ecoZone = null
+      modelStore.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+      modelStore.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      modelStore.highestPercentSpecies = 'FD'
+      modelStore.selectedSiteSpecies = 'FD'
+      modelStore.siteIndexRows = [
+        makeRow('FD', { bhaSiteIndex: null, computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX }),
+        makeRow('PL', { age: null, height: null, bhaSiteIndex: null }),
+        makeRow('S', { age: null, height: null, bhaSiteIndex: null }),
+      ]
+    },
+    template: '<SiteInfoPanel />',
+  }),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Computed + Volume: only the primary row (FD) is editable. Non-primary rows show N/A in all fields.',
       },
     },
   },

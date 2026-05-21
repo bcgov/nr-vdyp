@@ -28,7 +28,7 @@
           <td class="site-col font-weight-bold">{{ row.speciesCode }}</td>
           <td class="computed-col">
             <v-select
-              :model-value="isComputedValueDisabled(index) ? null : row.computedValue"
+              :model-value="isComputedValueNA(index) ? null : row.computedValue"
               :items="OPTIONS.computedValueOptions"
               item-title="label"
               item-value="value"
@@ -44,11 +44,12 @@
           <td class="age-col">
             <div class="d-flex align-center age-col-inner">
               <v-radio-group
-                v-model="row.ageType"
-                :disabled="isAgeRadioDisabled(index)"
+                :model-value="row.ageType"
+                :disabled="isAgeRadioDisabled(row, index)"
                 hide-details
                 density="compact"
                 class="flex-shrink-0"
+                @update:model-value="row.ageType = $event"
               >
                 <v-radio
                   v-for="opt in OPTIONS.tableAgeTypeOptions"
@@ -60,7 +61,7 @@
               </v-radio-group>
               <AppSpinField
                 class="site-spin-field"
-                :model-value="row.age"
+                :model-value="(isSupplied || isNonPrimaryRowDisabled(index)) ? null : row.age"
                 :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX"
                 :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN"
                 :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_STEP"
@@ -77,7 +78,7 @@
           <td>
             <AppSpinField
               class="site-spin-field"
-              :model-value="row.height"
+              :model-value="(isSupplied || isNonPrimaryRowDisabled(index)) ? null : row.height"
               :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MAX"
               :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MIN"
               :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_STEP"
@@ -129,7 +130,7 @@
               <span class="card-field-label">Computed<br>Value:</span>
               <div class="flex-grow-1 ml-2">
                 <v-select
-                  :model-value="isComputedValueDisabled(index) ? null : row.computedValue"
+                  :model-value="isComputedValueNA(index) ? null : row.computedValue"
                   :items="OPTIONS.computedValueOptions"
                   item-title="label"
                   item-value="value"
@@ -149,11 +150,12 @@
             <div class="d-flex align-start card-age-inner">
               <span class="card-field-label mr-1 mt-2">Age:</span>
               <v-radio-group
-                v-model="row.ageType"
-                :disabled="isAgeRadioDisabled(index)"
+                :model-value="row.ageType"
+                :disabled="isAgeRadioDisabled(row, index)"
                 hide-details
                 density="compact"
                 class="flex-grow-0 flex-shrink-0"
+                @update:model-value="row.ageType = $event"
               >
                 <v-radio
                   v-for="opt in OPTIONS.cardAgeTypeOptions"
@@ -165,7 +167,7 @@
               </v-radio-group>
               <AppSpinField
                 class="card-age-spin-field ml-4"
-                :model-value="row.age"
+                :model-value="(isSupplied || isNonPrimaryRowDisabled(index)) ? null : row.age"
                 :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX"
                 :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN"
                 :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_STEP"
@@ -186,7 +188,7 @@
               <div class="flex-grow-1 ml-2">
                 <AppSpinField
                   class="card-spin-field"
-                  :model-value="row.height"
+                  :model-value="(isSupplied || isNonPrimaryRowDisabled(index)) ? null : row.height"
                   :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MAX"
                   :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MIN"
                   :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_STEP"
@@ -227,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDisplay } from 'vuetify'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -242,26 +244,28 @@ const props = defineProps<{
 const { mdAndUp } = useDisplay()
 
 const modelParameterStore = useModelParameterStore()
-const { siteIndexRows, siteSpeciesValues, derivedBy } = storeToRefs(modelParameterStore)
+const { siteIndexRows, siteSpeciesValues, derivedBy, isSupplied } = storeToRefs(modelParameterStore)
 
-const isSupplied = computed(() => siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED)
 const isComputed = computed(() => siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED)
 const isVolume = computed(() => derivedBy.value === CONSTANTS.DERIVED_BY.VOLUME)
 
 const isNonPrimaryRowDisabled = (index: number) =>
   isComputed.value && isVolume.value && index > 0
 
-const isComputedValueDisabled = (index: number) =>
-  !props.isConfirmEnabled || isSupplied.value || isNonPrimaryRowDisabled(index)
+const isComputedValueNA = (index: number) =>
+  isSupplied.value || isNonPrimaryRowDisabled(index)
 
-const isAgeRadioDisabled = (index: number) =>
-  !props.isConfirmEnabled || isSupplied.value || isNonPrimaryRowDisabled(index)
+const isComputedValueDisabled = (index: number) =>
+  !props.isConfirmEnabled || isComputedValueNA(index)
+
+const isAgeRadioDisabled = (row: SiteIndexSpeciesRow, index: number) =>
+  isAgeDisabled(row, index)
 
 const isAgeDisabled = (row: SiteIndexSpeciesRow, index: number) =>
   !props.isConfirmEnabled ||
   isSupplied.value ||
   isNonPrimaryRowDisabled(index) ||
-  row.computedValue === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE
+  (isComputed.value && row.computedValue === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE)
 
 const isHeightDisabled = (row: SiteIndexSpeciesRow, index: number) =>
   !props.isConfirmEnabled ||
@@ -292,38 +296,15 @@ const getBhaPlaceholder = (row: SiteIndexSpeciesRow, index: number): string => {
   return ''
 }
 
-watch(isSupplied, (supplied) => {
-  if (supplied) {
-    siteIndexRows.value.forEach((row) => {
-      row.age = null
-      row.height = null
-      row.bhaSiteIndex = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
-    })
-  } else {
-    siteIndexRows.value.forEach((row) => {
-      row.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
-      row.ageType = CONSTANTS.AGE_TYPE.TOTAL
-      row.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
-      row.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
-      row.bhaSiteIndex = null
-    })
-  }
-})
 
 const handleComputedValueChange = (row: SiteIndexSpeciesRow) => {
-  if (row.computedValue === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX) {
-    row.bhaSiteIndex = null
-    if (!row.age) row.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
-    if (!row.height) row.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
-  } else if (row.computedValue === CONSTANTS.COMPUTED_VALUE.HEIGHT) {
-    row.height = null
-    if (!row.age) row.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
-    if (!row.bhaSiteIndex) row.bhaSiteIndex = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
-  } else if (row.computedValue === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE) {
-    row.age = null
-    if (!row.height) row.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
-    if (!row.bhaSiteIndex) row.bhaSiteIndex = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
-  }
+  const isBha = row.computedValue === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
+  const isHeight = row.computedValue === CONSTANTS.COMPUTED_VALUE.HEIGHT
+  const isTotal = row.computedValue === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE
+  row.bhaSiteIndex = isBha ? null : row.bhaSiteIndex ?? DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
+  row.height = isHeight ? null : row.height ?? DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+  row.age = isTotal ? null : row.age ?? DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+  row.ageType = isTotal ? CONSTANTS.AGE_TYPE.TOTAL : (row.ageType ?? CONSTANTS.AGE_TYPE.TOTAL)
 }
 </script>
 
