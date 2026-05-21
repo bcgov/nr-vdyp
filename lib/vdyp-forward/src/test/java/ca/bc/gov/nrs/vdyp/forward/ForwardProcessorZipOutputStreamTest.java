@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
@@ -8,10 +7,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.Test;
@@ -19,6 +16,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.ZipOutputFileResolver;
@@ -29,7 +27,8 @@ class ForwardProcessorZipOutputStreamTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessorZipOutputStreamTest.class);
 
-	private static Set<ForwardPass> vdypPassSet = new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5));
+	private static EnumSet<Pass> vdypPassSet = EnumSet
+			.of(Pass.PASS_1, Pass.PASS_2, Pass.PASS_3, Pass.PASS_4, Pass.PASS_5);
 
 	@TempDir
 	Path outputFilesLocation;

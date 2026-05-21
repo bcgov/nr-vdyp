@@ -1,12 +1,9 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
-
 import java.io.Closeable;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,6 +11,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
@@ -29,9 +27,9 @@ public class VdypForwardApplication extends VdypApplication implements Closeable
 
 	public static final String DEFAULT_VDYP_CONTROL_FILE_NAME = "vdyp.ctr";
 
-	public static final Set<ForwardPass> DEFAULT_PASS_SET = Collections
-			.unmodifiableSet(new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5)));
-	private static Set<ForwardPass> vdypPassSet = new HashSet<>(DEFAULT_PASS_SET);
+	public static final Set<Pass> DEFAULT_PASS_SET = Collections
+			.unmodifiableSet(EnumSet.of(Pass.PASS_1, Pass.PASS_2, Pass.PASS_3, Pass.PASS_4, Pass.PASS_5));
+	private static Set<Pass> vdypPassSet = EnumSet.copyOf(DEFAULT_PASS_SET);
 
 	public static void main(final String... args) {
 		main(Optional.empty(), Optional.empty(), args);

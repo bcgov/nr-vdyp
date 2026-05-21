@@ -14,10 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
@@ -27,6 +23,10 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
 
 class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcessingEngineTest {
 
@@ -38,9 +38,9 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 
-		assertThat(fpe.fps.fcm.getBecLookup(), notNullValue());
-		assertThat(fpe.fps.fcm.getGenusDefinitionMap(), notNullValue());
-		assertThat(fpe.fps.fcm.getSiteCurveMap(), notNullValue());
+		assertThat(fpe.fps.controlMap.getBecLookup(), notNullValue());
+		assertThat(fpe.fps.controlMap.getGenusDefinitionMap(), notNullValue());
+		assertThat(fpe.fps.controlMap.getSiteCurveMap(), notNullValue());
 
 		int nPolygonsProcessed = 0;
 		while (true) {
@@ -70,7 +70,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 			fpe.fps.setPolygon(polygon);
 
-			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 			ForwardProcessingEngine.calculateCoverages(lps);
 			fpe.determinePolygonRankings();

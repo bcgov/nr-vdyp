@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.vdyp.si32.cfs;
 
 import java.text.MessageFormat;
 
-import ca.bc.gov.nrs.vdyp.model.EnumIterator;
+import ca.bc.gov.nrs.vdyp.sindex.EnumIterator;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
 
 /**
