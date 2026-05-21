@@ -11,15 +11,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CodeErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable.SpeciesTableItem;
 import ca.bc.gov.nrs.vdyp.sindex.Sindxdll;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CodeErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
 
 public class VdypMethods {
 	private static final Logger logger = LoggerFactory.getLogger(VdypMethods.class);

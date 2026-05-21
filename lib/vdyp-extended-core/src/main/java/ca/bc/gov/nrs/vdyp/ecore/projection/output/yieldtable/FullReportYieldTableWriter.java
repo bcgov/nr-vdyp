@@ -15,7 +15,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
@@ -33,6 +32,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
 /**
  * Write a yield table in the format required by Input Model Parameters Report. This class makes some assumptions that

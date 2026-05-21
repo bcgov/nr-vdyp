@@ -14,13 +14,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP64Name;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexSpecies;
 
 class VdypMethodsTest {
 

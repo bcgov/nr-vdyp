@@ -11,7 +11,6 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
@@ -32,6 +31,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.SilviculturalBaseCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.NullMath;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
+import ca.bc.gov.nrs.vdyp.sindex.Reference;
 
 /**
  * This class is the internal representation of a Polygon to be projected.

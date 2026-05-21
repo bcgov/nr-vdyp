@@ -103,6 +103,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when()
+				.header("X-Consumer-Username", "integration-test-client") //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON)
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
@@ -153,6 +154,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		// String serializedParametersText = mapper.writeValueAsString(parameters);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+				.header("X-Consumer-Username", "integration-test-user") //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
@@ -254,6 +256,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -302,6 +305,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -372,6 +376,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -446,6 +451,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -583,6 +589,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -645,6 +652,19 @@ class Hcsv_Vdyp7_Comparison_Test {
 		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1026b/output/VDYP7YieldTable.csv")) {
 			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
 			runIntTestData("vdyp-1026b", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testManySpeciesCloseDiameter() throws IOException, ResourceParseException {
+		logger.info("Starting vdyp-1026c");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1026c/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1026c", result -> {
 				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
 				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
 			});

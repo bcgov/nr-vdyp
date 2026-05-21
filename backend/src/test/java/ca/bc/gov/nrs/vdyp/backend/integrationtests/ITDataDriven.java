@@ -53,6 +53,7 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 	) {
 
 		return given().basePath(TestHelper.ROOT_PATH).when() //
+				.header("X-Consumer-Username", "integration-test-client") //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, dataDir.resolve(polygonFileName).toFile()) //
 				.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, dataDir.resolve(layerFileName).toFile()) //

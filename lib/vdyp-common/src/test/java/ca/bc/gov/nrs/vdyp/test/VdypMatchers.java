@@ -1,10 +1,24 @@
 package ca.bc.gov.nrs.vdyp.test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.describedAs;
+import static org.hamcrest.Matchers.emptyArray;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -36,6 +50,7 @@ import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -108,7 +123,7 @@ public class VdypMatchers {
 	 * @param causeMatcher
 	 * @return
 	 */
-	public static Matcher<Throwable> causedBy(Matcher<? super Throwable> causeMatcher) {
+	public static Matcher<Throwable> causedBy(Matcher<? extends Throwable> causeMatcher) {
 
 		return new BaseMatcher<Throwable>() {
 
@@ -189,10 +204,6 @@ public class VdypMatchers {
 	}
 
 	/**
-	 * Stopgap until Hamcrest 3.1 or 4.0 which will provide optional matchers
-	 *
-	 * https://github.com/hamcrest/JavaHamcrest/pull/421
-	 *
 	 * Matches an Optional if it is not present
 	 *
 	 * @param <T>
@@ -517,6 +528,34 @@ public class VdypMatchers {
 				"A Coefficients indexed from %0 that %1", //
 				allOf(
 						isA(Coefficients.class), //
+						hasProperty("indexFrom", is(indexFrom)), //
+						contentsMatcher
+				), //
+				indexFrom, //
+				contentsMatcher
+		);
+	}
+
+	@SafeVarargs
+	public static Matcher<DoubleCoefficients> dcoe(int indexFrom, Matcher<Double>... contentsMatchers) {
+		return dcoe(indexFrom, contains(contentsMatchers));
+	}
+
+	public static Matcher<DoubleCoefficients>
+			dcoe(int indexFrom, Function<Double, Matcher<? super Double>> matcherGenerator, Double... contents) {
+		List<Matcher<? super Double>> contentsMatchers = Arrays.stream(contents).map(matcherGenerator).toList();
+		return dcoe(indexFrom, contains(contentsMatchers));
+	}
+
+	public static Matcher<DoubleCoefficients> dcoe(int indexFrom, Double... contents) {
+		return dcoe(indexFrom, VdypMatchers::closeTo, contents);
+	}
+
+	public static Matcher<DoubleCoefficients> dcoe(int indexFrom, Matcher<? super List<Double>> contentsMatcher) {
+		return describedAs(
+				"A DoubleCoefficients indexed from %0 that %1", //
+				allOf(
+						isA(DoubleCoefficients.class), //
 						hasProperty("indexFrom", is(indexFrom)), //
 						contentsMatcher
 				), //
@@ -857,6 +896,48 @@ public class VdypMatchers {
 		};
 	}
 
+	public static <T> Matcher<T>
+			compatibilityVariable(String name, Matcher<Float> expected, Class<T> klazz, Object... params) {
+		return new TypeSafeDiagnosingMatcher<>(klazz) {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText(name).appendValueList("(", ", ", ") ", params);
+				description.appendDescriptionOf(expected);
+			}
+
+			@Override
+			protected boolean matchesSafely(T item, Description mismatchDescription) {
+				Method method;
+				try {
+					method = klazz.getMethod(
+							name,
+							(Class<?>[]) Arrays.stream(params)
+									.map(o -> o instanceof Integer ? Integer.TYPE : o.getClass()).toArray(Class[]::new)
+					);
+				} catch (NoSuchMethodException e) {
+					mismatchDescription.appendText("Method " + name + " does not exist");
+					return false;
+				}
+
+				float result;
+				try {
+					result = (float) method.invoke(item, params);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					mismatchDescription.appendText(e.getMessage());
+					return false;
+				}
+
+				if (expected.matches(result)) {
+					return true;
+				}
+
+				expected.describeMismatch(result, mismatchDescription);
+				return false;
+			}
+		};
+	}
+
 	public static interface RecursiveHasEntryBuilder {
 		Matcher<Map<?, ?>> withValue(Matcher<?> valueMatcher);
 	}
@@ -980,7 +1061,7 @@ public class VdypMatchers {
 					mismatchDescription.appendText("does not exist");
 					return false;
 				}
-			}
+			};
 		};
 	}
 }

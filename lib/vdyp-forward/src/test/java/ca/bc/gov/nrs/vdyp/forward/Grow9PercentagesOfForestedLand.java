@@ -15,12 +15,14 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class Grow9PercentagesOfForestedLand {
@@ -63,7 +65,8 @@ class Grow9PercentagesOfForestedLand {
 
 		fpe.processPolygon(polygon, ExecutionStep.GROW_9_SPECIES_PCT);
 
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
+				.getPrimaryLayerProcessingState();
 
 		// VDYP7 value is 0.892216682f, 11.5443392f, 64.3765259f, 13.3774729f, 9.80944252f
 		assertThat(

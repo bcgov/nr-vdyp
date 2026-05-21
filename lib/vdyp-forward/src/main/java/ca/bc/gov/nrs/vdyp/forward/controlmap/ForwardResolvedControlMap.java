@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.forward.controlmap;
 import java.util.Map;
 import java.util.Optional;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
@@ -15,6 +14,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.ModelCoefficients;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
 public interface ForwardResolvedControlMap extends ResolvedControlMap {
 

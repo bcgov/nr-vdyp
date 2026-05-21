@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.vdyp.io.parse.coe;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.dcoe;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,8 +42,8 @@ class BySpeciesDqCoefficientParserTest {
 		// is just old and newer ones
 		// take this into account
 
-		assertThat(result, hasEntry(is("AC"), coe(0, -0.65484f, 2.26389f, 0.23162f)));
-		assertThat(result, hasEntry(is("AT"), coe(0, -0.48275f, 0.19886f, 0.23162f)));
+		assertThat(result, hasEntry(is("AC"), dcoe(0, -0.65484, 2.26389, 0.23162)));
+		assertThat(result, hasEntry(is("AT"), dcoe(0, -0.48275, 0.19886, 0.23162)));
 
 	}
 

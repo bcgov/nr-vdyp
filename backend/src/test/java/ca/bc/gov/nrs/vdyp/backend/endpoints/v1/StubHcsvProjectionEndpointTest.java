@@ -55,6 +55,7 @@ class StubHcsvProjectionEndpointTest {
 //		String serializedParametersText = mapper.writeValueAsString(parameters);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+				.header("X-Consumer-Username", "integration-test-client") //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
@@ -100,6 +101,7 @@ class StubHcsvProjectionEndpointTest {
 		Parameters parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+				.header("X-Consumer-Username", "integration-test-client") //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,

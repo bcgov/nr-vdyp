@@ -13,6 +13,10 @@ import ca.bc.gov.nrs.vdyp.common.IndexedFloatUnaryOperator;
 /**
  * Fixed length list of floats that can be accessed using an offset index
  *
+ * Note a parallel more precise (double) implementation exists in {@link DoubleCoefficients} these classes should be
+ * kept functionally equivalent, no changes should be made to one without updating the other. The classes do not share
+ * an interface because of the primitive nature of the underlying vectors.
+ *
  * @author Kevin Smith, Vivid Solutions
  *
  */

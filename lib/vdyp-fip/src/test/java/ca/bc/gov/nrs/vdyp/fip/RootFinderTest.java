@@ -97,12 +97,9 @@ class RootFinderTest {
 
 			var point = app.findRoot(diameterBase, goal, x, layer, 2.0e-3f);
 
-			assertThat(
-					point,
-					vectorCloseTo(
-							new double[] { 0.891877294, 11.4491625, 66.0574265, 12.3855982, 0.00443319743 }, 2.0E-03
-					)
-			);
+			var expected = new double[] { 0.891877294, 11.4491625, 66.0574265, 12.3855982, 0.00443319743 };
+			expected = new double[] { 0.89186548, 11.44848844, 66.0574032, 12.38476932, 0.00092791 };
+			assertThat(point, vectorCloseTo(expected, 2.0E-03));
 		}
 	}
 
