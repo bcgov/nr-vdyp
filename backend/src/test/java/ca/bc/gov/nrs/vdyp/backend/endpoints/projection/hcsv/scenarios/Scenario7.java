@@ -170,6 +170,7 @@ class Scenario7 extends Scenario {
 		parameters.setCombineAgeYearRange(AgeYearRangeCombinationKind.UNION);
 
 		Object result = given().basePath(TestHelper.ROOT_PATH).when() //
+				.header("X-Consumer-Username", "integration-test-client") //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,

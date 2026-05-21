@@ -103,6 +103,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when()
+				.header("X-Consumer-Username", "integration-test-client") //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON)
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
@@ -153,6 +154,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		// String serializedParametersText = mapper.writeValueAsString(parameters);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+				.header("X-Consumer-Username", "integration-test-user") //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
@@ -254,6 +256,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -302,6 +305,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -372,6 +376,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -446,6 +451,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -583,6 +589,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -881,99 +888,6 @@ class Hcsv_Vdyp7_Comparison_Test {
 					)
 			);
 		});
-
-	}
-
-	@Test
-	@Disabled
-	void testCompare7And8() throws IOException, ResourceParseException, URISyntaxException, CsvException {
-
-		logger.info("Starting testCompare7And8");
-
-		try (
-				CSVReader vdyp7Stream = new CSVReader(
-						new InputStreamReader(
-								MainTest.class
-										.getResourceAsStream("secheight/output/Console-YldTbl-092G010-6-After.csv")
-						)
-				);
-				CSVReader vdyp8Stream = new CSVReader(
-						new InputStreamReader(
-								MainTest.class.getResourceAsStream("secheight/output/finalsortedVDYP8.csv")
-						)
-				);
-		) {
-			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
-			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
-		}
-
-	}
-
-	@Test
-	@Disabled
-	void testCompare44AMapSheet() throws IOException, ResourceParseException, URISyntaxException, CsvException {
-
-		logger.info("Starting testCompare7And8");
-
-		try (
-				CSVReader vdyp7Stream = new CSVReader(
-						new InputStreamReader(
-								MainTest.class.getResourceAsStream("secheight/output/44MapSheetYieldTable7.csv")
-						)
-				);
-				CSVReader vdyp8Stream = new CSVReader(
-						new InputStreamReader(
-								MainTest.class.getResourceAsStream("secheight/output/44mapsheetyieldTable8.csv")
-						)
-				);
-		) {
-			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
-			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
-		}
-
-	}
-
-	@Test
-	@Disabled
-	void testCompareSmall() throws IOException, ResourceParseException, URISyntaxException, CsvException {
-
-		logger.info("Starting testCompare7And8");
-
-		try (
-				CSVReader vdyp7Stream = new CSVReader(
-						new InputStreamReader(
-								MainTest.class.getResourceAsStream("secheight/output/finalsortedVDYP7.csv")
-						)
-				);
-				CSVReader vdyp8Stream = new CSVReader(
-						new InputStreamReader(
-								MainTest.class.getResourceAsStream("secheight/output/finalsortedVDYP8.csv")
-						)
-				);
-		) {
-			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
-			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
-		}
-
-	}
-
-	@Test
-	@Disabled
-	void testCompare44BMapSheet() throws IOException, ResourceParseException, URISyntaxException, CsvException {
-
-		logger.info("Starting testCompare7And8");
-
-		try (
-				CSVReader vdyp7Stream = new CSVReader(
-						new InputStreamReader(MainTest.class.getResourceAsStream("secheight/output/44bvdyp7.csv"))
-				);
-				CSVReader vdyp8Stream = new CSVReader(
-						new InputStreamReader(MainTest.class.getResourceAsStream("secheight/output/44bvdyp8.csv"))
-				);
-		) {
-			Pattern ignorePattern = Pattern.compile("TABLE_NUM");
-			evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
-		}
 
 	}
 

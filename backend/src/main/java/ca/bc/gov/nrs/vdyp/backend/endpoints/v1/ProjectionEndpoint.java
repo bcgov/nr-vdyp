@@ -109,6 +109,7 @@ public class ProjectionEndpoint implements Endpoint {
 
 	@jakarta.ws.rs.POST
 	@Path("/hcsv")
+	@RolesAllowed({ "USER", "ADMIN", "KONG_API_GATEWAY" })
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
 	@Tag(
