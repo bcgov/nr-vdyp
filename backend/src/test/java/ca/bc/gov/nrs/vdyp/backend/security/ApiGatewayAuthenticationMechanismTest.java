@@ -72,7 +72,7 @@ class ApiGatewayAuthenticationMechanismTest {
 
 		assertEquals(401, challenge.status);
 		assertEquals("WWW-Authenticate", challenge.headerName.toString());
-		assertEquals("Bearer, ApiKey", challenge.headerContent.toString());
+		assertEquals("Bearer, ApiKey", challenge.headerContent);
 	}
 
 	@Test
