@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.parse.value;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,9 +12,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 
 /**
  * Parses a string to a value
@@ -26,6 +30,11 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 public interface ValueParser<T> extends ControlledValueParser<T> {
 
 	public static final String S_IS_NOT_A_VALID_S = "\"%s\" is not a valid %s";
+
+	public static final String NON_NEGATIVE_FLOAT_MSG = "non-negative float";
+	public static final String POSITIVE_FLOAT_MSG = "positive float";
+	public static final String NON_NEGATIVE_INTEGER_MSG = "non-negative integer";
+	public static final String POSITIVE_INTEGER_MSG = "positive integer";
 
 	/**
 	 * Parse a string to a value
@@ -127,14 +136,14 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	 * Parser for single precision floats >0
 	 */
 	public static final ValueParser<Optional<Float>> SAFE_POSITIVE_FLOAT = rangeSilentLow(
-			FLOAT, 0f, false, Float.MAX_VALUE, true, "positive float"
+			FLOAT, 0f, false, Float.MAX_VALUE, true, POSITIVE_FLOAT_MSG
 	);
 
 	/**
 	 * Parser for single precision floats >=0
 	 */
 	public static final ValueParser<Optional<Float>> SAFE_NONNEGATIVE_FLOAT = rangeSilentLow(
-			FLOAT, 0f, true, Float.MAX_VALUE, true, "non-negative float"
+			FLOAT, 0f, true, Float.MAX_VALUE, true, NON_NEGATIVE_FLOAT_MSG
 	);
 
 	/**
@@ -353,6 +362,63 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	public static <U> ValueParser<Optional<U>> posttestOptional(ValueParser<U> delegate, Predicate<U> test) {
 		return uncontrolled(ControlledValueParser.posttestOptional(delegate, test));
 	}
+
+	/**
+	 * Validate that a parsed value is greater than 0 and less than (or, if includeMax is true, equal to) max.
+	 * Additionally, if the value is missingIndicator, it is considered "not present" and empty is returned.
+	 *
+	 * @param parser     underlying parser
+	 * @param max        the upper bound
+	 * @param includeMax is the upper bound inclusive
+	 * @param name       Name for the value to use in the parse error if it is out of the range.
+	 */
+	static <T extends Comparable<T>> ValueParser<T> rangeSilentWithDefaulting(
+			ValueParser<T> parser, T min, boolean includeMin, T max, boolean includeMax, T missingIndicator,
+			T defaultValue, String name
+	) {
+		return ValueParser.validate(s -> {
+			var result = defaultValue;
+			if (!StringUtils.isEmpty(s)) {
+				result = parser.parse(s);
+				if (missingIndicator.equals(result)) {
+					result = defaultValue;
+				}
+			}
+			return result;
+		}, result -> {
+			if (!defaultValue.equals(result) && (result.compareTo(max) > (includeMax ? 0 : -1)
+					|| result.compareTo(min) < (includeMin ? 0 : 1))) {
+				return Optional.of(
+						MessageFormat.format(
+								"{0} must be between {1} ({2}) and {3} ({4})", name, min,
+								includeMin ? "inclusive" : "exclusive", max, includeMax ? "inclusive" : "exclusive"
+						)
+				);
+			}
+			return Optional.empty();
+		});
+	}
+
+	/**
+	 * Parser for non-negative single precision floats with default -9.0. -9.0 results in an
+	 * VdypEntity.MISSING_FLOAT_VALUE being returned. All other negative values, and those greater than Float.MAX_VALUE,
+	 * result in an error.
+	 */
+	ValueParser<Float> FLOAT_WITH_DEFAULT = rangeSilentWithDefaulting(
+			FLOAT, 0.0f, true, Float.MAX_VALUE, true, -9.0f, VdypEntity.MISSING_FLOAT_VALUE, NON_NEGATIVE_FLOAT_MSG
+	);
+
+	/**
+	 * Parser for non-negative integers with default -9. -9 results in VdypEntity.MISSING_INTEGER_VALUE being returned.
+	 * All other negative values, and those > Float.MAX_VALUE, result in an error.
+	 */
+	ValueParser<Integer> INTEGER_WITH_DEFAULT = rangeSilentWithDefaulting(
+			INTEGER, 0, true, Integer.MAX_VALUE, true, -9, VdypEntity.MISSING_INTEGER_VALUE, NON_NEGATIVE_INTEGER_MSG
+	);
+
+	public static final ValueParser<Float> ALLOW_NEG_FLOAT_WITH_DEFAULT = rangeSilentWithDefaulting(
+			FLOAT, -8.9f, true, Float.MAX_VALUE, true, -9.0f, VdypEntity.MISSING_FLOAT_VALUE, NON_NEGATIVE_FLOAT_MSG
+	);
 
 	/**
 	 * Parse a string as a set of fixed length chunks.

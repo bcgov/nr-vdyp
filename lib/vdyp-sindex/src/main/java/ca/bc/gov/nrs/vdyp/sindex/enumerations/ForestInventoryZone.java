@@ -1,0 +1,24 @@
+package ca.bc.gov.nrs.vdyp.sindex.enumerations;
+
+import static ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexForestInventoryZone.*;
+
+/**
+ * Determines whether a given FIZ code represents the coast or interior.
+ */
+public class ForestInventoryZone {
+
+	/**
+	 * @param fiz a character identifying the forest inventory zone (A - L)
+	 * @return the region containing the zone
+	 */
+	public static SiteIndexForestInventoryZone toRegion(char fiz) {
+		switch (fiz) {
+		case 'A', 'B', 'C':
+			return FIZ_COAST;
+		case 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L':
+			return FIZ_INTERIOR;
+		default:
+			return FIZ_UNKNOWN;
+		}
+	}
+}

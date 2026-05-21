@@ -37,10 +37,10 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 

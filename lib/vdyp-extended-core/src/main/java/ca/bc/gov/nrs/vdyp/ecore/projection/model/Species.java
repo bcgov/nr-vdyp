@@ -8,11 +8,6 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.common.Reference;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
@@ -21,6 +16,11 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean.SpeciesDeta
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
+import ca.bc.gov.nrs.vdyp.sindex.Reference;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEstimationType;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 
 /**
  * Holds all the information surrounding a single species component.

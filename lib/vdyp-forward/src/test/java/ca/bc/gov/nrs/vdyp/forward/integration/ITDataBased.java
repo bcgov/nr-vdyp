@@ -2,14 +2,12 @@ package ca.bc.gov.nrs.vdyp.forward.integration;
 
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 

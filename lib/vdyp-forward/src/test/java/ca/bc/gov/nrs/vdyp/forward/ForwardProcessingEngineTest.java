@@ -25,11 +25,10 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.SpeciesDynamics;
@@ -43,7 +42,11 @@ import ca.bc.gov.nrs.vdyp.model.Sp64DistributionSet;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class ForwardProcessingEngineTest {
@@ -258,7 +261,7 @@ class ForwardProcessingEngineTest {
 	class GrowSpecies {
 		IMocksControl em;
 		ForwardProcessingEngine fpe;
-		LayerProcessingState lps;
+		ForwardLayerProcessingState lps;
 		Map<String, Object> controlMap;
 
 		@BeforeEach
@@ -271,7 +274,7 @@ class ForwardProcessingEngineTest {
 					.addMockedMethod("growUsingPartialSpeciesDynamics").addMockedMethod("growUsingNoSpeciesDynamics")
 					.addMockedMethod("growUsingFullSpeciesDynamics").withConstructor(controlMap, Optional.empty())
 					.createMock(em);
-			lps = em.createMock(LayerProcessingState.class);
+			lps = em.createMock(ForwardLayerProcessingState.class);
 		}
 
 		@Test
@@ -590,7 +593,7 @@ class ForwardProcessingEngineTest {
 		}
 
 		@Test
-		void testChoice1MovesSiteIndexFromSecondarySpeciesToPrimarySpecies() {
+		void testChoice1MovesSiteIndexFromSecondarySpeciesToPrimarySpecies() throws Exception {
 			var fixture = createFixture();
 			int primarySlot = fixture.slot("F");
 			int secondarySlot = fixture.slot("L");
@@ -735,7 +738,7 @@ class ForwardProcessingEngineTest {
 			var fixture = createFixture();
 			int primarySlot = fixture.slot("F");
 			int secondarySlot = fixture.slot("L");
-			float expected = fixture.lps.getFps().estimators.leadHeightFromPrimaryHeight(
+			float expected = fixture.lps.getParent().estimators.leadHeightFromPrimaryHeight(
 					fixture.bank.loreyHeights[primarySlot][UC_ALL_INDEX], fixture.bank.speciesNames[primarySlot],
 					fixture.lps.getBecZone().getRegion(), fixture.bank.treesPerHectare[primarySlot][UC_ALL_INDEX]
 			);
@@ -755,7 +758,7 @@ class ForwardProcessingEngineTest {
 			var fixture = createFixture();
 			int primarySlot = fixture.slot("F");
 			int secondarySlot = fixture.slot("L");
-			float expected = fixture.lps.getFps().estimators.leadHeightFromPrimaryHeight(
+			float expected = fixture.lps.getParent().estimators.leadHeightFromPrimaryHeight(
 					fixture.bank.loreyHeights[secondarySlot][UC_ALL_INDEX], fixture.bank.speciesNames[secondarySlot],
 					fixture.lps.getBecZone().getRegion(), fixture.bank.treesPerHectare[secondarySlot][UC_ALL_INDEX]
 			);
@@ -821,7 +824,7 @@ class ForwardProcessingEngineTest {
 			float height = (float) SiteTool.ageAndSiteIndexToHeight(curve, age, ageType, inputSiteIndex, inputYtbh);
 			float expectedSiteIndex = (float) SiteTool.heightAndAgeToSiteIndex(
 					curve, age, ageType, height,
-					ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType.SI_EST_DIRECT
+					ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEstimationType.SI_EST_DIRECT
 			);
 			float expectedYtbh = yearsToBreastHeight(curve, expectedSiteIndex);
 
@@ -888,7 +891,7 @@ class ForwardProcessingEngineTest {
 			assertThat(fixture.bank.yearsToBreastHeight[slot], closeTo(expectedYtbh));
 		}
 
-		private LayerFixture createFixture() {
+		private LayerFixture createFixture() throws ProcessingException {
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("EstimateFixture", 2025);
 				pb.percentAvailable(90f);
@@ -969,11 +972,11 @@ class ForwardProcessingEngineTest {
 		}
 
 		private final class LayerFixture {
-			private final LayerProcessingState lps;
+			private final ForwardLayerProcessingState lps;
 			private final Bank bank;
 			private final Map<String, Integer> slots;
 
-			private LayerFixture(LayerProcessingState lps, Bank bank, Map<String, Integer> slots) {
+			private LayerFixture(ForwardLayerProcessingState lps, Bank bank, Map<String, Integer> slots) {
 				this.lps = lps;
 				this.bank = bank;
 				this.slots = slots;
@@ -1010,7 +1013,8 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
+					.getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
@@ -1033,7 +1037,8 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
+					.getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
@@ -1056,7 +1061,8 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
+					.getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];

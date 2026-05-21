@@ -11,10 +11,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.common.Reference;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
@@ -29,6 +25,10 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.NullMath;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
+import ca.bc.gov.nrs.vdyp.sindex.Reference;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 
 /** Identifies information regarding a single layer within a stand. */
 public class Layer implements Comparable<Layer> {

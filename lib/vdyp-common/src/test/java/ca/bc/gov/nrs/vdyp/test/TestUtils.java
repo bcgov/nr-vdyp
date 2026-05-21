@@ -93,7 +93,6 @@ public class TestUtils {
 					+ "WS_VOL_PER_HA_75,WS_VOL_PER_HA_125,CU_VOL_PER_HA_125,D_VOL_PER_HA_125,DW_VOL_PER_HA_125";
 
 	/**
-	 *
 	 * Create a stream returning the given sequence of lines.
 	 */
 	public static InputStream makeInputStream(String... lines) {
@@ -717,6 +716,10 @@ public class TestUtils {
 		}
 
 		return layer.getSpecies().get(ids[0]);
+	}
+
+	public static BecDefinition mockBec() {
+		return new BecDefinition("T", Region.COASTAL, "Test");
 	}
 
 	/**

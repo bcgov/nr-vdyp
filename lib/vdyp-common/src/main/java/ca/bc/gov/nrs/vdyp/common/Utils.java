@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -633,20 +632,6 @@ public class Utils {
 
 	public static float[] specFraction(VdypLayer layer) {
 		return specValueArray(layer, VdypSpecies::getFractionGenus);
-	}
-
-	public static final double METRES_PER_FOOT = 0.3048f;
-
-	/**
-	 * Converts the given value from metres to feet, does the given operation, and converts the result from feet to
-	 * metres.
-	 *
-	 * @param value
-	 * @param operation
-	 * @return
-	 */
-	public static double computeInFeet(double value, DoubleUnaryOperator operation) {
-		return operation.applyAsDouble(value / METRES_PER_FOOT) * METRES_PER_FOOT;
 	}
 
 	/**

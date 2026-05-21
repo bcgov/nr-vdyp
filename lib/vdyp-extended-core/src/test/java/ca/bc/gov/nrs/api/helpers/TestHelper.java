@@ -46,10 +46,10 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.LayerYields;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class TestHelper {

@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.model.EnumIterator;
+import ca.bc.gov.nrs.vdyp.sindex.EnumIterator;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsTreeSpecies;
 
 class SI32EnumIteratorTest {
