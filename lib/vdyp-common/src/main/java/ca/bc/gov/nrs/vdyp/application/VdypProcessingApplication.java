@@ -75,8 +75,6 @@ public abstract class VdypProcessingApplication<DS extends DebugSettings> extend
 
 			processor.run(new FileSystemFileResolver(), new FileSystemFileResolver(), controlFileNames, getAllPasses());
 
-			System.err.println("Blah");
-
 		} catch (Exception ex) {
 			logger.error("Error during processing", ex);
 			return PROCESSING_ERROR_EXIT;
@@ -91,7 +89,7 @@ public abstract class VdypProcessingApplication<DS extends DebugSettings> extend
 		List<String> controlFileNames;
 		os.print(
 				MessageFormat
-						.format("Enter name of control file (or RETURN for {1}) or *name for both): ", defaultFilename)
+						.format("Enter name of control file (or RETURN for {0}) or *name for both): ", defaultFilename)
 		);
 
 		controlFileNames = new ArrayList<>();
