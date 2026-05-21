@@ -481,6 +481,10 @@ const getRequiredPairError = (
 // The field matching computedValue is intentionally null (Calc.) - skip it, validate the other two
 const getComputedRowError = (row: SiteIndexSpeciesRow): string | null => {
   const cv = row.computedValue
+  if (cv === null) {
+    // computedValue not selected - all inputs are missing; treat as required values error
+    return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP_NEW_UI(row.speciesCode)
+  }
   if (cv === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX) {
     if (isEmptyOrZero(row.age) || isEmptyOrZero(row.height))
       return MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP_NEW_UI(row.speciesCode)

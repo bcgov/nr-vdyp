@@ -208,6 +208,18 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       }
     })
 
+    // If the new primary row was previously a non-primary N/A row (computedValue=null due to
+    // Volume+Computed constraints), reset it to defaults so it's properly editable as primary.
+    // Supplied mode is excluded because its constraint block below will handle all rows.
+    if (siteIndexRows.value.length > 0 && !isSupplied.value && siteIndexRows.value[0].computedValue === null) {
+      const primaryRow = siteIndexRows.value[0]
+      primaryRow.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
+      primaryRow.ageType = CONSTANTS.AGE_TYPE.TOTAL
+      primaryRow.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+      primaryRow.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+      primaryRow.bhaSiteIndex = null
+    }
+
     // Watchers fire only on isVolumeComputed/isSupplied transitions, not when rows are added
     // while the mode is already active. Apply constraints here to cover that gap.
     if (isVolumeComputed.value) {
