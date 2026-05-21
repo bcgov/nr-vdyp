@@ -306,6 +306,12 @@ const createLayerData = (
 ): CSVRowType => {
   const speciesData = getSpeciesData(modelParameterStore.speciesList)
   const speciesRow = flattenSpeciesData(speciesData, 6)
+  const siteIndexRows: SiteIndexSpeciesRow[] = modelParameterStore.siteIndexRows ?? []
+  const row1 = siteIndexRows[1]
+  const row2 = siteIndexRows[2]
+  const row3 = siteIndexRows[3]
+  const row4 = siteIndexRows[4]
+  const row5 = siteIndexRows[5]
   const crownClosure =
     modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME &&
     modelParameterStore.siteSpeciesValues ===
@@ -347,8 +353,8 @@ const createLayerData = (
     ...speciesRow, // Species codes and percentages (6 pairs)
     modelParameterStore.spzAge, // EST_AGE_SPP1
     modelParameterStore.spzHeight, // EST_HEIGHT_SPP1
-    '', // EST_AGE_SPP2
-    '', // EST_HEIGHT_SPP2
+    row1?.age ?? '', // EST_AGE_SPP2
+    row1?.height ?? '', // EST_HEIGHT_SPP2
     '', // ADJ_IND
     '', // LOREY_HEIGHT_75
     '', // BASAL_AREA_125
@@ -357,6 +363,19 @@ const createLayerData = (
     '', // CU_VOL_PER_HA_125
     '', // D_VOL_PER_HA_125
     '', // DW_VOL_PER_HA_125
+    row2?.age ?? '', // EST_AGE_SPP3
+    row2?.height ?? '', // EST_HEIGHT_SPP3
+    row3?.age ?? '', // EST_AGE_SPP4
+    row3?.height ?? '', // EST_HEIGHT_SPP4
+    row4?.age ?? '', // EST_AGE_SPP5
+    row4?.height ?? '', // EST_HEIGHT_SPP5
+    row5?.age ?? '', // EST_AGE_SPP6
+    row5?.height ?? '', // EST_HEIGHT_SPP6
+    row1?.bhaSiteIndex ?? '', // EST_SITE_INDEX_SPP2
+    row2?.bhaSiteIndex ?? '', // EST_SITE_INDEX_SPP3
+    row3?.bhaSiteIndex ?? '', // EST_SITE_INDEX_SPP4
+    row4?.bhaSiteIndex ?? '', // EST_SITE_INDEX_SPP5
+    row5?.bhaSiteIndex ?? '', // EST_SITE_INDEX_SPP6
   ]
   return [CSVHEADERS.LAYER_HEADERS, row]
 }
