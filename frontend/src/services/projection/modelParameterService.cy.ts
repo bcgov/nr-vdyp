@@ -67,6 +67,7 @@ const createMockModelParameterStore = (overrides: Record<string, unknown> = {}) 
     ageType: CONSTANTS.AGE_TYPE.TOTAL,
     minDBHLimit: '7.5 cm+',
     currentDiameter: null,
+    siteIndexRows: [],
     ...overrides,
   }) as any
 
@@ -381,11 +382,12 @@ describe('buildProjectionParameters', () => {
     expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
   })
 
-  it('should add ForwardGrowEnabled to excluded when isForwardGrowEnabled is false', () => {
+  it('should always include ForwardGrowEnabled in selected regardless of isForwardGrowEnabled', () => {
     const store = createMockModelParameterStore({ isForwardGrowEnabled: false })
-    const { excludedExecutionOptions } = buildProjectionParameters(store)
+    const { selectedExecutionOptions, excludedExecutionOptions } = buildProjectionParameters(store)
 
-    expect(excludedExecutionOptions).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
+    expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
+    expect(excludedExecutionOptions).to.not.include(ExecutionOptionsEnum.ForwardGrowEnabled)
   })
 
   it('should map speciesGroups to utils', () => {
@@ -436,10 +438,14 @@ describe('buildModelParameters', () => {
       ecoZone: '7',
       siteSpeciesValues: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
       selectedSiteSpecies: 'FD',
-      ageType: CONSTANTS.AGE_TYPE.BREAST,
-      spzAge: '50',
-      spzHeight: '20.00',
-      bha50SiteIndex: '18.5',
+      siteIndexRows: [{
+        speciesCode: 'FD',
+        computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
+        ageType: CONSTANTS.AGE_TYPE.BREAST,
+        age: '50',
+        height: '20.00',
+        bhaSiteIndex: '18.5',
+      }],
       percentStockableArea: 70,
       crownClosure: 60,
       basalArea: '25.0',
@@ -454,6 +460,7 @@ describe('buildModelParameters', () => {
     expect(params.ecoZone).to.equal('7')
     expect(params.siteIndex).to.equal(CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED)
     expect(params.siteSpecies).to.equal('FD')
+    expect(params.compute).to.equal(CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
     expect(params.ageYears).to.equal(CONSTANTS.AGE_TYPE.BREAST)
     expect(params.speciesAge).to.equal('50')
     expect(params.speciesHeight).to.equal('20.00')
@@ -476,17 +483,50 @@ describe('buildModelParameters', () => {
     expect(params.siteSpecies).to.equal('PL')
   })
 
-  it('should set speciesAge, speciesHeight, bha50SiteIndex to null when falsy', () => {
-    const store = createMockModelParameterStore({
-      spzAge: null,
-      spzHeight: null,
-      bha50SiteIndex: null,
-    })
+  it('should set speciesAge, speciesHeight, bha50SiteIndex to null when siteIndexRows is empty', () => {
+    const store = createMockModelParameterStore({ siteIndexRows: [] })
     const params = buildModelParameters(store)
 
     expect(params.speciesAge).to.be.null
     expect(params.speciesHeight).to.be.null
     expect(params.bha50SiteIndex).to.be.null
+  })
+
+  it('should read per-row fields from siteIndexRows[0] for primary species', () => {
+    const store = createMockModelParameterStore({
+      siteIndexRows: [{
+        speciesCode: 'FD',
+        computedValue: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE,
+        ageType: CONSTANTS.AGE_TYPE.BREAST,
+        age: null,
+        height: '22.5',
+        bhaSiteIndex: '18.0',
+      }],
+    })
+    const params = buildModelParameters(store)
+
+    expect(params.compute).to.equal(CONSTANTS.COMPUTED_VALUE.TOTAL_AGE)
+    expect(params.ageYears).to.equal(CONSTANTS.AGE_TYPE.BREAST)
+    expect(params.speciesAge).to.be.null
+    expect(params.speciesHeight).to.equal('22.5')
+    expect(params.bha50SiteIndex).to.equal('18.0')
+  })
+
+  it('should serialize rows 1-5 into compute2-compute6 fields', () => {
+    const store = createMockModelParameterStore({
+      siteIndexRows: [
+        { speciesCode: 'FD', computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX, ageType: CONSTANTS.AGE_TYPE.TOTAL, age: '40', height: '18.0', bhaSiteIndex: null },
+        { speciesCode: 'PL', computedValue: CONSTANTS.COMPUTED_VALUE.HEIGHT, ageType: CONSTANTS.AGE_TYPE.TOTAL, age: '35', height: null, bhaSiteIndex: '15.0' },
+      ],
+    })
+    const params = buildModelParameters(store)
+
+    expect(params.compute2).to.equal(CONSTANTS.COMPUTED_VALUE.HEIGHT)
+    expect(params.ageYears2).to.equal(CONSTANTS.AGE_TYPE.TOTAL)
+    expect(params.age2).to.equal('35')
+    expect(params.height2).to.be.null
+    expect(params.si2).to.equal('15.0')
+    expect(params.compute3).to.be.null
   })
 })
 
@@ -581,10 +621,16 @@ const createSavedModelParams = (overrides: Record<string, any> = {}) => ({
   ecoZone: null,
   siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
   siteSpecies: 'FD',
+  compute: null,
   ageYears: CONSTANTS.AGE_TYPE.TOTAL,
   speciesAge: null,
   speciesHeight: null,
   bha50SiteIndex: null,
+  compute2: null, ageYears2: null, age2: null, height2: null, si2: null,
+  compute3: null, ageYears3: null, age3: null, height3: null, si3: null,
+  compute4: null, ageYears4: null, age4: null, height4: null, si4: null,
+  compute5: null, ageYears5: null, age5: null, height5: null, si5: null,
+  compute6: null, ageYears6: null, age6: null, height6: null, si6: null,
   stockable: null,
   cc: null,
   BA: null,
@@ -650,6 +696,45 @@ describe('hasPanelUnsavedChanges', () => {
     ).should('equal', true)
   })
 
+  it('should return false for SITE_INFO when nothing has changed', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: { ...mockProjectionModel, modelParameters: JSON.stringify(createSavedModelParams()) },
+    })
+    cy.wrap(
+      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO, createMockModelParameterStore()),
+    ).should('equal', false)
+  })
+
+  it('should return true for SITE_INFO when becZone has changed', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: {
+        ...mockProjectionModel,
+        modelParameters: JSON.stringify(createSavedModelParams({ becZone: 'SBS' })),
+      },
+    })
+    cy.wrap(
+      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO, createMockModelParameterStore()),
+    ).should('equal', true)
+  })
+
+  it('should return true for SITE_INFO when primary row computedValue has changed', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: {
+        ...mockProjectionModel,
+        modelParameters: JSON.stringify(createSavedModelParams({ compute: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX })),
+      },
+    })
+    cy.wrap(
+      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO, createMockModelParameterStore()),
+    ).should('equal', true)
+  })
+
   it('should return true for STAND_INFO when percentStockableArea has changed', () => {
     const appStore = useAppStore()
     appStore.setCurrentProjectionGUID('some-guid')
@@ -674,6 +759,26 @@ describe('revertPanelToSaved', () => {
     cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO as any)).then(() => {
       const modelStore = useModelParameterStore()
       expect(modelStore.panelState.speciesInfo.confirmed).to.be.false
+    })
+  })
+
+  it('should close all other panels and keep the cancelled panel open after revert', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: {
+        ...mockProjectionModel,
+        modelParameters: JSON.stringify(createSavedModelParams()),
+        reportDescription: null,
+      },
+    })
+    cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO as any)).then(() => {
+      const modelStore = useModelParameterStore()
+      expect(modelStore.panelOpenStates.siteInfo).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(modelStore.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(modelStore.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(modelStore.panelOpenStates.standInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(modelStore.panelOpenStates.reportSettings).to.equal(CONSTANTS.PANEL.CLOSE)
     })
   })
 

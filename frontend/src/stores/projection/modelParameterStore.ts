@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
-import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters } from '@/interfaces/interfaces'
+import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
 import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-api'
 import type { ModelParameters } from '@/services/vdyp-api'
@@ -192,16 +192,146 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     // Update highestPercentSpecies and selectedSiteSpecies with the first siteSpecies in speciesGroups
     highestPercentSpecies.value = selectedSiteSpecies.value =
       speciesGroups.value.length > 0 ? speciesGroups.value[0].siteSpecies : null
+
+    // Sync siteIndexRows with updated speciesGroups, preserving existing row data
+    const existingRows = new Map(siteIndexRows.value.map((r) => [r.speciesCode, r]))
+    siteIndexRows.value = speciesGroups.value.map((group) => {
+      const existing = existingRows.get(group.siteSpecies)
+      if (existing) return existing
+      return {
+        speciesCode: group.siteSpecies,
+        computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
+        ageType: CONSTANTS.AGE_TYPE.TOTAL,
+        age: DEFAULTS.DEFAULT_VALUES.SPZ_AGE,
+        height: DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT,
+        bhaSiteIndex: null,
+      }
+    })
+
+    // If the new primary row was previously a non-primary N/A row (computedValue=null due to
+    // Volume+Computed constraints), reset it to defaults so it's properly editable as primary.
+    // Supplied mode is excluded because its constraint block below will handle all rows.
+    if (siteIndexRows.value.length > 0 && !isSupplied.value && siteIndexRows.value[0].computedValue === null) {
+      const primaryRow = siteIndexRows.value[0]
+      primaryRow.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
+      primaryRow.ageType = CONSTANTS.AGE_TYPE.TOTAL
+      primaryRow.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+      primaryRow.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+      primaryRow.bhaSiteIndex = null
+    }
+
+    // Watchers fire only on isVolumeComputed/isSupplied transitions, not when rows are added
+    // while the mode is already active. Apply constraints here to cover that gap.
+    if (isVolumeComputed.value) {
+      siteIndexRows.value.slice(1).forEach((row) => {
+        row.computedValue = null
+        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
+        row.age = null
+        row.height = null
+        row.bhaSiteIndex = null
+      })
+    } else if (isSupplied.value) {
+      siteIndexRows.value.forEach((row) => {
+        row.computedValue = null
+        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
+        row.age = null
+        row.height = null
+        row.bhaSiteIndex = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
+      })
+    }
   }
 
   // site info
   const becZone = ref<string | null>(null)
   const ecoZone = ref<string | null>(null)
-  const siteSpeciesValues = ref<string | null>(null)
+  const siteSpeciesValues = ref<string | null>(CONSTANTS.SITE_SPECIES_VALUES.COMPUTED)
   const ageType = ref<string | null>(null)
   const spzAge = ref<string | null>(null)
   const spzHeight = ref<string | null>(null)
   const bha50SiteIndex = ref<string | null>(null)
+  const siteIndexRows = ref<SiteIndexSpeciesRow[]>([])
+
+  // VDYP-880: Cell enable/disable rules for the new Site Indices table (showNewSiteIndicesFeature).
+  //
+  // Derived By \ Site Index |  Computed                                    |  Supplied
+  // ----------------------- | -------------------------------------------- | ----------------------------------
+  // Volume                  | Primary row only; the field matching         | All rows: BHA Site Index only.
+  //                         | Computed Value is disabled (calc.), the      | Age, Height, Computed Value: N/A.
+  //                         | other two (Age/Height/BHA SI) are enabled.   |
+  //                         | Non-primary rows: entirely disabled (N/A).   |
+  // ----------------------- | -------------------------------------------- | ----------------------------------
+  // Basal Area              | All rows active; same Computed Value rule    | All rows: BHA Site Index only.
+  //                         | applies per row as above.                    | Age, Height, Computed Value: N/A.
+  const isVolumeComputed = computed(
+    () =>
+      siteSpeciesValues.value !== CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED &&
+      derivedBy.value === CONSTANTS.DERIVED_BY.VOLUME,
+  )
+
+  const isSupplied = computed(
+    () => siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
+  )
+
+  // Why isVolumeComputed and isSupplied are watched here (not in SiteIndicesTable): transitions
+  // must be tracked across component remounts. Vuetify expansion panels destroy and recreate
+  // their content when collapsed/expanded, which would reset a component-level watcher's oldValue
+  // to undefined and miss transitions that occurred while the panel was closed.
+  watch(isVolumeComputed, (nowVC, wasVC) => {
+    // The `if (isRestoringFromDB.value) return` below (also in the isSupplied watcher) prevents overwriting rows that
+    // restoreFromModelParameters() just restored from DB (e.g. Cancel button). Changing
+    // derivedBy/siteSpeciesValues during restore triggers these watchers before
+    // restorePerSpeciesRows() sets the correct values. isRestoringFromDB resets via nextTick.
+    if (isRestoringFromDB.value) return
+    if (nowVC) {
+      // Volume+Computed: non-primary rows must be N/A - null out all their fields except ageType.
+      siteIndexRows.value.slice(1).forEach((row) => {
+        row.computedValue = null
+        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
+        row.age = null
+        row.height = null
+        row.bhaSiteIndex = null
+      })
+    } else if (wasVC) {
+      // Leaving Volume+Computed -> restore defaults so non-primary rows are editable again.
+      // If the destination is Supplied, the isSupplied watcher below will overwrite these
+      // immediately after, which is intentional - each watcher owns its own transition.
+      siteIndexRows.value.slice(1).forEach((row) => {
+        row.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
+        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
+        row.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+        row.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+        row.bhaSiteIndex = null
+      })
+    }
+  })
+
+  watch(isSupplied, (supplied) => {
+    // Same guard as above - skip during DB restore to preserve the restored row values.
+    if (isRestoringFromDB.value) return
+    if (supplied) {
+      // Supplied: only BHA Site Index is editable - null out all other fields for every row.
+      siteIndexRows.value.forEach((row) => {
+        row.computedValue = null
+        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
+        row.age = null
+        row.height = null
+        row.bhaSiteIndex = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
+      })
+    } else {
+      // Leaving Supplied -> restore Computed defaults.
+      // When also entering Volume+Computed, isVolumeComputed watcher (registered before this one)
+      // has already nulled non-primary rows. Skip them here so we don't overwrite those nulls
+      // with defaults.
+      siteIndexRows.value.forEach((row, index) => {
+        if (isVolumeComputed.value && index > 0) return
+        row.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
+        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
+        row.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+        row.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+        row.bhaSiteIndex = null
+      })
+    }
+  })
 
   // stand information
   const percentStockableArea = ref<string | null>(null)
@@ -277,11 +407,12 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     // Reset site info
     becZone.value = null
     ecoZone.value = null
-    siteSpeciesValues.value = null
+    siteSpeciesValues.value = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
     ageType.value = DEFAULTS.DEFAULT_VALUES.AGE_TYPE
     spzAge.value = null
     spzHeight.value = null
     bha50SiteIndex.value = null
+    siteIndexRows.value = []
 
     // Reset stand info
     percentStockableArea.value = null
@@ -473,6 +604,69 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     updateSpeciesGroup()
   }
 
+  // Old data (pre-VDYP-1076): infer computedValue from which field is null
+  const inferPrimaryRowFromOldData = (
+    primaryRow: SiteIndexSpeciesRow,
+    age: string | null,
+    height: string | null,
+    si: string | null
+  ) => {
+    if (!si) {
+      primaryRow.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
+      primaryRow.age = age ?? DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+      primaryRow.height = height ?? DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+      primaryRow.bhaSiteIndex = null
+    } else if (!height) {
+      primaryRow.computedValue = CONSTANTS.COMPUTED_VALUE.HEIGHT
+      primaryRow.age = age ?? DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+      primaryRow.height = null
+      primaryRow.bhaSiteIndex = si
+    } else if (age) {
+      // All three values present - default to BHA_SITE_INDEX computed
+      primaryRow.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
+      primaryRow.age = age
+      primaryRow.height = height
+      primaryRow.bhaSiteIndex = null
+    } else {
+      // age is null -> TOTAL_AGE computed
+      primaryRow.computedValue = CONSTANTS.COMPUTED_VALUE.TOTAL_AGE
+      primaryRow.age = null
+      primaryRow.height = height
+      primaryRow.bhaSiteIndex = si
+    }
+  }
+
+  // Restore SPP2~6 rows from VDYP-1076 fields
+  const restorePerSpeciesRows = (params: ModelParameters) => {
+    const perSpeciesData = [
+      { compute: params.compute2, ageYears: params.ageYears2, age: params.age2, height: params.height2, si: params.si2 },
+      { compute: params.compute3, ageYears: params.ageYears3, age: params.age3, height: params.height3, si: params.si3 },
+      { compute: params.compute4, ageYears: params.ageYears4, age: params.age4, height: params.height4, si: params.si4 },
+      { compute: params.compute5, ageYears: params.ageYears5, age: params.age5, height: params.height5, si: params.si5 },
+      { compute: params.compute6, ageYears: params.ageYears6, age: params.age6, height: params.height6, si: params.si6 },
+    ]
+    for (let i = 1; i < siteIndexRows.value.length; i++) {
+      const row = siteIndexRows.value[i]
+      const data = perSpeciesData[i - 1]
+      if (siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED) {
+        // Supplied mode: null out all fields except BHA site index and ageType (mirrors the isSupplied watcher).
+        row.computedValue = null
+        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
+        row.age = null
+        row.height = null
+        row.bhaSiteIndex = data.si ?? DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
+      } else if (data.compute) {
+        // New data (VDYP-1076): restore all fields; null means that field is computed
+        row.computedValue = data.compute
+        row.ageType = data.ageYears ?? CONSTANTS.AGE_TYPE.TOTAL
+        row.age = data.age
+        row.height = data.height
+        row.bhaSiteIndex = data.si
+      }
+      // Old data (no compute stored): leave row with defaults set by updateSpeciesGroup()
+    }
+  }
+
   /**
    * Restore site info from model parameters
    */
@@ -481,9 +675,42 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     ecoZone.value = params.ecoZone
     siteSpeciesValues.value = params.siteIndex
     ageType.value = params.ageYears
-    spzAge.value = toStringOrNull(params.speciesAge)
-    spzHeight.value = toStringOrNull(params.speciesHeight)
-    bha50SiteIndex.value = toStringOrNull(params.bha50SiteIndex)
+    spzAge.value = params.speciesAge
+    spzHeight.value = params.speciesHeight
+    bha50SiteIndex.value = params.bha50SiteIndex
+
+    if (siteIndexRows.value.length > 0) {
+      const primaryRow = siteIndexRows.value[0]
+
+      if (siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED) {
+        // Supplied mode: only BHA site index is editable - null out all other fields explicitly
+        // so that row state stays consistent even when the isSupplied watcher was skipped (DB restore).
+        primaryRow.computedValue = null
+        primaryRow.ageType = CONSTANTS.AGE_TYPE.TOTAL
+        primaryRow.age = null
+        primaryRow.height = null
+        primaryRow.bhaSiteIndex = bha50SiteIndex.value
+      } else if (params.compute) {
+        primaryRow.ageType = ageType.value ?? CONSTANTS.AGE_TYPE.TOTAL
+        // New data (VDYP-1076): restore compute directly from stored value
+        primaryRow.computedValue = params.compute
+        primaryRow.age = spzAge.value ?? DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+        primaryRow.height = spzHeight.value ?? DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+        primaryRow.bhaSiteIndex = bha50SiteIndex.value
+        if (params.compute === CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX) {
+          primaryRow.bhaSiteIndex = null
+        } else if (params.compute === CONSTANTS.COMPUTED_VALUE.HEIGHT) {
+          primaryRow.height = null
+        } else if (params.compute === CONSTANTS.COMPUTED_VALUE.TOTAL_AGE) {
+          primaryRow.age = null
+        }
+      } else {
+        primaryRow.ageType = ageType.value ?? CONSTANTS.AGE_TYPE.TOTAL
+        inferPrimaryRowFromOldData(primaryRow, spzAge.value, spzHeight.value, bha50SiteIndex.value)
+      }
+    }
+
+    restorePerSpeciesRows(params)
   }
 
   /**
@@ -502,7 +729,10 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
    * Restore species, site, and stand info from model parameters JSON
    * @param params The ModelParameters object from the backend
    */
+  const isRestoringFromDB = ref(false)
+
   const restoreFromModelParameters = (params: ModelParameters) => {
+    isRestoringFromDB.value = true
     derivedBy.value = params.derivedBy
     restoreSpeciesListFromParams(params.species)
 
@@ -517,6 +747,10 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     if (!referenceYear.value) {
       referenceYear.value = new Date().getFullYear()
     }
+
+    nextTick(() => {
+      isRestoringFromDB.value = false
+    })
   }
 
   return {
@@ -537,6 +771,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     totalSpeciesGroupPercent,
     updateSpeciesGroup,
     // site info
+    isVolumeComputed,
+    isSupplied,
     becZone,
     ecoZone,
     siteSpeciesValues,
@@ -544,6 +780,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     spzAge,
     spzHeight,
     bha50SiteIndex,
+    siteIndexRows,
     // stand info
     percentStockableArea,
     basalArea,
@@ -579,6 +816,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     //
     referenceYear,
     // restore functions
+    isRestoringFromDB,
     resetStore,
     restoreFromProjectionParams,
     restoreFromModelParameters,

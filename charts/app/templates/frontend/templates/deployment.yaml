@@ -52,6 +52,8 @@ spec:
               value: {{ .Values.frontend.env.VITE_SSO_REDIRECT_URI | quote }}
             - name: VITE_API_URL
               value: {{ .Values.frontend.env.VITE_API_URL | quote }}
+            - name: VITE_SITE_INDICES_TABLE_ENABLED
+              value: {{ .Values.frontend.env.VITE_SITE_INDICES_TABLE_ENABLED | quote }}
           ports:
             - name: http
               containerPort: 3000

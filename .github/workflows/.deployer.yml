@@ -176,6 +176,7 @@ jobs:
             --set frontend.env.VITE_SSO_REDIRECT_URI=${{ secrets.VITE_SSO_REDIRECT_URI }} \
             --set frontend.env.VITE_API_URL=${{ secrets.VITE_API_URL }} \
             --set frontend.env.VITE_SSO_TOKEN_ISSUER=${{ secrets.VITE_SSO_TOKEN_ISSUER }} \
+            --set frontend.env.VITE_SITE_INDICES_TABLE_ENABLED=${{ vars.VITE_SITE_INDICES_TABLE_ENABLED }} \
             --set-string coms.image.tag=${{ vars.COMS_TAG }} \
             --set-string coms.env.OBJECTSTORAGE_ENABLED=true \
             --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=${{ vars.OBJECTSTORAGE_ACCESSKEYID }} \

@@ -28,9 +28,9 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text class="expansion-panel-text mt-n4">
+        <v-expansion-panel-text class="expansion-panel-text">
           <v-form ref="form">
-            <div class="mt-1">
+            <div class="mt-n1">
               <v-row style="display: inline-flex; align-items: center">
                 <v-col cols="auto" class="species-percent-derived-by-container">
                   <div>

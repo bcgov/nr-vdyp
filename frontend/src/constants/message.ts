@@ -99,15 +99,21 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
   SPCZ_VLD_MISSING_DERIVED_BY:
     "Input field - 'Species % derived by' - is missing essential information which must be filled in order to confirm and continue",
   SITE_VLD_AGE_RNG: "'Years' must range from 0 and 500",
+  SITE_VLD_AGE_RNG_NEW_UI: "'Age' must range from 0 and 500",
   SITE_VLD_HIGHT_RNG: "'Height in Meters' must range from 0.00 and 99.90",
   SITE_VLD_SI_RNG: "'BHA 50 Site Index' must range from 0.00 and 60.00",
+  SITE_VLD_SI_RNG_NEW_UI: "'BHA Site Index' must range from 0.00 and 60.00",
   SITE_VLD_SITE_INDEX_REQ:
     "Please select a Site Index option ('Supplied' or 'Computed')",
   SITE_VLD_BEC_ZONE_REQ: 'Please select a BEC Zone',
   SITE_VLD_SPCZ_REQ_VALS_SUP: (selectedSiteSpeciesValue: string | null) =>
     `The species '${selectedSiteSpeciesValue}' must have Years/Height in Meters values supplied`,
+  SITE_VLD_SPCZ_REQ_VALS_SUP_NEW_UI: (selectedSiteSpeciesValue: string | null) =>
+    `The species '${selectedSiteSpeciesValue}' must have Age/Height in Meters values supplied`,
   SITE_VLD_SPCZ_REQ_SI_VAL: (selectedSiteSpeciesValue: string | null) =>
     `The species '${selectedSiteSpeciesValue}' must have an BHA 50 Site Index value supplied`,
+  SITE_VLD_SPCZ_REQ_SI_VAL_NEW_UI: (selectedSiteSpeciesValue: string | null) =>
+    `The species '${selectedSiteSpeciesValue}' must have an BHA Site Index value supplied`,
   DENSITY_VLD_PCT_STCB_AREA_RNG:
     "'Percent Stockable Area' must range from 0 and 100",
   DENSITY_VLD_BSL_AREA_RNG: "'Basal Area' must range from 0.1000 and 250.0000",
