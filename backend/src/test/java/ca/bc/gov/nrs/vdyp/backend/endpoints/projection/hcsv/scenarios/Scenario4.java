@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv.scenarios;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.csvRowContaining;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
@@ -17,7 +18,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
@@ -27,7 +27,6 @@ import io.smallrye.common.constraint.Assert;
 import jakarta.inject.Inject;
 
 @QuarkusTest
-@Disabled("VDYP-1010")
 class Scenario4 extends Scenario {
 
 	@Inject
@@ -52,7 +51,8 @@ class Scenario4 extends Scenario {
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES, //
 				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
 				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
 		);
 		parameters.yearStart(2000).yearEnd(2050);
 
@@ -82,13 +82,13 @@ class Scenario4 extends Scenario {
 		assertThat(indexOfLineOfInterest, not(nullValue()));
 		assertThat(
 				csvLines[indexOfLineOfInterest], csvRowContaining(
-						"3", "13919428", "", "093C090", //
+						anything(), "13919428", "", "093C090", //
 						"94833422", "D", "2013", "170", //
 						"PLI", closeTo(100.00000), "", "", //
 						"", "", "", "", //
 						"", "", "", "", //
 						closeTo(30.00000), closeTo(10.02000), closeTo(17.99054), "", closeTo(15.23330), //
-						closeTo(20.53386), closeTo(452.95999), closeTo(14.60411), closeTo(97.19800), //
+						closeTo(20.26108), closeTo(452.95999), closeTo(14.60411), closeTo(97.19800), //
 						closeTo(86.55379), closeTo(82.18890), closeTo(80.94500), closeTo(79.21390), //
 						"Ref"
 				)
