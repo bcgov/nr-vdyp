@@ -74,6 +74,7 @@ export class FileUploadValidator extends ValidationBase {
   private async getHeaderValidationDetails(
     file: File,
     expectedHeaders: string[],
+    optionalHeaders: Set<string> = new Set(),
   ): Promise<{
     isValid: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
@@ -88,7 +89,7 @@ export class FileUploadValidator extends ValidationBase {
     const expectedSet = new Set(expectedHeaders)
     const actualSet = new Set(actualHeaders)
     expectedHeaders.forEach((h) => {
-      if (!actualSet.has(h)) missing.push(h)
+      if (!actualSet.has(h) && !optionalHeaders.has(h)) missing.push(h)
     })
     actualHeaders.forEach((h) => {
       if (!expectedSet.has(h)) extra.push(h)
@@ -130,6 +131,7 @@ export class FileUploadValidator extends ValidationBase {
     const { isValid, details } = await this.getHeaderValidationDetails(
       file,
       CSVHEADERS.LAYER_HEADERS,
+      CSVHEADERS.OPTIONAL_LAYER_HEADERS,
     )
     return { isValid, details, expected: CSVHEADERS.LAYER_HEADERS }
   }
