@@ -351,6 +351,7 @@
         <configuration>
 					<includes>
 						<include>**/Test*.java</include>
+						<include>**/Scenario*.java</include>
 						<include>**/*Test.java</include>
 					</includes>
 					<systemPropertyVariables>
