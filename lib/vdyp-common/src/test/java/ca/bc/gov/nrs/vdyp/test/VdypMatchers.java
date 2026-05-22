@@ -797,9 +797,7 @@ public class VdypMatchers {
 				var result = true;
 
 				if (rowValues.length != fields.length) {
-					mismatchDescription.appendText("given csv row ").appendValueList(
-							"[", ", ", "]", rowValues
-					)
+					mismatchDescription.appendText("given csv row ").appendValueList("[", ", ", "]", rowValues) //
 							.appendText(" has ").appendValue(rowValues.length).appendText(" fields rather than ")
 							.appendValue(fields.length);
 					result = false;

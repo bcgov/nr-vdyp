@@ -65,7 +65,9 @@ class Scenario3 extends Scenario {
 		);
 
 		assertThat(
-				csvLines[1], csvRowContaining(
+				csvLines[1], //
+				csvRowContaining(
+						//
 						"1", is(13919428), "", "093C090", "94833422", "1", "1843", "10", "PLI", closeTo(60.00), "SX",
 						closeTo(40.00), "", "", "", "", "", "", "", "", closeTo(1.00), closeTo(9.79000),
 						closeTo(1.32755), closeTo(0.25340), "", closeTo(20.60), closeTo(300.00), closeTo(10.000010), "",
