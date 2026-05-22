@@ -1,18 +1,7 @@
 package ca.bc.gov.nrs.vdyp.test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.anything;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.describedAs;
-import static org.hamcrest.Matchers.emptyArray;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isA;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -808,7 +797,9 @@ public class VdypMatchers {
 				var result = true;
 
 				if (rowValues.length != fields.length) {
-					mismatchDescription.appendText("given csv row ").appendValueList("[", ", ", "]", fields)
+					mismatchDescription.appendText("given csv row ").appendValueList(
+							"[", ", ", "]", rowValues
+					)
 							.appendText(" has ").appendValue(rowValues.length).appendText(" fields rather than ")
 							.appendValue(fields.length);
 					result = false;
