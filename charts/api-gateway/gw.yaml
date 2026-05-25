@@ -1,0 +1,66 @@
+_format_version: "3.0"
+services:
+- host: vdyp-ui-dev.c50504-dev.svc
+  id: 172050f9-97fd-5c49-96e3-3af59f21d1ef
+  name: vdyp-ui-dev
+  path: /
+  plugins:
+    - name: key-auth
+      tags: [ns.gw-ae880]
+      protocols: [http, https]
+      config:
+        key_names: ["X-API-KEY"]
+        run_on_preflight: true
+        hide_credentials: true
+        key_in_body: false
+    - name: kong-upstream-jwt
+      service: vdyp-ui-dev
+      tags: [ns.gw-ae880]
+      config:
+        header: GW-JWT
+        include_credential_type: false
+  port: 80
+  protocol: http
+  routes:
+  - hosts:
+    - vdyp-ui-dev.dev.api.gov.bc.ca
+    id: 6c4e195b-64f7-523f-9480-54e741924bee
+    methods:
+    - GET
+    name: vdyp-ui-dev_~_get
+    paths:
+    - /api/v8
+    plugins: []
+    regex_priority: 200
+    strip_path: false
+    tags:
+    - ns.gw-ae880
+  - hosts:
+    - vdyp-ui-dev.dev.api.gov.bc.ca
+    id: bc98e3de-eab5-5563-b69d-8f7bb371efd8
+    methods:
+    - GET
+    name: vdyp-ui-dev_hcsv_get
+    paths:
+    - /api/v8/projection/hcsv
+    plugins: []
+    regex_priority: 200
+    strip_path: false
+    tags:
+    - ns.gw-ae880
+  - hosts:
+    - vdyp-ui-dev.dev.api.gov.bc.ca
+    id: c3d6f8a8-5658-54ad-ba13-b2d071e80109
+    methods:
+    - GET
+    name: vdyp-ui-dev_me_get
+    paths:
+    - /api/v8/projection/me
+    plugins: []
+    regex_priority: 200
+    strip_path: false
+    tags:
+    - ns.gw-ae880
+  tags:
+  - ns.gw-ae880
+upstreams: []
