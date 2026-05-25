@@ -8,6 +8,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.item.ExecutionContext;
+
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+
 public final class BatchUtils {
 
 	private BatchUtils() {
@@ -199,6 +205,22 @@ public final class BatchUtils {
 		String sanitized = (base + "_All Files").replaceAll("[^a-zA-Z0-9._\\-]", "_").replaceAll("_+", "_")
 				.replaceAll("(^_)|(_$)", "");
 		return sanitized + ".zip";
+	}
+
+	public static VDYPProjectionProgressUpdate buildFinalProgress(String jobGuid, JobExecution jobExecution) {
+		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+		int polygonsProcessed = 0;
+		int errorCount = 0;
+		int polygonsSkipped = 0;
+		for (StepExecution step : jobExecution.getStepExecutions()) {
+			if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
+				ExecutionContext stepCtx = step.getExecutionContext();
+				polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
+				errorCount += stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
+				polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
+			}
+		}
+		return new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped);
 	}
 
 	public static void confirmDirectoryExists(Path dirPath) throws IOException {
