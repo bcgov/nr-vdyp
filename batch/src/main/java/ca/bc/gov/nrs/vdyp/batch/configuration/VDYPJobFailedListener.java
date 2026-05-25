@@ -9,6 +9,7 @@ import org.springframework.lang.NonNull;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 public class VDYPJobFailedListener implements JobExecutionListener {
 	private static final Logger logger = LoggerFactory.getLogger(VDYPJobFailedListener.class);
@@ -31,7 +32,7 @@ public class VDYPJobFailedListener implements JobExecutionListener {
 					"[GUID: {}] [Job Failed Listener] Job execution ID: {} Projection GUID: {} Status:{} Updating Vdyp backend",
 					jobGuid, projectionGUID, jobExecution.getId(), status
 			);
-			vdypClient.markComplete(projectionGUID, false);
+			vdypClient.markComplete(projectionGUID, false, BatchUtils.buildFinalProgress(jobGuid, jobExecution));
 		}
 	}
 }

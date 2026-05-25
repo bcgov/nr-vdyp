@@ -563,11 +563,16 @@ public class ProjectionService {
 	}
 
 	@Transactional
-	public ProjectionModel updateCompleteStatus(VDYPUserModel actingUser, UUID projectionGUID, boolean success)
-			throws ProjectionServiceException {
+	public ProjectionModel updateCompleteStatus(
+			VDYPUserModel actingUser, UUID projectionGUID, boolean success, ProjectionProgressUpdate progressUpdate
+	) throws ProjectionServiceException {
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.COMPLETE_PROJECTION);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.COMPLETE_PROJECTION);
+
+		if (progressUpdate != null) {
+			batchMappingService.updateProgress(entity, progressUpdate);
+		}
 
 		ProjectionStatusCodeEntity status = statusLookup
 				.requireEntity(success ? ProjectionStatusCodeModel.READY : ProjectionStatusCodeModel.FAILED);

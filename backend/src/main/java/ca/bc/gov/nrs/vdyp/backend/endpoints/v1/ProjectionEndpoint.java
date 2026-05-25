@@ -294,13 +294,16 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed("SYSTEM")
 	@Path("/{projectionGUID}/complete")
 	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({ MediaType.APPLICATION_JSON })
 	@Tag(
 			name = "Set a Projections Status", description = "(System Only) Updates as a projection status to complete after processing."
 	)
 	public Response updateCompleteProjectionStatus(
-			@PathParam("projectionGUID") UUID projectionGUID, @QueryParam("success") boolean success
+			@PathParam("projectionGUID") UUID projectionGUID, @QueryParam("success") boolean success,
+			ProjectionProgressUpdate progressUpdate
 	) throws ProjectionServiceException {
-		var started = projectionService.updateCompleteStatus(currentUser.getUser(), projectionGUID, success);
+		var started = projectionService
+				.updateCompleteStatus(currentUser.getUser(), projectionGUID, success, progressUpdate);
 		return Response.status(Status.OK).entity(started).build();
 	}
 

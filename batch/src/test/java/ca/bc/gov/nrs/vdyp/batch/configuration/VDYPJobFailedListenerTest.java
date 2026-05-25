@@ -7,6 +7,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +22,7 @@ import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -50,12 +53,14 @@ class VDYPJobFailedListenerTest {
 		when(jobExecution.getId()).thenReturn(1L);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobExecution.getStatus()).thenReturn(BatchStatus.FAILED);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
 
 		listener.afterJob(jobExecution);
 
 		verify(jobExecution, atLeastOnce()).getId();
 		verify(jobExecution, atLeastOnce()).getJobParameters();
-		verify(vdypClient, atLeastOnce()).markComplete(any(), eq(false));
+		verify(vdypClient, atLeastOnce()).markComplete(any(), eq(false), any());
 	}
 
 	@ParameterizedTest
@@ -71,6 +76,6 @@ class VDYPJobFailedListenerTest {
 
 		listener.afterJob(jobExecution);
 
-		verify(vdypClient, never()).markComplete(any(), eq(false));
+		verify(vdypClient, never()).markComplete(any(), eq(false), any());
 	}
 }

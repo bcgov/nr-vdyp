@@ -68,7 +68,9 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 				);
 			}
 
-			vdypClient.markComplete(projectionGUID, true);
+			vdypClient.markComplete(
+					projectionGUID, true, BatchUtils.buildFinalProgress(jobGuid, stepExecution.getJobExecution())
+			);
 
 			logger.debug("Completed persistence of result zip file to COMS.");
 		} catch (Exception e) {

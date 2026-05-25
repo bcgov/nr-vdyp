@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +28,7 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
@@ -132,6 +134,8 @@ class ResultPersistenceTaskletTest {
 				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()) //
 				.toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
 		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
 		when(details.resultFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));
@@ -167,6 +171,8 @@ class ResultPersistenceTaskletTest {
 				.addString(BatchConstants.Job.TIMESTAMP, BatchUtils.createJobTimestamp()) //
 				.toJobParameters();
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
 		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
 		when(details.resultFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));

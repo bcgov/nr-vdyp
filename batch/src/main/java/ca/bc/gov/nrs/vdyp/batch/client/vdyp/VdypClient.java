@@ -71,13 +71,15 @@ public class VdypClient {
 				.body(FileMappingDetails.class);
 	}
 
-	public void markComplete(String projectionGUID, boolean success) {
+	public void markComplete(String projectionGUID, boolean success, VDYPProjectionProgressUpdate progressUpdate) {
 		vdypBackendReliableRestClient.post() //
 				.uri(
 						b -> b.path("/api/v8/projection/{projectionGUID}/complete") //
 								.queryParam("success", success) //
 								.build(projectionGUID)
 				) //
+				.contentType(MediaType.APPLICATION_JSON) //
+				.body(progressUpdate) //
 				.retrieve() //
 				.body(Void.class);
 	}
