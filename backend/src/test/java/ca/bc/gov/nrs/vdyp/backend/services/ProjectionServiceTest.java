@@ -27,6 +27,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,6 +72,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
+import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
@@ -1591,5 +1593,133 @@ class ProjectionServiceTest {
 		assertNotNull(model);
 		assertEquals(entity.getProjectionGUID(), UUID.fromString(model.getProjectionGUID()));
 		assertEquals(mapping, model.getBatchMapping());
+	}
+
+	// ==========================================================
+	// updateCompleteStatus
+	// ==========================================================
+
+	@Test
+	void updateCompleteStatus_withNullProgressUpdate_doesNotCallBatchMappingService()
+			throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		ProjectionEntity entity = projectionEntity(
+				projectionGUID, UUID.randomUUID(), ProjectionStatusCodeModel.RUNNING
+		);
+		UserTypeCodeModel systemUserType = new UserTypeCodeModel();
+		systemUserType.setCode(UserTypeCodeModel.SYSTEM);
+		VDYPUserModel systemUser = new VDYPUserModel();
+		systemUser.setUserTypeCode(systemUserType);
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.READY))
+				.thenReturn(statusCode(ProjectionStatusCodeModel.READY));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		service.updateCompleteStatus(systemUser, projectionGUID, true, null);
+
+		verify(batchMappingService, never()).updateProgress(any(), any());
+	}
+
+	@Test
+	void updateCompleteStatus_withProgressUpdate_callsBatchMappingService() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		ProjectionEntity entity = projectionEntity(
+				projectionGUID, UUID.randomUUID(), ProjectionStatusCodeModel.RUNNING
+		);
+		UserTypeCodeModel systemUserType = new UserTypeCodeModel();
+		systemUserType.setCode(UserTypeCodeModel.SYSTEM);
+		VDYPUserModel systemUser = new VDYPUserModel();
+		systemUser.setUserTypeCode(systemUserType);
+		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1, 1);
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.READY))
+				.thenReturn(statusCode(ProjectionStatusCodeModel.READY));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		service.updateCompleteStatus(systemUser, projectionGUID, true, progressUpdate);
+
+		verify(batchMappingService).updateProgress(entity, progressUpdate);
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - updateCompleteProjectionStatus
+	// ==========================================================
+
+	@Test
+	void endpoint_updateCompleteProjectionStatus_returnsOk_withProgressUpdate() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1, 1);
+
+		ProjectionModel model = new ProjectionModel();
+		model.setProjectionGUID(projectionGUID.toString());
+		when(mockService.updateCompleteStatus(actingUser, projectionGUID, true, progressUpdate)).thenReturn(model);
+
+		Response response = endpoint.updateCompleteProjectionStatus(projectionGUID, true, progressUpdate);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		assertThat(response.getEntity()).isSameAs(model);
+	}
+
+	@Test
+	void endpoint_updateCompleteProjectionStatus_returnsOk_withNullProgressUpdate() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		ProjectionModel model = new ProjectionModel();
+		model.setProjectionGUID(projectionGUID.toString());
+		when(mockService.updateCompleteStatus(actingUser, projectionGUID, false, null)).thenReturn(model);
+
+		Response response = endpoint.updateCompleteProjectionStatus(projectionGUID, false, null);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		verify(mockService).updateCompleteStatus(actingUser, projectionGUID, false, null);
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - streamResultsZip
+	// ==========================================================
+
+	@Test
+	void endpoint_streamResultsZip_returnsOk_whenResultFilesExist() throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		UUID fileSetGUID = UUID.randomUUID();
+		UUID fileMappingGUID = UUID.randomUUID();
+
+		ProjectionEntity entity = new ProjectionEntity();
+		entity.setProjectionGUID(projectionGUID);
+		entity.setResultFileSet(fileSetEntity(fileSetGUID));
+
+		FileMappingModel fileWithUrl = fileMappingModel(fileMappingGUID, UUID.randomUUID());
+		fileWithUrl.setDownloadURL(new URL("http://example.com/result.zip"));
+
+		when(mockService.getProjectionEntity(projectionGUID)).thenReturn(entity);
+		when(mockService.getAllFileSetFiles(projectionGUID, fileSetGUID, actingUser)).thenReturn(List.of(fileWithUrl));
+		when(mockService.getFileForDownload(projectionGUID, fileSetGUID, fileMappingGUID, actingUser))
+				.thenReturn(fileWithUrl);
+
+		Response response = endpoint.streamResultsZip(projectionGUID, null);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
 	}
 }

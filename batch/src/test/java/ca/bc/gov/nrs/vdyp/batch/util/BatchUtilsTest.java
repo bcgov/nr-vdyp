@@ -1,11 +1,20 @@
 package ca.bc.gov.nrs.vdyp.batch.util;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.item.ExecutionContext;
+
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 
 class BatchUtilsTest {
 	@Test
@@ -93,5 +102,60 @@ class BatchUtilsTest {
 		String reformatted = formatter.format(parsed);
 
 		assertEquals(timestamp, reformatted);
+	}
+
+	@Test
+	void buildFinalProgress_emptySteps_returnsZeroCounts() {
+		JobExecution jobExecution = mock(JobExecution.class);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
+
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution);
+
+		assertEquals("job-guid", result.batchJobGUID());
+		assertEquals(0, result.totalPolygons());
+		assertEquals(0, result.polygonsProcessed());
+		assertEquals(0, result.projectionErrors());
+		assertEquals(0, result.polygonsSkipped());
+	}
+
+	@Test
+	void buildFinalProgress_workerSteps_accumulatesCounts() {
+		JobExecution jobExecution = mock(JobExecution.class);
+		ExecutionContext jobContext = new ExecutionContext();
+		jobContext.putInt(BatchConstants.Job.TOTAL_POLYGONS, 10);
+		when(jobExecution.getExecutionContext()).thenReturn(jobContext);
+
+		StepExecution workerStep = mock(StepExecution.class);
+		when(workerStep.getStepName()).thenReturn(BatchConstants.Job.WORKER_STEP_NAME + ":partition0");
+		ExecutionContext stepContext = new ExecutionContext();
+		stepContext.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 8);
+		stepContext.putInt(BatchConstants.Job.PROJECTION_ERRORS, 1);
+		stepContext.putInt(BatchConstants.Job.POLYGONS_SKIPPED, 1);
+		when(workerStep.getExecutionContext()).thenReturn(stepContext);
+		when(jobExecution.getStepExecutions()).thenReturn(List.of(workerStep));
+
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution);
+
+		assertEquals(10, result.totalPolygons());
+		assertEquals(8, result.polygonsProcessed());
+		assertEquals(1, result.projectionErrors());
+		assertEquals(1, result.polygonsSkipped());
+	}
+
+	@Test
+	void buildFinalProgress_nonWorkerStepIgnored() {
+		JobExecution jobExecution = mock(JobExecution.class);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+
+		StepExecution nonWorkerStep = mock(StepExecution.class);
+		when(nonWorkerStep.getStepName()).thenReturn("someOtherStep");
+		when(jobExecution.getStepExecutions()).thenReturn(List.of(nonWorkerStep));
+
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution);
+
+		assertEquals(0, result.polygonsProcessed());
+		assertEquals(0, result.projectionErrors());
+		assertEquals(0, result.polygonsSkipped());
 	}
 }

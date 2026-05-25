@@ -33,6 +33,8 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriBuilder;
 
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+
 @ExtendWith(MockitoExtension.class)
 class VdypClientTest {
 
@@ -202,6 +204,30 @@ class VdypClientTest {
 
 		Object part = formCaptor.getValue().getFirst("file");
 		assertInstanceOf(FileSystemResource.class, part);
+	}
+
+	@Test
+	void markComplete_buildsExpectedUri_andSendsProgressUpdate() {
+		String projectionGuid = "proj-123";
+		VDYPProjectionProgressUpdate progressUpdate = new VDYPProjectionProgressUpdate("job-guid", 10, 8, 1, 1);
+
+		var req = mock(RestClient.RequestBodyUriSpec.class);
+		var resp = mock(RestClient.ResponseSpec.class);
+		when(restClient.post()).thenReturn(req);
+		when(req.uri(ArgumentMatchers.<Function<UriBuilder, URI>>any())).thenReturn(req);
+		when(req.contentType(MediaType.APPLICATION_JSON)).thenReturn(req);
+		doReturn(req).when(req).body(any(VDYPProjectionProgressUpdate.class));
+		when(req.retrieve()).thenReturn(resp);
+		when(resp.body(Void.class)).thenReturn(null);
+
+		client.markComplete(projectionGuid, true, progressUpdate);
+
+		@SuppressWarnings("unchecked")
+		ArgumentCaptor<Function<UriBuilder, URI>> uriCaptor = ArgumentCaptor.forClass(Function.class);
+		verify(req).uri(uriCaptor.capture());
+
+		URI built = uriCaptor.getValue().apply(new DefaultUriBuilderFactory(BASE_URL).builder());
+		assertEquals(BASE_URL + "/api/v8/projection/" + projectionGuid + "/complete?success=true", built.toString());
 	}
 
 }
