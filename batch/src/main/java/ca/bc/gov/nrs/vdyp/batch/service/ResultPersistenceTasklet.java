@@ -9,8 +9,10 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.stereotype.Component;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
@@ -18,6 +20,8 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultPersistenceException;
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 @Component
@@ -68,13 +72,29 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 				);
 			}
 
-			vdypClient.markComplete(projectionGUID, true);
+			vdypClient.markComplete(projectionGUID, true, buildFinalProgress(stepExecution.getJobExecution()));
 
 			logger.debug("Completed persistence of result zip file to COMS.");
 		} catch (Exception e) {
 			throw BatchResultPersistenceException
 					.handleResultPersistenceFailure(e, "Failed to persist result zip to COMS.", jobGuid, jobId, logger);
 		}
+	}
+
+	private VDYPProjectionProgressUpdate buildFinalProgress(JobExecution jobExecution) {
+		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+		int polygonsProcessed = 0;
+		int errorCount = 0;
+		int polygonsSkipped = 0;
+		for (StepExecution step : jobExecution.getStepExecutions()) {
+			if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
+				ExecutionContext stepCtx = step.getExecutionContext();
+				polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
+				errorCount += stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
+				polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
+			}
+		}
+		return new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped);
 	}
 
 }
