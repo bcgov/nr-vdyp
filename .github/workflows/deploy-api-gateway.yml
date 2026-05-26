@@ -15,7 +15,6 @@ on:
       TARGET_ENVIRONMENT:
         type: string
         required: true
-  pull_request:
 
 jobs:
   publish:
@@ -39,6 +38,7 @@ jobs:
             echo 'ENV_URL_COMPONENT=""' >> $GITHUB_OUTPUT
           else
             echo 'ENV_URL_COMPONENT=".${{inputs.TARGET_ENVIRONMENT}}"' >> $GITHUB_OUTPUT
+          fi
 
       - name: Replace tokens in gateway yaml
         uses: cschleiden/replace-tokens@v1
