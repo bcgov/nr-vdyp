@@ -15,6 +15,7 @@ on:
       TARGET_ENVIRONMENT:
         type: string
         required: true
+  pull_request:
 
 jobs:
   publish:
