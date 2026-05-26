@@ -94,44 +94,7 @@ const meta: Meta<typeof ProjectionTable> = {
       control: { type: 'object' },
       description: 'Array of projection GUIDs currently selected for bulk actions.',
     },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
-A desktop table component for displaying projections. This component is used in the ProjectionListView when the screen width is above 1025px.
-
-**Features:**
-- Checkbox column for bulk row selection (header checkbox selects/deselects all)
-- Sortable columns with visual indicators
-- Hover tooltips showing full content for truncated cells
-- Status icons for each projection state
-- Action menu for each row with status-dependent options:
-  - **Draft**: Edit, Duplicate, Delete
-  - **Ready**: View, Duplicate, Download, Delete
-  - **Running**: Cancel, Delete
-  - **Failed**: Edit, Duplicate, Download, Delete
-
-**Events:**
-- \`sort\` - emitted when a sortable header is clicked
-- \`rowClick\` - emitted when a row is clicked (excluding checkbox/actions cells)
-- \`selectionChange\` - emitted with updated array of selected GUIDs when checkboxes change
-- \`view\`, \`edit\`, \`duplicate\`, \`download\`, \`cancel\`, \`delete\` - action menu events
-
-**Column widths are fixed:**
-- Checkbox: 44px
-- Projection Title: 180px
-- Description: 270px
-- Method: 160px
-- Projection Type: 130px
-- Last Updated: 130px
-- Expiration: 100px
-- Status: 110px
-- Actions: 50px
-        `,
-      },
-    },
-  },
+  }
 }
 
 export default meta
@@ -179,14 +142,7 @@ export const Default: Story = {
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
     selectedGUIDs: [],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Default table view showing multiple projections with different statuses.',
-      },
-    },
-  },
+  }
 }
 
 export const SortedByTitle: Story = {
@@ -230,14 +186,7 @@ export const SortedByTitle: Story = {
     sortBy: 'title',
     sortOrder: 'asc',
     selectedGUIDs: [],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Table sorted by Projection Title in ascending order.',
-      },
-    },
-  },
+  }
 }
 
 export const SingleDraftRow: Story = {
@@ -275,14 +224,7 @@ export const SingleDraftRow: Story = {
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
     selectedGUIDs: [],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Single Draft row showing Edit, Duplicate, and Delete actions in the menu.',
-      },
-    },
-  },
+  }
 }
 
 export const SingleReadyRow: Story = {
@@ -320,14 +262,7 @@ export const SingleReadyRow: Story = {
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
     selectedGUIDs: [],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Single Ready row showing View, Duplicate, Download, and Delete actions.',
-      },
-    },
-  },
+  }
 }
 
 export const SingleRunningRow: Story = {
@@ -365,14 +300,7 @@ export const SingleRunningRow: Story = {
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
     selectedGUIDs: [],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Single Running row showing Cancel and Delete actions.',
-      },
-    },
-  },
+  }
 }
 
 export const SingleFailedRow: Story = {
@@ -410,14 +338,7 @@ export const SingleFailedRow: Story = {
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
     selectedGUIDs: [],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Single Failed row showing Edit, Duplicate, Download, and Delete actions.',
-      },
-    },
-  },
+  }
 }
 
 export const SomeRowsSelected: Story = {
@@ -464,15 +385,7 @@ export const SomeRowsSelected: Story = {
       '63c26de0-f6f3-42c2-bbb2-3c2b1e60d033',
       '63c26de0-f6f3-42c2-ccc2-3c2b1e60d033',
     ],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Two of four rows pre-selected, showing highlighted row background and indeterminate state on the header checkbox.',
-      },
-    },
-  },
+  }
 }
 
 export const AllRowsSelected: Story = {
@@ -516,14 +429,7 @@ export const AllRowsSelected: Story = {
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
     selectedGUIDs: sampleProjections.map((p) => p.projectionGUID),
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'All rows selected, showing all row highlights and the header checkbox in a fully checked state.',
-      },
-    },
-  },
+  }
 }
 
 export const LongContent: Story = {
@@ -573,15 +479,7 @@ export const LongContent: Story = {
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
     selectedGUIDs: [],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Row with very long title and description to demonstrate text truncation with ellipsis and tooltip on hover.',
-      },
-    },
-  },
+  }
 }
 
 export const ManyRows: Story = {
@@ -674,14 +572,7 @@ export const ManyRows: Story = {
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
     selectedGUIDs: [],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Table with many rows showing alternating row backgrounds.',
-      },
-    },
-  },
+  }
 }
 
 export const EmptyTable: Story = {
@@ -715,12 +606,5 @@ export const EmptyTable: Story = {
     sortBy: 'lastUpdated',
     sortOrder: 'desc',
     selectedGUIDs: [],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Empty table showing headers and the "No projections found" empty state message.',
-      },
-    },
-  },
+  }
 }

@@ -426,7 +426,7 @@ const yearIncrementError = ref<string>('')
 
 const validateTitle = (): boolean => {
   if (!localReportTitle.value || localReportTitle.value.trim() === '') {
-    titleError.value = 'Report Title is required.'
+    titleError.value = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_REPORT_TITLE_REQ
     return false
   }
   titleError.value = ''
@@ -456,20 +456,21 @@ const validateNumericRange = (
 const validateAgeFields = (): boolean => {
   const { STARTING_AGE_MIN, STARTING_AGE_MAX, FINISHING_AGE_MIN, FINISHING_AGE_MAX, AGE_INC_MIN, AGE_INC_MAX } =
     CONSTANTS.NUM_INPUT_LIMITS
-  const { RPT_VLD_START_AGE_RNG, RPT_VLD_START_FNSH_RNG, RPT_VLD_AGE_INC_RNG, RPT_VLD_COMP_FNSH_AGE } =
+  const { RPT_VLD_START_AGE_RNG, RPT_VLD_START_FNSH_RNG, RPT_VLD_AGE_INC_RNG, RPT_VLD_COMP_FNSH_AGE,
+    RPT_VLD_START_AGE_REQ, RPT_VLD_FNSH_AGE_REQ, RPT_VLD_AGE_INC_REQ } =
     MESSAGE.MDL_PRM_INPUT_ERR
 
   let isValid = validateNumericRange(
     localStartingAge.value, STARTING_AGE_MIN, STARTING_AGE_MAX,
-    'Starting Age is required.', RPT_VLD_START_AGE_RNG(STARTING_AGE_MIN, STARTING_AGE_MAX), startingAgeError,
+    RPT_VLD_START_AGE_REQ, RPT_VLD_START_AGE_RNG(STARTING_AGE_MIN, STARTING_AGE_MAX), startingAgeError,
   )
   isValid = validateNumericRange(
     localFinishingAge.value, FINISHING_AGE_MIN, FINISHING_AGE_MAX,
-    'Finishing Age is required.', RPT_VLD_START_FNSH_RNG(FINISHING_AGE_MIN, FINISHING_AGE_MAX), finishingAgeError,
+    RPT_VLD_FNSH_AGE_REQ, RPT_VLD_START_FNSH_RNG(FINISHING_AGE_MIN, FINISHING_AGE_MAX), finishingAgeError,
   ) && isValid
   isValid = validateNumericRange(
     localAgeIncrement.value, AGE_INC_MIN, AGE_INC_MAX,
-    'Increment is required.', RPT_VLD_AGE_INC_RNG(AGE_INC_MIN, AGE_INC_MAX), ageIncrementError,
+    RPT_VLD_AGE_INC_REQ, RPT_VLD_AGE_INC_RNG(AGE_INC_MIN, AGE_INC_MAX), ageIncrementError,
   ) && isValid
 
   if (localStartingAge.value !== null && localStartingAge.value.trim() !== '' &&
@@ -485,20 +486,21 @@ const validateAgeFields = (): boolean => {
 const validateYearFields = (): boolean => {
   const { START_YEAR_MIN, START_YEAR_MAX, END_YEAR_MIN, END_YEAR_MAX, YEAR_INC_MIN, YEAR_INC_MAX } =
     CONSTANTS.NUM_INPUT_LIMITS
-  const { RPT_VLD_START_YEAR_RNG, RPT_VLD_END_YEAR_RNG, RPT_VLD_YEAR_INC_RNG, RPT_VLD_COMP_END_YEAR } =
+  const { RPT_VLD_START_YEAR_RNG, RPT_VLD_END_YEAR_RNG, RPT_VLD_YEAR_INC_RNG, RPT_VLD_COMP_END_YEAR,
+    RPT_VLD_START_YEAR_REQ, RPT_VLD_END_YEAR_REQ, RPT_VLD_YEAR_INC_REQ } =
     MESSAGE.MDL_PRM_INPUT_ERR
 
   let isValid = validateNumericRange(
     localStartYear.value, START_YEAR_MIN, START_YEAR_MAX,
-    'Start Year is required.', RPT_VLD_START_YEAR_RNG(START_YEAR_MIN, START_YEAR_MAX), startYearError,
+    RPT_VLD_START_YEAR_REQ, RPT_VLD_START_YEAR_RNG(START_YEAR_MIN, START_YEAR_MAX), startYearError,
   )
   isValid = validateNumericRange(
     localEndYear.value, END_YEAR_MIN, END_YEAR_MAX,
-    'End Year is required.', RPT_VLD_END_YEAR_RNG(END_YEAR_MIN, END_YEAR_MAX), endYearError,
+    RPT_VLD_END_YEAR_REQ, RPT_VLD_END_YEAR_RNG(END_YEAR_MIN, END_YEAR_MAX), endYearError,
   ) && isValid
   isValid = validateNumericRange(
     localYearIncrement.value, YEAR_INC_MIN, YEAR_INC_MAX,
-    'Increment is required.', RPT_VLD_YEAR_INC_RNG(YEAR_INC_MIN, YEAR_INC_MAX), yearIncrementError,
+    RPT_VLD_YEAR_INC_REQ, RPT_VLD_YEAR_INC_RNG(YEAR_INC_MIN, YEAR_INC_MAX), yearIncrementError,
   ) && isValid
 
   if (localStartYear.value !== null && localStartYear.value.trim() !== '' &&
