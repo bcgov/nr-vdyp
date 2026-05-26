@@ -19,8 +19,8 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    env:
-      GW: <gatewayId> # replace with your gateway ID
+    environment:
+      name: ${{ inputs.TARGET_ENVIRONMENT }}
     steps:
       - uses: actions/checkout@v6
 
