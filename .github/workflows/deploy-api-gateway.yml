@@ -1,0 +1,62 @@
+name: Publish Gateway Configuration
+
+on:
+  workflow_dispatch:
+    inputs:
+      TARGET_ENVIRONMENT:
+        type: choice
+        required: true
+        options: 
+          - dev
+          - test
+          - prod
+  workflow_call:
+    inputs:
+      TARGET_ENVIRONMENT:
+        type: string
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GW: <gatewayId> # replace with your gateway ID
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Get GWA Command Line
+        run: |
+          GWA_CLI_VERSION=v3.1.1
+          curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_Linux_x86_64.tgz
+          tar -xf gwa_Linux_x86_64.tgz
+      
+      - name: Get environment url component
+        id: get-url-environment-component
+        run: |
+          if [[ ${{inputs.TARGET_ENVIRONMENT}} == "prod" ]]
+          then
+            echo 'ENV_URL_COMPONENT=""' >> $GITHUB_OUTPUT
+          else
+            echo 'ENV_URL_COMPONENT=".${{inputs.TARGET_ENVIRONMENT}}"' >> $GITHUB_OUTPUT
+
+      - name: Replace tokens in gateway yaml
+        uses: cschleiden/replace-tokens@v1
+        with:
+          files: 'charts/api-gateway/gw.yaml'
+        env:
+          GATEWAY_ID: ${{vars.GATEWAY_ID}}
+          TARGET_ENV: ${{inputs.TARGET_ENVIRONMENT}}
+          ENV_URL_COMPONENT: ${{ steps.get-url-environment-component.outputs.ENV_URL_COMPONENT }}
+
+      - name: Apply Gateway Configuration
+        run: |
+          export PATH=`pwd`:$PATH
+
+          cd charts/api-gateway
+
+          gwa login \
+          --client-id=${{ secrets.GWA_CLIENT_ID }} \
+          --client-secret=${{ secrets.GWA_CLIENT_SECRET }}
+          gwa config set gateway ${{ vars.GATEWAY_ID }}
+
+          gwa pg gw-config.yaml
