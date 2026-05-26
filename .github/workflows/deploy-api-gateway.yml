@@ -60,4 +60,4 @@ jobs:
           --client-secret=${{ secrets.GWA_CLIENT_SECRET }}
           gwa config set gateway ${{ vars.GATEWAY_ID }}
 
-          gwa pg gw-config.yaml
+          gwa pg gw.yaml -D
