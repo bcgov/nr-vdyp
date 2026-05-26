@@ -1,4 +1,4 @@
-name: Publish Gateway Configuration
+name: publish-gateway-config
 
 on:
   workflow_dispatch:
