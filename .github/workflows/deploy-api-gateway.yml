@@ -48,7 +48,7 @@ jobs:
       - name: Replace tokens in gateway yaml
         uses: cschleiden/replace-tokens@63252851d87eb5cb853019ba8538b5c51813779d
         with:
-          files: 'charts/api-gateway/gw.yaml'
+          files: '["charts/api-gateway/*.yaml"]'
         env:
           GATEWAY_ID: ${{vars.GATEWAY_ID}}
           TARGET_ENV: ${{inputs.TARGET_ENVIRONMENT}}
@@ -69,3 +69,4 @@ jobs:
           gwa config set gateway ${{ vars.GATEWAY_ID }}
 
           gwa pg gw.yaml -D
+          gwa apply -i product.yaml

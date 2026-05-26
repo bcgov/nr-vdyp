@@ -24,7 +24,7 @@ services:
     - vdyp#{ENV_URL_COMPONENT}#.api.gov.bc.ca
     methods:
     - GET
-    name: vdyp-ui-#{TARGET_ENV}#_~_get
+    name: vdyp-#{TARGET_ENV}#_~_get
     paths:
     - /api/v8
     plugins: []
@@ -36,7 +36,7 @@ services:
     - vdyp#{ENV_URL_COMPONENT}#.api.gov.bc.ca
     methods:
     - GET
-    name: vdyp-ui-#{TARGET_ENV}#_hcsv_get
+    name: vdyp-#{TARGET_ENV}#_hcsv_get
     paths:
     - /api/v8/projection/hcsv
     plugins: []
@@ -48,7 +48,7 @@ services:
     - vdyp#{ENV_URL_COMPONENT}#.api.gov.bc.ca
     methods:
     - GET
-    name: vdyp-ui-#{TARGET_ENV}#_me_get
+    name: vdyp-#{TARGET_ENV}#_me_get
     paths:
     - /api/v8/projection/me
     plugins: []
