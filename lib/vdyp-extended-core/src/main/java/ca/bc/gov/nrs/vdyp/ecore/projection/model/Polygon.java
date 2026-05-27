@@ -432,6 +432,21 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
+	public void addCheckedMessage(PolygonMessage message) {
+		if (messageOkToAdd(message)) {
+			addMessage(message);
+		}
+	}
+
+	public boolean messageOkToAdd(PolygonMessage message) {
+		for (PolygonMessage m : getMessages()) {
+			if (m.getKind() == message.getKind()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public void addMessage(PolygonMessage message) {
 		ensureUnlocked();
 
