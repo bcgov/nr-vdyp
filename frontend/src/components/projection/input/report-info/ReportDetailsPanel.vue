@@ -230,7 +230,7 @@ watch(localReportDescription, (v) => { modelParameterStore.reportDescription = v
 
 const validateTitle = () => {
   if (!localReportTitle.value || localReportTitle.value.trim() === '') {
-    titleError.value = 'Report Title is required.'
+    titleError.value = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_REPORT_TITLE_REQ
     return false
   }
   titleError.value = ''

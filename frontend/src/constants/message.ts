@@ -114,6 +114,7 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
     `The species '${selectedSiteSpeciesValue}' must have an BHA 50 Site Index value supplied`,
   SITE_VLD_SPCZ_REQ_SI_VAL_NEW_UI: (selectedSiteSpeciesValue: string | null) =>
     `The species '${selectedSiteSpeciesValue}' must have an BHA Site Index value supplied`,
+  DENSITY_VLD_PCT_STCB_AREA_REQ: 'Percent Stockable Area is required.',
   DENSITY_VLD_PCT_STCB_AREA_RNG:
     "'Percent Stockable Area' must range from 0 and 100",
   DENSITY_VLD_BSL_AREA_RNG: "'Basal Area' must range from 0.1000 and 250.0000",
@@ -137,7 +138,13 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
     `'End Year' must range from ${endYearMin} and ${endYearMax}`,
   RPT_VLD_YEAR_INC_RNG: (yearIncMin: number, yearIncMax: number) =>
     `'Increment' must range from ${yearIncMin} and ${yearIncMax}`,
-  RPT_VLD_REPORT_TITLE_REQ: 'Please enter a Report Title.',
+  RPT_VLD_REPORT_TITLE_REQ: 'Report Title is required.',
+  RPT_VLD_START_AGE_REQ: 'Starting Age is required.',
+  RPT_VLD_FNSH_AGE_REQ: 'Finishing Age is required.',
+  RPT_VLD_AGE_INC_REQ: 'Increment is required.',
+  RPT_VLD_START_YEAR_REQ: 'Start Year is required.',
+  RPT_VLD_END_YEAR_REQ: 'End Year is required.',
+  RPT_VLD_YEAR_INC_REQ: 'Increment is required.',
   RPT_VLD_PROJECTION_TYPE_REQ: 'Please select a Projection Type.',
 })
 
