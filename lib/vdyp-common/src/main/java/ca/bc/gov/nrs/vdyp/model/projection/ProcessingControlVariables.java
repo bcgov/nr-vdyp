@@ -1,10 +1,9 @@
-package ca.bc.gov.nrs.vdyp.forward.model;
+package ca.bc.gov.nrs.vdyp.model.projection;
 
 import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
 
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
-import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 
 /**
  * Control Variable values
@@ -54,7 +53,7 @@ import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
  * <li>1: Yes (normal)
  * </ul>
  */
-public class ForwardControlVariables {
+public class ProcessingControlVariables extends ControlVariables {
 
 	// NOTE:
 	//
@@ -71,7 +70,7 @@ public class ForwardControlVariables {
 
 	private final int[] controlVariables = new int[10];
 
-	public ForwardControlVariables(Integer[] controlVariableValues) throws ValueParseException {
+	public ProcessingControlVariables(Integer[] controlVariableValues) throws ValueParseException {
 		int index = 0;
 
 		if (controlVariableValues != null) {

@@ -6,7 +6,7 @@ import java.util.Optional;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
@@ -14,10 +14,10 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
-public abstract class ProcessingState<RCM extends ResolvedControlMap, LS extends LayerProcessingState<RCM, LS>> {
+public abstract class ProcessingState<LS extends LayerProcessingState<LS>> {
 
 	/** The control map defining the context of the execution */
-	public final RCM controlMap;
+	public final ProcessingResolvedControlMap controlMap;
 
 	/** The estimators instance used by this engine */
 	public final EstimationMethods estimators;
@@ -40,7 +40,7 @@ public abstract class ProcessingState<RCM extends ResolvedControlMap, LS extends
 		this.computers = new ComputationMethods(estimators, appId);
 	}
 
-	protected abstract RCM resolveControlMap(Map<String, Object> controlMap);
+	protected abstract ProcessingResolvedControlMap resolveControlMap(Map<String, Object> controlMap);
 
 	protected abstract LS createLayerState(VdypPolygon polygon, VdypLayer layer) throws ProcessingException;
 

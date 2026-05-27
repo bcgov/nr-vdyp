@@ -6,6 +6,7 @@ import java.util.Optional;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -13,6 +14,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariables;
 
 public interface ResolvedControlMap {
 
@@ -107,4 +109,10 @@ public interface ResolvedControlMap {
 
 	/** 198 - MODIFIER_FILE */
 	MatrixMap2<String, Region, Float> getDecayModifierMap();
+
+	/** 199 - DEBUG_SWITCHES */
+	DebugSettings getDebugSettings();
+
+	/** 101 - VTROL */
+	ControlVariables getControlVariables();
 }

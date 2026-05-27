@@ -16,19 +16,20 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
 class Grow2CalculateBasalAreaDeltaTest {
 
 	protected static final Logger logger = LoggerFactory.getLogger(Grow2CalculateBasalAreaDeltaTest.class);
 
-	protected static ForwardControlParser parser;
+	protected static ProcessingControlParser parser;
 	protected static Map<String, Object> controlMap;
 
 	protected static StreamingParserFactory<PolygonIdentifier> polygonDescriptionStreamFactory;
@@ -39,7 +40,7 @@ class Grow2CalculateBasalAreaDeltaTest {
 	@SuppressWarnings("unchecked")
 	@BeforeEach
 	void beforeTest() throws IOException, ResourceParseException, ProcessingException {
-		parser = new ForwardControlParser();
+		parser = new ProcessingControlParser();
 		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
@@ -109,7 +110,7 @@ class Grow2CalculateBasalAreaDeltaTest {
 		float ba = 45.3864441f;
 		float hdDelta = 0.173380271f;
 
-		fpe.fps.controlMap.getDebugSettings().setValue(ForwardDebugSettings.BA_GROWTH_MODEL, 0);
+		fpe.fps.controlMap.getDebugSettings().setValue(ProcessingDebugSettings.BA_GROWTH_MODEL, 0);
 
 		float gba = fpe.calculateBasalAreaDelta(yabh, hd, ba, Optional.empty(), hdDelta);
 

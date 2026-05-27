@@ -31,11 +31,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.GrowthModel;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.LoreyHeightChangeStrategy;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.SpeciesDynamics;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
@@ -63,6 +58,11 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings.GrowthModel;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings.LoreyHeightChangeStrategy;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings.SpeciesDynamics;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
@@ -2068,7 +2068,7 @@ public class ForwardProcessingEngine {
 			float pspYabhStart, float pspDhStart, float baStart, Optional<Float> veteranLayerBaStart, float dhDelta
 	) throws StandProcessingException {
 
-		ForwardDebugSettings debugSettings = fps.controlMap.getDebugSettings();
+		ProcessingDebugSettings debugSettings = fps.controlMap.getDebugSettings();
 		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps
 				.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
@@ -2760,7 +2760,7 @@ public class ForwardProcessingEngine {
 	 * @throws ProcessingException
 	 */
 	private HashMap<UtilizationClassVariable, Float>
-			calculateSmallCompatibilityVariables(int speciesIndex, ForwardControlVariables forwardControlVariables) {
+			calculateSmallCompatibilityVariables(int speciesIndex, ProcessingControlVariables forwardControlVariables) {
 
 		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps
 				.getPrimaryLayerProcessingState();
@@ -3305,7 +3305,7 @@ public class ForwardProcessingEngine {
 	 * @param lps the layer processing state
 	 * @throws ProcessingException on serious calculation failures
 	 */
-	static void estimateMissingSiteIndicesAndAgesExtended(ForwardLayerProcessingState lps, ForwardDebugSettings fds)
+	static void estimateMissingSiteIndicesAndAgesExtended(ForwardLayerProcessingState lps, ProcessingDebugSettings fds)
 			throws ProcessingException {
 
 		Bank bank = lps.getBank();

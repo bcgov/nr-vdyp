@@ -3,9 +3,9 @@ package ca.bc.gov.nrs.vdyp.forward;
 import java.util.Map;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
-import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
@@ -18,7 +18,7 @@ public class ForwardProcessingState extends ProcessingState<ForwardResolvedContr
 
 	@Override
 	protected ForwardResolvedControlMap resolveControlMap(Map<String, Object> controlMap) {
-		return new ForwardResolvedControlMapImpl(controlMap);
+		return new ProcessingResolvedControlMapImpl(controlMap);
 	}
 
 	@Override

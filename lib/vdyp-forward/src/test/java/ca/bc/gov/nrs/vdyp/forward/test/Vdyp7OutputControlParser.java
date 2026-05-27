@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
-import ca.bc.gov.nrs.vdyp.forward.parsers.ForwardControlVariableParser;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageEquationGroupParser;
@@ -31,15 +29,17 @@ import ca.bc.gov.nrs.vdyp.io.parse.control.ResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingControlVariableParser;
 import ca.bc.gov.nrs.vdyp.io.parse.projection.VdypPolygonDescriptionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
 /**
  * Parser for VDYP control files
  *
  * @author Michael Junkin, Vivid Solutions
  */
-public class Vdyp7OutputControlParser extends BaseControlParser<ForwardDebugSettings> {
+public class Vdyp7OutputControlParser extends BaseControlParser<ProcessingDebugSettings> {
 
 	private static final Logger logger = LoggerFactory.getLogger(Vdyp7OutputControlParser.class);
 
@@ -119,7 +119,7 @@ public class Vdyp7OutputControlParser extends BaseControlParser<ForwardDebugSett
 
 		// 101 - a literal value of type VdypGrowthDetails
 
-		controlParser.record(ControlKey.VTROL, new ForwardControlVariableParser());
+		controlParser.record(ControlKey.VTROL, new ProcessingControlVariableParser());
 		orderedControlKeys.add(ControlKey.VTROL);
 
 		// 199 - debug switches
@@ -173,12 +173,12 @@ public class Vdyp7OutputControlParser extends BaseControlParser<ForwardDebugSett
 	}
 
 	@Override
-	protected DebugSettingsParser<ForwardDebugSettings> getDebugSettingsParser() {
+	protected DebugSettingsParser<ProcessingDebugSettings> getDebugSettingsParser() {
 		return new DebugSettingsParser<>() {
 
 			@Override
-			protected ForwardDebugSettings build(Integer[] debugSettingsValues) {
-				return new ForwardDebugSettings(debugSettingsValues);
+			protected ProcessingDebugSettings build(Integer[] debugSettingsValues) {
+				return new ProcessingDebugSettings(debugSettingsValues);
 			}
 
 		};

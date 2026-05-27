@@ -32,10 +32,10 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.RealProjectionResul
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ErrorMessageUtils;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
-import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
 
@@ -290,7 +290,7 @@ public class RealComponentRunner implements ComponentRunner {
 			if (state.didRunProjectionStage(ProjectionStageCode.Forward, projectionType)) {
 
 				try (var fis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.FORWARD_CONTROL_FILE_NAME)) {
-					var forwardControlFileParser = new ForwardControlParser();
+					var forwardControlFileParser = new ProcessingControlParser();
 					Map<String, Object> forwardControlMap = forwardControlFileParser
 							.parse(fis, vdypControlFileResolver, new HashMap<>());
 					forwardReader = new RealProjectionResultsReader(forwardControlMap);

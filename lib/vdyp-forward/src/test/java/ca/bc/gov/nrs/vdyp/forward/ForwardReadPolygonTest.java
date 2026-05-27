@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -29,6 +29,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 @SuppressWarnings({ "unchecked" })
@@ -37,9 +38,9 @@ class ForwardReadPolygonTest {
 	@Test
 	void testReadPolygons() throws Exception {
 
-		var parser = new ForwardControlParser();
+		var parser = new ProcessingControlParser();
 		Map<String, Object> controlMap = parse(parser, "VDYP.CTR");
-		controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
+		controlMap.put(ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
 		try {
 			var polygonDescriptionStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_GROWTO.name());
@@ -103,9 +104,10 @@ class ForwardReadPolygonTest {
 	@Test
 	void testReadPolygonsWithControlSpecifiedGrowthYear() throws Exception {
 
-		var parser = new ForwardControlParser();
+		var parser = new ProcessingControlParser();
 		Map<String, Object> controlMap = parse(parser, "VDYP.CTR");
-		controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { 130, 1, 2, 2, 1, 1, 1 }));
+		controlMap
+				.put(ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] { 130, 1, 2, 2, 1, 1, 1 }));
 		try {
 			var polygonDescriptionStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
 			var polygonDescriptionStream = ((StreamingParserFactory<PolygonIdentifier>) polygonDescriptionStreamFactory)
@@ -163,7 +165,7 @@ class ForwardReadPolygonTest {
 	@Test
 	void testReadPolygonsWithNoGrowthFile() throws Exception {
 
-		var parser = new ForwardControlParser();
+		var parser = new ProcessingControlParser();
 		Map<String, Object> controlMap = parse(parser, "VDYP.CTR");
 		controlMap.remove(ControlKey.FORWARD_INPUT_GROWTO.name());
 		try {
@@ -226,7 +228,7 @@ class ForwardReadPolygonTest {
 		return new SequenceInputStream(is, appendix);
 	}
 
-	static Map<String, ?> parseWithAppendix(ForwardControlParser parser, String... lines)
+	static Map<String, ?> parseWithAppendix(ProcessingControlParser parser, String... lines)
 			throws IOException, ResourceParseException {
 
 		Class<?> klazz = TestUtils.class;
@@ -235,7 +237,7 @@ class ForwardReadPolygonTest {
 		}
 	}
 
-	Map<String, Object> parse(ForwardControlParser parser, String resourceName)
+	Map<String, Object> parse(ProcessingControlParser parser, String resourceName)
 			throws IOException, ResourceParseException {
 
 		Class<?> klazz = TestUtils.class;

@@ -10,17 +10,17 @@ import org.opentest4j.AssertionFailedError;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingState;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class ForwardTestUtils {
@@ -64,8 +64,9 @@ public class ForwardTestUtils {
 
 	}
 
-	public static Map<String, Object> loadControlMap(ForwardControlParser parser, Class<?> klazz, String resourceName)
-			throws IOException, ResourceParseException {
+	public static Map<String, Object>
+			loadControlMap(ProcessingControlParser parser, Class<?> klazz, String resourceName)
+					throws IOException, ResourceParseException {
 		try (var is = klazz.getResourceAsStream(resourceName)) {
 
 			return parser.parse(is, TestUtils.fileResolver(klazz), new HashMap<>());
@@ -76,15 +77,15 @@ public class ForwardTestUtils {
 	 * Load the control map from resources in the test package using the full control map parser.
 	 */
 	public static Map<String, Object> loadControlMap() {
-		var parser = new ForwardControlParser();
+		var parser = new ProcessingControlParser();
 		try {
-			return loadControlMap(parser, ForwardControlParser.class, "VDYP.CTR");
+			return loadControlMap(parser, ProcessingControlParser.class, "VDYP.CTR");
 		} catch (IOException | ResourceParseException ex) {
 			throw new AssertionFailedError(null, ex);
 		}
 	}
 
-	public static Map<String, Object> parse(BaseControlParser<ForwardDebugSettings> parser, String resourceName)
+	public static Map<String, Object> parse(BaseControlParser<ProcessingDebugSettings> parser, String resourceName)
 			throws IOException, ResourceParseException {
 
 		Class<?> klazz = TestUtils.class;

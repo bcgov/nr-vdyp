@@ -11,6 +11,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -18,6 +19,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariables;
 
 public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 
@@ -51,6 +53,7 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	private final Optional<MatrixMap2<String, String, Integer>> decayEquationGroups;
 	private final Optional<MatrixMap2<String, String, Integer>> breakageEquationGroups;
 	private final Optional<Map<String, DoubleCoefficients>> quadMeanDiameterBySpeciesCoefficients;
+	private final Optional<ControlVariables> controlVariables;
 
 	private final Map<String, Object> controlMap;
 
@@ -89,6 +92,7 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 		this.decayEquationGroups = this.get(ControlKey.DECAY_GROUPS, MatrixMap2.class);
 		this.breakageEquationGroups = this.get(ControlKey.BREAKAGE_GROUPS, MatrixMap2.class);
 		this.quadMeanDiameterBySpeciesCoefficients = this.get(ControlKey.BY_SPECIES_DQ, Map.class);
+		this.controlVariables = this.get(ControlKey.VTROL, ControlVariables.class);
 	}
 
 	/**
@@ -262,6 +266,17 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	public Map<String, DoubleCoefficients> getQuadMeanDiameterBySpeciesCoefficients() {
 		return quadMeanDiameterBySpeciesCoefficients
 				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterBySpeciesCoefficients"));
+	}
+
+	@Override
+	public DebugSettings getDebugSettings() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ControlVariables getControlVariables() {
+		return controlVariables.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterBySpeciesCoefficients"));
 	}
 
 }

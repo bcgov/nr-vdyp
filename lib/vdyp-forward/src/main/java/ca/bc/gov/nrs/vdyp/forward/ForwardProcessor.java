@@ -14,11 +14,12 @@ import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
 /**
  *
@@ -49,7 +50,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
  *
  * @author Michael Junkin, Vivid Solutions
  */
-public class ForwardProcessor extends Processor<ForwardDebugSettings> {
+public class ForwardProcessor extends Processor<ProcessingDebugSettings> {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessor.class);
 
@@ -129,7 +130,7 @@ public class ForwardProcessor extends Processor<ForwardDebugSettings> {
 	}
 
 	@Override
-	protected BaseControlParser<ForwardDebugSettings> getControlFileParser() {
-		return new ForwardControlParser();
+	protected BaseControlParser<ProcessingDebugSettings> getControlFileParser() {
+		return new ProcessingControlParser();
 	}
 }

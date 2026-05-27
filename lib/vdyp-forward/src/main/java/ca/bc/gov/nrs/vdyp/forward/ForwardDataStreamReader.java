@@ -16,10 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser.VdypPolygonStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
@@ -34,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilization;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 
 public class ForwardDataStreamReader implements AutoCloseable {
 
@@ -65,9 +65,9 @@ public class ForwardDataStreamReader implements AutoCloseable {
 			speciesUtilizationStream = ((StreamingParserFactory<Collection<VdypUtilization>>) speciesUtilizationStreamFactory)
 					.get();
 
-			boolean growthTargetSpecified = Utils
-					.parsedControl(resolvedControlMap.getControlMap(), ControlKey.VTROL, ForwardControlVariables.class)
-					.map(vtrol -> vtrol.getControlVariable(ControlVariable.GROW_TARGET_1) >= 0).orElse(false);
+			boolean growthTargetSpecified = Utils.parsedControl(
+					resolvedControlMap.getControlMap(), ControlKey.VTROL, ProcessingControlVariables.class
+			).map(vtrol -> vtrol.getControlVariable(ControlVariable.GROW_TARGET_1) >= 0).orElse(false);
 
 			polygonDescriptionStream = Optional.empty();
 			if (controlMap.containsKey(ControlKey.FORWARD_INPUT_GROWTO.name()) // Growth file specified
@@ -94,7 +94,7 @@ public class ForwardDataStreamReader implements AutoCloseable {
 	 */
 	public ForwardDataStreamReader(Map<String, Object> controlMap) throws ProcessingException {
 
-		this(new ForwardResolvedControlMapImpl(controlMap));
+		this(new ProcessingResolvedControlMapImpl(controlMap));
 	}
 
 	public Optional<VdypPolygon> readNextPolygon() throws ProcessingException {

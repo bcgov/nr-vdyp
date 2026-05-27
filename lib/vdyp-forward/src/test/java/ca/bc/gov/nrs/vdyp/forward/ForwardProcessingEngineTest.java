@@ -29,11 +29,9 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.SpeciesDynamics;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -42,6 +40,9 @@ import ca.bc.gov.nrs.vdyp.model.Sp64DistributionSet;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings.SpeciesDynamics;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
@@ -60,11 +61,11 @@ class ForwardProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException {
-			var parser = new ForwardControlParser();
+			var parser = new ProcessingControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 			controlMap.put(
 					ControlKey.VTROL.name(),
-					new ForwardControlVariables(new Integer[] { -1, 1, 2, 3, 1, 1, 0, 0, 0, 0 })
+					new ProcessingControlVariables(new Integer[] { -1, 1, 2, 3, 1, 1, 0, 0, 0, 0 })
 			);
 			em = EasyMock.createControl();
 			VdypOutputWriter output = new VdypOutputWriter(
@@ -266,9 +267,9 @@ class ForwardProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException {
-			var parser = new ForwardControlParser();
+			var parser = new ProcessingControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
-			controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] {}));
+			controlMap.put(ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] {}));
 			em = EasyMock.createControl();
 			fpe = EasyMock.partialMockBuilder(ForwardProcessingEngine.class).addMockedMethod("growLoreyHeights")
 					.addMockedMethod("growUsingPartialSpeciesDynamics").addMockedMethod("growUsingNoSpeciesDynamics")
@@ -582,14 +583,14 @@ class ForwardProcessingEngineTest {
 		private static final int UC_ALL_INDEX = UtilizationClass.ALL.ordinal();
 
 		Map<String, Object> controlMap;
-		ForwardDebugSettings fds;
+		ProcessingDebugSettings fds;
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException {
-			var parser = new ForwardControlParser();
+			var parser = new ProcessingControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
-			controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] {}));
-			fds = new ForwardDebugSettings(new Integer[25]);
+			controlMap.put(ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] {}));
+			fds = new ProcessingDebugSettings(new Integer[25]);
 		}
 
 		@Test
@@ -947,7 +948,7 @@ class ForwardProcessingEngineTest {
 		}
 
 		private void setChoices(int... choices) {
-			fds = new ForwardDebugSettings(new Integer[25]);
+			fds = new ProcessingDebugSettings(new Integer[25]);
 			int slot = 11;
 			for (int choice : choices) {
 				fds.setValue(slot++, choice);
@@ -995,7 +996,7 @@ class ForwardProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException, ProcessingException {
-			var parser = new ForwardControlParser();
+			var parser = new ProcessingControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 			forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
 		}
@@ -1145,7 +1146,7 @@ class ForwardProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException, ProcessingException {
-			var parser = new ForwardControlParser();
+			var parser = new ProcessingControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 			forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
 		}
