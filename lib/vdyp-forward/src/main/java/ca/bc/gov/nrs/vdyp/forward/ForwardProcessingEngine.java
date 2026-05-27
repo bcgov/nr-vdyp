@@ -30,7 +30,6 @@ import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
@@ -103,8 +102,7 @@ public class ForwardProcessingEngine {
 		this.fps = new ForwardProcessingState(controlMap);
 		this.outputWriter = outputWriter;
 
-		int cv7Value = this.fps.controlMap.getForwardControlVariables()
-				.getControlVariable(ControlVariable.CHECKPOINT_7);
+		int cv7Value = this.fps.controlMap.getControlVariables().getControlVariable(ControlVariable.CHECKPOINT_7);
 		doCheckpoint = cv7Value == 1;
 	}
 
@@ -214,7 +212,7 @@ public class ForwardProcessingEngine {
 		// Determine the target year of the growth
 		int targetYear;
 
-		int growTargetControlVariableValue = fps.controlMap.getForwardControlVariables()
+		int growTargetControlVariableValue = fps.controlMap.getControlVariables()
 				.getControlVariable(ControlVariable.GROW_TARGET_1);
 		if (growTargetControlVariableValue == -1) {
 			if (polygon.getTargetYear().isEmpty()) {
@@ -303,7 +301,7 @@ public class ForwardProcessingEngine {
 			boolean doRecalculateGroupsPriorToOutput = fps.controlMap.getDebugSettings()
 					.getSpeciesDynamics() != SpeciesDynamics.PARTIAL && plps.getNSpecies() > 1;
 
-			boolean doRecalculateGroups = fps.controlMap.getForwardControlVariables()
+			boolean doRecalculateGroups = fps.controlMap.getControlVariables()
 					.getControlVariable(ControlVariable.UPDATE_DURING_GROWTH_6) >= 1;
 
 			// Write out the staring year with no growth
@@ -547,7 +545,7 @@ public class ForwardProcessingEngine {
 		VdypLayer primaryLayer = fps.updatePolygon().getLayers().get(LayerType.PRIMARY);
 
 		VolumeComputeMode volumeComputationMode = VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC;
-		int controlVariable3Value = fps.controlMap.getForwardControlVariables()
+		int controlVariable3Value = fps.controlMap.getControlVariables()
 				.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3);
 		CompatibilityVariableMode compatibilityVariableMode = CompatibilityVariableMode
 				.getByInteger(controlVariable3Value);
@@ -636,10 +634,9 @@ public class ForwardProcessingEngine {
 	}
 
 	void growSpecies(
-			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps, int currentYear,
-			ExecutionStep lastStepInclusive, Bank bank, Change dominantHeight, Change quadMeanDiameter,
-			Change basalArea, Change tph, float lhStart, float pspLhStart, float pspTphStart,
-			SpeciesDynamics debugSetting1Value
+			LayerProcessingState<ForwardLayerProcessingState> lps, int currentYear, ExecutionStep lastStepInclusive,
+			Bank bank, Change dominantHeight, Change quadMeanDiameter, Change basalArea, Change tph, float lhStart,
+			float pspLhStart, float pspTphStart, SpeciesDynamics debugSetting1Value
 	) throws ProcessingException {
 		boolean wasSolutionFound = false;
 		if (debugSetting1Value == SpeciesDynamics.PARTIAL) {
@@ -715,9 +712,7 @@ public class ForwardProcessingEngine {
 		}
 	}
 
-	private void updateVeteranSpeciesAges(
-			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> vlps
-	) {
+	private void updateVeteranSpeciesAges(LayerProcessingState<ForwardLayerProcessingState> vlps) {
 
 		for (int i : vlps.getIndices()) {
 			vlps.getBank().ageTotals[i] += 1;
@@ -750,8 +745,7 @@ public class ForwardProcessingEngine {
 	 */
 	void growUsingNoSpeciesDynamics(float basalArea, float tph) {
 
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		for (int i : lps.getIndices()) {
@@ -822,8 +816,7 @@ public class ForwardProcessingEngine {
 	boolean growUsingPartialSpeciesDynamics(Change basalArea, Change quadMeanDiameter, float tphStart, float[] hlStart)
 			throws ProcessingException {
 
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 		Region polygonRegion = fps.getCurrentBecZone().getRegion();
 
@@ -1624,9 +1617,7 @@ public class ForwardProcessingEngine {
 	 *
 	 * @throws ProcessingException
 	 */
-	private void calculateSmallComponentYields(
-			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps
-	) {
+	private void calculateSmallComponentYields(LayerProcessingState<ForwardLayerProcessingState> lps) {
 
 		Bank bank = lps.getBank();
 
@@ -1674,7 +1665,7 @@ public class ForwardProcessingEngine {
 			// EMP086
 			float meanVolumeSmall = meanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
 
-			int controlVar3Value = fps.controlMap.getForwardControlVariables()
+			int controlVar3Value = fps.controlMap.getControlVariables()
 					.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3);
 
 			if (controlVar3Value >= 1 /* apply compatibility variables */) {
@@ -1738,8 +1729,8 @@ public class ForwardProcessingEngine {
 	 * @param pspLhStart  primary species Lorey height at end
 	 */
 	void growLoreyHeights(
-			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps, float dhStart,
-			float dhEnd, float pspTphStart, float pspTphEnd, float pspLhStart
+			LayerProcessingState<ForwardLayerProcessingState> lps, float dhStart, float dhEnd, float pspTphStart,
+			float pspTphEnd, float pspLhStart
 	) {
 		Bank bank = lps.getBank();
 
@@ -1863,8 +1854,7 @@ public class ForwardProcessingEngine {
 			Optional<Float> veteranBaEnd, float dhDelta, Reference<Boolean> dqGrowthLimitApplied
 	) throws StandProcessingException {
 
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		var becZone = lps.getBecZone();
 
 		float[] speciesProportionsByBasalArea = getSpeciesProportionsByBasalAreaAtStartOfYear();
@@ -2039,8 +2029,7 @@ public class ForwardProcessingEngine {
 	 */
 	private float[] getSpeciesProportionsByBasalAreaAtStartOfYear() {
 
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		float[] speciesProportionsByBasalArea = new float[lps.getNSpecies() + 1];
@@ -2069,8 +2058,7 @@ public class ForwardProcessingEngine {
 	) throws StandProcessingException {
 
 		ProcessingDebugSettings debugSettings = fps.controlMap.getDebugSettings();
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		float[] speciesProportionsByBasalArea = getSpeciesProportionsByBasalAreaAtStartOfYear();
@@ -2495,7 +2483,7 @@ public class ForwardProcessingEngine {
 
 				logger.info("Writing polygon {} for year {}", polygon, currentYear);
 
-				int controlVariable4Value = fps.controlMap.getForwardControlVariables()
+				int controlVariable4Value = fps.controlMap.getControlVariables()
 						.getControlVariable(ControlVariable.OUTPUT_FILES_4);
 
 				switch (controlVariable4Value) {
@@ -2559,7 +2547,7 @@ public class ForwardProcessingEngine {
 
 		Coefficients aAdjust = new Coefficients(new float[] { 0.0f, 0.0f, 0.0f, 0.0f }, 1);
 
-		var growthDetails = fps.controlMap.getForwardControlVariables();
+		var growthDetails = fps.controlMap.getControlVariables();
 		var lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
@@ -2762,8 +2750,7 @@ public class ForwardProcessingEngine {
 	private HashMap<UtilizationClassVariable, Float>
 			calculateSmallCompatibilityVariables(int speciesIndex, ProcessingControlVariables forwardControlVariables) {
 
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		Region region = lps.getBecZone().getRegion();
@@ -3658,7 +3645,7 @@ public class ForwardProcessingEngine {
 	 *
 	 * @param state the bank in which the calculations are performed
 	 */
-	static void calculateCoverages(LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps) {
+	static void calculateCoverages(LayerProcessingState<ForwardLayerProcessingState> lps) {
 
 		Bank bank = lps.getBank();
 
@@ -3845,8 +3832,7 @@ public class ForwardProcessingEngine {
 		}
 	}
 
-	private List<VdypSpecies>
-			buildCoverageSpecies(LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps) {
+	private List<VdypSpecies> buildCoverageSpecies(LayerProcessingState<ForwardLayerProcessingState> lps) {
 		Bank bank = lps.getBank();
 		VdypLayer layer = fps.getCurrentPolygon().getLayers().get(LayerType.PRIMARY);
 

@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
@@ -19,8 +18,7 @@ import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
-public class ForwardLayerProcessingState
-		extends LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> {
+public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLayerProcessingState> {
 
 	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
 	private static final String PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY = "PrimarySpeciesDetails can be set once only";
@@ -278,7 +276,7 @@ public class ForwardLayerProcessingState
 
 		// Normally, these values may only be set only once. However, during grow(), if the
 		// control variable UPDATE_DURING_GROWTH_6 has value "1" then updates are allowed.
-		if (arePrimarySpeciesDetailsSet && ps.controlMap.getForwardControlVariables()
+		if (arePrimarySpeciesDetailsSet && ps.controlMap.getControlVariables()
 				.getControlVariable(ControlVariable.UPDATE_DURING_GROWTH_6) != 1) {
 			throw new IllegalStateException(PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY);
 		}

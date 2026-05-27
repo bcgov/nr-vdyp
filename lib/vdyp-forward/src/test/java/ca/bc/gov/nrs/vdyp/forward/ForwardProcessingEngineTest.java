@@ -28,7 +28,6 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
-import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
@@ -1014,8 +1013,7 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
-					.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
@@ -1038,8 +1036,7 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
-					.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
@@ -1062,8 +1059,7 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
-					.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];

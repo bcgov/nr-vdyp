@@ -175,7 +175,7 @@ public class ProcessingControlVariables extends ControlVariables {
 		validate();
 	}
 
-	int getControlVariable(int elementNumber) {
+	public int getControlVariable(int elementNumber) {
 
 		if (elementNumber < 1 || elementNumber > MAX_CONTROL_VARIABLE_VALUES) {
 			throw new IllegalArgumentException(

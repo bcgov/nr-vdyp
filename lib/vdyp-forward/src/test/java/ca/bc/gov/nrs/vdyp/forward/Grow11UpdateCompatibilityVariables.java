@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
-import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
@@ -67,8 +66,7 @@ class Grow11UpdateCompatibilityVariables {
 		fpe.processPolygon(polygon, ExecutionStep.GROW_10_COMPATIBILITY_VARS);
 
 		// VDYP7 reports [], -9, -9, 35.473381, -9, -9)
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
 		assertThat(
 				// VDYP7 reports BASAL_AREA = -2.13947629e-07, all others 0.0
 				lps.getCvPrimaryLayerSmall()[1],
