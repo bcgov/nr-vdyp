@@ -1,7 +1,7 @@
 _format_version: "3.0"
 services:
-- host: vdyp-ui-#{TARGET_ENV}#.c50504-#{TARGET_ENV}#.svc
-  name: vdyp-ui-#{TARGET_ENV}#
+- host: nr-vdyp-#{TARGET_ENV}#-backend.c50504-#{TARGET_ENV}#.svc
+  name: nr-vdyp-#{TARGET_ENV}#-backend
   path: /
   plugins:
     - name: key-auth
@@ -39,18 +39,6 @@ services:
     name: vdyp-#{TARGET_ENV}#_hcsv_get
     paths:
     - /api/v8/projection/hcsv
-    plugins: []
-    regex_priority: 200
-    strip_path: false
-    tags:
-    - "ns.#{GATEWAY_ID}#"
-  - hosts:
-    - vdyp#{ENV_URL_COMPONENT}#.api.gov.bc.ca
-    methods:
-    - GET
-    name: vdyp-#{TARGET_ENV}#_me_get
-    paths:
-    - /api/v8/projection/me
     plugins: []
     regex_priority: 200
     strip_path: false

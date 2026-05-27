@@ -4,7 +4,7 @@ title: vdyp-#{TARGET_ENV}#-dataset
 organization: ministry-of-citizens-services
 organizationUnit: databc
 notes: |
-  The vdyp API grants access to the /, /projection/hcsv and /projection/me endpoints endpoints
+  The vdyp API grants access to the / and /projection/hcsv endpoints endpoints
 
   The endpoints in this API are accessible without authentication to users with an API key.
 
