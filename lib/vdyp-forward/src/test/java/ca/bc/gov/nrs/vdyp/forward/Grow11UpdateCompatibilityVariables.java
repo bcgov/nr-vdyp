@@ -1,6 +1,10 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
 import java.util.Map;
@@ -24,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class Grow11UpdateCompatibilityVariables {
 
@@ -70,53 +75,53 @@ class Grow11UpdateCompatibilityVariables {
 		assertThat(
 				// VDYP7 reports BASAL_AREA = -2.13947629e-07, all others 0.0
 				lps.getCvPrimaryLayerSmall()[1],
-				Matchers.allOf(
-						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, -2.1394816e-07f),
-						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f),
-						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, 0.0f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f)
+				allOf(
+						hasEntry(is(UtilizationClassVariable.BASAL_AREA), closeTo(-2.1394816e-07f)),
+						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), is(0.0f)),
+						hasEntry(is(UtilizationClassVariable.LOREY_HEIGHT), is(0.0f)),
+						hasEntry(is(UtilizationClassVariable.WHOLE_STEM_VOLUME), is(0.0f))
 				)
 		);
 		assertThat(
 				// VDYP7 reports BASAL_AREA = -4.49605286e-05, QUAD_MEAN_DIAMETER = 0.00236749649
 				// LOREY_HEIGHT = 1.19209221e-06, WHOLE_STEM_VOLUME = 0.00102931913
 				lps.getCvPrimaryLayerSmall()[2],
-				Matchers.allOf(
-						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, -4.406223e-5f),
-						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0023196794f),
-						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, 1.2850753e-6f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0010083826f)
+				allOf(
+						hasEntry(is(UtilizationClassVariable.BASAL_AREA), closeTo(-4.406223e-5f)),
+						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), closeTo(0.0023196794f)),
+						hasEntry(is(UtilizationClassVariable.LOREY_HEIGHT), closeTo(1.2850753e-6f)),
+						hasEntry(is(UtilizationClassVariable.WHOLE_STEM_VOLUME), closeTo(0.0010083826f))
 				)
 		);
 		assertThat(
 				// VDYP7 reports BASAL_AREA = 4.94660344e-6, QUAD_MEAN_DIAMETER = 0.0
 				// LOREY_HEIGHT = -1.55569342e-5, WHOLE_STEM_VOLUME = 0.0
 				lps.getCvPrimaryLayerSmall()[3],
-				Matchers.allOf(
-						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, 4.8476713e-6f),
-						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f),
-						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, -1.5245796e-5f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f)
+				allOf(
+						hasEntry(is(UtilizationClassVariable.BASAL_AREA), closeTo(4.8476713e-6f)),
+						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), is(0.0f)),
+						hasEntry(is(UtilizationClassVariable.LOREY_HEIGHT), closeTo(-1.5245796e-5f)),
+						hasEntry(is(UtilizationClassVariable.WHOLE_STEM_VOLUME), is(0.0f))
 				)
 		);
 		assertThat(
 				// VDYP7 reports 0.0 for all
 				lps.getCvPrimaryLayerSmall()[4],
-				Matchers.allOf(
-						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, 0.0f),
-						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f),
-						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, 0.0f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f)
+				allOf(
+						hasEntry(is(UtilizationClassVariable.BASAL_AREA), is(0.0f)),
+						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), is(0.0f)),
+						hasEntry(is(UtilizationClassVariable.LOREY_HEIGHT), is(0.0f)),
+						hasEntry(is(UtilizationClassVariable.WHOLE_STEM_VOLUME), is(0.0f))
 				)
 		);
 		assertThat(
 				// VDYP7 reports BASAL_AREA = 3.42086423e-06, LOREY_HEIGHT = -5.7758567e-5, 0.0 for all others
 				lps.getCvPrimaryLayerSmall()[5],
-				Matchers.allOf(
-						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, 3.352447e-6f),
-						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f),
-						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, -5.6603396e-5f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f)
+				allOf(
+						hasEntry(is(UtilizationClassVariable.BASAL_AREA), closeTo(3.352447e-6f)),
+						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), is(0.0f)),
+						hasEntry(is(UtilizationClassVariable.LOREY_HEIGHT), closeTo(-5.6603396e-5f)),
+						hasEntry(is(UtilizationClassVariable.WHOLE_STEM_VOLUME), is(0.0f))
 				)
 		);
 	}
