@@ -26,6 +26,22 @@
             <v-col>
               <span class="text-h6">Species Information</span>
             </v-col>
+            <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
+              <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
+                <template #activator="{ props: tooltipProps }">
+                  <span v-bind="tooltipProps">
+                    <AppButton
+                      label="Edit"
+                      variant="tertiary"
+                      mdi-name="mdi-pencil-outline"
+                      iconPosition="top"
+                      :isDisabled="!isHeaderEditActive"
+                      @click="onHeaderEdit"
+                    />
+                  </span>
+                </template>
+              </v-tooltip>
+            </v-col>
           </v-row>
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
@@ -98,11 +114,14 @@
             </div>
             <ActionPanel
               v-if="!isReadOnly"
+              class="action-panel"
               :isConfirmEnabled="isConfirmEnabled"
               :isConfirmed="isConfirmed"
-              @clear="onClear"
+              :hideClearButton="true"
+              :hideEditButton="true"
+              :showCancelButton="true"
               @confirm="onConfirm"
-              @edit="onEdit"
+              @cancel="onCancel"
             />
           </v-form>
         </v-expansion-panel-text>
@@ -115,8 +134,10 @@ import { ref, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import {
   AppMessageDialog,
+  AppButton,
 } from '@/components'
 import {
   ActionPanel,
@@ -129,17 +150,19 @@ import {
   MESSAGE,
   OPTIONS,
 } from '@/constants'
-import { PROJECTION_ERR } from '@/constants/message'
+import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
 import type { SpeciesList, MessageDialog } from '@/interfaces/interfaces'
 import { speciesInfoValidation } from '@/validation'
 import { cloneDeep } from 'lodash'
-import { saveProjectionOnPanelConfirm } from '@/services/projection/modelParameterService'
+import { saveProjectionOnPanelConfirm, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
+import type { PanelName } from '@/types/types'
 
 const form = ref<HTMLFormElement>()
 
 const modelParameterStore = useModelParameterStore()
 const appStore = useAppStore()
+const alertDialogStore = useAlertDialogStore()
 const notificationStore = useNotificationStore()
 
 // Check if we're in read-only (view) mode
@@ -273,7 +296,7 @@ const onConfirm = async () => {
   if (form.value) {
     form.value.validate()
   } else {
-    console.warn('Form reference is null. Validation skipped.')
+    console.warn(VALIDATION_WARN.FORM_REF_NULL)
   }
 
   // Save projection (create or update) before confirming the panel
@@ -281,7 +304,7 @@ const onConfirm = async () => {
   try {
     await saveProjectionOnPanelConfirm(modelParameterStore, panelName)
   } catch (error) {
-    console.error('Error saving projection:', error)
+    console.error(PROJECTION_ERR.SAVE_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
     return
   } finally {
@@ -294,25 +317,81 @@ const onConfirm = async () => {
   }
 }
 
-const onEdit = () => {
-  // this panel has already been confirmed.
+const isHeaderEditActive = computed(() => {
+  const status = appStore.currentProjectionStatus
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) return false
+  return isConfirmed.value && !modelParameterStore.panelState[panelName].editable
+})
+
+const editTooltipText = computed(() => {
+  const status = appStore.currentProjectionStatus
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
+    return MESSAGE.EDIT_SECTION_TOOLTIP.RESTRICTED_BY_STATUS(status)
+  }
+  if (isConfirmed.value && !modelParameterStore.panelState[panelName].editable) {
+    return MESSAGE.EDIT_SECTION_TOOLTIP.CLICK_TO_EDIT
+  }
+  return ''
+})
+
+const getEditablePanel = (): string | null => {
+  const panelsToCheck = [
+    CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS,
+  ]
+  return panelsToCheck.find((p) => modelParameterStore.panelState[p].editable) ?? null
+}
+
+const onHeaderEdit = async () => {
   if (isConfirmed.value) {
+    const editablePanel = getEditablePanel()
+    if (editablePanel) {
+      const hasChanges = await hasPanelUnsavedChanges(editablePanel, modelParameterStore)
+      if (hasChanges) {
+        const proceed = await alertDialogStore.openDialog(
+          MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+          MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+          { variant: 'warning' },
+        )
+        if (!proceed) return
+
+        appStore.isSavingProjection = true
+        try {
+          await revertPanelToSaved(editablePanel as PanelName)
+        } catch (error) {
+          console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
+          notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+          return
+        } finally {
+          appStore.isSavingProjection = false
+        }
+      }
+    }
     modelParameterStore.editPanel(panelName)
   }
 }
 
-const onClear = () => {
-  for (const item of speciesList.value) {
-    item.species = null
-    item.percent = null
+const onCancel = async () => {
+  appStore.isSavingProjection = true
+  try {
+    await revertPanelToSaved(panelName)
+  } catch (error) {
+    console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+  } finally {
+    appStore.isSavingProjection = false
   }
-  derivedBy.value = null
 }
 
 const handleDialogClose = () => {}
 </script>
 
 <style scoped>
+.action-panel {
+  margin-top: 16px;
+}
+
 .vertical-line {
   display: flex;
   align-items: center;
@@ -335,4 +414,21 @@ const handleDialogClose = () => {}
   padding-bottom: 0px;
 }
 
+.edit-button-col {
+  display: flex;
+  align-items: center;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top) {
+  padding: 2px 4px;
+  gap: 2px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
+  font-size: 18px;
+}
+
+.edit-button-col :deep(.bcds-button.icon-top .button-label) {
+  font-size: 11px;
+}
 </style>
