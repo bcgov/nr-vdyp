@@ -125,16 +125,18 @@ const formattedTimeElapsed = computed(() => {
 
   const upperBoundMs = props.endDate ? new Date(props.endDate).getTime() : currentTime.value
   const elapsedMs = Math.max(0, upperBoundMs - startMs)
-  const totalMinutes = Math.floor(elapsedMs / 60_000)
+  const totalSeconds = Math.floor(elapsedMs / 1_000)
+  const totalMinutes = Math.floor(totalSeconds / 60)
   const totalHours = Math.floor(totalMinutes / 60)
   const days = Math.floor(totalHours / 24)
   const hours = totalHours % 24
   const minutes = totalMinutes % 60
+  const seconds = totalSeconds % 60
 
   const parts: string[] = []
   if (days > 0) parts.push(`${days}d`)
   if (totalHours > 0 || days > 0) parts.push(`${hours}h`)
-  parts.push(`${minutes}m`)
+  parts.push(`${minutes}m ${seconds}s`)
   return parts.join(' ')
 })
 
