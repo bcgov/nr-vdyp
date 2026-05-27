@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.back.processing_state;
 
 import java.util.function.Predicate;
 
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
@@ -11,11 +10,10 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 
-public class BackLayerProcessingState extends LayerProcessingState<ResolvedControlMap, BackLayerProcessingState> {
+public class BackLayerProcessingState extends LayerProcessingState<BackLayerProcessingState> {
 
 	protected BackLayerProcessingState(
-			ProcessingState<ResolvedControlMap, BackLayerProcessingState> ps, VdypPolygon polygon,
-			LayerType subjectLayerType
+			ProcessingState<BackLayerProcessingState> ps, VdypPolygon polygon, LayerType subjectLayerType
 	) throws ProcessingException {
 		super(ps, polygon, subjectLayerType);
 		// TODO Auto-generated constructor stub
