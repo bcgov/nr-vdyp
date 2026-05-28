@@ -1471,16 +1471,16 @@ public class YieldTable implements Closeable {
 			throw new StandYieldCalculationException(new FailedToGrowYoungStandException());
 		}
 
-		Species sp0 = null;
+		Species sp0;
+		if (stand == null) {
+			sp0 = layer.getSp0sByPercent().get(0).getSpeciesGroup();
+		} else {
+			sp0 = stand.getSpeciesGroup();
+		}
+
 		// vdyp7core_requestyeardata
 		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
 		if (projectedPolygon != null && layerType != null) {
-
-			if (stand == null) {
-				sp0 = layer.getSp0sByPercent().get(0).getSpeciesGroup();
-			} else {
-				sp0 = stand.getSpeciesGroup();
-			}
 
 			var projectedLayer = projectedPolygon.getLayers().get(layerType);
 			var projectedSp0 = projectedLayer.getSpeciesBySp0(sp0.getSpeciesCode());
@@ -1499,11 +1499,16 @@ public class YieldTable implements Closeable {
 		} else {
 			var polygon = layer.getPolygon();
 
-			polygon.addMessage(
+			PolygonMessageKind kind = PolygonMessageKind.NO_PROJECTED_DATA;
+			if (rowContext.getCurrentYearIsAgeRow()) {
+				kind = PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR;
+			}
+
+			polygon.addCheckedMessage(
 					new PolygonMessage.Builder().layer(layer)
 							.details(
-									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING,
-									PolygonMessageKind.NO_PROJECTED_DATA, projectionType, calendarYear
+									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING, kind,
+									sp0.getSpeciesCode(), ageToRequest, calendarYear
 							).build()
 			);
 
