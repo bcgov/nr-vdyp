@@ -1507,8 +1507,8 @@ public class YieldTable implements Closeable {
 			polygon.addCheckedMessage(
 					new PolygonMessage.Builder().layer(layer)
 							.details(
-									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING,
-									kind, sp0.getSpeciesCode(), ageToRequest, calendarYear
+									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING, kind,
+									sp0.getSpeciesCode(), ageToRequest, calendarYear
 							).build()
 			);
 
