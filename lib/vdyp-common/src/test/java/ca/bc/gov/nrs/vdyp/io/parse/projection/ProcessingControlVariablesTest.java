@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward;
+package ca.bc.gov.nrs.vdyp.io.parse.projection;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -10,7 +10,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 
-class ForwardControlVariablesTest {
+class ProcessingControlVariablesTest {
 
 	@Test
 	void testNull() throws ValueParseException {
