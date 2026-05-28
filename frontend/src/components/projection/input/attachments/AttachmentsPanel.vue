@@ -12,7 +12,7 @@
               }}</v-icon>
             </v-col>
             <v-col>
-              <span class="text-h6">File Upload</span>
+              <span class="text-h6">{{ CONSTANTS.FILE_UPLOAD_PANEL_LABEL.ATTACHMENTS }}</span>
             </v-col>
           </v-row>
         </v-expansion-panel-title>

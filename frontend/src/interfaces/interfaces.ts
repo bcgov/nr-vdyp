@@ -38,7 +38,7 @@ export interface FileUploadSpeciesGroup {
 
 export interface Tab {
   label: string
-  component: string | object // Component name or an actual component
+  component?: string | object // Component name or an actual component
   tabname: string | null // Optional tabname
   disabled: boolean
 }
