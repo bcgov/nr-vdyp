@@ -279,11 +279,12 @@ export const revertPanelToSaved = async (panelName: FileUploadPanelName): Promis
   const params = parseProjectionParams(projectionModel.projectionParameters)
   fileUploadStore.restoreFromProjectionParams(params, false)
   fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
-  fileUploadStore.updateRunModelEnabled()
 
-  // Keep the cancelled panel open and editable so the user can continue editing
-  fileUploadStore.panelOpenStates[panelName] = CONSTANTS.PANEL.OPEN
-  fileUploadStore.panelState[panelName] = { confirmed: false, editable: true }
+  // editPanel resets the cancelled panel and all subsequent panels to unconfirmed/closed.
+  // This prevents stale confirmed states (restored from the backend) from blocking
+  // confirmPanel calls when the user re-navigates via Next, and prevents the attachments
+  // panel from being opened incorrectly by applyEditModePanelStates.
+  fileUploadStore.editPanel(panelName)
 }
 
 /**

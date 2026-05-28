@@ -51,7 +51,8 @@ public enum PolygonMessageKind {
 	MISSING_YEARS_TO_BREAST_HEIGHT("species missing years-to-breast-height value."), //
 	NO_LEADING_SPECIES("no leading site species could be found"), //
 	NO_YIELD_TABLE_FOR_DEAD_LAYER("suppressing CFS Biomass output for dead layer. No yield table will be produced."), //
-	NO_PROJECTED_DATA("projected data for the {0} layer was not generated at calendar year {1,number,#}"), //
+	NO_PROJECTED_DATA("projected data for species {0} was not generated at stand age {1} (Calendar year {2,number,#})"), //
+	NO_PROJECTED_DATA_NO_YEAR("projected data for species {0} was not generated at stand age {1}"), //
 	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("polygon already has a rank 1 layer"),
 	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. VRISTART return code: {0}"), //
 	REASSIGNED_HEIGHT("based on estimated site index of {0}, recomputed input height at age {1} to be {2}"), //

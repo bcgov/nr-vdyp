@@ -1,0 +1,25 @@
+kind: DraftDataset
+name: vdyp-#{TARGET_ENV}#-dataset
+title: vdyp-#{TARGET_ENV}#-dataset
+organization: ministry-of-citizens-services
+organizationUnit: databc
+notes: |
+  The vdyp API grants access to the / and /projection/hcsv endpoints endpoints
+
+  The endpoints in this API are accessible without authentication to users with an API key.
+
+  Use the following URL to access this API: https://vdyp#{ENV_URL_COMPONENT}#.api.gov.bc.ca
+tags: ["vdyp-#{TARGET_ENV}#", openapi]
+license_title: Access Only
+security_class: PUBLIC
+record_publish_date: '2024-01-01'
+---
+kind: Product
+name: vdyp-#{TARGET_ENV}# API
+dataset: vdyp-#{TARGET_ENV}#-dataset
+environments:
+  - name: #{TARGET_ENV}#
+    active: false
+    approval: false
+    flow: public
+    services: [vdyp-ui-dev]

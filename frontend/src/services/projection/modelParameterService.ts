@@ -907,28 +907,13 @@ export const revertPanelToSaved = async (panelName: PanelName): Promise<void> =>
   }
   modelParameterStore.restoreFromModelParameters(modelParams)
 
-  // Restore projection params with isViewMode=true to preserve all other panels as confirmed.
-  // (isViewMode=false would reset all panels to CREATE mode, losing confirmed states.)
-  modelParameterStore.restoreFromProjectionParams(params, true)
+  // isViewMode=false: uses restoreEditModePanelState to infer confirmed states from data,
+  // which correctly marks prior panels as confirmed without setting runModelEnabled=true.
+  modelParameterStore.restoreFromProjectionParams(params, false)
   modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
 
-  // Close all panels except the cancelled panel.
-  // restoreFromProjectionParams with isViewMode=true opens all panels, so we should close the
-  // ones the user was not editing to avoid them auto-opening on Cancel.
-  const allPanelNames: PanelName[] = [
-    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS,
-    CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
-    CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
-    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
-    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS,
-  ]
-  for (const panel of allPanelNames) {
-    if (panel !== panelName) {
-      modelParameterStore.panelOpenStates[panel] = CONSTANTS.PANEL.CLOSE
-    }
-  }
-
-  // Keep the cancelled panel open and editable so the user can continue editing
-  modelParameterStore.panelOpenStates[panelName] = CONSTANTS.PANEL.OPEN
-  modelParameterStore.panelState[panelName] = { confirmed: false, editable: true }
+  // editPanel resets the cancelled panel and all subsequent panels to unconfirmed/closed.
+  // This prevents stale confirmed states from blocking confirmPanel calls when the user
+  // re-navigates via Next, and ensures runModelEnabled is correctly false during editing.
+  modelParameterStore.editPanel(panelName)
 }
