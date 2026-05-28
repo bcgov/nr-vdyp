@@ -21,7 +21,7 @@
       :key="index"
       :value="index"
     >
-      <component :is="tab.component" :tabname="tab.tabname" />
+      <component v-if="tab.component" :is="tab.component" :tabname="tab.tabname" />
     </v-tabs-window-item>
   </v-tabs-window>
 </template>

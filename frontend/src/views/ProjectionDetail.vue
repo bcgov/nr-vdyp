@@ -132,6 +132,14 @@
         />
       </div>
       <template v-if="isModelParameterPanelsVisible">
+        <ParameterSelectionProgressBar
+          :sections="manualInputProgressSections"
+          :percentage="manualInputPercentage"
+          :completedCount="manualInputCompletedCount"
+          :projectionStatus="appStore.currentProjectionStatus"
+          class="panel-spacing"
+        />
+        <ReportDetailsPanel class="panel-spacing" />
         <SpeciesInfoPanel class="panel-spacing" />
         <SiteInfoPanel class="panel-spacing" />
         <StandInfoPanel class="panel-spacing" />
@@ -374,7 +382,6 @@ const duplicatedFromText = computed(() => {
 const modelParamTabs = computed<Tab[]>(() => [
   {
     label: CONSTANTS.MANUAL_INPUT_TAB_NAME.MODEL_PARAM_SELECTION,
-    component: ReportDetailsPanel,
     tabname: null,
     disabled: false,
   },
@@ -423,6 +430,38 @@ const uploadedFilesCount = computed(() => {
   if (fileUploadStore.layerFileInfo !== null) count++
   return count
 })
+
+const manualInputProgressSections = computed(() => [
+  {
+    label: 'Report Details',
+    completed: modelParameterStore.panelState.reportDetails.confirmed,
+  },
+  {
+    label: 'Species Information',
+    completed: modelParameterStore.panelState.speciesInfo.confirmed,
+  },
+  {
+    label: 'Site Information',
+    completed: modelParameterStore.panelState.siteInfo.confirmed,
+  },
+  {
+    label: 'Stand Information',
+    completed: modelParameterStore.panelState.standInfo.confirmed,
+  },
+  {
+    label: 'Report Settings',
+    completed: modelParameterStore.panelState.reportSettings.confirmed,
+  },
+])
+
+const manualInputPercentage = computed(() => {
+  const confirmed = manualInputProgressSections.value.filter((s) => s.completed).length
+  return Math.round((confirmed / manualInputProgressSections.value.length) * 100)
+})
+
+const manualInputCompletedCount = computed(() =>
+  manualInputProgressSections.value.filter((s) => s.completed).length,
+)
 
 const fileUploadProgressSections = computed(() => [
   {
