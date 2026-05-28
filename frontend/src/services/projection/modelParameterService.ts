@@ -807,7 +807,7 @@ const hasReportInfoChanges = (
   if (!numEq(store.finishingAge, savedParams.ageEnd)) return true
   if (!numEq(store.ageIncrement, savedParams.ageIncrement)) return true
   if (!strEq(store.reportTitle, savedParams.reportTitle)) return true
-  if (!strEq(store.reportDescription, savedDescription)) return true
+  if (!strEq(store.reportDescription || null, savedDescription || null)) return true
   const opts = savedParams.selectedExecutionOptions
   if (store.isComputedMAIEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)) return true
   if (store.isCulminationValuesEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)) return true
