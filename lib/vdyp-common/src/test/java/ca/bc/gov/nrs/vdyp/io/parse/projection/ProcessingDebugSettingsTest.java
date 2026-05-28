@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward;
+package ca.bc.gov.nrs.vdyp.io.parse.projection;
 
 import static org.hamcrest.Matchers.is;
 
@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
-class ForwardDebugSettingsTest {
+class ProcessingDebugSettingsTest {
 
 	@Test
 	void testNoSpecialActions() {

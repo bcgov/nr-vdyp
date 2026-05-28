@@ -49,7 +49,7 @@ import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
-class VdypForwardControlParserTest {
+class ProcessingControlParserTest {
 
 	@Test
 	void testParseBec_9() throws Exception {
