@@ -152,10 +152,10 @@ const isHeaderEditActive = computed(() => {
 const editTooltipText = computed(() => {
   const status = appStore.currentProjectionStatus
   if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
-    return `This section may not be edited with a status of ${status}`
+    return MESSAGE.EDIT_SECTION_TOOLTIP.RESTRICTED_BY_STATUS(status)
   }
   if (isConfirmed.value && !modelParameterStore.panelState[panelName].editable) {
-    return 'Click Edit to make changes to this section'
+    return MESSAGE.EDIT_SECTION_TOOLTIP.CLICK_TO_EDIT
   }
   return ''
 })
@@ -187,7 +187,7 @@ const onHeaderEdit = async () => {
         try {
           await revertPanelToSaved(editablePanel as PanelName)
         } catch (error) {
-          console.error('Error reverting panel to saved state:', error)
+          console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
           notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
           return
         } finally {
@@ -244,7 +244,7 @@ const onConfirm = async () => {
   try {
     await saveProjectionOnPanelConfirm(modelParameterStore, panelName)
   } catch (error) {
-    console.error('Error saving projection:', error)
+    console.error(PROJECTION_ERR.SAVE_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
     return
   } finally {
@@ -261,7 +261,7 @@ const onCancel = async () => {
   try {
     await revertPanelToSaved(panelName)
   } catch (error) {
-    console.error('Error reverting panel to saved state:', error)
+    console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
   } finally {
     appStore.isSavingProjection = false

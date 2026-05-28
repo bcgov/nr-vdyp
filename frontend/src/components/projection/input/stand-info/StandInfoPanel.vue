@@ -156,7 +156,7 @@ import {
   ActionPanel,
 } from '@/components/projection'
 import { CONSTANTS, DEFAULTS, MESSAGE, OPTIONS } from '@/constants'
-import { PROJECTION_ERR } from '@/constants/message'
+import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
 import type { SpeciesGroup } from '@/interfaces/interfaces'
 import { standInfoValidation } from '@/validation'
 import { isEmptyOrZero, isZeroValue } from '@/utils/util'
@@ -466,7 +466,7 @@ const onConfirm = async () => {
   if (form.value) {
     form.value.validate()
   } else {
-    console.warn('Form reference is null. Validation skipped.')
+    console.warn(VALIDATION_WARN.FORM_REF_NULL)
   }
 
   if (isEmptyOrZero(percentStockableArea.value)) {
@@ -480,7 +480,7 @@ const onConfirm = async () => {
   try {
     await saveProjectionOnPanelConfirm(modelParameterStore, panelName)
   } catch (error) {
-    console.error('Error saving projection:', error)
+    console.error(PROJECTION_ERR.SAVE_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
     return
   } finally {
@@ -502,10 +502,10 @@ const isHeaderEditActive = computed(() => {
 const editTooltipText = computed(() => {
   const status = appStore.currentProjectionStatus
   if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
-    return `This section may not be edited with a status of ${status}`
+    return MESSAGE.EDIT_SECTION_TOOLTIP.RESTRICTED_BY_STATUS(status)
   }
   if (isConfirmed.value && !modelParameterStore.panelState[panelName].editable) {
-    return 'Click Edit to make changes to this section'
+    return MESSAGE.EDIT_SECTION_TOOLTIP.CLICK_TO_EDIT
   }
   return ''
 })
@@ -537,7 +537,7 @@ const onHeaderEdit = async () => {
         try {
           await revertPanelToSaved(editablePanel as PanelName)
         } catch (error) {
-          console.error('Error reverting panel to saved state:', error)
+          console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
           notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
           return
         } finally {
@@ -554,7 +554,7 @@ const onCancel = async () => {
   try {
     await revertPanelToSaved(panelName)
   } catch (error) {
-    console.error('Error reverting panel to saved state:', error)
+    console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
   } finally {
     appStore.isSavingProjection = false

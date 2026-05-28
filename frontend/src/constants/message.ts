@@ -224,6 +224,8 @@ export const PROJECTION_ERR = Object.freeze({
   MISSING_GUID: 'No projection is currently selected. Please create or select a projection first.',
   SAVE_FAILED: 'Failed to save the projection. Please try again.',
   SAVE_FAILED_TITLE: 'Projection Save Failed',
+  SAVE_ERROR_LOG: 'Error saving projection:',
+  REVERT_ERROR_LOG: 'Error reverting panel to saved state:',
   FILE_UPLOAD_FAILED: 'Failed to upload the file. Please try again.',
   FILE_UPLOAD_FAILED_TITLE: 'File Upload Failed',
   FILE_DELETE_FAILED: 'Failed to remove the file. Please try again.',
@@ -258,4 +260,13 @@ export const FILE_REMOVAL_DIALOG = Object.freeze({
 export const UNSAVED_CHANGES_DIALOG = Object.freeze({
   TITLE: 'Unsaved Changes',
   MESSAGE: 'You have unsaved changes that will be lost if you navigate away. Do you wish to continue?',
+})
+
+export const VALIDATION_WARN = Object.freeze({
+  FORM_REF_NULL: 'Form reference is null. Validation skipped.',
+})
+
+export const EDIT_SECTION_TOOLTIP = Object.freeze({
+  RESTRICTED_BY_STATUS: (status: string) => `This section may not be edited with a status of ${status}`,
+  CLICK_TO_EDIT: 'Click Edit to make changes to this section',
 })

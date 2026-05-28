@@ -86,7 +86,7 @@ import { useAppStore } from '@/stores/projection/appStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { AppButton } from '@/components'
 import { ActionPanel } from '@/components/projection'
-import { CONSTANTS, OPTIONS } from '@/constants'
+import { CONSTANTS, MESSAGE, OPTIONS } from '@/constants'
 import { saveProjectionOnPanelConfirm, revertPanelToSaved } from '@/services/projection/fileUploadService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { PROJECTION_ERR } from '@/constants/message'
@@ -132,10 +132,10 @@ const isHeaderEditActive = computed(() => {
 const editTooltipText = computed(() => {
   const status = appStore.currentProjectionStatus
   if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
-    return `This section may not be edited with a status of ${status}`
+    return MESSAGE.EDIT_SECTION_TOOLTIP.RESTRICTED_BY_STATUS(status)
   }
   if (isConfirmed.value && !fileUploadStore.panelState[panelName].editable) {
-    return 'Click Edit to make changes to this section'
+    return MESSAGE.EDIT_SECTION_TOOLTIP.CLICK_TO_EDIT
   }
   return ''
 })
@@ -197,7 +197,7 @@ const onConfirm = async () => {
   try {
     await saveProjectionOnPanelConfirm(fileUploadStore, panelName)
   } catch (error) {
-    console.error('Error saving projection:', error)
+    console.error(PROJECTION_ERR.SAVE_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
     return
   } finally {
@@ -214,7 +214,7 @@ const onCancel = async () => {
   try {
     await revertPanelToSaved(panelName)
   } catch (error) {
-    console.error('Error reverting panel to saved state:', error)
+    console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
   } finally {
     appStore.isSavingProjection = false
