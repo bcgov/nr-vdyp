@@ -90,6 +90,22 @@ export const FILE_UPLOAD_PANEL = Object.freeze({
   ATTACHMENTS: 'attachments',
 })
 
+export const MANUAL_INPUT_PANEL_LABEL = Object.freeze({
+  REPORT_DETAILS: 'Report Details',
+  SPECIES_INFO: 'Species Information',
+  SITE_INFO: 'Site Information',
+  STAND_INFO: 'Stand Information',
+  REPORT_SETTINGS: 'Report Settings',
+})
+
+export const FILE_UPLOAD_PANEL_LABEL = Object.freeze({
+  REPORT_CONFIG: 'Report Details',
+  MINIMUM_DBH: 'Minimum DBH',
+  MINIMUM_DBH_PANEL_DESKTOP: 'Minimum DBH Limit by Species Group',
+  MINIMUM_DBH_PANEL_MOBILE: 'Min DBH by Species Group (cm+)',
+  ATTACHMENTS: 'File Upload',
+})
+
 export const NUM_INPUT_LIMITS = Object.freeze({
   SPECIES_PERCENT_MAX: 100,
   SPECIES_PERCENT_MIN: 0,

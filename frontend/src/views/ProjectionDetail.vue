@@ -433,23 +433,23 @@ const uploadedFilesCount = computed(() => {
 
 const manualInputProgressSections = computed(() => [
   {
-    label: 'Report Details',
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.REPORT_DETAILS,
     completed: modelParameterStore.panelState.reportDetails.confirmed,
   },
   {
-    label: 'Species Information',
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.SPECIES_INFO,
     completed: modelParameterStore.panelState.speciesInfo.confirmed,
   },
   {
-    label: 'Site Information',
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.SITE_INFO,
     completed: modelParameterStore.panelState.siteInfo.confirmed,
   },
   {
-    label: 'Stand Information',
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.STAND_INFO,
     completed: modelParameterStore.panelState.standInfo.confirmed,
   },
   {
-    label: 'Report Settings',
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.REPORT_SETTINGS,
     completed: modelParameterStore.panelState.reportSettings.confirmed,
   },
 ])
@@ -465,15 +465,15 @@ const manualInputCompletedCount = computed(() =>
 
 const fileUploadProgressSections = computed(() => [
   {
-    label: 'Report Details',
+    label: CONSTANTS.FILE_UPLOAD_PANEL_LABEL.REPORT_CONFIG,
     completed: fileUploadStore.panelState.reportConfig.confirmed,
   },
   {
-    label: 'Minimum DBH',
+    label: CONSTANTS.FILE_UPLOAD_PANEL_LABEL.MINIMUM_DBH,
     completed: fileUploadStore.panelState.minimumDBH.confirmed,
   },
   {
-    label: 'File Upload',
+    label: CONSTANTS.FILE_UPLOAD_PANEL_LABEL.ATTACHMENTS,
     completed:
       fileUploadPrerequisitesDone.value && uploadedFilesCount.value === 2,
   },

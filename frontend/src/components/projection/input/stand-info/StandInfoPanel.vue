@@ -12,7 +12,7 @@
               }}</v-icon>
             </v-col>
             <v-col>
-              <span class="text-h6">Stand Information</span>
+              <span class="text-h6">{{ CONSTANTS.MANUAL_INPUT_PANEL_LABEL.STAND_INFO }}</span>
             </v-col>
             <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
               <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
