@@ -1,0 +1,72 @@
+name: publish-gateway-config
+
+on:
+  workflow_dispatch:
+    inputs:
+      TARGET_ENVIRONMENT:
+        type: choice
+        required: true
+        options: 
+          - dev
+          - test
+          - prod
+  workflow_call:
+    inputs:
+      TARGET_ENVIRONMENT:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.TARGET_ENVIRONMENT }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Get GWA Command Line
+        run: |
+          GWA_CLI_VERSION=v3.1.1
+          curl --proto "=https" -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_Linux_x86_64.tgz
+          tar -xf gwa_Linux_x86_64.tgz
+      
+      - name: Get environment url component
+        id: get-url-environment-component
+        env:
+          TARGET_ENVIRONMENT: ${{inputs.TARGET_ENVIRONMENT}}
+          
+        run: |
+          if [[ $TARGET_ENVIRONMENT == "prod" ]]
+          then
+            echo "ENV_URL_COMPONENT=''" >> $GITHUB_OUTPUT
+          else
+            echo "ENV_URL_COMPONENT=.$TARGET_ENVIRONMENT" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Replace tokens in gateway yaml
+        uses: cschleiden/replace-tokens@63252851d87eb5cb853019ba8538b5c51813779d
+        with:
+          files: '["charts/api-gateway/*.yaml"]'
+        env:
+          GATEWAY_ID: ${{vars.GATEWAY_ID}}
+          TARGET_ENV: ${{inputs.TARGET_ENVIRONMENT}}
+          ENV_URL_COMPONENT: ${{ steps.get-url-environment-component.outputs.ENV_URL_COMPONENT }}
+
+      - name: Apply Gateway Configuration
+        env:
+          GWA_CLIENT_ID: ${{ secrets.GWA_CLIENT_ID }}
+          GWA_CLIENT_SECRET: ${{ secrets.GWA_CLIENT_SECRET }}
+        run: |
+          export PATH=`pwd`:$PATH
+
+          cd charts/api-gateway
+
+          gwa login \
+          --client-id=$GWA_CLIENT_ID \
+          --client-secret=$GWA_CLIENT_SECRET
+          gwa config set gateway ${{ vars.GATEWAY_ID }}
+
+          gwa pg gw.yaml -D
+          gwa apply -i product.yaml

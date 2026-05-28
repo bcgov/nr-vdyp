@@ -99,9 +99,9 @@ class YieldTableRowContext {
 	private Integer currentTableAgeToRequest;
 
 	/** Indicates whether or not the current year corresponds to a year range/increment */
-	private Boolean currentYearIsYearRow;
+	private boolean currentYearIsYearRow;
 	/** Indicates whether or not the current year corresponds to a age range/increment */
-	private Boolean currentYearIsAgeRow;
+	private boolean currentYearIsAgeRow;
 
 	/** The calendar year the yields first become valid. */
 	private Integer yearYieldsValid;
@@ -158,7 +158,6 @@ class YieldTableRowContext {
 		assertBothNullOrPredicateTrue(ageAtStartYear, ageAtEndYear, (a, b) -> a <= b);
 		assertBothNullOrPredicateTrue(ageAtGapStart, ageAtGapEnd, (a, b) -> a < b);
 		assertBothNullOrPredicateTrue(currentTableYear, currentTableAge, (a, b) -> a == b + yearToAgeDifference);
-		assertEqualNullity(currentYearIsAgeRow, currentYearIsYearRow);
 		Validate.isTrue(referenceYear == referenceAge + yearToAgeDifference);
 		Validate.isTrue(measurementYear == measurementAge + yearToAgeDifference);
 		Validate.isTrue(nowYear == nowAge + yearToAgeDifference);
@@ -689,11 +688,11 @@ class YieldTableRowContext {
 		return currentTableAgeToRequest;
 	}
 
-	public Boolean getCurrentYearIsYearRow() {
+	public boolean getCurrentYearIsYearRow() {
 		return currentYearIsYearRow;
 	}
 
-	public Boolean getCurrentYearIsAgeRow() {
+	public boolean getCurrentYearIsAgeRow() {
 		return currentYearIsAgeRow;
 	}
 
