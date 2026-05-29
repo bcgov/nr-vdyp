@@ -22,4 +22,4 @@ environments:
     active: false
     approval: false
     flow: public
-    services: [vdyp-ui-dev]
+    services: ["vdyp-#{TARGET_ENV}#"]
