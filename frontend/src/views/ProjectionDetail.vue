@@ -133,6 +133,7 @@
       </div>
       <template v-if="isModelParameterPanelsVisible">
         <ParameterSelectionProgressBar
+          v-if="isDraft"
           :sections="manualInputProgressSections"
           :percentage="manualInputPercentage"
           :completedCount="manualInputCompletedCount"
