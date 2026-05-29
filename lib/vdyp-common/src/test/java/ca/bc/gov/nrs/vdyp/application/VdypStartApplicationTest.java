@@ -1708,7 +1708,7 @@ class VdypStartApplicationTest {
 			EasyMock.replay(species);
 			float result;
 			try (var app = new TestStartApplication(controlMap, false)) {
-				result = app.meanVolumeSmall(species, dq, hl);
+				result = app.estimationMethods.estimateMeanVolumeSmall(species, dq, hl);
 			}
 			assertThat(result, closeTo(expectedVolume));
 			EasyMock.verify(species);

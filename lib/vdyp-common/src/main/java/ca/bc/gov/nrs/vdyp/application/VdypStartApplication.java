@@ -1050,7 +1050,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			float loreyHeightSpecSmall = smallComponentLoreyHeight(spec, quadMeanDiameterSpecSmall); // HLSMsp
 
 			// EMP086
-			float meanVolumeSmall = meanVolumeSmall(spec, quadMeanDiameterSpecSmall, loreyHeightSpecSmall); // VMEANSMs
+			float meanVolumeSmall = this.estimationMethods.estimateMeanVolumeSmall(spec, quadMeanDiameterSpecSmall, loreyHeightSpecSmall); // VMEANSMs
 
 			// TODO Apply Compatibility Variables, not needed for FIPSTART or VRISTART
 
@@ -1158,11 +1158,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 						a3 * spec.getLoreyHeightByUtilization().getAll();
 
 		return exp(logit) / (1.0f + exp(logit));
-	}
-
-	// EMP086
-	public float meanVolumeSmall(VdypSpecies spec, float quadMeanDiameterSpecSmall, float loreyHeightSpecSmall) {
-		return this.estimationMethods.estimateMeanVolumeSmall(spec, quadMeanDiameterSpecSmall, loreyHeightSpecSmall);
 	}
 
 	// YUC1
