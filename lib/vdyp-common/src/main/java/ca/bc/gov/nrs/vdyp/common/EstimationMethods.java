@@ -1017,10 +1017,12 @@ public class EstimationMethods {
 
 	/**
 	 * EMPO086
+	 * 
+	 * Estimate the whole stem volume of the small utilization class
 	 *
-	 * @param spec
-	 * @param quadMeanDiameterSpecSmall
-	 * @param loreyHeightSpecSmall
+	 * @param spec                      The species
+	 * @param loreyHeightSpecSmall      The Lorey height of the small class
+	 * @param quadMeanDiameterSpecSmall The quadratic mean diameter of the small class
 	 */
 	public float
 			estimateMeanVolumeSmall(VdypSpecies spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall) {
@@ -1029,10 +1031,12 @@ public class EstimationMethods {
 
 	/**
 	 * EMPO086
-	 *
-	 * @param spec
-	 * @param loreyHeightSpecSmall
-	 * @param quadMeanDiameterSpecSmall
+	 * 
+	 * Estimate the whole stem volume of the small utilization class
+	 * 
+	 * @param spec                      The species
+	 * @param loreyHeightSpecSmall      The Lorey height of the small class
+	 * @param quadMeanDiameterSpecSmall The quadratic mean diameter of the small class
 	 */
 	public float estimateMeanVolumeSmall(String spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall) {
 		Coefficients coe = controlMap.getSmallComponentWholeStemVolumeCoefficients().get(spec);
