@@ -114,7 +114,7 @@ const handlePrint = () => {
   width: 100%;
   padding-left: var(--layout-padding-none) !important;
   padding-right: var(--layout-padding-none) !important;
-  padding-top: var(--layout-padding-medium);
+  padding-top: 0px;
   padding-bottom: var(--layout-padding-medium);
   margin: var(--layout-margin-none);
 }

@@ -117,7 +117,17 @@
         CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
       "
     >
-      <div class="tabs-with-download">
+      <ProjectionRunProgressBar
+        v-if="isManualInputRunProgressBarVisible"
+        :status="appStore.currentProjectionStatus"
+        :polygonCount="batchPolygonCount"
+        :completedPolygonCount="batchCompletedPolygonCount"
+        :errorCount="batchErrorCount"
+        :startDate="runStartDate"
+        :endDate="runEndDate"
+        class="panel-spacing"
+      />
+      <div class="tabs-with-download" :style="isManualInputRunProgressBarVisible ? { marginTop: '16px' } : {}">
         <AppTabs
           v-model:currentTab="modelParamActiveTab"
           :tabs="modelParamTabs"
@@ -131,16 +141,6 @@
           @click="handleDownloadReport"
         />
       </div>
-      <ProjectionRunProgressBar
-        v-if="isManualInputRunProgressBarVisible"
-        :status="appStore.currentProjectionStatus"
-        :polygonCount="batchPolygonCount"
-        :completedPolygonCount="batchCompletedPolygonCount"
-        :errorCount="batchErrorCount"
-        :startDate="runStartDate"
-        :endDate="runEndDate"
-        class="panel-spacing"
-      />
       <template v-if="isModelParameterPanelsVisible">
         <ParameterSelectionProgressBar
           v-if="isDraft"
