@@ -51,6 +51,10 @@ public class ApiGatewayAuthenticationMechanism implements HttpAuthenticationMech
 		String consumer = request.getHeader(GATEWAY_CONSUMER_HEADER);
 		String gatewayJwt = request.getHeader(GATEWAY_JWT_HEADER);
 
+		if (isBlank(consumer) && isBlank(gatewayJwt)) {
+			return Uni.createFrom().nullItem();
+		}
+
 		if (isBlank(consumer) || isBlank(gatewayJwt)) {
 			return Uni.createFrom().failure(new AuthenticationFailedException());
 		}

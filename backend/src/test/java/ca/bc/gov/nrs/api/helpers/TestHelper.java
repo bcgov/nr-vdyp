@@ -51,6 +51,10 @@ public class TestHelper {
 
 	public static final String ROOT_PATH = "/api/v8";
 
+	public static final String GATEWAY_JWT_HEADER = "GW-JWT";
+
+	public static final String GATEWAY_JWT = "test-gateway-jwt";
+
 	public Path getResourceFile(Path testResourceFolderPath, String fileName) {
 
 		String resourceFilePath = Path.of(testResourceFolderPath.toString(), fileName).toString();

@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
@@ -79,6 +80,17 @@ class ApiGatewayJwtVerifierTest {
 		String token = gatewayJwt(AUDIENCE, ISSUER, Date.from(Instant.now().plusSeconds(300)), JWSAlgorithm.RS512);
 
 		assertThrows(BadJOSEException.class, () -> verifier.verify(token));
+	}
+
+	@Test
+	void testVerifySkipsJwtParsingWhenVerificationDisabled() throws Exception {
+		ApiGatewayJwtVerifier disabledVerifier = new ApiGatewayJwtVerifier(
+				AUDIENCE, ISSUER, new ImmutableJWKSet<>(new JWKSet()), false
+		);
+
+		JWTClaimsSet claims = disabledVerifier.verify("not-a-jwt");
+
+		assertNull(claims.getIssuer());
 	}
 
 	@Test

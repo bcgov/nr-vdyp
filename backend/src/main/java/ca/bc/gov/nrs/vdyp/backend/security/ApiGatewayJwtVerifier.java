@@ -27,27 +27,45 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class ApiGatewayJwtVerifier {
 
 	private static final String AUDIENCE_PROPERTY = "vdyp.api-gateway.jwt.audience";
 
+	private static final String VERIFICATION_ENABLED_PROPERTY = "vdyp.api-gateway.jwt.verification.enabled";
+
 	private final ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
 
+	private final boolean verificationEnabled;
+
+	@Inject
 	public ApiGatewayJwtVerifier(
 			@ConfigProperty(name = "vdyp.api-gateway.jwt.jwks-uri") String jwksUri,
 			@ConfigProperty(name = AUDIENCE_PROPERTY) String audience,
-			@ConfigProperty(name = "vdyp.api-gateway.jwt.issuer") String issuer
+			@ConfigProperty(name = "vdyp.api-gateway.jwt.issuer") String issuer,
+			@ConfigProperty(name = VERIFICATION_ENABLED_PROPERTY, defaultValue = "true") boolean verificationEnabled
 	) {
-		this(audience, issuer, JWKSourceBuilder.create(toUrl(jwksUri)).build());
+		this(audience, issuer, JWKSourceBuilder.create(toUrl(jwksUri)).build(), verificationEnabled);
 	}
 
 	ApiGatewayJwtVerifier(String audience, String issuer, JWKSource<SecurityContext> jwkSource) {
+		this(audience, issuer, jwkSource, true);
+	}
+
+	ApiGatewayJwtVerifier(
+			String audience, String issuer, JWKSource<SecurityContext> jwkSource, boolean verificationEnabled
+	) {
+		this.verificationEnabled = verificationEnabled;
 		this.jwtProcessor = createJwtProcessor(parseRequiredCsv(AUDIENCE_PROPERTY, audience), issuer, jwkSource);
 	}
 
 	public JWTClaimsSet verify(String token) throws ParseException, BadJOSEException, JOSEException {
+		if (!verificationEnabled) {
+			return new JWTClaimsSet.Builder().build();
+		}
+
 		return jwtProcessor.process(token, null);
 	}
 
