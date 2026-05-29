@@ -131,6 +131,16 @@
           @click="handleDownloadReport"
         />
       </div>
+      <ProjectionRunProgressBar
+        v-if="isManualInputRunProgressBarVisible"
+        :status="appStore.currentProjectionStatus"
+        :polygonCount="batchPolygonCount"
+        :completedPolygonCount="batchCompletedPolygonCount"
+        :errorCount="batchErrorCount"
+        :startDate="runStartDate"
+        :endDate="runEndDate"
+        class="panel-spacing"
+      />
       <template v-if="isModelParameterPanelsVisible">
         <ParameterSelectionProgressBar
           v-if="isDraft"
@@ -287,6 +297,13 @@ const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONS
 const isRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD &&
+    (isRunning.value || isReady.value || isFailed.value || isCancelled.value),
+)
+
+// Shown for Manual Input mode when projection has been run (Running/Ready/Failed/Cancelled)
+const isManualInputRunProgressBarVisible = computed(
+  () =>
+    appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT &&
     (isRunning.value || isReady.value || isFailed.value || isCancelled.value),
 )
 
