@@ -59,7 +59,6 @@ import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
@@ -2534,7 +2533,7 @@ class VdypStartApplicationTest {
 
 			layer.setSpecies(Arrays.asList(spec1, spec2));
 
-			EstimationMethods estimationMethods = new EstimationMethods(new ResolvedControlMapImpl(controlMap));
+			EstimationMethods estimationMethods = new EstimationMethods(TestUtils.resolveControlMap(controlMap));
 			ComputationMethods computationMethods = new ComputationMethods(
 					estimationMethods, VdypApplicationIdentifier.FIP_START
 			);

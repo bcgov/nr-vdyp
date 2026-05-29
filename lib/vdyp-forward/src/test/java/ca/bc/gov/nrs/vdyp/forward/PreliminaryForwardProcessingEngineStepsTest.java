@@ -15,13 +15,13 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
@@ -377,7 +377,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 	}
 
 	private static void setSiteEstimationModeToSimple() {
-		ForwardDebugSettings mockDebugSettings = new ForwardDebugSettings(new Integer[25]);
+		ProcessingDebugSettings mockDebugSettings = new ProcessingDebugSettings(new Integer[25]);
 		mockDebugSettings.setValue(11, 0);
 		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), mockDebugSettings);
 	}

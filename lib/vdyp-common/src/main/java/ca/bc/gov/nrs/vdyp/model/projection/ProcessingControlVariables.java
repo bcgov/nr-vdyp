@@ -1,10 +1,10 @@
-package ca.bc.gov.nrs.vdyp.forward.model;
+package ca.bc.gov.nrs.vdyp.model.projection;
 
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
-import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 
 /**
  * Control Variable values
@@ -54,7 +54,7 @@ import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
  * <li>1: Yes (normal)
  * </ul>
  */
-public class ForwardControlVariables {
+public class ProcessingControlVariables extends ControlVariables {
 
 	// NOTE:
 	//
@@ -71,7 +71,7 @@ public class ForwardControlVariables {
 
 	private final int[] controlVariables = new int[10];
 
-	public ForwardControlVariables(Integer[] controlVariableValues) throws ValueParseException {
+	public ProcessingControlVariables(Integer[] controlVariableValues) throws ValueParseException {
 		int index = 0;
 
 		if (controlVariableValues != null) {
@@ -148,9 +148,9 @@ public class ForwardControlVariables {
 		}
 	}
 
-	public boolean allowCalculation(float value, float limit, BiFunction<Float, Float, Boolean> p) {
+	public boolean allowCalculation(float value, float limit, BiPredicate<Float, Float> p) {
 		int cvValue = controlVariables[ControlVariable.ALLOW_COMPAT_VAR_CALCS_5.ordinal()];
-		return cvValue == 0 && value > 0 || cvValue > 0 && p.apply(value, limit);
+		return cvValue == 0 && value > 0 || cvValue > 0 && p.test(value, limit);
 	}
 
 	public boolean allowCalculation(BooleanSupplier p) {
@@ -176,7 +176,7 @@ public class ForwardControlVariables {
 		validate();
 	}
 
-	int getControlVariable(int elementNumber) {
+	public int getControlVariable(int elementNumber) {
 
 		if (elementNumber < 1 || elementNumber > MAX_CONTROL_VARIABLE_VALUES) {
 			throw new IllegalArgumentException(

@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -39,7 +38,7 @@ class EstimationMethodsTest {
 	@BeforeEach
 	void setup() {
 		controlMap = TestUtils.loadControlMap();
-		var resolvedControlMap = new ResolvedControlMapImpl(controlMap);
+		var resolvedControlMap = TestUtils.resolveControlMap(controlMap);
 		emp = new EstimationMethods(resolvedControlMap);
 		becLookup = (BecLookup) controlMap.get(ControlKey.BEC_DEF.name());
 	}

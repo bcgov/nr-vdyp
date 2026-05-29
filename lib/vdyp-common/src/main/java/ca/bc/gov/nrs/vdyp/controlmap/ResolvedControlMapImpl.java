@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.controlmap;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,13 +19,13 @@ import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 
-public class ResolvedControlMapImpl implements ResolvedControlMap {
+public abstract class ResolvedControlMapImpl implements ResolvedControlMap {
 
 	private final Map<String, Object> controlMap;
 
-	private final Map<ControlKey, Object> entityCache = new HashMap<>();
+	private final Map<ControlKey, Object> entityCache = new EnumMap<>(ControlKey.class);
 
-	public ResolvedControlMapImpl(Map<String, Object> controlMap) {
+	protected ResolvedControlMapImpl(Map<String, Object> controlMap) {
 		this.controlMap = controlMap;
 	}
 
@@ -38,7 +38,7 @@ public class ResolvedControlMapImpl implements ResolvedControlMap {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <U> U get(ControlKey key, Class<? super U> clazz) {
+	protected <U> U get(ControlKey key, Class<? super U> clazz) {
 
 		U entity = (U) entityCache.get(key);
 		if (entity == null) {
