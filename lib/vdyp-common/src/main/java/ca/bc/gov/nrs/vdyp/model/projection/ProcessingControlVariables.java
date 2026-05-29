@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.model.projection;
 
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
@@ -147,9 +148,9 @@ public class ProcessingControlVariables extends ControlVariables {
 		}
 	}
 
-	public boolean allowCalculation(float value, float limit, BiFunction<Float, Float, Boolean> p) {
+	public boolean allowCalculation(float value, float limit, BiPredicate<Float, Float> p) {
 		int cvValue = controlVariables[ControlVariable.ALLOW_COMPAT_VAR_CALCS_5.ordinal()];
-		return cvValue == 0 && value > 0 || cvValue > 0 && p.apply(value, limit);
+		return cvValue == 0 && value > 0 || cvValue > 0 && p.test(value, limit);
 	}
 
 	public boolean allowCalculation(BooleanSupplier p) {
