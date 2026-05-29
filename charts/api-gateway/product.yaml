@@ -1,6 +1,6 @@
 kind: DraftDataset
 name: vdyp-#{TARGET_ENV}#-dataset
-title: vdyp-#{TARGET_ENV}#-dataset
+title: VDYP #{TARGET_ENV}# API
 organization: ministry-of-forests
 organizationUnit: forest-analysis-and-inventory
 notes: |
