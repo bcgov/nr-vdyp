@@ -22,7 +22,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
+import ca.bc.gov.nrs.vdyp.application.test.TestStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
@@ -39,6 +42,7 @@ import ca.bc.gov.nrs.vdyp.model.Sp64DistributionSet;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings.SpeciesDynamics;
@@ -47,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class ForwardProcessingEngineTest {
@@ -601,11 +606,11 @@ class ForwardProcessingEngineTest {
 			// uses real expecterd value later
 			float expected = Float.NaN; // current behavior is dropping this value but that is ok to fix when we know
 										// we have matched VDYP7
-			/*
-			 * float realExpected = (float) SiteTool.convertSiteIndexBetweenCurves(
-			 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(secondarySlot)), sourceSiteIndex,
-			 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(primarySlot)) );
-			 */
+										/*
+										 * float realExpected = (float) SiteTool.convertSiteIndexBetweenCurves(
+										 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(secondarySlot)), sourceSiteIndex,
+										 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(primarySlot)) );
+										 */
 			fixture.bank.siteIndices[primarySlot] = Float.NaN;
 			fixture.bank.siteIndices[secondarySlot] = sourceSiteIndex;
 			fixture.bank.siteIndices[fixture.slot("H")] = 16.1f;
@@ -986,6 +991,38 @@ class ForwardProcessingEngineTest {
 				return slots.get(genus);
 			}
 		}
+	}
+
+	@Nested
+	class EstimateMeanVolumeSmall {
+
+		Map<String, Object> controlMap;
+		ForwardProcessingEngine fpe;
+
+		@BeforeEach
+		void setup() throws IOException, ResourceParseException, ValueParseException {
+			var parser = new ProcessingControlParser();
+			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
+			fpe = new ForwardProcessingEngine(controlMap);
+		}
+
+		@ParameterizedTest
+		@CsvSource(
+			{ // Values taken from VDYP7 via debugger
+					"S, 5.58619356, 4.69048452, 0.00447751069",
+					"S, 5.94472694, 7.54808998, 0.00964565482",
+					"PL, 5.73309135, 5.04876852, 0.00573747745",
+					"H, 6.32094097, 7.15886297, 0.00975632109",
+					"Y, 6.0864749, 7.53712893, 0.0137963342"
+			}
+		)
+		void testSimple(String speciesId, float dq, float hl, float expectedVolume) throws Exception {
+
+			float result = fpe.meanVolumeSmall(speciesId, hl, dq);
+
+			assertThat(result, closeTo(expectedVolume));
+		}
+
 	}
 
 	@Nested
