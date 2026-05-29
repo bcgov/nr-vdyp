@@ -1017,23 +1017,24 @@ public class EstimationMethods {
 
 	/**
 	 * EMPO086
-	 * 
+	 *
 	 * Estimate the whole stem volume of the small utilization class
 	 *
 	 * @param spec                      The species
 	 * @param loreyHeightSpecSmall      The Lorey height of the small class
 	 * @param quadMeanDiameterSpecSmall The quadratic mean diameter of the small class
 	 */
-	public float
-			estimateMeanVolumeSmall(VdypSpecies spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall) {
+	public float estimateMeanVolumeSmall(
+			BaseVdypSpecies<?> spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall
+	) {
 		return estimateMeanVolumeSmall(spec.getGenus(), loreyHeightSpecSmall, quadMeanDiameterSpecSmall);
 	}
 
 	/**
 	 * EMPO086
-	 * 
+	 *
 	 * Estimate the whole stem volume of the small utilization class
-	 * 
+	 *
 	 * @param spec                      The species
 	 * @param loreyHeightSpecSmall      The Lorey height of the small class
 	 * @param quadMeanDiameterSpecSmall The quadratic mean diameter of the small class
