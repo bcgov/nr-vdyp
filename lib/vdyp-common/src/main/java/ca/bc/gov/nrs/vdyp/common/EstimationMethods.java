@@ -1014,4 +1014,38 @@ public class EstimationMethods {
 		components.setCoe(UtilizationClass.ALL.index, sum);
 		return sum;
 	}
+
+	/**
+	 * EMPO086
+	 * 
+	 * @param spec
+	 * @param quadMeanDiameterSpecSmall
+	 * @param loreyHeightSpecSmall
+	 */
+	public float meanVolumeSmall(VdypSpecies spec, float quadMeanDiameterSpecSmall, float loreyHeightSpecSmall) {
+		return meanVolumeSmall(spec.getGenus(), quadMeanDiameterSpecSmall, loreyHeightSpecSmall);
+	}
+
+	/**
+	 * EMPO086
+	 * 
+	 * @param spec
+	 * @param quadMeanDiameterSpecSmall
+	 * @param loreyHeightSpecSmall
+	 */
+	public float meanVolumeSmall(String spec, float quadMeanDiameterSpecSmall, float loreyHeightSpecSmall) {
+		Coefficients coe = controlMap.getSmallComponentWholeStemVolumeCoefficients().get(spec);
+
+		// EQN 1 in IPSJF119.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+		float a2 = coe.getCoe(3);
+		float a3 = coe.getCoe(4);
+
+		return exp(
+				a0 + a1 * log(quadMeanDiameterSpecSmall) + a2 * log(loreyHeightSpecSmall) + a3
+						* quadMeanDiameterSpecSmall
+		);
+	}
 }
