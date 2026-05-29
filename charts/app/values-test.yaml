@@ -84,6 +84,9 @@ backend:
     OIDC_CLIENT_SECRET_SECRET_KEY: client-secret
     BATCH_BASE_URL: ~
     VDYP_PROJECTION_EXPIRY_DAYS: ~
+    VDYP_API_GATEWAY_JWT_JWKS_URI: ~
+    VDYP_API_GATEWAY_JWT_ISSUER: ~
+    VDYP_API_GATEWAY_JWT_AUDIENCE: ~
 
 frontend:
   fullnameOverride: "vdyp-ui-test"
