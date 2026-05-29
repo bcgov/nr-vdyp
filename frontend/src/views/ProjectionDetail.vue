@@ -132,6 +132,15 @@
         />
       </div>
       <template v-if="isModelParameterPanelsVisible">
+        <ParameterSelectionProgressBar
+          v-if="isDraft"
+          :sections="manualInputProgressSections"
+          :percentage="manualInputPercentage"
+          :completedCount="manualInputCompletedCount"
+          :projectionStatus="appStore.currentProjectionStatus"
+          class="panel-spacing"
+        />
+        <ReportDetailsPanel class="panel-spacing" />
         <SpeciesInfoPanel class="panel-spacing" />
         <SiteInfoPanel class="panel-spacing" />
         <StandInfoPanel class="panel-spacing" />
@@ -374,7 +383,6 @@ const duplicatedFromText = computed(() => {
 const modelParamTabs = computed<Tab[]>(() => [
   {
     label: CONSTANTS.MANUAL_INPUT_TAB_NAME.MODEL_PARAM_SELECTION,
-    component: ReportDetailsPanel,
     tabname: null,
     disabled: false,
   },
@@ -424,17 +432,49 @@ const uploadedFilesCount = computed(() => {
   return count
 })
 
+const manualInputProgressSections = computed(() => [
+  {
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.REPORT_DETAILS,
+    completed: modelParameterStore.panelState.reportDetails.confirmed,
+  },
+  {
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.SPECIES_INFO,
+    completed: modelParameterStore.panelState.speciesInfo.confirmed,
+  },
+  {
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.SITE_INFO,
+    completed: modelParameterStore.panelState.siteInfo.confirmed,
+  },
+  {
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.STAND_INFO,
+    completed: modelParameterStore.panelState.standInfo.confirmed,
+  },
+  {
+    label: CONSTANTS.MANUAL_INPUT_PANEL_LABEL.REPORT_SETTINGS,
+    completed: modelParameterStore.panelState.reportSettings.confirmed,
+  },
+])
+
+const manualInputPercentage = computed(() => {
+  const confirmed = manualInputProgressSections.value.filter((s) => s.completed).length
+  return Math.round((confirmed / manualInputProgressSections.value.length) * 100)
+})
+
+const manualInputCompletedCount = computed(() =>
+  manualInputProgressSections.value.filter((s) => s.completed).length,
+)
+
 const fileUploadProgressSections = computed(() => [
   {
-    label: 'Report Details',
+    label: CONSTANTS.FILE_UPLOAD_PANEL_LABEL.REPORT_CONFIG,
     completed: fileUploadStore.panelState.reportConfig.confirmed,
   },
   {
-    label: 'Minimum DBH',
+    label: CONSTANTS.FILE_UPLOAD_PANEL_LABEL.MINIMUM_DBH,
     completed: fileUploadStore.panelState.minimumDBH.confirmed,
   },
   {
-    label: 'File Upload',
+    label: CONSTANTS.FILE_UPLOAD_PANEL_LABEL.ATTACHMENTS,
     completed:
       fileUploadPrerequisitesDone.value && uploadedFilesCount.value === 2,
   },

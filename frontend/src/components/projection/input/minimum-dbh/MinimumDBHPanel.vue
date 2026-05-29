@@ -100,8 +100,8 @@ const panelName = CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH
 
 const panelTitle = computed(() =>
   mobile.value
-    ? 'Min DBH by Species Group (cm+)'
-    : 'Minimum DBH Limit by Species Group',
+    ? CONSTANTS.FILE_UPLOAD_PANEL_LABEL.MINIMUM_DBH_PANEL_MOBILE
+    : CONSTANTS.FILE_UPLOAD_PANEL_LABEL.MINIMUM_DBH_PANEL_DESKTOP,
 )
 
 const panelOpenStates = computed(() => fileUploadStore.panelOpenStates)
