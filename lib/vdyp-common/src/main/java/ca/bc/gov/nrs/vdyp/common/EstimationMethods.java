@@ -1017,25 +1017,24 @@ public class EstimationMethods {
 
 	/**
 	 * EMPO086
-	 * 
+	 *
 	 * @param spec
 	 * @param quadMeanDiameterSpecSmall
 	 * @param loreyHeightSpecSmall
 	 */
-	public float estimateMeanVolumeSmall(
-			VdypSpecies spec, float quadMeanDiameterSpecSmall, float loreyHeightSpecSmall
-	) {
-		return estimateMeanVolumeSmall(spec.getGenus(), quadMeanDiameterSpecSmall, loreyHeightSpecSmall);
+	public float
+			estimateMeanVolumeSmall(VdypSpecies spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall) {
+		return estimateMeanVolumeSmall(spec.getGenus(), loreyHeightSpecSmall, quadMeanDiameterSpecSmall);
 	}
 
 	/**
 	 * EMPO086
-	 * 
+	 *
 	 * @param spec
-	 * @param quadMeanDiameterSpecSmall
 	 * @param loreyHeightSpecSmall
+	 * @param quadMeanDiameterSpecSmall
 	 */
-	public float estimateMeanVolumeSmall(String spec, float quadMeanDiameterSpecSmall, float loreyHeightSpecSmall) {
+	public float estimateMeanVolumeSmall(String spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall) {
 		Coefficients coe = controlMap.getSmallComponentWholeStemVolumeCoefficients().get(spec);
 
 		// EQN 1 in IPSJF119.doc
@@ -1046,8 +1045,8 @@ public class EstimationMethods {
 		float a3 = coe.getCoe(4);
 
 		return exp(
-				a0 + a1 * log(quadMeanDiameterSpecSmall) + a2 * log(loreyHeightSpecSmall) + a3
-						* quadMeanDiameterSpecSmall
+				a0 + a1 * log(quadMeanDiameterSpecSmall) + a2 * log(loreyHeightSpecSmall)
+						+ a3 * quadMeanDiameterSpecSmall
 		);
 	}
 }

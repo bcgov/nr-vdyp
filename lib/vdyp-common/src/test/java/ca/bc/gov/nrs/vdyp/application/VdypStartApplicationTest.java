@@ -1691,15 +1691,30 @@ class VdypStartApplicationTest {
 
 		@ParameterizedTest
 		@CsvSource(
-			{
-					"S, 5.58619356, 4.69048452, 0.00447751069",
-					"S, 5.94472694, 7.54808998, 0.00964565482",
-					"PL, 5.73309135, 5.04876852, 0.00573747745",
-					"H, 6.32094097, 7.15886297, 0.00975632109",
-					"Y, 6.0864749, 7.53712893, 0.0137963342"
-			}
+			{ // Values from VDYP7 via debugger
+					"S, 5.58619356, 4.69048452, 0.00447751069", "S, 5.94472694, 7.54808998, 0.00964565482",
+					"PL, 5.73309135, 5.04876852, 0.00573747745", "H, 6.32094097, 7.15886297, 0.00975632109",
+					"Y, 6.0864749, 7.53712893, 0.0137963342" }
 		)
 		void testSimple(String speciesId, float dq, float hl, float expectedVolume) throws Exception {
+
+			controlMap = TestUtils.loadControlMap();
+
+			float result;
+			try (var app = new TestStartApplication(controlMap, false)) {
+				result = app.estimationMethods.estimateMeanVolumeSmall(speciesId, hl, dq);
+			}
+			assertThat(result, closeTo(expectedVolume));
+		}
+
+		@ParameterizedTest
+		@CsvSource(
+			{ // Values from VDYP7 via debugger
+					"S, 5.58619356, 4.69048452, 0.00447751069", "S, 5.94472694, 7.54808998, 0.00964565482",
+					"PL, 5.73309135, 5.04876852, 0.00573747745", "H, 6.32094097, 7.15886297, 0.00975632109",
+					"Y, 6.0864749, 7.53712893, 0.0137963342" }
+		)
+		void testSpeciesObject(String speciesId, float dq, float hl, float expectedVolume) throws Exception {
 
 			controlMap = TestUtils.loadControlMap();
 
@@ -1708,7 +1723,7 @@ class VdypStartApplicationTest {
 			EasyMock.replay(species);
 			float result;
 			try (var app = new TestStartApplication(controlMap, false)) {
-				result = app.estimationMethods.estimateMeanVolumeSmall(species, dq, hl);
+				result = app.estimationMethods.estimateMeanVolumeSmall(species, hl, dq);
 			}
 			assertThat(result, closeTo(expectedVolume));
 			EasyMock.verify(species);

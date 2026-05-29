@@ -1663,7 +1663,7 @@ public class ForwardProcessingEngine {
 			float spLhSmall = smallComponentLoreyHeight(speciesName, spLhAll, spDqSmall, spDqAll); // HLSMsp
 
 			// EMP086
-			float meanVolumeSmall = fps.estimators.estimateMeanVolumeSmall(speciesName, spDqSmall, spLhSmall); // VMEANSMs
+			float meanVolumeSmall = fps.estimators.estimateMeanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
 
 			int controlVar3Value = fps.controlMap.getControlVariables()
 					.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3);
@@ -2782,7 +2782,7 @@ public class ForwardProcessingEngine {
 		float spLhSmall = smallComponentLoreyHeight(speciesName, spLoreyHeight_All, spDqSmall, spQuadMeanDiameter_All); // HLSMsp
 
 		// EMP086
-		float spMeanVolumeSmall = fps.estimators.estimateMeanVolumeSmall(speciesName, spDqSmall, spLhSmall); // VMEANSMs
+		float spMeanVolumeSmall = fps.estimators.estimateMeanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
 
 		var spCvSmall = new HashMap<UtilizationClassVariable, Float>();
 
