@@ -3,7 +3,7 @@ package ca.bc.gov.nrs.vdyp.backend.security;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.text.ParseException;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -12,20 +12,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.jwk.source.JWKSourceBuilder;
-import com.nimbusds.jose.proc.BadJOSEException;
-import com.nimbusds.jose.proc.JWSKeySelector;
-import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jose.proc.SecurityContext;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
-import com.nimbusds.jwt.proc.DefaultJWTProcessor;
-
+import io.smallrye.jwt.algorithm.SignatureAlgorithm;
+import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
+import io.smallrye.jwt.auth.principal.JWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -36,7 +28,9 @@ public class ApiGatewayJwtVerifier {
 
 	private static final String VERIFICATION_ENABLED_PROPERTY = "vdyp.api-gateway.jwt.verification.enabled";
 
-	private final ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
+	private final JWTParser jwtParser;
+
+	private final JWTAuthContextInfo jwtAuthContextInfo;
 
 	private final boolean verificationEnabled;
 
@@ -45,51 +39,70 @@ public class ApiGatewayJwtVerifier {
 			@ConfigProperty(name = "vdyp.api-gateway.jwt.jwks-uri") String jwksUri,
 			@ConfigProperty(name = AUDIENCE_PROPERTY) String audience,
 			@ConfigProperty(name = "vdyp.api-gateway.jwt.issuer") String issuer,
-			@ConfigProperty(name = VERIFICATION_ENABLED_PROPERTY, defaultValue = "true") boolean verificationEnabled
+			@ConfigProperty(name = VERIFICATION_ENABLED_PROPERTY, defaultValue = "true") boolean verificationEnabled,
+			JWTParser jwtParser
 	) {
-		this(audience, issuer, JWKSourceBuilder.create(toUrl(jwksUri)).build(), verificationEnabled);
+		this(
+				jwtParser,
+				createJwtAuthContextInfo(parseRequiredCsv(AUDIENCE_PROPERTY, audience), issuer, toUrlString(jwksUri)),
+				verificationEnabled
+		);
 	}
 
-	ApiGatewayJwtVerifier(String audience, String issuer, JWKSource<SecurityContext> jwkSource) {
-		this(audience, issuer, jwkSource, true);
+	ApiGatewayJwtVerifier(String audience, String issuer, PublicKey publicKey, JWTParser jwtParser) {
+		this(audience, issuer, publicKey, jwtParser, true);
 	}
 
 	ApiGatewayJwtVerifier(
-			String audience, String issuer, JWKSource<SecurityContext> jwkSource, boolean verificationEnabled
+			String audience, String issuer, PublicKey publicKey, JWTParser jwtParser, boolean verificationEnabled
 	) {
-		this.verificationEnabled = verificationEnabled;
-		this.jwtProcessor = createJwtProcessor(parseRequiredCsv(AUDIENCE_PROPERTY, audience), issuer, jwkSource);
-	}
-
-	public JWTClaimsSet verify(String token) throws ParseException, BadJOSEException, JOSEException {
-		if (!verificationEnabled) {
-			return new JWTClaimsSet.Builder().build();
-		}
-
-		return jwtProcessor.process(token, null);
-	}
-
-	private static ConfigurableJWTProcessor<SecurityContext>
-			createJwtProcessor(Set<String> audiences, String issuer, JWKSource<SecurityContext> jwkSource) {
-		ConfigurableJWTProcessor<SecurityContext> processor = new DefaultJWTProcessor<>();
-		JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.RS256, jwkSource);
-		processor.setJWSKeySelector(keySelector);
-
-		DefaultJWTClaimsVerifier<SecurityContext> claimsVerifier = new DefaultJWTClaimsVerifier<>(
-				audiences, exactIssuerClaim(issuer), Set.of("exp"), Set.of()
+		this(
+				jwtParser, createJwtAuthContextInfo(parseRequiredCsv(AUDIENCE_PROPERTY, audience), issuer, publicKey),
+				verificationEnabled
 		);
-		processor.setJWTClaimsSetVerifier(claimsVerifier);
-
-		return processor;
 	}
 
-	private static JWTClaimsSet exactIssuerClaim(String issuer) {
-		String normalizedIssuer = normalize(issuer);
-		if (normalizedIssuer == null) {
+	private ApiGatewayJwtVerifier(
+			JWTParser jwtParser, JWTAuthContextInfo jwtAuthContextInfo, boolean verificationEnabled
+	) {
+		this.jwtParser = jwtParser;
+		this.jwtAuthContextInfo = jwtAuthContextInfo;
+		this.verificationEnabled = verificationEnabled;
+	}
+
+	public JsonWebToken verify(String token) throws ParseException {
+		if (!verificationEnabled) {
 			return null;
 		}
 
-		return new JWTClaimsSet.Builder().issuer(normalizedIssuer).build();
+		return jwtParser.parse(token, jwtAuthContextInfo);
+	}
+
+	private static JWTAuthContextInfo createJwtAuthContextInfo(Set<String> audiences, String issuer, String jwksUri) {
+		JWTAuthContextInfo authContextInfo = createJwtAuthContextInfo(audiences, issuer);
+		authContextInfo.setPublicKeyLocation(jwksUri);
+		return authContextInfo;
+	}
+
+	private static JWTAuthContextInfo
+			createJwtAuthContextInfo(Set<String> audiences, String issuer, PublicKey publicKey) {
+		JWTAuthContextInfo authContextInfo = createJwtAuthContextInfo(audiences, issuer);
+		authContextInfo.setPublicVerificationKey(publicKey);
+		return authContextInfo;
+	}
+
+	private static JWTAuthContextInfo createJwtAuthContextInfo(Set<String> audiences, String issuer) {
+		JWTAuthContextInfo authContextInfo = new JWTAuthContextInfo();
+		String normalizedIssuer = normalize(issuer);
+		if (normalizedIssuer != null) {
+			authContextInfo.setIssuedBy(normalizedIssuer);
+		}
+
+		authContextInfo.setExpectedAudience(audiences);
+		authContextInfo.setSignatureAlgorithm(SignatureAlgorithm.RS256);
+		authContextInfo.setRequiredClaims(Set.of("exp"));
+		authContextInfo.setRequireNamedPrincipal(false);
+		return authContextInfo;
 	}
 
 	private static Set<String> parseRequiredCsv(String propertyName, String value) {
@@ -112,9 +125,10 @@ public class ApiGatewayJwtVerifier {
 		return value.trim();
 	}
 
-	private static URL toUrl(String jwksUri) {
+	private static String toUrlString(String jwksUri) {
 		try {
-			return URI.create(jwksUri).toURL();
+			URL url = URI.create(jwksUri).toURL();
+			return url.toExternalForm();
 		} catch (IllegalArgumentException | MalformedURLException e) {
 			throw new IllegalStateException("Invalid API gateway JWT JWKS URI: " + jwksUri, e);
 		}

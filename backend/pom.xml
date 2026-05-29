@@ -287,8 +287,9 @@
 			<artifactId>quarkus-oidc</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.nimbusds</groupId>
-			<artifactId>nimbus-jose-jwt</artifactId>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-smallrye-jwt-build</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.reflections</groupId>

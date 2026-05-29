@@ -11,18 +11,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import com.nimbusds.jose.proc.BadJOSEException;
-import com.nimbusds.jwt.JWTClaimsSet;
-
 import ca.bc.gov.nrs.vdyp.backend.config.ApiGatewayPathConfig;
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.vertx.http.runtime.security.ChallengeData;
+import io.smallrye.jwt.auth.principal.ParseException;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 
@@ -93,7 +92,7 @@ class ApiGatewayAuthenticationMechanismTest {
 	@Test
 	void testAuthenticateFailsWhenGatewayJwtDoesNotVerify() throws Exception {
 		RoutingContext context = gatewayContext("/api/token", "test-consumer", GATEWAY_JWT);
-		when(apiGatewayJwtVerifier.verify(GATEWAY_JWT)).thenThrow(new BadJOSEException("invalid token"));
+		when(apiGatewayJwtVerifier.verify(GATEWAY_JWT)).thenThrow(new ParseException("invalid token"));
 
 		assertThrows(
 				AuthenticationFailedException.class, () -> mechanism.authenticate(context, null).await().indefinitely()
@@ -104,7 +103,8 @@ class ApiGatewayAuthenticationMechanismTest {
 	@Test
 	void testAuthenticateCreatesGatewaySecurityIdentity() throws Exception {
 		RoutingContext context = gatewayContext("/api/token/", "test-consumer", GATEWAY_JWT);
-		when(apiGatewayJwtVerifier.verify(GATEWAY_JWT)).thenReturn(gatewayClaims());
+		JsonWebToken gatewayClaims = gatewayClaims();
+		when(apiGatewayJwtVerifier.verify(GATEWAY_JWT)).thenReturn(gatewayClaims);
 
 		SecurityIdentity identity = mechanism.authenticate(context, null).await().indefinitely();
 
@@ -142,7 +142,9 @@ class ApiGatewayAuthenticationMechanismTest {
 		return context;
 	}
 
-	private static JWTClaimsSet gatewayClaims() {
-		return new JWTClaimsSet.Builder().issuer("https://issuer.example").build();
+	private static JsonWebToken gatewayClaims() {
+		JsonWebToken claims = mock(JsonWebToken.class);
+		when(claims.getIssuer()).thenReturn("https://issuer.example");
+		return claims;
 	}
 }

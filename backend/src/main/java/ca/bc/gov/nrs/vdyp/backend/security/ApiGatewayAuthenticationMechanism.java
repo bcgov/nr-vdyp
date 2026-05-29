@@ -3,10 +3,9 @@ package ca.bc.gov.nrs.vdyp.backend.security;
 import java.security.Principal;
 import java.util.Set;
 
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.nimbusds.jwt.JWTClaimsSet;
 
 import ca.bc.gov.nrs.vdyp.backend.config.ApiGatewayPathConfig;
 import io.quarkus.security.AuthenticationFailedException;
@@ -59,7 +58,7 @@ public class ApiGatewayAuthenticationMechanism implements HttpAuthenticationMech
 			return Uni.createFrom().failure(new AuthenticationFailedException());
 		}
 
-		JWTClaimsSet gatewayClaims;
+		JsonWebToken gatewayClaims;
 		try {
 			gatewayClaims = apiGatewayJwtVerifier.verify(gatewayJwt);
 		} catch (Exception e) {
@@ -72,7 +71,7 @@ public class ApiGatewayAuthenticationMechanism implements HttpAuthenticationMech
 
 		Builder identityBuilder = QuarkusSecurityIdentity.builder().setPrincipal(principal).addRole("KONG_API_GATEWAY")
 				.addAttribute("auth_source", "gwa").addAttribute("gateway_consumer", consumer);
-		if (gatewayClaims.getIssuer() != null) {
+		if (gatewayClaims != null && gatewayClaims.getIssuer() != null) {
 			identityBuilder.addAttribute("gateway_jwt_issuer", gatewayClaims.getIssuer());
 		}
 

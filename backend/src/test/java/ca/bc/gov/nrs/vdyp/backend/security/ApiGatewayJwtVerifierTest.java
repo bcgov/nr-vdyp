@@ -3,24 +3,20 @@ package ca.bc.gov.nrs.vdyp.backend.security;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.time.Instant;
-import java.util.Date;
 
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import com.nimbusds.jose.proc.BadJOSEException;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
+import io.smallrye.jwt.algorithm.SignatureAlgorithm;
+import io.smallrye.jwt.auth.principal.DefaultJWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
+import io.smallrye.jwt.build.Jwt;
 
 class ApiGatewayJwtVerifierTest {
 
@@ -28,85 +24,79 @@ class ApiGatewayJwtVerifierTest {
 
 	private static final String ISSUER = "https://aps-jwks-upstream-jwt-api-gov-bc-ca.test.api.gov.bc.ca";
 
-	private RSAKey gatewayKey;
+	private KeyPair gatewayKey;
 
 	private ApiGatewayJwtVerifier verifier;
 
 	@BeforeEach
-	void setUp() throws JOSEException {
-		gatewayKey = new RSAKeyGenerator(2048).keyID("gateway-key").generate();
-		verifier = new ApiGatewayJwtVerifier(
-				AUDIENCE, ISSUER, new ImmutableJWKSet<>(new JWKSet(gatewayKey.toPublicJWK()))
-		);
+	void setUp() throws Exception {
+		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+		keyPairGenerator.initialize(2048);
+		gatewayKey = keyPairGenerator.generateKeyPair();
+		verifier = new ApiGatewayJwtVerifier(AUDIENCE, ISSUER, gatewayKey.getPublic(), new DefaultJWTParser());
 	}
 
 	@Test
 	void testVerifyAcceptsValidGatewayJwt() throws Exception {
-		String token = gatewayJwt(AUDIENCE, ISSUER, Date.from(Instant.now().plusSeconds(300)), JWSAlgorithm.RS256);
+		String token = gatewayJwt(AUDIENCE, ISSUER, Instant.now().plusSeconds(300), SignatureAlgorithm.RS256);
 
-		JWTClaimsSet claims = verifier.verify(token);
+		JsonWebToken claims = verifier.verify(token);
 
 		assertEquals(ISSUER, claims.getIssuer());
-		assertEquals(AUDIENCE, claims.getAudience().get(0));
+		assertTrue(claims.getAudience().contains(AUDIENCE));
 	}
 
 	@Test
 	void testVerifyRejectsWrongAudience() throws Exception {
-		String token = gatewayJwt(
-				"other-service", ISSUER, Date.from(Instant.now().plusSeconds(300)), JWSAlgorithm.RS256
-		);
+		String token = gatewayJwt("other-service", ISSUER, Instant.now().plusSeconds(300), SignatureAlgorithm.RS256);
 
-		assertThrows(BadJOSEException.class, () -> verifier.verify(token));
+		assertThrows(ParseException.class, () -> verifier.verify(token));
 	}
 
 	@Test
 	void testVerifyRejectsWrongIssuer() throws Exception {
 		String token = gatewayJwt(
-				AUDIENCE, "https://issuer.example", Date.from(Instant.now().plusSeconds(300)), JWSAlgorithm.RS256
+				AUDIENCE, "https://issuer.example", Instant.now().plusSeconds(300), SignatureAlgorithm.RS256
 		);
 
-		assertThrows(BadJOSEException.class, () -> verifier.verify(token));
+		assertThrows(ParseException.class, () -> verifier.verify(token));
 	}
 
 	@Test
 	void testVerifyRejectsExpiredJwt() throws Exception {
-		String token = gatewayJwt(AUDIENCE, ISSUER, Date.from(Instant.now().minusSeconds(300)), JWSAlgorithm.RS256);
+		String token = gatewayJwt(AUDIENCE, ISSUER, Instant.now().minusSeconds(300), SignatureAlgorithm.RS256);
 
-		assertThrows(BadJOSEException.class, () -> verifier.verify(token));
+		assertThrows(ParseException.class, () -> verifier.verify(token));
 	}
 
 	@Test
 	void testVerifyRejectsJwtSignedWithUnexpectedAlgorithm() throws Exception {
-		String token = gatewayJwt(AUDIENCE, ISSUER, Date.from(Instant.now().plusSeconds(300)), JWSAlgorithm.RS512);
+		String token = gatewayJwt(AUDIENCE, ISSUER, Instant.now().plusSeconds(300), SignatureAlgorithm.RS512);
 
-		assertThrows(BadJOSEException.class, () -> verifier.verify(token));
+		assertThrows(ParseException.class, () -> verifier.verify(token));
 	}
 
 	@Test
 	void testVerifySkipsJwtParsingWhenVerificationDisabled() throws Exception {
 		ApiGatewayJwtVerifier disabledVerifier = new ApiGatewayJwtVerifier(
-				AUDIENCE, ISSUER, new ImmutableJWKSet<>(new JWKSet()), false
+				AUDIENCE, ISSUER, gatewayKey.getPublic(), new DefaultJWTParser(), false
 		);
 
-		JWTClaimsSet claims = disabledVerifier.verify("not-a-jwt");
+		JsonWebToken claims = disabledVerifier.verify("not-a-jwt");
 
-		assertNull(claims.getIssuer());
+		assertNull(claims);
 	}
 
 	@Test
 	void testConstructorRejectsBlankAudience() {
 		assertThrows(
 				IllegalStateException.class,
-				() -> new ApiGatewayJwtVerifier("  ", ISSUER, new ImmutableJWKSet<>(new JWKSet()))
+				() -> new ApiGatewayJwtVerifier("  ", ISSUER, gatewayKey.getPublic(), new DefaultJWTParser())
 		);
 	}
 
-	private String gatewayJwt(String audience, String issuer, Date expiresAt, JWSAlgorithm algorithm)
-			throws JOSEException {
-		JWTClaimsSet claims = new JWTClaimsSet.Builder().issuer(issuer).audience(audience).subject("gateway")
-				.expirationTime(expiresAt).build();
-		SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(algorithm).keyID(gatewayKey.getKeyID()).build(), claims);
-		jwt.sign(new RSASSASigner(gatewayKey));
-		return jwt.serialize();
+	private String gatewayJwt(String audience, String issuer, Instant expiresAt, SignatureAlgorithm algorithm) {
+		return Jwt.issuer(issuer).audience(audience).subject("gateway").expiresAt(expiresAt).jws().algorithm(algorithm)
+				.keyId("gateway-key").sign(gatewayKey.getPrivate());
 	}
 }
