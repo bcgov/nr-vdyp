@@ -1,8 +1,8 @@
 kind: DraftDataset
 name: vdyp-#{TARGET_ENV}#-dataset
 title: vdyp-#{TARGET_ENV}#-dataset
-organization: ministry-of-citizens-services
-organizationUnit: databc
+organization: ministry-of-forests
+organizationUnit: forest-analysis-and-inventory
 notes: |
   The vdyp API grants access to the / and /projection/hcsv endpoints endpoints
 
@@ -21,5 +21,5 @@ environments:
   - name: #{TARGET_ENV}#
     active: false
     approval: false
-    flow: public
-    services: ["vdyp-#{TARGET_ENV}#"]
+    flow: kong-api-key-only
+    services: [nr-vdyp-#{TARGET_ENV}#-backend]
