@@ -1162,19 +1162,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	// EMP086
 	public float meanVolumeSmall(VdypSpecies spec, float quadMeanDiameterSpecSmall, float loreyHeightSpecSmall) {
-		Coefficients coe = getCoeForSpecies(spec, ControlKey.SMALL_COMP_WS_VOLUME);
-
-		// EQN 1 in IPSJF119.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		return exp(
-				a0 + a1 * log(quadMeanDiameterSpecSmall) + a2 * log(loreyHeightSpecSmall)
-						+ a3 * quadMeanDiameterSpecSmall
-		);
+		return this.estimationMethods.estimateMeanVolumeSmall(spec, quadMeanDiameterSpecSmall, loreyHeightSpecSmall);
 	}
 
 	// YUC1

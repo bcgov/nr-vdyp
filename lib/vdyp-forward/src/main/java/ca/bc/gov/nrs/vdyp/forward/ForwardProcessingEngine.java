@@ -2919,16 +2919,7 @@ public class ForwardProcessingEngine {
 
 	// EMP086
 	public float meanVolumeSmall(String speciesName, float spHlSmall, float spDqSmall) {
-		Coefficients coe = fps.controlMap.getSmallComponentWholeStemVolumeCoefficients().get(speciesName);
-
-		// EQN 1 in IPSJF119.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		return exp(a0 + a1 * log(spDqSmall) + a2 * log(spHlSmall) + a3 * spDqSmall);
+		return fps.estimators.estimateMeanVolumeSmall(speciesName, spDqSmall, spHlSmall);
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
