@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.time.Instant;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import io.smallrye.jwt.algorithm.SignatureAlgorithm;
 import io.smallrye.jwt.auth.principal.DefaultJWTParser;
+import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.jwt.build.Jwt;
 
@@ -89,9 +91,11 @@ class ApiGatewayJwtVerifierTest {
 
 	@Test
 	void testConstructorRejectsBlankAudience() {
+        PublicKey key = gatewayKey.getPublic();
+        JWTParser parser = new DefaultJWTParser()
 		assertThrows(
 				IllegalStateException.class,
-				() -> new ApiGatewayJwtVerifier("  ", ISSUER, gatewayKey.getPublic(), new DefaultJWTParser())
+				() -> new ApiGatewayJwtVerifier("  ", ISSUER, key, parser)
 		);
 	}
 
