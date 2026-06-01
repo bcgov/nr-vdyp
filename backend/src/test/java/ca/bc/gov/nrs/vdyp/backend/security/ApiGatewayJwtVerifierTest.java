@@ -91,12 +91,9 @@ class ApiGatewayJwtVerifierTest {
 
 	@Test
 	void testConstructorRejectsBlankAudience() {
-        PublicKey key = gatewayKey.getPublic();
+		PublicKey key = gatewayKey.getPublic();
 		JWTParser parser = new DefaultJWTParser();
-		assertThrows(
-				IllegalStateException.class,
-				() -> new ApiGatewayJwtVerifier("  ", ISSUER, key, parser)
-		);
+		assertThrows(IllegalStateException.class, () -> new ApiGatewayJwtVerifier("  ", ISSUER, key, parser));
 	}
 
 	private String gatewayJwt(String audience, String issuer, Instant expiresAt, SignatureAlgorithm algorithm) {
