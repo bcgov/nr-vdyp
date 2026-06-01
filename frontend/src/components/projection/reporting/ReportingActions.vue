@@ -63,7 +63,6 @@ const handleDownload = () => {
   justify-content: flex-end;
   align-items: flex-end;
   text-align: end;
-  margin-right: var(--layout-margin-small);
   background-color: transparent;
 }
 
