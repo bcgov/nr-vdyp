@@ -47,14 +47,14 @@ class ApiGatewayJwtVerifierTest {
 	}
 
 	@Test
-	void testVerifyRejectsWrongAudience() throws Exception {
+	void testVerifyRejectsWrongAudience() {
 		String token = gatewayJwt("other-service", ISSUER, Instant.now().plusSeconds(300), SignatureAlgorithm.RS256);
 
 		assertThrows(ParseException.class, () -> verifier.verify(token));
 	}
 
 	@Test
-	void testVerifyRejectsWrongIssuer() throws Exception {
+	void testVerifyRejectsWrongIssuer() {
 		String token = gatewayJwt(
 				AUDIENCE, "https://issuer.example", Instant.now().plusSeconds(300), SignatureAlgorithm.RS256
 		);
@@ -63,14 +63,14 @@ class ApiGatewayJwtVerifierTest {
 	}
 
 	@Test
-	void testVerifyRejectsExpiredJwt() throws Exception {
+	void testVerifyRejectsExpiredJwt() {
 		String token = gatewayJwt(AUDIENCE, ISSUER, Instant.now().minusSeconds(300), SignatureAlgorithm.RS256);
 
 		assertThrows(ParseException.class, () -> verifier.verify(token));
 	}
 
 	@Test
-	void testVerifyRejectsJwtSignedWithUnexpectedAlgorithm() throws Exception {
+	void testVerifyRejectsJwtSignedWithUnexpectedAlgorithm() {
 		String token = gatewayJwt(AUDIENCE, ISSUER, Instant.now().plusSeconds(300), SignatureAlgorithm.RS512);
 
 		assertThrows(ParseException.class, () -> verifier.verify(token));
