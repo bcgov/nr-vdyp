@@ -227,6 +227,7 @@ class Hcsv_44GrpATest extends BaseHttpProjectionRequestTest {
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.header("X-Consumer-Username", "integration-test-client") //
+				.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, polyFile) //
 				.multiPart(

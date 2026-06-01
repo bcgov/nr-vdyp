@@ -75,6 +75,12 @@ spec:
               value: {{ .Values.backend.env.BATCH_BASE_URL | quote }}
             - name: VDYP_PROJECTION_EXPIRY_DAYS
               value: {{ .Values.backend.env.VDYP_PROJECTION_EXPIRY_DAYS | quote }}
+            - name: VDYP_API_GATEWAY_JWT_JWKS_URI
+              value: {{ .Values.backend.env.VDYP_API_GATEWAY_JWT_JWKS_URI | quote }}
+            - name: VDYP_API_GATEWAY_JWT_ISSUER
+              value: {{ .Values.backend.env.VDYP_API_GATEWAY_JWT_ISSUER | quote }}
+            - name: VDYP_API_GATEWAY_JWT_AUDIENCE
+              value: {{ .Values.backend.env.VDYP_API_GATEWAY_JWT_AUDIENCE | quote }}
             - name: VDYP_DB_PROXY_USER
               valueFrom:
                 secretKeyRef:

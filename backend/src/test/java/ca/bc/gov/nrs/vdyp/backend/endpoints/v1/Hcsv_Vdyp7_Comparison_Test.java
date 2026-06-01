@@ -104,6 +104,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when()
 				.header("X-Consumer-Username", "integration-test-client") //
+				.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON)
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
@@ -155,6 +156,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.header("X-Consumer-Username", "integration-test-user") //
+				.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
@@ -257,6 +259,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 					.header("X-Consumer-Username", "integration-test-user") //
+					.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -306,6 +309,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 					.header("X-Consumer-Username", "integration-test-user") //
+					.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -377,6 +381,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 					.header("X-Consumer-Username", "integration-test-user") //
+					.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -452,6 +457,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 					.header("X-Consumer-Username", "integration-test-user") //
+					.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
@@ -590,6 +596,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 					.header("X-Consumer-Username", "integration-test-user") //
+					.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
 					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //

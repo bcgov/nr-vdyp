@@ -163,6 +163,9 @@ jobs:
             --set backend.env.CORS_FRONTEND_BASE_URL=${{ vars.CORS_FRONTEND_BASE_URL }} \
             --set backend.env.BATCH_BASE_URL=${{ vars.BATCH_BASE_URL }} \
             --set backend.env.VDYP_PROJECTION_EXPIRY_DAYS=${{ vars.VDYP_PROJECTION_EXPIRY_DAYS }} \
+            --set backend.env.VDYP_API_GATEWAY_JWT_JWKS_URI=${{ vars.VDYP_API_GATEWAY_JWT_JWKS_URI }} \
+            --set backend.env.VDYP_API_GATEWAY_JWT_ISSUER=${{ vars.VDYP_API_GATEWAY_JWT_ISSUER }} \
+            --set backend.env.VDYP_API_GATEWAY_JWT_AUDIENCE=${{ vars.VDYP_API_GATEWAY_JWT_AUDIENCE }} \
             --set batch.env.VDYP_BASE_URL=${{ vars.VDYP_BASE_URL }} \
             --set batch.env.BATCH_SYSTEM_LOGGING_LEVEL=${{ vars.BATCH_SYSTEM_LOGGING_LEVEL }} \
             --set batch.env.VDYP_SYSTEM_LOGGING_LEVEL=${{ vars.VDYP_SYSTEM_LOGGING_LEVEL }} \
