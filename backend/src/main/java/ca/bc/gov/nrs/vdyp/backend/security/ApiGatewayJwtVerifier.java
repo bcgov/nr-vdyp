@@ -94,10 +94,11 @@ public class ApiGatewayJwtVerifier {
 	private static JWTAuthContextInfo createJwtAuthContextInfo(Set<String> audiences, String issuer) {
 		JWTAuthContextInfo authContextInfo = new JWTAuthContextInfo();
 		String normalizedIssuer = normalize(issuer);
-		if (normalizedIssuer != null) {
-			authContextInfo.setIssuedBy(normalizedIssuer);
+		if (normalizedIssuer == null) {
+			throw new IllegalStateException("issuer must be set");
 		}
 
+		authContextInfo.setIssuedBy(normalizedIssuer);
 		authContextInfo.setExpectedAudience(audiences);
 		authContextInfo.setSignatureAlgorithm(SignatureAlgorithm.RS256);
 		authContextInfo.setRequiredClaims(Set.of("exp"));
