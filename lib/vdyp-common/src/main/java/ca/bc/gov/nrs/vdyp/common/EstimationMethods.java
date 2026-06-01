@@ -1016,8 +1016,8 @@ public class EstimationMethods {
 	}
 
 	/**
-	 * EMPO086
-	 *
+	 * EMP086
+	 * <p>
 	 * Estimate the whole stem volume of the small utilization class
 	 *
 	 * @param spec                      The species
@@ -1031,8 +1031,8 @@ public class EstimationMethods {
 	}
 
 	/**
-	 * EMPO086
-	 *
+	 * EMP086
+	 * <p>
 	 * Estimate the whole stem volume of the small utilization class
 	 *
 	 * @param spec                      The species
