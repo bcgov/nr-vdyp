@@ -77,14 +77,20 @@ export class FileUploadValidator extends ValidationBase {
     optionalHeaders: Set<string> = new Set(),
   ): Promise<{
     isValid: boolean
+    isEmpty: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
   }> {
     const actualHeaders = await this.getFileHeaders(file)
 
+    // Empty file - fail with isEmpty flag so callers can show a specific message.
+    if (actualHeaders.length === 0) {
+      return { isValid: false, isEmpty: true, details: { missing: [], extra: [], mismatches: [] } }
+    }
+
     // If the first field doesn't match the expected first header, treat the file
     // as headerless and skip validation.
     if (actualHeaders[0] !== expectedHeaders[0]) {
-      return { isValid: true, details: { missing: [], extra: [], mismatches: [] } }
+      return { isValid: true, isEmpty: false, details: { missing: [], extra: [], mismatches: [] } }
     }
 
     const missing: string[] = []
@@ -114,32 +120,34 @@ export class FileUploadValidator extends ValidationBase {
 
     const isValid =
       missing.length === 0 && extra.length === 0 && mismatches.length === 0
-    return { isValid, details: { missing, extra, mismatches } }
+    return { isValid, isEmpty: false, details: { missing, extra, mismatches } }
   }
 
   async validatePolygonHeader(file: File): Promise<{
     isValid: boolean
+    isEmpty: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
     expected: string[]
   }> {
-    const { isValid, details } = await this.getHeaderValidationDetails(
+    const { isValid, isEmpty, details } = await this.getHeaderValidationDetails(
       file,
       CSVHEADERS.POLYGON_HEADERS,
     )
-    return { isValid, details, expected: CSVHEADERS.POLYGON_HEADERS }
+    return { isValid, isEmpty, details, expected: CSVHEADERS.POLYGON_HEADERS }
   }
 
   async validateLayerHeader(file: File): Promise<{
     isValid: boolean
+    isEmpty: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
     expected: string[]
   }> {
-    const { isValid, details } = await this.getHeaderValidationDetails(
+    const { isValid, isEmpty, details } = await this.getHeaderValidationDetails(
       file,
       CSVHEADERS.LAYER_HEADERS,
       CSVHEADERS.OPTIONAL_LAYER_HEADERS,
     )
-    return { isValid, details, expected: CSVHEADERS.LAYER_HEADERS }
+    return { isValid, isEmpty, details, expected: CSVHEADERS.LAYER_HEADERS }
   }
 
   private async getFileHeaders(file: File): Promise<string[]> {
@@ -168,7 +176,7 @@ export class FileUploadValidator extends ValidationBase {
       await reader.cancel()
     }
 
-    return line
+    return line.replace(/\r$/, '')
   }
 
   private parseCSVHeader(headerLine: string): string[] {

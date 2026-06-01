@@ -227,10 +227,12 @@ const getDuplicateColumnsError = async (
 
 const getHeaderColumnsError = async (
   file: File,
-  validateFn: (file: File) => Promise<{ isValid: boolean; details: any }>,
+  validateFn: (file: File) => Promise<{ isValid: boolean; isEmpty: boolean; details: any }>,
+  emptyFileMessage: string,
 ): Promise<string | null> => {
   const result = await validateFn(file)
   if (!result.isValid) {
+    if (result.isEmpty) return emptyFileMessage
     return buildHeaderErrorMessage(result.details)
   }
   return null
@@ -250,6 +252,7 @@ const validatePolygonFile = async (file: File): Promise<boolean> => {
   const headerError = await getHeaderColumnsError(
     file,
     fileUploadValidation.validatePolygonHeader,
+    MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_EMPTY,
   )
   if (headerError) {
     polygonFileError.value = headerError
@@ -274,6 +277,7 @@ const validateLayerFile = async (file: File): Promise<boolean> => {
   const headerError = await getHeaderColumnsError(
     file,
     fileUploadValidation.validateLayerHeader,
+    MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_EMPTY,
   )
   if (headerError) {
     layerFileError.value = headerError
