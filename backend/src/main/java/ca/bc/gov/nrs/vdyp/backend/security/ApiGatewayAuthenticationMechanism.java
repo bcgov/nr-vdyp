@@ -50,11 +50,9 @@ public class ApiGatewayAuthenticationMechanism implements HttpAuthenticationMech
 		String consumer = request.getHeader(GATEWAY_CONSUMER_HEADER);
 		String gatewayJwt = request.getHeader(GATEWAY_JWT_HEADER);
 
-		if (isBlank(consumer) && isBlank(gatewayJwt)) {
-			return Uni.createFrom().nullItem();
-		}
+		String useConsumer = isBlank(consumer) ? "Unknown API Gateway Consumer" : consumer;
 
-		if (isBlank(consumer) || isBlank(gatewayJwt)) {
+		if (isBlank(gatewayJwt)) {
 			return Uni.createFrom().failure(new AuthenticationFailedException());
 		}
 
@@ -67,10 +65,10 @@ public class ApiGatewayAuthenticationMechanism implements HttpAuthenticationMech
 			return Uni.createFrom().failure(new AuthenticationFailedException(e));
 		}
 
-		Principal principal = () -> consumer;
+		Principal principal = () -> useConsumer;
 
 		Builder identityBuilder = QuarkusSecurityIdentity.builder().setPrincipal(principal).addRole("KONG_API_GATEWAY")
-				.addAttribute("auth_source", "gwa").addAttribute("gateway_consumer", consumer);
+				.addAttribute("auth_source", "gwa").addAttribute("gateway_consumer", useConsumer);
 		if (gatewayClaims != null && gatewayClaims.getIssuer() != null) {
 			identityBuilder.addAttribute("gateway_jwt_issuer", gatewayClaims.getIssuer());
 		}

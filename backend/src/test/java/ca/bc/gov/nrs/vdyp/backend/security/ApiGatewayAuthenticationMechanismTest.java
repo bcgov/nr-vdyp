@@ -58,23 +58,27 @@ class ApiGatewayAuthenticationMechanismTest {
 	@ParameterizedTest
 	@NullAndEmptySource
 	@ValueSource(strings = { "   " })
-	void testAuthenticateReturnsNullWhenGatewayConsumerHeaderIsMissingOrBlank(String consumer) {
+	void testAuthenticateFailsWhenGwtHeaderIsMissing(String consumer) {
 		RoutingContext context = gatewayContext("/api/token", consumer, null);
-
-		SecurityIdentity identity = mechanism.authenticate(context, null).await().indefinitely();
-
-		assertNull(identity);
-		verifyNoInteractions(apiGatewayJwtVerifier);
-	}
-
-	@Test
-	void testAuthenticateFailsWhenOnlyGatewayJwtHeaderIsPresent() {
-		RoutingContext context = gatewayContext("/api/token", null, GATEWAY_JWT);
 
 		assertThrows(
 				AuthenticationFailedException.class, () -> mechanism.authenticate(context, null).await().indefinitely()
 		);
-		verifyNoInteractions(apiGatewayJwtVerifier);
+	}
+
+	@Test
+	void testAuthenticateUsesUnknownUsernameWhenConsumerIsMissing() throws Exception {
+		RoutingContext context = gatewayContext("/api/token", null, GATEWAY_JWT);
+
+		SecurityIdentity identity = mechanism.authenticate(context, null).await().indefinitely();
+
+		assertNotNull(identity);
+		assertEquals("Unknown API Gateway Consumer", identity.getPrincipal().getName());
+		assertTrue(identity.hasRole("KONG_API_GATEWAY"));
+		assertEquals("gwa", identity.getAttribute("auth_source"));
+		assertEquals("Unknown API Gateway Consumer", identity.getAttribute("gateway_consumer"));
+		assertEquals(null, (String) identity.getAttribute("gateway_jwt_issuer"));
+		verify(apiGatewayJwtVerifier).verify(GATEWAY_JWT);
 	}
 
 	@ParameterizedTest
