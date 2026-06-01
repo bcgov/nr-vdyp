@@ -92,7 +92,7 @@ class ApiGatewayJwtVerifierTest {
 	@Test
 	void testConstructorRejectsBlankAudience() {
         PublicKey key = gatewayKey.getPublic();
-        JWTParser parser = new DefaultJWTParser()
+		JWTParser parser = new DefaultJWTParser();
 		assertThrows(
 				IllegalStateException.class,
 				() -> new ApiGatewayJwtVerifier("  ", ISSUER, key, parser)
