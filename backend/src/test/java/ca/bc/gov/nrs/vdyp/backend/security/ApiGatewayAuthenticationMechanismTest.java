@@ -81,6 +81,10 @@ class ApiGatewayAuthenticationMechanismTest {
 		verify(apiGatewayJwtVerifier).verify(GATEWAY_JWT);
 	}
 
+	private SecurityIdentity authenticate(RoutingContext context) {
+		return mechanism.authenticate(context, null).await().indefinitely();
+	}
+
 	@ParameterizedTest
 	@NullAndEmptySource
 	@ValueSource(strings = { "   " })
@@ -88,7 +92,7 @@ class ApiGatewayAuthenticationMechanismTest {
 		RoutingContext context = gatewayContext("/api/token", "test-consumer", gatewayJwt);
 
 		assertThrows(
-				AuthenticationFailedException.class, () -> mechanism.authenticate(context, null).await().indefinitely()
+				AuthenticationFailedException.class, () -> authenticate(context)
 		);
 		verifyNoInteractions(apiGatewayJwtVerifier);
 	}
@@ -99,7 +103,7 @@ class ApiGatewayAuthenticationMechanismTest {
 		when(apiGatewayJwtVerifier.verify(GATEWAY_JWT)).thenThrow(new ParseException("invalid token"));
 
 		assertThrows(
-				AuthenticationFailedException.class, () -> mechanism.authenticate(context, null).await().indefinitely()
+				AuthenticationFailedException.class, () -> authenticate(context)
 		);
 		verify(apiGatewayJwtVerifier).verify(GATEWAY_JWT);
 	}
@@ -110,7 +114,7 @@ class ApiGatewayAuthenticationMechanismTest {
 		JsonWebToken gatewayClaims = gatewayClaims();
 		when(apiGatewayJwtVerifier.verify(GATEWAY_JWT)).thenReturn(gatewayClaims);
 
-		SecurityIdentity identity = mechanism.authenticate(context, null).await().indefinitely();
+		SecurityIdentity identity = authenticate(context);
 
 		assertNotNull(identity);
 		assertEquals("test-consumer", identity.getPrincipal().getName());
