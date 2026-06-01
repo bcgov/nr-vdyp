@@ -81,6 +81,12 @@ export class FileUploadValidator extends ValidationBase {
   }> {
     const actualHeaders = await this.getFileHeaders(file)
 
+    // If the first field doesn't match the expected first header, treat the file
+    // as headerless and skip validation.
+    if (actualHeaders[0] !== expectedHeaders[0]) {
+      return { isValid: true, details: { missing: [], extra: [], mismatches: [] } }
+    }
+
     const missing: string[] = []
     const extra: string[] = []
     const mismatches: string[] = []
@@ -198,11 +204,18 @@ export class FileUploadValidator extends ValidationBase {
     return headers
   }
 
-  async validateDuplicateColumns(file: File): Promise<{
+  async validateDuplicateColumns(
+    file: File,
+    expectedFirstHeader: string,
+  ): Promise<{
     isValid: boolean
     duplicates: string[]
   }> {
     const headers = await this.getFileHeaders(file)
+
+    if (headers[0] !== expectedFirstHeader) {
+      return { isValid: true, duplicates: [] }
+    }
     const seen = new Set<string>()
     const duplicates: string[] = []
     const duplicateTracker = new Set<string>()
