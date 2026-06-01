@@ -62,7 +62,7 @@ class ApiGatewayAuthenticationMechanismTest {
 		RoutingContext context = gatewayContext("/api/token", consumer, null);
 
 		assertThrows(
-				AuthenticationFailedException.class, () -> mechanism.authenticate(context, null).await().indefinitely()
+				AuthenticationFailedException.class, () -> authenticate(context)
 		);
 	}
 
