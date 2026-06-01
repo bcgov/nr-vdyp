@@ -2904,17 +2904,9 @@ public class ForwardProcessingEngine {
 			String speciesName, float speciesLoreyHeight_All, float quadMeanDiameterSpecSmall,
 			float speciesQuadMeanDiameter_All
 	) {
-		Coefficients coe = fps.controlMap.getSmallComponentLoreyHeightCoefficients().get(speciesName);
-
-		// EQN 1 in IPSJF119.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-
-		var result = 1.3f + (speciesLoreyHeight_All - 1.3f) //
-				* exp(a0 * (pow(quadMeanDiameterSpecSmall, a1) - pow(speciesQuadMeanDiameter_All, a1)));
-
-		return result;
+		return fps.estimators.smallComponentLoreyHeight(
+				speciesName, speciesLoreyHeight_All, quadMeanDiameterSpecSmall, speciesQuadMeanDiameter_All
+		);
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {

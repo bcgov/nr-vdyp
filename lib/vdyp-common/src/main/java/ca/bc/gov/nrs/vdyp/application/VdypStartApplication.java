@@ -1084,17 +1084,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	// EMP085
 	private float smallComponentLoreyHeight(VdypSpecies spec, float quadMeanDiameterSpecSmall) {
-		Coefficients coe = getCoeForSpecies(spec, ControlKey.SMALL_COMP_HL);
-
-		// EQN 1 in IPSJF119.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-
-		return 1.3f + (spec.getLoreyHeightByUtilization().getAll() - 1.3f) * exp(
-				a0 * (pow(quadMeanDiameterSpecSmall, a1)
-						- pow(spec.getQuadraticMeanDiameterByUtilization().getAll(), a1))
-		);
+		return estimationMethods.smallComponentLoreyHeight(spec, quadMeanDiameterSpecSmall);
 	}
 
 	// EMP082

@@ -1054,4 +1054,48 @@ public class EstimationMethods {
 						+ a3 * quadMeanDiameterSpecSmall
 		);
 	}
+
+	/**
+	 * EMP085
+	 * <p>
+	 * Estimate lorey height for small component (4.0-7.5 cm diameter)
+	 *
+	 * @param species                   Species with ALL component set for Lorey height and quadratic mean diameter
+	 * @param quadMeanDiameterSpecSmall Small component quadratic mean diameter
+	 * @return
+	 */
+	public float smallComponentLoreyHeight(VdypSpecies spec, float quadMeanDiameterSpecSmall) {
+		return smallComponentLoreyHeight(
+				spec.getGenus(), spec.getLoreyHeightByUtilization().getAll(), quadMeanDiameterSpecSmall,
+				spec.getQuadraticMeanDiameterByUtilization().getAll()
+		);
+	}
+
+	/**
+	 * EMP085
+	 * <p>
+	 * Estimate lorey height for small component (4.0-7.5 cm diameter)
+	 *
+	 * @param speciesName
+	 * @param speciesLoreyHeight_All      ALL component Lorey height
+	 * @param quadMeanDiameterSpecSmall   Small component quadratic mean diameter
+	 * @param speciesQuadMeanDiameter_All ALL component quadratic mean diameter
+	 * @return
+	 */
+	public float smallComponentLoreyHeight(
+			String speciesName, float speciesLoreyHeight_All, float quadMeanDiameterSpecSmall,
+			float speciesQuadMeanDiameter_All
+	) {
+		Coefficients coe = controlMap.getSmallComponentLoreyHeightCoefficients().get(speciesName);
+
+		// EQN 1 in IPSJF119.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+
+		var result = 1.3f + (speciesLoreyHeight_All - 1.3f) //
+				* exp(a0 * (pow(quadMeanDiameterSpecSmall, a1) - pow(speciesQuadMeanDiameter_All, a1)));
+
+		return result;
+	}
 }
