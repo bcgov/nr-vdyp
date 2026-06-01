@@ -832,7 +832,7 @@ class EstimationMethodsTest {
 		void testSimple(String speciesId, float hlAll, float dqSmall, float dqAll, float expectedHeight)
 				throws Exception {
 
-			float result = emp.smallComponentLoreyHeight(speciesId, hlAll, dqSmall, dqAll);
+			float result = emp.estimateSmallComponentLoreyHeight(speciesId, hlAll, dqSmall, dqAll);
 
 			assertThat(result, closeTo(expectedHeight));
 		}
@@ -849,7 +849,7 @@ class EstimationMethodsTest {
 			EasyMock.expect(spec.getQuadraticMeanDiameterByUtilization()).andStubReturn(Utils.utilizationVector(dqAll));
 			em.replay();
 
-			float result = emp.smallComponentLoreyHeight(spec, dqSmall);
+			float result = emp.estimateSmallComponentLoreyHeight(spec, dqSmall);
 			em.verify();
 
 			assertThat(result, closeTo(expectedHeight));

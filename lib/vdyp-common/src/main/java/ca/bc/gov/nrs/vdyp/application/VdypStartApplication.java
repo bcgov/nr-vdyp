@@ -1084,7 +1084,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	// EMP085
 	private float smallComponentLoreyHeight(VdypSpecies spec, float quadMeanDiameterSpecSmall) {
-		return estimationMethods.smallComponentLoreyHeight(spec, quadMeanDiameterSpecSmall);
+		return estimationMethods.estimateSmallComponentLoreyHeight(spec, quadMeanDiameterSpecSmall);
 	}
 
 	// EMP082

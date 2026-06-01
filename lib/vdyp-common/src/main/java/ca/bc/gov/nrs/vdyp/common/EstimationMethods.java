@@ -1068,8 +1068,8 @@ public class EstimationMethods {
 	 * @return
 	 */
 	public <S extends BaseVdypSpecies<?> & VdypUtilizationHolder> float
-			smallComponentLoreyHeight(S spec, float quadMeanDiameterSpecSmall) {
-		return smallComponentLoreyHeight(
+			estimateSmallComponentLoreyHeight(S spec, float quadMeanDiameterSpecSmall) {
+		return estimateSmallComponentLoreyHeight(
 				spec.getGenus(), spec.getLoreyHeightByUtilization().getAll(), quadMeanDiameterSpecSmall,
 				spec.getQuadraticMeanDiameterByUtilization().getAll()
 		);
@@ -1086,7 +1086,7 @@ public class EstimationMethods {
 	 * @param speciesQuadMeanDiameter_All ALL component quadratic mean diameter
 	 * @return
 	 */
-	public float smallComponentLoreyHeight(
+	public float estimateSmallComponentLoreyHeight(
 			String speciesName, float speciesLoreyHeight_All, float quadMeanDiameterSpecSmall,
 			float speciesQuadMeanDiameter_All
 	) {

@@ -2904,7 +2904,7 @@ public class ForwardProcessingEngine {
 			String speciesName, float speciesLoreyHeight_All, float quadMeanDiameterSpecSmall,
 			float speciesQuadMeanDiameter_All
 	) {
-		return fps.estimators.smallComponentLoreyHeight(
+		return fps.estimators.estimateSmallComponentLoreyHeight(
 				speciesName, speciesLoreyHeight_All, quadMeanDiameterSpecSmall, speciesQuadMeanDiameter_All
 		);
 	}
