@@ -1663,7 +1663,7 @@ public class ForwardProcessingEngine {
 			float spLhSmall = smallComponentLoreyHeight(speciesName, spLhAll, spDqSmall, spDqAll); // HLSMsp
 
 			// EMP086
-			float meanVolumeSmall = meanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
+			float meanVolumeSmall = fps.estimators.estimateMeanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
 
 			int controlVar3Value = fps.controlMap.getControlVariables()
 					.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3);
@@ -2782,7 +2782,7 @@ public class ForwardProcessingEngine {
 		float spLhSmall = smallComponentLoreyHeight(speciesName, spLoreyHeight_All, spDqSmall, spQuadMeanDiameter_All); // HLSMsp
 
 		// EMP086
-		float spMeanVolumeSmall = meanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
+		float spMeanVolumeSmall = fps.estimators.estimateMeanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
 
 		var spCvSmall = new HashMap<UtilizationClassVariable, Float>();
 
@@ -2915,20 +2915,6 @@ public class ForwardProcessingEngine {
 				* exp(a0 * (pow(quadMeanDiameterSpecSmall, a1) - pow(speciesQuadMeanDiameter_All, a1)));
 
 		return result;
-	}
-
-	// EMP086
-	private float meanVolumeSmall(String speciesName, float spHlSmall, float spDqSmall) {
-		Coefficients coe = fps.controlMap.getSmallComponentWholeStemVolumeCoefficients().get(speciesName);
-
-		// EQN 1 in IPSJF119.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		return exp(a0 + a1 * log(spDqSmall) + a2 * log(spHlSmall) + a3 * spDqSmall);
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
