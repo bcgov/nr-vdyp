@@ -91,9 +91,7 @@ class ApiGatewayAuthenticationMechanismTest {
 	void testAuthenticateFailsWhenGatewayJwtHeaderIsMissingOrBlank(String gatewayJwt) {
 		RoutingContext context = gatewayContext("/api/token", "test-consumer", gatewayJwt);
 
-		assertThrows(
-				AuthenticationFailedException.class, () -> authenticate(context)
-		);
+		assertThrows(AuthenticationFailedException.class, () -> authenticate(context));
 		verifyNoInteractions(apiGatewayJwtVerifier);
 	}
 
@@ -102,9 +100,7 @@ class ApiGatewayAuthenticationMechanismTest {
 		RoutingContext context = gatewayContext("/api/token", "test-consumer", GATEWAY_JWT);
 		when(apiGatewayJwtVerifier.verify(GATEWAY_JWT)).thenThrow(new ParseException("invalid token"));
 
-		assertThrows(
-				AuthenticationFailedException.class, () -> authenticate(context)
-		);
+		assertThrows(AuthenticationFailedException.class, () -> authenticate(context));
 		verify(apiGatewayJwtVerifier).verify(GATEWAY_JWT);
 	}
 
