@@ -1081,14 +1081,14 @@ public class EstimationMethods {
 	 * Estimate lorey height for small component (4.0-7.5 cm diameter)
 	 *
 	 * @param speciesName
-	 * @param speciesLoreyHeight_All      ALL component Lorey height
-	 * @param quadMeanDiameterSpecSmall   Small component quadratic mean diameter
-	 * @param speciesQuadMeanDiameter_All ALL component quadratic mean diameter
+	 * @param speciesLoreyHeightAll      ALL component Lorey height
+	 * @param quadMeanDiameterSpecSmall  Small component quadratic mean diameter
+	 * @param speciesQuadMeanDiameterAll ALL component quadratic mean diameter
 	 * @return
 	 */
 	public float estimateSmallComponentLoreyHeight(
-			String speciesName, float speciesLoreyHeight_All, float quadMeanDiameterSpecSmall,
-			float speciesQuadMeanDiameter_All
+			String speciesName, float speciesLoreyHeightAll, float quadMeanDiameterSpecSmall,
+			float speciesQuadMeanDiameterAll
 	) {
 		Coefficients coe = controlMap.getSmallComponentLoreyHeightCoefficients().get(speciesName);
 
@@ -1097,9 +1097,8 @@ public class EstimationMethods {
 		float a0 = coe.getCoe(1);
 		float a1 = coe.getCoe(2);
 
-		var result = 1.3f + (speciesLoreyHeight_All - 1.3f) //
-				* exp(a0 * (pow(quadMeanDiameterSpecSmall, a1) - pow(speciesQuadMeanDiameter_All, a1)));
+		return 1.3f + (speciesLoreyHeightAll - 1.3f) //
+				* exp(a0 * (pow(quadMeanDiameterSpecSmall, a1) - pow(speciesQuadMeanDiameterAll, a1)));
 
-		return result;
 	}
 }
