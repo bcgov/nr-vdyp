@@ -61,9 +61,7 @@ class ApiGatewayAuthenticationMechanismTest {
 	void testAuthenticateFailsWhenGwtHeaderIsMissing(String consumer) {
 		RoutingContext context = gatewayContext("/api/token", consumer, null);
 
-		assertThrows(
-				AuthenticationFailedException.class, () -> authenticate(context)
-		);
+		assertThrows(AuthenticationFailedException.class, () -> authenticate(context));
 	}
 
 	@Test
