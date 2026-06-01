@@ -137,9 +137,32 @@ export class FileUploadValidator extends ValidationBase {
   }
 
   private async getFileHeaders(file: File): Promise<string[]> {
-    const fileContent = await file.text()
-    const headerLine = fileContent.split('\n')[0]
+    const headerLine = await this.readFirstLine(file)
     return this.parseCSVHeader(headerLine)
+  }
+
+  // Streams the file until the first newline, then cancels - avoids loading
+  // large files into memory entirely.
+  private async readFirstLine(file: File): Promise<string> {
+    const reader = file.stream().getReader()
+    const decoder = new TextDecoder()
+    let line = ''
+
+    try {
+      outer: while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        for (const char of chunk) {
+          if (char === '\n') break outer
+          line += char
+        }
+      }
+    } finally {
+      await reader.cancel()
+    }
+
+    return line
   }
 
   private parseCSVHeader(headerLine: string): string[] {
