@@ -35,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector.BinaryOperatorWithClass;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
 public class EstimationMethods {
 
@@ -1060,11 +1061,14 @@ public class EstimationMethods {
 	 * <p>
 	 * Estimate lorey height for small component (4.0-7.5 cm diameter)
 	 *
+	 * @param <S>
+	 *
 	 * @param species                   Species with ALL component set for Lorey height and quadratic mean diameter
 	 * @param quadMeanDiameterSpecSmall Small component quadratic mean diameter
 	 * @return
 	 */
-	public float smallComponentLoreyHeight(VdypSpecies spec, float quadMeanDiameterSpecSmall) {
+	public <S extends BaseVdypSpecies<?> & VdypUtilizationHolder> float
+			smallComponentLoreyHeight(S spec, float quadMeanDiameterSpecSmall) {
 		return smallComponentLoreyHeight(
 				spec.getGenus(), spec.getLoreyHeightByUtilization().getAll(), quadMeanDiameterSpecSmall,
 				spec.getQuadraticMeanDiameterByUtilization().getAll()
