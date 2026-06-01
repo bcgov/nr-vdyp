@@ -15,22 +15,22 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
-import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
 class Grow8PerSpeciesLoreyHeightTest {
 
 	protected static final Logger logger = LoggerFactory.getLogger(Grow8PerSpeciesLoreyHeightTest.class);
 
-	protected static ForwardControlParser parser;
+	protected static ProcessingControlParser parser;
 	protected static Map<String, Object> controlMap;
 
 	protected static StreamingParserFactory<PolygonIdentifier> polygonDescriptionStreamFactory;
@@ -41,7 +41,7 @@ class Grow8PerSpeciesLoreyHeightTest {
 	@SuppressWarnings("unchecked")
 	@BeforeEach
 	void beforeTest() throws IOException, ResourceParseException, ProcessingException {
-		parser = new ForwardControlParser();
+		parser = new ProcessingControlParser();
 		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
@@ -64,11 +64,10 @@ class Grow8PerSpeciesLoreyHeightTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.fps.controlMap.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 0);
+		fpe.fps.controlMap.getDebugSettings().setValue(ProcessingDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 0);
 		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
 
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 
@@ -84,11 +83,10 @@ class Grow8PerSpeciesLoreyHeightTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.fps.controlMap.getDebugSettings().setValue(ForwardDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 2);
+		fpe.fps.controlMap.getDebugSettings().setValue(ProcessingDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 2);
 		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
 
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 

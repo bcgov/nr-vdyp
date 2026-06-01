@@ -117,7 +117,17 @@
         CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
       "
     >
-      <div class="tabs-with-download">
+      <ProjectionRunProgressBar
+        v-if="isManualInputRunProgressBarVisible"
+        :status="appStore.currentProjectionStatus"
+        :polygonCount="batchPolygonCount"
+        :completedPolygonCount="batchCompletedPolygonCount"
+        :errorCount="batchErrorCount"
+        :startDate="runStartDate"
+        :endDate="runEndDate"
+        class="panel-spacing"
+      />
+      <div class="tabs-with-download" :style="isManualInputRunProgressBarVisible ? { marginTop: '16px' } : {}">
         <AppTabs
           v-model:currentTab="modelParamActiveTab"
           :tabs="modelParamTabs"
@@ -287,6 +297,13 @@ const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONS
 const isRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD &&
+    (isRunning.value || isReady.value || isFailed.value || isCancelled.value),
+)
+
+// Shown for Manual Input mode when projection has been run (Running/Ready/Failed/Cancelled)
+const isManualInputRunProgressBarVisible = computed(
+  () =>
+    appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT &&
     (isRunning.value || isReady.value || isFailed.value || isCancelled.value),
 )
 

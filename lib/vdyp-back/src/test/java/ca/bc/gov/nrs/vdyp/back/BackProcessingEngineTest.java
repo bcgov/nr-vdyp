@@ -6,6 +6,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
+import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -48,7 +50,7 @@ class BackProcessingEngineTest {
 	void setup() {
 		engine = new BackProcessingEngine();
 
-		controlMap = TestUtils.loadControlMap(); // TODO switch to appropriate control file for Back.
+		controlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
 
 		becLookup = Utils.parsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get();
 

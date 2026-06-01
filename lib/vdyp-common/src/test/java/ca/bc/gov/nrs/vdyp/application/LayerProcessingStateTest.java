@@ -18,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -37,11 +36,10 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class LayerProcessingStateTest {
 
-	static class TestLayerProcessingState extends LayerProcessingState<ResolvedControlMap, TestLayerProcessingState> {
+	static class TestLayerProcessingState extends LayerProcessingState<TestLayerProcessingState> {
 
 		protected TestLayerProcessingState(
-				ProcessingState<ResolvedControlMap, TestLayerProcessingState> ps, VdypPolygon polygon,
-				LayerType subjectLayerType
+				ProcessingState<TestLayerProcessingState> ps, VdypPolygon polygon, LayerType subjectLayerType
 		) throws ProcessingException {
 			super(ps, polygon, subjectLayerType);
 		}
@@ -71,8 +69,7 @@ class LayerProcessingStateTest {
 		@Test
 		void testConstructNoSpecies() throws ProcessingException {
 			var em = EasyMock.createStrictControl();
-			ProcessingState<ResolvedControlMap, TestLayerProcessingState> parent = em
-					.createMock("parent", ProcessingState.class);
+			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
 				pb.biogeoclimaticZone(TestUtils.mockBec());
@@ -98,8 +95,7 @@ class LayerProcessingStateTest {
 		@Test
 		void testConstructOneSpecies() throws ProcessingException {
 			var em = EasyMock.createStrictControl();
-			ProcessingState<ResolvedControlMap, TestLayerProcessingState> parent = em
-					.createMock("parent", ProcessingState.class);
+			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
 				pb.biogeoclimaticZone(TestUtils.mockBec());
@@ -129,7 +125,7 @@ class LayerProcessingStateTest {
 	@Nested
 	class SetCompatibilityVariables {
 		IMocksControl em;
-		LayerProcessingState<?, ?> unit;
+		LayerProcessingState<?> unit;
 
 		MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume;
 		MatrixMap2<UtilizationClass, LayerType, Float>[] cvBa;
@@ -140,8 +136,7 @@ class LayerProcessingStateTest {
 		@SuppressWarnings("unchecked")
 		void setup() throws ProcessingException {
 			var em = EasyMock.createStrictControl();
-			ProcessingState<ResolvedControlMap, TestLayerProcessingState> parent = em
-					.createMock("parent", ProcessingState.class);
+			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
 				pb.biogeoclimaticZone(TestUtils.mockBec());
@@ -234,18 +229,18 @@ class LayerProcessingStateTest {
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Matcher<LayerProcessingState<?, ?>>
+		Matcher<LayerProcessingState<?>>
 				testCV(String name, Object p1, Object p2, Object p3, Object p4, Matcher<Float> match) {
 			return (Matcher) compatibilityVariable(name, match, LayerProcessingState.class, p1, p2, p3, p4);
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Matcher<LayerProcessingState<?, ?>> testCV(String name, Object p1, Object p2, Object p3, Matcher<Float> match) {
+		Matcher<LayerProcessingState<?>> testCV(String name, Object p1, Object p2, Object p3, Matcher<Float> match) {
 			return (Matcher) compatibilityVariable(name, match, LayerProcessingState.class, p1, p2, p3);
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Matcher<LayerProcessingState<?, ?>> testCV(String name, Object p1, Object p2, Matcher<Float> match) {
+		Matcher<LayerProcessingState<?>> testCV(String name, Object p1, Object p2, Matcher<Float> match) {
 			return (Matcher) compatibilityVariable(name, match, LayerProcessingState.class, p1, p2);
 		}
 

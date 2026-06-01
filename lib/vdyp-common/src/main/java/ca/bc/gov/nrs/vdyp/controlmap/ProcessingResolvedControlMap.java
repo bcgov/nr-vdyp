@@ -1,11 +1,8 @@
-package ca.bc.gov.nrs.vdyp.forward.controlmap;
+package ca.bc.gov.nrs.vdyp.controlmap;
 
 import java.util.Map;
 import java.util.Optional;
 
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompVarAdjustments;
 import ca.bc.gov.nrs.vdyp.model.GrowthFiatDetails;
@@ -14,9 +11,11 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.ModelCoefficients;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
-public interface ForwardResolvedControlMap extends ResolvedControlMap {
+public interface ProcessingResolvedControlMap extends ResolvedControlMap {
 
 	/** 25 - SITE_CURVE_NUMBERS */
 	MatrixMap2<String, Region, SiteIndexEquation> getSiteCurveMap();
@@ -34,7 +33,8 @@ public interface ForwardResolvedControlMap extends ResolvedControlMap {
 	MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>> getLoreyHeightNonPrimaryCoefficients();
 
 	/** 101 - VTROL */
-	ForwardControlVariables getForwardControlVariables();
+	@Override
+	ProcessingControlVariables getControlVariables();
 
 	/** 106 - BA_YIELD */
 	MatrixMap2<String, String, Coefficients> getBasalAreaYieldCoefficients();
@@ -70,5 +70,6 @@ public interface ForwardResolvedControlMap extends ResolvedControlMap {
 	MatrixMap2<String, Integer, Optional<Coefficients>> getNonPrimarySpeciesQuadMeanDiameterGrowthCoefficients();
 
 	/** 199 - DEBUG_SWITCHES */
-	ForwardDebugSettings getDebugSettings();
+	@Override
+	ProcessingDebugSettings getDebugSettings();
 }

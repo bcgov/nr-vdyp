@@ -39,6 +39,8 @@ import org.hamcrest.Matchers;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.test.TestDebugSettings;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageParser;
@@ -69,6 +71,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariables;
 
 public class TestUtils {
 
@@ -487,6 +490,22 @@ public class TestUtils {
 
 	public static Map<String, Object> loadControlMap() {
 		return loadControlMap(startAppControlParser());
+	}
+
+	public static ResolvedControlMap resolveControlMap(Map<String, Object> controlMap) {
+		return new ResolvedControlMapImpl(controlMap) {
+
+			@Override
+			public DebugSettings getDebugSettings() {
+				return this.get(ControlKey.DEBUG_SWITCHES, DebugSettings.class);
+			}
+
+			@Override
+			public ControlVariables getControlVariables() {
+				return this.get(ControlKey.VTROL, ControlVariables.class);
+			}
+
+		};
 	}
 
 	public static Map<String, Object> loadControlMap(Path controlMapPath) {

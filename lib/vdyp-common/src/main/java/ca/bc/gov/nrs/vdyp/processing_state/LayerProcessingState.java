@@ -6,7 +6,6 @@ import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -19,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 
-public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self extends LayerProcessingState<RCM, Self>> {
+public abstract class LayerProcessingState<Self extends LayerProcessingState<Self>> {
 
 	@FunctionalInterface
 	protected static interface SmallCVUpdate {
@@ -43,7 +42,7 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 	private static final String UNSET_CV_BASAL_AREAS = "unset cvBasalAreas";
 
 	/** The containing ForwardProcessingState */
-	protected final ProcessingState<RCM, Self> ps;
+	protected final ProcessingState<Self> ps;
 
 	/** The containing polygon of the layer on which the Processor is operating */
 	private final VdypPolygon polygon;
@@ -67,7 +66,7 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter;
 	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
 
-	protected LayerProcessingState(ProcessingState<RCM, Self> ps, VdypPolygon polygon, LayerType subjectLayerType)
+	protected LayerProcessingState(ProcessingState<Self> ps, VdypPolygon polygon, LayerType subjectLayerType)
 			throws ProcessingException {
 
 		this.ps = ps;
@@ -98,7 +97,7 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 		return logger;
 	}
 
-	public ProcessingState<RCM, Self> getParent() {
+	public ProcessingState<Self> getParent() {
 		return ps;
 	}
 

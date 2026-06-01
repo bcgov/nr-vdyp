@@ -1,6 +1,6 @@
 <template>
   <div
-    class="ml-2 mr-2"
+    class="ml-2"
     :style="outputStyle"
   >
     {{ formattedData }}

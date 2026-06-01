@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
@@ -29,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ForwardProcessorCheckpointGenerationTest {
@@ -81,7 +81,7 @@ class ForwardProcessorCheckpointGenerationTest {
 				ControlKey.SP0_DEF.name(),
 				genusDefinitionParser.parse(TestUtils.class, "coe/SP0DEF_v0.dat", Collections.emptyMap())
 		);
-		controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
+		controlMap.put(ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
 		try (var reader = new ForwardDataStreamReader(controlMap);) {
 			Optional<VdypPolygon> polygon = reader.readNextPolygon();

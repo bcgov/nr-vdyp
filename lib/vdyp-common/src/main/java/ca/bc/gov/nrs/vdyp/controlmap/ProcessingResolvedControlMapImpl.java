@@ -1,13 +1,10 @@
-package ca.bc.gov.nrs.vdyp.forward.controlmap;
+package ca.bc.gov.nrs.vdyp.controlmap;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.controlmap.CachingResolvedControlMapImpl;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompVarAdjustments;
 import ca.bc.gov.nrs.vdyp.model.GrowthFiatDetails;
@@ -16,12 +13,15 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.ModelCoefficients;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
-public class ForwardResolvedControlMapImpl extends CachingResolvedControlMapImpl implements ForwardResolvedControlMap {
+public class ProcessingResolvedControlMapImpl extends CachingResolvedControlMapImpl
+		implements ProcessingResolvedControlMap {
 
-	private final Optional<ForwardDebugSettings> debugSettings;
-	private final Optional<ForwardControlVariables> forwardControlVariables;
+	private final Optional<ProcessingDebugSettings> debugSettings;
+	private final Optional<ProcessingControlVariables> forwardControlVariables;
 	private final Optional<MatrixMap2<String, Region, SiteIndexEquation>> siteCurveMap;
 	private final Optional<CompVarAdjustments> compVarAdjustments;
 	private final Optional<MatrixMap2<String, String, Coefficients>> basalAreaYieldCoefficients;
@@ -39,12 +39,12 @@ public class ForwardResolvedControlMapImpl extends CachingResolvedControlMapImpl
 	private final Optional<Map<Integer, ModelCoefficients>> primaryQuadMeanDiameterGrowthCoefficients;
 	private final Optional<MatrixMap2<String, Integer, Optional<Coefficients>>> nonPrimaryQuadMeanDiameterGrowthCoefficients;
 
-	public ForwardResolvedControlMapImpl(Map<String, Object> controlMap) {
+	public ProcessingResolvedControlMapImpl(Map<String, Object> controlMap) {
 
 		super(controlMap);
 
-		this.debugSettings = get(ControlKey.DEBUG_SWITCHES, ForwardDebugSettings.class);
-		this.forwardControlVariables = get(ControlKey.VTROL, ForwardControlVariables.class);
+		this.debugSettings = get(ControlKey.DEBUG_SWITCHES, ProcessingDebugSettings.class);
+		this.forwardControlVariables = get(ControlKey.VTROL, ProcessingControlVariables.class);
 		this.siteCurveMap = get(ControlKey.SITE_CURVE_NUMBERS, MatrixMap2.class);
 		this.compVarAdjustments = get(ControlKey.PARAM_ADJUSTMENTS, CompVarAdjustments.class);
 		this.basalAreaYieldCoefficients = get(ControlKey.BA_YIELD, MatrixMap2.class);
@@ -67,12 +67,12 @@ public class ForwardResolvedControlMapImpl extends CachingResolvedControlMapImpl
 	}
 
 	@Override
-	public ForwardDebugSettings getDebugSettings() {
+	public ProcessingDebugSettings getDebugSettings() {
 		return debugSettings.orElseThrow(() -> new NoSuchElementException("debugSettings"));
 	}
 
 	@Override
-	public ForwardControlVariables getForwardControlVariables() {
+	public ProcessingControlVariables getControlVariables() {
 		return forwardControlVariables.orElseThrow(() -> new NoSuchElementException("forwardControlVariables"));
 	}
 

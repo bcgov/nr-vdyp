@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.parse.model;
 
 import java.io.InputStream;
-import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Optional;
 

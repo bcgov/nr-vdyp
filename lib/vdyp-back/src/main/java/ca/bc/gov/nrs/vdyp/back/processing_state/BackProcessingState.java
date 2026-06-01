@@ -6,8 +6,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -18,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 
-public class BackProcessingState extends ProcessingState<ResolvedControlMap, BackLayerProcessingState> {
+public class BackProcessingState extends ProcessingState<BackLayerProcessingState> {
 
 	Optional<Float> baseAreaVeteran = Optional.empty(); // BACK1/BAV
 
@@ -49,8 +49,8 @@ public class BackProcessingState extends ProcessingState<ResolvedControlMap, Bac
 	}
 
 	@Override
-	public ResolvedControlMap resolveControlMap(Map<String, Object> controlMap) {
-		return new ResolvedControlMapImpl(controlMap);
+	public ProcessingResolvedControlMap resolveControlMap(Map<String, Object> controlMap) {
+		return new ProcessingResolvedControlMapImpl(controlMap);
 	}
 
 	@Override

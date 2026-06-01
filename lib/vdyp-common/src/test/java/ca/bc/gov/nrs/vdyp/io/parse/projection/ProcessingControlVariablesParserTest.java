@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward.model;
+package ca.bc.gov.nrs.vdyp.io.parse.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -7,16 +7,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.forward.parsers.ForwardControlVariableParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 
-class VdypForwardControlVariablesParserTest {
+class ProcessingControlVariablesParserTest {
 
 	@Test
 	void testNullInput() {
 		try {
-			var parser = new ForwardControlVariableParser();
+			var parser = new ProcessingControlVariableParser();
 			parser.parse(null);
 			Assertions.fail();
 		} catch (ValueParseException e) {
@@ -27,7 +26,7 @@ class VdypForwardControlVariablesParserTest {
 	@Test
 	void testEmptyInput() {
 		try {
-			var parser = new ForwardControlVariableParser();
+			var parser = new ProcessingControlVariableParser();
 			parser.parse("   ");
 			Assertions.fail();
 		} catch (ValueParseException e) {
@@ -38,7 +37,7 @@ class VdypForwardControlVariablesParserTest {
 	@Test
 	void testInvalidInput() {
 		try {
-			var parser = new ForwardControlVariableParser();
+			var parser = new ProcessingControlVariableParser();
 			parser.parse("a b c");
 			Assertions.fail();
 		} catch (ValueParseException e) {
@@ -48,7 +47,7 @@ class VdypForwardControlVariablesParserTest {
 
 	@Test
 	void testValidInput() throws Exception {
-		var parser = new ForwardControlVariableParser();
+		var parser = new ProcessingControlVariableParser();
 
 		var details = parser.parse("1 1 1 1 1 1");
 		assertThat(1, equalTo(details.getControlVariable(ControlVariable.GROW_TARGET_1)));
@@ -61,7 +60,7 @@ class VdypForwardControlVariablesParserTest {
 
 	@Test
 	void testExtraInputIgnored() throws Exception {
-		var parser = new ForwardControlVariableParser();
+		var parser = new ProcessingControlVariableParser();
 
 		var details = parser.parse("1 1 1 1 1 1 1 1 1 1 1");
 		assertThat(1, equalTo(details.getControlVariable(10)));

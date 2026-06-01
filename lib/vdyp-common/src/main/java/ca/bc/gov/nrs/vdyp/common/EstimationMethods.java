@@ -1014,4 +1014,44 @@ public class EstimationMethods {
 		components.setCoe(UtilizationClass.ALL.index, sum);
 		return sum;
 	}
+
+	/**
+	 * EMPO086
+	 *
+	 * Estimate the whole stem volume of the small utilization class
+	 *
+	 * @param spec                      The species
+	 * @param loreyHeightSpecSmall      The Lorey height of the small class
+	 * @param quadMeanDiameterSpecSmall The quadratic mean diameter of the small class
+	 */
+	public float estimateMeanVolumeSmall(
+			BaseVdypSpecies<?> spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall
+	) {
+		return estimateMeanVolumeSmall(spec.getGenus(), loreyHeightSpecSmall, quadMeanDiameterSpecSmall);
+	}
+
+	/**
+	 * EMPO086
+	 *
+	 * Estimate the whole stem volume of the small utilization class
+	 *
+	 * @param spec                      The species
+	 * @param loreyHeightSpecSmall      The Lorey height of the small class
+	 * @param quadMeanDiameterSpecSmall The quadratic mean diameter of the small class
+	 */
+	public float estimateMeanVolumeSmall(String spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall) {
+		Coefficients coe = controlMap.getSmallComponentWholeStemVolumeCoefficients().get(spec);
+
+		// EQN 1 in IPSJF119.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+		float a2 = coe.getCoe(3);
+		float a3 = coe.getCoe(4);
+
+		return exp(
+				a0 + a1 * log(quadMeanDiameterSpecSmall) + a2 * log(loreyHeightSpecSmall)
+						+ a3 * quadMeanDiameterSpecSmall
+		);
+	}
 }

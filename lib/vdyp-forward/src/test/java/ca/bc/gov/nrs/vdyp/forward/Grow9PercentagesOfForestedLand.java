@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
-import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -29,7 +29,7 @@ class Grow9PercentagesOfForestedLand {
 
 	protected static final Logger logger = LoggerFactory.getLogger(Grow9PercentagesOfForestedLand.class);
 
-	protected static ForwardControlParser parser;
+	protected static ProcessingControlParser parser;
 	protected static Map<String, Object> controlMap;
 
 	protected static StreamingParserFactory<PolygonIdentifier> polygonDescriptionStreamFactory;
@@ -40,7 +40,7 @@ class Grow9PercentagesOfForestedLand {
 	@SuppressWarnings("unchecked")
 	@BeforeEach
 	void beforeTest() throws IOException, ResourceParseException, ProcessingException {
-		parser = new ForwardControlParser();
+		parser = new ProcessingControlParser();
 		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
@@ -65,8 +65,7 @@ class Grow9PercentagesOfForestedLand {
 
 		fpe.processPolygon(polygon, ExecutionStep.GROW_9_SPECIES_PCT);
 
-		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fpe.fps
-				.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		// VDYP7 value is 0.892216682f, 11.5443392f, 64.3765259f, 13.3774729f, 9.80944252f
 		assertThat(

@@ -1,15 +1,15 @@
-package ca.bc.gov.nrs.vdyp.forward.parsers;
+package ca.bc.gov.nrs.vdyp.io.parse.projection;
 
 import java.util.List;
 
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 
-public class ForwardControlVariableParser implements ValueParser<ForwardControlVariables> {
+public class ProcessingControlVariableParser implements ValueParser<ProcessingControlVariables> {
 
 	@Override
-	public ForwardControlVariables parse(String string) throws ValueParseException {
+	public ProcessingControlVariables parse(String string) throws ValueParseException {
 
 		if (string == null) {
 			throw new ValueParseException(null, "VdypControlVariableParser: supplied string is null");
@@ -29,6 +29,6 @@ public class ForwardControlVariableParser implements ValueParser<ForwardControlV
 			);
 		}
 
-		return new ForwardControlVariables(controlVariableValues.toArray(new Integer[controlVariableValues.size()]));
+		return new ProcessingControlVariables(controlVariableValues.toArray(new Integer[controlVariableValues.size()]));
 	}
 }

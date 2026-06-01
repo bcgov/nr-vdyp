@@ -10,6 +10,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
@@ -188,7 +189,7 @@ class UtilizationOperationsTest {
 		}
 	}
 
-	Map<String, Object> parse(ForwardControlParser parser, String resourceName)
+	Map<String, Object> parse(ProcessingControlParser parser, String resourceName)
 			throws IOException, ResourceParseException {
 
 		Class<?> klazz = TestUtils.class;

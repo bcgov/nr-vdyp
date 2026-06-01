@@ -8,15 +8,15 @@ import java.util.function.Predicate;
 import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
-public class BackProcessor extends Processor<ForwardDebugSettings> {
+public class BackProcessor extends Processor<ProcessingDebugSettings> {
 
 	@Override
-	protected BaseControlParser<ForwardDebugSettings> getControlFileParser() {
+	protected BaseControlParser<ProcessingDebugSettings> getControlFileParser() {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { CONSTANTS } from '@/constants'
 import { formatNumber } from '@/utils/util'
 import {
@@ -83,6 +83,11 @@ const props = defineProps<{
 // Timer for updating elapsed time display
 const currentTime = ref(Date.now())
 let clockTimer: ReturnType<typeof setInterval> | null = null
+
+// Refresh currentTime immediately when a new run starts so elapsed is accurate from the first render
+watch(() => props.startDate, () => {
+  currentTime.value = Date.now()
+})
 
 onMounted(() => {
   clockTimer = setInterval(() => {
@@ -125,13 +130,15 @@ const formattedTimeElapsed = computed(() => {
 
   const upperBoundMs = props.endDate ? new Date(props.endDate).getTime() : currentTime.value
   const elapsedMs = Math.max(0, upperBoundMs - startMs)
-  const totalSeconds = Math.floor(elapsedMs / 1_000)
-  const totalMinutes = Math.floor(totalSeconds / 60)
+  const rawSeconds = Math.floor(elapsedMs / 1_000)
+  const isCompleted = props.status !== CONSTANTS.PROJECTION_STATUS.RUNNING
+  const displaySeconds = isCompleted ? Math.max(1, rawSeconds) : rawSeconds
+  const totalMinutes = Math.floor(displaySeconds / 60)
   const totalHours = Math.floor(totalMinutes / 60)
   const days = Math.floor(totalHours / 24)
   const hours = totalHours % 24
   const minutes = totalMinutes % 60
-  const seconds = totalSeconds % 60
+  const seconds = displaySeconds % 60
 
   const parts: string[] = []
   if (days > 0) parts.push(`${days}d`)

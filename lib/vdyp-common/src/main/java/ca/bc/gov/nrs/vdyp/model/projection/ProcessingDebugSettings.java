@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward.model;
+package ca.bc.gov.nrs.vdyp.model.projection;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -93,9 +93,9 @@ import ca.bc.gov.nrs.vdyp.model.DebugSettings;
  * <li>15: Same as option 1, condition on total age (primary) < 30.
  * </ul>
  */
-public class ForwardDebugSettings extends DebugSettings {
+public class ProcessingDebugSettings extends DebugSettings {
 
-	private static final Logger logger = LoggerFactory.getLogger(ForwardDebugSettings.class);
+	private static final Logger logger = LoggerFactory.getLogger(ProcessingDebugSettings.class);
 
 	public static final int MAX_FILL_INDEX_SETTINGS_INDEX = DebugSettings.MAX_DEBUG_SETTINGS;
 
@@ -108,7 +108,7 @@ public class ForwardDebugSettings extends DebugSettings {
 
 	public static final float MAX_BREAST_HEIGHT_AGE_MULTIPLIER = 100f;
 
-	public ForwardDebugSettings(Integer[] settings) {
+	public ProcessingDebugSettings(Integer[] settings) {
 		super(settings);
 	}
 

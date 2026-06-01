@@ -9,13 +9,16 @@ import static org.hamcrest.Matchers.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.easymock.EasyMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -39,7 +42,7 @@ class EstimationMethodsTest {
 	@BeforeEach
 	void setup() {
 		controlMap = TestUtils.loadControlMap();
-		var resolvedControlMap = new ResolvedControlMapImpl(controlMap);
+		var resolvedControlMap = TestUtils.resolveControlMap(controlMap);
 		emp = new EstimationMethods(resolvedControlMap);
 		becLookup = (BecLookup) controlMap.get(ControlKey.BEC_DEF.name());
 	}
@@ -767,6 +770,43 @@ class EstimationMethodsTest {
 			float result = emp.leadHeightFromPrimaryHeight(19.870464f, "B", Region.COASTAL, 40.260403f);
 
 			assertThat(result, closeTo(20));
+		}
+
+	}
+
+	@Nested
+	class EstimateMeanVolumeSmall {
+
+		@ParameterizedTest
+		@CsvSource(
+			{ // Values taken from VDYP7 via debugger
+					"S, 5.58619356, 4.69048452, 0.00447751069", "S, 5.94472694, 7.54808998, 0.00964565482",
+					"PL, 5.73309135, 5.04876852, 0.00573747745", "H, 6.32094097, 7.15886297, 0.00975632109",
+					"Y, 6.0864749, 7.53712893, 0.0137963342" }
+		)
+		void testSimple(String speciesId, float dq, float hl, float expectedVolume) throws Exception {
+
+			float result = emp.estimateMeanVolumeSmall(speciesId, hl, dq);
+
+			assertThat(result, closeTo(expectedVolume));
+		}
+
+		@ParameterizedTest
+		@CsvSource(
+			{ // Values taken from VDYP7 via debugger
+					"S, 5.58619356, 4.69048452, 0.00447751069", "S, 5.94472694, 7.54808998, 0.00964565482",
+					"PL, 5.73309135, 5.04876852, 0.00573747745", "H, 6.32094097, 7.15886297, 0.00975632109",
+					"Y, 6.0864749, 7.53712893, 0.0137963342" }
+		)
+		void testSpeciesObject(String speciesId, float dq, float hl, float expectedVolume) throws Exception {
+
+			var em = EasyMock.createControl();
+			BaseVdypSpecies<?> spec = em.createMock(BaseVdypSpecies.class);
+			EasyMock.expect(spec.getGenus()).andStubReturn(speciesId);
+			em.replay();
+			float result = emp.estimateMeanVolumeSmall(spec, hl, dq);
+			assertThat(result, closeTo(expectedVolume));
+			em.verify();
 		}
 
 	}
