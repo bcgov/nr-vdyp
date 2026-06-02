@@ -38,12 +38,14 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.service.DownloadAndPartitionTasklet;
 import ca.bc.gov.nrs.vdyp.batch.service.ResultPersistenceTasklet;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 /**
  * Central configuration class for the VDYP batch processing system.
@@ -347,9 +349,10 @@ public class BatchConfiguration {
 			String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
 			String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 
+			VDYPProjectionProgressUpdate finalProgress = BatchUtils.buildFinalProgress(jobGuid, jobExecution);
 			// Execute aggregation
 			Path consolidatedZip = resultAggregationService
-					.aggregateResultsFromJobDir(jobExecutionId, jobGuid, jobBaseDir, jobTimestamp);
+					.aggregateResultsFromJobDir(jobExecutionId, jobGuid, jobBaseDir, jobTimestamp, finalProgress);
 
 			stepExecution.getExecutionContext().putString("consolidatedOutputPath", consolidatedZip.toString());
 
