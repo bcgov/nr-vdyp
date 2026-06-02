@@ -35,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector.BinaryOperatorWithClass;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
 public class EstimationMethods {
 
@@ -1016,31 +1017,32 @@ public class EstimationMethods {
 	}
 
 	/**
-	 * EMPO086
-	 *
+	 * EMP086
+	 * <p>
 	 * Estimate the whole stem volume of the small utilization class
 	 *
-	 * @param spec                      The species
+	 * @param species                   The species
 	 * @param loreyHeightSpecSmall      The Lorey height of the small class
 	 * @param quadMeanDiameterSpecSmall The quadratic mean diameter of the small class
 	 */
 	public float estimateMeanVolumeSmall(
-			BaseVdypSpecies<?> spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall
+			BaseVdypSpecies<?> species, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall
 	) {
-		return estimateMeanVolumeSmall(spec.getGenus(), loreyHeightSpecSmall, quadMeanDiameterSpecSmall);
+		return estimateMeanVolumeSmall(species.getGenus(), loreyHeightSpecSmall, quadMeanDiameterSpecSmall);
 	}
 
 	/**
-	 * EMPO086
-	 *
+	 * EMP086
+	 * <p>
 	 * Estimate the whole stem volume of the small utilization class
 	 *
-	 * @param spec                      The species
+	 * @param speciesId                 Species identifier (SP0)
 	 * @param loreyHeightSpecSmall      The Lorey height of the small class
 	 * @param quadMeanDiameterSpecSmall The quadratic mean diameter of the small class
 	 */
-	public float estimateMeanVolumeSmall(String spec, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall) {
-		Coefficients coe = controlMap.getSmallComponentWholeStemVolumeCoefficients().get(spec);
+	public float
+			estimateMeanVolumeSmall(String speciesId, float loreyHeightSpecSmall, float quadMeanDiameterSpecSmall) {
+		Coefficients coe = controlMap.getSmallComponentWholeStemVolumeCoefficients().get(speciesId);
 
 		// EQN 1 in IPSJF119.doc
 
@@ -1053,5 +1055,51 @@ public class EstimationMethods {
 				a0 + a1 * log(quadMeanDiameterSpecSmall) + a2 * log(loreyHeightSpecSmall)
 						+ a3 * quadMeanDiameterSpecSmall
 		);
+	}
+
+	/**
+	 * EMP085
+	 * <p>
+	 * Estimate lorey height for small component (4.0-7.5 cm diameter)
+	 *
+	 * @param <S>
+	 *
+	 * @param species                   Species with ALL component set for Lorey height and quadratic mean diameter
+	 * @param quadMeanDiameterSpecSmall Small component quadratic mean diameter
+	 * @return
+	 */
+	public <S extends BaseVdypSpecies<?> & VdypUtilizationHolder> float
+			estimateSmallComponentLoreyHeight(S spec, float quadMeanDiameterSpecSmall) {
+		return estimateSmallComponentLoreyHeight(
+				spec.getGenus(), spec.getLoreyHeightByUtilization().getAll(), quadMeanDiameterSpecSmall,
+				spec.getQuadraticMeanDiameterByUtilization().getAll()
+		);
+	}
+
+	/**
+	 * EMP085
+	 * <p>
+	 * Estimate lorey height for small component (4.0-7.5 cm diameter)
+	 *
+	 * @param speciesId                  Species identifier (SP0)
+	 * @param speciesLoreyHeightAll      ALL component Lorey height
+	 * @param quadMeanDiameterSpecSmall  Small component quadratic mean diameter
+	 * @param speciesQuadMeanDiameterAll ALL component quadratic mean diameter
+	 * @return
+	 */
+	public float estimateSmallComponentLoreyHeight(
+			String speciesId, float speciesLoreyHeightAll, float quadMeanDiameterSpecSmall,
+			float speciesQuadMeanDiameterAll
+	) {
+		Coefficients coe = controlMap.getSmallComponentLoreyHeightCoefficients().get(speciesId);
+
+		// EQN 1 in IPSJF119.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+
+		return 1.3f + (speciesLoreyHeightAll - 1.3f) //
+				* exp(a0 * (pow(quadMeanDiameterSpecSmall, a1) - pow(speciesQuadMeanDiameterAll, a1)));
+
 	}
 }

@@ -6,7 +6,9 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.easymock.EasyMock;
@@ -14,7 +16,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
@@ -809,6 +813,47 @@ class EstimationMethodsTest {
 			em.verify();
 		}
 
+	}
+
+	@Nested
+	class EstimateLoreyHeightSmall {
+
+		static Collection<Arguments> data() {
+			return List.of(
+					Arguments.of("B", 12.8474216f, 5.68512583f, 13.5389509f, 5.72298288f),
+					Arguments.of("B", 12.9123373f, 5.68627961f, 13.6021004f, 5.72802305f),
+					Arguments.of("PL", 13.9236240f, 6.08169651f, 17.2023621f, 7.21131372f),
+					Arguments.of("S", 16.6616268f, 5.88927603f, 19.7704563f, 6.11308193f)
+			);
+		}
+
+		@ParameterizedTest
+		@MethodSource("data")
+		void testSimple(String speciesId, float hlAll, float dqSmall, float dqAll, float expectedHeight)
+				throws Exception {
+
+			float result = emp.estimateSmallComponentLoreyHeight(speciesId, hlAll, dqSmall, dqAll);
+
+			assertThat(result, closeTo(expectedHeight));
+		}
+
+		@ParameterizedTest
+		@MethodSource("data")
+		void testSpeciesObject(String speciesId, float hlAll, float dqSmall, float dqAll, float expectedHeight)
+				throws Exception {
+
+			var em = EasyMock.createControl();
+			VdypSpecies spec = em.createMock(VdypSpecies.class);
+			EasyMock.expect(spec.getGenus()).andStubReturn(speciesId);
+			EasyMock.expect(spec.getLoreyHeightByUtilization()).andStubReturn(Utils.heightVector(0f, hlAll));
+			EasyMock.expect(spec.getQuadraticMeanDiameterByUtilization()).andStubReturn(Utils.utilizationVector(dqAll));
+			em.replay();
+
+			float result = emp.estimateSmallComponentLoreyHeight(spec, dqSmall);
+			em.verify();
+
+			assertThat(result, closeTo(expectedHeight));
+		}
 	}
 
 }
