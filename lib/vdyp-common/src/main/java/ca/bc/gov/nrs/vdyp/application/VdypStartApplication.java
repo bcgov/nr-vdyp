@@ -1047,7 +1047,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			float quadMeanDiameterSpecSmall = smallComponentQuadMeanDiameter(spec); // DQSMsp
 
 			// EMP085
-			float loreyHeightSpecSmall = smallComponentLoreyHeight(spec, quadMeanDiameterSpecSmall); // HLSMsp
+			float loreyHeightSpecSmall = estimationMethods
+					.estimateSmallComponentLoreyHeight(spec, quadMeanDiameterSpecSmall); // HLSMsp
 
 			// EMP086
 			float meanVolumeSmall = this.estimationMethods
@@ -1080,21 +1081,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		layer.getQuadraticMeanDiameterByUtilization()
 				.setSmall(BaseAreaTreeDensityDiameter.quadMeanDiameter(baseAreaSum, treesPerHectareSum));
 		layer.getWholeStemVolumeByUtilization().setSmall(volumeSum);
-	}
-
-	// EMP085
-	private float smallComponentLoreyHeight(VdypSpecies spec, float quadMeanDiameterSpecSmall) {
-		Coefficients coe = getCoeForSpecies(spec, ControlKey.SMALL_COMP_HL);
-
-		// EQN 1 in IPSJF119.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-
-		return 1.3f + (spec.getLoreyHeightByUtilization().getAll() - 1.3f) * exp(
-				a0 * (pow(quadMeanDiameterSpecSmall, a1)
-						- pow(spec.getQuadraticMeanDiameterByUtilization().getAll(), a1))
-		);
 	}
 
 	// EMP082
