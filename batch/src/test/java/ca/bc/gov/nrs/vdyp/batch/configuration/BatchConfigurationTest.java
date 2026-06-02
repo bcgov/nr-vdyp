@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -126,6 +127,11 @@ class BatchConfigurationTest {
 		when(reader.getDefaultChunkSize()).thenReturn(10);
 	}
 
+	private void mockProgressContext(JobExecution jobExecution) {
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
+	}
+
 	@Test
 	void testMasterStep_WithValidComponents() {
 		TaskExecutor taskExecutor = mock(TaskExecutor.class);
@@ -197,6 +203,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
@@ -243,6 +250,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
@@ -291,6 +299,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
@@ -330,6 +339,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
@@ -374,6 +384,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
@@ -414,6 +425,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
@@ -459,6 +471,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
@@ -497,6 +510,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(null);
