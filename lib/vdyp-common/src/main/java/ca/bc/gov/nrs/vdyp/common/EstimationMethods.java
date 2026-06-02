@@ -1103,14 +1103,31 @@ public class EstimationMethods {
 
 	}
 
-	// EMP082
-	public float estimateSmallComponentQuadMeanDiameter(VdypSpecies spec) {
-		return estimateSmallComponentQuadMeanDiameter(spec.getGenus(), spec.getLoreyHeightByUtilization().getAll());
+	/**
+	 * EMP082
+	 * <p>
+	 * Estimate the quadratic mean diameter for the small component (4.0-7.5 cm diameter)
+	 *
+	 * @param species Species with ALL component set for Lorey height
+	 * @return
+	 */
+	public float estimateSmallComponentQuadMeanDiameter(VdypSpecies species) {
+		return estimateSmallComponentQuadMeanDiameter(
+				species.getGenus(), species.getLoreyHeightByUtilization().getAll()
+		);
 	}
 
-	// EMP082
-	public float estimateSmallComponentQuadMeanDiameter(String speciesName, float loreyHeight) {
-		Coefficients coe = controlMap.getSmallComponentQuadMeanDiameterCoefficients().get(speciesName);
+	/**
+	 * EMP082
+	 * <p>
+	 * Estimate the quadratic mean diameter for the small component (4.0-7.5 cm diameter)
+	 *
+	 * @param speciesId   Species identifier (SP0)
+	 * @param loreyHeight ALL component Lorey height
+	 * @return
+	 */
+	public float estimateSmallComponentQuadMeanDiameter(String speciesId, float loreyHeight) {
+		Coefficients coe = controlMap.getSmallComponentQuadMeanDiameterCoefficients().get(speciesId);
 
 		// EQN 5 in IPSJF118.doc
 
