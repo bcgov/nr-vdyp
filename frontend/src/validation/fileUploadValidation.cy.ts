@@ -169,7 +169,8 @@ describe('File Upload Validation Unit Tests', () => {
       const file = createFile(mismatchedHeader, 'polygon.csv', 'text/csv')
       const result = await validatePolygonHeader(file)
       expect(result.isValid).to.be.false
-      expect(result.details.mismatches.length).to.be.greaterThan(0)
+      expect(result.details.extra).to.include('WRONG_COLUMN')
+      expect(result.details.missing).to.include(CSVHEADERS.POLYGON_HEADERS[1])
     })
   })
 
@@ -207,13 +208,14 @@ describe('File Upload Validation Unit Tests', () => {
       const file = createFile(mismatchedHeader, 'layer.csv', 'text/csv')
       const result = await validateLayerHeader(file)
       expect(result.isValid).to.be.false
-      expect(result.details.mismatches.length).to.be.greaterThan(0)
+      expect(result.details.extra).to.include('WRONG_COLUMN')
+      expect(result.details.missing).to.include(CSVHEADERS.LAYER_HEADERS[1])
     })
   })
 
   context('validatePolygonDuplicateColumns', () => {
     it('should return true for a polygon file with no duplicate columns', async () => {
-      const validHeader = 'COL1,COL2,COL3,COL4'
+      const validHeader = `${CSVHEADERS.POLYGON_HEADERS[0]},COL1,COL2,COL3`
       const file = createFile(validHeader, 'polygon.csv', 'text/csv')
       const result = await validatePolygonDuplicateColumns(file)
       expect(result.isValid).to.be.true
@@ -250,7 +252,7 @@ describe('File Upload Validation Unit Tests', () => {
 
   context('validateLayerDuplicateColumns', () => {
     it('should return true for a layer file with no duplicate columns', async () => {
-      const validHeader = 'LAYER1,LAYER2,LAYER3,LAYER4'
+      const validHeader = `${CSVHEADERS.LAYER_HEADERS[0]},LAYER1,LAYER2,LAYER3`
       const file = createFile(validHeader, 'layer.csv', 'text/csv')
       const result = await validateLayerDuplicateColumns(file)
       expect(result.isValid).to.be.true
@@ -303,7 +305,7 @@ describe('File Upload Validation Unit Tests', () => {
     })
 
     it('should handle mixed quoted and unquoted columns', async () => {
-      const mixedHeader = '"COL1",COL2,"COL3",COL4'
+      const mixedHeader = `"${CSVHEADERS.POLYGON_HEADERS[0]}",COL2,"COL3",COL4`
       const file = createFile(mixedHeader, 'polygon.csv', 'text/csv')
       const result = await validatePolygonDuplicateColumns(file)
       expect(result.isValid).to.be.true
@@ -329,7 +331,7 @@ describe('File Upload Validation Unit Tests', () => {
     })
 
     it('should handle mixed quoted and unquoted columns', async () => {
-      const mixedHeader = '"COL1",COL2,"COL3",COL4'
+      const mixedHeader = `"${CSVHEADERS.LAYER_HEADERS[0]}",COL2,"COL3",COL4`
       const file = createFile(mixedHeader, 'layer.csv', 'text/csv')
       const result = await validateLayerDuplicateColumns(file)
       expect(result.isValid).to.be.true
