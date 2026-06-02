@@ -2867,23 +2867,7 @@ public class ForwardProcessingEngine {
 	private float calculateSmallComponentConditionalExpectedBasalArea(
 			String sp0Name, float spBaEnd, float spLhEnd, Region region
 	) {
-		Coefficients coe = fps.controlMap.getSmallComponentBasalAreaCoefficients().get(sp0Name);
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		float regionMultiplier = region == Region.COASTAL ? 1.0f : 0.0f;
-
-		// FIXME due to a bug in VDYP7 it always treats this as interior. Replicating
-		// that for now.
-		regionMultiplier = 0f;
-
-		float result = (a0 + a1 * regionMultiplier + a2 * spBaEnd) * exp(a3 * spLhEnd);
-		result = max(result, 0f);
-
-		return result;
+		return fps.estimators.estimateSmallComponentConditionalExpectedBasalArea(sp0Name, spBaEnd, spLhEnd, region);
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {

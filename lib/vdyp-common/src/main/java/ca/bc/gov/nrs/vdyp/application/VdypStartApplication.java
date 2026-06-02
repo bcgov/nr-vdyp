@@ -1085,29 +1085,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	// EMP081
 	private float conditionalExpectedBaseArea(VdypSpecies spec, float baseAreaSpec, Region region) {
-		Coefficients coe = getCoeForSpecies(spec, ControlKey.SMALL_COMP_BA);
-
-		// EQN 3 in IPSJF118.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		float coast = region == Region.COASTAL ? 1.0f : 0.0f;
-
-		// FIXME due to a bug in VDYP7 it always treats this as interior. Replicating
-		// that for now.
-		coast = 0f;
-
-		float arg = //
-				(a0 + //
-						a1 * coast + //
-						a2 * baseAreaSpec//
-				) * exp(a3 * spec.getLoreyHeightByUtilization().getAll());
-		arg = max(arg, 0f);
-
-		return arg;
+		return estimationMethods.estimateSmallComponentConditionalExpectedBasalArea(spec, baseAreaSpec, region);
 	}
 
 	// EMP080
