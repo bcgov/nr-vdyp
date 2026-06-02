@@ -1102,4 +1102,23 @@ public class EstimationMethods {
 				* exp(a0 * (pow(quadMeanDiameterSpecSmall, a1) - pow(speciesQuadMeanDiameterAll, a1)));
 
 	}
+
+	// EMP082
+	public float estimateSmallComponentQuadMeanDiameter(VdypSpecies spec) {
+		return estimateSmallComponentQuadMeanDiameter(spec.getGenus(), spec.getLoreyHeightByUtilization().getAll());
+	}
+
+	// EMP082
+	public float estimateSmallComponentQuadMeanDiameter(String speciesName, float loreyHeight) {
+		Coefficients coe = controlMap.getSmallComponentQuadMeanDiameterCoefficients().get(speciesName);
+
+		// EQN 5 in IPSJF118.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+
+		float logit = a0 + a1 * loreyHeight;
+
+		return 4.0f + 3.5f * exp(logit) / (1.0f + exp(logit));
+	}
 }
