@@ -1656,7 +1656,7 @@ public class ForwardProcessingEngine {
 			float spBaSmall = smallProbability * conditionalExpectedBasalArea;
 
 			// EMP082
-			float spDqSmall = smallComponentQuadMeanDiameter(speciesName, spLhAll); // DQSMsp
+			float spDqSmall = fps.estimators.estimateSmallComponentQuadMeanDiameter(speciesName, spLhAll); // DQSMsp
 
 			// EMP085
 			float spLhSmall = fps.estimators
@@ -2776,7 +2776,7 @@ public class ForwardProcessingEngine {
 		float spBaSmall = smallProbability * conditionalExpectedBaseArea;
 
 		// EMP082
-		float spDqSmall = smallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
+		float spDqSmall = fps.estimators.estimateSmallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
 
 		// EMP085
 		float spLhSmall = fps.estimators
@@ -2884,11 +2884,6 @@ public class ForwardProcessingEngine {
 		result = max(result, 0f);
 
 		return result;
-	}
-
-	// EMP082
-	private float smallComponentQuadMeanDiameter(String speciesName, float loreyHeight) {
-		return fps.estimators.estimateSmallComponentQuadMeanDiameter(speciesName, loreyHeight);
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
