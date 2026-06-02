@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.UUID;
 
 import org.springframework.batch.core.JobExecution;
@@ -208,11 +209,18 @@ public final class BatchUtils {
 	}
 
 	public static VDYPProjectionProgressUpdate buildFinalProgress(String jobGuid, JobExecution jobExecution) {
-		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+		ExecutionContext jobCtx = jobExecution.getExecutionContext();
+		int totalPolygons = jobCtx == null ? 0 : jobCtx.getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
 		int polygonsProcessed = 0;
 		int errorCount = 0;
 		int polygonsSkipped = 0;
-		for (StepExecution step : jobExecution.getStepExecutions()) {
+		Collection<StepExecution> stepExecutions = jobExecution.getStepExecutions();
+		if (stepExecutions == null) {
+			return new VDYPProjectionProgressUpdate(
+					jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped
+			);
+		}
+		for (StepExecution step : stepExecutions) {
 			if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
 				ExecutionContext stepCtx = step.getExecutionContext();
 				polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);

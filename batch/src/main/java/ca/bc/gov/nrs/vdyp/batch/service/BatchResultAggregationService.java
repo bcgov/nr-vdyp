@@ -24,6 +24,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -46,7 +47,7 @@ public class BatchResultAggregationService {
 	 */
 	public Path aggregateResultsFromJobDir(
 			@NonNull Long jobExecutionId, @NonNull String jobGuid, @NonNull String jobBaseDir,
-			@NonNull String jobTimestamp
+			@NonNull String jobTimestamp, @NonNull VDYPProjectionProgressUpdate finalProgress
 	) throws BatchResultAggregationException {
 		logger.info(
 				"[GUID: {}] Starting result aggregation for job execution: {} from job directory: {}", jobGuid,
@@ -74,7 +75,7 @@ public class BatchResultAggregationService {
 			// Aggregate results
 			try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(finalZipPath))) {
 				aggregateYieldTables(partitionOutputDirs, zipOut);
-				aggregateLogs(partitionOutputDirs, zipOut);
+				aggregateLogs(partitionOutputDirs, zipOut, finalProgress);
 
 				logger.info("Successfully created consolidated ZIP file: {}", finalZipPath);
 			}
@@ -611,7 +612,9 @@ public class BatchResultAggregationService {
 	 *
 	 * @throws IOException if aggregation fails
 	 */
-	private void aggregateLogs(List<Path> partitionDirs, ZipOutputStream zipOut) throws IOException {
+	private void
+			aggregateLogs(List<Path> partitionDirs, ZipOutputStream zipOut, VDYPProjectionProgressUpdate progressUpdate)
+					throws IOException {
 		logger.debug("Aggregating log files from {} partitions", partitionDirs.size());
 
 		Map<String, List<Path>> logsByType = new HashMap<>();
@@ -650,7 +653,7 @@ public class BatchResultAggregationService {
 			List<Path> logPaths = entry.getValue();
 
 			if (!logPaths.isEmpty()) {
-				mergeLogs(logType, logPaths, zipOut);
+				mergeLogs(logType, logPaths, zipOut, progressUpdate);
 			}
 		}
 
@@ -704,7 +707,9 @@ public class BatchResultAggregationService {
 	/**
 	 * Merges multiple log files of the same type into a single file in the ZIP.
 	 */
-	private void mergeLogs(String logType, List<Path> logPaths, ZipOutputStream zipOut) throws IOException {
+	private void mergeLogs(
+			String logType, List<Path> logPaths, ZipOutputStream zipOut, VDYPProjectionProgressUpdate progressUpdate
+	) throws IOException {
 		String mergedLogFileName = String.format("%sLog.txt", logType);
 
 		ZipEntry zipEntry = new ZipEntry(mergedLogFileName);
@@ -724,6 +729,10 @@ public class BatchResultAggregationService {
 			}
 		}
 
+		if (BatchConstants.File.LOG_TYPE_PROGRESS.equals(logType)) {
+			writeTotalProgress(zipOut, progressUpdate);
+		}
+
 		zipOut.closeEntry();
 
 		int successFiles = totalFiles - failedFiles;
@@ -735,6 +744,15 @@ public class BatchResultAggregationService {
 		} else {
 			logger.debug("Merged {} log files into: {}", totalFiles, mergedLogFileName);
 		}
+	}
+
+	private void writeTotalProgress(ZipOutputStream zipOut, VDYPProjectionProgressUpdate progressUpdate)
+			throws IOException {
+		String progress = String.format(
+				"Total Processing Summary: \n\tTotal Polygons Processed:\t%d\n\tTotal Polygons Skipped:\t\t%d\n\t\t\t\t\t------\n\t\t\t\t\t\t\t%d",
+				progressUpdate.polygonsProcessed(), progressUpdate.polygonsSkipped(), progressUpdate.totalPolygons()
+		);
+		zipOut.write(progress.getBytes(StandardCharsets.UTF_8));
 	}
 
 	/**
