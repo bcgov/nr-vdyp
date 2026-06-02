@@ -751,10 +751,11 @@ public class BatchResultAggregationService {
 		String progress = String.format(
 				"""
 						Total Processing Summary:
-						\tTotal Polygons Processed:\t\t%d
-						\tTotal Polygons Skipped:\t\t\t%d
-						\t\t\t\t\t\t\t\t-----
-						\t\t\t\t\t\t\t\t\t%d""", progressUpdate.polygonsProcessed(), progressUpdate.polygonsSkipped(),
+						  Total Polygons Processed: %7d
+						  Total Polygons Skipped:   %7d
+						                            -------
+						                            %7d""", progressUpdate.polygonsProcessed(),
+				progressUpdate.polygonsSkipped(),
 				progressUpdate.totalPolygons()
 		);
 		zipOut.write(progress.getBytes(StandardCharsets.UTF_8));
