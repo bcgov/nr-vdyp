@@ -232,15 +232,23 @@ export class FileUploadValidator extends ValidationBase {
   async validateDuplicateColumns(
     file: File,
     expectedFirstHeader: string,
+    expectedHeaders: string[],
+    optionalHeaders: Set<string> = new Set(),
   ): Promise<{
     isValid: boolean
+    isColumnCountInvalid: boolean
     duplicates: string[]
   }> {
     const headers = await this.getFileHeaders(file)
 
     if (headers[0] !== expectedFirstHeader) {
-      return { isValid: true, duplicates: [] }
+      // Headerless file: validate column count is within expected range.
+      const minColumns = expectedHeaders.length - optionalHeaders.size
+      const maxColumns = expectedHeaders.length
+      const validCount = headers.length >= minColumns && headers.length <= maxColumns
+      return { isValid: validCount, isColumnCountInvalid: !validCount, duplicates: [] }
     }
+
     const seen = new Set<string>()
     const duplicates: string[] = []
     const duplicateTracker = new Set<string>()
@@ -259,6 +267,7 @@ export class FileUploadValidator extends ValidationBase {
 
     return {
       isValid: duplicates.length === 0,
+      isColumnCountInvalid: false,
       duplicates,
     }
   }

@@ -160,6 +160,10 @@ export const FILE_UPLOAD_ERR = Object.freeze({
     'A Layer file was uploaded to the Polygon file area. Please upload a Polygon file.',
   LAYER_UPLOAD_RECEIVED_POLYGON_FILE:
     'A Polygon file was uploaded to the Layer file area. Please upload a Layer file.',
+  POLYGON_FILE_INVALID_COLUMN_COUNT:
+    'The Polygon file has an incorrect number of columns. Expected 43 columns.',
+  LAYER_FILE_INVALID_COLUMN_COUNT:
+    'The Layer file has an incorrect number of columns. Expected between 38 and 51 columns.',
   POLYGON_FILE_DUPLICATE_COLUMNS:
     'The Polygon file contains duplicate column names. Each column must have a unique name. Please fix the file and try again.',
   LAYER_FILE_DUPLICATE_COLUMNS:

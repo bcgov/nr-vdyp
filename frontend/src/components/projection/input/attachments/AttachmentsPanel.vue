@@ -210,11 +210,13 @@ const buildHeaderErrorMessage = (details: {
 
 const getDuplicateColumnsError = async (
   file: File,
-  validateFn: (file: File) => Promise<{ isValid: boolean; duplicates: string[] }>,
+  validateFn: (file: File) => Promise<{ isValid: boolean; isColumnCountInvalid: boolean; duplicates: string[] }>,
   errorMessage: string,
+  columnCountErrorMessage: string,
 ): Promise<string | null> => {
   const result = await validateFn(file)
   if (!result.isValid) {
+    if (result.isColumnCountInvalid) return columnCountErrorMessage
     let message = errorMessage
     if (result.duplicates.length > 0) {
       message += '\n\nDuplicate columns found:\n' +
@@ -245,6 +247,7 @@ const validatePolygonFile = async (file: File): Promise<boolean> => {
     file,
     fileUploadValidation.validatePolygonDuplicateColumns,
     MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_DUPLICATE_COLUMNS,
+    MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_INVALID_COLUMN_COUNT,
   )
   if (duplicateError) {
     polygonFileError.value = duplicateError
@@ -271,6 +274,7 @@ const validateLayerFile = async (file: File): Promise<boolean> => {
     file,
     fileUploadValidation.validateLayerDuplicateColumns,
     MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_DUPLICATE_COLUMNS,
+    MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_INVALID_COLUMN_COUNT,
   )
   if (duplicateError) {
     layerFileError.value = duplicateError
