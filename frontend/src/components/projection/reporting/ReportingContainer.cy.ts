@@ -52,7 +52,7 @@ describe('ReportingContainer.vue', () => {
 
     it('renders the ReportingOutput panel', () => {
       mountComponent(REPORTING_TAB.MODEL_REPORT)
-      cy.get('.ml-2.mr-2').should('exist')
+      cy.get('.ml-2').should('exist')
     })
   })
 
@@ -138,8 +138,8 @@ describe('ReportingContainer.vue', () => {
         txtYieldLines: ['Yield Report Header', 'Species: Fir'],
         csvYieldLines: ['csv,header,col'],
       })
-      cy.get('.ml-2.mr-2').should('contain.text', 'Yield Report Header')
-      cy.get('.ml-2.mr-2').should('contain.text', 'Species: Fir')
+      cy.get('.ml-2').should('contain.text', 'Yield Report Header')
+      cy.get('.ml-2').should('contain.text', 'Species: Fir')
     })
 
     it('does NOT show csvYieldLines in output for MODEL_REPORT (display uses txtYieldLines)', () => {
@@ -147,39 +147,39 @@ describe('ReportingContainer.vue', () => {
         txtYieldLines: ['Text report line'],
         csvYieldLines: ['csv,only,data'],
       })
-      cy.get('.ml-2.mr-2').should('contain.text', 'Text report line')
-      cy.get('.ml-2.mr-2').should('not.contain.text', 'csv,only,data')
+      cy.get('.ml-2').should('contain.text', 'Text report line')
+      cy.get('.ml-2').should('not.contain.text', 'csv,only,data')
     })
 
     it('displays errorMessages in output for VIEW_ERR_MSG', () => {
       mountComponent(REPORTING_TAB.VIEW_ERR_MSG, {
         errorMessages: ['ERROR: Missing polygon', 'WARNING: Low density value'],
       })
-      cy.get('.ml-2.mr-2').should('contain.text', 'ERROR: Missing polygon')
-      cy.get('.ml-2.mr-2').should('contain.text', 'WARNING: Low density value')
+      cy.get('.ml-2').should('contain.text', 'ERROR: Missing polygon')
+      cy.get('.ml-2').should('contain.text', 'WARNING: Low density value')
     })
 
     it('displays logMessages in output for VIEW_LOG_FILE', () => {
       mountComponent(REPORTING_TAB.VIEW_LOG_FILE, {
         logMessages: ['Batch job started', 'Batch job completed'],
       })
-      cy.get('.ml-2.mr-2').should('contain.text', 'Batch job started')
-      cy.get('.ml-2.mr-2').should('contain.text', 'Batch job completed')
+      cy.get('.ml-2').should('contain.text', 'Batch job started')
+      cy.get('.ml-2').should('contain.text', 'Batch job completed')
     })
 
     it('shows empty output when store has no data', () => {
       mountComponent(REPORTING_TAB.MODEL_REPORT, { txtYieldLines: [] })
-      cy.get('.ml-2.mr-2').should('have.text', '')
+      cy.get('.ml-2').should('have.text', '')
     })
 
     it('output updates reactively when store data changes after mount', () => {
       mountComponent(REPORTING_TAB.VIEW_ERR_MSG, { errorMessages: [] })
-      cy.get('.ml-2.mr-2').should('have.text', '')
+      cy.get('.ml-2').should('have.text', '')
 
       cy.then(() => {
         useProjectionStore().errorMessages = ['Late-arriving error message']
       })
-      cy.get('.ml-2.mr-2').should('contain.text', 'Late-arriving error message')
+      cy.get('.ml-2').should('contain.text', 'Late-arriving error message')
     })
   })
 

@@ -75,11 +75,25 @@ export class FileUploadValidator extends ValidationBase {
     file: File,
     expectedHeaders: string[],
     optionalHeaders: Set<string> = new Set(),
+    otherTypeHeaders?: string[],
   ): Promise<{
     isValid: boolean
+    isEmpty: boolean
+    isWrongFileType: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
   }> {
     const actualHeaders = await this.getFileHeaders(file)
+
+    // Empty file - fail with isEmpty flag so callers can show a specific message.
+    if (actualHeaders.length === 0) {
+      return { isValid: false, isEmpty: true, isWrongFileType: false, details: { missing: [], extra: [], mismatches: [] } }
+    }
+
+    // If the first field doesn't match the expected first header, treat the file
+    // as headerless and skip validation.
+    if (actualHeaders[0] !== expectedHeaders[0]) {
+      return { isValid: true, isEmpty: false, isWrongFileType: false, details: { missing: [], extra: [], mismatches: [] } }
+    }
 
     const missing: string[] = []
     const extra: string[] = []
@@ -95,9 +109,11 @@ export class FileUploadValidator extends ValidationBase {
       if (!expectedSet.has(h)) extra.push(h)
     })
 
-    // Only check mismatches if lengths are equal (to avoid unnecessary details)
-    if (actualHeaders.length === expectedHeaders.length) {
-      for (let i = 0; i < expectedHeaders.length; i++) {
+    // Check mismatches only when there are no missing or extra columns.
+    // Use min length to handle files without optional headers.
+    if (missing.length === 0 && extra.length === 0) {
+      const checkLength = Math.min(actualHeaders.length, expectedHeaders.length)
+      for (let i = 0; i < checkLength; i++) {
         if (actualHeaders[i] !== expectedHeaders[i]) {
           mismatches.push(
             `Position ${i + 1}: Expected '${expectedHeaders[i]}', found '${actualHeaders[i]}'`,
@@ -108,38 +124,83 @@ export class FileUploadValidator extends ValidationBase {
 
     const isValid =
       missing.length === 0 && extra.length === 0 && mismatches.length === 0
-    return { isValid, details: { missing, extra, mismatches } }
+
+    // Detect if the file looks like the other file type by comparing the second header.
+    const isWrongFileType =
+      !isValid &&
+      otherTypeHeaders !== undefined &&
+      actualHeaders.length > 1 &&
+      actualHeaders[1] === otherTypeHeaders[1]
+
+    return { isValid, isEmpty: false, isWrongFileType, details: { missing, extra, mismatches } }
   }
 
   async validatePolygonHeader(file: File): Promise<{
     isValid: boolean
+    isEmpty: boolean
+    isWrongFileType: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
     expected: string[]
   }> {
-    const { isValid, details } = await this.getHeaderValidationDetails(
-      file,
-      CSVHEADERS.POLYGON_HEADERS,
-    )
-    return { isValid, details, expected: CSVHEADERS.POLYGON_HEADERS }
+    const { isValid, isEmpty, isWrongFileType, details } =
+      await this.getHeaderValidationDetails(
+        file,
+        CSVHEADERS.POLYGON_HEADERS,
+        new Set(),
+        CSVHEADERS.LAYER_HEADERS,
+      )
+    return { isValid, isEmpty, isWrongFileType, details, expected: CSVHEADERS.POLYGON_HEADERS }
   }
 
   async validateLayerHeader(file: File): Promise<{
     isValid: boolean
+    isEmpty: boolean
+    isWrongFileType: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
     expected: string[]
   }> {
-    const { isValid, details } = await this.getHeaderValidationDetails(
-      file,
-      CSVHEADERS.LAYER_HEADERS,
-      CSVHEADERS.OPTIONAL_LAYER_HEADERS,
-    )
-    return { isValid, details, expected: CSVHEADERS.LAYER_HEADERS }
+    const { isValid, isEmpty, isWrongFileType, details } =
+      await this.getHeaderValidationDetails(
+        file,
+        CSVHEADERS.LAYER_HEADERS,
+        CSVHEADERS.OPTIONAL_LAYER_HEADERS,
+        CSVHEADERS.POLYGON_HEADERS,
+      )
+    return { isValid, isEmpty, isWrongFileType, details, expected: CSVHEADERS.LAYER_HEADERS }
+  }
+
+  async isFileEmpty(file: File): Promise<boolean> {
+    const firstLine = await this.readFirstLine(file)
+    return firstLine.length === 0
   }
 
   private async getFileHeaders(file: File): Promise<string[]> {
-    const fileContent = await file.text()
-    const headerLine = fileContent.split('\n')[0]
+    const headerLine = await this.readFirstLine(file)
     return this.parseCSVHeader(headerLine)
+  }
+
+  // Streams the file until the first newline, then cancels - avoids loading
+  // large files into memory entirely.
+  private async readFirstLine(file: File): Promise<string> {
+    const reader = file.stream().getReader()
+    const decoder = new TextDecoder()
+    let line = ''
+
+    try {
+      outer: while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        for (const char of chunk) {
+          if (char === '\n') break outer
+          line += char
+        }
+      }
+    } finally {
+      await reader.cancel()
+    }
+
+    return line.replace(/\r$/, '')
   }
 
   private parseCSVHeader(headerLine: string): string[] {
@@ -175,11 +236,26 @@ export class FileUploadValidator extends ValidationBase {
     return headers
   }
 
-  async validateDuplicateColumns(file: File): Promise<{
+  async validateDuplicateColumns(
+    file: File,
+    expectedFirstHeader: string,
+    expectedHeaders: string[],
+    optionalHeaders: Set<string> = new Set(),
+  ): Promise<{
     isValid: boolean
+    isColumnCountInvalid: boolean
     duplicates: string[]
   }> {
     const headers = await this.getFileHeaders(file)
+
+    if (headers[0] !== expectedFirstHeader) {
+      // Headerless file: validate column count is within expected range.
+      const minColumns = expectedHeaders.length - optionalHeaders.size
+      const maxColumns = expectedHeaders.length
+      const validCount = headers.length >= minColumns && headers.length <= maxColumns
+      return { isValid: validCount, isColumnCountInvalid: !validCount, duplicates: [] }
+    }
+
     const seen = new Set<string>()
     const duplicates: string[] = []
     const duplicateTracker = new Set<string>()
@@ -198,6 +274,7 @@ export class FileUploadValidator extends ValidationBase {
 
     return {
       isValid: duplicates.length === 0,
+      isColumnCountInvalid: false,
       duplicates,
     }
   }
