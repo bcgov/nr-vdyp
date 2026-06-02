@@ -748,12 +748,14 @@ public class BatchResultAggregationService {
 
 	private void writeTotalProgress(ZipOutputStream zipOut, VDYPProjectionProgressUpdate progressUpdate)
 			throws IOException {
-		String progress = String.format("Total Processing Summary: \n" + //
-				"\tTotal Polygons Processed:\t\t%d\n" + //
-				"\tTotal Polygons Skipped:\t\t\t%d\n" + //
-				"\t\t\t\t\t\t\t\t-----\n" + //
-				"\t\t\t\t\t\t\t\t\t%d", //
-				progressUpdate.polygonsProcessed(), progressUpdate.polygonsSkipped(), progressUpdate.totalPolygons()
+		String progress = String.format(
+				"""
+						Total Processing Summary:
+						\tTotal Polygons Processed:\t\t%d
+						\tTotal Polygons Skipped:\t\t\t%d
+						\t\t\t\t\t\t\t\t-----
+						\t\t\t\t\t\t\t\t\t%d""", progressUpdate.polygonsProcessed(), progressUpdate.polygonsSkipped(),
+				progressUpdate.totalPolygons()
 		);
 		zipOut.write(progress.getBytes(StandardCharsets.UTF_8));
 	}
