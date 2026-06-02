@@ -169,6 +169,11 @@ export class FileUploadValidator extends ValidationBase {
     return { isValid, isEmpty, isWrongFileType, details, expected: CSVHEADERS.LAYER_HEADERS }
   }
 
+  async isFileEmpty(file: File): Promise<boolean> {
+    const firstLine = await this.readFirstLine(file)
+    return firstLine.length === 0
+  }
+
   private async getFileHeaders(file: File): Promise<string[]> {
     const headerLine = await this.readFirstLine(file)
     return this.parseCSVHeader(headerLine)

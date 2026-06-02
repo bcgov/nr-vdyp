@@ -95,6 +95,10 @@ export const validateFiles = async (
   return { isValid: true }
 }
 
+export const isFileEmpty = async (file: File) => {
+  return fileUploadValidator.isFileEmpty(file)
+}
+
 export const validatePolygonHeader = async (file: File) => {
   return fileUploadValidator.validatePolygonHeader(file)
 }

@@ -229,13 +229,11 @@ const getDuplicateColumnsError = async (
 
 const getHeaderColumnsError = async (
   file: File,
-  validateFn: (file: File) => Promise<{ isValid: boolean; isEmpty: boolean; isWrongFileType: boolean; details: any }>,
-  emptyFileMessage: string,
+  validateFn: (file: File) => Promise<{ isValid: boolean; isWrongFileType: boolean; details: any }>,
   wrongFileTypeMessage: string,
 ): Promise<string | null> => {
   const result = await validateFn(file)
   if (!result.isValid) {
-    if (result.isEmpty) return emptyFileMessage
     if (result.isWrongFileType) return wrongFileTypeMessage
     return buildHeaderErrorMessage(result.details)
   }
@@ -243,6 +241,11 @@ const getHeaderColumnsError = async (
 }
 
 const validatePolygonFile = async (file: File): Promise<boolean> => {
+  if (await fileUploadValidation.isFileEmpty(file)) {
+    polygonFileError.value = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_EMPTY
+    return false
+  }
+
   const duplicateError = await getDuplicateColumnsError(
     file,
     fileUploadValidation.validatePolygonDuplicateColumns,
@@ -257,7 +260,6 @@ const validatePolygonFile = async (file: File): Promise<boolean> => {
   const headerError = await getHeaderColumnsError(
     file,
     fileUploadValidation.validatePolygonHeader,
-    MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_EMPTY,
     MESSAGE.FILE_UPLOAD_ERR.POLYGON_UPLOAD_RECEIVED_LAYER_FILE,
   )
   if (headerError) {
@@ -270,6 +272,11 @@ const validatePolygonFile = async (file: File): Promise<boolean> => {
 }
 
 const validateLayerFile = async (file: File): Promise<boolean> => {
+  if (await fileUploadValidation.isFileEmpty(file)) {
+    layerFileError.value = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_EMPTY
+    return false
+  }
+
   const duplicateError = await getDuplicateColumnsError(
     file,
     fileUploadValidation.validateLayerDuplicateColumns,
@@ -284,7 +291,6 @@ const validateLayerFile = async (file: File): Promise<boolean> => {
   const headerError = await getHeaderColumnsError(
     file,
     fileUploadValidation.validateLayerHeader,
-    MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_EMPTY,
     MESSAGE.FILE_UPLOAD_ERR.LAYER_UPLOAD_RECEIVED_POLYGON_FILE,
   )
   if (headerError) {
