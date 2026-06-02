@@ -840,6 +840,102 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void testBiosmass01() throws ResourceParseException, IOException {
+
+		logger.info("Starting biomass-test-01-no-back");
+		Pattern ignorePattern = Pattern.compile(
+				"TABLE_NUM|PRJ_SCND_HT|PRJ_DIAMETER|PRJ_TPH|PRJ_DOM_HT|PRJ_LOREY_HT|PRJ_SITE_INDEX|PRJ_PCNT_STOCK|PRJ_BA"
+		);
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("biomass-test-01-no-back/output/Output_YldTbl.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("biomass-test-01-no-back", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testBiosmass02() throws ResourceParseException, IOException {
+
+		logger.info("Starting biomass-test-02-no-back");
+		Pattern ignorePattern = Pattern.compile(
+				"TABLE_NUM|PRJ_SCND_HT|PRJ_DIAMETER|PRJ_TPH|PRJ_DOM_HT|PRJ_LOREY_HT|PRJ_SITE_INDEX|PRJ_PCNT_STOCK|PRJ_BA"
+		);
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("biomass-test-02-no-back/output/Output_YldTbl.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("biomass-test-02-no-back", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testBiosmass03() throws ResourceParseException, IOException {
+
+		logger.info("Starting biomass-test-03-no-back");
+		Pattern ignorePattern = Pattern.compile(
+				"TABLE_NUM|PRJ_SCND_HT|PRJ_DIAMETER|PRJ_TPH|PRJ_DOM_HT|PRJ_LOREY_HT|PRJ_SITE_INDEX|PRJ_PCNT_STOCK|PRJ_BA"
+		);
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("biomass-test-03-no-back/output/Output_YldTbl.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("biomass-test-03-no-back", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	@Disabled("VDYP-1143: value is diverging by more than 1%")
+	void testBiosmass04() throws ResourceParseException, IOException {
+
+		logger.info("Starting biomass-test-04-no-back");
+		Pattern ignorePattern = Pattern.compile(
+				"TABLE_NUM|PRJ_SCND_HT|PRJ_DIAMETER|PRJ_TPH|PRJ_DOM_HT|PRJ_LOREY_HT|PRJ_SITE_INDEX|PRJ_PCNT_STOCK|PRJ_BA"
+		);
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("biomass-test-04-no-back/output/Output_YldTbl.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("biomass-test-04-no-back", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void testBiosmass05() throws ResourceParseException, IOException {
+
+		logger.info("Starting biomass-test-05-no-back");
+		Pattern ignorePattern = Pattern.compile(
+				"TABLE_NUM|PRJ_SCND_HT|PRJ_DIAMETER|PRJ_TPH|PRJ_DOM_HT|PRJ_LOREY_HT|PRJ_SITE_INDEX|PRJ_PCNT_STOCK|PRJ_BA"
+		);
+		try (
+				InputStream vdyp7Stream = MainTest.class
+						.getResourceAsStream("biomass-test-05-no-back/output/Output_YldTbl.csv")
+		) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("biomass-test-05-no-back", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void testTPHSumSpecies() throws ResourceParseException, IOException {
 
 		logger.info("Starting tph-sum-species");

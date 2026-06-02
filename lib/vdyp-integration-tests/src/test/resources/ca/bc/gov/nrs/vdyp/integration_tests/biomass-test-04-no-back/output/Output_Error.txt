@@ -1,0 +1,41 @@
+                                                 - I SUCCESS - Substitution of Supplied BA/TPH as Projected values has been disabled.
+                                                 - W SUCCESS - CFS BIOMASS Output has been selected. Utilization Levels Pine and Hardwood - 12.5cm+; Others 17.5cm+
+                                                 - I SUCCESS - VDYP7 Console Run Started:         2026-Mar-24 13:55:04
+                                                 - I SUCCESS - VDYP7 Console Version:             7.17d
+                                                 - I SUCCESS - VDYP7 Extended Core DLL Version:   7.29a
+                                                 - I SUCCESS - VDYP7CORE DLL Version:             7.19h
+                                                 - I SUCCESS - Supporting Calc Library Version:   7.2d 2020-Jul-31
+                                                 - I SUCCESS - VRIADJST Calc DLL Version:         7.5d
+                                                 - I SUCCESS - VDYPBACK Calc DLL Version:         7.5d
+                                                 - I SUCCESS - FIPSTART Calc DLL Version:         7.5d
+                                                 - I SUCCESS - VDYP7 Calc DLL Version:            7.5d
+                                                 - I SUCCESS - VRISTART Calc DLL Version:         7.5d
+                                                 - I SUCCESS - Calc DLL I/O Support Version:      7.5d
+                                                 - I SUCCESS - VDYP7 Low Level I/O DLL Version:   7.23f
+                                                 - I SUCCESS - VDYP SI Wrapper Version:           7.13c
+                                                 - I SUCCESS - SINDEX Version:                    1.51
+                                                 - I SUCCESS - Batch Parameters:
+                                                 - I SUCCESS -    Project Age Range:
+                                                 - I SUCCESS -       Start Age:     0
+                                                 - I SUCCESS -       End Age:       250
+                                                 - I SUCCESS -       Start Year:    N/A
+                                                 - I SUCCESS -       End Year:      N/A
+                                                 - I SUCCESS -       Increment:     10
+                                                 - I SUCCESS -    Reported Utilization Levels by SP0 Code:
+                                                 - I SUCCESS -       AC   --> 12.5 cm+
+                                                 - I SUCCESS -       AT   --> 12.5 cm+
+                                                 - I SUCCESS -       B    --> 17.5 cm+
+                                                 - I SUCCESS -       C    --> 17.5 cm+
+                                                 - I SUCCESS -       D    --> 12.5 cm+
+                                                 - I SUCCESS -       E    --> 12.5 cm+
+                                                 - I SUCCESS -       F    --> 17.5 cm+
+                                                 - I SUCCESS -       H    --> 17.5 cm+
+                                                 - I SUCCESS -       L    --> 12.5 cm+
+                                                 - I SUCCESS -       MB   --> 12.5 cm+
+                                                 - I SUCCESS -       PA   --> 12.5 cm+
+                                                 - I SUCCESS -       PL   --> 12.5 cm+
+                                                 - I SUCCESS -       PW   --> 12.5 cm+
+                                                 - I SUCCESS -       PY   --> 12.5 cm+
+                                                 - I SUCCESS -       S    --> 17.5 cm+
+                                                 - I SUCCESS -       Y    --> 17.5 cm+
+    093H044 0 0 80726775  (Rcrd ID: 17600806 ) 1 - I INVALIDSITEINFO - Height 0.0 at Projection Year 1765 is too short to generate yields for species 'SE'
