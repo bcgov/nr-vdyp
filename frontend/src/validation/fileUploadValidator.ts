@@ -109,9 +109,11 @@ export class FileUploadValidator extends ValidationBase {
       if (!expectedSet.has(h)) extra.push(h)
     })
 
-    // Only check mismatches if lengths are equal (to avoid unnecessary details)
-    if (actualHeaders.length === expectedHeaders.length) {
-      for (let i = 0; i < expectedHeaders.length; i++) {
+    // Check mismatches only when there are no missing or extra columns.
+    // Use min length to handle files without optional headers.
+    if (missing.length === 0 && extra.length === 0) {
+      const checkLength = Math.min(actualHeaders.length, expectedHeaders.length)
+      for (let i = 0; i < checkLength; i++) {
         if (actualHeaders[i] !== expectedHeaders[i]) {
           mismatches.push(
             `Position ${i + 1}: Expected '${expectedHeaders[i]}', found '${actualHeaders[i]}'`,
