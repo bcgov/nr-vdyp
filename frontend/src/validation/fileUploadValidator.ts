@@ -75,22 +75,24 @@ export class FileUploadValidator extends ValidationBase {
     file: File,
     expectedHeaders: string[],
     optionalHeaders: Set<string> = new Set(),
+    otherTypeHeaders?: string[],
   ): Promise<{
     isValid: boolean
     isEmpty: boolean
+    isWrongFileType: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
   }> {
     const actualHeaders = await this.getFileHeaders(file)
 
     // Empty file - fail with isEmpty flag so callers can show a specific message.
     if (actualHeaders.length === 0) {
-      return { isValid: false, isEmpty: true, details: { missing: [], extra: [], mismatches: [] } }
+      return { isValid: false, isEmpty: true, isWrongFileType: false, details: { missing: [], extra: [], mismatches: [] } }
     }
 
     // If the first field doesn't match the expected first header, treat the file
     // as headerless and skip validation.
     if (actualHeaders[0] !== expectedHeaders[0]) {
-      return { isValid: true, isEmpty: false, details: { missing: [], extra: [], mismatches: [] } }
+      return { isValid: true, isEmpty: false, isWrongFileType: false, details: { missing: [], extra: [], mismatches: [] } }
     }
 
     const missing: string[] = []
@@ -120,34 +122,49 @@ export class FileUploadValidator extends ValidationBase {
 
     const isValid =
       missing.length === 0 && extra.length === 0 && mismatches.length === 0
-    return { isValid, isEmpty: false, details: { missing, extra, mismatches } }
+
+    // Detect if the file looks like the other file type by comparing the second header.
+    const isWrongFileType =
+      !isValid &&
+      otherTypeHeaders !== undefined &&
+      actualHeaders.length > 1 &&
+      actualHeaders[1] === otherTypeHeaders[1]
+
+    return { isValid, isEmpty: false, isWrongFileType, details: { missing, extra, mismatches } }
   }
 
   async validatePolygonHeader(file: File): Promise<{
     isValid: boolean
     isEmpty: boolean
+    isWrongFileType: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
     expected: string[]
   }> {
-    const { isValid, isEmpty, details } = await this.getHeaderValidationDetails(
-      file,
-      CSVHEADERS.POLYGON_HEADERS,
-    )
-    return { isValid, isEmpty, details, expected: CSVHEADERS.POLYGON_HEADERS }
+    const { isValid, isEmpty, isWrongFileType, details } =
+      await this.getHeaderValidationDetails(
+        file,
+        CSVHEADERS.POLYGON_HEADERS,
+        new Set(),
+        CSVHEADERS.LAYER_HEADERS,
+      )
+    return { isValid, isEmpty, isWrongFileType, details, expected: CSVHEADERS.POLYGON_HEADERS }
   }
 
   async validateLayerHeader(file: File): Promise<{
     isValid: boolean
     isEmpty: boolean
+    isWrongFileType: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
     expected: string[]
   }> {
-    const { isValid, isEmpty, details } = await this.getHeaderValidationDetails(
-      file,
-      CSVHEADERS.LAYER_HEADERS,
-      CSVHEADERS.OPTIONAL_LAYER_HEADERS,
-    )
-    return { isValid, isEmpty, details, expected: CSVHEADERS.LAYER_HEADERS }
+    const { isValid, isEmpty, isWrongFileType, details } =
+      await this.getHeaderValidationDetails(
+        file,
+        CSVHEADERS.LAYER_HEADERS,
+        CSVHEADERS.OPTIONAL_LAYER_HEADERS,
+        CSVHEADERS.POLYGON_HEADERS,
+      )
+    return { isValid, isEmpty, isWrongFileType, details, expected: CSVHEADERS.LAYER_HEADERS }
   }
 
   private async getFileHeaders(file: File): Promise<string[]> {
