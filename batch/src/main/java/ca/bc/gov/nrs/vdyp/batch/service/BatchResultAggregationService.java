@@ -755,8 +755,7 @@ public class BatchResultAggregationService {
 						  Total Polygons Skipped:   %7d
 						                            -------
 						                            %7d""", progressUpdate.polygonsProcessed(),
-				progressUpdate.polygonsSkipped(),
-				progressUpdate.totalPolygons()
+				progressUpdate.polygonsSkipped(), progressUpdate.totalPolygons()
 		);
 		zipOut.write(progress.getBytes(StandardCharsets.UTF_8));
 	}
