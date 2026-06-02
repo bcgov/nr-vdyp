@@ -210,11 +210,13 @@ const buildHeaderErrorMessage = (details: {
 
 const getDuplicateColumnsError = async (
   file: File,
-  validateFn: (file: File) => Promise<{ isValid: boolean; duplicates: string[] }>,
+  validateFn: (file: File) => Promise<{ isValid: boolean; isColumnCountInvalid: boolean; duplicates: string[] }>,
   errorMessage: string,
+  columnCountErrorMessage: string,
 ): Promise<string | null> => {
   const result = await validateFn(file)
   if (!result.isValid) {
+    if (result.isColumnCountInvalid) return columnCountErrorMessage
     let message = errorMessage
     if (result.duplicates.length > 0) {
       message += '\n\nDuplicate columns found:\n' +
@@ -227,20 +229,28 @@ const getDuplicateColumnsError = async (
 
 const getHeaderColumnsError = async (
   file: File,
-  validateFn: (file: File) => Promise<{ isValid: boolean; details: any }>,
+  validateFn: (file: File) => Promise<{ isValid: boolean; isWrongFileType: boolean; details: any }>,
+  wrongFileTypeMessage: string,
 ): Promise<string | null> => {
   const result = await validateFn(file)
   if (!result.isValid) {
+    if (result.isWrongFileType) return wrongFileTypeMessage
     return buildHeaderErrorMessage(result.details)
   }
   return null
 }
 
 const validatePolygonFile = async (file: File): Promise<boolean> => {
+  if (await fileUploadValidation.isFileEmpty(file)) {
+    polygonFileError.value = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_EMPTY
+    return false
+  }
+
   const duplicateError = await getDuplicateColumnsError(
     file,
     fileUploadValidation.validatePolygonDuplicateColumns,
     MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_DUPLICATE_COLUMNS,
+    MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_INVALID_COLUMN_COUNT,
   )
   if (duplicateError) {
     polygonFileError.value = duplicateError
@@ -250,6 +260,7 @@ const validatePolygonFile = async (file: File): Promise<boolean> => {
   const headerError = await getHeaderColumnsError(
     file,
     fileUploadValidation.validatePolygonHeader,
+    MESSAGE.FILE_UPLOAD_ERR.POLYGON_UPLOAD_RECEIVED_LAYER_FILE,
   )
   if (headerError) {
     polygonFileError.value = headerError
@@ -261,10 +272,16 @@ const validatePolygonFile = async (file: File): Promise<boolean> => {
 }
 
 const validateLayerFile = async (file: File): Promise<boolean> => {
+  if (await fileUploadValidation.isFileEmpty(file)) {
+    layerFileError.value = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_EMPTY
+    return false
+  }
+
   const duplicateError = await getDuplicateColumnsError(
     file,
     fileUploadValidation.validateLayerDuplicateColumns,
     MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_DUPLICATE_COLUMNS,
+    MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_INVALID_COLUMN_COUNT,
   )
   if (duplicateError) {
     layerFileError.value = duplicateError
@@ -274,6 +291,7 @@ const validateLayerFile = async (file: File): Promise<boolean> => {
   const headerError = await getHeaderColumnsError(
     file,
     fileUploadValidation.validateLayerHeader,
+    MESSAGE.FILE_UPLOAD_ERR.LAYER_UPLOAD_RECEIVED_POLYGON_FILE,
   )
   if (headerError) {
     layerFileError.value = headerError

@@ -152,6 +152,18 @@ export const FILE_UPLOAD_ERR = Object.freeze({
   LAYER_FILE_MISSING: 'Layer file is missing. Please upload the required file.',
   POLYGON_FILE_MISSING:
     'Polygon file is missing. Please upload the required file.',
+  POLYGON_FILE_EMPTY:
+    'The Polygon file is empty. Please upload a file with data.',
+  LAYER_FILE_EMPTY:
+    'The Layer file is empty. Please upload a file with data.',
+  POLYGON_UPLOAD_RECEIVED_LAYER_FILE:
+    'A Layer file was uploaded to the Polygon file area. Please upload a Polygon file.',
+  LAYER_UPLOAD_RECEIVED_POLYGON_FILE:
+    'A Polygon file was uploaded to the Layer file area. Please upload a Layer file.',
+  POLYGON_FILE_INVALID_COLUMN_COUNT:
+    'The Polygon file has an incorrect number of columns. Expected 43 columns.',
+  LAYER_FILE_INVALID_COLUMN_COUNT:
+    'The Layer file has an incorrect number of columns. Expected between 38 and 51 columns.',
   POLYGON_FILE_DUPLICATE_COLUMNS:
     'The Polygon file contains duplicate column names. Each column must have a unique name. Please fix the file and try again.',
   LAYER_FILE_DUPLICATE_COLUMNS:

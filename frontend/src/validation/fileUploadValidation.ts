@@ -1,4 +1,5 @@
 import { FileUploadValidator } from './fileUploadValidator'
+import { CSVHEADERS } from '@/constants'
 
 const fileUploadValidator = new FileUploadValidator()
 
@@ -94,6 +95,10 @@ export const validateFiles = async (
   return { isValid: true }
 }
 
+export const isFileEmpty = async (file: File) => {
+  return fileUploadValidator.isFileEmpty(file)
+}
+
 export const validatePolygonHeader = async (file: File) => {
   return fileUploadValidator.validatePolygonHeader(file)
 }
@@ -103,9 +108,18 @@ export const validateLayerHeader = async (file: File) => {
 }
 
 export const validatePolygonDuplicateColumns = async (file: File) => {
-  return fileUploadValidator.validateDuplicateColumns(file)
+  return fileUploadValidator.validateDuplicateColumns(
+    file,
+    CSVHEADERS.POLYGON_HEADERS[0],
+    CSVHEADERS.POLYGON_HEADERS,
+  )
 }
 
 export const validateLayerDuplicateColumns = async (file: File) => {
-  return fileUploadValidator.validateDuplicateColumns(file)
+  return fileUploadValidator.validateDuplicateColumns(
+    file,
+    CSVHEADERS.LAYER_HEADERS[0],
+    CSVHEADERS.LAYER_HEADERS,
+    CSVHEADERS.OPTIONAL_LAYER_HEADERS,
+  )
 }
