@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.smallrye.jwt.algorithm.SignatureAlgorithm;
 import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
@@ -24,6 +26,7 @@ import jakarta.inject.Inject;
 @ApplicationScoped
 public class ApiGatewayJwtVerifier {
 
+	private static final Logger logger = LoggerFactory.getLogger(ApiGatewayJwtVerifier.class);
 	private static final String AUDIENCE_PROPERTY = "vdyp.api-gateway.jwt.audience";
 
 	private static final String VERIFICATION_ENABLED_PROPERTY = "vdyp.api-gateway.jwt.verification.enabled";
@@ -75,6 +78,8 @@ public class ApiGatewayJwtVerifier {
 			return null;
 		}
 
+		logger.info("VDYP verifying API token: " + token);
+		logger.info("against Auth Context Info: " + jwtAuthContextInfo);
 		return jwtParser.parse(token, jwtAuthContextInfo);
 	}
 
