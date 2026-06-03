@@ -23,18 +23,6 @@ services:
   - hosts:
     - vdyp#{ENV_URL_COMPONENT}#.api.gov.bc.ca
     methods:
-    - GET
-    name: vdyp-#{TARGET_ENV}#_~_get
-    paths:
-    - /api/v8
-    plugins: []
-    regex_priority: 200
-    strip_path: false
-    tags:
-    - "ns.#{GATEWAY_ID}#"
-  - hosts:
-    - vdyp#{ENV_URL_COMPONENT}#.api.gov.bc.ca
-    methods:
     - POST
     name: vdyp-#{TARGET_ENV}#_hcsv_post
     paths:
