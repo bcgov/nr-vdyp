@@ -65,6 +65,7 @@ public class ApiGatewayAuthenticationMechanism implements HttpAuthenticationMech
 			return Uni.createFrom().failure(new AuthenticationFailedException(e));
 		}
 
+
 		Principal principal = () -> useConsumer;
 
 		Builder identityBuilder = QuarkusSecurityIdentity.builder().setPrincipal(principal).addRole("KONG_API_GATEWAY")
@@ -72,10 +73,19 @@ public class ApiGatewayAuthenticationMechanism implements HttpAuthenticationMech
 		if (gatewayClaims != null && gatewayClaims.getIssuer() != null) {
 			identityBuilder.addAttribute("gateway_jwt_issuer", gatewayClaims.getIssuer());
 		}
-
+		logger.info("JWT is valid");
 		SecurityIdentity identity = identityBuilder.build();
 
+		logger.info("Created identity: {}", identity);
+
+		logger.info(
+				"Current SecurityIdentity principal={}, anonymous={}, roles={}",
+				identity.getPrincipal() != null ? identity.getPrincipal().getName() : null, identity.isAnonymous(),
+				identity.getRoles()
+		);
+
 		return Uni.createFrom().item(identity);
+
 	}
 
 	@Override
