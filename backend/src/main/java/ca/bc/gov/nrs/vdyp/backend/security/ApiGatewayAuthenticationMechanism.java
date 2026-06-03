@@ -46,6 +46,7 @@ public class ApiGatewayAuthenticationMechanism implements HttpAuthenticationMech
 		if (!apiGatewayPathConfig.isApiGatewayPath(request.path())) {
 			return Uni.createFrom().nullItem();
 		}
+		logger.info("Gateway auth request method={}, path={}", request.method(), request.path());
 
 		String consumer = request.getHeader(GATEWAY_CONSUMER_HEADER);
 		String gatewayJwt = request.getHeader(GATEWAY_JWT_HEADER);
