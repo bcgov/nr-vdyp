@@ -35,8 +35,8 @@ services:
   - hosts:
     - vdyp#{ENV_URL_COMPONENT}#.api.gov.bc.ca
     methods:
-    - GET
-    name: vdyp-#{TARGET_ENV}#_hcsv_get
+    - POST
+    name: vdyp-#{TARGET_ENV}#_hcsv_post
     paths:
     - /api/v8/projection/hcsv
     plugins: []
