@@ -856,4 +856,40 @@ class EstimationMethodsTest {
 		}
 	}
 
+	@Nested
+	class EstimateQuadraticMeanDiameterSmall {
+
+		static Collection<Arguments> data() {
+			return List.of(
+					Arguments.of("B", 12.9761534f, 5.68740845f), Arguments.of("B", 13.4484148f, 5.69578362f),
+					Arguments.of("PL", 14.7377281f, 6.12132778f), Arguments.of("S", 16.9553261f, 5.89840364f)
+			);
+		}
+
+		@ParameterizedTest
+		@MethodSource("data")
+		void testSimple(String speciesId, float hlAll, float expectedDq) throws Exception {
+
+			float result = emp.estimateSmallComponentQuadMeanDiameter(speciesId, hlAll);
+
+			assertThat(result, closeTo(expectedDq));
+		}
+
+		@ParameterizedTest
+		@MethodSource("data")
+		void testSpeciesObject(String speciesId, float hlAll, float expectedDq) throws Exception {
+
+			var em = EasyMock.createControl();
+			VdypSpecies spec = em.createMock(VdypSpecies.class);
+			EasyMock.expect(spec.getGenus()).andStubReturn(speciesId);
+			EasyMock.expect(spec.getLoreyHeightByUtilization()).andStubReturn(Utils.heightVector(0f, hlAll));
+			em.replay();
+
+			float result = emp.estimateSmallComponentQuadMeanDiameter(spec);
+			em.verify();
+
+			assertThat(result, closeTo(expectedDq));
+		}
+
+	}
 }

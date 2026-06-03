@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.forward;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static ca.bc.gov.nrs.vdyp.model.VdypEntity.MISSING_FLOAT_VALUE;
 import static java.lang.Math.max;
 
@@ -1657,7 +1656,7 @@ public class ForwardProcessingEngine {
 			float spBaSmall = smallProbability * conditionalExpectedBasalArea;
 
 			// EMP082
-			float spDqSmall = smallComponentQuadMeanDiameter(speciesName, spLhAll); // DQSMsp
+			float spDqSmall = fps.estimators.estimateSmallComponentQuadMeanDiameter(speciesName, spLhAll); // DQSMsp
 
 			// EMP085
 			float spLhSmall = fps.estimators
@@ -2777,7 +2776,7 @@ public class ForwardProcessingEngine {
 		float spBaSmall = smallProbability * conditionalExpectedBaseArea;
 
 		// EMP082
-		float spDqSmall = smallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
+		float spDqSmall = fps.estimators.estimateSmallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
 
 		// EMP085
 		float spLhSmall = fps.estimators
@@ -2885,20 +2884,6 @@ public class ForwardProcessingEngine {
 		result = max(result, 0f);
 
 		return result;
-	}
-
-	// EMP082
-	private float smallComponentQuadMeanDiameter(String speciesName, float loreyHeight) {
-		Coefficients coe = fps.controlMap.getSmallComponentQuadMeanDiameterCoefficients().get(speciesName);
-
-		// EQN 5 in IPSJF118.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-
-		float logit = a0 + a1 * loreyHeight;
-
-		return 4.0f + 3.5f * exp(logit) / (1.0f + exp(logit));
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
