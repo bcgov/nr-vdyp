@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.BeforeEach;
@@ -886,6 +887,90 @@ class EstimationMethodsTest {
 			em.replay();
 
 			float result = emp.estimateSmallComponentQuadMeanDiameter(spec);
+			em.verify();
+
+			assertThat(result, closeTo(expectedDq));
+		}
+
+	}
+
+	@Nested
+	class EstimateConditionalBasalAreaSmall {
+
+		static Collection<Arguments> coast() {
+			// FIXME These are wrong, see VDYP-1146
+			return List.of(
+					Arguments.of("B", 0.406989872f, 36.7552986f, Region.COASTAL, 5.99528221e-7f),
+					Arguments.of("C", 5.0969491f, 22.9584007f, Region.COASTAL, 0.0274789277f)
+			);
+		}
+
+		static Collection<Arguments> interior() {
+			return List.of(
+					Arguments.of("S", 3.0541997f, 6.95058966f, Region.INTERIOR, 0.758663595f),
+					Arguments.of("S", 12.794775f, 9.05280018f, Region.INTERIOR, 1.74533093f),
+					Arguments.of("PL", 56.6666641f, 11.4125996f, Region.INTERIOR, 4.46649837f)
+			);
+		}
+
+		static Collection<Arguments> withFractionAvailable() {
+			// For each of the tests done for the un-normalized version, do the normalized test with the given and
+			// expected BAs normalized
+			return Stream.concat(coast().stream(), interior().stream())
+					.flatMap(
+							args -> Stream.of(0.25f, 0.5f, 0.75f, 1f).map(
+									frac -> Arguments.of(
+											args.get()[0], //
+											(float) args.get()[1] / frac, //
+											args.get()[2], //
+											args.get()[3], //
+											frac, //
+											(float) args.get()[4] / frac
+									)
+							)
+					).toList();
+		}
+
+		@ParameterizedTest
+		@MethodSource({ "coast", "interior" })
+		void testSimple(String speciesId, float baAll, float hlAll, Region region, float expectedDq) throws Exception {
+
+			float result = emp.estimateSmallComponentConditionalExpectedBasalArea(speciesId, baAll, hlAll, region);
+
+			assertThat(result, closeTo(expectedDq));
+		}
+
+		@ParameterizedTest
+		@MethodSource({ "coast", "interior" })
+		void testSpeciesObject(String speciesId, float baAll, float hlAll, Region region, float expectedDq)
+				throws Exception {
+
+			var em = EasyMock.createControl();
+			VdypSpecies species = em.createMock(VdypSpecies.class);
+			EasyMock.expect(species.getGenus()).andStubReturn(speciesId);
+			EasyMock.expect(species.getLoreyHeightByUtilization()).andStubReturn(Utils.heightVector(0f, hlAll));
+			em.replay();
+
+			float result = emp.estimateSmallComponentConditionalExpectedBasalArea(species, baAll, region);
+			em.verify();
+
+			assertThat(result, closeTo(expectedDq));
+		}
+
+		@ParameterizedTest
+		@MethodSource({ "withFractionAvailable" })
+		void testSpeciesObjectNormalized(
+				String speciesId, float baAll, float hlAll, Region region, float fraction, float expectedDq
+		) throws Exception {
+
+			var em = EasyMock.createControl();
+			VdypSpecies species = em.createMock(VdypSpecies.class);
+			EasyMock.expect(species.getGenus()).andStubReturn(speciesId);
+			EasyMock.expect(species.getLoreyHeightByUtilization()).andStubReturn(Utils.heightVector(0f, hlAll));
+			EasyMock.expect(species.getBaseAreaByUtilization()).andStubReturn(Utils.heightVector(0f, baAll));
+			em.replay();
+
+			float result = emp.estimateSmallComponentConditionalExpectedBasalAreaNormalized(species, fraction, region);
 			em.verify();
 
 			assertThat(result, closeTo(expectedDq));
