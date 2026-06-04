@@ -27,7 +27,6 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObjectVersion;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -39,15 +38,17 @@ public class FileMappingService {
 
 	private final HttpClient httpClient;
 	private final COMSClient comsClient;
+	private final FileMappingPersistenceService persistenceService;
 
 	public FileMappingService(
 			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient,
-			HttpClient httpClient
+			HttpClient httpClient, FileMappingPersistenceService persistenceService
 	) {
 		this.repository = repository;
 		this.assembler = assembler;
 		this.comsClient = comsClient;
 		this.httpClient = httpClient;
+		this.persistenceService = persistenceService;
 	}
 
 	public FileMappingModel
@@ -70,10 +71,9 @@ public class FileMappingService {
 				UUID objectGUID = UUID.fromString(createObjectResponse.id());
 
 				// persist a record here for the file
-				FileMappingEntity entity = persistFileMapping(objectGUID, projectionFileSetEntity, file.fileName());
-
-				// return the data from COMS up the chain
-				return assembler.toModel(entity);
+				return persistenceService.persistFileMapping(
+						objectGUID, projectionFileSetEntity.getProjectionFileSetGUID(), file.fileName()
+				);
 			}
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error uploading file to COMS", e);
@@ -182,10 +182,9 @@ public class FileMappingService {
 						jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM, // String constant
 						in
 				);
-				FileMappingEntity newEntity = persistFileMapping(
-						UUID.fromString(comsObj.id()), fileSetEntity, file.getFilename()
+				return persistenceService.persistFileMapping(
+						UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), file.getFilename()
 				);
-				return assembler.toModel(newEntity);
 			}
 		} catch (ProjectionServiceException e) {
 			throw e;
@@ -209,21 +208,10 @@ public class FileMappingService {
 					placeholderStream
 			);
 			UUID objectGUID = UUID.fromString(createObjectResponse.id());
-			FileMappingEntity entity = persistFileMapping(objectGUID, projectionFileSetEntity, filename);
-			return assembler.toModel(entity);
+			return persistenceService
+					.persistFileMapping(objectGUID, projectionFileSetEntity.getProjectionFileSetGUID(), filename);
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error creating placeholder file in COMS", e);
 		}
-	}
-
-	@Transactional
-	protected FileMappingEntity
-			persistFileMapping(UUID objectGUID, ProjectionFileSetEntity fileSetEntity, String fileName) {
-		FileMappingEntity entity = new FileMappingEntity();
-		entity.setComsObjectGUID(objectGUID);
-		entity.setProjectionFileSet(fileSetEntity);
-		entity.setFilename(fileName);
-		repository.persist(entity);
-		return entity;
 	}
 }
