@@ -1031,7 +1031,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			float quadMeanDiameterSpec = spec.getQuadraticMeanDiameterByUtilization().getAll(); // DQsp
 
 			// EMP080
-			float smallComponentProbability = smallComponentProbability(layer, spec, region); // PROBsp
+			float smallComponentProbability = estimationMethods.estimateSmallComponentProbability(layer, spec, region); // PROBsp
 
 			// this WHOLE operation on Actual BA's, not 100% occupancy.
 			float fractionAvailable = Utils.<Float>optSafe(fPoly.getPercentAvailable()).map(p -> p / 100f).orElse(1f);
@@ -1080,11 +1080,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		layer.getQuadraticMeanDiameterByUtilization()
 				.setSmall(BaseAreaTreeDensityDiameter.quadMeanDiameter(baseAreaSum, treesPerHectareSum));
 		layer.getWholeStemVolumeByUtilization().setSmall(volumeSum);
-	}
-
-	// EMP080
-	private float smallComponentProbability(VdypLayer layer, VdypSpecies spec, Region region) {
-		return estimationMethods.estimateSmallComponentProbability(layer, spec, region);
 	}
 
 	// YUC1

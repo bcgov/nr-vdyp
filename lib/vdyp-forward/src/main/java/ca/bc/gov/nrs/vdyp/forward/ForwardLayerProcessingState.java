@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -14,26 +13,18 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
 public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLayerProcessingState> {
 
 	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
-	private static final String PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY = "PrimarySpeciesDetails can be set once only";
 	private static final String SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY = "SiteCurveNumbers can be set once only";
-	private static final String SPECIES_RANKING_DETAILS_CAN_BE_SET_ONCE_ONLY = "SpeciesRankingDetails can be set once only";
 
-	private static final String UNSET_PRIMARY_SPECIES_AGE_TO_BREAST_HEIGHT = "unset primarySpeciesAgeToBreastHeight";
-	private static final String UNSET_PRIMARY_SPECIES_AGE_AT_BREAST_HEIGHT = "unset primarySpeciesAgeAtBreastHeight";
-	private static final String UNSET_PRIMARY_SPECIES_DOMINANT_HEIGHT = "unset primarySpeciesDominantHeight";
 	private static final String UNSET_CV_VOLUMES = "unset cvVolumes";
 	private static final String UNSET_CV_BASAL_AREAS = "unset cvBasalAreas";
 	private static final String UNSET_RANKING_DETAILS = "unset rankingDetails";
 	private static final String UNSET_SITE_CURVE_NUMBERS = "unset siteCurveNumbers";
-	private static final String UNSET_INVENTORY_TYPE_GROUP = "unset inventoryTypeGroup";
-
 	private static final Logger logger = LoggerFactory.getLogger(ForwardLayerProcessingState.class);
 
 	// L1COM1, L1COM4 and L1COM5 - these common blocks mirror BANK1, BANK2 and BANK3 and are initialized
@@ -59,35 +50,11 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 
 	// Calculated data - this data is calculated after construction during processing.
 
-	// Ranking Details - encompasses INXXL1 and INXL1
-	private boolean areRankingDetailsSet = false;
-
-	// INXXL1
-	private int primarySpeciesIndex; // IPOSP
-
-	// INXL1
-	// ISPP = wallet.speciesIndices[primarySpeciesIndex]
-	// PCTP = wallet.percentagesOfForestedLand[primarySpeciesIndex]
-	private Optional<Integer> secondarySpeciesIndex; // => ISPS (species name) and PCTS (percentage)
-	private int inventoryTypeGroup; // ITG
-	private int primarySpeciesGroupNumber; // GRPBA1
-	private int primarySpeciesStratumNumber; // GRPBA3
-
 	// Site Curve Numbers - encompasses INXSCV
 	private boolean areSiteCurveNumbersSet = false;
 
 	// INXSC
 	private int[] siteCurveNumbers; // INXSCV
-
-	// Primary Species Details - encompasses L1COM6
-	private boolean arePrimarySpeciesDetailsSet = false;
-
-	// L1COM6
-	private float primarySpeciesDominantHeight; // HD
-	private float primarySpeciesSiteIndex; // SI
-	private float primarySpeciesTotalAge; // AGETOTP
-	private float primarySpeciesAgeAtBreastHeight; // AGEBHP
-	private float primarySpeciesAgeToBreastHeight; // YTBHP
 
 	// FRBASP0 - FR
 	// TODO
@@ -129,35 +96,6 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 		}
 	}
 
-	public int getPrimarySpeciesIndex() {
-		if (!areRankingDetailsSet) {
-			throw new IllegalStateException("unset primarySpeciesIndex");
-		}
-		return primarySpeciesIndex;
-	}
-
-	public String getPrimarySpeciesAlias() {
-		if (!areRankingDetailsSet) {
-			throw new IllegalStateException("unset primarySpeciesIndex");
-		}
-		return bank.speciesNames[primarySpeciesIndex];
-	}
-
-	public boolean hasSecondarySpeciesIndex() {
-		return secondarySpeciesIndex.isPresent();
-	}
-
-	public int getSecondarySpeciesIndex() {
-		return secondarySpeciesIndex.orElseThrow(() -> new IllegalStateException("unset secondarySpeciesIndex"));
-	}
-
-	public int getInventoryTypeGroup() {
-		if (!areRankingDetailsSet) {
-			throw new IllegalStateException(UNSET_INVENTORY_TYPE_GROUP);
-		}
-		return inventoryTypeGroup;
-	}
-
 	public static Logger getLogger() {
 		return logger;
 	}
@@ -177,18 +115,6 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 
 	public int[] getBreakageEquationGroups() {
 		return breakageEquationGroups;
-	}
-
-	public boolean isAreRankingDetailsSet() {
-		return areRankingDetailsSet;
-	}
-
-	public int getPrimarySpeciesGroupNumber() {
-		return primarySpeciesGroupNumber;
-	}
-
-	public int getPrimarySpeciesStratumNumber() {
-		return primarySpeciesStratumNumber;
 	}
 
 	public int[] getSiteCurveNumbers() {
@@ -213,55 +139,6 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 		return siteCurveNumbers[n];
 	}
 
-	public float getPrimarySpeciesDominantHeight() {
-		if (!arePrimarySpeciesDetailsSet) {
-			throw new IllegalStateException(UNSET_PRIMARY_SPECIES_DOMINANT_HEIGHT);
-		}
-		return primarySpeciesDominantHeight;
-	}
-
-	public float getPrimarySpeciesSiteIndex() {
-		if (!arePrimarySpeciesDetailsSet) {
-			throw new IllegalStateException(UNSET_PRIMARY_SPECIES_DOMINANT_HEIGHT);
-		}
-		return primarySpeciesSiteIndex;
-	}
-
-	public float getPrimarySpeciesTotalAge() {
-		if (!arePrimarySpeciesDetailsSet) {
-			throw new IllegalStateException(UNSET_PRIMARY_SPECIES_DOMINANT_HEIGHT);
-		}
-		return primarySpeciesTotalAge;
-	}
-
-	public float getPrimarySpeciesAgeAtBreastHeight() {
-		if (!arePrimarySpeciesDetailsSet) {
-			throw new IllegalStateException(UNSET_PRIMARY_SPECIES_AGE_AT_BREAST_HEIGHT);
-		}
-		return primarySpeciesAgeAtBreastHeight;
-	}
-
-	public float getPrimarySpeciesAgeToBreastHeight() {
-		if (!arePrimarySpeciesDetailsSet) {
-			throw new IllegalStateException(UNSET_PRIMARY_SPECIES_AGE_TO_BREAST_HEIGHT);
-		}
-		return primarySpeciesAgeToBreastHeight;
-	}
-
-	public void setSpeciesRankingDetails(SpeciesRankingDetails rankingDetails) {
-		if (areRankingDetailsSet) {
-			throw new IllegalStateException(SPECIES_RANKING_DETAILS_CAN_BE_SET_ONCE_ONLY);
-		}
-
-		primarySpeciesIndex = rankingDetails.primarySpeciesIndex();
-		secondarySpeciesIndex = rankingDetails.secondarySpeciesIndex();
-		inventoryTypeGroup = rankingDetails.inventoryTypeGroup();
-		primarySpeciesGroupNumber = rankingDetails.basalAreaGroup1();
-		primarySpeciesStratumNumber = rankingDetails.basalAreaGroup3();
-
-		areRankingDetailsSet = true;
-	}
-
 	public void setSiteCurveNumbers(int[] siteCurveNumbers) {
 		if (areSiteCurveNumbersSet) {
 			throw new IllegalStateException(SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY);
@@ -270,44 +147,6 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 		this.siteCurveNumbers = Arrays.copyOf(siteCurveNumbers, siteCurveNumbers.length);
 
 		areSiteCurveNumbersSet = true;
-	}
-
-	public void setPrimarySpeciesDetails(PrimarySpeciesDetails details) {
-
-		// Normally, these values may only be set only once. However, during grow(), if the
-		// control variable UPDATE_DURING_GROWTH_6 has value "1" then updates are allowed.
-		if (arePrimarySpeciesDetailsSet && ps.controlMap.getControlVariables()
-				.getControlVariable(ControlVariable.UPDATE_DURING_GROWTH_6) != 1) {
-			throw new IllegalStateException(PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY);
-		}
-
-		primarySpeciesDominantHeight = details.primarySpeciesDominantHeight();
-		primarySpeciesSiteIndex = details.primarySpeciesSiteIndex();
-		primarySpeciesTotalAge = details.primarySpeciesTotalAge();
-		primarySpeciesAgeAtBreastHeight = details.primarySpeciesAgeAtBreastHeight();
-		primarySpeciesAgeToBreastHeight = details.primarySpeciesAgeToBreastHeight();
-
-		// Store these values into bank if not already set - VHDOM1 lines 182 - 186
-		if (Float.isNaN(bank.dominantHeights[primarySpeciesIndex])
-				|| bank.dominantHeights[primarySpeciesIndex] <= 0.0) {
-			bank.dominantHeights[primarySpeciesIndex] = primarySpeciesDominantHeight;
-		}
-		if (Float.isNaN(bank.siteIndices[primarySpeciesIndex]) || bank.siteIndices[primarySpeciesIndex] <= 0.0) {
-			bank.siteIndices[primarySpeciesIndex] = primarySpeciesSiteIndex;
-		}
-		if (Float.isNaN(bank.ageTotals[primarySpeciesIndex]) || bank.ageTotals[primarySpeciesIndex] <= 0.0) {
-			bank.ageTotals[primarySpeciesIndex] = primarySpeciesTotalAge;
-		}
-		if (Float.isNaN(bank.yearsAtBreastHeight[primarySpeciesIndex])
-				|| bank.yearsAtBreastHeight[primarySpeciesIndex] <= 0.0) {
-			bank.yearsAtBreastHeight[primarySpeciesIndex] = primarySpeciesAgeAtBreastHeight;
-		}
-		if (Float.isNaN(bank.yearsToBreastHeight[primarySpeciesIndex])
-				|| bank.yearsToBreastHeight[primarySpeciesIndex] <= 0.0) {
-			bank.yearsToBreastHeight[primarySpeciesIndex] = primarySpeciesAgeToBreastHeight;
-		}
-
-		arePrimarySpeciesDetailsSet = true;
 	}
 
 	/**

@@ -61,6 +61,8 @@ import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings.LoreyHeightCh
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings.SpeciesDynamics;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.PrimarySpeciesDetails;
+import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.Reference;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
@@ -1146,7 +1148,7 @@ public class ForwardProcessingEngine {
 	void growUsingFullSpeciesDynamics(Change basalArea, Change quadMeanDiameter, float tphStart, float lhStart)
 			throws ProcessingException {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		float spBaEnd[] = new float[lps.getNSpecies() + 1];
@@ -1382,7 +1384,7 @@ public class ForwardProcessingEngine {
 			Change quadMeanDiameter, float pspDqStart, float lhStart, float pspLhStart
 	) throws ProcessingException {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		int pspStratumNumber = lps.getPrimarySpeciesStratumNumber();
 
 		ModelCoefficients mc = fps.controlMap.getPrimarySpeciesQuadMeanDiameterGrowthCoefficients()
@@ -1418,7 +1420,7 @@ public class ForwardProcessingEngine {
 			int speciesIndex, Change quadMeanDiameter, float spDqStart, float lhStart, float spLhStart
 	) throws ProcessingException {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 
 		String speciesName = lps.getBank().speciesNames[speciesIndex];
 		int pspStratumNumber = lps.getPrimarySpeciesStratumNumber();
@@ -1502,7 +1504,7 @@ public class ForwardProcessingEngine {
 			String speciesName, Change basalArea, float lhStart, float spBaStart, float spDqStart, float spLhStart
 	) throws ProcessingException {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 
 		if (spBaStart <= 0.0f || spBaStart >= basalArea.start()) {
 			throw new ProcessingException(
@@ -1568,7 +1570,7 @@ public class ForwardProcessingEngine {
 			Change basalArea, float pspBaStart, float dhStart, float pspYabhStart, float pspLhStart
 	) throws ProcessingException {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 
 		float pspBaDelta;
 
@@ -1633,7 +1635,12 @@ public class ForwardProcessingEngine {
 			String speciesName = bank.speciesNames[speciesIndex];
 
 			// EMP080
-			float smallProbability = smallComponentProbability(speciesName, spLhAll, region);
+			float smallProbability = fps.estimators.estimateSmallComponentProbability(
+					speciesName, //
+					lps.getBank().yearsAtBreastHeight[lps.getPrimarySpeciesIndex()], //
+					spLhAll, //
+					region
+			);
 
 			// This whole operation is on Actual BA's, not 100% occupancy.
 			float fractionAvailable = fps.getCurrentPolygon().getPercentAvailable() / 100.0f;
@@ -1799,7 +1806,7 @@ public class ForwardProcessingEngine {
 	 * @return as described
 	 */
 	private float estimateNonPrimarySpeciesLoreyHeight(int speciesIndex, float dh, float pspLoreyHeight) {
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		float spLh;
@@ -2236,7 +2243,7 @@ public class ForwardProcessingEngine {
 	 */
 	private float growBasalAreaUpperBound() {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 
 		switch (fps.controlMap.getDebugSettings().getUpperBoundsMode()) {
 		case MODE_1:
@@ -2257,7 +2264,7 @@ public class ForwardProcessingEngine {
 	 */
 	private float growQuadraticMeanDiameterUpperBound() {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 
 		switch (fps.controlMap.getDebugSettings().getUpperBoundsMode()) {
 		case MODE_1:
@@ -2758,10 +2765,15 @@ public class ForwardProcessingEngine {
 
 		// this WHOLE operation on Actual BA's, not 100% occupancy.
 		// TODO: verify this: float fractionAvailable = polygon.getPercentForestLand();
-		float spBaseArea_All = bank.basalAreas[speciesIndex][UC_ALL_INDEX] /* * fractionAvailable */; // BAsp
+		float spBaseArea_All = bank.basalAreas[speciesIndex][UC_ALL_INDEX] /* * fractionAvailable */;
 
 		// EMP080
-		float smallProbability = smallComponentProbability(speciesName, spLoreyHeight_All, region); // PROBsp
+		float smallProbability = fps.estimators.estimateSmallComponentProbability(
+				speciesName, //
+				lps.getBank().yearsAtBreastHeight[lps.getPrimarySpeciesIndex()], //
+				spLoreyHeight_All, //
+				region
+		); // PROBsp
 
 		// EMP081
 		float conditionalExpectedBaseArea = fps.estimators.estimateSmallComponentConditionalExpectedBasalArea(
@@ -2817,27 +2829,6 @@ public class ForwardProcessingEngine {
 		}
 
 		return spCvSmall;
-	}
-
-	/**
-	 * EMP080 - calculate the small component probability of the species with <code>speciesAlias</code>, the given Lorey
-	 * height and in the given <code>region</code>.
-	 *
-	 * @param speciesAlias the species' alias
-	 * @param loreyHeight  current Lorey height of the stand
-	 * @param region       the stand's region
-	 * @return as described
-	 */
-	private float smallComponentProbability(String speciesAlias, float loreyHeight, Region region) {
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
-
-		return fps.estimators.estimateSmallComponentProbability(
-				//
-				speciesAlias, //
-				lps.getBank().yearsAtBreastHeight[lps.getPrimarySpeciesIndex()], //
-				loreyHeight, //
-				region
-		);
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
@@ -3685,7 +3676,7 @@ public class ForwardProcessingEngine {
 	 */
 	void determinePolygonRankings() {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		if (lps.getNSpecies() == 0) {

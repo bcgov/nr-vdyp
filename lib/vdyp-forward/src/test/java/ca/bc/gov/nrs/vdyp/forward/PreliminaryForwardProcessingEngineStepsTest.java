@@ -22,6 +22,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
+import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
@@ -70,7 +71,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 			fpe.fps.setPolygon(polygon);
 
-			ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
 
 			ForwardProcessingEngine.calculateCoverages(lps);
 			fpe.determinePolygonRankings();
