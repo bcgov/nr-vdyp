@@ -1027,7 +1027,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		for (VdypSpecies spec : layer.getSpecies().values()) {
 			@SuppressWarnings("unused")
 			float loreyHeightSpec = spec.getLoreyHeightByUtilization().getAll(); // HLsp
-			float baseAreaSpec = spec.getBaseAreaByUtilization().getAll(); // BAsp
 			@SuppressWarnings("unused")
 			float quadMeanDiameterSpec = spec.getQuadraticMeanDiameterByUtilization().getAll(); // DQsp
 
@@ -1036,11 +1035,10 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 			// this WHOLE operation on Actual BA's, not 100% occupancy.
 			float fractionAvailable = Utils.<Float>optSafe(fPoly.getPercentAvailable()).map(p -> p / 100f).orElse(1f);
-			baseAreaSpec *= fractionAvailable;
+
 			// EMP081
 			float conditionalExpectedBaseArea = estimationMethods
-					.estimateSmallComponentConditionalExpectedBasalArea(spec, baseAreaSpec, region); // BACONDsp
-			conditionalExpectedBaseArea /= fractionAvailable;
+					.estimateSmallComponentConditionalExpectedBasalAreaNormalized(spec, fractionAvailable, region); // BACONDsp
 
 			float baseAreaSpecSmall = smallComponentProbability * conditionalExpectedBaseArea; // BASMsp
 
