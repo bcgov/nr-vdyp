@@ -65,6 +65,7 @@ public class ApiGatewayAuthenticationMechanism implements HttpAuthenticationMech
 			return Uni.createFrom().failure(new AuthenticationFailedException(e));
 		}
 
+
 		Principal principal = () -> useConsumer;
 
 		Builder identityBuilder = QuarkusSecurityIdentity.builder().setPrincipal(principal).addRole("KONG_API_GATEWAY")
