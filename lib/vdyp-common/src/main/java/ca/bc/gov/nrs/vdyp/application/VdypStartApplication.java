@@ -1084,24 +1084,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	// EMP080
 	private float smallComponentProbability(VdypLayer layer, VdypSpecies spec, Region region) {
-		Coefficients coe = getCoeForSpecies(spec, ControlKey.SMALL_COMP_PROBABILITY);
-
-		// EQN 1 in IPSJF118.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		float coast = region == Region.COASTAL ? 1.0f : 0.0f;
-
-		float logit = //
-				a0 + //
-						a1 * coast + //
-						a2 * layer.getComputedYearsAtBreastHeight().orElse(0f) + //
-						a3 * spec.getLoreyHeightByUtilization().getAll();
-
-		return exp(logit) / (1.0f + exp(logit));
+		return estimationMethods.estimateSmallComponentProbability(layer, spec, region);
 	}
 
 	// YUC1

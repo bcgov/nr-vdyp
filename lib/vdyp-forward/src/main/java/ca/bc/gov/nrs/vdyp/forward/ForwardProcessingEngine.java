@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.model.VdypEntity.MISSING_FLOAT_VALUE;
 
@@ -2832,25 +2831,13 @@ public class ForwardProcessingEngine {
 	private float smallComponentProbability(String speciesAlias, float loreyHeight, Region region) {
 		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
 
-		Coefficients coe = fps.controlMap.getSmallComponentProbabilityCoefficients().get(speciesAlias);
-
-		// EQN 1 in IPSJF118.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		a1 = (region == Region.COASTAL) ? a1 : 0.0f;
-
-		float logit = a0 + //
-				a1 + //
-				a2 * lps.getBank().yearsAtBreastHeight[lps.getPrimarySpeciesIndex()] + //
-				a3 * loreyHeight;
-
-		float result = exp(logit) / (1.0f + exp(logit));
-
-		return result;
+		return fps.estimators.estimateSmallComponentProbability(
+				//
+				speciesAlias, //
+				lps.getBank().yearsAtBreastHeight[lps.getPrimarySpeciesIndex()], //
+				loreyHeight, //
+				region
+		);
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
