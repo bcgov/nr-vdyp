@@ -120,7 +120,6 @@ public class ProjectionFileSetService {
 		}
 	}
 
-	@Transactional
 	public FileMappingModel addNewFileToFileSet(UUID fileSetGUID, VDYPUserModel user, FileUpload file)
 			throws ProjectionServiceException {
 		// Check that the file set exists
