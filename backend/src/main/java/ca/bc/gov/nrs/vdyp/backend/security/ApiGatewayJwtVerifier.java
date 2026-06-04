@@ -3,10 +3,8 @@ package ca.bc.gov.nrs.vdyp.backend.security;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
@@ -79,18 +77,9 @@ public class ApiGatewayJwtVerifier {
 		if (!verificationEnabled) {
 			return null;
 		}
-		String[] parts = token.split("\\.");
-		String headerJson = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
-		String claimsJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
 
-		logger.info("Verify JWT header: {}", headerJson);
-		logger.info("Verify JWT claims: {}", claimsJson);
-
-		logger.info(
-				"against Auth Context Info: " + jwtAuthContextInfo.getIssuedBy() + ", "
-						+ jwtAuthContextInfo.getExpectedAudience() + ", " + jwtAuthContextInfo.getPublicKeyLocation()
-						+ ", " + jwtAuthContextInfo.getPublicVerificationKey()
-		);
+		logger.info("VDYP verifying API token: " + token);
+		logger.info("against Auth Context Info: " + jwtAuthContextInfo);
 		return jwtParser.parse(token, jwtAuthContextInfo);
 	}
 
