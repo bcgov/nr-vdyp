@@ -644,7 +644,6 @@ public class ProjectionService {
 		return fileSetService.getAllFiles(fileSetGUID, user, false);
 	}
 
-	@Transactional
 	public ProjectionModel addProjectionFile(UUID projectionGUID, UUID fileSetGUID, FileUpload file, VDYPUserModel user)
 			throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
