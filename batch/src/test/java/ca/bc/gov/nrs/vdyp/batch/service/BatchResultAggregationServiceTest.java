@@ -23,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 
 @ExtendWith(MockitoExtension.class)
 class BatchResultAggregationServiceTest {
@@ -47,6 +48,10 @@ class BatchResultAggregationServiceTest {
 			2024-01-01 10:05:00 ERROR Another error occurred
 			""";
 
+	private static final VDYPProjectionProgressUpdate progressUpdate = new VDYPProjectionProgressUpdate(
+			JOB_GUID, 100, 99, 0, 1
+	);
+
 	@BeforeEach
 	void setUp() {
 		// Test setup is handled by @TempDir and @InjectMocks
@@ -56,8 +61,9 @@ class BatchResultAggregationServiceTest {
 	void testAggregateResults_Success() throws BatchResultAggregationException, IOException {
 		setupPartitionDirectories();
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -87,8 +93,9 @@ class BatchResultAggregationServiceTest {
 		Path baseDir = tempDir.resolve("empty-base");
 		Files.createDirectories(baseDir);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, baseDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, baseDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -118,8 +125,9 @@ class BatchResultAggregationServiceTest {
 		Files.writeString(partition1.resolve("YieldTable.csv"), yieldTable1);
 		Files.writeString(partition2.resolve("YieldTable.csv"), yieldTable2);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		// Verify yield tables are merged with sequential table numbers
 		verifyYieldTableMerging(resultZip);
@@ -139,8 +147,9 @@ class BatchResultAggregationServiceTest {
 		Files.writeString(partition2.resolve("error.log"), "Error 2");
 		Files.writeString(partition2.resolve("debug.log"), "Debug info");
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		verifyLogAggregation(resultZip);
 	}
@@ -158,8 +167,9 @@ class BatchResultAggregationServiceTest {
 
 		Files.writeString(partitionDir.resolve("YieldTable.csv"), invalidYieldTable);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -182,8 +192,9 @@ class BatchResultAggregationServiceTest {
 		// Create other result files
 		Files.writeString(partitionDir.resolve("projection_results.csv"), "FEATURE_ID,RESULT\n123,data");
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -333,7 +344,7 @@ class BatchResultAggregationServiceTest {
 
 	private Path aggregateResultsFromJobDir(String directoryPath) throws BatchResultAggregationException {
 		return resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, directoryPath, JOB_TIMESTAMP);
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, directoryPath, JOB_TIMESTAMP, progressUpdate);
 	}
 
 	@Test
@@ -363,8 +374,9 @@ class BatchResultAggregationServiceTest {
 		Files.createDirectories(partition);
 		Files.writeString(partition.resolve("error.log"), "Error log only");
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		boolean isValid = resultAggregationService.validateConsolidatedZip(resultZip);
 
@@ -457,8 +469,9 @@ class BatchResultAggregationServiceTest {
 				""";
 		Files.writeString(partition.resolve("YieldTable.csv"), yieldTable);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		String yieldTableContent = getZipEntryContent(resultZip, "YieldTable.csv");
 		assertNotNull(yieldTableContent);
@@ -476,8 +489,9 @@ class BatchResultAggregationServiceTest {
 		Files.writeString(partition.resolve("application.log"), "General application log");
 		Files.writeString(partition.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		List<String> entryNames = new ArrayList<>();
 		try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(resultZip))) {
@@ -501,8 +515,9 @@ class BatchResultAggregationServiceTest {
 		Files.writeString(partition1.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
 		Files.writeString(partition2.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -516,8 +531,9 @@ class BatchResultAggregationServiceTest {
 		// Try to process but yield table doesn't exist
 		Files.writeString(partition.resolve("error.log"), ERROR_LOG_CONTENT);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -537,8 +553,9 @@ class BatchResultAggregationServiceTest {
 		// Make file unreadable (on Windows this may not work as expected, but test
 		// should pass)
 		if (yieldTablePath.toFile().setReadable(false)) {
-			Path resultZip = resultAggregationService
-					.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+			Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+					JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+			);
 
 			assertNotNull(resultZip);
 			assertTrue(Files.exists(resultZip));
@@ -563,8 +580,9 @@ class BatchResultAggregationServiceTest {
 				""";
 		Files.writeString(partition.resolve("YieldTable.csv"), yieldTableWithEmptyLines);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		String yieldTableContent = getZipEntryContent(resultZip, "YieldTable.csv");
 		assertNotNull(yieldTableContent);
@@ -587,8 +605,9 @@ class BatchResultAggregationServiceTest {
 			Files.writeString(partitionDir.resolve("YieldTable.csv"), yieldTable);
 		}
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -610,8 +629,9 @@ class BatchResultAggregationServiceTest {
 		Path invalidLog = partition2.resolve("error.log.backup");
 		Files.createDirectories(invalidLog);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -649,8 +669,9 @@ class BatchResultAggregationServiceTest {
 				""";
 		Files.writeString(partition1.resolve("YieldTable.csv"), validYieldTable);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -680,8 +701,9 @@ class BatchResultAggregationServiceTest {
 		Files.writeString(partition0.resolve("YieldTable.csv"), "");
 		Files.writeString(partition1.resolve("YieldTable.csv"), "");
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -714,8 +736,9 @@ class BatchResultAggregationServiceTest {
 				""";
 		Files.writeString(partition1.resolve("YieldTable.csv"), validYieldTable);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -757,8 +780,9 @@ class BatchResultAggregationServiceTest {
 				""";
 		Files.writeString(partition1.resolve("YieldTable.csv"), validYieldTable);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -783,8 +807,9 @@ class BatchResultAggregationServiceTest {
 		Files.writeString(partition0.resolve("YieldTable.csv"), dataOnly1);
 		Files.writeString(partition1.resolve("YieldTable.csv"), dataOnly2);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -815,8 +840,9 @@ class BatchResultAggregationServiceTest {
 
 		Files.writeString(partitionValid.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -830,8 +856,9 @@ class BatchResultAggregationServiceTest {
 
 		Files.writeString(partition0.resolve("YieldTable.csv"), "");
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -849,8 +876,9 @@ class BatchResultAggregationServiceTest {
 				""";
 		Files.writeString(partition.resolve("YieldTable.csv"), validYieldTable);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -864,8 +892,9 @@ class BatchResultAggregationServiceTest {
 		String dataOnly = "1,123456789,FD,P,FD,100.0,50\n";
 		Files.writeString(partition.resolve("YieldTable.csv"), dataOnly);
 
-		Path resultZip = resultAggregationService
-				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate
+		);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));

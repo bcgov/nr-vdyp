@@ -1,0 +1,31 @@
+
+VDYP7 Console version: '7.17d'
+
+INI File:       'D:\PROJ\VDYP7\VDYP_CFG\VDYP.ini'
+Input Path:     ''
+HCSV Poly Inp:  'D:\VDYP7_Console_Run\.\InputFiles\BIOMASS_14261350_VDYP7_INPUT_POLY.csv'
+HCSV Layer Inp: 'D:\VDYP7_Console_Run\.\InputFiles\BIOMASS_14261350_VDYP7_INPUT_LAYER.csv'
+Output Path:    'D:\VDYP7_Console_Run\.\Output\Output_YldTbl.csv'
+Error File:     'D:\VDYP7_Console_Run\.\Output\Output_Error.txt'
+Log File:       'D:\VDYP7_Console_Run\.\Output\Output_Log.txt'
+Debug Folder:   ''
+Debug Mode:     'Inactive'
+Start Age:     0
+End Age:       250
+Start Year:    N/A
+End Year:      N/A
+Increment:     10
+Inc. Ref Year:     No
+Inc. Crnt Year:    No
+Inc. Spcl Year:    Yes (-9)
+Back Grow Enabled: Yes
+Forward Grow Enabled: Yes
+
+Processing Polygon 14261350: '' '092B032'-71189904
+
+Processing Summary:
+	Polygons Processed:       1
+	Polygons Skipped:         0
+	                    -------
+	                          1
+
