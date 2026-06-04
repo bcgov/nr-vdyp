@@ -85,7 +85,7 @@ public class ApiGatewayJwtVerifier {
 
 		logger.info("Verify JWT header: {}", headerJson);
 		logger.info("Verify JWT claims: {}", claimsJson);
-		logger.debug("Test Debug output");
+
 		logger.info(
 				"against Auth Context Info: " + jwtAuthContextInfo.getIssuedBy() + ", "
 						+ jwtAuthContextInfo.getExpectedAudience() + ", " + jwtAuthContextInfo.getPublicKeyLocation()
