@@ -4,7 +4,6 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.model.VdypEntity.MISSING_FLOAT_VALUE;
-import static java.lang.Math.max;
 
 import java.io.IOException;
 import java.text.MessageFormat;
