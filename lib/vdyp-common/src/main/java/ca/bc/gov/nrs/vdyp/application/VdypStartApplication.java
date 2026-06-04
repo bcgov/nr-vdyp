@@ -1038,7 +1038,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			float fractionAvailable = Utils.<Float>optSafe(fPoly.getPercentAvailable()).map(p -> p / 100f).orElse(1f);
 			baseAreaSpec *= fractionAvailable;
 			// EMP081
-			float conditionalExpectedBaseArea = conditionalExpectedBaseArea(spec, baseAreaSpec, region); // BACONDsp
+			float conditionalExpectedBaseArea = estimationMethods
+					.estimateSmallComponentConditionalExpectedBasalArea(spec, baseAreaSpec, region); // BACONDsp
 			conditionalExpectedBaseArea /= fractionAvailable;
 
 			float baseAreaSpecSmall = smallComponentProbability * conditionalExpectedBaseArea; // BASMsp
@@ -1081,11 +1082,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		layer.getQuadraticMeanDiameterByUtilization()
 				.setSmall(BaseAreaTreeDensityDiameter.quadMeanDiameter(baseAreaSum, treesPerHectareSum));
 		layer.getWholeStemVolumeByUtilization().setSmall(volumeSum);
-	}
-
-	// EMP081
-	private float conditionalExpectedBaseArea(VdypSpecies spec, float baseAreaSpec, Region region) {
-		return estimationMethods.estimateSmallComponentConditionalExpectedBasalArea(spec, baseAreaSpec, region);
 	}
 
 	// EMP080

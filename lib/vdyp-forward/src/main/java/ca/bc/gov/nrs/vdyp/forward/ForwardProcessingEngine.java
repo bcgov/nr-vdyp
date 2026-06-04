@@ -1645,9 +1645,8 @@ public class ForwardProcessingEngine {
 			}
 
 			// EMP081
-			float conditionalExpectedBasalArea = calculateSmallComponentConditionalExpectedBasalArea(
-					speciesName, spBaAll, spLhAll, region
-			);
+			float conditionalExpectedBasalArea = fps.estimators
+					.estimateSmallComponentConditionalExpectedBasalArea(speciesName, spBaAll, spLhAll, region);
 
 			if (fractionAvailable > 0.0f) {
 				conditionalExpectedBasalArea /= fractionAvailable;
@@ -2767,7 +2766,7 @@ public class ForwardProcessingEngine {
 		float smallProbability = smallComponentProbability(speciesName, spLoreyHeight_All, region); // PROBsp
 
 		// EMP081
-		float conditionalExpectedBaseArea = calculateSmallComponentConditionalExpectedBasalArea(
+		float conditionalExpectedBaseArea = fps.estimators.estimateSmallComponentConditionalExpectedBasalArea(
 				speciesName, spBaseArea_All, spLoreyHeight_All, region
 		); // BACONDsp
 
@@ -2853,21 +2852,6 @@ public class ForwardProcessingEngine {
 		float result = exp(logit) / (1.0f + exp(logit));
 
 		return result;
-	}
-
-	/**
-	 * EMP081 - calculate the conditional expected small component basal area. See IPSJF118.doc, equation 3.
-	 *
-	 * @param sp0Name the species group name
-	 * @param spBaEnd the species UC 0 (all) basal area
-	 * @param spLhEnd the species UC 0 (all) Lorey height
-	 * @param region  the region in which the calculation is occurring
-	 * @return as described
-	 */
-	private float calculateSmallComponentConditionalExpectedBasalArea(
-			String sp0Name, float spBaEnd, float spLhEnd, Region region
-	) {
-		return fps.estimators.estimateSmallComponentConditionalExpectedBasalArea(sp0Name, spBaEnd, spLhEnd, region);
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
