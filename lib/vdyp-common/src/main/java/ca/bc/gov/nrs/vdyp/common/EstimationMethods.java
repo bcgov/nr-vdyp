@@ -1102,4 +1102,108 @@ public class EstimationMethods {
 				* exp(a0 * (pow(quadMeanDiameterSpecSmall, a1) - pow(speciesQuadMeanDiameterAll, a1)));
 
 	}
+
+	/**
+	 * EMP082
+	 * <p>
+	 * Estimate the quadratic mean diameter for the small component (4.0-7.5 cm diameter)
+	 *
+	 * @param species Species with ALL component set for Lorey height
+	 * @return
+	 */
+	public float estimateSmallComponentQuadMeanDiameter(VdypSpecies species) {
+		return estimateSmallComponentQuadMeanDiameter(
+				species.getGenus(), species.getLoreyHeightByUtilization().getAll()
+		);
+	}
+
+	/**
+	 * EMP082
+	 * <p>
+	 * Estimate the quadratic mean diameter for the small component (4.0-7.5 cm diameter)
+	 *
+	 * @param speciesId   Species identifier (SP0)
+	 * @param loreyHeight ALL component Lorey height
+	 * @return
+	 */
+	public float estimateSmallComponentQuadMeanDiameter(String speciesId, float loreyHeight) {
+		Coefficients coe = controlMap.getSmallComponentQuadMeanDiameterCoefficients().get(speciesId);
+
+		// EQN 5 in IPSJF118.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+
+		float logit = a0 + a1 * loreyHeight;
+
+		return 4.0f + 3.5f * exp(logit) / (1.0f + exp(logit));
+	}
+
+	/**
+	 * EMP081
+	 * <p>
+	 * Estimate the conditional expected small component basal area. See IPSJF118.doc, equation 3.
+	 *
+	 * @param speciesId Species identifier (SP0)
+	 * @param baAll     ALL component basal area
+	 * @param lhAll     ALL component Lorey height
+	 * @param region    the region in which the calculation is occurring
+	 * @return small component basal area
+	 */
+	public float estimateSmallComponentConditionalExpectedBasalArea(
+			String speciesId, float baAll, float lhAll, Region region
+	) {
+		Coefficients coe = controlMap.getSmallComponentBasalAreaCoefficients().get(speciesId);
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+		float a2 = coe.getCoe(3);
+		float a3 = coe.getCoe(4);
+
+		float regionMultiplier = region == Region.COASTAL ? 1.0f : 0.0f;
+
+		// FIXME VDYP-1146 due to a bug in VDYP7 it always treats this as interior. Replicating
+		// that for now.
+		regionMultiplier = 0f;
+
+		float result = (a0 + a1 * regionMultiplier + a2 * baAll) * exp(a3 * lhAll);
+		result = max(result, 0f);
+
+		return result;
+	}
+
+	/**
+	 * EMP081
+	 * <p>
+	 * Estimate the conditional expected small component basal area. See IPSJF118.doc, equation 3.
+	 *
+	 * @param species Species with ALL component set for Lorey height
+	 * @param baAll   ALL component basal area
+	 * @param region  the region in which the calculation is occurring
+	 * @return small component basal area
+	 */
+	public <S extends BaseVdypSpecies<?> & VdypUtilizationHolder> float
+			estimateSmallComponentConditionalExpectedBasalArea(S species, float baAll, Region region) {
+		return estimateSmallComponentConditionalExpectedBasalArea(
+				species.getGenus(), baAll, species.getLoreyHeightByUtilization().getAll(), region
+		);
+	}
+
+	/**
+	 * Estimate the conditional expected small component basal area. See IPSJF118.doc, equation 3.
+	 *
+	 * @param species           Species with ALL component set for Lorey height
+	 * @param fractionAvailable Fraction of the polygon available
+	 * @param region            the region in which the calculation is occurring
+	 * @return small component basal area normalized for fraction available
+	 */
+	public <S extends BaseVdypSpecies<?> & VdypUtilizationHolder> float
+			estimateSmallComponentConditionalExpectedBasalAreaNormalized(
+					S species, float fractionAvailable, Region region
+			) {
+		return estimateSmallComponentConditionalExpectedBasalArea(
+				species, species.getBaseAreaByUtilization().getAll() * fractionAvailable, region
+		) / fractionAvailable;
+	}
+
 }

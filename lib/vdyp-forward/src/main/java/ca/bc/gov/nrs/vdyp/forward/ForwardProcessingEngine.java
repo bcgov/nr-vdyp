@@ -3,9 +3,7 @@ package ca.bc.gov.nrs.vdyp.forward;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static ca.bc.gov.nrs.vdyp.model.VdypEntity.MISSING_FLOAT_VALUE;
-import static java.lang.Math.max;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -1646,9 +1644,8 @@ public class ForwardProcessingEngine {
 			}
 
 			// EMP081
-			float conditionalExpectedBasalArea = calculateSmallComponentConditionalExpectedBasalArea(
-					speciesName, spBaAll, spLhAll, region
-			);
+			float conditionalExpectedBasalArea = fps.estimators
+					.estimateSmallComponentConditionalExpectedBasalArea(speciesName, spBaAll, spLhAll, region);
 
 			if (fractionAvailable > 0.0f) {
 				conditionalExpectedBasalArea /= fractionAvailable;
@@ -1657,7 +1654,7 @@ public class ForwardProcessingEngine {
 			float spBaSmall = smallProbability * conditionalExpectedBasalArea;
 
 			// EMP082
-			float spDqSmall = smallComponentQuadMeanDiameter(speciesName, spLhAll); // DQSMsp
+			float spDqSmall = fps.estimators.estimateSmallComponentQuadMeanDiameter(speciesName, spLhAll); // DQSMsp
 
 			// EMP085
 			float spLhSmall = fps.estimators
@@ -2768,7 +2765,7 @@ public class ForwardProcessingEngine {
 		float smallProbability = smallComponentProbability(speciesName, spLoreyHeight_All, region); // PROBsp
 
 		// EMP081
-		float conditionalExpectedBaseArea = calculateSmallComponentConditionalExpectedBasalArea(
+		float conditionalExpectedBaseArea = fps.estimators.estimateSmallComponentConditionalExpectedBasalArea(
 				speciesName, spBaseArea_All, spLoreyHeight_All, region
 		); // BACONDsp
 
@@ -2777,7 +2774,7 @@ public class ForwardProcessingEngine {
 		float spBaSmall = smallProbability * conditionalExpectedBaseArea;
 
 		// EMP082
-		float spDqSmall = smallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
+		float spDqSmall = fps.estimators.estimateSmallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
 
 		// EMP085
 		float spLhSmall = fps.estimators
@@ -2854,51 +2851,6 @@ public class ForwardProcessingEngine {
 		float result = exp(logit) / (1.0f + exp(logit));
 
 		return result;
-	}
-
-	/**
-	 * EMP081 - calculate the conditional expected small component basal area. See IPSJF118.doc, equation 3.
-	 *
-	 * @param sp0Name the species group name
-	 * @param spBaEnd the species UC 0 (all) basal area
-	 * @param spLhEnd the species UC 0 (all) Lorey height
-	 * @param region  the region in which the calculation is occurring
-	 * @return as described
-	 */
-	private float calculateSmallComponentConditionalExpectedBasalArea(
-			String sp0Name, float spBaEnd, float spLhEnd, Region region
-	) {
-		Coefficients coe = fps.controlMap.getSmallComponentBasalAreaCoefficients().get(sp0Name);
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		float regionMultiplier = region == Region.COASTAL ? 1.0f : 0.0f;
-
-		// FIXME due to a bug in VDYP7 it always treats this as interior. Replicating
-		// that for now.
-		regionMultiplier = 0f;
-
-		float result = (a0 + a1 * regionMultiplier + a2 * spBaEnd) * exp(a3 * spLhEnd);
-		result = max(result, 0f);
-
-		return result;
-	}
-
-	// EMP082
-	private float smallComponentQuadMeanDiameter(String speciesName, float loreyHeight) {
-		Coefficients coe = fps.controlMap.getSmallComponentQuadMeanDiameterCoefficients().get(speciesName);
-
-		// EQN 5 in IPSJF118.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-
-		float logit = a0 + a1 * loreyHeight;
-
-		return 4.0f + 3.5f * exp(logit) / (1.0f + exp(logit));
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {

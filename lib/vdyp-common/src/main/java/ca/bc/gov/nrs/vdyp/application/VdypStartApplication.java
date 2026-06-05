@@ -1027,7 +1027,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		for (VdypSpecies spec : layer.getSpecies().values()) {
 			@SuppressWarnings("unused")
 			float loreyHeightSpec = spec.getLoreyHeightByUtilization().getAll(); // HLsp
-			float baseAreaSpec = spec.getBaseAreaByUtilization().getAll(); // BAsp
 			@SuppressWarnings("unused")
 			float quadMeanDiameterSpec = spec.getQuadraticMeanDiameterByUtilization().getAll(); // DQsp
 
@@ -1036,15 +1035,15 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 			// this WHOLE operation on Actual BA's, not 100% occupancy.
 			float fractionAvailable = Utils.<Float>optSafe(fPoly.getPercentAvailable()).map(p -> p / 100f).orElse(1f);
-			baseAreaSpec *= fractionAvailable;
+
 			// EMP081
-			float conditionalExpectedBaseArea = conditionalExpectedBaseArea(spec, baseAreaSpec, region); // BACONDsp
-			conditionalExpectedBaseArea /= fractionAvailable;
+			float conditionalExpectedBaseArea = estimationMethods
+					.estimateSmallComponentConditionalExpectedBasalAreaNormalized(spec, fractionAvailable, region); // BACONDsp
 
 			float baseAreaSpecSmall = smallComponentProbability * conditionalExpectedBaseArea; // BASMsp
 
 			// EMP082
-			float quadMeanDiameterSpecSmall = smallComponentQuadMeanDiameter(spec); // DQSMsp
+			float quadMeanDiameterSpecSmall = estimationMethods.estimateSmallComponentQuadMeanDiameter(spec); // DQSMsp
 
 			// EMP085
 			float loreyHeightSpecSmall = estimationMethods
@@ -1081,48 +1080,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		layer.getQuadraticMeanDiameterByUtilization()
 				.setSmall(BaseAreaTreeDensityDiameter.quadMeanDiameter(baseAreaSum, treesPerHectareSum));
 		layer.getWholeStemVolumeByUtilization().setSmall(volumeSum);
-	}
-
-	// EMP082
-	private float smallComponentQuadMeanDiameter(VdypSpecies spec) {
-		Coefficients coe = getCoeForSpecies(spec, ControlKey.SMALL_COMP_DQ);
-
-		// EQN 5 in IPSJF118.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-
-		float logit = //
-				a0 + a1 * spec.getLoreyHeightByUtilization().getAll();
-
-		return 4.0f + 3.5f * exp(logit) / (1.0f + exp(logit));
-	}
-
-	// EMP081
-	private float conditionalExpectedBaseArea(VdypSpecies spec, float baseAreaSpec, Region region) {
-		Coefficients coe = getCoeForSpecies(spec, ControlKey.SMALL_COMP_BA);
-
-		// EQN 3 in IPSJF118.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		float coast = region == Region.COASTAL ? 1.0f : 0.0f;
-
-		// FIXME due to a bug in VDYP7 it always treats this as interior. Replicating
-		// that for now.
-		coast = 0f;
-
-		float arg = //
-				(a0 + //
-						a1 * coast + //
-						a2 * baseAreaSpec//
-				) * exp(a3 * spec.getLoreyHeightByUtilization().getAll());
-		arg = max(arg, 0f);
-
-		return arg;
 	}
 
 	// EMP080

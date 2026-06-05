@@ -4,7 +4,6 @@ import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.fileSetEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,7 +11,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.startsWith;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -41,7 +39,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -70,13 +67,15 @@ class TestFileMappingService {
 	FileUpload fileUpload;
 	@Mock
 	HttpClient httpClient;
+	@Mock
+	FileMappingPersistenceService persistenceService;
 
 	FileMappingService service;
 
 	@BeforeEach
 	void setUp() {
 		assembler = new FileMappingResourceAssembler();
-		service = new FileMappingService(repository, assembler, comsClient, httpClient);
+		service = new FileMappingService(repository, assembler, comsClient, httpClient, persistenceService);
 	}
 
 	@Test
@@ -107,6 +106,10 @@ class TestFileMappingService {
 						any()
 				)
 		).thenReturn(createdObject);
+		FileMappingModel persistedModel = new FileMappingModel();
+		persistedModel.setComsObjectGUID(objectGuid.toString());
+		persistedModel.setFilename("input.txt");
+		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "input.txt")).thenReturn(persistedModel);
 
 		FileMappingModel result = service.createNewFile("bucket-guid-123", fileSetEntity, fileUpload);
 
@@ -114,7 +117,7 @@ class TestFileMappingService {
 		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
 		assertEquals("input.txt", result.getFilename());
 
-		verify(repository).persist(any(FileMappingEntity.class));
+		verify(persistenceService).persistFileMapping(objectGuid, fileSetGUID, "input.txt");
 	}
 
 	@Test
@@ -128,6 +131,7 @@ class TestFileMappingService {
 		);
 
 		verify(repository, never()).persist(any(FileMappingEntity.class));
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any());
 	}
 
 	@Test
@@ -318,23 +322,22 @@ class TestFileMappingService {
 				)
 		).thenReturn(comsObj);
 
-		// Let persistFileMapping run real logic, but mock repository and assembler
-		var expectedEntity = new FileMappingEntity();
-		expectedEntity.setComsObjectGUID(UUID.fromString(comsObj.id()));
-		expectedEntity.setProjectionFileSet(fileSetEntity);
-		expectedEntity.setFilename("file.bin");
-
-		ArgumentCaptor<FileMappingEntity> entityCaptor = ArgumentCaptor.forClass(FileMappingEntity.class);
-		doNothing().when(repository).persist(entityCaptor.capture());
+		var persistedModel = new FileMappingModel();
+		persistedModel.setComsObjectGUID(comsObj.id());
+		persistedModel.setFilename("file.bin");
+		when(
+				persistenceService.persistFileMapping(
+						UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin"
+				)
+		).thenReturn(persistedModel);
 
 		// Act
 		service.duplicateFile(file, fileSetEntity, bucketGuid);
 
 		// Assert
-		var persisted = entityCaptor.getValue();
-		assertEquals(UUID.fromString(comsObj.id()), persisted.getComsObjectGUID());
-		assertSame(fileSetEntity, persisted.getProjectionFileSet());
-		assertEquals("file.bin", persisted.getFilename());
+		verify(persistenceService).persistFileMapping(
+				UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin"
+		);
 
 		verify(comsClient).createObject(
 				eq(bucketGuid), anyString(), eq(3L), eq(jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM),
@@ -375,13 +378,17 @@ class TestFileMappingService {
 						eq("bucket-id"), anyString(), anyLong(), eq(MediaType.APPLICATION_OCTET_STREAM), any()
 				)
 		).thenReturn(createdObject);
+		FileMappingModel persistedModel = new FileMappingModel();
+		persistedModel.setComsObjectGUID(objectGuid.toString());
+		persistedModel.setFilename("result.zip");
+		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "result.zip")).thenReturn(persistedModel);
 
 		FileMappingModel result = service.createPlaceholderFile("bucket-id", fileSetEntity, "result.zip");
 
 		assertNotNull(result);
 		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
 		assertEquals("result.zip", result.getFilename());
-		verify(repository).persist(any(FileMappingEntity.class));
+		verify(persistenceService).persistFileMapping(objectGuid, fileSetGUID, "result.zip");
 	}
 
 	@Test
