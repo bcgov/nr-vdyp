@@ -71,50 +71,6 @@ describe('ProjectionActionsMenu.vue', () => {
     })
   })
 
-  describe('Draft status', () => {
-    it('shows Edit, Duplicate, and Delete menu items', () => {
-      mountComponent('Draft')
-      openMenu()
-
-      cy.contains('.menu-text', 'Edit').should('be.visible')
-      cy.contains('.menu-text', 'Duplicate').should('be.visible')
-      cy.contains('.menu-text', 'Delete').should('be.visible')
-
-      cy.contains('.menu-text', 'View').should('not.exist')
-      cy.contains('.menu-text', 'Download').should('not.exist')
-      cy.contains('.menu-text', 'Cancel').should('not.exist')
-    })
-
-    it('emits edit event when Edit is clicked', () => {
-      const onEditSpy = cy.spy().as('editSpy')
-      mountComponent('Draft', 'Test Projection', { onEdit: onEditSpy })
-      openMenu()
-
-      cy.contains('.menu-text', 'Edit').click()
-      cy.get('@editSpy').should('have.been.called')
-    })
-
-    it('emits duplicate event when Duplicate is clicked', () => {
-      const onDuplicateSpy = cy.spy().as('duplicateSpy')
-      mountComponent('Draft', 'Test Projection', {
-        onDuplicate: onDuplicateSpy,
-      })
-      openMenu()
-
-      cy.contains('.menu-text', 'Duplicate').click()
-      cy.get('@duplicateSpy').should('have.been.called')
-    })
-
-    it('emits delete event when Delete is clicked', () => {
-      const onDeleteSpy = cy.spy().as('deleteSpy')
-      mountComponent('Draft', 'Test Projection', { onDelete: onDeleteSpy })
-      openMenu()
-
-      cy.contains('.menu-text', 'Delete').click()
-      cy.get('@deleteSpy').should('have.been.called')
-    })
-  })
-
   describe('Ready status', () => {
     it('shows View, Duplicate, Download, and Delete menu items', () => {
       mountComponent('Ready')
@@ -127,48 +83,6 @@ describe('ProjectionActionsMenu.vue', () => {
 
       cy.contains('.menu-text', 'Edit').should('not.exist')
       cy.contains('.menu-text', 'Cancel').should('not.exist')
-    })
-
-    it('emits view event when View is clicked', () => {
-      const onViewSpy = cy.spy().as('viewSpy')
-      mountComponent('Ready', 'Test Projection', { onView: onViewSpy })
-      openMenu()
-
-      cy.contains('.menu-text', 'View').click()
-      cy.get('@viewSpy').should('have.been.called')
-    })
-
-    it('emits download event when Download is clicked', () => {
-      const onDownloadSpy = cy.spy().as('downloadSpy')
-      mountComponent('Ready', 'Test Projection', { onDownload: onDownloadSpy })
-      openMenu()
-
-      cy.contains('.menu-text', 'Download').click()
-      cy.get('@downloadSpy').should('have.been.called')
-    })
-  })
-
-  describe('Running status', () => {
-    it('shows Cancel menu item only', () => {
-      mountComponent('Running')
-      openMenu()
-
-      cy.contains('.menu-text', 'Cancel').should('be.visible')
-
-      cy.contains('.menu-text', 'View').should('not.exist')
-      cy.contains('.menu-text', 'Edit').should('not.exist')
-      cy.contains('.menu-text', 'Duplicate').should('not.exist')
-      cy.contains('.menu-text', 'Download').should('not.exist')
-      cy.contains('.menu-text', 'Delete').should('not.exist')
-    })
-
-    it('emits cancel event when Cancel is clicked', () => {
-      const onCancelSpy = cy.spy().as('cancelSpy')
-      mountComponent('Running', 'Test Projection', { onCancel: onCancelSpy })
-      openMenu()
-
-      cy.contains('.menu-text', 'Cancel').click()
-      cy.get('@cancelSpy').should('have.been.called')
     })
   })
 

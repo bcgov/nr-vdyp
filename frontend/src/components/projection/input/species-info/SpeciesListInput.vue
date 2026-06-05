@@ -1,139 +1,68 @@
 <template>
-  <div>
-    <div v-for="(item, index) in localSpeciesList" :key="index">
-      <v-row>
-        <v-col cols="6">
-          <label class="bcds-select-label" :for="`species-select-${index}`">Species #{{ index + 1 }}</label>
-          <v-select
-            :id="`species-select-${index}`"
-            :items="computedSpeciesOptions"
-            v-model="item.species"
-            item-title="label"
-            item-value="value"
-            clearable
-            hide-details="auto"
-            persistent-placeholder
-            placeholder="Select..."
-            :disabled="!isConfirmEnabled"
-            data-testid="species-select"
-            append-inner-icon="mdi-chevron-down"
-            @update:model-value="handleUpdateSpecies"
-            @keydown="handleSpeciesSelectKeyDown($event, index)"
-          ></v-select>
-        </v-col>
-        <v-col cols="6" class="pt-2">
-          <label class="bcds-text-field-label" :for="`species-percent-${index}`">Species #{{ index + 1 }} Percent</label>
-          <v-text-field
-            :id="`species-percent-${index}`"
-            type="text"
-            v-model="item.percent"
-            :max="max"
-            :min="min"
-            :step="step"
-            :rules="[validatePercent]"
-            persistent-placeholder
-            placeholder="Select..."
-            data-testid="species-percent"
-            @update:focused="handlePercentBlur"
-            @update:modelValue="handlePercentInput(index)"
-            @keydown="handleSpeciesPercentKeyDown($event, index)"
-            :disabled="!isConfirmEnabled"
-          >
-            <template #append-inner>
-              <div class="spin-box">
-                <div
-                  class="spin-up-arrow-button"
-                  @mousedown="startIncrement(index)"
-                  @mouseup="stopIncrement"
-                  @mouseout="handleIncMouseout"
-                  :class="{ disabled: !isConfirmEnabled }"
-                >
-                  <!-- CSS triangle instead of text -->
-                </div>
-                <div
-                  class="spin-down-arrow-button"
-                  @mousedown="startDecrement(index)"
-                  @mouseup="stopDecrement"
-                  @mouseout="handleDecMouseout"
-                  :class="{ disabled: !isConfirmEnabled }"
-                >
-                  <!-- CSS triangle instead of text -->
-                </div>
-              </div>
-            </template>
-          </v-text-field>
-        </v-col>
-      </v-row>
-      <div class="hr-line mb-1"></div>
+  <div class="species-list-input">
+    <!-- Empty state -->
+    <div v-if="localSpeciesList.length === 0" class="empty-state">
+      <p class="empty-text mb-3">No Species added.</p>
+      <AppButton
+        label="Add Species"
+        variant="primary"
+        mdi-name="mdi-plus"
+        :isDisabled="!isConfirmEnabled"
+        @click="$emit('request-add')"
+      />
+    </div>
+
+    <!-- Cards grid -->
+    <div v-else class="species-cards-grid">
+      <SpeciesCard
+        v-for="item in localSpeciesList"
+        :key="item.species!"
+        :speciesCode="item.species!"
+        :percent="item.percent"
+        :isDisabled="!isConfirmEnabled"
+        @update:percent="(v) => handlePercentUpdate(item.species!, v)"
+        @percent-blur="handlePercentBlur"
+        @delete="handleDelete(item.species!)"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeUnmount, watch, type PropType } from 'vue'
-import { CONSTANTS, MESSAGE } from '@/constants'
-import type { SpeciesList } from '@/interfaces/interfaces'
-import { speciesInfoValidation } from '@/validation'
-import {
-  increaseItemBySpinButton,
-  decrementItemBySpinButton,
-  isEmptyOrZero,
-} from '@/utils/util'
+import { ref, watch, type PropType } from 'vue'
 import { cloneDeep } from 'lodash'
+import type { SpeciesList } from '@/interfaces/interfaces'
+import { AppButton } from '@/components'
+import SpeciesCard from './SpeciesCard.vue'
 
 const props = defineProps({
   speciesList: {
     type: Array as PropType<SpeciesList[]>,
     required: true,
   },
-  computedSpeciesOptions: {
-    type: Array as PropType<{ label: string; value: string }[]>,
-    required: true,
-  },
   isConfirmEnabled: {
     type: Boolean,
     required: true,
   },
-  max: {
-    type: Number,
-    default: CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX,
-  },
-  min: {
-    type: Number,
-    default: CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN,
-  },
-  step: {
-    type: Number,
-    default: CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_STEP,
-  },
 })
 
-const emit = defineEmits(['update:speciesList'])
+const emit = defineEmits<{
+  'update:speciesList': [list: SpeciesList[]]
+  'request-add': []
+}>()
 
-const localSpeciesList = ref(cloneDeep(props.speciesList))
+const localSpeciesList = ref<SpeciesList[]>(cloneDeep(props.speciesList))
 
-// Watch for external speciesList changes
 watch(
   () => props.speciesList,
   (newList) => {
     const isDifferent =
+      newList.length !== localSpeciesList.value.length ||
       newList.some(
-        (item) =>
-          !localSpeciesList.value.some(
-            (localItem) =>
-              localItem.species === item.species &&
-              localItem.percent === item.percent,
-          ),
-      ) ||
-      localSpeciesList.value.some(
-        (localItem) =>
-          !newList.some(
-            (item) =>
-              item.species === localItem.species &&
-              item.percent === localItem.percent,
-          ),
+        (item, i) =>
+          item.species !== localSpeciesList.value[i]?.species ||
+          item.percent !== localSpeciesList.value[i]?.percent,
       )
-
     if (isDifferent) {
       localSpeciesList.value = cloneDeep(newList)
     }
@@ -141,198 +70,69 @@ watch(
   { deep: true },
 )
 
-// Emit changes back to parent
-watch(
-  localSpeciesList,
-  (newSpeciesList) => {
-    emit('update:speciesList', newSpeciesList)
-  },
-  { deep: true },
-)
-
-let incrementIntervalId: ReturnType<typeof globalThis.setInterval> | null = null
-let decrementIntervalId: ReturnType<typeof globalThis.setInterval> | null = null
-
-const updateValue = (action: 'increment' | 'decrement', index: number) => {
-  const localPercent = localSpeciesList.value[index].percent
-  let newValue =
-    action === 'increment'
-      ? increaseItemBySpinButton(localPercent, props.max, props.min, props.step)
-      : decrementItemBySpinButton(
-          localPercent,
-          props.max,
-          props.min,
-          props.step,
-        )
-
-  localSpeciesList.value[index].percent = newValue.toFixed(
-    CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
-  )
-
-  if (isEmptyOrZero(localSpeciesList.value[index].percent)) {
-    localSpeciesList.value[index].species = null
-  }
-}
-
-const startIncrement = (index: number) => {
-  updateValue('increment', index)
-  incrementIntervalId = globalThis.setInterval(
-    () => updateValue('increment', index),
-    CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL,
-  )
-}
-
-const stopIncrement = () => {
-  if (incrementIntervalId !== null) {
-    clearInterval(incrementIntervalId)
-    incrementIntervalId = null
-  }
-}
-
-const startDecrement = (index: number) => {
-  updateValue('decrement', index)
-  decrementIntervalId = globalThis.setInterval(
-    () => updateValue('decrement', index),
-    CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL,
-  )
-}
-
-const stopDecrement = () => {
-  if (decrementIntervalId !== null) {
-    clearInterval(decrementIntervalId)
-    decrementIntervalId = null
-  }
-}
-
-const triggerSpeciesSortByPercent = () => {
-  localSpeciesList.value.sort((a: SpeciesList, b: SpeciesList) => {
-    const percentA = Number.parseFloat(a.percent || '0')
-    const percentB = Number.parseFloat(b.percent || '0')
-
-    // Empty species are sent backward in the sort
-    if (!a.species) return 1
-    if (!b.species) return -1
-
-    // Sort by percent in descending order
-    return percentB - percentA
+const sortByPercent = () => {
+  localSpeciesList.value.sort((a, b) => {
+    const pA = Number.parseFloat(a.percent || '0')
+    const pB = Number.parseFloat(b.percent || '0')
+    return pB - pA
   })
 }
 
-const validatePercent = (percent: string | null): boolean | string => {
-  const validationResult = speciesInfoValidation.validatePercent(percent)
-  if (!validationResult.isValid) {
-    return MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_INPUT_RANGE(
-      CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN,
-      CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX,
-    )
+const handlePercentUpdate = (code: string, value: string) => {
+  const item = localSpeciesList.value.find((s) => s.species === code)
+  if (item) {
+    item.percent = value
+    emit('update:speciesList', cloneDeep(localSpeciesList.value))
   }
-  return true
 }
 
-// Loop through speciesList to set percent to 0.0 for empty species or empty percent
-const handleUpdateSpecies = () => {
-  for (const item of localSpeciesList.value) {
-    if (!item.species || !item.percent) {
-      item.percent = '0.0'
-    }
-  }
-
-  triggerSpeciesSortByPercent()
-}
-
-// NOTE: "update:focused" event fired when the input is Focused or Blurred
 const handlePercentBlur = () => {
-  for (const item of localSpeciesList.value) {
-    if (item.percent) {
-      // Add a leading zero if the value starts with a decimal point (e.g., '.1' -> '0.1')
-      if (item.percent.startsWith('.')) {
-        item.percent = `0${item.percent}`
-      }
-
-      // Format percent value to fixed decimal places if it lacks a decimal or ends with a decimal point
-      if (!item.percent.includes('.') || item.percent.endsWith('.')) {
-        item.percent = Number.parseFloat(item.percent).toFixed(
-          CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
-        )
-      }
-
-      // Parse the percent value, round it to the nearest allowed decimal place, and convert back to string
-      const roundedValue = Number.parseFloat(item.percent).toFixed(
-        CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
-      )
-
-      item.percent = roundedValue
-    }
-  }
-
-  triggerSpeciesSortByPercent()
+  sortByPercent()
+  emit('update:speciesList', cloneDeep(localSpeciesList.value))
 }
 
-const handlePercentInput = (index: number) => {
-  let localPercent = localSpeciesList.value[index].percent || ''
-
-  // Allow only numbers and a single '.'
-  let cleanedValue = localPercent.replaceAll(/[^0-9.]/g, '')
-
-  // If there are multiple '.', keep only the first one
-  const dotIndex = cleanedValue.indexOf('.')
-  if (dotIndex !== -1) {
-    cleanedValue =
-      cleanedValue.slice(0, dotIndex + 1) +
-      cleanedValue.slice(dotIndex + 1).replaceAll('.', '')
-  }
-  // Update the percent value in the list
-  localSpeciesList.value[index].percent = cleanedValue
-
-  // If the value is 0.0, set the species to null
-  if (isEmptyOrZero(localSpeciesList.value[index].percent)) {
-    localSpeciesList.value[index].species = null
-  }
+const handleDelete = (code: string) => {
+  localSpeciesList.value = localSpeciesList.value.filter((s) => s.species !== code)
+  emit('update:speciesList', cloneDeep(localSpeciesList.value))
 }
-
-const handleIncMouseout = () => {
-  stopIncrement()
-  triggerSpeciesSortByPercent()
-}
-
-const handleDecMouseout = () => {
-  stopDecrement()
-  triggerSpeciesSortByPercent()
-}
-
-const handleSpeciesPercentKeyDown = (event: KeyboardEvent, index: number) => {
-  if (!props.isConfirmEnabled) return
-
-  if (event.key === 'ArrowUp') {
-    event.preventDefault()
-    updateValue('increment', index)
-  } else if (event.key === 'ArrowDown') {
-    event.preventDefault()
-    updateValue('decrement', index)
-  }
-}
-
-const handleSpeciesSelectKeyDown = (event: KeyboardEvent, index: number) => {
-  if (!props.isConfirmEnabled) return
-
-  // Delete or Backspace key clears the selection
-  if (event.key === 'Delete' || event.key === 'Backspace') {
-    // Only clear if there's a value selected
-    if (localSpeciesList.value[index].species) {
-      event.preventDefault()
-      localSpeciesList.value[index].species = null
-      localSpeciesList.value[index].percent = '0.0'
-      triggerSpeciesSortByPercent()
-    }
-  }
-}
-
-onBeforeUnmount(() => {
-  stopIncrement()
-  stopDecrement()
-})
 </script>
 
 <style scoped>
-/* Spin box styles are defined in src/styles/_spin-field.scss */
+.species-list-input {
+  width: 100%;
+}
+
+.empty-text {
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-danger);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 0 0 0;
+}
+
+.species-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(3, auto);
+  grid-auto-flow: column;
+  gap: 10px;
+}
+
+@media (max-width: 599px) {
+  .species-cards-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: unset;
+    grid-auto-flow: row;
+  }
+}
+
+@media (max-width: 700px) {
+  .species-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

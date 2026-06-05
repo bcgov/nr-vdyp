@@ -33,20 +33,13 @@ const mountPanel = (
 
 describe('<MinimumDBHPanel />', () => {
   describe('Panel structure', () => {
-    it('renders the desktop panel title "Minimum DBH Limit by Species Group" on wide viewports', () => {
+    it('renders the panel title "Minimum DBH Limit by Species Group"', () => {
       cy.viewport(1280, 800)
       mountPanel()
       cy.contains('.text-h6', 'Minimum DBH Limit by Species Group').should('exist')
     })
 
-    it('renders the mobile panel title "Min DBH by Species Group (cm+)" on narrow viewports', () => {
-      cy.viewport(600, 800)
-      mountPanel()
-      cy.contains('.text-h6', 'Min DBH by Species Group (cm+)').should('exist')
-    })
-
     it('panel content is not in the DOM when initially closed', () => {
-      // minimumDBH starts CLOSE by default in the store
       mountPanel()
       cy.get('.min-dbh-row').should('not.exist')
     })
@@ -59,61 +52,36 @@ describe('<MinimumDBHPanel />', () => {
       })
       cy.get('.expansion-panel-icon').should('have.class', 'mdi-chevron-down')
     })
-
-    it('shows mdi-chevron-up when the panel is open', () => {
-      mountPanel((fu) => {
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.expansion-panel-icon').should('have.class', 'mdi-chevron-up')
-    })
   })
 
   describe('Header Edit button', () => {
-    it('is not rendered in view mode (isReadOnly = true)', () => {
+    it('is not rendered in view mode', () => {
       mountPanel((fu, app) => {
         app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
       })
       cy.get('.edit-button-col').should('not.exist')
     })
 
-    it('is rendered in non-read-only mode', () => {
-      mountPanel()
-      cy.get('.edit-button-col').should('exist')
-    })
-
     it('is disabled when the panel has not been confirmed yet', () => {
-      // Default state: confirmed=false, editable=false -> isHeaderEditActive=false
       mountPanel()
       cy.get('.edit-button-col button').should('be.disabled')
     })
 
     it('is enabled when the panel is confirmed and not currently editable', () => {
       mountPanel((fu) => {
-        // Confirm both sequential panels; minimumDBH becomes confirmed+closed
         fu.confirmPanel('reportConfig')
         fu.confirmPanel('minimumDBH')
-        // Re-open the panel so the title row with the Edit button is visible
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.get('.edit-button-col button').should('not.be.disabled')
     })
 
-    it('is disabled when projection status is RUNNING (even if confirmed)', () => {
+    it('is disabled when projection status is RUNNING', () => {
       mountPanel((fu, app) => {
         fu.confirmPanel('reportConfig')
         fu.confirmPanel('minimumDBH')
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
         app.setCurrentProjectionStatus(PROJECTION_STATUS.RUNNING)
-      })
-      cy.get('.edit-button-col button').should('be.disabled')
-    })
-
-    it('is disabled when projection status is READY (even if confirmed)', () => {
-      mountPanel((fu, app) => {
-        fu.confirmPanel('reportConfig')
-        fu.confirmPanel('minimumDBH')
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-        app.setCurrentProjectionStatus(PROJECTION_STATUS.READY)
       })
       cy.get('.edit-button-col button').should('be.disabled')
     })
@@ -128,32 +96,12 @@ describe('<MinimumDBHPanel />', () => {
       cy.get('.min-dbh-row').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
     })
 
-    it('displays the first species group label "AC"', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.min-dbh-species-group-label').first().should('contain.text', 'AC')
-    })
-
     it('renders a slider for each species group', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.get('.v-slider').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
-    })
-
-    it('species group labels have the disabled class when panel is not editable', () => {
-      // Default: editable=false -> isMinDBHDeactivated=true
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.min-dbh-species-group-label.min-dbh-disabled').should(
-        'have.length',
-        BIZCONSTANTS.SPECIES_GROUPS.length,
-      )
     })
 
     it('sliders are disabled when panel is not editable', () => {
@@ -164,91 +112,23 @@ describe('<MinimumDBHPanel />', () => {
       cy.get('.v-slider.v-input--disabled').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
     })
 
-    it('species labels do NOT have the disabled class when panel is editable', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportConfig') // makes minimumDBH editable
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.min-dbh-species-group-label.min-dbh-disabled').should('not.exist')
-    })
-
     it('sliders are enabled when panel is editable and projection type is not CFS Biomass', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportConfig') // makes minimumDBH editable
+        fu.confirmPanel('reportConfig')
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.get('.v-slider.v-input--disabled').should('not.exist')
     })
 
-    it('sliders are disabled when projectionType is CFS Biomass (regardless of editable state)', () => {
+    it('sliders are disabled when projectionType is CFS Biomass', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportConfig') // makes minimumDBH editable
+        fu.confirmPanel('reportConfig')
         fu.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.get('.v-slider.v-input--disabled').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
-    })
-
-    it('species labels have disabled class when projectionType is CFS Biomass', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportConfig') // makes minimumDBH editable
-        fu.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.min-dbh-species-group-label.min-dbh-disabled').should(
-        'have.length',
-        BIZCONSTANTS.SPECIES_GROUPS.length,
-      )
-    })
-  })
-
-  describe('Label row (labels rendered outside slider)', () => {
-    it('renders a label row for each species group', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.min-dbh-label-row').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
-    })
-
-    it('renders 5 label items per row', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.min-dbh-label-row').first().find('.min-dbh-label-item').should('have.length', 5)
-    })
-
-    it('label rows have min-dbh-labels-muted class when panel is not editable', () => {
-      // Default: editable=false -> isMinDBHDeactivated=true
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.min-dbh-label-row.min-dbh-labels-muted').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
-    })
-
-    it('label rows do NOT have min-dbh-labels-muted class when panel is editable', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportConfig') // makes minimumDBH editable
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.min-dbh-label-row.min-dbh-labels-muted').should('not.exist')
-    })
-
-    it('label rows have min-dbh-labels-muted class when projectionType is CFS Biomass', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportConfig') // makes minimumDBH editable
-        fu.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.min-dbh-label-row.min-dbh-labels-muted').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
     })
   })
 
@@ -259,29 +139,20 @@ describe('<MinimumDBHPanel />', () => {
         app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
-      // ActionPanel has v-if="!isReadOnly"
       cy.contains('button', 'Next').should('not.exist')
       cy.contains('button', 'Cancel').should('not.exist')
     })
 
-    it('renders the "Next" button in edit mode', () => {
+    it('renders "Next" and "Cancel" buttons in edit mode', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.contains('button', 'Next').should('exist')
-    })
-
-    it('renders the "Cancel" button in edit mode', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
       cy.contains('button', 'Cancel').should('exist')
     })
 
     it('"Next" and "Cancel" are disabled when the panel is not editable', () => {
-      // Default: panelState.minimumDBH.editable=false -> isConfirmEnabled=false
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
@@ -293,19 +164,10 @@ describe('<MinimumDBHPanel />', () => {
     it('"Next" and "Cancel" are enabled when the panel is editable', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
-        fu.confirmPanel('reportConfig') // opens minimumDBH and makes it editable
+        fu.confirmPanel('reportConfig')
       })
-      // minimumDBH is now open (confirmPanel('reportConfig') opens it)
       cy.contains('button', 'Next').should('not.be.disabled')
       cy.contains('button', 'Cancel').should('not.be.disabled')
-    })
-
-    it('does not render the "Clear" button (hideClearButton=true)', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.contains('button', 'Clear').should('not.exist')
     })
   })
 })

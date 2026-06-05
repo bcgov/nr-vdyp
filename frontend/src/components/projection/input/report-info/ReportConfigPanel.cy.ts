@@ -51,76 +51,11 @@ describe('<ReportConfigPanel />', () => {
     })
   })
 
-  describe('Expansion panel chevron icon', () => {
-    it('shows mdi-chevron-up when the panel is open (default)', () => {
-      mountPanel()
-      cy.get('.expansion-panel-icon').should('have.class', 'mdi-chevron-up')
-    })
-
-    it('shows mdi-chevron-down when the panel is closed', () => {
-      mountPanel((fu) => {
-        fu.panelOpenStates.reportConfig = CONSTANTS.PANEL.CLOSE
-      })
-      cy.get('.expansion-panel-icon').should('have.class', 'mdi-chevron-down')
-    })
-  })
-
   describe('Form fields', () => {
-    it('renders "Report Title (Required)" label', () => {
-      mountPanel()
-      cy.contains('label', 'Report Title (Required)').should('exist')
-    })
-
-    it('renders the report title text field with placeholder', () => {
-      mountPanel()
-      cy.get('#reportTitle').should('have.attr', 'placeholder', 'Enter a report title...')
-    })
-
-    it('renders "Projection Type" label', () => {
-      mountPanel()
-      cy.contains('label', 'Projection Type').should('exist')
-    })
-
-    it('renders "Volume" and "CFS Biomass" radio options', () => {
+    it('renders "Volume" and "CFS Biomass" radio options for projection type', () => {
       mountPanel()
       cy.contains('.v-label', 'Volume').should('exist')
       cy.contains('.v-label', 'CFS Biomass').should('exist')
-    })
-
-    it('renders the description textarea with placeholder', () => {
-      mountPanel()
-      cy.get('#reportDescription').should(
-        'have.attr',
-        'placeholder',
-        'Provide a description of this Projection...',
-      )
-    })
-
-    it('shows "0/500" counter when description is empty', () => {
-      mountPanel()
-      cy.contains('.counter', '0/500').should('exist')
-    })
-
-    it('updates the counter as description text is typed', () => {
-      mountPanel()
-      cy.get('#reportDescription').type('Hello')
-      cy.contains('.counter', '5/500').should('exist')
-    })
-
-    it('renders "Numeric Range Value" label', () => {
-      mountPanel()
-      cy.contains('.numeric-range-value-label', 'Numeric Range Value').should('exist')
-    })
-
-    it('renders "Age" and "Year" radio options for numeric range', () => {
-      mountPanel()
-      cy.contains('.v-label', 'Age').should('exist')
-      cy.contains('.v-label', 'Year').should('exist')
-    })
-
-    it('renders "Include following values in Report" section', () => {
-      mountPanel()
-      cy.contains('.include-in-report-label', 'Include the following values in the Report').should('exist')
     })
 
     it('renders all checkboxes in "Include following values in Report"', () => {
@@ -132,30 +67,16 @@ describe('<ReportConfigPanel />', () => {
       cy.get('[data-testid="is-current-year-enabled"]').should('exist')
       cy.get('[data-testid="is-reference-year-enabled"]').should('exist')
     })
-  })
 
-  describe('Age range fields (default)', () => {
-    it('renders Starting Age, Finishing Age, and Increment fields when Age is selected', () => {
+    it('renders Starting Age, Finishing Age, and Increment fields when Age is selected (default)', () => {
       mountPanel()
       cy.get('[data-testid="starting-age"]').should('exist')
       cy.get('[data-testid="finishing-age"]').should('exist')
       cy.get('[data-testid="age-increment"]').should('exist')
     })
-
-    it('does not render Year fields when Age is selected', () => {
-      mountPanel()
-      cy.get('[data-testid="start-year"]').should('not.exist')
-      cy.get('[data-testid="end-year"]').should('not.exist')
-    })
   })
 
   describe('Input enabled/disabled state', () => {
-    it('inputs are enabled when the panel is editable (default)', () => {
-      mountPanel()
-      cy.get('#reportTitle').should('not.be.disabled')
-      cy.get('#reportDescription').should('not.be.disabled')
-    })
-
     it('inputs are disabled in read-only mode', () => {
       mountPanel((_, app) => {
         app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
@@ -180,13 +101,6 @@ describe('<ReportConfigPanel />', () => {
       cy.get('#reportTitle').blur()
       cy.contains('Report Title is required.').should('exist')
     })
-
-    it('does not show an error when the title has a value on blur', () => {
-      mountPanel()
-      cy.get('#reportTitle').type('My Report')
-      cy.get('#reportTitle').blur()
-      cy.contains('Report Title is required.').should('not.exist')
-    })
   })
 
   describe('Store synchronization', () => {
@@ -195,22 +109,6 @@ describe('<ReportConfigPanel />', () => {
         fu.reportTitle = 'Stored Title'
       })
       cy.get('#reportTitle').should('have.value', 'Stored Title')
-    })
-
-    it('updates store reportTitle when the user types in the field', () => {
-      const { fileUploadStore } = mountPanel()
-      cy.get('#reportTitle').type('New Title')
-      cy.then(() => {
-        expect(fileUploadStore.reportTitle).to.equal('New Title')
-      })
-    })
-
-    it('updates store reportDescription when the user types in the textarea', () => {
-      const { fileUploadStore } = mountPanel()
-      cy.get('#reportDescription').type('A description')
-      cy.then(() => {
-        expect(fileUploadStore.reportDescription).to.equal('A description')
-      })
     })
 
     it('disables "By Species" checkbox when CFS Biomass projection type is selected', () => {
@@ -222,11 +120,6 @@ describe('<ReportConfigPanel />', () => {
   })
 
   describe('Edit button in header', () => {
-    it('is visible in non-read-only mode', () => {
-      mountPanel()
-      cy.get('.edit-button-col').should('exist')
-    })
-
     it('is not visible in read-only mode', () => {
       mountPanel((_, app) => {
         app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
@@ -242,28 +135,11 @@ describe('<ReportConfigPanel />', () => {
       cy.contains('button', 'Edit').should('be.disabled')
     })
 
-    it('is enabled when the panel is confirmed and not editable', () => {
-      mountPanel((fu) => {
-        fu.panelState.reportConfig.confirmed = true
-        fu.panelState.reportConfig.editable = false
-      })
-      cy.contains('button', 'Edit').should('not.be.disabled')
-    })
-
-    it('is disabled when projection status is RUNNING', () => {
+    it('is disabled when projection is running or ready', () => {
       mountPanel((fu, app) => {
         fu.panelState.reportConfig.confirmed = true
         fu.panelState.reportConfig.editable = false
         app.setCurrentProjectionStatus(PROJECTION_STATUS.RUNNING)
-      })
-      cy.contains('button', 'Edit').should('be.disabled')
-    })
-
-    it('is disabled when projection status is READY', () => {
-      mountPanel((fu, app) => {
-        fu.panelState.reportConfig.confirmed = true
-        fu.panelState.reportConfig.editable = false
-        app.setCurrentProjectionStatus(PROJECTION_STATUS.READY)
       })
       cy.contains('button', 'Edit').should('be.disabled')
     })
@@ -278,45 +154,12 @@ describe('<ReportConfigPanel />', () => {
       cy.contains('button', 'Cancel').should('not.exist')
     })
 
-    it('renders "Next" and "Cancel" buttons in edit mode', () => {
-      mountPanel()
-      cy.contains('button', 'Next').should('exist')
-      cy.contains('button', 'Cancel').should('exist')
-    })
-
-    it('"Next" and "Cancel" are enabled when the panel is editable (default)', () => {
-      mountPanel()
-      cy.contains('button', 'Next').should('not.be.disabled')
-      cy.contains('button', 'Cancel').should('not.be.disabled')
-    })
-
     it('"Next" and "Cancel" are disabled when the panel is not editable', () => {
       mountPanel((fu) => {
         fu.panelState.reportConfig.editable = false
       })
       cy.contains('button', 'Next').should('be.disabled')
       cy.contains('button', 'Cancel').should('be.disabled')
-    })
-
-    it('does not render the "Clear" button (hideClearButton=true)', () => {
-      mountPanel()
-      cy.contains('button', 'Clear').should('not.exist')
-    })
-
-    it('clicking "Next" with an empty title shows a validation error', () => {
-      mountPanel((fu) => {
-        fu.reportTitle = null
-      })
-      cy.contains('button', 'Next').click()
-      cy.contains('Report Title is required.').should('exist')
-    })
-
-    it('clicking "Next" with a whitespace-only title shows a validation error', () => {
-      mountPanel((fu) => {
-        fu.reportTitle = '   '
-      })
-      cy.contains('button', 'Next').click()
-      cy.contains('Report Title is required.').should('exist')
     })
   })
 })

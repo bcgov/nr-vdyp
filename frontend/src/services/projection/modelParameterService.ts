@@ -305,6 +305,9 @@ const createLayerData = (
   treeCoverLayerEstimatedId: string,
 ): CSVRowType => {
   const speciesData = getSpeciesData(modelParameterStore.speciesList)
+  while (speciesData.length < 6) {
+    speciesData.push({ species: null as any, percent: '' })
+  }
   const speciesRow = flattenSpeciesData(speciesData, 6)
   const siteIndexRows: SiteIndexSpeciesRow[] = modelParameterStore.siteIndexRows ?? []
   const row1 = siteIndexRows[1]

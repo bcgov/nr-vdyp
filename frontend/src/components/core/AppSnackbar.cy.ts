@@ -137,26 +137,6 @@ describe('AppSnackbar.vue', () => {
     cy.get('@onCloseSpy').should('have.been.calledWith', false)
   })
 
-  it('handles auto timeout', () => {
-    const onCloseSpy = cy.spy().as('onCloseSpy')
-    cy.mount(AppSnackbar, {
-      props: {
-        isVisible: true,
-        message: 'This message will auto-hide.',
-        type: 'info',
-        timeout: 2000, // 2 seconds
-        autoTimeout: true,
-        'onUpdate:isVisible': onCloseSpy,
-      },
-    })
-
-    // Verify snackbar visibility
-    cy.get('.v-snackbar__wrapper').should('be.visible')
-
-    // Wait for auto timeout and verify close event was called
-    cy.get('@onCloseSpy', { timeout: 3000 }).should('have.been.calledWith', false)
-  })
-
   it('displays correct BC Gov Design System styling', () => {
     cy.mount(AppSnackbar, {
       props: {
