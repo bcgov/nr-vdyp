@@ -1,8 +1,15 @@
 <template>
   <div style="width: 100%">
     <span class="bcds-text-field-label" v-html="label"></span>
-    <div class="spin-field-wrapper">
+    <div class="spin-field-wrapper" ref="wrapperRef">
+      <span
+        v-if="showPercentSign && localValue !== null && localValue !== ''"
+        class="percent-overlay"
+        :style="percentOverlayStyle"
+        aria-hidden="true"
+      >%</span>
       <v-text-field
+        ref="textFieldRef"
         type="text"
         v-model="localValue"
         :max="max"
@@ -47,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, type PropType } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted, nextTick, type PropType } from 'vue'
 import type { Density, Variant } from '@/types/types'
 import { CONSTANTS } from '@/constants'
 import {
@@ -93,6 +100,10 @@ const props = defineProps({
     type: [String, Array] as PropType<string | string[]>,
     default: '',
   },
+  showPercentSign: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -104,6 +115,61 @@ const hasError = computed(() => {
 })
 
 const localValue = ref<string | null>(props.modelValue)
+
+const textFieldRef = ref()
+const wrapperRef = ref<HTMLElement | null>(null)
+const percentOverlayStyle = ref<Record<string, string>>({})
+
+const _measureCanvas = document.createElement('canvas')
+
+const updatePercentOverlay = async () => {
+  if (!props.showPercentSign || !localValue.value || !wrapperRef.value || !textFieldRef.value) {
+    percentOverlayStyle.value = {}
+    return
+  }
+
+  await nextTick()
+
+  const inputEl = textFieldRef.value.$el?.querySelector('input') as HTMLInputElement | null
+  if (!inputEl) return
+
+  const wrapperRect = wrapperRef.value.getBoundingClientRect()
+  const inputRect = inputEl.getBoundingClientRect()
+  const style = globalThis.getComputedStyle(inputEl)
+  const paddingLeft = Number.parseFloat(style.paddingLeft) || 16
+
+  const ctx = _measureCanvas.getContext('2d')
+  let textWidth = 0
+  if (ctx) {
+    ctx.font = style.font
+    textWidth = ctx.measureText(localValue.value).width
+  }
+
+  percentOverlayStyle.value = {
+    left: `${inputRect.left - wrapperRect.left + paddingLeft + textWidth}px`,
+    top: `${inputRect.top - wrapperRect.top}px`,
+    height: `${inputRect.height}px`,
+    color: style.color,
+    fontSize: style.fontSize,
+    fontFamily: style.fontFamily,
+  }
+}
+
+let resizeObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  if (wrapperRef.value) {
+    resizeObserver = new ResizeObserver(() => {
+      if (localValue.value) updatePercentOverlay()
+    })
+    resizeObserver.observe(wrapperRef.value)
+  }
+  updatePercentOverlay()
+})
+
+onUnmounted(() => {
+  resizeObserver?.disconnect()
+})
 
 let incrementInterval: ReturnType<typeof setInterval> | null = null
 let decrementInterval: ReturnType<typeof setInterval> | null = null
@@ -121,6 +187,7 @@ watch(
 // Emit changes back to parent
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue)
+  updatePercentOverlay()
 })
 
 const startIncrement = () => {
@@ -219,5 +286,15 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 .spin-field-wrapper {
   position: relative;
+}
+
+.percent-overlay {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+  user-select: none;
 }
 </style>

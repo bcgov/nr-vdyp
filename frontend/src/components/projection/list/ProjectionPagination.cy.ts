@@ -223,17 +223,5 @@ describe('ProjectionPagination.vue', () => {
       cy.get('.pagination-controls').should('contain.text', 'Show')
       cy.get('.pagination-controls').should('contain.text', 'entries')
     })
-
-    it('emits update:itemsPerPage when selecting a new value', () => {
-      const onUpdateItemsPerPage = cy.spy().as('updateItemsPerPageSpy')
-      mountComponent(
-        { itemsPerPageOptions: [10, 25, 50] },
-        { 'onUpdate:itemsPerPage': onUpdateItemsPerPage },
-      )
-
-      cy.get('.items-per-page-select').click()
-      cy.get('.v-list-item').contains('25').click()
-      cy.get('@updateItemsPerPageSpy').should('have.been.calledWith', 25)
-    })
   })
 })

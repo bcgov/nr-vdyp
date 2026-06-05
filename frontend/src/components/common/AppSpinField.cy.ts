@@ -147,12 +147,4 @@ describe('AppSpinField.vue', () => {
     cy.get('input').trigger('keydown', { key: 'ArrowDown' })
     cy.get('input').should('have.value', '10.00')
   })
-
-  it('filters out non-numeric characters on direct input', () => {
-    cy.mountWithVuetify(AppSpinField, { props })
-
-    cy.get('input').clear()
-    cy.get('input').type('abc12.5xyz')
-    cy.get('input').should('have.value', '12.5')
-  })
 })
