@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -21,6 +22,7 @@ public class PresignedFileFetcher {
 		this(RestClient.create());
 	}
 
+	@Autowired
 	PresignedFileFetcher(RestClient restClient) {
 		this.restClient = Objects.requireNonNull(restClient, "restClient");
 	}
