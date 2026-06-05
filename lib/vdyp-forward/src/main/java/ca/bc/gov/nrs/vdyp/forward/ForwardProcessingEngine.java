@@ -2877,6 +2877,17 @@ public class ForwardProcessingEngine {
 		return actualLogit - staticLogit;
 	}
 
+	static Optional<Integer> findIndexInOneIndexedFloatArray(Optional<Integer> tryFirst, float[] array, int arraySize) {
+		return tryFirst.filter(index -> !Float.isNaN(array[index])).or(() -> {
+			for (int i = 1; i <= arraySize; i++) {
+				if (!Float.isNaN(array[i])) {
+					return Optional.of(i);
+				}
+			}
+			return Optional.empty();
+		});
+	}
+
 	/**
 	 * VHDOM1 METH_H = 2, METH_A = 2, METH_SI = 2.
 	 *
@@ -2898,6 +2909,7 @@ public class ForwardProcessingEngine {
 		float primarySpeciesDominantHeight = bank.dominantHeights[primarySpeciesIndex];
 		if (Float.isNaN(primarySpeciesDominantHeight)) {
 			float loreyHeight = bank.loreyHeights[primarySpeciesIndex][UC_ALL_INDEX];
+
 			if (Float.isNaN(loreyHeight)) {
 				throw new ProcessingException(
 						MessageFormat.format(
@@ -2931,27 +2943,21 @@ public class ForwardProcessingEngine {
 
 		if (Float.isNaN(primarySpeciesTotalAge)) {
 
-			if (lps.hasSecondarySpeciesIndex() && !Float.isNaN(bank.ageTotals[lps.getSecondarySpeciesIndex()])) {
-				activeIndex = Optional.of(lps.getSecondarySpeciesIndex());
-			} else {
-				for (int i = 1; i <= lps.getNSpecies(); i++) {
-					if (!Float.isNaN(bank.ageTotals[i])) {
-						activeIndex = Optional.of(i);
-						break;
-					}
-				}
-			}
+			activeIndex = findIndexInOneIndexedFloatArray(
+					lps.getSecondarySpeciesIndex(), bank.ageTotals, lps.getNSpecies()
+			);
 
-			activeIndex.orElseThrow(() -> new ProcessingException("Age data unavailable for ALL species", 5));
+			var index = activeIndex
+					.orElseThrow(() -> new ProcessingException("Age data unavailable for ALL species", 5));
 
-			primarySpeciesTotalAge = bank.ageTotals[activeIndex.get()];
+			primarySpeciesTotalAge = bank.ageTotals[index];
 			if (!Float.isNaN(primarySpeciesYearsToBreastHeight)) {
 				primarySpeciesYearsAtBreastHeight = primarySpeciesTotalAge - primarySpeciesYearsToBreastHeight;
 			} else if (!Float.isNaN(primarySpeciesYearsAtBreastHeight)) {
 				primarySpeciesYearsToBreastHeight = primarySpeciesTotalAge - primarySpeciesYearsAtBreastHeight;
 			} else {
-				primarySpeciesYearsAtBreastHeight = bank.yearsAtBreastHeight[activeIndex.get()];
-				primarySpeciesYearsToBreastHeight = bank.yearsToBreastHeight[activeIndex.get()];
+				primarySpeciesYearsAtBreastHeight = bank.yearsAtBreastHeight[index];
+				primarySpeciesYearsToBreastHeight = bank.yearsToBreastHeight[index];
 			}
 		}
 
@@ -2959,18 +2965,10 @@ public class ForwardProcessingEngine {
 		float primarySpeciesSiteIndex = bank.siteIndices[primarySpeciesIndex];
 		if (Float.isNaN(primarySpeciesSiteIndex)) {
 
-			if (lps.hasSecondarySpeciesIndex() && !Float.isNaN(bank.siteIndices[lps.getSecondarySpeciesIndex()])) {
-				activeIndex = Optional.of(lps.getSecondarySpeciesIndex());
-			} else {
-				if (activeIndex.isEmpty() || Float.isNaN(bank.siteIndices[activeIndex.get()])) {
-					for (int i = 1; i <= lps.getNSpecies(); i++) {
-						if (!Float.isNaN(bank.siteIndices[i])) {
-							activeIndex = Optional.of(i);
-							break;
-						}
-					}
-				}
-			}
+			activeIndex = findIndexInOneIndexedFloatArray(
+					lps.getSecondarySpeciesIndex(), bank.siteIndices, lps.getNSpecies()
+			);
+
 			primarySpeciesSiteIndex = bank.siteIndices[activeIndex
 					.orElseThrow(() -> new ProcessingException("Site Index data unavailable for ALL species", 7))];
 		} else {
@@ -3219,7 +3217,7 @@ public class ForwardProcessingEngine {
 				 */
 
 				if (Float.isNaN(bank.siteIndices[pspIndex]) && nSpecies > 1) {
-					int secondarySpeciesIndex = lps.hasSecondarySpeciesIndex() ? lps.getSecondarySpeciesIndex() : -1;
+					int secondarySpeciesIndex = lps.getSecondarySpeciesIndex().orElse(-1);
 
 					float movedSiteIndex = Float.NaN;
 					float usableSiteIndex = Float.NaN;
@@ -3346,7 +3344,7 @@ public class ForwardProcessingEngine {
 				// Move total age from non-primary to primary species. Try secondary first, then any species.
 				if (Float.isNaN(bank.ageTotals[pspIndex]) || bank.ageTotals[pspIndex] <= 0.0f) {
 
-					int secondarySpeciesIndex = lps.hasSecondarySpeciesIndex() ? lps.getSecondarySpeciesIndex() : -1;
+					int secondarySpeciesIndex = lps.getSecondarySpeciesIndex().orElse(-1);
 
 					if (secondarySpeciesIndex > 0 && bank.ageTotals[secondarySpeciesIndex] > 0.0f) {
 						bank.ageTotals[pspIndex] = bank.ageTotals[secondarySpeciesIndex];

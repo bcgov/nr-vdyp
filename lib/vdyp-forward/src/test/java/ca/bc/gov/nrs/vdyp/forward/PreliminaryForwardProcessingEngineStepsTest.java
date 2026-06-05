@@ -1,6 +1,9 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -77,7 +80,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 			fpe.determinePolygonRankings();
 
 			assertThat(lps.getPrimarySpeciesIndex(), is(3));
-			assertThat(lps.getSecondarySpeciesIndex(), is(4));
+			assertThat(lps.getSecondarySpeciesIndex(), present(is(4)));
 			assertThat(lps.getInventoryTypeGroup(), is(37));
 			assertThat(lps.getPrimarySpeciesGroupNumber(), is(1));
 			assertThat(lps.getPrimarySpeciesStratumNumber(), is(1));
@@ -113,9 +116,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.DETERMINE_POLYGON_RANKINGS);
 
 		assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesIndex(), is(1));
-		assertThrows(
-				IllegalStateException.class, () -> fpe.fps.getPrimaryLayerProcessingState().getSecondarySpeciesIndex()
-		);
+		assertThat(fpe.fps.getPrimaryLayerProcessingState(), hasProperty("secondarySpeciesIndex", is(notPresent())));
 		assertThat(fpe.fps.getPrimaryLayerProcessingState().getInventoryTypeGroup(), is(9));
 		assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesGroupNumber(), is(34));
 		assertThat(fpe.fps.getPrimaryLayerProcessingState().getPrimarySpeciesStratumNumber(), is(24));

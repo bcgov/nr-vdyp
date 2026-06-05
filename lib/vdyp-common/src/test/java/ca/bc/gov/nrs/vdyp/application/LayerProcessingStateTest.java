@@ -1,7 +1,11 @@
 package ca.bc.gov.nrs.vdyp.application;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -9,11 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -32,6 +38,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class LayerProcessingStateTest {
@@ -242,6 +249,116 @@ class LayerProcessingStateTest {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Matcher<LayerProcessingState<?>> testCV(String name, Object p1, Object p2, Matcher<Float> match) {
 			return (Matcher) compatibilityVariable(name, match, LayerProcessingState.class, p1, p2);
+		}
+
+	}
+
+	@Nested
+	class RankingDetails {
+		LayerProcessingState<?> unit;
+		IMocksControl em;
+
+		@BeforeEach
+		void setup() throws Exception {
+			em = EasyMock.createStrictControl();
+			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2024);
+				pb.biogeoclimaticZone(TestUtils.mockBec());
+				pb.forestInventoryZone("A");
+				pb.percentAvailable(90f);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("A", 1);
+					});
+				});
+			});
+
+			em.replay();
+
+			unit = new TestLayerProcessingState(parent, polygon, LayerType.PRIMARY);
+
+			assertThat(unit, hasProperty("NSpecies", is(1)));
+
+		}
+
+		@AfterEach
+		void verify() throws Exception {
+			em.verify();
+		}
+
+		@Test
+		void testUnset() {
+
+			assertThat(unit, hasProperty("areRankingDetailsSet", is(false)));
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getInventoryTypeGroup()),
+					hasProperty("message", containsString("inventoryTypeGroup"))
+			);
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesIndex()),
+					hasProperty("message", containsString("primarySpeciesIndex"))
+			);
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesAlias()),
+					hasProperty("message", containsString("primarySpeciesIndex"))
+			);
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getSecondarySpeciesIndex()),
+					hasProperty("message", containsString("secondarySpeciesIndex"))
+			);
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesGroupNumber()),
+					hasProperty("message", containsString("primarySpeciesGroupNumber"))
+			);
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesStratumNumber()),
+					hasProperty("message", containsString("primarySpeciesStratumNumber"))
+			);
+
+		}
+
+		@Test
+		void testSetNoSecondary() {
+			unit.setSpeciesRankingDetails(new SpeciesRankingDetails(1, Optional.empty(), 12, 13, 14));
+			assertThat(unit, hasProperty("areRankingDetailsSet", is(true)));
+			assertThat(unit, hasProperty("inventoryTypeGroup", is(12)));
+			assertThat(unit, hasProperty("primarySpeciesIndex", is(1)));
+			assertThat(unit, hasProperty("primarySpeciesAlias", is("A")));
+			assertThat(unit, hasProperty("secondarySpeciesIndex", notPresent()));
+			assertThat(unit, hasProperty("primarySpeciesGroupNumber", is(13)));
+			assertThat(unit, hasProperty("primarySpeciesStratumNumber", is(14)));
+
+		}
+
+		@Test
+		void testSetWithSecondary() {
+			unit.setSpeciesRankingDetails(new SpeciesRankingDetails(1, Optional.of(2), 12, 13, 14));
+			assertThat(unit, hasProperty("areRankingDetailsSet", is(true)));
+			assertThat(unit, hasProperty("inventoryTypeGroup", is(12)));
+			assertThat(unit, hasProperty("primarySpeciesIndex", is(1)));
+			assertThat(unit, hasProperty("primarySpeciesAlias", is("A")));
+			assertThat(unit, hasProperty("secondarySpeciesIndex", present(is(2))));
+			assertThat(unit, hasProperty("primarySpeciesGroupNumber", is(13)));
+			assertThat(unit, hasProperty("primarySpeciesStratumNumber", is(14)));
+
+		}
+
+		@Test
+		void testSetTwice() {
+			unit.setSpeciesRankingDetails(new SpeciesRankingDetails(1, Optional.empty(), 12, 13, 14));
+			assertThat(
+					assertThrows(
+							IllegalStateException.class,
+							() -> unit.setSpeciesRankingDetails(
+									new SpeciesRankingDetails(1, Optional.empty(), 12, 13, 14)
+							)
+					),
+					hasProperty("message", equalTo(LayerProcessingState.SPECIES_RANKING_DETAILS_CAN_BE_SET_ONCE_ONLY))
+			);
 		}
 
 	}

@@ -265,18 +265,30 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 	}
 
 	public boolean hasSecondarySpeciesIndex() {
+		if (!areRankingDetailsSet) {
+			throw new IllegalStateException("unset secondarySpeciesIndex");
+		}
 		return secondarySpeciesIndex.isPresent();
 	}
 
-	public int getSecondarySpeciesIndex() {
-		return secondarySpeciesIndex.orElseThrow(() -> new IllegalStateException("unset secondarySpeciesIndex"));
+	public Optional<Integer> getSecondarySpeciesIndex() {
+		if (!areRankingDetailsSet) {
+			throw new IllegalStateException("unset secondarySpeciesIndex");
+		}
+		return secondarySpeciesIndex;
 	}
 
 	public int getPrimarySpeciesGroupNumber() {
+		if (!areRankingDetailsSet) {
+			throw new IllegalStateException("unset primarySpeciesGroupNumber");
+		}
 		return primarySpeciesGroupNumber;
 	}
 
 	public int getPrimarySpeciesStratumNumber() {
+		if (!areRankingDetailsSet) {
+			throw new IllegalStateException("unset primarySpeciesStratumNumber");
+		}
 		return primarySpeciesStratumNumber;
 	}
 
