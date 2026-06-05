@@ -38,6 +38,7 @@
               <v-col class="stand-field-col">
                 <AppSpinField
                   label="Percent Stockable Area (Required)"
+                  :showPercentSign="true"
                   :model-value="percentStockableArea"
                   :max="CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX"
                   :min="CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN"
@@ -61,6 +62,7 @@
               <v-col class="stand-field-col">
                 <AppSpinField
                   label="Crown Closure Percent"
+                  :showPercentSign="true"
                   :model-value="crownClosure"
                   :max="CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX"
                   :min="CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MIN"

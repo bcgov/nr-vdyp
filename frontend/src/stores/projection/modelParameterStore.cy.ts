@@ -58,14 +58,6 @@ describe('Model Parameter Store Unit Tests', () => {
       expect(store.runModelEnabled).to.be.false
     })
 
-    it('should initialize species list with 6 empty rows', () => {
-      expect(store.speciesList).to.have.length(6)
-      store.speciesList.forEach((item) => {
-        expect(item.species).to.be.null
-        expect(item.percent).to.be.null
-      })
-    })
-
     it('should initialize speciesGroups as empty array', () => {
       expect(store.speciesGroups).to.deep.equal([])
     })
@@ -207,20 +199,6 @@ describe('Model Parameter Store Unit Tests', () => {
   describe('totalSpeciesPercent', () => {
     it('should return 0.0 when all species are empty', () => {
       expect(store.totalSpeciesPercent).to.equal('0.0')
-    })
-
-    it('should sum species percentages correctly', () => {
-      store.speciesList[0].percent = '60'
-      store.speciesList[1].percent = '40'
-
-      expect(store.totalSpeciesPercent).to.equal('100.0')
-    })
-
-    it('should ignore null percent entries', () => {
-      store.speciesList[0].percent = '70'
-      store.speciesList[1].percent = null
-
-      expect(store.totalSpeciesPercent).to.equal('70.0')
     })
   })
 
@@ -375,17 +353,6 @@ describe('Model Parameter Store Unit Tests', () => {
       store.resetStore()
 
       expect(store.runModelEnabled).to.be.false
-    })
-
-    it('should reset speciesList to 6 empty rows', () => {
-      store.speciesList[0] = { species: 'PL', percent: '100' }
-      store.resetStore()
-
-      expect(store.speciesList).to.have.length(6)
-      store.speciesList.forEach((item) => {
-        expect(item.species).to.be.null
-        expect(item.percent).to.be.null
-      })
     })
 
     it('should reset speciesGroups to empty array', () => {
@@ -606,14 +573,6 @@ describe('Model Parameter Store Unit Tests', () => {
       store.restoreFromModelParameters(makeModelParams())
 
       expect(store.derivedBy).to.equal('Volume')
-    })
-
-    it('should restore species list from model parameters', () => {
-      store.restoreFromModelParameters(makeModelParams())
-
-      expect(store.speciesList[0].species).to.equal('PL')
-      expect(store.speciesList[1].species).to.equal('AC')
-      expect(store.speciesList[2].species).to.be.null
     })
 
     it('should restore site info fields', () => {

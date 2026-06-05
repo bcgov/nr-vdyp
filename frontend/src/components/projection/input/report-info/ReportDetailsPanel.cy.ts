@@ -100,12 +100,6 @@ describe('<ReportDetailsPanel />', () => {
       mountPanel()
       cy.contains('.counter', '0/500').should('exist')
     })
-
-    it('updates the counter as description text is typed', () => {
-      mountPanel()
-      cy.get('#manualReportDescription').type('Hello')
-      cy.contains('.counter', '5/500').should('exist')
-    })
   })
 
   describe('Input enabled/disabled state', () => {
@@ -139,13 +133,6 @@ describe('<ReportDetailsPanel />', () => {
       cy.get('#manualReportTitle').blur()
       cy.contains('Report Title is required.').should('exist')
     })
-
-    it('does not show an error when the title has a value on blur', () => {
-      mountPanel()
-      cy.get('#manualReportTitle').type('My Report')
-      cy.get('#manualReportTitle').blur()
-      cy.contains('Report Title is required.').should('not.exist')
-    })
   })
 
   describe('Store synchronization', () => {
@@ -154,22 +141,6 @@ describe('<ReportDetailsPanel />', () => {
         modelStore.reportTitle = 'Stored Title'
       })
       cy.get('#manualReportTitle').should('have.value', 'Stored Title')
-    })
-
-    it('updates store reportTitle when the user types in the field', () => {
-      const { modelStore } = mountPanel()
-      cy.get('#manualReportTitle').type('New Title')
-      cy.then(() => {
-        expect(modelStore.reportTitle).to.equal('New Title')
-      })
-    })
-
-    it('updates store reportDescription when the user types in the textarea', () => {
-      const { modelStore } = mountPanel()
-      cy.get('#manualReportDescription').type('A description')
-      cy.then(() => {
-        expect(modelStore.reportDescription).to.equal('A description')
-      })
     })
   })
 

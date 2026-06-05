@@ -8,26 +8,6 @@ const meta: Meta<typeof AttachmentsPanel> = {
   title: 'components/projection/input/AttachmentsPanel',
   component: AttachmentsPanel,
   tags: ['autodocs'],
-  parameters: {
-    docs: {
-      description: {
-        component: `
-Panel component for uploading Polygon and Layer CSV files.
-
-**Features:**
-- Separate upload slots for Polygon and Layer files
-- Files are uploaded to the server immediately upon selection
-- Uploaded files can be deleted (with a confirmation dialog)
-- Supports Edit and Read-only (View) modes
-- Validates file headers and checks for duplicate columns
-
-**State management:**
-- File info and panel open state are managed via \`fileUploadStore\`
-- Read-only mode is determined by \`appStore.isReadOnly\`
-        `,
-      },
-    },
-  },
 }
 
 export default meta
@@ -49,13 +29,6 @@ export const Default: Story = {
     },
     template: '<AttachmentsPanel />',
   }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Edit mode - panel open with no files uploaded yet.',
-      },
-    },
-  },
 }
 
 export const WithFilesUploaded: Story = {
@@ -82,13 +55,6 @@ export const WithFilesUploaded: Story = {
     },
     template: '<AttachmentsPanel />',
   }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Edit mode - both Polygon and Layer files uploaded. Delete buttons are shown for each file.',
-      },
-    },
-  },
 }
 
 export const PolygonFileOnly: Story = {
@@ -111,13 +77,6 @@ export const PolygonFileOnly: Story = {
     },
     template: '<AttachmentsPanel />',
   }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Edit mode - only the Polygon file has been uploaded; Layer file is still pending.',
-      },
-    },
-  },
 }
 
 export const ReadOnlyWithFiles: Story = {
@@ -142,13 +101,6 @@ export const ReadOnlyWithFiles: Story = {
     },
     template: '<AttachmentsPanel />',
   }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Read-only (View) mode - both files uploaded. File names are displayed instead of the upload UI.',
-      },
-    },
-  },
 }
 
 export const PanelCollapsed: Story = {
@@ -165,11 +117,4 @@ export const PanelCollapsed: Story = {
     },
     template: '<AttachmentsPanel />',
   }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Panel in collapsed state. Only the header is visible; the file upload content is hidden.',
-      },
-    },
-  },
 }

@@ -1,14 +1,10 @@
 <template>
   <v-card class="elevation-0">
-    <AppMessageDialog
-      :dialog="messageDialog.dialog"
-      :title="messageDialog.title"
-      :message="messageDialog.message"
-      :dialogWidth="messageDialog.dialogWidth"
-      :btnLabel="messageDialog.btnLabel"
-      :variant="messageDialog.variant"
-      @update:dialog="(value) => (messageDialog.dialog = value)"
-      @close="handleDialogClose"
+    <SpeciesSelectionModal
+      v-model="modalOpen"
+      :existingSpecies="existingSpeciesCodes"
+      :maxSpecies="MAX_SPECIES"
+      @confirm="handleModalConfirm"
     />
     <v-expansion-panels v-model="panelOpenStates.speciesInfo">
       <v-expansion-panel hide-actions>
@@ -46,72 +42,74 @@
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
           <v-form ref="form">
-            <div class="mt-n1">
-              <v-row style="display: inline-flex; align-items: center">
-                <v-col cols="auto" class="species-percent-derived-by-container">
-                  <div>
-                    <label class="bcds-radio-label" for="derivedBy">Species % derived by:</label>
-                    <v-radio-group
-                      id="derivedBy"
-                      v-model="derivedBy"
-                      inline
-                      :disabled="isInputDisabled"
-                    >
-                      <v-radio
-                        v-for="option in OPTIONS.derivedByOptions"
-                        :key="option.value"
-                        :label="option.label"
-                        :value="option.value"
-                      ></v-radio>
-                    </v-radio-group>
-                  </div>
-                </v-col>
-              </v-row>
+            <!-- Derived By row + Add Species button -->
+            <div class="top-controls mt-n1">
+              <div class="derived-by-wrapper">
+                <label class="bcds-radio-label mr-2" for="derivedBy">Species % Derived By:</label>
+                <v-radio-group
+                  id="derivedBy"
+                  v-model="derivedBy"
+                  inline
+                  hide-details
+                  :disabled="isInputDisabled"
+                  class="mt-0 pt-0"
+                >
+                  <v-radio
+                    v-for="option in OPTIONS.derivedByOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                  ></v-radio>
+                </v-radio-group>
+              </div>
+              <div v-if="!isReadOnly" class="add-species-btn-col">
+                <AppButton
+                  label="Add Species"
+                  variant="primary"
+                  mdi-name="mdi-plus"
+                  :isDisabled="isInputDisabled || isAtSpeciesLimit"
+                  @click="openModal"
+                />
+              </div>
             </div>
-            <div class="mt-n3">
+
+            <hr v-if="!hasSpecies" class="section-divider" />
+
+            <!-- Cards + Summary row -->
+            <div :class="hasSpecies ? 'mt-5' : 'mt-3'">
               <v-row>
-                <v-col cols="5">
+                <v-col cols="12" :lg="hasSpecies ? 8 : 12" class="pt-0">
                   <SpeciesListInput
                     :speciesList="speciesList"
-                    :computedSpeciesOptions="computedSpeciesOptions"
                     :isConfirmEnabled="!isInputDisabled"
-                    :max="CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX"
-                    :min="CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN"
-                    :step="CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_STEP"
-                    @update:speciesList="
-                      (updatedList: SpeciesList[]) =>
-                        handleSpeciesListUpdate(updatedList)
-                    "
+                    @update:speciesList="handleSpeciesListUpdate"
+                    @request-add="openModal"
                   />
                 </v-col>
-                <v-col class="vertical-line pb-0" />
-                <SpeciesGroupsDisplay :speciesGroups="speciesGroups" />
+                <SpeciesGroupsDisplay v-if="hasSpecies" :speciesGroups="speciesGroups" />
               </v-row>
             </div>
-            <div>
-              <v-row>
-                <v-col cols="5" class="total-species-percent-container">
-                  <div>
-                    <v-row>
-                      <v-col cols="6"></v-col>
-                      <v-col cols="6">
-                        <label class="bcds-text-field-label" for="totalSpeciesPercent">Total Species Percent</label>
-                        <v-text-field
-                          id="totalSpeciesPercent"
-                          label="Total Species Percent"
-                          :model-value="totalSpeciesPercent"
-                          variant="underlined"
-                          disabled
-                          data-testid="total-species-percent"
-                        ></v-text-field>
-                      </v-col>
-                    </v-row>
+
+            <!-- Total species percent + validation -->
+            <v-row v-if="hasSpecies" class="mt-n1">
+              <v-col cols="12" lg="8" class="pb-0">
+                <div class="total-percent-row text-right">
+                  <span class="text-body-2 font-weight-medium">
+                    Total Species Percentage: {{ totalSpeciesPercent }}%
+                  </span>
+                  <div v-if="showPercentageError" class="percent-error-text mt-1">
+                    Percentages must add up to 100%
                   </div>
-                </v-col>
-                <v-col class="vertical-line" />
-                <v-col cols="6" />
-              </v-row>
-            </div>
+                  <div v-if="duplicateErrorMessage" class="percent-error-text mt-1">
+                    {{ duplicateErrorMessage }}
+                  </div>
+                  <div v-if="requiredErrorMessage" class="percent-error-text mt-1">
+                    {{ requiredErrorMessage }}
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
+
             <ActionPanel
               v-if="!isReadOnly"
               class="action-panel"
@@ -135,28 +133,23 @@ import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
-import {
-  AppMessageDialog,
-  AppButton,
-} from '@/components'
-import {
-  ActionPanel,
-  SpeciesListInput,
-  SpeciesGroupsDisplay,
-} from '@/components/projection'
-import {
-  BIZCONSTANTS,
-  CONSTANTS,
-  MESSAGE,
-  OPTIONS,
-} from '@/constants'
+import { AppButton } from '@/components'
+import { ActionPanel, SpeciesListInput, SpeciesGroupsDisplay } from '@/components/projection'
+import { BIZCONSTANTS, CONSTANTS, MESSAGE, OPTIONS } from '@/constants'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
-import type { SpeciesList, MessageDialog } from '@/interfaces/interfaces'
+import type { SpeciesList } from '@/interfaces/interfaces'
 import { speciesInfoValidation } from '@/validation'
 import { cloneDeep } from 'lodash'
-import { saveProjectionOnPanelConfirm, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
+import {
+  saveProjectionOnPanelConfirm,
+  revertPanelToSaved,
+  hasPanelUnsavedChanges,
+} from '@/services/projection/modelParameterService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import type { PanelName } from '@/types/types'
+import SpeciesSelectionModal from './SpeciesSelectionModal.vue'
+
+const MAX_SPECIES = 6
 
 const form = ref<HTMLFormElement>()
 
@@ -165,14 +158,8 @@ const appStore = useAppStore()
 const alertDialogStore = useAlertDialogStore()
 const notificationStore = useNotificationStore()
 
-// Check if we're in read-only (view) mode
 const isReadOnly = computed(() => appStore.isReadOnly)
 
-const messageDialog = ref<MessageDialog>({
-  dialog: false,
-  title: '',
-  message: '',
-})
 
 const {
   panelOpenStates,
@@ -187,82 +174,88 @@ const panelName = CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO
 const isConfirmEnabled = computed(
   () => !isReadOnly.value && modelParameterStore.panelState[panelName].editable,
 )
-const isConfirmed = computed(
-  () => modelParameterStore.panelState[panelName].confirmed,
-)
+const isConfirmed = computed(() => modelParameterStore.panelState[panelName].confirmed)
 
-// Determine if inputs should be disabled (read-only mode or not editable)
 const isInputDisabled = computed(
   () => isReadOnly.value || !modelParameterStore.panelState[panelName].editable,
 )
 
-const computedSpeciesOptions = computed(() =>
-  (
-    Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<
-      keyof typeof BIZCONSTANTS.SPECIES_MAP
-    >
-  ).map((code) => ({
-    label: `${code} - ${BIZCONSTANTS.SPECIES_MAP[code]}`,
-    value: code,
-  })),
+const hasSpecies = computed(() => speciesList.value.length > 0)
+
+const isAtSpeciesLimit = computed(() => speciesList.value.length >= MAX_SPECIES)
+
+const existingSpeciesCodes = computed(() =>
+  speciesList.value.map((s) => s.species).filter(Boolean) as string[],
+)
+
+const duplicateErrorMessage = ref<string | null>(null)
+const requiredErrorMessage = ref<string | null>(null)
+
+const showPercentageError = computed(
+  () =>
+    hasSpecies.value &&
+    !speciesInfoValidation.validateTotalSpeciesPercent(
+      totalSpeciesPercent.value,
+      totalSpeciesGroupPercent.value,
+    ).isValid,
 )
 
 const updateSpeciesGroup = modelParameterStore.updateSpeciesGroup
 
-watch(
-  speciesList,
-  () => {
-    updateSpeciesGroup()
-  },
-  { deep: true },
-)
+watch(speciesList, () => updateSpeciesGroup(), { deep: true })
 
+// --- Modal ---
+const modalOpen = ref(false)
+
+const openModal = () => {
+  if (!isInputDisabled.value && !isAtSpeciesLimit.value) {
+    modalOpen.value = true
+  }
+}
+
+const handleModalConfirm = (selectedCodes: string[]) => {
+  const existing = new Map(speciesList.value.map((s) => [s.species, s.percent]))
+  const newList: SpeciesList[] = selectedCodes.map((code) => ({
+    species: code,
+    percent: existing.get(code) ?? '0.0',
+  }))
+  // Sort by percent descending
+  newList.sort(
+    (a, b) => Number.parseFloat(b.percent || '0') - Number.parseFloat(a.percent || '0'),
+  )
+  speciesList.value = newList
+}
+
+// --- Species list updates from cards ---
 const handleSpeciesListUpdate = (updatedList: SpeciesList[]) => {
-  const isDifferent = updatedList.some((item, index) => {
-    return (
-      item.species !== speciesList.value[index]?.species ||
-      item.percent !== speciesList.value[index]?.percent
+  const isDifferent =
+    updatedList.length !== speciesList.value.length ||
+    updatedList.some(
+      (item, index) =>
+        item.species !== speciesList.value[index]?.species ||
+        item.percent !== speciesList.value[index]?.percent,
     )
-  })
-
-  // Update speciesList only if there are differences
   if (isDifferent) {
     speciesList.value = cloneDeep(updatedList)
   }
 }
 
 const onConfirm = async () => {
-  // validation - duplicate
-  const duplicateSpeciesResult = speciesInfoValidation.validateDuplicateSpecies(
-    speciesList.value,
-  )
-  if (!duplicateSpeciesResult.isValid) {
-    const duplicateSpecies =
-      duplicateSpeciesResult.duplicateSpecies as keyof typeof BIZCONSTANTS.SPECIES_MAP
+  // validation - duplicate species (safety net)
+  const duplicateResult = speciesInfoValidation.validateDuplicateSpecies(speciesList.value)
+  if (!duplicateResult.isValid) {
+    const dupCode = duplicateResult.duplicateSpecies as keyof typeof BIZCONSTANTS.SPECIES_MAP
     const speciesLabel = (
-      Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<
-        keyof typeof BIZCONSTANTS.SPECIES_MAP
-      >
-    ).includes(duplicateSpeciesResult.duplicateSpecies as keyof typeof BIZCONSTANTS.SPECIES_MAP)
-      ? BIZCONSTANTS.SPECIES_MAP[duplicateSpecies]
+      Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<keyof typeof BIZCONSTANTS.SPECIES_MAP>
+    ).includes(dupCode)
+      ? BIZCONSTANTS.SPECIES_MAP[dupCode]
       : ''
-
-    const message = speciesLabel
-      ? MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_W_LABEL(
-          duplicateSpecies,
-          speciesLabel,
-        )
-      : MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_WO_LABEL(duplicateSpecies)
-
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.DATA_DUPLICATED,
-      message: message,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      variant: 'error',
-    }
+    duplicateErrorMessage.value = speciesLabel
+      ? MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_W_LABEL(dupCode, speciesLabel)
+      : MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_WO_LABEL(dupCode)
     return
   }
+  duplicateErrorMessage.value = null
 
   // validation - total percent
   const totalPercentResult = speciesInfoValidation.validateTotalSpeciesPercent(
@@ -270,28 +263,16 @@ const onConfirm = async () => {
     totalSpeciesGroupPercent.value,
   )
   if (!totalPercentResult.isValid) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.DATA_INCOMPLETE,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_TOTAL_PCT,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      variant: 'error',
-    }
     return
   }
 
   // validation - required fields
   const requiredResult = speciesInfoValidation.validateRequired(derivedBy.value)
   if (!requiredResult.isValid) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      variant: 'error',
-    }
+    requiredErrorMessage.value = MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY
     return
   }
+  requiredErrorMessage.value = null
 
   if (form.value) {
     form.value.validate()
@@ -299,7 +280,6 @@ const onConfirm = async () => {
     console.warn(VALIDATION_WARN.FORM_REF_NULL)
   }
 
-  // Save projection (create or update) before confirming the panel
   appStore.isSavingProjection = true
   try {
     await saveProjectionOnPanelConfirm(modelParameterStore, panelName)
@@ -311,7 +291,6 @@ const onConfirm = async () => {
     appStore.isSavingProjection = false
   }
 
-  // this panel is not in a confirmed state
   if (!isConfirmed.value) {
     modelParameterStore.confirmPanel(panelName)
   }
@@ -319,13 +298,20 @@ const onConfirm = async () => {
 
 const isHeaderEditActive = computed(() => {
   const status = appStore.currentProjectionStatus
-  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) return false
+  if (
+    status === CONSTANTS.PROJECTION_STATUS.RUNNING ||
+    status === CONSTANTS.PROJECTION_STATUS.READY
+  )
+    return false
   return isConfirmed.value && !modelParameterStore.panelState[panelName].editable
 })
 
 const editTooltipText = computed(() => {
   const status = appStore.currentProjectionStatus
-  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
+  if (
+    status === CONSTANTS.PROJECTION_STATUS.RUNNING ||
+    status === CONSTANTS.PROJECTION_STATUS.READY
+  ) {
     return MESSAGE.EDIT_SECTION_TOOLTIP.RESTRICTED_BY_STATUS(status)
   }
   if (isConfirmed.value && !modelParameterStore.panelState[panelName].editable) {
@@ -361,7 +347,10 @@ const onHeaderEdit = async () => {
           await revertPanelToSaved(editablePanel as PanelName)
         } catch (error) {
           console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
-          notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+          notificationStore.showErrorMessage(
+            PROJECTION_ERR.LOAD_FAILED,
+            PROJECTION_ERR.LOAD_FAILED_TITLE,
+          )
           return
         } finally {
           appStore.isSavingProjection = false
@@ -384,7 +373,6 @@ const onCancel = async () => {
   }
 }
 
-const handleDialogClose = () => {}
 </script>
 
 <style scoped>
@@ -392,26 +380,58 @@ const handleDialogClose = () => {}
   margin-top: 16px;
 }
 
-.vertical-line {
+
+.top-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
-  max-width: 1px;
 }
 
-.vertical-line::before {
-  content: '';
-  display: block;
-  border-left: 1px dashed rgba(0, 0, 0, 0.12);
-  height: 100%;
+.derived-by-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
-.total-species-percent-container {
-  padding-top: 6px;
+.derived-by-wrapper :deep(.bcds-radio-label) {
+  white-space: nowrap;
 }
 
-.species-percent-derived-by-container {
-  padding-bottom: 0px;
+.derived-by-wrapper :deep(.v-selection-control-group) {
+  flex-wrap: nowrap !important;
+  gap: 0;
+}
+
+.derived-by-wrapper :deep(.v-selection-control) {
+  white-space: nowrap;
+  min-width: unset;
+  padding-inline-end: 0;
+  margin-inline-end: -8px;
+}
+
+.add-species-btn-col {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+@media (max-width: 599px) {
+  .top-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .add-species-btn-col {
+    margin-left: 0;
+    margin-top: 8px;
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 360px) {
+  .derived-by-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .edit-button-col {
@@ -430,5 +450,20 @@ const handleDialogClose = () => {}
 
 .edit-button-col :deep(.bcds-button.icon-top .button-label) {
   font-size: 11px;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #d8d8d8;
+  margin: 6px 0 0 0;
+}
+
+.total-percent-row {
+  padding: 4px 0 0 0;
+}
+
+.percent-error-text {
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-danger);
 }
 </style>

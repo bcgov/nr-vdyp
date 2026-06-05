@@ -118,14 +118,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   // species info
   const derivedBy = ref<string | null>(null)
 
-  const speciesList = ref<SpeciesList[]>([
-    { species: null, percent: null },
-    { species: null, percent: null },
-    { species: null, percent: null },
-    { species: null, percent: null },
-    { species: null, percent: null },
-    { species: null, percent: null },
-  ])
+  const speciesList = ref<SpeciesList[]>([])
 
   const speciesGroups = ref<SpeciesGroup[]>([])
 
@@ -392,14 +385,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Reset species info
     derivedBy.value = null
-    speciesList.value = [
-      { species: null, percent: null },
-      { species: null, percent: null },
-      { species: null, percent: null },
-      { species: null, percent: null },
-      { species: null, percent: null },
-      { species: null, percent: null },
-    ]
+    speciesList.value = []
     speciesGroups.value = []
     highestPercentSpecies.value = null
     selectedSiteSpecies.value = null
@@ -591,14 +577,14 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
    */
   const restoreSpeciesListFromParams = (species: ModelParameters['species']) => {
     speciesList.value = []
-    for (let i = 0; i < 6; i++) {
-      if (species && i < species.length) {
-        speciesList.value.push({
-          species: species[i].code,
-          percent: formatPercentValue(species[i].percent),
-        })
-      } else {
-        speciesList.value.push({ species: null, percent: null })
+    if (species) {
+      for (const s of species) {
+        if (s.code) {
+          speciesList.value.push({
+            species: s.code,
+            percent: formatPercentValue(s.percent),
+          })
+        }
       }
     }
     updateSpeciesGroup()
