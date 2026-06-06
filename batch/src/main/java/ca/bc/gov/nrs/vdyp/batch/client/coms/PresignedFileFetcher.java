@@ -18,11 +18,12 @@ import org.springframework.web.client.RestClientException;
 public class PresignedFileFetcher {
 	private final RestClient restClient;
 
+	@Autowired
 	public PresignedFileFetcher() {
 		this(RestClient.create());
 	}
 
-	@Autowired
+
 	PresignedFileFetcher(RestClient restClient) {
 		this.restClient = Objects.requireNonNull(restClient, "restClient");
 	}
