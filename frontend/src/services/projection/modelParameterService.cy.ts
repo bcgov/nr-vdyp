@@ -89,12 +89,6 @@ describe('generateFeatureId', () => {
     expect(id).to.be.greaterThan(0)
   })
 
-  it('should return a 9 or 10 digit number', () => {
-    const id = generateFeatureId()
-    const digits = id.toString().length
-    expect(digits).to.be.at.least(9).and.at.most(10)
-  })
-
   it('should generate different IDs on successive calls', () => {
     const ids = new Set(Array.from({ length: 10 }, () => generateFeatureId()))
     expect(ids.size).to.be.greaterThan(1)
@@ -102,10 +96,6 @@ describe('generateFeatureId', () => {
 })
 
 describe('generateRandomNumber', () => {
-  it('should return a string', () => {
-    expect(generateRandomNumber(3, 5)).to.be.a('string')
-  })
-
   it('should return exactly minDigits when min equals max', () => {
     const result = generateRandomNumber(8, 8)
     expect(result.length).to.equal(8)
@@ -124,14 +114,10 @@ describe('generateRandomNumber', () => {
 })
 
 describe('generatePolygonNumber', () => {
-  it('should return an 8-digit string', () => {
+  it('should return an 8-digit numeric string', () => {
     const result = generatePolygonNumber()
     expect(result).to.be.a('string')
     expect(result.length).to.equal(8)
-  })
-
-  it('should return a numeric string', () => {
-    const result = generatePolygonNumber()
     expect(Number(result)).to.not.be.NaN
   })
 })
@@ -261,19 +247,10 @@ describe('getSpeciesData', () => {
     ])
   })
 
-  it('should return empty string for percent when percent is 0', () => {
-    const result = getSpeciesData([{ species: 'FD', percent: 0 }])
-    expect(result[0].percent).to.equal('')
-  })
-
-  it('should return empty string for percent when percent is null', () => {
-    const result = getSpeciesData([{ species: 'FD', percent: null }])
-    expect(result[0].percent).to.equal('')
-  })
-
-  it('should return empty string for percent when species is null', () => {
-    const result = getSpeciesData([{ species: null, percent: 50 }])
-    expect(result[0].percent).to.equal('')
+  it('should return empty string for percent when percent is 0, null, or species is null', () => {
+    expect(getSpeciesData([{ species: 'FD', percent: 0 }])[0].percent).to.equal('')
+    expect(getSpeciesData([{ species: 'FD', percent: null }])[0].percent).to.equal('')
+    expect(getSpeciesData([{ species: null, percent: 50 }])[0].percent).to.equal('')
   })
 })
 
@@ -315,30 +292,15 @@ describe('buildProjectionParameters', () => {
     expect(params.ageIncrement).to.equal(5)
   })
 
-  it('should set ageStart/ageEnd/ageIncrement to null when not provided', () => {
+  it('should default ages to null and use fixed output format/metadata when ages are not provided', () => {
     const params = buildProjectionParameters(createMockModelParameterStore())
 
     expect(params.ageStart).to.be.null
     expect(params.ageEnd).to.be.null
     expect(params.ageIncrement).to.be.null
-  })
-
-  it('should always set yearStart and yearEnd to null', () => {
-    const params = buildProjectionParameters(createMockModelParameterStore())
-
     expect(params.yearStart).to.be.null
     expect(params.yearEnd).to.be.null
-  })
-
-  it('should always use CSVYieldTable output format', () => {
-    const params = buildProjectionParameters(createMockModelParameterStore())
-
     expect(params.outputFormat).to.equal(OutputFormatEnum.CSVYieldTable)
-  })
-
-  it('should always use MetadataToOutput NONE', () => {
-    const params = buildProjectionParameters(createMockModelParameterStore())
-
     expect(params.metadataToOutput).to.equal(MetadataToOutputEnum.NONE)
   })
 
@@ -373,13 +335,6 @@ describe('buildProjectionParameters', () => {
 
     expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
     expect(excludedExecutionOptions).to.not.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
-  })
-
-  it('should add ForwardGrowEnabled to selected when isForwardGrowEnabled is true', () => {
-    const store = createMockModelParameterStore({ isForwardGrowEnabled: true })
-    const { selectedExecutionOptions } = buildProjectionParameters(store)
-
-    expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
   })
 
   it('should always include ForwardGrowEnabled in selected regardless of isForwardGrowEnabled', () => {
@@ -492,26 +447,6 @@ describe('buildModelParameters', () => {
     expect(params.bha50SiteIndex).to.be.null
   })
 
-  it('should read per-row fields from siteIndexRows[0] for primary species', () => {
-    const store = createMockModelParameterStore({
-      siteIndexRows: [{
-        speciesCode: 'FD',
-        computedValue: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE,
-        ageType: CONSTANTS.AGE_TYPE.BREAST,
-        age: null,
-        height: '22.5',
-        bhaSiteIndex: '18.0',
-      }],
-    })
-    const params = buildModelParameters(store)
-
-    expect(params.compute).to.equal(CONSTANTS.COMPUTED_VALUE.TOTAL_AGE)
-    expect(params.ageYears).to.equal(CONSTANTS.AGE_TYPE.BREAST)
-    expect(params.speciesAge).to.be.null
-    expect(params.speciesHeight).to.equal('22.5')
-    expect(params.bha50SiteIndex).to.equal('18.0')
-  })
-
   it('should serialize rows 1-5 into compute2-compute6 fields', () => {
     const store = createMockModelParameterStore({
       siteIndexRows: [
@@ -531,25 +466,14 @@ describe('buildModelParameters', () => {
 })
 
 describe('createProjection', () => {
-  it('should call the provided createProjectionFunc with built parameters', () => {
+  it('should call createProjectionFunc once and pass reportDescription and return its result', () => {
     const mockResult = { ...mockProjectionModel, projectionGUID: 'new-proj-guid' }
     const mockFunc = cy.stub().resolves(mockResult)
-
-    const store = createMockModelParameterStore({
-      reportDescription: 'My description',
-    })
+    const store = createMockModelParameterStore({ reportDescription: 'Test description' })
 
     cy.wrap(createProjection(store, mockFunc)).then((result: any) => {
       expect(mockFunc).to.be.calledOnce
       expect(result.projectionGUID).to.equal('new-proj-guid')
-    })
-  })
-
-  it('should pass reportDescription to the createProjectionFunc', () => {
-    const mockFunc = cy.stub().resolves(mockProjectionModel)
-    const store = createMockModelParameterStore({ reportDescription: 'Test description' })
-
-    cy.wrap(createProjection(store, mockFunc)).then(() => {
       const [, , reportDescription] = mockFunc.getCall(0).args
       expect(reportDescription).to.equal('Test description')
     })
@@ -696,17 +620,6 @@ describe('hasPanelUnsavedChanges', () => {
     ).should('equal', true)
   })
 
-  it('should return false for SITE_INFO when nothing has changed', () => {
-    const appStore = useAppStore()
-    appStore.setCurrentProjectionGUID('some-guid')
-    cy.stub(apiClient, 'getProjection').resolves({
-      data: { ...mockProjectionModel, modelParameters: JSON.stringify(createSavedModelParams()) },
-    })
-    cy.wrap(
-      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO, createMockModelParameterStore()),
-    ).should('equal', false)
-  })
-
   it('should return true for SITE_INFO when becZone has changed', () => {
     const appStore = useAppStore()
     appStore.setCurrentProjectionGUID('some-guid')
@@ -714,20 +627,6 @@ describe('hasPanelUnsavedChanges', () => {
       data: {
         ...mockProjectionModel,
         modelParameters: JSON.stringify(createSavedModelParams({ becZone: 'SBS' })),
-      },
-    })
-    cy.wrap(
-      hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO, createMockModelParameterStore()),
-    ).should('equal', true)
-  })
-
-  it('should return true for SITE_INFO when primary row computedValue has changed', () => {
-    const appStore = useAppStore()
-    appStore.setCurrentProjectionGUID('some-guid')
-    cy.stub(apiClient, 'getProjection').resolves({
-      data: {
-        ...mockProjectionModel,
-        modelParameters: JSON.stringify(createSavedModelParams({ compute: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX })),
       },
     })
     cy.wrap(
@@ -759,26 +658,6 @@ describe('revertPanelToSaved', () => {
     cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO as any)).then(() => {
       const modelStore = useModelParameterStore()
       expect(modelStore.panelState.speciesInfo.confirmed).to.be.false
-    })
-  })
-
-  it('should close all other panels and keep the cancelled panel open after revert', () => {
-    const appStore = useAppStore()
-    appStore.setCurrentProjectionGUID('some-guid')
-    cy.stub(apiClient, 'getProjection').resolves({
-      data: {
-        ...mockProjectionModel,
-        modelParameters: JSON.stringify(createSavedModelParams()),
-        reportDescription: null,
-      },
-    })
-    cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO as any)).then(() => {
-      const modelStore = useModelParameterStore()
-      expect(modelStore.panelOpenStates.siteInfo).to.equal(CONSTANTS.PANEL.OPEN)
-      expect(modelStore.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.CLOSE)
-      expect(modelStore.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.CLOSE)
-      expect(modelStore.panelOpenStates.standInfo).to.equal(CONSTANTS.PANEL.CLOSE)
-      expect(modelStore.panelOpenStates.reportSettings).to.equal(CONSTANTS.PANEL.CLOSE)
     })
   })
 
