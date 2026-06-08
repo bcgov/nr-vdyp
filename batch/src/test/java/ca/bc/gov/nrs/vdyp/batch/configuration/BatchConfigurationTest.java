@@ -105,6 +105,8 @@ class BatchConfigurationTest {
 	@TempDir
 	Path tempDir;
 
+	LocalDateTime testStartTime = LocalDateTime.of(2000, 1, 1, 0, 0);
+
 	private BatchConfiguration configuration;
 
 	@BeforeEach
@@ -205,7 +207,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+		when(jobExecution.getStartTime()).thenReturn(testStartTime);
 
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
@@ -253,7 +255,7 @@ class BatchConfigurationTest {
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+		when(jobExecution.getStartTime()).thenReturn(testStartTime);
 
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
@@ -307,7 +309,7 @@ class BatchConfigurationTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+		when(jobExecution.getStartTime()).thenReturn(testStartTime);
 
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
@@ -346,7 +348,7 @@ class BatchConfigurationTest {
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+		when(jobExecution.getStartTime()).thenReturn(testStartTime);
 
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
@@ -393,7 +395,7 @@ class BatchConfigurationTest {
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+		when(jobExecution.getStartTime()).thenReturn(testStartTime);
 
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
@@ -436,7 +438,7 @@ class BatchConfigurationTest {
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+		when(jobExecution.getStartTime()).thenReturn(testStartTime);
 
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
@@ -485,7 +487,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+		when(jobExecution.getStartTime()).thenReturn(testStartTime);
 
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
@@ -526,7 +528,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+		when(jobExecution.getStartTime()).thenReturn(testStartTime);
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
