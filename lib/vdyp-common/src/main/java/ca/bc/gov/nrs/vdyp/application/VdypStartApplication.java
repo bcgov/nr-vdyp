@@ -1031,7 +1031,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			float quadMeanDiameterSpec = spec.getQuadraticMeanDiameterByUtilization().getAll(); // DQsp
 
 			// EMP080
-			float smallComponentProbability = smallComponentProbability(layer, spec, region); // PROBsp
+			float smallComponentProbability = estimationMethods.estimateSmallComponentProbability(layer, spec, region); // PROBsp
 
 			// this WHOLE operation on Actual BA's, not 100% occupancy.
 			float fractionAvailable = Utils.<Float>optSafe(fPoly.getPercentAvailable()).map(p -> p / 100f).orElse(1f);
@@ -1080,28 +1080,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		layer.getQuadraticMeanDiameterByUtilization()
 				.setSmall(BaseAreaTreeDensityDiameter.quadMeanDiameter(baseAreaSum, treesPerHectareSum));
 		layer.getWholeStemVolumeByUtilization().setSmall(volumeSum);
-	}
-
-	// EMP080
-	private float smallComponentProbability(VdypLayer layer, VdypSpecies spec, Region region) {
-		Coefficients coe = getCoeForSpecies(spec, ControlKey.SMALL_COMP_PROBABILITY);
-
-		// EQN 1 in IPSJF118.doc
-
-		float a0 = coe.getCoe(1);
-		float a1 = coe.getCoe(2);
-		float a2 = coe.getCoe(3);
-		float a3 = coe.getCoe(4);
-
-		float coast = region == Region.COASTAL ? 1.0f : 0.0f;
-
-		float logit = //
-				a0 + //
-						a1 * coast + //
-						a2 * layer.getComputedYearsAtBreastHeight().orElse(0f) + //
-						a3 * spec.getLoreyHeightByUtilization().getAll();
-
-		return exp(logit) / (1.0f + exp(logit));
 	}
 
 	// YUC1

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -231,5 +232,33 @@ public final class BatchUtils {
 		if (!Files.isDirectory(dirPath)) {
 			throw new IOException("Path is not a directory: " + dirPath);
 		}
+	}
+
+	public static String formatDuration(Duration duration) {
+		long days = duration.toDaysPart();
+		int hours = duration.toHoursPart();
+		int minutes = duration.toMinutesPart();
+		int seconds = duration.toSecondsPart();
+		int millis = duration.toMillisPart();
+
+		StringBuilder builder = new StringBuilder();
+
+		if (days > 0) {
+			builder.append(days).append("d");
+		}
+		if (hours > 0) {
+			builder.append(hours).append("h");
+		}
+		if (minutes > 0) {
+			builder.append(minutes).append("m");
+		}
+		if (seconds > 0) {
+			builder.append(seconds).append("s");
+		}
+		if (millis > 0) {
+			builder.append(millis).append("ms");
+		}
+
+		return builder.isEmpty() ? "0s" : builder.toString();
 	}
 }

@@ -34,6 +34,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector.BinaryOperatorWithClass;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
@@ -1204,6 +1205,62 @@ public class EstimationMethods {
 		return estimateSmallComponentConditionalExpectedBasalArea(
 				species, species.getBaseAreaByUtilization().getAll() * fractionAvailable, region
 		) / fractionAvailable;
+	}
+
+	/**
+	 * EMP080
+	 * <p>
+	 * Calculate the small component probability of a species
+	 *
+	 * @param speciesId           Species identifier (SP0)
+	 * @param yearsAtBreastHeight Years at breast height for primary species
+	 * @param loreyHeight         current Lorey height of the stand
+	 * @param region              the stand's region
+	 * @return the small component probability of the species.
+	 */
+	public float estimateSmallComponentProbability(
+			String speciesId, float yearsAtBreastHeight, float loreyHeight, Region region
+	) {
+
+		Coefficients coe = controlMap.getSmallComponentProbabilityCoefficients().get(speciesId);
+
+		// EQN 1 in IPSJF118.doc
+
+		float a0 = coe.getCoe(1);
+
+		float a1 = switch (region) {
+		case COASTAL -> coe.getCoe(2);
+		case INTERIOR -> 0f;
+		};
+
+		float a2 = coe.getCoe(3);
+		float a3 = coe.getCoe(4);
+
+		float logit = a0 + //
+				a1 + //
+				a2 * yearsAtBreastHeight + //
+				a3 * loreyHeight;
+
+		return exp(logit) / (1.0f + exp(logit));
+	}
+
+	/**
+	 * EMP080
+	 * <p>
+	 * Calculate the small component probability of a species
+	 *
+	 * @param layer   the layer containing the species
+	 * @param species Species identifier (SP0)
+	 * @param region  the stand's region
+	 * @return the small component probability of the species.
+	 */
+	public float estimateSmallComponentProbability(VdypLayer layer, VdypSpecies species, Region region) {
+		return estimateSmallComponentProbability(
+				species.getGenus(), //
+				layer.getComputedYearsAtBreastHeight().orElse(0f), //
+				species.getLoreyHeightByUtilization().getAll(), //
+				region
+		);
 	}
 
 }

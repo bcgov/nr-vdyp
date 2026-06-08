@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.easymock.EasyMock;
@@ -974,6 +975,48 @@ class EstimationMethodsTest {
 			em.verify();
 
 			assertThat(result, closeTo(expectedDq));
+		}
+
+	}
+
+	@Nested
+	class EstimateSmallProbability {
+
+		static Collection<Arguments> data() {
+			return List.of(
+					Arguments.of("S", 80.7f, 10.2395f, Region.INTERIOR, 0.0730085522f),
+					Arguments.of("S", 91.7f, 11.0868368f, Region.INTERIOR, 0.06185959f),
+					Arguments.of("B", 242.7f, 33.4065018f, Region.COASTAL, 0.0155089973f)
+			);
+		}
+
+		@ParameterizedTest
+		@MethodSource({ "data" })
+		void testSimple(String speciesId, float yearsAtbreastHeight, float hlAll, Region region, float expected) {
+
+			float result = emp.estimateSmallComponentProbability(speciesId, yearsAtbreastHeight, hlAll, region);
+
+			assertThat(result, closeTo(expected));
+		}
+
+		@ParameterizedTest
+		@MethodSource({ "data" })
+		void testSpeciesObject(
+				String speciesId, float yearsAtbreastHeight, float hlAll, Region region, float expected
+		) {
+
+			var em = EasyMock.createControl();
+			VdypSpecies species = em.createMock(VdypSpecies.class);
+			VdypLayer layer = em.createMock(VdypLayer.class);
+			EasyMock.expect(species.getGenus()).andStubReturn(speciesId);
+			EasyMock.expect(species.getLoreyHeightByUtilization()).andStubReturn(Utils.heightVector(0f, hlAll));
+			EasyMock.expect(layer.getComputedYearsAtBreastHeight()).andStubReturn(Optional.of(yearsAtbreastHeight));
+			em.replay();
+
+			float result = emp.estimateSmallComponentProbability(layer, species, region);
+			em.verify();
+
+			assertThat(result, closeTo(expected));
 		}
 
 	}
