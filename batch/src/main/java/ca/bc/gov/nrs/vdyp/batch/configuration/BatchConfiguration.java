@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.slf4j.Logger;
@@ -350,7 +352,10 @@ public class BatchConfiguration {
 			JobExecution jobExecution = stepExecution.getJobExecution();
 			String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
 			String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
-			Duration duration = Duration.between(LocalDateTime.now(), jobExecution.getStartTime());
+			LocalDateTime startTime = jobExecution.getStartTime();
+			ZonedDateTime now = LocalDateTime.now().atZone(ZoneId.systemDefault());
+			Duration duration = Duration
+					.between(now, startTime == null ? now : startTime.atZone(ZoneId.systemDefault()));
 
 			VDYPProjectionProgressUpdate finalProgress = BatchUtils.buildFinalProgress(jobGuid, jobExecution);
 			// Execute aggregation
