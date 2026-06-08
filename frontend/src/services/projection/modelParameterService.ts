@@ -774,12 +774,13 @@ const hasSiteInfoChanges = (store: any, saved: ModelParameters): boolean => {
   if (!strEq(store.becZone, saved.becZone)) return true
   if (!strEq(store.ecoZone, saved.ecoZone)) return true
   if (!strEq(store.siteSpeciesValues, saved.siteIndex)) return true
-  if (!strEq(store.ageType, saved.ageYears)) return true
-  if (!numEq(store.spzAge, saved.speciesAge)) return true
-  if (!numEq(store.spzHeight, saved.speciesHeight)) return true
-  if (!numEq(store.bha50SiteIndex, saved.bha50SiteIndex)) return true
   const rows: SiteIndexSpeciesRow[] = store.siteIndexRows ?? []
-  if (!strEq(rows[0]?.computedValue, saved.compute)) return true
+  const row0 = rows[0]
+  if (!strEq(row0?.computedValue, saved.compute)) return true
+  if (!strEq(row0?.ageType, saved.ageYears)) return true
+  if (!numEq(row0?.age, saved.speciesAge)) return true
+  if (!numEq(row0?.height, saved.speciesHeight)) return true
+  if (!numEq(row0?.bhaSiteIndex, saved.bha50SiteIndex)) return true
   const savedPerSpecies: SavedPerSpeciesEntry[] = [
     { compute: saved.compute2, ageYears: saved.ageYears2, age: saved.age2, height: saved.height2, si: saved.si2 },
     { compute: saved.compute3, ageYears: saved.ageYears3, age: saved.age3, height: saved.height3, si: saved.si3 },
@@ -801,6 +802,20 @@ const hasStandInfoChanges = (store: any, saved: ModelParameters): boolean => {
   return false
 }
 
+const hasReportDetailsChanges = (
+  store: any,
+  savedParams: ParsedProjectionParameters,
+  savedDescription: string | null,
+): boolean => {
+  if (!strEq(store.reportTitle, savedParams.reportTitle)) return true
+  if (!strEq(store.reportDescription || null, savedDescription || null)) return true
+  const opts = savedParams.selectedExecutionOptions
+  const savedProjectionType = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+    ? CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+    : CONSTANTS.PROJECTION_TYPE.VOLUME
+  return !strEq(store.projectionType, savedProjectionType)
+}
+
 const hasReportInfoChanges = (
   store: any,
   savedParams: ParsedProjectionParameters,
@@ -820,6 +835,21 @@ const hasReportInfoChanges = (
     ? CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
     : CONSTANTS.PROJECTION_TYPE.VOLUME
   if (!strEq(store.projectionType, savedProjectionType)) return true
+
+  const defaultMap = savedProjectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+    ? DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP
+    : DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP
+  const utilsMap: Record<string, string> = {}
+  for (const util of savedParams.utils) {
+    const u = util as { s: string; u: string }
+    if (u.s && u.u) utilsMap[u.s] = u.u
+  }
+  const hasUtils = savedParams.utils.length > 0
+  if ((store.speciesGroups as SpeciesGroup[]).some((sg) => {
+    const savedValue = hasUtils ? (utilsMap[sg.group] ?? defaultMap[sg.group]) : defaultMap[sg.group]
+    return sg.minimumDBHLimit !== savedValue
+  })) return true
+
   return false
 }
 
@@ -860,6 +890,8 @@ export const hasPanelUnsavedChanges = async (
       return savedModelParams ? hasSiteInfoChanges(modelParameterStore, savedModelParams) : false
     case CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO:
       return savedModelParams ? hasStandInfoChanges(modelParameterStore, savedModelParams) : false
+    case CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS:
+      return hasReportDetailsChanges(modelParameterStore, savedParams, projectionModel.reportDescription ?? null)
     case CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS:
       return hasReportInfoChanges(modelParameterStore, savedParams, projectionModel.reportDescription ?? null)
     default:

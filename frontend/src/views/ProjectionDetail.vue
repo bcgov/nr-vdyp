@@ -242,12 +242,13 @@ import {
   RunProjectionButtonPanel
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
-import { CONSTANTS, MESSAGE } from '@/constants'
+import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import { loadProjectionSession, clearProjectionSession, saveExistingProjectionSession } from '@/utils/projectionSession'
 import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip, getResultsDownloadUrl, isProjectionReadOnly } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
-import { runProjection, revertPanelToSaved } from '@/services/projection/modelParameterService'
-import { runProjectionFileUpload } from '@/services/projection/fileUploadService'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
+import { runProjection, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
+import { runProjectionFileUpload, hasReportConfigUnsavedChanges, hasMinimumDBHUnsavedChanges } from '@/services/projection/fileUploadService'
 import {
   delay,
   getStatusIcon,
@@ -262,6 +263,7 @@ import type { PanelName } from '@/types/types'
 
 const router = useRouter()
 const { isLoading: isProjectionLoading, loadProjection } = useProjectionLoader()
+const alertDialogStore = useAlertDialogStore()
 
 const reportSettingsPanelRef = ref<{ onConfirm: () => Promise<boolean> }>()
 
@@ -690,10 +692,75 @@ watch(
   },
 )
 
+const hasCreateModeUnsavedChanges = (isManualInput: boolean): boolean => {
+  const store = isManualInput ? modelParameterStore : fileUploadStore
+
+  if (store.reportTitle !== DEFAULTS.DEFAULT_VALUES.REPORT_TITLE) return true
+  if (store.projectionType !== DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE) return true
+  if (store.selectedAgeYearRange !== DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE) return true
+
+  const nullDefaultFields = [
+    store.reportDescription, store.startingAge, store.finishingAge, store.ageIncrement,
+    store.startYear, store.endYear, store.yearIncrement, store.specificYear,
+  ]
+  if (nullDefaultFields.some((v) => v !== null)) return true
+
+  const falseDefaultFlags = [
+    store.isComputedMAIEnabled, store.isCulminationValuesEnabled, store.isBySpeciesEnabled,
+    store.isProjectionModeEnabled, store.isPolygonIDEnabled, store.isCurrentYearEnabled,
+    store.isReferenceYearEnabled, store.incSecondaryHeight,
+  ]
+  if (falseDefaultFlags.some(Boolean)) return true
+
+  const fwdBwdDefault = isManualInput
+  return store.isForwardGrowEnabled !== fwdBwdDefault || store.isBackwardGrowEnabled !== fwdBwdDefault
+}
+
+const hasEditModeManualInputChanges = async (): Promise<boolean> => {
+  const editablePanels = Object.entries(modelParameterStore.panelState)
+    .filter(([, state]) => state.editable)
+    .map(([name]) => name)
+  for (const panelName of editablePanels) {
+    if (await hasPanelUnsavedChanges(panelName, modelParameterStore)) return true
+  }
+  return false
+}
+
+const hasEditModeFileUploadChanges = async (): Promise<boolean> => {
+  if (fileUploadStore.panelState.reportConfig.editable) {
+    if (await hasReportConfigUnsavedChanges(fileUploadStore)) return true
+  }
+  if (fileUploadStore.panelState.minimumDBH.editable) {
+    if (await hasMinimumDBHUnsavedChanges(fileUploadStore)) return true
+  }
+  return false
+}
+
+const hasAnyUnsavedChanges = async (): Promise<boolean> => {
+  if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.VIEW) return false
+  const isManualInput = appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT
+  if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.EDIT) {
+    return isManualInput ? hasEditModeManualInputChanges() : hasEditModeFileUploadChanges()
+  }
+  if (appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.CREATE) {
+    return hasCreateModeUnsavedChanges(isManualInput)
+  }
+  return false
+}
+
 // Clear session when navigating away so stale data doesn't persist to a new session.
 // NOTE: onBeforeRouteLeave does NOT fire on browser refresh, so the session correctly
 // persists across refreshes while still being cleaned up on normal navigation.
-onBeforeRouteLeave(() => {
+onBeforeRouteLeave(async (to) => {
+  if (to.name === 'ProjectionListView' && await hasAnyUnsavedChanges()) {
+    const proceed = await alertDialogStore.openDialog(
+      MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+      MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+      { variant: 'warning' },
+    )
+    if (!proceed) return false
+  }
+
   stopPolling()
   clearProjectionSession()
 })
