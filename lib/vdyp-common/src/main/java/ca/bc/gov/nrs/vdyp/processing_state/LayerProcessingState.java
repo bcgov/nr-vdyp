@@ -80,7 +80,7 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	protected Optional<Integer> secondarySpeciesIndex;
 
-	public boolean areRankingDetailsSet = false;
+	private boolean areRankingDetailsSet = false;
 
 	private boolean arePrimarySpeciesDetailsSet = false;
 
@@ -94,11 +94,11 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	private float primarySpeciesAgeToBreastHeight;
 
-	public int primarySpeciesGroupNumber;
+	private int primarySpeciesGroupNumber;
 
-	public int primarySpeciesStratumNumber;
+	private int primarySpeciesStratumNumber;
 
-	public int inventoryTypeGroup;
+	private int inventoryTypeGroup;
 
 	protected LayerProcessingState(ProcessingState<Self> ps, VdypPolygon polygon, LayerType subjectLayerType)
 			throws ProcessingException {

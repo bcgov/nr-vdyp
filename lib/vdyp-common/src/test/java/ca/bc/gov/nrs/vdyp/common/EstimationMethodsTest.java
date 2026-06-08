@@ -5,7 +5,6 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,7 +14,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.easymock.EasyMock;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,7 +23,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
-import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
@@ -995,8 +992,7 @@ class EstimationMethodsTest {
 
 		@ParameterizedTest
 		@MethodSource({ "data" })
-		void testSimple(String speciesId, float yearsAtbreastHeight, float hlAll, Region region, float expected)
-				throws Exception {
+		void testSimple(String speciesId, float yearsAtbreastHeight, float hlAll, Region region, float expected) {
 
 			float result = emp.estimateSmallComponentProbability(speciesId, yearsAtbreastHeight, hlAll, region);
 
@@ -1005,8 +1001,9 @@ class EstimationMethodsTest {
 
 		@ParameterizedTest
 		@MethodSource({ "data" })
-		void testSpeciesObject(String speciesId, float yearsAtbreastHeight, float hlAll, Region region, float expected)
-				throws Exception {
+		void testSpeciesObject(
+				String speciesId, float yearsAtbreastHeight, float hlAll, Region region, float expected
+		) {
 
 			var em = EasyMock.createControl();
 			VdypSpecies species = em.createMock(VdypSpecies.class);

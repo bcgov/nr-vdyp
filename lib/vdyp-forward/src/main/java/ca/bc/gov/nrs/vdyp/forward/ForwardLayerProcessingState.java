@@ -131,7 +131,7 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 		}
 		if (n == 0) {
 			// Take this opportunity to initialize siteCurveNumbers[0] from that of the primary species.
-			if (!areRankingDetailsSet) {
+			if (!isAreRankingDetailsSet()) {
 				throw new IllegalStateException(UNSET_RANKING_DETAILS);
 			}
 			siteCurveNumbers[0] = siteCurveNumbers[primarySpeciesIndex];

@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
@@ -292,7 +291,7 @@ class LayerProcessingStateTest {
 		}
 
 		@AfterEach
-		void verify() throws Exception {
+		void verify() {
 			em.verify();
 		}
 
@@ -410,7 +409,7 @@ class LayerProcessingStateTest {
 		}
 
 		@AfterEach
-		void verify() throws Exception {
+		void verify() {
 			em.verify();
 		}
 
