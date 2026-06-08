@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.Collections;
 
 import org.junit.jupiter.api.Assertions;
@@ -105,7 +106,7 @@ class BatchConfigurationTest {
 	@TempDir
 	Path tempDir;
 
-	LocalDateTime testStartTime = LocalDateTime.of(2000, 1, 1, 0, 0);
+	LocalDateTime testStartTime = LocalDateTime.of(2000, Month.JANUARY, 1, 0, 0);
 
 	private BatchConfiguration configuration;
 

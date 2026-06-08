@@ -353,7 +353,7 @@ public class BatchConfiguration {
 			String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
 			String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 			LocalDateTime startTime = jobExecution.getStartTime();
-			ZonedDateTime now = LocalDateTime.now().atZone(ZoneId.systemDefault());
+			ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
 			Duration duration = Duration
 					.between(now, startTime == null ? now : startTime.atZone(ZoneId.systemDefault()));
 
