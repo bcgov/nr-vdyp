@@ -248,6 +248,7 @@
               :hideClearButton="true"
               :hideEditButton="true"
               :showCancelButton="true"
+              :isCancelEnabled="isDirty"
               @confirm="onConfirm"
               @cancel="onCancel"
             />
@@ -259,7 +260,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
@@ -324,6 +325,23 @@ const isConfirmed = computed(
 const isInputDisabled = computed(
   () => isReadOnly.value || !modelParameterStore.panelState[panelName].editable,
 )
+
+const isDirty = ref(false)
+let suppressDirtyTracking = false
+const markDirty = () => { if (!suppressDirtyTracking) isDirty.value = true }
+
+watch(() => modelParameterStore.panelState[panelName].editable, (editable, wasEditable) => {
+  if (editable && !wasEditable) isDirty.value = false
+})
+
+watch(selectedSiteSpecies, markDirty)
+watch(becZone, markDirty)
+watch(ecoZone, markDirty)
+watch(siteSpeciesValues, markDirty, { deep: true })
+watch(ageType, markDirty)
+watch(spzAge, markDirty)
+watch(spzHeight, markDirty)
+watch(bha50SiteIndex, markDirty)
 
 const siteSpeciesOptions = computed(() =>
   speciesGroups.value.map((group: SpeciesGroup) => ({
@@ -605,6 +623,7 @@ const onConfirm = async () => {
     appStore.isSavingProjection = false
   }
 
+  isDirty.value = false
   if (!isConfirmed.value) modelParameterStore.confirmPanel(panelName)
 }
 
@@ -666,14 +685,18 @@ const onHeaderEdit = async () => {
 }
 
 const onCancel = async () => {
+  suppressDirtyTracking = true
   appStore.isSavingProjection = true
   try {
     await revertPanelToSaved(panelName)
+    await nextTick()
+    isDirty.value = false
   } catch (error) {
     console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
   } finally {
     appStore.isSavingProjection = false
+    suppressDirtyTracking = false
   }
 }
 

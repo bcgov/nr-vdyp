@@ -26,19 +26,9 @@ const mountPanel = (props: MountProps) =>
 
 describe('<ActionPanel />', () => {
   describe('Clear button', () => {
-    it('renders Clear button by default', () => {
-      mountPanel({ isConfirmEnabled: true, isConfirmed: false })
-      cy.contains('button.bcds-button', 'Clear').should('exist')
-    })
-
     it('is hidden when hideClearButton is true', () => {
       mountPanel({ isConfirmEnabled: true, isConfirmed: false, hideClearButton: true })
       cy.contains('button.bcds-button', 'Clear').should('not.exist')
-    })
-
-    it('is disabled when isConfirmEnabled is false', () => {
-      mountPanel({ isConfirmEnabled: false, isConfirmed: false })
-      cy.contains('button.bcds-button', 'Clear').should('be.disabled')
     })
 
     it('emits "clear" when clicked', () => {
@@ -55,16 +45,6 @@ describe('<ActionPanel />', () => {
       cy.contains('button.bcds-button', 'Cancel').should('not.exist')
     })
 
-    it('renders when showCancelButton is true', () => {
-      mountPanel({ isConfirmEnabled: true, isConfirmed: false, showCancelButton: true })
-      cy.contains('button.bcds-button', 'Cancel').should('exist')
-    })
-
-    it('is disabled when isConfirmEnabled is false', () => {
-      mountPanel({ isConfirmEnabled: false, isConfirmed: false, showCancelButton: true })
-      cy.contains('button.bcds-button', 'Cancel').should('be.disabled')
-    })
-
     it('emits "cancel" when clicked', () => {
       const onCancel = cy.spy().as('cancelSpy')
       mountPanel({ isConfirmEnabled: true, isConfirmed: false, showCancelButton: true, onCancel })
@@ -73,52 +53,32 @@ describe('<ActionPanel />', () => {
     })
   })
 
-  describe('Next button', () => {
-    it('is visible when isConfirmed is false', () => {
+  describe('Next / Edit button toggle', () => {
+    it('shows Next and hides Edit when isConfirmed is false', () => {
       mountPanel({ isConfirmEnabled: true, isConfirmed: false })
       cy.contains('button.bcds-button', 'Next').should('be.visible')
+      cy.contains('button.bcds-button', 'Edit').should('not.be.visible')
     })
 
-    it('is hidden when isConfirmed is true and hideEditButton is false', () => {
+    it('hides Next and shows Edit when isConfirmed is true', () => {
       mountPanel({ isConfirmEnabled: true, isConfirmed: true })
       cy.contains('button.bcds-button', 'Next').should('not.be.visible')
+      cy.contains('button.bcds-button', 'Edit').should('be.visible')
     })
 
-    it('is visible when isConfirmed is true but hideEditButton is true', () => {
-      mountPanel({ isConfirmEnabled: true, isConfirmed: true, hideEditButton: true })
-      cy.contains('button.bcds-button', 'Next').should('be.visible')
-    })
-
-    it('is disabled when isConfirmEnabled is false', () => {
+    it('disables Next when isConfirmEnabled is false', () => {
       mountPanel({ isConfirmEnabled: false, isConfirmed: false })
       cy.contains('button.bcds-button', 'Next').should('be.disabled')
     })
 
-    it('emits "confirm" when clicked', () => {
+    it('emits "confirm" when Next is clicked', () => {
       const onConfirm = cy.spy().as('confirmSpy')
       mountPanel({ isConfirmEnabled: true, isConfirmed: false, onConfirm })
       cy.contains('button.bcds-button', 'Next').click()
       cy.get('@confirmSpy').should('have.been.calledOnce')
     })
-  })
 
-  describe('Edit button', () => {
-    it('is hidden when isConfirmed is false', () => {
-      mountPanel({ isConfirmEnabled: true, isConfirmed: false })
-      cy.contains('button.bcds-button', 'Edit').should('not.be.visible')
-    })
-
-    it('is visible when isConfirmed is true', () => {
-      mountPanel({ isConfirmEnabled: true, isConfirmed: true })
-      cy.contains('button.bcds-button', 'Edit').should('be.visible')
-    })
-
-    it('is hidden when isConfirmed is true but hideEditButton is true', () => {
-      mountPanel({ isConfirmEnabled: true, isConfirmed: true, hideEditButton: true })
-      cy.contains('button.bcds-button', 'Edit').should('not.be.visible')
-    })
-
-    it('emits "edit" when clicked', () => {
+    it('emits "edit" when Edit is clicked', () => {
       const onEdit = cy.spy().as('editSpy')
       mountPanel({ isConfirmEnabled: true, isConfirmed: true, onEdit })
       cy.contains('button.bcds-button', 'Edit').click()

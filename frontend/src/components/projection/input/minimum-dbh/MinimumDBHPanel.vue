@@ -70,6 +70,7 @@
             :hideClearButton="true"
             :hideEditButton="true"
             :showCancelButton="true"
+            :isCancelEnabled="isDirty"
             @confirm="onConfirm"
             @cancel="onCancel"
           />
@@ -80,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
@@ -146,6 +147,12 @@ const onHeaderEdit = () => {
   }
 }
 
+const isDirty = ref(false)
+
+watch(() => fileUploadStore.panelState[panelName].editable, (editable, wasEditable) => {
+  if (editable && !wasEditable) isDirty.value = false
+})
+
 // Species groups and slider logic
 const utilizationClassOptions = OPTIONS.utilizationClassOptions
 const fileUploadSpeciesGroups = computed(() => fileUploadStore.fileUploadSpeciesGroup)
@@ -188,6 +195,7 @@ const updateFileUploadMinDBH = (index: number, value: number) => {
     const enumValue = utilizationClassOptions[value]?.value
     if (enumValue !== undefined) {
       fileUploadSpeciesGroups.value[index].minimumDBHLimit = enumValue
+      isDirty.value = true
     }
   }
 }
@@ -204,6 +212,7 @@ const onConfirm = async () => {
     appStore.isSavingProjection = false
   }
 
+  isDirty.value = false
   if (!isConfirmed.value) {
     fileUploadStore.confirmPanel(panelName)
   }
@@ -213,6 +222,8 @@ const onCancel = async () => {
   appStore.isSavingProjection = true
   try {
     await revertPanelToSaved(panelName)
+    await nextTick()
+    isDirty.value = false
   } catch (error) {
     console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)

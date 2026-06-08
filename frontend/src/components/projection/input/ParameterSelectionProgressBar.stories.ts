@@ -12,7 +12,7 @@ const meta: Meta<typeof ParameterSelectionProgressBar> = {
     },
     percentage: {
       control: { type: 'range', min: 0, max: 100, step: 1 },
-      description: 'Current completion percentage (0–100).',
+      description: 'Current completion percentage (0~100).',
     },
     completedCount: {
       control: { type: 'number', min: 0 },

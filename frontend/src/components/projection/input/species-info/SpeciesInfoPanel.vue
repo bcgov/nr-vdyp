@@ -118,6 +118,7 @@
               :hideClearButton="true"
               :hideEditButton="true"
               :showCancelButton="true"
+              :isCancelEnabled="isDirty"
               @confirm="onConfirm"
               @cancel="onCancel"
             />
@@ -128,7 +129,7 @@
   </v-card>
 </template>
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
@@ -203,6 +204,17 @@ const showPercentageError = computed(
 const updateSpeciesGroup = modelParameterStore.updateSpeciesGroup
 
 watch(speciesList, () => updateSpeciesGroup(), { deep: true })
+
+const isDirty = ref(false)
+let suppressDirtyTracking = false
+const markDirty = () => { if (!suppressDirtyTracking) isDirty.value = true }
+
+watch(() => modelParameterStore.panelState[panelName].editable, (editable, wasEditable) => {
+  if (editable && !wasEditable) isDirty.value = false
+})
+
+watch(speciesList, markDirty, { deep: true })
+watch(derivedBy, markDirty)
 
 // --- Modal ---
 const modalOpen = ref(false)
@@ -291,6 +303,7 @@ const onConfirm = async () => {
     appStore.isSavingProjection = false
   }
 
+  isDirty.value = false
   if (!isConfirmed.value) {
     modelParameterStore.confirmPanel(panelName)
   }
@@ -362,14 +375,18 @@ const onHeaderEdit = async () => {
 }
 
 const onCancel = async () => {
+  suppressDirtyTracking = true
   appStore.isSavingProjection = true
   try {
     await revertPanelToSaved(panelName)
+    await nextTick()
+    isDirty.value = false
   } catch (error) {
     console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
   } finally {
     appStore.isSavingProjection = false
+    suppressDirtyTracking = false
   }
 }
 

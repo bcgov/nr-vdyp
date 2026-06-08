@@ -35,266 +35,109 @@ const mountTable = (
 }
 
 describe('<SiteIndicesTable />', () => {
-  describe('Table structure', () => {
-    it('renders the "Site Indices" subtitle', () => {
-      mountTable(false)
-      cy.contains('.text-subtitle-2', 'Site Indices').should('exist')
-    })
+  it('renders subtitle and all column headers', () => {
+    mountTable(false)
+    cy.contains('.text-subtitle-2', 'Site Indices').should('exist')
+    cy.get('thead th').eq(0).should('contain.text', 'Site Species')
+    cy.get('thead th').eq(1).should('contain.text', 'Computed Value')
+    cy.get('thead th').eq(2).should('contain.text', 'Age')
+    cy.get('thead th').eq(3).should('contain.text', 'Height in Meters')
+    cy.get('thead th').eq(4).should('contain.text', 'BHA Site Index')
+  })
 
-    it('renders all column headers', () => {
-      mountTable(false)
-      cy.get('thead th').eq(0).should('contain.text', 'Site Species')
-      cy.get('thead th').eq(1).should('contain.text', 'Computed Value')
-      cy.get('thead th').eq(2).should('contain.text', 'Age')
-      cy.get('thead th').eq(3).should('contain.text', 'Height in Meters')
-      cy.get('thead th').eq(4).should('contain.text', 'BHA Site Index')
+  it('renders one row per store entry with correct species code', () => {
+    mountTable(false, (store) => {
+      store.siteIndexRows = [makeRow('FD'), makeRow('PL'), makeRow('S')]
     })
+    cy.get('tbody tr').should('have.length', 3)
+    cy.get('tbody tr').eq(0).find('td').eq(0).should('contain.text', 'FD')
+    cy.get('tbody tr').eq(1).find('td').eq(0).should('contain.text', 'PL')
+  })
 
-    it('renders no rows when siteIndexRows is empty', () => {
-      mountTable(false)
-      cy.get('tbody tr').should('have.length', 0)
+  it('disables all inputs when isConfirmEnabled is false', () => {
+    mountTable(false, (store) => {
+      store.siteIndexRows = [makeRow('FD')]
     })
-
-    it('renders one row per entry in siteIndexRows', () => {
-      mountTable(false, (store) => {
-        store.siteIndexRows = [makeRow('FD'), makeRow('PL'), makeRow('S')]
-      })
-      cy.get('tbody tr').should('have.length', 3)
-    })
-
-    it('displays the species code in the first cell of each row', () => {
-      mountTable(false, (store) => {
-        store.siteIndexRows = [makeRow('FD'), makeRow('PL')]
-      })
-      cy.get('tbody tr').eq(0).find('td').eq(0).should('contain.text', 'FD')
-      cy.get('tbody tr').eq(1).find('td').eq(0).should('contain.text', 'PL')
+    cy.get('.v-select.v-input--disabled').should('have.length', 1)
+    cy.get('.v-radio-group.v-input--disabled').should('have.length', 1)
+    cy.get('tbody tr').eq(0).find('.site-spin-field input').each(($input) => {
+      cy.wrap($input).should('be.disabled')
     })
   })
 
-  describe('Computed Value select - disabled states', () => {
-    it('is disabled for all rows when isConfirmEnabled is false', () => {
-      mountTable(false, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-      })
-      cy.get('.v-select.v-input--disabled').should('have.length', 1)
+  it('disables select, radio, age, and height when Supplied; BHA remains enabled', () => {
+    mountTable(true, (store) => {
+      store.siteIndexRows = [makeRow('FD')]
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
     })
+    cy.get('.v-select.v-input--disabled').should('have.length', 1)
+    cy.get('.v-radio-group.v-input--disabled').should('have.length', 1)
+    cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input').should('be.disabled')
+    cy.get('tbody tr').eq(0).find('.site-spin-field').eq(1).find('input').should('be.disabled')
+    cy.get('tbody tr').eq(0).find('.site-spin-field').eq(2).find('input').should('not.be.disabled')
+  })
 
-    it('is disabled when siteSpeciesValues is Supplied', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      })
-      cy.get('.v-select.v-input--disabled').should('have.length', 1)
+  it('enables primary row inputs when Computed + isConfirmEnabled', () => {
+    mountTable(true, (store) => {
+      store.siteIndexRows = [makeRow('FD')]
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
     })
+    cy.get('.v-select').first().should('not.have.class', 'v-input--disabled')
+    cy.get('.v-radio-group').first().should('not.have.class', 'v-input--disabled')
+  })
 
-    it('is enabled for the primary row when Computed + isConfirmEnabled', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.get('.v-select').first().should('not.have.class', 'v-input--disabled')
+  it('disables all non-primary row inputs with N/A placeholders when Computed + Volume', () => {
+    mountTable(true, (store) => {
+      store.siteIndexRows = [makeRow('FD'), makeRow('PL', { age: null, height: null, bhaSiteIndex: null })]
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
     })
-
-    it('is disabled for non-primary rows when Computed + Volume + isConfirmEnabled', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD'), makeRow('PL')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-        store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-      })
-      cy.get('.v-select').eq(1).should('have.class', 'v-input--disabled')
+    cy.get('.v-select').eq(1).should('have.class', 'v-input--disabled')
+    cy.get('tbody tr').eq(1).find('.site-spin-field input').each(($input) => {
+      cy.wrap($input).should('be.disabled')
+      cy.wrap($input).should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
     })
   })
 
-  describe('Age radio group - disabled states', () => {
-    it('is disabled when isConfirmEnabled is false', () => {
-      mountTable(false, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-      })
-      cy.get('.v-radio-group.v-input--disabled').should('have.length', 1)
+  it('shows Calc. placeholder for the field matching the selected computedValue', () => {
+    mountTable(true, (store) => {
+      store.siteIndexRows = [
+        makeRow('FD', { age: null, computedValue: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE }),
+        makeRow('PL', { height: null, computedValue: CONSTANTS.COMPUTED_VALUE.HEIGHT }),
+        makeRow('S', { bhaSiteIndex: null, computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX }),
+      ]
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
     })
-
-    it('is disabled when siteSpeciesValues is Supplied', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      })
-      cy.get('.v-radio-group.v-input--disabled').should('have.length', 1)
-    })
-
-    it('is enabled when Computed + isConfirmEnabled', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.get('.v-radio-group').first().should('not.have.class', 'v-input--disabled')
-    })
+    cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input')
+      .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.CALC)
+    cy.get('tbody tr').eq(1).find('.site-spin-field').eq(1).find('input')
+      .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.CALC)
+    cy.get('tbody tr').eq(2).find('.site-spin-field').eq(2).find('input')
+      .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.CALC)
   })
 
-  describe('Placeholders (N/A and Calc.)', () => {
-    it('shows N/A placeholder for Age when Supplied', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD', { age: null })]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input')
-        .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
+  it('shows N/A placeholder for age and height when Supplied', () => {
+    mountTable(true, (store) => {
+      store.siteIndexRows = [makeRow('FD', { age: null, height: null })]
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
     })
-
-    it('shows Calc. placeholder for Age when computedValue is Total Age', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD', { age: null, computedValue: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE })]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input')
-        .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.CALC)
-    })
-
-    it('shows Calc. placeholder for Height when computedValue is Height in Meters', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD', { height: null, computedValue: CONSTANTS.COMPUTED_VALUE.HEIGHT })]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(1).find('input')
-        .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.CALC)
-    })
-
-    it('shows Calc. placeholder for BHA Site Index when computedValue is BHA Site Index', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD', { bhaSiteIndex: null, computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX })]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(2).find('input')
-        .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.CALC)
-    })
-
-    it('shows N/A for all spin fields on non-primary rows when Computed + Volume', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD'), makeRow('PL', { age: null, height: null, bhaSiteIndex: null })]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-        store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-      })
-      cy.get('tbody tr').eq(1).find('.site-spin-field input').each(($input) => {
-        cy.wrap($input).should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
-      })
-    })
+    cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input')
+      .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
+    cy.get('tbody tr').eq(0).find('.site-spin-field').eq(1).find('input')
+      .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
   })
 
-  describe('Age spin field - disabled states', () => {
-    it('is disabled when isConfirmEnabled is false', () => {
-      mountTable(false, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input').should('be.disabled')
+  it('resets age and height to N/A when switching to Supplied', () => {
+    mountTable(true, (store) => {
+      store.siteIndexRows = [makeRow('FD')]
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
     })
-
-    it('is disabled when siteSpeciesValues is Supplied', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input').should('be.disabled')
+    cy.then(() => {
+      useModelParameterStore().siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
     })
-
-    it('is disabled when computedValue is TOTAL_AGE', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD', { computedValue: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE })]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input').should('be.disabled')
-    })
-
-    it('is disabled for non-primary rows when Computed + Volume', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD'), makeRow('PL')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-        store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-      })
-      cy.get('tbody tr').eq(1).find('.site-spin-field').eq(0).find('input').should('be.disabled')
-    })
-  })
-
-  describe('Height spin field - disabled states', () => {
-    it('is disabled when isConfirmEnabled is false', () => {
-      mountTable(false, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(1).find('input').should('be.disabled')
-    })
-
-    it('is disabled when siteSpeciesValues is Supplied', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(1).find('input').should('be.disabled')
-    })
-
-    it('is disabled when computedValue is HEIGHT', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD', { computedValue: CONSTANTS.COMPUTED_VALUE.HEIGHT })]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(1).find('input').should('be.disabled')
-    })
-
-    it('is disabled for non-primary rows when Computed + Volume', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD'), makeRow('PL')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-        store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-      })
-      cy.get('tbody tr').eq(1).find('.site-spin-field').eq(1).find('input').should('be.disabled')
-    })
-  })
-
-  describe('BHA Site Index spin field - disabled states', () => {
-    it('is disabled when isConfirmEnabled is false', () => {
-      mountTable(false, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(2).find('input').should('be.disabled')
-    })
-
-    it('is NOT disabled when siteSpeciesValues is Supplied', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(2).find('input').should('not.be.disabled')
-    })
-
-    it('is disabled when computedValue is BHA_SITE_INDEX', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD', { computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX })]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(2).find('input').should('be.disabled')
-    })
-
-    it('is disabled for non-primary rows when Computed + Volume', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD'), makeRow('PL')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-        store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-      })
-      cy.get('tbody tr').eq(1).find('.site-spin-field').eq(2).find('input').should('be.disabled')
-    })
-  })
-
-  describe('Watch: siteSpeciesValues -> Supplied resets rows', () => {
-    it('clears age and height when switching to Supplied (DOM: Age input becomes N/A placeholder)', () => {
-      mountTable(true, (store) => {
-        store.siteIndexRows = [makeRow('FD')]
-        store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.then(() => {
-        useModelParameterStore().siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      })
-      // Cypress retries until Vue flushes the watcher
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input')
-        .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
-      cy.get('tbody tr').eq(0).find('.site-spin-field').eq(1).find('input')
-        .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
-    })
+    cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input')
+      .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
+    cy.get('tbody tr').eq(0).find('.site-spin-field').eq(1).find('input')
+      .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
   })
 })

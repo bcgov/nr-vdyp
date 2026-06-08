@@ -241,7 +241,7 @@
   </v-card>
 </template>
 <script setup lang="ts">
-import { ref, watch, computed, type Ref } from 'vue'
+import { ref, watch, computed, nextTick, type Ref } from 'vue'
 import { useDisplay } from 'vuetify'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS, MESSAGE, OPTIONS } from '@/constants'
 import { reportInfoValidation } from '@/validation'
@@ -436,6 +436,21 @@ watch(
   },
 )
 
+const isDirty = ref(false)
+let suppressDirtyTracking = false
+const markDirty = () => { if (!suppressDirtyTracking) isDirty.value = true }
+
+watch(() => modelParameterStore.panelState[panelName].editable, (editable, wasEditable) => {
+  if (editable && !wasEditable) isDirty.value = false
+})
+
+const resetDirty = async (): Promise<void> => {
+  suppressDirtyTracking = true
+  await nextTick()
+  isDirty.value = false
+  suppressDirtyTracking = false
+}
+
 // Watch startingAge and finishingAge to manage CulminationValues state
 watch(
   [localStartingAge, localFinishingAge],
@@ -489,32 +504,36 @@ watch(() => modelParameterStore.incSecondaryHeight, (newVal) => {
   }
 })
 
-watch(selectedAgeYearRange, (newVal) => { modelParameterStore.selectedAgeYearRange = newVal })
-watch(localStartingAge, (newVal) => { modelParameterStore.startingAge = newVal })
-watch(localFinishingAge, (newVal) => { modelParameterStore.finishingAge = newVal })
-watch(localAgeIncrement, (newVal) => { modelParameterStore.ageIncrement = newVal })
-watch(localStartYear, (newVal) => { modelParameterStore.startYear = newVal })
-watch(localEndYear, (newVal) => { modelParameterStore.endYear = newVal })
-watch(localYearIncrement, (newVal) => { modelParameterStore.yearIncrement = newVal })
+watch(selectedAgeYearRange, (newVal) => { modelParameterStore.selectedAgeYearRange = newVal; markDirty() })
+watch(localStartingAge, (newVal) => { modelParameterStore.startingAge = newVal; markDirty() })
+watch(localFinishingAge, (newVal) => { modelParameterStore.finishingAge = newVal; markDirty() })
+watch(localAgeIncrement, (newVal) => { modelParameterStore.ageIncrement = newVal; markDirty() })
+watch(localStartYear, (newVal) => { modelParameterStore.startYear = newVal; markDirty() })
+watch(localEndYear, (newVal) => { modelParameterStore.endYear = newVal; markDirty() })
+watch(localYearIncrement, (newVal) => { modelParameterStore.yearIncrement = newVal; markDirty() })
 
 watch(localIsComputedMAIEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.isComputedMAIEnabled)) {
     modelParameterStore.isComputedMAIEnabled = newVal
+    markDirty()
   }
 })
 watch(localIsCulminationValuesEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.isCulminationValuesEnabled)) {
     modelParameterStore.isCulminationValuesEnabled = newVal
+    markDirty()
   }
 })
 watch(localIsBySpeciesEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.isBySpeciesEnabled)) {
     modelParameterStore.isBySpeciesEnabled = newVal
+    markDirty()
   }
 })
 watch(localIncSecondaryHeight, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.incSecondaryHeight)) {
     modelParameterStore.incSecondaryHeight = newVal
+    markDirty()
   }
 })
 
@@ -553,6 +572,7 @@ const updateMinDBH = (index: number, value: number) => {
     const enumValue = utilizationClassOptions[value]?.value
     if (enumValue !== undefined) {
       speciesGroups.value[index].minimumDBHLimit = enumValue
+      isDirty.value = true
     }
   }
 }
@@ -715,13 +735,14 @@ const onConfirm = async (): Promise<boolean> => {
     appStore.isSavingProjection = false
   }
 
+  isDirty.value = false
   if (!isConfirmed.value) {
     modelParameterStore.confirmPanel(panelName)
   }
   return true
 }
 
-defineExpose({ onConfirm })
+defineExpose({ onConfirm, isDirty, resetDirty })
 </script>
 <style scoped>
 /* Top row: age/year fields + include in report section */

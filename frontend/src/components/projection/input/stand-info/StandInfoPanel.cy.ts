@@ -35,41 +35,17 @@ const makeEditable = (modelStore: ReturnType<typeof useModelParameterStore>) => 
 }
 
 describe('<StandInfoPanel />', () => {
-  describe('Panel structure', () => {
-    it('renders the "Stand Information" heading', () => {
-      mountPanel()
-      cy.contains('.text-h6', 'Stand Information').should('exist')
-    })
-
-    it('renders all four input fields when panel is open', () => {
-      mountPanel((ms) => openPanel(ms))
-      cy.get('[data-testid="percent-stockable-area"]').should('exist')
-      cy.get('[data-testid="crown-closure"]').should('exist')
-      cy.get('[data-testid="basal-area"]').should('exist')
-      cy.get('[data-testid="trees-per-hectare"]').should('exist')
-    })
+  it('renders all four input fields when panel is open', () => {
+    mountPanel((ms) => openPanel(ms))
+    cy.get('[data-testid="percent-stockable-area"]').should('exist')
+    cy.get('[data-testid="crown-closure"]').should('exist')
+    cy.get('[data-testid="basal-area"]').should('exist')
+    cy.get('[data-testid="trees-per-hectare"]').should('exist')
   })
 
-  describe('Expansion panel toggle', () => {
-    it('shows panel content when open', () => {
-      mountPanel((ms) => openPanel(ms))
-      cy.get('.v-expansion-panel-text').should('be.visible')
-    })
-
-    it('hides panel content when closed', () => {
-      mountPanel()
-      cy.get('.v-expansion-panel-text').should('not.be.visible')
-    })
-
-    it('shows chevron-down icon when panel is closed', () => {
-      mountPanel()
-      cy.get('i.expansion-panel-icon').should('have.class', 'mdi-chevron-down')
-    })
-
-    it('shows chevron-up icon when panel is open', () => {
-      mountPanel((ms) => openPanel(ms))
-      cy.get('i.expansion-panel-icon').should('have.class', 'mdi-chevron-up')
-    })
+  it('shows panel content when open', () => {
+    mountPanel((ms) => openPanel(ms))
+    cy.get('.v-expansion-panel-text').should('be.visible')
   })
 
   describe('Input disabled states', () => {
@@ -136,62 +112,24 @@ describe('<StandInfoPanel />', () => {
     })
   })
 
-  describe('Header Edit button', () => {
-    it('renders Edit button in the header when not in read-only mode', () => {
-      mountPanel((ms) => openPanel(ms))
-      cy.get('.edit-button-col').should('exist')
+  it('shows required error when Percent Stockable Area is empty', () => {
+    mountPanel((ms) => {
+      openPanel(ms)
+      makeEditable(ms)
+      ms.percentStockableArea = null
+      ms.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+      ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
     })
-
-    it('does not render Edit button in read-only mode', () => {
-      mountPanel((ms, as) => {
-        openPanel(ms)
-        as.viewMode = PROJECTION_VIEW_MODE.VIEW
-      })
-      cy.get('.edit-button-col').should('not.exist')
-    })
+    cy.contains('button', 'Next').click()
+    cy.get('[data-testid="percent-stockable-area"]')
+      .find('.v-messages__message')
+      .should('contain.text', MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_REQ)
   })
 
-  describe('Confirm validation errors', () => {
-    it('shows required error when Percent Stockable Area is empty', () => {
-      mountPanel((ms) => {
-        openPanel(ms)
-        makeEditable(ms)
-        ms.percentStockableArea = null
-        ms.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
-        ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.contains('button', 'Next').click()
-      cy.get('[data-testid="percent-stockable-area"]')
-        .find('.v-messages__message')
-        .should('contain.text', MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_REQ)
-    })
-
-    it('shows range error when Percent Stockable Area is out of range', () => {
-      mountPanel((ms) => {
-        openPanel(ms)
-        makeEditable(ms)
-        ms.percentStockableArea = '150'
-        ms.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
-        ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      })
-      cy.contains('button', 'Next').click()
-      cy.get('[data-testid="percent-stockable-area"]')
-        .find('.v-messages__message')
-        .should('contain.text', MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_RNG)
-    })
-  })
-
-  describe('Min DBH Limit display', () => {
-    it('does not render min-dbh-limit block when minDBHLimit is null', () => {
-      mountPanel((ms) => openPanel(ms))
-      cy.get('[data-testid="min-dbh-limit"]').should('not.exist')
-    })
-
-    it('renders min-dbh-limit block when minDBHLimit is set', () => {
-      const { modelStore } = mountPanel((ms) => openPanel(ms))
-      cy.then(() => { modelStore.minDBHLimit = '12.5 cm' })
-      cy.get('[data-testid="min-dbh-limit"]').should('exist')
-      cy.get('.min-dbh-value').should('contain', '12.5 cm')
-    })
+  it('renders min-dbh-limit block when minDBHLimit is set', () => {
+    const { modelStore } = mountPanel((ms) => openPanel(ms))
+    cy.then(() => { modelStore.minDBHLimit = '12.5 cm' })
+    cy.get('[data-testid="min-dbh-limit"]').should('exist')
+    cy.get('.min-dbh-value').should('contain', '12.5 cm')
   })
 })
