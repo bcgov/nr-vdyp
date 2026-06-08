@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 import org.junit.jupiter.api.Assertions;
@@ -203,6 +205,8 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
@@ -215,7 +219,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
 				)
 		).thenReturn(mockPath);
 
@@ -224,7 +228,7 @@ class BatchConfigurationTest {
 		assertEquals(RepeatStatus.FINISHED, result);
 		verify(resultAggregationService).aggregateResultsFromJobDir(
 				eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-				any(VDYPProjectionProgressUpdate.class)
+				any(VDYPProjectionProgressUpdate.class), any(Duration.class)
 		);
 		verify(executionContext).putString("consolidatedOutputPath", "/tmp/consolidated.zip");
 	}
@@ -249,6 +253,8 @@ class BatchConfigurationTest {
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
@@ -261,7 +267,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
 				)
 		)
 				.thenReturn(mockPath);
@@ -301,6 +307,8 @@ class BatchConfigurationTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
@@ -310,7 +318,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
 				)
 		)
 				.thenReturn(mockPath);
@@ -338,6 +346,8 @@ class BatchConfigurationTest {
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
@@ -355,7 +365,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
 				)
 		).thenThrow(wrappedException);
 
@@ -383,6 +393,8 @@ class BatchConfigurationTest {
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
@@ -398,7 +410,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
 				)
 		).thenThrow(testException);
 
@@ -424,6 +436,8 @@ class BatchConfigurationTest {
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
@@ -439,7 +453,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
 				)
 		).thenThrow(testException);
 
@@ -471,6 +485,8 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
+
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
@@ -482,7 +498,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
 				)
 		).thenReturn(mockPath);
 
@@ -510,6 +526,7 @@ class BatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minus(Duration.ofMinutes(5)));
 		mockProgressContext(jobExecution);
 		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
@@ -525,7 +542,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), eq(null), anyString(),
-						any(VDYPProjectionProgressUpdate.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
 				)
 		).thenThrow(testException);
 
