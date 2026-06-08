@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -47,7 +48,8 @@ public class BatchResultAggregationService {
 	 */
 	public Path aggregateResultsFromJobDir(
 			@NonNull Long jobExecutionId, @NonNull String jobGuid, @NonNull String jobBaseDir,
-			@NonNull String jobTimestamp, @NonNull VDYPProjectionProgressUpdate finalProgress
+			@NonNull String jobTimestamp, @NonNull VDYPProjectionProgressUpdate finalProgress,
+			@NonNull Duration duration
 	) throws BatchResultAggregationException {
 		logger.info(
 				"[GUID: {}] Starting result aggregation for job execution: {} from job directory: {}", jobGuid,
@@ -75,8 +77,8 @@ public class BatchResultAggregationService {
 			// Aggregate results
 			try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(finalZipPath))) {
 				aggregateYieldTables(partitionOutputDirs, zipOut);
-				aggregateLogs(partitionOutputDirs, zipOut, finalProgress);
-
+				aggregateLogs(partitionOutputDirs, zipOut);
+				writeTotalProgress(zipOut, finalProgress, duration);
 				logger.info("Successfully created consolidated ZIP file: {}", finalZipPath);
 			}
 
@@ -612,9 +614,7 @@ public class BatchResultAggregationService {
 	 *
 	 * @throws IOException if aggregation fails
 	 */
-	private void
-			aggregateLogs(List<Path> partitionDirs, ZipOutputStream zipOut, VDYPProjectionProgressUpdate progressUpdate)
-					throws IOException {
+	private void aggregateLogs(List<Path> partitionDirs, ZipOutputStream zipOut) throws IOException {
 		logger.debug("Aggregating log files from {} partitions", partitionDirs.size());
 
 		Map<String, List<Path>> logsByType = new HashMap<>();
@@ -653,7 +653,7 @@ public class BatchResultAggregationService {
 			List<Path> logPaths = entry.getValue();
 
 			if (!logPaths.isEmpty()) {
-				mergeLogs(logType, logPaths, zipOut, progressUpdate);
+				mergeLogs(logType, logPaths, zipOut);
 			}
 		}
 
@@ -682,8 +682,8 @@ public class BatchResultAggregationService {
 	 */
 	private boolean isLogFile(String fileName) {
 		String lowerName = fileName.toLowerCase();
-		return lowerName.contains("log") || lowerName.contains("error") || lowerName.contains("progress")
-				|| lowerName.contains("debug");
+		return (lowerName.contains("log") || lowerName.contains("error") || lowerName.contains("debug"))
+				&& !lowerName.contains("progress"); // skip progress logs
 	}
 
 	/**
@@ -707,9 +707,7 @@ public class BatchResultAggregationService {
 	/**
 	 * Merges multiple log files of the same type into a single file in the ZIP.
 	 */
-	private void mergeLogs(
-			String logType, List<Path> logPaths, ZipOutputStream zipOut, VDYPProjectionProgressUpdate progressUpdate
-	) throws IOException {
+	private void mergeLogs(String logType, List<Path> logPaths, ZipOutputStream zipOut) throws IOException {
 		String mergedLogFileName = String.format("%sLog.txt", logType);
 
 		ZipEntry zipEntry = new ZipEntry(mergedLogFileName);
@@ -729,10 +727,6 @@ public class BatchResultAggregationService {
 			}
 		}
 
-		if (BatchConstants.File.LOG_TYPE_PROGRESS.equals(logType)) {
-			writeTotalProgress(zipOut, progressUpdate);
-		}
-
 		zipOut.closeEntry();
 
 		int successFiles = totalFiles - failedFiles;
@@ -746,16 +740,21 @@ public class BatchResultAggregationService {
 		}
 	}
 
-	private void writeTotalProgress(ZipOutputStream zipOut, VDYPProjectionProgressUpdate progressUpdate)
-			throws IOException {
+	private void
+			writeTotalProgress(ZipOutputStream zipOut, VDYPProjectionProgressUpdate progressUpdate, Duration duration)
+					throws IOException {
+		String mergedLogFileName = String.format("%sLog.txt", "Progress");
+
+		ZipEntry zipEntry = new ZipEntry(mergedLogFileName);
+		zipOut.putNextEntry(zipEntry);
+
 		String progress = String.format(
 				"""
-						Total Processing Summary:
-						  Total Polygons Processed: %7d
-						  Total Polygons Skipped:   %7d
-						                            -------
-						                            %7d""", progressUpdate.polygonsProcessed(),
-				progressUpdate.polygonsSkipped(), progressUpdate.totalPolygons()
+						Projection Type: HCSV
+						Processed %d polygons...
+						Processing summary: %d polygons processed + %d skipped = %d seen
+						Total Duration: %s""", progressUpdate.totalPolygons(), progressUpdate.polygonsProcessed(),
+				progressUpdate.polygonsSkipped(), progressUpdate.totalPolygons(), BatchUtils.formatDuration(duration)
 		);
 		zipOut.write(progress.getBytes(StandardCharsets.UTF_8));
 	}
