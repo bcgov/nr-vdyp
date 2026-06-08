@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.EnumMap;
@@ -24,7 +25,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
@@ -36,7 +39,10 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.PrimarySpeciesDetails;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -304,7 +310,7 @@ class LayerProcessingStateTest {
 			);
 			assertThat(
 					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesAlias()),
-					hasProperty("message", containsString("primarySpeciesIndex"))
+					hasProperty("message", containsString("primarySpeciesAlias"))
 			);
 			assertThat(
 					assertThrows(IllegalStateException.class, () -> unit.getSecondarySpeciesIndex()),
@@ -359,6 +365,186 @@ class LayerProcessingStateTest {
 					),
 					hasProperty("message", equalTo(LayerProcessingState.SPECIES_RANKING_DETAILS_CAN_BE_SET_ONCE_ONLY))
 			);
+		}
+
+	}
+
+	@Nested
+	class PrimaryDetails {
+		LayerProcessingState<?> unit;
+		IMocksControl em;
+		ProcessingControlVariables controlVariables;
+
+		@BeforeEach
+		void setup() throws Exception {
+			controlVariables = new ProcessingControlVariables(new Integer[] {});
+
+			em = EasyMock.createStrictControl();
+			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
+			ProcessingResolvedControlMap controlMap = em.createMock("controlMap", ProcessingResolvedControlMap.class);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2024);
+				pb.biogeoclimaticZone(TestUtils.mockBec());
+				pb.forestInventoryZone("A");
+				pb.percentAvailable(90f);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("A", 1);
+					});
+				});
+			});
+
+			EasyMock.expect(parent.getControlMap()).andStubReturn(controlMap);
+			EasyMock.expect(controlMap.getControlVariables()).andStubReturn(controlVariables);
+
+			em.replay();
+
+			unit = new TestLayerProcessingState(parent, polygon, LayerType.PRIMARY);
+
+			assertThat(unit, hasProperty("NSpecies", is(1)));
+
+		}
+
+		@AfterEach
+		void verify() throws Exception {
+			em.verify();
+		}
+
+		@Test
+		void testUnset() {
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesDominantHeight()),
+					hasProperty("message", containsString("primarySpeciesDominantHeight"))
+			);
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesSiteIndex()),
+					hasProperty("message", containsString("primarySpeciesSiteIndex"))
+			);
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesTotalAge()),
+					hasProperty("message", containsString("primarySpeciesTotalAge"))
+			);
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesAgeAtBreastHeight()),
+					hasProperty("message", containsString("primarySpeciesAgeAtBreastHeight"))
+			);
+			assertThat(
+					assertThrows(IllegalStateException.class, () -> unit.getPrimarySpeciesAgeToBreastHeight()),
+					hasProperty("message", containsString("primarySpeciesAgeToBreastHeight"))
+			);
+		}
+
+		@Test
+		void testSetWithBankEmpty() {
+
+			unit.setPrimarySpeciesDetails(new PrimarySpeciesDetails(11f, 12f, 13f, 14f, 15f));
+
+			// Properties should change
+
+			assertThat(unit, hasProperty("primarySpeciesDominantHeight", is(11f)));
+			assertThat(unit, hasProperty("primarySpeciesSiteIndex", is(12f)));
+			assertThat(unit, hasProperty("primarySpeciesTotalAge", is(13f)));
+			assertThat(unit, hasProperty("primarySpeciesAgeAtBreastHeight", is(14f)));
+			assertThat(unit, hasProperty("primarySpeciesAgeToBreastHeight", is(15f)));
+
+			var bank = unit.getBank();
+
+			// So should bank as it was empty.
+
+			assertThat("bank.dominantHeights", bank.dominantHeights[0], is(11f));
+			assertThat("bank.siteIndices", bank.siteIndices[0], is(12f));
+			assertThat("bank.ageTotals", bank.ageTotals[0], is(13f));
+			assertThat("bank.yearsAtBreastHeight", bank.yearsAtBreastHeight[0], is(14f));
+			assertThat("bank.yearsToBreastHeight", bank.yearsToBreastHeight[0], is(15f));
+		}
+
+		@Test
+		void testSetWithBankSet() {
+			var bank = unit.getBank();
+			bank.dominantHeights[0] = 21f;
+			bank.siteIndices[0] = 22f;
+			bank.ageTotals[0] = 23f;
+			bank.yearsAtBreastHeight[0] = 24f;
+			bank.yearsToBreastHeight[0] = 25f;
+
+			unit.setPrimarySpeciesDetails(new PrimarySpeciesDetails(11f, 12f, 13f, 14f, 15f));
+
+			// Properties should change
+
+			assertThat(unit, hasProperty("primarySpeciesDominantHeight", is(11f)));
+			assertThat(unit, hasProperty("primarySpeciesSiteIndex", is(12f)));
+			assertThat(unit, hasProperty("primarySpeciesTotalAge", is(13f)));
+			assertThat(unit, hasProperty("primarySpeciesAgeAtBreastHeight", is(14f)));
+			assertThat(unit, hasProperty("primarySpeciesAgeToBreastHeight", is(15f)));
+
+			bank = unit.getBank();
+
+			// Bank was already set so no change
+
+			assertThat("bank.dominantHeights", bank.dominantHeights[0], is(21f));
+			assertThat("bank.siteIndices", bank.siteIndices[0], is(22f));
+			assertThat("bank.ageTotals", bank.ageTotals[0], is(23f));
+			assertThat("bank.yearsAtBreastHeight", bank.yearsAtBreastHeight[0], is(24f));
+			assertThat("bank.yearsToBreastHeight", bank.yearsToBreastHeight[0], is(25f));
+		}
+
+		@Test
+		void testSetTwiceDisallowed() {
+			unit.setPrimarySpeciesDetails(new PrimarySpeciesDetails(11f, 12f, 13f, 14f, 15f));
+			var ex = assertThrows(
+					IllegalStateException.class,
+					() -> unit.setPrimarySpeciesDetails(new PrimarySpeciesDetails(21f, 22f, 23f, 24f, 25f))
+			);
+			assertThat(
+					ex, hasProperty("message", is(LayerProcessingState.PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY))
+			);
+
+			// No change to properties
+
+			assertThat(unit, hasProperty("primarySpeciesDominantHeight", is(11f)));
+			assertThat(unit, hasProperty("primarySpeciesSiteIndex", is(12f)));
+			assertThat(unit, hasProperty("primarySpeciesTotalAge", is(13f)));
+			assertThat(unit, hasProperty("primarySpeciesAgeAtBreastHeight", is(14f)));
+			assertThat(unit, hasProperty("primarySpeciesAgeToBreastHeight", is(15f)));
+
+			var bank = unit.getBank();
+
+			// No change to bank
+
+			assertThat("bank.dominantHeights", bank.dominantHeights[0], is(11f));
+			assertThat("bank.siteIndices", bank.siteIndices[0], is(12f));
+			assertThat("bank.ageTotals", bank.ageTotals[0], is(13f));
+			assertThat("bank.yearsAtBreastHeight", bank.yearsAtBreastHeight[0], is(14f));
+			assertThat("bank.yearsToBreastHeight", bank.yearsToBreastHeight[0], is(15f));
+		}
+
+		@Test
+		void testSetTwiceAllowed() throws Exception {
+			controlVariables.setControlVariable(ControlVariable.UPDATE_DURING_GROWTH_6, 1);
+			unit.setPrimarySpeciesDetails(new PrimarySpeciesDetails(11f, 12f, 13f, 14f, 15f));
+			assertDoesNotThrow(() -> unit.setPrimarySpeciesDetails(new PrimarySpeciesDetails(21f, 22f, 23f, 24f, 25f)));
+
+			// Properties should change
+
+			assertThat(unit, hasProperty("primarySpeciesDominantHeight", is(21f)));
+			assertThat(unit, hasProperty("primarySpeciesSiteIndex", is(22f)));
+			assertThat(unit, hasProperty("primarySpeciesTotalAge", is(23f)));
+			assertThat(unit, hasProperty("primarySpeciesAgeAtBreastHeight", is(24f)));
+			assertThat(unit, hasProperty("primarySpeciesAgeToBreastHeight", is(25f)));
+
+			var bank = unit.getBank();
+
+			// But bank should not
+
+			assertThat("bank.dominantHeights", bank.dominantHeights[0], is(11f));
+			assertThat("bank.siteIndices", bank.siteIndices[0], is(12f));
+			assertThat("bank.ageTotals", bank.ageTotals[0], is(13f));
+			assertThat("bank.yearsAtBreastHeight", bank.yearsAtBreastHeight[0], is(14f));
+			assertThat("bank.yearsToBreastHeight", bank.yearsToBreastHeight[0], is(15f));
 		}
 
 	}

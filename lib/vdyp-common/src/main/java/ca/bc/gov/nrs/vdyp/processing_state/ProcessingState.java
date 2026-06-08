@@ -113,4 +113,8 @@ public abstract class ProcessingState<LS extends LayerProcessingState<LS>> {
 
 		return polygon;
 	}
+
+	public ProcessingResolvedControlMap getControlMap() {
+		return controlMap;
+	}
 }
