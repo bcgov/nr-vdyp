@@ -23,7 +23,6 @@ public class PresignedFileFetcher {
 		this(RestClient.create());
 	}
 
-
 	PresignedFileFetcher(RestClient restClient) {
 		this.restClient = Objects.requireNonNull(restClient, "restClient");
 	}
