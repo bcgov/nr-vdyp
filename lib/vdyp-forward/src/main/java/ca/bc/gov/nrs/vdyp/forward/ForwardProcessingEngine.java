@@ -2939,7 +2939,7 @@ public class ForwardProcessingEngine {
 		float primarySpeciesYearsAtBreastHeight = bank.yearsAtBreastHeight[primarySpeciesIndex];
 		float primarySpeciesYearsToBreastHeight = bank.yearsToBreastHeight[primarySpeciesIndex];
 
-		Optional<Integer> activeIndex = Optional.empty();
+		Optional<Integer> activeIndex;
 
 		if (Float.isNaN(primarySpeciesTotalAge)) {
 
