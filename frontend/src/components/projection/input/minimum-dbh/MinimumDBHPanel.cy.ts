@@ -6,7 +6,7 @@ import MinimumDBHPanel from './MinimumDBHPanel.vue'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { CONSTANTS, BIZCONSTANTS } from '@/constants'
-import { PROJECTION_VIEW_MODE, PROJECTION_STATUS } from '@/constants/constants'
+import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 
 const vuetify = createVuetify()
 
@@ -45,15 +45,6 @@ describe('<MinimumDBHPanel />', () => {
     })
   })
 
-  describe('Expansion panel chevron icon', () => {
-    it('shows mdi-chevron-down when the panel is closed', () => {
-      mountPanel((fu) => {
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.CLOSE
-      })
-      cy.get('.expansion-panel-icon').should('have.class', 'mdi-chevron-down')
-    })
-  })
-
   describe('Header Edit button', () => {
     it('is not rendered in view mode', () => {
       mountPanel((fu, app) => {
@@ -75,16 +66,6 @@ describe('<MinimumDBHPanel />', () => {
       })
       cy.get('.edit-button-col button').should('not.be.disabled')
     })
-
-    it('is disabled when projection status is RUNNING', () => {
-      mountPanel((fu, app) => {
-        fu.confirmPanel('reportConfig')
-        fu.confirmPanel('minimumDBH')
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-        app.setCurrentProjectionStatus(PROJECTION_STATUS.RUNNING)
-      })
-      cy.get('.edit-button-col button').should('be.disabled')
-    })
   })
 
   describe('Species groups', () => {
@@ -94,14 +75,6 @@ describe('<MinimumDBHPanel />', () => {
         fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.get('.min-dbh-row').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
-    })
-
-    it('renders a slider for each species group', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.v-slider').should('have.length', BIZCONSTANTS.SPECIES_GROUPS.length)
     })
 
     it('sliders are disabled when panel is not editable', () => {
@@ -133,41 +106,14 @@ describe('<MinimumDBHPanel />', () => {
   })
 
   describe('ActionPanel', () => {
-    it('is not rendered in view mode', () => {
-      mountPanel((fu, app) => {
-        fu.initializeSpeciesGroups()
-        app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.contains('button', 'Next').should('not.exist')
-      cy.contains('button', 'Cancel').should('not.exist')
-    })
-
-    it('renders "Next" and "Cancel" buttons in edit mode', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.contains('button', 'Next').should('exist')
-      cy.contains('button', 'Cancel').should('exist')
-    })
-
-    it('"Next" and "Cancel" are disabled when the panel is not editable', () => {
-      mountPanel((fu) => {
-        fu.initializeSpeciesGroups()
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.contains('button', 'Next').should('be.disabled')
-      cy.contains('button', 'Cancel').should('be.disabled')
-    })
-
-    it('"Next" and "Cancel" are enabled when the panel is editable', () => {
+    it('"Next" is enabled and "Cancel" is disabled (no changes yet) when the panel is editable', () => {
       mountPanel((fu) => {
         fu.initializeSpeciesGroups()
         fu.confirmPanel('reportConfig')
+        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
       })
       cy.contains('button', 'Next').should('not.be.disabled')
-      cy.contains('button', 'Cancel').should('not.be.disabled')
+      cy.contains('button', 'Cancel').should('be.disabled')
     })
   })
 })

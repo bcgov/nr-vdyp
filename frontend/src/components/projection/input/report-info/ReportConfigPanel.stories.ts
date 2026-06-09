@@ -33,14 +33,7 @@ export const Default: Story = {
       fileUploadStore.ageIncrement = '5'
     },
     template: '<ReportConfigPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Edit mode - panel open with title, description, and age range fields filled in. All inputs are enabled.',
-      },
-    },
-  },
+  })
 }
 
 export const YearRangeMode: Story = {
@@ -62,14 +55,7 @@ export const YearRangeMode: Story = {
       fileUploadStore.yearIncrement = '5'
     },
     template: '<ReportConfigPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Numeric Range set to "Year" mode - Starting Year, Finishing Year, and Increment fields are shown instead of Age fields.',
-      },
-    },
-  },
+  })
 }
 
 export const CFSBiomassProjection: Story = {
@@ -92,14 +78,7 @@ export const CFSBiomassProjection: Story = {
       fileUploadStore.isBySpeciesEnabled = false
     },
     template: '<ReportConfigPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'CFS Biomass projection type selected - the "By Species" checkbox is automatically disabled.',
-      },
-    },
-  },
+  })
 }
 
 export const Confirmed: Story = {
@@ -122,14 +101,7 @@ export const Confirmed: Story = {
       fileUploadStore.ageIncrement = '5'
     },
     template: '<ReportConfigPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Confirmed state - all fields are disabled and the Edit button in the header is enabled.',
-      },
-    },
-  },
+  })
 }
 
 export const ReadOnly: Story = {
@@ -152,14 +124,7 @@ export const ReadOnly: Story = {
       fileUploadStore.ageIncrement = '5'
     },
     template: '<ReportConfigPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Read-only (View) mode - all fields are disabled and the ActionPanel and Edit button are hidden.',
-      },
-    },
-  },
+  })
 }
 
 export const PanelCollapsed: Story = {
@@ -175,12 +140,5 @@ export const PanelCollapsed: Story = {
       fileUploadStore.panelState.reportConfig.editable = true
     },
     template: '<ReportConfigPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Panel in collapsed state - only the "Report Details" header with the chevron icon is visible.',
-      },
-    },
-  },
+  })
 }

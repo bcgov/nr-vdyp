@@ -37,14 +37,7 @@ export const Editable: Story = {
       ]
     },
     template: '<SiteIndicesTable :isConfirmEnabled="true" />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Computed + Basal Area: all rows editable. Primary row has BHA Site Index computed (Calc. placeholder). Confirm is enabled.',
-      },
-    },
-  },
+  })
 }
 
 export const Disabled: Story = {
@@ -56,14 +49,7 @@ export const Disabled: Story = {
       store.siteIndexRows = [makeRow('FD'), makeRow('PL'), makeRow('S')]
     },
     template: '<SiteIndicesTable :isConfirmEnabled="false" />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'isConfirmEnabled = false: all inputs are disabled regardless of other state.',
-      },
-    },
-  },
+  })
 }
 
 export const Supplied: Story = {
@@ -78,14 +64,7 @@ export const Supplied: Story = {
       ]
     },
     template: '<SiteIndicesTable :isConfirmEnabled="true" />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'siteSpeciesValues = Supplied: Computed Value select shows N/A placeholder; Age and Height spin fields show N/A.',
-      },
-    },
-  },
+  })
 }
 
 export const ComputedVolumePrimaryOnly: Story = {
@@ -102,14 +81,7 @@ export const ComputedVolumePrimaryOnly: Story = {
       ]
     },
     template: '<SiteIndicesTable :isConfirmEnabled="true" />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Computed + Volume: only the primary row (FD) is editable. Non-primary rows show N/A in all fields.',
-      },
-    },
-  },
+  })
 }
 
 export const TotalAgeComputed: Story = {
@@ -124,14 +96,7 @@ export const TotalAgeComputed: Story = {
       ]
     },
     template: '<SiteIndicesTable :isConfirmEnabled="true" />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'computedValue = Total Age: Age spin shows Calc. placeholder and is disabled; Height and BHA remain editable.',
-      },
-    },
-  },
+  })
 }
 
 export const HeightComputed: Story = {
@@ -146,14 +111,7 @@ export const HeightComputed: Story = {
       ]
     },
     template: '<SiteIndicesTable :isConfirmEnabled="true" />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'computedValue = Height in Meters: Height spin shows Calc. placeholder and is disabled; Age and BHA remain editable.',
-      },
-    },
-  },
+  })
 }
 
 export const Empty: Story = {
@@ -164,12 +122,5 @@ export const Empty: Story = {
       store.siteIndexRows = []
     },
     template: '<SiteIndicesTable :isConfirmEnabled="false" />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'No species rows - only the header and divider are rendered.',
-      },
-    },
-  },
+  })
 }

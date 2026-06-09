@@ -29,14 +29,7 @@ export const Default: Story = {
       modelStore.reportDescription = 'This projection covers the north-east sector stand inventory for the 2024 planning cycle.'
     },
     template: '<ReportDetailsPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Edit mode - panel open with a title and description filled in. The description counter reflects the current character count.',
-      },
-    },
-  },
+  })
 }
 
 export const Confirmed: Story = {
@@ -55,14 +48,7 @@ export const Confirmed: Story = {
       modelStore.reportDescription = 'North-east sector stand inventory.'
     },
     template: '<ReportDetailsPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Confirmed state - all fields are disabled. The action panel shows the Edit button.',
-      },
-    },
-  },
+  })
 }
 
 export const ReadOnly: Story = {
@@ -81,14 +67,7 @@ export const ReadOnly: Story = {
       modelStore.reportDescription = 'North-east sector stand inventory.'
     },
     template: '<ReportDetailsPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Read-only (View) mode - all fields are disabled and the ActionPanel is hidden.',
-      },
-    },
-  },
+  })
 }
 
 export const PanelCollapsed: Story = {
@@ -104,14 +83,7 @@ export const PanelCollapsed: Story = {
       modelStore.panelState.reportDetails.editable = true
     },
     template: '<ReportDetailsPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Panel in collapsed state. Only the "Report Details" header with the chevron icon is visible.',
-      },
-    },
-  },
+  })
 }
 
 export const ProjectionRunning: Story = {
@@ -131,14 +103,7 @@ export const ProjectionRunning: Story = {
       modelStore.reportDescription = 'North-east sector stand inventory.'
     },
     template: '<ReportDetailsPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Projection is currently running - the Edit button in the header is disabled and shows a tooltip explaining that editing is not available during this status.',
-      },
-    },
-  },
+  })
 }
 
 export const TitleValidationError: Story = {
@@ -157,12 +122,5 @@ export const TitleValidationError: Story = {
       modelStore.reportDescription = ''
     },
     template: '<ReportDetailsPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Edit mode with no title entered. Click "Next" or blur the title field to trigger the "Report Title is required." validation error.',
-      },
-    },
-  },
+  })
 }

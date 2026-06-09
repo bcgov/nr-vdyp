@@ -321,6 +321,7 @@
               :hideClearButton="true"
               :hideEditButton="true"
               :showCancelButton="true"
+              :isCancelEnabled="isDirty"
               @confirm="onConfirm"
               @cancel="onCancel"
             />
@@ -331,7 +332,7 @@
   </v-card>
 </template>
 <script setup lang="ts">
-import { ref, watch, computed, type Ref } from 'vue'
+import { ref, watch, computed, nextTick, type Ref } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { AppButton, AppSpinField } from '@/components'
@@ -536,6 +537,14 @@ const validateFields = (): boolean => {
   return isValid && rangeValid
 }
 
+const isDirty = ref(false)
+let suppressDirtyTracking = false
+const markDirty = () => { if (!suppressDirtyTracking) isDirty.value = true }
+
+watch(() => fileUploadStore.panelState[panelName].editable, (editable, wasEditable) => {
+  if (editable && !wasEditable) isDirty.value = false
+})
+
 // Watch store -> local (for external changes)
 watch(() => fileUploadStore.reportTitle, (v) => { localReportTitle.value = v })
 watch(() => fileUploadStore.reportDescription, (v) => { localReportDescription.value = v })
@@ -557,29 +566,29 @@ watch(() => fileUploadStore.isPolygonIDEnabled, (v) => { localIsPolygonIDEnabled
 watch(() => fileUploadStore.isCurrentYearEnabled, (v) => { localIsCurrentYearEnabled.value = v })
 watch(() => fileUploadStore.isReferenceYearEnabled, (v) => { localIsReferenceYearEnabled.value = v })
 
-// Watch local -> store (for UI changes)
-watch(localReportTitle, (v) => { fileUploadStore.reportTitle = v })
-watch(localReportDescription, (v) => { fileUploadStore.reportDescription = v })
+watch(localReportTitle, (v) => { fileUploadStore.reportTitle = v; markDirty() })
+watch(localReportDescription, (v) => { fileUploadStore.reportDescription = v; markDirty() })
 watch(localProjectionType, (v) => {
   if (v === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
     localIsBySpeciesEnabled.value = false
   }
   fileUploadStore.projectionType = v
+  markDirty()
 })
-watch(localSelectedAgeYearRange, (v) => { fileUploadStore.selectedAgeYearRange = v })
-watch(localStartingAge, (v) => { fileUploadStore.startingAge = v })
-watch(localFinishingAge, (v) => { fileUploadStore.finishingAge = v })
-watch(localAgeIncrement, (v) => { fileUploadStore.ageIncrement = v })
-watch(localStartYear, (v) => { fileUploadStore.startYear = v })
-watch(localEndYear, (v) => { fileUploadStore.endYear = v })
-watch(localYearIncrement, (v) => { fileUploadStore.yearIncrement = v })
-watch(localSpecificYear, (v) => { fileUploadStore.specificYear = v })
-watch(localIsBySpeciesEnabled, (v) => { fileUploadStore.isBySpeciesEnabled = v })
-watch(localIncSecondaryHeight, (v) => { fileUploadStore.incSecondaryHeight = v })
-watch(localIsProjectionModeEnabled, (v) => { fileUploadStore.isProjectionModeEnabled = v })
-watch(localIsPolygonIDEnabled, (v) => { fileUploadStore.isPolygonIDEnabled = v })
-watch(localIsCurrentYearEnabled, (v) => { fileUploadStore.isCurrentYearEnabled = v })
-watch(localIsReferenceYearEnabled, (v) => { fileUploadStore.isReferenceYearEnabled = v })
+watch(localSelectedAgeYearRange, (v) => { fileUploadStore.selectedAgeYearRange = v; markDirty() })
+watch(localStartingAge, (v) => { fileUploadStore.startingAge = v; markDirty() })
+watch(localFinishingAge, (v) => { fileUploadStore.finishingAge = v; markDirty() })
+watch(localAgeIncrement, (v) => { fileUploadStore.ageIncrement = v; markDirty() })
+watch(localStartYear, (v) => { fileUploadStore.startYear = v; markDirty() })
+watch(localEndYear, (v) => { fileUploadStore.endYear = v; markDirty() })
+watch(localYearIncrement, (v) => { fileUploadStore.yearIncrement = v; markDirty() })
+watch(localSpecificYear, (v) => { fileUploadStore.specificYear = v; markDirty() })
+watch(localIsBySpeciesEnabled, (v) => { fileUploadStore.isBySpeciesEnabled = v; markDirty() })
+watch(localIncSecondaryHeight, (v) => { fileUploadStore.incSecondaryHeight = v; markDirty() })
+watch(localIsProjectionModeEnabled, (v) => { fileUploadStore.isProjectionModeEnabled = v; markDirty() })
+watch(localIsPolygonIDEnabled, (v) => { fileUploadStore.isPolygonIDEnabled = v; markDirty() })
+watch(localIsCurrentYearEnabled, (v) => { fileUploadStore.isCurrentYearEnabled = v; markDirty() })
+watch(localIsReferenceYearEnabled, (v) => { fileUploadStore.isReferenceYearEnabled = v; markDirty() })
 
 // Input handlers (clear error on change)
 const handleStartingAgeInput = (value: string | null) => {
@@ -665,20 +674,25 @@ const onConfirm = async () => {
     appStore.isSavingProjection = false
   }
 
+  isDirty.value = false
   if (!isConfirmed.value) {
     fileUploadStore.confirmPanel(panelName)
   }
 }
 
 const onCancel = async () => {
+  suppressDirtyTracking = true
   appStore.isSavingProjection = true
   try {
     await revertPanelToSaved(panelName as FileUploadPanelName)
+    await nextTick()
+    isDirty.value = false
   } catch (error) {
     console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
   } finally {
     appStore.isSavingProjection = false
+    suppressDirtyTracking = false
   }
 }
 </script>

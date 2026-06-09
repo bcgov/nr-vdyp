@@ -49,14 +49,7 @@ export const EditableComputed: Story = {
       ]
     },
     template: '<SiteInfoPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Editable state with Site Index = Computed and three species rows. BHA Site Index is the computed field for the primary row (FD).',
-      },
-    },
-  },
+  })
 }
 
 export const EditableSupplied: Story = {
@@ -82,14 +75,7 @@ export const EditableSupplied: Story = {
       ]
     },
     template: '<SiteInfoPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Editable state with Site Index = Supplied. Age and Height columns are N/A; BHA Site Index is entered directly.',
-      },
-    },
-  },
+  })
 }
 
 export const Confirmed: Story = {
@@ -116,14 +102,7 @@ export const Confirmed: Story = {
       ]
     },
     template: '<SiteInfoPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Confirmed state - all inputs are disabled and the ActionPanel shows the Edit button.',
-      },
-    },
-  },
+  })
 }
 
 export const ReadOnly: Story = {
@@ -147,14 +126,7 @@ export const ReadOnly: Story = {
       modelStore.siteIndexRows = [makeRow('S'), makeRow('FD')]
     },
     template: '<SiteInfoPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Read-only (view) mode - all inputs are disabled and the ActionPanel is hidden entirely.',
-      },
-    },
-  },
+  })
 }
 
 export const ComputedVolume: Story = {
@@ -182,14 +154,7 @@ export const ComputedVolume: Story = {
       ]
     },
     template: '<SiteInfoPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Computed + Volume: only the primary row (FD) is editable. Non-primary rows show N/A in all fields.',
-      },
-    },
-  },
+  })
 }
 
 export const PanelCollapsed: Story = {
@@ -205,12 +170,5 @@ export const PanelCollapsed: Story = {
       modelStore.panelState.siteInfo.confirmed = false
     },
     template: '<SiteInfoPanel />',
-  }),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Panel in collapsed state. Only the "Site Information" header with the chevron icon is visible.',
-      },
-    },
-  },
+  })
 }

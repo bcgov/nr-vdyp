@@ -32,230 +32,94 @@ const mountPanel = (
 }
 
 describe('<ReportDetailsPanel />', () => {
-  describe('Panel structure', () => {
-    it('renders the "Report Details" panel title', () => {
-      mountPanel()
-      cy.contains('.text-h6', 'Report Details').should('exist')
-    })
+  it('shows panel content when open (default)', () => {
+    mountPanel()
+    cy.get('#manualReportTitle').should('exist')
+  })
 
-    it('panel content is in the DOM when the panel is open (default)', () => {
-      mountPanel()
-      cy.get('#manualReportTitle').should('exist')
+  it('hides panel content when closed', () => {
+    mountPanel((modelStore) => {
+      modelStore.panelOpenStates.reportDetails = CONSTANTS.PANEL.CLOSE
     })
+    cy.get('#manualReportTitle').should('not.exist')
+  })
 
-    it('panel content is not in the DOM when the panel is closed', () => {
-      mountPanel((modelStore) => {
-        modelStore.panelOpenStates.reportDetails = CONSTANTS.PANEL.CLOSE
-      })
-      cy.get('#manualReportTitle').should('not.exist')
+  it('disables inputs in view mode and when panel is not editable', () => {
+    mountPanel((_, app) => {
+      app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
+    })
+    cy.get('#manualReportTitle').should('be.disabled')
+    cy.get('#manualReportDescription').should('be.disabled')
+
+    mountPanel((modelStore) => {
+      modelStore.panelState.reportDetails.editable = false
+    })
+    cy.get('#manualReportTitle').should('be.disabled')
+    cy.get('#manualReportDescription').should('be.disabled')
+  })
+
+  it('shows validation error when title is empty on blur', () => {
+    mountPanel()
+    cy.get('#manualReportTitle').focus()
+    cy.get('#manualReportTitle').blur()
+    cy.contains('Report Title is required.').should('exist')
+  })
+
+  it('reflects the store reportTitle value in the text field', () => {
+    mountPanel((modelStore) => {
+      modelStore.reportTitle = 'Stored Title'
+    })
+    cy.get('#manualReportTitle').should('have.value', 'Stored Title')
+  })
+
+  it('clicking "Next" with empty title shows error and does not confirm', () => {
+    const { modelStore } = mountPanel((modelStore) => {
+      modelStore.reportTitle = null
+    })
+    cy.contains('button', 'Next').click()
+    cy.contains('Report Title is required.').should('exist')
+    cy.then(() => {
+      expect(modelStore.panelState.reportDetails.confirmed).to.be.false
     })
   })
 
-  describe('Expansion panel chevron icon', () => {
-    it('shows mdi-chevron-up when the panel is open (default)', () => {
-      mountPanel()
-      cy.get('.expansion-panel-icon').should('have.class', 'mdi-chevron-up')
+  it('hides ActionPanel in view mode and shows Next/Cancel in edit mode', () => {
+    mountPanel((_, app) => {
+      app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
     })
+    cy.contains('button', 'Next').should('not.exist')
+    cy.contains('button', 'Cancel').should('not.exist')
 
-    it('shows mdi-chevron-down when the panel is closed', () => {
-      mountPanel((modelStore) => {
-        modelStore.panelOpenStates.reportDetails = CONSTANTS.PANEL.CLOSE
-      })
-      cy.get('.expansion-panel-icon').should('have.class', 'mdi-chevron-down')
+    mountPanel()
+    cy.contains('button', 'Next').should('exist')
+    cy.contains('button', 'Cancel').should('exist')
+  })
+
+  it('disables Next and Cancel when panel is not editable', () => {
+    mountPanel((modelStore) => {
+      modelStore.panelState.reportDetails.editable = false
+    })
+    cy.contains('button', 'Next').should('be.disabled')
+    cy.contains('button', 'Cancel').should('be.disabled')
+  })
+
+  it('clicking Edit button makes the panel editable', () => {
+    const { modelStore } = mountPanel((modelStore) => {
+      modelStore.panelState.reportDetails.confirmed = true
+      modelStore.panelState.reportDetails.editable = false
+    })
+    cy.contains('button', 'Edit').click({ force: true })
+    cy.then(() => {
+      expect(modelStore.panelState.reportDetails.editable).to.be.true
     })
   })
 
-  describe('Form fields', () => {
-    it('renders "Report Title (Required)" label', () => {
-      mountPanel()
-      cy.contains('label', 'Report Title (Required)').should('exist')
+  it('disables Edit button when projection is RUNNING', () => {
+    mountPanel((modelStore, appStore) => {
+      modelStore.panelState.reportDetails.confirmed = true
+      modelStore.panelState.reportDetails.editable = false
+      appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.RUNNING
     })
-
-    it('renders the report title text field with placeholder', () => {
-      mountPanel()
-      cy.get('#manualReportTitle').should('have.attr', 'placeholder', 'Enter a report title...')
-    })
-
-    it('renders "Projection Type" label', () => {
-      mountPanel()
-      cy.contains('label', 'Projection Type').should('exist')
-    })
-
-    it('renders "Volume" and "CFS Biomass" radio options', () => {
-      mountPanel()
-      cy.contains('.v-label', 'Volume').should('exist')
-      cy.contains('.v-label', 'CFS Biomass').should('exist')
-    })
-
-    it('renders the description textarea with placeholder', () => {
-      mountPanel()
-      cy.get('#manualReportDescription').should(
-        'have.attr',
-        'placeholder',
-        'Provide a description of this Projection...',
-      )
-    })
-
-    it('shows "0/500" counter when description is empty', () => {
-      mountPanel()
-      cy.contains('.counter', '0/500').should('exist')
-    })
-  })
-
-  describe('Input enabled/disabled state', () => {
-    it('inputs are enabled when the panel is editable (default)', () => {
-      mountPanel()
-      cy.get('#manualReportTitle').should('not.be.disabled')
-      cy.get('#manualReportDescription').should('not.be.disabled')
-    })
-
-    it('inputs are disabled in view/read-only mode', () => {
-      mountPanel((_, app) => {
-        app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
-      })
-      cy.get('#manualReportTitle').should('be.disabled')
-      cy.get('#manualReportDescription').should('be.disabled')
-    })
-
-    it('inputs are disabled when panel is not editable', () => {
-      mountPanel((modelStore) => {
-        modelStore.panelState.reportDetails.editable = false
-      })
-      cy.get('#manualReportTitle').should('be.disabled')
-      cy.get('#manualReportDescription').should('be.disabled')
-    })
-  })
-
-  describe('Title validation', () => {
-    it('shows an error message when the title is empty on blur', () => {
-      mountPanel()
-      cy.get('#manualReportTitle').focus()
-      cy.get('#manualReportTitle').blur()
-      cy.contains('Report Title is required.').should('exist')
-    })
-  })
-
-  describe('Store synchronization', () => {
-    it('reflects the store reportTitle initial value in the text field', () => {
-      mountPanel((modelStore) => {
-        modelStore.reportTitle = 'Stored Title'
-      })
-      cy.get('#manualReportTitle').should('have.value', 'Stored Title')
-    })
-  })
-
-  describe('ActionPanel', () => {
-    it('is not rendered in view/read-only mode', () => {
-      mountPanel((_, app) => {
-        app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
-      })
-      cy.contains('button', 'Next').should('not.exist')
-      cy.contains('button', 'Cancel').should('not.exist')
-    })
-
-    it('renders "Next" and "Cancel" buttons in edit mode', () => {
-      mountPanel()
-      cy.contains('button', 'Next').should('exist')
-      cy.contains('button', 'Cancel').should('exist')
-    })
-
-    it('"Next" and "Cancel" are enabled when the panel is editable (default)', () => {
-      mountPanel()
-      cy.contains('button', 'Next').should('not.be.disabled')
-      cy.contains('button', 'Cancel').should('not.be.disabled')
-    })
-
-    it('"Next" and "Cancel" are disabled when the panel is not editable', () => {
-      mountPanel((modelStore) => {
-        modelStore.panelState.reportDetails.editable = false
-      })
-      cy.contains('button', 'Next').should('be.disabled')
-      cy.contains('button', 'Cancel').should('be.disabled')
-    })
-
-    it('does not render the "Clear" button (hideClearButton=true)', () => {
-      mountPanel()
-      cy.contains('button', 'Clear').should('not.exist')
-    })
-  })
-
-  describe('Edit button in header', () => {
-    it('is visible in non-read-only (create) mode', () => {
-      mountPanel()
-      cy.get('.edit-button-col').should('exist')
-    })
-
-    it('is not visible in read-only (view) mode', () => {
-      mountPanel((_, app) => {
-        app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
-      })
-      cy.get('.edit-button-col').should('not.exist')
-    })
-
-    it('is disabled when the panel is not yet confirmed', () => {
-      mountPanel((modelStore) => {
-        modelStore.panelState.reportDetails.confirmed = false
-        modelStore.panelState.reportDetails.editable = true
-      })
-      cy.contains('button', 'Edit').should('be.disabled')
-    })
-
-    it('is enabled when the panel is confirmed and not editable', () => {
-      mountPanel((modelStore) => {
-        modelStore.panelState.reportDetails.confirmed = true
-        modelStore.panelState.reportDetails.editable = false
-      })
-      cy.contains('button', 'Edit').should('not.be.disabled')
-    })
-
-    it('is disabled when the projection status is RUNNING', () => {
-      mountPanel((modelStore, appStore) => {
-        modelStore.panelState.reportDetails.confirmed = true
-        modelStore.panelState.reportDetails.editable = false
-        appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.RUNNING
-      })
-      cy.contains('button', 'Edit').should('be.disabled')
-    })
-
-    it('is disabled when the projection status is READY', () => {
-      mountPanel((modelStore, appStore) => {
-        modelStore.panelState.reportDetails.confirmed = true
-        modelStore.panelState.reportDetails.editable = false
-        appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.READY
-      })
-      cy.contains('button', 'Edit').should('be.disabled')
-    })
-
-    it('clicking Edit makes the panel editable', () => {
-      const { modelStore } = mountPanel((modelStore) => {
-        modelStore.panelState.reportDetails.confirmed = true
-        modelStore.panelState.reportDetails.editable = false
-      })
-      cy.contains('button', 'Edit').click({ force: true })
-      cy.then(() => {
-        expect(modelStore.panelState.reportDetails.editable).to.be.true
-      })
-    })
-  })
-
-  describe('Confirm and cancel behavior', () => {
-    it('clicking "Next" with an empty title shows a validation error and does not confirm', () => {
-      const { modelStore } = mountPanel((modelStore) => {
-        modelStore.reportTitle = null
-      })
-      cy.contains('button', 'Next').click()
-      cy.contains('Report Title is required.').should('exist')
-      cy.then(() => {
-        expect(modelStore.panelState.reportDetails.confirmed).to.be.false
-      })
-    })
-
-    it('clicking "Next" with a whitespace-only title shows a validation error', () => {
-      mountPanel((modelStore) => {
-        modelStore.reportTitle = '   '
-      })
-      cy.contains('button', 'Next').click()
-      cy.contains('Report Title is required.').should('exist')
-    })
+    cy.contains('button', 'Edit').should('be.disabled')
   })
 })

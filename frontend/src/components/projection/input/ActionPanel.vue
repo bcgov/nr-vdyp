@@ -13,7 +13,7 @@
       label="Cancel"
       variant="tertiary"
       class="ml-2"
-      :isDisabled="!isConfirmEnabled"
+      :isDisabled="props.isCancelEnabled !== undefined ? !props.isCancelEnabled : !isConfirmEnabled"
       @click="onCancel"
     />
     <AppButton
@@ -38,7 +38,7 @@
 import { AppButton } from '@/components'
 import { PANEL_ACTION } from '@/constants/constants'
 
-defineProps({
+const props = defineProps({
   isConfirmEnabled: {
     type: Boolean,
     required: true,
@@ -58,6 +58,10 @@ defineProps({
   showCancelButton: {
     type: Boolean,
     default: false,
+  },
+  isCancelEnabled: {
+    type: Boolean,
+    default: undefined,
   },
 })
 

@@ -102,6 +102,7 @@
               :hideClearButton="true"
               :hideEditButton="true"
               :showCancelButton="true"
+              :isCancelEnabled="isDirty"
               @confirm="onConfirm"
               @cancel="onCancel"
             />
@@ -113,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
@@ -211,6 +212,14 @@ const descriptionLength = computed(() =>
   localReportDescription.value ? localReportDescription.value.length : 0,
 )
 
+const isDirty = ref(false)
+let suppressDirtyTracking = false
+const markDirty = () => { if (!suppressDirtyTracking) isDirty.value = true }
+
+watch(() => modelParameterStore.panelState[panelName].editable, (editable, wasEditable) => {
+  if (editable && !wasEditable) isDirty.value = false
+})
+
 // Sync store -> local
 watch(() => modelParameterStore.reportTitle, (v) => { localReportTitle.value = v })
 watch(() => modelParameterStore.projectionType, (v) => {
@@ -218,15 +227,15 @@ watch(() => modelParameterStore.projectionType, (v) => {
 })
 watch(() => modelParameterStore.reportDescription, (v) => { localReportDescription.value = v })
 
-// Sync local -> store
-watch(localReportTitle, (v) => { modelParameterStore.reportTitle = v })
+watch(localReportTitle, (v) => { modelParameterStore.reportTitle = v; markDirty() })
 watch(localProjectionType, (v) => {
   modelParameterStore.projectionType = v
   if (v === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
     modelParameterStore.isBySpeciesEnabled = false
   }
+  markDirty()
 })
-watch(localReportDescription, (v) => { modelParameterStore.reportDescription = v })
+watch(localReportDescription, (v) => { modelParameterStore.reportDescription = v; markDirty() })
 
 const validateTitle = () => {
   if (!localReportTitle.value || localReportTitle.value.trim() === '') {
@@ -251,20 +260,25 @@ const onConfirm = async () => {
     appStore.isSavingProjection = false
   }
 
+  isDirty.value = false
   if (!isConfirmed.value) {
     modelParameterStore.confirmPanel(panelName)
   }
 }
 
 const onCancel = async () => {
+  suppressDirtyTracking = true
   appStore.isSavingProjection = true
   try {
     await revertPanelToSaved(panelName)
+    await nextTick()
+    isDirty.value = false
   } catch (error) {
     console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
   } finally {
     appStore.isSavingProjection = false
+    suppressDirtyTracking = false
   }
 }
 </script>

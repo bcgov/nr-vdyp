@@ -265,7 +265,7 @@ const router = useRouter()
 const { isLoading: isProjectionLoading, loadProjection } = useProjectionLoader()
 const alertDialogStore = useAlertDialogStore()
 
-const reportSettingsPanelRef = ref<{ onConfirm: () => Promise<boolean> }>()
+const reportSettingsPanelRef = ref<{ onConfirm: () => Promise<boolean>; isDirty: boolean; resetDirty: () => Promise<void> }>()
 
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
@@ -371,15 +371,16 @@ onUnmounted(() => {
   stopPolling()
 })
 
-// Cancel button for ReportSettings panel: enabled when user is actively editing that panel
-const isCancelDisabled = computed(() =>
-  !modelParameterStore.panelState[CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS].editable,
-)
+const isCancelDisabled = computed(() => {
+  if (!modelParameterStore.panelState[CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS].editable) return true
+  return !(reportSettingsPanelRef.value?.isDirty ?? false)
+})
 
 const onRevertCancel = async () => {
   appStore.isSavingProjection = true
   try {
     await revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS as PanelName)
+    await reportSettingsPanelRef.value?.resetDirty()
   } catch (error) {
     console.error('Error reverting report settings to saved state:', error)
     notificationStore.showErrorMessage(MESSAGE.PROJECTION_ERR.LOAD_FAILED, MESSAGE.PROJECTION_ERR.LOAD_FAILED_TITLE)

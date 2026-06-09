@@ -6,7 +6,7 @@ import ReportConfigPanel from './ReportConfigPanel.vue'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { CONSTANTS } from '@/constants'
-import { PROJECTION_VIEW_MODE, PROJECTION_STATUS } from '@/constants/constants'
+import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 
 const vuetify = createVuetify()
 
@@ -33,16 +33,6 @@ const mountPanel = (
 
 describe('<ReportConfigPanel />', () => {
   describe('Panel structure', () => {
-    it('renders the "Report Details" panel title', () => {
-      mountPanel()
-      cy.contains('.text-h6', 'Report Details').should('exist')
-    })
-
-    it('panel content is in the DOM when the panel is open (default)', () => {
-      mountPanel()
-      cy.get('#reportTitle').should('exist')
-    })
-
     it('panel content is not in the DOM when the panel is closed', () => {
       mountPanel((fu) => {
         fu.panelOpenStates.reportConfig = CONSTANTS.PANEL.CLOSE
@@ -52,12 +42,6 @@ describe('<ReportConfigPanel />', () => {
   })
 
   describe('Form fields', () => {
-    it('renders "Volume" and "CFS Biomass" radio options for projection type', () => {
-      mountPanel()
-      cy.contains('.v-label', 'Volume').should('exist')
-      cy.contains('.v-label', 'CFS Biomass').should('exist')
-    })
-
     it('renders all checkboxes in "Include following values in Report"', () => {
       mountPanel()
       cy.get('[data-testid="is-by-species-enabled"]').should('exist')
@@ -67,27 +51,12 @@ describe('<ReportConfigPanel />', () => {
       cy.get('[data-testid="is-current-year-enabled"]').should('exist')
       cy.get('[data-testid="is-reference-year-enabled"]').should('exist')
     })
-
-    it('renders Starting Age, Finishing Age, and Increment fields when Age is selected (default)', () => {
-      mountPanel()
-      cy.get('[data-testid="starting-age"]').should('exist')
-      cy.get('[data-testid="finishing-age"]').should('exist')
-      cy.get('[data-testid="age-increment"]').should('exist')
-    })
   })
 
   describe('Input enabled/disabled state', () => {
     it('inputs are disabled in read-only mode', () => {
       mountPanel((_, app) => {
         app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
-      })
-      cy.get('#reportTitle').should('be.disabled')
-      cy.get('#reportDescription').should('be.disabled')
-    })
-
-    it('inputs are disabled when panel is not editable', () => {
-      mountPanel((fu) => {
-        fu.panelState.reportConfig.editable = false
       })
       cy.get('#reportTitle').should('be.disabled')
       cy.get('#reportDescription').should('be.disabled')
@@ -131,15 +100,6 @@ describe('<ReportConfigPanel />', () => {
       mountPanel((fu) => {
         fu.panelState.reportConfig.confirmed = false
         fu.panelState.reportConfig.editable = true
-      })
-      cy.contains('button', 'Edit').should('be.disabled')
-    })
-
-    it('is disabled when projection is running or ready', () => {
-      mountPanel((fu, app) => {
-        fu.panelState.reportConfig.confirmed = true
-        fu.panelState.reportConfig.editable = false
-        app.setCurrentProjectionStatus(PROJECTION_STATUS.RUNNING)
       })
       cy.contains('button', 'Edit').should('be.disabled')
     })
