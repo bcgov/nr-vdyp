@@ -154,7 +154,8 @@ public class EstimationMethods {
 		case 1 -> leadHeight;
 		case 2 -> primaryHeight;
 		default -> throw new IllegalStateException(
-				MessageFormat.format("Expecting equation index 1 or 2 but saw {0}", equationIndex)
+				MessageFormat
+						.format("Expecting non-primay Lorey height equation index 1 or 2 but was {0}", equationIndex)
 		);
 		};
 		return 1.3f + coe.getCoe(1) * pow(heightToUse - 1.3f, coe.getCoe(2));

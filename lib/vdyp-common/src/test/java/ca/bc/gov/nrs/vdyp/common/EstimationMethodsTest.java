@@ -5,7 +5,9 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
@@ -31,6 +34,8 @@ import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -759,6 +764,61 @@ class EstimationMethodsTest {
 			assertThat(result, closeTo(38.7456512f));
 
 		}
+
+		@ParameterizedTest
+		@ValueSource(ints = { Integer.MIN_VALUE, -8, -1, 0, 3, 8, Integer.MAX_VALUE })
+		void testBadEqn(int eqn) throws Exception {
+
+			MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>> coeMap = Utils
+					.expectParsedControl(controlMap, ControlKey.HL_NONPRIMARY, MatrixMap3.class);
+			// Force the equation number to be something unsupported.
+			coeMap.put(
+					"B", "D", Region.COASTAL, Optional.of(new NonprimaryHLCoefficients(new float[] { 1f, 2f }, eqn))
+			);
+
+			var bec = Utils.getBec("CWH", controlMap);
+
+			var spec = VdypSpecies.build(builder -> {
+				builder.polygonIdentifier("Test", 2024);
+				builder.layerType(LayerType.PRIMARY);
+				builder.genus("B", controlMap);
+				builder.percentGenus(50f);
+				builder.volumeGroup(-1);
+				builder.decayGroup(-1);
+				builder.breakageGroup(-1);
+			});
+			var specPrime = VdypSpecies.build(builder -> {
+				builder.polygonIdentifier("Test", 2024);
+				builder.layerType(LayerType.PRIMARY);
+				builder.genus("D", controlMap);
+				builder.percentGenus(50f);
+				builder.volumeGroup(-1);
+				builder.decayGroup(-1);
+				builder.breakageGroup(-1);
+			});
+
+			var ex = assertThrows(
+					IllegalStateException.class,
+					() -> emp.estimateNonPrimaryLoreyHeight(
+							spec.getGenus(), specPrime.getGenus(), bec, 35.2999992f, 33.6889763f
+					)
+			);
+
+			// Should have a useful error message
+			assertThat(
+					ex,
+					hasProperty(
+							"message",
+							is(
+									MessageFormat.format(
+											"Expecting non-primay Lorey height equation index 1 or 2 but was {0}", eqn
+									)
+							)
+					)
+			);
+
+		}
+
 	}
 
 	@Nested
