@@ -23,7 +23,7 @@ import {
 } from '@/services/projectionService'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
-import { addExecutionOptionsFromMappings } from '@/utils/util'
+import { addExecutionOptionsFromMappings, numEq, strEq } from '@/utils/util'
 
 /**
  * Builds an array of selected and excluded execution options based on the file upload store.
@@ -187,11 +187,10 @@ export const buildProjectionParameters = (
     combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
     metadataToOutput: MetadataToOutputEnum.VERSION,
     utils: fileUploadStore.fileUploadSpeciesGroup.map(
-      (sg: FileUploadSpeciesGroup) =>
-        ({
-          speciesName: sg.group,
-          utilizationClass: sg.minimumDBHLimit,
-        }) as UtilizationParameter,
+      (sg: FileUploadSpeciesGroup): UtilizationParameter => ({
+        speciesName: sg.group,
+        utilizationClass: sg.minimumDBHLimit,
+      }),
     ),
   }
 
@@ -258,6 +257,61 @@ export const hasMinimumDBHUnsavedChanges = async (
       : defaultMap[group.group]
     return group.minimumDBHLimit !== savedValue
   })
+}
+
+type Store = ReturnType<typeof useFileUploadStore>
+type SavedParams = ReturnType<typeof parseProjectionParams>
+
+const reportConfigTextChanged = (store: Store, saved: SavedParams, savedDescription: string | null): boolean => {
+  const isAgeRange = store.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
+  const isYearRange = store.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
+  return (
+    !strEq(store.reportTitle, saved.reportTitle) ||
+    !strEq(store.reportDescription ?? null, savedDescription) ||
+    !numEq(isAgeRange ? store.startingAge : null, saved.ageStart) ||
+    !numEq(isAgeRange ? store.finishingAge : null, saved.ageEnd) ||
+    !numEq(isYearRange ? store.startYear : null, saved.yearStart) ||
+    !numEq(isYearRange ? store.endYear : null, saved.yearEnd) ||
+    !numEq(isYearRange ? store.yearIncrement : store.ageIncrement, saved.ageIncrement) ||
+    !numEq(store.specificYear, saved.forceYear)
+  )
+}
+
+const reportConfigOptionsChanged = (store: Store, opts: string[]): boolean => {
+  const savedProjectionType = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+    ? CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+    : CONSTANTS.PROJECTION_TYPE.VOLUME
+  if (store.projectionType !== savedProjectionType) return true
+
+  const flagOptionPairs: [boolean, ExecutionOptionsEnum][] = [
+    [store.isForwardGrowEnabled, ExecutionOptionsEnum.ForwardGrowEnabled],
+    [store.isBackwardGrowEnabled, ExecutionOptionsEnum.BackGrowEnabled],
+    [store.isComputedMAIEnabled, ExecutionOptionsEnum.ReportIncludeVolumeMAI],
+    [store.isCulminationValuesEnabled, ExecutionOptionsEnum.ReportIncludeCulminationValues],
+    [store.isBySpeciesEnabled, ExecutionOptionsEnum.DoIncludeSpeciesProjection],
+    [store.isProjectionModeEnabled, ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable],
+    [store.isPolygonIDEnabled, ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable],
+    [store.isCurrentYearEnabled, ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables],
+    [store.isReferenceYearEnabled, ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables],
+    [store.incSecondaryHeight, ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable],
+  ]
+  return flagOptionPairs.some(([flag, option]) => flag !== opts.includes(option))
+}
+
+export const hasReportConfigUnsavedChanges = async (
+  fileUploadStore: ReturnType<typeof useFileUploadStore>,
+): Promise<boolean> => {
+  const appStore = useAppStore()
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) return false
+
+  const projectionModel = await getProjectionById(projectionGUID)
+  const savedParams = parseProjectionParams(projectionModel.projectionParameters)
+
+  return (
+    reportConfigTextChanged(fileUploadStore, savedParams, projectionModel.reportDescription ?? null) ||
+    reportConfigOptionsChanged(fileUploadStore, savedParams.selectedExecutionOptions)
+  )
 }
 
 /**

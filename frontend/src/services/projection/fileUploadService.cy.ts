@@ -86,6 +86,7 @@ describe('buildExecutionOptions', () => {
       ExecutionOptionsEnum.DoEnableErrorLogging,
       ExecutionOptionsEnum.DoEnableDebugLogging,
       ExecutionOptionsEnum.ForwardGrowEnabled,
+      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
     ]
     alwaysSelected.forEach((opt) => expect(selectedExecutionOptions).to.include(opt))
   })
@@ -97,48 +98,26 @@ describe('buildExecutionOptions', () => {
       ExecutionOptionsEnum.DoSaveIntermediateFiles,
       ExecutionOptionsEnum.AllowAggressiveValueEstimation,
       ExecutionOptionsEnum.DoIncludeProjectionFiles,
+      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
     ]
     alwaysExcluded.forEach((opt) => expect(excludedExecutionOptions).to.include(opt))
   })
 
-  it('should add DoIncludeProjectedMOFVolumes to selected when projectionType is VOLUME', () => {
-    const store = createMockFileUploadStore({ projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME })
-    const { selectedExecutionOptions, excludedExecutionOptions } = buildExecutionOptions(store)
+  it('should add the correct volume option to selected based on projectionType', () => {
+    const volumeStore = createMockFileUploadStore({ projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME })
+    const { selectedExecutionOptions: volSelected, excludedExecutionOptions: volExcluded } = buildExecutionOptions(volumeStore)
+    expect(volSelected).to.include(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
+    expect(volExcluded).to.not.include(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
 
-    expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
-    expect(excludedExecutionOptions).to.not.include(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
-  })
-
-  it('should add DoIncludeProjectedCFSBiomass to selected when projectionType is CFS_BIOMASS', () => {
-    const store = createMockFileUploadStore({ projectionType: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS })
-    const { selectedExecutionOptions, excludedExecutionOptions } = buildExecutionOptions(store)
-
-    expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
-    expect(excludedExecutionOptions).to.not.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
-  })
-
-  it('should always include ForwardGrowEnabled in selected regardless of isForwardGrowEnabled', () => {
-    const storeEnabled = createMockFileUploadStore({ isForwardGrowEnabled: true })
-    const { selectedExecutionOptions: selected1, excludedExecutionOptions: excluded1 } = buildExecutionOptions(storeEnabled)
-    expect(selected1).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
-    expect(excluded1).to.not.include(ExecutionOptionsEnum.ForwardGrowEnabled)
-
-    const storeDisabled = createMockFileUploadStore({ isForwardGrowEnabled: false })
-    const { selectedExecutionOptions: selected2, excludedExecutionOptions: excluded2 } = buildExecutionOptions(storeDisabled)
-    expect(selected2).to.include(ExecutionOptionsEnum.ForwardGrowEnabled)
-    expect(excluded2).to.not.include(ExecutionOptionsEnum.ForwardGrowEnabled)
-  })
-
-  it('should always include DoSummarizeProjectionByLayer in selected and DoSummarizeProjectionByPolygon in excluded', () => {
-    const { selectedExecutionOptions, excludedExecutionOptions } = buildExecutionOptions(createMockFileUploadStore())
-
-    expect(selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoSummarizeProjectionByLayer)
-    expect(excludedExecutionOptions).to.include(ExecutionOptionsEnum.DoSummarizeProjectionByPolygon)
+    const cfsStore = createMockFileUploadStore({ projectionType: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS })
+    const { selectedExecutionOptions: cfsSelected, excludedExecutionOptions: cfsExcluded } = buildExecutionOptions(cfsStore)
+    expect(cfsSelected).to.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+    expect(cfsExcluded).to.not.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
   })
 })
 
 describe('buildProjectionParameters', () => {
-  it('should set ageStart/ageEnd and null yearStart/yearEnd in AGE range mode', () => {
+  it('should set ageStart/ageEnd and null yearStart/yearEnd in AGE range mode, with fixed output format', () => {
     const store = createMockFileUploadStore({
       selectedAgeYearRange: CONSTANTS.AGE_YEAR_RANGE.AGE,
       startingAge: '10',
@@ -152,6 +131,9 @@ describe('buildProjectionParameters', () => {
     expect(params.ageIncrement).to.equal(5)
     expect(params.yearStart).to.be.null
     expect(params.yearEnd).to.be.null
+    expect(params.outputFormat).to.equal(OutputFormatEnum.CSVYieldTable)
+    expect(params.combineAgeYearRange).to.equal(CombineAgeYearRangeEnum.Intersect)
+    expect(params.metadataToOutput).to.equal(MetadataToOutputEnum.VERSION)
   })
 
   it('should set yearStart/yearEnd and ageIncrement from yearIncrement in YEAR range mode', () => {
@@ -170,26 +152,9 @@ describe('buildProjectionParameters', () => {
     expect(params.ageEnd).to.be.null
   })
 
-  it('should set forceYear from specificYear', () => {
-    const store = createMockFileUploadStore({ specificYear: '2030' })
-    const params = buildProjectionParameters(store)
-
-    expect(params.forceYear).to.equal(2030)
-  })
-
-  it('should set forceYear to null when specificYear is falsy', () => {
-    const store = createMockFileUploadStore({ specificYear: null })
-    const params = buildProjectionParameters(store)
-
-    expect(params.forceYear).to.be.null
-  })
-
-  it('should always use CSVYieldTable output format and Intersect combineAgeYearRange', () => {
-    const params = buildProjectionParameters(createMockFileUploadStore())
-
-    expect(params.outputFormat).to.equal(OutputFormatEnum.CSVYieldTable)
-    expect(params.combineAgeYearRange).to.equal(CombineAgeYearRangeEnum.Intersect)
-    expect(params.metadataToOutput).to.equal(MetadataToOutputEnum.VERSION)
+  it('should set forceYear from specificYear, or null when falsy', () => {
+    expect(buildProjectionParameters(createMockFileUploadStore({ specificYear: '2030' })).forceYear).to.equal(2030)
+    expect(buildProjectionParameters(createMockFileUploadStore({ specificYear: null })).forceYear).to.be.null
   })
 
   it('should map fileUploadSpeciesGroup to utils', () => {
@@ -344,7 +309,7 @@ describe('hasMinimumDBHUnsavedChanges', () => {
     cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', false)
   })
 
-  it('should return false when minimumDBHLimit matches the volume default (no utils saved)', () => {
+  it('should compare against the projection type default when no utils are saved', () => {
     const appStore = useAppStore()
     appStore.setCurrentProjectionGUID('some-guid')
 
@@ -356,31 +321,16 @@ describe('hasMinimumDBHUnsavedChanges', () => {
       data: { ...mockProjectionModel, projectionParameters: projParams },
     })
 
-    const store = createMockFileUploadStore({
+    cy.wrap(hasMinimumDBHUnsavedChanges(createMockFileUploadStore({
       fileUploadSpeciesGroup: [{ group: 'F', minimumDBHLimit: '7.5+' }],
-    })
-    cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', false)
-  })
+    }))).should('equal', false)
 
-  it('should return true when minimumDBHLimit differs from the volume default (no utils saved)', () => {
-    const appStore = useAppStore()
-    appStore.setCurrentProjectionGUID('some-guid')
-
-    const projParams = JSON.stringify({
-      selectedExecutionOptions: [ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes],
-      utils: [],
-    })
-    cy.stub(apiClient, 'getProjection').resolves({
-      data: { ...mockProjectionModel, projectionParameters: projParams },
-    })
-
-    const store = createMockFileUploadStore({
+    cy.wrap(hasMinimumDBHUnsavedChanges(createMockFileUploadStore({
       fileUploadSpeciesGroup: [{ group: 'F', minimumDBHLimit: '12.5+' }],
-    })
-    cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', true)
+    }))).should('equal', true)
   })
 
-  it('should return false when minimumDBHLimit matches the saved utils value', () => {
+  it('should compare against the saved utils value when utils are present', () => {
     const appStore = useAppStore()
     appStore.setCurrentProjectionGUID('some-guid')
 
@@ -392,28 +342,13 @@ describe('hasMinimumDBHUnsavedChanges', () => {
       data: { ...mockProjectionModel, projectionParameters: projParams },
     })
 
-    const store = createMockFileUploadStore({
+    cy.wrap(hasMinimumDBHUnsavedChanges(createMockFileUploadStore({
       fileUploadSpeciesGroup: [{ group: 'F', minimumDBHLimit: '12.5+' }],
-    })
-    cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', false)
-  })
+    }))).should('equal', false)
 
-  it('should return true when minimumDBHLimit differs from the saved utils value', () => {
-    const appStore = useAppStore()
-    appStore.setCurrentProjectionGUID('some-guid')
-
-    const projParams = JSON.stringify({
-      selectedExecutionOptions: [ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes],
-      utils: [{ s: 'F', u: '12.5+' }],
-    })
-    cy.stub(apiClient, 'getProjection').resolves({
-      data: { ...mockProjectionModel, projectionParameters: projParams },
-    })
-
-    const store = createMockFileUploadStore({
+    cy.wrap(hasMinimumDBHUnsavedChanges(createMockFileUploadStore({
       fileUploadSpeciesGroup: [{ group: 'F', minimumDBHLimit: '7.5+' }],
-    })
-    cy.wrap(hasMinimumDBHUnsavedChanges(store)).should('equal', true)
+    }))).should('equal', true)
   })
 })
 
