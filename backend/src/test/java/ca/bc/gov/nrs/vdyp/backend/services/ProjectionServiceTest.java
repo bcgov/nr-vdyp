@@ -28,6 +28,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +41,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -50,6 +53,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import ca.bc.gov.nrs.vdyp.backend.config.ProjectionExpiryConfig;
+import ca.bc.gov.nrs.vdyp.backend.config.ProjectionLimitsConfig;
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
@@ -73,6 +77,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
@@ -96,6 +101,7 @@ class ProjectionServiceTest {
 	VDYPUserService userService;
 	@Mock
 	ProjectionExpiryConfig expiryConfig;
+	ProjectionLimitsConfig limitsConfig;
 	ProjectionResourceAssembler assembler;
 
 	ProjectionService service;
@@ -103,10 +109,11 @@ class ProjectionServiceTest {
 	@BeforeEach
 	void setUp() {
 		assembler = new ProjectionResourceAssembler();
+		limitsConfig = new ProjectionLimitsConfig(300);
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig
+				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig, limitsConfig
 		);
 	}
 
@@ -121,6 +128,38 @@ class ProjectionServiceTest {
 
 		assertNotNull(results);
 		assertTrue(results.isEmpty());
+	}
+
+	@Test
+	void validateMaximumPolygons_allowsFilesAtLimit(@TempDir Path tempDir) throws Exception {
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Files.writeString(polygonFile, "FEATURE_ID,MAP_ID,POLYGON_NUMBER\n\n1,082G055,1234\n2,082G055,5678\n");
+
+		service = new ProjectionService(
+				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig,
+				new ProjectionLimitsConfig(2)
+		);
+
+		assertDoesNotThrow(() -> service.validateMaximumPolygons(polygonFile));
+	}
+
+	@Test
+	void validateMaximumPolygons_throwsWhenFileExceedsLimit(@TempDir Path tempDir) throws Exception {
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Files.writeString(polygonFile, "\"FEATURE_ID\",MAP_ID,POLYGON_NUMBER\n1,082G055,1234\n2,082G055,5678\n");
+
+		service = new ProjectionService(
+				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig,
+				new ProjectionLimitsConfig(1)
+		);
+
+		var exception = assertThrows(
+				ProjectionRequestValidationException.class, () -> service.validateMaximumPolygons(polygonFile)
+		);
+		assertThat(exception.getValidationMessages().get(0).getMessage())
+				.isEqualTo("Polygon file exceeds maximum polygon count of 1.");
 	}
 
 	@Test
@@ -428,7 +467,7 @@ class ProjectionServiceTest {
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, userService, failingMapper, expiryConfig
+				calculationEngineCodeLookup, userService, failingMapper, expiryConfig, limitsConfig
 		);
 
 		UUID projectionId = UUID.randomUUID();

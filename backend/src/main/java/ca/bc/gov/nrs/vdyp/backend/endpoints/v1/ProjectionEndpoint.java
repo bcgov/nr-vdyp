@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
@@ -133,20 +132,23 @@ public class ProjectionEndpoint implements Endpoint {
 					.build();
 		}
 
-		var polygonFile = polygonDataStream.uploadedFile().toFile();
-		var layerFile = layersDataStream.uploadedFile().toFile();
+		var polygonFile = polygonDataStream.uploadedFile();
+		var layerFile = layersDataStream.uploadedFile();
 
 		try {
-			try (
-					var polyStream = new FileInputStream(polygonFile); //
-					var layersStream = new FileInputStream(layerFile)
-			) {
-				return projectionService.projectionHcsvPost(
-						trialRun, parameters, polyStream, layersStream, null /* securityContext */
-				);
-			} catch (ProjectionRequestValidationException e) {
+			return projectionService.projectionHcsvPost(
+					trialRun, parameters, polygonFile, layerFile, null /* securityContext */
+			);
+		} catch (ProjectionRequestValidationException e) {
+			try {
 				return Response.status(Status.BAD_REQUEST).header("content-type", "application/json")
 						.entity(serialize(new ValidationMessageListResource(e.getValidationMessages()))).build();
+			} catch (JsonProcessingException serializationException) {
+				return Response.status(Status.INTERNAL_SERVER_ERROR)
+						.entity(
+								serializationException.getMessage() == null ? "unknown reason"
+										: serializationException.getMessage()
+						).build();
 			}
 		} catch (Exception e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR)
