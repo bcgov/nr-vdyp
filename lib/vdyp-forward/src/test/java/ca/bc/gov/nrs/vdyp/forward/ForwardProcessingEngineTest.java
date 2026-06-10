@@ -739,7 +739,7 @@ class ForwardProcessingEngineTest {
 			var fixture = createFixture();
 			int primarySlot = fixture.slot("F");
 			int secondarySlot = fixture.slot("L");
-			float expected = fixture.lps.getParent().estimators.leadHeightFromPrimaryHeight(
+			float expected = fixture.lps.getParent().estimators.estimateLeadHeightFromPrimaryHeight(
 					fixture.bank.loreyHeights[primarySlot][UC_ALL_INDEX], fixture.bank.speciesNames[primarySlot],
 					fixture.lps.getBecZone().getRegion(), fixture.bank.treesPerHectare[primarySlot][UC_ALL_INDEX]
 			);
@@ -759,7 +759,7 @@ class ForwardProcessingEngineTest {
 			var fixture = createFixture();
 			int primarySlot = fixture.slot("F");
 			int secondarySlot = fixture.slot("L");
-			float expected = fixture.lps.getParent().estimators.leadHeightFromPrimaryHeight(
+			float expected = fixture.lps.getParent().estimators.estimateLeadHeightFromPrimaryHeight(
 					fixture.bank.loreyHeights[secondarySlot][UC_ALL_INDEX], fixture.bank.speciesNames[secondarySlot],
 					fixture.lps.getBecZone().getRegion(), fixture.bank.treesPerHectare[secondarySlot][UC_ALL_INDEX]
 			);
