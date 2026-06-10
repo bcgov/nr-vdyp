@@ -81,6 +81,8 @@ spec:
               value: {{ .Values.backend.env.VDYP_API_GATEWAY_JWT_ISSUER | quote }}
             - name: VDYP_API_GATEWAY_JWT_AUDIENCE
               value: {{ .Values.backend.env.VDYP_API_GATEWAY_JWT_AUDIENCE | quote }}
+            - name: VDYP_BACKEND_MAX_POLYGONS
+              value: {{ .Values.backend.env.VDYP_BACKEND_MAX_POLYGONS | quote }}
             - name: VDYP_DB_PROXY_USER
               valueFrom:
                 secretKeyRef:

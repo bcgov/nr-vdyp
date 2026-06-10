@@ -87,6 +87,7 @@ backend:
     VDYP_API_GATEWAY_JWT_JWKS_URI: ~
     VDYP_API_GATEWAY_JWT_ISSUER: ~
     VDYP_API_GATEWAY_JWT_AUDIENCE: ~
+    VDYP_BACKEND_MAX_POLYGONS: ~
 
 frontend:
   fullnameOverride: "vdyp-ui-test"

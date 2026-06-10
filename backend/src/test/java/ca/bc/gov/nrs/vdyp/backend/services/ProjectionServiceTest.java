@@ -23,11 +23,16 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,9 +41,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -50,6 +57,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import ca.bc.gov.nrs.vdyp.backend.config.ProjectionExpiryConfig;
+import ca.bc.gov.nrs.vdyp.backend.config.ProjectionLimitsConfig;
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
@@ -73,9 +81,15 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectionServiceTest {
@@ -96,6 +110,7 @@ class ProjectionServiceTest {
 	VDYPUserService userService;
 	@Mock
 	ProjectionExpiryConfig expiryConfig;
+	ProjectionLimitsConfig limitsConfig;
 	ProjectionResourceAssembler assembler;
 
 	ProjectionService service;
@@ -103,10 +118,11 @@ class ProjectionServiceTest {
 	@BeforeEach
 	void setUp() {
 		assembler = new ProjectionResourceAssembler();
+		limitsConfig = new ProjectionLimitsConfig(300);
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig
+				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig, limitsConfig
 		);
 	}
 
@@ -121,6 +137,112 @@ class ProjectionServiceTest {
 
 		assertNotNull(results);
 		assertTrue(results.isEmpty());
+	}
+
+	@Test
+	void validateMaximumPolygons_allowsFilesAtLimit(@TempDir Path tempDir) throws Exception {
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Files.writeString(polygonFile, "FEATURE_ID,MAP_ID,POLYGON_NUMBER\n\n1,082G055,1234\n2,082G055,5678\n");
+
+		service = new ProjectionService(
+				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig,
+				new ProjectionLimitsConfig(2)
+		);
+
+		assertDoesNotThrow(() -> service.validateMaximumPolygons(polygonFile));
+	}
+
+	@Test
+	void validateMaximumPolygons_throwsWhenFileExceedsLimit(@TempDir Path tempDir) throws Exception {
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Files.writeString(polygonFile, "\"FEATURE_ID\",MAP_ID,POLYGON_NUMBER\n1,082G055,1234\n2,082G055,5678\n");
+
+		service = new ProjectionService(
+				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig,
+				new ProjectionLimitsConfig(1)
+		);
+
+		var exception = assertThrows(
+				ProjectionRequestValidationException.class, () -> service.validateMaximumPolygons(polygonFile)
+		);
+		assertThat(exception.getValidationMessages().get(0).getMessage())
+				.isEqualTo("Polygon file exceeds maximum polygon count of 1.");
+	}
+
+	@Test
+	void projectionHcsvPost_pathInputsPassesValidatedStreamsToRunProjection(@TempDir Path tempDir) throws Exception {
+		String polygonContents = "FEATURE_ID,MAP_ID,POLYGON_NUMBER\n1,082G055,1234\n";
+		String layerContents = "FEATURE_ID,TREE_COVER_LAYER_ESTIMATED_ID\n1,99\n";
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path layerFile = tempDir.resolve("layer.csv");
+		Files.writeString(polygonFile, polygonContents);
+		Files.writeString(layerFile, layerContents);
+
+		ProjectionService serviceSpy = spy(
+				new ProjectionService(
+						em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+						calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig,
+						new ProjectionLimitsConfig(1)
+				)
+		);
+		Parameters parameters = new Parameters().ageStart(0).ageEnd(100).ageIncrement(10);
+		SecurityContext securityContext = mock(SecurityContext.class);
+		Response expectedResponse = Response.ok().build();
+
+		doAnswer(invocation -> {
+			Map<String, InputStream> inputStreams = invocation.getArgument(1);
+			assertThat(inputStreams)
+					.containsOnlyKeys(ParameterNames.HCSV_POLYGON_INPUT_DATA, ParameterNames.HCSV_LAYERS_INPUT_DATA);
+			assertThat(
+					new String(
+							inputStreams.get(ParameterNames.HCSV_POLYGON_INPUT_DATA).readAllBytes(),
+							StandardCharsets.UTF_8
+					)
+			).isEqualTo(polygonContents);
+			assertThat(
+					new String(
+							inputStreams.get(ParameterNames.HCSV_LAYERS_INPUT_DATA).readAllBytes(),
+							StandardCharsets.UTF_8
+					)
+			).isEqualTo(layerContents);
+			return expectedResponse;
+		}).when(serviceSpy).runProjection(
+				eq(ProjectionRequestKind.HCSV), any(), eq(Boolean.TRUE), eq(parameters), eq(securityContext)
+		);
+
+		Response response = serviceSpy.projectionHcsvPost(true, parameters, polygonFile, layerFile, securityContext);
+
+		assertThat(response).isSameAs(expectedResponse);
+		verify(serviceSpy).runProjection(
+				eq(ProjectionRequestKind.HCSV), any(), eq(Boolean.TRUE), eq(parameters), eq(securityContext)
+		);
+	}
+
+	@Test
+	void projectionHcsvPost_pathInputsThrowsWhenPolygonFileExceedsLimitBeforeOpeningLayerFile(@TempDir Path tempDir)
+			throws Exception {
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path missingLayerFile = tempDir.resolve("missing-layer.csv");
+		Files.writeString(polygonFile, "FEATURE_ID,MAP_ID,POLYGON_NUMBER\n1,082G055,1234\n2,082G055,5678\n");
+
+		ProjectionService serviceSpy = spy(
+				new ProjectionService(
+						em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+						calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig,
+						new ProjectionLimitsConfig(1)
+				)
+		);
+
+		var exception = assertThrows(
+				ProjectionRequestValidationException.class,
+				() -> serviceSpy.projectionHcsvPost(false, new Parameters(), polygonFile, missingLayerFile, null)
+		);
+
+		assertThat(exception.getValidationMessages().get(0).getMessage())
+				.isEqualTo("Polygon file exceeds maximum polygon count of 1.");
+		verify(serviceSpy, never()).runProjection(any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -428,7 +550,7 @@ class ProjectionServiceTest {
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, userService, failingMapper, expiryConfig
+				calculationEngineCodeLookup, userService, failingMapper, expiryConfig, limitsConfig
 		);
 
 		UUID projectionId = UUID.randomUUID();
@@ -1415,6 +1537,120 @@ class ProjectionServiceTest {
 
 		assertNotNull(model);
 		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - projectionHcsvPost
+	// ==========================================================
+
+	@Test
+	void endpoint_projectionHcsvPost_nullPolygonData_returnsBadRequest() throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+		FileUpload layerUpload = mock(FileUpload.class);
+
+		Response response = endpoint.projectionHcsvPost(false, new Parameters(), null, layerUpload);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+		assertThat(response.getEntity()).isEqualTo("Projection request failed: no polygon data supplied");
+		verify(mockService, never()).projectionHcsvPost(
+				any(Boolean.class), any(Parameters.class), any(Path.class), any(Path.class), any(SecurityContext.class)
+		);
+	}
+
+	@Test
+	void endpoint_projectionHcsvPost_nullLayerData_returnsBadRequest() throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+		FileUpload polygonUpload = mock(FileUpload.class);
+
+		Response response = endpoint.projectionHcsvPost(false, new Parameters(), polygonUpload, null);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+		assertThat(response.getEntity()).isEqualTo("Projection request failed: no layer data supplied");
+		verify(mockService, never()).projectionHcsvPost(
+				any(Boolean.class), any(Parameters.class), any(Path.class), any(Path.class), any(SecurityContext.class)
+		);
+	}
+
+	@Test
+	void endpoint_projectionHcsvPost_passesUploadedFilePathsToService(@TempDir Path tempDir) throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		FileUpload polygonUpload = mock(FileUpload.class);
+		FileUpload layerUpload = mock(FileUpload.class);
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path layerFile = tempDir.resolve("layer.csv");
+		Parameters parameters = new Parameters().ageStart(0).ageEnd(100);
+		Response expectedResponse = Response.ok("projection-output").build();
+
+		when(polygonUpload.uploadedFile()).thenReturn(polygonFile);
+		when(layerUpload.uploadedFile()).thenReturn(layerFile);
+		when(mockService.projectionHcsvPost(true, parameters, polygonFile, layerFile, null))
+				.thenReturn(expectedResponse);
+
+		Response response = endpoint.projectionHcsvPost(true, parameters, polygonUpload, layerUpload);
+
+		assertThat(response).isSameAs(expectedResponse);
+		verify(mockService).projectionHcsvPost(true, parameters, polygonFile, layerFile, null);
+	}
+
+	@Test
+	void endpoint_projectionHcsvPost_validationException_returnsSerializedValidationMessages(@TempDir Path tempDir)
+			throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		FileUpload polygonUpload = mock(FileUpload.class);
+		FileUpload layerUpload = mock(FileUpload.class);
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path layerFile = tempDir.resolve("layer.csv");
+		Parameters parameters = new Parameters();
+		String validationMessage = "Polygon file exceeds maximum polygon count of 1.";
+
+		when(polygonUpload.uploadedFile()).thenReturn(polygonFile);
+		when(layerUpload.uploadedFile()).thenReturn(layerFile);
+		when(mockService.projectionHcsvPost(false, parameters, polygonFile, layerFile, null)).thenThrow(
+				new ProjectionRequestValidationException(
+						List.of(new ValidationMessage(ValidationMessageKind.GENERIC, validationMessage))
+				)
+		);
+
+		Response response = endpoint.projectionHcsvPost(false, parameters, polygonUpload, layerUpload);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+		assertThat(response.getHeaderString("content-type")).isEqualTo("application/json");
+		assertThat(response.getEntity()).isInstanceOf(String.class);
+		assertThat((String) response.getEntity()).contains(validationMessage);
+	}
+
+	@Test
+	void endpoint_projectionHcsvPost_unexpectedException_returnsInternalServerError(@TempDir Path tempDir)
+			throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		FileUpload polygonUpload = mock(FileUpload.class);
+		FileUpload layerUpload = mock(FileUpload.class);
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path layerFile = tempDir.resolve("layer.csv");
+		Parameters parameters = new Parameters();
+
+		when(polygonUpload.uploadedFile()).thenReturn(polygonFile);
+		when(layerUpload.uploadedFile()).thenReturn(layerFile);
+		when(mockService.projectionHcsvPost(false, parameters, polygonFile, layerFile, null))
+				.thenThrow(new RuntimeException("service failed"));
+
+		Response response = endpoint.projectionHcsvPost(false, parameters, polygonUpload, layerUpload);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+		assertThat(response.getEntity()).isEqualTo("service failed");
 	}
 
 	// ==========================================================

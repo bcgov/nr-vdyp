@@ -3,10 +3,12 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -35,6 +37,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.config.ProjectionExpiryConfig;
+import ca.bc.gov.nrs.vdyp.backend.config.ProjectionLimitsConfig;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
@@ -62,6 +65,8 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationExc
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRequestParametersValidator;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
@@ -94,6 +99,7 @@ public class ProjectionService {
 	private final VDYPUserService userService;
 	private final ObjectMapper objectMapper;
 	private final ProjectionExpiryConfig expiryConfig;
+	private final ProjectionLimitsConfig limitsConfig;
 
 	private static final String FILE_SET_IDENTIFIER = "file set";
 	private static final String FILE_IDENTIFIER = "file";
@@ -108,7 +114,8 @@ public class ProjectionService {
 			EntityManager em, ProjectionResourceAssembler assembler, ProjectionRepository repository,
 			ProjectionFileSetService fileSetService, ProjectionBatchMappingService batchMappingService,
 			ProjectionStatusCodeLookup statusLookup, CalculationEngineCodeLookup calclationEngineLookup,
-			VDYPUserService userService, ObjectMapper objectMapper, ProjectionExpiryConfig expiryConfig
+			VDYPUserService userService, ObjectMapper objectMapper, ProjectionExpiryConfig expiryConfig,
+			ProjectionLimitsConfig limitsConfig
 	) {
 		this.em = em;
 		this.assembler = assembler;
@@ -120,12 +127,86 @@ public class ProjectionService {
 		this.userService = userService;
 		this.objectMapper = objectMapper;
 		this.expiryConfig = expiryConfig;
+		this.limitsConfig = limitsConfig;
 	}
 
 	static {
 		// FIXME Would be better if we moved the stateful parts of the SINDEX library to an instanced singleton.
 		// See VDYP-732
 		PolygonProjectionRunner.initializeSiteIndexCurves();
+	}
+
+	public Response projectionHcsvPost(
+			Boolean trialRun, //
+			Parameters parameters, //
+			Path polygonFile, //
+			Path layersFile, //
+			SecurityContext securityContext
+	) throws IOException, AbstractProjectionRequestException {
+		validateMaximumPolygons(polygonFile);
+
+		try (
+				InputStream polygonStream = Files.newInputStream(polygonFile, StandardOpenOption.READ);
+				InputStream layersStream = Files.newInputStream(layersFile, StandardOpenOption.READ)
+		) {
+			return projectionHcsvPost(trialRun, parameters, polygonStream, layersStream, securityContext);
+		}
+	}
+
+	void validateMaximumPolygons(Path polygonFile) throws IOException, ProjectionRequestValidationException {
+		int maximumPolygons = limitsConfig.maximumPolygons();
+		int polygonCount = 0;
+		boolean firstNonBlankLine = true;
+
+		try (BufferedReader reader = Files.newBufferedReader(polygonFile, StandardCharsets.UTF_8)) {
+			String line;
+			while ( (line = reader.readLine()) != null) {
+				boolean skipLine = false;
+				if (line.isBlank()) {
+					skipLine = true;
+				}
+
+				if (firstNonBlankLine) {
+					firstNonBlankLine = false;
+					if (isHcsvHeaderLine(line)) {
+						skipLine = true;
+					}
+				}
+
+				if (skipLine) {
+					continue;
+				}
+
+				polygonCount++;
+				if (polygonCount > maximumPolygons) {
+					throw new ProjectionRequestValidationException(
+							List.of(
+									new ValidationMessage(
+											ValidationMessageKind.GENERIC,
+											"Polygon file exceeds maximum polygon count of " + maximumPolygons + "."
+									)
+							)
+					);
+				}
+			}
+		}
+
+		logger.info("HCSV polygon input file {} contains {} polygons", polygonFile.getFileName(), polygonCount);
+	}
+
+	private boolean isHcsvHeaderLine(String line) {
+		String firstField = line;
+		int firstComma = line.indexOf(',');
+		if (firstComma >= 0) {
+			firstField = line.substring(0, firstComma);
+		}
+
+		firstField = firstField.strip();
+		if (firstField.length() >= 2 && firstField.startsWith("\"") && firstField.endsWith("\"")) {
+			firstField = firstField.substring(1, firstField.length() - 1);
+		}
+
+		return "FEATURE_ID".equalsIgnoreCase(firstField);
 	}
 
 	public Response projectionHcsvPost(
