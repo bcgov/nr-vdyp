@@ -371,13 +371,14 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		}
 		// Estimate lorey height for primary species
 		if (iPass == 1 && vdypSpecies.size() == 1) {
-			primaryHeight = estimationMethods
-					.primaryHeightFromLeadHeight(leadHeight, vdypPrimarySpecies.getGenus(), bec.getRegion(), tphTotal);
+			primaryHeight = estimationMethods.estimatePrimaryHeightFromLeadHeight(
+					leadHeight, vdypPrimarySpecies.getGenus(), bec.getRegion(), tphTotal
+			);
 		} else if (iPass == 1) {
 			primaryHeight = estimationMethods
 					.primaryHeightFromLeadHeightInitial(leadHeight, vdypPrimarySpecies.getGenus(), bec.getRegion());
 		} else {
-			primaryHeight = estimationMethods.primaryHeightFromLeadHeight(
+			primaryHeight = estimationMethods.estimatePrimaryHeightFromLeadHeight(
 					leadHeight, vdypPrimarySpecies.getGenus(), bec.getRegion(),
 					vdypPrimarySpecies.getTreesPerHectareByUtilization().getAll()
 			);

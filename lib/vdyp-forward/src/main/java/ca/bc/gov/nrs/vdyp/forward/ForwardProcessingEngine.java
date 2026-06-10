@@ -40,7 +40,6 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.ModelCoefficients;
-import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
@@ -1785,15 +1784,8 @@ public class ForwardProcessingEngine {
 
 		String primarySpeciesAlias = fps.getPrimaryLayerProcessingState().getPrimarySpeciesAlias();
 		Region polygonRegion = fps.getPrimaryLayerProcessingState().getBecZone().getRegion();
-		var coefficients = fps.controlMap.getLoreyHeightPrimarySpeciesEquationP1Coefficients();
 
-		float a0 = coefficients.get(primarySpeciesAlias, polygonRegion).getCoe(1);
-		float a1 = coefficients.get(primarySpeciesAlias, polygonRegion).getCoe(2);
-		float a2 = coefficients.get(primarySpeciesAlias, polygonRegion).getCoe(3);
-
-		float hMult = a0 - a1 + a1 * FloatMath.exp(a2 * (pspTph - 100.0f));
-
-		return 1.3f + (dh - 1.3f) * hMult;
+		return fps.estimators.estimatePrimaryHeightFromLeadHeight(dh, primarySpeciesAlias, polygonRegion, pspTph);
 	}
 
 	/**
@@ -1804,38 +1796,19 @@ public class ForwardProcessingEngine {
 	 * @param pspLoreyHeight primary species Lorey height
 	 *
 	 * @return as described
+	 * @throws ProcessingException
 	 */
 	private float estimateNonPrimarySpeciesLoreyHeight(int speciesIndex, float dh, float pspLoreyHeight) {
 		LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
-		float spLh;
-
 		int primarySpeciesIndex = lps.getPrimarySpeciesIndex();
 		String primarySpeciesAlias = bank.speciesNames[primarySpeciesIndex];
 		String speciesAlias = bank.speciesNames[speciesIndex];
-		Region region = lps.getBecZone().getRegion();
 
-		var coefficients = fps.controlMap.getLoreyHeightNonPrimaryCoefficients();
+		return fps.estimators
+				.estimateNonPrimaryLoreyHeight(speciesAlias, primarySpeciesAlias, lps.getBecZone(), dh, pspLoreyHeight);
 
-		var configuredLhCoefficients = coefficients.get(speciesAlias, primarySpeciesAlias, region);
-		var lhCoefficients = configuredLhCoefficients.orElseGet(() -> NonprimaryHLCoefficients.getDefault());
-
-		float a0 = lhCoefficients.getCoe(1);
-		float a1 = lhCoefficients.getCoe(2);
-		int equationIndex = lhCoefficients.getEquationIndex();
-
-		if (equationIndex == 1) {
-			spLh = 1.3f + a0 * (FloatMath.pow(dh - 1.3f, a1));
-		} else if (equationIndex == 2) {
-			spLh = 1.3f + a0 * (FloatMath.pow(pspLoreyHeight - 1.3f, a1));
-		} else {
-			throw new IllegalStateException(
-					MessageFormat.format("Expecting equation index 1 or 2 but saw {0}", equationIndex)
-			);
-		}
-
-		return spLh;
 	}
 
 	/**
@@ -3375,7 +3348,7 @@ public class ForwardProcessingEngine {
 					}
 
 					try {
-						bank.dominantHeights[spIndex] = lps.getParent().estimators.leadHeightFromPrimaryHeight(
+						bank.dominantHeights[spIndex] = lps.getParent().estimators.estimateLeadHeightFromPrimaryHeight(
 								bank.loreyHeights[spIndex][UC_ALL_INDEX], bank.speciesNames[spIndex],
 								lps.getBecZone().getRegion(), bank.treesPerHectare[spIndex][UC_ALL_INDEX]
 						);

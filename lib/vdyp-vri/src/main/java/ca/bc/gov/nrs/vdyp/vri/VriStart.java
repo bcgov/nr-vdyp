@@ -494,7 +494,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		// Note: this seems to be what happens in VDY7. All the values credited with calculationSite are actullly
 		// assigned to a common variable for the layer
 		// Confirmation of this behaviro is asssigned to FIXME VDYP-1048
-		var primaryHeight = estimationMethods.primaryHeightFromLeadHeight(
+		var primaryHeight = estimationMethods.estimatePrimaryHeightFromLeadHeight(
 				leadHeight, calculationSite.getSiteGenus(), bec.getRegion(), primarySpeciesDensity
 		);
 
@@ -531,18 +531,15 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 							float speciesDensity = treesPerHectare(specBaseArea, speciesQuadMeanDiameter);
 
 							// EMP050
-							return (float) estimationMethods.primaryHeightFromLeadHeight(
+							return (float) estimationMethods.estimatePrimaryHeightFromLeadHeight(
 									site.getHeight().get(), site.getSiteGenus(), bec.getRegion(), speciesDensity
 							);
 						})).orElseGet(() -> {
-							try {
-								// EMP053
-								return estimationMethods.estimateNonPrimaryLoreyHeight(
-										vriSpec.getGenus(), primarySiteIn.getSiteGenus(), bec, leadHeight, primaryHeight
-								);
-							} catch (ProcessingException e) {
-								throw new RuntimeProcessingException(e);
-							}
+							// EMP053
+							return estimationMethods.estimateNonPrimaryLoreyHeight(
+									vriSpec.getGenus(), primarySiteIn.getSiteGenus(), bec, leadHeight, primaryHeight
+							);
+
 						});
 
 				float maxHeight = estimationMethods.getLimitsForHeightAndDiameter(vriSpec.getGenus(), bec.getRegion())
