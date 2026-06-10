@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,6 +84,8 @@ import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
@@ -1534,6 +1537,120 @@ class ProjectionServiceTest {
 
 		assertNotNull(model);
 		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - projectionHcsvPost
+	// ==========================================================
+
+	@Test
+	void endpoint_projectionHcsvPost_nullPolygonData_returnsBadRequest() throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+		FileUpload layerUpload = mock(FileUpload.class);
+
+		Response response = endpoint.projectionHcsvPost(false, new Parameters(), null, layerUpload);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+		assertThat(response.getEntity()).isEqualTo("Projection request failed: no polygon data supplied");
+		verify(mockService, never()).projectionHcsvPost(
+				any(Boolean.class), any(Parameters.class), any(Path.class), any(Path.class), any(SecurityContext.class)
+		);
+	}
+
+	@Test
+	void endpoint_projectionHcsvPost_nullLayerData_returnsBadRequest() throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+		FileUpload polygonUpload = mock(FileUpload.class);
+
+		Response response = endpoint.projectionHcsvPost(false, new Parameters(), polygonUpload, null);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+		assertThat(response.getEntity()).isEqualTo("Projection request failed: no layer data supplied");
+		verify(mockService, never()).projectionHcsvPost(
+				any(Boolean.class), any(Parameters.class), any(Path.class), any(Path.class), any(SecurityContext.class)
+		);
+	}
+
+	@Test
+	void endpoint_projectionHcsvPost_passesUploadedFilePathsToService(@TempDir Path tempDir) throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		FileUpload polygonUpload = mock(FileUpload.class);
+		FileUpload layerUpload = mock(FileUpload.class);
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path layerFile = tempDir.resolve("layer.csv");
+		Parameters parameters = new Parameters().ageStart(0).ageEnd(100);
+		Response expectedResponse = Response.ok("projection-output").build();
+
+		when(polygonUpload.uploadedFile()).thenReturn(polygonFile);
+		when(layerUpload.uploadedFile()).thenReturn(layerFile);
+		when(mockService.projectionHcsvPost(true, parameters, polygonFile, layerFile, null))
+				.thenReturn(expectedResponse);
+
+		Response response = endpoint.projectionHcsvPost(true, parameters, polygonUpload, layerUpload);
+
+		assertThat(response).isSameAs(expectedResponse);
+		verify(mockService).projectionHcsvPost(true, parameters, polygonFile, layerFile, null);
+	}
+
+	@Test
+	void endpoint_projectionHcsvPost_validationException_returnsSerializedValidationMessages(@TempDir Path tempDir)
+			throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		FileUpload polygonUpload = mock(FileUpload.class);
+		FileUpload layerUpload = mock(FileUpload.class);
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path layerFile = tempDir.resolve("layer.csv");
+		Parameters parameters = new Parameters();
+		String validationMessage = "Polygon file exceeds maximum polygon count of 1.";
+
+		when(polygonUpload.uploadedFile()).thenReturn(polygonFile);
+		when(layerUpload.uploadedFile()).thenReturn(layerFile);
+		when(mockService.projectionHcsvPost(false, parameters, polygonFile, layerFile, null)).thenThrow(
+				new ProjectionRequestValidationException(
+						List.of(new ValidationMessage(ValidationMessageKind.GENERIC, validationMessage))
+				)
+		);
+
+		Response response = endpoint.projectionHcsvPost(false, parameters, polygonUpload, layerUpload);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+		assertThat(response.getHeaderString("content-type")).isEqualTo("application/json");
+		assertThat(response.getEntity()).isInstanceOf(String.class);
+		assertThat((String) response.getEntity()).contains(validationMessage);
+	}
+
+	@Test
+	void endpoint_projectionHcsvPost_unexpectedException_returnsInternalServerError(@TempDir Path tempDir)
+			throws Exception {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		FileUpload polygonUpload = mock(FileUpload.class);
+		FileUpload layerUpload = mock(FileUpload.class);
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path layerFile = tempDir.resolve("layer.csv");
+		Parameters parameters = new Parameters();
+
+		when(polygonUpload.uploadedFile()).thenReturn(polygonFile);
+		when(layerUpload.uploadedFile()).thenReturn(layerFile);
+		when(mockService.projectionHcsvPost(false, parameters, polygonFile, layerFile, null))
+				.thenThrow(new RuntimeException("service failed"));
+
+		Response response = endpoint.projectionHcsvPost(false, parameters, polygonUpload, layerUpload);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+		assertThat(response.getEntity()).isEqualTo("service failed");
 	}
 
 	// ==========================================================
