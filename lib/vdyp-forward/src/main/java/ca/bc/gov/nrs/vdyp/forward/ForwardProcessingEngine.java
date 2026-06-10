@@ -1363,7 +1363,7 @@ public class ForwardProcessingEngine {
 	 * @return as described
 	 */
 	private ComponentSizeLimits getComponentSizeLimits(String genusAlias, Region region) {
-		return fps.controlMap.getComponentSizeLimits().get(genusAlias, region);
+		return fps.estimators.getLimitsForHeightAndDiameter(genusAlias, region);
 	}
 
 	/**
