@@ -161,15 +161,20 @@ public class ProjectionService {
 		try (BufferedReader reader = Files.newBufferedReader(polygonFile, StandardCharsets.UTF_8)) {
 			String line;
 			while ( (line = reader.readLine()) != null) {
+				boolean skipLine = false;
 				if (line.isBlank()) {
-					continue;
+					skipLine = true;
 				}
 
 				if (firstNonBlankLine) {
 					firstNonBlankLine = false;
 					if (isHcsvHeaderLine(line)) {
-						continue;
+						skipLine = true;
 					}
+				}
+
+				if (skipLine) {
+					continue;
 				}
 
 				polygonCount++;
