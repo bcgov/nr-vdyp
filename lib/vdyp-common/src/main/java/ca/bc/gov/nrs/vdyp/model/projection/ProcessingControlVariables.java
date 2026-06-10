@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.model.projection;
 
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 

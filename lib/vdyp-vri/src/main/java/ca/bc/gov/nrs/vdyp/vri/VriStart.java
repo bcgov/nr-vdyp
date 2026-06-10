@@ -535,14 +535,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 									site.getHeight().get(), site.getSiteGenus(), bec.getRegion(), speciesDensity
 							);
 						})).orElseGet(() -> {
-							try {
-								// EMP053
-								return estimationMethods.estimateNonPrimaryLoreyHeight(
-										vriSpec.getGenus(), primarySiteIn.getSiteGenus(), bec, leadHeight, primaryHeight
-								);
-							} catch (ProcessingException e) {
-								throw new RuntimeProcessingException(e);
-							}
+							// EMP053
+							return estimationMethods.estimateNonPrimaryLoreyHeight(
+									vriSpec.getGenus(), primarySiteIn.getSiteGenus(), bec, leadHeight, primaryHeight
+							);
+
 						});
 
 				float maxHeight = estimationMethods.getLimitsForHeightAndDiameter(vriSpec.getGenus(), bec.getRegion())

@@ -8,6 +8,7 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.ratio;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -127,7 +128,7 @@ public class EstimationMethods {
 	public float estimateNonPrimaryLoreyHeight(
 			BaseVdypSpecies<?> vspec, BaseVdypSpecies<?> vspecPrime, BecDefinition bec, float leadHeight,
 			float primaryHeight
-	) throws ProcessingException {
+	) {
 		return estimateNonPrimaryLoreyHeight(vspec.getGenus(), vspecPrime.getGenus(), bec, leadHeight, primaryHeight);
 	}
 
@@ -141,15 +142,22 @@ public class EstimationMethods {
 	 * @param bec           The BEC zone containing the species.
 	 * @param leadHeight    lead height of the layer
 	 * @param primaryHeight height of the primary species
-	 * @throws ProcessingException
 	 */
 	public float estimateNonPrimaryLoreyHeight(
 			String vspec, String vspecPrime, BecDefinition bec, float leadHeight, float primaryHeight
-	) throws ProcessingException {
+	) {
 		var coeMap = controlMap.getHlNonPrimaryCoefficients();
 
 		var coe = coeMap.get(vspec, vspecPrime, bec.getRegion()).orElseGet(() -> NonprimaryHLCoefficients.getDefault());
-		var heightToUse = coe.getEquationIndex() == 1 ? leadHeight : primaryHeight;
+		final int equationIndex = coe.getEquationIndex();
+		var heightToUse = switch (equationIndex) {
+		case 1 -> leadHeight;
+		case 2 -> primaryHeight;
+		default -> throw new IllegalStateException(
+				MessageFormat
+						.format("Expecting non-primay Lorey height equation index 1 or 2 but was {0}", equationIndex)
+		);
+		};
 		return 1.3f + coe.getCoe(1) * pow(heightToUse - 1.3f, coe.getCoe(2));
 	}
 
