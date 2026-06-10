@@ -1272,9 +1272,8 @@ public class ForwardProcessingEngine {
 
 					spDqDelta += f;
 
-					ComponentSizeLimits csl = getComponentSizeLimits(
-							bank.speciesNames[i], lps.getBecZone().getRegion()
-					);
+					ComponentSizeLimits csl = fps.estimators
+							.getLimitsForHeightAndDiameter(bank.speciesNames[i], lps.getBecZone().getRegion());
 
 					var spLhAllStart = bank.loreyHeights[i][UC_ALL_INDEX];
 
@@ -1352,18 +1351,6 @@ public class ForwardProcessingEngine {
 				}
 			}
 		}
-	}
-
-	/**
-	 * EMP061 - get the component size limits for the given genus and alias.
-	 *
-	 * @param genusAlias the alias of the genus in question
-	 * @param region     the region in question
-	 *
-	 * @return as described
-	 */
-	private ComponentSizeLimits getComponentSizeLimits(String genusAlias, Region region) {
-		return fps.controlMap.getComponentSizeLimits().get(genusAlias, region);
 	}
 
 	/**
