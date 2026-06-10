@@ -23,11 +23,14 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -79,8 +82,11 @@ import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectionServiceTest {
@@ -160,6 +166,80 @@ class ProjectionServiceTest {
 		);
 		assertThat(exception.getValidationMessages().get(0).getMessage())
 				.isEqualTo("Polygon file exceeds maximum polygon count of 1.");
+	}
+
+	@Test
+	void projectionHcsvPost_pathInputsPassesValidatedStreamsToRunProjection(@TempDir Path tempDir) throws Exception {
+		String polygonContents = "FEATURE_ID,MAP_ID,POLYGON_NUMBER\n1,082G055,1234\n";
+		String layerContents = "FEATURE_ID,TREE_COVER_LAYER_ESTIMATED_ID\n1,99\n";
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path layerFile = tempDir.resolve("layer.csv");
+		Files.writeString(polygonFile, polygonContents);
+		Files.writeString(layerFile, layerContents);
+
+		ProjectionService serviceSpy = spy(
+				new ProjectionService(
+						em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+						calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig,
+						new ProjectionLimitsConfig(1)
+				)
+		);
+		Parameters parameters = new Parameters().ageStart(0).ageEnd(100).ageIncrement(10);
+		SecurityContext securityContext = mock(SecurityContext.class);
+		Response expectedResponse = Response.ok().build();
+
+		doAnswer(invocation -> {
+			Map<String, InputStream> inputStreams = invocation.getArgument(1);
+			assertThat(inputStreams)
+					.containsOnlyKeys(ParameterNames.HCSV_POLYGON_INPUT_DATA, ParameterNames.HCSV_LAYERS_INPUT_DATA);
+			assertThat(
+					new String(
+							inputStreams.get(ParameterNames.HCSV_POLYGON_INPUT_DATA).readAllBytes(),
+							StandardCharsets.UTF_8
+					)
+			).isEqualTo(polygonContents);
+			assertThat(
+					new String(
+							inputStreams.get(ParameterNames.HCSV_LAYERS_INPUT_DATA).readAllBytes(),
+							StandardCharsets.UTF_8
+					)
+			).isEqualTo(layerContents);
+			return expectedResponse;
+		}).when(serviceSpy).runProjection(
+				eq(ProjectionRequestKind.HCSV), any(), eq(Boolean.TRUE), eq(parameters), eq(securityContext)
+		);
+
+		Response response = serviceSpy.projectionHcsvPost(true, parameters, polygonFile, layerFile, securityContext);
+
+		assertThat(response).isSameAs(expectedResponse);
+		verify(serviceSpy).runProjection(
+				eq(ProjectionRequestKind.HCSV), any(), eq(Boolean.TRUE), eq(parameters), eq(securityContext)
+		);
+	}
+
+	@Test
+	void projectionHcsvPost_pathInputsThrowsWhenPolygonFileExceedsLimitBeforeOpeningLayerFile(@TempDir Path tempDir)
+			throws Exception {
+		Path polygonFile = tempDir.resolve("polygon.csv");
+		Path missingLayerFile = tempDir.resolve("missing-layer.csv");
+		Files.writeString(polygonFile, "FEATURE_ID,MAP_ID,POLYGON_NUMBER\n1,082G055,1234\n2,082G055,5678\n");
+
+		ProjectionService serviceSpy = spy(
+				new ProjectionService(
+						em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
+						calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig,
+						new ProjectionLimitsConfig(1)
+				)
+		);
+
+		var exception = assertThrows(
+				ProjectionRequestValidationException.class,
+				() -> serviceSpy.projectionHcsvPost(false, new Parameters(), polygonFile, missingLayerFile, null)
+		);
+
+		assertThat(exception.getValidationMessages().get(0).getMessage())
+				.isEqualTo("Polygon file exceeds maximum polygon count of 1.");
+		verify(serviceSpy, never()).runProjection(any(), any(), any(), any(), any());
 	}
 
 	@Test
