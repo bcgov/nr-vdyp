@@ -101,6 +101,9 @@ public interface ResolvedControlMap {
 	/** 95 - BREAKAGE */
 	Map<Integer, Coefficients> getNetBreakageMap();
 
+	/** 107 - DQ_YIELD */
+	MatrixMap2<String, String, Coefficients> getQuadMeanDiameterYieldCoefficients();
+
 	/** 108 - BA_DQ_UPPER_BOUNDS */
 	Map<Integer, Coefficients> getUpperBounds();
 

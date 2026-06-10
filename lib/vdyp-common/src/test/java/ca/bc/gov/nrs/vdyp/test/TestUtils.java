@@ -748,11 +748,15 @@ public class TestUtils {
 	 * @param value
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T extends DebugSettings> T debugSettingsSingle(Class<T> debugClass, int index, int value) {
 		var arr = new Integer[DebugSettings.MAX_DEBUG_SETTINGS];
 		Arrays.fill(arr, 0);
 		arr[index - 1] = value;
 
+		if (debugClass == DebugSettings.class) {
+			debugClass = (Class<T>) TestDebugSettings.class;
+		}
 		try {
 			return debugClass.getConstructor(Integer[].class).newInstance(new Object[] { arr });
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException

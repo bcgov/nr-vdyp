@@ -54,6 +54,7 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	private final Optional<MatrixMap2<String, String, Integer>> breakageEquationGroups;
 	private final Optional<Map<String, DoubleCoefficients>> quadMeanDiameterBySpeciesCoefficients;
 	private final Optional<ControlVariables> controlVariables;
+	private final Optional<MatrixMap2<String, String, Coefficients>> quadMeanDiameterYieldCoefficients;
 
 	private final Map<String, Object> controlMap;
 
@@ -93,6 +94,7 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 		this.breakageEquationGroups = this.get(ControlKey.BREAKAGE_GROUPS, MatrixMap2.class);
 		this.quadMeanDiameterBySpeciesCoefficients = this.get(ControlKey.BY_SPECIES_DQ, Map.class);
 		this.controlVariables = this.get(ControlKey.VTROL, ControlVariables.class);
+		this.quadMeanDiameterYieldCoefficients = this.get(ControlKey.DQ_YIELD, MatrixMap2.class);
 	}
 
 	/**
@@ -277,6 +279,12 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	@Override
 	public ControlVariables getControlVariables() {
 		return controlVariables.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterBySpeciesCoefficients"));
+	}
+
+	@Override
+	public MatrixMap2<String, String, Coefficients> getQuadMeanDiameterYieldCoefficients() {
+		return this.quadMeanDiameterYieldCoefficients
+				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterYieldCoefficients"));
 	}
 
 }

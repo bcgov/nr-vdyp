@@ -9,10 +9,15 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +29,15 @@ import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -883,6 +891,85 @@ public class EstimationMethods {
 		return bap;
 	}
 
+	Coefficients sumCoefficientsWeightedBySpeciesAndDecayBec(
+			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec,
+			MatrixMap2<String, String, Coefficients> coeMap, int size
+	) {
+
+		final String decayBecAlias = bec.getDecayBec().getAlias();
+
+		return weightedCoefficientSum(
+				size, 0, //
+				species, //
+				BaseVdypSpecies::getFractionGenus, // Weight by fraction
+				spec -> coeMap.get(decayBecAlias, spec.getGenus())
+		);
+	}
+
+	/**
+	 * Create a coefficients object where its values are either a weighted sum of those for each of the given entities,
+	 * or the value from one arbitrarily chose entity.
+	 *
+	 * @param <T>             The type of entity
+	 * @param size            Size of the resulting coefficients object
+	 * @param indexFrom       index from of the resulting coefficients object
+	 * @param entities        the entities to do weighted sums over
+	 * @param weight          the weight for a given entity
+	 * @param getCoefficients the coefficients for a given entity
+	 */
+	public static <T> Coefficients weightedCoefficientSum(
+			int size, int indexFrom, Collection<T> entities, ToDoubleFunction<T> weight,
+			Function<T, Coefficients> getCoefficients
+	) {
+		var weighted = IntStream.range(indexFrom, size + indexFrom).boxed().toList();
+		return weightedCoefficientSum(weighted, size, indexFrom, entities, weight, getCoefficients);
+	}
+
+	// UPPERGEN Method 1
+	public Coefficients upperBounds(int baseAreaGroup) {
+		var upperBoundsMap = controlMap.getUpperBounds();
+		return Utils.<Coefficients>optSafe(upperBoundsMap.get(baseAreaGroup)).orElseThrow(
+				() -> new IllegalStateException("Could not find limits for base area group " + baseAreaGroup)
+		);
+	}
+
+	public float upperBoundsBaseArea(int baseAreaGroup) {
+		return upperBounds(baseAreaGroup).getCoe(1);
+	}
+
+	public float upperBoundsQuadMeanDiameter(int baseAreaGroup) {
+		return upperBounds(baseAreaGroup).getCoe(2);
+	}
+
+	/**
+	 * // EMP107 /**
+	 *
+	 * @param dominantHeight  Dominant height (m)
+	 * @param breastHeightAge breast height age
+	 * @param veteranBaseArea Basal area of overstory (>= 0)
+	 * @param species         Species for the layer
+	 * @param becZone         BEC of the polygon
+	 * @param baseAreaGroup   Index of the base area group
+	 * @return DQ of primary layer (w DBH >= 7.5)
+	 * @throws StandProcessingException
+	 */
+	float estimateQuadMeanDiameterYield(
+			float dominantHeight, float breastHeightAge, Optional<Float> veteranBaseArea,
+			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition becZone,
+			int baseAreaGroup
+	) throws StandProcessingException {
+		controlMap.getQuadMeanDiameterYieldCoefficients();
+		final var coe = sumCoefficientsWeightedBySpeciesAndDecayBec(
+				species, becZone, controlMap.getQuadMeanDiameterYieldCoefficients(), 6
+		);
+		Optional<Float> maxBreastHeightAge = ((NonFipDebugSettings) controlMap.getDebugSettings())
+				.getMaxBreastHeightAge();
+		float upperBoundQuadMeanDiameter = upperBoundsBaseArea(baseAreaGroup);
+		return estimateQuadMeanDiameterYield(
+				coe, maxBreastHeightAge, dominantHeight, breastHeightAge, veteranBaseArea, upperBoundQuadMeanDiameter
+		);
+	}
+
 	/**
 	 * EMP107 - estimate DQ yield for the primary layer (from IPSJF161.doc)
 	 *
@@ -919,6 +1006,28 @@ public class EstimationMethods {
 		float dq = c0 + c1 * FloatMath.pow(dominantHeight - 5f, c2)
 				* FloatMath.exp(veteranBaseArea.orElse(0.0f) * coefficients.getCoe(5));
 		return FloatMath.clamp(dq, 7.6f, upperBoundQuadMeanDiameter);
+	}
+
+	/**
+	 * EMP107 - estimate DQ yield for the primary layer (from IPSJF161.doc)
+	 *
+	 * @param coefficients               coefficients weighted by species and decay bec zone
+	 * @param dominantHeight             dominant height (m)
+	 * @param breastHeightAge            breast height age (years)
+	 * @param veteranBaseArea            basal area of overstory (>= 0)
+	 * @param upperBoundQuadMeanDiameter upper bound on the result of this call
+	 * @return quad-mean-diameter of primary layer (with DBH >= 7.5)
+	 * @throws StandProcessingException in the event of a processing error
+	 */
+	public float estimateQuadMeanDiameterYield(
+			Coefficients coefficients, float dominantHeight, float breastHeightAge, Optional<Float> veteranBaseArea,
+			float upperBoundQuadMeanDiameter
+	) throws StandProcessingException {
+		return estimateQuadMeanDiameterYield(
+				coefficients, ((NonFipDebugSettings) controlMap.getDebugSettings()).getMaxBreastHeightAge(),
+				dominantHeight, breastHeightAge, veteranBaseArea, upperBoundQuadMeanDiameter
+		);
+
 	}
 
 	@FunctionalInterface
@@ -1270,6 +1379,55 @@ public class EstimationMethods {
 				species.getLoreyHeightByUtilization().getAll(), //
 				region
 		);
+	}
+
+	/**
+	 * Create a coefficients object where its values are either a weighted sum of those for each of the given entities,
+	 * or the value from one arbitrarily chose entity.
+	 *
+	 * @param <T>             The type of entity
+	 * @param weighted        the indicies of the coefficients that should be weighted sums, those that are not included
+	 *                        are assumed to be constant across all entities and one is choses arbitrarily.
+	 * @param size            Size of the resulting coefficients object
+	 * @param indexFrom       index from of the resulting coefficients object
+	 * @param entities        the entities to do weighted sums over
+	 * @param weight          the weight for a given entity
+	 * @param getCoefficients the coefficients for a given entity
+	 */
+	public static <T> Coefficients weightedCoefficientSum(
+			Collection<Integer> weighted, int size, int indexFrom, Collection<T> entities, ToDoubleFunction<T> weight,
+			Function<T, Coefficients> getCoefficients
+	) {
+		Coefficients coe = Coefficients.empty(size, indexFrom);
+
+		// Do the summation in double precision
+		var coeWorking = new double[size];
+		Arrays.fill(coeWorking, 0.0);
+
+		for (var entity : entities) {
+			var entityCoe = getCoefficients.apply(entity);
+			double fraction = weight.applyAsDouble(entity);
+			log.atInfo().addArgument(entity).addArgument(fraction).addArgument(entityCoe)
+					.setMessage("For entity {} with fraction {} adding coefficients {}").log();
+			for (int i : weighted) {
+				coeWorking[i - indexFrom] += (entityCoe.getCoe(i)) * fraction;
+			}
+		}
+		// Reduce back to float once done
+		for (int i : weighted) {
+			coe.setCoe(i, (float) coeWorking[i - indexFrom]);
+		}
+
+		// Pick one entity to fill in the fixed coefficients
+		// Choice is arbitrary, they should all be the same
+		var anyCoe = getCoefficients.apply(entities.iterator().next());
+
+		for (int i = indexFrom; i < size + indexFrom; i++) {
+			if (weighted.contains(i))
+				continue;
+			coe.setCoe(i, anyCoe.getCoe(i));
+		}
+		return coe;
 	}
 
 }

@@ -90,7 +90,7 @@ import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, D extends DebugSettings>
 		extends VdypApplication implements AutoCloseable, SpeciesCopier<S, I> {
 
-	private static final Logger log = LoggerFactory.getLogger(VdypStartApplication.class);
+	public static final Logger log = LoggerFactory.getLogger(VdypStartApplication.class);
 
 	public static final int CONFIG_LOAD_ERROR = 1;
 	public static final int PROCESSING_ERROR = 2;
@@ -477,7 +477,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		var leadGenus = leadGenus(layer);
 
 		var decayBecAlias = bec.getDecayBec().getAlias();
-		Coefficients coe = weightedCoefficientSum(
+		Coefficients coe = EstimationMethods.weightedCoefficientSum(
 				List.of(0, 1, 2, 3, 4, 5), 9, 0, layer.getSpecies().values(), BaseVdypSpecies::getFractionGenus,
 				s -> coeMap.get(decayBecAlias, s.getGenus())
 		);
@@ -727,36 +727,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			Collection<Integer> weighted, int size, int indexFrom, Collection<T> entities, ToDoubleFunction<T> weight,
 			Function<T, Coefficients> getCoefficients
 	) {
-		Coefficients coe = Coefficients.empty(size, indexFrom);
-
-		// Do the summation in double precision
-		var coeWorking = new double[size];
-		Arrays.fill(coeWorking, 0.0);
-
-		for (var entity : entities) {
-			var entityCoe = getCoefficients.apply(entity);
-			double fraction = weight.applyAsDouble(entity);
-			log.atInfo().addArgument(entity).addArgument(fraction).addArgument(entityCoe)
-					.setMessage("For entity {} with fraction {} adding coefficients {}").log();
-			for (int i : weighted) {
-				coeWorking[i - indexFrom] += (entityCoe.getCoe(i)) * fraction;
-			}
-		}
-		// Reduce back to float once done
-		for (int i : weighted) {
-			coe.setCoe(i, (float) coeWorking[i - indexFrom]);
-		}
-
-		// Pick one entity to fill in the fixed coefficients
-		// Choice is arbitrary, they should all be the same
-		var anyCoe = getCoefficients.apply(entities.iterator().next());
-
-		for (int i = indexFrom; i < size + indexFrom; i++) {
-			if (weighted.contains(i))
-				continue;
-			coe.setCoe(i, anyCoe.getCoe(i));
-		}
-		return coe;
+		// TODO Inline
+		return EstimationMethods.weightedCoefficientSum(weighted, size, indexFrom, entities, weight, getCoefficients);
 	}
 
 	/**
@@ -774,8 +746,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			int size, int indexFrom, Collection<T> entities, ToDoubleFunction<T> weight,
 			Function<T, Coefficients> getCoefficients
 	) {
-		var weighted = IntStream.range(indexFrom, size + indexFrom).boxed().toList();
-		return weightedCoefficientSum(weighted, size, indexFrom, entities, weight, getCoefficients);
+		// TODO Inline
+		return EstimationMethods.weightedCoefficientSum(size, indexFrom, entities, weight, getCoefficients);
 	}
 
 	// FIPLAND
@@ -897,7 +869,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		var leadGenus = leadGenus(layer);
 
 		var decayBecAlias = bec.getDecayBec().getAlias();
-		Coefficients coe = weightedCoefficientSum(
+		Coefficients coe = EstimationMethods.weightedCoefficientSum(
 				List.of(0, 1, 2, 3, 4), 8, 0, layer.getSpecies().values(), BaseVdypSpecies::getFractionGenus,
 				s -> coeMap.get(decayBecAlias, s.getGenus())
 		);
