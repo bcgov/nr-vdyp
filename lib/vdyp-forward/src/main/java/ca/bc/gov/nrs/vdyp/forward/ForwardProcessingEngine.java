@@ -1784,15 +1784,8 @@ public class ForwardProcessingEngine {
 
 		String primarySpeciesAlias = fps.getPrimaryLayerProcessingState().getPrimarySpeciesAlias();
 		Region polygonRegion = fps.getPrimaryLayerProcessingState().getBecZone().getRegion();
-		var coefficients = fps.controlMap.getLoreyHeightPrimarySpeciesEquationP1Coefficients();
 
-		float a0 = coefficients.get(primarySpeciesAlias, polygonRegion).getCoe(1);
-		float a1 = coefficients.get(primarySpeciesAlias, polygonRegion).getCoe(2);
-		float a2 = coefficients.get(primarySpeciesAlias, polygonRegion).getCoe(3);
-
-		float hMult = a0 - a1 + a1 * FloatMath.exp(a2 * (pspTph - 100.0f));
-
-		return 1.3f + (dh - 1.3f) * hMult;
+		return fps.estimators.estimatePrimaryHeightFromLeadHeight(dh, primarySpeciesAlias, polygonRegion, pspTph);
 	}
 
 	/**
@@ -3355,7 +3348,7 @@ public class ForwardProcessingEngine {
 					}
 
 					try {
-						bank.dominantHeights[spIndex] = lps.getParent().estimators.leadHeightFromPrimaryHeight(
+						bank.dominantHeights[spIndex] = lps.getParent().estimators.estimateLeadHeightFromPrimaryHeight(
 								bank.loreyHeights[spIndex][UC_ALL_INDEX], bank.speciesNames[spIndex],
 								lps.getBecZone().getRegion(), bank.treesPerHectare[spIndex][UC_ALL_INDEX]
 						);

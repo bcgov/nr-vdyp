@@ -826,14 +826,14 @@ class EstimationMethodsTest {
 
 		@Test
 		void testPrimaryHeightFromLeadHeight() {
-			float result = emp.primaryHeightFromLeadHeight(20.0f, "B", Region.COASTAL, 40.260403f);
+			float result = emp.estimatePrimaryHeightFromLeadHeight(20.0f, "B", Region.COASTAL, 40.260403f);
 
 			assertThat(result, closeTo(19.870464f));
 		}
 
 		@Test
 		void testLeadHeightFromPrimaryHeight() {
-			float result = emp.leadHeightFromPrimaryHeight(19.870464f, "B", Region.COASTAL, 40.260403f);
+			float result = emp.estimateLeadHeightFromPrimaryHeight(19.870464f, "B", Region.COASTAL, 40.260403f);
 
 			assertThat(result, closeTo(20));
 		}

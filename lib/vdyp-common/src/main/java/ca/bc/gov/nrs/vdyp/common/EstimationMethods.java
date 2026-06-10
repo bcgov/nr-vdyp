@@ -81,8 +81,9 @@ public class EstimationMethods {
 	 * @param treesPerHectarePrimary trees per hectare >7.5 cm of the primary species
 	 * @return as described
 	 */
-	public float
-			primaryHeightFromLeadHeight(float leadHeight, String genus, Region region, float treesPerHectarePrimary) {
+	public float estimatePrimaryHeightFromLeadHeight(
+			float leadHeight, String genus, Region region, float treesPerHectarePrimary
+	) {
 		return 1.3f + (leadHeight - 1.3f) * heightMultiplier(genus, region, treesPerHectarePrimary);
 	}
 
@@ -94,7 +95,7 @@ public class EstimationMethods {
 	 * @param region                 Region of the polygon
 	 * @param treesPerHectarePrimary trees per hectare >7.5 cm of the primary species
 	 */
-	public float leadHeightFromPrimaryHeight(
+	public float estimateLeadHeightFromPrimaryHeight(
 			float primaryHeight, String genus, Region region, float treesPerHectarePrimary
 	) {
 		return 1.3f + (primaryHeight - 1.3f) / heightMultiplier(genus, region, treesPerHectarePrimary);
