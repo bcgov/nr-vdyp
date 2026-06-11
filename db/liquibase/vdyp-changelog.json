@@ -534,6 +534,32 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_11_00",
+        "author": "pminter",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_11_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_11/00/dml/app-vdyp.projection_status_code.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "DELETE FROM \"app-vdyp\".\"projection_status_code\" WHERE projection_status_code = 'QUEUED'"
+          }
+        ]
+      }
     }
   ]
 }
