@@ -327,7 +327,11 @@ export const revertPanelToSaved = async (panelName: FileUploadPanelName): Promis
   const fileUploadStore = useFileUploadStore()
 
   const projectionGUID = appStore.getCurrentProjectionGUID
-  if (!projectionGUID) return
+  if (!projectionGUID) {
+    fileUploadStore.resetStore()
+    fileUploadStore.initializeSpeciesGroups()
+    return
+  }
 
   const projectionModel = await getProjectionById(projectionGUID)
   const params = parseProjectionParams(projectionModel.projectionParameters)
