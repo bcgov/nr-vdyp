@@ -267,6 +267,14 @@ const onConfirm = async () => {
 }
 
 const onCancel = async () => {
+  if (isDirty.value) {
+    const proceed = await alertDialogStore.openDialog(
+      MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+      MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+      { variant: 'warning' },
+    )
+    if (!proceed) return
+  }
   suppressDirtyTracking = true
   appStore.isSavingProjection = true
   try {

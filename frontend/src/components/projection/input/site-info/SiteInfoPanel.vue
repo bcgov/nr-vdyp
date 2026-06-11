@@ -342,6 +342,7 @@ watch(ageType, markDirty)
 watch(spzAge, markDirty)
 watch(spzHeight, markDirty)
 watch(bha50SiteIndex, markDirty)
+watch(siteIndexRows, markDirty, { deep: true })
 
 const siteSpeciesOptions = computed(() =>
   speciesGroups.value.map((group: SpeciesGroup) => ({
@@ -685,6 +686,14 @@ const onHeaderEdit = async () => {
 }
 
 const onCancel = async () => {
+  if (isDirty.value) {
+    const proceed = await alertDialogStore.openDialog(
+      MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+      MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+      { variant: 'warning' },
+    )
+    if (!proceed) return
+  }
   suppressDirtyTracking = true
   appStore.isSavingProjection = true
   try {

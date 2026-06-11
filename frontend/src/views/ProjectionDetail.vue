@@ -377,6 +377,14 @@ const isCancelDisabled = computed(() => {
 })
 
 const onRevertCancel = async () => {
+  if (reportSettingsPanelRef.value?.isDirty) {
+    const proceed = await alertDialogStore.openDialog(
+      MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+      MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+      { variant: 'warning' },
+    )
+    if (!proceed) return
+  }
   appStore.isSavingProjection = true
   try {
     await revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS as PanelName)
