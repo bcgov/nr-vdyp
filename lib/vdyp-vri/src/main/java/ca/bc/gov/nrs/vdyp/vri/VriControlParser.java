@@ -8,6 +8,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
+import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 
 /**

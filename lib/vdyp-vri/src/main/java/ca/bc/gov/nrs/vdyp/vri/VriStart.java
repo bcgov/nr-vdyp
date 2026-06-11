@@ -994,21 +994,20 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
-	// UPPERGEN Method 1
-	Coefficients upperBounds(int baseAreaGroup) {
-		var upperBoundsMap = Utils
-				.<Map<Integer, Coefficients>>expectParsedControl(controlMap, ControlKey.BA_DQ_UPPER_BOUNDS, Map.class);
-		return Utils.<Coefficients>optSafe(upperBoundsMap.get(baseAreaGroup)).orElseThrow(
-				() -> new IllegalStateException("Could not find limits for base area group " + baseAreaGroup)
-		);
-	}
-
+	/**
+	 * @deprecated Use {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#upperBoundsBaseArea(int)} instead
+	 */
 	float upperBoundsBaseArea(int baseAreaGroup) {
-		return upperBounds(baseAreaGroup).getCoe(1);
+		// TODO Inline
+		return estimationMethods.upperBoundsBaseArea(baseAreaGroup);
 	}
 
+	/**
+	 * @deprecated Use {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#upperBoundsQuadMeanDiameter(int)} instead
+	 */
 	float upperBoundsQuadMeanDiameter(int baseAreaGroup) {
-		return upperBounds(baseAreaGroup).getCoe(2);
+		// TODO Inline
+		return estimationMethods.upperBoundsQuadMeanDiameter(baseAreaGroup);
 	}
 
 	// EMP106
