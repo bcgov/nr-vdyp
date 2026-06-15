@@ -28,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
@@ -925,38 +926,72 @@ public class EstimationMethods {
 		return weightedCoefficientSum(weighted, size, indexFrom, entities, weight, getCoefficients);
 	}
 
-	// UPPERGEN Method 1
-	public Coefficients upperBounds(int baseAreaGroup) {
-		var upperBoundsMap = controlMap.getUpperBounds();
-		return Utils.<Coefficients>optSafe(upperBoundsMap.get(baseAreaGroup)).orElseThrow(
-				() -> new IllegalStateException("Could not find limits for base area group " + baseAreaGroup)
-		);
+	static final private int BA_COE_INDEX = 1;
+	static final private int DQ_COE_INDEX = 2;
+
+	/**
+	 * UPPERGEN
+	 * <p>
+	 * Get the upper bound for basal area
+	 *
+	 * @param region
+	 * @param primarySpeciesId
+	 * @param primarySpeciesGroupNumber
+	 * @return
+	 */
+	public float upperBoundsBaseArea(Region region, String primarySpeciesId, int primarySpeciesGroupNumber) {
+		return getUpperBoundsCoefficient(region, primarySpeciesId, primarySpeciesGroupNumber, BA_COE_INDEX);
 	}
 
-	public float upperBoundsBaseArea(int baseAreaGroup) {
-		return upperBounds(baseAreaGroup).getCoe(1);
+	/**
+	 * UPPERGEN
+	 * <p>
+	 * Get the upper bound for quadratic mean diameter
+	 *
+	 * @param region
+	 * @param primarySpeciesId
+	 * @param primarySpeciesGroupNumber
+	 * @return
+	 */
+	public float upperBoundsQuadMeanDiameter(Region region, String primarySpeciesId, int primarySpeciesGroupNumber) {
+		return getUpperBoundsCoefficient(region, primarySpeciesId, primarySpeciesGroupNumber, DQ_COE_INDEX);
 	}
 
-	public float upperBoundsQuadMeanDiameter(int baseAreaGroup) {
-		return upperBounds(baseAreaGroup).getCoe(2);
+	/**
+	 * UPPERGEN
+	 */
+	private float getUpperBoundsCoefficient(
+			Region region, String primarySpeciesId, int primarySpeciesGroupNumber, int coefficient
+	) {
+
+		switch (controlMap.getDebugSettings().getUpperBoundsMode()) {
+		case MODE_1:
+			return controlMap.getUpperBounds().get(primarySpeciesGroupNumber).getCoe(UpperBoundsParser.BA_INDEX);
+		case MODE_2:
+		default:
+			var upperBoundsCoefficients = controlMap.getUpperBoundsCoefficients();
+			return upperBoundsCoefficients.get(region, primarySpeciesId, coefficient);
+		}
+
 	}
 
 	/**
 	 * // EMP107 /**
 	 *
-	 * @param dominantHeight  Dominant height (m)
-	 * @param breastHeightAge breast height age
-	 * @param veteranBaseArea Basal area of overstory (>= 0)
-	 * @param species         Species for the layer
-	 * @param becZone         BEC of the polygon
-	 * @param baseAreaGroup   Index of the base area group
+	 * @param dominantHeight   Dominant height (m)
+	 * @param breastHeightAge  breast height age
+	 * @param veteranBaseArea  Basal area of overstory (>= 0)
+	 * @param species          Species for the layer
+	 * @param primarySpeciesId Id of the primary species
+	 * @param becZone          BEC of the polygon
+	 * @param baseAreaGroup    Index of the base area group
 	 * @return DQ of primary layer (w DBH >= 7.5)
 	 * @throws StandProcessingException
 	 */
 	float estimateQuadMeanDiameterYield(
 			float dominantHeight, float breastHeightAge, Optional<Float> veteranBaseArea,
-			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition becZone,
-			int baseAreaGroup
+			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, String primarySpeciesId,
+			BecDefinition becZone, int baseAreaGroup
 	) throws StandProcessingException {
 		controlMap.getQuadMeanDiameterYieldCoefficients();
 		final var coe = sumCoefficientsWeightedBySpeciesAndDecayBec(
@@ -964,7 +999,7 @@ public class EstimationMethods {
 		);
 		Optional<Float> maxBreastHeightAge = ((NonFipDebugSettings) controlMap.getDebugSettings())
 				.getMaxBreastHeightAge();
-		float upperBoundQuadMeanDiameter = upperBoundsBaseArea(baseAreaGroup);
+		float upperBoundQuadMeanDiameter = upperBoundsBaseArea(becZone.getRegion(), primarySpeciesId, baseAreaGroup);
 		return estimateQuadMeanDiameterYield(
 				coe, maxBreastHeightAge, dominantHeight, breastHeightAge, veteranBaseArea, upperBoundQuadMeanDiameter
 		);

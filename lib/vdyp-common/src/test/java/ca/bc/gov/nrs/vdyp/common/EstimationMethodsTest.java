@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,6 +36,7 @@ import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -619,6 +621,32 @@ class EstimationMethodsTest {
 
 			assertThat(dq, closeTo(66.565033f));
 
+		}
+
+	}
+
+	@Disabled("TODO")
+	@Nested
+	class EstimateQuadMeanDiameterYield {
+
+		@Test
+		void testTest1() throws Exception {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.replay(debug);
+
+			var bec = Utils.getBec("ICH", controlMap);
+			var spec = VdypSpecies.build(sb -> {
+				sb.polygonIdentifier("Test", 2026);
+				sb.layerType(LayerType.PRIMARY);
+				sb.genus("S", controlMap);
+				sb.percentGenus(100f);
+			});
+
+			float result = emp.estimateQuadMeanDiameterYield(8f, 17.1f, Optional.empty(), List.of(spec), "S", bec, 167);
+
+			assertThat(result, closeTo(0f));
 		}
 
 	}

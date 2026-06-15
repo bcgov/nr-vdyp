@@ -55,6 +55,7 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	private final Optional<Map<String, DoubleCoefficients>> quadMeanDiameterBySpeciesCoefficients;
 	private final Optional<ControlVariables> controlVariables;
 	private final Optional<MatrixMap2<String, String, Coefficients>> quadMeanDiameterYieldCoefficients;
+	private final Optional<MatrixMap3<Region, String, Integer, Float>> upperBoundsCoefficients;
 
 	private final Map<String, Object> controlMap;
 
@@ -95,6 +96,8 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 		this.quadMeanDiameterBySpeciesCoefficients = this.get(ControlKey.BY_SPECIES_DQ, Map.class);
 		this.controlVariables = this.get(ControlKey.VTROL, ControlVariables.class);
 		this.quadMeanDiameterYieldCoefficients = this.get(ControlKey.DQ_YIELD, MatrixMap2.class);
+		this.upperBoundsCoefficients = this.get(ControlKey.UPPER_BA_BY_CI_S0_P, MatrixMap3.class);
+
 	}
 
 	/**
@@ -285,6 +288,11 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	public MatrixMap2<String, String, Coefficients> getQuadMeanDiameterYieldCoefficients() {
 		return this.quadMeanDiameterYieldCoefficients
 				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterYieldCoefficients"));
+	}
+
+	@Override
+	public MatrixMap3<Region, String, Integer, Float> getUpperBoundsCoefficients() {
+		return this.upperBoundsCoefficients.orElseThrow(() -> new NoSuchElementException("upperBoundsCoefficients"));
 	}
 
 }

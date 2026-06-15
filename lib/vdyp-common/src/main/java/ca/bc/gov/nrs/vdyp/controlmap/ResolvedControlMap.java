@@ -44,6 +44,9 @@ public interface ResolvedControlMap {
 	/** 31 - EQN_MODIFIERS */
 	MatrixMap2<Integer, Integer, Integer> getEquationModifierGroup();
 
+	/** 43 - UPPER_BA_BY_CI_S0_P */
+	MatrixMap3<Region, String, Integer, Float> getUpperBoundsCoefficients();
+
 	/** 50 - HL_PRIMARY_SP_EQN_P1 */
 	MatrixMap2<String, Region, Coefficients> getHl1Coefficients();
 
@@ -118,4 +121,5 @@ public interface ResolvedControlMap {
 
 	/** 101 - VTROL */
 	ControlVariables getControlVariables();
+
 }

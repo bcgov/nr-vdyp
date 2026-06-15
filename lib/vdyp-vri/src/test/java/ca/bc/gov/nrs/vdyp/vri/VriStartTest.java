@@ -34,6 +34,7 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -70,6 +71,8 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings.UpperBoundsMode;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
@@ -96,6 +99,14 @@ class VriStartTest {
 	ByteArrayOutputStream polyOut;
 	ByteArrayOutputStream specOut;
 	ByteArrayOutputStream utilOut;
+
+	@BeforeEach
+	void init() {
+		VriDebugSettings debug = EasyMock.createMock(VriDebugSettings.class);
+		EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+		EasyMock.replay(debug);
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), debug);
+	}
 
 	private MockFileResolver dummyInput() {
 
@@ -159,7 +170,7 @@ class VriStartTest {
 
 			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
 
-			float result = app.estimateBaseAreaYield(32f, 190.300003f, Optional.empty(), false, species, bec, 76);
+			float result = app.estimateBaseAreaYield(32f, 190.300003f, Optional.empty(), false, species, "H", bec, 76);
 
 			assertThat(result, closeTo(62.0858421f));
 		}
@@ -263,7 +274,7 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, "B", bec,
 					Optional.of(76)
 			);
 
@@ -316,7 +327,7 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, "B", bec,
 					Optional.of(76)
 			);
 
@@ -369,7 +380,7 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, "B", bec,
 					Optional.of(76)
 			);
 
@@ -422,7 +433,7 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, "B", bec,
 					Optional.of(76)
 			);
 
@@ -475,7 +486,7 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, "B", bec,
 					Optional.of(76)
 			);
 
@@ -528,7 +539,7 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, "B", bec,
 					Optional.of(76)
 			);
 
@@ -3681,6 +3692,7 @@ class VriStartTest {
 						sb.addSp64Distribution("PLI", 100);
 						sb.percentGenus(100);
 					});
+					lb.primaryGenus("PL");
 				});
 				pb.yieldFactor(1.0f);
 			});
@@ -4625,7 +4637,7 @@ class VriStartTest {
 
 			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
 
-			float result = app.estimateQuadMeanDiameterYield(7.6f, 15f, Optional.empty(), species, bec, 61);
+			float result = app.estimateQuadMeanDiameterYield(7.6f, 15f, Optional.empty(), species, "H", bec, 61);
 
 			assertThat(result, closeTo(10.3879938f));
 		}
@@ -4678,7 +4690,9 @@ class VriStartTest {
 
 			var ex = assertThrows(
 					FatalProcessingException.class,
-					() -> app.estimateQuadMeanDiameterYield(7.6f, breastHeightAge, Optional.empty(), species, bec, 61)
+					() -> app.estimateQuadMeanDiameterYield(
+							7.6f, breastHeightAge, Optional.empty(), species, "H", bec, 61
+					)
 			);
 
 			assertThat(ex, hasProperty("message", endsWith(MessageFormat.format("{0,number}", breastHeightAge))));
