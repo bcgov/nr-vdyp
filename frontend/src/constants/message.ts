@@ -261,6 +261,17 @@ export const PROJECTION_ERR = Object.freeze({
   VIEW_MODE_FORCED_TITLE: 'View Only',
   NO_SESSION: 'No projection was selected. Please select a projection from the list.',
   NO_SESSION_TITLE: 'No Projection Selected',
+  BULK_DOWNLOAD_NON_DOWNLOADABLE:
+    'One or more of your selections does not contain any files to download. Only projections with a Status of Ready or Failed will download.',
+  BULK_DOWNLOAD_NON_DOWNLOADABLE_TITLE: 'Warning',
+  DUPLICATE_CONFIRM: 'Are you sure you would like to duplicate this Projection?',
+  DUPLICATE_CONFIRM_TITLE: 'Confirmation',
+  BULK_DUPLICATE_CONFIRM: (count: number) => `Are you sure you would like to duplicate ${count} Projection(s)?`,
+  BULK_DUPLICATE_CONFIRM_TITLE: 'Confirmation',
+  CANCEL_CONFIRM: 'Are you sure you would like to Cancel this Projection?',
+  CANCEL_CONFIRM_TITLE: 'Confirmation',
+  BULK_CANCEL_CONFIRM: (count: number) => `Are you sure you would like to Cancel ${count} Projection(s)?`,
+  BULK_CANCEL_CONFIRM_TITLE: 'Confirmation',
 })
 
 export const FILE_REMOVAL_DIALOG = Object.freeze({

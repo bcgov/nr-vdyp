@@ -97,12 +97,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import JSZip from 'jszip'
 import { useRouter } from 'vue-router'
 import type { Projection, TableHeader, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
-import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, METHOD_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH } from '@/constants/constants'
+import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, METHOD_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH, MESSAGE_TYPE } from '@/constants/constants'
 import { saveExistingProjectionSession, saveNewProjectionSession } from '@/utils/projectionSession'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { downloadFile, downloadURL, sanitizeFileName } from '@/utils/util'
@@ -207,7 +206,7 @@ const canBulkDownload = computed(() =>
   selectedProjections.value.some(p => p.status === PROJECTION_STATUS.READY || p.status === PROJECTION_STATUS.FAILED)
 )
 const canBulkCancel = computed(() =>
-  selectedProjections.value.some(p => p.status === PROJECTION_STATUS.RUNNING)
+  selectedProjections.value.length > 0 && selectedProjections.value.every(p => p.status === PROJECTION_STATUS.RUNNING)
 )
 const canBulkDelete = computed(() =>
   selectedProjections.value.some(p => p.status !== PROJECTION_STATUS.RUNNING)
@@ -334,6 +333,13 @@ const handleEdit = async (projectionGUID: string) => {
  * Duplicates a single projection and refreshes the list
  */
 const handleDuplicate = async (projectionGUID: string) => {
+  const confirmed = await alertDialogStore.openDialog(
+    PROJECTION_ERR.DUPLICATE_CONFIRM_TITLE,
+    PROJECTION_ERR.DUPLICATE_CONFIRM,
+    { variant: 'confirmation' },
+  )
+  if (!confirmed) return
+
   const projection = projections.value.find(p => p.projectionGUID === projectionGUID)
   const originalName = projection?.title || 'Projection'
 
@@ -421,6 +427,13 @@ const updateProjectionInList = (projectionModel: Awaited<ReturnType<typeof getPr
 }
 
 const handleCancel = async (projectionGUID: string) => {
+  const confirmed = await alertDialogStore.openDialog(
+    PROJECTION_ERR.CANCEL_CONFIRM_TITLE,
+    PROJECTION_ERR.CANCEL_CONFIRM,
+    { variant: 'confirmation' },
+  )
+  if (!confirmed) return
+
   isProgressVisible.value = true
   progressMessage.value = PROGRESS_MSG.CANCELLING_PROJECTION
   try {
@@ -493,28 +506,6 @@ const downloadFileUploadProjection = async (guid: string): Promise<void> => {
   downloadURL(comsUrl)
 }
 
-const buildManualMasterZip = async (
-  manualDownloaded: { zipBlob: Blob; title: string }[],
-  fileUploadSuccessCount: number,
-): Promise<{ fileBlob: Blob; fileName: string }> => {
-  if (manualDownloaded.length === 1 && fileUploadSuccessCount === 0) {
-    return {
-      fileName: sanitizeFileName(`${manualDownloaded[0].title}_All Files`) + '.zip',
-      fileBlob: manualDownloaded[0].zipBlob,
-    }
-  }
-  const masterZip = new JSZip()
-  for (const { zipBlob, title } of manualDownloaded) {
-    masterZip.file(sanitizeFileName(`${title}_All Files`) + '.zip', zipBlob)
-  }
-  const now = new Date()
-  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-  return {
-    fileName: `VDYP_Projections_All Files_${dateStr}.zip`,
-    fileBlob: await masterZip.generateAsync({ type: 'blob' }),
-  }
-}
-
 /**
  * Downloads all selected projections' result zips.
  * FILE_UPLOAD projections are each triggered as individual browser downloads via COMS presigned URLs.
@@ -523,39 +514,50 @@ const buildManualMasterZip = async (
 const handleBulkDownload = async () => {
   if (selectedGUIDs.value.length === 0) return
 
+  const hasNonDownloadable = selectedProjections.value.some(
+    p => p.status !== PROJECTION_STATUS.READY && p.status !== PROJECTION_STATUS.FAILED,
+  )
+
+  if (hasNonDownloadable) {
+    const confirmed = await alertDialogStore.openDialog(
+      PROJECTION_ERR.BULK_DOWNLOAD_NON_DOWNLOADABLE_TITLE,
+      PROJECTION_ERR.BULK_DOWNLOAD_NON_DOWNLOADABLE,
+      { variant: MESSAGE_TYPE.WARNING },
+    )
+    if (!confirmed) return
+  }
+
   isProgressVisible.value = true
   progressMessage.value = PROGRESS_MSG.DOWNLOADING_PROJECTION
 
   try {
-    // FILE_UPLOAD: each result is downloaded individually via downloadURL() instead of being
-    // fetched into memory and re-zipped. Reasons:
-    //   - CORS: fetch() on cross-origin COMS presigned URLs is blocked; downloadURL() (browser navigate) is not.
-    //   - Memory: files go directly to disk without passing through browser memory.
-    // MANUAL_INPUT: blobs are streamed from the backend and merged into a single master zip.
-    const manualDownloaded: { zipBlob: Blob; title: string }[] = []
-    let fileUploadSuccessCount = 0
+    // FILE_UPLOAD: downloaded individually via downloadURL() (browser navigate) to avoid CORS issues with COMS presigned URLs.
+    // MANUAL_INPUT: streamed through the backend and saved directly with the backend-provided filename.
+    // Each projection downloads as its own separate ZIP regardless of method.
+    let successCount = 0
 
-    for (const guid of selectedGUIDs.value) {
+    const downloadableGUIDs = selectedGUIDs.value.filter(guid => {
+      const p = projections.value.find(p => p.projectionGUID === guid)
+      return p?.status === PROJECTION_STATUS.READY || p?.status === PROJECTION_STATUS.FAILED
+    })
+
+    for (const guid of downloadableGUIDs) {
       const projection = projections.value.find(p => p.projectionGUID === guid)
       try {
         if (projection?.method === METHOD_SELECTION.FILE_UPLOAD) {
           await downloadFileUploadProjection(guid)
-          fileUploadSuccessCount++
         } else {
+          const zipFileName = sanitizeFileName(`${projection?.title || guid}_All Files`) + '.zip'
           const { zipBlob } = await streamResultsZip(guid)
-          manualDownloaded.push({ zipBlob, title: projection?.title || guid })
+          downloadFile(zipBlob, zipFileName)
         }
+        successCount++
       } catch (err) {
         console.error(`Error downloading projection ${guid}:`, err)
       }
     }
 
-    if (manualDownloaded.length > 0) {
-      const { fileBlob, fileName } = await buildManualMasterZip(manualDownloaded, fileUploadSuccessCount)
-      downloadFile(fileBlob, fileName)
-    }
-
-    const totalSuccess = fileUploadSuccessCount + manualDownloaded.length
+    const totalSuccess = successCount
     if (totalSuccess === 0) {
       notificationStore.showErrorMessage(PROJECTION_ERR.DOWNLOAD_FAILED('Projections'), PROJECTION_ERR.DOWNLOAD_FAILED_TITLE)
       return
@@ -578,6 +580,13 @@ const handleBulkDownload = async () => {
  */
 const handleBulkDuplicate = async () => {
   if (selectedGUIDs.value.length === 0) return
+
+  const confirmed = await alertDialogStore.openDialog(
+    PROJECTION_ERR.BULK_DUPLICATE_CONFIRM_TITLE,
+    PROJECTION_ERR.BULK_DUPLICATE_CONFIRM(selectedGUIDs.value.length),
+    { variant: 'confirmation' },
+  )
+  if (!confirmed) return
 
   isProgressVisible.value = true
   progressMessage.value = PROGRESS_MSG.DUPLICATING_PROJECTION
@@ -621,6 +630,13 @@ const handleBulkDuplicate = async () => {
  */
 const handleBulkCancel = async () => {
   if (selectedGUIDs.value.length === 0) return
+
+  const confirmed = await alertDialogStore.openDialog(
+    PROJECTION_ERR.BULK_CANCEL_CONFIRM_TITLE,
+    PROJECTION_ERR.BULK_CANCEL_CONFIRM(selectedGUIDs.value.length),
+    { variant: 'confirmation' },
+  )
+  if (!confirmed) return
 
   isProgressVisible.value = true
   progressMessage.value = PROGRESS_MSG.CANCELLING_PROJECTION
@@ -678,7 +694,7 @@ const handleBulkDelete = async () => {
 
   const confirmed = await alertDialogStore.openDialog(
     'Confirmation',
-    `Are you sure you want to delete ${selectedGUIDs.value.length} projection(s)? Once deleted, they will not be recoverable.`,
+    `Are you sure you want to delete ${selectedGUIDs.value.length} Projection(s)? Once deleted, they will not be recoverable and will be removed forever.`,
     { variant: 'confirmation' },
   )
 
