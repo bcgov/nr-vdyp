@@ -24,6 +24,9 @@ service:
   clientPort: 4222
   monitorPort: 8222
 
+networkPolicy:
+  enabled: true
+
 persistence:
   enabled: true
   accessModes:

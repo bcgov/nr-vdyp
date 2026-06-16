@@ -135,14 +135,19 @@ jobs:
 
       - name: Deploy NATS
         working-directory: charts/nats
+        env:
+          NATS_PASSWORD: ${{ secrets.NATS_PASSWORD }}
         run: |
           nats_release="vdyp-nats"
           if [ -n "${{ inputs.environment }}" ]; then
             nats_release="${nats_release}-${{ inputs.environment }}"
           fi
 
+          printf '%s' "$NATS_PASSWORD" > "$RUNNER_TEMP/nats-password"
+
           helm upgrade \
             --install "$nats_release" \
+            --set auth.password="$(cat $RUNNER_TEMP/nats-password)" \
             --wait \
             --wait-for-jobs \
             --atomic \
