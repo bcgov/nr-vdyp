@@ -606,10 +606,28 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, user, ProjectionAction.CANCEL);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.CANCEL);
 
-		batchMappingService.cancelProjection(entity);
+		if (!tryCancelQueuedProjection(projectionGUID, entity)) {
+			batchMappingService.cancelProjection(entity);
+		}
 		entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
 
 		return toModelWithExpiry(entity);
+	}
+
+	private boolean tryCancelQueuedProjection(UUID projectionGUID, ProjectionEntity entity) {
+		if (!ProjectionStatusCodeModel.QUEUED.equals(entity.getProjectionStatusCode().getCode())) {
+			return false;
+		}
+
+		if (batchJobPublisher == null) {
+			logger.warn(
+					"Cannot remove queued NATS batch request for projection {}: publisher is not configured",
+					projectionGUID
+			);
+			return false;
+		}
+
+		return batchJobPublisher.deleteQueuedRequest(projectionGUID);
 	}
 
 	public enum ProjectionAction {

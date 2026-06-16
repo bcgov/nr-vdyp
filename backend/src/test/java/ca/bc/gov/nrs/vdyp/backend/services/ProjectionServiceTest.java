@@ -79,6 +79,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
+import ca.bc.gov.nrs.vdyp.backend.messaging.publisher.BatchJobPublisher;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
@@ -109,6 +110,8 @@ class ProjectionServiceTest {
 	@Mock
 	VDYPUserService userService;
 	@Mock
+	BatchJobPublisher batchJobPublisher;
+	@Mock
 	ProjectionExpiryConfig expiryConfig;
 	ProjectionLimitsConfig limitsConfig;
 	ProjectionResourceAssembler assembler;
@@ -122,7 +125,8 @@ class ProjectionServiceTest {
 
 		service = new ProjectionService(
 				em, assembler, repository, fileSetService, batchMappingService, projectionStatusCodeLookup,
-				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig, limitsConfig
+				calculationEngineCodeLookup, userService, new ObjectMapper(), expiryConfig, limitsConfig,
+				batchJobPublisher
 		);
 	}
 
@@ -1299,6 +1303,53 @@ class ProjectionServiceTest {
 		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
 
 		verify(batchMappingService, times(1)).cancelProjection(any());
+		verify(batchJobPublisher, never()).deleteQueuedRequest(any());
+	}
+
+	@Test
+	void cancelBatchProcessing_queuedDeletesNatsRequest_statusDraft() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.QUEUED);
+		VDYPUserModel actingUser = new VDYPUserModel();
+
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(batchJobPublisher.deleteQueuedRequest(projectionGUID)).thenReturn(true);
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT))
+				.thenReturn(statusCode(ProjectionStatusCodeModel.DRAFT));
+
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID);
+		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
+
+		verify(batchJobPublisher, times(1)).deleteQueuedRequest(projectionGUID);
+		verify(batchMappingService, never()).cancelProjection(any());
+	}
+
+	@Test
+	void cancelBatchProcessing_queuedFallsBackToBatchCancel_whenNatsRequestMissing() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.QUEUED);
+		VDYPUserModel actingUser = new VDYPUserModel();
+
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(batchJobPublisher.deleteQueuedRequest(projectionGUID)).thenReturn(false);
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT))
+				.thenReturn(statusCode(ProjectionStatusCodeModel.DRAFT));
+
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID);
+		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
+
+		verify(batchJobPublisher, times(1)).deleteQueuedRequest(projectionGUID);
+		verify(batchMappingService, times(1)).cancelProjection(entity);
 	}
 
 	@Test
