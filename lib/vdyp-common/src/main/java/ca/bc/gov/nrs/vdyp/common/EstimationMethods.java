@@ -988,7 +988,7 @@ public class EstimationMethods {
 	 * @return DQ of primary layer (w DBH >= 7.5)
 	 * @throws StandProcessingException
 	 */
-	float estimateQuadMeanDiameterYield(
+	public float estimateQuadMeanDiameterYield(
 			float dominantHeight, float breastHeightAge, Optional<Float> veteranBaseArea,
 			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, String primarySpeciesId,
 			BecDefinition becZone, int baseAreaGroup

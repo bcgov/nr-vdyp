@@ -52,6 +52,7 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.CouldNotFindBracketingIntervalException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BaseAreaCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLNonprimaryCoefficientParser;
@@ -104,6 +105,7 @@ class VriStartTest {
 	void init() {
 		VriDebugSettings debug = EasyMock.createMock(VriDebugSettings.class);
 		EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+		EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
 		EasyMock.replay(debug);
 		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), debug);
 	}
@@ -4689,13 +4691,13 @@ class VriStartTest {
 			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
 
 			var ex = assertThrows(
-					FatalProcessingException.class,
+					StandProcessingException.class,
 					() -> app.estimateQuadMeanDiameterYield(
 							7.6f, breastHeightAge, Optional.empty(), species, "H", bec, 61
 					)
 			);
 
-			assertThat(ex, hasProperty("message", endsWith(MessageFormat.format("{0,number}", breastHeightAge))));
+			assertThat(ex, hasProperty("message", containsString(MessageFormat.format("{0,number}", breastHeightAge))));
 
 		}
 

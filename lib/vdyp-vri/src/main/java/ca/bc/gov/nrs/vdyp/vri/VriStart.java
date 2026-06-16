@@ -1000,23 +1000,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		return primarySpeciesId;
 	}
 
-	/**
-	 * @deprecated Use {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#upperBoundsBaseArea(int)} instead
-	 */
-	float upperBoundsBaseArea(Region region, String primarySpeciesId, int baseAreaGroup) {
-		// TODO Inline
-		return estimationMethods.upperBoundsBaseArea(region, primarySpeciesId, baseAreaGroup);
-	}
-
-	/**
-	 * @param region
-	 * @deprecated Use {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#upperBoundsQuadMeanDiameter(int)} instead
-	 */
-	float upperBoundsQuadMeanDiameter(Region region, String primarySpeciesId, int baseAreaGroup) {
-		// TODO Inline
-		return estimationMethods.upperBoundsQuadMeanDiameter(region, primarySpeciesId, baseAreaGroup);
-	}
-
 	// EMP106
 	float estimateBaseAreaYield(
 			float dominantHeight, float breastHeightAge, Optional<Float> baseAreaOverstory, boolean fullOccupancy,
@@ -1025,7 +1008,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	) throws FatalProcessingException {
 		var coe = estimateBaseAreaYieldCoefficients(species, bec);
 
-		float upperBoundBaseArea = upperBoundsBaseArea(bec.getRegion(), primarySpeciesId, baseAreaGroup);
+		float upperBoundBaseArea = estimationMethods
+				.upperBoundsBaseArea(bec.getRegion(), primarySpeciesId, baseAreaGroup);
 
 		/*
 		 * The original Fortran had the following comment and a commented out modification to upperBoundsBaseArea
@@ -1114,27 +1098,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			float dominantHeight, float breastHeightAge, Optional<Float> veteranBaseArea,
 			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, String primarySpeciesId,
 			BecDefinition bec, int baseAreaGroup
-	) throws FatalProcessingException {
-		final var coe = sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, ControlKey.DQ_YIELD, 6);
-
-		// TODO handle getDebugMode(2) case
-		final float ageUse = breastHeightAge;
-
-		final float upperBoundsQuadMeanDiameter = upperBoundsQuadMeanDiameter(
-				bec.getRegion(), primarySpeciesId, baseAreaGroup
+	) throws StandProcessingException {
+		// TODO Inline
+		return estimationMethods.estimateQuadMeanDiameterYield(
+				dominantHeight, breastHeightAge, veteranBaseArea, species, primarySpeciesId, bec, baseAreaGroup
 		);
-
-		if (ageUse <= 0f) {
-			throw fatalError("Primary breast height age must be positive but was {0,number}", ageUse);
-		}
-
-		final float trAge = FloatMath.log(ageUse);
-
-		final float c0 = coe.getCoe(0);
-		final float c1 = Math.max(coe.getCoe(1) + coe.getCoe(2) * trAge, 0f);
-		final float c2 = Math.max(coe.getCoe(3) + coe.getCoe(4) * trAge, 0f);
-
-		return FloatMath.clamp(c0 + c1 * FloatMath.pow(dominantHeight - 5f, c2), 7.6f, upperBoundsQuadMeanDiameter);
 
 	}
 
@@ -1442,7 +1410,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
-	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, PreprocessEstimatedBaseAreaLowException {
+	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, StandProcessingException {
 
 		final VriLayer primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
 		final VriSite calculationSite = primaryLayer.getCalculationSite().orElseThrow(
