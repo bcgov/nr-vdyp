@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ResultWithStatus;
 import ca.bc.gov.nrs.vdyp.common.ResultWithStatus.BasicStatus;
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -1073,11 +1074,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		final String decayBecAlias = bec.getDecayBec().getAlias();
 
-		return weightedCoefficientSum(
-				size, 0, //
-				species, //
-				BaseVdypSpecies::getFractionGenus, // Weight by fraction
-				spec -> coeMap.get(decayBecAlias, spec.getGenus())
+		// TODO Inline
+		return EstimationMethods.weightedCoefficientSum(
+				size, 0, species, BaseVdypSpecies::getFractionGenus, spec -> coeMap.get(decayBecAlias, spec.getGenus())
 		);
 	}
 

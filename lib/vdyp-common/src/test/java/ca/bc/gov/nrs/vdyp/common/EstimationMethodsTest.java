@@ -640,8 +640,8 @@ class EstimationMethodsTest {
 
 		@Test
 		void testTwoEntities() throws Exception {
-			var result = EstimationMethods.weightedCoefficientSum(
-					List.of(0, 1), 2, 0, List.of("A", "B"), e -> switch (e) {
+			var result = EstimationMethods
+					.weightedCoefficientSum(List.of(0, 1), 2, 0, List.of("A", "B"), e -> switch (e) {
 					case "A" -> 0.75f;
 					case "B" -> 0.25f;
 					default -> throw new IllegalStateException();
@@ -651,14 +651,13 @@ class EstimationMethodsTest {
 					default -> throw new IllegalStateException();
 					}
 
-			);
+					);
 			assertThat(result, coe(0, 3f * 1f + 5f, 3f * 3f + 1f * 7f));
 		}
 
 		@Test
 		void testConstant() throws Exception {
-			var result = EstimationMethods.weightedCoefficientSum(
-					List.of(0) // Only coefficient 0 is summed
+			var result = EstimationMethods.weightedCoefficientSum(List.of(0) // Only coefficient 0 is summed
 					, 2, 0, List.of("A", "B"), e -> switch (e) {
 					case "A" -> 0.75f;
 					case "B" -> 0.25f;
@@ -670,7 +669,8 @@ class EstimationMethodsTest {
 					}
 
 			);
-			assertThat(result, coe(0, 3f * 1f + 5f, 4 * 3f)); // Coefficient 0 is a weighted sum, coefficient 1 is the value from the first entity unweighted
+			assertThat(result, coe(0, 3f * 1f + 5f, 4 * 3f)); // Coefficient 0 is a weighted sum, coefficient 1 is the
+																// value from the first entity unweighted
 		}
 
 	}

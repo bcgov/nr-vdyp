@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -707,46 +705,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected static FatalProcessingException causedFatalError(String template, Throwable cause, Object... values) {
 
 		return new FatalProcessingException(String.format(template, values), cause);
-	}
-
-	/**
-	 * Create a coefficients object where its values are either a weighted sum of those for each of the given entities,
-	 * or the value from one arbitrarily chose entity.
-	 *
-	 * @param <T>             The type of entity
-	 * @param weighted        the indicies of the coefficients that should be weighted sums, those that are not included
-	 *                        are assumed to be constant across all entities and one is choses arbitrarily.
-	 * @param size            Size of the resulting coefficients object
-	 * @param indexFrom       index from of the resulting coefficients object
-	 * @param entities        the entities to do weighted sums over
-	 * @param weight          the weight for a given entity
-	 * @param getCoefficients the coefficients for a given entity
-	 */
-	public static <T> Coefficients weightedCoefficientSum(
-			Collection<Integer> weighted, int size, int indexFrom, Collection<T> entities, ToDoubleFunction<T> weight,
-			Function<T, Coefficients> getCoefficients
-	) {
-		// TODO Inline
-		return EstimationMethods.weightedCoefficientSum(weighted, size, indexFrom, entities, weight, getCoefficients);
-	}
-
-	/**
-	 * Create a coefficients object where its values are either a weighted sum of those for each of the given entities,
-	 * or the value from one arbitrarily chose entity.
-	 *
-	 * @param <T>             The type of entity
-	 * @param size            Size of the resulting coefficients object
-	 * @param indexFrom       index from of the resulting coefficients object
-	 * @param entities        the entities to do weighted sums over
-	 * @param weight          the weight for a given entity
-	 * @param getCoefficients the coefficients for a given entity
-	 */
-	public static <T> Coefficients weightedCoefficientSum(
-			int size, int indexFrom, Collection<T> entities, ToDoubleFunction<T> weight,
-			Function<T, Coefficients> getCoefficients
-	) {
-		// TODO Inline
-		return EstimationMethods.weightedCoefficientSum(size, indexFrom, entities, weight, getCoefficients);
 	}
 
 	// FIPLAND
