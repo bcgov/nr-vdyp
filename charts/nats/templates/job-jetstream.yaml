@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "nats.fullname" . }}-jetstream
+  labels:
+    {{- include "nats.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.jetstreamJob.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "nats.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: jetstream-setup
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: jetstream-setup
+          image: "{{ .Values.natsBox.image.repository }}:{{ .Values.natsBox.image.tag }}"
+          imagePullPolicy: {{ .Values.natsBox.image.pullPolicy }}
+          env:
+            - name: NATS_URL
+              value: "nats://{{ include "nats.fullname" . }}:{{ .Values.service.clientPort }}"
+            {{- if .Values.auth.enabled }}
+            - name: NATS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nats.authSecretName" . }}
+                  key: {{ .Values.auth.usernameKey }}
+            - name: NATS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nats.authSecretName" . }}
+                  key: {{ .Values.auth.passwordKey }}
+            {{- end }}
+          command:
+            - /bin/sh
+            - /nats-config/apply-jetstream.sh
+          volumeMounts:
+            - name: jetstream-config
+              mountPath: /nats-config
+              readOnly: true
+          resources:
+            {{- toYaml .Values.jetstreamJob.resources | nindent 12 }}
+      volumes:
+        - name: jetstream-config
+          configMap:
+            name: {{ include "nats.fullname" . }}-jetstream
+            defaultMode: 0555

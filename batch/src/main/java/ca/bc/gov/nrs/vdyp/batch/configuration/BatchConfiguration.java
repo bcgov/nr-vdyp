@@ -27,6 +27,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -75,7 +76,7 @@ public class BatchConfiguration {
 	}
 
 	@Bean(name = "asyncJobLauncher")
-	public JobLauncher asyncJobLauncher(TaskExecutor taskExecutor) throws Exception {
+	public JobLauncher asyncJobLauncher(@Qualifier("taskExecutor") TaskExecutor taskExecutor) throws Exception {
 		TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
 		jobLauncher.setJobRepository(jobRepository);
 		jobLauncher.setTaskExecutor(taskExecutor);
@@ -105,7 +106,7 @@ public class BatchConfiguration {
 	 * Task executor for parallel processing
 	 */
 	@Bean
-	public TaskExecutor taskExecutor() {
+	public ThreadPoolTaskExecutor taskExecutor() {
 		int corePoolSize = batchProperties.getThreadPool().getCorePoolSize();
 		int maxPoolSizeMultiplier = batchProperties.getThreadPool().getMaxPoolSizeMultiplier();
 		String threadNamePrefix = batchProperties.getThreadPool().getThreadNamePrefix();
@@ -127,16 +128,16 @@ public class BatchConfiguration {
 
 	@Bean
 	public DynamicPartitionHandler dynamicPartitionHandler(
-			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
-			BatchProperties batchProperties
+			@Qualifier("taskExecutor") TaskExecutor taskExecutor, Step workerStep,
+			DynamicPartitioner dynamicPartitioner, BatchProperties batchProperties
 	) {
 		return new DynamicPartitionHandler(taskExecutor, workerStep, dynamicPartitioner, batchProperties);
 	}
 
 	@Bean
 	public Step masterStep(
-			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
-			DynamicPartitionHandler dynamicPartitionHandler
+			@Qualifier("taskExecutor") TaskExecutor taskExecutor, Step workerStep,
+			DynamicPartitioner dynamicPartitioner, DynamicPartitionHandler dynamicPartitionHandler
 	) {
 		return new StepBuilder("masterStep", jobRepository)
 				.partitioner(BatchConstants.Job.WORKER_STEP_NAME, dynamicPartitioner)

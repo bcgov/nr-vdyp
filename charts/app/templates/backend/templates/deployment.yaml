@@ -83,6 +83,20 @@ spec:
               value: {{ .Values.backend.env.VDYP_API_GATEWAY_JWT_AUDIENCE | quote }}
             - name: VDYP_BACKEND_MAX_POLYGONS
               value: {{ .Values.backend.env.VDYP_BACKEND_MAX_POLYGONS | quote }}
+            - name: NATS_ENABLED
+              value: {{ .Values.backend.env.NATS_ENABLED | quote }}
+            - name: NATS_URL
+              value: {{ .Values.backend.env.NATS_URL | quote }}
+            - name: NATS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.NATS_SECRET_NAME }}
+                  key: {{ .Values.backend.env.NATS_USERNAME_SECRET_KEY }}
+            - name: NATS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.NATS_SECRET_NAME }}
+                  key: {{ .Values.backend.env.NATS_PASSWORD_SECRET_KEY }}
             - name: VDYP_DB_PROXY_USER
               valueFrom:
                 secretKeyRef:

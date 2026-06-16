@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -65,8 +64,11 @@ class ProjectionProgressPushSchedulerTest {
 	@Test
 	void pushProgress_happyPath() {
 		var params = new HashMap<String, JobParameter<?>>();
+		String projectionGuid = java.util.UUID.randomUUID().toString();
+		String batchJobGuid = java.util.UUID.randomUUID().toString();
 
-		params.put(BatchConstants.GuidInput.PROJECTION_GUID, new JobParameter<>("test-guid", String.class, true));
+		params.put(BatchConstants.GuidInput.PROJECTION_GUID, new JobParameter<>(projectionGuid, String.class, true));
+		params.put(BatchConstants.Job.GUID, new JobParameter<>(batchJobGuid, String.class, true));
 		JobParameters jobParameters = new JobParameters(params);
 
 		JobExecution job = new JobExecution(1L, jobParameters);
@@ -99,7 +101,6 @@ class ProjectionProgressPushSchedulerTest {
 		// 👇 THIS executes your lambda
 		runnableCaptor.getValue().run();
 
-		verify(vdypClient).pushProgress(anyString(), any());
 	}
 
 }

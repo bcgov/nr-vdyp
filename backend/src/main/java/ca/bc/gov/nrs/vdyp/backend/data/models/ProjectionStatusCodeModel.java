@@ -13,6 +13,7 @@ public class ProjectionStatusCodeModel extends CodeTableModel {
 	public static final String READY = "READY";
 	public static final String RUNNING = "RUNNING";
 	public static final String FAILED = "FAILED";
+	public static final String QUEUED = "QUEUED";
 
 	private String projectionStatusCode;
 

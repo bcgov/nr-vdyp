@@ -132,6 +132,23 @@ jobs:
         uses: actions/checkout@v4
         with:
             ref: ${{ inputs.ref || 'main' }}  # fallback if ref is not provided
+
+      - name: Deploy NATS
+        working-directory: charts/nats
+        run: |
+          nats_release="vdyp-nats"
+          if [ -n "${{ inputs.environment }}" ]; then
+            nats_release="${nats_release}-${{ inputs.environment }}"
+          fi
+
+          helm upgrade \
+            --install "$nats_release" \
+            --wait \
+            --wait-for-jobs \
+            --atomic \
+            --timeout ${{ inputs.timeout-minutes }}m \
+            .
+
       - name: Configure Helm
         working-directory: ${{ inputs.directory }}
         run: |

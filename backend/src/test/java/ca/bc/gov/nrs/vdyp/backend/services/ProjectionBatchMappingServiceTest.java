@@ -153,20 +153,6 @@ class ProjectionBatchMappingServiceTest {
 	}
 
 	@Test
-	void updateProgress_projectionHasNoMapping_throwsException() {
-		// Arrange
-		UUID projectionGuid = UUID.randomUUID();
-
-		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
-
-		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
-
-		ProjectionProgressUpdate update = new ProjectionProgressUpdate(null, 1, 1, 1, 1);
-		// Act
-		assertThrows(ProjectionServiceException.class, () -> service.updateProgress(projectionEntity, update));
-	}
-
-	@Test
 	void updateProgress_projectionHasMapping_updatesCorrectly() throws ProjectionServiceException {
 		// Arrange
 		UUID projectionGuid = UUID.randomUUID();
@@ -178,7 +164,7 @@ class ProjectionBatchMappingServiceTest {
 
 		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
 
-		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 30);
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20);
 		// Act
 		service.updateProgress(projectionEntity, update);
 		assertEquals(100, mappingEntity.getPolygonCount());

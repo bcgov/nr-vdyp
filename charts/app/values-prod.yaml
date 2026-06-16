@@ -88,6 +88,11 @@ backend:
     VDYP_API_GATEWAY_JWT_ISSUER: ~
     VDYP_API_GATEWAY_JWT_AUDIENCE: ~
     VDYP_BACKEND_MAX_POLYGONS: ~
+    NATS_ENABLED: "true"
+    NATS_URL: nats://vdyp-nats-prod:4222
+    NATS_SECRET_NAME: vdyp-nats-prod-auth
+    NATS_USERNAME_SECRET_KEY: username
+    NATS_PASSWORD_SECRET_KEY: password
 
 frontend:
   fullnameOverride: "vdyp-ui-prod"
@@ -267,3 +272,8 @@ batch:
     SPRING_PROFILES_ACTIVE: "prod"
     BATCH_DB_SECRET_NAME: crunchy-postgres-prod-pguser-batch
     VDYP_BASE_URL: ~
+    NATS_ENABLED: "true"
+    NATS_URL: nats://vdyp-nats-prod:4222
+    NATS_SECRET_NAME: vdyp-nats-prod-auth
+    NATS_USERNAME_SECRET_KEY: username
+    NATS_PASSWORD_SECRET_KEY: password

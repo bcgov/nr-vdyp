@@ -141,10 +141,44 @@ services:
 
       SERVER_LOGLEVEL: info
 
+  nats:
+    image: nats:2.14.0-alpine
+    command:
+      - "-js"
+      - "-m"
+      - "8222"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats-data:/data
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:8222/healthz" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+  nats-init:
+    image: natsio/nats-box:latest
+    container_name: vdyp-nats-init
+    depends_on:
+      nats:
+        condition: service_healthy
+    environment:
+      NATS_URL: nats://nats:4222
+    volumes:
+      - ./nats:/nats-config:ro
+    working_dir: /nats-config
+    entrypoint: [ "/bin/sh", "./apply-jetstream.sh" ]
+    restart: "no"
+
   vdyp-backend:
     depends_on:
       vdyp-liquibase:
-        condition: service_completed_successfully        # wait for DB migrations
+        condition: service_completed_successfully # wait for DB migrations
+      nats-init:
+        condition: service_completed_successfully # wait for NATS setup
 
     build:
       context: ./
@@ -197,3 +231,4 @@ services:
 volumes:
   db_data:
   minio-data:
+  nats-data:
