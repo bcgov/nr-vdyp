@@ -1,0 +1,15 @@
+{{- if and .Values.batch.enabled .Values.batch.pvc.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "batch.fullname" . }}
+  labels:
+    {{- include "batch.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.batch.pvc.accessModes }}
+  resources:
+    requests:
+      storage: {{ .Values.batch.pvc.size }}
+  storageClassName: {{ .Values.batch.pvc.storageClassName }}
+{{- end }}
