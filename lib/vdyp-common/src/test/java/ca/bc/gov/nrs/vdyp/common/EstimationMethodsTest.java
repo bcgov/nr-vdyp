@@ -34,6 +34,7 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings.UpperBoundsMode;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -1157,5 +1158,53 @@ class EstimationMethodsTest {
 			assertThat(result, closeTo(expected));
 		}
 
+	}
+
+	@Nested
+	class UpperBounds {
+
+		@Test
+		void testBAMode1() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+
+			float result = emp.upperBoundsBaseArea(Region.COASTAL, "B", 167);
+			assertThat(result, closeTo(64.58f));
+		}
+
+		@Test
+		void testBAMode2() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_2);
+			EasyMock.replay(debug);
+
+			float result = emp.upperBoundsBaseArea(Region.COASTAL, "B", 167);
+			assertThat(result, closeTo(104.0f));
+		}
+
+		@Test
+		void testDQMode1() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+
+			float result = emp.upperBoundsQuadMeanDiameter(Region.INTERIOR, "S", 168);
+			assertThat(result, closeTo(71.04f));
+		}
+
+		@Test
+		void testDQMode2() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_2);
+			EasyMock.replay(debug);
+
+			float result = emp.upperBoundsQuadMeanDiameter(Region.INTERIOR, "S", 168);
+			assertThat(result, closeTo(40.3f));
+		}
 	}
 }
