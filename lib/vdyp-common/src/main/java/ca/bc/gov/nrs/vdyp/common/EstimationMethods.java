@@ -926,8 +926,8 @@ public class EstimationMethods {
 		return weightedCoefficientSum(weighted, size, indexFrom, entities, weight, getCoefficients);
 	}
 
-	static final private int BA_COE_INDEX = 1;
-	static final private int DQ_COE_INDEX = 2;
+	private static final int BA_COE_INDEX = 1;
+	private static final int DQ_COE_INDEX = 2;
 
 	/**
 	 * UPPERGEN

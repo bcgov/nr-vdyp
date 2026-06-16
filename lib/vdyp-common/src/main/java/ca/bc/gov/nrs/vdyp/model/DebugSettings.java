@@ -59,7 +59,7 @@ public interface DebugSettings {
 	/**
 	 * The mode to determine primary species
 	 */
-	public static enum SpeciesGroupPreference {
+	public enum SpeciesGroupPreference {
 
 		/**
 		 * Default behavior
@@ -94,7 +94,7 @@ public interface DebugSettings {
 	/**
 	 * The message level for the Math77 library.
 	 */
-	public static enum Math77MessagesLevel {
+	public enum Math77MessagesLevel {
 		/**
 		 * Don't display any messages
 		 */
