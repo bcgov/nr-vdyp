@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.common;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.closeUtilMap;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -29,6 +30,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
@@ -676,7 +678,6 @@ class EstimationMethodsTest {
 
 	}
 
-	@Disabled("TODO")
 	@Nested
 	class EstimateQuadMeanDiameterYield {
 
@@ -685,6 +686,7 @@ class EstimationMethodsTest {
 			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
 			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
 			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
 			EasyMock.replay(debug);
 
 			var bec = Utils.getBec("ICH", controlMap);
@@ -697,7 +699,52 @@ class EstimationMethodsTest {
 
 			float result = emp.estimateQuadMeanDiameterYield(8f, 17.1f, Optional.empty(), List.of(spec), "S", bec, 167);
 
-			assertThat(result, closeTo(0f));
+			assertThat(result, closeTo(9.13f));
+		}
+
+		@Test
+		void testLowDominantHeight() throws Exception {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+
+			var bec = Utils.getBec("ICH", controlMap);
+			var spec = VdypSpecies.build(sb -> {
+				sb.polygonIdentifier("Test", 2026);
+				sb.layerType(LayerType.PRIMARY);
+				sb.genus("S", controlMap);
+				sb.percentGenus(100f);
+			});
+
+			float result = emp
+					.estimateQuadMeanDiameterYield(4.5f, 17.1f, Optional.empty(), List.of(spec), "S", bec, 167);
+
+			assertThat(result, closeTo(7.6f));
+		}
+
+		@Test
+		void testLowAge() throws Exception {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+
+			var bec = Utils.getBec("ICH", controlMap);
+			var spec = VdypSpecies.build(sb -> {
+				sb.polygonIdentifier("Test", 2026);
+				sb.layerType(LayerType.PRIMARY);
+				sb.genus("S", controlMap);
+				sb.percentGenus(100f);
+			});
+
+			var ex = assertThrows(
+					BreastHeightAgeLowException.class,
+					() -> emp.estimateQuadMeanDiameterYield(5.5f, -0.1f, Optional.empty(), List.of(spec), "S", bec, 167)
+			);
+			assertThat(ex, hasProperty("value", present(is(-0.1f))));
 		}
 
 	}
