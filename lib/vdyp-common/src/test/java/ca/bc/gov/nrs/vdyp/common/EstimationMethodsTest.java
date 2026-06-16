@@ -2,10 +2,12 @@ package ca.bc.gov.nrs.vdyp.common;
 
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.closeUtilMap;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.text.MessageFormat;
 import java.util.Collection;
@@ -621,6 +623,54 @@ class EstimationMethodsTest {
 
 			assertThat(dq, closeTo(66.565033f));
 
+		}
+
+	}
+
+	@Nested
+	class WeightedSum {
+
+		@Test
+		void testOneEntity() throws Exception {
+			var result = EstimationMethods.weightedCoefficientSum(
+					List.of(0, 1), 2, 0, List.of("A"), e -> 0.5f, e -> new Coefficients(new float[] { 6, 8 }, 0)
+			);
+			assertThat(result, coe(0, 3f, 4f));
+		}
+
+		@Test
+		void testTwoEntities() throws Exception {
+			var result = EstimationMethods.weightedCoefficientSum(
+					List.of(0, 1), 2, 0, List.of("A", "B"), e -> switch (e) {
+					case "A" -> 0.75f;
+					case "B" -> 0.25f;
+					default -> throw new IllegalStateException();
+					}, e -> switch (e) {
+					case "A" -> new Coefficients(new float[] { 4 * 1, 4 * 3 }, 0);
+					case "B" -> new Coefficients(new float[] { 4 * 5, 4 * 7 }, 0);
+					default -> throw new IllegalStateException();
+					}
+
+			);
+			assertThat(result, coe(0, 3f * 1f + 5f, 3f * 3f + 1f * 7f));
+		}
+
+		@Test
+		void testConstant() throws Exception {
+			var result = EstimationMethods.weightedCoefficientSum(
+					List.of(0) // Only coefficient 0 is summed
+					, 2, 0, List.of("A", "B"), e -> switch (e) {
+					case "A" -> 0.75f;
+					case "B" -> 0.25f;
+					default -> throw new IllegalStateException();
+					}, e -> switch (e) {
+					case "A" -> new Coefficients(new float[] { 4 * 1, 4 * 3 }, 0);
+					case "B" -> new Coefficients(new float[] { 4 * 5, 4 * 7 }, 0);
+					default -> throw new IllegalStateException();
+					}
+
+			);
+			assertThat(result, coe(0, 3f * 1f + 5f, 4 * 3f)); // Coefficient 0 is a weighted sum, coefficient 1 is the value from the first entity unweighted
 		}
 
 	}
