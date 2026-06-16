@@ -90,12 +90,14 @@ import { ActionPanel } from '@/components/projection'
 import { CONSTANTS, MESSAGE, OPTIONS } from '@/constants'
 import { saveProjectionOnPanelConfirm, revertPanelToSaved } from '@/services/projection/fileUploadService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { PROJECTION_ERR } from '@/constants/message'
 
 const { mobile } = useDisplay()
 const appStore = useAppStore()
 const fileUploadStore = useFileUploadStore()
 const notificationStore = useNotificationStore()
+const alertDialogStore = useAlertDialogStore()
 
 const panelName = CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH
 
@@ -219,6 +221,14 @@ const onConfirm = async () => {
 }
 
 const onCancel = async () => {
+  if (isDirty.value) {
+    const proceed = await alertDialogStore.openDialog(
+      MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+      MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+      { variant: 'warning' },
+    )
+    if (!proceed) return
+  }
   appStore.isSavingProjection = true
   try {
     await revertPanelToSaved(panelName)

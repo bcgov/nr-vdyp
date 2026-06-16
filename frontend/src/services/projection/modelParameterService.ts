@@ -915,7 +915,10 @@ export const revertPanelToSaved = async (panelName: PanelName): Promise<void> =>
   const modelParameterStore = useModelParameterStore()
 
   const projectionGUID = appStore.getCurrentProjectionGUID
-  if (!projectionGUID) return
+  if (!projectionGUID) {
+    modelParameterStore.resetStore()
+    return
+  }
 
   const projectionModel = await getProjectionById(projectionGUID)
   const params = parseProjectionParams(projectionModel.projectionParameters)
