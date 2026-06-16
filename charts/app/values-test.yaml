@@ -268,6 +268,12 @@ batch:
   #-- route configuration for external access (dev only for debugging)
   route:
     enabled: true
+  pvc:
+    enabled: true
+    size: 2Gi
+    storageClassName: netapp-file-standard
+    accessModes: ReadWriteMany
+    mountPath: /opt/vdyp-batch/data
   env:
     SPRING_PROFILES_ACTIVE: "test"
     BATCH_DB_SECRET_NAME: crunchy-postgres-test-pguser-batch

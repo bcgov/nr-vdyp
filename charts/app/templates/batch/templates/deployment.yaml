@@ -121,6 +121,10 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.batch.env.BATCH_DB_SECRET_NAME }}
                   key: dbname
+            {{- if .Values.batch.pvc.enabled }}
+            - name: BATCH_ROOT_DIRECTORY
+              value: {{ .Values.batch.pvc.mountPath | quote }}
+            {{- end }}
 
           ports:
             - name: http
@@ -152,6 +156,17 @@ spec:
             requests:
               cpu: 50m
               memory: 256Mi
+          {{- if .Values.batch.pvc.enabled }}
+          volumeMounts:
+            - name: batch-data
+              mountPath: {{ .Values.batch.pvc.mountPath | quote }}
+          {{- end }}
+      {{- if .Values.batch.pvc.enabled }}
+      volumes:
+        - name: batch-data
+          persistentVolumeClaim:
+            claimName: {{ include "batch.fullname" . }}
+      {{- end }}
       {{- with .Values.batch.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
