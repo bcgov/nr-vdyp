@@ -1266,6 +1266,135 @@ class ProjectionServiceTest {
 	}
 
 	@ParameterizedTest
+	@ValueSource(strings = { ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.READY })
+	void queueBatchProjection_notDraft_throwsException(String statusCode) {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, statusCode);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		assertThrows(ProjectionStateException.class, () -> service.queueForBatchProjection(actingUser, projectionGUID));
+	}
+
+	@Test
+	void queueBatchProjection_noPolygonFile_throwsException() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		UUID polygonFileSetGUID = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		entity.setPolygonFileSet(fileSetEntity(polygonFileSetGUID));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(fileSetService.getAllFiles(polygonFileSetGUID, actingUser, false)).thenReturn(List.of());
+		assertThrows(
+				ProjectionValidationException.class, () -> service.queueForBatchProjection(actingUser, projectionGUID)
+		);
+	}
+
+	@Test
+	void queueBatchProjection_noLayerFile_throwsException() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		UUID polygonFileSetGUID = UUID.randomUUID();
+		UUID layerFileSetGUID = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		FileMappingModel polygonFileModel = fileMappingModel(UUID.randomUUID(), UUID.randomUUID());
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		entity.setPolygonFileSet(fileSetEntity(polygonFileSetGUID));
+		entity.setLayerFileSet(fileSetEntity(layerFileSetGUID));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(fileSetService.getAllFiles(polygonFileSetGUID, actingUser, false)).thenReturn(List.of(polygonFileModel));
+		when(fileSetService.getAllFiles(layerFileSetGUID, actingUser, false)).thenReturn(List.of());
+		assertThrows(
+				ProjectionValidationException.class, () -> service.queueForBatchProjection(actingUser, projectionGUID)
+		);
+	}
+
+	@Test
+	void queueBatchProjection_noParameters_throwsException() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		UUID polygonFileSetGUID = UUID.randomUUID();
+		UUID layerFileSetGUID = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		FileMappingModel polygonFileModel = fileMappingModel(UUID.randomUUID(), UUID.randomUUID());
+		FileMappingModel layerFileModel = fileMappingModel(UUID.randomUUID(), UUID.randomUUID());
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		entity.setPolygonFileSet(fileSetEntity(polygonFileSetGUID));
+		entity.setLayerFileSet(fileSetEntity(layerFileSetGUID));
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(fileSetService.getAllFiles(polygonFileSetGUID, actingUser, false)).thenReturn(List.of(polygonFileModel));
+		when(fileSetService.getAllFiles(layerFileSetGUID, actingUser, false)).thenReturn(List.of(layerFileModel));
+		assertThrows(
+				ProjectionValidationException.class, () -> service.queueForBatchProjection(actingUser, projectionGUID)
+		);
+	}
+
+	@Test
+	void queueBatchProjection_invalidParameters_throwsException() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		UUID polygonFileSetGUID = UUID.randomUUID();
+		UUID layerFileSetGUID = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		FileMappingModel polygonFileModel = fileMappingModel(UUID.randomUUID(), UUID.randomUUID());
+		FileMappingModel layerFileModel = fileMappingModel(UUID.randomUUID(), UUID.randomUUID());
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		entity.setPolygonFileSet(fileSetEntity(polygonFileSetGUID));
+		entity.setLayerFileSet(fileSetEntity(layerFileSetGUID));
+		entity.setProjectionParameters("{ invalid json ");
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(fileSetService.getAllFiles(polygonFileSetGUID, actingUser, false)).thenReturn(List.of(polygonFileModel));
+		when(fileSetService.getAllFiles(layerFileSetGUID, actingUser, false)).thenReturn(List.of(layerFileModel));
+		assertThrows(
+				ProjectionValidationException.class, () -> service.queueForBatchProjection(actingUser, projectionGUID)
+		);
+	}
+
+	@Test
+	void queueBatchProjection_defaultParameters_succeeds() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		UUID polygonFileSetGUID = UUID.randomUUID();
+		UUID layerFileSetGUID = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.DRAFT);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		FileMappingModel polygonFileModel = fileMappingModel(UUID.randomUUID(), UUID.randomUUID());
+		FileMappingModel layerFileModel = fileMappingModel(UUID.randomUUID(), UUID.randomUUID());
+		actingUser.setVdypUserGUID(entity.getOwnerUser().getVdypUserGUID().toString());
+		entity.setPolygonFileSet(fileSetEntity(polygonFileSetGUID));
+		entity.setLayerFileSet(fileSetEntity(layerFileSetGUID));
+		entity.setProjectionParameters("{\"ageStart\":0,\"ageEnd\":100,\"ageIncrement\":10}");
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(fileSetService.getAllFiles(polygonFileSetGUID, actingUser, false)).thenReturn(List.of(polygonFileModel));
+		when(fileSetService.getAllFiles(layerFileSetGUID, actingUser, false)).thenReturn(List.of(layerFileModel));
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.QUEUED))
+				.thenReturn(statusCode(ProjectionStatusCodeModel.QUEUED));
+
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+		ProjectionModel model = service.queueForBatchProjection(actingUser, projectionGUID);
+		assertEquals(ProjectionStatusCodeModel.QUEUED, model.getProjectionStatusCode().getCode());
+
+	}
+
+	@ParameterizedTest
 	@ValueSource(
 			strings = { ProjectionStatusCodeModel.READY, //
 					ProjectionStatusCodeModel.FAILED, //
