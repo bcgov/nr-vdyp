@@ -551,9 +551,6 @@ public class ProjectionService {
 		BatchRequestMessage request = new BatchRequestMessage(
 				entity.getProjectionGUID(), entity.getProjectionParameters()
 		);
-		if (batchJobPublisher == null) {
-			throw new ProjectionServiceException("Batch job publisher is not configured", projectionGUID);
-		}
 		batchJobPublisher.publish(request);
 		entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.QUEUED));
 
@@ -616,14 +613,6 @@ public class ProjectionService {
 
 	private boolean tryCancelQueuedProjection(UUID projectionGUID, ProjectionEntity entity) {
 		if (!ProjectionStatusCodeModel.QUEUED.equals(entity.getProjectionStatusCode().getCode())) {
-			return false;
-		}
-
-		if (batchJobPublisher == null) {
-			logger.warn(
-					"Cannot remove queued NATS batch request for projection {}: publisher is not configured",
-					projectionGUID
-			);
 			return false;
 		}
 
