@@ -20,6 +20,7 @@ spec:
         - name: jetstream-setup
           image: "{{ .Values.natsBox.image.repository }}:{{ .Values.natsBox.image.tag }}"
           imagePullPolicy: {{ .Values.natsBox.image.pullPolicy }}
+          workingDir: /nats-config
           env:
             - name: NATS_URL
               value: "nats://{{ include "nats.fullname" . }}:{{ .Values.service.clientPort }}"

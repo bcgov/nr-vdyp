@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ResultWithStatus;
 import ca.bc.gov.nrs.vdyp.common.ResultWithStatus.BasicStatus;
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -932,13 +933,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var treesPerHectare = primaryLayer.getTreesPerHectare();
 		var crownClosure = primaryLayer.getCrownClosure();
 		var percentForest = polygon.getPercentAvailable();
-
+		var primarySpeciesId = requirePrimarySpecies(primaryLayer);
 		try {
 			PolygonMode mode = polygon.getMode().orElseGet(() -> {
 				try {
 					return findDefaultPolygonMode(
 							ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest,
-							primaryLayer.getSpecies().values(), bec,
+							primaryLayer.getSpecies().values(), primarySpeciesId, bec,
 							primaryLayer.getEmpiricalRelationshipParameterIndex()
 					);
 				} catch (FatalProcessingException e) {
@@ -994,31 +995,22 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
-	// UPPERGEN Method 1
-	Coefficients upperBounds(int baseAreaGroup) {
-		var upperBoundsMap = Utils
-				.<Map<Integer, Coefficients>>expectParsedControl(controlMap, ControlKey.BA_DQ_UPPER_BOUNDS, Map.class);
-		return Utils.<Coefficients>optSafe(upperBoundsMap.get(baseAreaGroup)).orElseThrow(
-				() -> new IllegalStateException("Could not find limits for base area group " + baseAreaGroup)
-		);
-	}
-
-	float upperBoundsBaseArea(int baseAreaGroup) {
-		return upperBounds(baseAreaGroup).getCoe(1);
-	}
-
-	float upperBoundsQuadMeanDiameter(int baseAreaGroup) {
-		return upperBounds(baseAreaGroup).getCoe(2);
+	protected String requirePrimarySpecies(VriLayer primaryLayer) {
+		var primarySpeciesId = primaryLayer.getPrimaryGenus()
+				.orElseThrow(() -> new IllegalStateException("Primary layer does not have a primary species"));
+		return primarySpeciesId;
 	}
 
 	// EMP106
 	float estimateBaseAreaYield(
 			float dominantHeight, float breastHeightAge, Optional<Float> baseAreaOverstory, boolean fullOccupancy,
-			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec, int baseAreaGroup
+			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, String primarySpeciesId,
+			BecDefinition bec, int baseAreaGroup
 	) throws FatalProcessingException {
 		var coe = estimateBaseAreaYieldCoefficients(species, bec);
 
-		float upperBoundBaseArea = upperBoundsBaseArea(baseAreaGroup);
+		float upperBoundBaseArea = estimationMethods
+				.upperBoundsBaseArea(bec.getRegion(), primarySpeciesId, baseAreaGroup);
 
 		/*
 		 * The original Fortran had the following comment and a commented out modification to upperBoundsBaseArea
@@ -1066,78 +1058,51 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	Coefficients estimateBaseAreaYieldCoefficients(
 			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec
 	) {
-		var coe = sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, ControlKey.BA_YIELD, 7);
+		var coe = this.estimationMethods
+				.sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, ControlKey.BA_YIELD, 7);
 
 		// TODO confirm going over 0.5 should drop to 0 as this seems odd.
 		coe.scalarInPlace(5, x -> x > 0.0f ? 0f : x);
 		return coe;
 	}
 
-	Coefficients sumCoefficientsWeightedBySpeciesAndDecayBec(
-			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec, ControlKey key,
-			int size
-	) {
-		var coeMap = Utils
-				.<MatrixMap2<String, String, Coefficients>>expectParsedControl(controlMap, key, MatrixMap2.class);
-
-		final String decayBecAlias = bec.getDecayBec().getAlias();
-
-		return weightedCoefficientSum(
-				size, 0, //
-				species, //
-				BaseVdypSpecies::getFractionGenus, // Weight by fraction
-				spec -> coeMap.get(decayBecAlias, spec.getGenus())
-		);
-	}
-
 	// EMP107
 	/**
 	 *
-	 * @param dominantHeight  Dominant height (m)
-	 * @param breastHeightAge breast height age
-	 * @param veteranBaseArea Basal area of overstory (>= 0)
-	 * @param species         Species for the layer
-	 * @param bec             BEC of the polygon
-	 * @param baseAreaGroup   Index of the base area group
+	 * @param dominantHeight   Dominant height (m)
+	 * @param breastHeightAge  breast height age
+	 * @param veteranBaseArea  Basal area of overstory (>= 0)
+	 * @param species          Species for the layer
+	 * @param primarySpeciesId ID of the primary species for the layer
+	 * @param bec              BEC of the polygon
+	 * @param baseAreaGroup    Index of the base area group
 	 * @return DQ of primary layer (w DBH >= 7.5)
 	 * @throws FatalProcessingException
 	 */
 	float estimateQuadMeanDiameterYield(
 			float dominantHeight, float breastHeightAge, Optional<Float> veteranBaseArea,
-			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec, int baseAreaGroup
-	) throws FatalProcessingException {
-		final var coe = sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, ControlKey.DQ_YIELD, 6);
-
-		// TODO handle getDebugMode(2) case
-		final float ageUse = breastHeightAge;
-
-		final float upperBoundsQuadMeanDiameter = upperBoundsQuadMeanDiameter(baseAreaGroup);
-
-		if (ageUse <= 0f) {
-			throw fatalError("Primary breast height age must be positive but was {0,number}", ageUse);
-		}
-
-		final float trAge = FloatMath.log(ageUse);
-
-		final float c0 = coe.getCoe(0);
-		final float c1 = Math.max(coe.getCoe(1) + coe.getCoe(2) * trAge, 0f);
-		final float c2 = Math.max(coe.getCoe(3) + coe.getCoe(4) * trAge, 0f);
-
-		return FloatMath.clamp(c0 + c1 * FloatMath.pow(dominantHeight - 5f, c2), 7.6f, upperBoundsQuadMeanDiameter);
+			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, String primarySpeciesId,
+			BecDefinition bec, int baseAreaGroup
+	) throws StandProcessingException {
+		// TODO Inline
+		return estimationMethods.estimateQuadMeanDiameterYield(
+				dominantHeight, breastHeightAge, veteranBaseArea, species, primarySpeciesId, bec, baseAreaGroup
+		);
 
 	}
 
 	PolygonMode findDefaultPolygonMode(
 			Optional<Float> ageTotal, Optional<Float> yearsToBreastHeight, Optional<Float> height,
 			Optional<Float> baseArea, Optional<Float> treesPerHectare, Optional<Float> percentForest,
-			Collection<VriSpecies> species, BecDefinition bec, Optional<Integer> baseAreaGroup
+			Collection<VriSpecies> species, String primarySpeciesId, BecDefinition bec, Optional<Integer> baseAreaGroup
 	) throws FatalProcessingException {
 		Optional<Float> ageBH = ageTotal.map(at -> at - yearsToBreastHeight.orElse(3f));
 
 		float bap;
 		if (ageBH.map(abh -> abh >= 1).orElse(false)) {
 			bap = this.estimateBaseAreaYield(
-					height.get(), ageBH.get(), Optional.empty(), true, species, bec, baseAreaGroup.get()
+					height.get(), ageBH.get(), Optional.empty(), true, species, primarySpeciesId, bec,
+					baseAreaGroup.get()
 			);
 		} else {
 			bap = 0;
@@ -1317,6 +1282,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	) throws FatalProcessingException, FailedToGrowYoungStandException {
 		float dominantHeight;
 		float ageIncrease;
+		final String primarySpeciesId = requirePrimarySpecies(primaryLayer);
 		for (int increase = 0; increase <= moreYears; increase++) {
 			float primaryBreastHeightAge = primaryBreastHeightAge0 + increase; // AGEBH
 
@@ -1345,7 +1311,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 				float predictedBaseArea = estimateBaseAreaYield(
 						dominantHeight, primaryBreastHeightAge, Optional.empty(), false,
-						primaryLayer.getSpecies().values(), bec,
+						primaryLayer.getSpecies().values(), primarySpeciesId, bec,
 						primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
 				); // BAP
 
@@ -1429,7 +1395,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
-	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, PreprocessEstimatedBaseAreaLowException {
+	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, StandProcessingException {
 
 		final VriLayer primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
 		final VriSite calculationSite = primaryLayer.getCalculationSite().orElseThrow(
@@ -1437,6 +1403,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 						"Primary layer, " + primaryLayer + ", does not have a calculation site"
 				)
 		);
+		final String primarySpeciesId = requirePrimarySpecies(primaryLayer);
 		final Optional<VriLayer> veteranLayer = Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 		BecDefinition bec = poly.getBiogeoclimaticZone();
 
@@ -1459,14 +1426,14 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				);
 
 		float primaryBaseAreaEstimated = estimateBaseAreaYield(
-				primaryHeight, primaryBreastHeightAge, veteranBaseArea, false, primaryLayer.getSpecies().values(), bec,
-				primaryEmpiricalRelationshipParameterIndex
+				primaryHeight, primaryBreastHeightAge, veteranBaseArea, false, primaryLayer.getSpecies().values(),
+				primarySpeciesId, bec, primaryEmpiricalRelationshipParameterIndex
 		);
 
 		// EMP107
 		float normativeQuadMeanDiameter = estimateQuadMeanDiameterYield(
-				primaryHeight, primaryBreastHeightAge, veteranBaseArea, primaryLayer.getSpecies().values(), bec,
-				primaryEmpiricalRelationshipParameterIndex
+				primaryHeight, primaryBreastHeightAge, veteranBaseArea, primaryLayer.getSpecies().values(),
+				primarySpeciesId, bec, primaryEmpiricalRelationshipParameterIndex
 		);
 
 		final float normativePercentAvailable = 85f;

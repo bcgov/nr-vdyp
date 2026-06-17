@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.common;
 
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.closeUtilMap;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -26,15 +28,18 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings.UpperBoundsMode;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -624,6 +629,125 @@ class EstimationMethodsTest {
 	}
 
 	@Nested
+	class WeightedSum {
+
+		@Test
+		void testOneEntity() throws Exception {
+			var result = EstimationMethods.weightedCoefficientSum(
+					List.of(0, 1), 2, 0, List.of("A"), e -> 0.5f, e -> new Coefficients(new float[] { 6, 8 }, 0)
+			);
+			assertThat(result, coe(0, 3f, 4f));
+		}
+
+		@Test
+		void testTwoEntities() throws Exception {
+			var result = EstimationMethods
+					.weightedCoefficientSum(List.of(0, 1), 2, 0, List.of("A", "B"), e -> switch (e) {
+					case "A" -> 0.75f;
+					case "B" -> 0.25f;
+					default -> throw new IllegalStateException();
+					}, e -> switch (e) {
+					case "A" -> new Coefficients(new float[] { 4 * 1, 4 * 3 }, 0);
+					case "B" -> new Coefficients(new float[] { 4 * 5, 4 * 7 }, 0);
+					default -> throw new IllegalStateException();
+					}
+
+					);
+			assertThat(result, coe(0, 3f * 1f + 5f, 3f * 3f + 1f * 7f));
+		}
+
+		@Test
+		void testConstant() throws Exception {
+			var result = EstimationMethods.weightedCoefficientSum(List.of(0) // Only coefficient 0 is summed
+					, 2, 0, List.of("A", "B"), e -> switch (e) {
+					case "A" -> 0.75f;
+					case "B" -> 0.25f;
+					default -> throw new IllegalStateException();
+					}, e -> switch (e) {
+					case "A" -> new Coefficients(new float[] { 4 * 1, 4 * 3 }, 0);
+					case "B" -> new Coefficients(new float[] { 4 * 5, 4 * 7 }, 0);
+					default -> throw new IllegalStateException();
+					}
+
+			);
+			assertThat(result, coe(0, 3f * 1f + 5f, 4 * 3f)); // Coefficient 0 is a weighted sum, coefficient 1 is the
+																// value from the first entity unweighted
+		}
+
+	}
+
+	@Nested
+	class EstimateQuadMeanDiameterYield {
+
+		@Test
+		void testTest1() throws Exception {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+
+			var bec = Utils.getBec("ICH", controlMap);
+			var spec = VdypSpecies.build(sb -> {
+				sb.polygonIdentifier("Test", 2026);
+				sb.layerType(LayerType.PRIMARY);
+				sb.genus("S", controlMap);
+				sb.percentGenus(100f);
+			});
+
+			float result = emp.estimateQuadMeanDiameterYield(8f, 17.1f, Optional.empty(), List.of(spec), "S", bec, 167);
+
+			assertThat(result, closeTo(9.13f));
+		}
+
+		@Test
+		void testLowDominantHeight() throws Exception {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+
+			var bec = Utils.getBec("ICH", controlMap);
+			var spec = VdypSpecies.build(sb -> {
+				sb.polygonIdentifier("Test", 2026);
+				sb.layerType(LayerType.PRIMARY);
+				sb.genus("S", controlMap);
+				sb.percentGenus(100f);
+			});
+
+			float result = emp
+					.estimateQuadMeanDiameterYield(4.5f, 17.1f, Optional.empty(), List.of(spec), "S", bec, 167);
+
+			assertThat(result, closeTo(7.6f));
+		}
+
+		@Test
+		void testLowAge() throws Exception {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+
+			var bec = Utils.getBec("ICH", controlMap);
+			var spec = VdypSpecies.build(sb -> {
+				sb.polygonIdentifier("Test", 2026);
+				sb.layerType(LayerType.PRIMARY);
+				sb.genus("S", controlMap);
+				sb.percentGenus(100f);
+			});
+
+			var ex = assertThrows(
+					BreastHeightAgeLowException.class,
+					() -> emp.estimateQuadMeanDiameterYield(5.5f, -0.1f, Optional.empty(), List.of(spec), "S", bec, 167)
+			);
+			assertThat(ex, hasProperty("value", present(is(-0.1f))));
+		}
+
+	}
+
+	@Nested
 	class WholeStemVolumeEstimation {
 
 		@Test
@@ -1079,5 +1203,53 @@ class EstimationMethodsTest {
 			assertThat(result, closeTo(expected));
 		}
 
+	}
+
+	@Nested
+	class UpperBounds {
+
+		@Test
+		void testBAMode1() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+
+			float result = emp.upperBoundsBaseArea(Region.COASTAL, "B", 167);
+			assertThat(result, closeTo(64.58f));
+		}
+
+		@Test
+		void testBAMode2() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_2);
+			EasyMock.replay(debug);
+
+			float result = emp.upperBoundsBaseArea(Region.COASTAL, "B", 167);
+			assertThat(result, closeTo(104.0f));
+		}
+
+		@Test
+		void testDQMode1() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+
+			float result = emp.upperBoundsQuadMeanDiameter(Region.INTERIOR, "S", 168);
+			assertThat(result, closeTo(71.04f));
+		}
+
+		@Test
+		void testDQMode2() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_2);
+			EasyMock.replay(debug);
+
+			float result = emp.upperBoundsQuadMeanDiameter(Region.INTERIOR, "S", 168);
+			assertThat(result, closeTo(40.3f));
+		}
 	}
 }

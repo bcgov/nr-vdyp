@@ -48,6 +48,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication.CombinedPolygonStream;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication.Strictness;
+import ca.bc.gov.nrs.vdyp.application.test.TestDebugSettings;
 import ca.bc.gov.nrs.vdyp.application.test.TestLayer;
 import ca.bc.gov.nrs.vdyp.application.test.TestPolygon;
 import ca.bc.gov.nrs.vdyp.application.test.TestSite;
@@ -831,7 +832,9 @@ class VdypStartApplicationTest {
 
 			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
 
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(DebugSettings.class, 22, 0));
+			controlMap.put(
+					ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(TestDebugSettings.class, 22, 0)
+			);
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 
@@ -2272,7 +2275,7 @@ class VdypStartApplicationTest {
 
 		@Test
 		void testWeightedCoefficientSum() {
-			var result = VdypStartApplication
+			var result = EstimationMethods
 					.weightedCoefficientSum(List.of(2, 4, 6), 6, 1, List.of("A", "B", "C", "D"), s -> {
 						switch (s) {
 						case "A":
