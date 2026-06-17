@@ -60,7 +60,7 @@ class BatchJobPublisherTest {
 	BatchJobPublisher publisher;
 
 	@BeforeEach
-	void setUp() throws Exception {
+	void setUp() {
 		objectMapper = new ObjectMapper();
 		publisher = new BatchJobPublisher(
 				objectMapper, URL, Optional.empty(), Optional.empty(), SUBJECT, STREAM, connectionFactory
@@ -87,9 +87,8 @@ class BatchJobPublisherTest {
 		IOException cause = new IOException("cannot connect");
 		when(connectionFactory.connect(any(Options.class))).thenThrow(cause);
 
-		IllegalStateException exception = assertThrows(
-				IllegalStateException.class, () -> publisher.publish(new BatchRequestMessage(UUID.randomUUID(), "{}"))
-		);
+		var request = new BatchRequestMessage(UUID.randomUUID(), "{}");
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> publisher.publish(request));
 
 		assertEquals("Unable to publish NATS batch request", exception.getMessage());
 		assertSame(cause, exception.getCause());
@@ -101,9 +100,9 @@ class BatchJobPublisherTest {
 		when(connectionFactory.connect(any(Options.class))).thenThrow(cause);
 
 		try {
+			var request = new BatchRequestMessage(UUID.randomUUID(), "{}");
 			IllegalStateException exception = assertThrows(
-					IllegalStateException.class,
-					() -> publisher.publish(new BatchRequestMessage(UUID.randomUUID(), "{}"))
+					IllegalStateException.class, () -> publisher.publish(request)
 			);
 
 			assertEquals("Interrupted while publishing NATS batch request", exception.getMessage());
@@ -220,9 +219,9 @@ class BatchJobPublisherTest {
 		givenConnectedToManagement();
 		when(cause.getErrorCode()).thenReturn(500);
 		when(management.getFirstMessage(STREAM, SUBJECT)).thenThrow(cause);
-
+		UUID queuedId = UUID.randomUUID();
 		IllegalStateException exception = assertThrows(
-				IllegalStateException.class, () -> publisher.deleteQueuedRequest(UUID.randomUUID())
+				IllegalStateException.class, () -> publisher.deleteQueuedRequest(queuedId)
 		);
 
 		assertEquals("Unable to delete queued NATS batch request", exception.getMessage());
@@ -235,8 +234,9 @@ class BatchJobPublisherTest {
 		when(connectionFactory.connect(any(Options.class))).thenThrow(cause);
 
 		try {
+			UUID queuedId = UUID.randomUUID();
 			IllegalStateException exception = assertThrows(
-					IllegalStateException.class, () -> publisher.deleteQueuedRequest(UUID.randomUUID())
+					IllegalStateException.class, () -> publisher.deleteQueuedRequest(queuedId)
 			);
 
 			assertEquals("Interrupted while deleting queued NATS batch request", exception.getMessage());
@@ -252,8 +252,9 @@ class BatchJobPublisherTest {
 		IOException cause = new IOException("cannot connect");
 		when(connectionFactory.connect(any(Options.class))).thenThrow(cause);
 
+		UUID queuedId = UUID.randomUUID();
 		IllegalStateException exception = assertThrows(
-				IllegalStateException.class, () -> publisher.deleteQueuedRequest(UUID.randomUUID())
+				IllegalStateException.class, () -> publisher.deleteQueuedRequest(queuedId)
 		);
 
 		assertEquals("Unable to delete queued NATS batch request", exception.getMessage());
@@ -267,9 +268,8 @@ class BatchJobPublisherTest {
 		givenConnectedToJetStream();
 		when(jetStream.publish(eq(SUBJECT), any(byte[].class))).thenThrow(cause);
 
-		IllegalStateException exception = assertThrows(
-				IllegalStateException.class, () -> publisher.publish(new BatchRequestMessage(UUID.randomUUID(), "{}"))
-		);
+		var request = new BatchRequestMessage(UUID.randomUUID(), "{}");
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> publisher.publish(request));
 
 		assertEquals("Unable to publish NATS batch request", exception.getMessage());
 		assertSame(cause, exception.getCause());
@@ -282,9 +282,8 @@ class BatchJobPublisherTest {
 		givenConnectedToJetStream();
 		when(jetStream.publish(eq(SUBJECT), any(byte[].class))).thenThrow(cause);
 
-		IllegalStateException exception = assertThrows(
-				IllegalStateException.class, () -> publisher.publish(new BatchRequestMessage(UUID.randomUUID(), "{}"))
-		);
+		var request = new BatchRequestMessage(UUID.randomUUID(), "{}");
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> publisher.publish(request));
 
 		assertEquals("Unable to publish NATS batch request", exception.getMessage());
 		assertSame(cause, exception.getCause());
