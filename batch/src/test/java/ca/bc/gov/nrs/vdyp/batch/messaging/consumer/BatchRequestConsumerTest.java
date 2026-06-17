@@ -211,6 +211,38 @@ class BatchRequestConsumerTest {
 		}
 	}
 
+	@Test
+	void start_WhenNoJobLaunchCapacityInitially_PausesUntilCapacityIsAvailableBeforeFetching() throws Exception {
+		NatsBatchProperties shortPollProperties = natsProperties(true, Duration.ofMillis(1));
+		BatchRequestConsumer capacityLimitedConsumer = new BatchRequestConsumer(
+				natsConnection, shortPollProperties, objectMapper, jobLauncher, vdypBatchJob, batchProperties,
+				taskExecutor
+		);
+		CountDownLatch fetchCalled = new CountDownLatch(1);
+
+		when(taskExecutor.getActiveCount()).thenReturn(1, 1, 0);
+		when(taskExecutor.getMaxPoolSize()).thenReturn(1);
+		when(natsConnection.jetStream()).thenReturn(jetStream);
+		when(jetStream.subscribe(eq(shortPollProperties.subject()), any(PullSubscribeOptions.class)))
+				.thenReturn(subscription);
+		when(subscription.fetch(shortPollProperties.batchSize(), shortPollProperties.pollTimeout()))
+				.thenAnswer(invocation -> {
+					capacityLimitedConsumer.stop();
+					fetchCalled.countDown();
+					return List.of();
+				});
+
+		try {
+			capacityLimitedConsumer.start();
+
+			assertTrue(fetchCalled.await(1, TimeUnit.SECONDS));
+			assertFalse(capacityLimitedConsumer.isRunning());
+			verify(subscription).fetch(shortPollProperties.batchSize(), shortPollProperties.pollTimeout());
+		} finally {
+			capacityLimitedConsumer.stop();
+		}
+	}
+
 	private void givenThreadPoolHasCapacity() {
 		when(taskExecutor.getActiveCount()).thenReturn(0);
 		when(taskExecutor.getMaxPoolSize()).thenReturn(1);
@@ -228,10 +260,14 @@ class BatchRequestConsumerTest {
 	}
 
 	private static NatsBatchProperties natsProperties(boolean enabled) {
+		return natsProperties(enabled, PROPERTIES.pollTimeout());
+	}
+
+	private static NatsBatchProperties natsProperties(boolean enabled, Duration pollTimeout) {
 		return new NatsBatchProperties(
 				PROPERTIES.url(), PROPERTIES.username(), PROPERTIES.password(), PROPERTIES.stream(),
-				PROPERTIES.consumer(), PROPERTIES.subject(), PROPERTIES.statusSubject(), enabled,
-				PROPERTIES.pollTimeout(), PROPERTIES.batchSize()
+				PROPERTIES.consumer(), PROPERTIES.subject(), PROPERTIES.statusSubject(), enabled, pollTimeout,
+				PROPERTIES.batchSize()
 		);
 	}
 }
