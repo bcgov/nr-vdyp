@@ -20,7 +20,7 @@ class DebugSettingsTest {
 
 	@Test
 	void testNullArray() {
-		DebugSettings ds = new DebugSettings(null);
+		DebugSettings ds = new TestDebugSettings(null);
 		for (int i = 1; i <= DebugSettings.MAX_DEBUG_SETTINGS; i++) {
 			assertThat("Entry " + i, ds.getValue(i), is(0));
 		}
@@ -30,7 +30,7 @@ class DebugSettingsTest {
 
 	@Test
 	void testEmptyArray() {
-		DebugSettings ds = new DebugSettings(new Integer[0]);
+		DebugSettings ds = new TestDebugSettings(new Integer[0]);
 		for (int i = 1; i <= DebugSettings.MAX_DEBUG_SETTINGS; i++) {
 			assertThat("Entry " + i, ds.getValue(i), is(0));
 		}
@@ -40,7 +40,7 @@ class DebugSettingsTest {
 
 	@Test
 	void testSizeOneArray() {
-		DebugSettings ds = new DebugSettings(new Integer[] { 43 });
+		DebugSettings ds = new TestDebugSettings(new Integer[] { 43 });
 		assertThat("Entry " + 1, ds.getValue(1), is(43));
 		for (int i = 2; i <= DebugSettings.MAX_DEBUG_SETTINGS; i++) {
 			assertThat("Entry " + i, ds.getValue(i), is(0));
@@ -53,13 +53,13 @@ class DebugSettingsTest {
 	void testTooLargeArray() {
 		assertThrows(
 				IllegalArgumentException.class,
-				() -> new DebugSettings(new Integer[DebugSettings.MAX_DEBUG_SETTINGS + 1])
+				() -> new TestDebugSettings(new Integer[DebugSettings.MAX_DEBUG_SETTINGS + 1])
 		);
 	}
 
 	@Test
 	void testValuesRecordedCorrectly() {
-		DebugSettings ds = new DebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+		DebugSettings ds = new TestDebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 		for (int i = 0; i < 10; i++) {
 			assertThat(ds.getValue(i + 1), is(i + 1));
 		}
@@ -67,7 +67,7 @@ class DebugSettingsTest {
 
 	@Test
 	void testSetValue() {
-		DebugSettings ds = new DebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+		DebugSettings ds = new TestDebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 		ds.setValue(3, 42);
 		for (int i = 0; i < 10; i++) {
 			if (i + 1 == 3) {
@@ -81,7 +81,7 @@ class DebugSettingsTest {
 
 	@Test
 	void testSetOutOfBounds() {
-		DebugSettings ds = new DebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+		DebugSettings ds = new TestDebugSettings(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 		assertThrows(IllegalArgumentException.class, () -> ds.setValue(0, 42));
 		assertThrows(IllegalArgumentException.class, () -> ds.setValue(-1, 42));
 		assertThrows(IllegalArgumentException.class, () -> ds.setValue(DebugSettings.MAX_DEBUG_SETTINGS + 1, 42));
@@ -129,7 +129,7 @@ class DebugSettingsTest {
 
 	@Test
 	void testDefaultCorrectly() {
-		DebugSettings ds = new DebugSettings(new Integer[] { 1 });
+		DebugSettings ds = new TestDebugSettings(new Integer[] { 1 });
 		assertThat(ds.getValue(1), is(1));
 		for (int i = 2; i <= DebugSettings.MAX_DEBUG_SETTINGS; i++) {
 			assertThat(ds.getValue(i), is(0));
@@ -138,7 +138,7 @@ class DebugSettingsTest {
 
 	@Test
 	void testOutOfBoundsRequest() {
-		DebugSettings ds = new DebugSettings(new Integer[] { 1 });
+		DebugSettings ds = new TestDebugSettings(new Integer[] { 1 });
 		assertThrows(IllegalArgumentException.class, () -> ds.getValue(DebugSettings.MAX_DEBUG_SETTINGS + 1));
 	}
 }

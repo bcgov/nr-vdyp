@@ -39,9 +39,6 @@ public interface ProcessingResolvedControlMap extends ResolvedControlMap {
 	/** 106 - BA_YIELD */
 	MatrixMap2<String, String, Coefficients> getBasalAreaYieldCoefficients();
 
-	/** 107 - DQ_YIELD */
-	MatrixMap2<String, String, Coefficients> getQuadMeanDiameterYieldCoefficients();
-
 	/** 111 - BA_GROWTH_FIAT */
 	Map<Region, GrowthFiatDetails> getBasalAreaGrowthFiatDetails();
 

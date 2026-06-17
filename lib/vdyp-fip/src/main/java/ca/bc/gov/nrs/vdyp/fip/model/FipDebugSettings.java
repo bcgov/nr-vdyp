@@ -3,9 +3,9 @@ package ca.bc.gov.nrs.vdyp.fip.model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.model.DebugSettings;
+import ca.bc.gov.nrs.vdyp.model.BaseDebugSettings;
 
-public class FipDebugSettings extends DebugSettings {
+public class FipDebugSettings extends BaseDebugSettings {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(FipDebugSettings.class);

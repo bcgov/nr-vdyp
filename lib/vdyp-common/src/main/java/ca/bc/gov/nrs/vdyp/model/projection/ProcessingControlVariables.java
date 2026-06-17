@@ -65,26 +65,14 @@ public class ProcessingControlVariables extends ControlVariables {
 	// See ca.bc.gov.nrs.vdyp.ecore.projection.RealComponentRunner.runForward
 	// and vdyp7controlwrite.for:createvdyp7control
 
-	private static final int MAX_CONTROL_VARIABLE_VALUES = 10;
-	private static final int DEFAULT_CONTROL_VARIABLE_VALUE = 0;
-
-	private final int[] controlVariables = new int[10];
+	static final int MAX_CONTROL_VARIABLE_VALUES = 10;
 
 	public ProcessingControlVariables(Integer[] controlVariableValues) throws ValueParseException {
-		int index = 0;
-
-		if (controlVariableValues != null) {
-			for (; index < Math.min(controlVariableValues.length, MAX_CONTROL_VARIABLE_VALUES); index++)
-				this.controlVariables[index] = controlVariableValues[index];
-		}
-
-		for (; index < MAX_CONTROL_VARIABLE_VALUES; index++)
-			this.controlVariables[index] = DEFAULT_CONTROL_VARIABLE_VALUE;
-
-		validate();
+		super(controlVariableValues, MAX_CONTROL_VARIABLE_VALUES);
 	}
 
-	private void validate() throws ValueParseException {
+	@Override
+	protected void validate() throws ValueParseException {
 
 		// Validate the control variable values.
 
@@ -148,19 +136,18 @@ public class ProcessingControlVariables extends ControlVariables {
 	}
 
 	public boolean allowCalculation(float value, float limit, BiPredicate<Float, Float> p) {
-		int cvValue = controlVariables[ControlVariable.ALLOW_COMPAT_VAR_CALCS_5.ordinal()];
+		int cvValue = getControlVariable(ControlVariable.ALLOW_COMPAT_VAR_CALCS_5);
 		return cvValue == 0 && value > 0 || cvValue > 0 && p.test(value, limit);
 	}
 
 	public boolean allowCalculation(BooleanSupplier p) {
-		int cvValue = controlVariables[ControlVariable.ALLOW_COMPAT_VAR_CALCS_5.ordinal()];
+		int cvValue = getControlVariable(ControlVariable.ALLOW_COMPAT_VAR_CALCS_5);
 		return cvValue == 1 && p.getAsBoolean();
 	}
 
 	public int getControlVariable(ControlVariable controlVariable) {
 
-		assert controlVariable.ordinal() == controlVariable.variableNumber - 1;
-		return controlVariables[controlVariable.ordinal()];
+		return getControlVariable(controlVariable.variableNumber);
 	}
 
 	/**
@@ -171,19 +158,7 @@ public class ProcessingControlVariables extends ControlVariables {
 	 * @throws ValueParseException
 	 */
 	public void setControlVariable(ControlVariable controlVariable, int value) throws ValueParseException {
-		controlVariables[controlVariable.ordinal()] = value;
+		setControlVariable(controlVariable.variableNumber, value);
 		validate();
-	}
-
-	public int getControlVariable(int elementNumber) {
-
-		if (elementNumber < 1 || elementNumber > MAX_CONTROL_VARIABLE_VALUES) {
-			throw new IllegalArgumentException(
-					"Element number (" + elementNumber + ") is out of range - must be from 1 to "
-							+ MAX_CONTROL_VARIABLE_VALUES
-			);
-		}
-
-		return controlVariables[elementNumber - 1];
 	}
 }
