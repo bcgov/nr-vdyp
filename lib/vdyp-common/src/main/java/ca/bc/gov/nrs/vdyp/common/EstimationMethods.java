@@ -892,7 +892,7 @@ public class EstimationMethods {
 		return bap;
 	}
 
-	Coefficients sumCoefficientsWeightedBySpeciesAndDecayBec(
+	private Coefficients sumCoefficientsWeightedBySpeciesAndDecayBec(
 			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec,
 			MatrixMap2<String, String, Coefficients> coeMap, int size
 	) {
@@ -905,6 +905,18 @@ public class EstimationMethods {
 				BaseVdypSpecies::getFractionGenus, // Weight by fraction
 				spec -> coeMap.get(decayBecAlias, spec.getGenus())
 		);
+	}
+
+	// TODO Make private after VDYP-1107
+	public Coefficients sumCoefficientsWeightedBySpeciesAndDecayBec(
+			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec, ControlKey key,
+			int size
+	) {
+		MatrixMap2<String, String, Coefficients> coeMap = Utils
+				.<MatrixMap2<String, String, Coefficients>>expectParsedControl(
+						controlMap.getControlMap(), key, MatrixMap2.class
+				);
+		return sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, coeMap, size);
 	}
 
 	/**

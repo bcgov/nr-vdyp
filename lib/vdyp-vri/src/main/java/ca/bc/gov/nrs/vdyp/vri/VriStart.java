@@ -1058,26 +1058,12 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	Coefficients estimateBaseAreaYieldCoefficients(
 			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec
 	) {
-		var coe = sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, ControlKey.BA_YIELD, 7);
+		var coe = this.estimationMethods
+				.sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, ControlKey.BA_YIELD, 7);
 
 		// TODO confirm going over 0.5 should drop to 0 as this seems odd.
 		coe.scalarInPlace(5, x -> x > 0.0f ? 0f : x);
 		return coe;
-	}
-
-	Coefficients sumCoefficientsWeightedBySpeciesAndDecayBec(
-			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec, ControlKey key,
-			int size
-	) {
-		var coeMap = Utils
-				.<MatrixMap2<String, String, Coefficients>>expectParsedControl(controlMap, key, MatrixMap2.class);
-
-		final String decayBecAlias = bec.getDecayBec().getAlias();
-
-		// TODO Inline
-		return EstimationMethods.weightedCoefficientSum(
-				size, 0, species, BaseVdypSpecies::getFractionGenus, spec -> coeMap.get(decayBecAlias, spec.getGenus())
-		);
 	}
 
 	// EMP107

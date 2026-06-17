@@ -6,7 +6,7 @@ public abstract class ControlVariables {
 
 	private static final int DEFAULT_CONTROL_VARIABLE_VALUE = 0;
 
-	private final int[] controlVariables = new int[10];
+	private final int[] controlVariableValues = new int[10];
 	private final int maximum;
 
 	protected ControlVariables(Integer[] controlVariableValues, int maximum) throws ValueParseException {
@@ -14,11 +14,11 @@ public abstract class ControlVariables {
 		this.maximum = maximum;
 		if (controlVariableValues != null) {
 			for (; index < Math.min(controlVariableValues.length, maximum); index++)
-				this.controlVariables[index] = controlVariableValues[index];
+				this.controlVariableValues[index] = controlVariableValues[index];
 		}
 
 		for (; index < maximum; index++)
-			this.controlVariables[index] = DEFAULT_CONTROL_VARIABLE_VALUE;
+			this.controlVariableValues[index] = DEFAULT_CONTROL_VARIABLE_VALUE;
 
 		validate();
 	}
@@ -33,7 +33,7 @@ public abstract class ControlVariables {
 			);
 		}
 
-		return controlVariables[elementNumber - 1];
+		return controlVariableValues[elementNumber - 1];
 	}
 
 	/**
@@ -44,6 +44,6 @@ public abstract class ControlVariables {
 	 * @throws ValueParseException
 	 */
 	public void setControlVariable(int elementNumber, int value) {
-		controlVariables[elementNumber - 1] = value;
+		controlVariableValues[elementNumber - 1] = value;
 	}
 }
