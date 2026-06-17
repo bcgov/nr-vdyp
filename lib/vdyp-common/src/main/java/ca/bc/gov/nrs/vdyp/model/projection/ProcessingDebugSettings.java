@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.model.BaseDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
 /**
@@ -93,7 +94,7 @@ import ca.bc.gov.nrs.vdyp.model.DebugSettings;
  * <li>15: Same as option 1, condition on total age (primary) < 30.
  * </ul>
  */
-public class ProcessingDebugSettings extends DebugSettings {
+public class ProcessingDebugSettings extends BaseDebugSettings {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProcessingDebugSettings.class);
 

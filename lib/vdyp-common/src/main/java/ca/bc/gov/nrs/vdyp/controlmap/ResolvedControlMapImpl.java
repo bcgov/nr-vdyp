@@ -200,4 +200,14 @@ public abstract class ResolvedControlMapImpl implements ResolvedControlMap {
 	public Map<String, DoubleCoefficients> getQuadMeanDiameterBySpeciesCoefficients() {
 		return this.get(ControlKey.BY_SPECIES_DQ, Map.class);
 	}
+
+	@Override
+	public MatrixMap2<String, String, Coefficients> getQuadMeanDiameterYieldCoefficients() {
+		return get(ControlKey.DQ_YIELD, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class);
+	}
+
+	@Override
+	public MatrixMap3<Region, String, Integer, Float> getUpperBoundsCoefficients() {
+		return get(ControlKey.UPPER_BA_BY_CI_S0_P, ca.bc.gov.nrs.vdyp.model.MatrixMap3.class);
+	}
 }
