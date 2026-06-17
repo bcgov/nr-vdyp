@@ -18,6 +18,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -170,5 +171,31 @@ class ProjectionBatchMappingServiceTest {
 		assertEquals(100, mappingEntity.getPolygonCount());
 		assertEquals(20, mappingEntity.getErrorCount());
 		assertEquals(10, mappingEntity.getCompletedPolygonCount());
+	}
+
+	@Test
+	void updateProgress_projectionHasNoMapping_createsStreamedMappingAndUpdatesProgress()
+			throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20);
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
+
+		service.updateProgress(projectionEntity, update);
+
+		ArgumentCaptor<ProjectionBatchMappingEntity> entityCaptor = ArgumentCaptor
+				.forClass(ProjectionBatchMappingEntity.class);
+		verify(repository).persist(entityCaptor.capture());
+
+		ProjectionBatchMappingEntity entity = entityCaptor.getValue();
+		assertEquals(batchJobGuid, entity.getBatchJobGUID());
+		assertEquals(projectionEntity, entity.getProjection());
+		assertEquals(100, entity.getPolygonCount());
+		assertEquals(20, entity.getErrorCount());
+		assertEquals(10, entity.getCompletedPolygonCount());
+		assertEquals(0, entity.getWarningCount());
+		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
 }
