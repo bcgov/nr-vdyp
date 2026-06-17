@@ -248,6 +248,7 @@ export const getStatusIcon = (status: string): string => {
     Draft: new URL('@/assets/icons/Draft_Icon_Status.png', import.meta.url).href,
     Ready: new URL('@/assets/icons/Ready_Icon_Status.png', import.meta.url).href,
     Running: new URL('@/assets/icons/Running_Icon_Status.png', import.meta.url).href,
+    Queued: new URL('@/assets/icons/Running_Icon_Status.png', import.meta.url).href,
     Failed: new URL('@/assets/icons/Failed_Icon_Status.png', import.meta.url).href,
   }
   return iconMap[status] || ''

@@ -292,6 +292,7 @@ describe('projectionService Unit Tests', () => {
       expect(mapProjectionStatus('DRAFT')).to.equal(PROJECTION_STATUS.DRAFT)
       expect(mapProjectionStatus('READY')).to.equal(PROJECTION_STATUS.READY)
       expect(mapProjectionStatus('RUNNING')).to.equal(PROJECTION_STATUS.RUNNING)
+      expect(mapProjectionStatus('QUEUED')).to.equal(PROJECTION_STATUS.QUEUED)
       expect(mapProjectionStatus('FAILED')).to.equal(PROJECTION_STATUS.FAILED)
     })
 
@@ -351,6 +352,7 @@ describe('projectionService Unit Tests', () => {
     it('should return true for Ready and Running statuses', () => {
       expect(isProjectionReadOnly(PROJECTION_STATUS.READY)).to.be.true
       expect(isProjectionReadOnly(PROJECTION_STATUS.RUNNING)).to.be.true
+      expect(isProjectionReadOnly(PROJECTION_STATUS.QUEUED)).to.be.true
     })
 
     it('should return false for Draft and Failed statuses', () => {

@@ -507,7 +507,7 @@ export const parseProjectionParams = (
  * @returns true if the projection should be read-only
  */
 export const isProjectionReadOnly = (status: ProjectionStatus): boolean => {
-  return status === PROJECTION_STATUS.READY || status === PROJECTION_STATUS.RUNNING
+  return status === PROJECTION_STATUS.READY || status === PROJECTION_STATUS.RUNNING || status === PROJECTION_STATUS.QUEUED
 }
 
 // ============================================================================

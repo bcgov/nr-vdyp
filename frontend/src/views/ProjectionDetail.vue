@@ -289,6 +289,7 @@ const projectionStore = useProjectionStore()
 const notificationStore = useNotificationStore()
 
 const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
+const isQueued = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.QUEUED)
 const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
 const isDraft = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.DRAFT)
 const isFailed = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED)
@@ -299,14 +300,14 @@ const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONS
 const isRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD &&
-    (isRunning.value || isReady.value || isFailed.value || isCancelled.value),
+    (isRunning.value || isQueued.value || isReady.value || isFailed.value || isCancelled.value),
 )
 
 // Shown for Manual Input mode when projection has been run (Running/Ready/Failed/Cancelled)
 const isManualInputRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT &&
-    (isRunning.value || isReady.value || isFailed.value || isCancelled.value),
+    (isRunning.value || isQueued.value|| isReady.value || isFailed.value || isCancelled.value),
 )
 
 // Batch mapping data updated via polling
