@@ -8,6 +8,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.partition.PartitionHandler;
 import org.springframework.batch.core.partition.StepExecutionSplitter;
 import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.lang.NonNull;
 
@@ -41,13 +42,25 @@ public class DynamicPartitionHandler implements PartitionHandler {
 					throws Exception {
 
 		JobParameters jobParameters = masterStepExecution.getJobExecution().getJobParameters();
-		Long numPartitions = jobParameters.getLong(BatchConstants.Partition.NUMBER);
+		ExecutionContext jobExecCtx = masterStepExecution.getJobExecution().getExecutionContext();
 
+		// COMPUTED_PARTITIONS (set by DownloadAndPartitionTasklet for GUID flow) takes priority over job parameter
 		int actualNumPartitions;
-		if (numPartitions != null) {
-			actualNumPartitions = numPartitions.intValue();
+		if (jobExecCtx.containsKey(BatchConstants.Job.COMPUTED_PARTITIONS)) {
+			actualNumPartitions = jobExecCtx.getInt(BatchConstants.Job.COMPUTED_PARTITIONS);
 		} else {
-			actualNumPartitions = batchProperties.getPartition().getDefaultNumberOfPartitions();
+			Long numPartitions = jobParameters.getLong(BatchConstants.Partition.NUMBER);
+			actualNumPartitions = (numPartitions != null) ? numPartitions.intValue()
+					: batchProperties.getPartition().getDefaultNumberOfPartitions();
+		}
+
+		// For file-upload flow, copy TOTAL_POLYGONS from job params into execution context for uniform progress
+		// tracking
+		if (!jobExecCtx.containsKey(BatchConstants.Job.TOTAL_POLYGONS)) {
+			Long totalPolygonsParam = jobParameters.getLong(BatchConstants.Job.TOTAL_POLYGONS);
+			if (totalPolygonsParam != null) {
+				jobExecCtx.putInt(BatchConstants.Job.TOTAL_POLYGONS, totalPolygonsParam.intValue());
+			}
 		}
 
 		logger.info("Starting VDYP FEATURE_ID-based parallel processing with {} partitions", actualNumPartitions);

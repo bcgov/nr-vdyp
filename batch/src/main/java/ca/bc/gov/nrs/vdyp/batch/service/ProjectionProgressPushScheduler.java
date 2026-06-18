@@ -23,6 +23,7 @@ import com.google.common.base.Strings;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 @Component
 @EnableScheduling
@@ -56,48 +57,49 @@ public class ProjectionProgressPushScheduler {
 		}
 
 		Set<String> currentlyRunningProjectionGUIDs = new HashSet<>();
-		// for each projection that changed:
 		for (JobExecution job : jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")) {
 			String projectionGUID = job.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
 			if (Strings.isNullOrEmpty(projectionGUID))
 				continue;
 
-			String batchJobGUID = job.getJobParameters().getString(BatchConstants.Job.GUID);
-
 			currentlyRunningProjectionGUIDs.add(projectionGUID);
-			int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
-			int polygonsProcessed = 0;
-			int errorCount = 0;
-			int polygonsSkipped = 0;
-			for (StepExecution step : job.getStepExecutions()) {
-				if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
-					// If you have multiple steps, you may want to filter by step name prefix
-					ExecutionContext stepCtx = step.getExecutionContext();
-					polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
-					errorCount += stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
-					polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
-				}
-			}
-
-			// Check hash of values do not send if no change
-			Triple<Integer, Integer, Integer> checkTriple = Triple.of(polygonsProcessed, errorCount, polygonsSkipped);
-			int newHash = checkTriple.hashCode();
-			Integer previousHash = lastProgressHashByProjection.put(projectionGUID, newHash);
-			if (previousHash == null || previousHash != newHash) {
-				VDYPProjectionProgressUpdate payload = new VDYPProjectionProgressUpdate(
-						batchJobGUID, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped
-				);
-				progressExecutor.execute(() -> {
-					try {
-						vdypClient.pushProgress(projectionGUID, payload);
-					} catch (Exception logMe) {
-						logger.error("Error pushing progress to VDYP", logMe);
-					}
-				});
-			}
+			pushProgressForJob(job, projectionGUID);
 		}
 
 		// Clean up any projections that are no longer running to prevent memory leak in the map
 		lastProgressHashByProjection.keySet().removeIf(guid -> !currentlyRunningProjectionGUIDs.contains(guid));
+	}
+
+	private void pushProgressForJob(JobExecution job, String projectionGUID) {
+		String batchJobGUID = job.getJobParameters().getString(BatchConstants.Job.GUID);
+		int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+		int workers = BatchUtils.calculateActiveWorkers(job, true);
+		int polygonsProcessed = 0;
+		int errorCount = 0;
+		int polygonsSkipped = 0;
+		for (StepExecution step : job.getStepExecutions()) {
+			if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
+				ExecutionContext stepCtx = step.getExecutionContext();
+				polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
+				errorCount += stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
+				polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
+			}
+		}
+
+		Triple<Integer, Integer, Integer> checkTriple = Triple.of(polygonsProcessed, errorCount, polygonsSkipped);
+		int newHash = checkTriple.hashCode();
+		Integer previousHash = lastProgressHashByProjection.put(projectionGUID, newHash);
+		if (previousHash == null || previousHash != newHash) {
+			VDYPProjectionProgressUpdate payload = new VDYPProjectionProgressUpdate(
+					batchJobGUID, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, workers
+			);
+			progressExecutor.execute(() -> {
+				try {
+					vdypClient.pushProgress(projectionGUID, payload);
+				} catch (Exception logMe) {
+					logger.error("Error pushing progress to VDYP", logMe);
+				}
+			});
+		}
 	}
 }

@@ -71,6 +71,8 @@ spec:
               value: {{ .Values.batch.env.BATCH_DEFAULT_PARTITION_NUMBER | quote }}
             - name: BATCH_THREAD_POOL_SIZE
               value: {{ .Values.batch.env.BATCH_THREAD_POOL_SIZE | quote }}
+            - name: BATCH_MAX_JOB_THREADS
+              value: {{ .Values.batch.env.BATCH_MAX_JOB_THREADS | quote }}
             - name: BATCH_DB_CONNECITON_POOL_SIZE
               value: {{ .Values.batch.env.BATCH_DB_CONNECITON_POOL_SIZE | quote }}
             - name: NATS_ENABLED

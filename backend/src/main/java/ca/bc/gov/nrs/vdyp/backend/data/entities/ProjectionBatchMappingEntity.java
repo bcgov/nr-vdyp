@@ -37,6 +37,8 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 	private Integer errorCount;
 	@Column(name = "warning_count")
 	private Integer warningCount;
+	@Column(name = "worker_count")
+	private Integer workerCount;
 
 	public UUID getProjectionBatchMappingGUID() {
 		return projectionBatchMappingGUID;
@@ -66,6 +68,10 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 		return warningCount;
 	}
 
+	public Integer getWorkerCount() {
+		return workerCount;
+	}
+
 	public void setProjectionBatchMappingGUID(UUID projectionBatchMappingGUID) {
 		this.projectionBatchMappingGUID = projectionBatchMappingGUID;
 	}
@@ -92,5 +98,9 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 
 	public void setWarningCount(Integer warningCount) {
 		this.warningCount = warningCount;
+	}
+
+	public void setWorkerCount(Integer workerCount) {
+		this.workerCount = workerCount;
 	}
 }

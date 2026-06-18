@@ -2047,7 +2047,7 @@ class ProjectionServiceTest {
 		systemUserType.setCode(UserTypeCodeModel.SYSTEM);
 		VDYPUserModel systemUser = new VDYPUserModel();
 		systemUser.setUserTypeCode(systemUserType);
-		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1);
+		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1, 1, 0);
 
 		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.READY))
@@ -2073,7 +2073,7 @@ class ProjectionServiceTest {
 		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
 
 		UUID projectionGUID = UUID.randomUUID();
-		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1);
+		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1, 1, 0);
 
 		ProjectionModel model = new ProjectionModel();
 		model.setProjectionGUID(projectionGUID.toString());

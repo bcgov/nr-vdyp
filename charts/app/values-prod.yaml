@@ -283,3 +283,4 @@ batch:
     NATS_SECRET_NAME: vdyp-nats-prod-auth
     NATS_USERNAME_SECRET_KEY: username
     NATS_PASSWORD_SECRET_KEY: password
+    BATCH_MAX_JOB_THREADS: ~
