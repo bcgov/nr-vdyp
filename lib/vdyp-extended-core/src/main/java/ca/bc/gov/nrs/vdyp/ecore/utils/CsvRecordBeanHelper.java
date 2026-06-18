@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.utils;
 
+import java.math.BigDecimal;
+
 public class CsvRecordBeanHelper {
 
 	public static Double parseDoubleAcceptNull(String doubleText) {
@@ -7,7 +9,7 @@ public class CsvRecordBeanHelper {
 	}
 
 	public static Long parseLongAcceptNull(String longText) {
-		return longText == null ? null : Long.parseLong(longText);
+		return longText == null ? null : new BigDecimal(longText).longValue();
 	}
 
 	public static Short parseShortAcceptNull(String shortText) {

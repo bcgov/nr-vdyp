@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -151,7 +152,7 @@ public final class BatchUtils {
 			return null;
 		}
 		try {
-			return Long.valueOf(field);
+			return new BigDecimal(field).longValue();
 		} catch (NumberFormatException e) {
 			return null;
 		}
