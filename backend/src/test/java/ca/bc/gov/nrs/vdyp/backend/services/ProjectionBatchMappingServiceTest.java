@@ -165,7 +165,7 @@ class ProjectionBatchMappingServiceTest {
 
 		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
 
-		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 30, 3);
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 3);
 		// Act
 		service.updateProgress(projectionEntity, update);
 		assertEquals(100, mappingEntity.getPolygonCount());
