@@ -108,6 +108,7 @@ public class ProjectionBatchMappingService {
 			entity.setPolygonCount(progressUpdate.totalPolygons());
 			entity.setErrorCount(progressUpdate.projectionErrors());
 			entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());
+			entity.setWorkerCount(progressUpdate.workers());
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error updating projection batch progress", e);
 		}

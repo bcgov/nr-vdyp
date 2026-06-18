@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
+import java.io.BufferedReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,27 +17,36 @@ import org.springframework.stereotype.Component;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 @Component
 @StepScope
 public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 	private static final Logger logger = LoggerFactory.getLogger(DownloadAndPartitionTasklet.class);
 	private final BatchInputPartitioner inputPartitioner;
+	private final BatchProperties batchProperties;
 
 	public DownloadAndPartitionTasklet(
-			ComsFileService comsFileService, BatchInputPartitioner inputPartitioner, VdypClient vdypClient
+			ComsFileService comsFileService, BatchInputPartitioner inputPartitioner, VdypClient vdypClient,
+			BatchProperties batchProperties
 	) {
 		super(comsFileService, vdypClient);
 		this.inputPartitioner = inputPartitioner;
+		this.batchProperties = batchProperties;
 	}
 
 	@Override
 	void performVdypFileOperation(StepExecution stepExecution) throws BatchException {
+		int partitionedCount = 0;
+		int computedPartitions = 0;
+
 		try {
-			if (jobGuid == null || baseDir == null || partitions == null || projectionGUID == null) {
+			if (jobGuid == null || baseDir == null || projectionGUID == null) {
 				throw new IllegalArgumentException("Missing required job parameters for COMS download mode.");
 			}
 
@@ -65,16 +76,49 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 			comsFileService.fetchObjectToFile(UUID.fromString(polygonGuidStr), polygonPath);
 			comsFileService.fetchObjectToFile(UUID.fromString(layerGuidStr), layerPath);
 
-			int totalPolygons = inputPartitioner
-					.partitionCsvFiles(polygonPath, layerPath, partitions.intValue(), jobBaseDir, jobGuid);
+			// Count polygons before partitioning to determine the correct thread allocation
+			int totalPolygons;
+			try (BufferedReader reader = Files.newBufferedReader(polygonPath, StandardCharsets.UTF_8)) {
+				totalPolygons = BatchUtils.countDataRecords(reader);
+			}
+
+			int chunkSize = batchProperties.getReader().getDefaultChunkSize();
+			int maxJobThreads = batchProperties.getThreadPool().getMaxJobThreads();
+			computedPartitions = BatchUtils.calculateThreadsForJob(totalPolygons, chunkSize, maxJobThreads);
+
+			logger.debug(
+					"[GUID: {}] Computed {} partitions for {} polygons (chunkSize={}, maxJobThreads={})", jobGuid,
+					computedPartitions, totalPolygons, chunkSize, maxJobThreads
+			);
+
+			partitionedCount = inputPartitioner
+					.partitionCsvFiles(polygonPath, layerPath, computedPartitions, jobBaseDir, jobGuid);
 
 			stepExecution.getJobExecution().getExecutionContext()
-					.putInt(BatchConstants.Job.TOTAL_POLYGONS, totalPolygons);
+					.putInt(BatchConstants.Job.TOTAL_POLYGONS, partitionedCount);
+			stepExecution.getJobExecution().getExecutionContext()
+					.putInt(BatchConstants.Job.COMPUTED_PARTITIONS, computedPartitions);
+			stepExecution.getJobExecution().getExecutionContext()
+					.putInt(BatchConstants.Job.WORKERS, computedPartitions);
 		} catch (Exception e) {
 			throw BatchPartitionException
 					.handlePartitionFailure(e, "Could not fetch and partition input files", jobGuid, logger);
 		}
 
+		// Push worker count immediately so the DB reflects assigned threads during the run,
+		// regardless of how quickly the job completes relative to the scheduler interval.
+		pushInitialWorkerCount(partitionedCount, computedPartitions);
+
 		logger.debug("Completed download and partitioning of input files.");
+	}
+
+	private void pushInitialWorkerCount(int totalPolygons, int workers) {
+		try {
+			vdypClient.pushProgress(
+					projectionGUID, new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, 0, 0, 0, workers)
+			);
+		} catch (Exception e) {
+			logger.warn("[GUID: {}] Failed to push initial worker count to backend: {}", jobGuid, e.getMessage());
+		}
 	}
 }

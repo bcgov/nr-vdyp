@@ -209,7 +209,7 @@ class VdypClientTest {
 	@Test
 	void markComplete_buildsExpectedUri_andSendsProgressUpdate() {
 		String projectionGuid = "proj-123";
-		VDYPProjectionProgressUpdate progressUpdate = new VDYPProjectionProgressUpdate("job-guid", 10, 8, 1, 1);
+		VDYPProjectionProgressUpdate progressUpdate = new VDYPProjectionProgressUpdate("job-guid", 10, 8, 1, 1, 0);
 
 		var req = mock(RestClient.RequestBodyUriSpec.class);
 		var resp = mock(RestClient.ResponseSpec.class);

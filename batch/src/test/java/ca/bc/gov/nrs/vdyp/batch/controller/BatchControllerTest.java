@@ -43,6 +43,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
@@ -80,15 +81,29 @@ class BatchControllerTest {
 	private JobOperator jobOperator;
 
 	@Mock
+	private BatchProperties batchProperties;
+
+	@Mock
+	private BatchProperties.ReaderProperties readerProperties;
+
+	@Mock
+	private BatchProperties.ThreadPoolProperties threadPoolProperties;
+
+	@Mock
 	private JobParameters jobParameters;
 
 	private BatchController batchController;
 
 	@BeforeEach
 	void setUp() {
+		when(batchProperties.getReader()).thenReturn(readerProperties);
+		when(readerProperties.getDefaultChunkSize()).thenReturn(150);
+		when(batchProperties.getThreadPool()).thenReturn(threadPoolProperties);
+		when(threadPoolProperties.getMaxJobThreads()).thenReturn(4);
+
 		batchController = new BatchController(
 				jobLauncher, partitionedJob, downloadAndPartitionJob, jobExplorer, metricsCollector, csvPartitioner,
-				jobOperator
+				jobOperator, batchProperties
 		);
 
 		// Use system temp directory for cross-platform compatibility
