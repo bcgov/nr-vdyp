@@ -236,6 +236,7 @@ VDYP8Run <- function(polyFile,
   resp <- httr2::request(endpoint) |>
     httr2::req_url_query(trialRun = "false") |> 
     httr2::req_timeout(seconds = 120) |>
+    httr2::req_headers(`X-Consumer-Username` = "r-user") |>
     httr2::req_body_multipart(
       # JSON part
       `Projection Parameters` = curl::form_data(

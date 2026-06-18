@@ -368,13 +368,13 @@ const isInputDisabled = computed(
 
 const isHeaderEditActive = computed(() => {
   const status = appStore.currentProjectionStatus
-  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) return false
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.QUEUED || status === CONSTANTS.PROJECTION_STATUS.READY) return false
   return isConfirmed.value && !fileUploadStore.panelState[panelName].editable
 })
 
 const editTooltipText = computed(() => {
   const status = appStore.currentProjectionStatus
-  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.READY) {
+  if (status === CONSTANTS.PROJECTION_STATUS.RUNNING || status === CONSTANTS.PROJECTION_STATUS.QUEUED || status === CONSTANTS.PROJECTION_STATUS.READY) {
     return MESSAGE.EDIT_SECTION_TOOLTIP.RESTRICTED_BY_STATUS(status)
   }
   if (isConfirmed.value && !fileUploadStore.panelState[panelName].editable) {

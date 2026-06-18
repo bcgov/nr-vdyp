@@ -66,6 +66,7 @@ const showStatus = computed(() => {
   const status = props.projectionStatus
   return (
     status === CONSTANTS.PROJECTION_STATUS.RUNNING ||
+    status === CONSTANTS.PROJECTION_STATUS.QUEUED ||
     status === CONSTANTS.PROJECTION_STATUS.READY ||
     status === CONSTANTS.PROJECTION_STATUS.FAILED
   )
@@ -95,6 +96,7 @@ const progressColor = computed(() => {
   if (props.projectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED) return 'error'
   if (props.projectionStatus === CONSTANTS.PROJECTION_STATUS.READY) return 'success'
   if (props.projectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING) return 'warning'
+  if (props.projectionStatus === CONSTANTS.PROJECTION_STATUS.QUEUED) return 'warning'
   return '#013366'
 })
 </script>

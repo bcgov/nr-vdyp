@@ -56,6 +56,8 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
+import ca.bc.gov.nrs.vdyp.backend.messaging.message.BatchRequestMessage;
+import ca.bc.gov.nrs.vdyp.backend.messaging.publisher.BatchJobPublisher;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
@@ -75,6 +77,7 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
@@ -100,6 +103,7 @@ public class ProjectionService {
 	private final ObjectMapper objectMapper;
 	private final ProjectionExpiryConfig expiryConfig;
 	private final ProjectionLimitsConfig limitsConfig;
+	private final BatchJobPublisher batchJobPublisher;
 
 	private static final String FILE_SET_IDENTIFIER = "file set";
 	private static final String FILE_IDENTIFIER = "file";
@@ -117,6 +121,20 @@ public class ProjectionService {
 			VDYPUserService userService, ObjectMapper objectMapper, ProjectionExpiryConfig expiryConfig,
 			ProjectionLimitsConfig limitsConfig
 	) {
+		this(
+				em, assembler, repository, fileSetService, batchMappingService, statusLookup, calclationEngineLookup,
+				userService, objectMapper, expiryConfig, limitsConfig, null
+		);
+	}
+
+	@Inject
+	public ProjectionService(
+			EntityManager em, ProjectionResourceAssembler assembler, ProjectionRepository repository,
+			ProjectionFileSetService fileSetService, ProjectionBatchMappingService batchMappingService,
+			ProjectionStatusCodeLookup statusLookup, CalculationEngineCodeLookup calclationEngineLookup,
+			VDYPUserService userService, ObjectMapper objectMapper, ProjectionExpiryConfig expiryConfig,
+			ProjectionLimitsConfig limitsConfig, BatchJobPublisher batchJobPublisher
+	) {
 		this.em = em;
 		this.assembler = assembler;
 		this.repository = repository;
@@ -128,6 +146,7 @@ public class ProjectionService {
 		this.objectMapper = objectMapper;
 		this.expiryConfig = expiryConfig;
 		this.limitsConfig = limitsConfig;
+		this.batchJobPublisher = batchJobPublisher;
 	}
 
 	static {
@@ -501,6 +520,44 @@ public class ProjectionService {
 	}
 
 	@Transactional
+	public ProjectionModel queueForBatchProjection(VDYPUserModel user, UUID projectionGUID)
+			throws ProjectionServiceException {
+		var entity = getProjectionEntity(projectionGUID);
+		checkUserCanPerformAction(entity, user, ProjectionAction.UPDATE);
+		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE);
+
+		// Check that the Projection has at least one polygon file and layer file
+		List<FileMappingModel> files = fileSetService
+				.getAllFiles(entity.getPolygonFileSet().getProjectionFileSetGUID(), user, false);
+		if (files.isEmpty()) {
+			throw new ProjectionValidationException(
+					"Cannot start projection: No polygon files have been uploaded.", projectionGUID
+			);
+		}
+		files = fileSetService.getAllFiles(entity.getLayerFileSet().getProjectionFileSetGUID(), user, false);
+		if (files.isEmpty()) {
+			throw new ProjectionValidationException(
+					"Cannot start projection: No layer files have been uploaded.", projectionGUID
+			);
+		}
+		try {
+			// Check that the Parameters JSON is valid.
+			Parameters params = objectMapper.readValue(entity.getProjectionParameters(), Parameters.class);
+			ProjectionRequestParametersValidator.validate(params, ProjectionRequestKind.HCSV);
+		} catch (Exception e) {
+			throw new ProjectionValidationException("Invalid parameter JSON", e, projectionGUID);
+		}
+
+		BatchRequestMessage request = new BatchRequestMessage(
+				entity.getProjectionGUID(), entity.getProjectionParameters()
+		);
+		batchJobPublisher.publish(request);
+		entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.QUEUED));
+
+		return toModelWithExpiry(entity);
+	}
+
+	@Transactional
 	public ProjectionModel startBatchProjection(VDYPUserModel user, UUID projectionGUID)
 			throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
@@ -546,10 +603,20 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, user, ProjectionAction.CANCEL);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.CANCEL);
 
-		batchMappingService.cancelProjection(entity);
+		if (!tryCancelQueuedProjection(projectionGUID, entity)) {
+			batchMappingService.cancelProjection(entity);
+		}
 		entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
 
 		return toModelWithExpiry(entity);
+	}
+
+	private boolean tryCancelQueuedProjection(UUID projectionGUID, ProjectionEntity entity) {
+		if (!ProjectionStatusCodeModel.QUEUED.equals(entity.getProjectionStatusCode().getCode())) {
+			return false;
+		}
+
+		return batchJobPublisher.deleteQueuedRequest(projectionGUID);
 	}
 
 	public enum ProjectionAction {
@@ -587,7 +654,12 @@ public class ProjectionService {
 			), //
 			ProjectionStatusCodeModel.READY, Set.of(ProjectionAction.DELETE, ProjectionAction.READ),
 			ProjectionStatusCodeModel.FAILED,
-			Set.of(ProjectionAction.UPDATE, ProjectionAction.DELETE, ProjectionAction.READ)
+			Set.of(ProjectionAction.UPDATE, ProjectionAction.DELETE, ProjectionAction.READ),
+			ProjectionStatusCodeModel.QUEUED,
+			Set.of(
+					ProjectionAction.UPDATE_PROGRESS, ProjectionAction.COMPLETE_PROJECTION,
+					ProjectionAction.STORE_RESULTS, ProjectionAction.READ, ProjectionAction.CANCEL
+			)
 	);
 
 	public void checkProjectionStatusPermitsAction(ProjectionEntity entity, ProjectionAction action)
@@ -658,6 +730,10 @@ public class ProjectionService {
 		ProjectionStatusCodeEntity status = statusLookup
 				.requireEntity(success ? ProjectionStatusCodeModel.READY : ProjectionStatusCodeModel.FAILED);
 
+		// in the event we never received progress at all
+		if (entity.getStartDate() == null) {
+			entity.setStartDate(OffsetDateTime.now());
+		}
 		entity.setProjectionStatusCode(status);
 		entity.setEndDate(OffsetDateTime.now());
 		return toModelWithExpiry(entity);
@@ -670,6 +746,10 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.UPDATE_PROGRESS);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE_PROGRESS);
 		batchMappingService.updateProgress(entity, progressUpdate);
+		if (ProjectionStatusCodeModel.QUEUED.equals(entity.getProjectionStatusCode().getCode())) {
+			entity.setStartDate(OffsetDateTime.now());
+			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.RUNNING));
+		}
 	}
 
 	@Transactional

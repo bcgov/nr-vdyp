@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nats.fullname" . }}-jetstream
+  labels:
+    {{- include "nats.labels" . | nindent 4 }}
+data:
+  apply-jetstream.sh: |-
+    #!/usr/bin/env sh
+    set -eu
+
+    : "${NATS_URL:=nats://{{ include "nats.fullname" . }}:{{ .Values.service.clientPort }}}"
+
+    echo "Waiting for NATS at ${NATS_URL}..."
+
+    nats_command() {
+      if [ -n "${NATS_USERNAME:-}" ]; then
+        nats --user "$NATS_USERNAME" --password "${NATS_PASSWORD:-}" "$@"
+      else
+        nats "$@"
+      fi
+    }
+
+    until nats_command server check connection --server "$NATS_URL" >/dev/null 2>&1; do
+      sleep 1
+    done
+
+    echo "NATS is available."
+
+    apply_stream() {
+      stream_name="$1"
+      config_file="$2"
+
+      if nats_command stream info "$stream_name" --server "$NATS_URL" >/dev/null 2>&1; then
+        echo "Skipping stream ${stream_name} it already exists"
+      else
+        echo "Creating stream ${stream_name}"
+        nats_command stream add "$stream_name" \
+          --server "$NATS_URL" \
+          --config "$config_file" \
+          --defaults
+      fi
+    }
+
+    apply_consumer() {
+      stream_name="$1"
+      consumer_name="$2"
+      config_file="$3"
+
+      if nats_command consumer info "$stream_name" "$consumer_name" --server "$NATS_URL" >/dev/null 2>&1; then
+        echo "Skipping consumer ${consumer_name} on stream ${stream_name}, it already exists"
+      else
+        echo "Creating consumer ${consumer_name} on stream ${stream_name}"
+        nats_command consumer add "$stream_name" "$consumer_name" \
+          --server "$NATS_URL" \
+          --config "$config_file" \
+          --defaults
+      fi
+    }
+
+    apply_stream "{{ .Values.jetstream.stream.name }}" "/nats-config/stream.json"
+    apply_consumer "{{ .Values.jetstream.consumer.stream }}" "{{ .Values.jetstream.consumer.name }}" "/nats-config/consumer.json"
+
+    echo "JetStream configuration applied successfully."
+  stream.json: |-
+{{ .Values.jetstream.stream.config | toPrettyJson | nindent 4 }}
+  consumer.json: |-
+{{ .Values.jetstream.consumer.config | toPrettyJson | nindent 4 }}

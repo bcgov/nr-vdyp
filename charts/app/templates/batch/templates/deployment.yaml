@@ -75,6 +75,20 @@ spec:
               value: {{ .Values.batch.env.BATCH_MAX_JOB_THREADS | quote }}
             - name: BATCH_DB_CONNECITON_POOL_SIZE
               value: {{ .Values.batch.env.BATCH_DB_CONNECITON_POOL_SIZE | quote }}
+            - name: NATS_ENABLED
+              value: {{ .Values.batch.env.NATS_ENABLED | quote }}
+            - name: NATS_URL
+              value: {{ .Values.batch.env.NATS_URL | quote }}
+            - name: NATS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.batch.env.NATS_SECRET_NAME }}
+                  key: {{ .Values.batch.env.NATS_USERNAME_SECRET_KEY }}
+            - name: NATS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.batch.env.NATS_SECRET_NAME }}
+                  key: {{ .Values.batch.env.NATS_PASSWORD_SECRET_KEY }}
             - name: KEYCLOAK_CLIENT_ID
               value: {{ .Values.frontend.env.VITE_SSO_CLIENT_ID | quote }}
             - name: KEYCLOAK_CLIENT_SECRET

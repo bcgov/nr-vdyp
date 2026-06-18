@@ -90,28 +90,45 @@ public class ProjectionBatchMappingService {
 	public void updateProgress(ProjectionEntity projectionEntity, ProjectionProgressUpdate progressUpdate)
 			throws ProjectionServiceException {
 		try {
+			if (progressUpdate.batchJobGUID() == null) {
+				throw new ProjectionServiceException(
+						"Error updating projection batch progress received null batch job"
+				);
+			}
+			// Ensure the batch entity, and set the start time if necessary
 			ProjectionBatchMappingEntity entity = repository.findByProjectionGUID(projectionEntity.getProjectionGUID())
-					.orElseThrow(
-							() -> new ProjectionServiceException(
-									"No batch mapping found for projection GUID: "
-											+ projectionEntity.getProjectionGUID()
-							)
-					);
-			if (progressUpdate.batchJobGUID() != null
-					&& !progressUpdate.batchJobGUID().equals(entity.getBatchJobGUID())) {
+					.orElseGet(() -> createStreamedMapping(projectionEntity, progressUpdate.batchJobGUID()));
+
+			if (entity.getBatchJobGUID() == null || !progressUpdate.batchJobGUID().equals(entity.getBatchJobGUID())) {
 				logger.warn(
 						"Ignoring progress update from stale batch job {} for projection {} (current job: {})",
 						progressUpdate.batchJobGUID(), projectionEntity.getProjectionGUID(), entity.getBatchJobGUID()
 				);
 				return;
 			}
-			entity.setPolygonCount(progressUpdate.totalPolygons());
-			entity.setErrorCount(progressUpdate.projectionErrors());
-			entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());
-			entity.setWorkerCount(progressUpdate.workers());
+			applyProgress(entity, progressUpdate);
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error updating projection batch progress", e);
 		}
+	}
+
+	private ProjectionBatchMappingEntity createStreamedMapping(ProjectionEntity projectionEntity, UUID batchJobGUID) {
+		ProjectionBatchMappingEntity entity = new ProjectionBatchMappingEntity();
+		entity.setBatchJobGUID(batchJobGUID);
+		entity.setProjection(projectionEntity);
+		entity.setPolygonCount(0);
+		entity.setCompletedPolygonCount(0);
+		entity.setErrorCount(0);
+		entity.setWarningCount(0);
+		repository.persist(entity);
+		return entity;
+	}
+
+	private static void applyProgress(ProjectionBatchMappingEntity entity, ProjectionProgressUpdate progressUpdate) {
+		entity.setPolygonCount(progressUpdate.totalPolygons());
+		entity.setErrorCount(progressUpdate.projectionErrors());
+		entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());
+		entity.setWorkerCount(progressUpdate.workers());
 	}
 
 	public Map<UUID, ProjectionBatchMappingModel> getLatestBatchMappingsForProjections(List<UUID> projectionGUIDs) {

@@ -64,4 +64,9 @@ const statusClass = computed(() => {
   font: var(--typography-bold-body);
   color: var(--support-border-color-warning);
 }
+
+.status-text.status-queued {
+  font: var(--typography-bold-body);
+  color: var(--support-border-color-warning);
+}
 </style>

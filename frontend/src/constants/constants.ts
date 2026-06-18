@@ -242,6 +242,7 @@ export const PROJECTION_STATUS = Object.freeze({
   DRAFT: 'Draft',
   READY: 'Ready', // complete
   RUNNING: 'Running',
+  QUEUED: 'Queued',
   FAILED: 'Failed',
   // Frontend-only transient UI state: backend has no CANCELLED status code.
   // After cancellation the backend immediately returns DRAFT.

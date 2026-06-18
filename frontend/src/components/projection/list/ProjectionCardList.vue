@@ -188,7 +188,7 @@
           </template>
 
           <!-- Running: Cancel -->
-          <template v-else-if="projection.status === PROJECTION_STATUS.RUNNING">
+          <template v-else-if="projection.status === PROJECTION_STATUS.RUNNING || projection.status === PROJECTION_STATUS.QUEUED">
             <AppButton
               label="Cancel"
               variant="tertiary"
