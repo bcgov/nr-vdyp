@@ -128,7 +128,7 @@ public class ProjectionBatchMappingService {
 		entity.setPolygonCount(progressUpdate.totalPolygons());
 		entity.setErrorCount(progressUpdate.projectionErrors());
 		entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());
-        entity.setWorkerCount(progressUpdate.workers());
+		entity.setWorkerCount(progressUpdate.workers());
 	}
 
 	public Map<UUID, ProjectionBatchMappingModel> getLatestBatchMappingsForProjections(List<UUID> projectionGUIDs) {
