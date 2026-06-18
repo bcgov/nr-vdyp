@@ -74,8 +74,6 @@ public class DynamicPartitionHandler implements PartitionHandler {
 			logger.warn("No partition base directory found in job parameters");
 		}
 
-		jobExecCtx.putInt(BatchConstants.Job.WORKERS, actualNumPartitions);
-
 		// Create and configure TaskExecutorPartitionHandler with dynamic grid size
 		TaskExecutorPartitionHandler handler = new TaskExecutorPartitionHandler();
 		handler.setTaskExecutor(taskExecutor);

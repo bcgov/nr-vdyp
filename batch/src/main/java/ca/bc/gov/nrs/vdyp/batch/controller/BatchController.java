@@ -15,7 +15,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
@@ -300,10 +299,7 @@ public class BatchController {
 				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.PROJECTION_ERRORS, 0)) //
 				.sum();
 		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
-		int workers = isRunning ? (int) jobExecution.getStepExecutions().stream() //
-				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) //
-				.filter(se -> BatchStatus.STARTED.equals(se.getStatus())) //
-				.count() : 0;
+		int workers = BatchUtils.calculateActiveWorkers(jobExecution, isRunning);
 
 		response.put(BatchConstants.Job.GUID, jobGuid);
 		response.put(BatchConstants.Job.EXECUTION_ID, executionId);

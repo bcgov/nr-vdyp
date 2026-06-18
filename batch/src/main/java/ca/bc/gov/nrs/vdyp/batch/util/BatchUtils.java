@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
@@ -220,11 +221,21 @@ public final class BatchUtils {
 	 * @return the number of threads to allocate (always >= 1)
 	 */
 	public static int calculateThreadsForJob(int polygonCount, int chunkSize, int maxJobThreads) {
-		if (polygonCount < chunkSize) {
-			return 1;
-		}
 		int threads = (polygonCount + chunkSize - 1) / chunkSize;
 		return Math.min(threads, maxJobThreads);
+	}
+
+	/**
+	 * Counts the number of actively running worker steps in a job execution.
+	 *
+	 * @param job       the job execution to inspect
+	 * @param isRunning whether the job is currently running
+	 * @return the count of STARTED worker steps, or 0 if the job is not running
+	 */
+	public static int calculateActiveWorkers(JobExecution job, boolean isRunning) {
+		return isRunning ? (int) job.getStepExecutions().stream()
+				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME))
+				.filter(se -> BatchStatus.STARTED.equals(se.getStatus())).count() : 0;
 	}
 
 	public static VDYPProjectionProgressUpdate buildFinalProgress(String jobGuid, JobExecution jobExecution) {

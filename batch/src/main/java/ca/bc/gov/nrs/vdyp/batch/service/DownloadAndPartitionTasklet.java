@@ -98,27 +98,23 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 					.putInt(BatchConstants.Job.TOTAL_POLYGONS, partitionedCount);
 			stepExecution.getJobExecution().getExecutionContext()
 					.putInt(BatchConstants.Job.COMPUTED_PARTITIONS, computedPartitions);
-			stepExecution.getJobExecution().getExecutionContext()
-					.putInt(BatchConstants.Job.WORKERS, computedPartitions);
 		} catch (Exception e) {
 			throw BatchPartitionException
 					.handlePartitionFailure(e, "Could not fetch and partition input files", jobGuid, logger);
 		}
 
-		// Push worker count immediately so the DB reflects assigned threads during the run,
-		// regardless of how quickly the job completes relative to the scheduler interval.
-		pushInitialWorkerCount(partitionedCount, computedPartitions);
+		// Push initial progress so the backend can update status to RUNNING as soon as polygon count is known.
+		pushInitialProgress(partitionedCount);
 
 		logger.debug("Completed download and partitioning of input files.");
 	}
 
-	private void pushInitialWorkerCount(int totalPolygons, int workers) {
+	private void pushInitialProgress(int totalPolygons) {
 		try {
-			vdypClient.pushProgress(
-					projectionGUID, new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, 0, 0, 0, workers)
-			);
+			vdypClient
+					.pushProgress(projectionGUID, new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, 0, 0, 0, 0));
 		} catch (Exception e) {
-			logger.warn("[GUID: {}] Failed to push initial worker count to backend: {}", jobGuid, e.getMessage());
+			logger.warn("[GUID: {}] Failed to push initial progress to backend: {}", jobGuid, e.getMessage());
 		}
 	}
 }

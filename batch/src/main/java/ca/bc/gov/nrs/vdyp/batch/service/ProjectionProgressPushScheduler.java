@@ -23,6 +23,7 @@ import com.google.common.base.Strings;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 @Component
 @EnableScheduling
@@ -72,7 +73,7 @@ public class ProjectionProgressPushScheduler {
 	private void pushProgressForJob(JobExecution job, String projectionGUID) {
 		String batchJobGUID = job.getJobParameters().getString(BatchConstants.Job.GUID);
 		int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
-		int workers = job.getExecutionContext().getInt(BatchConstants.Job.WORKERS, 0);
+		int workers = BatchUtils.calculateActiveWorkers(job, true);
 		int polygonsProcessed = 0;
 		int errorCount = 0;
 		int polygonsSkipped = 0;
