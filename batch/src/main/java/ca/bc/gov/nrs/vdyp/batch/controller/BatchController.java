@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
@@ -59,6 +60,7 @@ public class BatchController {
 	private final Job fetchAndPartitionJob;
 	private final BatchInputPartitioner inputPartitioner;
 	private final JobOperator jobOperator;
+	private final BatchProperties batchProperties;
 
 	private final JobExplorer jobExplorer;
 	@SuppressWarnings("unused")
@@ -79,7 +81,8 @@ public class BatchController {
 	public BatchController(
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, @Qualifier("partitionedJob") Job partitionedJob,
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, BatchInputPartitioner inputPartitioner, JobOperator jobOperator
+			BatchMetricsCollector metricsCollector, BatchInputPartitioner inputPartitioner, JobOperator jobOperator,
+			BatchProperties batchProperties
 	) {
 		this.jobLauncher = jobLauncher;
 		this.partitionedJob = partitionedJob;
@@ -88,6 +91,7 @@ public class BatchController {
 		this.metricsCollector = metricsCollector;
 		this.inputPartitioner = inputPartitioner;
 		this.jobOperator = jobOperator;
+		this.batchProperties = batchProperties;
 	}
 
 	/**
@@ -282,8 +286,6 @@ public class BatchController {
 
 		boolean isRunning = jobExecution.getStatus().isRunning();
 
-		// Count total partitions and completed partitions
-
 		int polygonsProcessed = jobExecution.getStepExecutions().stream() //
 				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) //
 				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0)) //
@@ -297,6 +299,7 @@ public class BatchController {
 				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.PROJECTION_ERRORS, 0)) //
 				.sum();
 		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+		int workers = BatchUtils.calculateActiveWorkers(jobExecution, isRunning);
 
 		response.put(BatchConstants.Job.GUID, jobGuid);
 		response.put(BatchConstants.Job.EXECUTION_ID, executionId);
@@ -307,6 +310,7 @@ public class BatchController {
 		response.put(BatchConstants.Job.POLYGONS_PROCESSED, polygonsProcessed);
 		response.put(BatchConstants.Job.POLYGONS_SKIPPED, polygonsSkipped);
 		response.put(BatchConstants.Job.TOTAL_POLYGONS, totalPolygons);
+		response.put(BatchConstants.Job.WORKERS, workers);
 
 		if (jobExecution.getStartTime() != null) {
 			response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime());
@@ -364,19 +368,17 @@ public class BatchController {
 
 			Path jobBaseDir = ensureProjectionDirectoryExists(jobGuid);
 
-			logger.debug("[GUID: {}] Using {} partitions", jobGuid, defaultNumPartitions);
+			logger.debug("[GUID: {}] Starting GUID-based job", jobGuid);
 
-			// Now start the job with the partition directory included in parameters
+			// Thread count will be computed dynamically by DownloadAndPartitionTasklet after files are fetched.
+			// Pass defaultNumPartitions as a safe fallback in case the tasklet cannot determine the count.
 			JobParameters jobParameters = buildJobParameters(
 					projectionParametersJson, defaultNumPartitions, jobGuid, jobTimestamp, jobBaseDir.toString(),
 					projectionGuid
 			);
 			JobExecution jobExecution = jobLauncher.run(fetchAndPartitionJob, jobParameters);
 
-			logger.info(
-					"[GUID: {}] Batch job started - Execution ID: {}, Partitions: {}", jobGuid, jobExecution.getId(),
-					defaultNumPartitions
-			);
+			logger.info("[GUID: {}] Batch job started - Execution ID: {}", jobGuid, jobExecution.getId());
 
 			return jobExecution;
 
@@ -407,27 +409,30 @@ public class BatchController {
 
 			Path jobBaseDir = ensureProjectionDirectoryExists(jobGuid);
 
-			logger.debug("[GUID: {}] Using {} partitions", jobGuid, defaultNumPartitions);
+			// Count polygons and compute the optimal thread allocation before partitioning
+			int chunkSize = batchProperties.getReader().getDefaultChunkSize();
+			int maxJobThreads = batchProperties.getThreadPool().getMaxJobThreads();
 
-			// Partition CSV files using streaming approach BEFORE starting the job
+			// Partition CSV files using the computed thread count BEFORE starting the job
 			logger.debug("[GUID: {}] Starting CSV partitioning...", jobGuid);
-			int featureIdToPartition = inputPartitioner
+			int totalPolygons = inputPartitioner
 					.partitionCsvFiles(polygonFile, layerFile, defaultNumPartitions, jobBaseDir, jobGuid);
 
+			int numThreads = BatchUtils.calculateThreadsForJob(totalPolygons, chunkSize, maxJobThreads);
+
 			logger.debug(
-					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}", jobGuid,
-					defaultNumPartitions, featureIdToPartition
+					"[GUID: {}] CSV files partitioned. totalPolygons={}, chunkSize={}, maxJobThreads={}, numThreads={}",
+					jobGuid, totalPolygons, chunkSize, maxJobThreads, numThreads
 			);
 
-			// Now start the job with the partition directory included in parameters
 			JobParameters jobParameters = buildJobParameters(
-					projectionParametersJson, defaultNumPartitions, jobGuid, jobTimestamp, jobBaseDir.toString()
+					projectionParametersJson, numThreads, jobGuid, jobTimestamp, jobBaseDir.toString(), totalPolygons
 			);
 			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
 
 			logger.info(
-					"[GUID: {}] Batch job started - Execution ID: {}, Partitions: {}", jobGuid, jobExecution.getId(),
-					defaultNumPartitions
+					"[GUID: {}] Batch job started - Execution ID: {}, threads: {}", jobGuid, jobExecution.getId(),
+					numThreads
 			);
 
 			return jobExecution;
@@ -597,34 +602,30 @@ public class BatchController {
 		return jobBaseDir;
 	}
 
+	/** Builds job parameters for file-upload flow (polygon/layer files supplied directly). */
 	private JobParameters buildJobParameters(
-			String projectionParametersJson, Integer numPartitions, String jobGuid, String jobTimestamp,
-			String jobBaseDir
+			String projectionParametersJson, int numPartitions, String jobGuid, String jobTimestamp, String jobBaseDir,
+			int totalPolygons
 	) {
-
-		JobParametersBuilder parametersBuilder = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+		return new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
 				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
 				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
-				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue());
-
-		return parametersBuilder.toJobParameters();
+				.addLong(BatchConstants.Partition.NUMBER, (long) numPartitions)
+				.addLong(BatchConstants.Job.TOTAL_POLYGONS, (long) totalPolygons).toJobParameters();
 	}
 
+	/** Builds job parameters for GUID-based flow (files fetched from COMS by DownloadAndPartitionTasklet). */
 	private JobParameters buildJobParameters(
 			String projectionParametersJson, Integer numPartitions, String jobGuid, String jobTimestamp,
 			String jobBaseDir, UUID projectionGUID
 	) {
-
-		JobParametersBuilder parametersBuilder = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+		return new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
 				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
 				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
-				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir) //
-				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGUID.toString())
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
-				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue());
-
-		return parametersBuilder.toJobParameters();
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGUID.toString())
+				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue()).toJobParameters();
 	}
 
 	private void buildSuccessResponse(Map<String, Object> response, JobExecution jobExecution) {

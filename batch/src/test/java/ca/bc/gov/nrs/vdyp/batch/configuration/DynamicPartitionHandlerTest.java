@@ -11,6 +11,7 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.partition.StepExecutionSplitter;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.core.task.TaskExecutor;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,6 +66,7 @@ class DynamicPartitionHandlerTest {
 	private void setupBasicMocks(JobParameters jobParameters) {
 		when(masterStepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
 	}
 
 	@Test

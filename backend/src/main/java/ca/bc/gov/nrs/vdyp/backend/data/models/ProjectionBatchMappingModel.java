@@ -11,6 +11,7 @@ public class ProjectionBatchMappingModel {
 	private Integer completedPolygonCount;
 	private Integer errorCount;
 	private Integer warningCount;
+	private Integer workerCount;
 
 	public String getProjectionBatchMappingGUID() {
 		return projectionBatchMappingGUID;
@@ -66,5 +67,13 @@ public class ProjectionBatchMappingModel {
 
 	public void setWarningCount(Integer warningCount) {
 		this.warningCount = warningCount;
+	}
+
+	public Integer getWorkerCount() {
+		return workerCount;
+	}
+
+	public void setWorkerCount(Integer workerCount) {
+		this.workerCount = workerCount;
 	}
 }

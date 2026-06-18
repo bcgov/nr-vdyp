@@ -51,7 +51,7 @@ class BatchResultAggregationServiceTest {
 	private Duration duration = Duration.ofSeconds(15);
 
 	private static final VDYPProjectionProgressUpdate progressUpdate = new VDYPProjectionProgressUpdate(
-			JOB_GUID, 100, 99, 0, 1
+			JOB_GUID, 100, 99, 0, 1, 0
 	);
 
 	@BeforeEach

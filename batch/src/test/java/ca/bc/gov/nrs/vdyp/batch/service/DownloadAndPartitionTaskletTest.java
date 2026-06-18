@@ -3,12 +3,14 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +34,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -44,6 +47,12 @@ class DownloadAndPartitionTaskletTest {
 	BatchInputPartitioner inputPartitioner;
 	@Mock
 	VdypClient vdypClient;
+	@Mock
+	BatchProperties batchProperties;
+	@Mock
+	BatchProperties.ReaderProperties readerProperties;
+	@Mock
+	BatchProperties.ThreadPoolProperties threadPoolProperties;
 
 	@Mock
 	ChunkContext chunkContext;
@@ -70,7 +79,7 @@ class DownloadAndPartitionTaskletTest {
 
 	@BeforeEach
 	void setup() {
-		tasklet = new DownloadAndPartitionTasklet(comsFileService, inputPartitioner, vdypClient);
+		tasklet = new DownloadAndPartitionTasklet(comsFileService, inputPartitioner, vdypClient, batchProperties);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -156,6 +165,17 @@ class DownloadAndPartitionTaskletTest {
 				List.of(new FileMappingDetails(layerFileSetGuid.toString(), layerComsObjectGuid.toString()))
 		);
 
+		when(batchProperties.getReader()).thenReturn(readerProperties);
+		when(readerProperties.getDefaultChunkSize()).thenReturn(150);
+		when(batchProperties.getThreadPool()).thenReturn(threadPoolProperties);
+		when(threadPoolProperties.getMaxJobThreads()).thenReturn(4);
+
+		// fetchObjectToFile is a no-op in tests; create the input files manually so the
+		// tasklet can open them to count polygons before partitioning.
+		Path inputDir = tempDir.resolve("input");
+		Files.createDirectories(inputDir);
+		Files.writeString(inputDir.resolve("polygon.csv"), "FEATURE_ID\n");
+		Files.writeString(inputDir.resolve("layer.csv"), "LAYER_ID\n");
 		doNothing().when(comsFileService).fetchObjectToFile(any(UUID.class), any(Path.class));
 
 		// Act
@@ -166,8 +186,10 @@ class DownloadAndPartitionTaskletTest {
 		verify(comsFileService).fetchObjectToFile(eq(polygonComsObjectGuid), any(Path.class));
 		verify(comsFileService).fetchObjectToFile(eq(layerComsObjectGuid), any(Path.class));
 		verify(inputPartitioner).partitionCsvFiles(
-				tempDir.resolve("input/polygon.csv"), tempDir.resolve("input/layer.csv"), 4, tempDir, "job-123"
+				eq(tempDir.resolve("input/polygon.csv")), eq(tempDir.resolve("input/layer.csv")), anyInt(), eq(tempDir),
+				eq("job-123")
 		);
+		verify(vdypClient).pushProgress(eq(projectionGuid.toString()), any());
 	}
 
 }

@@ -4,7 +4,8 @@ import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 
 @RegisterReflectionForBinding
 public record VDYPProjectionProgressUpdate(
-		String batchJobGUID, int totalPolygons, int polygonsProcessed, int projectionErrors, int polygonsSkipped
+		String batchJobGUID, int totalPolygons, int polygonsProcessed, int projectionErrors, int polygonsSkipped,
+		int workers
 ) {
 
 }

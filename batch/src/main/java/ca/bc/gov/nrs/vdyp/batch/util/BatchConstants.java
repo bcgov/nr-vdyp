@@ -20,6 +20,8 @@ public final class BatchConstants {
 		public static final String POLYGONS_PROCESSED = "polygonsProcessed";
 		public static final String POLYGONS_SKIPPED = "polygonsSkipped";
 		public static final String PROJECTION_ERRORS = "projectionErrors";
+		public static final String WORKERS = "workers";
+		public static final String COMPUTED_PARTITIONS = "computedPartitions";
 
 		private Job() {
 		}

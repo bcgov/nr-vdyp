@@ -161,7 +161,7 @@ class ProjectionBatchMappingServiceTest {
 
 		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
 
-		ProjectionProgressUpdate update = new ProjectionProgressUpdate(null, 1, 1, 1, 1);
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(null, 1, 1, 1, 1, 0);
 		// Act
 		assertThrows(ProjectionServiceException.class, () -> service.updateProgress(projectionEntity, update));
 	}
@@ -178,11 +178,12 @@ class ProjectionBatchMappingServiceTest {
 
 		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
 
-		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 30);
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 30, 3);
 		// Act
 		service.updateProgress(projectionEntity, update);
 		assertEquals(100, mappingEntity.getPolygonCount());
 		assertEquals(20, mappingEntity.getErrorCount());
 		assertEquals(10, mappingEntity.getCompletedPolygonCount());
+		assertEquals(3, mappingEntity.getWorkerCount());
 	}
 }

@@ -150,6 +150,7 @@ public class BatchProperties {
 		private int corePoolSize;
 		private int maxPoolSizeMultiplier;
 		private String threadNamePrefix;
+		private int maxJobThreads;
 
 		public int getCorePoolSize() {
 			return corePoolSize;
@@ -174,6 +175,15 @@ public class BatchProperties {
 		public void setThreadNamePrefix(String threadNamePrefix) {
 			this.threadNamePrefix = threadNamePrefix;
 		}
+
+		public int getMaxJobThreads() {
+			return maxJobThreads;
+		}
+
+		public void setMaxJobThreads(int maxJobThreads) {
+			this.maxJobThreads = maxJobThreads;
+		}
+
 	}
 
 	public static class ValidationProperties {
