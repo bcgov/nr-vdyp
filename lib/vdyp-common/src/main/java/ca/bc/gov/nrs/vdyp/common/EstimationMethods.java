@@ -825,8 +825,35 @@ public class EstimationMethods {
 	/**
 	 * EMP106 - estimate basal area yield for the primary layer (from IPSJF160.doc)
 	 *
+	 * @param dominantHeight    dominant height (m)
+	 * @param breastHeightAge   breast height age (years)
+	 * @param baseAreaOverstory basal area of overstory (>= 0)
+	 * @param fullOccupancy     if true, the empirically fitted curve is increased to become a full occupancy curve. If
+	 *                          false, BAP is for mean conditions
+	 * @param species           Species for the layer
+	 * @param primarySpeciesId  Id of the primary species
+	 * @param bec               BEC of the polygon
+	 * @param baseAreaGroup     Index of the base area group
+	 * @return as described
+	 * @throws StandProcessingException
+	 */
+	public float estimateBaseAreaYield(
+			float dominantHeight, float breastHeightAge, Optional<Float> baseAreaOverstory, boolean fullOccupancy,
+			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, String primarySpeciesId,
+			BecDefinition bec, int baseAreaGroup
+	) throws StandProcessingException {
+		var coe = estimateBaseAreaYieldCoefficients(species, bec);
+
+		float upperBoundBaseArea = upperBoundsBaseArea(bec.getRegion(), primarySpeciesId, baseAreaGroup);
+		return estimateBaseAreaYield(
+				coe, dominantHeight, breastHeightAge, baseAreaOverstory, fullOccupancy, upperBoundBaseArea
+		);
+	}
+
+	/**
+	 * EMP106 - estimate basal area yield for the primary layer (from IPSJF160.doc)
+	 *
 	 * @param estimateBasalAreaYieldCoefficients estimate basal area yield coefficients
-	 * @param maxBreastHeightAge                 the value of debug setting 2
 	 * @param dominantHeight                     dominant height (m)
 	 * @param breastHeightAge                    breast height age (years)
 	 * @param veteranBaseArea                    basal area of overstory (>= 0)
@@ -837,9 +864,12 @@ public class EstimationMethods {
 	 * @throws StandProcessingException
 	 */
 	public float estimateBaseAreaYield(
-			Coefficients estimateBasalAreaYieldCoefficients, Optional<Float> maxBreastHeightAge, float dominantHeight,
-			float breastHeightAge, Optional<Float> veteranBasalArea, boolean fullOccupancy, float upperBoundBasalArea
+			Coefficients estimateBasalAreaYieldCoefficients, float dominantHeight, float breastHeightAge,
+			Optional<Float> veteranBasalArea, boolean fullOccupancy, float upperBoundBasalArea
 	) throws StandProcessingException {
+
+		Optional<Float> maxBreastHeightAge = ((NonFipDebugSettings) controlMap.getDebugSettings())
+				.getMaxBreastHeightAge();
 
 		// The original Fortran had the following comment and a commented out modification to upperBoundsBaseArea
 		// (BATOP98):
@@ -1426,6 +1456,16 @@ public class EstimationMethods {
 				species.getLoreyHeightByUtilization().getAll(), //
 				region
 		);
+	}
+
+	public Coefficients estimateBaseAreaYieldCoefficients(
+			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec
+	) {
+		var coe = sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, ControlKey.BA_YIELD, 7);
+
+		// TODO confirm going over 0.5 should drop to 0 as this seems odd.
+		coe.scalarInPlace(5, x -> x > 0.0f ? 0f : x);
+		return coe;
 	}
 
 	/**

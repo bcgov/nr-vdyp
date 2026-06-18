@@ -2047,19 +2047,18 @@ public class ForwardProcessingEngine {
 		var baUpperBound = growBasalAreaUpperBound();
 
 		boolean isFullOccupancy = true;
-		Optional<Float> maxBreastHeightAge = fps.controlMap.getDebugSettings().getMaxBreastHeightAge();
 
 		float baYieldStart = fps.estimators.estimateBaseAreaYield(
-				estimateBasalAreaYieldCoefficients, maxBreastHeightAge, pspDhStart, pspYabhStart, veteranLayerBaStart,
-				isFullOccupancy, baUpperBound
+				estimateBasalAreaYieldCoefficients, pspDhStart, pspYabhStart, veteranLayerBaStart, isFullOccupancy,
+				baUpperBound
 		);
 
 		float pspDhEnd = pspDhStart + dhDelta;
 		float pspYabhEnd = pspYabhStart + 1.0f;
 
 		float baYieldEnd = fps.estimators.estimateBaseAreaYield(
-				estimateBasalAreaYieldCoefficients, maxBreastHeightAge, pspDhEnd, pspYabhEnd, veteranLayerBaStart,
-				isFullOccupancy, baUpperBound
+				estimateBasalAreaYieldCoefficients, pspDhEnd, pspYabhEnd, veteranLayerBaStart, isFullOccupancy,
+				baUpperBound
 		);
 
 		var growthFaitDetails = fps.controlMap.getBasalAreaGrowthFiatDetails()
