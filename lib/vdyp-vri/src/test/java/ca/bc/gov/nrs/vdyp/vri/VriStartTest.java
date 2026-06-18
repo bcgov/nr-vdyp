@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +51,6 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.CouldNotFindBracketingIntervalException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BaseAreaCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLNonprimaryCoefficientParser;
@@ -70,7 +68,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings.UpperBoundsMode;
@@ -84,7 +81,6 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 import ca.bc.gov.nrs.vdyp.vri.VriStart.Interval;
 import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
@@ -127,106 +123,6 @@ class VriStartTest {
 		resolver.addStream("DUMMY2", (OutputStream) specOut);
 		resolver.addStream("DUMMY3", (OutputStream) utilOut);
 		return resolver;
-	}
-
-	@Nested
-	class EstimateBaseAreaYield {
-		@Test
-		void testCompute() throws ProcessingException {
-			Map<String, Object> controlMap = VriTestUtils.loadControlMap();
-			VriStart app = new VriStart();
-			ApplicationTestUtils.setControlMap(app, controlMap);
-
-			var polygon = VriPolygon.build(pBuilder -> {
-				pBuilder.polygonIdentifier("Test", 2024);
-				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
-				pBuilder.yieldFactor(1.0f);
-				pBuilder.addLayer(lBuilder -> {
-					lBuilder.layerType(LayerType.PRIMARY);
-					lBuilder.crownClosure(57.8f);
-					lBuilder.baseArea(66f);
-					lBuilder.treesPerHectare(850f);
-					lBuilder.utilization(7.5f);
-					lBuilder.empiricalRelationshipParameterIndex(76);
-
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("B", controlMap);
-						sBuilder.percentGenus(2.99999993f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("C", controlMap);
-						sBuilder.percentGenus(30.0000012f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("H", controlMap);
-						sBuilder.percentGenus(48.9000022f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("S", controlMap);
-						sBuilder.percentGenus(18.1000009f);
-					});
-				});
-			});
-
-			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
-
-			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
-
-			float result = app.estimateBaseAreaYield(32f, 190.300003f, Optional.empty(), false, species, "H", bec, 76);
-
-			assertThat(result, closeTo(62.0858421f));
-		}
-
-		@Test
-		void testGetCoefficients() {
-			Map<String, Object> controlMap = VriTestUtils.loadControlMap();
-			VriStart app = new VriStart();
-			ApplicationTestUtils.setControlMap(app, controlMap);
-
-			var polygon = VriPolygon.build(pBuilder -> {
-				pBuilder.polygonIdentifier("Test", 2024);
-				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
-				pBuilder.yieldFactor(1.0f);
-				pBuilder.addLayer(lBuilder -> {
-					lBuilder.layerType(LayerType.PRIMARY);
-					lBuilder.crownClosure(57.8f);
-					lBuilder.baseArea(66f);
-					lBuilder.treesPerHectare(850f);
-					lBuilder.utilization(7.5f);
-					lBuilder.empiricalRelationshipParameterIndex(76);
-
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("B", controlMap);
-						sBuilder.percentGenus(2.99999993f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("C", controlMap);
-						sBuilder.percentGenus(30.0000012f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("H", controlMap);
-						sBuilder.percentGenus(48.9000022f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("S", controlMap);
-						sBuilder.percentGenus(18.1000009f);
-					});
-				});
-			});
-
-			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
-
-			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
-
-			Coefficients result = app.estimateBaseAreaYieldCoefficients(species, bec);
-
-			assertThat(
-					result,
-					VdypMatchers.coe(
-							0, 7.29882717f, 0.934803009f, 7.22950029f, 0.478330702f, 0.00542420009f, 0f, -0.00899999961f
-					)
-			);
-		}
 	}
 
 	@Nested
@@ -4588,119 +4484,6 @@ class VriStartTest {
 
 			control.verify();
 		}
-	}
-
-	@Nested
-	class EstimateQuadMeanDiameterYield {
-
-		@Test
-		void testCompute() throws ProcessingException {
-
-			controlMap = VriTestUtils.loadControlMap();
-			VriStart app = new VriStart();
-			ApplicationTestUtils.setControlMap(app, controlMap);
-
-			var polygon = VriPolygon.build(pBuilder -> {
-				pBuilder.polygonIdentifier("Test", 2024);
-				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
-				pBuilder.yieldFactor(1.0f);
-				pBuilder.addLayer(lBuilder -> {
-					lBuilder.layerType(LayerType.PRIMARY);
-					lBuilder.crownClosure(57.8f);
-					lBuilder.utilization(7.5f);
-					lBuilder.empiricalRelationshipParameterIndex(61);
-
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("B", controlMap);
-						sBuilder.percentGenus(10f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("C", controlMap);
-						sBuilder.percentGenus(20f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("F", controlMap);
-						sBuilder.percentGenus(30f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("H", controlMap);
-						sBuilder.percentGenus(30f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("S", controlMap);
-						sBuilder.percentGenus(10f);
-					});
-
-					lBuilder.primaryGenus("F");
-				});
-			});
-
-			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
-
-			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
-
-			float result = app.estimateQuadMeanDiameterYield(7.6f, 15f, Optional.empty(), species, "H", bec, 61);
-
-			assertThat(result, closeTo(10.3879938f));
-		}
-
-		@ParameterizedTest
-		@ValueSource(floats = { 0f, -1f, -Float.MIN_VALUE, -Float.MAX_VALUE, Float.NEGATIVE_INFINITY })
-		void testBreastHeightAgeLow(float breastHeightAge) {
-			controlMap = VriTestUtils.loadControlMap();
-			VriStart app = new VriStart();
-			ApplicationTestUtils.setControlMap(app, controlMap);
-
-			var polygon = VriPolygon.build(pBuilder -> {
-				pBuilder.polygonIdentifier("Test", 2024);
-				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
-				pBuilder.yieldFactor(1.0f);
-				pBuilder.addLayer(lBuilder -> {
-					lBuilder.layerType(LayerType.PRIMARY);
-					lBuilder.crownClosure(57.8f);
-					lBuilder.utilization(7.5f);
-					lBuilder.empiricalRelationshipParameterIndex(61);
-
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("B", controlMap);
-						sBuilder.percentGenus(10f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("C", controlMap);
-						sBuilder.percentGenus(20f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("F", controlMap);
-						sBuilder.percentGenus(30f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("H", controlMap);
-						sBuilder.percentGenus(30f);
-					});
-					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("S", controlMap);
-						sBuilder.percentGenus(10f);
-					});
-
-					lBuilder.primaryGenus("F");
-				});
-			});
-
-			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
-
-			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
-
-			var ex = assertThrows(
-					StandProcessingException.class,
-					() -> app.estimateQuadMeanDiameterYield(
-							7.6f, breastHeightAge, Optional.empty(), species, "H", bec, 61
-					)
-			);
-
-			assertThat(ex, hasProperty("message", containsString(MessageFormat.format("{0,number}", breastHeightAge))));
-
-		}
-
 	}
 
 	@Nested

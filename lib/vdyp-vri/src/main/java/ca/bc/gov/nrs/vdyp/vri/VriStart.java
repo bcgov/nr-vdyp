@@ -1010,7 +1010,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		float bap;
 		if (ageBH.map(abh -> abh >= 1).orElse(false)) {
 			bap = this.estimationMethods.estimateBaseAreaYield(
-					height.get(), ageBH.get(), Optional.empty(), true, (Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, primarySpeciesId, bec,
+					height.get(), ageBH.get(), Optional.empty(), true,
+					(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, primarySpeciesId, bec,
 					baseAreaGroup.get()
 			);
 		} else {
@@ -1219,8 +1220,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				// check empirical BA assuming BAV = 0
 
 				float predictedBaseArea = estimationMethods.estimateBaseAreaYield(
-						dominantHeight, primaryBreastHeightAge, Optional.empty(), false, (Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) primaryLayer.getSpecies().values(), primarySpeciesId, bec,
-						primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+						dominantHeight, primaryBreastHeightAge, Optional.empty(), false,
+						(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) primaryLayer.getSpecies()
+								.values(),
+						primarySpeciesId, bec, primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
 				); // BAP
 
 				// Calculate the full occupancy BA Hence the BA we will test is the Full
@@ -1334,13 +1337,16 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				);
 
 		float primaryBaseAreaEstimated = estimationMethods.estimateBaseAreaYield(
-				primaryHeight, primaryBreastHeightAge, veteranBaseArea, false, (Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) primaryLayer.getSpecies().values(), primarySpeciesId, bec,
-				primaryEmpiricalRelationshipParameterIndex
+				primaryHeight, primaryBreastHeightAge, veteranBaseArea, false,
+				(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) primaryLayer.getSpecies().values(),
+				primarySpeciesId, bec, primaryEmpiricalRelationshipParameterIndex
 		);
 
 		// EMP107
 		float normativeQuadMeanDiameter = estimationMethods.estimateQuadMeanDiameterYield(
-				primaryHeight, primaryBreastHeightAge, veteranBaseArea, (Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) primaryLayer.getSpecies().values(), primarySpeciesId, bec, primaryEmpiricalRelationshipParameterIndex
+				primaryHeight, primaryBreastHeightAge, veteranBaseArea,
+				(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) primaryLayer.getSpecies().values(),
+				primarySpeciesId, bec, primaryEmpiricalRelationshipParameterIndex
 		);
 
 		final float normativePercentAvailable = 85f;
