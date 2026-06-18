@@ -181,6 +181,11 @@
       <artifactId>quarkus-logging-logback</artifactId>
     </dependency>
 		<dependency>
+			<groupId>io.nats</groupId>
+			<artifactId>jnats</artifactId>
+			<version>2.21.4</version>
+		</dependency>
+		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-scheduler</artifactId>
 		</dependency>

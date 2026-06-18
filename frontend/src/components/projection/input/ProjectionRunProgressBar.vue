@@ -104,6 +104,7 @@ onUnmounted(() => {
 const statusIcon20px = computed(() => {
   const map: Record<string, string> = {
     [CONSTANTS.PROJECTION_STATUS.RUNNING]: RunningIcon20px,
+    [CONSTANTS.PROJECTION_STATUS.QUEUED]: RunningIcon20px,
     [CONSTANTS.PROJECTION_STATUS.READY]: ReadyIcon20px,
     [CONSTANTS.PROJECTION_STATUS.FAILED]: FailedIcon20px,
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: CancelIcon20px,
@@ -116,6 +117,7 @@ const statusText = computed(() => props.status)
 const statusValueClass = computed(() => {
   const map: Record<string, string> = {
     [CONSTANTS.PROJECTION_STATUS.RUNNING]: 'tile-value--running',
+    [CONSTANTS.PROJECTION_STATUS.QUEUED]: 'tile-value--running',
     [CONSTANTS.PROJECTION_STATUS.READY]: 'tile-value--ready',
     [CONSTANTS.PROJECTION_STATUS.FAILED]: 'tile-value--failed',
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: 'tile-value--cancelled',
@@ -131,7 +133,7 @@ const formattedTimeElapsed = computed(() => {
   const upperBoundMs = props.endDate ? new Date(props.endDate).getTime() : currentTime.value
   const elapsedMs = Math.max(0, upperBoundMs - startMs)
   const rawSeconds = Math.floor(elapsedMs / 1_000)
-  const isCompleted = props.status !== CONSTANTS.PROJECTION_STATUS.RUNNING
+  const isCompleted = props.status !== CONSTANTS.PROJECTION_STATUS.RUNNING && props.status !== CONSTANTS.PROJECTION_STATUS.QUEUED 
   const displaySeconds = isCompleted ? Math.max(1, rawSeconds) : rawSeconds
   const totalMinutes = Math.floor(displaySeconds / 60)
   const totalHours = Math.floor(totalMinutes / 60)
@@ -174,6 +176,7 @@ const progressFillClass = computed(() => {
 
 const progressLeftText = computed(() => {
   const map: Record<string, string> = {
+    [CONSTANTS.PROJECTION_STATUS.QUEUED]: 'Queued for projection...',
     [CONSTANTS.PROJECTION_STATUS.RUNNING]: 'Running Projection Model...',
     [CONSTANTS.PROJECTION_STATUS.READY]: 'Projection Complete',
     [CONSTANTS.PROJECTION_STATUS.FAILED]: 'Projection Run Failed',

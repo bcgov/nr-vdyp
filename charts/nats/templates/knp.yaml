@@ -1,0 +1,27 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "nats.fullname" . }}-allow-client-ingress
+  labels:
+    {{- include "nats.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "nats.selectorLabels" . | nindent 6 }}
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - backend
+                  - batch
+                  - {{ include "nats.name" . }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.clientPort }}
+  policyTypes:
+    - Ingress
+{{- end }}

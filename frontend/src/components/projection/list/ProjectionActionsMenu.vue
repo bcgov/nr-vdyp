@@ -76,7 +76,7 @@
 
       <!-- Cancel: only for Running -->
       <v-list-item
-        v-if="status === PROJECTION_STATUS.RUNNING"
+        v-if="status === PROJECTION_STATUS.RUNNING || status === PROJECTION_STATUS.QUEUED"
         class="action-menu-item"
         @click="$emit(PROJECTION_USER_ACTION.CANCEL)"
       >

@@ -1,0 +1,18 @@
+{
+	"name": "VDYP_BATCH_REQUESTS",
+	"subjects": [
+		"vdyp.batch.request.standard"
+	],
+	"retention": "workqueue",
+	"storage": "file",
+	"discard": "old",
+	"max_consumers": -1,
+	"max_msgs": -1,
+	"max_msgs_per_subject": -1,
+	"max_bytes": -1,
+	"max_age": 604800000000000,
+	"max_msg_size": -1,
+	"num_replicas": 1,
+	"duplicate_window": 120000000000,
+	"metadata": {}
+}

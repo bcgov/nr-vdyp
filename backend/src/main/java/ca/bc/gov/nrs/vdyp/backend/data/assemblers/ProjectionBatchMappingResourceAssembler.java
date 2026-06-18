@@ -30,6 +30,7 @@ public class ProjectionBatchMappingResourceAssembler {
 		entity.setCompletedPolygonCount(model.getCompletedPolygonCount());
 		entity.setWarningCount(model.getWarningCount());
 		entity.setErrorCount(model.getErrorCount());
+		entity.setWorkerCount(model.getWorkerCount());
 		return entity;
 	}
 
@@ -49,6 +50,7 @@ public class ProjectionBatchMappingResourceAssembler {
 		model.setCompletedPolygonCount(entity.getCompletedPolygonCount());
 		model.setWarningCount(entity.getWarningCount());
 		model.setErrorCount(entity.getErrorCount());
+		model.setWorkerCount(entity.getWorkerCount());
 		return model;
 	}
 }

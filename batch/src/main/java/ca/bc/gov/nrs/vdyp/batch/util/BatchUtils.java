@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
@@ -208,6 +209,35 @@ public final class BatchUtils {
 		return sanitized + ".zip";
 	}
 
+	/**
+	 * Calculates the number of worker threads to allocate for a job based on polygon count.
+	 *
+	 * Small projections (fewer polygons than one chunk) receive a single thread. Larger projections scale linearly by
+	 * chunk size, capped at maxJobThreads.
+	 *
+	 * @param polygonCount  total number of polygons in the job
+	 * @param chunkSize     number of polygons per processing chunk
+	 * @param maxJobThreads maximum threads this job is allowed to use
+	 * @return the number of threads to allocate (always >= 1)
+	 */
+	public static int calculateThreadsForJob(int polygonCount, int chunkSize, int maxJobThreads) {
+		int threads = (polygonCount + chunkSize - 1) / chunkSize;
+		return Math.min(threads, maxJobThreads);
+	}
+
+	/**
+	 * Counts the number of actively running worker steps in a job execution.
+	 *
+	 * @param job       the job execution to inspect
+	 * @param isRunning whether the job is currently running
+	 * @return the count of STARTED worker steps, or 0 if the job is not running
+	 */
+	public static int calculateActiveWorkers(JobExecution job, boolean isRunning) {
+		return isRunning ? (int) job.getStepExecutions().stream()
+				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME))
+				.filter(se -> BatchStatus.STARTED.equals(se.getStatus())).count() : 0;
+	}
+
 	public static VDYPProjectionProgressUpdate buildFinalProgress(String jobGuid, JobExecution jobExecution) {
 		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
 		int polygonsProcessed = 0;
@@ -221,7 +251,10 @@ public final class BatchUtils {
 				polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
 			}
 		}
-		return new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped);
+		// Finished projections report 0 workers (no active threads)
+		return new VDYPProjectionProgressUpdate(
+				jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, 0
+		);
 	}
 
 	public static void confirmDirectoryExists(Path dirPath) throws IOException {

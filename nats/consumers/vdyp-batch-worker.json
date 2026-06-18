@@ -1,0 +1,13 @@
+{
+	"durable_name": "VDYP_BATCH_WORKER",
+	"name": "VDYP_BATCH_WORKER",
+	"filter_subject": "vdyp.batch.request.standard",
+	"ack_policy": "explicit",
+	"deliver_policy": "all",
+	"replay_policy": "instant",
+	"max_ack_pending": 1,
+	"ack_wait": 30000000000,
+	"metadata": {},
+	"max_deliver": -1,
+	"max_waiting": 512
+}

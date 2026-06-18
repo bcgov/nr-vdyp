@@ -273,7 +273,7 @@ public class ProjectionEndpoint implements Endpoint {
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(name = "Run a Projection", description = "Send a Projection to the processing engine to be run.")
 	public Response runProjection(@PathParam("projectionGUID") UUID projectionGUID) throws ProjectionServiceException {
-		var started = projectionService.startBatchProjection(currentUser.getUser(), projectionGUID);
+		var started = projectionService.queueForBatchProjection(currentUser.getUser(), projectionGUID);
 		return Response.status(Status.OK).entity(started).build();
 	}
 

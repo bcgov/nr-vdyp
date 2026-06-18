@@ -88,6 +88,11 @@ backend:
     VDYP_API_GATEWAY_JWT_ISSUER: ~
     VDYP_API_GATEWAY_JWT_AUDIENCE: ~
     VDYP_BACKEND_MAX_POLYGONS: ~
+    NATS_ENABLED: "true"
+    NATS_URL: nats://vdyp-nats-dev:4222
+    NATS_SECRET_NAME: vdyp-nats-dev-auth
+    NATS_USERNAME_SECRET_KEY: username
+    NATS_PASSWORD_SECRET_KEY: password
 
 frontend:
   fullnameOverride: "vdyp-ui-dev"
@@ -277,5 +282,10 @@ batch:
     VDYP_SYSTEM_LOGGING_LEVEL: ~
     BATCH_DEFAULT_PARTITION_NUMBER: ~
     BATCH_THREAD_POOL_SIZE: ~
+    BATCH_MAX_JOB_THREADS: ~
     BATCH_DB_CONNECITON_POOL_SIZE: ~
-
+    NATS_ENABLED: "true"
+    NATS_URL: nats://vdyp-nats-dev:4222
+    NATS_SECRET_NAME: vdyp-nats-dev-auth
+    NATS_USERNAME_SECRET_KEY: username
+    NATS_PASSWORD_SECRET_KEY: password
