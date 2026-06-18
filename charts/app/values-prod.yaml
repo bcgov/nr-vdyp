@@ -273,3 +273,4 @@ batch:
     SPRING_PROFILES_ACTIVE: "prod"
     BATCH_DB_SECRET_NAME: crunchy-postgres-prod-pguser-batch
     VDYP_BASE_URL: ~
+    BATCH_MAX_JOB_THREADS: ~

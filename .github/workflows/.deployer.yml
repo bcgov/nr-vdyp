@@ -172,6 +172,7 @@ jobs:
             --set batch.env.VDYP_SYSTEM_LOGGING_LEVEL=${{ vars.VDYP_SYSTEM_LOGGING_LEVEL }} \
             --set batch.env.BATCH_DEFAULT_PARTITION_NUMBER=${{ vars.BATCH_DEFAULT_PARTITION_NUMBER }} \
             --set batch.env.BATCH_THREAD_POOL_SIZE=${{ vars.BATCH_THREAD_POOL_SIZE }} \
+            --set batch.env.BATCH_MAX_JOB_THREADS=${{ vars.BATCH_MAX_JOB_THREADS }} \
             --set batch.env.BATCH_DB_CONNECITON_POOL_SIZE=${{ vars.BATCH_DB_CONNECITON_POOL_SIZE }} \
             --set frontend.env.BACKEND_URL=${{ vars.BACKEND_URL }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
