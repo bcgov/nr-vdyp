@@ -54,7 +54,8 @@ public class DynamicPartitionHandler implements PartitionHandler {
 					: batchProperties.getPartition().getDefaultNumberOfPartitions();
 		}
 
-		// For file-upload flow, copy TOTAL_POLYGONS from job params into execution context for uniform progress tracking
+		// For file-upload flow, copy TOTAL_POLYGONS from job params into execution context for uniform progress
+		// tracking
 		if (!jobExecCtx.containsKey(BatchConstants.Job.TOTAL_POLYGONS)) {
 			Long totalPolygonsParam = jobParameters.getLong(BatchConstants.Job.TOTAL_POLYGONS);
 			if (totalPolygonsParam != null) {
