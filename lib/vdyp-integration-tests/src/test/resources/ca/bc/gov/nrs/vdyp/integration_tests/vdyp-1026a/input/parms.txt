@@ -61,7 +61,7 @@
 -inc 10
 
 #-includeagerows Yes 
-#-allowbatphsub Yes
+-allowbatphsub Yes
 #-PROGRESSFREQUENCY 500 
 -yieldtableincpolyid  Yes
 -projectedByLayer Yes
