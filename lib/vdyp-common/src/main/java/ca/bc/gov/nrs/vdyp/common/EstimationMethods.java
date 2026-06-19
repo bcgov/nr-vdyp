@@ -835,13 +835,13 @@ public class EstimationMethods {
 	 * @param bec               BEC of the polygon
 	 * @param baseAreaGroup     Index of the base area group
 	 * @return as described
-	 * @throws StandProcessingException
+	 * @throws BreastHeightAgeLowException
 	 */
 	public float estimateBaseAreaYield(
 			float dominantHeight, float breastHeightAge, Optional<Float> baseAreaOverstory, boolean fullOccupancy,
 			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, String primarySpeciesId,
 			BecDefinition bec, int baseAreaGroup
-	) throws StandProcessingException {
+	) throws BreastHeightAgeLowException {
 		var coe = estimateBaseAreaYieldCoefficients(species, bec);
 
 		float upperBoundBaseArea = upperBoundsBaseArea(bec.getRegion(), primarySpeciesId, baseAreaGroup);
@@ -866,7 +866,7 @@ public class EstimationMethods {
 	public float estimateBaseAreaYield(
 			Coefficients estimateBasalAreaYieldCoefficients, float dominantHeight, float breastHeightAge,
 			Optional<Float> veteranBasalArea, boolean fullOccupancy, float upperBoundBasalArea
-	) throws StandProcessingException {
+	) throws BreastHeightAgeLowException {
 
 		Optional<Float> maxBreastHeightAge = ((NonFipDebugSettings) controlMap.getDebugSettings())
 				.getMaxBreastHeightAge();

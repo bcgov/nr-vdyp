@@ -921,7 +921,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	static final String TREES_PER_HECTARE_PROPERTY_NAME = "Trees per hectare";
 	static final String CROWN_CLOSURE_PROPERTY_NAME = "Crown closure";
 
-	protected PolygonMode checkPolygonForMode(VriPolygon polygon, BecDefinition bec) throws ProcessingException {
+	protected PolygonMode checkPolygonForMode(VriPolygon polygon, BecDefinition bec) throws StandProcessingException {
 		VriLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		Optional<VriSite> calculationSite = primaryLayer.getCalculationSite();
 		var ageTotal = calculationSite.flatMap(VriSite::getAgeTotal);
@@ -933,65 +933,58 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var crownClosure = primaryLayer.getCrownClosure();
 		var percentForest = polygon.getPercentAvailable();
 		var primarySpeciesId = requirePrimarySpecies(primaryLayer);
-		try {
-			PolygonMode mode = polygon.getMode().orElseGet(() -> {
-				try {
-					return findDefaultPolygonMode(
-							ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest,
-							primaryLayer.getSpecies().values(), primarySpeciesId, bec,
-							primaryLayer.getEmpiricalRelationshipParameterIndex()
-					);
-				} catch (StandProcessingException e) {
-					throw new RuntimeStandProcessingException(e);
-				}
-			});
-			polygon.setMode(Optional.of(mode));
-			Optional<Float> primaryBreastHeightAge = Utils.mapBoth(
-					primaryLayer.getCalculationSite().flatMap(VriSite::getAgeTotal),
-					primaryLayer.getCalculationSite().flatMap(VriSite::getYearsToBreastHeight), (at, ytbh) -> at - ytbh
+		PolygonMode mode = polygon.getMode().orElseGet(() -> {
+			return findDefaultPolygonMode(
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest,
+					primaryLayer.getSpecies().values(), primarySpeciesId, bec,
+					primaryLayer.getEmpiricalRelationshipParameterIndex()
 			);
-			log.atDebug().setMessage("Polygon mode {} checks").addArgument(mode).log();
-			switch (mode) {
+		});
+		polygon.setMode(Optional.of(mode));
+		Optional<Float> primaryBreastHeightAge = Utils.mapBoth(
+				primaryLayer.getCalculationSite().flatMap(VriSite::getAgeTotal),
+				primaryLayer.getCalculationSite().flatMap(VriSite::getYearsToBreastHeight), (at, ytbh) -> at - ytbh
+		);
+		log.atDebug().setMessage("Polygon mode {} checks").addArgument(mode).log();
+		switch (mode) {
 
-			case START:
-				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
-				Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 4.5f));
-				Utils.throwIfPresent(BaseAreaLowException.check(LayerType.PRIMARY, baseArea, 0f));
-				Utils.throwIfPresent(TreesPerHectareLowException.check(LayerType.PRIMARY, treesPerHectare, 0f));
-				break;
+		case START:
+			Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+			Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+			Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+			Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 4.5f));
+			Utils.throwIfPresent(BaseAreaLowException.check(LayerType.PRIMARY, baseArea, 0f));
+			Utils.throwIfPresent(TreesPerHectareLowException.check(LayerType.PRIMARY, treesPerHectare, 0f));
+			break;
 
-			case YOUNG:
-				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				Utils.throwIfPresent(YearsToBreastHeightLowException.check(LayerType.PRIMARY, yearsToBreastHeight, 0f));
-				break;
+		case YOUNG:
+			Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+			Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+			Utils.throwIfPresent(YearsToBreastHeightLowException.check(LayerType.PRIMARY, yearsToBreastHeight, 0f));
+			break;
 
-			case BATN:
-				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
-				Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
-				break;
+		case BATN:
+			Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+			Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+			Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+			Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
+			break;
 
-			case BATC:
-				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
-				Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
-				Utils.throwIfPresent(CrownClosureLowException.check(LayerType.PRIMARY, Optional.of(crownClosure), 0f));
-				break;
+		case BATC:
+			Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+			Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+			Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+			Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
+			Utils.throwIfPresent(CrownClosureLowException.check(LayerType.PRIMARY, Optional.of(crownClosure), 0f));
+			break;
 
-			case DONT_PROCESS:
-				log.atDebug().setMessage("Skipping validation for ignored polygon");
-				// Do Nothing
-				break;
-			}
-			return mode;
-		} catch (RuntimeStandProcessingException e) {
-			throw e.unwrap();
+		case DONT_PROCESS:
+			log.atDebug().setMessage("Skipping validation for ignored polygon");
+			// Do Nothing
+			break;
 		}
+		return mode;
+
 	}
 
 	protected String requirePrimarySpecies(VriLayer primaryLayer) {
@@ -1004,16 +997,20 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			Optional<Float> ageTotal, Optional<Float> yearsToBreastHeight, Optional<Float> height,
 			Optional<Float> baseArea, Optional<Float> treesPerHectare, Optional<Float> percentForest,
 			Collection<VriSpecies> species, String primarySpeciesId, BecDefinition bec, Optional<Integer> baseAreaGroup
-	) throws StandProcessingException {
+	) {
 		Optional<Float> ageBH = ageTotal.map(at -> at - yearsToBreastHeight.orElse(3f));
 
 		float bap;
 		if (ageBH.map(abh -> abh >= 1).orElse(false)) {
-			bap = this.estimationMethods.estimateBaseAreaYield(
-					height.get(), ageBH.get(), Optional.empty(), true,
-					(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, primarySpeciesId, bec,
-					baseAreaGroup.get()
-			);
+			try {
+				bap = this.estimationMethods.estimateBaseAreaYield(
+						height.get(), ageBH.get(), Optional.empty(), true,
+						(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, primarySpeciesId, bec,
+						baseAreaGroup.get()
+				);
+			} catch (BreastHeightAgeLowException e) {
+				throw new IllegalStateException("Breast height age should not be low due to previous checks", e);
+			}
 		} else {
 			bap = 0;
 		}
