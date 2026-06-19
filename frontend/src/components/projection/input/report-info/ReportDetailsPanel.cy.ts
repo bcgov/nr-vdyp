@@ -121,7 +121,9 @@ describe('<ReportDetailsPanel />', () => {
       appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.RUNNING
     })
     cy.contains('button', 'Edit').should('be.disabled')
-  })  it('disables Edit button when projection is QUEUED', () => {
+  })
+
+  it('disables Edit button when projection is QUEUED', () => {
     mountPanel((modelStore, appStore) => {
       modelStore.panelState.reportDetails.confirmed = true
       modelStore.panelState.reportDetails.editable = false
