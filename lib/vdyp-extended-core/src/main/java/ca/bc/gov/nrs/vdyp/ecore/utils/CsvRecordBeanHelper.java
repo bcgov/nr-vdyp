@@ -12,13 +12,14 @@ public class CsvRecordBeanHelper {
 	}
 
 	public static Long parseLongAcceptNull(String longText) {
-		if (longText == null) {
-			return null;
+		return longText == null ? null : toLong(longText);
+	}
+
+	public static long toLong(String s) {
+		if (s.indexOf('.') >= 0 || s.indexOf('e') >= 0 || s.indexOf('E') >= 0) {
+			return new BigDecimal(s).longValue();
 		}
-		if (longText.indexOf('.') >= 0 || longText.indexOf('e') >= 0 || longText.indexOf('E') >= 0) {
-			return new BigDecimal(longText).longValue();
-		}
-		return Long.parseLong(longText);
+		return Long.parseLong(s);
 	}
 
 	public static Short parseShortAcceptNull(String shortText) {

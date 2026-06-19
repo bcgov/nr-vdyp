@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.batch.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -16,6 +15,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.ecore.utils.CsvRecordBeanHelper;
 
 public final class BatchUtils {
 
@@ -152,17 +152,10 @@ public final class BatchUtils {
 			return null;
 		}
 		try {
-			return toLong(field);
+			return CsvRecordBeanHelper.parseLongAcceptNull(field);
 		} catch (NumberFormatException e) {
 			return null;
 		}
-	}
-
-	public static long toLong(String s) {
-		if (s.indexOf('.') >= 0 || s.indexOf('e') >= 0 || s.indexOf('E') >= 0) {
-			return new BigDecimal(s).longValue();
-		}
-		return Long.parseLong(s);
 	}
 
 	/**
