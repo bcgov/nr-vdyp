@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.input;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -561,7 +560,7 @@ public class HcsvPolygonRecordBean {
 
 			BeanValidatorHelper bvh = new BeanValidatorHelper(bean.polyFeatureId);
 
-			bvh.validateNumber(bean.polyFeatureId, n -> new BigDecimal(n).longValue(), "Feature ID");
+			bvh.validateNumber(bean.polyFeatureId, CsvRecordBeanHelper::parseLongAcceptNull, "Feature ID");
 
 			// lcl_CopyPolygonDataIntoSnapshot: 3156
 			bean.mapId = bvh.truncateString(bean.mapId, Vdyp7Constants.MAX_LEN_MAPSHEET);

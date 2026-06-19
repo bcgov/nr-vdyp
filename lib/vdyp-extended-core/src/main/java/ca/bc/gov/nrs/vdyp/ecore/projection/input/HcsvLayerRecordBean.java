@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.input;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -655,7 +654,7 @@ public class HcsvLayerRecordBean {
 					"Target VDYP7 Layer Code"
 			);
 
-			bvh.validateNumber(bean.featureId, n -> new BigDecimal(n).longValue(), "Feature Id");
+			bvh.validateNumber(bean.featureId, CsvRecordBeanHelper::parseLongAcceptNull, "Feature Id");
 			bvh.validateNumber(bean.polygonNumber, n -> Long.parseLong(n), "Polygon Number");
 
 			// TREE_COVER_ID is not transferred from the CSV to the layer snapshot in VDYP7

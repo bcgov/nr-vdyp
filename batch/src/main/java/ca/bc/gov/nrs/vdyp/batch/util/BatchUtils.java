@@ -152,10 +152,17 @@ public final class BatchUtils {
 			return null;
 		}
 		try {
-			return new BigDecimal(field).longValue();
+			return toLong(field);
 		} catch (NumberFormatException e) {
 			return null;
 		}
+	}
+
+	public static long toLong(String s) {
+		if (s.indexOf('.') >= 0 || s.indexOf('e') >= 0 || s.indexOf('E') >= 0) {
+			return new BigDecimal(s).longValue();
+		}
+		return Long.parseLong(s);
 	}
 
 	/**

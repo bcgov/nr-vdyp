@@ -4,12 +4,21 @@ import java.math.BigDecimal;
 
 public class CsvRecordBeanHelper {
 
+	private CsvRecordBeanHelper() {
+	}
+
 	public static Double parseDoubleAcceptNull(String doubleText) {
 		return doubleText == null ? null : Double.parseDouble(doubleText);
 	}
 
 	public static Long parseLongAcceptNull(String longText) {
-		return longText == null ? null : new BigDecimal(longText).longValue();
+		if (longText == null) {
+			return null;
+		}
+		if (longText.indexOf('.') >= 0 || longText.indexOf('e') >= 0 || longText.indexOf('E') >= 0) {
+			return new BigDecimal(longText).longValue();
+		}
+		return Long.parseLong(longText);
 	}
 
 	public static Short parseShortAcceptNull(String shortText) {
