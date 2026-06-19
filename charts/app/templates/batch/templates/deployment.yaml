@@ -153,11 +153,9 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 10
           resources:
-            limits:
-              memory: 1Gi
             requests:
               cpu: 50m
-              memory: 256Mi
+              memory: 512Mi
           {{- if .Values.batch.pvc.enabled }}
           volumeMounts:
             - name: batch-data
