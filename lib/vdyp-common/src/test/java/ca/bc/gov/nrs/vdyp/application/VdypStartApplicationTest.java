@@ -47,7 +47,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication.CombinedPolygonStream;
-import ca.bc.gov.nrs.vdyp.application.VdypStartApplication.Strictness;
 import ca.bc.gov.nrs.vdyp.application.test.TestDebugSettings;
 import ca.bc.gov.nrs.vdyp.application.test.TestLayer;
 import ca.bc.gov.nrs.vdyp.application.test.TestPolygon;
@@ -57,6 +56,7 @@ import ca.bc.gov.nrs.vdyp.application.test.TestStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods.Strictness;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
@@ -1557,7 +1557,9 @@ class VdypStartApplicationTest {
 				});
 
 				var result = assertDoesNotThrow(
-						() -> app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f, Strictness.LENIENT)
+						() -> app.estimatePrimaryBaseArea(
+								layer, bec, 1f, 79.5999985f, 3.13497972f, EstimationMethods.Strictness.LENIENT
+						)
 				);
 
 				assertThat(result, is(0.0f));

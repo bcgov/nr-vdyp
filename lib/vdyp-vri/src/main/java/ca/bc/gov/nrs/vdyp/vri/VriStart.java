@@ -1424,11 +1424,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	@Override
-	protected Optional<VriSite> getPrimarySite(VriLayer layer) {
-		return layer.getPrimarySite();
-	}
-
-	@Override
 	protected float getYieldFactor(VriPolygon polygon) {
 		return polygon.getYieldFactor();
 	}

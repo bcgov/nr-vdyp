@@ -12,6 +12,7 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -22,6 +23,7 @@ import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
@@ -29,15 +31,19 @@ import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
+import ca.bc.gov.nrs.vdyp.model.InputLayer;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -1112,6 +1118,21 @@ public class EstimationMethods {
 		float apply(UtilizationClass utilizationClass, float inputValue) throws ProcessingException;
 	}
 
+	public enum Strictness {
+		/**
+		 * Prefer to throw an exception
+		 */
+		STRICT,
+		/**
+		 * Prefer to tweak values to work and log a warning
+		 */
+		ADJUST,
+		/**
+		 * Prefer to accept values as they are and log a warning
+		 */
+		LENIENT
+	}
+
 	/**
 	 * Estimate values for one utilization vector from another
 	 *
@@ -1466,6 +1487,75 @@ public class EstimationMethods {
 		// TODO confirm going over 0.5 should drop to 0 as this seems odd.
 		coe.scalarInPlace(5, x -> x > 0.0f ? 0f : x);
 		return coe;
+	}
+
+	public <L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> S
+			leadGenus(L fipLayer) {
+		return fipLayer.getSpecies().values().stream()
+				.sorted(Utils.compareUsing(BaseVdypSpecies<? extends BaseVdypSite>::getFractionGenus).reversed())
+				.findFirst().orElseThrow();
+	}
+
+	public <L extends BaseVdypLayer<?, ?>> Optional<Float> getLayerHeight(L layer) {
+		return layer.getPrimarySite().flatMap(BaseVdypSite::getHeight);
+	}
+
+	public <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
+			float estimatePrimaryQuadMeanDiameter(
+					L2 layer, BecDefinition bec, float breastHeightAge, float baseAreaOverstory
+			) {
+		var coeMap = controlMap.getQuadMeanDiameterCoefficients();
+		var modMap = controlMap.getQuadMeanDiameterModifiers();
+		var upperBoundMap = controlMap.getUpperBoundsCoefficients();
+
+		var leadGenus = leadGenus(layer);
+
+		var decayBecAlias = bec.getDecayBec().getAlias();
+		Coefficients coe = EstimationMethods.weightedCoefficientSum(
+				List.of(0, 1, 2, 3, 4), 8, 0, layer.getSpecies().values(), BaseVdypSpecies::getFractionGenus,
+				s -> coeMap.get(decayBecAlias, s.getGenus())
+		);
+
+		var trAge = log(clamp(breastHeightAge, 5f, 350f));
+		var height = getLayerHeight(layer).orElse(0f);
+
+		if (height <= coe.getCoe(5)) {
+			return 7.6f;
+		}
+
+		/* @formatter:off */
+		//    C0 = A(0)
+		//    C1 = EXP(A(1)) + EXP(A(2)) * TR_AGE
+		//    C2 = EXP(A(3)) + EXP(A(4)) * TR_AGE
+		/* @formatter:on */
+		var c0 = coe.get(0);
+		var c1 = exp(coe.getCoe(1)) + exp(coe.getCoe(2)) * trAge;
+		var c2 = exp(coe.getCoe(3)) + exp(coe.getCoe(4)) * trAge;
+
+		/* @formatter:off */
+		//      DQ = C0 + ( C1*(HD - A(5))**C2 )**2 * exp(A(7)*BAV)
+		//     &        * (1.0 - A(6)*CC/100.0)
+		/* @formatter:on */
+
+		var quadMeanDiameter = c0 + pow(c1 * pow(height - coe.getCoe(5), c2), 2)
+				* exp(coe.getCoe(7) * baseAreaOverstory) * (1f - coe.getCoe(6) * layer.getCrownClosure() / 100f);
+
+		/* @formatter:off */
+		//      DQ = DQ * DQMOD200(JLEAD, INDEX_IC)
+		/* @formatter:on */
+		quadMeanDiameter *= modMap.get(leadGenus.getGenus(), bec.getRegion());
+
+		quadMeanDiameter = max(quadMeanDiameter, 7.6f);
+
+		// TODO
+		var NDEBUG_2 = 0;
+		if (NDEBUG_2 <= 0) {
+			// See ISPSJF129
+			var upperBound = upperBoundMap.get(bec.getRegion(), leadGenus.getGenus(), UpperCoefficientParser.DQ);
+			quadMeanDiameter = min(quadMeanDiameter, upperBound);
+		}
+
+		return quadMeanDiameter;
 	}
 
 	/**

@@ -44,6 +44,9 @@ public interface ResolvedControlMap {
 	/** 31 - EQN_MODIFIERS */
 	MatrixMap2<Integer, Integer, Integer> getEquationModifierGroup();
 
+	/** 41 - COE_DQ */
+	MatrixMap2<String, String, Coefficients> getQuadMeanDiameterCoefficients();
+
 	/** 43 - UPPER_BA_BY_CI_S0_P */
 	MatrixMap3<Region, String, Integer, Float> getUpperBoundsCoefficients();
 
@@ -121,5 +124,7 @@ public interface ResolvedControlMap {
 
 	/** 101 - VTROL */
 	ControlVariables getControlVariables();
+
+	MatrixMap2<String, Region, Float> getQuadMeanDiameterModifiers();
 
 }

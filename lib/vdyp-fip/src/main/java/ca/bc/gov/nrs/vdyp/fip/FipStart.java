@@ -1064,11 +1064,6 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	}
 
 	@Override
-	protected Optional<FipSite> getPrimarySite(FipLayer layer) {
-		return layer.getSite();
-	}
-
-	@Override
 	protected float getYieldFactor(FipPolygon polygon) {
 		return polygon.getYieldFactor();
 		// TODO Make an InputPolygon interface that has this.

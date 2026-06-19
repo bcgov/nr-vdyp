@@ -3,7 +3,9 @@ package ca.bc.gov.nrs.vdyp.controlmap;
 import java.util.Map;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariables;
 
 public class StartResolvedControlMapImpl extends ResolvedControlMapImpl {
