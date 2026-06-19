@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.model.BaseDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
+import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 
 /**
  * (1) Species Dynamics
@@ -94,7 +95,7 @@ import ca.bc.gov.nrs.vdyp.model.DebugSettings;
  * <li>15: Same as option 1, condition on total age (primary) < 30.
  * </ul>
  */
-public class ProcessingDebugSettings extends BaseDebugSettings {
+public class ProcessingDebugSettings extends BaseDebugSettings implements NonFipDebugSettings {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProcessingDebugSettings.class);
 
@@ -183,9 +184,7 @@ public class ProcessingDebugSettings extends BaseDebugSettings {
 		return (SpeciesDynamics) getProcessedValue(SPECIES_DYNAMICS);
 	}
 
-	/**
-	 * Get the maximum breast height age if there is a limit.
-	 */
+	@Override
 	@SuppressWarnings("unchecked")
 	public Optional<Float> getMaxBreastHeightAge() {
 		return (Optional<Float>) getProcessedValue(MAX_BREAST_HEIGHT_AGE);

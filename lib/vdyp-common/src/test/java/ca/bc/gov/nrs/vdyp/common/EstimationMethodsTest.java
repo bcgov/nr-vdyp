@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.easymock.EasyMock;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -27,9 +28,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import ca.bc.gov.nrs.vdyp.application.test.TestPolygon;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -679,13 +683,121 @@ class EstimationMethodsTest {
 	@Nested
 	class EstimateQuadMeanDiameterYield {
 
-		@Test
-		void testTest1() throws Exception {
+		@BeforeEach
+		void setup() {
 			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
 			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
 			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
 			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
 			EasyMock.replay(debug);
+		}
+
+		@Test
+		void testCompute() throws ProcessingException {
+
+			var polygon = TestPolygon.build(pBuilder -> {
+				pBuilder.polygonIdentifier("Test", 2024);
+				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+				pBuilder.percentAvailable(Optional.of(75f));
+				pBuilder.forestInventoryZone("");
+				pBuilder.addLayer(lBuilder -> {
+					lBuilder.layerType(LayerType.PRIMARY);
+					lBuilder.crownClosure(57.8f);
+
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("B", controlMap);
+						sBuilder.percentGenus(10f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("C", controlMap);
+						sBuilder.percentGenus(20f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("F", controlMap);
+						sBuilder.percentGenus(30f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("H", controlMap);
+						sBuilder.percentGenus(30f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("S", controlMap);
+						sBuilder.percentGenus(10f);
+					});
+
+					lBuilder.primaryGenus("F");
+				});
+			});
+
+			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+
+			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
+
+			float result = emp.estimateQuadMeanDiameterYield(
+					7.6f, 15f, Optional.empty(),
+					(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, "H", bec, 61
+			);
+
+			assertThat(result, closeTo(10.3879938f));
+		}
+
+		@ParameterizedTest
+		@ValueSource(floats = { 0f, -1f, -Float.MIN_VALUE, -Float.MAX_VALUE, Float.NEGATIVE_INFINITY })
+		void testBreastHeightAgeLow(float breastHeightAge) {
+
+			var polygon = TestPolygon.build(pBuilder -> {
+				pBuilder.polygonIdentifier("Test", 2024);
+				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+				pBuilder.percentAvailable(Optional.of(75f));
+				pBuilder.forestInventoryZone("");
+				pBuilder.addLayer(lBuilder -> {
+					lBuilder.layerType(LayerType.PRIMARY);
+					lBuilder.crownClosure(57.8f);
+
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("B", controlMap);
+						sBuilder.percentGenus(10f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("C", controlMap);
+						sBuilder.percentGenus(20f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("F", controlMap);
+						sBuilder.percentGenus(30f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("H", controlMap);
+						sBuilder.percentGenus(30f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("S", controlMap);
+						sBuilder.percentGenus(10f);
+					});
+
+					lBuilder.primaryGenus("F");
+				});
+			});
+
+			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+
+			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
+
+			var ex = Assertions.assertThrows(
+					StandProcessingException.class,
+					() -> emp.estimateQuadMeanDiameterYield(
+							7.6f, breastHeightAge, Optional.empty(),
+							(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, "H", bec, 61
+					)
+
+			);
+
+			assertThat(ex, hasProperty("message", containsString(MessageFormat.format("{0,number}", breastHeightAge))));
+
+		}
+
+		@Test
+		void testTest1() throws Exception {
 
 			var bec = Utils.getBec("ICH", controlMap);
 			var spec = VdypSpecies.build(sb -> {
@@ -702,11 +814,6 @@ class EstimationMethodsTest {
 
 		@Test
 		void testLowDominantHeight() throws Exception {
-			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
-			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
-			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
-			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
-			EasyMock.replay(debug);
 
 			var bec = Utils.getBec("ICH", controlMap);
 			var spec = VdypSpecies.build(sb -> {
@@ -724,11 +831,6 @@ class EstimationMethodsTest {
 
 		@Test
 		void testLowAge() throws Exception {
-			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
-			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
-			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
-			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
-			EasyMock.replay(debug);
 
 			var bec = Utils.getBec("ICH", controlMap);
 			var spec = VdypSpecies.build(sb -> {
@@ -745,6 +847,109 @@ class EstimationMethodsTest {
 			assertThat(ex, hasProperty("value", present(is(-0.1f))));
 		}
 
+	}
+
+	@Nested
+	class EstimateBaseAreaYield {
+
+		@BeforeEach
+		void setup() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.replay(debug);
+		}
+
+		@Test
+		void testCompute() throws ProcessingException {
+
+			var polygon = TestPolygon.build(pBuilder -> {
+				pBuilder.polygonIdentifier("Test", 2024);
+				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+				pBuilder.percentAvailable(Optional.of(75f));
+				pBuilder.forestInventoryZone("");
+				pBuilder.addLayer(lBuilder -> {
+					lBuilder.layerType(LayerType.PRIMARY);
+					lBuilder.crownClosure(57.8f);
+
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("B", controlMap);
+						sBuilder.percentGenus(2.99999993f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("C", controlMap);
+						sBuilder.percentGenus(30.0000012f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("H", controlMap);
+						sBuilder.percentGenus(48.9000022f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("S", controlMap);
+						sBuilder.percentGenus(18.1000009f);
+					});
+				});
+			});
+
+			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+
+			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
+
+			float result = emp.estimateBaseAreaYield(
+					32f, 190.300003f, Optional.empty(), false,
+					(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, "H", bec, 76
+			);
+
+			assertThat(result, closeTo(62.0858421f));
+		}
+
+		@Test
+		void testGetCoefficients() {
+
+			var polygon = TestPolygon.build(pBuilder -> {
+				pBuilder.polygonIdentifier("Test", 2024);
+				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+				pBuilder.percentAvailable(Optional.of(75f));
+				pBuilder.forestInventoryZone("");
+				pBuilder.addLayer(lBuilder -> {
+					lBuilder.layerType(LayerType.PRIMARY);
+					lBuilder.crownClosure(57.8f);
+
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("B", controlMap);
+						sBuilder.percentGenus(2.99999993f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("C", controlMap);
+						sBuilder.percentGenus(30.0000012f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("H", controlMap);
+						sBuilder.percentGenus(48.9000022f);
+					});
+					lBuilder.addSpecies(sBuilder -> {
+						sBuilder.genus("S", controlMap);
+						sBuilder.percentGenus(18.1000009f);
+					});
+				});
+			});
+
+			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+
+			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
+
+			Coefficients result = emp.estimateBaseAreaYieldCoefficients(
+					(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, bec
+			);
+
+			assertThat(
+					result,
+					VdypMatchers.coe(
+							0, 7.29882717f, 0.934803009f, 7.22950029f, 0.478330702f, 0.00542420009f, 0f, -0.00899999961f
+					)
+			);
+		}
 	}
 
 	@Nested

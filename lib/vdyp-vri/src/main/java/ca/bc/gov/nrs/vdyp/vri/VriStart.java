@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ResultWithStatus;
 import ca.bc.gov.nrs.vdyp.common.ResultWithStatus.BasicStatus;
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -922,7 +921,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	static final String TREES_PER_HECTARE_PROPERTY_NAME = "Trees per hectare";
 	static final String CROWN_CLOSURE_PROPERTY_NAME = "Crown closure";
 
-	protected PolygonMode checkPolygonForMode(VriPolygon polygon, BecDefinition bec) throws ProcessingException {
+	protected PolygonMode checkPolygonForMode(VriPolygon polygon, BecDefinition bec) throws StandProcessingException {
 		VriLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		Optional<VriSite> calculationSite = primaryLayer.getCalculationSite();
 		var ageTotal = calculationSite.flatMap(VriSite::getAgeTotal);
@@ -934,65 +933,58 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var crownClosure = primaryLayer.getCrownClosure();
 		var percentForest = polygon.getPercentAvailable();
 		var primarySpeciesId = requirePrimarySpecies(primaryLayer);
-		try {
-			PolygonMode mode = polygon.getMode().orElseGet(() -> {
-				try {
-					return findDefaultPolygonMode(
-							ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest,
-							primaryLayer.getSpecies().values(), primarySpeciesId, bec,
-							primaryLayer.getEmpiricalRelationshipParameterIndex()
-					);
-				} catch (FatalProcessingException e) {
-					throw new RuntimeProcessingException(e);
-				}
-			});
-			polygon.setMode(Optional.of(mode));
-			Optional<Float> primaryBreastHeightAge = Utils.mapBoth(
-					primaryLayer.getCalculationSite().flatMap(VriSite::getAgeTotal),
-					primaryLayer.getCalculationSite().flatMap(VriSite::getYearsToBreastHeight), (at, ytbh) -> at - ytbh
+		PolygonMode mode = polygon.getMode().orElseGet(() -> {
+			return findDefaultPolygonMode(
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest,
+					primaryLayer.getSpecies().values(), primarySpeciesId, bec,
+					primaryLayer.getEmpiricalRelationshipParameterIndex()
 			);
-			log.atDebug().setMessage("Polygon mode {} checks").addArgument(mode).log();
-			switch (mode) {
+		});
+		polygon.setMode(Optional.of(mode));
+		Optional<Float> primaryBreastHeightAge = Utils.mapBoth(
+				primaryLayer.getCalculationSite().flatMap(VriSite::getAgeTotal),
+				primaryLayer.getCalculationSite().flatMap(VriSite::getYearsToBreastHeight), (at, ytbh) -> at - ytbh
+		);
+		log.atDebug().setMessage("Polygon mode {} checks").addArgument(mode).log();
+		switch (mode) {
 
-			case START:
-				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
-				Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 4.5f));
-				Utils.throwIfPresent(BaseAreaLowException.check(LayerType.PRIMARY, baseArea, 0f));
-				Utils.throwIfPresent(TreesPerHectareLowException.check(LayerType.PRIMARY, treesPerHectare, 0f));
-				break;
+		case START:
+			Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+			Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+			Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+			Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 4.5f));
+			Utils.throwIfPresent(BaseAreaLowException.check(LayerType.PRIMARY, baseArea, 0f));
+			Utils.throwIfPresent(TreesPerHectareLowException.check(LayerType.PRIMARY, treesPerHectare, 0f));
+			break;
 
-			case YOUNG:
-				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				Utils.throwIfPresent(YearsToBreastHeightLowException.check(LayerType.PRIMARY, yearsToBreastHeight, 0f));
-				break;
+		case YOUNG:
+			Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+			Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+			Utils.throwIfPresent(YearsToBreastHeightLowException.check(LayerType.PRIMARY, yearsToBreastHeight, 0f));
+			break;
 
-			case BATN:
-				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
-				Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
-				break;
+		case BATN:
+			Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+			Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+			Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+			Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
+			break;
 
-			case BATC:
-				Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
-				Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
-				Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
-				Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
-				Utils.throwIfPresent(CrownClosureLowException.check(LayerType.PRIMARY, Optional.of(crownClosure), 0f));
-				break;
+		case BATC:
+			Utils.throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+			Utils.throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+			Utils.throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+			Utils.throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
+			Utils.throwIfPresent(CrownClosureLowException.check(LayerType.PRIMARY, Optional.of(crownClosure), 0f));
+			break;
 
-			case DONT_PROCESS:
-				log.atDebug().setMessage("Skipping validation for ignored polygon");
-				// Do Nothing
-				break;
-			}
-			return mode;
-		} catch (RuntimeProcessingException e) {
-			throw new FatalProcessingException(e);
+		case DONT_PROCESS:
+			log.atDebug().setMessage("Skipping validation for ignored polygon");
+			// Do Nothing
+			break;
 		}
+		return mode;
+
 	}
 
 	protected String requirePrimarySpecies(VriLayer primaryLayer) {
@@ -1001,109 +993,24 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		return primarySpeciesId;
 	}
 
-	// EMP106
-	float estimateBaseAreaYield(
-			float dominantHeight, float breastHeightAge, Optional<Float> baseAreaOverstory, boolean fullOccupancy,
-			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, String primarySpeciesId,
-			BecDefinition bec, int baseAreaGroup
-	) throws FatalProcessingException {
-		var coe = estimateBaseAreaYieldCoefficients(species, bec);
-
-		float upperBoundBaseArea = estimationMethods
-				.upperBoundsBaseArea(bec.getRegion(), primarySpeciesId, baseAreaGroup);
-
-		/*
-		 * The original Fortran had the following comment and a commented out modification to upperBoundsBaseArea
-		 * (BATOP98). I have included them here.
-		 */
-
-		/*
-		 * And one POSSIBLY one last vestage of grouping by ITG That limit applies to full occupancy and Empirical
-		 * occupancy. They were derived as the 98th percentile of Empirical stocking, though adjusted PSP's were
-		 * included. If the ouput of this routine is bumped up from empirical to full, MIGHT adjust this limit DOWN
-		 * here, so that at end, it is correct. Tentatively decide NOT to do this.
-		 */
-
-		// if (fullOccupancy)
-		// upperBoundsBaseArea *= EMPOC;
-
-		float ageToUse = breastHeightAge;
-
-		// TODO getDebugMode(2)==1
-
-		if (ageToUse <= 0f) {
-			throw fatalError("Age was not positive");
-		}
-
-		float trAge = FloatMath.log(ageToUse);
-
-		float a00 = Math.max(coe.getCoe(0) + coe.getCoe(1) * trAge, 0f);
-		float ap = Math.max(coe.getCoe(3) + coe.getCoe(4) * trAge, 0f);
-
-		float bap;
-		if (dominantHeight <= coe.getCoe(2)) {
-			bap = 0f;
-		} else {
-			bap = a00 * FloatMath.pow(dominantHeight - coe.getCoe(2), ap)
-					* FloatMath.exp(coe.getCoe(5) * dominantHeight + coe.getCoe(6) * baseAreaOverstory.orElse(0f));
-			bap = Math.min(bap, upperBoundBaseArea);
-		}
-
-		if (fullOccupancy)
-			bap /= EMPOC;
-
-		return bap;
-	}
-
-	Coefficients estimateBaseAreaYieldCoefficients(
-			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec
-	) {
-		var coe = this.estimationMethods
-				.sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, ControlKey.BA_YIELD, 7);
-
-		// TODO confirm going over 0.5 should drop to 0 as this seems odd.
-		coe.scalarInPlace(5, x -> x > 0.0f ? 0f : x);
-		return coe;
-	}
-
-	// EMP107
-	/**
-	 *
-	 * @param dominantHeight   Dominant height (m)
-	 * @param breastHeightAge  breast height age
-	 * @param veteranBaseArea  Basal area of overstory (>= 0)
-	 * @param species          Species for the layer
-	 * @param primarySpeciesId ID of the primary species for the layer
-	 * @param bec              BEC of the polygon
-	 * @param baseAreaGroup    Index of the base area group
-	 * @return DQ of primary layer (w DBH >= 7.5)
-	 * @throws FatalProcessingException
-	 */
-	float estimateQuadMeanDiameterYield(
-			float dominantHeight, float breastHeightAge, Optional<Float> veteranBaseArea,
-			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, String primarySpeciesId,
-			BecDefinition bec, int baseAreaGroup
-	) throws StandProcessingException {
-		// TODO Inline
-		return estimationMethods.estimateQuadMeanDiameterYield(
-				dominantHeight, breastHeightAge, veteranBaseArea, species, primarySpeciesId, bec, baseAreaGroup
-		);
-
-	}
-
 	PolygonMode findDefaultPolygonMode(
 			Optional<Float> ageTotal, Optional<Float> yearsToBreastHeight, Optional<Float> height,
 			Optional<Float> baseArea, Optional<Float> treesPerHectare, Optional<Float> percentForest,
 			Collection<VriSpecies> species, String primarySpeciesId, BecDefinition bec, Optional<Integer> baseAreaGroup
-	) throws FatalProcessingException {
+	) {
 		Optional<Float> ageBH = ageTotal.map(at -> at - yearsToBreastHeight.orElse(3f));
 
 		float bap;
 		if (ageBH.map(abh -> abh >= 1).orElse(false)) {
-			bap = this.estimateBaseAreaYield(
-					height.get(), ageBH.get(), Optional.empty(), true, species, primarySpeciesId, bec,
-					baseAreaGroup.get()
-			);
+			try {
+				bap = this.estimationMethods.estimateBaseAreaYield(
+						height.get(), ageBH.get(), Optional.empty(), true,
+						(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, primarySpeciesId, bec,
+						baseAreaGroup.get()
+				);
+			} catch (BreastHeightAgeLowException e) {
+				throw new IllegalStateException("Breast height age should not be low due to previous checks", e);
+			}
 		} else {
 			bap = 0;
 		}
@@ -1178,7 +1085,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	static record Increase(float dominantHeight, float ageIncrease) {
 	}
 
-	VriPolygon processYoung(VriPolygon poly) throws FatalProcessingException, FailedToGrowYoungStandException {
+	VriPolygon processYoung(VriPolygon poly) throws FatalProcessingException, StandProcessingException {
 
 		PolygonIdentifier polygonIdentifier = poly.getPolygonIdentifier();
 		int year = polygonIdentifier.getYear();
@@ -1279,7 +1186,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			BecDefinition bec, VriLayer primaryLayer, SiteIndexEquation siteCurve, float primaryBreastHeightAge0,
 			float siteIndex, float yeastToBreastHeight, float baseAreaTarget, float heightTarget, float ageTarget,
 			float dominantHeight0, int moreYears, float primaryHeight
-	) throws FatalProcessingException, FailedToGrowYoungStandException {
+	) throws FatalProcessingException, StandProcessingException {
 		float dominantHeight;
 		float ageIncrease;
 		final String primarySpeciesId = requirePrimarySpecies(primaryLayer);
@@ -1309,10 +1216,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 				// check empirical BA assuming BAV = 0
 
-				float predictedBaseArea = estimateBaseAreaYield(
+				float predictedBaseArea = estimationMethods.estimateBaseAreaYield(
 						dominantHeight, primaryBreastHeightAge, Optional.empty(), false,
-						primaryLayer.getSpecies().values(), primarySpeciesId, bec,
-						primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+						(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) primaryLayer.getSpecies()
+								.values(),
+						primarySpeciesId, bec, primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
 				); // BAP
 
 				// Calculate the full occupancy BA Hence the BA we will test is the Full
@@ -1425,13 +1333,14 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 						)
 				);
 
-		float primaryBaseAreaEstimated = estimateBaseAreaYield(
-				primaryHeight, primaryBreastHeightAge, veteranBaseArea, false, primaryLayer.getSpecies().values(),
+		float primaryBaseAreaEstimated = estimationMethods.estimateBaseAreaYield(
+				primaryHeight, primaryBreastHeightAge, veteranBaseArea, false,
+				(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) primaryLayer.getSpecies().values(),
 				primarySpeciesId, bec, primaryEmpiricalRelationshipParameterIndex
 		);
 
 		// EMP107
-		float normativeQuadMeanDiameter = estimateQuadMeanDiameterYield(
+		float normativeQuadMeanDiameter = estimationMethods.estimateQuadMeanDiameterYield(
 				primaryHeight, primaryBreastHeightAge, veteranBaseArea, primaryLayer.getSpecies().values(),
 				primarySpeciesId, bec, primaryEmpiricalRelationshipParameterIndex
 		);

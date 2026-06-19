@@ -58,6 +58,7 @@ class VriInputValidationTest {
 
 		VriDebugSettings debug = EasyMock.createMock(VriDebugSettings.class);
 		EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+		EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
 		EasyMock.replay(debug);
 		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), debug);
 
