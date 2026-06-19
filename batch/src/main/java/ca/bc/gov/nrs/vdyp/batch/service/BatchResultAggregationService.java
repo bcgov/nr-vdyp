@@ -501,6 +501,7 @@ public class BatchResultAggregationService {
 		private int tableNum = 0;
 		private String lastTableNum = "";
 		private String lastFeatureNum = "";
+
 		/**
 		 * Assigns TABLE_NUM based on polygon/layer combination.
 		 *
