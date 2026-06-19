@@ -75,23 +75,23 @@ public class BatchInputPartitioner {
 	 */
 	public int partitionCsvFiles(
 			@NonNull Path polygonFile, @NonNull Path layerFile, @NonNull Integer numPartitions,
-			@NonNull Path jobBaseDir, @NonNull String jobGuid
+			@NonNull Path jobBaseDir, @NonNull String jobGuid, int totalPolygons
 	) throws BatchPartitionException {
 
 		try (
 				BufferedReader polyReader = Files.newBufferedReader(polygonFile, StandardCharsets.UTF_8);
 				BufferedReader layerReader = Files.newBufferedReader(layerFile, StandardCharsets.UTF_8)
 		) {
-			return partitionCSVReaders(polyReader, layerReader, numPartitions, jobBaseDir, jobGuid);
+			return partitionCSVReaders(polyReader, layerReader, numPartitions, jobBaseDir, jobGuid, totalPolygons);
 		} catch (IOException e) {
 			throw BatchPartitionException.handlePartitionFailure(e, "Failed to open CSV files", jobGuid, logger);
 		}
 	}
 
 	/**
-	 * Partition polygon and layer CSV readers by FEATURE_ID into separate partition files. Works round robin style,
-	 * this assumes that output files are permitted to vary in order as long as all FEATURE_IDS are reported in the
-	 * output The ordering issue could be fixed by merging the files in a round robin style as well.
+	 * Partition polygon and layer CSV readers by FEATURE_ID into separate partition files. Works in sequential chunks
+	 * so the output remains ordered and memory efficient. Logs warnings for any layer lines that do not have a matching
+	 * polygon FEATURE_ID.
 	 *
 	 * @param polygonReader A Buffered reader of the polygon CSV file to partition
 	 * @param layerReader   a Buffered reader of the layer CSV file to partition
@@ -104,9 +104,10 @@ public class BatchInputPartitioner {
 	 */
 	private int partitionCSVReaders(
 			BufferedReader polygonReader, BufferedReader layerReader, Integer numPartitions, Path jobBaseDir,
-			String jobGuid
+			String jobGuid, int totalPolygons
 	) throws BatchPartitionException, IOException {
 		int uniqueFeatureIdCount = 0;
+		int[] polygonsPerPartition = calculateFeaturesPerPartition(totalPolygons, numPartitions);
 		Map<Integer, PrintWriter> polygonWriters = null;
 		Map<Integer, PrintWriter> layerWriters = null;
 		try (PrintWriter warningWriter = createWarningWriter(jobBaseDir)) {
@@ -132,7 +133,11 @@ public class BatchInputPartitioner {
 					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, numPartitions, jobGuid
 			);
 			Long layerFeatureId = null;
+			int partition = 0;
 			while (polygonLine != null) {
+				if (polygonsPerPartition[partition] <= 0) {
+					partition++;
+				}
 				Long polygonFeatureId = BatchUtils.extractFeatureIdLong(polygonLine);
 				if (polygonFeatureId == null) {
 					// Decide: skip or fail. I would fail in polygon file because it drives the join.
@@ -140,10 +145,11 @@ public class BatchInputPartitioner {
 							String.format("Polygon row missing FEATURE_ID: %s", polygonLine), jobGuid, logger
 					);
 				}
+
 				uniqueFeatureIdCount++;
-				int partition = (uniqueFeatureIdCount - 1) % numPartitions;
-				// write the polygon to it's partition round robin style
+				// write the polygon to it's partition in sequential chunks
 				polygonWriters.get(partition).println(polygonLine);
+				polygonsPerPartition[partition]--;
 				polygonLine = readNextNonBlankLine(polygonReader);
 
 				if (layerLine == null) {

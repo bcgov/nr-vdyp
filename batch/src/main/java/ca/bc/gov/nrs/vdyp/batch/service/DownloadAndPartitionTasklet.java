@@ -92,7 +92,7 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 			);
 
 			partitionedCount = inputPartitioner
-					.partitionCsvFiles(polygonPath, layerPath, computedPartitions, jobBaseDir, jobGuid);
+					.partitionCsvFiles(polygonPath, layerPath, computedPartitions, jobBaseDir, jobGuid, totalPolygons);
 
 			stepExecution.getJobExecution().getExecutionContext()
 					.putInt(BatchConstants.Job.TOTAL_POLYGONS, partitionedCount);

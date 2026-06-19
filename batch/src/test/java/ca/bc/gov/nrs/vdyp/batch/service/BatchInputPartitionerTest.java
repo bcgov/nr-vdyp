@@ -177,7 +177,7 @@ class BatchInputPartitionerTest {
 			Files.writeString(polygonPath, polygonCsv);
 			Files.writeString(layerPath, layerCsv);
 			int totalFeatureIds = batchInputPartitioner
-					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID);
+					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID, 5);
 
 			assertEquals(5, totalFeatureIds);
 
@@ -186,14 +186,14 @@ class BatchInputPartitionerTest {
 			String partition0Content = Files.readString(partition0Polygon);
 			assertTrue(partition0Content.contains("15724968"), "Partition 0 should contain first FEATURE_ID");
 			assertTrue(partition0Content.contains("15724973"), "Partition 0 should contain third FEATURE_ID");
-			assertTrue(partition0Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
+			assertTrue(partition0Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
 			assertFalse(partition0Content.contains("15725009"), "Partition 0 should NOT contain fourth FEATURE_ID");
 
 			// Partition 1 gets remaining 2 records
 			Path partition1Polygon = tempDir.resolve("input-partition1").resolve("polygons.csv");
 			String partition1Content = Files.readString(partition1Polygon);
-			assertTrue(partition1Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
 			assertTrue(partition1Content.contains("15725009"), "Partition 1 should contain fourth FEATURE_ID");
+			assertTrue(partition1Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
 			assertFalse(partition1Content.contains("15724973"), "Partition 1 should NOT contain third FEATURE_ID");
 
 			// Verify layers follow the same partitioning
@@ -234,7 +234,7 @@ class BatchInputPartitionerTest {
 			Files.writeString(layerPath, layerCsv);
 			assertThrows(
 					BatchPartitionException.class,
-					() -> batchInputPartitioner.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID)
+					() -> batchInputPartitioner.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID, 5)
 			);
 		}
 	}
@@ -262,7 +262,7 @@ class BatchInputPartitionerTest {
 			Files.writeString(layerPath, layerCsv);
 			assertThrows(
 					BatchPartitionException.class,
-					() -> batchInputPartitioner.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID)
+					() -> batchInputPartitioner.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID, 5)
 			);
 		}
 	}
@@ -289,7 +289,7 @@ class BatchInputPartitionerTest {
 			Files.writeString(layerPath, layerCsv);
 			assertThrows(
 					BatchPartitionException.class,
-					() -> batchInputPartitioner.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID)
+					() -> batchInputPartitioner.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID, 5)
 			);
 		}
 	}
@@ -326,7 +326,7 @@ class BatchInputPartitionerTest {
 			Files.writeString(polygonPath, polygonCsv);
 			Files.writeString(layerPath, layerCsv);
 			int totalFeatureIds = batchInputPartitioner
-					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID);
+					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID, 5);
 
 			assertEquals(5, totalFeatureIds);
 
@@ -334,15 +334,15 @@ class BatchInputPartitionerTest {
 			Path partition0Polygon = tempDir.resolve("input-partition0").resolve("polygons.csv");
 			String partition0Content = Files.readString(partition0Polygon);
 			assertTrue(partition0Content.contains("15724968"), "Partition 0 should contain first FEATURE_ID");
+			assertTrue(partition0Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
 			assertTrue(partition0Content.contains("15724973"), "Partition 0 should contain third FEATURE_ID");
-			assertTrue(partition0Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
 			assertFalse(partition0Content.contains("15725009"), "Partition 0 should NOT contain fourth FEATURE_ID");
 
 			// Partition 1 gets remaining 2 records
 			Path partition1Polygon = tempDir.resolve("input-partition1").resolve("polygons.csv");
 			String partition1Content = Files.readString(partition1Polygon);
-			assertTrue(partition1Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
 			assertTrue(partition1Content.contains("15725009"), "Partition 1 should contain fourth FEATURE_ID");
+			assertTrue(partition1Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
 			assertFalse(partition1Content.contains("15724973"), "Partition 1 should NOT contain third FEATURE_ID");
 
 			// Verify layers follow the same partitioning
@@ -390,7 +390,7 @@ class BatchInputPartitionerTest {
 			Files.writeString(polygonPath, polygonCsv);
 			Files.writeString(layerPath, layerCsv);
 			int totalFeatureIds = batchInputPartitioner
-					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID);
+					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID, 5);
 
 			assertEquals(5, totalFeatureIds);
 
@@ -398,14 +398,14 @@ class BatchInputPartitionerTest {
 			Path partition0Polygon = tempDir.resolve("input-partition0").resolve("polygons.csv");
 			String partition0Content = Files.readString(partition0Polygon);
 			assertTrue(partition0Content.contains("15724968"), "Partition 0 should contain first FEATURE_ID");
+			assertTrue(partition0Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
 			assertTrue(partition0Content.contains("15724973"), "Partition 0 should contain third FEATURE_ID");
-			assertTrue(partition0Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
 			assertFalse(partition0Content.contains("15725009"), "Partition 0 should NOT contain fourth FEATURE_ID");
 
 			// Partition 1 gets remaining 2 records
 			Path partition1Polygon = tempDir.resolve("input-partition1").resolve("polygons.csv");
 			String partition1Content = Files.readString(partition1Polygon);
-			assertTrue(partition1Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
+			assertTrue(partition1Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
 			assertTrue(partition1Content.contains("15725009"), "Partition 1 should contain fourth FEATURE_ID");
 			assertFalse(partition1Content.contains("15724973"), "Partition 1 should NOT contain third FEATURE_ID");
 
@@ -414,13 +414,13 @@ class BatchInputPartitionerTest {
 			String partition0LayerContent = Files.readString(partition0Layer);
 			long partition0LayerCount = partition0LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
 					.count();
-			assertEquals(1, partition0LayerCount, "Partition 0 should have 3 layer records");
+			assertEquals(0, partition0LayerCount, "Partition 0 should have 0 layer records");
 
 			Path partition1Layer = tempDir.resolve("input-partition1").resolve("layers.csv");
 			String partition1LayerContent = Files.readString(partition1Layer);
 			long partition1LayerCount = partition1LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
 					.count();
-			assertEquals(0, partition1LayerCount, "Partition 1 should have 2 layer records");
+			assertEquals(1, partition1LayerCount, "Partition 1 should have 1 layer records");
 		}
 	}
 
@@ -451,7 +451,7 @@ class BatchInputPartitionerTest {
 			Files.writeString(polygonPath, polygonCsv);
 			Files.writeString(layerPath, layerCsv);
 			int totalFeatureIds = batchInputPartitioner
-					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID);
+					.partitionCsvFiles(polygonPath, layerPath, 2, tempDir, TEST_JOB_GUID, 5);
 
 			assertEquals(5, totalFeatureIds);
 
@@ -459,15 +459,15 @@ class BatchInputPartitionerTest {
 			Path partition0Polygon = tempDir.resolve("input-partition0").resolve("polygons.csv");
 			String partition0Content = Files.readString(partition0Polygon);
 			assertTrue(partition0Content.contains("15724968"), "Partition 0 should contain first FEATURE_ID");
+			assertTrue(partition0Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
 			assertTrue(partition0Content.contains("15724973"), "Partition 0 should contain third FEATURE_ID");
-			assertTrue(partition0Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
 			assertFalse(partition0Content.contains("15725009"), "Partition 0 should NOT contain fourth FEATURE_ID");
 
 			// Partition 1 gets remaining 2 records
 			Path partition1Polygon = tempDir.resolve("input-partition1").resolve("polygons.csv");
 			String partition1Content = Files.readString(partition1Polygon);
-			assertTrue(partition1Content.contains("15724970"), "Partition 0 should contain second FEATURE_ID");
 			assertTrue(partition1Content.contains("15725009"), "Partition 1 should contain fourth FEATURE_ID");
+			assertTrue(partition1Content.contains("15725037"), "Partition 1 should contain fifth FEATURE_ID");
 			assertFalse(partition1Content.contains("15724973"), "Partition 1 should NOT contain third FEATURE_ID");
 
 			// Verify layers follow the same partitioning
