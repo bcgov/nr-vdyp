@@ -498,9 +498,9 @@ public class BatchResultAggregationService {
 	}
 
 	private class TableNumberAssigner {
-		private final Map<String, Integer> polygonLayerTableNumbers = new HashMap<>();
-		private int nextTableNum = 1;
-
+		private int tableNum = 0;
+		private String lastTableNum = "";
+		private String lastFeatureNum = "";
 		/**
 		 * Assigns TABLE_NUM based on polygon/layer combination.
 		 *
@@ -526,54 +526,26 @@ public class BatchResultAggregationService {
 			}
 
 			// Extract FEATURE_ID (column 1) - between first and second comma
+			String tableNumStr = line.substring(0, firstComma).trim();
+			// Extract FEATURE_ID (column 1) - between first and second comma
 			String featureId = line.substring(firstComma + 1, secondComma).trim();
 
+			if (tableNumStr.isEmpty()) {
+				// No FEATURE_ID, skip this line
+				logger.warn("Skipping line with missing TABLE_NUM: {}", line);
+				return null;
+			}
 			if (featureId.isEmpty()) {
 				// No FEATURE_ID, skip this line
 				logger.warn("Skipping line with missing FEATURE_ID: {}", line);
 				return null;
 			}
 
-			// Extract LAYER_ID (column 5) - need to find 5th comma
-			int commaIndex = secondComma;
-			for (int i = 0; i < 3; i++) {
-				commaIndex = line.indexOf(',', commaIndex + 1);
-				if (commaIndex == -1) {
-					// Not enough columns for LAYER_ID
-					return line;
-				}
+			if (!lastFeatureNum.equals(featureId) || !lastTableNum.equals(tableNumStr)) {
+				tableNum++;
+				lastFeatureNum = featureId;
+				lastTableNum = tableNumStr;
 			}
-
-			int sixthComma = line.indexOf(',', commaIndex + 1);
-			String layerId;
-			if (sixthComma == -1) {
-				// LAYER_ID is the last column
-				layerId = line.substring(commaIndex + 1).trim();
-			} else {
-				// LAYER_ID is between 5th and 6th comma
-				layerId = line.substring(commaIndex + 1, sixthComma).trim();
-			}
-
-			// Create unique key for polygon/layer combination
-			String polygonLayerKey = featureId + "_" + layerId;
-
-			// Get or assign TABLE_NUM for this polygon/layer combination
-			Integer tableNum = polygonLayerTableNumbers.computeIfAbsent(polygonLayerKey, key -> {
-				// Check for overflow before assigning
-				if (nextTableNum >= Integer.MAX_VALUE - 1) {
-					logger.error("TABLE_NUM overflow detected. Current count: {}", polygonLayerTableNumbers.size());
-					throw new IllegalStateException(
-							"TABLE_NUM exceeded maximum value. Too many polygon/layer combinations."
-					);
-				}
-
-				int assigned = nextTableNum++;
-				logger.trace(
-						"Assigned TABLE_NUM {} to polygon/layer combination: FEATURE_ID={}, LAYER_ID={}", assigned,
-						featureId, layerId
-				);
-				return assigned;
-			});
 
 			return tableNum + line.substring(firstComma);
 		}
@@ -582,7 +554,7 @@ public class BatchResultAggregationService {
 		 * Gets the number of unique polygon/layer combinations processed.
 		 */
 		public int getUniqueCount() {
-			return polygonLayerTableNumbers.size();
+			return tableNum;
 		}
 	}
 
