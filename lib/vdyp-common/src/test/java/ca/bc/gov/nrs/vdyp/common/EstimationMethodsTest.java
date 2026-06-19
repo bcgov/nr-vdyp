@@ -700,12 +700,9 @@ class EstimationMethodsTest {
 				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				pBuilder.percentAvailable(Optional.of(75f));
 				pBuilder.forestInventoryZone("");
-				// pBuilder.yieldFactor(1.0f);
 				pBuilder.addLayer(lBuilder -> {
 					lBuilder.layerType(LayerType.PRIMARY);
 					lBuilder.crownClosure(57.8f);
-					// lBuilder.utilization(7.5f);
-					// lBuilder.empiricalRelationshipParameterIndex(61);
 
 					lBuilder.addSpecies(sBuilder -> {
 						sBuilder.genus("B", controlMap);
@@ -753,12 +750,9 @@ class EstimationMethodsTest {
 				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				pBuilder.percentAvailable(Optional.of(75f));
 				pBuilder.forestInventoryZone("");
-				// pBuilder.yieldFactor(1.0f);
 				pBuilder.addLayer(lBuilder -> {
 					lBuilder.layerType(LayerType.PRIMARY);
 					lBuilder.crownClosure(57.8f);
-					// lBuilder.utilization(7.5f);
-					// lBuilder.empiricalRelationshipParameterIndex(61);
 
 					lBuilder.addSpecies(sBuilder -> {
 						sBuilder.genus("B", controlMap);
@@ -875,14 +869,9 @@ class EstimationMethodsTest {
 				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				pBuilder.percentAvailable(Optional.of(75f));
 				pBuilder.forestInventoryZone("");
-				// pBuilder.yieldFactor(1.0f);
 				pBuilder.addLayer(lBuilder -> {
 					lBuilder.layerType(LayerType.PRIMARY);
 					lBuilder.crownClosure(57.8f);
-					// lBuilder.baseArea(66f);
-					// lBuilder.treesPerHectare(850f);
-					// lBuilder.utilization(7.5f);
-					// lBuilder.empiricalRelationshipParameterIndex(76);
 
 					lBuilder.addSpecies(sBuilder -> {
 						sBuilder.genus("B", controlMap);
@@ -923,14 +912,9 @@ class EstimationMethodsTest {
 				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				pBuilder.percentAvailable(Optional.of(75f));
 				pBuilder.forestInventoryZone("");
-				// pBuilder.yieldFactor(1.0f);
 				pBuilder.addLayer(lBuilder -> {
 					lBuilder.layerType(LayerType.PRIMARY);
 					lBuilder.crownClosure(57.8f);
-					// lBuilder.baseArea(66f);
-					// lBuilder.treesPerHectare(850f);
-					// lBuilder.utilization(7.5f);
-					// lBuilder.empiricalRelationshipParameterIndex(76);
 
 					lBuilder.addSpecies(sBuilder -> {
 						sBuilder.genus("B", controlMap);

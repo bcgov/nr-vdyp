@@ -1341,8 +1341,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		// EMP107
 		float normativeQuadMeanDiameter = estimationMethods.estimateQuadMeanDiameterYield(
-				primaryHeight, primaryBreastHeightAge, veteranBaseArea,
-				(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) primaryLayer.getSpecies().values(),
+				primaryHeight, primaryBreastHeightAge, veteranBaseArea, primaryLayer.getSpecies().values(),
 				primarySpeciesId, bec, primaryEmpiricalRelationshipParameterIndex
 		);
 
