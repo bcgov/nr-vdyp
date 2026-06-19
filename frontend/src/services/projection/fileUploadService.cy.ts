@@ -81,7 +81,6 @@ describe('buildExecutionOptions', () => {
       ExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
       ExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
       ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
-      ExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
       ExecutionOptionsEnum.DoEnableProgressLogging,
       ExecutionOptionsEnum.DoEnableErrorLogging,
       ExecutionOptionsEnum.DoEnableDebugLogging,
