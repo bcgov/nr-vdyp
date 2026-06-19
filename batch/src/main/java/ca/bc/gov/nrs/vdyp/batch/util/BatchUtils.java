@@ -15,6 +15,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.ecore.utils.CsvRecordBeanHelper;
 
 public final class BatchUtils {
 
@@ -151,7 +152,7 @@ public final class BatchUtils {
 			return null;
 		}
 		try {
-			return Long.valueOf(field);
+			return CsvRecordBeanHelper.parseLongAcceptNull(field);
 		} catch (NumberFormatException e) {
 			return null;
 		}

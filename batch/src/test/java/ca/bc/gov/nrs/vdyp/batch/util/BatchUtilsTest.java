@@ -15,6 +15,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.ecore.utils.CsvRecordBeanHelper;
 
 class BatchUtilsTest {
 	@Test
@@ -141,6 +142,41 @@ class BatchUtilsTest {
 		assertEquals(8, result.polygonsProcessed());
 		assertEquals(1, result.projectionErrors());
 		assertEquals(1, result.polygonsSkipped());
+	}
+
+	@Test
+	void toLong_standardInteger_parsesCorrectly() {
+		assertEquals(23000000L, CsvRecordBeanHelper.toLong("23000000"));
+	}
+
+	@Test
+	void toLong_eNotationLowerCase_parsesCorrectly() {
+		assertEquals(23000000L, CsvRecordBeanHelper.toLong("2.3e+07"));
+	}
+
+	@Test
+	void toLong_eNotationUpperCase_parsesCorrectly() {
+		assertEquals(23000000L, CsvRecordBeanHelper.toLong("2.3E+07"));
+	}
+
+	@Test
+	void toLong_invalidValue_throwsNumberFormatException() {
+		assertThrows(NumberFormatException.class, () -> CsvRecordBeanHelper.toLong("abc"));
+	}
+
+	@Test
+	void extractFeatureIdLong_eNotation_returnsLong() {
+		assertEquals(23000000L, BatchUtils.extractFeatureIdLong("2.3e+07,092O096,42344045"));
+	}
+
+	@Test
+	void extractFeatureIdLong_standardInteger_returnsLong() {
+		assertEquals(23000000L, BatchUtils.extractFeatureIdLong("23000000,092O096,42344045"));
+	}
+
+	@Test
+	void extractFeatureIdLong_invalidValue_returnsNull() {
+		assertNull(BatchUtils.extractFeatureIdLong("abc,092O096,42344045"));
 	}
 
 	@Test

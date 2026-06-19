@@ -319,7 +319,7 @@ public class HcsvPolygonRecordBean {
 	// ACCESSORS
 
 	public Long getFeatureId() {
-		return Long.valueOf(polyFeatureId);
+		return CsvRecordBeanHelper.parseLongAcceptNull(polyFeatureId);
 	}
 
 	public String getMapId() {
@@ -560,7 +560,7 @@ public class HcsvPolygonRecordBean {
 
 			BeanValidatorHelper bvh = new BeanValidatorHelper(bean.polyFeatureId);
 
-			bvh.validateNumber(bean.polyFeatureId, n -> Long.parseLong(n), "Feature ID");
+			bvh.validateNumber(bean.polyFeatureId, CsvRecordBeanHelper::parseLongAcceptNull, "Feature ID");
 
 			// lcl_CopyPolygonDataIntoSnapshot: 3156
 			bean.mapId = bvh.truncateString(bean.mapId, Vdyp7Constants.MAX_LEN_MAPSHEET);
