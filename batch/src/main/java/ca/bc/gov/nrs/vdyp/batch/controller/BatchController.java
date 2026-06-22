@@ -157,22 +157,36 @@ public class BatchController {
 
 	@PostMapping(value = "/stop/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable UUID jobGuid) {
+		return stopBatchJob(jobGuid, BatchConstants.Job.GUID, "GUID");
+	}
+
+	@PostMapping(value = "/stop/projection/{projectionGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> stopBatchJobByProjectionGuid(@PathVariable UUID projectionGuid) {
+		return stopBatchJob(projectionGuid, BatchConstants.GuidInput.PROJECTION_GUID, "projection GUID");
+	}
+
+	private ResponseEntity<Map<String, Object>>
+			stopBatchJob(UUID requestedGuid, String jobParameterName, String guidDescription) {
 		Map<String, Object> response = new HashMap<>();
 		Long executionId = null;
 
 		try {
-			logger.debug("Attempting to stop job with GUID: {}", jobGuid);
+			logger.debug("Attempting to stop job with {}: {}", guidDescription, requestedGuid);
 
-			JobExecution jobExecution = findJobExecutionByGuid(jobGuid.toString());
+			JobExecution jobExecution = findJobExecutionByJobParameter(
+					jobParameterName, requestedGuid.toString(),
+					BatchConstants.GuidInput.PROJECTION_GUID.equals(jobParameterName)
+			);
 			executionId = jobExecution.getId();
+			addJobIdentifiers(response, jobExecution, requestedGuid, jobParameterName);
 
+			String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 			logger.debug("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
 
 			// Stop the job execution - this sends a stop signal to the running job
 			boolean stopped = jobOperator.stop(executionId);
 
 			if (stopped) {
-				response.put(BatchConstants.Job.GUID, jobGuid);
 				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 				response.put(BatchConstants.Job.STATUS, "STOP_REQUESTED");
 				response.put(
@@ -185,7 +199,6 @@ public class BatchController {
 
 				return ResponseEntity.ok(response);
 			} else {
-				response.put(BatchConstants.Job.GUID, jobGuid);
 				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 				response.put(BatchConstants.Job.STATUS, "STOP_FAILED");
 				response.put(BatchConstants.Job.MESSAGE, "Job execution could not be stopped. It may not be running.");
@@ -200,7 +213,6 @@ public class BatchController {
 
 		} catch (JobExecutionNotRunningException e) {
 			// Job is already stopping or has stopped - this is not an error, just inform the user
-			response.put(BatchConstants.Job.GUID, jobGuid);
 			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 			response.put(BatchConstants.Job.STATUS, "ALREADY_STOPPING");
 			response.put(
@@ -210,24 +222,25 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.debug("[GUID: {}] Job is already stopping or stopped", jobGuid);
+			logger.debug("[{}: {}] Job is already stopping or stopped", guidDescription, requestedGuid);
 			// Return 202 Accepted - the stop request was already accepted and is being processed
 			return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
 
 		} catch (NoSuchJobExecutionException e) {
-			response.put(BatchConstants.Job.GUID, jobGuid);
+			addRequestedGuid(response, requestedGuid, jobParameterName);
 			response.put(BatchConstants.Job.ERROR, "Job execution not found");
 			response.put(
 					BatchConstants.Job.MESSAGE,
-					"No job execution found with GUID: " + jobGuid + ". " + "Please verify the GUID is correct."
+					"No job execution found with " + guidDescription + ": " + requestedGuid + ". "
+							+ "Please verify the GUID is correct."
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error("Job execution not found with GUID: {}", jobGuid);
+			logger.error("Job execution not found with {}: {}", guidDescription, requestedGuid);
 			return ResponseEntity.status(404).body(response);
 
 		} catch (Exception e) {
-			response.put(BatchConstants.Job.GUID, jobGuid);
+			addRequestedGuid(response, requestedGuid, jobParameterName);
 			if (executionId != null) {
 				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 			}
@@ -239,7 +252,9 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error("[GUID: {}] Error stopping job execution: {}", jobGuid, e.getMessage(), e);
+			logger.error(
+					"[{}: {}] Error stopping job execution: {}", guidDescription, requestedGuid, e.getMessage(), e
+			);
 			return ResponseEntity.internalServerError().body(response);
 		}
 	}
@@ -254,7 +269,7 @@ public class BatchController {
 		try {
 			logger.debug("Getting status for job with GUID: {}", jobGuid);
 
-			jobExecution = findJobExecutionByGuid(jobGuid.toString());
+			jobExecution = findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false);
 			executionId = jobExecution.getId();
 
 			logger.debug("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
@@ -662,84 +677,138 @@ public class BatchController {
 		return ResponseEntity.internalServerError().body(errorResponse);
 	}
 
-	private JobExecution findJobExecutionByGuid(String jobGuid) throws NoSuchJobExecutionException {
+	private JobExecution
+			findJobExecutionByJobParameter(String parameterName, String expectedValue, boolean preferRunning)
+					throws NoSuchJobExecutionException {
 		List<String> jobNames = jobExplorer.getJobNames();
+		JobExecution fallbackMatch = null;
 
 		for (String jobName : jobNames) {
-			JobExecution execution = searchJobExecutionsByName(jobName, jobGuid);
-			if (execution != null) {
-				return execution;
+			JobExecutionSearchResult result = searchJobExecutionsByName(
+					jobName, parameterName, expectedValue, preferRunning
+			);
+			if (result.primaryMatch() != null) {
+				return result.primaryMatch();
+			}
+			if (fallbackMatch == null) {
+				fallbackMatch = result.fallbackMatch();
 			}
 		}
 
-		throw new NoSuchJobExecutionException("No job execution found with GUID: " + jobGuid);
+		if (fallbackMatch != null) {
+			return fallbackMatch;
+		}
+
+		throw new NoSuchJobExecutionException("No job execution found with " + parameterName + ": " + expectedValue);
 	}
 
 	/**
-	 * Searches for a job execution by job name and GUID.
+	 * Searches for a job execution by job name and job parameter value.
 	 *
 	 * @param jobName The name of the job to search
-	 * @param jobGuid The GUID to match
-	 * @return The JobExecution if found, or null if not found in this job name. Callers MUST check for null before
-	 *         using the returned value.
+	 * @return matching executions, preferring a running match when requested
 	 */
-	private JobExecution searchJobExecutionsByName(String jobName, String jobGuid) {
+	private JobExecutionSearchResult searchJobExecutionsByName(
+			String jobName, String parameterName, String expectedValue, boolean preferRunning
+	) {
+		JobExecution fallbackMatch = null;
 		try {
 			long totalInstances = jobExplorer.getJobInstanceCount(jobName);
 
 			for (long start = 0; start < totalInstances; start += jobSearchChunkSize) {
-				JobExecution execution = searchJobExecutionsInChunk(jobName, jobGuid, start);
-				if (execution != null) {
-					return execution;
+				JobExecutionSearchResult result = searchJobExecutionsInChunk(
+						jobName, parameterName, expectedValue, start, preferRunning
+				);
+				if (result.primaryMatch() != null) {
+					return result;
+				}
+				if (fallbackMatch == null) {
+					fallbackMatch = result.fallbackMatch();
 				}
 			}
 		} catch (NoSuchJobException e) {
-			logger.error("Job {} not found while searching for GUID {}: {}", jobName, jobGuid, e.getMessage());
+			logger.error(
+					"Job {} not found while searching for {} {}: {}", jobName, parameterName, expectedValue,
+					e.getMessage()
+			);
 		}
 
-		return null;
+		return new JobExecutionSearchResult(null, fallbackMatch);
 	}
 
 	/**
 	 * Searches for a job execution within a chunk of job instances.
 	 *
 	 * @param jobName The name of the job
-	 * @param jobGuid The GUID to match
 	 * @param start   The starting index for the chunk
-	 * @return The JobExecution if found in this chunk, or null if not found. Callers MUST check for null before using
-	 *         the returned value.
+	 * @return matching executions, preferring a running match when requested
 	 */
-	private JobExecution searchJobExecutionsInChunk(String jobName, String jobGuid, long start) {
+	private JobExecutionSearchResult searchJobExecutionsInChunk(
+			String jobName, String parameterName, String expectedValue, long start, boolean preferRunning
+	) {
 		List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, (int) start, jobSearchChunkSize);
+		JobExecution fallbackMatch = null;
 
 		for (JobInstance jobInstance : jobInstances) {
-			JobExecution execution = findMatchingExecution(jobInstance, jobGuid);
-			if (execution != null) {
-				return execution;
+			JobExecutionSearchResult result = findMatchingExecution(
+					jobInstance, parameterName, expectedValue, preferRunning
+			);
+			if (result.primaryMatch() != null) {
+				return result;
+			}
+			if (fallbackMatch == null) {
+				fallbackMatch = result.fallbackMatch();
 			}
 		}
 
-		return null;
+		return new JobExecutionSearchResult(null, fallbackMatch);
 	}
 
 	/**
-	 * Finds a job execution matching the given GUID within a job instance.
+	 * Finds a job execution matching the given job parameter within a job instance.
 	 *
 	 * @param jobInstance The job instance to search
-	 * @param jobGuid     The GUID to match
-	 * @return The JobExecution if found, or null if no execution in this instance matches the GUID. Callers MUST check
-	 *         for null before using the returned value.
+	 * @return matching executions, preferring a running match when requested
 	 */
-	private JobExecution findMatchingExecution(JobInstance jobInstance, String jobGuid) {
+	private JobExecutionSearchResult findMatchingExecution(
+			JobInstance jobInstance, String parameterName, String expectedValue, boolean preferRunning
+	) {
 		List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
+		JobExecution fallbackMatch = null;
 
 		for (JobExecution execution : jobExecutions) {
-			String executionGuid = execution.getJobParameters().getString(BatchConstants.Job.GUID);
-			if (jobGuid.equals(executionGuid)) {
-				return execution;
+			String parameterValue = execution.getJobParameters().getString(parameterName);
+			if (expectedValue.equals(parameterValue)) {
+				if (!preferRunning || (execution.getStatus() != null && execution.getStatus().isRunning())) {
+					return new JobExecutionSearchResult(execution, null);
+				}
+				if (fallbackMatch == null) {
+					fallbackMatch = execution;
+				}
 			}
 		}
 
-		return null;
+		return new JobExecutionSearchResult(null, fallbackMatch);
+	}
+
+	private void addJobIdentifiers(
+			Map<String, Object> response, JobExecution jobExecution, UUID requestedGuid, String jobParameterName
+	) {
+		JobParameters parameters = jobExecution.getJobParameters();
+		response.put(BatchConstants.Job.GUID, parameters.getString(BatchConstants.Job.GUID));
+
+		String projectionGuid = parameters.getString(BatchConstants.GuidInput.PROJECTION_GUID);
+		if (projectionGuid != null) {
+			response.put(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid);
+		} else if (BatchConstants.GuidInput.PROJECTION_GUID.equals(jobParameterName)) {
+			response.put(BatchConstants.GuidInput.PROJECTION_GUID, requestedGuid);
+		}
+	}
+
+	private void addRequestedGuid(Map<String, Object> response, UUID requestedGuid, String jobParameterName) {
+		response.put(jobParameterName, requestedGuid);
+	}
+
+	private record JobExecutionSearchResult(JobExecution primaryMatch, JobExecution fallbackMatch) {
 	}
 }

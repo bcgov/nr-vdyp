@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.projectionEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -70,6 +69,7 @@ class ProjectionBatchMappingServiceTest {
 		service.startProjectionInBatch(projectionEntity);
 
 		// Verify persist called and capture entity
+		verify(batchClient, times(1)).startBatchProcessWithGUID(projectionGuid, projectionParameters.toString());
 		verify(repository, times(1)).persist(any(ProjectionBatchMappingEntity.class));
 		verify(assembler, times(1)).toModel(any(ProjectionBatchMappingEntity.class));
 
@@ -94,13 +94,14 @@ class ProjectionBatchMappingServiceTest {
 		service.cancelProjection(projectionEntity);
 
 		// Verify cancel called
+		verify(repository, times(1)).findByProjectionGUID(projectionGuid);
 		verify(batchClient, times(1)).stopBatchJob(batchJobGuid);
 		verify(repository, times(1)).delete(mappingEntity);
 		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
 
 	@Test
-	void cancelProjection_invalidBatchMapping() {
+	void cancelProjection_missingBatchMapping_cancelsBatchJobByProjectionGuid() throws ProjectionServiceException {
 		// Arrange
 		UUID projectionGuid = UUID.randomUUID();
 
@@ -109,10 +110,12 @@ class ProjectionBatchMappingServiceTest {
 		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
 
 		// Act
-		assertThrows(ProjectionServiceException.class, () -> service.cancelProjection(projectionEntity));
+		service.cancelProjection(projectionEntity);
 
-		// Verify cancel not called
-		verify(batchClient, never()).stopBatchJob(projectionGuid);
+		verify(repository, times(1)).findByProjectionGUID(projectionGuid);
+		verify(batchClient, times(1)).stopBatchJobByProjection(projectionGuid);
+		verify(batchClient, never()).stopBatchJob(any());
+		verify(repository, never()).delete(any());
 		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
 
@@ -132,6 +135,7 @@ class ProjectionBatchMappingServiceTest {
 		service.deleteMappingsForProjection(projectionEntity);
 
 		// Verify delete called
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
 		verify(repository, times(1)).delete(mappingEntity);
 		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
@@ -149,6 +153,7 @@ class ProjectionBatchMappingServiceTest {
 		service.deleteMappingsForProjection(projectionEntity);
 
 		// Verify delete called
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
 		verify(repository, never()).delete(any());
 		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
@@ -188,6 +193,7 @@ class ProjectionBatchMappingServiceTest {
 
 		ArgumentCaptor<ProjectionBatchMappingEntity> entityCaptor = ArgumentCaptor
 				.forClass(ProjectionBatchMappingEntity.class);
+		verify(repository).findByProjectionGUID(projectionGuid);
 		verify(repository).persist(entityCaptor.capture());
 
 		ProjectionBatchMappingEntity entity = entityCaptor.getValue();
