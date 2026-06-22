@@ -1511,15 +1511,15 @@ public class EstimationMethods {
 	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
 	 * @return The basal area.
 	 */
-	public <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
-			float estimatePrimaryQuadMeanDiameter(
-					L2 layer, BecDefinition bec, float breastHeightAge, float baseAreaOverstory
+	public <L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> float
+			estimatePrimaryQuadMeanDiameter(
+					L layer, BecDefinition bec, float breastHeightAge, float baseAreaOverstory
 			) {
 		var coeMap = controlMap.getQuadMeanDiameterCoefficients();
 		var modMap = controlMap.getQuadMeanDiameterModifiers();
 		var upperBoundMap = controlMap.getUpperBoundsCoefficients();
 
-		var leadGenus = leadSpecies(layer);
+		S leadGenus = leadSpecies(layer);
 
 		var decayBecAlias = bec.getDecayBec().getAlias();
 		Coefficients coe = EstimationMethods.weightedCoefficientSum(
@@ -1583,9 +1583,9 @@ public class EstimationMethods {
 	 * @param basalAreaMinimum  How should the basal area minimum be applied
 	 * @return The basal area.
 	 */
-	public <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
-			float estimatePrimaryBaseArea(
-					L2 layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
+	public <L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> float
+			estimatePrimaryBaseArea(
+					L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
 					float crownClosure, Strictness basalAreaMinimum
 			) throws BaseAreaLowException {
 		boolean lowCrownClosure = layer.getCrownClosure() < VdypStartApplication.LOW_CROWN_CLOSURE;
@@ -1595,7 +1595,7 @@ public class EstimationMethods {
 		var modMap = controlMap.getBasalAreaModifiers();
 		var upperBoundMap = controlMap.getUpperBoundsCoefficients();
 
-		var leadGenus = leadSpecies(layer);
+		S leadGenus = leadSpecies(layer);
 
 		var decayBecAlias = bec.getDecayBec().getAlias();
 		Coefficients coe = EstimationMethods.weightedCoefficientSum(
@@ -1683,6 +1683,109 @@ public class EstimationMethods {
 		}
 
 		return baseArea;
+	}
+
+	/**
+	 * EMP040
+	 * <p>
+	 * Estimate the basal area yield for the primary layer. Ensures that it does not go below the allowable minimum.
+	 *
+	 * @param layer             The layer
+	 * @param bec               BEC zone of the polygon
+	 * @param yieldFactor       Yield factor of the polygon
+	 * @param breastHeightAge   Breast height age
+	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @param basalAreaMinimum  How should the basal area minimum be applied
+	 * @return The basal area.
+	 */
+	public <L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> float
+			estimatePrimaryBaseArea(
+					L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
+					Strictness basalAreaMinimum
+			) throws BaseAreaLowException {
+		return estimatePrimaryBaseArea(
+				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, layer.getCrownClosure(), basalAreaMinimum
+		);
+	}
+
+	/**
+	 * EMP040
+	 * <p>
+	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Ensures that it does not go below
+	 * the allowable minimum.
+	 *
+	 * @param vdypStartApplication TODO
+	 * @param layer                The layer
+	 * @param bec                  BEC zone of the polygon
+	 * @param yieldFactor          Yield factor of the polygon
+	 * @param breastHeightAge      Breast height age
+	 * @param baseAreaOverstory    Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @return The basal area.
+	 */
+	// EMP040
+	public <L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> float
+			estimatePrimaryBaseAreaAdjust(
+					L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
+			) {
+		try {
+			return estimatePrimaryBaseArea(
+					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, EstimationMethods.Strictness.ADJUST
+			);
+		} catch (BaseAreaLowException e) {
+			throw new IllegalArgumentException("This should not happen", e);
+		}
+	}
+
+	/**
+	 * EMP040
+	 * <p>
+	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Throws an exception if the
+	 * computed BA is below the allowable minimum
+	 *
+	 * @param vdypStartApplication TODO
+	 * @param layer                The layer
+	 * @param bec                  BEC zone of the polygon
+	 * @param yieldFactor          Yield factor of the polygon
+	 * @param breastHeightAge      Breast height age
+	 * @param baseAreaOverstory    Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @return The basal area.
+	 * @throws BaseAreaLowException if the computed BA is below the allowable minimum
+	 */
+	public <L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> float
+			estimatePrimaryBaseAreaStrict(
+					L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
+			) throws BaseAreaLowException {
+		return estimatePrimaryBaseArea(
+				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, EstimationMethods.Strictness.STRICT
+		);
+	}
+
+	/**
+	 * EMP040
+	 * <p>
+	 * Estimate the basal area yield for the primary layer. Ensures that it does not go below the allowable minimum.
+	 *
+	 * @param layer             The layer
+	 * @param bec               BEC zone of the polygon
+	 * @param yieldFactor       Yield factor of the polygon
+	 * @param breastHeightAge   Breast height age
+	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @param crownClosure      Crown closure percentage
+	 * @return The basal area.
+	 */
+	public <L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> float
+			estimatePrimaryBaseAreaAdjust(
+					L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
+					float crownClosure
+			) {
+		try {
+			return estimatePrimaryBaseArea(
+					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure,
+					EstimationMethods.Strictness.ADJUST
+			);
+		} catch (BaseAreaLowException e) {
+			throw new IllegalStateException("This should never happen", e);
+		}
 	}
 
 	/**
