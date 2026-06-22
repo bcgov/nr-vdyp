@@ -5,7 +5,7 @@
     <parent>
         <groupId>ca.bc.gov.nrs.vdyp</groupId>
         <artifactId>vdyp-root</artifactId>
-        <version>8.0.0-SNAPSHOT</version>
+        <version>1.2.0-SNAPSHOT</version>
     </parent>
     <artifactId>vdyp-batch</artifactId>
     <name>Variable Density Yield Project - Batch</name>
