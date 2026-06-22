@@ -34,7 +34,7 @@ if (APP_VERSION) {
   color: #2D2D2D;
   font-family: var(--typography-font-families-bc-sans);
   font-size: 14px;
-  padding: 16px 24px 8px;
+  padding: 4px 16px 8px 16px;
   text-align: left;
 }
 </style>
