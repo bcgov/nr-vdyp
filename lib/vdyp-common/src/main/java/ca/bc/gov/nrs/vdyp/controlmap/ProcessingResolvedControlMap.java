@@ -23,9 +23,6 @@ public interface ProcessingResolvedControlMap extends ResolvedControlMap {
 	/** 28 - PARAM_ADJUSTMENTS */
 	CompVarAdjustments getCompVarAdjustments();
 
-	/** 43 - UPPER_BA_BY_CI_S0_P */
-	MatrixMap3<Region, String, Integer, Float> getUpperBoundsCoefficients();
-
 	/** 50 - HL_PRIMARY_SP_EQN_P1 */
 	MatrixMap2<String, Region, Coefficients> getLoreyHeightPrimarySpeciesEquationP1Coefficients();
 

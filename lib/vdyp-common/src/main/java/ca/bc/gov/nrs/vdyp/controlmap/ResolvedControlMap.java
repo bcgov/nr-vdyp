@@ -44,6 +44,9 @@ public interface ResolvedControlMap {
 	/** 31 - EQN_MODIFIERS */
 	MatrixMap2<Integer, Integer, Integer> getEquationModifierGroup();
 
+	/** 40 - COE_BA */
+	MatrixMap2<String, String, Coefficients> getBasalAreaCoefficients();
+
 	/** 41 - COE_DQ */
 	MatrixMap2<String, String, Coefficients> getQuadMeanDiameterCoefficients();
 
@@ -119,12 +122,16 @@ public interface ResolvedControlMap {
 	/** 198 - MODIFIER_FILE */
 	MatrixMap2<String, Region, Float> getDecayModifierMap();
 
+	/** 198 - MODIFIER_FILE */
+	MatrixMap2<String, Region, Float> getQuadMeanDiameterModifiers();
+
+	/** 198 - MODIFIER_FILE */
+	MatrixMap2<String, Region, Float> getBasalAreaModifiers();
+
 	/** 199 - DEBUG_SWITCHES */
 	DebugSettings getDebugSettings();
 
 	/** 101 - VTROL */
 	ControlVariables getControlVariables();
-
-	MatrixMap2<String, Region, Float> getQuadMeanDiameterModifiers();
 
 }

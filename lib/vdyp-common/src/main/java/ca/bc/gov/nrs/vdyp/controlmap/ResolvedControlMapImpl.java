@@ -221,4 +221,14 @@ public abstract class ResolvedControlMapImpl implements ResolvedControlMap {
 		return get(ControlKey.DQ_MODIFIERS, MatrixMap2.class);
 	}
 
+	@Override
+	public MatrixMap2<String, Region, Float> getBasalAreaModifiers() {
+		return get(ControlKey.BA_MODIFIERS, MatrixMap2.class);
+	}
+
+	@Override
+	public MatrixMap2<String, String, Coefficients> getBasalAreaCoefficients() {
+		return get(ControlKey.COE_BA, MatrixMap2.class);
+	}
+
 }
