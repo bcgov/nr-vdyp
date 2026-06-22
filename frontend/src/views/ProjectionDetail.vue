@@ -22,7 +22,7 @@
           <!-- Manual Input mode: status badge -->
           <template v-if="appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT">
             <div class="status-section">
-              <v-menu v-if="isRunning">
+              <v-menu v-if="isRunning || isQueued">
                 <template #activator="{ props }">
                   <button v-bind="props" class="running-status-menu-button">
                     <img
@@ -82,7 +82,7 @@
             <!-- RunProgressBar visible: Cancel (Running) or Download (Ready) -->
             <template v-if="isRunProgressBarVisible">
               <AppButton
-                v-if="isRunning"
+                v-if="isRunning || isQueued"
                 label="Cancel"
                 variant="secondary"
                 mdi-name="mdi-stop-circle-outline"
@@ -158,8 +158,8 @@
         <RunProjectionButtonPanel
           v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
-          :showCancelButton="isRunning"
-          :showRevertCancelButton="!isRunning"
+          :showCancelButton="isRunning || isQueued"
+          :showRevertCancelButton="!(isRunning||isQueued)"
           :isRevertCancelDisabled="isCancelDisabled"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -674,9 +674,9 @@ onMounted(async () => {
   }
 
   const guid = appStore.currentProjectionGUID
-  if (guid && (isRunning.value || isReady.value || isFailed.value)) {
+  if (guid && (isRunning.value || isQueued.value || isReady.value || isFailed.value)) {
     await fetchBatchData(guid)
-    if (isRunning.value) {
+    if (isRunning.value || isQueued.value) {
       startPolling()
     } else if (isReady.value && appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
       fetchAndPopulateResults(false)
@@ -933,7 +933,7 @@ const cancelRunHandler = async () => {
     const latestProjection = await getProjectionById(projectionGUID)
     const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
 
-    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
+    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING && latestStatus !== CONSTANTS.PROJECTION_STATUS.QUEUED) {
       // Projection is no longer running - update state and show appropriate message
       updateProjectionState(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
 
