@@ -27,16 +27,12 @@ public class FipDebugSettings extends BaseDebugSettings {
 		}
 	}
 
-	/**
-	 * Disable limit on basal area
-	 */
+	@Override
 	public boolean getNoBasalAreaLimit() {
 		return (Boolean) this.getProcessedValue(NO_BA_LIMIT);
 	}
 
-	/**
-	 * Disable limit on quadratic mean diameter
-	 */
+	@Override
 	public boolean getNoQuadraticMeanDiameterLimit() {
 		return (Boolean) this.getProcessedValue(NO_DQ_LIMIT);
 	}

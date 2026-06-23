@@ -1562,9 +1562,7 @@ public class EstimationMethods {
 
 		quadMeanDiameter = max(quadMeanDiameter, 7.6f);
 
-		// TODO
-		var NDEBUG_2 = 0;
-		if (NDEBUG_2 <= 0) {
+		if (!controlMap.getDebugSettings().getNoQuadraticMeanDiameterLimit()) {
 			// See ISPSJF129
 			var upperBound = upperBoundMap.get(bec.getRegion(), leadGenus.getGenus(), UpperCoefficientParser.DQ);
 			quadMeanDiameter = min(quadMeanDiameter, upperBound);
@@ -1647,9 +1645,7 @@ public class EstimationMethods {
 
 			baseArea *= modMap.get(leadGenus.getGenus(), bec.getRegion());
 
-			// TODO
-			var NDEBUG_1 = 0;
-			if (NDEBUG_1 <= 0) {
+			if (!controlMap.getDebugSettings().getNoBasalAreaLimit()) {
 				// See ISPSJF128
 				var upperBound = upperBoundMap.get(bec.getRegion(), leadGenus.getGenus(), UpperCoefficientParser.BA);
 				baseArea = min(baseArea, upperBound);

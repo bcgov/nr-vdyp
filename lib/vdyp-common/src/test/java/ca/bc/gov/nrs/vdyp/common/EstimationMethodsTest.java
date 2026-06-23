@@ -695,6 +695,8 @@ class EstimationMethodsTest {
 			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
 			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
 			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.expect(debug.getValue(1)).andStubReturn(0);
+			EasyMock.expect(debug.getValue(2)).andStubReturn(0);
 			EasyMock.replay(debug);
 		}
 
@@ -1467,6 +1469,16 @@ class EstimationMethodsTest {
 	@Nested
 	class EstimatePrimaryBaseArea {
 
+		@BeforeEach
+		void setup() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.expect(debug.getNoBasalAreaLimit()).andStubReturn(false);
+			EasyMock.replay(debug);
+		}
+
 		@Test
 		void testSimple() throws Exception {
 			controlMap = TestUtils.loadControlMap();
@@ -1709,6 +1721,16 @@ class EstimationMethodsTest {
 
 	@Nested
 	class EstimatePrimaryQuadMeanDiameter {
+
+		@BeforeEach
+		void setup() {
+			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
+			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
+			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
+			EasyMock.expect(debug.getNoQuadraticMeanDiameterLimit()).andStubReturn(false);
+			EasyMock.replay(debug);
+		}
 
 		@Test
 		void testSimple() throws Exception {

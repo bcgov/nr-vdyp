@@ -167,6 +167,16 @@ public interface DebugSettings {
 	public UpperBoundsMode getUpperBoundsMode();
 
 	/**
+	 * Disable limit on quadratic mean diameter
+	 */
+	boolean getNoQuadraticMeanDiameterLimit();
+
+	/**
+	 * Disable limit on basal area
+	 */
+	boolean getNoBasalAreaLimit();
+
+	/**
 	 * Log a message when applying a default value and return that value.
 	 *
 	 * @param <T>          type of the value

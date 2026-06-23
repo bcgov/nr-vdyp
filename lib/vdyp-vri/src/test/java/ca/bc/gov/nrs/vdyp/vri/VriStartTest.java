@@ -102,6 +102,8 @@ class VriStartTest {
 		VriDebugSettings debug = EasyMock.createMock(VriDebugSettings.class);
 		EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
 		EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+		EasyMock.expect(debug.getNoBasalAreaLimit()).andStubReturn(false);
+		EasyMock.expect(debug.getNoQuadraticMeanDiameterLimit()).andStubReturn(false);
 		EasyMock.replay(debug);
 		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), debug);
 	}
