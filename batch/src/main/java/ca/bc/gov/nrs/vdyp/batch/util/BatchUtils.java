@@ -2,14 +2,15 @@ package ca.bc.gov.nrs.vdyp.batch.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
@@ -267,18 +268,25 @@ public final class BatchUtils {
 	 * @throws IOException if deletion fails for any entry
 	 */
 	public static void deleteDirectoryRecursively(Path directory) throws IOException {
-		if (!Files.exists(directory)) {
+		if (Files.notExists(directory)) {
 			return;
 		}
-		try (Stream<Path> walk = Files.walk(directory)) {
-			walk.sorted(Comparator.reverseOrder()).forEach(path -> {
-				try {
-					Files.delete(path);
-				} catch (IOException e) {
-					// Individual delete failures are logged by callers; continue to attempt remaining entries
+		Files.walkFileTree(directory, new SimpleFileVisitor<>() {
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				Files.delete(file);
+				return FileVisitResult.CONTINUE;
+			}
+
+			@Override
+			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+				if (exc != null) {
+					throw exc;
 				}
-			});
-		}
+				Files.delete(dir);
+				return FileVisitResult.CONTINUE;
+			}
+		});
 	}
 
 	public static void confirmDirectoryExists(Path dirPath) throws IOException {
