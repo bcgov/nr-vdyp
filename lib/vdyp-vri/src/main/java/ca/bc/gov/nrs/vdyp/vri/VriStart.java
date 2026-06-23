@@ -747,7 +747,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			float specHeight = spec.getSite().flatMap(VriSite::getHeight).filter(x -> x > 0).orElse(dominantHeight);
 			float specBaseArea = spec.getFractionGenus() * baseArea;
 			float specQuadMeanDiameter = max(
-					estimateVeteranQuadMeanDiameter(spec.getGenus(), bec, specHeight), VETERAN_MIN_DQ
+					estimationMethods.estimateVeteranQuadMeanDiameter(spec.getGenus(), bec, specHeight), VETERAN_MIN_DQ
 			);
 			float specTreeDensity = BaseAreaTreeDensityDiameter.treesPerHectare(specBaseArea, specQuadMeanDiameter);
 			sBuilder.loreyHeight(specHeight);
@@ -820,11 +820,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			lowDq = true;
 		}
 		return new VeteranResult(treesPerHectare, lowDq);
-	}
-
-	// EMP097 TODO move to EstimationMethods and this should probably be used in FipStart
-	float estimateVeteranQuadMeanDiameter(String sp0, BecDefinition bec, float loreyHeight) {
-		return estimationMethods.estimateVeteranQuadMeanDiameter(sp0, bec, loreyHeight);
 	}
 
 	// VRI_CHK
