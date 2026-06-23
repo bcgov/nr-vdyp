@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,9 +9,11 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -82,9 +85,9 @@ class DownloadAndPartitionTaskletTest {
 	void setup() {
 		tasklet = new DownloadAndPartitionTasklet(comsFileService, inputPartitioner, vdypClient, batchProperties);
 
-		when(chunkContext.getStepContext()).thenReturn(stepContext);
-		when(stepContext.getStepExecution()).thenReturn(stepExecution);
-		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		lenient().when(chunkContext.getStepContext()).thenReturn(stepContext);
+		lenient().when(stepContext.getStepExecution()).thenReturn(stepExecution);
+		lenient().when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 	}
 
 	@Test
@@ -196,6 +199,20 @@ class DownloadAndPartitionTaskletTest {
 		assertFalse(Files.exists(inputDir.resolve("polygon.csv")), "polygon.csv should be deleted after partitioning");
 		assertFalse(Files.exists(inputDir.resolve("layer.csv")), "layer.csv should be deleted after partitioning");
 		assertFalse(Files.exists(inputDir), "input directory should be deleted after partitioning");
+	}
+
+	@Test
+	void testDeleteOriginalInputDirectory_ioExceptionIsSwallowedAsWarning() {
+		DownloadAndPartitionTasklet testTasklet = new DownloadAndPartitionTasklet(
+				comsFileService, inputPartitioner, vdypClient, batchProperties
+		) {
+			@Override
+			protected void deleteDirectory(Path dir) throws IOException {
+				throw new IOException("simulated disk error");
+			}
+		};
+
+		assertDoesNotThrow(() -> testTasklet.deleteOriginalInputDirectory(tempDir));
 	}
 
 	@Test

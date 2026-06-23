@@ -112,15 +112,19 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 		logger.debug("Completed download and partitioning of input files.");
 	}
 
-	private void deleteOriginalInputDirectory(Path inputDir) {
+	void deleteOriginalInputDirectory(Path inputDir) {
 		try {
-			BatchUtils.deleteDirectoryRecursively(inputDir);
+			deleteDirectory(inputDir);
 			logger.debug("[GUID: {}] Deleted original input directory after partitioning: {}", jobGuid, inputDir);
 		} catch (IOException e) {
 			logger.warn(
 					"[GUID: {}] Failed to delete original input directory {}: {}", jobGuid, inputDir, e.getMessage()
 			);
 		}
+	}
+
+	protected void deleteDirectory(Path dir) throws IOException {
+		BatchUtils.deleteDirectoryRecursively(dir);
 	}
 
 	private void pushInitialProgress(int totalPolygons) {
