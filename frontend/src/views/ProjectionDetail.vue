@@ -342,10 +342,10 @@ const pollProjectionProgress = async () => {
       runStartDate.value = projection.startDate
     }
     const latestStatus = mapProjectionStatus(projection.projectionStatusCode?.code ?? '')
-    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
+    appStore.setCurrentProjectionStatus(latestStatus)
+    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING && latestStatus !== CONSTANTS.PROJECTION_STATUS.QUEUED) {
       stopPolling()
       if (projection.endDate) runEndDate.value = projection.endDate
-      appStore.setCurrentProjectionStatus(latestStatus)
       if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
         appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
         // ManualInput results are shown in reporting tabs; fetch them as soon as the job completes
