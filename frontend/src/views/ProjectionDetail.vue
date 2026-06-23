@@ -22,7 +22,35 @@
           <!-- Manual Input mode: status badge -->
           <template v-if="appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT">
             <div class="status-section">
-              <v-menu v-if="isRunning || isQueued">
+              <v-menu v-if="isQueued">
+                <template #activator="{ props }">
+                  <button v-bind="props" class="running-status-menu-button">
+                    <img
+                      :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.QUEUED)"
+                      alt="Queued"
+                      class="running-status-icon"
+                    />
+                    <span class="running-status-text">Queued</span>
+                    <v-icon size="small">mdi-chevron-down</v-icon>
+                  </button>
+                </template>
+                <v-list class="running-status-menu-list">
+                  <v-list-item
+                    class="running-status-menu-item"
+                    @click="cancelRunHandler"
+                  >
+                    <div class="running-menu-item-content">
+                      <img
+                        src="@/assets/icons/Cancel_Icon_Menu.png"
+                        alt="Cancel"
+                        class="running-menu-icon"
+                      />
+                      <span class="running-menu-text">Cancel</span>
+                    </div>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+              <v-menu v-if="isRunning">
                 <template #activator="{ props }">
                   <button v-bind="props" class="running-status-menu-button">
                     <img
