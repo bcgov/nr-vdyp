@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -190,6 +191,53 @@ class DownloadAndPartitionTaskletTest {
 				eq("job-123")
 		);
 		verify(vdypClient).pushProgress(eq(projectionGuid.toString()), any());
+
+		// Verify original input files are deleted after partitioning
+		assertFalse(Files.exists(inputDir.resolve("polygon.csv")), "polygon.csv should be deleted after partitioning");
+		assertFalse(Files.exists(inputDir.resolve("layer.csv")), "layer.csv should be deleted after partitioning");
+		assertFalse(Files.exists(inputDir), "input directory should be deleted after partitioning");
+	}
+
+	@Test
+	void testExecute_inputFilesDeletedEvenWhenPartitionerReturnsZero() throws Exception {
+		UUID polygonFileSetGuid = UUID.randomUUID();
+		UUID layerFileSetGuid = UUID.randomUUID();
+		polygonComsObjectGuid = UUID.randomUUID();
+		layerComsObjectGuid = UUID.randomUUID();
+
+		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-456")
+				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()).addLong(BatchConstants.Partition.NUMBER, 2L)
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
+		ExecutionContext executionContext = new ExecutionContext();
+		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
+		when(details.polygonFileSet())
+				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(polygonFileSetGuid.toString()));
+		when(details.layerFileSet())
+				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(layerFileSetGuid.toString()));
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getExecutionContext()).thenReturn(executionContext);
+		when(vdypClient.getFileSetFiles(any(), matches(polygonFileSetGuid.toString()))).thenReturn(
+				List.of(new FileMappingDetails(polygonFileSetGuid.toString(), polygonComsObjectGuid.toString()))
+		);
+		when(vdypClient.getFileSetFiles(any(), matches(layerFileSetGuid.toString()))).thenReturn(
+				List.of(new FileMappingDetails(layerFileSetGuid.toString(), layerComsObjectGuid.toString()))
+		);
+
+		when(batchProperties.getReader()).thenReturn(readerProperties);
+		when(readerProperties.getDefaultChunkSize()).thenReturn(150);
+		when(batchProperties.getThreadPool()).thenReturn(threadPoolProperties);
+		when(threadPoolProperties.getMaxJobThreads()).thenReturn(4);
+
+		Path inputDir = tempDir.resolve("input");
+		Files.createDirectories(inputDir);
+		Files.writeString(inputDir.resolve("polygon.csv"), "FEATURE_ID\n12345\n");
+		Files.writeString(inputDir.resolve("layer.csv"), "LAYER_ID\n");
+		doNothing().when(comsFileService).fetchObjectToFile(any(UUID.class), any(Path.class));
+
+		RepeatStatus status = tasklet.execute(stepContribution, chunkContext);
+
+		assertEquals(RepeatStatus.FINISHED, status);
+		assertFalse(Files.exists(inputDir), "input directory should be cleaned up after partitioning");
 	}
 
 }
