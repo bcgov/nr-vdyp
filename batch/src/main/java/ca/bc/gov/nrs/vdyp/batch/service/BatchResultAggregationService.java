@@ -833,24 +833,8 @@ public class BatchResultAggregationService {
 		}
 	}
 
-	/**
-	 * Recursively deletes a directory and all its contents.
-	 */
 	private void deleteDirectoryRecursively(Path directory) throws IOException {
-		if (!Files.exists(directory)) {
-			return;
-		}
-
-		try (Stream<Path> walk = Files.walk(directory)) {
-			walk.sorted(Comparator.reverseOrder()).forEach(path -> {
-				try {
-					Files.delete(path);
-					logger.trace("Deleted: {}", path);
-				} catch (IOException e) {
-					logger.warn("Failed to delete: {} - {}", path, e.getMessage());
-				}
-			});
-		}
+		BatchUtils.deleteDirectoryRecursively(directory);
 	}
 
 	/**

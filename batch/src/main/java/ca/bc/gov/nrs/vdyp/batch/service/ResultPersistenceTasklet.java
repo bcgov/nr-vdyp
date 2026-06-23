@@ -18,6 +18,7 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultPersistenceException;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 @Component
@@ -73,9 +74,29 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 			);
 
 			logger.debug("Completed persistence of result zip file to COMS.");
+
+			cleanupJobFiles(jobBasePath);
 		} catch (Exception e) {
 			throw BatchResultPersistenceException
 					.handleResultPersistenceFailure(e, "Failed to persist result zip to COMS.", jobGuid, jobId, logger);
+		}
+	}
+
+	private void cleanupJobFiles(Path jobBasePath) {
+		try {
+			BatchUtils.deleteDirectoryRecursively(jobBasePath);
+			logger.debug("[GUID: {}] Deleted job directory after S3 upload: {}", jobGuid, jobBasePath);
+		} catch (IOException e) {
+			logger.warn("[GUID: {}] Failed to delete job directory {}: {}", jobGuid, jobBasePath, e.getMessage());
+		}
+
+		Path warningsFile = Paths.get(jobBasePath + BatchConstants.Partition.WARNING_FILE_NAME);
+		try {
+			if (Files.deleteIfExists(warningsFile)) {
+				logger.debug("[GUID: {}] Deleted warnings file: {}", jobGuid, warningsFile);
+			}
+		} catch (IOException e) {
+			logger.warn("[GUID: {}] Failed to delete warnings file {}: {}", jobGuid, warningsFile, e.getMessage());
 		}
 	}
 
