@@ -441,7 +441,7 @@ const handleCancel = async (projectionGUID: string) => {
     const latestProjection = await getProjectionById(projectionGUID)
     const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT)
 
-    if (latestStatus !== PROJECTION_STATUS.RUNNING) {
+    if (latestStatus !== PROJECTION_STATUS.RUNNING && latestStatus !== PROJECTION_STATUS.QUEUED) {
       // Projection is no longer running - update the single item and show appropriate message
       updateProjectionInList(latestProjection)
 

@@ -22,6 +22,34 @@
           <!-- Manual Input mode: status badge -->
           <template v-if="appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT">
             <div class="status-section">
+              <v-menu v-if="isQueued">
+                <template #activator="{ props }">
+                  <button v-bind="props" class="running-status-menu-button">
+                    <img
+                      :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.QUEUED)"
+                      alt="Queued"
+                      class="running-status-icon"
+                    />
+                    <span class="running-status-text">Queued</span>
+                    <v-icon size="small">mdi-chevron-down</v-icon>
+                  </button>
+                </template>
+                <v-list class="running-status-menu-list">
+                  <v-list-item
+                    class="running-status-menu-item"
+                    @click="cancelRunHandler"
+                  >
+                    <div class="running-menu-item-content">
+                      <img
+                        src="@/assets/icons/Cancel_Icon_Menu.png"
+                        alt="Cancel"
+                        class="running-menu-icon"
+                      />
+                      <span class="running-menu-text">Cancel</span>
+                    </div>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
               <v-menu v-if="isRunning">
                 <template #activator="{ props }">
                   <button v-bind="props" class="running-status-menu-button">
@@ -82,7 +110,7 @@
             <!-- RunProgressBar visible: Cancel (Running) or Download (Ready) -->
             <template v-if="isRunProgressBarVisible">
               <AppButton
-                v-if="isRunning"
+                v-if="isRunning || isQueued"
                 label="Cancel"
                 variant="secondary"
                 mdi-name="mdi-stop-circle-outline"
@@ -158,8 +186,8 @@
         <RunProjectionButtonPanel
           v-if="!appStore.isReadOnly || isRunning"
           :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
-          :showCancelButton="isRunning"
-          :showRevertCancelButton="!isRunning"
+          :showCancelButton="isRunning || isQueued"
+          :showRevertCancelButton="!(isRunning||isQueued)"
           :isRevertCancelDisabled="isCancelDisabled"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -342,10 +370,10 @@ const pollProjectionProgress = async () => {
       runStartDate.value = projection.startDate
     }
     const latestStatus = mapProjectionStatus(projection.projectionStatusCode?.code ?? '')
-    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
+    appStore.setCurrentProjectionStatus(latestStatus)
+    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING && latestStatus !== CONSTANTS.PROJECTION_STATUS.QUEUED) {
       stopPolling()
       if (projection.endDate) runEndDate.value = projection.endDate
-      appStore.setCurrentProjectionStatus(latestStatus)
       if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
         appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
         // ManualInput results are shown in reporting tabs; fetch them as soon as the job completes
@@ -674,9 +702,9 @@ onMounted(async () => {
   }
 
   const guid = appStore.currentProjectionGUID
-  if (guid && (isRunning.value || isReady.value || isFailed.value)) {
+  if (guid && (isRunning.value || isQueued.value || isReady.value || isFailed.value)) {
     await fetchBatchData(guid)
-    if (isRunning.value) {
+    if (isRunning.value || isQueued.value) {
       startPolling()
     } else if (isReady.value && appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
       fetchAndPopulateResults(false)
@@ -933,7 +961,7 @@ const cancelRunHandler = async () => {
     const latestProjection = await getProjectionById(projectionGUID)
     const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
 
-    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
+    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING && latestStatus !== CONSTANTS.PROJECTION_STATUS.QUEUED) {
       // Projection is no longer running - update state and show appropriate message
       updateProjectionState(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
 
