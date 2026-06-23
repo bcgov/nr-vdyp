@@ -4,12 +4,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
@@ -177,6 +181,23 @@ class BatchUtilsTest {
 	@Test
 	void extractFeatureIdLong_invalidValue_returnsNull() {
 		assertNull(BatchUtils.extractFeatureIdLong("abc,092O096,42344045"));
+	}
+
+	@Test
+	void deleteDirectoryRecursively_nonExistentDir_doesNothing(@TempDir Path tempDir) {
+		Path nonExistent = tempDir.resolve("does-not-exist");
+		assertDoesNotThrow(() -> BatchUtils.deleteDirectoryRecursively(nonExistent));
+		assertFalse(Files.exists(nonExistent));
+	}
+
+	@Test
+	void deleteDirectoryRecursively_existingDirWithFiles_deletesAll(@TempDir Path tempDir) throws IOException {
+		Path subDir = Files.createDirectory(tempDir.resolve("job-dir"));
+		Files.createFile(subDir.resolve("output.zip"));
+
+		BatchUtils.deleteDirectoryRecursively(subDir);
+
+		assertFalse(Files.exists(subDir));
 	}
 
 	@Test
