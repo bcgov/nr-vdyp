@@ -231,4 +231,9 @@ public abstract class ResolvedControlMapImpl implements ResolvedControlMap {
 		return get(ControlKey.COE_BA, MatrixMap2.class);
 	}
 
+	@Override
+	public MatrixMap2<String, Region, Coefficients> getVeteranQuadMeanDiameterCoefficients() {
+		return get(ControlKey.VETERAN_LAYER_DQ, MatrixMap2.class);
+	}
+
 }

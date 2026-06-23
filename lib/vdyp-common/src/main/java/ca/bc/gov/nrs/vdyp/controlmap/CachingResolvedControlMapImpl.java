@@ -62,6 +62,8 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	private final Optional<MatrixMap2<String, Region, Float>> quadMeanDiameterModifiers;
 	private final Optional<MatrixMap2<String, Region, Float>> basalAreaModifiers;
 
+	private Optional<MatrixMap2<String, Region, Coefficients>> veteranQuadMeanDiameterCoefficients;
+
 	private final Map<String, Object> controlMap;
 
 	public CachingResolvedControlMapImpl(Map<String, Object> controlMap) {
@@ -106,6 +108,7 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 		this.quadMeanDiameterModifiers = this.get(ControlKey.DQ_MODIFIERS, MatrixMap2.class);
 		this.basalAreaModifiers = this.get(ControlKey.BA_MODIFIERS, MatrixMap2.class);
 		this.basalAreaCoefficients = this.get(ControlKey.COE_BA, MatrixMap2.class);
+		this.veteranQuadMeanDiameterCoefficients = this.get(ControlKey.VETERAN_LAYER_DQ, MatrixMap2.class);
 	}
 
 	/**
@@ -322,7 +325,13 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 
 	@Override
 	public MatrixMap2<String, String, Coefficients> getBasalAreaCoefficients() {
-		return basalAreaCoefficients.orElseThrow(() -> new NoSuchElementException("Coefficients"));
+		return basalAreaCoefficients.orElseThrow(() -> new NoSuchElementException("basalAreaCoefficients"));
+	}
+
+	@Override
+	public MatrixMap2<String, Region, Coefficients> getVeteranQuadMeanDiameterCoefficients() {
+		return veteranQuadMeanDiameterCoefficients
+				.orElseThrow(() -> new NoSuchElementException("veteranQuadMeanDiameterCoefficients"));
 	}
 
 }

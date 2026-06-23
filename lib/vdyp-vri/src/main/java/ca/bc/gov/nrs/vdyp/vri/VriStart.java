@@ -823,17 +823,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	// EMP097 TODO move to EstimationMethods and this should probably be used in FipStart
-
 	float estimateVeteranQuadMeanDiameter(String sp0, BecDefinition bec, float loreyHeight) {
-		var vetDqMap = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.VETERAN_LAYER_DQ, MatrixMap2.class
-		);
-		var coe = vetDqMap.get(sp0, bec.getRegion());
-		var a0 = coe.getCoe(1);
-		var a1 = coe.getCoe(2);
-		var a2 = coe.getCoe(3);
-
-		return a0 + a1 * pow(loreyHeight, a2);
+		return estimationMethods.estimateVeteranQuadMeanDiameter(sp0, bec, loreyHeight);
 	}
 
 	// VRI_CHK

@@ -674,19 +674,13 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 					.setLarge(baseAreaByUtilization.getLarge() * vSpec.getPercentGenus() / 100f);
 		}
 
-		var vetDqMap = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.VETERAN_LAYER_DQ, MatrixMap2.class
-		);
-
 		for (var vSpec : vdypSpecies.values()) {
-			// TODO this should probably be using estimateVeteranQuadMeanDiameter
-			var genus = vSpec.getGenus();
-			var coe = vetDqMap.get(genus, region);
-			var a0 = coe.getCoe(1);
-			var a1 = coe.getCoe(2);
-			var a2 = coe.getCoe(3);
+			var speciesId = vSpec.getGenus();
 			float hl = vSpec.getLoreyHeightByUtilization().getCoe(0);
-			float dq = max(a0 + a1 * pow(hl, a2), UtilizationClass.OVER225.lowBound);
+			float dq = max(
+					estimationMethods.estimateVeteranQuadMeanDiameter(speciesId, bec, hl),
+					UtilizationClass.OVER225.lowBound
+			);
 			vSpec.getQuadraticMeanDiameterByUtilization().setLarge(dq);
 			vSpec.getTreesPerHectareByUtilization().setLarge(
 					BaseAreaTreeDensityDiameter.treesPerHectare(vSpec.getBaseAreaByUtilization().getLarge(), dq)

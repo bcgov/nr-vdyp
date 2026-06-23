@@ -1834,4 +1834,24 @@ public class EstimationMethods {
 		return coe;
 	}
 
+	/**
+	 * EMP097
+	 * <p>
+	 *
+	 * @param sp0
+	 * @param bec
+	 * @param loreyHeight
+	 * @return
+	 */
+	public float estimateVeteranQuadMeanDiameter(String sp0, BecDefinition bec, float loreyHeight) {
+
+		var vetDqMap = controlMap.getVeteranQuadMeanDiameterCoefficients();
+
+		var coe = vetDqMap.get(sp0, bec.getRegion());
+		var a0 = coe.getCoe(1);
+		var a1 = coe.getCoe(2);
+		var a2 = coe.getCoe(3);
+
+		return a0 + a1 * pow(loreyHeight, a2);
+	}
 }
