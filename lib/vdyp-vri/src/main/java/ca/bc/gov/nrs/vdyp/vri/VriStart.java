@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.vri;
 
 import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.quadMeanDiameter;
 import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.treesPerHectare;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 
 import java.io.IOException;
@@ -70,7 +69,6 @@ import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;

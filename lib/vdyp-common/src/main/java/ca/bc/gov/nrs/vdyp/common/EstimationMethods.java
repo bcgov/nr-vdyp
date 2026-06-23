@@ -1837,6 +1837,7 @@ public class EstimationMethods {
 	/**
 	 * EMP097
 	 * <p>
+	 * Estimate the diameter for a veteran layer.
 	 *
 	 * @param sp0
 	 * @param bec
