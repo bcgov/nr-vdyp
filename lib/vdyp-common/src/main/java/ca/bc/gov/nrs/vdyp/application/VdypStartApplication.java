@@ -86,8 +86,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	public static final int CONFIG_LOAD_ERROR = 1;
 	public static final int PROCESSING_ERROR = 2;
 
-	public static final float LOW_CROWN_CLOSURE = 10f;
-
 	static final Map<String, Integer> ITG_PURE = Utils.constMap(map -> {
 		map.put("AC", 36);
 		map.put("AT", 42);
@@ -339,146 +337,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return vriWriter;
 	}
 
-	public static final float MINIMUM_BASAL_AREA = 0.05f;
-
-	/**
-	 * EMP040
-	 * <p>
-	 * Estimate the basal area yield for the primary layer. Ensures that it does not go below the allowable minimum.
-	 *
-	 * @param layer             The layer
-	 * @param bec               BEC zone of the polygon
-	 * @param yieldFactor       Yield factor of the polygon
-	 * @param breastHeightAge   Breast height age
-	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
-	 * @param crownClosure      Crown closure percentage
-	 * @return The basal area.
-	 * @deprecated Use
-	 *             {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#estimatePrimaryBaseAreaAdjust(L2,BecDefinition,float,float,float,float)}
-	 *             instead
-	 */
-	protected <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
-			float estimatePrimaryBaseAreaAdjust(
-					L2 layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
-					float crownClosure
-			) {
-		return estimationMethods.estimatePrimaryBaseAreaAdjust(
-				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure
-		);
-	}
-
-	/**
-	 * EMP040
-	 * <p>
-	 * Estimate the basal area yield for the primary layer. Throws an exception if the computed BA is below the
-	 * allowable minimum
-	 *
-	 * @param layer             The layer
-	 * @param bec               BEC zone of the polygon
-	 * @param yieldFactor       Yield factor of the polygon
-	 * @param breastHeightAge   Breast height age
-	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
-	 * @param crownClosure      Crown closure percentage
-	 * @return The basal area.
-	 * @throws BaseAreaLowException if the computed BA is below the allowable minimum
-	 */
-	protected float estimatePrimaryBaseAreaStrict(
-			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
-			float crownClosure
-	) throws BaseAreaLowException {
-		return estimationMethods.estimatePrimaryBaseArea(
-				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure,
-				EstimationMethods.Strictness.STRICT
-		);
-	}
-
-	/**
-	 * EMP040
-	 * <p>
-	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Throws an exception if the
-	 * computed BA is below the allowable minimum
-	 *
-	 * @param layer             The layer
-	 * @param bec               BEC zone of the polygon
-	 * @param yieldFactor       Yield factor of the polygon
-	 * @param breastHeightAge   Breast height age
-	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
-	 * @return The basal area.
-	 * @throws BaseAreaLowException if the computed BA is below the allowable minimum
-	 * @deprecated Use
-	 *             {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#estimatePrimaryBaseAreaStrict(ca.bc.gov.nrs.vdyp.application.VdypStartApplication,L2,BecDefinition,float,float,float)}
-	 *             instead
-	 */
-	protected <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
-			float estimatePrimaryBaseAreaStrict(
-					L2 layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
-			) throws BaseAreaLowException {
-		return estimationMethods
-				.estimatePrimaryBaseAreaStrict(layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory);
-	}
-
-	/**
-	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Ensures that it does not go below
-	 * the allowable minimum.
-	 *
-	 * @param layer             The layer
-	 * @param bec               BEC zone of the polygon
-	 * @param yieldFactor       Yield factor of the polygon
-	 * @param breastHeightAge   Breast height age
-	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
-	 * @return The basal area.
-	 * @deprecated Use
-	 *             {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#estimatePrimaryBaseAreaAdjust(ca.bc.gov.nrs.vdyp.application.VdypStartApplication,L2,BecDefinition,float,float,float)}
-	 *             instead
-	 */
-	// EMP040
-	protected <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
-			float estimatePrimaryBaseAreaAdjust(
-					L2 layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
-			) {
-		return estimationMethods
-				.estimatePrimaryBaseAreaAdjust(layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory);
-	}
-
-	// EMP040
-	/**
-	 * @deprecated Use
-	 *             {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#estimatePrimaryBaseArea(ca.bc.gov.nrs.vdyp.application.VdypStartApplication,L2,BecDefinition,float,float,float,float,Strictness)}
-	 *             instead
-	 */
-	public <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
-			float estimatePrimaryBaseArea(
-					L2 layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
-					float crownClosure, EstimationMethods.Strictness basalAreaMinimum
-			) throws BaseAreaLowException {
-		return estimationMethods.estimatePrimaryBaseArea(
-				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure, basalAreaMinimum
-		);
-	}
-
-	/**
-	 * @deprecated Use
-	 *             {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#estimatePrimaryBaseArea(ca.bc.gov.nrs.vdyp.application.VdypStartApplication,L2,BecDefinition,float,float,float,Strictness)}
-	 *             instead
-	 */
-	public <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
-			float estimatePrimaryBaseArea(
-					L2 layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
-					EstimationMethods.Strictness basalAreaMinimum
-			) throws BaseAreaLowException {
-		return estimationMethods
-				.estimatePrimaryBaseArea(layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, basalAreaMinimum);
-	}
-
 	protected abstract float getYieldFactor(P polygon);
-
-	/**
-	 * @deprecated Use {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#getLayerHeight(L)} instead
-	 */
-	protected <L extends BaseVdypLayer<?, ?>> Optional<Float> getLayerHeight(L layer) {
-		// TODO Inline
-		return estimationMethods.getLayerHeight(layer);
-	}
 
 	protected Optional<Float> getLayerAgeTotal(L layer) {
 		return layer.getPrimarySite().flatMap(BaseVdypSite::getAgeTotal);
@@ -650,13 +509,11 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 		breastHeightAge = max(5.0f, breastHeightAge);
 		// EMP040
-		float baseAreaTop = estimatePrimaryBaseAreaAdjust(
-				primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosureTop
-		);
+		float baseAreaTop = estimationMethods
+				.estimatePrimaryBaseAreaAdjust(primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosureTop);
 		// EMP040
-		float baseAreaHat = estimatePrimaryBaseAreaAdjust(
-				primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosure
-		);
+		float baseAreaHat = estimationMethods
+				.estimatePrimaryBaseAreaAdjust(primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosure);
 
 		float percentYield;
 		if (baseAreaTop > 0f && baseAreaHat > 0f) {
@@ -688,7 +545,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected ValueOrMarker<Float, Boolean> isVeteranForEstimatePercentForestLand(P polygon, Optional<L> vetLayer) {
 		boolean veteran = vetLayer//
-				.filter(layer -> getLayerHeight(layer).orElse(0f) > 0f) //
+				.filter(layer -> estimationMethods.getLayerHeight(layer).orElse(0f) > 0f) //
 				.filter(layer -> layer.getCrownClosure() > 0f)//
 				.isPresent(); // LAYERV
 
@@ -711,20 +568,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 		crownClosure = clamp(crownClosure, 0, 100);
 		return crownClosure;
-	}
-
-	// EMP041
-	/**
-	 * @deprecated Use
-	 *             {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#estimatePrimaryQuadMeanDiameter(ca.bc.gov.nrs.vdyp.application.VdypStartApplication,L2,BecDefinition,float,float)}
-	 *             instead
-	 */
-	protected <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
-			float estimatePrimaryQuadMeanDiameter(
-					L2 layer, BecDefinition bec, float breastHeightAge, float baseAreaOverstory
-			) {
-		// TODO Inline
-		return estimationMethods.estimatePrimaryQuadMeanDiameter(layer, bec, breastHeightAge, baseAreaOverstory);
 	}
 
 	protected Map<String, Float> applyGroupsAndGetTargetPercentages(

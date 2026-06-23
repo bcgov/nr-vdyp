@@ -62,6 +62,10 @@ public class EstimationMethods {
 
 	private ResolvedControlMap controlMap;
 
+	public static final float LOW_CROWN_CLOSURE = 10f;
+
+	public static final float MINIMUM_BASAL_AREA = 0.05f;
+
 	public EstimationMethods(ResolvedControlMap controlMap) {
 		this.controlMap = controlMap;
 	}
@@ -1588,8 +1592,8 @@ public class EstimationMethods {
 					L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
 					float crownClosure, Strictness basalAreaMinimum
 			) throws BaseAreaLowException {
-		boolean lowCrownClosure = layer.getCrownClosure() < VdypStartApplication.LOW_CROWN_CLOSURE;
-		crownClosure = lowCrownClosure ? VdypStartApplication.LOW_CROWN_CLOSURE : crownClosure;
+		boolean lowCrownClosure = layer.getCrownClosure() < LOW_CROWN_CLOSURE;
+		crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : crownClosure;
 
 		var coeMap = controlMap.getBasalAreaCoefficients();
 		var modMap = controlMap.getBasalAreaModifiers();
@@ -1598,7 +1602,7 @@ public class EstimationMethods {
 		S leadGenus = leadSpecies(layer);
 
 		var decayBecAlias = bec.getDecayBec().getAlias();
-		Coefficients coe = EstimationMethods.weightedCoefficientSum(
+		Coefficients coe = weightedCoefficientSum(
 				List.of(0, 1, 2, 3, 4, 5), 9, 0, layer.getSpecies().values(), BaseVdypSpecies::getFractionGenus,
 				s -> coeMap.get(decayBecAlias, s.getGenus())
 		);
@@ -1652,7 +1656,7 @@ public class EstimationMethods {
 			}
 
 			if (lowCrownClosure) {
-				baseArea *= layer.getCrownClosure() / VdypStartApplication.LOW_CROWN_CLOSURE;
+				baseArea *= layer.getCrownClosure() / LOW_CROWN_CLOSURE;
 			}
 
 		}
@@ -1664,15 +1668,15 @@ public class EstimationMethods {
 
 		switch (basalAreaMinimum) {
 		case ADJUST:
-			if (baseArea < VdypStartApplication.MINIMUM_BASAL_AREA) {
+			if (baseArea < MINIMUM_BASAL_AREA) {
 				VdypStartApplication.log.atWarn().setMessage("Estimated basal area {} is too low. Increasing to {}.")
-						.addArgument(baseArea).addArgument(VdypStartApplication.MINIMUM_BASAL_AREA).log();
-				baseArea = VdypStartApplication.MINIMUM_BASAL_AREA;
+						.addArgument(baseArea).addArgument(MINIMUM_BASAL_AREA).log();
+				baseArea = MINIMUM_BASAL_AREA;
 			}
 			break;
 		case LENIENT:
 			VdypStartApplication.log.atWarn().setMessage("Estimated basal area {} is too low.").addArgument(baseArea)
-					.addArgument(VdypStartApplication.MINIMUM_BASAL_AREA).log();
+					.addArgument(MINIMUM_BASAL_AREA).log();
 			break;
 		case STRICT:
 			Utils.throwIfPresent(
@@ -1729,7 +1733,7 @@ public class EstimationMethods {
 			) {
 		try {
 			return estimatePrimaryBaseArea(
-					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, EstimationMethods.Strictness.ADJUST
+					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, Strictness.ADJUST
 			);
 		} catch (BaseAreaLowException e) {
 			throw new IllegalArgumentException("This should not happen", e);
@@ -1755,9 +1759,7 @@ public class EstimationMethods {
 			estimatePrimaryBaseAreaStrict(
 					L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
 			) throws BaseAreaLowException {
-		return estimatePrimaryBaseArea(
-				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, EstimationMethods.Strictness.STRICT
-		);
+		return estimatePrimaryBaseArea(layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, Strictness.STRICT);
 	}
 
 	/**
@@ -1780,8 +1782,7 @@ public class EstimationMethods {
 			) {
 		try {
 			return estimatePrimaryBaseArea(
-					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure,
-					EstimationMethods.Strictness.ADJUST
+					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure, Strictness.ADJUST
 			);
 		} catch (BaseAreaLowException e) {
 			throw new IllegalStateException("This should never happen", e);

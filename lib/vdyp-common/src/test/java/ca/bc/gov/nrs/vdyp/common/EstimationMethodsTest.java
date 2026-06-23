@@ -7,6 +7,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.text.MessageFormat;
@@ -28,11 +29,15 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import ca.bc.gov.nrs.vdyp.application.test.TestLayer;
 import ca.bc.gov.nrs.vdyp.application.test.TestPolygon;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.controlmap.StartResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
@@ -45,6 +50,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
+import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -1455,6 +1461,372 @@ class EstimationMethodsTest {
 
 			float result = emp.upperBoundsQuadMeanDiameter(Region.INTERIOR, "S", 168);
 			assertThat(result, closeTo(40.3f));
+		}
+	}
+
+	@Nested
+	class EstimatePrimaryBaseArea {
+
+		@Test
+		void testSimple() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
+
+			var bec = Utils.getBec("CWH", controlMap);
+
+			var layer = TestLayer.build(lb -> {
+				lb.polygonIdentifier(polygonId);
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(82.8000031f);
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(33f);
+					sb.addSp64Distribution("B", 100f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.percentGenus(67f);
+					sb.addSp64Distribution("H", 100f);
+					sb.addSite(ib -> {
+						ib.ageTotal(85f);
+						ib.height(38.2999992f);
+						ib.siteIndex(28.6000004f);
+						ib.yearsToBreastHeight(5.4000001f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(34);
+					});
+				});
+			});
+
+			var result = em.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f);
+
+			assertThat(result, closeTo(62.6653595f));
+
+		}
+
+		@Test
+		void testHeightCloseToA2() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
+
+			var bec = Utils.getBec("CWH", controlMap);
+
+			var layer = TestLayer.build(lb -> {
+				lb.polygonIdentifier(polygonId);
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(82.8000031f);
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(33f);
+					sb.addSp64Distribution("B", 100f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.percentGenus(67f);
+					sb.addSp64Distribution("H", 100f);
+					sb.addSite(ib -> {
+						ib.ageTotal(85f);
+						ib.height(10.1667995f); // Altered this in the debugger while running VDYP7
+						ib.siteIndex(28.6000004f);
+						ib.yearsToBreastHeight(5.4000001f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(34);
+					});
+				});
+			});
+
+			var result = em.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f);
+
+			assertThat(result, closeTo(23.1988659f));
+
+		}
+
+		@Test
+		void testLowCrownClosure() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
+
+			var bec = Utils.getBec("CWH", controlMap);
+
+			var layer = TestLayer.build(lb -> {
+				lb.polygonIdentifier(polygonId);
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(9f);// Altered this in the debugger while running VDYP7
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(33f);
+					sb.addSp64Distribution("B", 100f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.percentGenus(67f);
+					sb.addSp64Distribution("H", 100f);
+					sb.addSite(ib -> {
+						ib.ageTotal(85f);
+						ib.height(38.2999992f);
+						ib.siteIndex(28.6000004f);
+						ib.yearsToBreastHeight(5.4000001f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(34);
+					});
+				});
+			});
+
+			var result = em.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f);
+
+			assertThat(result, closeTo(37.6110077f));
+
+		}
+
+		@Test
+		void testLowResultStrict() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
+
+			var bec = Utils.getBec("CWH", controlMap);
+
+			var layer = TestLayer.build(lb -> {
+				lb.polygonIdentifier(polygonId);
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(82.8000031f);
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(33f);
+					sb.addSp64Distribution("B", 100f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.percentGenus(67f);
+					sb.addSp64Distribution("H", 100f);
+					sb.addSite(ib -> {
+						ib.ageTotal(85f);
+						ib.height(7f); // Altered this in the debugger while running VDYP7
+						ib.siteIndex(28.6000004f);
+						ib.yearsToBreastHeight(5.4000001f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(34);
+					});
+				});
+			});
+
+			var ex = assertThrows(BaseAreaLowException.class, () -> {
+				em.estimatePrimaryBaseAreaStrict(layer, bec, 1f, 79.5999985f, 3.13497972f);
+			});
+
+			assertThat(ex, hasProperty("value", present(is(0.0f))));
+			assertThat(ex, hasProperty("threshold", present(is(0.05f))));
+
+		}
+
+		@Test
+		void testLowResultAdjust() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
+
+			var bec = Utils.getBec("CWH", controlMap);
+
+			var layer = TestLayer.build(lb -> {
+				lb.polygonIdentifier(polygonId);
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(82.8000031f);
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(33f);
+					sb.addSp64Distribution("B", 100f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.percentGenus(67f);
+					sb.addSp64Distribution("H", 100f);
+					sb.addSite(ib -> {
+						ib.ageTotal(85f);
+						ib.height(7f); // Altered this in the debugger while running VDYP7
+						ib.siteIndex(28.6000004f);
+						ib.yearsToBreastHeight(5.4000001f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(34);
+					});
+				});
+			});
+
+			var result = assertDoesNotThrow(
+					() -> em.estimatePrimaryBaseAreaAdjust(layer, bec, 1f, 79.5999985f, 3.13497972f)
+
+			);
+
+			assertThat(result, is(0.05f));
+
+		}
+
+		@Test
+		void testLowResultLenient() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
+
+			var bec = Utils.getBec("CWH", controlMap);
+
+			var layer = TestLayer.build(lb -> {
+				lb.polygonIdentifier(polygonId);
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(82.8000031f);
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(33f);
+					sb.addSp64Distribution("B", 100f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.percentGenus(67f);
+					sb.addSp64Distribution("H", 100f);
+					sb.addSite(ib -> {
+						ib.ageTotal(85f);
+						ib.height(7f); // Altered this in the debugger while running VDYP7
+						ib.siteIndex(28.6000004f);
+						ib.yearsToBreastHeight(5.4000001f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(34);
+					});
+				});
+			});
+
+			var result = assertDoesNotThrow(
+					() -> em.estimatePrimaryBaseArea(
+							layer, bec, 1f, 79.5999985f, 3.13497972f, EstimationMethods.Strictness.LENIENT
+					)
+
+			);
+
+			assertThat(result, is(0.0f));
+
+		}
+	}
+
+	@Nested
+	class EstimatePrimaryQuadMeanDiameter {
+
+		@Test
+		void testSimple() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
+
+			var becLookup = BecDefinitionParser.getBecs(controlMap);
+			var bec = becLookup.get("CWH").get();
+
+			var layer = TestLayer.build(lb -> {
+				lb.polygonIdentifier(polygonId);
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(82.8000031f);
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(33f);
+					sb.addSp64Distribution("B", 100f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.percentGenus(67f);
+					sb.addSp64Distribution("H", 100f);
+					sb.addSite(ib -> {
+						ib.ageTotal(85f);
+						ib.height(38.2999992f);
+						ib.siteIndex(28.6000004f);
+						ib.yearsToBreastHeight(5.4000001f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(34);
+					});
+				});
+			});
+
+			var result = em.estimatePrimaryQuadMeanDiameter(layer, bec, 79.5999985f, 3.13497972f);
+
+			assertThat(result, closeTo(32.5390053f));
+
+		}
+
+		@Test
+		void testHeightLessThanA5() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
+
+			var becLookup = BecDefinitionParser.getBecs(controlMap);
+			var bec = becLookup.get("CWH").get();
+
+			var layer = TestLayer.build(lb -> {
+				lb.polygonIdentifier(polygonId);
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(82.8000031f);
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(33f);
+					sb.addSp64Distribution("B", 100f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.percentGenus(67f);
+					sb.addSp64Distribution("H", 100f);
+					sb.addSite(ib -> {
+						ib.ageTotal(85f);
+						ib.height(4.74730005f);
+						ib.siteIndex(28.6000004f);
+						ib.yearsToBreastHeight(5.4000001f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(34);
+					});
+				});
+			});
+
+			var result = em.estimatePrimaryQuadMeanDiameter(layer, bec, 79.5999985f, 3.13497972f);
+
+			assertThat(result, closeTo(7.6f));
+
+		}
+
+		@Test
+		void testResultLargerThanUpperBound() throws Exception {
+			controlMap = TestUtils.loadControlMap();
+			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
+			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
+
+			var becLookup = BecDefinitionParser.getBecs(controlMap);
+			var bec = becLookup.get("CWH").get();
+
+			var layer = TestLayer.build(lb -> {
+				lb.polygonIdentifier(polygonId);
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(82.8000031f);
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(33f);
+					sb.addSp64Distribution("B", 100f);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+					sb.percentGenus(67f);
+					sb.addSp64Distribution("H", 100f);
+					sb.addSite(ib -> {
+						ib.ageTotal(350f);
+						ib.height(80f);
+						ib.siteIndex(28.6000004f);
+						ib.yearsToBreastHeight(5.4000001f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(34);
+					});
+				});
+			});
+
+			var result = em.estimatePrimaryQuadMeanDiameter(layer, bec, 350f - 5.4000001f, 3.13497972f);
+
+			assertThat(result, closeTo(61.1f)); // Clamp to the COE043/UPPER_BA_BY_CI_S0_P DQ value for this species
+												// and
+												// region
+
 		}
 	}
 }

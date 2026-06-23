@@ -307,13 +307,14 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 				.flatMap(x -> Utils.mapBoth(x.getAgeTotal(), x.getYearsToBreastHeight(), (at, ytbh) -> at - ytbh))
 				.orElse(0f);
 		// EMP040
-		var baseArea = estimatePrimaryBaseAreaStrict(
+		var baseArea = estimationMethods.estimatePrimaryBaseAreaStrict(
 				fipLayer, bec, fipPolygon.getYieldFactor(), breastHeightAge, baseAreaOverstory
 		); // BA_TOT
 
 		result.getBaseAreaByUtilization().setAll(baseArea);
 
-		var quadMeanDiameter = estimatePrimaryQuadMeanDiameter(fipLayer, bec, breastHeightAge, baseAreaOverstory);
+		var quadMeanDiameter = estimationMethods
+				.estimatePrimaryQuadMeanDiameter(fipLayer, bec, breastHeightAge, baseAreaOverstory);
 
 		result.getQuadraticMeanDiameterByUtilization().setAll(quadMeanDiameter);
 
