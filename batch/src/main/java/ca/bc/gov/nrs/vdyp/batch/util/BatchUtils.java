@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
@@ -256,6 +258,27 @@ public final class BatchUtils {
 		return new VDYPProjectionProgressUpdate(
 				jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, 0
 		);
+	}
+
+	/**
+	 * Recursively deletes a directory and all its contents. Silently succeeds if the directory does not exist.
+	 *
+	 * @param directory The directory to delete
+	 * @throws IOException if deletion fails for any entry
+	 */
+	public static void deleteDirectoryRecursively(Path directory) throws IOException {
+		if (!Files.exists(directory)) {
+			return;
+		}
+		try (Stream<Path> walk = Files.walk(directory)) {
+			walk.sorted(Comparator.reverseOrder()).forEach(path -> {
+				try {
+					Files.delete(path);
+				} catch (IOException e) {
+					// Individual delete failures are logged by callers; continue to attempt remaining entries
+				}
+			});
+		}
 	}
 
 	public static void confirmDirectoryExists(Path dirPath) throws IOException {
