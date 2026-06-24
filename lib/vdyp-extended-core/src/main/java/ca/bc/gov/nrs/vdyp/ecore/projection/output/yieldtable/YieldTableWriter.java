@@ -260,7 +260,10 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 		ValidatedParameters params = context.getParams();
 		if (params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
 			extractCFSCategories(params);
-		} else {
+		}
+		boolean mofExplicit = params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+				|| params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS);
+		if (mofExplicit || !params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
 			extractMofCategories(params);
 		}
 	}
