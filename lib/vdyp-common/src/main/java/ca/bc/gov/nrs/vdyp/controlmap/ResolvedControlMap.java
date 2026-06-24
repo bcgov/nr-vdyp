@@ -113,6 +113,9 @@ public interface ResolvedControlMap {
 	/** 97 - {@link ca.bc.gov.nrs.vdyp.common.ControlKey.VETERAN_LAYER_DQ} */
 	MatrixMap2<String, Region, Coefficients> getVeteranQuadMeanDiameterCoefficients();
 
+	/** 98 - {@link ca.bc.gov.nrs.vdyp.common.ControlKey.VETERAN_BQ} */
+	MatrixMap2<String, Region, Coefficients> getVeteranBasalAreaCoefficients();
+
 	/** 107 - {@link ca.bc.gov.nrs.vdyp.common.ControlKey.DQ_YIELD} */
 	MatrixMap2<String, String, Coefficients> getQuadMeanDiameterYieldCoefficients();
 

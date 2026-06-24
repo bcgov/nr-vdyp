@@ -838,22 +838,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 	// EMP098
 	float estimateVeteranBaseArea(float height, float crownClosure, String genus, Region region) {
-		var coefficients = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.VETERAN_BQ, MatrixMap2.class
-		).getM(genus, region);
-
-		// mismatched index is copied from VDYP7
-		float a0 = coefficients.getCoe(1);
-		float a1 = coefficients.getCoe(2);
-		float a2 = coefficients.getCoe(3);
-
-		float baseArea = a0 * pow(max(height - a1, 0.0f), a2);
-
-		baseArea *= crownClosure / 4.0f;
-
-		baseArea = max(baseArea, 0.01f);
-
-		return baseArea;
+		return this.estimationMethods.estimateVeteranBasalArea(height, crownClosure, genus, region);
 	}
 
 	/**

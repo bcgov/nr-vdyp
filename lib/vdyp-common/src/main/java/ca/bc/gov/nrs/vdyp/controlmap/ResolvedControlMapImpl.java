@@ -236,4 +236,9 @@ public abstract class ResolvedControlMapImpl implements ResolvedControlMap {
 		return get(ControlKey.VETERAN_LAYER_DQ, MatrixMap2.class);
 	}
 
+	@Override
+	public MatrixMap2<String, Region, Coefficients> getVeteranBasalAreaCoefficients() {
+		return get(ControlKey.VETERAN_BQ, MatrixMap2.class);
+	}
+
 }

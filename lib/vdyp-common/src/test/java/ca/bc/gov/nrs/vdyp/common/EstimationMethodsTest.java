@@ -1855,15 +1855,6 @@ class EstimationMethodsTest {
 	@Nested
 	class EstimateVeteranQuadMeanDiameter {
 
-		@BeforeEach
-		void setup() {
-			NonFipDebugSettings debug = EasyMock.createMock(NonFipDebugSettings.class);
-			controlMap.put(ControlKey.DEBUG_SWITCHES.toString(), debug);
-			EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
-			EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
-			EasyMock.replay(debug);
-		}
-
 		@Test
 		void test() {
 			var becLookup = BecDefinitionParser.getBecs(controlMap);
@@ -1872,6 +1863,19 @@ class EstimationMethodsTest {
 			var result = emp.estimateVeteranQuadMeanDiameter("PY", bec, 10.5370f);
 
 			assertThat(result, closeTo(34.8706f));
+		}
+	}
+
+	@Nested
+	class EstimateVeteranBasalArea {
+
+		@Test
+		void test() throws Exception {
+
+			var result = emp.estimateVeteranBasalArea(26.2000008f, 4f, "H", Region.COASTAL);
+
+			assertThat(result, closeTo(2.24055195f));
+
 		}
 	}
 }
