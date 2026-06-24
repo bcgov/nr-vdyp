@@ -116,7 +116,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   }
 
   // species info
-  const derivedBy = ref<string | null>(null)
+  const derivedBy = ref<string | null>(CONSTANTS.DERIVED_BY.VOLUME)
 
   const speciesList = ref<SpeciesList[]>([])
 
@@ -384,7 +384,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     runModelEnabled.value = false
 
     // Reset species info
-    derivedBy.value = null
+    derivedBy.value = CONSTANTS.DERIVED_BY.VOLUME
     speciesList.value = []
     speciesGroups.value = []
     highestPercentSpecies.value = null

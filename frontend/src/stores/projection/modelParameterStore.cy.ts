@@ -86,319 +86,239 @@ describe('Model Parameter Store', () => {
     store = useModelParameterStore()
   })
 
-  describe('Initial State', () => {
-    it('should initialize panel states: reportDetails open+editable, others closed+non-editable', () => {
-      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
-      expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })
-      ;(['speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((panel) => {
-        expect(store.panelOpenStates[panel]).to.equal(CONSTANTS.PANEL.CLOSE)
-        expect(store.panelState[panel]).to.deep.equal({ confirmed: false, editable: false })
-      })
+  it('should initialize panel states and key defaults', () => {
+    expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
+    expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })
+    ;(['speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((panel) => {
+      expect(store.panelOpenStates[panel]).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(store.panelState[panel]).to.deep.equal({ confirmed: false, editable: false })
     })
+    expect(store.runModelEnabled).to.be.false
+    expect(store.speciesGroups).to.deep.equal([])
+    expect(store.siteIndexRows).to.deep.equal([])
+    expect(store.selectedAgeYearRange).to.equal(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
+    expect(store.projectionType).to.equal(DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE)
+    expect(store.isForwardGrowEnabled).to.be.true
+    expect(store.isBackwardGrowEnabled).to.be.true
+    expect(store.isByLayerEnabled).to.be.true
+    expect(store.isComputedMAIEnabled).to.be.false
+  })
 
-    it('should initialize key defaults', () => {
-      expect(store.runModelEnabled).to.be.false
-      expect(store.speciesGroups).to.deep.equal([])
-      expect(store.siteIndexRows).to.deep.equal([])
-      expect(store.selectedAgeYearRange).to.equal(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
-      expect(store.projectionType).to.equal(DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE)
-      expect(store.isForwardGrowEnabled).to.be.true
-      expect(store.isBackwardGrowEnabled).to.be.true
-      expect(store.isByLayerEnabled).to.be.true
-      expect(store.isComputedMAIEnabled).to.be.false
+  it('should progress panels on confirmPanel and enable runModelEnabled only when all confirmed', () => {
+    store.confirmPanel('reportDetails')
+
+    expect(store.panelState.reportDetails).to.deep.equal({ confirmed: true, editable: false })
+    expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.CLOSE)
+    expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.OPEN)
+    expect(store.panelState.speciesInfo.editable).to.be.true
+    expect(store.runModelEnabled).to.be.false
+
+    store.confirmPanel('speciesInfo')
+    store.confirmPanel('siteInfo')
+    store.confirmPanel('standInfo')
+    store.confirmPanel('reportSettings')
+    expect(store.runModelEnabled).to.be.true
+  })
+
+  it('should reopen panel unconfirmed, reset subsequent panels, and disable runModelEnabled on editPanel', () => {
+    ;(['reportDetails', 'speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((p) =>
+      store.confirmPanel(p),
+    )
+
+    store.editPanel('reportDetails')
+
+    expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })
+    expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
+    ;(['speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((panel) => {
+      expect(store.panelState[panel].confirmed).to.be.false
+      expect(store.panelState[panel].editable).to.be.false
+      expect(store.panelOpenStates[panel]).to.equal(CONSTANTS.PANEL.CLOSE)
+    })
+    expect(store.runModelEnabled).to.be.false
+  })
+
+  it('should group species by code, sum percents, sort descending, and preserve siteIndexRow data across updates', () => {
+    store.speciesList[0] = { species: 'PL', percent: '50' }
+    store.speciesList[1] = { species: 'PL', percent: '20' }
+    store.speciesList[2] = { species: 'AC', percent: '30' }
+    store.updateSpeciesGroup()
+
+    expect(store.speciesGroups[0].siteSpecies).to.equal('PL')
+    expect(Number.parseFloat(store.speciesGroups[0].percent)).to.equal(70)
+    expect(store.speciesGroups[1].siteSpecies).to.equal('AC')
+    expect(store.highestPercentSpecies).to.equal('PL')
+    expect(store.selectedSiteSpecies).to.equal('PL')
+    expect(store.siteIndexRows).to.have.length(2)
+
+    store.siteIndexRows[0].bhaSiteIndex = '25.0'
+    store.updateSpeciesGroup()
+
+    expect(store.siteIndexRows[0].speciesCode).to.equal('PL')
+    expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('25.0')
+  })
+
+  it('should apply mode-specific siteIndexRow defaults based on derivedBy and siteSpeciesValues', () => {
+    store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+    store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+    store.speciesList[0] = { species: 'PL', percent: '60' }
+    store.speciesList[1] = { species: 'AC', percent: '40' }
+    store.updateSpeciesGroup()
+
+    expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
+    expect(store.siteIndexRows[1].computedValue).to.be.null
+    expect(store.siteIndexRows[1].bhaSiteIndex).to.be.null
+
+    store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+    store.updateSpeciesGroup()
+
+    store.siteIndexRows.forEach((row) => {
+      expect(row.bhaSiteIndex).to.equal(DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX)
+      expect(row.computedValue).to.be.null
+      expect(row.age).to.be.null
+      expect(row.height).to.be.null
     })
   })
 
-  describe('confirmPanel', () => {
-    it('should close the confirmed panel and open the next one', () => {
-      store.confirmPanel('reportDetails')
+  it('should reflect computed conditions in isVolumeComputed and isSupplied', () => {
+    store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+    store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+    expect(store.isVolumeComputed).to.be.true
 
-      expect(store.panelState.reportDetails).to.deep.equal({ confirmed: true, editable: false })
-      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.CLOSE)
-      expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.OPEN)
-      expect(store.panelState.speciesInfo.editable).to.be.true
+    store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+    expect(store.isVolumeComputed).to.be.false
+
+    store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+    store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+    expect(store.isVolumeComputed).to.be.false
+
+    store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+    expect(store.isSupplied).to.be.true
+
+    store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+    expect(store.isSupplied).to.be.false
+  })
+
+  it('should reset panel states and all data fields to initial values', () => {
+    store.speciesList[0] = { species: 'PL', percent: '100' }
+    store.updateSpeciesGroup()
+    store.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.YEAR
+    store.reportTitle = 'Custom Title'
+    store.ageType = 'SomeType'
+    ;(['reportDetails', 'speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((p) =>
+      store.confirmPanel(p),
+    )
+
+    store.resetStore()
+
+    expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
+    expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })
+    expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+    expect(store.panelState.speciesInfo).to.deep.equal({ confirmed: false, editable: false })
+    expect(store.runModelEnabled).to.be.false
+    expect(store.speciesGroups).to.deep.equal([])
+    expect(store.siteIndexRows).to.deep.equal([])
+    expect(store.selectedAgeYearRange).to.equal(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
+    expect(store.reportTitle).to.equal(DEFAULTS.DEFAULT_VALUES.REPORT_TITLE)
+    expect(store.ageType).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_TYPE)
+  })
+
+  it('should restore all fields and set all panels open+confirmed+non-editable in view mode', () => {
+    const params = makeParsedParams({
+      reportTitle: 'My Report',
+      copyTitle: 'Copy Title',
+      ageStart: '20',
+      ageEnd: '200',
+      ageIncrement: '10',
+      selectedExecutionOptions: [ExecutionOptionsEnum.ForwardGrowEnabled],
     })
+    store.restoreFromProjectionParams(params, true)
 
-    it('should enable runModelEnabled only when all panels are confirmed', () => {
-      store.confirmPanel('reportDetails')
-      store.confirmPanel('speciesInfo')
-      expect(store.runModelEnabled).to.be.false
-
-      store.confirmPanel('siteInfo')
-      store.confirmPanel('standInfo')
-      store.confirmPanel('reportSettings')
-      expect(store.runModelEnabled).to.be.true
+    expect(store.reportTitle).to.equal('My Report')
+    expect(store.copyTitle).to.equal('Copy Title')
+    expect(store.startingAge).to.equal('20')
+    expect(store.runModelEnabled).to.be.true
+    ;(['reportDetails', 'speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((panel) => {
+      expect(store.panelOpenStates[panel]).to.equal(CONSTANTS.PANEL.OPEN)
+      expect(store.panelState[panel]).to.deep.equal({ confirmed: true, editable: false })
     })
   })
 
-  describe('editPanel', () => {
-    beforeEach(() => {
-      store.confirmPanel('reportDetails')
-      store.confirmPanel('speciesInfo')
-      store.confirmPanel('siteInfo')
-      store.confirmPanel('standInfo')
-      store.confirmPanel('reportSettings')
-    })
+  it('should restore panel flow based on reportTitle and set projectionType from options in edit mode', () => {
+    store.restoreFromProjectionParams(makeParsedParams({ reportTitle: null }), false)
+    expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
+    expect(store.panelState.reportDetails.confirmed).to.be.false
 
-    it('should reopen the panel unconfirmed and reset all subsequent panels', () => {
-      store.editPanel('reportDetails')
-
-      expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })
-      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
-      ;(['speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((panel) => {
-        expect(store.panelState[panel].confirmed).to.be.false
-        expect(store.panelState[panel].editable).to.be.false
-        expect(store.panelOpenStates[panel]).to.equal(CONSTANTS.PANEL.CLOSE)
-      })
-    })
-
-    it('should set runModelEnabled to false when editing any panel', () => {
-      store.editPanel('speciesInfo')
-
-      expect(store.runModelEnabled).to.be.false
-    })
-  })
-
-  describe('totalSpeciesPercent', () => {
-    it('should return 0.0 when all species are empty', () => {
-      expect(store.totalSpeciesPercent).to.equal('0.0')
-    })
-  })
-
-  describe('updateSpeciesGroup', () => {
-    it('should group same-code species, sum percentages, sort descending, and set highestPercentSpecies', () => {
-      store.speciesList[0] = { species: 'AC', percent: '30' }
-      store.speciesList[1] = { species: 'PL', percent: '50' }
-      store.speciesList[2] = { species: 'PL', percent: '20' }
-      store.updateSpeciesGroup()
-
-      expect(store.speciesGroups[0].siteSpecies).to.equal('PL')
-      expect(Number.parseFloat(store.speciesGroups[0].percent)).to.equal(70)
-      expect(store.speciesGroups[1].siteSpecies).to.equal('AC')
-      expect(store.highestPercentSpecies).to.equal('PL')
-      expect(store.selectedSiteSpecies).to.equal('PL')
-    })
-
-    it('should produce empty groups and null highestPercentSpecies when all species are null', () => {
-      store.updateSpeciesGroup()
-
-      expect(store.speciesGroups).to.deep.equal([])
-      expect(store.highestPercentSpecies).to.be.null
-    })
-
-    it('should create siteIndexRows per group and preserve existing row data across updates', () => {
-      store.speciesList[0] = { species: 'PL', percent: '60' }
-      store.speciesList[1] = { species: 'AC', percent: '40' }
-      store.updateSpeciesGroup()
-      store.siteIndexRows[0].bhaSiteIndex = '25.0'
-
-      store.updateSpeciesGroup()
-
-      expect(store.siteIndexRows).to.have.length(2)
-      expect(store.siteIndexRows[0].speciesCode).to.equal('PL')
-      expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('25.0')
-    })
-
-    it('should apply mode-specific siteIndexRow defaults: Volume+Computed nulls non-primary rows, Supplied sets bhaSiteIndex', () => {
-      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-      store.speciesList[0] = { species: 'PL', percent: '60' }
-      store.speciesList[1] = { species: 'AC', percent: '40' }
-      store.updateSpeciesGroup()
-
-      expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
-      expect(store.siteIndexRows[1].computedValue).to.be.null
-      expect(store.siteIndexRows[1].bhaSiteIndex).to.be.null
-
-      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      store.updateSpeciesGroup()
-
-      store.siteIndexRows.forEach((row) => {
-        expect(row.bhaSiteIndex).to.equal(DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX)
-        expect(row.computedValue).to.be.null
-        expect(row.age).to.be.null
-        expect(row.height).to.be.null
-      })
-    })
-  })
-
-  describe('isVolumeComputed and isSupplied', () => {
-    it('isVolumeComputed is true only when both Computed and Volume conditions are met', () => {
-      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-      expect(store.isVolumeComputed).to.be.true
-
-      store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
-      expect(store.isVolumeComputed).to.be.false
-
-      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-      expect(store.isVolumeComputed).to.be.false
-    })
-
-    it('isSupplied reflects siteSpeciesValues', () => {
-      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-      expect(store.isSupplied).to.be.true
-
-      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      expect(store.isSupplied).to.be.false
-    })
-  })
-
-  describe('resetStore', () => {
-    it('should reset panel states to initial values', () => {
-      store.confirmPanel('reportDetails')
-      store.confirmPanel('speciesInfo')
-      store.resetStore()
-
-      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
-      expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })
-      expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.CLOSE)
-      expect(store.panelState.speciesInfo).to.deep.equal({ confirmed: false, editable: false })
-    })
-
-    it('should reset all data fields and scalar values', () => {
-      store.speciesList[0] = { species: 'PL', percent: '100' }
-      store.updateSpeciesGroup()
-      store.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.YEAR
-      store.reportTitle = 'Custom Title'
-      store.ageType = 'SomeType'
-      store.confirmPanel('reportDetails')
-      store.confirmPanel('speciesInfo')
-      store.confirmPanel('siteInfo')
-      store.confirmPanel('standInfo')
-      store.confirmPanel('reportSettings')
-
-      store.resetStore()
-
-      expect(store.runModelEnabled).to.be.false
-      expect(store.speciesGroups).to.deep.equal([])
-      expect(store.siteIndexRows).to.deep.equal([])
-      expect(store.selectedAgeYearRange).to.equal(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
-      expect(store.reportTitle).to.equal(DEFAULTS.DEFAULT_VALUES.REPORT_TITLE)
-      expect(store.ageType).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_TYPE)
-    })
-  })
-
-  describe('restoreFromProjectionParams', () => {
-    it('should restore all fields and set panels open, confirmed, non-editable in view mode', () => {
-      const params = makeParsedParams({
-        reportTitle: 'My Report',
-        copyTitle: 'Copy Title',
+    store.resetStore()
+    store.speciesList[0] = { species: 'PL', percent: '100' }
+    store.updateSpeciesGroup()
+    store.becZone = 'CWH'
+    store.percentStockableArea = '55'
+    store.restoreFromProjectionParams(
+      makeParsedParams({
+        reportTitle: 'Title',
         ageStart: '20',
-        ageEnd: '200',
-        ageIncrement: '10',
-        selectedExecutionOptions: [ExecutionOptionsEnum.ForwardGrowEnabled],
-      })
-      store.restoreFromProjectionParams(params, true)
+        selectedExecutionOptions: [ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass],
+      }),
+      false,
+    )
 
-      expect(store.reportTitle).to.equal('My Report')
-      expect(store.copyTitle).to.equal('Copy Title')
-      expect(store.startingAge).to.equal('20')
-      expect(store.runModelEnabled).to.be.true
-      ;(['reportDetails', 'speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((panel) => {
-        expect(store.panelOpenStates[panel]).to.equal(CONSTANTS.PANEL.OPEN)
-        expect(store.panelState[panel]).to.deep.equal({ confirmed: true, editable: false })
-      })
-    })
-
-    it('should open reportDetails unconfirmed when reportTitle is null (edit mode)', () => {
-      store.restoreFromProjectionParams(makeParsedParams({ reportTitle: null }), false)
-
-      expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
-      expect(store.panelState.reportDetails.confirmed).to.be.false
-    })
-
-    it('should confirm reportDetails and open speciesInfo when reportTitle is set (edit mode)', () => {
-      store.restoreFromProjectionParams(makeParsedParams({ reportTitle: 'Title' }), false)
-
-      expect(store.panelState.reportDetails.confirmed).to.be.true
-      expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.OPEN)
-    })
-
-    it('should enable runModelEnabled when all panels populated and set projectionType from options (edit mode)', () => {
-      store.speciesList[0] = { species: 'PL', percent: '100' }
-      store.updateSpeciesGroup()
-      store.becZone = 'CWH'
-      store.percentStockableArea = '55'
-
-      store.restoreFromProjectionParams(
-        makeParsedParams({
-          reportTitle: 'Title',
-          ageStart: '20',
-          selectedExecutionOptions: [ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass],
-        }),
-        false,
-      )
-
-      expect(store.runModelEnabled).to.be.true
-      expect(store.projectionType).to.equal(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
-    })
+    expect(store.panelState.reportDetails.confirmed).to.be.true
+    expect(store.runModelEnabled).to.be.true
+    expect(store.projectionType).to.equal(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
   })
 
-  describe('restoreUtilizationLevels (via restoreFromProjectionParams)', () => {
-    it('should override minimumDBHLimit for matching species group', () => {
-      store.speciesList[0] = { species: 'FD', percent: '100' }
-      store.updateSpeciesGroup()
+  it('should override minimumDBHLimit for matching species group via utils', () => {
+    store.speciesList[0] = { species: 'FD', percent: '100' }
+    store.updateSpeciesGroup()
 
-      store.restoreFromProjectionParams(
-        makeParsedParams({ utils: [{ s: 'F', u: UtilizationClassSetEnum._175 }] }),
-        false,
-      )
+    store.restoreFromProjectionParams(
+      makeParsedParams({ utils: [{ s: 'F', u: UtilizationClassSetEnum._175 }] }),
+      false,
+    )
 
-      const fGroup = store.speciesGroups.find((g) => g.group === 'F')
-      expect(fGroup?.minimumDBHLimit).to.equal(UtilizationClassSetEnum._175)
-    })
+    const fGroup = store.speciesGroups.find((g) => g.group === 'F')
+    expect(fGroup?.minimumDBHLimit).to.equal(UtilizationClassSetEnum._175)
   })
 
-  describe('restoreFromModelParameters', () => {
-    it('should restore all data fields', () => {
-      store.restoreFromModelParameters(makeModelParams())
+  it('should restore all model parameter data fields and primary siteIndexRow for Supplied and Computed modes', () => {
+    store.restoreFromModelParameters(makeModelParams({ siteIndex: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED }))
 
-      expect(store.derivedBy).to.equal('Volume')
-      expect(store.becZone).to.equal('CWH')
-      expect(store.ecoZone).to.equal('MH')
-      expect(store.spzAge).to.equal('50')
-      expect(store.spzHeight).to.equal('18.5')
-      expect(store.bha50SiteIndex).to.equal('16.3')
-      expect(store.percentStockableArea).to.equal('55')
-      expect(store.crownClosure).to.equal('60')
-      expect(store.basalArea).to.equal('25')
-      expect(store.treesPerHectare).to.equal('800')
-      expect(store.minDBHLimit).to.equal('7.5 cm+')
-      expect(store.highestPercentSpecies).to.equal('PL')
-      expect(store.selectedSiteSpecies).to.equal('PL')
-      expect(store.referenceYear).to.equal(new Date().getFullYear())
-    })
+    expect(store.derivedBy).to.equal('Volume')
+    expect(store.becZone).to.equal('CWH')
+    expect(store.ecoZone).to.equal('MH')
+    expect(store.spzAge).to.equal('50')
+    expect(store.spzHeight).to.equal('18.5')
+    expect(store.bha50SiteIndex).to.equal('16.3')
+    expect(store.percentStockableArea).to.equal('55')
+    expect(store.crownClosure).to.equal('60')
+    expect(store.basalArea).to.equal('25')
+    expect(store.treesPerHectare).to.equal('800')
+    expect(store.minDBHLimit).to.equal('7.5 cm+')
+    expect(store.highestPercentSpecies).to.equal('PL')
+    expect(store.selectedSiteSpecies).to.equal('PL')
+    expect(store.referenceYear).to.equal(new Date().getFullYear())
+    expect(store.siteIndexRows[0].computedValue).to.be.null
+    expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('16.3')
+    expect(store.siteIndexRows[0].age).to.be.null
+    expect(store.siteIndexRows[0].height).to.be.null
 
-    it('should restore primary siteIndexRow in Supplied mode', () => {
-      store.restoreFromModelParameters(makeModelParams({ siteIndex: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED }))
+    store.restoreFromModelParameters(
+      makeModelParams({ siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED, compute: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX }),
+    )
+    expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
+    expect(store.siteIndexRows[0].bhaSiteIndex).to.be.null
 
-      expect(store.siteIndexRows[0].computedValue).to.be.null
-      expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('16.3')
-      expect(store.siteIndexRows[0].age).to.be.null
-      expect(store.siteIndexRows[0].height).to.be.null
-    })
+    store.restoreFromModelParameters(
+      makeModelParams({ siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED, compute: CONSTANTS.COMPUTED_VALUE.HEIGHT }),
+    )
+    expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.HEIGHT)
+    expect(store.siteIndexRows[0].height).to.be.null
+    expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('16.3')
+  })
 
-    it('should restore primary siteIndexRow in Computed mode for BHA_SITE_INDEX and HEIGHT', () => {
-      store.restoreFromModelParameters(makeModelParams({
-        siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
-        compute: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
-      }))
-      expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
-      expect(store.siteIndexRows[0].bhaSiteIndex).to.be.null
-
-      store.restoreFromModelParameters(makeModelParams({
-        siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
-        compute: CONSTANTS.COMPUTED_VALUE.HEIGHT,
-      }))
-      expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.HEIGHT)
-      expect(store.siteIndexRows[0].height).to.be.null
-      expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('16.3')
-    })
-
-    it('should restore secondary species rows in Computed mode', () => {
-      store.restoreFromModelParameters(makeModelParams({
+  it('should restore secondary siteIndexRows for Computed and Supplied modes', () => {
+    store.restoreFromModelParameters(
+      makeModelParams({
         siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
         compute: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
         compute2: CONSTANTS.COMPUTED_VALUE.HEIGHT,
@@ -406,25 +326,20 @@ describe('Model Parameter Store', () => {
         age2: '50',
         height2: null,
         si2: '20.0',
-      }))
+      }),
+    )
 
-      expect(store.siteIndexRows[1].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.HEIGHT)
-      expect(store.siteIndexRows[1].ageType).to.equal(CONSTANTS.AGE_TYPE.TOTAL)
-      expect(store.siteIndexRows[1].age).to.equal('50')
-      expect(store.siteIndexRows[1].height).to.be.null
-      expect(store.siteIndexRows[1].bhaSiteIndex).to.equal('20.0')
-    })
+    expect(store.siteIndexRows[1].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.HEIGHT)
+    expect(store.siteIndexRows[1].ageType).to.equal(CONSTANTS.AGE_TYPE.TOTAL)
+    expect(store.siteIndexRows[1].age).to.equal('50')
+    expect(store.siteIndexRows[1].height).to.be.null
+    expect(store.siteIndexRows[1].bhaSiteIndex).to.equal('20.0')
 
-    it('should restore secondary species rows in Supplied mode', () => {
-      store.restoreFromModelParameters(makeModelParams({
-        siteIndex: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
-        si2: '22.5',
-      }))
+    store.restoreFromModelParameters(makeModelParams({ siteIndex: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED, si2: '22.5' }))
 
-      expect(store.siteIndexRows[1].computedValue).to.be.null
-      expect(store.siteIndexRows[1].bhaSiteIndex).to.equal('22.5')
-      expect(store.siteIndexRows[1].age).to.be.null
-      expect(store.siteIndexRows[1].height).to.be.null
-    })
+    expect(store.siteIndexRows[1].computedValue).to.be.null
+    expect(store.siteIndexRows[1].bhaSiteIndex).to.equal('22.5')
+    expect(store.siteIndexRows[1].age).to.be.null
+    expect(store.siteIndexRows[1].height).to.be.null
   })
 })
