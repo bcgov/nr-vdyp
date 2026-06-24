@@ -638,7 +638,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 		// Call EMP098 to get Veteran Basal Area, store in LVCOM1/BA array at positions
 		// 0,0 and 0,4
-		var estimatedBaseArea = estimateVeteranBaseArea(height, crownClosure, primaryGenus, region);
+		var estimatedBaseArea = this.estimationMethods
+				.estimateVeteranBasalArea(height, crownClosure, primaryGenus, region);
 		var baseAreaByUtilization = Utils.utilizationVector(estimatedBaseArea);
 		// Copy over Species entries.
 		// LVCOM/ISPLV=ISPV
@@ -836,11 +837,6 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 	}
 
-	// EMP098
-	float estimateVeteranBaseArea(float height, float crownClosure, String genus, Region region) {
-		return this.estimationMethods.estimateVeteranBasalArea(height, crownClosure, genus, region);
-	}
-
 	/**
 	 * estimate mean volume per tree For a species, for trees with dbh >= 7.5 CM Using eqn in jf117.doc
 	 *
@@ -850,28 +846,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	 * @return
 	 */
 	public float estimateMeanVolume(int volumeGroup, float loreyHeight, float quadMeanDiameter) {
-		var coeMap = Utils.<Map<Integer, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.TOTAL_STAND_WHOLE_STEM_VOL, Map.class
-		);
-
-		var coe = coeMap.get(volumeGroup);
-
-		if (coe == null) {
-			throw new IllegalArgumentException("Coefficients not found for volume group " + volumeGroup);
-		}
-
-		float lvMean = //
-				coe.getCoe(0) + //
-						coe.getCoe(1) * log(quadMeanDiameter) + //
-						coe.getCoe(2) * log(loreyHeight) + //
-						coe.getCoe(3) * quadMeanDiameter + //
-						coe.getCoe(4) / quadMeanDiameter + //
-						coe.getCoe(5) * loreyHeight + //
-						coe.getCoe(6) * quadMeanDiameter * quadMeanDiameter + //
-						coe.getCoe(7) * quadMeanDiameter * loreyHeight + //
-						coe.getCoe(8) * loreyHeight / quadMeanDiameter;
-
-		return exp(lvMean);
+		return estimationMethods.estimateWholeStemVolumePerTree(volumeGroup, loreyHeight, quadMeanDiameter);
 	}
 
 	double[] rootFinderFunction(double[] point, VdypLayer layer, double[] diameterBase) {

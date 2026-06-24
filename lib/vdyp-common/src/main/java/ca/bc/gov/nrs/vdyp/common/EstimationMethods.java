@@ -542,6 +542,7 @@ public class EstimationMethods {
 	 * @return as described
 	 */
 	public float estimateWholeStemVolumePerTree(int volumeGroup, float loreyHeight, float quadMeanDiameter) {
+		// Using eqn in jf117.doc
 		var totalStandWholeStemVolumeCoeMap = controlMap.getTotalStandWholeStepVolumeCoeMap();
 		var coe = totalStandWholeStemVolumeCoeMap.get(volumeGroup).reindex(0);
 
