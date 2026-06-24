@@ -837,18 +837,6 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 	}
 
-	/**
-	 * estimate mean volume per tree For a species, for trees with dbh >= 7.5 CM Using eqn in jf117.doc
-	 *
-	 * @param volumeGroup
-	 * @param loreyHeight
-	 * @param quadMeanDiameter
-	 * @return
-	 */
-	public float estimateMeanVolume(int volumeGroup, float loreyHeight, float quadMeanDiameter) {
-		return estimationMethods.estimateWholeStemVolumePerTree(volumeGroup, loreyHeight, quadMeanDiameter);
-	}
-
 	double[] rootFinderFunction(double[] point, VdypLayer layer, double[] diameterBase) {
 
 		var percentL1 = new double[point.length];
@@ -888,7 +876,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 				final float loreyHeight = spec.getLoreyHeightByUtilization().getAll();
 
-				final float meanVolume = estimateMeanVolume(spec.getVolumeGroup(), loreyHeight, quadMeanDiameter);
+				final float meanVolume = estimationMethods
+						.estimateWholeStemVolumePerTree(spec.getVolumeGroup(), loreyHeight, quadMeanDiameter);
 				final float wholeStemVolume = tph * meanVolume;
 
 				spec.getWholeStemVolumeByUtilization().setAll(wholeStemVolume);

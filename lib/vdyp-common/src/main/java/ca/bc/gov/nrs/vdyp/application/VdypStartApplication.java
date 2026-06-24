@@ -354,14 +354,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	/**
-	 * @deprecated Use {@link ca.bc.gov.nrs.vdyp.common.EstimationMethods#leadSpecies(L2)} instead
-	 */
-	public <L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite> S2
-			leadGenus(L2 fipLayer) {
-		return estimationMethods.leadSpecies(fipLayer);
-	}
-
-	/**
 	 * Return the value of the given optional otherwise throw a FatalProcessingException
 	 *
 	 * @param <T>  type of the value
