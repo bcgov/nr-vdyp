@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -94,6 +95,8 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 			partitionedCount = inputPartitioner
 					.partitionCsvFiles(polygonPath, layerPath, computedPartitions, jobBaseDir, jobGuid);
 
+			deleteOriginalInputDirectory(inputDir);
+
 			stepExecution.getJobExecution().getExecutionContext()
 					.putInt(BatchConstants.Job.TOTAL_POLYGONS, partitionedCount);
 			stepExecution.getJobExecution().getExecutionContext()
@@ -107,6 +110,21 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 		pushInitialProgress(partitionedCount);
 
 		logger.debug("Completed download and partitioning of input files.");
+	}
+
+	void deleteOriginalInputDirectory(Path inputDir) {
+		try {
+			deleteDirectory(inputDir);
+			logger.debug("[GUID: {}] Deleted original input directory after partitioning: {}", jobGuid, inputDir);
+		} catch (IOException e) {
+			logger.warn(
+					"[GUID: {}] Failed to delete original input directory {}: {}", jobGuid, inputDir, e.getMessage()
+			);
+		}
+	}
+
+	protected void deleteDirectory(Path dir) throws IOException {
+		BatchUtils.deleteDirectoryRecursively(dir);
 	}
 
 	private void pushInitialProgress(int totalPolygons) {
