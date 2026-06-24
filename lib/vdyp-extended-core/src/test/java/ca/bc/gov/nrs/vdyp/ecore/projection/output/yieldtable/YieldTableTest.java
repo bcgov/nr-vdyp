@@ -892,8 +892,7 @@ class YieldTableTest {
 	void testTextCFSBiomassTable() throws AbstractProjectionRequestException, IOException {
 
 		var parameters = testHelper.addSelectedOptions(
-				new Parameters(),
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS, //
+				new Parameters(), Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS, //
 				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON, //
