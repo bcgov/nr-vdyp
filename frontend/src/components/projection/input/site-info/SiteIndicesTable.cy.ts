@@ -101,12 +101,15 @@ describe('<SiteIndicesTable />', () => {
 
   it('shows Calc. placeholder for the field matching the selected computedValue', () => {
     mountTable(true, (store) => {
-      store.siteIndexRows = [
+      store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+    })
+    cy.then(() => {
+      useModelParameterStore().siteIndexRows = [
         makeRow('FD', { age: null, computedValue: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE }),
         makeRow('PL', { height: null, computedValue: CONSTANTS.COMPUTED_VALUE.HEIGHT }),
         makeRow('S', { bhaSiteIndex: null, computedValue: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX }),
       ]
-      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
     })
     cy.get('tbody tr').eq(0).find('.site-spin-field').eq(0).find('input')
       .should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.CALC)

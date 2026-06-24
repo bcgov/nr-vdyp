@@ -927,7 +927,7 @@ export const revertPanelToSaved = async (panelName: PanelName): Promise<void> =>
   // Always call restoreFromModelParameters so that fields are reset to the saved state
   // (or to empty defaults if no modelParameters exist yet).
   let modelParams: ModelParameters = {
-    species: [], derivedBy: null, becZone: null, ecoZone: null, siteIndex: null, siteSpecies: null,
+    species: [], derivedBy: CONSTANTS.DERIVED_BY.VOLUME, becZone: null, ecoZone: null, siteIndex: null, siteSpecies: null,
     compute: null, ageYears: null, speciesAge: null, speciesHeight: null, bha50SiteIndex: null,
     compute2: null, ageYears2: null, age2: null, height2: null, si2: null,
     compute3: null, ageYears3: null, age3: null, height3: null, si3: null,
