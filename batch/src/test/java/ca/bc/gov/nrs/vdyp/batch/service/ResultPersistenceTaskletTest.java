@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -155,6 +156,42 @@ class ResultPersistenceTaskletTest {
 		// Assert
 		assertEquals(RepeatStatus.FINISHED, status);
 		verify(comsFileService).updateStoredObject(eq(resultFileComsObjectGuid), any(Path.class), any(String.class));
+		assertFalse(Files.exists(tempDir), "Job directory should be deleted after successful S3 upload");
+	}
+
+	@Test
+	void testExecute_filesExist_warningsFileDeletedAfterUpload() throws Exception {
+		UUID resultFileSetGuid = UUID.randomUUID();
+		UUID resultFileComsObjectGuid = UUID.randomUUID();
+
+		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
+				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()) //
+				.addString(BatchConstants.Job.TIMESTAMP, BatchUtils.createJobTimestamp()) //
+				.addLong(BatchConstants.Partition.NUMBER, 4L) //
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()) //
+				.toJobParameters();
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
+		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
+		when(details.resultFileSet())
+				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));
+		when(vdypClient.getFileSetFiles(any(), matches(resultFileSetGuid.toString()))).thenReturn(
+				List.of(new FileMappingDetails(UUID.randomUUID().toString(), resultFileComsObjectGuid.toString()))
+		);
+		when(details.reportTitle()).thenReturn("Test Report");
+		doNothing().when(comsFileService).updateStoredObject(any(UUID.class), any(Path.class), any(String.class));
+
+		Path finalZipPath = BatchUtils.getFinalZipName(tempDir, jobParameters.getString(BatchConstants.Job.TIMESTAMP));
+		Files.createFile(finalZipPath);
+
+		Path warningsFile = tempDir.getParent()
+				.resolve(tempDir.getFileName() + BatchConstants.Partition.WARNING_FILE_NAME);
+		Files.createFile(warningsFile);
+
+		tasklet.execute(stepContribution, chunkContext);
+
+		assertFalse(Files.exists(warningsFile), "Warnings file should be deleted after successful S3 upload");
 	}
 
 	@Test
@@ -204,5 +241,45 @@ class ResultPersistenceTaskletTest {
 		verify(vdypClient).completeFileSetFileUpload(
 				projectionGuid.toString(), resultFileSetGuid.toString(), placeholderFileMappingGuid.toString()
 		);
+	}
+
+	@Test
+	void testCleanupJobFiles_warningsPathIsNonEmptyDir_logsWarnAndContinues() throws Exception {
+		UUID resultFileSetGuid = UUID.randomUUID();
+		UUID resultFileComsObjectGuid = UUID.randomUUID();
+
+		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
+				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()) //
+				.addString(BatchConstants.Job.TIMESTAMP, BatchUtils.createJobTimestamp()) //
+				.addLong(BatchConstants.Partition.NUMBER, 4L) //
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()) //
+				.toJobParameters();
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
+		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
+		when(details.resultFileSet())
+				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));
+		when(vdypClient.getFileSetFiles(any(), matches(resultFileSetGuid.toString()))).thenReturn(
+				List.of(new FileMappingDetails(UUID.randomUUID().toString(), resultFileComsObjectGuid.toString()))
+		);
+		when(details.reportTitle()).thenReturn("Test Report");
+		doNothing().when(comsFileService).updateStoredObject(any(UUID.class), any(Path.class), any(String.class));
+
+		Path finalZipPath = BatchUtils.getFinalZipName(tempDir, jobParameters.getString(BatchConstants.Job.TIMESTAMP));
+		Files.createFile(finalZipPath);
+
+		Path warningsAsDir = tempDir.getParent()
+				.resolve(tempDir.getFileName() + BatchConstants.Partition.WARNING_FILE_NAME);
+		Files.createDirectory(warningsAsDir);
+		Files.createFile(warningsAsDir.resolve("nested.txt"));
+
+		try {
+			RepeatStatus status = tasklet.execute(stepContribution, chunkContext);
+			assertEquals(RepeatStatus.FINISHED, status);
+		} finally {
+			Files.deleteIfExists(warningsAsDir.resolve("nested.txt"));
+			Files.deleteIfExists(warningsAsDir);
+		}
 	}
 }

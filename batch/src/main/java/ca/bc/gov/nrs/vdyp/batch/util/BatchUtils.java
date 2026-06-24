@@ -2,8 +2,11 @@ package ca.bc.gov.nrs.vdyp.batch.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -256,6 +259,34 @@ public final class BatchUtils {
 		return new VDYPProjectionProgressUpdate(
 				jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, 0
 		);
+	}
+
+	/**
+	 * Recursively deletes a directory and all its contents. Silently succeeds if the directory does not exist.
+	 *
+	 * @param directory The directory to delete
+	 * @throws IOException if deletion fails for any entry
+	 */
+	public static void deleteDirectoryRecursively(Path directory) throws IOException {
+		if (Files.notExists(directory)) {
+			return;
+		}
+		Files.walkFileTree(directory, new SimpleFileVisitor<>() {
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				Files.delete(file);
+				return FileVisitResult.CONTINUE;
+			}
+
+			@Override
+			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+				if (exc != null) {
+					throw exc;
+				}
+				Files.delete(dir);
+				return FileVisitResult.CONTINUE;
+			}
+		});
 	}
 
 	public static void confirmDirectoryExists(Path dirPath) throws IOException {

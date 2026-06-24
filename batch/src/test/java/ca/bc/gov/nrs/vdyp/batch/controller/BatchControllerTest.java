@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -292,8 +293,75 @@ class BatchControllerTest {
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
 		assertEquals("STOP_REQUESTED", response.getBody().get(BatchConstants.Job.STATUS));
-		assertEquals(jobGuid, response.getBody().get(BatchConstants.Job.GUID));
+		assertEquals(jobGuid.toString(), response.getBody().get(BatchConstants.Job.GUID));
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
+	}
+
+	@Test
+	void testStopBatchJobByProjectionGuid_WithValidProjectionGuid_StopsJob()
+			throws NoSuchJobException, NoSuchJobExecutionException, JobExecutionNotRunningException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID jobGuid = UUID.randomUUID();
+		Long executionId = 123L;
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(jobInstance));
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.GuidInput.PROJECTION_GUID)).thenReturn(projectionGuid.toString());
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
+		when(jobExecution.getId()).thenReturn(executionId);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.STARTED);
+		when(jobOperator.stop(executionId)).thenReturn(true);
+
+		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJobByProjectionGuid(projectionGuid);
+
+		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("STOP_REQUESTED", response.getBody().get(BatchConstants.Job.STATUS));
+		assertEquals(jobGuid.toString(), response.getBody().get(BatchConstants.Job.GUID));
+		assertEquals(projectionGuid.toString(), response.getBody().get(BatchConstants.GuidInput.PROJECTION_GUID));
+		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
+		verify(jobOperator).stop(executionId);
+	}
+
+	@Test
+	void testStopBatchJobByProjectionGuid_WithPreviousExecution_StopsRunningExecution()
+			throws NoSuchJobException, NoSuchJobExecutionException, JobExecutionNotRunningException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID oldJobGuid = UUID.randomUUID();
+		UUID runningJobGuid = UUID.randomUUID();
+		Long runningExecutionId = 456L;
+
+		JobInstance oldInstance = new JobInstance(1L, "testJob");
+		JobInstance runningInstance = new JobInstance(2L, "testJob");
+		JobParameters oldParameters = new JobParametersBuilder()
+				.addString(BatchConstants.Job.GUID, oldJobGuid.toString())
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
+		JobParameters runningParameters = new JobParametersBuilder()
+				.addString(BatchConstants.Job.GUID, runningJobGuid.toString())
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
+		JobExecution oldExecution = new JobExecution(oldInstance, 123L, oldParameters);
+		oldExecution.setStatus(BatchStatus.COMPLETED);
+		JobExecution runningExecution = new JobExecution(runningInstance, runningExecutionId, runningParameters);
+		runningExecution.setStatus(BatchStatus.STARTED);
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(2L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(oldInstance, runningInstance));
+		when(jobExplorer.getJobExecutions(oldInstance)).thenReturn(List.of(oldExecution));
+		when(jobExplorer.getJobExecutions(runningInstance)).thenReturn(List.of(runningExecution));
+		when(jobOperator.stop(runningExecutionId)).thenReturn(true);
+
+		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJobByProjectionGuid(projectionGuid);
+
+		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("STOP_REQUESTED", response.getBody().get(BatchConstants.Job.STATUS));
+		assertEquals(runningJobGuid.toString(), response.getBody().get(BatchConstants.Job.GUID));
+		assertEquals(runningExecutionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
+		verify(jobOperator).stop(runningExecutionId);
 	}
 
 	@Test

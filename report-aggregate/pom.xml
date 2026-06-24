@@ -3,7 +3,7 @@
 
 	<groupId>ca.bc.gov.nrs.vdyp</groupId>
   <artifactId>report-aggregate</artifactId>
-	<version>8.0.0-SNAPSHOT</version>
+	<version>1.2.0-SNAPSHOT</version>
   <name>Variable Density Yield Project - Report Aggregation</name>
   <description>Aggregate Coverage Report</description>
 
