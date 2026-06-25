@@ -653,11 +653,10 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		entries.add("Finishing Total Age...... " + context.getParams().getAgeEnd());
 		entries.add("Age Increment............ " + context.getParams().getAgeIncrement());
 
-		entries.add(
-				"Projected Values......... "
-						+ (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
-								? "CFS Biomass" : "Volume")
-		);
+		boolean hasCfs = context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS);
+		boolean hasVolume = context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
+		String projectedValuesLabel = (hasCfs && hasVolume) ? "Both" : hasCfs ? "CFS Biomass" : "Volume";
+		entries.add("Projected Values......... " + projectedValuesLabel);
 
 		for (Stand stand : layer.getSp0sAsSupplied()) {
 			SP0Name speciesGroup = SP0Name.forText(stand.getSpeciesGroup().getSpeciesCode());

@@ -810,11 +810,89 @@ class YieldTableTest {
 	}
 
 	@Test
-	void testTextCFSBiomassTable() throws AbstractProjectionRequestException, IOException {
+	void testCSVBothVolumeAndCFSBiomassTable() throws AbstractProjectionRequestException, IOException {
 
 		var parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS, //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES,
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS,
+				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE,
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER,
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
+		);
+		parameters.setYearStart(2013);
+		parameters.setYearEnd(2050);
+		parameters.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+
+		var polygonStream = new HcsvPolygonStream(context, polygonInputStream, layersInputStream);
+
+		var polygon = polygonStream.getNextPolygon();
+
+		var yieldTable = YieldTable.of(context);
+		try {
+			yieldTable.startGeneration();
+
+			var state = new PolygonProjectionState();
+			state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			state.setProcessingResults(ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY, Optional.empty());
+
+			var vdypPolygonStream = Files
+					.newInputStream(testHelper.getResourceFile(relativeResourcePath, "vp_grow.dat"));
+			var vdypSpeciesStream = Files
+					.newInputStream(testHelper.getResourceFile(relativeResourcePath, "vs_grow.dat"));
+			var vdypUtilizationsStream = Files
+					.newInputStream(testHelper.getResourceFile(relativeResourcePath, "vu_grow.dat"));
+
+			ProjectionResultsReader forwardReader = new TestProjectionResultsReader(
+					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream
+			);
+			ProjectionResultsReader backReader = new NullProjectionResultsReader();
+
+			var projectionResults = ProjectionResultsBuilder
+					.read(polygon, state, ProjectionTypeCode.PRIMARY, forwardReader, backReader);
+			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
+				var layer = layerReportingInfo.getLayer();
+				if (state.layerWasProjected(layer)) {
+					yieldTable.generateYieldTableForPolygonLayer(
+							polygon, projectionResults, state, layerReportingInfo, true
+					);
+				}
+			}
+		} finally {
+			yieldTable.endGeneration();
+			yieldTable.close();
+		}
+
+		var content = new String(yieldTable.getAsStream().readAllBytes());
+		ResultYieldTable csvTable = new ResultYieldTable(content);
+		var yieldTableRow = csvTable.get("13919428").get("1").get("2013");
+
+		assertTrue(yieldTableRow.containsKey("PRJ_VOL_WS"));
+		assertTrue(yieldTableRow.containsKey("PRJ_VOL_CU"));
+		assertTrue(yieldTableRow.containsKey("PRJ_CFS_BIO_STEM"));
+		assertTrue(yieldTableRow.containsKey("PRJ_CFS_BIO_BARK"));
+		assertTrue(yieldTableRow.containsKey("PRJ_CFS_BIO_BRANCH"));
+		assertTrue(yieldTableRow.containsKey("PRJ_CFS_BIO_FOLIAGE"));
+	}
+
+	@Test
+	void testTextCFSBiomassTable() throws AbstractProjectionRequestException, IOException {
+
+		var parameters = testHelper.addSelectedOptions(
+				new Parameters(), Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS, //
 				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON, //

@@ -507,18 +507,15 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testCSFBiomassIssues2() {
+	void testCSFBiomassIssues2() throws AbstractProjectionRequestException {
 
+		// CFS Biomass + MoF Volume is allowed (produces a combined CSV yield table)
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
 				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
 
-		AbstractProjectionRequestException e = assertThrows(
-				AbstractProjectionRequestException.class,
-				() -> new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false)
-		);
-		TestHelper
-				.verifyMessageSetIs(e.getValidationMessages(), CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+		assertTrue(context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS));
 	}
 
 	@Test

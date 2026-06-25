@@ -324,14 +324,13 @@ public class ProjectionRequestParametersValidator {
 				}
 			}
 
-			// When selecting CSV Output for CFS Biomass, ensure neither of the MoF Volume
-			// nor MoF Biomass have also been selected as the CFS Biomass has different
-			// output columns than for MoF Volume/Biomass.
+			// When selecting CSV Output for CFS Biomass, ensure MoF Biomass has not also
+			// been selected. MoF Volume is allowed alongside CFS Biomass and will produce
+			// a combined table with both column sets.
 
 			if (vparams.getOutputFormat() == OutputFormat.CSV_YIELD_TABLE //
 					&& vparams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS) //
-					&& (vparams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)
-							|| vparams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES))) {
+					&& vparams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
 
 				recordValidationMessage(CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS);
 			}

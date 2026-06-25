@@ -6,7 +6,7 @@ public enum ValidationMessageKind {
 			"Age range yield table parameters are ignored when DCSV output format is requested"
 	), CANNOT_SPECIFY_BOTH_CFS_AND_MOF_BIOMASS_OUTPUT("MoF and CFS Biomass output cannot be selected at the same time"),
 	CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS(
-			"For CSV Yield Table of CFS Biomass, neither MoF volume or biomass may also be selected"
+			"For CSV Yield Table of CFS Biomass, MoF Biomass may not also be selected"
 	), //
 	DUPLICATE_LAYER_SUPPLIED("Polygon {0}: Layer \"{1}\" has already been supplied"),
 	EXPECTED_STREAMS_NOT_SUPPLIED("The following input file types were not supplied: {0}"),
