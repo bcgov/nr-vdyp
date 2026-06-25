@@ -37,7 +37,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
@@ -739,7 +738,7 @@ class EstimationMethodsTest {
 
 			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
 
-			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
+			var bec = becLookup.get("IDF").get();
 
 			float result = emp.estimateQuadMeanDiameterYield(
 					7.6f, 15f, Optional.empty(),
@@ -789,7 +788,7 @@ class EstimationMethodsTest {
 
 			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
 
-			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
+			var bec = becLookup.get("IDF").get();
 
 			var ex = Assertions.assertThrows(
 					StandProcessingException.class,
@@ -902,7 +901,7 @@ class EstimationMethodsTest {
 
 			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
 
-			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
+			var bec = becLookup.get("IDF").get();
 
 			float result = emp.estimateBaseAreaYield(
 					32f, 190.300003f, Optional.empty(), false,
@@ -945,7 +944,7 @@ class EstimationMethodsTest {
 
 			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
 
-			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
+			var bec = becLookup.get("IDF").get();
 
 			Coefficients result = emp.estimateBaseAreaYieldCoefficients(
 					(Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>>) species, bec
@@ -1738,7 +1737,6 @@ class EstimationMethodsTest {
 			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
 			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
 
-			var becLookup = BecDefinitionParser.getBecs(controlMap);
 			var bec = becLookup.get("CWH").get();
 
 			var layer = TestLayer.build(lb -> {
@@ -1777,7 +1775,6 @@ class EstimationMethodsTest {
 			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
 			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
 
-			var becLookup = BecDefinitionParser.getBecs(controlMap);
 			var bec = becLookup.get("CWH").get();
 
 			var layer = TestLayer.build(lb -> {
@@ -1816,7 +1813,6 @@ class EstimationMethodsTest {
 			var polygonId = new PolygonIdentifier("TestPolygon", 2024);
 			var em = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
 
-			var becLookup = BecDefinitionParser.getBecs(controlMap);
 			var bec = becLookup.get("CWH").get();
 
 			var layer = TestLayer.build(lb -> {
@@ -1857,7 +1853,6 @@ class EstimationMethodsTest {
 
 		@Test
 		void test() {
-			var becLookup = BecDefinitionParser.getBecs(controlMap);
 			var bec = becLookup.get("CWH").get();
 
 			var result = emp.estimateVeteranQuadMeanDiameter("PY", bec, 10.5370f);

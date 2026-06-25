@@ -23,7 +23,6 @@ import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
@@ -1666,13 +1665,13 @@ public class EstimationMethods {
 		switch (basalAreaMinimum) {
 		case ADJUST:
 			if (baseArea < MINIMUM_BASAL_AREA) {
-				VdypStartApplication.log.atWarn().setMessage("Estimated basal area {} is too low. Increasing to {}.")
-						.addArgument(baseArea).addArgument(MINIMUM_BASAL_AREA).log();
+				log.atWarn().setMessage("Estimated basal area {} is too low. Increasing to {}.").addArgument(baseArea)
+						.addArgument(MINIMUM_BASAL_AREA).log();
 				baseArea = MINIMUM_BASAL_AREA;
 			}
 			break;
 		case LENIENT:
-			VdypStartApplication.log.atWarn().setMessage("Estimated basal area {} is too low.").addArgument(baseArea)
+			log.atWarn().setMessage("Estimated basal area {} is too low.").addArgument(baseArea)
 					.addArgument(MINIMUM_BASAL_AREA).log();
 			break;
 		case STRICT:
@@ -1715,12 +1714,11 @@ public class EstimationMethods {
 	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Ensures that it does not go below
 	 * the allowable minimum.
 	 *
-	 * @param vdypStartApplication TODO
-	 * @param layer                The layer
-	 * @param bec                  BEC zone of the polygon
-	 * @param yieldFactor          Yield factor of the polygon
-	 * @param breastHeightAge      Breast height age
-	 * @param baseAreaOverstory    Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @param layer             The layer
+	 * @param bec               BEC zone of the polygon
+	 * @param yieldFactor       Yield factor of the polygon
+	 * @param breastHeightAge   Breast height age
+	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
 	 * @return The basal area.
 	 */
 	// EMP040
@@ -1743,12 +1741,11 @@ public class EstimationMethods {
 	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Throws an exception if the
 	 * computed BA is below the allowable minimum
 	 *
-	 * @param vdypStartApplication TODO
-	 * @param layer                The layer
-	 * @param bec                  BEC zone of the polygon
-	 * @param yieldFactor          Yield factor of the polygon
-	 * @param breastHeightAge      Breast height age
-	 * @param baseAreaOverstory    Basal area of the veteran layer if there is one, 0 otherwise.
+	 * @param layer             The layer
+	 * @param bec               BEC zone of the polygon
+	 * @param yieldFactor       Yield factor of the polygon
+	 * @param breastHeightAge   Breast height age
+	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
 	 * @return The basal area.
 	 * @throws BaseAreaLowException if the computed BA is below the allowable minimum
 	 */
