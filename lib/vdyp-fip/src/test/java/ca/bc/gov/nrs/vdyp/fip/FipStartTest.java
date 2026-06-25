@@ -1848,20 +1848,6 @@ class FipStartTest {
 		}
 	}
 
-	@Test
-	void testEstimateVeteranLayerBaseArea() throws Exception {
-
-		var controlMap = FipTestUtils.loadControlMap();
-
-		try (var app = new FipStart()) {
-			ApplicationTestUtils.setControlMap(app, controlMap);
-
-			var result = app.estimateVeteranBaseArea(26.2000008f, 4f, "H", Region.COASTAL);
-
-			assertThat(result, closeTo(2.24055195f));
-		}
-	}
-
 	void populateControlMapVeteranVolumeAdjust(HashMap<String, Object> controlMap, Function<String, float[]> mapper) {
 		var map = GenusDefinitionParser.getSpeciesAliases(controlMap).stream()
 				.collect(Collectors.toMap(x -> x, mapper.andThen(x -> new Coefficients(x, 1))));

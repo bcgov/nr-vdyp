@@ -39,6 +39,11 @@ public class FipLayerPrimary extends FipLayer {
 		this.primaryGenus = primaryGenus;
 	}
 
+	@Override
+	public Optional<FipSite> getPrimarySite() {
+		return getSite();
+	}
+
 	/**
 	 * Accepts a configuration function that accepts a builder to configure.
 	 *

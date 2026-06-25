@@ -69,7 +69,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
-import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings.UpperBoundsMode;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
@@ -102,6 +101,8 @@ class VriStartTest {
 		VriDebugSettings debug = EasyMock.createMock(VriDebugSettings.class);
 		EasyMock.expect(debug.getUpperBoundsMode()).andStubReturn(UpperBoundsMode.MODE_1);
 		EasyMock.expect(debug.getMaxBreastHeightAge()).andStubReturn(Optional.of(300f));
+		EasyMock.expect(debug.getNoBasalAreaLimit()).andStubReturn(false);
+		EasyMock.expect(debug.getNoQuadraticMeanDiameterLimit()).andStubReturn(false);
 		EasyMock.replay(debug);
 		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), debug);
 	}

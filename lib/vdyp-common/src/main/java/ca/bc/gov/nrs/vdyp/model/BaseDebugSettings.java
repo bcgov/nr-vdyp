@@ -190,6 +190,16 @@ public class BaseDebugSettings implements DebugSettings {
 		return (UpperBoundsMode) this.getProcessedValue(UPPER_BOUNDS_MODE);
 	}
 
+	@Override
+	public boolean getNoBasalAreaLimit() {
+		return false;
+	}
+
+	@Override
+	public boolean getNoQuadraticMeanDiameterLimit() {
+		return false;
+	}
+
 	/**
 	 * Log a message when applying a default value and return that value.
 	 *

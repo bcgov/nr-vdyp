@@ -1,10 +1,7 @@
 package ca.bc.gov.nrs.vdyp.application;
 
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.floor;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -38,7 +35,6 @@ import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.StartResolvedControlMapImpl;
-import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
@@ -46,13 +42,11 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
-import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
@@ -65,7 +59,6 @@ import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -91,8 +84,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	public static final int CONFIG_LOAD_ERROR = 1;
 	public static final int PROCESSING_ERROR = 2;
-
-	public static final float LOW_CROWN_CLOSURE = 10f;
 
 	static final Map<String, Integer> ITG_PURE = Utils.constMap(map -> {
 		map.put("AC", 36);
@@ -190,7 +181,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	/** The computation instance used by this engine */
 	protected ComputationMethods computers;
 
-	protected Map<String, Object> controlMap = new HashMap<>();
+	public Map<String, Object> controlMap = new HashMap<>();
 
 	public EstimationMethods estimationMethods;
 
@@ -345,258 +336,21 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return vriWriter;
 	}
 
-	static final float MINIMUM_BASAL_AREA = 0.05f;
-
-	enum Strictness {
-		/**
-		 * Prefer to throw an exception
-		 */
-		STRICT,
-		/**
-		 * Prefer to tweak values to work and log a warning
-		 */
-		ADJUST,
-		/**
-		 * Prefer to accept values as they are and log a warning
-		 */
-		LENIENT
-	}
-
-	/**
-	 * Estimate the basal area yield for the primary layer. Ensures that it does not go below the allowable minimum.
-	 *
-	 * @param layer             The layer
-	 * @param bec               BEC zone of the polygon
-	 * @param yieldFactor       Yield factor of the polygon
-	 * @param breastHeightAge   Breast height age
-	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
-	 * @param crownClosure      Crown closure percentage
-	 * @return The basal area.
-	 */
-	// EMP040
-	protected float estimatePrimaryBaseAreaAdjust(
-			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
-			float crownClosure
-	) {
-		try {
-			return estimatePrimaryBaseArea(
-					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure, Strictness.ADJUST
-			);
-		} catch (BaseAreaLowException e) {
-			throw new IllegalStateException("This should never happen", e);
-		}
-	}
-
-	/**
-	 * Estimate the basal area yield for the primary layer. Throws an exception if the computed BA is below the
-	 * allowable minimum
-	 *
-	 * @param layer             The layer
-	 * @param bec               BEC zone of the polygon
-	 * @param yieldFactor       Yield factor of the polygon
-	 * @param breastHeightAge   Breast height age
-	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
-	 * @param crownClosure      Crown closure percentage
-	 * @return The basal area.
-	 * @throws BaseAreaLowException if the computed BA is below the allowable minimum
-	 */
-	// EMP040
-	protected float estimatePrimaryBaseAreaStrict(
-			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
-			float crownClosure
-	) throws BaseAreaLowException {
-		return estimatePrimaryBaseArea(
-				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, crownClosure, Strictness.STRICT
-		);
-	}
-
-	/**
-	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Throws an exception if the
-	 * computed BA is below the allowable minimum
-	 *
-	 * @param layer             The layer
-	 * @param bec               BEC zone of the polygon
-	 * @param yieldFactor       Yield factor of the polygon
-	 * @param breastHeightAge   Breast height age
-	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
-	 * @return The basal area.
-	 * @throws BaseAreaLowException if the computed BA is below the allowable minimum
-	 */
-	// EMP040
-	protected float estimatePrimaryBaseAreaStrict(
-			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
-	) throws BaseAreaLowException {
-		return estimatePrimaryBaseArea(layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, Strictness.STRICT);
-	}
-
-	/**
-	 * Estimate the basal area yield for the primary layer. Determines CC from layer. Ensures that it does not go below
-	 * the allowable minimum.
-	 *
-	 * @param layer             The layer
-	 * @param bec               BEC zone of the polygon
-	 * @param yieldFactor       Yield factor of the polygon
-	 * @param breastHeightAge   Breast height age
-	 * @param baseAreaOverstory Basal area of the veteran layer if there is one, 0 otherwise.
-	 * @return The basal area.
-	 */
-	// EMP040
-	protected float estimatePrimaryBaseAreaAdjust(
-			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
-	) {
-		try {
-			return estimatePrimaryBaseArea(
-					layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, Strictness.ADJUST
-			);
-		} catch (BaseAreaLowException e) {
-			throw new IllegalArgumentException("This should not happen", e);
-		}
-	}
-
-	// EMP040
-	protected float estimatePrimaryBaseArea(
-			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
-			float crownClosure, Strictness basalAreaMinimum
-	) throws BaseAreaLowException {
-		boolean lowCrownClosure = layer.getCrownClosure() < LOW_CROWN_CLOSURE;
-		crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : crownClosure;
-
-		var coeMap = Utils.<MatrixMap2<String, String, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.COE_BA, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class
-		);
-		var modMap = Utils.<MatrixMap2<String, Region, Float>>expectParsedControl(
-				controlMap, ControlKey.BA_MODIFIERS, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class
-		);
-		var upperBoundMap = Utils.<MatrixMap3<Region, String, Integer, Float>>expectParsedControl(
-				controlMap, ControlKey.UPPER_BA_BY_CI_S0_P, MatrixMap3.class
-		);
-
-		var leadGenus = leadGenus(layer);
-
-		var decayBecAlias = bec.getDecayBec().getAlias();
-		Coefficients coe = EstimationMethods.weightedCoefficientSum(
-				List.of(0, 1, 2, 3, 4, 5), 9, 0, layer.getSpecies().values(), BaseVdypSpecies::getFractionGenus,
-				s -> coeMap.get(decayBecAlias, s.getGenus())
-		);
-
-		float ageToUse = clamp(breastHeightAge, 5f, 350f);
-		float trAge = FloatMath.log(ageToUse);
-
-		/* @formatter:off */
-						//      A00 = exp(A(0)) * ( 1.0 +  A(1) * TR_AGE  )
-						/* @formatter:on */
-		var a00 = exp(coe.getCoe(0)) * (1f + coe.getCoe(1) * trAge);
-
-		/* @formatter:off */
-						//      AP  = exp( A(3)) + exp(A(4)) * TR_AGE
-						/* @formatter:on */
-		float ap = FloatMath.exp(coe.getCoe(3)) + exp(coe.getCoe(4)) * trAge;
-
-		var baseArea = 0f;
-
-		float height = getLayerHeight(layer).orElse(0f);
-		if (height > coe.getCoe(2) - 3f) {
-			/* @formatter:off */
-							//  if (HD .le. A(2) - 3.0) then
-							//      BAP = 0.0
-							//      GO TO 90
-							//  else if (HD .lt. A(2)+3.0) then
-							//      FHD = (HD- (A(2)-3.00) )**2 / 12.0
-							//  else
-							//      FHD = HD-A(2)
-							//  end if
-							/* @formatter:on */
-			var fHeight = height <= coe.getCoe(2) + 3f ? //
-					pow(height - (coe.getCoe(2) - 3), 2) / 12f //
-					: height - coe.getCoe(2);
-
-			/* @formatter:off */
-							//      BAP =  A00 * (CCUSE/100) ** ( A(7) + A(8)*log(HD) )   *
-							//     &      FHD**AP * exp( A(5)*HD  + A(6) * BAV )
-							/* @formatter:on */
-			baseArea = a00 * FloatMath.pow(crownClosure / 100, coe.getCoe(7) + coe.getCoe(8) * FloatMath.log(height))
-					* FloatMath.pow(fHeight, ap) * exp(coe.getCoe(5) * height + coe.getCoe(6) * baseAreaOverstory);
-
-			baseArea *= modMap.get(leadGenus.getGenus(), bec.getRegion());
-
-			// TODO
-			var NDEBUG_1 = 0;
-			if (NDEBUG_1 <= 0) {
-				// See ISPSJF128
-				var upperBound = upperBoundMap.get(bec.getRegion(), leadGenus.getGenus(), UpperCoefficientParser.BA);
-				baseArea = min(baseArea, upperBound);
-			}
-
-			if (lowCrownClosure) {
-				baseArea *= layer.getCrownClosure() / LOW_CROWN_CLOSURE;
-			}
-
-		}
-
-		baseArea *= yieldFactor;
-
-		// This is to prevent underflow errors in later calculations
-		// VDYP7 returned an error code in parallel with the modified result
-
-		switch (basalAreaMinimum) {
-		case ADJUST:
-			if (baseArea < MINIMUM_BASAL_AREA) {
-				log.atWarn().setMessage("Estimated basal area {} is too low. Increasing to {}.").addArgument(baseArea)
-						.addArgument(MINIMUM_BASAL_AREA).log();
-				baseArea = MINIMUM_BASAL_AREA;
-			}
-			break;
-		case LENIENT:
-			log.atWarn().setMessage("Estimated basal area {} is too low.").addArgument(baseArea)
-					.addArgument(MINIMUM_BASAL_AREA).log();
-			break;
-		case STRICT:
-			Utils.throwIfPresent(
-					BaseAreaLowException
-							.check(layer.getLayerType(), "Estimated base area", Optional.of(baseArea), 0.05f)
-			);
-			break;
-		}
-
-		return baseArea;
-	}
-
-	protected float estimatePrimaryBaseArea(
-			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
-			Strictness basalAreaMinimum
-	) throws BaseAreaLowException {
-		return estimatePrimaryBaseArea(
-				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, layer.getCrownClosure(), basalAreaMinimum
-		);
-	}
-
 	protected abstract float getYieldFactor(P polygon);
 
-	protected abstract Optional<I> getPrimarySite(L layer);
-
-	protected Optional<Float> getLayerHeight(L layer) {
-		return getPrimarySite(layer).flatMap(BaseVdypSite::getHeight);
-	}
-
 	protected Optional<Float> getLayerAgeTotal(L layer) {
-		return getPrimarySite(layer).flatMap(BaseVdypSite::getAgeTotal);
+		return layer.getPrimarySite().flatMap(BaseVdypSite::getAgeTotal);
 	}
 
 	protected Optional<Float> getLayerYearstoBreastHhight(L layer) {
-		return getPrimarySite(layer).flatMap(BaseVdypSite::getYearsToBreastHeight);
+		return layer.getPrimarySite().flatMap(BaseVdypSite::getYearsToBreastHeight);
 	}
 
 	protected Optional<Float> getLayerBreastHeightAge(L layer) {
 		// TODO implement accessor for VRI and FIP Site. InputSite interface?
-		return getPrimarySite(layer).flatMap(
+		return layer.getPrimarySite().flatMap(
 				site -> Utils.mapBoth(site.getAgeTotal(), site.getYearsToBreastHeight(), (at, ytbh) -> at - ytbh)
 		);
-	}
-
-	public S leadGenus(L fipLayer) {
-		return fipLayer.getSpecies().values().stream()
-				.sorted(Utils.compareUsing(BaseVdypSpecies<? extends BaseVdypSite>::getFractionGenus).reversed())
-				.findFirst().orElseThrow();
 	}
 
 	/**
@@ -738,7 +492,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 		float crownClosureTop = 90f;
 		float breastHeightAge = primaryAgeTotal
-				- getPrimarySite(primaryLayer).flatMap(BaseVdypSite::getYearsToBreastHeight).orElseThrow();
+				- primaryLayer.getPrimarySite().flatMap(BaseVdypSite::getYearsToBreastHeight).orElseThrow();
 
 		float yieldFactor = getYieldFactor(polygon);
 
@@ -746,13 +500,11 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 		breastHeightAge = max(5.0f, breastHeightAge);
 		// EMP040
-		float baseAreaTop = estimatePrimaryBaseAreaAdjust(
-				primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosureTop
-		);
+		float baseAreaTop = estimationMethods
+				.estimatePrimaryBaseAreaAdjust(primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosureTop);
 		// EMP040
-		float baseAreaHat = estimatePrimaryBaseAreaAdjust(
-				primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosure
-		);
+		float baseAreaHat = estimationMethods
+				.estimatePrimaryBaseAreaAdjust(primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosure);
 
 		float percentYield;
 		if (baseAreaTop > 0f && baseAreaHat > 0f) {
@@ -784,7 +536,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected ValueOrMarker<Float, Boolean> isVeteranForEstimatePercentForestLand(P polygon, Optional<L> vetLayer) {
 		boolean veteran = vetLayer//
-				.filter(layer -> getLayerHeight(layer).orElse(0f) > 0f) //
+				.filter(layer -> estimationMethods.getLayerHeight(layer).orElse(0f) > 0f) //
 				.filter(layer -> layer.getCrownClosure() > 0f)//
 				.isPresent(); // LAYERV
 
@@ -807,70 +559,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 		crownClosure = clamp(crownClosure, 0, 100);
 		return crownClosure;
-	}
-
-	// EMP041
-	protected float estimatePrimaryQuadMeanDiameter(
-			L layer, BecDefinition bec, float breastHeightAge, float baseAreaOverstory
-	) {
-		var coeMap = Utils.<MatrixMap2<String, String, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.COE_DQ, MatrixMap2.class
-		);
-		var modMap = Utils.<MatrixMap2<String, Region, Float>>expectParsedControl(
-				controlMap, ControlKey.DQ_MODIFIERS, MatrixMap2.class
-		);
-		var upperBoundMap = Utils.<MatrixMap3<Region, String, Integer, Float>>expectParsedControl(
-				controlMap, ControlKey.UPPER_BA_BY_CI_S0_P, MatrixMap3.class
-		);
-
-		var leadGenus = leadGenus(layer);
-
-		var decayBecAlias = bec.getDecayBec().getAlias();
-		Coefficients coe = EstimationMethods.weightedCoefficientSum(
-				List.of(0, 1, 2, 3, 4), 8, 0, layer.getSpecies().values(), BaseVdypSpecies::getFractionGenus,
-				s -> coeMap.get(decayBecAlias, s.getGenus())
-		);
-
-		var trAge = log(clamp(breastHeightAge, 5f, 350f));
-		var height = getLayerHeight(layer).orElse(0f);
-
-		if (height <= coe.getCoe(5)) {
-			return 7.6f;
-		}
-
-		/* @formatter:off */
-		//    C0 = A(0)
-		//    C1 = EXP(A(1)) + EXP(A(2)) * TR_AGE
-		//    C2 = EXP(A(3)) + EXP(A(4)) * TR_AGE
-		/* @formatter:on */
-		var c0 = coe.get(0);
-		var c1 = exp(coe.getCoe(1)) + exp(coe.getCoe(2)) * trAge;
-		var c2 = exp(coe.getCoe(3)) + exp(coe.getCoe(4)) * trAge;
-
-		/* @formatter:off */
-		//      DQ = C0 + ( C1*(HD - A(5))**C2 )**2 * exp(A(7)*BAV)
-		//     &        * (1.0 - A(6)*CC/100.0)
-		/* @formatter:on */
-
-		var quadMeanDiameter = c0 + pow(c1 * pow(height - coe.getCoe(5), c2), 2)
-				* exp(coe.getCoe(7) * baseAreaOverstory) * (1f - coe.getCoe(6) * layer.getCrownClosure() / 100f);
-
-		/* @formatter:off */
-		//      DQ = DQ * DQMOD200(JLEAD, INDEX_IC)
-		/* @formatter:on */
-		quadMeanDiameter *= modMap.get(leadGenus.getGenus(), bec.getRegion());
-
-		quadMeanDiameter = max(quadMeanDiameter, 7.6f);
-
-		// TODO
-		var NDEBUG_2 = 0;
-		if (NDEBUG_2 <= 0) {
-			// See ISPSJF129
-			var upperBound = upperBoundMap.get(bec.getRegion(), leadGenus.getGenus(), UpperCoefficientParser.DQ);
-			quadMeanDiameter = min(quadMeanDiameter, upperBound);
-		}
-
-		return quadMeanDiameter;
 	}
 
 	protected Map<String, Float> applyGroupsAndGetTargetPercentages(

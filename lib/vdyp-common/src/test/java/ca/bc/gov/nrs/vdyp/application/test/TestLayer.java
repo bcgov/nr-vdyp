@@ -84,4 +84,12 @@ public class TestLayer extends BaseVdypLayer<TestSpecies, TestSite> implements I
 		}
 
 	}
+
+	@Override
+	public Optional<TestSite> getPrimarySite() {
+		return Optional.of(
+				getPrimaryGenus().map(this.getSites()::get).orElseGet(() -> this.getSites().values().iterator().next())
+		);
+	}
+
 }

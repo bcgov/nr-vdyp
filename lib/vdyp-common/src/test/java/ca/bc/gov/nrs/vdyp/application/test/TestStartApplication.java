@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
-import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
@@ -97,11 +96,6 @@ public class TestStartApplication
 	public TestSpecies copySpecies(TestSpecies toCopy, Consumer<Builder<TestSpecies, TestSite, ?>> config) {
 		fail();
 		return null;
-	}
-
-	@Override
-	protected Optional<TestSite> getPrimarySite(TestLayer layer) {
-		return Utils.optSafe(layer.getSites().values().iterator().next());
 	}
 
 	@Override

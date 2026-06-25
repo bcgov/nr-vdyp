@@ -307,13 +307,14 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 				.flatMap(x -> Utils.mapBoth(x.getAgeTotal(), x.getYearsToBreastHeight(), (at, ytbh) -> at - ytbh))
 				.orElse(0f);
 		// EMP040
-		var baseArea = estimatePrimaryBaseAreaStrict(
+		var baseArea = estimationMethods.estimatePrimaryBaseAreaStrict(
 				fipLayer, bec, fipPolygon.getYieldFactor(), breastHeightAge, baseAreaOverstory
 		); // BA_TOT
 
 		result.getBaseAreaByUtilization().setAll(baseArea);
 
-		var quadMeanDiameter = estimatePrimaryQuadMeanDiameter(fipLayer, bec, breastHeightAge, baseAreaOverstory);
+		var quadMeanDiameter = estimationMethods
+				.estimatePrimaryQuadMeanDiameter(fipLayer, bec, breastHeightAge, baseAreaOverstory);
 
 		result.getQuadraticMeanDiameterByUtilization().setAll(quadMeanDiameter);
 
@@ -637,7 +638,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 		// Call EMP098 to get Veteran Basal Area, store in LVCOM1/BA array at positions
 		// 0,0 and 0,4
-		var estimatedBaseArea = estimateVeteranBaseArea(height, crownClosure, primaryGenus, region);
+		var estimatedBaseArea = this.estimationMethods
+				.estimateVeteranBasalArea(height, crownClosure, primaryGenus, region);
 		var baseAreaByUtilization = Utils.utilizationVector(estimatedBaseArea);
 		// Copy over Species entries.
 		// LVCOM/ISPLV=ISPV
@@ -673,19 +675,13 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 					.setLarge(baseAreaByUtilization.getLarge() * vSpec.getPercentGenus() / 100f);
 		}
 
-		var vetDqMap = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.VETERAN_LAYER_DQ, MatrixMap2.class
-		);
-
 		for (var vSpec : vdypSpecies.values()) {
-			// TODO this should probably be using estimateVeteranQuadMeanDiameter
-			var genus = vSpec.getGenus();
-			var coe = vetDqMap.get(genus, region);
-			var a0 = coe.getCoe(1);
-			var a1 = coe.getCoe(2);
-			var a2 = coe.getCoe(3);
+			var speciesId = vSpec.getGenus();
 			float hl = vSpec.getLoreyHeightByUtilization().getCoe(0);
-			float dq = max(a0 + a1 * pow(hl, a2), UtilizationClass.OVER225.lowBound);
+			float dq = max(
+					estimationMethods.estimateVeteranQuadMeanDiameter(speciesId, bec, hl),
+					UtilizationClass.OVER225.lowBound
+			);
 			vSpec.getQuadraticMeanDiameterByUtilization().setLarge(dq);
 			vSpec.getTreesPerHectareByUtilization().setLarge(
 					BaseAreaTreeDensityDiameter.treesPerHectare(vSpec.getBaseAreaByUtilization().getLarge(), dq)
@@ -841,59 +837,6 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 	}
 
-	// EMP098
-	float estimateVeteranBaseArea(float height, float crownClosure, String genus, Region region) {
-		var coefficients = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.VETERAN_BQ, MatrixMap2.class
-		).getM(genus, region);
-
-		// mismatched index is copied from VDYP7
-		float a0 = coefficients.getCoe(1);
-		float a1 = coefficients.getCoe(2);
-		float a2 = coefficients.getCoe(3);
-
-		float baseArea = a0 * pow(max(height - a1, 0.0f), a2);
-
-		baseArea *= crownClosure / 4.0f;
-
-		baseArea = max(baseArea, 0.01f);
-
-		return baseArea;
-	}
-
-	/**
-	 * estimate mean volume per tree For a species, for trees with dbh >= 7.5 CM Using eqn in jf117.doc
-	 *
-	 * @param volumeGroup
-	 * @param loreyHeight
-	 * @param quadMeanDiameter
-	 * @return
-	 */
-	public float estimateMeanVolume(int volumeGroup, float loreyHeight, float quadMeanDiameter) {
-		var coeMap = Utils.<Map<Integer, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.TOTAL_STAND_WHOLE_STEM_VOL, Map.class
-		);
-
-		var coe = coeMap.get(volumeGroup);
-
-		if (coe == null) {
-			throw new IllegalArgumentException("Coefficients not found for volume group " + volumeGroup);
-		}
-
-		float lvMean = //
-				coe.getCoe(0) + //
-						coe.getCoe(1) * log(quadMeanDiameter) + //
-						coe.getCoe(2) * log(loreyHeight) + //
-						coe.getCoe(3) * quadMeanDiameter + //
-						coe.getCoe(4) / quadMeanDiameter + //
-						coe.getCoe(5) * loreyHeight + //
-						coe.getCoe(6) * quadMeanDiameter * quadMeanDiameter + //
-						coe.getCoe(7) * quadMeanDiameter * loreyHeight + //
-						coe.getCoe(8) * loreyHeight / quadMeanDiameter;
-
-		return exp(lvMean);
-	}
-
 	double[] rootFinderFunction(double[] point, VdypLayer layer, double[] diameterBase) {
 
 		var percentL1 = new double[point.length];
@@ -933,7 +876,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 				final float loreyHeight = spec.getLoreyHeightByUtilization().getAll();
 
-				final float meanVolume = estimateMeanVolume(spec.getVolumeGroup(), loreyHeight, quadMeanDiameter);
+				final float meanVolume = estimationMethods
+						.estimateWholeStemVolumePerTree(spec.getVolumeGroup(), loreyHeight, quadMeanDiameter);
 				final float wholeStemVolume = tph * meanVolume;
 
 				spec.getWholeStemVolumeByUtilization().setAll(wholeStemVolume);
@@ -1061,11 +1005,6 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			builder.copy(toCopy);
 			config.accept(builder);
 		});
-	}
-
-	@Override
-	protected Optional<FipSite> getPrimarySite(FipLayer layer) {
-		return layer.getSite();
 	}
 
 	@Override

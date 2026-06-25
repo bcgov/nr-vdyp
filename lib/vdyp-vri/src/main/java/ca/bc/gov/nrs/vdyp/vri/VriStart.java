@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.vri;
 
 import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.quadMeanDiameter;
 import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.treesPerHectare;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 
 import java.io.IOException;
@@ -70,7 +69,6 @@ import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -747,7 +745,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			float specHeight = spec.getSite().flatMap(VriSite::getHeight).filter(x -> x > 0).orElse(dominantHeight);
 			float specBaseArea = spec.getFractionGenus() * baseArea;
 			float specQuadMeanDiameter = max(
-					estimateVeteranQuadMeanDiameter(spec.getGenus(), bec, specHeight), VETERAN_MIN_DQ
+					estimationMethods.estimateVeteranQuadMeanDiameter(spec.getGenus(), bec, specHeight), VETERAN_MIN_DQ
 			);
 			float specTreeDensity = BaseAreaTreeDensityDiameter.treesPerHectare(specBaseArea, specQuadMeanDiameter);
 			sBuilder.loreyHeight(specHeight);
@@ -820,20 +818,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			lowDq = true;
 		}
 		return new VeteranResult(treesPerHectare, lowDq);
-	}
-
-	// EMP097 TODO move to EstimationMethods and this should probably be used in FipStart
-
-	float estimateVeteranQuadMeanDiameter(String sp0, BecDefinition bec, float loreyHeight) {
-		var vetDqMap = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
-				controlMap, ControlKey.VETERAN_LAYER_DQ, MatrixMap2.class
-		);
-		var coe = vetDqMap.get(sp0, bec.getRegion());
-		var a0 = coe.getCoe(1);
-		var a1 = coe.getCoe(2);
-		var a2 = coe.getCoe(3);
-
-		return a0 + a1 * pow(loreyHeight, a2);
 	}
 
 	// VRI_CHK
@@ -1265,18 +1249,18 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 			// EMP040
 			// In VDYP7 Low BA error code here gets propagated up and leads to the polygon being skipped.
-			final float initialPrimaryBaseArea = this.estimatePrimaryBaseAreaStrict(
+			final float initialPrimaryBaseArea = this.estimationMethods.estimatePrimaryBaseAreaStrict(
 					primaryLayer, bec, poly.getYieldFactor(), primaryBreastHeightAge, 0.0f
 			);
 
 			final Optional<Float> veteranBaseArea = veteranLayer.map(VriLayer::getCrownClosure) // BAV
 					.map(ccV -> ccV * initialPrimaryBaseArea / primaryLayer.getCrownClosure());
 
-			final float primaryBaseArea = this.estimatePrimaryBaseAreaStrict(
-					primaryLayer, bec, poly.getYieldFactor(), primaryBreastHeightAge, veteranBaseArea.orElse(0.0f) // BAP
+			final float primaryBaseArea = this.estimationMethods.estimatePrimaryBaseAreaStrict(
+					primaryLayer, bec, poly.getYieldFactor(), primaryBreastHeightAge, veteranBaseArea.orElse(0.0f)
 			);
 
-			final float primaryQuadMeanDiameter = this.estimatePrimaryQuadMeanDiameter(
+			final float primaryQuadMeanDiameter = this.estimationMethods.estimatePrimaryQuadMeanDiameter(
 					primaryLayer, bec, primaryBreastHeightAge, veteranBaseArea.orElse(0f)
 			);
 
@@ -1421,11 +1405,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		} catch (RuntimeProcessingException ex) {
 			throw new FatalProcessingException(ex);
 		}
-	}
-
-	@Override
-	protected Optional<VriSite> getPrimarySite(VriLayer layer) {
-		return layer.getPrimarySite();
 	}
 
 	@Override

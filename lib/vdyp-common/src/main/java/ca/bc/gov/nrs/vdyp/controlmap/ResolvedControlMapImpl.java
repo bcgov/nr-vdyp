@@ -203,11 +203,42 @@ public abstract class ResolvedControlMapImpl implements ResolvedControlMap {
 
 	@Override
 	public MatrixMap2<String, String, Coefficients> getQuadMeanDiameterYieldCoefficients() {
-		return get(ControlKey.DQ_YIELD, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class);
+		return get(ControlKey.DQ_YIELD, MatrixMap2.class);
 	}
 
 	@Override
 	public MatrixMap3<Region, String, Integer, Float> getUpperBoundsCoefficients() {
-		return get(ControlKey.UPPER_BA_BY_CI_S0_P, ca.bc.gov.nrs.vdyp.model.MatrixMap3.class);
+		return get(ControlKey.UPPER_BA_BY_CI_S0_P, MatrixMap3.class);
 	}
+
+	@Override
+	public MatrixMap2<String, String, Coefficients> getQuadMeanDiameterCoefficients() {
+		return get(ControlKey.COE_DQ, MatrixMap2.class);
+	}
+
+	@Override
+	public MatrixMap2<String, Region, Float> getQuadMeanDiameterModifiers() {
+		return get(ControlKey.DQ_MODIFIERS, MatrixMap2.class);
+	}
+
+	@Override
+	public MatrixMap2<String, Region, Float> getBasalAreaModifiers() {
+		return get(ControlKey.BA_MODIFIERS, MatrixMap2.class);
+	}
+
+	@Override
+	public MatrixMap2<String, String, Coefficients> getBasalAreaCoefficients() {
+		return get(ControlKey.COE_BA, MatrixMap2.class);
+	}
+
+	@Override
+	public MatrixMap2<String, Region, Coefficients> getVeteranQuadMeanDiameterCoefficients() {
+		return get(ControlKey.VETERAN_LAYER_DQ, MatrixMap2.class);
+	}
+
+	@Override
+	public MatrixMap2<String, Region, Coefficients> getVeteranBasalAreaCoefficients() {
+		return get(ControlKey.VETERAN_BQ, MatrixMap2.class);
+	}
+
 }
