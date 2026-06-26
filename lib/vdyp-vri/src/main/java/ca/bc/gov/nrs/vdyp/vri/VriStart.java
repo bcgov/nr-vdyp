@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ResultWithStatus;
 import ca.bc.gov.nrs.vdyp.common.ResultWithStatus.BasicStatus;
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -1363,7 +1364,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	@Override
 	protected ValueOrMarker<Float, Boolean>
 			isVeteranForEstimatePercentForestLand(VriPolygon polygon, Optional<VriLayer> vetLayer) {
-		return FLOAT_OR_BOOL.marker(vetLayer.isPresent());
+		return EstimationMethods.FLOAT_OR_BOOL.marker(vetLayer.isPresent());
 	}
 
 	/**
@@ -1405,11 +1406,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		} catch (RuntimeProcessingException ex) {
 			throw new FatalProcessingException(ex);
 		}
-	}
-
-	@Override
-	protected float getYieldFactor(VriPolygon polygon) {
-		return polygon.getYieldFactor();
 	}
 
 	float findRootForQuadMeanDiameterFractionalError(

@@ -1,10 +1,5 @@
 package ca.bc.gov.nrs.vdyp.application;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.floor;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -57,6 +52,7 @@ import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
+import ca.bc.gov.nrs.vdyp.model.InputPolygon;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
@@ -77,7 +73,7 @@ import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
  * @param <S> input species class
  * @param <I> input site class
  */
-public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, D extends DebugSettings>
+public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I> & InputPolygon, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, D extends DebugSettings>
 		extends VdypApplication implements AutoCloseable, SpeciesCopier<S, I> {
 
 	public static final Logger log = LoggerFactory.getLogger(VdypStartApplication.class);
@@ -336,12 +332,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return vriWriter;
 	}
 
-	protected abstract float getYieldFactor(P polygon);
-
-	protected Optional<Float> getLayerAgeTotal(L layer) {
-		return layer.getPrimarySite().flatMap(BaseVdypSite::getAgeTotal);
-	}
-
 	protected Optional<Float> getLayerYearstoBreastHhight(L layer) {
 		return layer.getPrimarySite().flatMap(BaseVdypSite::getYearsToBreastHeight);
 	}
@@ -463,103 +453,13 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	// FIPLAND
 	public float estimatePercentForestLand(P polygon, Optional<L> vetLayer, L primaryLayer) {
-		if (polygon.getPercentAvailable().isPresent()) {
-			return polygon.getPercentAvailable().get();
-		}
-
-		assert primaryLayer != null;
-
-		final boolean veteran;
-		{
-			var resultOrIsVeteran = isVeteranForEstimatePercentForestLand(polygon, vetLayer);
-			if (resultOrIsVeteran.isValue()) {
-				return resultOrIsVeteran.getValue().orElseThrow();
-			}
-
-			veteran = resultOrIsVeteran.getMarker().orElseThrow();
-		}
-
-		float primaryAgeTotal = getLayerAgeTotal(primaryLayer).orElseThrow();
-
-		float crownClosure = crownClosureForPercentForestLand(vetLayer, primaryLayer, veteran, primaryAgeTotal);
-
-		/*
-		 * assume that CC occurs at age 25 and that most land goes to 90% occupancy but that occupancy increases only 1%
-		 * /yr with no increases after ages 25. });
-		 */
-
-		// Obtain the percent yield (in comparison with CC = 90%)
-
-		float crownClosureTop = 90f;
-		float breastHeightAge = primaryAgeTotal
-				- primaryLayer.getPrimarySite().flatMap(BaseVdypSite::getYearsToBreastHeight).orElseThrow();
-
-		float yieldFactor = getYieldFactor(polygon);
-
-		var bec = polygon.getBiogeoclimaticZone();
-
-		breastHeightAge = max(5.0f, breastHeightAge);
-		// EMP040
-		float baseAreaTop = estimationMethods
-				.estimatePrimaryBaseAreaAdjust(primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosureTop);
-		// EMP040
-		float baseAreaHat = estimationMethods
-				.estimatePrimaryBaseAreaAdjust(primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosure);
-
-		float percentYield;
-		if (baseAreaTop > 0f && baseAreaHat > 0f) {
-			percentYield = min(100f, 100f * baseAreaHat / baseAreaTop);
-		} else {
-			percentYield = 90f;
-		}
-
-		float gainMax;
-		if (primaryAgeTotal > 125f) {
-			gainMax = 0f;
-		} else if (primaryAgeTotal < 25f) {
-			gainMax = max(90f - percentYield, 0);
-		} else {
-			gainMax = max(90f - percentYield, 0);
-			gainMax = min(gainMax, 125 - primaryAgeTotal);
-		}
-
-		return floor(min(percentYield + gainMax, 100f));
-
+		var resultOrIsVeteran = isVeteranForEstimatePercentForestLand(polygon, vetLayer);
+		return this.estimationMethods.estimatePercentForestLand(polygon, vetLayer, primaryLayer, resultOrIsVeteran);
 	}
-
-	protected static final ValueOrMarker.Builder<Float, Boolean> FLOAT_OR_BOOL = ValueOrMarker
-			.builder(Float.class, Boolean.class);
 
 	public static final Collection<UtilizationClass> UTIL_CLASSES = List.of(
 			UtilizationClass.U75TO125, UtilizationClass.U125TO175, UtilizationClass.U175TO225, UtilizationClass.OVER225
 	);
-
-	protected ValueOrMarker<Float, Boolean> isVeteranForEstimatePercentForestLand(P polygon, Optional<L> vetLayer) {
-		boolean veteran = vetLayer//
-				.filter(layer -> estimationMethods.getLayerHeight(layer).orElse(0f) > 0f) //
-				.filter(layer -> layer.getCrownClosure() > 0f)//
-				.isPresent(); // LAYERV
-
-		return FLOAT_OR_BOOL.marker(veteran);
-	}
-
-	private float crownClosureForPercentForestLand(
-			Optional<L> vetLayer, L primaryLayer, boolean veteran, float primaryAgeTotal
-	) {
-		float crownClosure = primaryLayer.getCrownClosure();
-
-		// Assume crown closure linear with age, to 25.
-		if (primaryAgeTotal < 25f) {
-			crownClosure *= 25f / primaryAgeTotal;
-		}
-		// define crown closure as the SUM of two layers
-		if (veteran) {
-			crownClosure += vetLayer.map(InputLayer::getCrownClosure).orElse(0f);
-		}
-
-		crownClosure = clamp(crownClosure, 0, 100);
-		return crownClosure;
-	}
 
 	protected Map<String, Float> applyGroupsAndGetTargetPercentages(
 			BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies
@@ -1153,6 +1053,10 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @throws FatalProcessingException if the processing failed in a way that should stop processing
 	 */
 	protected abstract Optional<VdypPolygon> processPolygon(int polygonsRead, P polygon) throws ProcessingException;
+
+	protected ValueOrMarker<Float, Boolean> isVeteranForEstimatePercentForestLand(P polygon, Optional<L> vetLayer) {
+		return estimationMethods.isVeteranForEstimatePercentForestLand(polygon, vetLayer);
+	}
 
 	/**
 	 * Simple Iterator like interface for accessing the assembled output of several StreamingParsers

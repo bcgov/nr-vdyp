@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.common;
 
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.floor;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.ratio;
@@ -23,6 +24,7 @@ import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
@@ -34,6 +36,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
@@ -41,6 +44,7 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.DoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
+import ca.bc.gov.nrs.vdyp.model.InputPolygon;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
@@ -64,6 +68,9 @@ public class EstimationMethods {
 	public static final float LOW_CROWN_CLOSURE = 10f;
 
 	public static final float MINIMUM_BASAL_AREA = 0.05f;
+
+	public static final ValueOrMarker.Builder<Float, Boolean> FLOAT_OR_BOOL = ValueOrMarker
+			.builder(Float.class, Boolean.class);
 
 	public EstimationMethods(ResolvedControlMap controlMap) {
 		this.controlMap = controlMap;
@@ -1880,5 +1887,138 @@ public class EstimationMethods {
 		baseArea = max(baseArea, 0.01f);
 
 		return baseArea;
+	}
+
+	/**
+	 * TODO
+	 *
+	 * @param <P2>
+	 * @param <L2>
+	 * @param <S2>
+	 * @param <I2>
+	 * @param polygon
+	 * @param vetLayer
+	 * @param primaryLayer
+	 * @return
+	 */
+	public <P2 extends BaseVdypPolygon<L2, Optional<Float>, S2, I2> & InputPolygon, L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
+			float estimatePercentForestLand(P2 polygon, Optional<L2> vetLayer, L2 primaryLayer) {
+		var resultOrIsVeteran = isVeteranForEstimatePercentForestLand(polygon, vetLayer);
+		return estimatePercentForestLand(polygon, vetLayer, primaryLayer, resultOrIsVeteran);
+	}
+
+	/**
+	 * TODO
+	 *
+	 * @param <P2>
+	 * @param <L2>
+	 * @param <S2>
+	 * @param <I2>
+	 * @param polygon
+	 * @param vetLayer
+	 * @param primaryLayer
+	 * @param resultOrIsVeteran
+	 * @return
+	 */
+	public <P2 extends BaseVdypPolygon<L2, Optional<Float>, S2, I2> & InputPolygon, L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
+			float estimatePercentForestLand(
+					P2 polygon, Optional<L2> vetLayer, L2 primaryLayer, ValueOrMarker<Float, Boolean> resultOrIsVeteran
+			) {
+		if (polygon.getPercentAvailable().isPresent()) {
+			return polygon.getPercentAvailable().get();
+		}
+
+		assert primaryLayer != null;
+		float yieldFactor = polygon.getYieldFactor();
+
+		final boolean veteran;
+		{
+			if (resultOrIsVeteran.isValue()) {
+				return resultOrIsVeteran.getValue().orElseThrow();
+			}
+
+			veteran = resultOrIsVeteran.getMarker().orElseThrow();
+		}
+
+		float primaryAgeTotal = getLayerAgeTotal(primaryLayer).orElseThrow();
+
+		float crownClosure = crownClosureForPercentForestLand(vetLayer, primaryLayer, veteran, primaryAgeTotal);
+
+		/*
+		 * assume that CC occurs at age 25 and that most land goes to 90% occupancy but that occupancy increases only 1%
+		 * /yr with no increases after ages 25. });
+		 */
+
+		// Obtain the percent yield (in comparison with CC = 90%)
+
+		float crownClosureTop = 90f;
+		float breastHeightAge = primaryAgeTotal
+				- primaryLayer.getPrimarySite().flatMap(BaseVdypSite::getYearsToBreastHeight).orElseThrow();
+
+		var bec = polygon.getBiogeoclimaticZone();
+
+		breastHeightAge = max(5.0f, breastHeightAge);
+		// EMP040
+		float baseAreaTop = estimatePrimaryBaseAreaAdjust(
+				primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosureTop
+		);
+		// EMP040
+		float baseAreaHat = estimatePrimaryBaseAreaAdjust(
+				primaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosure
+		);
+
+		float percentYield;
+		if (baseAreaTop > 0f && baseAreaHat > 0f) {
+			percentYield = min(100f, 100f * baseAreaHat / baseAreaTop);
+		} else {
+			percentYield = 90f;
+		}
+
+		float gainMax;
+		if (primaryAgeTotal > 125f) {
+			gainMax = 0f;
+		} else if (primaryAgeTotal < 25f) {
+			gainMax = max(90f - percentYield, 0);
+		} else {
+			gainMax = max(90f - percentYield, 0);
+			gainMax = min(gainMax, 125 - primaryAgeTotal);
+		}
+
+		return floor(min(percentYield + gainMax, 100f));
+
+	}
+
+	public <P2 extends BaseVdypPolygon<L2, Optional<Float>, S2, I2>, L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
+			ValueOrMarker<Float, Boolean> isVeteranForEstimatePercentForestLand(P2 polygon, Optional<L2> vetLayer) {
+		boolean veteran = vetLayer//
+				.filter(layer -> getLayerHeight(layer).orElse(0f) > 0f) //
+				.filter(layer -> layer.getCrownClosure() > 0f)//
+				.isPresent(); // LAYERV
+
+		return FLOAT_OR_BOOL.marker(veteran);
+	}
+
+	public <P2 extends BaseVdypPolygon<L2, Optional<Float>, S2, I2>, L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
+			float crownClosureForPercentForestLand(
+					Optional<L2> vetLayer, L2 primaryLayer, boolean veteran, float primaryAgeTotal
+			) {
+		float crownClosure = primaryLayer.getCrownClosure();
+
+		// Assume crown closure linear with age, to 25.
+		if (primaryAgeTotal < 25f) {
+			crownClosure *= 25f / primaryAgeTotal;
+		}
+		// define crown closure as the SUM of two layers
+		if (veteran) {
+			crownClosure += vetLayer.map(InputLayer::getCrownClosure).orElse(0f);
+		}
+
+		crownClosure = clamp(crownClosure, 0, 100);
+		return crownClosure;
+	}
+
+	public <P2 extends BaseVdypPolygon<L2, Optional<Float>, S2, I2>, L2 extends BaseVdypLayer<S2, I2> & InputLayer, S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
+			Optional<Float> getLayerAgeTotal(L2 layer) {
+		return layer.getPrimarySite().flatMap(BaseVdypSite::getAgeTotal);
 	}
 }

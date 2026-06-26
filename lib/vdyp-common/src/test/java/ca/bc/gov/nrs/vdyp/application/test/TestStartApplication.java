@@ -99,12 +99,6 @@ public class TestStartApplication
 	}
 
 	@Override
-	protected float getYieldFactor(TestPolygon polygon) {
-		// TODO Auto-generated method stub
-		return 1;
-	}
-
-	@Override
 	protected String getDefaultControlFileName() {
 		return "test.ctr";
 	}

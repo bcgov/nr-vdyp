@@ -3,8 +3,6 @@ package ca.bc.gov.nrs.vdyp.fip;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.abs;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -43,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
@@ -70,7 +69,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
@@ -906,9 +904,9 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	protected ValueOrMarker<Float, Boolean>
 			isVeteranForEstimatePercentForestLand(FipPolygon polygon, Optional<FipLayer> vetLayer) {
 		if (polygon.getMode().map(mode -> mode == PolygonMode.YOUNG).orElse(false)) {
-			return FLOAT_OR_BOOL.value(100f);
+			return EstimationMethods.FLOAT_OR_BOOL.value(100f);
 		}
-		return super.isVeteranForEstimatePercentForestLand(polygon, vetLayer);
+		return estimationMethods.isVeteranForEstimatePercentForestLand(polygon, vetLayer);
 	}
 
 	/**
@@ -1005,12 +1003,6 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			builder.copy(toCopy);
 			config.accept(builder);
 		});
-	}
-
-	@Override
-	protected float getYieldFactor(FipPolygon polygon) {
-		return polygon.getYieldFactor();
-		// TODO Make an InputPolygon interface that has this.
 	}
 
 	@Override

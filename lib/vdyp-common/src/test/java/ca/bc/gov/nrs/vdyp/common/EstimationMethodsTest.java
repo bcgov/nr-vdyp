@@ -1865,7 +1865,7 @@ class EstimationMethodsTest {
 	class EstimateVeteranBasalArea {
 
 		@Test
-		void test() throws Exception {
+		void test() {
 
 			var result = emp.estimateVeteranBasalArea(26.2000008f, 4f, "H", Region.COASTAL);
 

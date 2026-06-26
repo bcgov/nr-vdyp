@@ -6,10 +6,12 @@ import java.util.function.Consumer;
 
 import ca.bc.gov.nrs.vdyp.model.BaseVdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
+import ca.bc.gov.nrs.vdyp.model.InputPolygon;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 
-public class FipPolygon extends BaseVdypPolygon<FipLayer, Optional<Float>, FipSpecies, FipSite> {
+public class FipPolygon extends BaseVdypPolygon<FipLayer, Optional<Float>, FipSpecies, FipSite>
+		implements InputPolygon {
 
 	private Optional<String> nonproductiveDescription; // FIP_P3/NPDESC
 	private float yieldFactor; // FIP_P4/YLDFACT
@@ -31,6 +33,7 @@ public class FipPolygon extends BaseVdypPolygon<FipLayer, Optional<Float>, FipSp
 		this.nonproductiveDescription = nonproductiveDescription;
 	}
 
+	@Override
 	public float getYieldFactor() {
 		return yieldFactor;
 	}
