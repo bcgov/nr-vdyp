@@ -191,7 +191,7 @@ class DownloadAndPartitionTaskletTest {
 		verify(comsFileService).fetchObjectToFile(eq(layerComsObjectGuid), any(Path.class));
 		verify(inputPartitioner).partitionCsvFiles(
 				eq(tempDir.resolve("input/polygon.csv")), eq(tempDir.resolve("input/layer.csv")), anyInt(), eq(tempDir),
-				eq("job-123")
+				eq("job-123"), anyInt()
 		);
 		verify(vdypClient).pushProgress(eq(projectionGuid.toString()), any());
 
