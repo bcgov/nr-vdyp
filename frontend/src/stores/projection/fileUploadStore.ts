@@ -134,7 +134,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
 
   // update species groups based on projection type
   const updateSpeciesGroupsForProjectionType = (type: string | null) => {
-    if (type === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+    if (type === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS || type === CONSTANTS.PROJECTION_TYPE.BOTH) {
       // CFO Biomass: use specific values
       fileUploadSpeciesGroup.value.forEach((group) => {
         group.minimumDBHLimit =
@@ -255,9 +255,13 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   }
 
   const restoreProjectionTypeAndSpeciesGroups = (options: string[]) => {
-    if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)) {
+    const hasCfs = options.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+    const hasVolume = options.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
+    if (hasCfs && hasVolume) {
+      projectionType.value = CONSTANTS.PROJECTION_TYPE.BOTH
+    } else if (hasCfs) {
       projectionType.value = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-    } else if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)) {
+    } else if (hasVolume) {
       projectionType.value = CONSTANTS.PROJECTION_TYPE.VOLUME
     }
     initializeSpeciesGroups()

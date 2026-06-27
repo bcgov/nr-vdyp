@@ -230,7 +230,7 @@ watch(() => modelParameterStore.reportDescription, (v) => { localReportDescripti
 watch(localReportTitle, (v) => { modelParameterStore.reportTitle = v; markDirty() })
 watch(localProjectionType, (v) => {
   modelParameterStore.projectionType = v
-  if (v === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+  if (v === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS || v === CONSTANTS.PROJECTION_TYPE.BOTH) {
     modelParameterStore.isBySpeciesEnabled = false
   }
   markDirty()

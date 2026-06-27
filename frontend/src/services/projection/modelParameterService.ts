@@ -468,13 +468,14 @@ const buildExecutionOptions = (
   const optionMappings = [
     {
       flag:
-        modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME,
+        modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME ||
+        modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.BOTH,
       option: ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
     },
     {
       flag:
-        modelParameterStore.projectionType ===
-        CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+        modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
+        modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.BOTH,
       option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
     },
     {
@@ -802,6 +803,37 @@ const hasStandInfoChanges = (store: any, saved: ModelParameters): boolean => {
   return false
 }
 
+const resolveProjectionType = (opts: string[]): string => {
+  const hasCFS = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+  const hasVolume = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
+  if (hasCFS && hasVolume) return CONSTANTS.PROJECTION_TYPE.BOTH
+  if (hasCFS) return CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+  return CONSTANTS.PROJECTION_TYPE.VOLUME
+}
+
+const isCFSBiomassType = (projType: string): boolean =>
+  projType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS || projType === CONSTANTS.PROJECTION_TYPE.BOTH
+
+const hasUtilizationChanges = (
+  store: any,
+  savedParams: ParsedProjectionParameters,
+  savedProjectionType: string,
+): boolean => {
+  const defaultMap = isCFSBiomassType(savedProjectionType)
+    ? DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP
+    : DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP
+  const utilsMap: Record<string, string> = {}
+  for (const util of savedParams.utils) {
+    const u = util as { s: string; u: string }
+    if (u.s && u.u) utilsMap[u.s] = u.u
+  }
+  const hasUtils = savedParams.utils.length > 0
+  return (store.speciesGroups as SpeciesGroup[]).some((sg) => {
+    const savedValue = hasUtils ? (utilsMap[sg.group] ?? defaultMap[sg.group]) : defaultMap[sg.group]
+    return sg.minimumDBHLimit !== savedValue
+  })
+}
+
 const hasReportDetailsChanges = (
   store: any,
   savedParams: ParsedProjectionParameters,
@@ -810,9 +842,7 @@ const hasReportDetailsChanges = (
   if (!strEq(store.reportTitle, savedParams.reportTitle)) return true
   if (!strEq(store.reportDescription || null, savedDescription || null)) return true
   const opts = savedParams.selectedExecutionOptions
-  const savedProjectionType = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
-    ? CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-    : CONSTANTS.PROJECTION_TYPE.VOLUME
+  const savedProjectionType = resolveProjectionType(opts)
   return !strEq(store.projectionType, savedProjectionType)
 }
 
@@ -831,24 +861,9 @@ const hasReportInfoChanges = (
   if (store.isCulminationValuesEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)) return true
   if (store.isBySpeciesEnabled !== opts.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)) return true
   if (store.incSecondaryHeight !== opts.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)) return true
-  const savedProjectionType = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
-    ? CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-    : CONSTANTS.PROJECTION_TYPE.VOLUME
+  const savedProjectionType = resolveProjectionType(opts)
   if (!strEq(store.projectionType, savedProjectionType)) return true
-
-  const defaultMap = savedProjectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-    ? DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP
-    : DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP
-  const utilsMap: Record<string, string> = {}
-  for (const util of savedParams.utils) {
-    const u = util as { s: string; u: string }
-    if (u.s && u.u) utilsMap[u.s] = u.u
-  }
-  const hasUtils = savedParams.utils.length > 0
-  if ((store.speciesGroups as SpeciesGroup[]).some((sg) => {
-    const savedValue = hasUtils ? (utilsMap[sg.group] ?? defaultMap[sg.group]) : defaultMap[sg.group]
-    return sg.minimumDBHLimit !== savedValue
-  })) return true
+  if (hasUtilizationChanges(store, savedParams, savedProjectionType)) return true
 
   return false
 }

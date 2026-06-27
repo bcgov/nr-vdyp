@@ -64,14 +64,10 @@
                     :disabled="isInputDisabled"
                   >
                     <v-radio
-                      :key="OPTIONS.projectionTypeOptions[0].value"
-                      :label="OPTIONS.projectionTypeOptions[0].label"
-                      :value="OPTIONS.projectionTypeOptions[0].value"
-                    ></v-radio>
-                    <v-radio
-                      :key="OPTIONS.projectionTypeOptions[1].value"
-                      :label="OPTIONS.projectionTypeOptions[1].label"
-                      :value="OPTIONS.projectionTypeOptions[1].value"
+                      v-for="option in OPTIONS.projectionTypeOptions"
+                      :key="option.value"
+                      :label="option.label"
+                      :value="option.value"
                     ></v-radio>
                   </v-radio-group>
                 </v-col>
@@ -409,7 +405,8 @@ const reportDescriptionLength = computed(() =>
 )
 
 const isCFOBiomassSelected = computed(() =>
-  localProjectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+  localProjectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
+  localProjectionType.value === CONSTANTS.PROJECTION_TYPE.BOTH,
 )
 const isBySpeciesDeactivated = computed(() =>
   isInputDisabled.value || isCFOBiomassSelected.value,
@@ -569,7 +566,7 @@ watch(() => fileUploadStore.isReferenceYearEnabled, (v) => { localIsReferenceYea
 watch(localReportTitle, (v) => { fileUploadStore.reportTitle = v; markDirty() })
 watch(localReportDescription, (v) => { fileUploadStore.reportDescription = v; markDirty() })
 watch(localProjectionType, (v) => {
-  if (v === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+  if (v === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS || v === CONSTANTS.PROJECTION_TYPE.BOTH) {
     localIsBySpeciesEnabled.value = false
   }
   fileUploadStore.projectionType = v

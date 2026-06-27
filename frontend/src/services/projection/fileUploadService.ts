@@ -69,13 +69,15 @@ export const buildExecutionOptions = (
 
   const optionMappings = [
     {
-      flag: fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME,
+      flag:
+        fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME ||
+        fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.BOTH,
       option: ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
     },
     {
       flag:
-        fileUploadStore.projectionType ===
-        CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+        fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
+        fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.BOTH,
       option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
     },
     {
@@ -278,9 +280,11 @@ const reportConfigTextChanged = (store: Store, saved: SavedParams, savedDescript
 }
 
 const reportConfigOptionsChanged = (store: Store, opts: string[]): boolean => {
-  const savedProjectionType = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
-    ? CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-    : CONSTANTS.PROJECTION_TYPE.VOLUME
+  const hasCFS = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+  const hasVolume = opts.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
+  let savedProjectionType: string = CONSTANTS.PROJECTION_TYPE.VOLUME
+  if (hasCFS && hasVolume) savedProjectionType = CONSTANTS.PROJECTION_TYPE.BOTH
+  else if (hasCFS) savedProjectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
   if (store.projectionType !== savedProjectionType) return true
 
   const flagOptionPairs: [boolean, ExecutionOptionsEnum][] = [

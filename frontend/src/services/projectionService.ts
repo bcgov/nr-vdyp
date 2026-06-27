@@ -57,10 +57,15 @@ const getProjectionType = (parameters: Record<string, unknown>): string => {
   const selectedOptions = parameters.selectedExecutionOptions as
     | string[]
     | undefined
-  if (selectedOptions?.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)) {
+  const hasVolume = selectedOptions?.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
+  const hasCfs = selectedOptions?.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+  if (hasVolume && hasCfs) {
+    return PROJECTION_TYPE.BOTH
+  }
+  if (hasVolume) {
     return PROJECTION_TYPE.VOLUME
   }
-  if (selectedOptions?.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)) {
+  if (hasCfs) {
     return PROJECTION_TYPE.CFS_BIOMASS
   }
   return ''

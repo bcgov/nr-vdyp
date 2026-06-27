@@ -65,6 +65,7 @@ export const ageYearRangeOptions = [
 export const projectionTypeOptions = [
   { label: 'Volume', value: CONSTANTS.PROJECTION_TYPE.VOLUME },
   { label: 'CFS Biomass', value: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS },
+  { label: 'Both', value: CONSTANTS.PROJECTION_TYPE.BOTH },
 ]
 
 // Utilization class options with (slider) index, label, and enum value mapping

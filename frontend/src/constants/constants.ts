@@ -63,6 +63,7 @@ export const INCLUDE_IN_REPORT = Object.freeze({
 export const PROJECTION_TYPE = Object.freeze({
   VOLUME: 'Volume',
   CFS_BIOMASS: 'CFS Biomass',
+  BOTH: 'Both',
 })
 
 export const SPECIAL_INDICATORS = Object.freeze({
