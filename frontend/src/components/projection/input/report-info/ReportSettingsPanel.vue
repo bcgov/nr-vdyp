@@ -361,7 +361,10 @@ const speciesGroups = computed(() => modelParameterStore.speciesGroups)
 
 
 const isCFOBiomassSelected = computed(() => {
-  return modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+  return (
+    modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
+    modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.BOTH
+  )
 })
 
 // Computed deactivated states
@@ -420,7 +423,7 @@ watch(
 watch(
   () => modelParameterStore.projectionType,
   (newVal) => {
-    if (newVal === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+    if (newVal === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS || newVal === CONSTANTS.PROJECTION_TYPE.BOTH) {
       speciesGroups.value.forEach((group) => {
         if (BIZCONSTANTS.CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP[group.group]) {
           group.minimumDBHLimit =

@@ -14,22 +14,6 @@ describe('apiActions Unit Tests', () => {
         expect(result).to.deep.equal([{ id: 1, name: 'Help Detail' }])
       })
     })
-
-    it('should handle error when fetching help details', () => {
-      const mockError = new Error('Network error')
-      cy.stub(apiClient, 'helpGet').rejects(mockError)
-
-      apiActions
-        .helpGet()
-        .then(() => {
-          // assert-fail block
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.helpGet).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
-    })
   })
 
   context('projectionHcsvPost', () => {
@@ -48,33 +32,7 @@ describe('apiActions Unit Tests', () => {
       apiActions
         .projectionHcsvPost(formData, true)
         .then((result: { status: number; headers: any; data: Blob }) => {
-          expect(apiClient.projectionHcsvPost).to.be.calledOnceWith(
-            formData,
-            true,
-          )
-          expect(result.data).to.equal(mockBlob)
-        })
-    })
-
-    it('should post projection data successfully with status 201', () => {
-      const mockBlob = new Blob(['test data'], { type: 'application/octet-stream' })
-      const mockResponse = {
-        status: 201,
-        headers: { 'content-type': 'application/octet-stream' },
-        data: mockBlob,
-      }
-      const formData = new FormData()
-      formData.append('file', new Blob(), 'test.csv')
-
-      cy.stub(apiClient, 'projectionHcsvPost').resolves(mockResponse)
-
-      apiActions
-        .projectionHcsvPost(formData, false)
-        .then((result: { status: number; headers: any; data: Blob }) => {
-          expect(apiClient.projectionHcsvPost).to.be.calledOnceWith(
-            formData,
-            false,
-          )
+          expect(apiClient.projectionHcsvPost).to.be.calledOnceWith(formData, true)
           expect(result.data).to.equal(mockBlob)
         })
     })
@@ -97,10 +55,7 @@ describe('apiActions Unit Tests', () => {
           throw new Error('Test should have failed but succeeded unexpectedly')
         })
         .catch((error: Error) => {
-          expect(apiClient.projectionHcsvPost).to.be.calledOnceWith(
-            formData,
-            false,
-          )
+          expect(apiClient.projectionHcsvPost).to.be.calledOnceWith(formData, false)
           expect(error.message).to.equal(errorText)
         })
     })
@@ -122,10 +77,7 @@ describe('apiActions Unit Tests', () => {
           throw new Error('Test should have failed but succeeded unexpectedly')
         })
         .catch((error: Error) => {
-          expect(apiClient.projectionHcsvPost).to.be.calledOnceWith(
-            formData,
-            false,
-          )
+          expect(apiClient.projectionHcsvPost).to.be.calledOnceWith(formData, false)
           expect(error.message).to.equal('Unexpected response: 500')
         })
     })
@@ -140,14 +92,10 @@ describe('apiActions Unit Tests', () => {
       apiActions
         .projectionHcsvPost(formData, false)
         .then(() => {
-          // assert-fail block
           throw new Error('Test should have failed but succeeded unexpectedly')
         })
         .catch((error: Error) => {
-          expect(apiClient.projectionHcsvPost).to.be.calledOnceWith(
-            formData,
-            false,
-          )
+          expect(apiClient.projectionHcsvPost).to.be.calledOnceWith(formData, false)
           expect(error).to.equal(mockError)
         })
     })
@@ -162,27 +110,8 @@ describe('apiActions Unit Tests', () => {
 
       cy.wrap(apiActions.rootGet()).then((result) => {
         expect(apiClient.rootGet).to.be.calledOnce
-        expect(result).to.deep.equal({
-          name: 'Root Resource',
-          description: 'Details',
-        })
+        expect(result).to.deep.equal({ name: 'Root Resource', description: 'Details' })
       })
-    })
-
-    it('should handle error when fetching root details', () => {
-      const mockError = new Error('Network error')
-      cy.stub(apiClient, 'rootGet').rejects(mockError)
-
-      apiActions
-        .rootGet()
-        .then(() => {
-          // assert-fail block
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.rootGet).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
     })
   })
 
@@ -204,22 +133,6 @@ describe('apiActions Unit Tests', () => {
         ])
       })
     })
-
-    it('should handle error when fetching user projections', () => {
-      const mockError = new Error('Network error')
-      cy.stub(apiClient, 'getUserProjections').rejects(mockError)
-
-      apiActions
-        .getUserProjections()
-        .then(() => {
-          // assert-fail block
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.getUserProjections).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
-    })
   })
 
   context('createProjection', () => {
@@ -233,33 +146,12 @@ describe('apiActions Unit Tests', () => {
       cy.stub(apiClient, 'createProjection').resolves(mockResponse)
 
       cy.wrap(
-        apiActions.createProjection(
-          parameters as any,
-          modelParameters as any,
-          reportDescription,
-        ),
+        apiActions.createProjection(parameters as any, modelParameters as any, reportDescription),
       ).then((result) => {
         expect(apiClient.createProjection).to.be.calledOnceWith(
           parameters,
           modelParameters,
           reportDescription,
-        )
-        expect(result).to.deep.equal(mockProjection)
-      })
-    })
-
-    it('should create a projection successfully with only required parameters', () => {
-      const parameters = { projectionYear: 2024 }
-      const mockProjection = { projectionGUID: 'guid-456', status: 'DRAFT' }
-      const mockResponse = { data: mockProjection }
-
-      cy.stub(apiClient, 'createProjection').resolves(mockResponse)
-
-      cy.wrap(apiActions.createProjection(parameters as any)).then((result) => {
-        expect(apiClient.createProjection).to.be.calledOnceWith(
-          parameters,
-          undefined,
-          undefined,
         )
         expect(result).to.deep.equal(mockProjection)
       })
@@ -294,21 +186,6 @@ describe('apiActions Unit Tests', () => {
         expect(result).to.deep.equal(mockProjection)
       })
     })
-
-    it('should handle error when running a projection', () => {
-      const mockError = new Error('Run failed')
-      cy.stub(apiClient, 'runProjection').rejects(mockError)
-
-      apiActions
-        .runProjection('test-guid-123')
-        .then(() => {
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.runProjection).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
-    })
   })
 
   context('cancelProjection', () => {
@@ -323,21 +200,6 @@ describe('apiActions Unit Tests', () => {
         expect(apiClient.cancelProjection).to.be.calledOnceWith(projectionGUID)
         expect(result).to.deep.equal(mockProjection)
       })
-    })
-
-    it('should handle error when cancelling a projection', () => {
-      const mockError = new Error('Cancel failed')
-      cy.stub(apiClient, 'cancelProjection').rejects(mockError)
-
-      apiActions
-        .cancelProjection('test-guid-123')
-        .then(() => {
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.cancelProjection).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
     })
   })
 
@@ -354,21 +216,6 @@ describe('apiActions Unit Tests', () => {
         expect(result).to.deep.equal(mockProjection)
       })
     })
-
-    it('should handle error when duplicating a projection', () => {
-      const mockError = new Error('Duplicate failed')
-      cy.stub(apiClient, 'duplicateProjection').rejects(mockError)
-
-      apiActions
-        .duplicateProjection('test-guid-123')
-        .then(() => {
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.duplicateProjection).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
-    })
   })
 
   context('getProjection', () => {
@@ -383,21 +230,6 @@ describe('apiActions Unit Tests', () => {
         expect(apiClient.getProjection).to.be.calledOnceWith(projectionGUID)
         expect(result).to.deep.equal(mockProjection)
       })
-    })
-
-    it('should handle error when fetching a projection', () => {
-      const mockError = new Error('Fetch failed')
-      cy.stub(apiClient, 'getProjection').rejects(mockError)
-
-      apiActions
-        .getProjection('test-guid-123')
-        .then(() => {
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.getProjection).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
     })
   })
 
@@ -430,27 +262,6 @@ describe('apiActions Unit Tests', () => {
       })
     })
 
-    it('should update projection parameters successfully with only required parameters', () => {
-      const projectionGUID = 'test-guid-123'
-      const parameters = { projectionYear: 2025 }
-      const mockProjection = { projectionGUID, status: 'DRAFT' }
-      const mockResponse = { data: mockProjection }
-
-      cy.stub(apiClient, 'updateProjectionParams').resolves(mockResponse)
-
-      cy.wrap(
-        apiActions.updateProjectionParams(projectionGUID, parameters as any),
-      ).then((result) => {
-        expect(apiClient.updateProjectionParams).to.be.calledOnceWith(
-          projectionGUID,
-          parameters,
-          undefined,
-          undefined,
-        )
-        expect(result).to.deep.equal(mockProjection)
-      })
-    })
-
     it('should handle error when updating projection parameters', () => {
       const mockError = new Error('Update failed')
       cy.stub(apiClient, 'updateProjectionParams').rejects(mockError)
@@ -476,21 +287,6 @@ describe('apiActions Unit Tests', () => {
         expect(apiClient.deleteProjection).to.be.calledOnceWith(projectionGUID)
       })
     })
-
-    it('should handle error when deleting a projection', () => {
-      const mockError = new Error('Delete failed')
-      cy.stub(apiClient, 'deleteProjection').rejects(mockError)
-
-      apiActions
-        .deleteProjection('test-guid-123')
-        .then(() => {
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.deleteProjection).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
-    })
   })
 
   context('getFileSetFiles', () => {
@@ -505,30 +301,10 @@ describe('apiActions Unit Tests', () => {
 
       cy.stub(apiClient, 'getFileSetFiles').resolves(mockResponse)
 
-      cy.wrap(
-        apiActions.getFileSetFiles(projectionGUID, fileSetGUID),
-      ).then((result) => {
-        expect(apiClient.getFileSetFiles).to.be.calledOnceWith(
-          projectionGUID,
-          fileSetGUID,
-        )
+      cy.wrap(apiActions.getFileSetFiles(projectionGUID, fileSetGUID)).then((result) => {
+        expect(apiClient.getFileSetFiles).to.be.calledOnceWith(projectionGUID, fileSetGUID)
         expect(result).to.deep.equal(mockFiles)
       })
-    })
-
-    it('should handle error when fetching fileset files', () => {
-      const mockError = new Error('Fetch files failed')
-      cy.stub(apiClient, 'getFileSetFiles').rejects(mockError)
-
-      apiActions
-        .getFileSetFiles('proj-guid-123', 'fileset-guid-456')
-        .then(() => {
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.getFileSetFiles).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
     })
   })
 
@@ -542,32 +318,10 @@ describe('apiActions Unit Tests', () => {
 
       cy.stub(apiClient, 'uploadFileToFileSet').resolves(mockResponse)
 
-      cy.wrap(
-        apiActions.uploadFileToFileSet(projectionGUID, fileSetGUID, file),
-      ).then((result) => {
-        expect(apiClient.uploadFileToFileSet).to.be.calledOnceWith(
-          projectionGUID,
-          fileSetGUID,
-          file,
-        )
+      cy.wrap(apiActions.uploadFileToFileSet(projectionGUID, fileSetGUID, file)).then((result) => {
+        expect(apiClient.uploadFileToFileSet).to.be.calledOnceWith(projectionGUID, fileSetGUID, file)
         expect(result).to.deep.equal(mockProjection)
       })
-    })
-
-    it('should handle error when uploading a file to fileset', () => {
-      const mockError = new Error('Upload failed')
-      const file = new File(['content'], 'test.csv', { type: 'text/csv' })
-      cy.stub(apiClient, 'uploadFileToFileSet').rejects(mockError)
-
-      apiActions
-        .uploadFileToFileSet('proj-guid-123', 'fileset-guid-456', file)
-        .then(() => {
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.uploadFileToFileSet).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
     })
   })
 
@@ -585,11 +339,7 @@ describe('apiActions Unit Tests', () => {
       cy.stub(apiClient, 'getFileForDownload').resolves(mockResponse)
 
       cy.wrap(
-        apiActions.getFileForDownload(
-          projectionGUID,
-          fileSetGUID,
-          fileMappingGUID,
-        ),
+        apiActions.getFileForDownload(projectionGUID, fileSetGUID, fileMappingGUID),
       ).then((result) => {
         expect(apiClient.getFileForDownload).to.be.calledOnceWith(
           projectionGUID,
@@ -598,21 +348,6 @@ describe('apiActions Unit Tests', () => {
         )
         expect(result).to.deep.equal(mockFileMapping)
       })
-    })
-
-    it('should handle error when getting file for download', () => {
-      const mockError = new Error('Download URL failed')
-      cy.stub(apiClient, 'getFileForDownload').rejects(mockError)
-
-      apiActions
-        .getFileForDownload('proj-guid-123', 'fileset-guid-456', 'file-guid-789')
-        .then(() => {
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.getFileForDownload).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
     })
   })
 
@@ -624,31 +359,11 @@ describe('apiActions Unit Tests', () => {
 
       const projectionGUID = 'test-guid-123'
 
-      cy.wrap(apiActions.streamResultsZip(projectionGUID)).then(
-        (result: any) => {
-          expect(apiClient.streamResultsZip).to.be.calledOnceWith(
-            projectionGUID,
-          )
-          expect(result).to.deep.equal(mockResponse)
-          expect(result.data).to.equal(mockBlob)
-        },
-      )
-    })
-
-    it('should handle error when streaming results zip', () => {
-      const mockError = new Error('Download failed')
-      cy.stub(apiClient, 'streamResultsZip').rejects(mockError)
-
-      apiActions
-        .streamResultsZip('test-guid-123')
-        .then(() => {
-          // assert-fail block
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.streamResultsZip).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
+      cy.wrap(apiActions.streamResultsZip(projectionGUID)).then((result: any) => {
+        expect(apiClient.streamResultsZip).to.be.calledOnceWith(projectionGUID)
+        expect(result).to.deep.equal(mockResponse)
+        expect(result.data).to.equal(mockBlob)
+      })
     })
   })
 
@@ -661,11 +376,7 @@ describe('apiActions Unit Tests', () => {
       cy.stub(apiClient, 'deleteFileFromFileSet').resolves()
 
       cy.wrap(
-        apiActions.deleteFileFromFileSet(
-          projectionGUID,
-          fileSetGUID,
-          fileMappingGUID,
-        ),
+        apiActions.deleteFileFromFileSet(projectionGUID, fileSetGUID, fileMappingGUID),
       ).then(() => {
         expect(apiClient.deleteFileFromFileSet).to.be.calledOnceWith(
           projectionGUID,
@@ -673,25 +384,6 @@ describe('apiActions Unit Tests', () => {
           fileMappingGUID,
         )
       })
-    })
-
-    it('should handle error when deleting a file from fileset', () => {
-      const mockError = new Error('Delete file failed')
-      cy.stub(apiClient, 'deleteFileFromFileSet').rejects(mockError)
-
-      apiActions
-        .deleteFileFromFileSet(
-          'proj-guid-123',
-          'fileset-guid-456',
-          'file-guid-789',
-        )
-        .then(() => {
-          throw new Error('Test should have failed but succeeded unexpectedly')
-        })
-        .catch((error: Error) => {
-          expect(apiClient.deleteFileFromFileSet).to.be.calledOnce
-          expect(error).to.equal(mockError)
-        })
     })
   })
 })

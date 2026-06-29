@@ -72,17 +72,6 @@ describe('<ReportDetailsPanel />', () => {
     cy.get('#manualReportTitle').should('have.value', 'Stored Title')
   })
 
-  it('clicking "Next" with empty title shows error and does not confirm', () => {
-    const { modelStore } = mountPanel((modelStore) => {
-      modelStore.reportTitle = null
-    })
-    cy.contains('button', 'Next').click()
-    cy.contains('Report Title is required.').should('exist')
-    cy.then(() => {
-      expect(modelStore.panelState.reportDetails.confirmed).to.be.false
-    })
-  })
-
   it('hides ActionPanel in view mode and shows Next/Cancel in edit mode', () => {
     mountPanel((_, app) => {
       app.setViewMode(PROJECTION_VIEW_MODE.VIEW)

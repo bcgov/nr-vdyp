@@ -121,7 +121,9 @@ const isConfirmed = computed(
 
 const isMinDBHDeactivated = computed(() => {
   const isDisabled = isReadOnly.value || !fileUploadStore.panelState[panelName].editable
-  const isCFSBiomass = fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+  const isCFSBiomass =
+    fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
+    fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.BOTH
   return isDisabled || isCFSBiomass
 })
 

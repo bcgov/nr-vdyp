@@ -446,9 +446,13 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     isComputedMAIEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
     isCulminationValuesEnabled.value = options.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)
 
-    if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)) {
+    const hasCfs = options.includes(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+    const hasVolume = options.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
+    if (hasCfs && hasVolume) {
+      projectionType.value = CONSTANTS.PROJECTION_TYPE.BOTH
+    } else if (hasCfs) {
       projectionType.value = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-    } else if (options.includes(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)) {
+    } else if (hasVolume) {
       projectionType.value = CONSTANTS.PROJECTION_TYPE.VOLUME
     }
   }

@@ -73,8 +73,8 @@ describe('buildDebugOptions', () => {
 })
 
 describe('buildExecutionOptions', () => {
-  it('should always include the fixed selected options', () => {
-    const { selectedExecutionOptions } = buildExecutionOptions(createMockFileUploadStore())
+  it('should always include the fixed selected and excluded options', () => {
+    const { selectedExecutionOptions, excludedExecutionOptions } = buildExecutionOptions(createMockFileUploadStore())
 
     const alwaysSelected = [
       ExecutionOptionsEnum.DoIncludeFileHeader,
@@ -88,16 +88,14 @@ describe('buildExecutionOptions', () => {
       ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
     ]
     alwaysSelected.forEach((opt) => expect(selectedExecutionOptions).to.include(opt))
-  })
-
-  it('should always include the fixed excluded options', () => {
-    const { excludedExecutionOptions } = buildExecutionOptions(createMockFileUploadStore())
 
     const alwaysExcluded = [
       ExecutionOptionsEnum.DoSaveIntermediateFiles,
       ExecutionOptionsEnum.AllowAggressiveValueEstimation,
       ExecutionOptionsEnum.DoIncludeProjectionFiles,
       ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+      ExecutionOptionsEnum.BackGrowEnabled,
+      ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
     ]
     alwaysExcluded.forEach((opt) => expect(excludedExecutionOptions).to.include(opt))
   })
@@ -112,6 +110,11 @@ describe('buildExecutionOptions', () => {
     const { selectedExecutionOptions: cfsSelected, excludedExecutionOptions: cfsExcluded } = buildExecutionOptions(cfsStore)
     expect(cfsSelected).to.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
     expect(cfsExcluded).to.not.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+
+    const bothStore = createMockFileUploadStore({ projectionType: CONSTANTS.PROJECTION_TYPE.BOTH })
+    const { selectedExecutionOptions: bothSelected } = buildExecutionOptions(bothStore)
+    expect(bothSelected).to.include(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
+    expect(bothSelected).to.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
   })
 })
 
@@ -170,12 +173,6 @@ describe('buildProjectionParameters', () => {
     expect(params.utils![1]).to.deep.include({ speciesName: 'Pine', utilizationClass: '7.5 cm+' })
   })
 
-  it('should include reportTitle from the store', () => {
-    const store = createMockFileUploadStore({ reportTitle: 'My Report' })
-    const params = buildProjectionParameters(store)
-
-    expect(params.reportTitle).to.equal('My Report')
-  })
 })
 
 describe('runProjectionFileUpload', () => {

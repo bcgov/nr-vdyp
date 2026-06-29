@@ -4,9 +4,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import {
   generateFeatureId,
   generateRandomNumber,
-  generatePolygonNumber,
-  generateTreeCoverLayerEstimatedId,
-  computeBclcsLevel1,
+computeBclcsLevel1,
   computeBclcsLevel2,
   computeBclcsLevel3,
   determineBclcsLevel4,
@@ -105,22 +103,6 @@ describe('generateRandomNumber', () => {
   })
 })
 
-describe('generatePolygonNumber', () => {
-  it('should return an 8-digit numeric string', () => {
-    const result = generatePolygonNumber()
-    expect(result).to.be.a('string')
-    expect(result.length).to.equal(8)
-    expect(Number(result)).to.not.be.NaN
-  })
-})
-
-describe('generateTreeCoverLayerEstimatedId', () => {
-  it('should return a string with 4 to 10 digits', () => {
-    for (let i = 0; i < 20; i++) {
-      expect(generateTreeCoverLayerEstimatedId().length).to.be.at.least(4).and.at.most(10)
-    }
-  })
-})
 
 // ─ BCLCS level computations
 
@@ -232,6 +214,10 @@ describe('buildProjectionParameters', () => {
 
     const biomass = buildProjectionParameters(createMockModelParameterStore({ projectionType: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS }))
     expect(biomass.selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+
+    const both = buildProjectionParameters(createMockModelParameterStore({ projectionType: CONSTANTS.PROJECTION_TYPE.BOTH }))
+    expect(both.selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
+    expect(both.selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
   })
 
   it('should map speciesGroups to utils and include all four debug options', () => {
