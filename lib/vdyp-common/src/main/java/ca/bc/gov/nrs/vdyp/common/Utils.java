@@ -73,6 +73,17 @@ public class Utils {
 	}
 
 	/**
+	 * Wrap a possibly null enum with an optional. If the value is the given value to exclude, filter it out.
+	 *
+	 * @param <U>
+	 * @param value
+	 * @return
+	 */
+	public static <T extends Enum<T>> Optional<T> optEnum(@Nullable T value, T exclude) {
+		return Optional.ofNullable(value).filter(v -> v != exclude);
+	}
+
+	/**
 	 * Passes both operands to the consumer only if both are present.
 	 *
 	 * @return

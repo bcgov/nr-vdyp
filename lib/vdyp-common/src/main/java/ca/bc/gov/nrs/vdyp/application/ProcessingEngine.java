@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.application;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
-import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
@@ -45,7 +44,7 @@ public class ProcessingEngine {
 	 */
 	protected static void
 			calculateMissingSiteCurves(Bank bank, MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap) {
-		BecDefinition becZone = bank.getBecZone();
+		Region region = bank.getBecZone().getRegion();
 
 		for (int i : bank.getIndices()) {
 
@@ -55,7 +54,7 @@ public class ProcessingEngine {
 				final String speciesId = bank.speciesNames[i];
 
 				Optional<SiteIndexEquation> scIndex = calculateMissingSiteCurve(
-						siteCurveMap, becZone, sp0Dist, speciesId
+						siteCurveMap, region, sp0Dist, speciesId
 				);
 
 				bank.siteCurveNumbers[i] = scIndex.orElseThrow().n();
@@ -68,41 +67,41 @@ public class ProcessingEngine {
 	 * Calculate the siteCurve number of a species group.
 	 *
 	 * @param siteCurveMap the Site Curve definitions.
-	 * @param becZone      the bec zone of the polygon
+	 * @param region       the BEC region of the polygon
 	 * @param sp0Dist      The species distribution
 	 * @param speciesId    The species group to be calculated
 	 * @return
 	 */
 	protected static Optional<SiteIndexEquation> calculateMissingSiteCurve(
-			MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap, BecDefinition becZone,
+			MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap, Region region,
 			Optional<Sp64Distribution> sp0Dist, final String speciesId
 	) {
 		return sp0Dist
 				// First alternative is to use the name of the first of the species' sp64Distributions
-				.flatMap(dist -> calculateMissingSiteCurve(siteCurveMap, becZone, speciesId, dist.getGenusAlias()))
+				.flatMap(dist -> calculateMissingSiteCurve(siteCurveMap, region, speciesId, dist.getGenusAlias()))
 				// Second alternative is to use the species name as given in the species' "speciesName" field
-				.or(() -> calculateMissingSiteCurve(siteCurveMap, becZone, speciesId, speciesId));
+				.or(() -> calculateMissingSiteCurve(siteCurveMap, region, speciesId, speciesId));
 	}
 
 	/**
 	 * Calculate the siteCurve number of a species group.
 	 *
 	 * @param siteCurveMap the Site Curve definitions.
-	 * @param becZone      the bec zone of the polygon
+	 * @param region       the BEC region of the polygon
 	 * @param speciesId    The species group to be used if the map is empty
 	 * @param sp0          The species group to be used if the map is not empty
 	 * @return
 	 */
 	protected static Optional<SiteIndexEquation> calculateMissingSiteCurve(
-			MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap, BecDefinition becZone, final String speciesId,
+			MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap, Region region, final String speciesId,
 			String sp0
 	) {
 		Optional<SiteIndexEquation> scIndex;
 		if (!siteCurveMap.isEmpty()) {
-			scIndex = Utils.optSafe(siteCurveMap.get(sp0, becZone.getRegion()));
+			scIndex = Utils.optSafe(siteCurveMap.get(sp0, region));
 		} else {
-			SiteIndexEquation siCurve = SiteTool.getSICurve(speciesId, becZone.getRegion().equals(Region.COASTAL));
-			scIndex = siCurve == SiteIndexEquation.SI_NO_EQUATION ? Optional.empty() : Optional.of(siCurve);
+			SiteIndexEquation siCurve = SiteTool.getSICurve(speciesId, region.equals(Region.COASTAL));
+			scIndex = Optional.of(siCurve).filter(sc -> sc != SiteIndexEquation.SI_NO_EQUATION);
 		}
 		return scIndex;
 	}
