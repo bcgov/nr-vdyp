@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.processing_state;
 
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -51,6 +52,12 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	public static final String PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY = "PrimarySpeciesDetails can be set once only";
 
+	public static final String UNSET_SITE_CURVE_NUMBERS = "unset siteCurveNumbers";
+
+	public static final String UNSET_RANKING_DETAILS = "unset rankingDetails";
+
+	public static final String SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY = "SiteCurveNumbers can be set once only";
+
 	/** The containing ForwardProcessingState */
 	protected final ProcessingState<Self> ps;
 
@@ -99,6 +106,10 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 	private int primarySpeciesStratumNumber;
 
 	private int inventoryTypeGroup;
+
+	private int[] siteCurveNumbers;
+
+	public boolean areSiteCurveNumbersSet = false;
 
 	protected LayerProcessingState(ProcessingState<Self> ps, VdypPolygon polygon, LayerType subjectLayerType)
 			throws ProcessingException {
@@ -360,6 +371,38 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	public boolean isAreRankingDetailsSet() {
 		return areRankingDetailsSet;
+	}
+
+	public int[] getSiteCurveNumbers() {
+		return siteCurveNumbers;
+	}
+
+	/**
+	 * @param n index of species for whom the site curve number is to be returned.
+	 * @return the site curve number of the given species.
+	 */
+	public int getSiteCurveNumber(int n) {
+		if (!areSiteCurveNumbersSet) {
+			throw new IllegalStateException(UNSET_SITE_CURVE_NUMBERS);
+		}
+		if (n == 0) {
+			// Take this opportunity to initialize siteCurveNumbers[0] from that of the primary species.
+			if (!isAreRankingDetailsSet()) {
+				throw new IllegalStateException(UNSET_RANKING_DETAILS);
+			}
+			siteCurveNumbers[0] = siteCurveNumbers[primarySpeciesIndex];
+		}
+		return siteCurveNumbers[n];
+	}
+
+	public void setSiteCurveNumbers(int[] siteCurveNumbers) {
+		if (areSiteCurveNumbersSet) {
+			throw new IllegalStateException(SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY);
+		}
+
+		this.siteCurveNumbers = Arrays.copyOf(siteCurveNumbers, siteCurveNumbers.length);
+
+		areSiteCurveNumbersSet = true;
 	}
 
 }
