@@ -627,6 +627,20 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void test1176() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+
+		logger.info("Starting vdyp-1176");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1176/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1176", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void test1023() throws IOException, ResourceParseException {
 		logger.info("Starting vdyp-1023");
 		Pattern ignorePattern = Pattern.compile("TABLE_NUM");
