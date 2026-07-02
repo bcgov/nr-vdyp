@@ -145,6 +145,18 @@ public class VdypMatchers {
 
 	}
 
+	/**
+	 * Matcher for exception messages
+	 *
+	 * @param messageMatcher
+	 * @return
+	 */
+	public static Matcher<Throwable> hasMessage(Matcher<String> messageMatcher) {
+
+		return describedAs("has message %0", hasProperty("message", messageMatcher), messageMatcher);
+
+	}
+
 	public static <T> Matcher<Optional<T>> present() {
 		return present(anything());
 	}

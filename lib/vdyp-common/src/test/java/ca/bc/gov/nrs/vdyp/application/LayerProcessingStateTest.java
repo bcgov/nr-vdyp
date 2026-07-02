@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.application;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasMessage;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -546,5 +547,90 @@ class LayerProcessingStateTest {
 			assertThat("bank.yearsToBreastHeight", bank.yearsToBreastHeight[0], is(15f));
 		}
 
+	}
+
+	@Nested
+	class SiteCurves {
+
+		LayerProcessingState<?> unit;
+		IMocksControl em;
+		ProcessingControlVariables controlVariables;
+
+		@BeforeEach
+		void setup() throws Exception {
+			controlVariables = new ProcessingControlVariables(new Integer[] {});
+
+			em = EasyMock.createStrictControl();
+			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
+			ProcessingResolvedControlMap controlMap = em.createMock("controlMap", ProcessingResolvedControlMap.class);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2024);
+				pb.biogeoclimaticZone(TestUtils.mockBec());
+				pb.forestInventoryZone("A");
+				pb.percentAvailable(90f);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("A", 1);
+					});
+					lb.addSpecies(sb -> {
+						sb.genus("B", 1);
+					});
+				});
+			});
+
+			EasyMock.expect(parent.getControlMap()).andStubReturn(controlMap);
+			EasyMock.expect(controlMap.getControlVariables()).andStubReturn(controlVariables);
+
+			em.replay();
+
+			unit = new TestLayerProcessingState(parent, polygon, LayerType.PRIMARY);
+
+			assertThat(unit, hasProperty("NSpecies", is(2)));
+
+		}
+
+		@Test
+		void testGetFailsBeforeSet() {
+			var ex = assertThrows(IllegalStateException.class, () -> unit.getSiteCurveNumber(1));
+			assertThat(ex, hasMessage(is(LayerProcessingState.UNSET_SITE_CURVE_NUMBERS)));
+		}
+
+		@Test
+		void testGetForSpeciesAfterSet() {
+			unit.setSiteCurveNumbers(new int[] { 0, 118, 119 });
+			assertThat("Site curve for species 1", unit.getSiteCurveNumber(1), is(118));
+			assertThat("Site curve for species 2", unit.getSiteCurveNumber(2), is(119));
+		}
+
+		@Test
+		void testSetTwiceFails() {
+			unit.setSiteCurveNumbers(new int[] { 0, 118, 119 });
+			var ex = assertThrows(
+					IllegalStateException.class, () -> unit.setSiteCurveNumbers(new int[] { 0, 128, 129 })
+			);
+			assertThat(ex, hasMessage(is(LayerProcessingState.SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY)));
+			assertThat("Site curve for species 1", unit.getSiteCurveNumber(1), is(118));
+			assertThat("Site curve for species 2", unit.getSiteCurveNumber(2), is(119));
+		}
+
+		@Test
+		void testGetForSpeciesZeroWithoutRanking() {
+			unit.setSiteCurveNumbers(new int[] { 0, 118, 119 });
+			var ex = assertThrows(IllegalStateException.class, () -> unit.getSiteCurveNumber(0));
+			assertThat(
+					ex, hasMessage(is("SpeciesRankingDetails have not been set.  Cannot access primarySpeciesIndex."))
+			);
+		}
+
+		@Test
+		void testGetForSpeciesZeroWithRanking() {
+			unit.setSiteCurveNumbers(new int[] { 0, 118, 119 });
+			unit.setSpeciesRankingDetails(new SpeciesRankingDetails(1, Optional.of(2), 42, 42, 42));
+			assertThat("Site curve for \"species 0\"", unit.getSiteCurveNumber(0), is(118));
+		}
 	}
 }

@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import java.util.Arrays;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -19,12 +18,8 @@ import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLayerProcessingState> {
 
 	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
-	private static final String SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY = "SiteCurveNumbers can be set once only";
-
 	private static final String UNSET_CV_VOLUMES = "unset cvVolumes";
 	private static final String UNSET_CV_BASAL_AREAS = "unset cvBasalAreas";
-	private static final String UNSET_RANKING_DETAILS = "unset rankingDetails";
-	private static final String UNSET_SITE_CURVE_NUMBERS = "unset siteCurveNumbers";
 	private static final Logger logger = LoggerFactory.getLogger(ForwardLayerProcessingState.class);
 
 	// L1COM1, L1COM4 and L1COM5 - these common blocks mirror BANK1, BANK2 and BANK3 and are initialized
@@ -49,12 +44,6 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 	// HDL1 = wallet.dominantHeights[primarySpeciesIndex]
 
 	// Calculated data - this data is calculated after construction during processing.
-
-	// Site Curve Numbers - encompasses INXSCV
-	private boolean areSiteCurveNumbersSet = false;
-
-	// INXSC
-	private int[] siteCurveNumbers; // INXSCV
 
 	// FRBASP0 - FR
 	// TODO
@@ -115,38 +104,6 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 
 	public int[] getBreakageEquationGroups() {
 		return breakageEquationGroups;
-	}
-
-	public int[] getSiteCurveNumbers() {
-		return siteCurveNumbers;
-	}
-
-	/**
-	 * @param n index of species for whom the site curve number is to be returned.
-	 * @return the site curve number of the given species.
-	 */
-	public int getSiteCurveNumber(int n) {
-		if (!areSiteCurveNumbersSet) {
-			throw new IllegalStateException(UNSET_SITE_CURVE_NUMBERS);
-		}
-		if (n == 0) {
-			// Take this opportunity to initialize siteCurveNumbers[0] from that of the primary species.
-			if (!isAreRankingDetailsSet()) {
-				throw new IllegalStateException(UNSET_RANKING_DETAILS);
-			}
-			siteCurveNumbers[0] = siteCurveNumbers[primarySpeciesIndex];
-		}
-		return siteCurveNumbers[n];
-	}
-
-	public void setSiteCurveNumbers(int[] siteCurveNumbers) {
-		if (areSiteCurveNumbersSet) {
-			throw new IllegalStateException(SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY);
-		}
-
-		this.siteCurveNumbers = Arrays.copyOf(siteCurveNumbers, siteCurveNumbers.length);
-
-		areSiteCurveNumbersSet = true;
 	}
 
 	/**
