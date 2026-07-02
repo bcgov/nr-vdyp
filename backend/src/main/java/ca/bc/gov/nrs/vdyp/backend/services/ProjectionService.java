@@ -723,8 +723,15 @@ public class ProjectionService {
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.COMPLETE_PROJECTION);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.COMPLETE_PROJECTION);
 
-		if (progressUpdate != null) {
+		if (hasProgressUpdate(progressUpdate)) {
 			batchMappingService.updateProgress(entity, progressUpdate);
+		}
+
+		if (hasFailureDetails(progressUpdate)) {
+			batchMappingService.updateFailureDetails(
+					entity, progressUpdate.batchJobGUID(), progressUpdate.batchFailureTypeCode(),
+					progressUpdate.failureMessage()
+			);
 		}
 
 		ProjectionStatusCodeEntity status = statusLookup
@@ -737,6 +744,16 @@ public class ProjectionService {
 		entity.setProjectionStatusCode(status);
 		entity.setEndDate(OffsetDateTime.now());
 		return toModelWithExpiry(entity);
+	}
+
+	private boolean hasProgressUpdate(ProjectionProgressUpdate progressUpdate) {
+		return progressUpdate != null && progressUpdate.batchJobGUID() != null;
+	}
+
+	private boolean hasFailureDetails(ProjectionProgressUpdate progressUpdate) {
+		return progressUpdate != null
+				&& ( (progressUpdate.batchFailureTypeCode() != null && !progressUpdate.batchFailureTypeCode().isBlank())
+						|| progressUpdate.failureMessage() != null);
 	}
 
 	@Transactional

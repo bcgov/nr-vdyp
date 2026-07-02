@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.clients.VDYPBatchClient;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionBatchMappingResourceAssembler;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.BatchFailureTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
@@ -27,15 +28,18 @@ public class ProjectionBatchMappingService {
 
 	private ProjectionBatchMappingRepository repository;
 	private ProjectionBatchMappingResourceAssembler assembler;
+	private BatchFailureTypeCodeLookup batchFailureTypeCodeLookup;
 
 	private VDYPBatchClient batchClient;
 
 	public ProjectionBatchMappingService(
 			ProjectionBatchMappingRepository repository, ProjectionBatchMappingResourceAssembler assembler,
+			BatchFailureTypeCodeLookup batchFailureTypeCodeLookup,
 			@RestClient VDYPBatchClient batchClient
 	) {
 		this.repository = repository;
 		this.assembler = assembler;
+		this.batchFailureTypeCodeLookup = batchFailureTypeCodeLookup;
 		this.batchClient = batchClient;
 	}
 
@@ -128,6 +132,30 @@ public class ProjectionBatchMappingService {
 		entity.setWarningCount(0);
 		repository.persist(entity);
 		return entity;
+	}
+
+	@Transactional
+	public void updateFailureDetails(
+			ProjectionEntity projectionEntity, UUID batchJobGUID, String batchFailureTypeCode, String failureMessage
+	) throws ProjectionServiceException {
+		ProjectionBatchMappingEntity entity = repository.findByProjectionGUID(projectionEntity.getProjectionGUID())
+				.orElse(null);
+
+		if (entity == null) {
+			if (batchJobGUID == null) {
+				throw new ProjectionServiceException(
+						"Error updating projection batch failure details received null batch job",
+						projectionEntity.getProjectionGUID()
+				);
+			}
+			entity = createStreamedMapping(projectionEntity, batchJobGUID);
+		}
+
+		BatchFailureTypeCodeEntity failureTypeCodeEntity = batchFailureTypeCodeLookup
+				.requireEntity(batchFailureTypeCode);
+
+		entity.setBatchFailureTypeCode(failureTypeCodeEntity);
+		entity.setFailureMessage(failureMessage);
 	}
 
 	private static void applyProgress(ProjectionBatchMappingEntity entity, ProjectionProgressUpdate progressUpdate) {

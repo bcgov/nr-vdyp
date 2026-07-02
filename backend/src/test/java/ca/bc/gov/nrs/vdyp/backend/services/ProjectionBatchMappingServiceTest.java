@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.projectionEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -39,6 +41,8 @@ class ProjectionBatchMappingServiceTest {
 	@Mock
 	ProjectionBatchMappingResourceAssembler assembler;
 	@Mock
+	BatchFailureTypeCodeLookup failureLookup;
+	@Mock
 	@RestClient
 	VDYPBatchClient batchClient;
 
@@ -46,7 +50,7 @@ class ProjectionBatchMappingServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		service = new ProjectionBatchMappingService(repository, assembler, batchClient);
+		service = new ProjectionBatchMappingService(repository, assembler, failureLookup, batchClient);
 	}
 
 	@Test
@@ -170,7 +174,7 @@ class ProjectionBatchMappingServiceTest {
 
 		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
 
-		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 3);
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 3, null, null);
 		// Act
 		service.updateProgress(projectionEntity, update);
 		assertEquals(100, mappingEntity.getPolygonCount());
@@ -185,7 +189,7 @@ class ProjectionBatchMappingServiceTest {
 		UUID projectionGuid = UUID.randomUUID();
 		UUID batchJobGuid = UUID.randomUUID();
 		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
-		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 3);
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 3, null, null);
 
 		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
 
@@ -204,5 +208,57 @@ class ProjectionBatchMappingServiceTest {
 		assertEquals(10, entity.getCompletedPolygonCount());
 		assertEquals(0, entity.getWarningCount());
 		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void updateFailureDetails_projectionHasMapping_updatesCorrectly() throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		String failureTypeCode = "PROCESS";
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
+
+		service.updateFailureDetails(projectionEntity, batchJobGuid, failureTypeCode, "Projection failed");
+
+		assertSame(failureTypeCode, mappingEntity.getBatchFailureTypeCode().getCode());
+		assertEquals("Projection failed", mappingEntity.getFailureMessage());
+	}
+
+	@Test
+	void updateFailureDetails_projectionHasNoMapping_createsMappingWhenBatchJobProvided()
+			throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		String failureTypeCode = "INPUT";
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
+
+		service.updateFailureDetails(projectionEntity, batchJobGuid, failureTypeCode, "Input failed");
+
+		ArgumentCaptor<ProjectionBatchMappingEntity> entityCaptor = ArgumentCaptor
+				.forClass(ProjectionBatchMappingEntity.class);
+		verify(repository).persist(entityCaptor.capture());
+
+		ProjectionBatchMappingEntity entity = entityCaptor.getValue();
+		assertEquals(batchJobGuid, entity.getBatchJobGUID());
+		assertEquals(projectionEntity, entity.getProjection());
+		assertSame(failureTypeCode, entity.getBatchFailureTypeCode().getCode());
+		assertEquals("Input failed", entity.getFailureMessage());
+	}
+
+	@Test
+	void updateFailureDetails_projectionHasNoMappingAndNoBatchJob_throwsException() {
+		UUID projectionGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
+
+		assertThrows(
+				ProjectionServiceException.class,
+				() -> service.updateFailureDetails(projectionEntity, null, null, "Projection failed")
+		);
 	}
 }
