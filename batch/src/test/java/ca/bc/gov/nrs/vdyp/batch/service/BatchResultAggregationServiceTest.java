@@ -825,6 +825,36 @@ class BatchResultAggregationServiceTest {
 	}
 
 	@Test
+	void testAggregateResults_SkippedChunkErrorLog_MergedIntoErrorLog()
+			throws BatchResultAggregationException, IOException {
+		// Arrange: partition with a SkippedChunkErrorLog file (systemic failure) and a yield table
+		Path partitionDir = tempDir.resolve("output-partition0");
+		Files.createDirectories(partitionDir);
+
+		Files.writeString(partitionDir.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		String skipErrorMessage = "[GUID: test-guid, EXEID: 1, Partition: partition0] "
+				+ "VDYP projection failed for chunk of 5 polygon(s) starting at feature ID 12746400 "
+				+ "(polygonStartByte=0). Exception: IOException, Message: File not found";
+		Files.writeString(
+				partitionDir.resolve("YieldTables_partition0-chunk0_SkippedChunkErrorLog.txt"),
+				skipErrorMessage + System.lineSeparator()
+		);
+
+		// Act
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate, duration
+		);
+
+		// Assert: ErrorLog.txt in ZIP contains the chunk skip error
+		String errorLogContent = getZipEntryContent(resultZip, "ErrorLog.txt");
+		assertNotNull(errorLogContent, "ErrorLog.txt should exist in ZIP when SkippedChunkErrorLog is present");
+		assertTrue(errorLogContent.contains("12746400"), "ErrorLog.txt should contain the feature ID");
+		assertTrue(errorLogContent.contains("5 polygon(s)"), "ErrorLog.txt should contain polygon count");
+		assertTrue(errorLogContent.contains("IOException"), "ErrorLog.txt should contain exception type");
+	}
+
+	@Test
 	void testValidateConsolidatedZip_ZipException() throws IOException {
 		Path invalidZip = tempDir.resolve("invalid.zip");
 		Files.writeString(invalidZip, "This is not a valid ZIP file");

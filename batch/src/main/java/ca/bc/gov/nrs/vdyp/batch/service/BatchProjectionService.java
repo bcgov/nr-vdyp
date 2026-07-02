@@ -111,19 +111,84 @@ public class BatchProjectionService {
 			}
 
 		} catch (IOException e) {
-			throw BatchResultStorageException.handleResultStorageFailure(
-					e, "Failed to store projection results", jobGuid, jobExecutionId, logger
+			String firstFeatureId = extractFirstFeatureId(chunkMetadata);
+			BatchResultStorageException storageException = BatchResultStorageException.handleResultStorageFailure(
+					e, "Failed to store projection results", jobGuid, jobExecutionId, firstFeatureId, logger
 			);
+			String skipMessage = String.format(
+					"[GUID: %s, EXEID: %d, Partition: %s] Failed to store results for chunk of %d polygon(s) starting at feature ID %s. Exception: %s, Cause: %s",
+					jobGuid, jobExecutionId, partitionName, chunkMetadata.getPolygonRecordCount(),
+					firstFeatureId != null ? firstFeatureId : "unknown", e.getClass().getSimpleName(),
+					e.getMessage() != null ? e.getMessage() : "No error message"
+			);
+			writeChunkSkipErrorLog(chunkMetadata, skipMessage);
+			throw storageException;
 		} catch (Exception e) {
 			// All other exceptions from extended-core - wrap as BatchProjectionException
-			throw BatchProjectionException
-					.handleProjectionFailure(e, chunkMetadata, jobGuid, jobExecutionId, partitionName, logger);
+			String firstFeatureId = extractFirstFeatureId(chunkMetadata);
+			BatchProjectionException projectionException = BatchProjectionException.handleProjectionFailure(
+					e, chunkMetadata, jobGuid, jobExecutionId, partitionName, firstFeatureId, logger
+			);
+			writeChunkSkipErrorLog(chunkMetadata, projectionException.getMessage());
+			throw projectionException;
 		} finally {
 			if (inputStreams != null) {
 				for (var entry : inputStreams.entrySet()) {
 					Utils.close(entry.getValue(), entry.getKey());
 				}
 			}
+		}
+	}
+
+	/**
+	 * Reads the FEATURE_ID of the first polygon in the chunk. If a chunk error occurs, an error may be reported for
+	 * that data.
+	 */
+	private String extractFirstFeatureId(BatchChunkMetadata chunkMetadata) {
+		if (chunkMetadata.getPolygonRecordCount() <= 0) {
+			return null;
+		}
+
+		String inputPartitionFolderName = BatchUtils.buildInputPartitionFolderName(chunkMetadata.getPartitionName());
+		Path polygonFile = Paths.get(chunkMetadata.getJobBaseDir(), inputPartitionFolderName)
+				.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
+
+		try (
+				InputStream in = BatchRangeInputStream.create(polygonFile, chunkMetadata.getPolygonStartByte(), 1);
+				BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
+		) {
+			return BatchUtils.extractFeatureId(reader.readLine());
+		} catch (IOException e) {
+			logger.warn(
+					"Unable to read first feature ID for chunk in partition {}: {}", chunkMetadata.getPartitionName(),
+					e.getMessage()
+			);
+			return null;
+		}
+	}
+
+	/**
+	 * Writes a chunk-skip error entry to the partition output directory so the aggregation step merges it into
+	 * ErrorLog.txt. TRUNCATE_EXISTING prevents duplicate entries when Spring Batch retries the same chunk.
+	 */
+	private void writeChunkSkipErrorLog(BatchChunkMetadata chunkMetadata, String message) {
+		try {
+			Path outputPartitionDir = createOutputPartitionDir(
+					chunkMetadata.getPartitionName(), chunkMetadata.getJobBaseDir()
+			);
+			String fileName = String.format(
+					"YieldTables_%s-chunk%d_SkippedChunkErrorLog.txt", chunkMetadata.getPartitionName(),
+					chunkMetadata.getPolygonStartByte()
+			);
+			Files.writeString(
+					outputPartitionDir.resolve(fileName), message + System.lineSeparator(), StandardOpenOption.CREATE,
+					StandardOpenOption.TRUNCATE_EXISTING
+			);
+		} catch (IOException e) {
+			logger.warn(
+					"Failed to write skipped-chunk error log for partition {}: {}", chunkMetadata.getPartitionName(),
+					e.getMessage()
+			);
 		}
 	}
 

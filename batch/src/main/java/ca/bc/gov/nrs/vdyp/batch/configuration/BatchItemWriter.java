@@ -19,6 +19,7 @@ import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 
 /**
  * Memory-efficient ItemWriter that processes chunk metadata by streaming data directly from partition files. This
@@ -75,6 +76,14 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 
 		try {
 			this.projectionParameters = objectMapper.readValue(projectionParametersJson, Parameters.class);
+
+			// Error logging must always be on so VDYP-841 skip/error reporting has data to work with,
+			// regardless of what the caller requested.
+			if (this.projectionParameters != null && !this.projectionParameters.getSelectedExecutionOptions()
+					.contains(ExecutionOption.DO_ENABLE_ERROR_LOGGING.toString())) {
+				this.projectionParameters.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_ERROR_LOGGING);
+			}
+
 			logger.trace(
 					"[GUID: {}, EXEID: {}, Partition: {}] BatchItemWriter initialized with projection parameters. Parameters null: {}",
 					jobGuid, jobExecutionId, partitionName, this.projectionParameters == null

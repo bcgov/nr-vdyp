@@ -19,17 +19,29 @@ public class BatchProjectionException extends BatchException {
 			Exception cause, BatchChunkMetadata chunkMetadata, String jobGuid, Long jobExecutionId,
 			String partitionName, Logger logger
 	) {
+		return handleProjectionFailure(cause, chunkMetadata, jobGuid, jobExecutionId, partitionName, null, logger);
+	}
+
+	/**
+	 * @param firstFeatureId the FEATURE_ID of the first polygon in the chunk, so the skip can be traced back to the
+	 *                       affected data
+	 */
+	public static BatchProjectionException handleProjectionFailure(
+			Exception cause, BatchChunkMetadata chunkMetadata, String jobGuid, Long jobExecutionId,
+			String partitionName, String firstFeatureId, Logger logger
+	) {
 		long polygonStartByte = chunkMetadata.getPolygonStartByte();
 		int polygonRecordCount = chunkMetadata.getPolygonRecordCount();
 
 		String contextualMessage = String.format(
-				"[GUID: %s, EXEID: %d, Partition: %s] VDYP projection failed for chunk (polygonStartByte=%d, polygonRecordCount=%d). Exception: %s, Message: %s",
-				jobGuid, jobExecutionId, partitionName, polygonStartByte, polygonRecordCount,
-				cause.getClass().getSimpleName(), cause.getMessage() != null ? cause.getMessage() : "No error message"
+				"[GUID: %s, EXEID: %d, Partition: %s] VDYP projection failed for chunk of %d polygon(s) starting at feature ID %s (polygonStartByte=%d). Exception: %s, Message: %s",
+				jobGuid, jobExecutionId, partitionName, polygonRecordCount,
+				firstFeatureId != null ? firstFeatureId : "unknown", polygonStartByte, cause.getClass().getSimpleName(),
+				cause.getMessage() != null ? cause.getMessage() : "No error message"
 		);
 
 		logger.error(contextualMessage, cause);
 
-		return new BatchProjectionException(contextualMessage, cause, null);
+		return new BatchProjectionException(contextualMessage, cause, firstFeatureId);
 	}
 }

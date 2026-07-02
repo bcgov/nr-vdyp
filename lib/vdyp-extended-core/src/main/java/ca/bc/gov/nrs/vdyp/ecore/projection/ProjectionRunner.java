@@ -151,8 +151,15 @@ public class ProjectionRunner implements Closeable {
 						context.logError(m.getKind().template, m.getArgs());
 					}
 
-					for (var message : polygon.getMessages()) {
-						context.logError(message.toString());
+					if (polygon != null) {
+						for (var message : polygon.getMessages()) {
+							context.logError(message.toString());
+						}
+					} else {
+						// The record failed validation before a Polygon could even be built, so it was never
+						// counted by nPolygonsProcessed/nPolygonsSkipped above. Count it as skipped so the
+						// processed/skipped totals reconcile with the number of records actually seen.
+						nPolygonsSkipped += 1;
 					}
 				}
 			}

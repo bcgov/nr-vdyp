@@ -36,8 +36,22 @@ class BatchProjectionExceptionTest {
 		assertThat(exception.getMessage(), containsString(partitionName));
 		assertThat(exception.getMessage(), containsString("RuntimeException"));
 		assertThat(exception.getMessage(), containsString("Projection algorithm failed"));
-		assertThat(exception.getMessage(), containsString("polygonRecordCount=2"));
+		assertThat(exception.getMessage(), containsString("chunk of 2 polygon(s)"));
 		assertThat(exception.getMessage(), containsString("polygonStartByte=100"));
+		assertThat(exception.getMessage(), containsString("feature ID unknown"));
+	}
+
+	@Test
+	void testHandleProjectionFailure_WithFirstFeatureId_IncludesFeatureIdInMessageAndException() {
+		RuntimeException cause = new RuntimeException("Projection algorithm failed");
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-1", "/tmp/job", 100L, 2, 200L, 4);
+
+		BatchProjectionException exception = BatchProjectionException.handleProjectionFailure(
+				cause, chunkMetadata, "job-guid-456", 600L, "partition-1", "123456789", logger
+		);
+
+		assertThat(exception.getMessage(), containsString("feature ID 123456789"));
+		assertThat(exception.getFeatureId(), is("123456789"));
 	}
 
 	@Test
