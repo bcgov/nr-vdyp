@@ -34,8 +34,7 @@ public class ProjectionBatchMappingService {
 
 	public ProjectionBatchMappingService(
 			ProjectionBatchMappingRepository repository, ProjectionBatchMappingResourceAssembler assembler,
-			BatchFailureTypeCodeLookup batchFailureTypeCodeLookup,
-			@RestClient VDYPBatchClient batchClient
+			BatchFailureTypeCodeLookup batchFailureTypeCodeLookup, @RestClient VDYPBatchClient batchClient
 	) {
 		this.repository = repository;
 		this.assembler = assembler;

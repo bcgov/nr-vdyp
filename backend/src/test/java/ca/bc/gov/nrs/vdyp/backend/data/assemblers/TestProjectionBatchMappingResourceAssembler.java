@@ -25,13 +25,20 @@ class TestProjectionBatchMappingResourceAssembler {
 	}
 
 	static Stream<Arguments> modelEntityData() {
-		return Stream.of(
-				Arguments.of(
-						UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 5, 1, 2, 3, "INPUT", "Input failed"
-				), Arguments.of(null, UUID.randomUUID(), UUID.randomUUID(), 3, 1, 0, 1, "PROCESS", "Projection failed"),
-				Arguments.of(UUID.randomUUID(), null, UUID.randomUUID(), 10, 5, 1, 0, "OUTPUT", "Output failed"),
-				Arguments.of(UUID.randomUUID(), UUID.randomUUID(), null, 5, 1, 2, 3, null, null)
-		);
+		return Stream
+				.of(
+						Arguments.of(
+								UUID.randomUUID(), UUID.randomUUID(), UUID
+										.randomUUID(),
+								5, 1, 2, 3, "INPUT", "Input failed"
+						),
+						Arguments.of(
+								null, UUID.randomUUID(), UUID.randomUUID(), 3, 1, 0, 1, "PROCESS", "Projection failed"
+						),
+						Arguments
+								.of(UUID.randomUUID(), null, UUID.randomUUID(), 10, 5, 1, 0, "OUTPUT", "Output failed"),
+						Arguments.of(UUID.randomUUID(), UUID.randomUUID(), null, 5, 1, 2, 3, null, null)
+				);
 	}
 
 	@ParameterizedTest

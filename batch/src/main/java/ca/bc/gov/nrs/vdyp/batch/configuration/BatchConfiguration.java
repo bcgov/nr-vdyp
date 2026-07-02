@@ -139,7 +139,9 @@ public class BatchConfiguration {
 			@Qualifier("taskExecutor") TaskExecutor taskExecutor, Step workerStep,
 			DynamicPartitioner dynamicPartitioner, DynamicPartitionHandler dynamicPartitionHandler
 	) {
-		return new StepBuilder("masterStep", jobRepository)
+		return new StepBuilder(
+				BatchConstants.Job.MASTER_STEP_NAME, jobRepository
+		)
 				.partitioner(BatchConstants.Job.WORKER_STEP_NAME, dynamicPartitioner)
 				.partitionHandler(dynamicPartitionHandler).build();
 	}
@@ -148,8 +150,8 @@ public class BatchConfiguration {
 	public Step fetchAndPartitionFilesStep(
 			DownloadAndPartitionTasklet tasklet, PlatformTransactionManager transactionManager
 	) {
-		return new StepBuilder("fetchAndPartitionFilesStep", jobRepository).tasklet(tasklet, transactionManager)
-				.build();
+		return new StepBuilder(BatchConstants.Job.FETCH_AND_PARTITION_FILES_STEP_NAME, jobRepository)
+				.tasklet(tasklet, transactionManager).build();
 	}
 
 	/**
@@ -332,7 +334,7 @@ public class BatchConfiguration {
 	 */
 	@Bean
 	public Step postProcessingStep(PlatformTransactionManager transactionManager) {
-		return new StepBuilder("postProcessingStep", jobRepository)
+		return new StepBuilder(BatchConstants.Job.POST_PROCESSING_STEP_NAME, jobRepository)
 				.tasklet(resultAggregationTasklet(), transactionManager).build();
 	}
 
@@ -401,7 +403,8 @@ public class BatchConfiguration {
 
 	@Bean
 	public Step persistResultFileStep(ResultPersistenceTasklet tasklet, PlatformTransactionManager transactionManager) {
-		return new StepBuilder("persistResultFileStep", jobRepository).tasklet(tasklet, transactionManager).build();
+		return new StepBuilder(BatchConstants.Job.PERSIST_RESULT_FILE_STEP_NAME, jobRepository)
+				.tasklet(tasklet, transactionManager).build();
 	}
 
 }
