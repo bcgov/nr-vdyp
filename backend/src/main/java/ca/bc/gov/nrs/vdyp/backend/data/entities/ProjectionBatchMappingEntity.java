@@ -6,9 +6,11 @@ import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
@@ -39,6 +41,13 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 	private Integer warningCount;
 	@Column(name = "worker_count")
 	private Integer workerCount;
+
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "batch_failure_type_code", referencedColumnName = "batch_failure_type_code")
+	private BatchFailureTypeCodeEntity batchFailureTypeCode;
+
+	@Column(name = "failure_message")
+	private String failureMessage;
 
 	public UUID getProjectionBatchMappingGUID() {
 		return projectionBatchMappingGUID;
@@ -72,6 +81,14 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 		return workerCount;
 	}
 
+	public BatchFailureTypeCodeEntity getBatchFailureTypeCode() {
+		return batchFailureTypeCode;
+	}
+
+	public String getFailureMessage() {
+		return failureMessage;
+	}
+
 	public void setProjectionBatchMappingGUID(UUID projectionBatchMappingGUID) {
 		this.projectionBatchMappingGUID = projectionBatchMappingGUID;
 	}
@@ -103,4 +120,13 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 	public void setWorkerCount(Integer workerCount) {
 		this.workerCount = workerCount;
 	}
+
+	public void setBatchFailureTypeCode(BatchFailureTypeCodeEntity batchFailureTypeCode) {
+		this.batchFailureTypeCode = batchFailureTypeCode;
+	}
+
+	public void setFailureMessage(String failureMessage) {
+		this.failureMessage = failureMessage;
+	}
+
 }

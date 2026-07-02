@@ -12,6 +12,8 @@ public class ProjectionBatchMappingModel {
 	private Integer errorCount;
 	private Integer warningCount;
 	private Integer workerCount;
+	private BatchFailureTypeCodeModel batchFailureTypeCode;
+	private String failureMessage;
 
 	public String getProjectionBatchMappingGUID() {
 		return projectionBatchMappingGUID;
@@ -41,6 +43,14 @@ public class ProjectionBatchMappingModel {
 		return warningCount;
 	}
 
+	public BatchFailureTypeCodeModel getBatchFailureTypeCode() {
+		return batchFailureTypeCode;
+	}
+
+	public String getFailureMessage() {
+		return failureMessage;
+	}
+
 	public void setProjectionBatchMappingGUID(String projectionBatchMappingGUID) {
 		this.projectionBatchMappingGUID = projectionBatchMappingGUID;
 	}
@@ -67,6 +77,14 @@ public class ProjectionBatchMappingModel {
 
 	public void setWarningCount(Integer warningCount) {
 		this.warningCount = warningCount;
+	}
+
+	public void setBatchFailureTypeCode(BatchFailureTypeCodeModel batchFailureTypeCode) {
+		this.batchFailureTypeCode = batchFailureTypeCode;
+	}
+
+	public void setFailureMessage(String failureMessage) {
+		this.failureMessage = failureMessage;
 	}
 
 	public Integer getWorkerCount() {
