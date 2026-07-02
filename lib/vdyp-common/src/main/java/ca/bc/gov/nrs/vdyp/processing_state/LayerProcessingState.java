@@ -373,10 +373,6 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 		return areRankingDetailsSet;
 	}
 
-	public int[] getSiteCurveNumbers() {
-		return siteCurveNumbers;
-	}
-
 	/**
 	 * @param n index of species for whom the site curve number is to be returned.
 	 * @return the site curve number of the given species.
@@ -387,10 +383,7 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 		}
 		if (n == 0) {
 			// Take this opportunity to initialize siteCurveNumbers[0] from that of the primary species.
-			if (!isAreRankingDetailsSet()) {
-				throw new IllegalStateException(UNSET_RANKING_DETAILS);
-			}
-			siteCurveNumbers[0] = siteCurveNumbers[primarySpeciesIndex];
+			siteCurveNumbers[0] = siteCurveNumbers[getPrimarySpeciesIndex()];
 		}
 		return siteCurveNumbers[n];
 	}
