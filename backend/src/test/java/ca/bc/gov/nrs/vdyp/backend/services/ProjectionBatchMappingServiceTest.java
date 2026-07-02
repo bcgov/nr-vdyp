@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.projectionEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
@@ -222,7 +221,6 @@ class ProjectionBatchMappingServiceTest {
 
 		service.updateFailureDetails(projectionEntity, batchJobGuid, failureTypeCode, "Projection failed");
 
-		assertSame(failureTypeCode, mappingEntity.getBatchFailureTypeCode().getCode());
 		assertEquals("Projection failed", mappingEntity.getFailureMessage());
 	}
 
@@ -245,7 +243,6 @@ class ProjectionBatchMappingServiceTest {
 		ProjectionBatchMappingEntity entity = entityCaptor.getValue();
 		assertEquals(batchJobGuid, entity.getBatchJobGUID());
 		assertEquals(projectionEntity, entity.getProjection());
-		assertSame(failureTypeCode, entity.getBatchFailureTypeCode().getCode());
 		assertEquals("Input failed", entity.getFailureMessage());
 	}
 

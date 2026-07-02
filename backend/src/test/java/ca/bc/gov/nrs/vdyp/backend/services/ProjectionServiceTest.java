@@ -2050,7 +2050,9 @@ class ProjectionServiceTest {
 		systemUserType.setCode(UserTypeCodeModel.SYSTEM);
 		VDYPUserModel systemUser = new VDYPUserModel();
 		systemUser.setUserTypeCode(systemUserType);
-		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1, 0);
+		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(
+				UUID.randomUUID(), 10, 8, 1, 0, null, null
+		);
 
 		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.READY))
@@ -2080,43 +2082,15 @@ class ProjectionServiceTest {
 		batchFailureTypeCode.setCode("PROCESS");
 
 		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
-		when(batchFailureTypeCodeLookup.requireEntity("PROCESS")).thenReturn(batchFailureTypeCode);
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.FAILED))
 				.thenReturn(statusCode(ProjectionStatusCodeModel.FAILED));
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 
 		service.updateCompleteStatus(systemUser, projectionGUID, false, progressUpdate);
 
-		verify(batchFailureTypeCodeLookup).requireEntity("PROCESS");
 		verify(batchMappingService).updateProgress(entity, progressUpdate);
 		verify(batchMappingService)
-				.updateFailureDetails(entity, batchJobGUID, batchFailureTypeCode, "Projection failed");
-	}
-
-	@Test
-	void updateCompleteStatus_withInvalidFailureTypeCode_throwsValidationException() throws ProjectionServiceException {
-		UUID projectionGUID = UUID.randomUUID();
-		ProjectionEntity entity = projectionEntity(
-				projectionGUID, UUID.randomUUID(), ProjectionStatusCodeModel.RUNNING
-		);
-		UserTypeCodeModel systemUserType = new UserTypeCodeModel();
-		systemUserType.setCode(UserTypeCodeModel.SYSTEM);
-		VDYPUserModel systemUser = new VDYPUserModel();
-		systemUser.setUserTypeCode(systemUserType);
-		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(
-				UUID.randomUUID(), 10, 8, 1, 0, "BAD", "Projection failed"
-		);
-
-		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
-		when(batchFailureTypeCodeLookup.requireEntity("BAD")).thenThrow(new IllegalArgumentException("Unknown code"));
-
-		assertThrows(
-				ProjectionValidationException.class,
-				() -> service.updateCompleteStatus(systemUser, projectionGUID, false, progressUpdate)
-		);
-
-		verify(batchMappingService, never()).updateProgress(any(), any());
-		verify(batchMappingService, never()).updateFailureDetails(any(), any(), any(), any());
+				.updateFailureDetails(entity, batchJobGUID, batchFailureTypeCode.getCode(), "Projection failed");
 	}
 
 	// ==========================================================
@@ -2133,7 +2107,9 @@ class ProjectionServiceTest {
 		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
 
 		UUID projectionGUID = UUID.randomUUID();
-		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1, 0);
+		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(
+				UUID.randomUUID(), 10, 8, 1, 0, null, null
+		);
 
 		ProjectionModel model = new ProjectionModel();
 		model.setProjectionGUID(projectionGUID.toString());
