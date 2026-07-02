@@ -46,7 +46,6 @@ import ca.bc.gov.nrs.vdyp.processing_state.PrimarySpeciesDetails;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class LayerProcessingStateTest {
 
