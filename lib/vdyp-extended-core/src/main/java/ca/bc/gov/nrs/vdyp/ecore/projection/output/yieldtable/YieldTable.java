@@ -468,10 +468,11 @@ public class YieldTable implements Closeable {
 				}
 
 				Double dominantHeight = growthDetails != null ? growthDetails.dominantHeight() : null;
+				Layer layerToCheck = null;
 				if (rowContext.isPolygonTable()) {
 					var primaryLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
 					if (primaryLayer != null) {
-						dominantHeight = primaryLayer.determineLeadingSiteSpeciesHeight(targetAge);
+						layerToCheck = primaryLayer;
 					} else {
 						logger.warn(
 								"{}: unable to get leading species dominant height since polygon has no primary layer",
@@ -480,9 +481,11 @@ public class YieldTable implements Closeable {
 					}
 				} else if (rowContext.getLayerReportingInfo()
 						.getProcessedAsVDYP7Layer() != ProjectionTypeCode.VETERAN) {
-					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
+					layerToCheck = layer;
 				}
-
+				if (layerToCheck != null) {
+					dominantHeight = layerToCheck.determineLeadingSiteSpeciesHeight(targetAge);
+				}
 				writer.recordSiteInformation(
 						percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
 						secondaryHeight
