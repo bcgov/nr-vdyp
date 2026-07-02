@@ -468,10 +468,11 @@ public class YieldTable implements Closeable {
 				}
 
 				Double dominantHeight = growthDetails != null ? growthDetails.dominantHeight() : null;
+				Layer layerToCheck = null;
 				if (rowContext.isPolygonTable()) {
 					var primaryLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
 					if (primaryLayer != null) {
-						dominantHeight = primaryLayer.determineLeadingSiteSpeciesHeight(targetAge);
+						layerToCheck = primaryLayer;
 					} else {
 						logger.warn(
 								"{}: unable to get leading species dominant height since polygon has no primary layer",
@@ -480,9 +481,11 @@ public class YieldTable implements Closeable {
 					}
 				} else if (rowContext.getLayerReportingInfo()
 						.getProcessedAsVDYP7Layer() != ProjectionTypeCode.VETERAN) {
-					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
+					layerToCheck = layer;
 				}
-
+				if (layerToCheck != null) {
+					dominantHeight = layerToCheck.determineLeadingSiteSpeciesHeight(targetAge);
+				}
 				writer.recordSiteInformation(
 						percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
 						secondaryHeight
@@ -1430,8 +1433,6 @@ public class YieldTable implements Closeable {
 				)
 		);
 
-		LayerYields layerYields;
-
 		Integer calendarYear = getCalendarYear(layer, ageToRequest);
 		if (!rowContext.getPolygonProjectionState().layerWasProjected(layer)) {
 			return getUnprojectedStandYields(stand, calendarYear);
@@ -1477,6 +1478,7 @@ public class YieldTable implements Closeable {
 			throw new StandYieldCalculationException(new FailedToGrowYoungStandException());
 		}
 
+		LayerYields layerYields = null;
 		Species sp0;
 		if (stand == null) {
 			sp0 = layer.getSp0sByPercent().get(0).getSpeciesGroup();
@@ -1491,18 +1493,26 @@ public class YieldTable implements Closeable {
 			var projectedLayer = projectedPolygon.getLayers().get(layerType);
 			var projectedSp0 = projectedLayer.getSpeciesBySp0(sp0.getSpeciesCode());
 
-			// VDYP7 projects the polygon over the entire requested range of years using some
-			// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
-			// and so some years may be missing from polygonProjectionsByYear.
+			/*
+			 * If a stand has too small of a species percentage it can be dropped entirely from the projected data. This
+			 * species should still produce an age ane height (like all unprojected stands)
+			 */
+			if (projectedSp0 != null) {
+				// VDYP7 projects the polygon over the entire requested range of years using some
+				// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
+				// and so some years may be missing from polygonProjectionsByYear.
 
-			var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
-			var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
+				var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
+				var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
 
-			layerYields = getYields(
-					calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
-			);
+				layerYields = getYields(
+						calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
+				);
+			}
 
-		} else {
+		}
+
+		if (layerYields == null) {
 			var polygon = layer.getPolygon();
 
 			PolygonMessageKind kind = PolygonMessageKind.NO_PROJECTED_DATA;
@@ -1531,8 +1541,9 @@ public class YieldTable implements Closeable {
 	LayerYields getUnprojectedStandYields(Stand stand, int calendarYear) throws StandYieldCalculationException {
 		double dominantHeight = 0.0;
 		double speciesAge = 0.0;
-
+		String sp0Name = null;
 		if (stand != null) {
+			sp0Name = stand.getSp0Code();
 			Integer standAge = stand.determineSpeciesAgeAtYear(calendarYear);
 			if (standAge != null && standAge > 0
 					&& stand.getSpeciesGroup().getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION
@@ -1557,7 +1568,7 @@ public class YieldTable implements Closeable {
 		double unprojectedDiameter = Vdyp7Constants.EMPTY_DECIMAL;
 
 		return new LayerYields(
-				false, false /* not dominant */, null, calendarYear, speciesAge, dominantHeight, 0.0, 0.0,
+				false, false /* not dominant */, sp0Name, calendarYear, speciesAge, dominantHeight, 0.0, 0.0,
 				unprojectedDiameter, unprojectedTph, 0.0, 0.0, 0.0, 0.0, 0.0, unprojectedBasalArea,
 				unprojectedBasalArea, unprojectedBasalArea, 0.0, 0
 		);

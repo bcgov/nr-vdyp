@@ -910,7 +910,7 @@ class ForwardProcessingEngineTest {
 			var fps = new ForwardProcessingState(controlMap);
 			fps.setPolygon(polygon);
 
-			var lps = fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 			var bank = lps.getBank();
 
 			lps.setSpeciesRankingDetails(
@@ -973,11 +973,13 @@ class ForwardProcessingEngineTest {
 		}
 
 		private final class LayerFixture {
-			private final ForwardLayerProcessingState lps;
+			private final LayerProcessingState<ForwardLayerProcessingState> lps;
 			private final Bank bank;
 			private final Map<String, Integer> slots;
 
-			private LayerFixture(ForwardLayerProcessingState lps, Bank bank, Map<String, Integer> slots) {
+			private LayerFixture(
+					LayerProcessingState<ForwardLayerProcessingState> lps, Bank bank, Map<String, Integer> slots
+			) {
 				this.lps = lps;
 				this.bank = bank;
 				this.slots = slots;

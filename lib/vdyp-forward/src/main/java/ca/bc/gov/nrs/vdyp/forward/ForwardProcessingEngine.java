@@ -18,6 +18,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
@@ -30,7 +31,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
-import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -42,7 +42,6 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.ModelCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
-import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -77,7 +76,7 @@ import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
  * <code>processPolygon</code> for each polygon to be processed. All calls to <code>processPolygon</code> are entirely
  * independent of one another, allowing (different) polygons to the processed in parallel.
  */
-public class ForwardProcessingEngine {
+public class ForwardProcessingEngine extends ProcessingEngine {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessor.class);
 
@@ -2856,7 +2855,8 @@ public class ForwardProcessingEngine {
 	 * @throws ProcessingException
 	 */
 	static void calculateDominantHeightAgeSiteIndex(
-			ForwardLayerProcessingState lps, MatrixMap2<String, Region, Coefficients> hl1Coefficients
+			LayerProcessingState<ForwardLayerProcessingState> lps,
+			MatrixMap2<String, Region, Coefficients> hl1Coefficients
 	) throws ProcessingException {
 
 		Bank bank = lps.getBank();
@@ -2961,7 +2961,7 @@ public class ForwardProcessingEngine {
 	 *
 	 * @param lps the current state of the processing of the polygon
 	 */
-	static void estimateMissingYearsToBreastHeightValues(ForwardLayerProcessingState lps) {
+	static void estimateMissingYearsToBreastHeightValues(LayerProcessingState<ForwardLayerProcessingState> lps) {
 
 		Bank bank = lps.getBank();
 
@@ -3023,7 +3023,8 @@ public class ForwardProcessingEngine {
 	 * @param lps the bank in which the calculations are done.
 	 * @throws ProcessingException
 	 */
-	static void estimateMissingSiteIndices(ForwardLayerProcessingState lps) throws ProcessingException {
+	static void estimateMissingSiteIndices(LayerProcessingState<ForwardLayerProcessingState> lps)
+			throws ProcessingException {
 
 		Bank bank = lps.getBank();
 
@@ -3149,8 +3150,9 @@ public class ForwardProcessingEngine {
 	 * @param lps the layer processing state
 	 * @throws ProcessingException on serious calculation failures
 	 */
-	static void estimateMissingSiteIndicesAndAgesExtended(ForwardLayerProcessingState lps, ProcessingDebugSettings fds)
-			throws ProcessingException {
+	static void estimateMissingSiteIndicesAndAgesExtended(
+			LayerProcessingState<ForwardLayerProcessingState> lps, ProcessingDebugSettings fds
+	) throws ProcessingException {
 
 		Bank bank = lps.getBank();
 
@@ -3518,61 +3520,6 @@ public class ForwardProcessingEngine {
 					.addArgument(bank.basalAreas[i][UC_ALL_INDEX]).addArgument(bank.percentagesOfForestedLand[i])
 					.log("Species {}: SP0 {}, Name {}, Species 7.5cm+ BA {}, Calculated Percent {}");
 		}
-	}
-
-	/**
-	 * Calculate the siteCurve number of all species for which one was not supplied. All calculations are done in the
-	 * given bank but the result is also stored in the LayerProcessingState.
-	 * <p>
-	 * FORTRAN notes: the original SXINXSET function set both INXSC/INXSCV and BANK3/SCNB, except for index 0 of SCNB.
-	 *
-	 * @param bank         the bank in which the calculations are done.
-	 * @param siteCurveMap the Site Curve definitions.
-	 * @param lps          the PolygonProcessingState to where the calculated curves are also to be
-	 */
-	static void calculateMissingSiteCurves(
-			ForwardLayerProcessingState lps, MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap
-	) {
-		Bank bank = lps.getBank();
-
-		BecDefinition becZone = bank.getBecZone();
-
-		for (int i : bank.getIndices()) {
-
-			if (bank.siteCurveNumbers[i] == VdypEntity.MISSING_INTEGER_VALUE) {
-
-				Optional<SiteIndexEquation> scIndex = Optional.empty();
-
-				Optional<Sp64Distribution> sp0Dist = bank.sp64Distributions[i].getSpeciesDistribution(1);
-
-				// First alternative is to use the name of the first of the species' sp64Distributions
-				if (sp0Dist.isPresent()) {
-					if (!siteCurveMap.isEmpty()) {
-						scIndex = Utils.optSafe(siteCurveMap.get(sp0Dist.get().getGenusAlias(), becZone.getRegion()));
-					} else {
-						SiteIndexEquation siCurve = SiteTool
-								.getSICurve(bank.speciesNames[i], becZone.getRegion().equals(Region.COASTAL));
-						scIndex = siCurve == SiteIndexEquation.SI_NO_EQUATION ? Optional.empty() : Optional.of(siCurve);
-					}
-				}
-
-				// Second alternative is to use the species name as given in the species' "speciesName" field
-				if (scIndex.isEmpty()) {
-					String sp0 = bank.speciesNames[i];
-					if (!siteCurveMap.isEmpty()) {
-						scIndex = Utils.optSafe(siteCurveMap.get(sp0, becZone.getRegion()));
-					} else {
-						SiteIndexEquation siCurve = SiteTool
-								.getSICurve(sp0, becZone.getRegion().equals(Region.COASTAL));
-						scIndex = siCurve == SiteIndexEquation.SI_NO_EQUATION ? Optional.empty() : Optional.of(siCurve);
-					}
-				}
-
-				bank.siteCurveNumbers[i] = scIndex.orElseThrow().n();
-			}
-		}
-
-		lps.setSiteCurveNumbers(bank.siteCurveNumbers);
 	}
 
 	/**
