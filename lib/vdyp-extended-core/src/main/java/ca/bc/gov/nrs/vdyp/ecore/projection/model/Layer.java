@@ -919,12 +919,13 @@ public class Layer implements Comparable<Layer> {
 		// changed from simple leading sp64 to leading sp0 sp64 because VDYP7 appears to use that here.
 		// Uses combined species to determine total percent
 		var leadingSp64 = siteSpecies.get(0).getStand().getSpeciesByPercent().get(0);
+		Double dominantHeight = leadingSp64.getDominantHeight();
 		try {
 			Double siteIndex = leadingSp64.getSiteIndex();
 			Double y2bh = leadingSp64.getYearsToBreastHeight();
 
-			if (siteIndex != null && y2bh != null) {
-				return SiteTool.ageAndSiteIndexToHeight(
+			if (siteIndex != null && y2bh != null && siteIndex >= 2.0) {
+				dominantHeight = SiteTool.ageAndSiteIndexToHeight(
 						leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, y2bh
 				);
 			}
@@ -936,7 +937,7 @@ public class Layer implements Comparable<Layer> {
 			);
 
 		}
-		return null;
+		return dominantHeight;
 	}
 
 	/**
