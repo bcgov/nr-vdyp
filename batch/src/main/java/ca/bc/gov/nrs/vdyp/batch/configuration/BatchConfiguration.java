@@ -139,9 +139,7 @@ public class BatchConfiguration {
 			@Qualifier("taskExecutor") TaskExecutor taskExecutor, Step workerStep,
 			DynamicPartitioner dynamicPartitioner, DynamicPartitionHandler dynamicPartitionHandler
 	) {
-		return new StepBuilder(
-				BatchConstants.Job.MASTER_STEP_NAME, jobRepository
-		)
+		return new StepBuilder(BatchConstants.Job.MASTER_STEP_NAME, jobRepository) //
 				.partitioner(BatchConstants.Job.WORKER_STEP_NAME, dynamicPartitioner)
 				.partitionHandler(dynamicPartitionHandler).build();
 	}
