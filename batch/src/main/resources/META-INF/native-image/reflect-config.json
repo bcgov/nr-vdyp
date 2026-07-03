@@ -1811,7 +1811,7 @@
     "allDeclaredFields":true,
     "queryAllDeclaredMethods":true,
     "queryAllDeclaredConstructors":true,
-    "methods":[{"name":"<init>","parameterTypes":["org.springframework.batch.core.launch.JobLauncher","org.springframework.batch.core.Job","org.springframework.batch.core.explore.JobExplorer","ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector","ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner","org.springframework.batch.core.launch.JobOperator"] }, {"name":"startBatchJobWithFiles","parameterTypes":["org.springframework.web.multipart.MultipartFile","org.springframework.web.multipart.MultipartFile","java.lang.String"] }]
+    "methods":[{"name":"<init>","parameterTypes":["org.springframework.batch.core.launch.JobLauncher","org.springframework.batch.core.Job","org.springframework.batch.core.explore.JobExplorer","ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector","org.springframework.batch.core.launch.JobOperator"] }]
   },
   {
     "name":"ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException"

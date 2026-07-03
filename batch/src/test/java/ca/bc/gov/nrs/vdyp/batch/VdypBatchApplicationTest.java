@@ -12,8 +12,6 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -72,8 +70,7 @@ class VdypBatchApplicationTest {
 	}
 
 	@Test
-	@ExtendWith(OutputCaptureExtension.class)
-	void testOnApplicationReady_LogsStartupMessage(CapturedOutput output) {
+	void testOnApplicationReady_LogsStartupMessage() {
 		VdypBatchApplication application = new VdypBatchApplication();
 
 		Logger logger = (Logger) LoggerFactory.getLogger(VdypBatchApplication.class);
@@ -86,7 +83,6 @@ class VdypBatchApplicationTest {
 		assertTrue(listAppender.list.size() > 0, "Logger should have captured messages");
 
 		boolean foundStartupMessage = false;
-		boolean foundEndpointMessage = false;
 		boolean foundSeparator = false;
 
 		for (ILoggingEvent event : listAppender.list) {
@@ -94,16 +90,12 @@ class VdypBatchApplicationTest {
 			if (message.contains("VDYP Batch Processing Service Started!")) {
 				foundStartupMessage = true;
 			}
-			if (message.contains("POST   /api/batch/start")) {
-				foundEndpointMessage = true;
-			}
 			if (message.contains("============================================================")) {
 				foundSeparator = true;
 			}
 		}
 
 		assertTrue(foundStartupMessage, "Should log startup message");
-		assertTrue(foundEndpointMessage, "Should log endpoint information");
 		assertTrue(foundSeparator, "Should log separator line");
 
 		logger.detachAppender(listAppender);
@@ -127,7 +119,7 @@ class VdypBatchApplicationTest {
 
 		String messages = allMessages.toString();
 
-		assertTrue(messages.contains("/api/batch/start"), "Should log start endpoint");
+		assertTrue(messages.contains("/api/batch/startWithGUIDs"), "Should log startWithGUIDs endpoint");
 		assertTrue(messages.contains("/api/batch/health"), "Should log health endpoint");
 		assertTrue(messages.contains("API Endpoints:"), "Should log endpoints header");
 

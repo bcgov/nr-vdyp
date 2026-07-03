@@ -1,9 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,11 +34,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
-import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
-import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchInputPartitioner;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -56,13 +49,9 @@ public class BatchController {
 	private static final Logger logger = LoggerFactory.getLogger(BatchController.class);
 
 	private final JobLauncher jobLauncher;
-	private final Job partitionedJob;
 	private final Job fetchAndPartitionJob;
-	private final BatchInputPartitioner inputPartitioner;
-	private final JobOperator jobOperator;
-	private final BatchProperties batchProperties;
-
 	private final JobExplorer jobExplorer;
+	private final JobOperator jobOperator;
 	@SuppressWarnings("unused")
 	private final BatchMetricsCollector metricsCollector;
 
@@ -75,56 +64,20 @@ public class BatchController {
 	@Value("${batch.partition.job-search-chunk-size}")
 	private int jobSearchChunkSize;
 
-	// This class is instantiated by Spring's dependency injection container during application startup.
-	// As a @RestController, Spring automatically creates a singleton instance and injects the required dependencies.
-	// It's available at runtime for handling HTTP requests to /api/batch endpoints, not just in tests.
 	public BatchController(
-			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, @Qualifier("partitionedJob") Job partitionedJob,
+			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, BatchInputPartitioner inputPartitioner, JobOperator jobOperator,
-			BatchProperties batchProperties
+			BatchMetricsCollector metricsCollector, JobOperator jobOperator
 	) {
 		this.jobLauncher = jobLauncher;
-		this.partitionedJob = partitionedJob;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
 		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
-		this.inputPartitioner = inputPartitioner;
 		this.jobOperator = jobOperator;
-		this.batchProperties = batchProperties;
 	}
 
 	/**
-	 * Start a new batch job execution
-	 */
-	@PostMapping(
-			value = "/start", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE
-	)
-	public ResponseEntity<Map<String, Object>> startBatchJobWithFiles(
-			@RequestParam("polygonFile") MultipartFile polygonFile, @RequestParam("layerFile") MultipartFile layerFile,
-			@RequestParam("parameters") String projectionParametersJson
-	) {
-
-		try {
-			logRequestDetails(polygonFile, layerFile, projectionParametersJson);
-
-			Map<String, Object> response = new HashMap<>();
-
-			JobExecution jobExecution = executeJob(polygonFile, layerFile, projectionParametersJson);
-			buildSuccessResponse(response, jobExecution);
-
-			return ResponseEntity.ok(response);
-
-		} catch (ProjectionRequestValidationException e) {
-			return ResponseEntity.badRequest().header("content-type", "application/json")
-					.body(createValidationErrorResponse(e));
-		} catch (Exception e) {
-			return buildErrorResponse(e);
-		}
-	}
-
-	/**
-	 * Start a new batch job execution
+	 * Start a new batch job execution using pre-uploaded files identified by projection GUID.
 	 */
 	@PostMapping(value = "/startWithGUIDs", //
 			consumes = MediaType.MULTIPART_FORM_DATA_VALUE, //
@@ -349,7 +302,7 @@ public class BatchController {
 		response.put(
 				"availableEndpoints",
 				Arrays.asList(
-						"/api/batch/start", "/api/batch/stop/{jobGuid}", "/api/batch/status/{jobGuid}",
+						"/api/batch/startWithGUIDs", "/api/batch/stop/{jobGuid}", "/api/batch/status/{jobGuid}",
 						"/api/batch/health"
 				)
 		);
@@ -361,15 +314,6 @@ public class BatchController {
 		logger.debug("=== VDYP Batch Job Request ===");
 		logger.debug("projectionGUID: {} ", projectionGUID);
 		logger.debug("parametersJson: {} ", parametersJson);
-	}
-
-	private void logRequestDetails(MultipartFile polygonFile, MultipartFile layerFile, String parametersJson) {
-		logger.debug("=== VDYP Batch Job Request ===");
-		logger.debug("Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(), polygonFile.getSize());
-		logger.debug("Layer file: {} ({} bytes)", layerFile.getOriginalFilename(), layerFile.getSize());
-		logger.debug(
-				"Parameters provided: {}", (parametersJson != null && !parametersJson.trim().isEmpty()) ? "yes" : "no"
-		);
 	}
 
 	private JobExecution executeJob(UUID projectionGuid, String projectionParametersJson)
@@ -413,67 +357,6 @@ public class BatchController {
 		}
 	}
 
-	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile, String projectionParametersJson)
-			throws ProjectionRequestValidationException {
-		validateParametersJSON(projectionParametersJson);
-		validateProjectionParameters(polygonFile, layerFile);
-
-		try {
-			String jobGuid = BatchUtils.createJobGuid();
-			String jobTimestamp = BatchUtils.createJobTimestamp();
-
-			Path jobBaseDir = ensureProjectionDirectoryExists(jobGuid);
-
-			// Count polygons and compute the optimal thread allocation before partitioning
-			int chunkSize = batchProperties.getReader().getDefaultChunkSize();
-			int maxJobThreads = batchProperties.getThreadPool().getMaxJobThreads();
-
-			// Partition CSV files using the computed thread count BEFORE starting the job
-			logger.debug("[GUID: {}] Starting CSV partitioning...", jobGuid);
-			int totalPolygons = inputPartitioner
-					.partitionCsvFiles(polygonFile, layerFile, defaultNumPartitions, jobBaseDir, jobGuid);
-
-			int numThreads = BatchUtils.calculateThreadsForJob(totalPolygons, chunkSize, maxJobThreads);
-
-			logger.debug(
-					"[GUID: {}] CSV files partitioned. totalPolygons={}, chunkSize={}, maxJobThreads={}, numThreads={}",
-					jobGuid, totalPolygons, chunkSize, maxJobThreads, numThreads
-			);
-
-			JobParameters jobParameters = buildJobParameters(
-					projectionParametersJson, numThreads, jobGuid, jobTimestamp, jobBaseDir.toString(), totalPolygons
-			);
-			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
-
-			logger.info(
-					"[GUID: {}] Batch job started - Execution ID: {}, threads: {}", jobGuid, jobExecution.getId(),
-					numThreads
-			);
-
-			return jobExecution;
-
-		} catch (BatchPartitionException e) {
-			throw new ProjectionRequestValidationException(
-					List.of(new ValidationMessage(ValidationMessageKind.GENERIC, e.getMessage()))
-			);
-
-		} catch (Exception e) {
-			logger.error("Failed to process uploaded CSV files", e);
-
-			String errorMessage = e.getMessage() != null ? e.getMessage()
-					: "Unknown error (" + e.getClass().getSimpleName() + ")";
-
-			throw new ProjectionRequestValidationException(
-					List.of(
-							new ValidationMessage(
-									ValidationMessageKind.GENERIC,
-									"Failed to process uploaded CSV files: " + errorMessage
-							)
-					)
-			);
-		}
-	}
-
 	private void validateParametersJSON(String projectionParametersJson) throws ProjectionRequestValidationException {
 
 		if (projectionParametersJson == null || projectionParametersJson.trim().isEmpty()) {
@@ -482,119 +365,6 @@ public class BatchController {
 							new ValidationMessage(
 									ValidationMessageKind.GENERIC,
 									"VDYP projection parameters are required but not provided in the request"
-							)
-					)
-			);
-		}
-	}
-
-	/**
-	 * Validates that projection parameters are provided and not empty.
-	 */
-	private void validateProjectionParameters(MultipartFile polygonFile, MultipartFile layerFile)
-			throws ProjectionRequestValidationException {
-
-		// Validate polygon file
-		if (polygonFile == null || polygonFile.isEmpty()) {
-			throw new ProjectionRequestValidationException(
-					List.of(
-							new ValidationMessage(
-									ValidationMessageKind.GENERIC,
-									"Polygon file is required but not provided in the request"
-							)
-					)
-			);
-		}
-
-		if (polygonFile.getSize() == 0) {
-			throw new ProjectionRequestValidationException(
-					List.of(
-							new ValidationMessage(
-									ValidationMessageKind.GENERIC,
-									"Polygon file is empty. Please provide a valid CSV file with polygon data"
-							)
-					)
-			);
-		}
-
-		validateFileHasContent(polygonFile, "Polygon");
-
-		// Validate layer file
-		if (layerFile == null || layerFile.isEmpty()) {
-			throw new ProjectionRequestValidationException(
-					List.of(
-							new ValidationMessage(
-									ValidationMessageKind.GENERIC,
-									"Layer file is required but not provided in the request"
-							)
-					)
-			);
-		}
-
-		if (layerFile.getSize() == 0) {
-			throw new ProjectionRequestValidationException(
-					List.of(
-							new ValidationMessage(
-									ValidationMessageKind.GENERIC,
-									"Layer file is empty. Please provide a valid CSV file with layer data"
-							)
-					)
-			);
-		}
-
-		validateFileHasContent(layerFile, "Layer");
-	}
-
-	/**
-	 * Validates that a file contains actual data (not just whitespace/empty lines). Does NOT parse the file, only
-	 * checks if there is any non-whitespace content.
-	 *
-	 * @param file     The multipart file to validate
-	 * @param fileType The type of file (e.g., "Polygon", "Layer") for error messages
-	 * @throws ProjectionRequestValidationException if file contains only whitespace/empty lines
-	 */
-	private void validateFileHasContent(MultipartFile file, String fileType)
-			throws ProjectionRequestValidationException {
-
-		try (
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)
-				)
-		) {
-			String line;
-			boolean headerChecked = false;
-
-			while ( (line = reader.readLine()) != null) {
-				// Skip blank lines and optionally skip header (only checked once)
-				boolean shouldSkip = line.isBlank() || (!headerChecked && BatchUtils.isHeaderLine(line));
-
-				if (!headerChecked && !line.isBlank()) {
-					headerChecked = true;
-				}
-
-				if (!shouldSkip) {
-					// Found at least one data line with content - file is valid
-					return;
-				}
-			}
-
-			// If we reach here, file contains only empty lines/whitespace/headers
-			throw new ProjectionRequestValidationException(
-					List.of(
-							new ValidationMessage(
-									ValidationMessageKind.GENERIC,
-									fileType + " file contains only empty lines or whitespace. "
-											+ "Please provide a valid CSV file with " + fileType.toLowerCase() + " data"
-							)
-					)
-			);
-
-		} catch (IOException e) {
-			throw new ProjectionRequestValidationException(
-					List.of(
-							new ValidationMessage(
-									ValidationMessageKind.GENERIC,
-									"Failed to read " + fileType.toLowerCase() + " file: " + e.getMessage()
 							)
 					)
 			);
@@ -615,19 +385,6 @@ public class BatchController {
 
 		logger.debug("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
 		return jobBaseDir;
-	}
-
-	/** Builds job parameters for file-upload flow (polygon/layer files supplied directly). */
-	private JobParameters buildJobParameters(
-			String projectionParametersJson, int numPartitions, String jobGuid, String jobTimestamp, String jobBaseDir,
-			int totalPolygons
-	) {
-		return new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
-				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
-				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
-				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
-				.addLong(BatchConstants.Partition.NUMBER, (long) numPartitions)
-				.addLong(BatchConstants.Job.TOTAL_POLYGONS, (long) totalPolygons).toJobParameters();
 	}
 
 	/** Builds job parameters for GUID-based flow (files fetched from COMS by DownloadAndPartitionTasklet). */
