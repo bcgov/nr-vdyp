@@ -229,6 +229,47 @@ class BatchProjectionServiceTest {
 	}
 
 	@Test
+	void testPerformProjectionForChunk_IOException_WritesSkipErrorLog() throws IOException {
+		// Missing partition files -> NoSuchFileException (IOException) -> SkippedChunkErrorLog written
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 5, 0L, 0);
+
+		assertThrows(BatchResultStorageException.class, () -> {
+			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
+		});
+
+		Path outputDir = tempDir.resolve("output-" + PARTITION_NAME);
+		Path skipLog = outputDir.resolve("YieldTables_" + PARTITION_NAME + "-chunk0_SkippedChunkErrorLog.txt");
+
+		assertTrue(Files.exists(skipLog), "SkippedChunkErrorLog.txt should be created on IOException");
+
+		String content = Files.readString(skipLog);
+		assertTrue(content.contains(JOB_GUID), "Skip log should contain job GUID");
+		assertTrue(content.contains("5 polygon(s)"), "Skip log should contain polygon count");
+		assertTrue(content.contains(PARTITION_NAME), "Skip log should contain partition name");
+	}
+
+	@Test
+	void testPerformProjectionForChunk_UnexpectedException_WritesSkipErrorLog() throws IOException {
+		// Invalid polygon data -> exception from extended-core -> SkippedChunkErrorLog written
+		createPartitionStructure(PARTITION_NAME, List.of("123456789,MAP1"), List.of("123456789,P"));
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0);
+
+		assertThrows(BatchProjectionException.class, () -> {
+			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
+		});
+
+		Path outputDir = tempDir.resolve("output-" + PARTITION_NAME);
+		Path skipLog = outputDir.resolve("YieldTables_" + PARTITION_NAME + "-chunk0_SkippedChunkErrorLog.txt");
+
+		assertTrue(Files.exists(skipLog), "SkippedChunkErrorLog.txt should be created on projection exception");
+
+		String content = Files.readString(skipLog);
+		assertTrue(content.contains(JOB_GUID), "Skip log should contain job GUID");
+		assertTrue(content.contains("1 polygon(s)"), "Skip log should contain polygon count");
+		assertTrue(content.contains(PARTITION_NAME), "Skip log should contain partition name");
+	}
+
+	@Test
 	void testStoreDebugLog() throws IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
 		Path outputDir = tempDir.resolve("output");
