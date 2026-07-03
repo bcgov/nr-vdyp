@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,7 +14,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,19 +25,17 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobInstance;
-import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,11 +45,15 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
+import ca.bc.gov.nrs.vdyp.batch.service.ComsFileService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
  * Integration test for Scenario 1: End-to-end batch processing with single polygon test data. - This test verifies the
- * complete batch flow - Starting batch job via /api/batch/start endpoint - Verifying output against expected
+ * complete batch flow - Starting batch job via /api/batch/startWithGUIDs endpoint - Verifying output against expected
  * YieldTable.csv
  */
 @SpringBootTest
@@ -69,36 +73,89 @@ class Scenario1Test {
 	private static final String PARAMETERS_FILE = "test-data/hcsv/parameters.json";
 	private static final String EXPECTED_OUTPUT_FILE = TEST_DATA_PATH + "/YieldTable.csv";
 
+	private static final UUID PROJECTION_GUID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+	private static final UUID POLYGON_FILESET_GUID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+	private static final UUID LAYER_FILESET_GUID = UUID.fromString("33333333-3333-3333-3333-333333333333");
+	private static final UUID RESULT_FILESET_GUID = UUID.fromString("44444444-4444-4444-4444-444444444444");
+	private static final UUID POLYGON_COMS_GUID = UUID.fromString("55555555-5555-5555-5555-555555555555");
+	private static final UUID LAYER_COMS_GUID = UUID.fromString("66666666-6666-6666-6666-666666666666");
+	private static final UUID RESULT_COMS_GUID = UUID.fromString("77777777-7777-7777-7777-777777777777");
+
+	@MockitoBean
+	private VdypClient vdypClient;
+
+	@MockitoBean
+	private ComsFileService comsFileService;
+
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Autowired
-	private JobExplorer jobExplorer;
-
-	@Autowired
 	private ObjectMapper objectMapper;
 
-	@Value("${batch.root-directory}")
-	private String batchRootDirectory;
+	private volatile Path capturedZipPath;
+
+	@BeforeEach
+	void setupMocks() throws Exception {
+		capturedZipPath = null;
+
+		VdypProjectionDetails projectionDetails = new VdypProjectionDetails(
+				PROJECTION_GUID.toString(),
+				new VdypProjectionDetails.VdypProjectionFileSet(POLYGON_FILESET_GUID.toString()),
+				new VdypProjectionDetails.VdypProjectionFileSet(LAYER_FILESET_GUID.toString()),
+				new VdypProjectionDetails.VdypProjectionFileSet(RESULT_FILESET_GUID.toString()), "TestReport"
+		);
+		when(vdypClient.getProjectionDetails(PROJECTION_GUID.toString())).thenReturn(projectionDetails);
+		when(vdypClient.getFileSetFiles(PROJECTION_GUID.toString(), POLYGON_FILESET_GUID.toString()))
+				.thenReturn(List.of(new FileMappingDetails("filemap-poly", POLYGON_COMS_GUID.toString())));
+		when(vdypClient.getFileSetFiles(PROJECTION_GUID.toString(), LAYER_FILESET_GUID.toString()))
+				.thenReturn(List.of(new FileMappingDetails("filemap-layer", LAYER_COMS_GUID.toString())));
+		when(vdypClient.getFileSetFiles(PROJECTION_GUID.toString(), RESULT_FILESET_GUID.toString()))
+				.thenReturn(List.of(new FileMappingDetails("filemap-result", RESULT_COMS_GUID.toString())));
+
+		byte[] polygonBytes = loadTestFileBytes(POLYGON_FILE);
+		byte[] layerBytes = loadTestFileBytes(LAYER_FILE);
+
+		doAnswer(invocation -> {
+			UUID objectId = invocation.getArgument(0);
+			Path target = invocation.getArgument(1);
+			if (POLYGON_COMS_GUID.equals(objectId)) {
+				Files.write(target, polygonBytes);
+			} else if (LAYER_COMS_GUID.equals(objectId)) {
+				Files.write(target, layerBytes);
+			}
+			return null;
+		}).when(comsFileService).fetchObjectToFile(any(UUID.class), any(Path.class));
+
+		// Capture the result ZIP before ResultPersistenceTasklet deletes the job directory
+		doAnswer(invocation -> {
+			Path zipPath = invocation.getArgument(1);
+			capturedZipPath = Files.createTempFile("scenario1-output", ".zip");
+			Files.copy(zipPath, capturedZipPath, StandardCopyOption.REPLACE_EXISTING);
+			return null;
+		}).when(comsFileService).updateStoredObject(any(UUID.class), any(Path.class), any(String.class));
+	}
+
+	@AfterEach
+	void cleanup() throws IOException {
+		if (capturedZipPath != null) {
+			Files.deleteIfExists(capturedZipPath);
+		}
+	}
 
 	@Test
 	@Timeout(value = 300) // 5 minutes max
 	void testScenario1_SinglePolygonBatchProcessing() throws Exception {
 		logger.info("========== Starting Scenario 1: Single Polygon Batch Processing ==========");
 
-		// Step 1: Load test data files
-		logger.info("Step 1: Loading test data files from resources");
-		MockMultipartFile polygonFile = loadTestFile(POLYGON_FILE, "polygonFile", "VDYP7_INPUT_POLY.csv");
-		MockMultipartFile layerFile = loadTestFile(LAYER_FILE, "layerFile", "VDYP7_INPUT_LAYER.csv");
+		// Step 1: Load projection parameters
+		logger.info("Step 1: Loading projection parameters from resources");
 		String parametersJson = loadTestFileAsString(PARAMETERS_FILE);
-
-		logger.info("Loaded polygon file: {} bytes", polygonFile.getSize());
-		logger.info("Loaded layer file: {} bytes", layerFile.getSize());
 		logger.info("Loaded parameters: {} characters", parametersJson.length());
 
-		// Step 2: Start batch job
-		logger.info("Step 2: Starting batch job via /api/batch/start");
-		UUID jobGuid = startBatchJob(polygonFile, layerFile, parametersJson);
+		// Step 2: Start batch job via GUID-based endpoint
+		logger.info("Step 2: Starting batch job via /api/batch/startWithGUIDs");
+		UUID jobGuid = startBatchJob(parametersJson);
 		logger.info("Batch job started with GUID: {}", jobGuid);
 
 		// Step 3: Wait for job completion
@@ -111,21 +168,18 @@ class Scenario1Test {
 		assertEquals("COMPLETED", finalStatus.get(BatchConstants.Job.STATUS), "Job should complete successfully");
 		assertEquals(false, finalStatus.get("isRunning"), "Job should not be running");
 
-		// Step 5: Find and verify the output ZIP file
-		logger.info("Step 5: Locating output ZIP file");
-		Path outputZipPath = findOutputZipFile(jobGuid);
-		assertNotNull(outputZipPath, "Output ZIP file should exist");
-		assertTrue(Files.exists(outputZipPath), "Output ZIP file should exist at: " + outputZipPath);
-		logger.info("Found output ZIP file: {}", outputZipPath);
+		// Step 5: Verify result ZIP was captured from persistence step
+		logger.info("Step 5: Verifying result ZIP was captured from persistence step");
+		assertNotNull(capturedZipPath, "Result ZIP should have been persisted via COMS mock");
+		assertTrue(Files.exists(capturedZipPath), "Captured ZIP file should exist");
 
 		// Step 6: Verify YieldTable.csv content
 		logger.info("Step 6: Verifying YieldTable.csv content");
 		try {
-			verifyYieldTableContent(outputZipPath);
+			verifyYieldTableContent(capturedZipPath);
 			logger.info("========== Scenario 1 Completed Successfully ==========");
 		} catch (AssertionError e) {
-			// Check if there were projection errors
-			String errorLog = extractFileFromZip(outputZipPath, "ErrorLog.txt");
+			String errorLog = extractFileFromZip(capturedZipPath, "ErrorLog.txt");
 			if (errorLog != null && !errorLog.trim().isEmpty()) {
 				logger.error("========== Projection Errors Detected ==========");
 				logger.error(errorLog);
@@ -134,23 +188,15 @@ class Scenario1Test {
 		}
 	}
 
-	/**
-	 * Loads a test file from the classpath resources.
-	 */
-	private MockMultipartFile loadTestFile(String resourcePath, String paramName, String originalFilename)
-			throws IOException {
+	private byte[] loadTestFileBytes(String resourcePath) throws IOException {
 		try (var inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
 			if (inputStream == null) {
 				throw new IOException("Test file not found: " + resourcePath);
 			}
-			byte[] content = inputStream.readAllBytes();
-			return new MockMultipartFile(paramName, originalFilename, "text/csv", content);
+			return inputStream.readAllBytes();
 		}
 	}
 
-	/**
-	 * Loads a test file content as String.
-	 */
 	private String loadTestFileAsString(String resourcePath) throws IOException {
 		try (var inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
 			if (inputStream == null) {
@@ -161,18 +207,15 @@ class Scenario1Test {
 	}
 
 	/**
-	 * Starts a batch job by calling the /api/batch/start endpoint.
+	 * Starts a batch job by calling the /api/batch/startWithGUIDs endpoint.
 	 *
-	 * @return The job GUID
+	 * @return The internal job GUID
 	 */
-	private UUID startBatchJob(MockMultipartFile polygonFile, MockMultipartFile layerFile, String parametersJson)
-			throws Exception {
+	private UUID startBatchJob(String parametersJson) throws Exception {
 		MvcResult result = mockMvc.perform(
-				MockMvcRequestBuilders.multipart("/api/batch/start") //
-						.file(polygonFile).file(layerFile) //
-						.param("parameters", parametersJson) //
-						.with(csrf())//
-						.contentType(MediaType.MULTIPART_FORM_DATA) //
+				MockMvcRequestBuilders.multipart("/api/batch/startWithGUIDs")
+						.param("projectionGUID", PROJECTION_GUID.toString())
+						.param("projectionParametersJson", parametersJson).contentType(MediaType.MULTIPART_FORM_DATA)
 		).andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
 		String responseBody = result.getResponse().getContentAsString();
@@ -182,14 +225,13 @@ class Scenario1Test {
 		assertNotNull(responseMap.get(BatchConstants.Job.GUID), "Response should contain job GUID");
 		assertNotNull(responseMap.get(BatchConstants.Job.EXECUTION_ID), "Response should contain execution ID");
 
-		String guidString = (String) responseMap.get(BatchConstants.Job.GUID);
-		return UUID.fromString(guidString);
+		return UUID.fromString((String) responseMap.get(BatchConstants.Job.GUID));
 	}
 
 	/**
 	 * Waits for the batch job to complete by polling the status endpoint.
 	 *
-	 * @param jobGuid The job GUID to monitor
+	 * @param jobGuid The internal job GUID to monitor
 	 * @param timeout Maximum time to wait
 	 * @return The final status map
 	 */
@@ -214,26 +256,16 @@ class Scenario1Test {
 
 			logger.debug("Job status: {}, isRunning: {}", status, isRunning);
 
-			// Log partition progress if available
-			if (statusMap.containsKey("totalPartitions") && statusMap.containsKey("completedPartitions")) {
-				Integer total = (Integer) statusMap.get("totalPartitions");
-				Integer completed = (Integer) statusMap.get("completedPartitions");
-				logger.info("Progress: {}/{} partitions completed", completed, total);
-			}
-
-			// Check if job has completed
 			if (Boolean.FALSE.equals(isRunning)) {
 				logger.info("Job completed with final status: {}", status);
 				return statusMap;
 			}
 
-			// Check for failure status
 			if ("FAILED".equals(status) || "STOPPED".equals(status)) {
 				logger.error("Job ended with status: {}", status);
 				return statusMap;
 			}
 
-			// Wait before next poll
 			try {
 				TimeUnit.SECONDS.sleep(pollIntervalSeconds);
 			} catch (InterruptedException e) {
@@ -246,107 +278,29 @@ class Scenario1Test {
 	}
 
 	/**
-	 * Finds the output ZIP file for the given job GUID.
-	 */
-	private Path findOutputZipFile(UUID jobGuid) throws Exception {
-		// Find job execution to get the timestamp
-		JobExecution jobExecution = findJobExecution(jobGuid);
-		assertNotNull(jobExecution, "Job execution should be found");
-
-		String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
-		assertNotNull(jobTimestamp, "Job should have timestamp parameter");
-
-		// Construct expected job directory path with prefix
-		String jobDirName = BatchConstants.Job.BASE_FOLDER_PREFIX + "-" + jobGuid.toString();
-		Path jobDir = Paths.get(batchRootDirectory, jobDirName);
-
-		logger.info("Looking for job directory: {}", jobDir);
-
-		if (!Files.exists(jobDir)) {
-			// List all directories in batch root for debugging
-			logger.error("Job directory not found. Directories in batch root:");
-			Path batchRoot = Paths.get(batchRootDirectory);
-			if (Files.exists(batchRoot)) {
-				Files.list(batchRoot).filter(Files::isDirectory)
-						.forEach(path -> logger.error(" - {}", path.getFileName()));
-			} else {
-				logger.error("Batch root directory does not exist: {}", batchRoot);
-			}
-			return null;
-		}
-
-		// Find the ZIP file in the job directory
-		String zipFileName = String.format("vdyp-output-%s.zip", jobTimestamp);
-		Path zipFilePath = jobDir.resolve(zipFileName);
-
-		logger.info("Looking for ZIP file at: {}", zipFilePath);
-
-		if (!Files.exists(zipFilePath)) {
-			// List all files in job directory for debugging
-			logger.error("ZIP file not found. Files in job directory:");
-			Files.list(jobDir).forEach(path -> logger.error(" - {}", path.getFileName()));
-			return null;
-		}
-
-		return zipFilePath;
-	}
-
-	/**
-	 * Finds the JobExecution for a given job GUID.
-	 */
-	private JobExecution findJobExecution(UUID jobGuid) throws Exception {
-		for (String jobName : jobExplorer.getJobNames()) {
-			long instanceCount = jobExplorer.getJobInstanceCount(jobName);
-			int start = 0;
-			int chunkSize = 1000;
-
-			while (start < instanceCount) {
-				List<JobInstance> instances = jobExplorer.getJobInstances(jobName, start, chunkSize);
-
-				for (JobInstance instance : instances) {
-					for (JobExecution execution : jobExplorer.getJobExecutions(instance)) {
-						String executionGuid = execution.getJobParameters().getString(BatchConstants.Job.GUID);
-						if (jobGuid.toString().equals(executionGuid)) {
-							return execution;
-						}
-					}
-				}
-
-				start += chunkSize;
-			}
-		}
-		return null;
-	}
-
-	/**
 	 * Verifies that the YieldTable.csv in the output ZIP matches the expected content.
 	 */
 	private void verifyYieldTableContent(Path zipFilePath) throws IOException {
 		logger.info("Extracting YieldTable.csv from ZIP file");
 
-		// Load expected content
-		String expectedContent = loadExpectedYieldTableContent();
+		String expectedContent = loadTestFileAsString(EXPECTED_OUTPUT_FILE);
 		List<String> expectedLines = parseCSVLines(expectedContent);
 
 		logger.info("Expected YieldTable has {} lines", expectedLines.size());
 
-		// Extract actual content from ZIP
 		String actualContent = extractYieldTableFromZip(zipFilePath);
 		List<String> actualLines = parseCSVLines(actualContent);
 
 		logger.info("Actual YieldTable has {} lines", actualLines.size());
 
-		// Compare line counts
 		assertEquals(
 				expectedLines.size(), actualLines.size(), "YieldTable should have same number of lines as expected"
 		);
 
-		// Compare header
 		if (!expectedLines.isEmpty() && !actualLines.isEmpty()) {
 			assertEquals(expectedLines.get(0), actualLines.get(0), "YieldTable header should match expected");
 		}
 
-		// Compare data rows (allowing for minor floating point differences)
 		for (int i = 1; i < expectedLines.size(); i++) {
 			String expectedLine = expectedLines.get(i);
 			String actualLine = actualLines.get(i);
@@ -362,16 +316,6 @@ class Scenario1Test {
 		logger.info("YieldTable.csv verification passed - all {} lines match", expectedLines.size());
 	}
 
-	/**
-	 * Loads the expected YieldTable.csv content from resources.
-	 */
-	private String loadExpectedYieldTableContent() throws IOException {
-		return loadTestFileAsString(EXPECTED_OUTPUT_FILE);
-	}
-
-	/**
-	 * Extracts YieldTable.csv content from the output ZIP file.
-	 */
 	private String extractYieldTableFromZip(Path zipFilePath) throws IOException {
 		return extractFileFromZip(zipFilePath, "YieldTable.csv");
 	}
@@ -432,18 +376,15 @@ class Scenario1Test {
 			String expField = expectedFields[i].replace("\"", "").trim();
 			String actField = actualFields[i].replace("\"", "").trim();
 
-			// Try to compare as numbers with tolerance
 			try {
 				double expValue = Double.parseDouble(expField);
 				double actValue = Double.parseDouble(actField);
 
-				// Allow 0.1% relative difference or 0.00001 absolute difference
 				double tolerance = Math.max(Math.abs(expValue) * 0.001, 0.00001);
 				if (Math.abs(expValue - actValue) > tolerance) {
 					return false;
 				}
 			} catch (NumberFormatException e) {
-				// Not a number, compare as string
 				if (!expField.equals(actField)) {
 					return false;
 				}
