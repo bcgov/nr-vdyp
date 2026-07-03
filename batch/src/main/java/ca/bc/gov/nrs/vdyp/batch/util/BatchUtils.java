@@ -340,6 +340,11 @@ public final class BatchUtils {
 	}
 
 	private static String normalizeFailureMessage(String message) {
+		// remove logging GUID identifiers from the exception message if present
+		// this is brittle but it is the best indicator of items that need to be removed
+		if (message.startsWith("[")) {
+			message = message.substring(message.indexOf("]") + 1).trim();
+		}
 		String normalized = message.trim().replaceAll("\\s+", " ");
 		if (normalized.length() <= FAILURE_MESSAGE_MAX_LENGTH) {
 			return normalized;
