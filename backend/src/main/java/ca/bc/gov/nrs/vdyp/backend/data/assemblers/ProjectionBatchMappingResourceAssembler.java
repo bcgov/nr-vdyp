@@ -9,9 +9,11 @@ import jakarta.enterprise.context.Dependent;
 @Dependent
 public class ProjectionBatchMappingResourceAssembler {
 	ProjectionResourceAssembler pra;
+	BatchFailureTypeCodeResourceAssembler bftcra;
 
 	public ProjectionBatchMappingResourceAssembler() {
 		pra = new ProjectionResourceAssembler();
+		bftcra = new BatchFailureTypeCodeResourceAssembler();
 	}
 
 	public ProjectionBatchMappingEntity toEntity(ProjectionBatchMappingModel model) {
@@ -31,6 +33,8 @@ public class ProjectionBatchMappingResourceAssembler {
 		entity.setWarningCount(model.getWarningCount());
 		entity.setErrorCount(model.getErrorCount());
 		entity.setWorkerCount(model.getWorkerCount());
+		entity.setBatchFailureTypeCode(bftcra.toEntity(model.getBatchFailureTypeCode()));
+		entity.setFailureMessage(model.getFailureMessage());
 		return entity;
 	}
 
@@ -51,6 +55,8 @@ public class ProjectionBatchMappingResourceAssembler {
 		model.setWarningCount(entity.getWarningCount());
 		model.setErrorCount(entity.getErrorCount());
 		model.setWorkerCount(entity.getWorkerCount());
+		model.setBatchFailureTypeCode(bftcra.toModel(entity.getBatchFailureTypeCode()));
+		model.setFailureMessage(entity.getFailureMessage());
 		return model;
 	}
 }

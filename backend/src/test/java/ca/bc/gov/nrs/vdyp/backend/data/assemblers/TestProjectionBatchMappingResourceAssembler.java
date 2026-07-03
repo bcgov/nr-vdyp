@@ -10,8 +10,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import ca.bc.gov.nrs.vdyp.backend.data.entities.BatchFailureTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchFailureTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 
@@ -23,24 +25,34 @@ class TestProjectionBatchMappingResourceAssembler {
 	}
 
 	static Stream<Arguments> modelEntityData() {
-		return Stream.of(
-				Arguments.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 5, 1, 2, 3),
-				Arguments.of(null, UUID.randomUUID(), UUID.randomUUID(), 3, 1, 0, 1),
-				Arguments.of(UUID.randomUUID(), null, UUID.randomUUID(), 10, 5, 1, 0),
-				Arguments.of(UUID.randomUUID(), UUID.randomUUID(), null, 5, 1, 2, 3)
-		);
+		return Stream
+				.of(
+						Arguments.of(
+								UUID.randomUUID(), UUID.randomUUID(), UUID
+										.randomUUID(),
+								5, 1, 2, 3, "INPUT", "Input failed"
+						),
+						Arguments.of(
+								null, UUID.randomUUID(), UUID.randomUUID(), 3, 1, 0, 1, "PROCESS", "Projection failed"
+						),
+						Arguments
+								.of(UUID.randomUUID(), null, UUID.randomUUID(), 10, 5, 1, 0, "OUTPUT", "Output failed"),
+						Arguments.of(UUID.randomUUID(), UUID.randomUUID(), null, 5, 1, 2, 3, null, null)
+				);
 	}
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
 	void testEntityToModel(
 			UUID projectionBatchId, UUID batchJobId, UUID projectionId, Integer partitionCount,
-			Integer completedPartitionCount, Integer warningCount, Integer errorCount
+			Integer completedPartitionCount, Integer warningCount, Integer errorCount, String batchFailureTypeCode,
+			String failureMessage
 	) {
 		TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData data = ProjectionBatchMappingTestData
 				.builder().projectionBatchMappingUUID(projectionBatchId).batchJobUUID(batchJobId)
 				.projectionUUID(projectionId).partitionCount(partitionCount)
-				.completedPartitionCount(completedPartitionCount).warningCount(warningCount).errorCount(errorCount);
+				.completedPartitionCount(completedPartitionCount).warningCount(warningCount).errorCount(errorCount)
+				.batchFailureTypeCode(batchFailureTypeCode).failureMessage(failureMessage);
 
 		ProjectionBatchMappingModel model = data.buildModel();
 		ProjectionBatchMappingEntity entity = data.buildEntity();
@@ -54,12 +66,14 @@ class TestProjectionBatchMappingResourceAssembler {
 	@MethodSource("modelEntityData")
 	void testModelToEntity(
 			UUID projectionBatchId, UUID batchJobId, UUID projectionId, Integer partitionCount,
-			Integer completedPartitionCount, Integer warningCount, Integer errorCount
+			Integer completedPartitionCount, Integer warningCount, Integer errorCount, String batchFailureTypeCode,
+			String failureMessage
 	) {
 		TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData data = ProjectionBatchMappingTestData
 				.builder().projectionBatchMappingUUID(projectionBatchId).batchJobUUID(batchJobId)
 				.projectionUUID(projectionId).partitionCount(partitionCount)
-				.completedPartitionCount(completedPartitionCount).warningCount(warningCount).errorCount(errorCount);
+				.completedPartitionCount(completedPartitionCount).warningCount(warningCount).errorCount(errorCount)
+				.batchFailureTypeCode(batchFailureTypeCode).failureMessage(failureMessage);
 
 		ProjectionBatchMappingModel model = data.buildModel();
 		ProjectionBatchMappingEntity entity = data.buildEntity();
@@ -77,6 +91,8 @@ class TestProjectionBatchMappingResourceAssembler {
 		private Integer completedPartitionCount;
 		private Integer warningCount;
 		private Integer errorCount;
+		private String batchFailureTypeCode;
+		private String failureMessage;
 
 		public static TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData builder() {
 			return new TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData();
@@ -124,6 +140,18 @@ class TestProjectionBatchMappingResourceAssembler {
 			return this;
 		}
 
+		public TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData
+				batchFailureTypeCode(String batchFailureTypeCode) {
+			this.batchFailureTypeCode = batchFailureTypeCode;
+			return this;
+		}
+
+		public TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData
+				failureMessage(String failureMessage) {
+			this.failureMessage = failureMessage;
+			return this;
+		}
+
 		public ProjectionBatchMappingEntity buildEntity() {
 			ProjectionBatchMappingEntity data = new ProjectionBatchMappingEntity();
 			data.setProjectionBatchMappingGUID(projectionBatchMappingUUID);
@@ -137,6 +165,12 @@ class TestProjectionBatchMappingResourceAssembler {
 			data.setCompletedPolygonCount(completedPartitionCount);
 			data.setWarningCount(warningCount);
 			data.setErrorCount(errorCount);
+			if (batchFailureTypeCode != null) {
+				BatchFailureTypeCodeEntity batchFailureType = new BatchFailureTypeCodeEntity();
+				batchFailureType.setCode(batchFailureTypeCode);
+				data.setBatchFailureTypeCode(batchFailureType);
+			}
+			data.setFailureMessage(failureMessage);
 			return data;
 		}
 
@@ -156,6 +190,12 @@ class TestProjectionBatchMappingResourceAssembler {
 			data.setCompletedPolygonCount(completedPartitionCount);
 			data.setWarningCount(warningCount);
 			data.setErrorCount(errorCount);
+			if (batchFailureTypeCode != null) {
+				BatchFailureTypeCodeModel batchFailureType = new BatchFailureTypeCodeModel();
+				batchFailureType.setCode(batchFailureTypeCode);
+				data.setBatchFailureTypeCode(batchFailureType);
+			}
+			data.setFailureMessage(failureMessage);
 			return data;
 		}
 	}

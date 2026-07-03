@@ -52,6 +52,9 @@
           :style="{ width: `${progressPercent}%` }"
         />
       </div>
+      <div v-if="failureDetailsText" class="failure-details" :title="failureDetailsText">
+        {{ failureDetailsText }}
+      </div>
     </div>
   </div>
 </template>
@@ -78,6 +81,8 @@ const props = defineProps<{
   errorCount: number | null
   startDate: string | null
   endDate: string | null
+  batchFailureTypeDescription?: string | null
+  failureMessage?: string | null
 }>()
 
 // Timer for updating elapsed time display
@@ -188,6 +193,19 @@ const progressLeftText = computed(() => {
 const progressRightText = computed(() => {
   if (props.status === CONSTANTS.PROJECTION_STATUS.READY) return 'Done'
   return `${progressPercent.value}% Complete`
+})
+
+const failureDetailsText = computed(() => {
+  if (props.status !== CONSTANTS.PROJECTION_STATUS.FAILED) return ''
+
+  const failureType = props.batchFailureTypeDescription?.trim()
+  const failureMessage = props.failureMessage?.trim()
+
+  if (failureType && failureMessage) {
+    return `${failureType}: ${failureMessage}`
+  }
+
+  return failureType || failureMessage || ''
 })
 </script>
 
@@ -333,6 +351,14 @@ const progressRightText = computed(() => {
   background-color: #d14a46;
 }
 
+.failure-details {
+  font-size: 12pt;
+  font-weight: 400;
+  color: #7f1d1d;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 /* Responsive */
 
 @media (max-width: 720px) {
@@ -368,6 +394,10 @@ const progressRightText = computed(() => {
   .progress-left-text,
   .progress-right-text {
     font-size: 11pt;
+  }
+
+  .failure-details {
+    font-size: 10pt;
   }
 }
 </style>

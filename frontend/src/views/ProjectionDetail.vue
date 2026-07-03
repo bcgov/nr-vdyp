@@ -151,6 +151,8 @@
         :polygonCount="batchPolygonCount"
         :completedPolygonCount="batchCompletedPolygonCount"
         :errorCount="batchErrorCount"
+        :batchFailureTypeDescription="batchFailureTypeDescription"
+        :failureMessage="batchFailureMessage"
         :startDate="runStartDate"
         :endDate="runEndDate"
         class="panel-spacing"
@@ -208,6 +210,8 @@
           :polygonCount="batchPolygonCount"
           :completedPolygonCount="batchCompletedPolygonCount"
           :errorCount="batchErrorCount"
+          :batchFailureTypeDescription="batchFailureTypeDescription"
+          :failureMessage="batchFailureMessage"
           :startDate="runStartDate"
           :endDate="runEndDate"
           class="panel-spacing"
@@ -288,6 +292,7 @@ import {
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 import { DownloadIcon, MenuIcon } from '@/assets/'
 import type { PanelName } from '@/types/types'
+import type { ProjectionModel } from '@/services/vdyp-api'
 
 const router = useRouter()
 const { isLoading: isProjectionLoading, loadProjection } = useProjectionLoader()
@@ -342,8 +347,18 @@ const isManualInputRunProgressBarVisible = computed(
 const batchPolygonCount = ref<number | null>(null)
 const batchCompletedPolygonCount = ref<number | null>(null)
 const batchErrorCount = ref<number | null>(null)
+const batchFailureTypeDescription = ref<string | null>(null)
+const batchFailureMessage = ref<string | null>(null)
 const runStartDate = ref<string | null>(null)
 const runEndDate = ref<string | null>(null)
+
+const applyBatchMapping = (batchMapping: ProjectionModel['batchMapping']) => {
+  batchPolygonCount.value = batchMapping?.polygonCount ?? null
+  batchCompletedPolygonCount.value = batchMapping?.completedPolygonCount ?? null
+  batchErrorCount.value = batchMapping?.errorCount ?? null
+  batchFailureTypeDescription.value = batchMapping?.batchFailureTypeCode?.description ?? null
+  batchFailureMessage.value = batchMapping?.failureMessage ?? null
+}
 
 // Polling
 let pollingTimer: ReturnType<typeof setInterval> | null = null
@@ -360,12 +375,7 @@ const pollProjectionProgress = async () => {
   if (!projectionGUID) return
   try {
     const projection = await getProjectionById(projectionGUID)
-    const bm = projection.batchMapping
-    if (bm) {
-      batchPolygonCount.value = bm.polygonCount
-      batchCompletedPolygonCount.value = bm.completedPolygonCount
-      batchErrorCount.value = bm.errorCount
-    }
+    applyBatchMapping(projection.batchMapping)
     if (projection.startDate) {
       runStartDate.value = projection.startDate
     }
@@ -674,11 +684,7 @@ const restoreFromSession = async (): Promise<boolean> => {
 const fetchBatchData = async (guid: string) => {
   try {
     const projection = await getProjectionById(guid)
-    if (projection.batchMapping) {
-      batchPolygonCount.value = projection.batchMapping.polygonCount
-      batchCompletedPolygonCount.value = projection.batchMapping.completedPolygonCount
-      batchErrorCount.value = projection.batchMapping.errorCount
-    }
+    applyBatchMapping(projection.batchMapping)
     if (projection.startDate) runStartDate.value = projection.startDate
     const fetchedStatus = mapProjectionStatus(projection.projectionStatusCode?.code ?? '')
     if (projection.endDate && fetchedStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
@@ -856,6 +862,7 @@ const runManualInputProjection = async () => {
       mapProjectionStatus(response.projectionStatusCode.code),
     )
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+    applyBatchMapping(response.batchMapping)
     if (response.startDate) runStartDate.value = response.startDate
     runEndDate.value = null // clear any stale endDate from a previous run
     startPolling()
@@ -889,11 +896,7 @@ const runFileUploadProjection = async () => {
     )
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
     fileUploadStore.panelOpenStates.attachments = CONSTANTS.PANEL.CLOSE
-    if (response.batchMapping) {
-      batchPolygonCount.value = response.batchMapping.polygonCount
-      batchCompletedPolygonCount.value = response.batchMapping.completedPolygonCount
-      batchErrorCount.value = response.batchMapping.errorCount
-    }
+    applyBatchMapping(response.batchMapping)
     if (response.startDate) runStartDate.value = response.startDate
     runEndDate.value = null // clear any stale endDate from a previous run
     startPolling()

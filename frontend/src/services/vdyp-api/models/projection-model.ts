@@ -37,6 +37,12 @@ export interface ProjectionStatusCodeModel {
   code: string
 }
 
+export interface BatchFailureTypeCodeModel {
+  description: string
+  displayOrder: number
+  code: string
+}
+
 export interface BatchMappingModel {
   projectionBatchMappingGUID: string
   batchJobGUID: string
@@ -44,6 +50,9 @@ export interface BatchMappingModel {
   completedPolygonCount: number | null
   errorCount: number | null
   warningCount: number | null
+  workerCount?: number | null
+  batchFailureTypeCode?: BatchFailureTypeCodeModel | null
+  failureMessage?: string | null
 }
 
 export interface ProjectionModel {

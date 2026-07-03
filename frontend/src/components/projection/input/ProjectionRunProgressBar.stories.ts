@@ -27,6 +27,14 @@ const meta: Meta<typeof ProjectionRunProgressBar> = {
       control: 'text',
       description: 'ISO 8601 start date string for elapsed time calculation.',
     },
+    batchFailureTypeDescription: {
+      control: 'text',
+      description: 'Optional batch failure type description shown when the projection fails.',
+    },
+    failureMessage: {
+      control: 'text',
+      description: 'Optional batch failure message shown when the projection fails.',
+    },
   },
 }
 
@@ -74,6 +82,8 @@ export const Failed: Story = {
     completedPolygonCount: 6100,
     errorCount: 42,
     startDate: twoHoursAgo,
+    batchFailureTypeDescription: 'Processing Inputs',
+    failureMessage: 'Could not fetch and partition input files. Exception type: Exception, Root cause: Ultimate failure Test.',
   },
 }
 

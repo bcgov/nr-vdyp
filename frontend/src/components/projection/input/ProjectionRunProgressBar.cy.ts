@@ -12,6 +12,8 @@ const mountBar = (props: {
   errorCount?: number | null
   startDate?: string | null
   endDate?: string | null
+  batchFailureTypeDescription?: string | null
+  failureMessage?: string | null
 }) =>
   mount(ProjectionRunProgressBar, {
     global: { plugins: [vuetify] },
@@ -22,6 +24,8 @@ const mountBar = (props: {
       errorCount: 3,
       startDate: null,
       endDate: null,
+      batchFailureTypeDescription: null,
+      failureMessage: null,
       ...props,
     },
   })
@@ -118,6 +122,26 @@ describe('<ProjectionRunProgressBar />', () => {
     it('shows 0% when polygonCount is null', () => {
       mountBar({ status: 'Running', polygonCount: null, completedPolygonCount: null })
       cy.contains('.progress-right-text', '0% Complete').should('exist')
+    })
+
+    it('shows failed batch details when provided', () => {
+      mountBar({
+        status: 'Failed',
+        batchFailureTypeDescription: 'Processing Inputs',
+        failureMessage: 'Could not fetch and partition input files.',
+      })
+      cy.get('.failure-details')
+        .should('contain', 'Processing Inputs')
+        .and('contain', 'Could not fetch and partition input files.')
+    })
+
+    it('hides failed batch details for non-failed statuses', () => {
+      mountBar({
+        status: 'Running',
+        batchFailureTypeDescription: 'Processing Inputs',
+        failureMessage: 'Could not fetch and partition input files.',
+      })
+      cy.get('.failure-details').should('not.exist')
     })
   })
 

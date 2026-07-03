@@ -15,7 +15,11 @@ public final class BatchConstants {
 		public static final String BASE_DIR = "jobBaseDir";
 		public static final String BASE_FOLDER_PREFIX = "vdyp-batch";
 		public static final String IS_RUNNING = "isRunning";
+		public static final String FETCH_AND_PARTITION_FILES_STEP_NAME = "fetchAndPartitionFilesStep";
+		public static final String MASTER_STEP_NAME = "masterStep";
 		public static final String WORKER_STEP_NAME = "workerStep";
+		public static final String POST_PROCESSING_STEP_NAME = "postProcessingStep";
+		public static final String PERSIST_RESULT_FILE_STEP_NAME = "persistResultFileStep";
 		public static final String TOTAL_POLYGONS = "totalPolygonRecords";
 		public static final String POLYGONS_PROCESSED = "polygonsProcessed";
 		public static final String POLYGONS_SKIPPED = "polygonsSkipped";
@@ -24,6 +28,15 @@ public final class BatchConstants {
 		public static final String COMPUTED_PARTITIONS = "computedPartitions";
 
 		private Job() {
+		}
+	}
+
+	public static final class FailureType {
+		public static final String INPUT = "INPUT";
+		public static final String PROCESS = "PROCESS";
+		public static final String OUTPUT = "OUTPUT";
+
+		private FailureType() {
 		}
 	}
 

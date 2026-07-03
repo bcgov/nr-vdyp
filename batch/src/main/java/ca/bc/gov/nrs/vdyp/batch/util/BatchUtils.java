@@ -10,9 +10,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
@@ -28,6 +31,8 @@ public final class BatchUtils {
 
 	private static final DateTimeFormatter dateTimeFormatterForFilenames = DateTimeFormatter
 			.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
+	private static final int FAILURE_MESSAGE_MAX_LENGTH = 200;
+	private static final String DEFAULT_FAILURE_MESSAGE = "Batch job failed";
 
 	public static String createJobFolderName(String prefix, String guid) {
 		return String.format("%s-%s", prefix, guid);
@@ -259,6 +264,96 @@ public final class BatchUtils {
 		return new VDYPProjectionProgressUpdate(
 				jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, 0
 		);
+	}
+
+	public static VDYPProjectionProgressUpdate buildFailureProgress(String jobGuid, JobExecution jobExecution) {
+		return buildFinalProgress(jobGuid, jobExecution)
+				.withFailure(resolveFailureTypeCode(jobExecution), resolveFailureMessage(jobExecution));
+	}
+
+	private static String resolveFailureTypeCode(JobExecution jobExecution) {
+		return findFailedStep(jobExecution).map(StepExecution::getStepName).map(BatchUtils::failureTypeCodeForStep)
+				.orElse(BatchConstants.FailureType.PROCESS);
+	}
+
+	private static String failureTypeCodeForStep(String stepName) {
+		if (BatchConstants.Job.FETCH_AND_PARTITION_FILES_STEP_NAME.equals(stepName)) {
+			return BatchConstants.FailureType.INPUT;
+		}
+		if (BatchConstants.Job.POST_PROCESSING_STEP_NAME.equals(stepName)
+				|| BatchConstants.Job.PERSIST_RESULT_FILE_STEP_NAME.equals(stepName)) {
+			return BatchConstants.FailureType.OUTPUT;
+		}
+		return BatchConstants.FailureType.PROCESS;
+	}
+
+	private static String resolveFailureMessage(JobExecution jobExecution) {
+		return firstFailureExceptionMessage(jobExecution)
+				.or(() -> findFailedStep(jobExecution).flatMap(BatchUtils::exitDescription))
+				.or(() -> exitDescription(jobExecution.getExitStatus())).map(BatchUtils::normalizeFailureMessage)
+				.orElse(DEFAULT_FAILURE_MESSAGE);
+	}
+
+	private static Optional<String> firstFailureExceptionMessage(JobExecution jobExecution) {
+		Collection<Throwable> exceptions = jobExecution.getAllFailureExceptions();
+		return exceptions.stream().map(BatchUtils::failureMessage).filter(BatchUtils::hasText).findFirst();
+	}
+
+	private static String failureMessage(Throwable throwable) {
+		if (throwable == null) {
+			return null;
+		}
+		if (hasText(throwable.getMessage())) {
+			return throwable.getMessage();
+		}
+		return throwable.getClass().getSimpleName();
+	}
+
+	private static Optional<StepExecution> findFailedStep(JobExecution jobExecution) {
+		Collection<StepExecution> stepExecutions = jobExecution.getStepExecutions();
+		return stepExecutions.stream().filter(BatchUtils::isFailedStep).findFirst();
+	}
+
+	private static boolean isFailedStep(StepExecution stepExecution) {
+		if (stepExecution == null) {
+			return false;
+		}
+		if (BatchStatus.FAILED.equals(stepExecution.getStatus())) {
+			return true;
+		}
+		ExitStatus exitStatus = stepExecution.getExitStatus();
+		return ExitStatus.FAILED.getExitCode().equals(exitStatus.getExitCode());
+	}
+
+	private static Optional<String> exitDescription(StepExecution stepExecution) {
+		if (stepExecution == null) {
+			return Optional.empty();
+		}
+		return exitDescription(stepExecution.getExitStatus());
+	}
+
+	private static Optional<String> exitDescription(ExitStatus exitStatus) {
+		if (exitStatus == null || !hasText(exitStatus.getExitDescription())) {
+			return Optional.empty();
+		}
+		return Optional.of(exitStatus.getExitDescription());
+	}
+
+	private static String normalizeFailureMessage(String message) {
+		// remove logging GUID identifiers from the exception message if present
+		// this is brittle but it is the best indicator of items that need to be removed
+		if (message.startsWith("[")) {
+			message = message.substring(message.indexOf("]") + 1).trim();
+		}
+		String normalized = message.trim().replaceAll("\\s+", " ");
+		if (normalized.length() <= FAILURE_MESSAGE_MAX_LENGTH) {
+			return normalized;
+		}
+		return normalized.substring(0, FAILURE_MESSAGE_MAX_LENGTH - 3) + "...";
+	}
+
+	private static boolean hasText(String text) {
+		return text != null && !text.isBlank();
 	}
 
 	/**

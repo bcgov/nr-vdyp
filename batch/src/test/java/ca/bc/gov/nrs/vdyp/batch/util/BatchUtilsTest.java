@@ -1,6 +1,12 @@
 package ca.bc.gov.nrs.vdyp.batch.util;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -14,6 +20,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
@@ -122,6 +132,8 @@ class BatchUtilsTest {
 		assertEquals(0, result.polygonsProcessed());
 		assertEquals(0, result.projectionErrors());
 		assertEquals(0, result.polygonsSkipped());
+		assertNull(result.batchFailureTypeCode());
+		assertNull(result.failureMessage());
 	}
 
 	@Test
@@ -146,6 +158,62 @@ class BatchUtilsTest {
 		assertEquals(8, result.polygonsProcessed());
 		assertEquals(1, result.projectionErrors());
 		assertEquals(1, result.polygonsSkipped());
+	}
+
+	@Test
+	void buildFailureProgress_inputStepFailure_includesInputFailureDetails() {
+		JobExecution jobExecution = failureJobExecution(
+				BatchConstants.Job.FETCH_AND_PARTITION_FILES_STEP_NAME, null,
+				List.of(new RuntimeException("Could not fetch input files"))
+		);
+
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution);
+
+		assertEquals(BatchConstants.FailureType.INPUT, result.batchFailureTypeCode());
+		assertEquals("Could not fetch input files", result.failureMessage());
+	}
+
+	@Test
+	void buildFailureProgress_workerStepFailure_includesProcessFailureDetails() {
+		JobExecution jobExecution = failureJobExecution(
+				BatchConstants.Job.WORKER_STEP_NAME + ":partition0",
+				new ExitStatus(ExitStatus.FAILED.getExitCode(), "Projection failed in worker step"),
+				Collections.emptyList()
+		);
+
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution);
+
+		assertEquals(BatchConstants.FailureType.PROCESS, result.batchFailureTypeCode());
+		assertEquals("Projection failed in worker step", result.failureMessage());
+	}
+
+	@ParameterizedTest
+	@ValueSource(
+			strings = { BatchConstants.Job.POST_PROCESSING_STEP_NAME, BatchConstants.Job.PERSIST_RESULT_FILE_STEP_NAME }
+	)
+	void buildFailureProgress_outputStepFailure_includesOutputFailureDetails(String stepName) {
+		JobExecution jobExecution = failureJobExecution(
+				stepName, new ExitStatus(ExitStatus.FAILED.getExitCode(), "Could not build output archive"),
+				Collections.emptyList()
+		);
+
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution);
+
+		assertEquals(BatchConstants.FailureType.OUTPUT, result.batchFailureTypeCode());
+		assertEquals("Could not build output archive", result.failureMessage());
+	}
+
+	@Test
+	void buildFailureProgress_longFailureMessage_truncatesToColumnLength() {
+		JobExecution jobExecution = failureJobExecution(
+				BatchConstants.Job.WORKER_STEP_NAME + ":partition0", null,
+				List.of(new RuntimeException("x".repeat(250)))
+		);
+
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution);
+
+		assertEquals(200, result.failureMessage().length());
+		assertTrue(result.failureMessage().endsWith("..."));
 	}
 
 	@Test
@@ -214,5 +282,21 @@ class BatchUtilsTest {
 		assertEquals(0, result.polygonsProcessed());
 		assertEquals(0, result.projectionErrors());
 		assertEquals(0, result.polygonsSkipped());
+	}
+
+	private static JobExecution
+			failureJobExecution(String stepName, ExitStatus exitStatus, List<Throwable> exceptions) {
+		JobExecution jobExecution = mock(JobExecution.class);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getAllFailureExceptions()).thenReturn(exceptions);
+
+		StepExecution failedStep = mock(StepExecution.class);
+		when(failedStep.getStepName()).thenReturn(stepName);
+		when(failedStep.getStatus()).thenReturn(BatchStatus.FAILED);
+		when(failedStep.getExitStatus()).thenReturn(exitStatus);
+		when(failedStep.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getStepExecutions()).thenReturn(List.of(failedStep));
+
+		return jobExecution;
 	}
 }

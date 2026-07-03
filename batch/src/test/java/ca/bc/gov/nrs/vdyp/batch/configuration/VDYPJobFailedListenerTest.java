@@ -1,19 +1,22 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -22,9 +25,11 @@ import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,13 +59,22 @@ class VDYPJobFailedListenerTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobExecution.getStatus()).thenReturn(BatchStatus.FAILED);
 		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
-		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
+
+		StepExecution failedStep = mock(StepExecution.class);
+		when(failedStep.getStepName()).thenReturn(BatchConstants.Job.FETCH_AND_PARTITION_FILES_STEP_NAME);
+		when(failedStep.getStatus()).thenReturn(BatchStatus.FAILED);
+		when(jobExecution.getStepExecutions()).thenReturn(List.of(failedStep));
+		when(jobExecution.getAllFailureExceptions()).thenReturn(List.of(new IllegalStateException("Input failed")));
 
 		listener.afterJob(jobExecution);
 
 		verify(jobExecution, atLeastOnce()).getId();
 		verify(jobExecution, atLeastOnce()).getJobParameters();
-		verify(vdypClient, atLeastOnce()).markComplete(any(), eq(false), any());
+		ArgumentCaptor<VDYPProjectionProgressUpdate> progressCaptor = ArgumentCaptor
+				.forClass(VDYPProjectionProgressUpdate.class);
+		verify(vdypClient, atLeastOnce()).markComplete(eq("test-proj-123"), eq(false), progressCaptor.capture());
+		assertEquals(BatchConstants.FailureType.INPUT, progressCaptor.getValue().batchFailureTypeCode());
+		assertEquals("Input failed", progressCaptor.getValue().failureMessage());
 	}
 
 	@ParameterizedTest

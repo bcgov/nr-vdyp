@@ -60,6 +60,7 @@ import ca.bc.gov.nrs.vdyp.backend.config.ProjectionExpiryConfig;
 import ca.bc.gov.nrs.vdyp.backend.config.ProjectionLimitsConfig;
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionResourceAssembler;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.BatchFailureTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
@@ -107,6 +108,8 @@ class ProjectionServiceTest {
 	CalculationEngineCodeLookup calculationEngineCodeLookup;
 	@Mock
 	ProjectionBatchMappingService batchMappingService;
+	@Mock
+	BatchFailureTypeCodeLookup batchFailureTypeCodeLookup;
 	@Mock
 	VDYPUserService userService;
 	@Mock
@@ -2047,7 +2050,9 @@ class ProjectionServiceTest {
 		systemUserType.setCode(UserTypeCodeModel.SYSTEM);
 		VDYPUserModel systemUser = new VDYPUserModel();
 		systemUser.setUserTypeCode(systemUserType);
-		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1, 0);
+		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(
+				UUID.randomUUID(), 10, 8, 1, 0, null, null
+		);
 
 		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
 		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.READY))
@@ -2057,6 +2062,35 @@ class ProjectionServiceTest {
 		service.updateCompleteStatus(systemUser, projectionGUID, true, progressUpdate);
 
 		verify(batchMappingService).updateProgress(entity, progressUpdate);
+	}
+
+	@Test
+	void updateCompleteStatus_withFailureDetails_validatesAndUpdatesBatchMapping() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID batchJobGUID = UUID.randomUUID();
+		ProjectionEntity entity = projectionEntity(
+				projectionGUID, UUID.randomUUID(), ProjectionStatusCodeModel.RUNNING
+		);
+		UserTypeCodeModel systemUserType = new UserTypeCodeModel();
+		systemUserType.setCode(UserTypeCodeModel.SYSTEM);
+		VDYPUserModel systemUser = new VDYPUserModel();
+		systemUser.setUserTypeCode(systemUserType);
+		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(
+				batchJobGUID, 10, 8, 1, 0, "PROCESS", "Projection failed"
+		);
+		BatchFailureTypeCodeEntity batchFailureTypeCode = new BatchFailureTypeCodeEntity();
+		batchFailureTypeCode.setCode("PROCESS");
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.FAILED))
+				.thenReturn(statusCode(ProjectionStatusCodeModel.FAILED));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		service.updateCompleteStatus(systemUser, projectionGUID, false, progressUpdate);
+
+		verify(batchMappingService).updateProgress(entity, progressUpdate);
+		verify(batchMappingService)
+				.updateFailureDetails(entity, batchJobGUID, batchFailureTypeCode.getCode(), "Projection failed");
 	}
 
 	// ==========================================================
@@ -2073,7 +2107,9 @@ class ProjectionServiceTest {
 		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
 
 		UUID projectionGUID = UUID.randomUUID();
-		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(UUID.randomUUID(), 10, 8, 1, 0);
+		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(
+				UUID.randomUUID(), 10, 8, 1, 0, null, null
+		);
 
 		ProjectionModel model = new ProjectionModel();
 		model.setProjectionGUID(projectionGUID.toString());
