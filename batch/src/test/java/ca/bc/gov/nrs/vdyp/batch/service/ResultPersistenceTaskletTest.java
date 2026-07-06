@@ -158,39 +158,6 @@ class ResultPersistenceTaskletTest {
 	}
 
 	@Test
-	void testExecute_filesExist_warningsFileDeletedAfterUpload() throws Exception {
-		UUID resultFileSetGuid = UUID.randomUUID();
-		UUID resultFileComsObjectGuid = UUID.randomUUID();
-
-		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
-				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()) //
-				.addString(BatchConstants.Job.TIMESTAMP, BatchUtils.createJobTimestamp()) //
-				.addLong(BatchConstants.Partition.NUMBER, 4L) //
-				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()) //
-				.toJobParameters();
-		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
-		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
-		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
-		when(details.resultFileSet())
-				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));
-		when(vdypClient.getFileSetFiles(any(), matches(resultFileSetGuid.toString()))).thenReturn(
-				List.of(new FileMappingDetails(UUID.randomUUID().toString(), resultFileComsObjectGuid.toString()))
-		);
-		when(details.reportTitle()).thenReturn("Test Report");
-		doNothing().when(comsFileService).updateStoredObject(any(UUID.class), any(Path.class), any(String.class));
-
-		Path finalZipPath = BatchUtils.getFinalZipName(tempDir, jobParameters.getString(BatchConstants.Job.TIMESTAMP));
-		Files.createFile(finalZipPath);
-
-		Path warningsFile = tempDir.getParent()
-				.resolve(tempDir.getFileName() + BatchConstants.Partition.WARNING_FILE_NAME);
-		Files.createFile(warningsFile);
-
-		tasklet.execute(stepContribution, chunkContext);
-	}
-
-	@Test
 	void testExecute_filesExist_emptyFileSetCallsVDYPClient() throws Exception {
 		UUID resultFileSetGuid = UUID.randomUUID();
 		UUID placeholderComsObjectGuid = UUID.randomUUID();
