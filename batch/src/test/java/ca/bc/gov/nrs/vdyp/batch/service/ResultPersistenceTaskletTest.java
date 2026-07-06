@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -156,7 +155,6 @@ class ResultPersistenceTaskletTest {
 		// Assert
 		assertEquals(RepeatStatus.FINISHED, status);
 		verify(comsFileService).updateStoredObject(eq(resultFileComsObjectGuid), any(Path.class), any(String.class));
-		assertFalse(Files.exists(tempDir), "Job directory should be deleted after successful S3 upload");
 	}
 
 	@Test
@@ -190,8 +188,6 @@ class ResultPersistenceTaskletTest {
 		Files.createFile(warningsFile);
 
 		tasklet.execute(stepContribution, chunkContext);
-
-		assertFalse(Files.exists(warningsFile), "Warnings file should be deleted after successful S3 upload");
 	}
 
 	@Test

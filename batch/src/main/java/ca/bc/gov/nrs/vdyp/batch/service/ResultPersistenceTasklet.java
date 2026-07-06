@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,6 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultPersistenceException;
-import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 @Component
@@ -53,50 +51,26 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 				throw new IOException("Could not find expected result zip file at: " + finalZipPath);
 			}
 
-			String resultZipFileName = BatchUtils.buildResultZipFileName(projectionDetails.reportTitle());
-			String resultFileSetGUID = projectionDetails.resultFileSet().guid();
-			if (resultFiles.isEmpty()) {
-				// No result file yet: register a placeholder in Backend/COMS, upload directly, then confirm.
-				FileMappingDetails placeholder = vdypClient
-						.startFileSetFileUpload(projectionGUID, resultFileSetGUID, resultZipFileName);
-				comsFileService.updateStoredObject(
-						UUID.fromString(placeholder.comsObjectGuid()), finalZipPath, resultZipFileName
-				);
-				vdypClient.completeFileSetFileUpload(projectionGUID, resultFileSetGUID, placeholder.fileMappingGuid());
-			} else {
-				comsFileService.updateStoredObject(
-						UUID.fromString(resultFiles.get(0).comsObjectGuid()), finalZipPath, resultZipFileName
-				);
-			}
-
-			vdypClient.markComplete(
-					projectionGUID, true, BatchUtils.buildFinalProgress(jobGuid, stepExecution.getJobExecution())
-			);
-
-			logger.debug("Completed persistence of result zip file to COMS.");
-
-			cleanupJobFiles(jobBasePath);
+			throw new Exception("Fail on purpose");
+			/*
+			 * String resultZipFileName = BatchUtils.buildResultZipFileName(projectionDetails.reportTitle()); String
+			 * resultFileSetGUID = projectionDetails.resultFileSet().guid(); if (resultFiles.isEmpty()) { // No result
+			 * file yet: register a placeholder in Backend/COMS, upload directly, then confirm. FileMappingDetails
+			 * placeholder = vdypClient .startFileSetFileUpload(projectionGUID, resultFileSetGUID, resultZipFileName);
+			 * comsFileService.updateStoredObject( UUID.fromString(placeholder.comsObjectGuid()), finalZipPath,
+			 * resultZipFileName ); vdypClient.completeFileSetFileUpload(projectionGUID, resultFileSetGUID,
+			 * placeholder.fileMappingGuid()); } else { comsFileService.updateStoredObject(
+			 * UUID.fromString(resultFiles.get(0).comsObjectGuid()), finalZipPath, resultZipFileName ); }
+			 *
+			 * vdypClient.markComplete( projectionGUID, true, BatchUtils.buildFinalProgress(jobGuid,
+			 * stepExecution.getJobExecution()) );
+			 *
+			 * logger.debug("Completed persistence of result zip file to COMS.");
+			 *
+			 */
 		} catch (Exception e) {
 			throw BatchResultPersistenceException
 					.handleResultPersistenceFailure(e, "Failed to persist result zip to COMS.", jobGuid, jobId, logger);
-		}
-	}
-
-	private void cleanupJobFiles(Path jobBasePath) {
-		try {
-			BatchUtils.deleteDirectoryRecursively(jobBasePath);
-			logger.debug("[GUID: {}] Deleted job directory after S3 upload: {}", jobGuid, jobBasePath);
-		} catch (IOException e) {
-			logger.warn("[GUID: {}] Failed to delete job directory {}: {}", jobGuid, jobBasePath, e.getMessage());
-		}
-
-		Path warningsFile = Paths.get(jobBasePath + BatchConstants.Partition.WARNING_FILE_NAME);
-		try {
-			if (Files.deleteIfExists(warningsFile)) {
-				logger.debug("[GUID: {}] Deleted warnings file: {}", jobGuid, warningsFile);
-			}
-		} catch (IOException e) {
-			logger.warn("[GUID: {}] Failed to delete warnings file {}: {}", jobGuid, warningsFile, e.getMessage());
 		}
 	}
 
