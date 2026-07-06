@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,23 +52,28 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 				throw new IOException("Could not find expected result zip file at: " + finalZipPath);
 			}
 
-			throw new Exception("Fail on purpose");
-			/*
-			 * String resultZipFileName = BatchUtils.buildResultZipFileName(projectionDetails.reportTitle()); String
-			 * resultFileSetGUID = projectionDetails.resultFileSet().guid(); if (resultFiles.isEmpty()) { // No result
-			 * file yet: register a placeholder in Backend/COMS, upload directly, then confirm. FileMappingDetails
-			 * placeholder = vdypClient .startFileSetFileUpload(projectionGUID, resultFileSetGUID, resultZipFileName);
-			 * comsFileService.updateStoredObject( UUID.fromString(placeholder.comsObjectGuid()), finalZipPath,
-			 * resultZipFileName ); vdypClient.completeFileSetFileUpload(projectionGUID, resultFileSetGUID,
-			 * placeholder.fileMappingGuid()); } else { comsFileService.updateStoredObject(
-			 * UUID.fromString(resultFiles.get(0).comsObjectGuid()), finalZipPath, resultZipFileName ); }
-			 *
-			 * vdypClient.markComplete( projectionGUID, true, BatchUtils.buildFinalProgress(jobGuid,
-			 * stepExecution.getJobExecution()) );
-			 *
-			 * logger.debug("Completed persistence of result zip file to COMS.");
-			 *
-			 */
+			String resultZipFileName = BatchUtils.buildResultZipFileName(projectionDetails.reportTitle());
+			String resultFileSetGUID = projectionDetails.resultFileSet().guid();
+			if (resultFiles.isEmpty()) {
+				// No result file yet: register a placeholder in Backend/COMS, upload directly, then confirm.
+				FileMappingDetails placeholder = vdypClient
+						.startFileSetFileUpload(projectionGUID, resultFileSetGUID, resultZipFileName);
+				comsFileService.updateStoredObject(
+						UUID.fromString(placeholder.comsObjectGuid()), finalZipPath, resultZipFileName
+				);
+				vdypClient.completeFileSetFileUpload(projectionGUID, resultFileSetGUID, placeholder.fileMappingGuid());
+			} else {
+				comsFileService.updateStoredObject(
+						UUID.fromString(resultFiles.get(0).comsObjectGuid()), finalZipPath, resultZipFileName
+				);
+			}
+
+			vdypClient.markComplete(
+					projectionGUID, true, BatchUtils.buildFinalProgress(jobGuid, stepExecution.getJobExecution())
+			);
+
+			logger.debug("Completed persistence of result zip file to COMS.");
+
 		} catch (Exception e) {
 			throw BatchResultPersistenceException
 					.handleResultPersistenceFailure(e, "Failed to persist result zip to COMS.", jobGuid, jobId, logger);
