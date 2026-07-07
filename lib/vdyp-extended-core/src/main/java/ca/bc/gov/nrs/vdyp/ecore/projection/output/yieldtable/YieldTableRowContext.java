@@ -15,6 +15,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 
 class YieldTableRowContext {
@@ -542,6 +543,33 @@ class YieldTableRowContext {
 		}
 		if (yearAtGapEnd != null) {
 			ageAtGapEnd = yearAtGapEnd - yearToAgeDifference;
+		}
+
+		if (yearAtDeath == null && ageAtEndYear != null) {
+			int maxAllowedAge = referenceAge + Vdyp7Constants.MAX_YEARS_BEYOND_REFERENCE_AGE;
+			if (ageAtEndYear > maxAllowedAge) {
+				ageAtEndYear = maxAllowedAge;
+				yearAtEndAge = ageAtEndYear + yearToAgeDifference;
+				if (ageAtGapStart != null && ageAtGapStart >= ageAtEndYear) {
+					ageAtGapStart = null;
+					yearAtGapStart = null;
+					ageAtGapEnd = null;
+					yearAtGapEnd = null;
+				} else if (ageAtGapEnd != null && ageAtGapEnd > ageAtEndYear) {
+					ageAtGapEnd = ageAtEndYear;
+					yearAtGapEnd = yearAtEndAge;
+				}
+				if (ageAtStartYear != null && ageAtStartYear > ageAtEndYear) {
+					yearAtStartAge = null;
+					yearAtEndAge = null;
+					ageAtStartYear = null;
+					ageAtEndYear = null;
+					yearAtGapStart = null;
+					yearAtGapEnd = null;
+					ageAtGapStart = null;
+					ageAtGapEnd = null;
+				}
+			}
 		}
 	}
 
