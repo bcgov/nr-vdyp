@@ -1,9 +1,25 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -14,11 +30,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
-
-import java.time.LocalDateTime;
-
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -165,5 +177,63 @@ class BatchJobExecutionListenerTest {
 
 			listener.beforeJob(finalJob);
 		});
+	}
+
+	@Test
+	void testAfterJob_JobBasePathDeleteThrowsIOException(@TempDir Path tempDir) throws IOException {
+		Long jobId = 6L;
+		String jobGuid = "guid-006";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+
+		listener.beforeJob(jobExecution);
+
+		try (MockedStatic<BatchUtils> batchUtilsMock = mockStatic(BatchUtils.class)) {
+			batchUtilsMock.when(() -> BatchUtils.deleteDirectoryRecursively(jobBaseDir))
+					.thenThrow(new IOException("simulated delete failure"));
+
+			assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+		}
+
+		assertTrue(Files.exists(jobBaseDir));
+	}
+
+	@Test
+	void testAfterJob_WarningsDeleteThrowsIOException(@TempDir Path tempDir) throws IOException {
+		Long jobId = 7L;
+		String jobGuid = "guid-007";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir"));
+		Path warningsPath = Path.of(jobBaseDir + BatchConstants.Partition.WARNING_FILE_NAME);
+		Files.createDirectories(warningsPath);
+		Files.createFile(warningsPath.resolve("nested.txt"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+
+		listener.beforeJob(jobExecution);
+
+		try (MockedStatic<BatchUtils> batchUtilsMock = mockStatic(BatchUtils.class)) {
+			batchUtilsMock.when(() -> BatchUtils.deleteDirectoryRecursively(any(Path.class)))
+					.thenAnswer(invocation -> null);
+
+			assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+		}
+
+		assertTrue(Files.exists(warningsPath));
+		assertTrue(Files.exists(warningsPath.resolve("nested.txt")));
 	}
 }

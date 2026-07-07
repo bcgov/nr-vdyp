@@ -1,5 +1,14 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
@@ -8,11 +17,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
-
-import java.time.LocalDateTime;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 /**
  * Job execution listener for partitioned VDYP batch job.
@@ -50,6 +55,8 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 	public void afterJob(@NonNull JobExecution jobExecution) {
 		Long jobExecutionId = jobExecution.getId();
 		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
+		String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
+		Path jobBasePath = jobBaseDir != null ? Paths.get(jobBaseDir) : null;
 
 		// Use synchronization to ensure only one thread processes this job completion
 		synchronized (lock) {
@@ -61,6 +68,10 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 						jobGuid, jobExecutionId
 				);
 				return;
+			}
+
+			if (jobBasePath != null) {
+				cleanupJobDirectory(jobGuid, jobBasePath);
 			}
 
 			// Mark this job as processed
@@ -89,6 +100,24 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 			logger.info(separator);
 
 			cleanupOldJobTracker(jobExecutionId);
+		}
+	}
+
+	private void cleanupJobDirectory(String jobGuid, Path jobBasePath) {
+		try {
+			BatchUtils.deleteDirectoryRecursively(jobBasePath);
+			logger.debug("[GUID: {}] Deleted job directory after S3 upload: {}", jobGuid, jobBasePath);
+		} catch (IOException e) {
+			logger.warn("[GUID: {}] Failed to delete job directory {}: {}", jobGuid, jobBasePath, e.getMessage());
+		}
+
+		Path warningsFile = Paths.get(jobBasePath + BatchConstants.Partition.WARNING_FILE_NAME);
+		try {
+			if (Files.deleteIfExists(warningsFile)) {
+				logger.debug("[GUID: {}] Deleted warnings file: {}", jobGuid, warningsFile);
+			}
+		} catch (IOException e) {
+			logger.warn("[GUID: {}] Failed to delete warnings file {}: {}", jobGuid, warningsFile, e.getMessage());
 		}
 	}
 
