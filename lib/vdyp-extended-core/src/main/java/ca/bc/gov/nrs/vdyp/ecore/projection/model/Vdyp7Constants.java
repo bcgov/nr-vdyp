@@ -31,6 +31,7 @@ public class Vdyp7Constants {
 
 	public static final double MIN_SPECIES_AGE = 0.0;
 	public static final double MAX_SPECIES_AGE = 2000.0;
+	public static final int MAX_YEARS_BEYOND_REFERENCE_AGE = 400;
 
 	public static final int MAX_NUM_LAYERS_PER_POLYGON = 9;
 	public static final int MAX_NUM_SPECIES_PER_LAYER = 6;

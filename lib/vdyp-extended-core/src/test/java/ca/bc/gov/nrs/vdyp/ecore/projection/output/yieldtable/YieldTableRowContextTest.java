@@ -123,6 +123,20 @@ public class YieldTableRowContextTest {
 						AgeYearCombo.of(Parameters.AgeYearRangeCombinationKind.DIFFERENCE, 0, 50, 1975, 2000), // Disjoint
 						// Difference
 						AgeYearComboResults.of(0, 24, null, null)
+				),
+
+				Arguments.of(AgeYearCombo.of(null, 0, 500, null, null), AgeYearComboResults.of(0, 400, null, null)),
+				Arguments.of(AgeYearCombo.of(null, 0, 400, null, null), AgeYearComboResults.of(0, 400, null, null)),
+				Arguments.of(
+						AgeYearCombo.of(null, 401, 500, null, null), AgeYearComboResults.of(null, null, null, null)
+				),
+				Arguments.of(
+						AgeYearCombo.of(Parameters.AgeYearRangeCombinationKind.DIFFERENCE, 0, 500, 2360, 2500),
+						AgeYearComboResults.of(0, 400, null, null)
+				),
+				Arguments.of(
+						AgeYearCombo.of(Parameters.AgeYearRangeCombinationKind.DIFFERENCE, 0, 500, 2349, 2500),
+						AgeYearComboResults.of(0, 400, 398, 400)
 				)
 		);
 	}
