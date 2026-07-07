@@ -213,18 +213,18 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			float minimumPredictedBaseArea = minima.get(BaseControlParser.MINIMUM_FULLY_STOCKED_AREA);
 			Utils.throwIfPresent(
 					ResultBaseAreaLowException.check(
-					LayerType.PRIMARY, //
-					Optional.of(baseAreaTotalPrime), //
-					minimumBaseArea //
+							LayerType.PRIMARY, //
+							Optional.of(baseAreaTotalPrime), //
+							minimumBaseArea //
 					)
 			);
 			float predictedBaseArea = baseAreaTotalPrime * (100f / resultPoly.getPercentAvailable());
 			Utils.throwIfPresent(
 					ResultBaseAreaLowException.check(
-					LayerType.PRIMARY, //
-					"Predicted base area", //
-					Optional.of(predictedBaseArea), //
-					minimumPredictedBaseArea //
+							LayerType.PRIMARY, //
+							"Predicted base area", //
+							Optional.of(predictedBaseArea), //
+							minimumPredictedBaseArea //
 					)
 			);
 		}
