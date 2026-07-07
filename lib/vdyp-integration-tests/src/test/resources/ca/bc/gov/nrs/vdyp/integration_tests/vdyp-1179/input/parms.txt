@@ -1,0 +1,68 @@
+-ini C:\VDYP7Test\VDYP.ini 
+-c   C:\VDYP7Test\VDYP_CFG\
+
+-ifmt hcsv
+#-ofmt YieldTable
+-ofmt csvyieldtable
+
+
+-ip $(TestDir)\InputFiles\VDYP7_INPUT_POLY.csv
+-il $(TestDir)\InputFiles\VDYP7_INPUT_LAYER.csv
+#identifies input polygon definition file and layer definition file's location
+
+-o $(TestDir)\output\Output_YldTbl.csv
+-e $(TestDir)\output\Output_Error.txt
+-l $(TestDir)\output\Output_Log.txt
+#identifies output yield tables, logging file and error file's name and location
+#-dbg Yes
+#-dbgCfg $(TestDir)/VDYP7LoggingConfig.txt
+#-v7save Yes
+
+
+-back No
+-forward Yes
+-includeprojmode Yes
+-secondarySpcsHt Yes
+
+-util AC=7.5  
+-util AT=7.5   
+-util B=7.5   
+-util C=7.5   
+-util D=7.5  
+-util E=7.5  
+-util F=7.5   
+-util H=7.5    
+-util L=7.5   
+-util MB=7.5  
+-util PA=7.5 
+-util PL=7.5   
+-util PW=7.5 
+-util PY=7.5  
+-util S=7.5  
+-util Y=7.5
+
+#-filterforpolygonid    8489341
+#-filterforpolygon    4
+-forceyear 2023
+-forcerefyear Yes
+-forceCrntYear Yes
+#-yearstart 1961
+#-yearend 2061
+-agestart 0
+-ageend 400
+-inc 10
+
+-includeagerows Yes 
+-allowbatphsub Yes
+#-PROGRESSFREQUENCY 500 
+-yieldtableincpolyid  Yes
+-projectedByLayer Yes
+-projectedBySpecies Yes
+-projectedVolumes Yes
+#-projectedCFSBiomass Yes
+
+#-metadata none
+#-metadata minident
+#-metadata version
+#-metadata main
+#-metadata all
