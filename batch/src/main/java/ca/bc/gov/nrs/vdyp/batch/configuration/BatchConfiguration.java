@@ -358,6 +358,24 @@ public class BatchConfiguration {
 			Duration duration = Duration
 					.between(now, startTime == null ? now : startTime.atZone(ZoneId.systemDefault()));
 
+			boolean cleanupEnabled = batchProperties.getPartition().getInterimDirsCleanupEnabled();
+
+			// Delete input partition directories first: they are no longer needed once the worker
+			// steps have finished, so there is no reason to wait until the output ZIP is built and
+			// validated before reclaiming that storage.
+			if (cleanupEnabled) {
+				Path jobBasePath = Paths.get(jobBaseDir);
+				resultAggregationService.cleanupInputPartitionDirectories(jobBasePath);
+				logger.info(
+						"[GUID: {}] Input partition directories cleanup completed for job: {}", jobGuid, jobExecutionId
+				);
+			} else {
+				logger.info(
+						"[GUID: {}] Cleanup is disabled. Skipping cleanup of input partition directories for job: {}",
+						jobGuid, jobExecutionId
+				);
+			}
+
 			VDYPProjectionProgressUpdate finalProgress = BatchUtils.buildFinalProgress(jobGuid, jobExecution);
 			// Execute aggregation
 			Path consolidatedZip = resultAggregationService.aggregateResultsFromJobDir(
@@ -371,15 +389,15 @@ public class BatchConfiguration {
 					jobGuid, jobExecutionId, consolidatedZip
 			);
 
-			// Clean up interim partition directories after successful zip creation and validation
-			if (batchProperties.getPartition().getInterimDirsCleanupEnabled()) {
+			// Clean up output partition directories after successful zip creation and validation
+			if (cleanupEnabled) {
 				if (resultAggregationService.validateConsolidatedZip(consolidatedZip)) {
 
 					Path jobBasePath = Paths.get(jobBaseDir);
-					resultAggregationService.cleanupPartitionDirectories(jobBasePath);
+					resultAggregationService.cleanupOutputPartitionDirectories(jobBasePath);
 
 					logger.info(
-							"[GUID: {}] Interim partition directories cleanup completed for job: {}", jobGuid,
+							"[GUID: {}] Output partition directories cleanup completed for job: {}", jobGuid,
 							jobExecutionId
 					);
 				} else {
@@ -390,7 +408,7 @@ public class BatchConfiguration {
 				}
 			} else {
 				logger.info(
-						"[GUID: {}] Cleanup is disabled. Skipping cleanup of interim partition directories for job: {}",
+						"[GUID: {}] Cleanup is disabled. Skipping cleanup of output partition directories for job: {}",
 						jobGuid, jobExecutionId
 				);
 			}

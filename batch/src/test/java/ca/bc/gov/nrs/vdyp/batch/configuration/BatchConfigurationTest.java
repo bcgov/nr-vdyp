@@ -280,7 +280,8 @@ class BatchConfigurationTest {
 
 		assertEquals(RepeatStatus.FINISHED, result);
 		verify(resultAggregationService).validateConsolidatedZip(mockPath);
-		verify(resultAggregationService).cleanupPartitionDirectories(tempDir);
+		verify(resultAggregationService).cleanupInputPartitionDirectories(tempDir);
+		verify(resultAggregationService).cleanupOutputPartitionDirectories(tempDir);
 	}
 
 	@Test
@@ -331,7 +332,8 @@ class BatchConfigurationTest {
 
 		assertEquals(RepeatStatus.FINISHED, result);
 		verify(resultAggregationService).validateConsolidatedZip(mockPath);
-		verify(resultAggregationService, org.mockito.Mockito.never()).cleanupPartitionDirectories(any());
+		verify(resultAggregationService).cleanupInputPartitionDirectories(tempDir);
+		verify(resultAggregationService, org.mockito.Mockito.never()).cleanupOutputPartitionDirectories(any());
 	}
 
 	@Test
@@ -509,7 +511,8 @@ class BatchConfigurationTest {
 
 		assertEquals(RepeatStatus.FINISHED, result);
 
-		verify(resultAggregationService, org.mockito.Mockito.never()).cleanupPartitionDirectories(any());
+		verify(resultAggregationService, org.mockito.Mockito.never()).cleanupInputPartitionDirectories(any());
+		verify(resultAggregationService, org.mockito.Mockito.never()).cleanupOutputPartitionDirectories(any());
 		verify(resultAggregationService, org.mockito.Mockito.never()).validateConsolidatedZip(any());
 	}
 
