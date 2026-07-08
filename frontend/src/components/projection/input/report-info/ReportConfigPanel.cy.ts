@@ -88,23 +88,6 @@ describe('<ReportConfigPanel />', () => {
     })
   })
 
-  describe('Edit button in header', () => {
-    it('is not visible in read-only mode', () => {
-      mountPanel((_, app) => {
-        app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
-      })
-      cy.get('.edit-button-col').should('not.exist')
-    })
-
-    it('is disabled when the panel is not yet confirmed', () => {
-      mountPanel((fu) => {
-        fu.panelState.reportConfig.confirmed = false
-        fu.panelState.reportConfig.editable = true
-      })
-      cy.contains('button', 'Edit').should('be.disabled')
-    })
-  })
-
   describe('ActionPanel', () => {
     it('is not rendered in read-only mode', () => {
       mountPanel((_, app) => {

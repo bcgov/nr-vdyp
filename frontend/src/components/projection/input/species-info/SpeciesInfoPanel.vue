@@ -1,5 +1,5 @@
 <template>
-  <v-card class="elevation-0">
+  <v-card class="elevation-0 panel-card">
     <SpeciesSelectionModal
       v-model="modalOpen"
       :existingSpecies="existingSpeciesCodes"
@@ -22,22 +22,13 @@
             <v-col>
               <span class="text-h6">{{ CONSTANTS.MANUAL_INPUT_PANEL_LABEL.SPECIES_INFO }}</span>
             </v-col>
-            <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
-              <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
-                <template #activator="{ props: tooltipProps }">
-                  <span v-bind="tooltipProps">
-                    <AppButton
-                      label="Edit"
-                      variant="tertiary"
-                      mdi-name="mdi-pencil-outline"
-                      iconPosition="top"
-                      :isDisabled="!isHeaderEditActive"
-                      @click="onHeaderEdit"
-                    />
-                  </span>
-                </template>
-              </v-tooltip>
-            </v-col>
+            <PanelEditControl
+              :is-read-only="isReadOnly"
+              :editable="modelParameterStore.panelState[panelName].editable"
+              :is-header-edit-active="isHeaderEditActive"
+              :edit-tooltip-text="editTooltipText"
+              @edit="onHeaderEdit"
+            />
           </v-row>
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
@@ -135,7 +126,7 @@ import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { AppButton } from '@/components'
-import { ActionPanel, SpeciesListInput, SpeciesGroupsDisplay } from '@/components/projection'
+import { ActionPanel, PanelEditControl, SpeciesListInput, SpeciesGroupsDisplay } from '@/components/projection'
 import { BIZCONSTANTS, CONSTANTS, MESSAGE, OPTIONS } from '@/constants'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
 import type { SpeciesList } from '@/interfaces/interfaces'
@@ -459,24 +450,6 @@ const onCancel = async () => {
     flex-direction: column;
     align-items: flex-start;
   }
-}
-
-.edit-button-col {
-  display: flex;
-  align-items: center;
-}
-
-.edit-button-col :deep(.bcds-button.icon-top) {
-  padding: 2px 4px;
-  gap: 2px;
-}
-
-.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
-  font-size: 18px;
-}
-
-.edit-button-col :deep(.bcds-button.icon-top .button-label) {
-  font-size: 11px;
 }
 
 .section-divider {

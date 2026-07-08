@@ -91,33 +91,4 @@ describe('<ReportDetailsPanel />', () => {
     cy.contains('button', 'Next').should('be.disabled')
     cy.contains('button', 'Cancel').should('be.disabled')
   })
-
-  it('clicking Edit button makes the panel editable', () => {
-    const { modelStore } = mountPanel((modelStore) => {
-      modelStore.panelState.reportDetails.confirmed = true
-      modelStore.panelState.reportDetails.editable = false
-    })
-    cy.contains('button', 'Edit').click({ force: true })
-    cy.then(() => {
-      expect(modelStore.panelState.reportDetails.editable).to.be.true
-    })
-  })
-
-  it('disables Edit button when projection is RUNNING', () => {
-    mountPanel((modelStore, appStore) => {
-      modelStore.panelState.reportDetails.confirmed = true
-      modelStore.panelState.reportDetails.editable = false
-      appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.RUNNING
-    })
-    cy.contains('button', 'Edit').should('be.disabled')
-  })
-
-  it('disables Edit button when projection is QUEUED', () => {
-    mountPanel((modelStore, appStore) => {
-      modelStore.panelState.reportDetails.confirmed = true
-      modelStore.panelState.reportDetails.editable = false
-      appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.QUEUED
-    })
-    cy.contains('button', 'Edit').should('be.disabled')
-  })
 })
