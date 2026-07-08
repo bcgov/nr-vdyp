@@ -3,8 +3,6 @@ package ca.bc.gov.nrs.vdyp.fip;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.abs;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -70,7 +68,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
@@ -214,17 +211,21 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 			float minimumBaseArea = minima.get(BaseControlParser.MINIMUM_BASE_AREA);
 			float minimumPredictedBaseArea = minima.get(BaseControlParser.MINIMUM_FULLY_STOCKED_AREA);
-			ResultBaseAreaLowException.check(
-					LayerType.PRIMARY, //
-					Optional.of(baseAreaTotalPrime), //
-					minimumBaseArea //
+			Utils.throwIfPresent(
+					ResultBaseAreaLowException.check(
+							LayerType.PRIMARY, //
+							Optional.of(baseAreaTotalPrime), //
+							minimumBaseArea //
+					)
 			);
 			float predictedBaseArea = baseAreaTotalPrime * (100f / resultPoly.getPercentAvailable());
-			ResultBaseAreaLowException.check(
-					LayerType.PRIMARY, //
-					"Predicted base area", //
-					Optional.of(predictedBaseArea), //
-					minimumPredictedBaseArea //
+			Utils.throwIfPresent(
+					ResultBaseAreaLowException.check(
+							LayerType.PRIMARY, //
+							"Predicted base area", //
+							Optional.of(predictedBaseArea), //
+							minimumPredictedBaseArea //
+					)
 			);
 		}
 		// FIPSTK
