@@ -764,9 +764,8 @@ public class BatchResultAggregationService {
 	}
 
 	/**
-	 * Deletes all output-partition directories under the job base directory. Must only be called after the
-	 * consolidated ZIP has been created (and ideally validated), since aggregation reads results from these
-	 * directories.
+	 * Deletes all output-partition directories under the job base directory. Must only be called after the consolidated
+	 * ZIP has been created (and ideally validated), since aggregation reads results from these directories.
 	 */
 	public void cleanupOutputPartitionDirectories(Path jobBasePath) {
 		cleanupPartitionDirectoriesWithPrefix(jobBasePath, BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX);
