@@ -755,11 +755,28 @@ public class BatchResultAggregationService {
 	}
 
 	/**
-	 * Cleans up interim partition directories after successful zip creation. Deletes input-partition and
-	 * output-partition directories and their contents.
+	 * Deletes all input-partition directories under the job base directory. Runs as the first step of result
+	 * aggregation, since input partitions are no longer needed once the worker steps have finished processing them,
+	 * well before the output ZIP has been assembled or validated.
 	 */
-	public void cleanupPartitionDirectories(Path jobBasePath) {
-		logger.debug("Starting cleanup of partition directories in: {}", jobBasePath);
+	public void cleanupInputPartitionDirectories(Path jobBasePath) {
+		cleanupPartitionDirectoriesWithPrefix(jobBasePath, BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX);
+	}
+
+	/**
+	 * Deletes all output-partition directories under the job base directory. Must only be called after the consolidated
+	 * ZIP has been created (and ideally validated), since aggregation reads results from these directories.
+	 */
+	public void cleanupOutputPartitionDirectories(Path jobBasePath) {
+		cleanupPartitionDirectoriesWithPrefix(jobBasePath, BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX);
+	}
+
+	/**
+	 * Finds and recursively deletes all directories directly under the job base directory whose name starts with the
+	 * given prefix.
+	 */
+	private void cleanupPartitionDirectoriesWithPrefix(Path jobBasePath, String prefix) {
+		logger.debug("Starting cleanup of '{}' partition directories in: {}", prefix, jobBasePath);
 
 		if (!Files.exists(jobBasePath) || !Files.isDirectory(jobBasePath)) {
 			logger.warn("Job base directory does not exist or is not a directory: {}", jobBasePath);
@@ -768,13 +785,9 @@ public class BatchResultAggregationService {
 
 		int deletedDirs = 0;
 
-		// Find and delete all input-partition and output-partition directories
 		try (Stream<Path> files = Files.list(jobBasePath)) {
-			List<Path> partitionDirs = files.filter(Files::isDirectory).filter(dir -> {
-				String dirName = dir.getFileName().toString();
-				return dirName.startsWith(BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX)
-						|| dirName.startsWith(BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX);
-			}).toList();
+			List<Path> partitionDirs = files.filter(Files::isDirectory)
+					.filter(dir -> dir.getFileName().toString().startsWith(prefix)).toList();
 
 			for (Path partitionDir : partitionDirs) {
 				if (deletePartitionDirectory(partitionDir)) {
@@ -785,7 +798,7 @@ public class BatchResultAggregationService {
 			logger.error("Failed to list partition directories for cleanup: {}", jobBasePath, e);
 		}
 
-		logger.debug("Cleanup completed. Deleted {} partition directories", deletedDirs);
+		logger.debug("Cleanup completed. Deleted {} '{}' partition directories", deletedDirs, prefix);
 	}
 
 	/**

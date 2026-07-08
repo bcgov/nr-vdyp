@@ -387,7 +387,7 @@ class BatchResultAggregationServiceTest {
 	}
 
 	@Test
-	void testCleanupPartitionDirectories_Success() throws IOException {
+	void testCleanupInputPartitionDirectories_LeavesOutputIntact() throws IOException {
 		// Setup input and output partition directories
 		Path inputPartition = tempDir.resolve("input-partition0");
 		Path outputPartition = tempDir.resolve("output-partition0");
@@ -398,10 +398,27 @@ class BatchResultAggregationServiceTest {
 		Files.writeString(inputPartition.resolve("test.csv"), "data");
 		Files.writeString(outputPartition.resolve("result.csv"), "result");
 
-		resultAggregationService.cleanupPartitionDirectories(tempDir);
+		resultAggregationService.cleanupInputPartitionDirectories(tempDir);
 
-		// Verify directories are deleted
+		// Only input directories should be deleted; output must survive until aggregation reads it
 		assertFalse(Files.exists(inputPartition));
+		assertTrue(Files.exists(outputPartition), "Output partition should not be deleted by input cleanup");
+	}
+
+	@Test
+	void testCleanupOutputPartitionDirectories_Success() throws IOException {
+		Path inputPartition = tempDir.resolve("input-partition0");
+		Path outputPartition = tempDir.resolve("output-partition0");
+		Files.createDirectories(inputPartition);
+		Files.createDirectories(outputPartition);
+
+		Files.writeString(inputPartition.resolve("test.csv"), "data");
+		Files.writeString(outputPartition.resolve("result.csv"), "result");
+
+		resultAggregationService.cleanupOutputPartitionDirectories(tempDir);
+
+		// Only output directories should be deleted
+		assertTrue(Files.exists(inputPartition), "Input partition should not be deleted by output cleanup");
 		assertFalse(Files.exists(outputPartition));
 	}
 
@@ -410,7 +427,8 @@ class BatchResultAggregationServiceTest {
 		Path nonExistent = tempDir.resolve("non-existent");
 
 		// Should not throw exception
-		assertDoesNotThrow(() -> resultAggregationService.cleanupPartitionDirectories(nonExistent));
+		assertDoesNotThrow(() -> resultAggregationService.cleanupInputPartitionDirectories(nonExistent));
+		assertDoesNotThrow(() -> resultAggregationService.cleanupOutputPartitionDirectories(nonExistent));
 	}
 
 	@Test
@@ -420,24 +438,25 @@ class BatchResultAggregationServiceTest {
 		Files.writeString(filePath, "content");
 
 		// Should not throw exception, just log warning
-		assertDoesNotThrow(() -> resultAggregationService.cleanupPartitionDirectories(filePath));
+		assertDoesNotThrow(() -> resultAggregationService.cleanupInputPartitionDirectories(filePath));
+		assertDoesNotThrow(() -> resultAggregationService.cleanupOutputPartitionDirectories(filePath));
 	}
 
 	@Test
-	void testCleanupPartitionDirectories_NestedStructure() throws IOException {
+	void testCleanupInputPartitionDirectories_NestedStructure() throws IOException {
 		// Create nested directory structure
 		Path inputPartition = tempDir.resolve("input-partition0");
 		Path nestedDir = inputPartition.resolve("nested");
 		Files.createDirectories(nestedDir);
 		Files.writeString(nestedDir.resolve("file.txt"), "data");
 
-		resultAggregationService.cleanupPartitionDirectories(tempDir);
+		resultAggregationService.cleanupInputPartitionDirectories(tempDir);
 
 		assertFalse(Files.exists(inputPartition));
 	}
 
 	@Test
-	void testCleanupPartitionDirectories_OnlyPartitionDirs() throws IOException {
+	void testCleanupInputPartitionDirectories_OnlyInputDirs() throws IOException {
 		// Create partition directories and non-partition directories
 		Path inputPartition = tempDir.resolve("input-partition0");
 		Path outputPartition = tempDir.resolve("output-partition0");
@@ -449,11 +468,11 @@ class BatchResultAggregationServiceTest {
 		Files.createDirectories(otherDir);
 		Files.writeString(otherFile, "content");
 
-		resultAggregationService.cleanupPartitionDirectories(tempDir);
+		resultAggregationService.cleanupInputPartitionDirectories(tempDir);
 
-		// Only partition directories should be deleted
+		// Only the input partition directory should be deleted
 		assertFalse(Files.exists(inputPartition));
-		assertFalse(Files.exists(outputPartition));
+		assertTrue(Files.exists(outputPartition), "Output partition should not be deleted by input cleanup");
 		assertTrue(Files.exists(otherDir), "Non-partition directory should not be deleted");
 		assertTrue(Files.exists(otherFile), "Non-partition file should not be deleted");
 	}

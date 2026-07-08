@@ -80,7 +80,8 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 				String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 				if (jobBaseDir != null) {
 					Path jobBasePath = Paths.get(jobBaseDir);
-					resultAggregationService.cleanupPartitionDirectories(jobBasePath);
+					resultAggregationService.cleanupInputPartitionDirectories(jobBasePath);
+					resultAggregationService.cleanupOutputPartitionDirectories(jobBasePath);
 					logger.info(
 							"[GUID: {}] Job execution ID: {} was stopped. Interim partition directories cleanup completed",
 							jobGuid, jobExecution.getId()
