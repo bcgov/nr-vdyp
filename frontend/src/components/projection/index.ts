@@ -1,4 +1,5 @@
 export { default as ActionPanel } from './input/ActionPanel.vue'
+export { default as PanelEditControl } from './input/PanelEditControl.vue'
 export { default as SpeciesListInput } from './input/species-info/SpeciesListInput.vue'
 export { default as SpeciesGroupsDisplay } from './input/species-info/SpeciesGroupsDisplay.vue'
 export { default as SpeciesInfoPanel } from './input/species-info/SpeciesInfoPanel.vue'

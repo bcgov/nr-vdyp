@@ -14,22 +14,13 @@
             <v-col>
               <span class="text-h6">{{ CONSTANTS.MANUAL_INPUT_PANEL_LABEL.REPORT_DETAILS }}</span>
             </v-col>
-            <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
-              <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
-                <template #activator="{ props: tooltipProps }">
-                  <span v-bind="tooltipProps">
-                    <AppButton
-                      label="Edit"
-                      variant="tertiary"
-                      mdi-name="mdi-pencil-outline"
-                      iconPosition="top"
-                      :isDisabled="!isHeaderEditActive"
-                      @click="onHeaderEdit"
-                    />
-                  </span>
-                </template>
-              </v-tooltip>
-            </v-col>
+            <PanelEditControl
+              :is-read-only="isReadOnly"
+              :editable="modelParameterStore.panelState[panelName].editable"
+              :is-header-edit-active="isHeaderEditActive"
+              :edit-tooltip-text="editTooltipText"
+              @edit="onHeaderEdit"
+            />
           </v-row>
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
@@ -118,8 +109,7 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
-import { AppButton } from '@/components'
-import { ActionPanel } from '@/components/projection'
+import { ActionPanel, PanelEditControl } from '@/components/projection'
 import { CONSTANTS, MESSAGE, OPTIONS } from '@/constants'
 import { saveProjectionOnPanelConfirm, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import type { PanelName } from '@/types/types'
@@ -292,24 +282,6 @@ const onCancel = async () => {
 </script>
 
 <style scoped>
-.edit-button-col {
-  display: flex;
-  align-items: center;
-}
-
-.edit-button-col :deep(.bcds-button.icon-top) {
-  padding: 2px 4px;
-  gap: 2px;
-}
-
-.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
-  font-size: 18px;
-}
-
-.edit-button-col :deep(.bcds-button.icon-top .button-label) {
-  font-size: 11px;
-}
-
 .expansion-panel-icon-col {
   display: flex;
   align-items: center;

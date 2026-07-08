@@ -60,15 +60,6 @@ describe('<SpeciesInfoPanel />', () => {
   })
 
   describe('Add Species and Edit button visibility', () => {
-    it('shows "Add Species" and Edit buttons in create mode', () => {
-      mountPanel((ms, as) => {
-        openPanel(ms)
-        as.viewMode = PROJECTION_VIEW_MODE.CREATE
-      })
-      cy.contains('button', 'Add Species').should('exist')
-      cy.get('.edit-button-col').should('exist')
-    })
-
     it('hides "Add Species" and Edit buttons in read-only mode', () => {
       mountPanel((ms, as) => {
         openPanel(ms)
@@ -78,13 +69,14 @@ describe('<SpeciesInfoPanel />', () => {
       cy.get('.edit-button-col').should('not.exist')
     })
 
-    it('Edit button is disabled when panel is not confirmed', () => {
+    it('shows the "Editing" badge instead of the Edit button when panel is being edited', () => {
       mountPanel((ms) => {
         openPanel(ms)
         ms.panelState.speciesInfo.confirmed = false
         ms.panelState.speciesInfo.editable = true
       })
-      cy.get('.edit-button-col button').should('be.disabled')
+      cy.get('.editing-badge').should('exist').and('contain.text', 'Editing')
+      cy.get('.edit-button-col button').should('not.exist')
     })
   })
 

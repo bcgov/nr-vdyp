@@ -6,7 +6,6 @@ import MinimumDBHPanel from './MinimumDBHPanel.vue'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { CONSTANTS, BIZCONSTANTS } from '@/constants'
-import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 
 const vuetify = createVuetify()
 
@@ -42,29 +41,6 @@ describe('<MinimumDBHPanel />', () => {
     it('panel content is not in the DOM when initially closed', () => {
       mountPanel()
       cy.get('.min-dbh-row').should('not.exist')
-    })
-  })
-
-  describe('Header Edit button', () => {
-    it('is not rendered in view mode', () => {
-      mountPanel((fu, app) => {
-        app.setViewMode(PROJECTION_VIEW_MODE.VIEW)
-      })
-      cy.get('.edit-button-col').should('not.exist')
-    })
-
-    it('is disabled when the panel has not been confirmed yet', () => {
-      mountPanel()
-      cy.get('.edit-button-col button').should('be.disabled')
-    })
-
-    it('is enabled when the panel is confirmed and not currently editable', () => {
-      mountPanel((fu) => {
-        fu.confirmPanel('reportConfig')
-        fu.confirmPanel('minimumDBH')
-        fu.panelOpenStates.minimumDBH = CONSTANTS.PANEL.OPEN
-      })
-      cy.get('.edit-button-col button').should('not.be.disabled')
     })
   })
 

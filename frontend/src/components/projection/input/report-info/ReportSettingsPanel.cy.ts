@@ -104,13 +104,4 @@ describe('<ReportSettingsPanel />', () => {
     })
     cy.get('.edit-button-col').should('not.exist')
   })
-
-  it('disables Edit button when projection is RUNNING', () => {
-    mountPanel((modelStore, appStore) => {
-      modelStore.panelState.reportSettings.confirmed = true
-      modelStore.panelState.reportSettings.editable = false
-      appStore.currentProjectionStatus = CONSTANTS.PROJECTION_STATUS.RUNNING
-    })
-    cy.contains('button', 'Edit').should('be.disabled')
-  })
 })

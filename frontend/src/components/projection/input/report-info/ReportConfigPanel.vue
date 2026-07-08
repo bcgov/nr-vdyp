@@ -1,5 +1,5 @@
 <template>
-  <v-card class="elevation-0">
+  <v-card class="elevation-0 panel-card">
     <v-expansion-panels v-model="panelOpenStates[panelName]">
       <v-expansion-panel hide-actions>
         <v-expansion-panel-title>
@@ -14,22 +14,13 @@
             <v-col>
               <span class="text-h6">{{ CONSTANTS.FILE_UPLOAD_PANEL_LABEL.REPORT_CONFIG }}</span>
             </v-col>
-            <v-col cols="auto" v-if="!isReadOnly" class="edit-button-col">
-              <v-tooltip :text="editTooltipText" :disabled="!editTooltipText" location="top">
-                <template #activator="{ props: tooltipProps }">
-                  <span v-bind="tooltipProps">
-                    <AppButton
-                      label="Edit"
-                      variant="tertiary"
-                      mdi-name="mdi-pencil-outline"
-                      iconPosition="top"
-                      :isDisabled="!isHeaderEditActive"
-                      @click="onHeaderEdit"
-                    />
-                  </span>
-                </template>
-              </v-tooltip>
-            </v-col>
+            <PanelEditControl
+              :is-read-only="isReadOnly"
+              :editable="fileUploadStore.panelState[panelName].editable"
+              :is-header-edit-active="isHeaderEditActive"
+              :edit-tooltip-text="editTooltipText"
+              @edit="onHeaderEdit"
+            />
           </v-row>
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
@@ -331,9 +322,9 @@
 import { ref, watch, computed, nextTick, type Ref } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
-import { AppButton, AppSpinField } from '@/components'
+import { AppSpinField } from '@/components'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
-import { ActionPanel } from '@/components/projection'
+import { ActionPanel, PanelEditControl } from '@/components/projection'
 import { CONSTANTS, DEFAULTS, MESSAGE, OPTIONS } from '@/constants'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
 import type { FileUploadPanelName } from '@/types/types'
@@ -702,24 +693,6 @@ const onCancel = async () => {
 }
 </script>
 <style scoped>
-.edit-button-col {
-  display: flex;
-  align-items: center;
-}
-
-.edit-button-col :deep(.bcds-button.icon-top) {
-  padding: 2px 4px;
-  gap: 2px;
-}
-
-.edit-button-col :deep(.bcds-button.icon-top .v-icon) {
-  font-size: 18px;
-}
-
-.edit-button-col :deep(.bcds-button.icon-top .button-label) {
-  font-size: 11px;
-}
-
 .include-in-report-label {
   display: block;
   color: var(--typography-color-secondary);
@@ -838,4 +811,5 @@ const onCancel = async () => {
     padding-top: 0px !important;
   }
 }
+
 </style>
