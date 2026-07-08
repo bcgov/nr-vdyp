@@ -50,7 +50,7 @@ import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
  *
  * @author Michael Junkin, Vivid Solutions
  */
-public class ForwardProcessor extends Processor<ProcessingDebugSettings> {
+public class ForwardProcessor extends Processor {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessor.class);
 

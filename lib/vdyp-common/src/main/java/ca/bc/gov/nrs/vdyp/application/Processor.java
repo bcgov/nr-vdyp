@@ -16,8 +16,8 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
-import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
 /**
  *
@@ -36,7 +36,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public abstract class Processor<DS extends DebugSettings> {
+public abstract class Processor {
 
 	private static final Logger logger = LoggerFactory.getLogger(Processor.class);
 
@@ -95,7 +95,7 @@ public abstract class Processor<DS extends DebugSettings> {
 	/**
 	 * @return a parser for the control file for this application
 	 */
-	protected abstract BaseControlParser<DS> getControlFileParser();
+	protected abstract BaseControlParser<ProcessingDebugSettings> getControlFileParser();
 
 	/**
 	 * @return all values of the pass enum applicable for this processor

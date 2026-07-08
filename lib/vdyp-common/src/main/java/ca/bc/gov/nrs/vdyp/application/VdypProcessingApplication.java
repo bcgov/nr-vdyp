@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.application;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,9 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
-public abstract class VdypProcessingApplication<DS extends DebugSettings> extends VdypApplication {
+public abstract class VdypProcessingApplication extends VdypApplication implements Closeable {
 
 	@SuppressWarnings("java:S106")
 	protected static void initLogging(Class<?> klazz) {
@@ -35,7 +35,7 @@ public abstract class VdypProcessingApplication<DS extends DebugSettings> extend
 
 	public abstract String getDefaultControlFileName();
 
-	protected abstract Processor<DS> getProcessor();
+	protected abstract Processor getProcessor();
 
 	public static final int CONFIG_LOAD_ERROR_EXIT = 1;
 	public static final int PROCESSING_ERROR_EXIT = 2;
@@ -71,7 +71,7 @@ public abstract class VdypProcessingApplication<DS extends DebugSettings> extend
 		}
 
 		try {
-			Processor<DS> processor = getProcessor();
+			Processor processor = getProcessor();
 
 			processor.run(new FileSystemFileResolver(), new FileSystemFileResolver(), controlFileNames, getAllPasses());
 
@@ -109,10 +109,14 @@ public abstract class VdypProcessingApplication<DS extends DebugSettings> extend
 		return controlFileNames;
 	}
 
-	private void logVersionInformation() {
+	protected void logVersionInformation() {
 		logger.info("{} {}", RESOURCE_SHORT_VERSION, RESOURCE_VERSION_DATE);
 		logger.info("{} Ver:{} {}", RESOURCE_BINARY_NAME, RESOURCE_SHORT_VERSION, RESOURCE_VERSION_DATE);
 		logger.info("VDYP7 Support Ver: {}", AVERSION);
 	}
 
+	@Override
+	public void close() {
+		// Nothing to do
+	}
 }

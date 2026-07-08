@@ -13,7 +13,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
-public class BackProcessor extends Processor<ProcessingDebugSettings> {
+public class BackProcessor extends Processor {
 
 	@Override
 	protected BaseControlParser<ProcessingDebugSettings> getControlFileParser() {

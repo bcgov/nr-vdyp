@@ -19,21 +19,20 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
-import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
 class VdypProcessingApplicationTest {
 
 	@Nested
 	class Run {
 
-		VdypProcessingApplication<?> app;
-		Processor<DebugSettings> processor;
+		VdypProcessingApplication app;
+		Processor processor;
 
 		@BeforeEach
 		void init() {
 			processor = EasyMock.createMock(Processor.class);
 
-			app = new VdypProcessingApplication<>() {
+			app = new VdypProcessingApplication() {
 
 				@Override
 				public String getDefaultControlFileName() {
@@ -41,7 +40,7 @@ class VdypProcessingApplicationTest {
 				}
 
 				@Override
-				protected Processor<DebugSettings> getProcessor() {
+				protected Processor getProcessor() {
 					return processor;
 				}
 
@@ -156,11 +155,11 @@ class VdypProcessingApplicationTest {
 	@Nested
 	class GetControlFileNamesFromUser {
 
-		VdypProcessingApplication<?> app;
+		VdypProcessingApplication app;
 
 		@BeforeEach
 		void init() {
-			app = new VdypProcessingApplication<>() {
+			app = new VdypProcessingApplication() {
 
 				@Override
 				public String getDefaultControlFileName() {
@@ -168,7 +167,7 @@ class VdypProcessingApplicationTest {
 				}
 
 				@Override
-				protected Processor<DebugSettings> getProcessor() {
+				protected Processor getProcessor() {
 					fail();
 					return null;
 				}

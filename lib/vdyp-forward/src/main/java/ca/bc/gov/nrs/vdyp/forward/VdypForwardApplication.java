@@ -12,13 +12,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.Pass;
+import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.application.VdypProcessingApplication;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 
-public class VdypForwardApplication extends VdypApplication implements Closeable {
+public class VdypForwardApplication extends VdypProcessingApplication {
 
 	private static final Logger logger = LoggerFactory.getLogger(VdypForwardApplication.class);
 
@@ -88,19 +90,20 @@ public class VdypForwardApplication extends VdypApplication implements Closeable
 		}
 	}
 
-	private void logVersionInformation() {
-		logger.info("{} {}", RESOURCE_SHORT_VERSION, RESOURCE_VERSION_DATE);
-		logger.info("{} Ver:{} {}", RESOURCE_BINARY_NAME, RESOURCE_SHORT_VERSION, RESOURCE_VERSION_DATE);
-		logger.info("VDYP7 Support Ver: {}", AVERSION);
-	}
-
 	@Override
 	public VdypApplicationIdentifier getId() {
 		return VdypApplicationIdentifier.VDYP_FORWARD;
 	}
 
 	@Override
-	public void close() {
-		// Nothing to do
+	public String getDefaultControlFileName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected Processor getProcessor() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

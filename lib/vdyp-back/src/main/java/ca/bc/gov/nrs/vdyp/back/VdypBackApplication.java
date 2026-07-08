@@ -5,10 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypProcessingApplication;
-import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
 // TODO pull out the ForwardDebugSettings
-public class VdypBackApplication extends VdypProcessingApplication<ProcessingDebugSettings> {
+public class VdypBackApplication extends VdypProcessingApplication {
 
 	static {
 		initLogging(VdypBackApplication.class);
