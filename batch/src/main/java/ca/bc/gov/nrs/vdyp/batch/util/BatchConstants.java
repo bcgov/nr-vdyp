@@ -90,6 +90,14 @@ public final class BatchConstants {
 		}
 	}
 
+	public static final class Chunk {
+		public static final String TOTAL_POLYGON_RECORDS = "totalPolygonRecords";
+		public static final String NUM_PROCESSED_POLYGON_RECORDS = "numProcessedPolygonRecords";
+		public static final String CURRENT_CHUNK_NUMBER = "currentChunkNumber";
+		public static final String CURRENT_POLYGON_CHUNK_START_BYTE_OFFSET = "currentPolygonChunkOffset";
+		public static final String CURRENT_LAYER_CHUNK_OFFSET = "currentLayerChunkOffset";
+	}
+
 	public static final class Projection {
 		public static final String PARAMETERS_JSON = "projectionParametersJson";
 

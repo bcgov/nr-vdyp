@@ -84,6 +84,18 @@ public final class BatchUtils {
 	}
 
 	/**
+	 * Builds a unique batch projection ID for VDYP projection operations.
+	 *
+	 * @param chunkNumber the number from 1-X of the chunk in this partition
+	 * @return the batch projection ID (e.g., "batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933")
+	 */
+	public static String batchChunkFilenamePrefix(int chunkNumber) {
+		StringBuilder sb = new StringBuilder("chunk-");
+		sb.append(String.format("%06d", chunkNumber));
+		return sb.toString();
+	}
+
+	/**
 	 * Extracts the first field from a CSV line, handling both quoted and unquoted fields.
 	 *
 	 * Supports standard CSV quoting: - Unquoted: "value,other" -> "value" - Quoted: ""value"",other" -> "value" - With

@@ -188,7 +188,7 @@ class BatchItemReaderTest {
 
 	@Test
 	void testBatchChunkMetadata_ToString() {
-		BatchChunkMetadata metadata = new BatchChunkMetadata("partition-1", "/path/to/job", 100L, 5, 200L, 3);
+		BatchChunkMetadata metadata = new BatchChunkMetadata("partition-1", "/path/to/job", 100L, 5, 200L, 3, 1);
 		String result = metadata.toString();
 
 		assertNotNull(result);
