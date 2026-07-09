@@ -49,6 +49,22 @@ public abstract class AbstractProjectionRequestException extends Exception {
 		return validationMessages;
 	}
 
+	protected static String buildContextPrefix(long featureId) {
+		return "Polygon " + featureId;
+	}
+
+	protected static String buildContextPrefix(long featureId, String layerId) {
+		return buildContextPrefix(featureId) + " Layer " + layerId;
+	}
+
+	protected static String buildContextPrefix(long featureId, String layerId, String speciesCode) {
+		return buildContextPrefix(featureId, layerId) + " Species " + speciesCode;
+	}
+
+	protected static String withContext(String contextPrefix, String message) {
+		return contextPrefix + (message != null ? ": " + message : "");
+	}
+
 	private static String buildMessage(List<ValidationMessage> validationMessages) {
 		if (validationMessages.size() > 0) {
 			StringBuffer sb = new StringBuffer(validationMessages.get(0).toString());

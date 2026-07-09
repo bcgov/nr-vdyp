@@ -21,4 +21,8 @@ public class PolygonValidationException extends AbstractProjectionRequestExcepti
 	public PolygonValidationException(List<ValidationMessage> validationMessages) {
 		super(validationMessages);
 	}
+
+	public PolygonValidationException(long featureId, ValidationMessage validationMessage) {
+		super(buildContextPrefix(featureId), List.of(validationMessage));
+	}
 }

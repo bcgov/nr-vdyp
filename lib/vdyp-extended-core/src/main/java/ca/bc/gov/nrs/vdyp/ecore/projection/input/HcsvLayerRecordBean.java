@@ -836,7 +836,9 @@ public class HcsvLayerRecordBean {
 			// Now, throw if there's been any validation errors.
 
 			if (!bvh.getValidationMessages().isEmpty()) {
-				throw new CsvConstraintViolationException(new LayerValidationException(bvh.getValidationMessages()));
+				throw new CsvConstraintViolationException(
+						new LayerValidationException(bean.getFeatureId(), bean.layerId, bvh.getValidationMessages())
+				);
 			}
 
 			return true;

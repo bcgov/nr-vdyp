@@ -62,7 +62,7 @@ abstract class AbstractCSVTypeYieldTableWriter<T extends YieldTableRowBean> exte
 		try {
 			write(currentRecord);
 		} catch (CsvException e) {
-			throw new YieldTableGenerationException(e);
+			throw new YieldTableGenerationException(rowContext.getPolygon().getFeatureId(), e);
 		}
 	}
 

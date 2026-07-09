@@ -82,6 +82,7 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 
 			if (vdypPolygon.isPresent()) {
 				throw new YieldTableGenerationException(
+						polygon.getFeatureId(),
 						MessageFormat.format(
 								"Expected exactly one polygon {0} in the projection output, but saw {1} as well",
 								expectedPolygonIdentifier, vdypPolygon.get().getPolygonIdentifier()
@@ -89,7 +90,7 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 				);
 			}
 		} catch (ProcessingException e) {
-			throw new YieldTableGenerationException(e);
+			throw new YieldTableGenerationException(polygon.getFeatureId(), e);
 		}
 
 		return projectionResultsByYear;

@@ -19,4 +19,16 @@ public class YieldTableGenerationException extends AbstractProjectionRequestExce
 	public YieldTableGenerationException(String message) {
 		super(message);
 	}
+
+	public YieldTableGenerationException(long featureId, String message) {
+		super(withContext(buildContextPrefix(featureId), message));
+	}
+
+	public YieldTableGenerationException(long featureId, String message, Exception cause) {
+		super(withContext(buildContextPrefix(featureId), message), cause);
+	}
+
+	public YieldTableGenerationException(long featureId, Exception cause) {
+		super(withContext(buildContextPrefix(featureId), cause.getMessage()), cause);
+	}
 }

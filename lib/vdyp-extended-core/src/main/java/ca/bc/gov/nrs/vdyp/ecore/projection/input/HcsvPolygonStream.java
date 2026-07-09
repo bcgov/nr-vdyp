@@ -270,6 +270,10 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		} catch (Exception e) {
 			if (! (e instanceof PolygonValidationException)) {
 				var message = new ValidationMessage(ValidationMessageKind.GENERIC, e.getMessage());
+				Long currentPolygonFeatureId = nextPolygonRecord != null ? nextPolygonRecord.getFeatureId() : null;
+				if (currentPolygonFeatureId != null) {
+					throw new PolygonValidationException(currentPolygonFeatureId, message);
+				}
 				throw new PolygonValidationException(message);
 			} else {
 				throw e;

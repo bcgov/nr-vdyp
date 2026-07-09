@@ -94,6 +94,29 @@ public class YieldTable implements Closeable {
 		return new YieldTable(context, outputFormat);
 	}
 
+	private static StandYieldCalculationException standYieldCalculationException(
+			YieldTableRowContext rowContext, StandYieldMessageKind template, Object... args
+	) {
+		long featureId = rowContext.getPolygon().getFeatureId();
+		if (rowContext.isPolygonTable()) {
+			return new StandYieldCalculationException(featureId, template, args);
+		}
+		return new StandYieldCalculationException(
+				featureId, rowContext.getLayerReportingInfo().getLayer().getLayerId(), template, args
+		);
+	}
+
+	private static StandYieldCalculationException
+			standYieldCalculationException(YieldTableRowContext rowContext, Exception cause) {
+		long featureId = rowContext.getPolygon().getFeatureId();
+		if (rowContext.isPolygonTable()) {
+			return new StandYieldCalculationException(featureId, cause);
+		}
+		return new StandYieldCalculationException(
+				featureId, rowContext.getLayerReportingInfo().getLayer().getLayerId(), cause
+		);
+	}
+
 	public void startGeneration() throws YieldTableGenerationException {
 		writer.writeHeader();
 	}
@@ -645,15 +668,15 @@ public class YieldTable implements Closeable {
 	) throws StandYieldCalculationException {
 
 		if (totalAge < Vdyp7Constants.MIN_SPECIES_AGE || totalAge > Vdyp7Constants.MAX_SPECIES_AGE) {
-			throw new StandYieldCalculationException(
-					StandYieldMessageKind.AGE_OUT_OF_RANGE, Vdyp7Constants.MIN_SPECIES_AGE,
+			throw standYieldCalculationException(
+					rowContext, StandYieldMessageKind.AGE_OUT_OF_RANGE, Vdyp7Constants.MIN_SPECIES_AGE,
 					Vdyp7Constants.MAX_SPECIES_AGE
 			);
 		}
 
 		var primaryLayer = rowContext.getPolygon().getPrimaryLayer();
 		if (primaryLayer == null) {
-			throw new StandYieldCalculationException(new LayerMissingException(LayerType.PRIMARY));
+			throw standYieldCalculationException(rowContext, new LayerMissingException(LayerType.PRIMARY));
 		}
 
 		var primaryLayerAge0Year = primaryLayer.determineYearAtAge(0);
@@ -1074,6 +1097,8 @@ public class YieldTable implements Closeable {
 
 		if (targetAge < Vdyp7Constants.MIN_SPECIES_AGE || Vdyp7Constants.MAX_SPECIES_AGE < targetAge) {
 			throw new StandYieldCalculationException(
+					species.getStand().getLayer().getPolygon().getFeatureId(),
+					species.getStand().getLayer().getLayerId(), species.getSpeciesCode(),
 					StandYieldMessageKind.AGE_OUT_OF_RANGE, Double.valueOf(Vdyp7Constants.MIN_SPECIES_AGE),
 					Double.valueOf(Vdyp7Constants.MAX_SPECIES_AGE)
 			);
@@ -1475,7 +1500,7 @@ public class YieldTable implements Closeable {
 
 		if (layerType != null
 				&& initialProcessingResult.map(r -> r instanceof FailedToGrowYoungStandException).orElse(false)) {
-			throw new StandYieldCalculationException(new FailedToGrowYoungStandException());
+			throw standYieldCalculationException(rowContext, new FailedToGrowYoungStandException());
 		}
 
 		LayerYields layerYields = null;
@@ -1556,7 +1581,9 @@ public class YieldTable implements Closeable {
 							stand.getSpeciesGroup().getSiteIndex(), stand.getSpeciesGroup().getYearsToBreastHeight()
 					);
 				} catch (CommonCalculatorException ex) {
-					throw new StandYieldCalculationException(ex);
+					throw new StandYieldCalculationException(
+							stand.getLayer().getPolygon().getFeatureId(), stand.getLayer().getLayerId(), ex
+					);
 				}
 			}
 
@@ -1746,7 +1773,10 @@ public class YieldTable implements Closeable {
 			calendarYear = layer.determineYearAtAge(ageToUse);
 		}
 		if (calendarYear == null || calendarYear < 0) {
-			throw new StandYieldCalculationException(StandYieldMessageKind.YEAR_OUT_OF_RANGE, calendarYear);
+			throw new StandYieldCalculationException(
+					layer.getPolygon().getFeatureId(), layer.getLayerId(), StandYieldMessageKind.YEAR_OUT_OF_RANGE,
+					calendarYear
+			);
 		}
 
 		return calendarYear;

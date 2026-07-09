@@ -119,15 +119,17 @@ public class RealComponentRunner implements ComponentRunner {
 
 		} catch (Exception e) {
 			throw new PolygonExecutionException(
+					polygon.getFeatureId(),
 					MessageFormat.format(
-							"{0}: encountered {1} while running copyAdjustInputFilesToOutput{2}", polygon,
+							"encountered {0} while running copyAdjustInputFilesToOutput{1}",
 							e.getClass().getSimpleName(), e.getMessage() != null ? "; reason: " + e.getMessage() : ""
 					), e
 			);
 		} catch (Error e) {
 			throw new PolygonExecutionException(
+					polygon.getFeatureId(),
 					MessageFormat.format(
-							"{0}: encountered {1} while running copyAdjustInputFilesToOutput{2}", polygon,
+							"encountered {0} while running copyAdjustInputFilesToOutput{1}",
 							e.getClass().getSimpleName(), e.getMessage() != null ? "; reason: " + e.getMessage() : ""
 					), e
 			);
@@ -181,9 +183,9 @@ public class RealComponentRunner implements ComponentRunner {
 
 			state.setProcessingResults(ProjectionStageCode.Back, projectionTypeCode, Optional.empty());
 		} catch (Exception e) {
-			throw new PolygonExecutionException("Encountered exception while running BACK", e);
+			throw new PolygonExecutionException(polygon.getFeatureId(), "Encountered exception while running BACK", e);
 		} catch (Error e) {
-			throw new PolygonExecutionException("Encountered error while running BACK", e);
+			throw new PolygonExecutionException(polygon.getFeatureId(), "Encountered error while running BACK", e);
 		}
 	}
 
@@ -322,7 +324,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 			return projectionResults;
 		} catch (ResourceParseException | IOException e) {
-			throw new YieldTableGenerationException(e);
+			throw new YieldTableGenerationException(polygon.getFeatureId(), e);
 		}
 	}
 

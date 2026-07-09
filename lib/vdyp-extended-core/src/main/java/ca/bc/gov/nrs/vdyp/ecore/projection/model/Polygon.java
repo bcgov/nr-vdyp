@@ -990,7 +990,7 @@ public class Polygon implements Comparable<Polygon> {
 			var leadingSpecies = primaryLayer.determineLeadingSp0(0);
 			if (leadingSpecies == null || leadingSpecies.getSpeciesByPercent().isEmpty()) {
 				throw new PolygonValidationException(
-						new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, this, primaryLayer)
+						new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, primaryLayer)
 				);
 			}
 
