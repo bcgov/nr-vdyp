@@ -66,7 +66,8 @@ abstract class AbstractCSVTypeYieldTableWriter<T extends YieldTableRowBean> exte
 		}
 	}
 
-	static YieldTableGenerationException toYieldTableGenerationException(YieldTableRowContext rowContext, CsvException e) {
+	static YieldTableGenerationException
+			toYieldTableGenerationException(YieldTableRowContext rowContext, CsvException e) {
 		return new YieldTableGenerationException(rowContext.getPolygon().getFeatureId(), e);
 	}
 

@@ -125,8 +125,7 @@ class YieldTableTest {
 		var polygon = new Polygon.Builder().featureId(13919428).referenceYear(2013).build();
 		var rowContext = YieldTableRowContext.of(context, polygon, new PolygonProjectionState(), null);
 
-		var ex = AbstractCSVTypeYieldTableWriter
-				.toYieldTableGenerationException(rowContext, new CsvException("boom"));
+		var ex = AbstractCSVTypeYieldTableWriter.toYieldTableGenerationException(rowContext, new CsvException("boom"));
 
 		assertThat(ex.getMessage(), is("Polygon 13919428: boom"));
 	}
