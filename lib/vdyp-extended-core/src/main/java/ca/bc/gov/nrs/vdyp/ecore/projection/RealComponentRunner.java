@@ -117,15 +117,7 @@ public class RealComponentRunner implements ComponentRunner {
 			Path utilizationsOutputFile = Path.of(executionFolder.toString(), "vu_adj.dat");
 			Files.copy(utilizationsInputFile, utilizationsOutputFile);
 
-		} catch (Exception e) {
-			throw new PolygonExecutionException(
-					polygon.getFeatureId(),
-					MessageFormat.format(
-							"encountered {0} while running copyAdjustInputFilesToOutput{1}",
-							e.getClass().getSimpleName(), e.getMessage() != null ? "; reason: " + e.getMessage() : ""
-					), e
-			);
-		} catch (Error e) {
+		} catch (Exception | Error e) {
 			throw new PolygonExecutionException(
 					polygon.getFeatureId(),
 					MessageFormat.format(
@@ -182,10 +174,11 @@ public class RealComponentRunner implements ComponentRunner {
 			// app.doMain(controlFilePath.toAbsolutePath().toString());
 
 			state.setProcessingResults(ProjectionStageCode.Back, projectionTypeCode, Optional.empty());
-		} catch (Exception e) {
-			throw new PolygonExecutionException(polygon.getFeatureId(), "Encountered exception while running BACK", e);
-		} catch (Error e) {
-			throw new PolygonExecutionException(polygon.getFeatureId(), "Encountered error while running BACK", e);
+		} catch (Exception | Error e) {
+			throw new PolygonExecutionException(
+					polygon.getFeatureId(),
+					MessageFormat.format("Encountered {0} while running BACK", e.getClass().getSimpleName()), e
+			);
 		}
 	}
 

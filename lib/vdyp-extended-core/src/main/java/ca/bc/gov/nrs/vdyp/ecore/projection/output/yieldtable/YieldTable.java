@@ -94,7 +94,7 @@ public class YieldTable implements Closeable {
 		return new YieldTable(context, outputFormat);
 	}
 
-	private static StandYieldCalculationException standYieldCalculationException(
+	static StandYieldCalculationException standYieldCalculationException(
 			YieldTableRowContext rowContext, StandYieldMessageKind template, Object... args
 	) {
 		long featureId = rowContext.getPolygon().getFeatureId();
@@ -106,7 +106,7 @@ public class YieldTable implements Closeable {
 		);
 	}
 
-	private static StandYieldCalculationException
+	static StandYieldCalculationException
 			standYieldCalculationException(YieldTableRowContext rowContext, Exception cause) {
 		long featureId = rowContext.getPolygon().getFeatureId();
 		if (rowContext.isPolygonTable()) {

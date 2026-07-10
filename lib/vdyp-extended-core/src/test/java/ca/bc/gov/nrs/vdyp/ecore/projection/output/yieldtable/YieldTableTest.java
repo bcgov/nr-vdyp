@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -36,6 +37,7 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestExcep
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.StandYieldMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
@@ -43,6 +45,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionStageCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
@@ -110,6 +113,36 @@ class YieldTableTest {
 		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 0), closeTo(0.6, 0.00001));
 		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 1), closeTo(0.4, 0.00001));
 		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 2), closeTo(0.6, 0.00001));
+	}
+
+	@Test
+	void testStandYieldCalculationExceptionIncludesLayerForLayerTable() throws AbstractProjectionRequestException {
+
+		var parameters = new Parameters().ageStart(0).ageEnd(100);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		var polygon = new Polygon.Builder().featureId(13919428).referenceYear(2013).build();
+		var layer = new Layer.Builder().polygon(polygon).layerId("1").build();
+		var layerReportingInfo = new LayerReportingInfo.Builder().layer(layer).sourceLayerID(0).build();
+		layerReportingInfo.setSpeciesReportingInfos(new ArrayList<>());
+		var state = new PolygonProjectionState();
+
+		var layerRowContext = YieldTableRowContext.of(context, polygon, state, layerReportingInfo);
+		var polygonRowContext = YieldTableRowContext.of(context, polygon, state, null);
+
+		var templateEx = YieldTable
+				.standYieldCalculationException(layerRowContext, StandYieldMessageKind.YEAR_OUT_OF_RANGE, 5);
+		assertThat(templateEx.getMessage(), containsString("Polygon 13919428 Layer 1"));
+
+		var causeEx = YieldTable.standYieldCalculationException(layerRowContext, new IllegalStateException("boom"));
+		assertThat(causeEx.getMessage(), containsString("Polygon 13919428 Layer 1"));
+
+		var templateExPolygon = YieldTable
+				.standYieldCalculationException(polygonRowContext, StandYieldMessageKind.YEAR_OUT_OF_RANGE, 5);
+		assertThat(templateExPolygon.getMessage(), is("Polygon 13919428: calendar year must be at least zero"));
+
+		var causeExPolygon = YieldTable
+				.standYieldCalculationException(polygonRowContext, new IllegalStateException("boom"));
+		assertThat(causeExPolygon.getMessage(), containsString("Polygon 13919428"));
 	}
 
 	@Test
