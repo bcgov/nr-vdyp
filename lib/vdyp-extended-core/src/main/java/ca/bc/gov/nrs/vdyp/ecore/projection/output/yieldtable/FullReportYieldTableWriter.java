@@ -827,11 +827,15 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		try {
 			outputStream.write(String.format(message, args).getBytes());
 		} catch (IOException e) {
-			if (lastPolygonForTrailer != null) {
-				throw new YieldTableGenerationException(lastPolygonForTrailer.getFeatureId(), e);
-			}
-			throw new YieldTableGenerationException(e);
+			throw toYieldTableGenerationException(lastPolygonForTrailer, e);
 		}
+	}
+
+	static YieldTableGenerationException toYieldTableGenerationException(Polygon lastPolygonForTrailer, IOException e) {
+		if (lastPolygonForTrailer != null) {
+			return new YieldTableGenerationException(lastPolygonForTrailer.getFeatureId(), e);
+		}
+		return new YieldTableGenerationException(e);
 	}
 
 	@Override

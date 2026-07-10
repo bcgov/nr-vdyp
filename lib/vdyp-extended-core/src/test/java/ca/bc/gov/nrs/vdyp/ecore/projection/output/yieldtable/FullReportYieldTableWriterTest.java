@@ -1,7 +1,11 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 
@@ -28,5 +32,23 @@ class FullReportYieldTableWriterTest {
 
 		var ex = assertThrows(YieldTableGenerationException.class, () -> writer.writeRecord(rowContext));
 		assertTrue(ex.getMessage().startsWith("Polygon 13919428"));
+	}
+
+	@Test
+	void testToYieldTableGenerationExceptionIncludesFeatureIdWhenPolygonKnown() {
+
+		var polygon = new Polygon.Builder().featureId(13919428).build();
+
+		var ex = FullReportYieldTableWriter.toYieldTableGenerationException(polygon, new IOException("boom"));
+
+		assertThat(ex.getMessage(), is("Polygon 13919428: boom"));
+	}
+
+	@Test
+	void testToYieldTableGenerationExceptionOmitsFeatureIdWhenPolygonUnknown() {
+
+		var ex = FullReportYieldTableWriter.toYieldTableGenerationException(null, new IOException("boom"));
+
+		assertThat(ex.getMessage(), is("java.io.IOException: boom"));
 	}
 }
