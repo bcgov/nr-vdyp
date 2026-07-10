@@ -1148,6 +1148,96 @@ class YieldTableTest {
 	}
 
 	@Test
+	void testTextReportBothVolumeAndCFSBiomassTable() throws AbstractProjectionRequestException, IOException {
+
+		var parameters = testHelper.addSelectedOptions(
+				new Parameters(), Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES,
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS,
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER,
+				Parameters.ExecutionOption.REPORT_INCLUDE_WHOLE_STEM_VOLUME,
+				Parameters.ExecutionOption.REPORT_INCLUDE_CLOSE_UTILIZATION_VOLUME,
+				Parameters.ExecutionOption.REPORT_INCLUDE_NET_DECAY_VOLUME,
+				Parameters.ExecutionOption.REPORT_INCLUDE_ND_WASTE_VOLUME,
+				Parameters.ExecutionOption.REPORT_INCLUDE_ND_WAST_BRKG_VOLUME
+		);
+		parameters.setAgeStart(180);
+		parameters.setAgeEnd(217);
+		parameters.setOutputFormat(Parameters.OutputFormat.TEXT_REPORT);
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+
+		var polygonStream = new HcsvPolygonStream(context, polygonInputStream, layersInputStream);
+
+		var polygon = polygonStream.getNextPolygon();
+
+		var yieldTable = YieldTable.of(context);
+		try {
+			yieldTable.startGeneration();
+
+			var state = new PolygonProjectionState();
+			state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			state.setProcessingResults(ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY, Optional.empty());
+
+			var vdypPolygonStream = Files
+					.newInputStream(testHelper.getResourceFile(relativeResourcePath, "vp_grow.dat"));
+			var vdypSpeciesStream = Files
+					.newInputStream(testHelper.getResourceFile(relativeResourcePath, "vs_grow.dat"));
+			var vdypUtilizationsStream = Files
+					.newInputStream(testHelper.getResourceFile(relativeResourcePath, "vu_grow.dat"));
+
+			ProjectionResultsReader forwardReader = new TestProjectionResultsReader(
+					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream
+			);
+			ProjectionResultsReader backReader = new NullProjectionResultsReader();
+
+			var projectionResults = ProjectionResultsBuilder
+					.read(polygon, state, ProjectionTypeCode.PRIMARY, forwardReader, backReader);
+			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
+				var layer = layerReportingInfo.getLayer();
+				if (state.layerWasProjected(layer)) {
+					yieldTable.generateYieldTableForPolygonLayer(
+							polygon, projectionResults, state, layerReportingInfo, true
+					);
+				}
+			}
+		} finally {
+			yieldTable.endGeneration();
+			yieldTable.close();
+		}
+
+		var content = new String(yieldTable.getAsStream().readAllBytes());
+
+		long reportTitleCount = content.lines().filter(line -> line.contains("VDYP Yield Table Report")).count();
+		assertThat(reportTitleCount, is(1L));
+
+		assertThat(content, containsString("Whole"));
+		assertThat(content, containsString("Utilization"));
+		assertThat(content, containsString("Decay"));
+		assertThat(content, containsString("VOLUME"));
+		assertThat(content, containsString("CFS Biomass"));
+		assertThat(content, containsString("Stem"));
+		assertThat(content, containsString("Bark"));
+		assertThat(content, containsString("Branch"));
+		assertThat(content, containsString("Foliage"));
+		assertThat(content, containsString("(tons/ha)"));
+		assertThat(content, containsString("Projected Values......... Both"));
+
+		String dataRow = content.lines().filter(line -> line.startsWith("180 ")).findFirst().orElseThrow();
+		assertThat(dataRow, containsString("|"));
+		String[] volumeAndBiomassCells = dataRow.split("\\|");
+		assertThat(volumeAndBiomassCells.length, greaterThan(5));
+	}
+
+	@Test
 	void testGetYieldsNullsp0() throws AbstractProjectionRequestException {
 		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
 
