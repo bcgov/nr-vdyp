@@ -27,4 +27,16 @@ public class PolygonExecutionException extends AbstractProjectionRequestExceptio
 	public PolygonExecutionException(String message) {
 		super(message);
 	}
+
+	public PolygonExecutionException(long featureId, String message) {
+		super(withContext(buildContextPrefix(featureId), message));
+	}
+
+	public PolygonExecutionException(long featureId, String message, Throwable cause) {
+		super(withContext(buildContextPrefix(featureId), message), cause);
+	}
+
+	public PolygonExecutionException(long featureId, Throwable cause) {
+		super(withContext(buildContextPrefix(featureId), cause.getMessage()), cause);
+	}
 }

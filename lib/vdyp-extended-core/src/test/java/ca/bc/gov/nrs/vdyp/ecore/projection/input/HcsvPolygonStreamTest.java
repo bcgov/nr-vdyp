@@ -20,6 +20,8 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestExcep
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
@@ -82,6 +84,33 @@ class HcsvPolygonStreamTest {
 
 		assertThat(poly.getMessages().size(), is(1));
 		assertThat(poly.getMessages().get(0).toString().contains("stockability"), is(true));
+	}
+
+	@Test
+	void testToPolygonValidationExceptionIncludesFeatureIdWhenKnown() {
+		var message = new ValidationMessage(ValidationMessageKind.GENERIC, "boom");
+		var ex = HcsvPolygonStream.toPolygonValidationException(13919428L, message);
+		assertThat(ex.getMessage(), is("Polygon 13919428: boom"));
+	}
+
+	@Test
+	void testToPolygonValidationExceptionOmitsFeatureIdWhenUnknown() {
+		var message = new ValidationMessage(ValidationMessageKind.GENERIC, "boom");
+		var ex = HcsvPolygonStream.toPolygonValidationException((Long) null, message);
+		assertThat(ex.getMessage(), is("boom"));
+	}
+
+	@Test
+	void testToPolygonValidationExceptionFromRecordBeanIncludesFeatureId() {
+		var records = HcsvPolygonRecordBean
+				.createHcsvPolygonStream(new ByteArrayInputStream(hcsvPolygonFileContents.getBytes())).parse();
+		var message = new ValidationMessage(ValidationMessageKind.GENERIC, "boom");
+
+		var ex = HcsvPolygonStream.toPolygonValidationException(records.get(0), message);
+		assertThat(ex.getMessage(), is("Polygon 13919428: boom"));
+
+		var ex2 = HcsvPolygonStream.toPolygonValidationException((HcsvPolygonRecordBean) null, message);
+		assertThat(ex2.getMessage(), is("boom"));
 	}
 
 	@Nested

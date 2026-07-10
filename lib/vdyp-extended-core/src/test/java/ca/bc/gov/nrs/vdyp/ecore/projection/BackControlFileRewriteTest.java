@@ -33,8 +33,9 @@ class BackControlFileRewriteTest {
 							.getBytes()
 			);
 
-			PolygonProjectionRunner
-					.rewriteTargetYearToBackControlFile(executionFolder, 1970, 100, ProjectionTypeCode.PRIMARY);
+			PolygonProjectionRunner.rewriteTargetYearToBackControlFile(
+					123456L, executionFolder, 1970, 100, ProjectionTypeCode.PRIMARY
+			);
 
 			String contents = Files.readString(controlFile);
 

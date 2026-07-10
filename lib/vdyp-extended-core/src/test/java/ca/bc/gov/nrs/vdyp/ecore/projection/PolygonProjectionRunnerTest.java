@@ -12,9 +12,14 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -133,6 +138,62 @@ public class PolygonProjectionRunnerTest {
 
 		assertThrows(PolygonExecutionException.class, unit::project);
 
+	}
+
+	@Test
+	void testBuildPolygonProjectionExecutionStructureFailsWhenDirectoryAlreadyExists()
+			throws IOException, AbstractProjectionRequestException {
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		var componentRunner = new RealComponentRunner();
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+
+		Files.createDirectory(Path.of(context.getExecutionFolder().toString(), polygon.toString()));
+
+		var ex = assertThrows(PolygonExecutionException.class, unit::buildPolygonProjectionExecutionStructure);
+		assertTrue(ex.getMessage().startsWith("Polygon " + polygon.getFeatureId()));
+	}
+
+	@Test
+	void testCreateFipInputDataFailsWhenExecutionFolderMissing() throws Exception {
+
+		addStand("PL", 78.0, 8.0, 10.0);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		polygon.doCompleteDefinition(context);
+		var componentRunner = new RealComponentRunner();
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+
+		unit.buildPolygonProjectionExecutionStructure();
+
+		var polygonExecutionFolder = Path.of(context.getExecutionFolder().toString(), polygon.toString());
+		try (var paths = Files.walk(polygonExecutionFolder)) {
+			paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+				try {
+					Files.delete(path);
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			});
+		}
+
+		var ex = assertThrows(PolygonExecutionException.class, unit::performInitialProcessing);
+		assertTrue(ex.getMessage().startsWith("Polygon " + polygon.getFeatureId()));
+	}
+
+	@Test
+	void testRewriteTargetYearToBackControlFileFailsWhenControlFileMissing() throws IOException {
+
+		var executionFolder = Files.createTempDirectory("back-control-file-test");
+		Files.createDirectory(Path.of(executionFolder.toString(), ProjectionTypeCode.PRIMARY.toString()));
+
+		var ex = assertThrows(
+				PolygonExecutionException.class,
+				() -> PolygonProjectionRunner.rewriteTargetYearToBackControlFile(
+						13919428L, executionFolder, 1970, 100, ProjectionTypeCode.PRIMARY
+				)
+		);
+		assertTrue(ex.getMessage().startsWith("Polygon 13919428"));
 	}
 
 	@Test

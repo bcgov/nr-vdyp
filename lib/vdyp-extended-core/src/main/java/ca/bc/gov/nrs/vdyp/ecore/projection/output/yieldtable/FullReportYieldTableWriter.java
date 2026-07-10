@@ -320,7 +320,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			 */
 		} catch (Exception e) {
 			throw new YieldTableGenerationException(
-					"Error writing yield table record for polygon: " + rowContext.getPolygon().getPolygonNumber(), e
+					rowContext.getPolygon().getFeatureId(), "Error writing yield table record", e
 			);
 		}
 		// Print out all the relevant information
@@ -827,8 +827,15 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		try {
 			outputStream.write(String.format(message, args).getBytes());
 		} catch (IOException e) {
-			throw new YieldTableGenerationException(e);
+			throw toYieldTableGenerationException(lastPolygonForTrailer, e);
 		}
+	}
+
+	static YieldTableGenerationException toYieldTableGenerationException(Polygon lastPolygonForTrailer, IOException e) {
+		if (lastPolygonForTrailer != null) {
+			return new YieldTableGenerationException(lastPolygonForTrailer.getFeatureId(), e);
+		}
+		return new YieldTableGenerationException(e);
 	}
 
 	@Override

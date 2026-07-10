@@ -17,4 +17,8 @@ public class LayerValidationException extends AbstractProjectionRequestException
 	public LayerValidationException(List<ValidationMessage> validationMessages) {
 		super(validationMessages);
 	}
+
+	public LayerValidationException(long featureId, String layerId, List<ValidationMessage> validationMessages) {
+		super(buildContextPrefix(featureId, layerId), validationMessages);
+	}
 }

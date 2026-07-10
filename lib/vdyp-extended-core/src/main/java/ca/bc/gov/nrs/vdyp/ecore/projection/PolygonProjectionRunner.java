@@ -178,7 +178,7 @@ public class PolygonProjectionRunner {
 
 			state.setExecutionFolder(executionFolder);
 		} catch (IOException e) {
-			throw new PolygonExecutionException(e);
+			throw new PolygonExecutionException(polygon.getFeatureId(), e);
 		}
 	}
 
@@ -286,7 +286,7 @@ public class PolygonProjectionRunner {
 								)
 						);
 
-						throw new PolygonExecutionException(oFipResult.get());
+						throw new PolygonExecutionException(polygon.getFeatureId(), oFipResult.get());
 					}
 					break;
 				}
@@ -559,9 +559,10 @@ public class PolygonProjectionRunner {
 			}
 		} catch (Exception e) {
 			throw new PolygonExecutionException(
+					polygon.getFeatureId(),
 					MessageFormat.format(
-							"{0}: encountered {1} while running creating FIP input data{2}", polygon,
-							e.getClass().getName(), e.getMessage() != null ? "; reason: " + e.getMessage() : ""
+							"encountered {0} while running creating FIP input data{1}", e.getClass().getName(),
+							e.getMessage() != null ? "; reason: " + e.getMessage() : ""
 					)
 			);
 		} finally {
@@ -604,9 +605,10 @@ public class PolygonProjectionRunner {
 			}
 		} catch (Exception e) {
 			throw new PolygonExecutionException(
+					polygon.getFeatureId(),
 					MessageFormat.format(
-							"{0}: encountered {1} while running creating VRI input data{2}", polygon,
-							e.getClass().getName(), e.getMessage() != null ? "; reason: " + e.getMessage() : ""
+							"encountered {0} while running creating VRI input data{1}", e.getClass().getName(),
+							e.getMessage() != null ? "; reason: " + e.getMessage() : ""
 					), e
 			);
 		} finally {
@@ -689,10 +691,11 @@ public class PolygonProjectionRunner {
 			default: {
 				if (primaryLayerAge == null) {
 					throw new PolygonExecutionException(
+							polygon.getFeatureId(),
 							MessageFormat.format(
-									"{0}: unable to project layer {1} since the age of the polygon's primary layer can't"
-											+ " be calculated at year {2}{3}",
-									polygon, layer, polygon.getReferenceYear(),
+									"unable to project layer {0} since the age of the polygon's primary layer can't"
+											+ " be calculated at year {1}{2}",
+									layer, polygon.getReferenceYear(),
 									polygon.getPrimaryLayer() == null ? ". Reason: the polygon has no primary layer"
 											: ""
 							)
@@ -711,8 +714,9 @@ public class PolygonProjectionRunner {
 			var leadingSp0 = layer.determineLeadingSp0(0);
 			if (leadingSp0 == null) {
 				throw new PolygonExecutionException(
+						polygon.getFeatureId(),
 						MessageFormat.format(
-								"{0}: unable to project since layer {1} has no leading Sp0 at year {2}", polygon, layer,
+								"unable to project since layer {0} has no leading Sp0 at year {1}", layer,
 								polygon.getReferenceYear()
 						)
 				);
@@ -783,7 +787,8 @@ public class PolygonProjectionRunner {
 					// BACK read the backwards growth target value from entry 101 in the
 					// control file. Adjust the control file to contain this value.
 					rewriteTargetYearToBackControlFile(
-							state.getExecutionFolder(), measurementYear, yearsToGrowBack, projectionType
+							polygon.getFeatureId(), state.getExecutionFolder(), measurementYear, yearsToGrowBack,
+							projectionType
 					);
 
 					componentRunner.runBack(polygon, projectionType, state);
@@ -958,7 +963,7 @@ public class PolygonProjectionRunner {
 				yearToGrowWriter.writePolygon(polygon, measurementYear + yearsToGrow);
 			}
 		} catch (IOException e) {
-			throw new PolygonExecutionException(e);
+			throw new PolygonExecutionException(polygon.getFeatureId(), e);
 		}
 	}
 
@@ -974,13 +979,14 @@ public class PolygonProjectionRunner {
 							.collect(Collectors.joining(""))
 			);
 		} catch (IOException e) {
-			throw new PolygonExecutionException(e);
+			throw new PolygonExecutionException(polygon.getFeatureId(), e);
 		}
 		return path;
 	}
 
 	static void rewriteTargetYearToBackControlFile(
-			Path executionFolder, int measurementYear, int yearsToGrowBack, ProjectionTypeCode projectionType
+			long featureId, Path executionFolder, int measurementYear, int yearsToGrowBack,
+			ProjectionTypeCode projectionType
 	) throws PolygonExecutionException {
 
 		Path controlFilePath = Path
@@ -997,7 +1003,7 @@ public class PolygonProjectionRunner {
 			Files.delete(controlFilePath);
 			Files.move(tempControlFilePath, controlFilePath);
 		} catch (IOException e) {
-			throw new PolygonExecutionException(e);
+			throw new PolygonExecutionException(featureId, e);
 		}
 	}
 

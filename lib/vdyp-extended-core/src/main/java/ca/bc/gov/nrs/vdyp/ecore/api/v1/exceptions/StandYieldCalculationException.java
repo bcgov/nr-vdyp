@@ -24,4 +24,41 @@ public class StandYieldCalculationException extends AbstractProjectionRequestExc
 	public StandYieldCalculationException(StandYieldMessageKind template, Object... args) {
 		super(MessageFormat.format(template.template, args).toString());
 	}
+
+	public StandYieldCalculationException(long featureId, Exception cause) {
+		super(withContext(buildContextPrefix(featureId), buildCauseMessage(cause)), cause);
+	}
+
+	public StandYieldCalculationException(long featureId, StandYieldMessageKind template, Object... args) {
+		super(withContext(buildContextPrefix(featureId), MessageFormat.format(template.template, args)));
+	}
+
+	public StandYieldCalculationException(long featureId, String layerId, Exception cause) {
+		super(withContext(buildContextPrefix(featureId, layerId), buildCauseMessage(cause)), cause);
+	}
+
+	public StandYieldCalculationException(
+			long featureId, String layerId, String speciesCode, StandYieldMessageKind template, Object... args
+	) {
+		super(
+				withContext(
+						buildContextPrefix(featureId, layerId, speciesCode),
+						MessageFormat.format(template.template, args)
+				)
+		);
+	}
+
+	public StandYieldCalculationException(
+			long featureId, String layerId, StandYieldMessageKind template, Object... args
+	) {
+		super(withContext(buildContextPrefix(featureId, layerId), MessageFormat.format(template.template, args)));
+	}
+
+	private static String buildCauseMessage(Exception cause) {
+		if (cause == null) {
+			return "null";
+		}
+		String causeDetail = cause.getMessage() != null ? ": " + cause.getMessage() : "";
+		return cause.getClass().getSimpleName() + causeDetail;
+	}
 }
