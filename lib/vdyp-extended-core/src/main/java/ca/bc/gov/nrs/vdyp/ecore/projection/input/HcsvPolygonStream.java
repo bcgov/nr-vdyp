@@ -188,6 +188,11 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		return new PolygonValidationException(message);
 	}
 
+	static PolygonValidationException
+			toPolygonValidationException(HcsvPolygonRecordBean polygonRecord, ValidationMessage message) {
+		return toPolygonValidationException(polygonRecord != null ? polygonRecord.getFeatureId() : null, message);
+	}
+
 	private Polygon buildPolygon() throws PolygonValidationException {
 
 		Polygon polygon = null;
@@ -277,8 +282,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		} catch (Exception e) {
 			if (! (e instanceof PolygonValidationException)) {
 				var message = new ValidationMessage(ValidationMessageKind.GENERIC, e.getMessage());
-				Long currentPolygonFeatureId = nextPolygonRecord != null ? nextPolygonRecord.getFeatureId() : null;
-				throw toPolygonValidationException(currentPolygonFeatureId, message);
+				throw toPolygonValidationException(nextPolygonRecord, message);
 			} else {
 				throw e;
 			}

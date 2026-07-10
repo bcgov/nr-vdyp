@@ -96,8 +96,21 @@ class HcsvPolygonStreamTest {
 	@Test
 	void testToPolygonValidationExceptionOmitsFeatureIdWhenUnknown() {
 		var message = new ValidationMessage(ValidationMessageKind.GENERIC, "boom");
-		var ex = HcsvPolygonStream.toPolygonValidationException(null, message);
+		var ex = HcsvPolygonStream.toPolygonValidationException((Long) null, message);
 		assertThat(ex.getMessage(), is("boom"));
+	}
+
+	@Test
+	void testToPolygonValidationExceptionFromRecordBeanIncludesFeatureId() {
+		var records = HcsvPolygonRecordBean
+				.createHcsvPolygonStream(new ByteArrayInputStream(hcsvPolygonFileContents.getBytes())).parse();
+		var message = new ValidationMessage(ValidationMessageKind.GENERIC, "boom");
+
+		var ex = HcsvPolygonStream.toPolygonValidationException(records.get(0), message);
+		assertThat(ex.getMessage(), is("Polygon 13919428: boom"));
+
+		var ex2 = HcsvPolygonStream.toPolygonValidationException((HcsvPolygonRecordBean) null, message);
+		assertThat(ex2.getMessage(), is("boom"));
 	}
 
 	@Nested
