@@ -30,6 +30,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.opencsv.exceptions.CsvException;
+
 import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.api.helpers.TestProjectionResultsReader;
@@ -113,6 +115,20 @@ class YieldTableTest {
 		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 0), closeTo(0.6, 0.00001));
 		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 1), closeTo(0.4, 0.00001));
 		assertThat(YieldTable.determineSpeciesProjectionFactor(unit, 2), closeTo(0.6, 0.00001));
+	}
+
+	@Test
+	void testToYieldTableGenerationExceptionIncludesFeatureId() throws AbstractProjectionRequestException {
+
+		var parameters = new Parameters().ageStart(0).ageEnd(100);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		var polygon = new Polygon.Builder().featureId(13919428).referenceYear(2013).build();
+		var rowContext = YieldTableRowContext.of(context, polygon, new PolygonProjectionState(), null);
+
+		var ex = AbstractCSVTypeYieldTableWriter
+				.toYieldTableGenerationException(rowContext, new CsvException("boom"));
+
+		assertThat(ex.getMessage(), is("Polygon 13919428: boom"));
 	}
 
 	@Test
