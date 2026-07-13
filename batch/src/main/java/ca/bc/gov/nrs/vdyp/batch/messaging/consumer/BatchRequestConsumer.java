@@ -192,4 +192,9 @@ public class BatchRequestConsumer implements SmartLifecycle {
 	public boolean isRunning() {
 		return running.get();
 	}
+
+	@Override
+	public int getPhase() {
+		return 0;
+	}
 }
