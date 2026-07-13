@@ -130,6 +130,7 @@ class BatchConfigurationTest {
 		when(threadPool.getCorePoolSize()).thenReturn(4);
 		when(threadPool.getMaxPoolSizeMultiplier()).thenReturn(2);
 		when(threadPool.getThreadNamePrefix()).thenReturn("VDYP-Worker-");
+		when(threadPool.getAwaitTerminationSeconds()).thenReturn(330);
 		when(reader.getDefaultChunkSize()).thenReturn(10);
 	}
 
@@ -592,6 +593,7 @@ class BatchConfigurationTest {
 		verify(threadPool).getCorePoolSize();
 		verify(threadPool).getMaxPoolSizeMultiplier();
 		verify(threadPool).getThreadNamePrefix();
+		verify(threadPool).getAwaitTerminationSeconds();
 	}
 
 	@Test

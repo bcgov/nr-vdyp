@@ -110,6 +110,7 @@ public class BatchConfiguration {
 		int corePoolSize = batchProperties.getThreadPool().getCorePoolSize();
 		int maxPoolSizeMultiplier = batchProperties.getThreadPool().getMaxPoolSizeMultiplier();
 		String threadNamePrefix = batchProperties.getThreadPool().getThreadNamePrefix();
+		int awaitTerminationSeconds = batchProperties.getThreadPool().getAwaitTerminationSeconds();
 
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		executor.setCorePoolSize(corePoolSize);
@@ -117,6 +118,8 @@ public class BatchConfiguration {
 		executor.setQueueCapacity(corePoolSize);
 		executor.setThreadNamePrefix(threadNamePrefix);
 		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+		executor.setWaitForTasksToCompleteOnShutdown(true);
+		executor.setAwaitTerminationSeconds(awaitTerminationSeconds);
 		executor.initialize();
 		return executor;
 	}

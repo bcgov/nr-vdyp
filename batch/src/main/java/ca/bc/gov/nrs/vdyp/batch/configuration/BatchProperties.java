@@ -151,6 +151,7 @@ public class BatchProperties {
 		private int maxPoolSizeMultiplier;
 		private String threadNamePrefix;
 		private int maxJobThreads;
+		private int awaitTerminationSeconds;
 
 		public int getCorePoolSize() {
 			return corePoolSize;
@@ -182,6 +183,14 @@ public class BatchProperties {
 
 		public void setMaxJobThreads(int maxJobThreads) {
 			this.maxJobThreads = maxJobThreads;
+		}
+
+		public int getAwaitTerminationSeconds() {
+			return awaitTerminationSeconds;
+		}
+
+		public void setAwaitTerminationSeconds(int awaitTerminationSeconds) {
+			this.awaitTerminationSeconds = awaitTerminationSeconds;
 		}
 
 	}
