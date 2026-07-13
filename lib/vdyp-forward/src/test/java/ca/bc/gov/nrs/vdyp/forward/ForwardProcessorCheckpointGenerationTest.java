@@ -50,7 +50,7 @@ class ForwardProcessorCheckpointGenerationTest {
 
 		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
-		ProcessingTestUtils.runForwardProcessor(fp, vdyp8OutputResolver, "VDYP.CTR", vdypPassSet);
+		ProcessingTestUtils.runForwardProcessor(fp, vdyp8OutputResolver, "VDYP-Checkpoint.CTR", vdypPassSet);
 
 		// Verify that polygons are output 14 times for each year of growth.
 
