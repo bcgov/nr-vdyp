@@ -1,32 +1,45 @@
 package ca.bc.gov.nrs.vdyp.application;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
+import static org.easymock.EasyMock.eq;
+import static org.easymock.EasyMock.isA;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.EnumSet;
-import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.easymock.EasyMock;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
+import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
 
 class VdypProcessingApplicationTest {
 
 	@Nested
-	class Run {
+	class DoMain {
 
 		VdypProcessingApplication app;
 		Processor processor;
+
+		Optional<? extends IOException> initIoError = Optional.empty();
+		Optional<? extends ResourceParseException> initParseError = Optional.empty();
 
 		@BeforeEach
 		void init() {
@@ -46,184 +59,98 @@ class VdypProcessingApplicationTest {
 
 				@Override
 				public VdypApplicationIdentifier getId() {
-					fail();
-					return null;
+					return VdypApplicationIdentifier.VDYP_FORWARD;
 				}
+
+				@Override
+				public void close() {
+				}
+
+				@Override
+				protected void init(
+						FileSystemFileResolver resolver, PrintStream writeToIfNoArgs, InputStream readFromIfNoArgs,
+						String... controlFilePaths
+				) throws IOException, ResourceParseException {
+					Utils.throwIfPresent(initIoError);
+					Utils.throwIfPresent(initParseError);
+					this.resolvedControlMap = new ProcessingResolvedControlMapImpl(
+							ProcessingTestUtils.loadControlMap()
+					);
+				}
+
 			};
 
 		}
 
-		@Test
-		void testCommandLineControlNoError() throws Exception {
-			var outBytes = new ByteArrayOutputStream();
-			var outPrint = new PrintStream(outBytes);
-			var input = new ByteArrayInputStream("\n".getBytes());
+		EnumSet<Pass> defaultPasses = EnumSet.complementOf(EnumSet.of(Pass.ADDITIONAL_BASE_AREA_CRITERIA));
 
-			processor.run(
-					EasyMock.isA(FileResolver.class), EasyMock.isA(FileResolver.class),
-					EasyMock.eq(List.of("argument.ctl")), EasyMock.eq(EnumSet.allOf(Pass.class))
-			);
-			EasyMock.expectLastCall().once();
-
-			EasyMock.replay(processor);
-
-			int result = app.run(outPrint, input, "argument.ctl");
-
-			assertThat(result, is(0));
-
-			EasyMock.verify(processor);
-		}
-
-		@Test
-		void testMultipleCommandLineControlNoError() throws Exception {
-			var outBytes = new ByteArrayOutputStream();
-			var outPrint = new PrintStream(outBytes);
-			var input = new ByteArrayInputStream("\n".getBytes());
-
-			processor.run(
-					EasyMock.isA(FileResolver.class), EasyMock.isA(FileResolver.class),
-					EasyMock.eq(List.of("argument1.ctl", "argument2.ctl")), EasyMock.eq(EnumSet.allOf(Pass.class))
-			);
-			EasyMock.expectLastCall().once();
-
-			EasyMock.replay(processor);
-
-			int result = app.run(outPrint, input, "argument1.ctl", "argument2.ctl");
-
-			assertThat(result, is(0));
-
-			EasyMock.verify(processor);
-		}
-
-		@Test
-		void testConsoleInputControlNoError() throws Exception {
-			var outBytes = new ByteArrayOutputStream();
-			var outPrint = new PrintStream(outBytes);
-			var input = new ByteArrayInputStream("alternate1.ctl alternate2.ctl\n".getBytes());
-
-			processor.run(
-					EasyMock.isA(FileResolver.class), EasyMock.isA(FileResolver.class),
-					EasyMock.eq(List.of("alternate1.ctl", "alternate2.ctl")), EasyMock.eq(EnumSet.allOf(Pass.class))
-			);
-			EasyMock.expectLastCall().once();
-
-			EasyMock.replay(processor);
-
-			int result = app.run(outPrint, input);
-
-			assertThat(result, is(0));
-
-			EasyMock.verify(processor);
-		}
-
-		@Test
-		void testErrorGettingControlFileNames() throws Exception {
-			PrintStream outPrint = null;
-			InputStream input = null;
-
-			EasyMock.replay(processor);
-
-			int result = app.run(outPrint, input);
-
-			assertThat(result, is(1));
-
-			EasyMock.verify(processor);
-		}
-
+		@SuppressWarnings("unchecked")
 		@Test
 		void testErrorWhileProcessing() throws Exception {
-			var outBytes = new ByteArrayOutputStream();
-			var outPrint = new PrintStream(outBytes);
-			var input = new ByteArrayInputStream("\n".getBytes());
 
-			processor.run(
-					EasyMock.isA(FileResolver.class), EasyMock.isA(FileResolver.class),
-					EasyMock.eq(List.of("argument.ctl")), EasyMock.eq(EnumSet.allOf(Pass.class))
+			processor.process(
+					eq(defaultPasses), isA(ProcessingResolvedControlMap.class), isA(Optional.class),
+					isA(Predicate.class)
 			);
-			EasyMock.expectLastCall().andThrow(new ProcessingException("Test")).once();
+			var cause = new ProcessingException("Test");
+			EasyMock.expectLastCall().andThrow(cause).once();
 
 			EasyMock.replay(processor);
 
-			int result = app.run(outPrint, input, "argument.ctl");
+			var ex = assertThrows(VdypApplicationProcessingException.class, () -> app.doMain("argument.ctl"));
 
-			assertThat(result, is(2));
+			assertThat(ex, causedBy(sameInstance(cause)));
 
 			EasyMock.verify(processor);
 		}
+
+		@Test
+		void testIoErrorWhileInitializing() throws Exception {
+
+			var cause = new IOException("Test");
+			initIoError = Optional.of(cause);
+
+			EasyMock.replay(processor);
+
+			var ex = assertThrows(VdypApplicationInitializationException.class, () -> app.doMain("argument.ctl"));
+
+			assertThat(ex, causedBy(sameInstance(cause)));
+
+			EasyMock.verify(processor);
+		}
+
+		@Test
+		void testParseErrorWhileInitializing() throws Exception {
+
+			var cause = new ResourceParseException("Test");
+			initParseError = Optional.of(cause);
+
+			EasyMock.replay(processor);
+
+			var ex = assertThrows(VdypApplicationInitializationException.class, () -> app.doMain("argument.ctl"));
+
+			assertThat(ex, causedBy(sameInstance(cause)));
+
+			EasyMock.verify(processor);
+		}
+
+		@SuppressWarnings("unchecked")
+		@Test
+		void testCleanRun() throws Exception {
+
+			processor.process(
+					eq(defaultPasses), isA(ProcessingResolvedControlMap.class), isA(Optional.class),
+					isA(Predicate.class)
+			);
+			EasyMock.expectLastCall().once();
+
+			EasyMock.replay(processor);
+
+			assertDoesNotThrow(() -> app.doMain("argument.ctl"));
+
+			EasyMock.verify(processor);
+		}
+
 	}
 
-	@Nested
-	class GetControlFileNamesFromUser {
-
-		VdypProcessingApplication app;
-
-		@BeforeEach
-		void init() {
-			app = new VdypProcessingApplication() {
-
-				@Override
-				public String getDefaultControlFileName() {
-					return "default.ctl";
-				}
-
-				@Override
-				protected Processor getProcessor() {
-					fail();
-					return null;
-				}
-
-				@Override
-				public VdypApplicationIdentifier getId() {
-					fail();
-					return null;
-				}
-
-			};
-		}
-
-		@Test
-		void testJustDefault() throws Exception {
-			var outBytes = new ByteArrayOutputStream();
-			var outPrint = new PrintStream(outBytes);
-			var input = new ByteArrayInputStream("\n".getBytes());
-			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
-			assertThat(result, Matchers.contains("default.ctl"));
-		}
-
-		@Test
-		void testOneEntry() throws Exception {
-			var outBytes = new ByteArrayOutputStream();
-			var outPrint = new PrintStream(outBytes);
-			var input = new ByteArrayInputStream("alternate.ctl\n".getBytes());
-			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
-			assertThat(result, Matchers.contains("alternate.ctl"));
-		}
-
-		@Test
-		void testTwoEntries() throws Exception {
-			var outBytes = new ByteArrayOutputStream();
-			var outPrint = new PrintStream(outBytes);
-			var input = new ByteArrayInputStream("alternate1.ctl alternate2.ctl\n".getBytes());
-			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
-			assertThat(result, Matchers.contains("alternate1.ctl", "alternate2.ctl"));
-		}
-
-		@Test
-		void testOneEntryPlusDefault() throws Exception {
-			var outBytes = new ByteArrayOutputStream();
-			var outPrint = new PrintStream(outBytes);
-			var input = new ByteArrayInputStream("*alternate.ctl\n".getBytes());
-			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
-			assertThat(result, Matchers.contains("default.ctl", "alternate.ctl"));
-		}
-
-		@Test
-		void testTwoEntriesPlusDefault() throws Exception {
-			var outBytes = new ByteArrayOutputStream();
-			var outPrint = new PrintStream(outBytes);
-			var input = new ByteArrayInputStream("*alternate1.ctl alternate2.ctl\n".getBytes());
-			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
-			assertThat(result, Matchers.contains("default.ctl", "alternate1.ctl", "alternate2.ctl"));
-		}
-	}
 }

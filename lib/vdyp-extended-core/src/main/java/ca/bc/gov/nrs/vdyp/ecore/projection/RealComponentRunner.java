@@ -53,7 +53,7 @@ public class RealComponentRunner implements ComponentRunner {
 					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
 					Vdyp7Constants.FIP_START_CONTROL_FILE_NAME
 			);
-			fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
+			fipStartApplication.doMain(controlFilePath);
 			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
 			state.modifyGrowthModel(
 					projectionTypeCode, GrowthModelCode.FIP,
@@ -73,7 +73,7 @@ public class RealComponentRunner implements ComponentRunner {
 					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
 					Vdyp7Constants.VRI_START_CONTROL_FILE_NAME
 			);
-			vriStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
+			vriStartApplication.doMain(controlFilePath);
 			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
 			state.modifyGrowthModel(
 					projectionTypeCode, GrowthModelCode.VRI,
@@ -142,13 +142,7 @@ public class RealComponentRunner implements ComponentRunner {
 					Vdyp7Constants.STAND_FORWARD_CONTROL_FILE_NAME
 			);
 
-			Optional<Path> inputDir = Optional.empty();
-			Optional<Path> outputDir = Optional.empty();
-			forwardApplication.doMain(
-					inputDir, outputDir, //
-					controlFilePath.toAbsolutePath().toString(), //
-					standControlFilePath.toAbsolutePath().toString() //
-			);
+			forwardApplication.doMain(controlFilePath, standControlFilePath);
 
 			state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, Optional.empty());
 

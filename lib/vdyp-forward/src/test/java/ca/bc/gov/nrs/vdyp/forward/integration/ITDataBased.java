@@ -11,11 +11,10 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessor;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
 import ca.bc.gov.nrs.vdyp.integration_tests.IntermediateDataBasedIntegrationTest;
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -52,11 +51,11 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 
 		{
 
-			FileResolver inputFileResolver = new FileSystemFileResolver(configDir);
-			FileResolver outputFileResolver = new FileSystemFileResolver(configDir);
+			FileSystemFileResolver fileResolver = new FileSystemFileResolver(configDir);
 
-			ForwardProcessor processor = new ForwardProcessor();
-			processor.run(inputFileResolver, outputFileResolver, controlFiles, VdypForwardApplication.DEFAULT_PASS_SET);
+			VdypForwardApplication app = new VdypForwardApplication();
+			ApplicationTestUtils.runInit(app, fileResolver, null, null, controlFiles.toArray(String[]::new));
+			ApplicationTestUtils.runProcess(app);
 
 		}
 

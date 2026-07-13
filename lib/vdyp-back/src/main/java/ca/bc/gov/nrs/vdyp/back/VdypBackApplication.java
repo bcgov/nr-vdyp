@@ -3,10 +3,10 @@ package ca.bc.gov.nrs.vdyp.back;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypProcessingApplication;
 
-// TODO pull out the ForwardDebugSettings
 public class VdypBackApplication extends VdypProcessingApplication {
 
 	static {
@@ -19,8 +19,7 @@ public class VdypBackApplication extends VdypProcessingApplication {
 
 	public static void main(final String... args) {
 
-		var app = new VdypBackApplication();
-		System.exit(app.run(args));
+		VdypApplication.doRunApp(VdypBackApplication::new, args);
 	}
 
 	@Override

@@ -83,11 +83,6 @@ public class TestStartApplication
 	}
 
 	@Override
-	public void process() throws ProcessingException {
-		// Do Nothing
-	}
-
-	@Override
 	public VdypApplicationIdentifier getId() {
 		return VdypApplicationIdentifier.VRI_START;
 	}
@@ -112,6 +107,11 @@ public class TestStartApplication
 	@Override
 	public Optional<VdypPolygon> processPolygon(int polygonsRead, TestPolygon polygon) throws ProcessingException {
 		return Optional.empty();
+	}
+
+	@Override
+	protected void process() throws ProcessingException {
+		// Do Nothing
 	}
 
 }

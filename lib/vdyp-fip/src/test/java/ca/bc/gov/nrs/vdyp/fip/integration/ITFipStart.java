@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
+import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.fip.test.FipTestUtils;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
@@ -112,8 +113,8 @@ class ITFipStart {
 
 			assertThrows(
 					NoSuchFileException.class,
-					() -> app.init(
-							resolver, new PrintStream(new ByteArrayOutputStream()),
+					() -> ApplicationTestUtils.runInit(
+							app, resolver, new PrintStream(new ByteArrayOutputStream()),
 							new ByteArrayInputStream("\n\r".getBytes())
 					)
 			);
@@ -128,8 +129,8 @@ class ITFipStart {
 
 			assertThrows(
 					NoSuchFileException.class,
-					() -> app.init(
-							resolver, new PrintStream(new ByteArrayOutputStream()),
+					() -> ApplicationTestUtils.runInit(
+							app, resolver, new PrintStream(new ByteArrayOutputStream()),
 							new ByteArrayInputStream("\n\r".getBytes()), "FAKE"
 					)
 			);
@@ -270,9 +271,9 @@ class ITFipStart {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
-			app.init(
-					resolver, new PrintStream(new ByteArrayOutputStream()), new ByteArrayInputStream("\n\r".getBytes()),
-					baseControlFile.toString(), ioControlFile.toString()
+			ApplicationTestUtils.runInit(
+					app, resolver, new PrintStream(new ByteArrayOutputStream()),
+					new ByteArrayInputStream("\n\r".getBytes()), baseControlFile.toString(), ioControlFile.toString()
 			);
 
 			app.process();

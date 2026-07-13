@@ -483,7 +483,9 @@ public class TestUtils {
 	public static Map<String, Object> loadControlMap(BaseControlParser<?> parser, Class<?> klazz, String resourceName)
 			throws IOException, ResourceParseException {
 		try (var is = klazz.getResourceAsStream(resourceName)) {
-
+			if (is == null) {
+				throw new IOException("Could not find " + resourceName + " in " + klazz.getPackageName());
+			}
 			return parser.parse(is, TestUtils.fileResolver(klazz), new HashMap<>());
 		}
 	}
