@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -92,7 +94,7 @@ class ForwardProcessorCheckpointGenerationTest {
 				nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
 			}
 
-			assert (count == 14);
+			assertEquals(count, 14, "polygon count (same polygon, same year");
 		}
 	}
 }
