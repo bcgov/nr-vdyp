@@ -264,9 +264,9 @@ public class YieldTable implements Closeable {
 			Polygon polygon, Map<Integer, VdypPolygon> polygonProjectionResults, PolygonProjectionState state,
 			LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
 	) throws YieldTableGenerationException {
-		// For CSV output, use prioritized categories so that "Both" (Volume + CFS Biomass)
+		// For CSV and text report output, use prioritized categories so that "Both" (Volume + CFS Biomass)
 		// produces a single combined table with both column sets on each row.
-		if (outputFormat == OutputFormat.CSV_YIELD_TABLE) {
+		if (outputFormat == OutputFormat.CSV_YIELD_TABLE || outputFormat == OutputFormat.TEXT_REPORT) {
 			writer.setPrioritizedCurrentCategories(context);
 		} else {
 			writer.setMOFCategories(context);
