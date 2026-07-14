@@ -66,7 +66,7 @@ class StartupRecoveryServiceTest {
 	}
 
 	@Test
-	void start_whenNoStaleExecutions_marksServiceRunningWithoutLaunchingJob() throws Exception {
+	void start_whenNoStaleExecutions_marksServiceRunningWithoutLaunchingJob() {
 		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of());
 
 		service.start();
