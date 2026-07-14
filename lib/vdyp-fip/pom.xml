@@ -30,7 +30,7 @@
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
 			<artifactId>vdyp-integration-tests</artifactId>
@@ -76,6 +76,13 @@
 			<artifactId>easymock</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>io.github.classgraph</groupId>
+			<artifactId>classgraph</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>

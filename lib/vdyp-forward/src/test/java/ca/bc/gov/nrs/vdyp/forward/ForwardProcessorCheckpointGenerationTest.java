@@ -94,7 +94,7 @@ class ForwardProcessorCheckpointGenerationTest {
 				nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
 			}
 
-			assertEquals(count, 14, "polygon count (same polygon, same year");
+			assertEquals(14, count, "polygon count (same polygon, same year");
 		}
 	}
 }

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -33,6 +34,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
@@ -42,6 +45,7 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
+import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.CloseUtilVolumeParser;
@@ -72,6 +76,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariables;
+import io.github.classgraph.ClassGraph;
 
 public class TestUtils {
 
@@ -799,5 +804,49 @@ public class TestUtils {
 	 */
 	static boolean bankEntryWithin(float[][] array, int i1, int i2, float expected, float epsilon) {
 		return Math.abs(getBankEntry(array, i1, i2) - expected) <= epsilon;
+	}
+
+	/**
+	 * Initializes the given directory with config files from the classpath in the package of the given class. Copies
+	 * the given control files and the coe subdirectory with its contents.
+	 *
+	 * @param configDir
+	 * @param klazz
+	 * @param controlFiles
+	 * @return
+	 * @throws IOException
+	 */
+	public static FileSystemFileResolver initConfigDir(Path configDir, Class<?> klazz, String... controlFiles)
+			throws IOException {
+		initCoeDir(configDir, klazz);
+
+		for (var controlFile : controlFiles) {
+			IOUtils.copy(klazz.getResource(controlFile), configDir.resolve(controlFile).toFile());
+		}
+
+		return new FileSystemFileResolver(configDir);
+	}
+
+	/**
+	 * Copy the coe directory from the classpath in the same package as the given class to the given directory.
+	 *
+	 * @param configDir
+	 * @param klazz
+	 * @throws IOException
+	 */
+	public static void initCoeDir(Path configDir, Class<?> klazz) throws IOException {
+
+		final Path coeDir = configDir.resolve("coe/");
+		Files.createDirectory(coeDir);
+		String path = klazz.getPackageName().replace('.', '/') + "/coe";
+		try (var scan = new ClassGraph().verbose().addClassLoader(klazz.getClassLoader()).acceptPaths(path).scan()) {
+			for (var resource : scan.getResourcesMatchingWildcard(path + "/*")) {
+				final Path dest = coeDir.resolve(FilenameUtils.getName(resource.getPath()));
+				System.err.printf("Copying %s to %s", resource.getPath(), dest).println();
+				try (var is = resource.open()) {
+					Files.copy(is, dest);
+				}
+			}
+		}
 	}
 }

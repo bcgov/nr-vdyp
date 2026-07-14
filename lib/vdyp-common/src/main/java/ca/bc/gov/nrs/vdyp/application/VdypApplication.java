@@ -24,6 +24,7 @@ import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
@@ -54,6 +55,7 @@ public abstract class VdypApplication<D extends DebugSettings> extends VdypCompo
 	protected ComputationMethods computers;
 
 	protected Map<String, Object> controlMap = new HashMap<>();
+	protected FileResolver fileResolver;
 
 	public EstimationMethods estimationMethods;
 
@@ -129,9 +131,7 @@ public abstract class VdypApplication<D extends DebugSettings> extends VdypCompo
 				controlFilePaths, getDefaultControlFileName(), getId(), writeToIfNoArgs, readFromIfNoArgs
 		);
 
-		Map<String, Object> controlMap = new HashMap<>();
-
-		init(resolver, getControlFileParser().parseByName(controlFileNames, resolver, controlMap));
+		init(resolver, getControlFileParser().parseByName(controlFileNames, resolver, new HashMap<>()));
 	}
 
 	protected abstract BaseControlParser<D> getControlFileParser();
@@ -143,6 +143,7 @@ public abstract class VdypApplication<D extends DebugSettings> extends VdypCompo
 	 * @throws IOException
 	 */
 	void init(FileSystemFileResolver resolver, Map<String, Object> controlMap) throws IOException {
+		this.fileResolver = resolver;
 		setControlMap(controlMap);
 	}
 
@@ -201,6 +202,7 @@ public abstract class VdypApplication<D extends DebugSettings> extends VdypCompo
 
 	static protected int doRunApp(Supplier<? extends VdypApplication<?>> getApp, String... args) {
 		try (var app = getApp.get();) {
+			app.logVersionInformation();
 			app.doMain(args);
 		} catch (VdypApplicationInitializationException e) {
 			return CONFIG_LOAD_ERROR;

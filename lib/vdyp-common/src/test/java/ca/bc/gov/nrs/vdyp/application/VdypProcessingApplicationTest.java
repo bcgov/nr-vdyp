@@ -64,6 +64,7 @@ class VdypProcessingApplicationTest {
 
 				@Override
 				public void close() {
+					// Do Nothing
 				}
 
 				@Override
