@@ -196,11 +196,11 @@ public abstract class VdypApplication<D extends DebugSettings> extends VdypCompo
 		logger.info("VDYP7 Support Ver: {}", AVERSION);
 	}
 
-	static protected void runApp(Supplier<? extends VdypApplication<?>> getApp, String... args) {
+	protected static void runApp(Supplier<? extends VdypApplication<?>> getApp, String... args) {
 		System.exit(doRunApp(getApp, args));
 	}
 
-	static protected int doRunApp(Supplier<? extends VdypApplication<?>> getApp, String... args) {
+	protected static int doRunApp(Supplier<? extends VdypApplication<?>> getApp, String... args) {
 		try (var app = getApp.get();) {
 			app.logVersionInformation();
 			app.doMain(args);
