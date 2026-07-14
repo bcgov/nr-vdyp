@@ -84,10 +84,11 @@ public final class BatchUtils {
 	}
 
 	/**
-	 * Builds a unique batch projection ID for VDYP projection operations.
+	 * Builds a unique prefix for VDYP outputfiles based on chunk number
 	 *
 	 * @param chunkNumber the number from 1-X of the chunk in this partition
-	 * @return the batch projection ID (e.g., "batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933")
+	 * @return a chunk identifier prefix (e.g., "chunk-00000X) that should sort alphabetically and be reproducible for
+	 *         the same chunk
 	 */
 	public static String batchChunkFilenamePrefix(int chunkNumber) {
 		StringBuilder sb = new StringBuilder("chunk-");
