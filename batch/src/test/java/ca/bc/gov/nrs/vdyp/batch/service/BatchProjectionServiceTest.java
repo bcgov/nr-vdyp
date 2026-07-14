@@ -198,7 +198,7 @@ class BatchProjectionServiceTest {
 
 		method.invoke(batchProjectionService, mockYieldTable, outputDir, "projection1", 10);
 
-		Path expectedFile = outputDir.resolve("YieldTables_projection1_test_yield_table.txt");
+		Path expectedFile = outputDir.resolve("projection1_test_yield_table.txt");
 		assertTrue(Files.exists(expectedFile));
 		assertTrue(Files.size(expectedFile) > 0);
 	}
@@ -223,7 +223,7 @@ class BatchProjectionServiceTest {
 
 		method.invoke(batchProjectionService, mockYieldTable, outputDir, "projection1", 5);
 
-		Path expectedFile = outputDir.resolve("YieldTables_projection1_empty_table.txt");
+		Path expectedFile = outputDir.resolve("projection1_empty_table.txt");
 		assertTrue(Files.exists(expectedFile));
 		assertEquals(0L, Files.size(expectedFile));
 	}
@@ -281,7 +281,7 @@ class BatchProjectionServiceTest {
 
 		method.invoke(batchProjectionService, outputDir, "projection1", 10);
 
-		Path debugLogFile = outputDir.resolve("YieldTables_projection1_DebugLog.txt");
+		Path debugLogFile = outputDir.resolve("projection1_DebugLog.txt");
 		assertTrue(Files.exists(debugLogFile));
 		assertEquals(0L, Files.size(debugLogFile));
 	}
