@@ -50,7 +50,7 @@ class BatchProjectionServiceTest {
 	@Test
 	void testPerformProjectionForChunk_WithMissingPartitionFiles() {
 		// Create chunk metadata pointing to non-existent partition files
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0, 1);
 
 		BatchResultStorageException exception = assertThrows(BatchResultStorageException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
@@ -64,7 +64,7 @@ class BatchProjectionServiceTest {
 		// Create partition structure with invalid polygon data
 		createPartitionStructure(PARTITION_NAME, List.of("123456789,MAP1"), List.of("123456789,P"));
 
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0, 1);
 
 		BatchProjectionException exception = assertThrows(BatchProjectionException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
@@ -86,7 +86,7 @@ class BatchProjectionServiceTest {
 				List.of("100000000,P", "200000000,P", "300000000,P")
 		);
 
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 3, 0L, 0);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 3, 0L, 0, 1);
 
 		assertThrows(BatchProjectionException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
@@ -99,7 +99,7 @@ class BatchProjectionServiceTest {
 		createPartitionStructure(PARTITION_NAME, generatePolygonLines(10), generateLayerLines(10));
 
 		// Process chunk: startIndex=5, recordCount=3 (records 5, 6, 7)
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 3, 0L, 0);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 3, 0L, 0, 1);
 
 		assertThrows(BatchProjectionException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
@@ -198,7 +198,7 @@ class BatchProjectionServiceTest {
 
 		method.invoke(batchProjectionService, mockYieldTable, outputDir, "projection1", 10);
 
-		Path expectedFile = outputDir.resolve("YieldTables_projection1_test_yield_table.txt");
+		Path expectedFile = outputDir.resolve("projection1_test_yield_table.txt");
 		assertTrue(Files.exists(expectedFile));
 		assertTrue(Files.size(expectedFile) > 0);
 	}
@@ -223,7 +223,7 @@ class BatchProjectionServiceTest {
 
 		method.invoke(batchProjectionService, mockYieldTable, outputDir, "projection1", 5);
 
-		Path expectedFile = outputDir.resolve("YieldTables_projection1_empty_table.txt");
+		Path expectedFile = outputDir.resolve("projection1_empty_table.txt");
 		assertTrue(Files.exists(expectedFile));
 		assertEquals(0L, Files.size(expectedFile));
 	}
@@ -231,7 +231,7 @@ class BatchProjectionServiceTest {
 	@Test
 	void testPerformProjectionForChunk_IOException_WritesSkipErrorLog() throws IOException {
 		// Missing partition files -> NoSuchFileException (IOException) -> SkippedChunkErrorLog written
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 5, 0L, 0);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 5, 0L, 0, 1);
 
 		assertThrows(BatchResultStorageException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
@@ -252,7 +252,7 @@ class BatchProjectionServiceTest {
 	void testPerformProjectionForChunk_UnexpectedException_WritesSkipErrorLog() throws IOException {
 		// Invalid polygon data -> exception from extended-core -> SkippedChunkErrorLog written
 		createPartitionStructure(PARTITION_NAME, List.of("123456789,MAP1"), List.of("123456789,P"));
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0, 1);
 
 		assertThrows(BatchProjectionException.class, () -> {
 			batchProjectionService.performProjectionForChunk(chunkMetadata, parameters, JOB_EXECUTION_ID, JOB_GUID);
@@ -281,7 +281,7 @@ class BatchProjectionServiceTest {
 
 		method.invoke(batchProjectionService, outputDir, "projection1", 10);
 
-		Path debugLogFile = outputDir.resolve("YieldTables_projection1_DebugLog.txt");
+		Path debugLogFile = outputDir.resolve("projection1_DebugLog.txt");
 		assertTrue(Files.exists(debugLogFile));
 		assertEquals(0L, Files.size(debugLogFile));
 	}
