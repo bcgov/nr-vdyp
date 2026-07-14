@@ -158,6 +158,7 @@ public class BatchRequestConsumer implements SmartLifecycle {
 		String jobGuid = BatchUtils.createJobGuid();
 		String jobTimestamp = BatchUtils.createJobTimestamp();
 		Integer numPartitions = batchProperties.getPartition().getDefaultNumberOfPartitions();
+		Integer chunkSize = batchProperties.getReader().getDefaultChunkSize();
 		Path jobBaseDir = createJobBaseDirectory(jobGuid);
 
 		JobParameters parameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
@@ -165,7 +166,8 @@ public class BatchRequestConsumer implements SmartLifecycle {
 				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString())
 				.addString(BatchConstants.GuidInput.PROJECTION_GUID, request.projectionID().toString())
-				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue()).toJobParameters();
+				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue())
+				.addLong(BatchConstants.Chunk.SIZE, chunkSize.longValue(), false).toJobParameters();
 
 		logger.info("[GUID: {}] Launching NATS batch request for projection {}", jobGuid, request.projectionID());
 		jobLauncher.run(vdypBatchJob, parameters);
@@ -191,5 +193,10 @@ public class BatchRequestConsumer implements SmartLifecycle {
 	@Override
 	public boolean isRunning() {
 		return running.get();
+	}
+
+	@Override
+	public int getPhase() {
+		return 0;
 	}
 }

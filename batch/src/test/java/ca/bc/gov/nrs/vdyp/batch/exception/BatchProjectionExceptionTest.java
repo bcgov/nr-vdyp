@@ -21,7 +21,7 @@ class BatchProjectionExceptionTest {
 	@Test
 	void testHandleProjectionFailure_WithValidException() {
 		RuntimeException cause = new RuntimeException("Projection algorithm failed");
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-1", "/tmp/job", 100L, 2, 200L, 4);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-1", "/tmp/job", 100L, 2, 200L, 4, 1);
 		String jobGuid = "job-guid-456";
 		Long jobExecutionId = 600L;
 		String partitionName = "partition-1";
@@ -44,7 +44,7 @@ class BatchProjectionExceptionTest {
 	@Test
 	void testHandleProjectionFailure_WithFirstFeatureId_IncludesFeatureIdInMessageAndException() {
 		RuntimeException cause = new RuntimeException("Projection algorithm failed");
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-1", "/tmp/job", 100L, 2, 200L, 4);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-1", "/tmp/job", 100L, 2, 200L, 4, 1);
 
 		BatchProjectionException exception = BatchProjectionException.handleProjectionFailure(
 				cause, chunkMetadata, "job-guid-456", 600L, "partition-1", "123456789", logger
@@ -57,7 +57,7 @@ class BatchProjectionExceptionTest {
 	@Test
 	void testHandleProjectionFailure_WithNullExceptionMessage() {
 		RuntimeException cause = new RuntimeException((String) null);
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-nomsg", "/tmp/job", 0L, 1, 0L, 0);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-nomsg", "/tmp/job", 0L, 1, 0L, 0, 1);
 		String jobGuid = "job-guid-789";
 		Long jobExecutionId = 700L;
 		String partitionName = "partition-nomsg";
@@ -72,7 +72,7 @@ class BatchProjectionExceptionTest {
 	@Test
 	void testHandleProjectionFailure_IsSkippableAndNotRetryable() {
 		RuntimeException cause = new RuntimeException("Test");
-		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-test", "/tmp/job", 0L, 5, 0L, 0);
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata("partition-test", "/tmp/job", 0L, 5, 0L, 0, 1);
 
 		BatchProjectionException exception = BatchProjectionException
 				.handleProjectionFailure(cause, chunkMetadata, "guid", 1L, "partition-test", logger);

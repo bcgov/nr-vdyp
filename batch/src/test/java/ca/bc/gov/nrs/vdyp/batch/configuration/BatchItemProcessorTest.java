@@ -113,6 +113,6 @@ class BatchItemProcessorTest {
 	}
 
 	private BatchChunkMetadata createChunkMetadata(String partitionName, int recordCount) {
-		return new BatchChunkMetadata(partitionName, "/tmp/test-job", 0L, recordCount, 0L, 0);
+		return new BatchChunkMetadata(partitionName, "/tmp/test-job", 0L, recordCount, 0L, 0, 1);
 	}
 }

@@ -73,6 +73,9 @@ class BatchRequestConsumerTest {
 	private BatchProperties.PartitionProperties partitionProperties;
 
 	@Mock
+	private BatchProperties.ReaderProperties readerProperties;
+
+	@Mock
 	private ThreadPoolTaskExecutor taskExecutor;
 
 	@Mock
@@ -112,6 +115,7 @@ class BatchRequestConsumerTest {
 		assertTrue(Files.exists(Path.of(parameters.getString(BatchConstants.Job.BASE_DIR))));
 		assertEquals(jobId.toString(), parameters.getString(BatchConstants.GuidInput.PROJECTION_GUID));
 		assertEquals(2L, parameters.getLong(BatchConstants.Partition.NUMBER));
+		assertEquals(150L, parameters.getLong(BatchConstants.Chunk.SIZE));
 		verify(message).ack();
 		verify(message, never()).nak();
 	}
@@ -251,6 +255,8 @@ class BatchRequestConsumerTest {
 	private void givenBatchProperties(int numberOfPartitions) {
 		when(batchProperties.getPartition()).thenReturn(partitionProperties);
 		when(partitionProperties.getDefaultNumberOfPartitions()).thenReturn(numberOfPartitions);
+		when(batchProperties.getReader()).thenReturn(readerProperties);
+		when(readerProperties.getDefaultChunkSize()).thenReturn(150);
 		when(batchProperties.getRootDirectory()).thenReturn(tempDir.toString());
 	}
 
