@@ -16,6 +16,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -85,6 +86,7 @@ class BatchControllerTest {
 		ReflectionTestUtils.setField(batchController, "batchRootDirectory", tempDir);
 		ReflectionTestUtils.setField(batchController, "defaultNumPartitions", 4);
 		ReflectionTestUtils.setField(batchController, "jobSearchChunkSize", 1000);
+		ReflectionTestUtils.setField(batchController, "defaultChunkSize", 150);
 	}
 
 	@Test
@@ -117,6 +119,10 @@ class BatchControllerTest {
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
+
+		ArgumentCaptor<JobParameters> parametersCaptor = ArgumentCaptor.forClass(JobParameters.class);
+		verify(jobLauncher).run(any(), parametersCaptor.capture());
+		assertEquals(150L, parametersCaptor.getValue().getLong(BatchConstants.Chunk.SIZE));
 	}
 
 	@Test

@@ -48,7 +48,7 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 			var strategy = new CustomMappingStrategy<CSVYieldTableRowValuesBean>(filteredFields);
 			strategy.setType(CSVYieldTableRowValuesBean.class);
 			return new StatefulBeanToCsvBuilder<CSVYieldTableRowValuesBean>(writer).withMappingStrategy(strategy)
-					.build();
+					.withApplyQuotesToAll(false).build();
 		} else {
 			return new StatefulBeanToCsvBuilder<CSVYieldTableRowValuesBean>(writer).build();
 		}

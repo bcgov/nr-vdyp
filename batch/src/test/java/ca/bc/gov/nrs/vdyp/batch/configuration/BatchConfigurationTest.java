@@ -616,12 +616,21 @@ class BatchConfigurationTest {
 	}
 
 	@Test
-	void testPartitionReader() {
+	void testPartitionReader_UsesConfiguredChunkSize() {
 		var partitionReader = configuration
-				.partitionReader("partition-1", TEST_JOB_EXECUTION_ID, TEST_JOB_GUID, batchProperties);
+				.partitionReader("partition-1", TEST_JOB_EXECUTION_ID, TEST_JOB_GUID, 25L, batchProperties);
 
 		assertNotNull(partitionReader);
-		verify(reader, org.mockito.Mockito.times(2)).getDefaultChunkSize();
+		verify(reader, never()).getDefaultChunkSize();
+	}
+
+	@Test
+	void testPartitionReader_WhenChunkSizeParameterMissing_UsesDefaultChunkSize() {
+		var partitionReader = configuration
+				.partitionReader("partition-1", TEST_JOB_EXECUTION_ID, TEST_JOB_GUID, null, batchProperties);
+
+		assertNotNull(partitionReader);
+		verify(reader, org.mockito.Mockito.times(1)).getDefaultChunkSize();
 	}
 
 	@Test

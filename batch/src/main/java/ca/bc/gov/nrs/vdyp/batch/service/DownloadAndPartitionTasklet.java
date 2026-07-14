@@ -83,7 +83,7 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 				totalPolygons = BatchUtils.countDataRecords(reader);
 			}
 
-			int chunkSize = batchProperties.getReader().getDefaultChunkSize();
+			int chunkSize = resolveChunkSize(stepExecution);
 			int maxJobThreads = batchProperties.getThreadPool().getMaxJobThreads();
 			computedPartitions = BatchUtils.calculateThreadsForJob(totalPolygons, chunkSize, maxJobThreads);
 
@@ -125,6 +125,14 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 
 	protected void deleteDirectory(Path dir) throws IOException {
 		BatchUtils.deleteDirectoryRecursively(dir);
+	}
+
+	private int resolveChunkSize(StepExecution stepExecution) {
+		Long chunkSize = stepExecution.getJobExecution().getJobParameters().getLong(BatchConstants.Chunk.SIZE);
+		if (chunkSize != null) {
+			return Math.max(chunkSize.intValue(), 1);
+		}
+		return Math.max(batchProperties.getReader().getDefaultChunkSize(), 1);
 	}
 
 	private void pushInitialProgress(int totalPolygons) {

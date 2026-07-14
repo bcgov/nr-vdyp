@@ -306,15 +306,22 @@ public class BatchConfiguration {
 			@Value("#{stepExecutionContext['partitionName']}") String partitionName,
 			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId,
 			@Value("#{jobParameters['" + BatchConstants.Job.GUID + "']}") String jobGuid,
+			@Value("#{jobParameters['" + BatchConstants.Chunk.SIZE + "']}") Long configuredChunkSize,
 			BatchProperties batchProperties
 	) {
+		int chunkSize = resolveChunkSize(configuredChunkSize, batchProperties);
 		logger.trace(
 				"[GUID: {}, Execution ID: {}, Partition: {}] Using BatchItemReader with chunk size: {}", jobGuid,
-				jobExecutionId, partitionName, batchProperties.getReader().getDefaultChunkSize()
+				jobExecutionId, partitionName, chunkSize
 		);
-		return new BatchItemReader(
-				partitionName, jobExecutionId, jobGuid, batchProperties.getReader().getDefaultChunkSize()
-		);
+		return new BatchItemReader(partitionName, jobExecutionId, jobGuid, chunkSize);
+	}
+
+	private int resolveChunkSize(Long configuredChunkSize, BatchProperties batchProperties) {
+		if (configuredChunkSize != null) {
+			return Math.max(configuredChunkSize.intValue(), 1);
+		}
+		return Math.max(batchProperties.getReader().getDefaultChunkSize(), 1);
 	}
 
 	@Bean

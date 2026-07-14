@@ -91,6 +91,7 @@ public final class BatchConstants {
 	}
 
 	public static final class Chunk {
+		public static final String SIZE = "chunkSize";
 		public static final String TOTAL_POLYGON_RECORDS = "totalPolygonRecords";
 		public static final String NUM_PROCESSED_POLYGON_RECORDS = "numProcessedPolygonRecords";
 		public static final String CURRENT_CHUNK_NUMBER = "currentChunkNumber";
