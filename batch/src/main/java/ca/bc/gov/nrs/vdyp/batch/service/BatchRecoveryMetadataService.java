@@ -24,11 +24,15 @@ public class BatchRecoveryMetadataService {
 
 	@Transactional
 	public void markStaleExecutionFailed(Long jobExecutionId) {
-		markStaleExecutionFailed(jobExecutionId, "Marked FAILED during startup recovery after abrupt shutdown");
+		markStaleExecutionFailedInternal(jobExecutionId, "Marked FAILED during startup recovery after abrupt shutdown");
 	}
 
 	@Transactional
 	public JobExecution markStaleExecutionFailed(Long jobExecutionId, String exitDescription) {
+		return markStaleExecutionFailedInternal(jobExecutionId, exitDescription);
+	}
+
+	private JobExecution markStaleExecutionFailedInternal(Long jobExecutionId, String exitDescription) {
 		JobExecution jobExecution = jobExplorer.getJobExecution(jobExecutionId);
 
 		if (jobExecution == null) {
