@@ -29,6 +29,7 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
@@ -36,8 +37,6 @@ import ca.bc.gov.nrs.vdyp.common.ResultWithStatus;
 import ca.bc.gov.nrs.vdyp.common.ResultWithStatus.BasicStatus;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
-import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
-import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
@@ -103,13 +102,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 	public static void main(final String... args) {
 
-		try (var app = new VriStart();) {
-			app.doMain(args);
-		} catch (VdypApplicationInitializationException e) {
-			System.exit(CONFIG_LOAD_ERROR);
-		} catch (VdypApplicationProcessingException e) {
-			System.exit(PROCESSING_ERROR);
-		}
+		VdypApplication.runApp(VriStart::new, args);
+
 	}
 
 	// VRI_SUB

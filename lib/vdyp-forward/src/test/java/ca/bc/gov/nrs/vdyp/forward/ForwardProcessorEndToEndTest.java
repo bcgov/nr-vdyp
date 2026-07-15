@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -43,6 +42,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
+import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ForwardProcessorEndToEndTest {
@@ -71,11 +71,9 @@ class ForwardProcessorEndToEndTest {
 
 		ForwardProcessor fp = new ForwardProcessor();
 
-		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
-
 		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
-		fp.run(inputFileResolver, vdyp8OutputResolver, List.of("VDYP.CTR"), vdypPassSet);
+		ProcessingTestUtils.runForwardProcessor(fp, vdyp8OutputResolver, "VDYP.CTR", vdypPassSet);
 
 		var vdyp8InputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 		var polygonParser = new VdypPolygonParser();

@@ -2,8 +2,9 @@ package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
@@ -60,7 +61,7 @@ public class ProjectionRunnerTest {
 		);
 		unit.run(streams);
 
-		assertThat(unit.getProjectionResults().hasNext(), is(expectResults));
+		assertThat("Next projection results present", unit.getProjectionResults().hasNext(), is(expectResults));
 	}
 
 	ProjectionRunner unit;
@@ -93,7 +94,7 @@ public class ProjectionRunnerTest {
 
 		InputStream progressStream = unit.getProgressStream();
 		String progressLog = new String(progressStream.readAllBytes());
-		assertThat(progressLog.contains("Processing Map Sheet: \"null\", \"093C090\""), is(true));
+		assertThat("progressLog", progressLog, containsString("Processing Map Sheet: \"null\", \"093C090\""));
 	}
 
 	@Test
@@ -125,8 +126,7 @@ public class ProjectionRunnerTest {
 
 		YieldTable yieldTable = unit.getContext().getYieldTables().get(0);
 		String results = new String(yieldTable.getAsStream().readAllBytes());
-		assertThat(results.length(), greaterThan(0));
-		assertThat(results, containsString("CFS_BIO"));
+		assertThat("results", results, containsString("CFS_BIO"));
 	}
 
 	@Test
@@ -157,8 +157,7 @@ public class ProjectionRunnerTest {
 
 		YieldTable yieldTable = unit.getContext().getYieldTables().get(0);
 		String results = new String(yieldTable.getAsStream().readAllBytes());
-		assertThat(results.length(), greaterThan(0));
-		assertThat(results, containsString("MoF_BIO"));
+		assertThat("results", results, containsString("MoF_BIO"));
 	}
 
 	@Test
@@ -186,7 +185,7 @@ public class ProjectionRunnerTest {
 		unit.run(streams);
 		YieldTable yieldTable = unit.getContext().getYieldTables().get(0);
 		String results = new String(yieldTable.getAsStream().readAllBytes());
-		assertThat(results.length(), greaterThan(0));
+		assertThat("results", results, not(emptyString()));
 	}
 
 	@Test

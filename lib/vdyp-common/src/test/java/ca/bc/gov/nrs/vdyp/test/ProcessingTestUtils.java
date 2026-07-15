@@ -1,8 +1,22 @@
 package ca.bc.gov.nrs.vdyp.test;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.opentest4j.AssertionFailedError;
+
+import ca.bc.gov.nrs.vdyp.application.Pass;
+import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
@@ -179,6 +193,26 @@ public class ProcessingTestUtils {
 		}
 
 		return sum;
+	}
+
+	/**
+	 * Load the control map from resources in the test package using the full control map parser.
+	 */
+	public static Map<String, Object> loadControlMap() {
+		var parser = new ProcessingControlParser();
+		try {
+			return TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
+		} catch (IOException | ResourceParseException ex) {
+			throw new AssertionFailedError(null, ex);
+		}
+	}
+
+	public static void runForwardProcessor(
+			Processor fp, FileResolver outputResolver, final String controlPath, EnumSet<Pass> vdypPassSet
+	) throws ProcessingException {
+		var rawControlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of(controlPath));
+		var controlMap = new ProcessingResolvedControlMapImpl(rawControlMap);
+		fp.process(vdypPassSet, controlMap, Optional.of(outputResolver), p -> true);
 	}
 
 }
