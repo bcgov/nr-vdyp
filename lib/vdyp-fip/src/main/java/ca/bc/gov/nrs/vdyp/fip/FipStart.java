@@ -38,13 +38,12 @@ import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
-import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
-import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
@@ -94,13 +93,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 	public static void main(final String... args) {
 
-		try (var app = new FipStart();) {
-			app.doMain(args);
-		} catch (VdypApplicationInitializationException e) {
-			System.exit(CONFIG_LOAD_ERROR);
-		} catch (VdypApplicationProcessingException e) {
-			System.exit(PROCESSING_ERROR);
-		}
+		VdypApplication.runApp(FipStart::new, args);
+
 	}
 
 	@Override

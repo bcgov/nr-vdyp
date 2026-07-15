@@ -1531,7 +1531,8 @@ public class YieldTable implements Closeable {
 				var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
 
 				layerYields = getYields(
-						calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
+						rowContext, calendarYear, ucReportingLevel, projectedSp0,
+						stand == null ? projectedLayer : projectedSp0
 				);
 			}
 
@@ -1638,12 +1639,12 @@ public class YieldTable implements Closeable {
 	}
 
 	LayerYields getYields(
-			int calendarYear, UtilizationClassSet ucReportingLevel, VdypSpecies projectedSp0,
-			VdypUtilizationHolder entity
+			YieldTableRowContext rowContext, int calendarYear, UtilizationClassSet ucReportingLevel,
+			VdypSpecies projectedSp0, VdypUtilizationHolder entity
 	) throws StandYieldCalculationException {
 		if (projectedSp0 == null || entity == null) {
-			throw new StandYieldCalculationException(
-					new IllegalArgumentException("Cannot calculate yields with a null primary Species")
+			throw standYieldCalculationException(
+					rowContext, new IllegalArgumentException("Cannot calculate yields with a null primary Species")
 			);
 		}
 

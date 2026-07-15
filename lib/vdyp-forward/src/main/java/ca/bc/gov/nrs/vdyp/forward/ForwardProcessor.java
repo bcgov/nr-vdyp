@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -13,6 +12,7 @@ import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
@@ -50,7 +50,7 @@ import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
  *
  * @author Michael Junkin, Vivid Solutions
  */
-public class ForwardProcessor extends Processor<ProcessingDebugSettings> {
+public class ForwardProcessor extends Processor {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessor.class);
 
@@ -66,15 +66,17 @@ public class ForwardProcessor extends Processor<ProcessingDebugSettings> {
 	 */
 	@Override
 	public void process(
-			Set<Pass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver,
+			Set<Pass> vdypPassSet, ProcessingResolvedControlMap controlMap, Optional<FileResolver> outputFileResolver,
 			Predicate<VdypPolygon> polygonFilter
 	) throws ProcessingException {
+
+		// It seems like this is is only ever called with a polygonFilter that always returns true.
 
 		logger.info("Beginning processing with given configuration");
 
 		int maxPoly = 0;
 		if (vdypPassSet.contains(Pass.PASS_1)) {
-			Object maxPolyValue = controlMap.get(ControlKey.MAX_NUM_POLY.name());
+			Object maxPolyValue = controlMap.getControlMap().get(ControlKey.MAX_NUM_POLY.name());
 			if (maxPolyValue != null) {
 				maxPoly = (Integer) maxPolyValue;
 			}
@@ -90,8 +92,9 @@ public class ForwardProcessor extends Processor<ProcessingDebugSettings> {
 		if (vdypPassSet.contains(Pass.PASS_3)) {
 
 			try {
-				var outputWriter = Utils.map(outputFileResolver, ofr -> new VdypOutputWriter(controlMap, ofr));
-				var fpe = new ForwardProcessingEngine(controlMap, outputWriter);
+				var outputWriter = Utils
+						.map(outputFileResolver, ofr -> new VdypOutputWriter(controlMap.getControlMap(), ofr));
+				var fpe = new ForwardProcessingEngine(controlMap.getControlMap(), outputWriter);
 
 				try (var forwardDataStreamReader = new ForwardDataStreamReader(fpe.fps.controlMap);) {
 					// Fetch the next polygon to process.

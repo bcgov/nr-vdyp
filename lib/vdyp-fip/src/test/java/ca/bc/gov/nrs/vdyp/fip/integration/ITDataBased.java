@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.integration_tests.IntermediateDataBasedIntegrationTest;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
@@ -49,9 +50,8 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 		try (var app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
-
-			app.init(
-					resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", ""),
+			ApplicationTestUtils.runInit(
+					app, resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", ""),
 					controlFiles
 			);
 

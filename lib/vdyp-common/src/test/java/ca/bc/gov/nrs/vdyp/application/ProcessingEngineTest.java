@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.application;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -340,4 +341,113 @@ class ProcessingEngineTest {
 		control.verify();
 	}
 
+	@Nested
+	class CalculateCoverages {
+		@Test
+		void testOneSpeces() {
+			var controlMap = TestUtils.loadControlMap();
+			final var control = EasyMock.createControl();
+			MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap = control.createMock(MatrixMap2.class);
+			LayerProcessingState<?> lps = control.createMock(LayerProcessingState.class);
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Blah", 2025);
+				pb.percentAvailable(90f);
+				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.forestInventoryZone("");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("B", controlMap);
+						sb.addSp64Distribution("BL", 100);
+						sb.percentGenus(100);
+						sb.baseArea(10);
+						sb.addSite(ib -> {
+							ib.yearsToBreastHeight(6f);
+							ib.ageTotal(250f);
+							ib.height(20f);
+						});
+					});
+				});
+			});
+
+			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+
+			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
+
+			EasyMock.expect(siteCurveMap.isEmpty()).andStubReturn(true);
+
+			EasyMock.expect(lps.getBank()).andStubReturn(bank);
+			EasyMock.expect(lps.getNSpecies()).andStubReturn(1);
+			EasyMock.expect(lps.getIndices()).andStubReturn(new int[] { 1 });
+
+			control.replay();
+
+			ProcessingEngine.calculateCoverages(lps);
+
+			assertThat(lps.getBank().percentagesOfForestedLand[1], closeTo(100f));
+
+			control.verify();
+		}
+
+		@Test
+		void testTwoSpeces() {
+			var controlMap = TestUtils.loadControlMap();
+			final var control = EasyMock.createControl();
+			MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap = control.createMock(MatrixMap2.class);
+			LayerProcessingState<?> lps = control.createMock(LayerProcessingState.class);
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Blah", 2025);
+				pb.percentAvailable(90f);
+				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.forestInventoryZone("");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("B", controlMap);
+						sb.addSp64Distribution("BL", 70);
+						sb.baseArea(60);
+						sb.addSite(ib -> {
+							ib.yearsToBreastHeight(6f);
+							ib.ageTotal(250f);
+							ib.height(20f);
+						});
+						sb.percentGenus(70);
+					});
+					lb.addSpecies(sb -> {
+						sb.genus("S", controlMap);
+						sb.addSp64Distribution("S", 30);
+						sb.baseArea(40);
+						sb.addSite(ib -> {
+							ib.yearsToBreastHeight(6f);
+							ib.ageTotal(250f);
+							ib.height(20f);
+						});
+						sb.percentGenus(30);
+					});
+				});
+			});
+
+			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+
+			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
+
+			EasyMock.expect(siteCurveMap.isEmpty()).andStubReturn(true);
+
+			EasyMock.expect(lps.getBank()).andStubReturn(bank);
+			EasyMock.expect(lps.getNSpecies()).andStubReturn(2);
+			EasyMock.expect(lps.getIndices()).andStubReturn(new int[] { 1, 2 });
+
+			control.replay();
+
+			ProcessingEngine.calculateCoverages(lps);
+
+			// Percentage should be based on BA as a proportion of total
+			assertThat(lps.getBank().percentagesOfForestedLand[1], closeTo(60f));
+			assertThat(lps.getBank().percentagesOfForestedLand[2], closeTo(40f));
+
+			control.verify();
+		}
+	}
 }

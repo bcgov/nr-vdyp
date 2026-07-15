@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.Test;
@@ -18,10 +17,9 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.ZipOutputFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
 
 class ForwardProcessorZipOutputStreamTest {
 
@@ -38,11 +36,9 @@ class ForwardProcessorZipOutputStreamTest {
 
 		ForwardProcessor fp = new ForwardProcessor();
 
-		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
-
 		var outputResolver = new ZipOutputFileResolver();
 
-		fp.run(inputFileResolver, outputResolver, List.of("VDYP.CTR"), vdypPassSet);
+		ProcessingTestUtils.runForwardProcessor(fp, outputResolver, "VDYP.CTR", vdypPassSet);
 
 		Path resourceDirectory = Paths.get("src", "test", "resources", "output");
 		Files.createDirectories(resourceDirectory);

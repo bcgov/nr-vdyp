@@ -10,7 +10,7 @@ public enum ProjectionStageCode {
 		return this == Forward || this == Back;
 	}
 
-	public static ProjectionStageCode of(VdypApplication app) {
+	public static ProjectionStageCode of(VdypApplication<?> app) {
 		return of(app.getId());
 	}
 

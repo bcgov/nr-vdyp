@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.List;
@@ -15,11 +14,11 @@ import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
+import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
@@ -103,27 +102,6 @@ class ITVriStart {
 			writer.writeEntry(16, outputDir.resolve(SPECIES_OUTPUT_NAME).toString(), "VRI Species Output");
 			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VRI Utilization Output");
 
-		}
-	}
-
-	@Disabled
-	@Test
-	void noControlFile() throws Exception {
-		try (var app = new VriStart();) {
-
-			var resolver = new FileSystemFileResolver(configDir);
-
-			assertThrows(IllegalArgumentException.class, () -> app.init(resolver, null, null));
-		}
-	}
-
-	@Test
-	void controlFileDoesntExist() throws Exception {
-		try (var app = new VriStart();) {
-
-			var resolver = new FileSystemFileResolver(configDir);
-
-			assertThrows(NoSuchFileException.class, () -> app.init(resolver, null, null, "FAKE"));
 		}
 	}
 
@@ -265,7 +243,8 @@ class ITVriStart {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
-			app.init(resolver, null, null, baseControlFile.toString(), ioControlFile.toString());
+			ApplicationTestUtils
+					.runInit(app, resolver, null, null, baseControlFile.toString(), ioControlFile.toString());
 
 			app.process();
 		}

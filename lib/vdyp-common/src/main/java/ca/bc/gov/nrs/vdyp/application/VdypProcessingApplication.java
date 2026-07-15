@@ -1,25 +1,25 @@
 package ca.bc.gov.nrs.vdyp.application;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.LogManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.model.DebugSettings;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
-public abstract class VdypProcessingApplication<DS extends DebugSettings> extends VdypApplication {
+public abstract class VdypProcessingApplication extends VdypApplication<ProcessingDebugSettings> {
 
 	@SuppressWarnings("java:S106")
 	protected static void initLogging(Class<?> klazz) {
@@ -33,9 +33,7 @@ public abstract class VdypProcessingApplication<DS extends DebugSettings> extend
 
 	static final Logger logger = LoggerFactory.getLogger(VdypProcessingApplication.class);
 
-	public abstract String getDefaultControlFileName();
-
-	protected abstract Processor<DS> getProcessor();
+	protected abstract Processor getProcessor();
 
 	public static final int CONFIG_LOAD_ERROR_EXIT = 1;
 	public static final int PROCESSING_ERROR_EXIT = 2;
@@ -45,74 +43,46 @@ public abstract class VdypProcessingApplication<DS extends DebugSettings> extend
 		return EnumSet.allOf(Pass.class);
 	}
 
+	public static final Set<Pass> DEFAULT_PASS_SET = Collections.unmodifiableSet(
+			EnumSet.of(
+					Pass.INITIALIZE, //
+					Pass.OPEN_FILES, //
+					Pass.PROCESS_STANDS, //
+					Pass.MULTIPLE_STANDS, //
+					Pass.CLOSE_FILES //
+			)
+	);
+
+	protected Set<Pass> getDefaultPasses() {
+		return DEFAULT_PASS_SET;
+	}
+
 	protected VdypProcessingApplication() {
 		super();
 	}
 
-	@SuppressWarnings("java:S106") // Using System.out for direct, console based user interaction.
-	public int run(final String... args) {
-		return run(System.out, System.in, args);
-	}
+	@Override
+	protected void process() throws ProcessingException {
+		Processor processor = getProcessor();
 
-	public int run(final PrintStream os, final InputStream is, final String... args) {
-		logVersionInformation();
-
-		final List<String> controlFileNames;
-
-		try {
-			if (args.length == 0) {
-				controlFileNames = getControlFileNamesFromUser(os, is);
-			} else {
-				controlFileNames = Arrays.asList(args);
-			}
-		} catch (Exception ex) {
-			logger.error("Error during initialization", ex);
-			return CONFIG_LOAD_ERROR_EXIT;
-		}
-
-		try {
-			Processor<DS> processor = getProcessor();
-
-			processor.run(new FileSystemFileResolver(), new FileSystemFileResolver(), controlFileNames, getAllPasses());
-
-		} catch (Exception ex) {
-			logger.error("Error during processing", ex);
-			return PROCESSING_ERROR_EXIT;
-		}
-
-		return NO_ERROR_EXIT;
-
-	}
-
-	public List<String> getControlFileNamesFromUser(final PrintStream os, final InputStream is) throws IOException {
-		final String defaultFilename = getDefaultControlFileName();
-		List<String> controlFileNames;
-		os.print(
-				MessageFormat
-						.format("Enter name of control file (or RETURN for {0}) or *name for both): ", defaultFilename)
+		processor.process(
+				this.getDefaultPasses(), (ProcessingResolvedControlMap) this.resolvedControlMap,
+				Optional.of(new FileSystemFileResolver()), p -> true
 		);
-
-		controlFileNames = new ArrayList<>();
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
-			String userResponse = br.readLine();
-			if (userResponse.length() == 0) {
-				controlFileNames.add(defaultFilename);
-			} else {
-				if (userResponse.startsWith("*")) {
-					controlFileNames.add(defaultFilename);
-					userResponse = userResponse.substring(1);
-				}
-				controlFileNames.addAll(Arrays.asList(userResponse.split("\s+")));
-			}
-
-		}
-		return controlFileNames;
 	}
 
-	private void logVersionInformation() {
-		logger.info("{} {}", RESOURCE_SHORT_VERSION, RESOURCE_VERSION_DATE);
-		logger.info("{} Ver:{} {}", RESOURCE_BINARY_NAME, RESOURCE_SHORT_VERSION, RESOURCE_VERSION_DATE);
-		logger.info("VDYP7 Support Ver: {}", AVERSION);
+	@Override
+	protected ProcessingControlParser getControlFileParser() {
+		return new ProcessingControlParser();
 	}
 
+	@Override
+	protected ResolvedControlMap resolveControlMap(Map<String, Object> rawControlMap) {
+		return new ProcessingResolvedControlMapImpl(rawControlMap);
+	}
+
+	@Override
+	public void close() {
+		// nothing to do
+	}
 }

@@ -151,6 +151,7 @@ public class ProjectionEndpoint implements Endpoint {
 						).build();
 			}
 		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
 			return Response.status(Status.INTERNAL_SERVER_ERROR)
 					.entity(e.getMessage() == null ? "unknown reason" : e.getMessage()).build();
 		}
