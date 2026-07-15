@@ -967,7 +967,7 @@ public class Polygon implements Comparable<Polygon> {
 	 */
 	private void doEstimateStockability() throws PolygonValidationException {
 
-		if (percentStockable != null) {
+		if (percentStockable != null && percentStockable != 0.0) {
 			logger.debug("{}: using supplied stockability of {}", this, percentStockable);
 			return;
 		}
@@ -1372,7 +1372,9 @@ public class Polygon implements Comparable<Polygon> {
 					primaryPercentStockable = 1.0;
 				}
 				if (residualPercentStockable <= 1.0) {
-					residualPercentStockable = 1.0;
+					// This matches VDYP7 however it seems like a potential error.
+					// Creating VDYP-1242 to cover the correctness
+					primaryPercentStockable = 1.0;
 				}
 			} else {
 
