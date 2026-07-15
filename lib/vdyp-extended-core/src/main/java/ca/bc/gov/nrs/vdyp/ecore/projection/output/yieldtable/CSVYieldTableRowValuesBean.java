@@ -924,7 +924,9 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 
 	@Override
 	public void setPercentStockable(Double percentStockable) {
-		this.percentStockable = FieldFormatter.format(percentStockable);
+		if (percentStockable >= 0) {
+			this.percentStockable = FieldFormatter.format(percentStockable);
+		}
 	}
 
 	@Override
