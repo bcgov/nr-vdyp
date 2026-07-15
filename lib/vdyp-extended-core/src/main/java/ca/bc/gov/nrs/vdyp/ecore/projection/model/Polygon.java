@@ -967,7 +967,7 @@ public class Polygon implements Comparable<Polygon> {
 	 */
 	private void doEstimateStockability() throws PolygonValidationException {
 
-		if (percentStockable != null) {
+		if (percentStockable != null && percentStockable != 0.0) {
 			logger.debug("{}: using supplied stockability of {}", this, percentStockable);
 			return;
 		}
