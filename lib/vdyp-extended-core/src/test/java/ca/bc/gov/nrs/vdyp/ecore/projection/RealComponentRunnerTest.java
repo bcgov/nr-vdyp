@@ -195,7 +195,7 @@ class RealComponentRunnerTest {
 			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
 			EasyMock.expectLastCall().once();
 
-			//Do any postprocessing
+			// Do any postprocessing
 			after.accept(app);
 			EasyMock.expectLastCall().once();
 
@@ -322,9 +322,8 @@ class RealComponentRunnerTest {
 			em.replay();
 
 			var ex = assertThrows(
-					PolygonExecutionException.class, () -> runner.runApp(
-							polygon, projectionTypeCode, state, appToUse, controlFiles, getApp, after
-					)
+					PolygonExecutionException.class,
+					() -> runner.runApp(polygon, projectionTypeCode, state, appToUse, controlFiles, getApp, after)
 			);
 
 			assertThat(ex, causedBy(sameInstance(rootCause)));
@@ -359,7 +358,7 @@ class RealComponentRunnerTest {
 			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
 			EasyMock.expectLastCall().once();
 
-			//Do any postprocessing
+			// Do any postprocessing
 			after.accept(app);
 			EasyMock.expectLastCall().once();
 
@@ -374,9 +373,8 @@ class RealComponentRunnerTest {
 			em.replay();
 
 			var ex = assertThrows(
-					PolygonExecutionException.class, () -> runner.runApp(
-							polygon, projectionTypeCode, state, appToUse, controlFiles, getApp, after
-					)
+					PolygonExecutionException.class,
+					() -> runner.runApp(polygon, projectionTypeCode, state, appToUse, controlFiles, getApp, after)
 			);
 
 			assertThat(ex, causedBy(sameInstance(rootCause)));
