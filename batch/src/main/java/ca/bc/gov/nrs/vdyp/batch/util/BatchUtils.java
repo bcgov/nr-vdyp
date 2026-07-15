@@ -84,6 +84,19 @@ public final class BatchUtils {
 	}
 
 	/**
+	 * Builds a unique prefix for VDYP outputfiles based on chunk number
+	 *
+	 * @param chunkNumber the number from 1-X of the chunk in this partition
+	 * @return a chunk identifier prefix (e.g., "chunk-00000X) that should sort alphabetically and be reproducible for
+	 *         the same chunk
+	 */
+	public static String batchChunkFilenamePrefix(int chunkNumber) {
+		StringBuilder sb = new StringBuilder("chunk-");
+		sb.append(String.format("%06d", chunkNumber));
+		return sb.toString();
+	}
+
+	/**
 	 * Extracts the first field from a CSV line, handling both quoted and unquoted fields.
 	 *
 	 * Supports standard CSV quoting: - Unquoted: "value,other" -> "value" - Quoted: ""value"",other" -> "value" - With

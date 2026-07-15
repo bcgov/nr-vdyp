@@ -1,5 +1,11 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
+import static ca.bc.gov.nrs.vdyp.batch.util.BatchConstants.Chunk.CURRENT_CHUNK_NUMBER;
+import static ca.bc.gov.nrs.vdyp.batch.util.BatchConstants.Chunk.CURRENT_LAYER_CHUNK_OFFSET;
+import static ca.bc.gov.nrs.vdyp.batch.util.BatchConstants.Chunk.CURRENT_POLYGON_CHUNK_START_BYTE_OFFSET;
+import static ca.bc.gov.nrs.vdyp.batch.util.BatchConstants.Chunk.NUM_PROCESSED_POLYGON_RECORDS;
+import static ca.bc.gov.nrs.vdyp.batch.util.BatchConstants.Chunk.TOTAL_POLYGON_RECORDS;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -57,6 +63,9 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 
 	// Number of processed polygon data records so far (excluding headers and blank lines)
 	private int numProcessedPolygonRecords = 0;
+
+	// The number of this chunk
+	private int currentChunkNumber = 0;
 
 	// Current read positions in the files (byte offset where chunk will be read from)
 	private long currentPolygonChunkStartByteOffset = 0;
@@ -144,7 +153,7 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 
 		BatchChunkMetadata metadata = new BatchChunkMetadata(
 				partitionName, jobBaseDir, polygonChunkMetaData.getStartByte(), polygonChunkMetaData.getRecordCount(),
-				layerChunkMetadata.getStartByte(), layerChunkMetadata.getRecordCount()
+				layerChunkMetadata.getStartByte(), layerChunkMetadata.getRecordCount(), currentChunkNumber
 		);
 
 		logger.trace(
@@ -156,6 +165,7 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 		);
 
 		// Update position for next read
+		currentChunkNumber++;
 		numProcessedPolygonRecords += polygonRecordsInThisChunk;
 		currentPolygonChunkStartByteOffset = polygonChunkMetaData.getEndByte();
 		currentLayerChunkStartByteOffset = layerChunkMetadata.getEndByte();
@@ -202,13 +212,17 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 			this.polygonFilePath = partitionDir.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
 			this.layerFilePath = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
 
-			this.totalPolygonDataRecords = countTotalDataRecords(this.polygonFilePath);
+			boolean restoredState = restorePersistedState(executionContext);
+			if (!restoredState) {
+				this.currentChunkNumber = 1;
+				this.totalPolygonDataRecords = countTotalDataRecords(this.polygonFilePath);
 
-			// Initialize the current read position as the byte offset of the first data record (skipping headers and
-			// blank lines)
-			this.currentPolygonChunkStartByteOffset = findFirstDataRecordByteOffset(this.polygonFilePath);
-			this.currentLayerChunkStartByteOffset = findFirstDataRecordByteOffset(this.layerFilePath);
-
+				// Initialize the current read position as the byte offset of the first data record (skipping headers
+				// and
+				// blank lines)
+				this.currentPolygonChunkStartByteOffset = findFirstDataRecordByteOffset(this.polygonFilePath);
+				this.currentLayerChunkStartByteOffset = findFirstDataRecordByteOffset(this.layerFilePath);
+			}
 			readerOpened = true;
 			logger.trace(
 					"[GUID: {}, EXEID: {}, Partition: {}] BatchItemReader opened successfully. Total polygon records: {}, First polygon byte: {}, First layer byte: {}",
@@ -224,9 +238,35 @@ public class BatchItemReader implements ItemStreamReader<BatchChunkMetadata> {
 		}
 	}
 
+	private boolean restorePersistedState(ExecutionContext executionContext) {
+		boolean hasRestoreState = executionContext.containsKey(CURRENT_CHUNK_NUMBER);
+		boolean restoredState = false;
+
+		if (hasRestoreState) {
+			this.currentChunkNumber = executionContext.getInt(CURRENT_CHUNK_NUMBER);
+			this.totalPolygonDataRecords = executionContext.getInt(TOTAL_POLYGON_RECORDS);
+			this.numProcessedPolygonRecords = executionContext.getInt(NUM_PROCESSED_POLYGON_RECORDS);
+			this.currentPolygonChunkStartByteOffset = executionContext.getLong(CURRENT_POLYGON_CHUNK_START_BYTE_OFFSET);
+			this.currentLayerChunkStartByteOffset = executionContext.getLong(CURRENT_LAYER_CHUNK_OFFSET);
+			restoredState = true;
+			logger.info(
+					"[GUID: {}, EXEID: {}, Partition: {}] Restored persisted state from ExecutionContext: currentChunkNumber={}, totalPolygonRecords={}, numProcessedPolygonRecords={}, currentPolygonChunkStartByteOffset={}, currentLayerChunkStartByteOffset={}",
+					jobGuid, jobExecutionId, partitionName, currentChunkNumber, totalPolygonDataRecords,
+					numProcessedPolygonRecords, currentPolygonChunkStartByteOffset, currentLayerChunkStartByteOffset
+			);
+		}
+
+		return restoredState;
+	}
+
 	@Override
 	public void update(@NonNull ExecutionContext executionContext) {
-		// No state to persist
+		// Persist current chunk details so we can resume without starting form the beginning
+		executionContext.putInt(CURRENT_CHUNK_NUMBER, this.currentChunkNumber);
+		executionContext.putInt(TOTAL_POLYGON_RECORDS, this.totalPolygonDataRecords);
+		executionContext.putInt(NUM_PROCESSED_POLYGON_RECORDS, this.numProcessedPolygonRecords);
+		executionContext.putLong(CURRENT_POLYGON_CHUNK_START_BYTE_OFFSET, this.currentPolygonChunkStartByteOffset);
+		executionContext.putLong(CURRENT_LAYER_CHUNK_OFFSET, this.currentLayerChunkStartByteOffset);
 	}
 
 	@Override

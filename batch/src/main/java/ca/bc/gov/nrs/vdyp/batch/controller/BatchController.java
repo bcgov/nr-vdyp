@@ -64,6 +64,9 @@ public class BatchController {
 	@Value("${batch.partition.job-search-chunk-size}")
 	private int jobSearchChunkSize;
 
+	@Value("${batch.reader.default-chunk-size}")
+	private Integer defaultChunkSize;
+
 	public BatchController(
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
@@ -333,7 +336,7 @@ public class BatchController {
 			// Pass defaultNumPartitions as a safe fallback in case the tasklet cannot determine the count.
 			JobParameters jobParameters = buildJobParameters(
 					projectionParametersJson, defaultNumPartitions, jobGuid, jobTimestamp, jobBaseDir.toString(),
-					projectionGuid
+					projectionGuid, defaultChunkSize
 			);
 			JobExecution jobExecution = jobLauncher.run(fetchAndPartitionJob, jobParameters);
 
@@ -390,14 +393,15 @@ public class BatchController {
 	/** Builds job parameters for GUID-based flow (files fetched from COMS by DownloadAndPartitionTasklet). */
 	private JobParameters buildJobParameters(
 			String projectionParametersJson, Integer numPartitions, String jobGuid, String jobTimestamp,
-			String jobBaseDir, UUID projectionGUID
+			String jobBaseDir, UUID projectionGUID, Integer chunkSize
 	) {
 		return new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
 				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
 				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
 				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGUID.toString())
-				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue()).toJobParameters();
+				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue())
+				.addLong(BatchConstants.Chunk.SIZE, chunkSize.longValue(), false).toJobParameters();
 	}
 
 	private void buildSuccessResponse(Map<String, Object> response, JobExecution jobExecution) {

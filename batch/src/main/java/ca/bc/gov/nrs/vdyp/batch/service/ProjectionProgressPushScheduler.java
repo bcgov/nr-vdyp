@@ -72,26 +72,19 @@ public class ProjectionProgressPushScheduler {
 
 	private void pushProgressForJob(JobExecution job, String projectionGUID) {
 		String batchJobGUID = job.getJobParameters().getString(BatchConstants.Job.GUID);
-		int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
-		int workers = BatchUtils.calculateActiveWorkers(job, true);
-		int polygonsProcessed = 0;
-		int errorCount = 0;
-		int polygonsSkipped = 0;
-		for (StepExecution step : job.getStepExecutions()) {
-			if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
-				ExecutionContext stepCtx = step.getExecutionContext();
-				polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
-				errorCount += stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
-				polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
-			}
+		ProgressSnapshot progress = buildRestartAwareProgress(job);
+		if (progress.isEmpty()) {
+			return;
 		}
 
-		Triple<Integer, Integer, Integer> checkTriple = Triple.of(polygonsProcessed, errorCount, polygonsSkipped);
+		Triple<Integer, Integer, Integer> checkTriple = Triple
+				.of(progress.polygonsProcessed(), progress.errorCount(), progress.polygonsSkipped());
 		int newHash = checkTriple.hashCode();
 		Integer previousHash = lastProgressHashByProjection.put(projectionGUID, newHash);
 		if (previousHash == null || previousHash != newHash) {
 			VDYPProjectionProgressUpdate payload = new VDYPProjectionProgressUpdate(
-					batchJobGUID, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, workers
+					batchJobGUID, progress.totalPolygons(), progress.polygonsProcessed(), progress.errorCount(),
+					progress.polygonsSkipped(), progress.workers()
 			);
 			progressExecutor.execute(() -> {
 				try {
@@ -100,6 +93,61 @@ public class ProjectionProgressPushScheduler {
 					logger.error("Error pushing progress to VDYP", logMe);
 				}
 			});
+		}
+	}
+
+	private ProgressSnapshot buildRestartAwareProgress(JobExecution runningJob) {
+		Map<String, ProgressSnapshot> bestProgressByWorkerStep = new HashMap<>();
+		int totalPolygons = runningJob.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+
+		for (JobExecution jobExecution : jobExplorer.getJobExecutions(runningJob.getJobInstance())) {
+			totalPolygons = Math.max(
+					totalPolygons, jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0)
+			);
+			for (StepExecution step : jobExecution.getStepExecutions()) {
+				if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
+					bestProgressByWorkerStep.merge(
+							step.getStepName(), progressFromStep(step), ProjectionProgressPushScheduler::maxProgress
+					);
+				}
+			}
+		}
+
+		int workers = BatchUtils.calculateActiveWorkers(runningJob, true);
+		int polygonsProcessed = 0;
+		int errorCount = 0;
+		int polygonsSkipped = 0;
+		for (ProgressSnapshot progress : bestProgressByWorkerStep.values()) {
+			polygonsProcessed += progress.polygonsProcessed();
+			errorCount += progress.errorCount();
+			polygonsSkipped += progress.polygonsSkipped();
+		}
+
+		return new ProgressSnapshot(totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, workers);
+	}
+
+	private static ProgressSnapshot progressFromStep(StepExecution step) {
+		ExecutionContext stepCtx = step.getExecutionContext();
+		return new ProgressSnapshot(
+				0, stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0),
+				stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0),
+				stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0), 0
+		);
+	}
+
+	private static ProgressSnapshot maxProgress(ProgressSnapshot left, ProgressSnapshot right) {
+		return left.progressTotal() >= right.progressTotal() ? left : right;
+	}
+
+	private record ProgressSnapshot(
+			int totalPolygons, int polygonsProcessed, int errorCount, int polygonsSkipped, int workers
+	) {
+		boolean isEmpty() {
+			return totalPolygons == 0 && progressTotal() == 0;
+		}
+
+		int progressTotal() {
+			return polygonsProcessed + errorCount + polygonsSkipped;
 		}
 	}
 }

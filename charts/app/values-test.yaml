@@ -248,7 +248,8 @@ batch:
   #-- enable or disable batch
   enabled: true
   #-- the deployment strategy, can be "Recreate" or "RollingUpdate"
-  deploymentStrategy: RollingUpdate
+  # Recreate so in-flight projections can be restarted after the service is restarted.
+  deploymentStrategy: Recreate
   #-- autoscaling for the component. it is optional and is an object.
   autoscaling:
     #-- enable or disable autoscaling.

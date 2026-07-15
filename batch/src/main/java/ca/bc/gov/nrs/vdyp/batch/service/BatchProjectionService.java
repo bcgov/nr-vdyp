@@ -59,6 +59,7 @@ public class BatchProjectionService {
 
 		String partitionName = chunkMetadata.getPartitionName();
 		String jobBaseDir = chunkMetadata.getJobBaseDir();
+		int chunkNumber = chunkMetadata.getCurrentChunkNumber();
 		long polygonStartByte = chunkMetadata.getPolygonStartByte();
 		int polygonRecordCount = chunkMetadata.getPolygonRecordCount();
 
@@ -74,25 +75,24 @@ public class BatchProjectionService {
 			// Create input streams directly from partition files
 			inputStreams = createInputStreamsFromChunkMetadata(chunkMetadata);
 
-			String batchProjectionId = BatchUtils
-					.buildBatchProjectionId(jobExecutionId, partitionName, ProjectionRequestKind.HCSV);
+			String chunkFilePrefix = BatchUtils.batchChunkFilenamePrefix(chunkNumber);
 
 			try (
 					ProjectionRunner runner = new ProjectionRunner(
-							ProjectionRequestKind.HCSV, batchProjectionId, projectionParameters, false
+							ProjectionRequestKind.HCSV, chunkFilePrefix, projectionParameters, false
 					)
 			) {
 
 				logger.debug(
 						"[GUID: {}, EXEID: {}] Running HCSV projection {} for chunk of {} records in partition {}",
-						jobGuid, jobExecutionId, batchProjectionId, polygonRecordCount, partitionName
+						jobGuid, jobExecutionId, chunkFilePrefix, polygonRecordCount, partitionName
 				);
 
 				// Run the projection on the streamed data
 				runner.run(inputStreams);
 
 				// Store intermediate results
-				storeChunkIntermediateResults(runner, outputPartitionDir, batchProjectionId, polygonRecordCount);
+				storeChunkIntermediateResults(runner, outputPartitionDir, chunkFilePrefix, polygonRecordCount);
 
 				updateChunkMetaDataFromRunner(runner, chunkMetadata);
 
@@ -350,17 +350,17 @@ public class BatchProjectionService {
 	 * @throws IOException if result storage fails
 	 */
 	private void storeChunkIntermediateResults(
-			ProjectionRunner runner, Path partitionOutputDir, String projectionId, int recordCount
+			ProjectionRunner runner, Path partitionOutputDir, String filePrefix, int recordCount
 	) throws IOException {
 
-		logger.debug("Storing intermediate results for chunk projection {} ({} records)", projectionId, recordCount);
+		logger.debug("Storing intermediate results for chunk projection {} ({} records)", filePrefix, recordCount);
 
-		storeChunkYieldTables(runner, partitionOutputDir, projectionId, recordCount);
+		storeChunkYieldTables(runner, partitionOutputDir, filePrefix, recordCount);
 
-		storeChunkLogs(runner, partitionOutputDir, projectionId, recordCount);
+		storeChunkLogs(runner, partitionOutputDir, filePrefix, recordCount);
 
 		logger.debug(
-				"Successfully stored intermediate results for chunk projection {} ({} records) in {}", projectionId,
+				"Successfully stored intermediate results for chunk projection {} ({} records) in {}", filePrefix,
 				recordCount, partitionOutputDir
 		);
 	}
@@ -370,7 +370,7 @@ public class BatchProjectionService {
 	 *
 	 * @throws IOException if yield table storage fails
 	 */
-	private void storeChunkYieldTables(ProjectionRunner runner, Path partitionDir, String projectionId, int recordCount)
+	private void storeChunkYieldTables(ProjectionRunner runner, Path partitionDir, String filePrefix, int recordCount)
 			throws IOException {
 		if (runner == null || runner.getContext() == null) {
 			logger.warn("Cannot store yield tables: ProjectionRunner or context is null");
@@ -381,18 +381,18 @@ public class BatchProjectionService {
 		if (yieldTables == null || yieldTables.isEmpty()) {
 			logger.warn(
 					"WARNING: No yield tables returned from extended-core for projection {} ({} input records)",
-					projectionId, recordCount
+					filePrefix, recordCount
 			);
 			return;
 		}
 
 		logger.trace(
 				"Extended-core returned {} yield table(s) for projection {} ({} input records)", yieldTables.size(),
-				projectionId, recordCount
+				filePrefix, recordCount
 		);
 
 		for (YieldTable yieldTable : yieldTables) {
-			storeYieldTable(yieldTable, partitionDir, projectionId, recordCount);
+			storeYieldTable(yieldTable, partitionDir, filePrefix, recordCount);
 		}
 	}
 
@@ -401,16 +401,16 @@ public class BatchProjectionService {
 	 *
 	 * @throws IOException if file copy fails
 	 */
-	private void storeYieldTable(YieldTable yieldTable, Path partitionDir, String projectionId, int recordCount)
+	private void storeYieldTable(YieldTable yieldTable, Path partitionDir, String filePrefix, int recordCount)
 			throws IOException {
 		if (yieldTable == null) {
-			logger.warn("Skipping null yield table in projection {}", projectionId);
+			logger.warn("Skipping null yield table in projection {}", filePrefix);
 			return;
 		}
 
 		String yieldTableFileName = yieldTable.getOutputFormat().getYieldTableFileName();
 		// Add chunk prefix to maintain traceability
-		String prefixedFileName = String.format("YieldTables_%s_%s", projectionId, yieldTableFileName);
+		String prefixedFileName = String.format("%s_%s", filePrefix, yieldTableFileName);
 		Path yieldTablePath = partitionDir.resolve(prefixedFileName);
 
 		try (InputStream yieldTableStream = yieldTable.getAsStream()) {
@@ -441,7 +441,7 @@ public class BatchProjectionService {
 	 *
 	 * @throws IOException if log file storage fails
 	 */
-	private void storeChunkLogs(ProjectionRunner runner, Path partitionDir, String projectionId, int recordCount)
+	private void storeChunkLogs(ProjectionRunner runner, Path partitionDir, String filePrefix, int recordCount)
 			throws IOException {
 		if (runner == null || runner.getContext() == null || runner.getContext().getParams() == null) {
 			logger.warn("Cannot store logs: ProjectionRunner, context, or params is null");
@@ -452,23 +452,23 @@ public class BatchProjectionService {
 
 		// Store progress log if enabled
 		if (params.containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {
-			storeProgressLog(runner, partitionDir, projectionId, recordCount);
+			storeProgressLog(runner, partitionDir, filePrefix, recordCount);
 		}
 
 		// Store error log if enabled
 		if (params.containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
-			storeErrorLog(runner, partitionDir, projectionId, recordCount);
+			storeErrorLog(runner, partitionDir, filePrefix, recordCount);
 		}
 
 		// Store debug log if enabled
 		if (params.containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
-			storeDebugLog(partitionDir, projectionId, recordCount);
+			storeDebugLog(partitionDir, filePrefix, recordCount);
 		}
 	}
 
-	private void storeProgressLog(ProjectionRunner runner, Path partitionDir, String projectionId, int recordCount)
+	private void storeProgressLog(ProjectionRunner runner, Path partitionDir, String filePrefix, int recordCount)
 			throws IOException {
-		String progressLogFileName = String.format("YieldTables_%s_ProgressLog.txt", projectionId);
+		String progressLogFileName = String.format("%s_ProgressLog.txt", filePrefix);
 		Path progressLogPath = partitionDir.resolve(progressLogFileName);
 
 		try (InputStream progressStream = runner.getProgressStream()) {
@@ -492,9 +492,9 @@ public class BatchProjectionService {
 		}
 	}
 
-	private void storeErrorLog(ProjectionRunner runner, Path partitionDir, String projectionId, int recordCount)
+	private void storeErrorLog(ProjectionRunner runner, Path partitionDir, String filePrefix, int recordCount)
 			throws IOException {
-		String errorLogFileName = String.format("YieldTables_%s_ErrorLog.txt", projectionId);
+		String errorLogFileName = String.format("%s_ErrorLog.txt", filePrefix);
 		Path errorLogPath = partitionDir.resolve(errorLogFileName);
 
 		try (InputStream errorStream = runner.getErrorStream()) {
@@ -518,8 +518,8 @@ public class BatchProjectionService {
 		}
 	}
 
-	private void storeDebugLog(Path partitionDir, String projectionId, int recordCount) throws IOException {
-		String debugLogFileName = String.format("YieldTables_%s_DebugLog.txt", projectionId);
+	private void storeDebugLog(Path partitionDir, String filePrefix, int recordCount) throws IOException {
+		String debugLogFileName = String.format("%s_DebugLog.txt", filePrefix);
 		Path debugLogPath = partitionDir.resolve(debugLogFileName);
 
 		Files.write(debugLogPath, new byte[0], StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
