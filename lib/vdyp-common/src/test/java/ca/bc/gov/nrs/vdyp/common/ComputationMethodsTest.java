@@ -12,7 +12,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.model.BecDefinition;
+import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
+import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class ComputationMethodsTest {
 
@@ -145,6 +154,29 @@ public class ComputationMethodsTest {
 					.assertDoesNotThrow(() -> ComputationMethods.computeLoreyHeightWithSmallClass(entity));
 
 			assertThat(result, equalTo(0f));
+		}
+	}
+
+	@Nested
+	class ComputeUtilizationComponentsPrimary {
+
+		@Test
+		void testSimple() throws ProcessingException {
+			var control = TestUtils.resolveControlMap(TestUtils.loadControlMap());
+			var emp = new EstimationMethods(control);
+			var cmp = new ComputationMethods(emp, VdypApplicationIdentifier.FIP_START);
+
+			var bec = control.getBecLookup().get("CWH").get();
+			var volumeComputeMode = VolumeComputeMode.BY_UTIL;
+			var compatibilityVariableMode = CompatibilityVariableMode.NONE;
+
+			VdypLayer vdypLayer = VdypLayer.build(lb -> {
+				lb.polygonIdentifier("Test", 2026);
+				lb.layerType(LayerType.PRIMARY);
+
+			});
+
+			cmp.computeUtilizationComponentsPrimary(bec, vdypLayer, volumeComputeMode, compatibilityVariableMode);
 		}
 	}
 }
