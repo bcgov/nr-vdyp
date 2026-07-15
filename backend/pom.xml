@@ -323,6 +323,13 @@
 			<artifactId>lucene-core</artifactId>
 			<version>9.11.0</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>io.github.classgraph</groupId>
+			<artifactId>classgraph</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
   <build>
     <pluginManagement>

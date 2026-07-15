@@ -92,6 +92,11 @@ class VdypStartApplicationTest {
 
 	private Map<String, Object> controlMap = new HashMap<>();
 
+	@BeforeEach
+	void setup() {
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), new TestDebugSettings());
+	}
+
 	@Nested
 	class Init {
 

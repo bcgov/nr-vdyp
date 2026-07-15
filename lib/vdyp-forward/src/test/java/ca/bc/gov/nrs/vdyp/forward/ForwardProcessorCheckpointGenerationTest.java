@@ -1,11 +1,12 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
@@ -29,6 +29,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
+import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ForwardProcessorCheckpointGenerationTest {
@@ -47,11 +48,9 @@ class ForwardProcessorCheckpointGenerationTest {
 
 		ForwardProcessor fp = new ForwardProcessor();
 
-		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
-
 		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
-		fp.run(inputFileResolver, vdyp8OutputResolver, List.of("VDYP-Checkpoint.CTR"), vdypPassSet);
+		ProcessingTestUtils.runForwardProcessor(fp, vdyp8OutputResolver, "VDYP-Checkpoint.CTR", vdypPassSet);
 
 		// Verify that polygons are output 14 times for each year of growth.
 
@@ -95,7 +94,7 @@ class ForwardProcessorCheckpointGenerationTest {
 				nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
 			}
 
-			assert (count == 14);
+			assertEquals(14, count, "polygon count (same polygon, same year");
 		}
 	}
 }
