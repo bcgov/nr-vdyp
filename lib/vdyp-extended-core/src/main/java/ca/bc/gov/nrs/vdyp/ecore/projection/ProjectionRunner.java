@@ -138,18 +138,14 @@ public class ProjectionRunner implements Closeable {
 						}
 
 					} catch (PolygonExecutionException e) {
-						for (ValidationMessage m : e.getValidationMessages()) {
-							context.logError(m.getKind().template, m.getArgs());
-						}
+						logValidationMessages(e);
 
 						if (e.getCause() instanceof PolygonValidationException pve) {
 							throw pve;
 						}
 					}
 				} catch (PolygonValidationException e) {
-					for (ValidationMessage m : e.getValidationMessages()) {
-						context.logError(m.getKind().template, m.getArgs());
-					}
+					logValidationMessages(e);
 
 					if (polygon != null) {
 						for (var message : polygon.getMessages()) {
@@ -178,6 +174,23 @@ public class ProjectionRunner implements Closeable {
 			}
 		} finally {
 			context.endRun();
+		}
+	}
+
+	/**
+	 * Logs each of the given exception's validation messages to the error log, one line per message. If the exception
+	 * carries a separate polygon/layer context prefix (see AbstractProjectionRequestException.getContextPrefix()), that
+	 * prefix is prepended to each line; otherwise the message is logged as-is, since in that case any such context was
+	 * already baked into the message itself at construction time.
+	 */
+	private void logValidationMessages(AbstractProjectionRequestException e) {
+		String contextPrefix = e.getContextPrefix();
+		for (ValidationMessage m : e.getValidationMessages()) {
+			if (contextPrefix != null) {
+				context.logError(AbstractProjectionRequestException.prefixMessage(contextPrefix, m.getMessage()));
+			} else {
+				context.logError(m.getKind().template, m.getArgs());
+			}
 		}
 	}
 

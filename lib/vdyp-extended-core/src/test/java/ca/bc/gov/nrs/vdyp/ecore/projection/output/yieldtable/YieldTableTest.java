@@ -1244,11 +1244,14 @@ class YieldTableTest {
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
 
 		var yieldTable = YieldTable.of(context);
+		var polygon = new Polygon.Builder().featureId(13919428).build();
+		var rowContext = YieldTableRowContext.of(context, polygon, new PolygonProjectionState(), null);
 
-		assertThrows(
+		var ex = assertThrows(
 				StandYieldCalculationException.class,
-				() -> yieldTable.getYields(2020, UtilizationClassSet._7_5, null, null)
+				() -> yieldTable.getYields(rowContext, 2020, UtilizationClassSet._7_5, null, null)
 		);
+		assertThat(ex.getMessage(), containsString("Polygon 13919428"));
 	}
 
 	@Test
@@ -1258,13 +1261,16 @@ class YieldTableTest {
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
 
 		var yieldTable = YieldTable.of(context);
+		var polygon = new Polygon.Builder().featureId(13919428).build();
+		var rowContext = YieldTableRowContext.of(context, polygon, new PolygonProjectionState(), null);
 		VdypSpecies species = new VdypSpecies.Builder().genus("PL", 1).polygonIdentifier("12345689", 2020)
 				.layerType(LayerType.PRIMARY).build();
 
-		assertThrows(
+		var ex = assertThrows(
 				StandYieldCalculationException.class,
-				() -> yieldTable.getYields(2020, UtilizationClassSet._7_5, species, null)
+				() -> yieldTable.getYields(rowContext, 2020, UtilizationClassSet._7_5, species, null)
 		);
+		assertThat(ex.getMessage(), containsString("Polygon 13919428"));
 	}
 
 	@Test
@@ -1274,6 +1280,8 @@ class YieldTableTest {
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
 
 		var yieldTable = YieldTable.of(context);
+		var polygon = new Polygon.Builder().featureId(13919428).build();
+		var rowContext = YieldTableRowContext.of(context, polygon, new PolygonProjectionState(), null);
 
 		VdypSpecies species = VdypSpecies.build(sb -> {
 			sb.genus("PL", 1);
@@ -1303,7 +1311,7 @@ class YieldTableTest {
 			);
 		});
 
-		var result = yieldTable.getYields(2020, UtilizationClassSet._7_5, species, species);
+		var result = yieldTable.getYields(rowContext, 2020, UtilizationClassSet._7_5, species, species);
 		assertThat(result, recordHasProperty("basalArea75cm", Matchers.closeTo(14.9620, 0.014)));
 		assertThat(result, recordHasProperty("basalArea125cm", Matchers.closeTo(12.7926, 0.012)));
 		assertThat(result, recordHasProperty("basalArea", Matchers.closeTo(14.9620, 0.014)));
@@ -1317,6 +1325,8 @@ class YieldTableTest {
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
 
 		var yieldTable = YieldTable.of(context);
+		var polygon = new Polygon.Builder().featureId(13919428).build();
+		var rowContext = YieldTableRowContext.of(context, polygon, new PolygonProjectionState(), null);
 
 		VdypSpecies species = VdypSpecies.build(sb -> {
 			sb.genus("PL", 1);
@@ -1346,7 +1356,7 @@ class YieldTableTest {
 			);
 		});
 
-		var result = yieldTable.getYields(2020, UtilizationClassSet._12_5, species, species);
+		var result = yieldTable.getYields(rowContext, 2020, UtilizationClassSet._12_5, species, species);
 		assertThat(result, recordHasProperty("basalArea75cm", Matchers.closeTo(14.9620, 0.014)));
 		assertThat(result, recordHasProperty("basalArea125cm", Matchers.closeTo(12.7926, 0.012)));
 		assertThat(result, recordHasProperty("basalArea", Matchers.closeTo(12.7926, 0.012)));

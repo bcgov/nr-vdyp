@@ -122,7 +122,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 	private void collectMessages(List<ValidationMessage> messages, Exception e) {
 		if (e instanceof CsvConstraintViolationException cve) {
 			if (cve.getSourceObject() instanceof AbstractProjectionRequestException apre) {
-				messages.addAll(apre.getValidationMessages());
+				messages.addAll(withContextPrefix(apre));
 			} else {
 				throw new IllegalStateException(
 						"Expecting instanceof AbstractProjectionRequestException; saw instead " + e.getClass().getName()
@@ -134,6 +134,27 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 					"Expecting instanceof CsvConstraintViolationException; saw instead " + e.getClass().getName()
 			);
 		}
+	}
+
+	/**
+	 * Multiple exceptions (e.g. from several layers of the same polygon) are merged into a single flat list of
+	 * ValidationMessages here, so any polygon/layer context captured by the given exception (see
+	 * AbstractProjectionRequestException.getContextPrefix()) must be baked into each individual message now, before
+	 * that context is lost - a single prefix on the merged, multi-source list wouldn't correctly represent messages
+	 * that came from different layers.
+	 */
+	private static List<ValidationMessage> withContextPrefix(AbstractProjectionRequestException apre) {
+		String contextPrefix = apre.getContextPrefix();
+		if (contextPrefix == null) {
+			return apre.getValidationMessages();
+		}
+		return apre.getValidationMessages().stream()
+				.map(
+						m -> new ValidationMessage(
+								ValidationMessageKind.GENERIC,
+								AbstractProjectionRequestException.prefixMessage(contextPrefix, m.getMessage())
+						)
+				).toList();
 	}
 
 	private void advanceToFirstPolygon() {
