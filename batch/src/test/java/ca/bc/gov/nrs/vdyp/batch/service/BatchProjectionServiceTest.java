@@ -25,6 +25,7 @@ import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
@@ -267,6 +268,27 @@ class BatchProjectionServiceTest {
 		assertTrue(content.contains(JOB_GUID), "Skip log should contain job GUID");
 		assertTrue(content.contains("1 polygon(s)"), "Skip log should contain polygon count");
 		assertTrue(content.contains(PARTITION_NAME), "Skip log should contain partition name");
+	}
+
+	@Test
+	void testWriteChunkSkipErrorLog_IncludesFeatureIdFromYieldTableGenerationException() throws IOException,
+			NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException {
+		BatchChunkMetadata chunkMetadata = new BatchChunkMetadata(PARTITION_NAME, tempDir.toString(), 0L, 1, 0L, 0, 1);
+		var cause = new YieldTableGenerationException(13919428L, new IOException("disk full"));
+
+		Method method = BatchProjectionService.class
+				.getDeclaredMethod("writeChunkSkipErrorLog", BatchChunkMetadata.class, String.class);
+		method.setAccessible(true);
+
+		method.invoke(batchProjectionService, chunkMetadata, cause.getMessage());
+
+		Path outputDir = tempDir.resolve("output-" + PARTITION_NAME);
+		Path skipLog = outputDir.resolve("YieldTables_" + PARTITION_NAME + "-chunk0_SkippedChunkErrorLog.txt");
+
+		assertTrue(Files.exists(skipLog), "SkippedChunkErrorLog.txt should be created");
+
+		String content = Files.readString(skipLog);
+		assertTrue(content.contains("Polygon 13919428"), "Skip log should contain the polygon's feature ID");
 	}
 
 	@Test
