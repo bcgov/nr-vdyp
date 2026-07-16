@@ -57,12 +57,7 @@ class Scenario3 extends Scenario {
 
 		String[] csvLines = new String(TestHelper.readZipEntry(zipFile, entry1)).split("\n");
 		assertThat(csvLines, arrayWithSize(184));
-		assertThat(
-				csvLines[0],
-				startsWith(
-						"TABLE_NUM,FEATURE_ID,DISTRICT,MAP_ID,POLYGON_ID,LAYER_ID,PROJECTION_YEAR"
-				)
-		);
+		assertThat(csvLines[0], startsWith("TABLE_NUM,FEATURE_ID,DISTRICT,MAP_ID,POLYGON_ID,LAYER_ID,PROJECTION_YEAR"));
 
 		assertThat(
 				csvLines[1], //
