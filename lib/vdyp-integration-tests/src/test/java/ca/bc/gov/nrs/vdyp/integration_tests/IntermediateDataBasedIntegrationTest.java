@@ -15,7 +15,6 @@ import java.util.function.BiPredicate;
 import java.util.function.IntUnaryOperator;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FilenameUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.io.CleanupMode;
@@ -26,7 +25,6 @@ import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
-import io.github.classgraph.ClassGraph;
 
 public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBasedIntegrationTest {
 
@@ -100,22 +98,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 	 */
 	@BeforeAll
 	protected static void initConfigDir() throws IOException {
-
-		final Path coeDir = configDir.resolve("coe/");
-		Files.createDirectory(coeDir);
-
-		try (
-				var scan = new ClassGraph().verbose().addClassLoader(TestUtils.class.getClassLoader())
-						.acceptPaths("ca/bc/gov/nrs/vdyp/test").scan()
-		) {
-			for (var resource : scan.getResourcesMatchingWildcard("ca/bc/gov/nrs/vdyp/test/coe/*")) {
-				final Path dest = coeDir.resolve(FilenameUtils.getName(resource.getPath()));
-				System.err.printf("Copying %s to %s", resource.getPath(), dest).println();
-				try (var is = resource.open()) {
-					Files.copy(is, dest);
-				}
-			}
-		}
+		TestUtils.initCoeDir(configDir, TestUtils.class);
 	}
 
 	protected static String fileName(State state, Data data) {

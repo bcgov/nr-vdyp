@@ -80,9 +80,6 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessor.class);
 
-	private static final int UC_ALL_INDEX = UtilizationClass.ALL.ordinal();
-	private static final int UC_SMALL_INDEX = UtilizationClass.SMALL.ordinal();
-
 	public static final float MIN_BASAL_AREA = 0.001f;
 
 	/** π/4/10⁴ */
@@ -3495,30 +3492,6 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 		if (Float.isNaN(bank.yearsAtBreastHeight[pspIndex]) || bank.yearsAtBreastHeight[pspIndex] <= 0.0f
 				|| Float.isNaN(bank.siteIndices[pspIndex]) || bank.siteIndices[pspIndex] <= 0.0f) {
 			throw new ProcessingException("Primary species lacks BH age or site index");
-		}
-	}
-
-	/**
-	 * VPRIME1, method == 1: calculate the percentage of forested land covered by each species by dividing the basal
-	 * area of each given species with the basal area of the polygon covered by forest.
-	 *
-	 * @param state the bank in which the calculations are performed
-	 */
-	static void calculateCoverages(LayerProcessingState<ForwardLayerProcessingState> lps) {
-
-		Bank bank = lps.getBank();
-
-		logger.atDebug().addArgument(lps.getNSpecies()).addArgument(bank.basalAreas[0][0]).log(
-				"Calculating coverages as a ratio of Species BA over Total BA. # species: {}; Layer total 7.5cm+ basal area: {}"
-		);
-
-		for (int i : lps.getIndices()) {
-			bank.percentagesOfForestedLand[i] = bank.basalAreas[i][UC_ALL_INDEX] / bank.basalAreas[0][UC_ALL_INDEX]
-					* 100.0f;
-
-			logger.atDebug().addArgument(i).addArgument(bank.speciesIndices[i]).addArgument(bank.speciesNames[i])
-					.addArgument(bank.basalAreas[i][UC_ALL_INDEX]).addArgument(bank.percentagesOfForestedLand[i])
-					.log("Species {}: SP0 {}, Name {}, Species 7.5cm+ BA {}, Calculated Percent {}");
 		}
 	}
 

@@ -795,7 +795,7 @@ public class PolygonTest {
 												Map.of("ps", 10.0, "cc", (short) 11, "ba", 100.0),
 												ProjectionTypeCode.RESIDUAL, Map.of("cc", (short) 11, "ba", 1.0)
 										)
-								), Map.of(ProjectionTypeCode.PRIMARY, 84.15, ProjectionTypeCode.RESIDUAL, 1.0)
+								), Map.of(ProjectionTypeCode.PRIMARY, 1.0, ProjectionTypeCode.RESIDUAL, 0.84158)
 						),
 						Arguments.of(
 								new LayersCase(

@@ -1,19 +1,19 @@
 package ca.bc.gov.nrs.vdyp.back;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
 import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.application.Processor;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
-public class BackProcessor extends Processor<ProcessingDebugSettings> {
+public class BackProcessor extends Processor {
 
 	@Override
 	protected BaseControlParser<ProcessingDebugSettings> getControlFileParser() {
@@ -22,16 +22,8 @@ public class BackProcessor extends Processor<ProcessingDebugSettings> {
 	}
 
 	@Override
-	public void
-			process(Set<Pass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver)
-					throws ProcessingException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void process(
-			Set<Pass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver,
+			Set<Pass> vdypPassSet, ProcessingResolvedControlMap controlMap, Optional<FileResolver> outputFileResolver,
 			Predicate<VdypPolygon> polygonFilter
 	) throws ProcessingException {
 		// TODO Auto-generated method stub

@@ -9,8 +9,6 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -32,8 +30,8 @@ import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
-import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.controlmap.StartResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
@@ -43,7 +41,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
@@ -78,12 +75,9 @@ import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
  * @param <I> input site class
  */
 public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, D extends DebugSettings>
-		extends VdypApplication implements AutoCloseable, SpeciesCopier<S, I> {
+		extends VdypApplication<D> implements AutoCloseable, SpeciesCopier<S, I> {
 
 	public static final Logger log = LoggerFactory.getLogger(VdypStartApplication.class);
-
-	public static final int CONFIG_LOAD_ERROR = 1;
-	public static final int PROCESSING_ERROR = 2;
 
 	static final Map<String, Integer> ITG_PURE = Utils.constMap(map -> {
 		map.put("AC", 36);
@@ -104,16 +98,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		map.put("Y", 9);
 	});
 
-	private Optional<D> debugModes = Optional.empty();
-
-	public D getDebugModes() {
-		return debugModes.orElseThrow(() -> new IllegalStateException("Can not get debug modes before initialization"));
-	}
-
-	public void setDebugModes(D newDebugModes) {
-		debugModes = Optional.of(newDebugModes);
-	}
-
 	protected PolygonMode modeUsed = PolygonMode.DONT_PROCESS;
 
 	public PolygonMode getModeUsed() {
@@ -121,25 +105,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
-
-	public void doMain(final String... args)
-			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
-		var resolver = new FileSystemFileResolver();
-
-		try {
-			init(resolver, System.out, System.in, args);
-		} catch (Exception ex) {
-			log.error("Error during initialization", ex);
-			throw new VdypApplicationInitializationException(ex);
-		}
-
-		try {
-			process();
-		} catch (Exception ex) {
-			log.error("Error during processing", ex);
-			throw new VdypApplicationProcessingException(ex);
-		}
-	}
 
 	/**
 	 * Accessor methods for utilization vectors, except for Lorey Height, on Layer and Species objects.
@@ -178,13 +143,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected VdypOutputWriter vriWriter;
 
-	/** The computation instance used by this engine */
-	protected ComputationMethods computers;
-
-	public Map<String, Object> controlMap = new HashMap<>();
-
-	public EstimationMethods estimationMethods;
-
 	/**
 	 * When finding primary species these genera should be combined
 	 */
@@ -195,59 +153,16 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		super();
 	}
 
-	/**
-	 * Initialize application
-	 *
-	 * @param resolver
-	 * @param controlFilePath
-	 * @throws IOException
-	 * @throws ResourceParseException
-	 */
-	public void init(
-			FileSystemFileResolver resolver, PrintStream writeToIfNoArgs, InputStream readFromIfNoArgs,
-			String... controlFilePaths
-	) throws IOException, ResourceParseException {
-
-		var controlFileNames = VdypApplication.getControlMapFileNames(
-				controlFilePaths, getDefaultControlFileName(), getId(), writeToIfNoArgs, readFromIfNoArgs
-		);
-
-		init(resolver, getControlFileParser().parseByName(controlFileNames, resolver, controlMap));
-	}
-
-	protected abstract String getDefaultControlFileName();
-
-	/**
-	 * Initialize application
-	 *
-	 * @param controlMap
-	 * @throws IOException
-	 */
-	public void init(FileSystemFileResolver resolver, Map<String, Object> controlMap) throws IOException {
-		setControlMap(controlMap);
-		closeVriWriter();
-		vriWriter = createWriter(resolver, controlMap);
-	}
-
 	protected VdypOutputWriter createWriter(FileSystemFileResolver resolver, Map<String, Object> controlMap)
 			throws IOException {
 		return new VdypOutputWriter(controlMap, resolver);
 	}
-
-	protected abstract BaseControlParser<D> getControlFileParser();
 
 	void closeVriWriter() throws IOException {
 		if (vriWriter != null) {
 			vriWriter.close();
 			vriWriter = null;
 		}
-	}
-
-	protected void setControlMap(Map<String, Object> controlMap) {
-		this.controlMap = controlMap;
-		this.estimationMethods = new EstimationMethods(new StartResolvedControlMapImpl(controlMap));
-		this.debugModes = Utils.parsedControl(controlMap, ControlKey.DEBUG_SWITCHES, DebugSettings.class);
-		this.computers = new ComputationMethods(estimationMethods, getId());
 	}
 
 	protected <T> StreamingParser<T> getStreamingParser(ControlKey key) throws ProcessingException {
@@ -266,8 +181,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			throw new ProcessingException(MessageFormat.format("Error while opening data file {0}.", key), ex);
 		}
 	}
-
-	public abstract void process() throws ProcessingException;
 
 	@Override
 	public void close() throws VdypApplicationInitializationException {
@@ -1165,4 +1078,15 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		P next() throws ProcessingException, IOException, ResourceParseException;
 	}
 
+	@Override
+	public void init(FileSystemFileResolver resolver, Map<String, Object> controlMap) throws IOException {
+		super.init(resolver, controlMap);
+		closeVriWriter();
+		vriWriter = createWriter(resolver, controlMap);
+	}
+
+	@Override
+	protected ResolvedControlMap resolveControlMap(Map<String, Object> rawControlMap) {
+		return new StartResolvedControlMapImpl(rawControlMap);
+	}
 }

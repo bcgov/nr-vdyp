@@ -2,10 +2,14 @@ package ca.bc.gov.nrs.vdyp.application;
 
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
+import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
@@ -13,6 +17,10 @@ import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
 public class ProcessingEngine {
+
+	private static final Logger logger = LoggerFactory.getLogger(ProcessingEngine.class);
+	protected static final int UC_ALL_INDEX = UtilizationClass.ALL.ordinal();
+	protected static final int UC_SMALL_INDEX = UtilizationClass.SMALL.ordinal();
 
 	/**
 	 * Calculate the siteCurve number of all species for which one was not supplied. All calculations are done in the
@@ -104,6 +112,30 @@ public class ProcessingEngine {
 			scIndex = Optional.of(siCurve).filter(sc -> sc != SiteIndexEquation.SI_NO_EQUATION);
 		}
 		return scIndex;
+	}
+
+	/**
+	 * VPRIME1, method == 1: calculate the percentage of forested land covered by each species by dividing the basal
+	 * area of each given species with the basal area of the polygon covered by forest.
+	 *
+	 * @param state the bank in which the calculations are performed
+	 */
+	public static void calculateCoverages(LayerProcessingState<?> lps) {
+
+		Bank bank = lps.getBank();
+
+		logger.atDebug().addArgument(lps.getNSpecies()).addArgument(bank.basalAreas[0][0]).log(
+				"Calculating coverages as a ratio of Species BA over Total BA. # species: {}; Layer total 7.5cm+ basal area: {}"
+		);
+
+		for (int i : lps.getIndices()) {
+			bank.percentagesOfForestedLand[i] = bank.basalAreas[i][UC_ALL_INDEX] / bank.basalAreas[0][UC_ALL_INDEX]
+					* 100.0f;
+
+			logger.atDebug().addArgument(i).addArgument(bank.speciesIndices[i]).addArgument(bank.speciesNames[i])
+					.addArgument(bank.basalAreas[i][UC_ALL_INDEX]).addArgument(bank.percentagesOfForestedLand[i])
+					.log("Species {}: SP0 {}, Name {}, Species 7.5cm+ BA {}, Calculated Percent {}");
+		}
 	}
 
 }

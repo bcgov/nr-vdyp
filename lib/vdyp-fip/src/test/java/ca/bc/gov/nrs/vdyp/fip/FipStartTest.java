@@ -81,7 +81,7 @@ class FipStartTest {
 	void testProcessEmpty() throws Exception {
 
 		testWith(Arrays.asList(), Arrays.asList(), Arrays.asList(), (app, controlMap) -> {
-			assertDoesNotThrow(app::process);
+			assertDoesNotThrow(() -> ApplicationTestUtils.runProcess(app));
 		});
 	}
 
@@ -95,7 +95,7 @@ class FipStartTest {
 				Collections.emptyList(), //
 				Collections.emptyList(), //
 				(app, controlMap) -> {
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
+					var ex = assertThrows(ProcessingException.class, () -> ApplicationTestUtils.runProcess(app));
 
 					assertThat(ex, hasProperty("message", is("Layers file has fewer records than polygon file.")));
 
@@ -113,7 +113,7 @@ class FipStartTest {
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, TestUtils.valid(), TestUtils.valid()))), //
 				Collections.emptyList(), //
 				(app, controlMap) -> {
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
+					var ex = assertThrows(ProcessingException.class, () -> ApplicationTestUtils.runProcess(app));
 
 					assertThat(ex, hasProperty("message", is("Species file has fewer records than polygon file.")));
 
@@ -550,6 +550,7 @@ class FipStartTest {
 		TestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
 		TestUtils
 				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		mockDebugSettings(controlMap);
 
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -916,6 +917,10 @@ class FipStartTest {
 		}
 	}
 
+	static void mockDebugSettings(Map<String, Object> controlMap) {
+		controlMap.put(ControlKey.DEBUG_SWITCHES.name(), new FipDebugSettings(new Integer[] {}));
+	}
+
 	@Test
 	void testProcessVeteranYearsToBreastHeightLessThanMinimum() throws Exception {
 
@@ -947,6 +952,7 @@ class FipStartTest {
 		TestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
 		TestUtils
 				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		mockDebugSettings(controlMap);
 
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -996,6 +1002,7 @@ class FipStartTest {
 		TestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
 		TestUtils
 				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		mockDebugSettings(controlMap);
 
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -1887,6 +1894,7 @@ class FipStartTest {
 		TestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
 		TestUtils
 				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		mockDebugSettings(controlMap);
 
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -1948,6 +1956,7 @@ class FipStartTest {
 		TestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
 		TestUtils
 				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		mockDebugSettings(controlMap);
 
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -2013,6 +2022,7 @@ class FipStartTest {
 		TestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
 		TestUtils
 				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		mockDebugSettings(controlMap);
 
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -3567,7 +3577,10 @@ class FipStartTest {
 			List<FipPolygon> polygons, List<Map<LayerType, FipLayer>> layers, List<Collection<FipSpecies>> species,
 			TestConsumer<FipStart> test
 	) throws Exception {
-		testWith(new HashMap<>(), polygons, layers, species, test);
+
+		final HashMap<String, Object> controlMap = new HashMap<>();
+		mockDebugSettings(controlMap);
+		testWith(controlMap, polygons, layers, species, test);
 	}
 
 	private static final void testWith(

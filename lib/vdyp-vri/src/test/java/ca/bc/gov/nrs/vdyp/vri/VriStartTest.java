@@ -1882,7 +1882,7 @@ class VriStartTest {
 
 			app.init(resolver, controlMap);
 
-			app.process();
+			ApplicationTestUtils.runProcess(app);
 
 			app.close();
 
