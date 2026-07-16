@@ -14,6 +14,7 @@ import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.ItemWriteListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.SkipListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
@@ -232,6 +233,7 @@ public class BatchConfiguration {
 					}
 				}).listener((StepExecutionListener) chunkWriteListener) //
 				.listener((ItemWriteListener<? super BatchChunkMetadata>) chunkWriteListener) //
+				.listener((SkipListener<? super BatchChunkMetadata, ? super BatchChunkMetadata>) chunkWriteListener) //
 				.build();
 	}
 

@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.ItemWriteListener;
+import org.springframework.batch.core.SkipListener;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.Chunk;
@@ -11,7 +12,8 @@ import org.springframework.batch.item.ExecutionContext;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
-public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>, StepExecutionListener {
+public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>, StepExecutionListener,
+		SkipListener<BatchChunkMetadata, BatchChunkMetadata> {
 	private StepExecution stepExecution;
 
 	@Override
@@ -46,6 +48,20 @@ public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>
 		polygonsSkipped += meta.getSkippedPolygonCount();
 		stepCtx.putInt(BatchConstants.Job.POLYGONS_SKIPPED, polygonsSkipped);
 
+	}
+
+	/**
+	 * Called when an entire chunk's write fails and the skip policy accepts the failure. Because the write never
+	 * completed, afterWrite never ran for this item, so its polygons would otherwise be dropped from every progress
+	 * counter. Count them as skipped so processed + skipped reconciles with the total.
+	 */
+	@Override
+	public void onSkipInWrite(BatchChunkMetadata item, Throwable t) {
+		ExecutionContext stepCtx = stepExecution.getExecutionContext();
+
+		int polygonsSkipped = stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
+		polygonsSkipped += item.getPolygonRecordCount();
+		stepCtx.putInt(BatchConstants.Job.POLYGONS_SKIPPED, polygonsSkipped);
 	}
 
 }
