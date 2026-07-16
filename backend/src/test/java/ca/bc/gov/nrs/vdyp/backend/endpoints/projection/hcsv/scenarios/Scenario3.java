@@ -60,7 +60,7 @@ class Scenario3 extends Scenario {
 		assertThat(
 				csvLines[0],
 				startsWith(
-						"\"TABLE_NUM\",\"FEATURE_ID\",\"DISTRICT\",\"MAP_ID\",\"POLYGON_ID\",\"LAYER_ID\",\"PROJECTION_YEAR\""
+						"TABLE_NUM,FEATURE_ID,DISTRICT,MAP_ID,POLYGON_ID,LAYER_ID,PROJECTION_YEAR"
 				)
 		);
 
