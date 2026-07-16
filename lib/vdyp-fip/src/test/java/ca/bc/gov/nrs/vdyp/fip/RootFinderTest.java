@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
 import ca.bc.gov.nrs.vdyp.fip.test.FipTestUtils;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
@@ -112,31 +111,36 @@ class RootFinderTest {
 		});
 
 		var spec3 = VdypSpecies.build(layer, builder -> {
-			builder.genus(GenusDefinitionParser.getSpeciesByIndex(3, control).getAlias(), control); // B
+			builder.speciesGroup("B"); // 3
+			builder.controlMap(control);
 			builder.percentGenus(20f);
 		});
 		spec3.getLoreyHeightByUtilization().setAll(38.7456512f);
 
 		var spec4 = VdypSpecies.build(layer, builder -> {
-			builder.genus(GenusDefinitionParser.getSpeciesByIndex(4, control).getAlias(), control); // C
+			builder.speciesGroup("C"); // 4
+			builder.controlMap(control);
 			builder.percentGenus(20f);
 		});
 		spec4.getLoreyHeightByUtilization().setAll(22.8001652f);
 
 		var spec5 = VdypSpecies.build(layer, builder -> {
-			builder.genus(GenusDefinitionParser.getSpeciesByIndex(5, control).getAlias(), control); // D
+			builder.speciesGroup("D"); // 5
+			builder.controlMap(control);
 			builder.percentGenus(20f);
 		});
 		spec5.getLoreyHeightByUtilization().setAll(33.6889763f);
 
 		var spec8 = VdypSpecies.build(layer, builder -> {
-			builder.genus(GenusDefinitionParser.getSpeciesByIndex(8, control).getAlias(), control); // 8
+			builder.speciesGroup("H"); // 8
+			builder.controlMap(control);
 			builder.percentGenus(20f);
 		});
 		spec8.getLoreyHeightByUtilization().setAll(24.3451157f);
 
 		var spec15 = VdypSpecies.build(layer, builder -> {
-			builder.genus(GenusDefinitionParser.getSpeciesByIndex(15, control).getAlias(), control); // S
+			builder.speciesGroup("S"); // 15
+			builder.controlMap(control);
 			builder.percentGenus(20f);
 		});
 		spec15.getLoreyHeightByUtilization().setAll(34.6888771f);

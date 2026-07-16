@@ -3,13 +3,18 @@ package ca.bc.gov.nrs.vdyp.model;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 /**
  * Base for support classes to make classes with complex constructors nicer to work with.
  */
 
 public abstract class ModelClassBuilder<T> {
+
+	protected Optional<Map<String, Object>> controlMap = Optional.empty();
 
 	/**
 	 * Add an error message to the collection if the value is not present.
@@ -72,4 +77,37 @@ public abstract class ModelClassBuilder<T> {
 	protected void postProcess(T result) {
 		// Do nothing
 	};
+
+	public ModelClassBuilder<T> controlMap(Map<String, Object> controlMap) {
+		this.controlMap = Optional.of(controlMap);
+		return this;
+	}
+
+	/**
+	 * Given a configuration lambda for a child builder, return a lambda that first sets the control map if it is set on
+	 * this one.
+	 * 
+	 * @param <C>    child builder type
+	 * @param config configuration to run after setting the control map
+	 */
+	protected <C extends ModelClassBuilder<?>> Consumer<C> propagateControlMap(Consumer<C> config) {
+		return builder -> {
+			this.controlMap.ifPresent(builder::controlMap);
+			config.accept(builder);
+		};
+	}
+
+	protected <V, A> Optional<V> orLookup(
+			String name, Optional<V> value, Optional<A> alternate, BiFunction<A, Map<String, Object>, V> lookup
+	) {
+		// Use the value if present, otherwise if the alternate value is present, try to use the control map to look it up.
+		return value.or(() -> alternate.map(alt -> {
+			var cm = this.controlMap.orElseThrow(
+					() -> new IllegalStateException(
+							"Could not look up value for " + name + " because there was no control map"
+					)
+			);
+			return lookup.apply(alt, cm);
+		}));
+	}
 }

@@ -426,13 +426,14 @@ class FipStartTest {
 			pb.biogeoclimaticZone(Utils.getBec("BG", controlMap));
 			pb.mode(PolygonMode.START);
 			pb.yieldFactor(1.0f);
+			pb.controlMap(controlMap);
 
 			pb.addLayer(lb -> {
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(0.9f);
 
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(75f);
 					sb.addSite(ib -> {
 						ib.ageTotal(8f);
@@ -444,7 +445,7 @@ class FipStartTest {
 					});
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("C", controlMap);
+					sb.speciesGroup("C");
 					sb.percentGenus(25f);
 				});
 			});
@@ -479,13 +480,14 @@ class FipStartTest {
 			pb.biogeoclimaticZone(Utils.getBec("BG", controlMap));
 			pb.mode(PolygonMode.START);
 			pb.yieldFactor(1.0f);
+			pb.controlMap(controlMap);
 
 			pb.addLayer(lb -> {
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(0.9f);
 
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(75f + 0.009f);
 					sb.addSite(ib -> {
 						ib.ageTotal(8f);
@@ -497,7 +499,7 @@ class FipStartTest {
 					});
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("C", controlMap);
+					sb.speciesGroup("C");
 					sb.percentGenus(25f);
 				});
 			});
@@ -1636,9 +1638,10 @@ class FipStartTest {
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2024);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(1);
 
 					sb.volumeGroup(12);
@@ -1648,7 +1651,7 @@ class FipStartTest {
 					sb.addSp64Distribution("B", 100);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("C", controlMap);
+					sb.speciesGroup("C");
 					sb.percentGenus(7);
 
 					sb.volumeGroup(20);
@@ -1658,7 +1661,7 @@ class FipStartTest {
 					sb.addSp64Distribution("C", 100);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("S", controlMap);
+					sb.speciesGroup("S");
 					sb.percentGenus(9);
 
 					sb.volumeGroup(66);
@@ -1668,7 +1671,7 @@ class FipStartTest {
 					sb.addSp64Distribution("S", 100);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("D", controlMap);
+					sb.speciesGroup("D");
 					sb.percentGenus(74);
 
 					sb.volumeGroup(25);
@@ -1678,7 +1681,7 @@ class FipStartTest {
 					sb.addSp64Distribution("D", 100);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(9);
 
 					sb.volumeGroup(37);
@@ -1736,9 +1739,10 @@ class FipStartTest {
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2024);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(0.8918811f);
 
 					sb.volumeGroup(12);
@@ -1754,7 +1758,7 @@ class FipStartTest {
 					// sb.wholeStemVolume(6.3858347f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("C", controlMap);
+					sb.speciesGroup("C");
 					sb.percentGenus(11.449178f);
 
 					sb.volumeGroup(20);
@@ -1770,7 +1774,7 @@ class FipStartTest {
 					// sb.wholeStemVolume(44.700314f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("S", controlMap);
+					sb.speciesGroup("S");
 					sb.percentGenus(9.215943f);
 
 					sb.volumeGroup(66);
@@ -1786,7 +1790,7 @@ class FipStartTest {
 					// sb.wholeStemVolume(57.47183f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("D", controlMap);
+					sb.speciesGroup("D");
 					sb.percentGenus(66.05741f);
 
 					sb.volumeGroup(25);
@@ -1802,7 +1806,7 @@ class FipStartTest {
 					// sb.wholeStemVolume(472.54596f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(12.385582f);
 
 					sb.volumeGroup(37);
@@ -2233,13 +2237,14 @@ class FipStartTest {
 			layer.getTreesPerHectareByUtilization().setCoe(0, 845.805969f);
 			layer.getQuadraticMeanDiameterByUtilization().setCoe(0, 33.9379082f);
 
-			var spec = VdypSpecies.build(layer, lb -> {
-				lb.genus("Y", controlMap);
-				lb.percentGenus(100f);
-				lb.volumeGroup(74);
-				lb.decayGroup(63);
-				lb.breakageGroup(31);
-				lb.addSite(ib -> {
+			var spec = VdypSpecies.build(layer, sb -> {
+				sb.speciesGroup("Y");
+				sb.controlMap(controlMap);
+				sb.percentGenus(100f);
+				sb.volumeGroup(74);
+				sb.decayGroup(63);
+				sb.breakageGroup(31);
+				sb.addSite(ib -> {
 					ib.ageTotal(285f);
 					ib.yearsToBreastHeight(11.3999996f);
 					ib.yearsAtBreastHeightAuto();
@@ -2324,7 +2329,8 @@ class FipStartTest {
 			// sp 3, 4, 5, 8, 15
 			// sp B, C, D, H, S
 			var spec1 = VdypSpecies.build(layer, sb -> {
-				sb.genus("B", controlMap);
+				sb.speciesGroup("B");
+				sb.controlMap(controlMap);
 				sb.percentGenus(1f);
 				sb.volumeGroup(12);
 				sb.decayGroup(7);
@@ -2338,7 +2344,8 @@ class FipStartTest {
 			});
 			spec1.getLoreyHeightByUtilization().setCoe(0, 38.7456512f);
 			var spec2 = VdypSpecies.build(layer, sb -> {
-				sb.genus("C", controlMap);
+				sb.speciesGroup("C");
+				sb.controlMap(controlMap);
 				sb.percentGenus(7f);
 				sb.volumeGroup(20);
 				sb.decayGroup(14);
@@ -2347,7 +2354,8 @@ class FipStartTest {
 
 			spec2.getLoreyHeightByUtilization().setCoe(0, 22.8001652f);
 			var spec3 = VdypSpecies.build(layer, sb -> {
-				sb.genus("D", controlMap);
+				sb.speciesGroup("D");
+				sb.controlMap(controlMap);
 				sb.percentGenus(74f);
 				sb.volumeGroup(25);
 				sb.decayGroup(19);
@@ -2355,7 +2363,8 @@ class FipStartTest {
 			});
 			spec3.getLoreyHeightByUtilization().setCoe(0, 33.6889763f);
 			var spec4 = VdypSpecies.build(layer, sb -> {
-				sb.genus("H", controlMap);
+				sb.speciesGroup("H");
+				sb.controlMap(controlMap);
 				sb.percentGenus(9f);
 				sb.volumeGroup(37);
 				sb.decayGroup(31);
@@ -2363,7 +2372,8 @@ class FipStartTest {
 			});
 			spec4.getLoreyHeightByUtilization().setCoe(0, 24.3451157f);
 			var spec5 = VdypSpecies.build(layer, sb -> {
-				sb.genus("S", controlMap);
+				sb.speciesGroup("S");
+				sb.controlMap(controlMap);
 				sb.percentGenus(9f);
 				sb.volumeGroup(66);
 				sb.decayGroup(54);
@@ -2604,7 +2614,8 @@ class FipStartTest {
 			// sp 3, 4, 5, 8, 15
 			// sp B, C, D, H, S
 			var spec1 = VdypSpecies.build(layer, sb -> {
-				sb.genus("B", controlMap);
+				sb.speciesGroup("B");
+				sb.controlMap(controlMap);
 				sb.percentGenus(15f);
 				sb.volumeGroup(12);
 				sb.decayGroup(7);
@@ -2612,7 +2623,8 @@ class FipStartTest {
 			});
 			spec1.getLoreyHeightByUtilization().setCoe(0, 21.5356998f);
 			var spec2 = VdypSpecies.build(layer, sb -> {
-				sb.genus("D", controlMap);
+				sb.speciesGroup("D");
+				sb.controlMap(controlMap);
 				sb.percentGenus(7f);
 				sb.volumeGroup(25);
 				sb.decayGroup(19);
@@ -2620,7 +2632,8 @@ class FipStartTest {
 			});
 			spec2.getLoreyHeightByUtilization().setCoe(0, 22.4329224f);
 			var spec3 = VdypSpecies.build(layer, sb -> {
-				sb.genus("H", controlMap);
+				sb.speciesGroup("H");
+				sb.controlMap(controlMap);
 				sb.percentGenus(77f);
 				sb.volumeGroup(37);
 				sb.decayGroup(54);
@@ -2634,7 +2647,8 @@ class FipStartTest {
 			});
 			spec3.getLoreyHeightByUtilization().setCoe(0, 20.5984688f);
 			var spec4 = VdypSpecies.build(layer, sb -> {
-				sb.genus("S", controlMap);
+				sb.speciesGroup("S");
+				sb.controlMap(controlMap);
 				sb.percentGenus(1f);
 				sb.volumeGroup(66);
 				sb.decayGroup(54);
@@ -2861,7 +2875,8 @@ class FipStartTest {
 			}));
 
 			FipSpecies.build(fipPrimaryLayer, builder -> {
-				builder.genus("L", controlMap);
+				builder.speciesGroup("L");
+				builder.controlMap(controlMap);
 				builder.percentGenus(10f);
 				builder.addSite(ib -> {
 					ib.ageTotal(60f);
@@ -2874,7 +2889,8 @@ class FipStartTest {
 
 			});
 			FipSpecies.build(fipPrimaryLayer, builder -> {
-				builder.genus("PL", controlMap);
+				builder.speciesGroup("PL");
+				builder.controlMap(controlMap);
 				builder.percentGenus(90f);
 			});
 
@@ -2905,9 +2921,10 @@ class FipStartTest {
 			// var fipVeteranLayer = new FipLayer("Test", LayerType.VETERAN);
 			FipLayerPrimary.buildPrimary(fipPolygon, lb -> {
 				lb.crownClosure(60f);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("L", controlMap);
+					sb.speciesGroup("L");
 					sb.percentGenus(10f);
 
 					sb.addSite(ib -> {
@@ -2923,7 +2940,7 @@ class FipStartTest {
 				});
 
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(90f);
 				});
 
@@ -2960,9 +2977,10 @@ class FipStartTest {
 			// var fipVeteranLayer = new FipLayer("Test", LayerType.VETERAN);
 			FipLayerPrimary.buildPrimary(fipPolygon, lb -> {
 				lb.crownClosure(60f);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("L", controlMap);
+					sb.speciesGroup("L");
 					sb.percentGenus(10f);
 					sb.addSite(ib -> {
 						ib.ageTotal(60f);
@@ -2976,7 +2994,7 @@ class FipStartTest {
 				});
 
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(90f);
 				});
 
@@ -3013,9 +3031,10 @@ class FipStartTest {
 			var fipPrimaryLayer = FipLayerPrimary.buildPrimary(lb -> {
 				lb.polygonIdentifier("Test", 2024);
 				lb.crownClosure(0.9f);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("L", controlMap);
+					sb.speciesGroup("L");
 					sb.percentGenus(50f);
 					sb.addSite(ib -> {
 						ib.ageTotal(60f);
@@ -3028,7 +3047,7 @@ class FipStartTest {
 					});
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(50f);
 				});
 
@@ -3038,9 +3057,10 @@ class FipStartTest {
 			var vdypLayer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2024);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("L", controlMap);
+					sb.speciesGroup("L");
 					sb.percentGenus(50f);
 					sb.volumeGroup(-1);
 					sb.decayGroup(-1);
@@ -3056,7 +3076,7 @@ class FipStartTest {
 				});
 
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(50f);
 					sb.volumeGroup(-1);
 					sb.decayGroup(-1);
@@ -3164,9 +3184,10 @@ class FipStartTest {
 			var fipPrimaryLayer = FipLayerPrimary.buildPrimary(lb -> {
 				lb.polygonIdentifier("Test", 2024);
 				lb.crownClosure(60f);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("L", controlMap);
+					sb.speciesGroup("L");
 					sb.percentGenus(50f);
 					sb.addSite(ib -> {
 						ib.ageTotal(60f);
@@ -3179,7 +3200,7 @@ class FipStartTest {
 					});
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(50f);
 				});
 
@@ -3190,9 +3211,10 @@ class FipStartTest {
 			var vdypLayer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2024);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("L", controlMap);
+					sb.speciesGroup("L");
 					sb.percentGenus(50f);
 					sb.volumeGroup(-1);
 					sb.decayGroup(-1);
@@ -3208,7 +3230,7 @@ class FipStartTest {
 				});
 
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(50f);
 					sb.volumeGroup(-1);
 					sb.decayGroup(-1);
@@ -3334,9 +3356,10 @@ class FipStartTest {
 			var fipPrimaryLayer = FipLayerPrimary.buildPrimary(lb -> {
 				lb.polygonIdentifier("Test", 2024);
 				lb.crownClosure(60f);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("L", controlMap);
+					sb.speciesGroup("L");
 					sb.percentGenus(50f);
 					sb.addSite(ib -> {
 						ib.ageTotal(60f);
@@ -3349,7 +3372,7 @@ class FipStartTest {
 					});
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(50f);
 				});
 			});
@@ -3359,9 +3382,10 @@ class FipStartTest {
 			var vdypLayer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2024);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("L", controlMap);
+					sb.speciesGroup("L");
 					sb.percentGenus(50f);
 					sb.volumeGroup(-1);
 					sb.decayGroup(-1);
@@ -3377,7 +3401,7 @@ class FipStartTest {
 				});
 
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(50f);
 					sb.volumeGroup(-1);
 					sb.decayGroup(-1);
@@ -3401,7 +3425,8 @@ class FipStartTest {
 			);
 
 			var spec1 = VdypSpecies.build(vdypLayer, builder -> {
-				builder.genus("L", controlMap);
+				builder.speciesGroup("L");
+				builder.controlMap(controlMap);
 				builder.percentGenus(50f);
 				builder.volumeGroup(-1);
 				builder.decayGroup(-1);
@@ -3421,7 +3446,8 @@ class FipStartTest {
 			);
 
 			var spec2 = VdypSpecies.build(vdypLayer, builder -> {
-				builder.genus("PL", controlMap);
+				builder.speciesGroup("PL");
+				builder.controlMap(controlMap);
 				builder.percentGenus(50f);
 				builder.volumeGroup(-1);
 				builder.decayGroup(-1);
@@ -3514,9 +3540,10 @@ class FipStartTest {
 
 		var layer = FipLayerPrimary.buildPrimary(poly, lb -> {
 			lb.crownClosure(0.9f);
+			lb.controlMap(controlMap);
 
 			lb.addSpecies(sb -> {
-				sb.genus("B", controlMap);
+				sb.speciesGroup("B");
 				sb.percentGenus(100);
 
 				sb.addSite(ib -> {

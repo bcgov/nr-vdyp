@@ -67,6 +67,7 @@ class BackProcessingEngineTest {
 				pb.percentAvailable(80f);
 				pb.biogeoclimaticZone(becLookup.get("IDF").get());
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
@@ -76,7 +77,7 @@ class BackProcessingEngineTest {
 					final float dq = 31.5006275f;
 					final float tph = BaseAreaTreeDensityDiameter.treesPerHectare(ba, dq);
 					lb.addSpecies(sb -> {
-						sb.genus("F", controlMap);
+						sb.speciesGroup("F");
 						sb.baseArea(ba);
 						sb.loreyHeight(hl);
 						sb.quadMeanDiameter(dq);
@@ -135,6 +136,7 @@ class BackProcessingEngineTest {
 				pb.percentAvailable(80f);
 				pb.biogeoclimaticZone(becLookup.get("IDF").get());
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
@@ -144,7 +146,7 @@ class BackProcessingEngineTest {
 					lb.baseAreaByUtilization(20f);
 
 					lb.addSpecies(sb -> {
-						sb.genus("F", controlMap);
+						sb.speciesGroup("F");
 						sb.baseArea(20f);
 					});
 				});
@@ -180,6 +182,7 @@ class BackProcessingEngineTest {
 					pb.percentAvailable(80f);
 					pb.biogeoclimaticZone(becLookup.get("IDF").get());
 					pb.forestInventoryZone("");
+					pb.controlMap(controlMap);
 
 					pb.addLayer(lb -> {
 						lb.layerType(LayerType.PRIMARY);
@@ -188,7 +191,7 @@ class BackProcessingEngineTest {
 						lb.layerType(LayerType.VETERAN);
 						lb.baseAreaByUtilization(42f); // Not the sum of the base areas of the species
 						lb.addSpecies(sb -> {
-							sb.genus("F", controlMap);
+							sb.speciesGroup("F");
 							sb.baseArea(20f);
 						});
 					});

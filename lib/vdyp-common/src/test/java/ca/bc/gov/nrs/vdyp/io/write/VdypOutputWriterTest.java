@@ -154,9 +154,10 @@ class VdypOutputWriterTest {
 			var layer = VdypLayer.build(polygon, lb -> {
 				lb.polygonIdentifier("082E004    615       1988");
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(100);
 					sb.volumeGroup(1);
 					sb.decayGroup(2);
@@ -194,9 +195,10 @@ class VdypOutputWriterTest {
 				lb.layerType(LayerType.PRIMARY);
 
 				lb.primaryGenus("PL");
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(100);
 					sb.volumeGroup(0);
 					sb.decayGroup(0);
@@ -239,9 +241,10 @@ class VdypOutputWriterTest {
 			});
 			var layer = VdypLayer.build(polygon, lb -> {
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(100);
 					sb.volumeGroup(1);
 					sb.decayGroup(2);
@@ -261,7 +264,8 @@ class VdypOutputWriterTest {
 
 			@SuppressWarnings("unused")
 			var species = VdypSpecies.build(layer, builder -> {
-				builder.genus("PL", controlMap);
+				builder.speciesGroup("PL");
+				builder.controlMap(controlMap);
 				builder.addSp64Distribution("PL", 100f);
 
 				builder.percentGenus(100f);
@@ -327,9 +331,10 @@ class VdypOutputWriterTest {
 			});
 			var layer = VdypLayer.build(polygon, lb -> {
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
 
 				lb.addSpecies(sb -> {
-					sb.genus("PL", controlMap);
+					sb.speciesGroup("PL");
 					sb.percentGenus(100);
 					sb.volumeGroup(1);
 					sb.decayGroup(2);
@@ -347,7 +352,8 @@ class VdypOutputWriterTest {
 			});
 
 			var species = VdypSpecies.build(layer, builder -> {
-				builder.genus("PL", controlMap);
+				builder.speciesGroup("PL");
+				builder.controlMap(controlMap);
 				builder.addSp64Distribution("PL", 100f);
 
 				builder.percentGenus(100f);
@@ -489,8 +495,10 @@ class VdypOutputWriterTest {
 
 			lb.primaryGenus("PL");
 
+			lb.controlMap(controlMap);
+
 			lb.addSpecies(sb -> {
-				sb.genus("PL", controlMap);
+				sb.speciesGroup("PL");
 				sb.percentGenus(100);
 				sb.volumeGroup(0);
 				sb.decayGroup(0);

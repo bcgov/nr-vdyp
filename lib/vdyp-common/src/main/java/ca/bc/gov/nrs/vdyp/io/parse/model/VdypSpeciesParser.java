@@ -208,7 +208,8 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 							speciesBuilder.sp64DistributionSet(speciesDistributionSet);
 							speciesBuilder.polygonIdentifier(polygonId);
 							speciesBuilder.layerType(lt);
-							speciesBuilder.genus(speciesGroup, controlMap);
+							speciesBuilder.speciesGroup(speciesGroup);
+							speciesBuilder.controlMap(controlMap);
 							speciesBuilder.isPrimary(isPrimarySpecies.orElse(false));
 							speciesBuilder.addSite(siteBuilder -> {
 								siteBuilder.ageTotal(inferredTotalAge);

@@ -466,7 +466,8 @@ class EstimationMethodsTest {
 			// sp 3, 4, 5, 8, 15
 			// sp B, C, D, H, S
 			var spec1 = VdypSpecies.build(layer, builder -> {
-				builder.genus("B", controlMap);
+				builder.speciesGroup("B");
+				builder.controlMap(controlMap);
 				builder.volumeGroup(12);
 				builder.decayGroup(7);
 				builder.breakageGroup(5);
@@ -476,7 +477,8 @@ class EstimationMethodsTest {
 			spec1.setFractionGenus(0.00817133673f);
 
 			var spec2 = VdypSpecies.build(layer, builder -> {
-				builder.genus("C", controlMap);
+				builder.speciesGroup("C");
+				builder.controlMap(controlMap);
 				builder.volumeGroup(4);
 				builder.decayGroup(14);
 				builder.breakageGroup(6);
@@ -486,7 +488,8 @@ class EstimationMethodsTest {
 			spec2.setFractionGenus(0.0972022042f);
 
 			var spec3 = VdypSpecies.build(layer, builder -> {
-				builder.genus("D", controlMap);
+				builder.speciesGroup("D");
+				builder.controlMap(controlMap);
 				builder.volumeGroup(25);
 				builder.decayGroup(19);
 				builder.breakageGroup(12);
@@ -496,7 +499,8 @@ class EstimationMethodsTest {
 			spec3.setFractionGenus(0.695440531f);
 
 			var spec4 = VdypSpecies.build(layer, lb -> {
-				lb.genus("H", controlMap);
+				lb.speciesGroup("H");
+				lb.controlMap(controlMap);
 				lb.volumeGroup(37);
 				lb.decayGroup(31);
 				lb.breakageGroup(17);
@@ -512,7 +516,8 @@ class EstimationMethodsTest {
 			spec4.setFractionGenus(0.117043354f);
 
 			var spec5 = VdypSpecies.build(layer, builder -> {
-				builder.genus("S", controlMap);
+				builder.speciesGroup("S");
+				builder.controlMap(controlMap);
 				builder.volumeGroup(66);
 				builder.decayGroup(54);
 				builder.breakageGroup(28);
@@ -707,28 +712,30 @@ class EstimationMethodsTest {
 				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				pBuilder.percentAvailable(Optional.of(75f));
 				pBuilder.forestInventoryZone("");
+				pBuilder.controlMap(controlMap);
+
 				pBuilder.addLayer(lBuilder -> {
 					lBuilder.layerType(LayerType.PRIMARY);
 					lBuilder.crownClosure(57.8f);
 
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("B", controlMap);
+						sBuilder.speciesGroup("B");
 						sBuilder.percentGenus(10f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("C", controlMap);
+						sBuilder.speciesGroup("C");
 						sBuilder.percentGenus(20f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("F", controlMap);
+						sBuilder.speciesGroup("F");
 						sBuilder.percentGenus(30f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("H", controlMap);
+						sBuilder.speciesGroup("H");
 						sBuilder.percentGenus(30f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("S", controlMap);
+						sBuilder.speciesGroup("S");
 						sBuilder.percentGenus(10f);
 					});
 
@@ -757,28 +764,29 @@ class EstimationMethodsTest {
 				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				pBuilder.percentAvailable(Optional.of(75f));
 				pBuilder.forestInventoryZone("");
+				pBuilder.controlMap(controlMap);
 				pBuilder.addLayer(lBuilder -> {
 					lBuilder.layerType(LayerType.PRIMARY);
 					lBuilder.crownClosure(57.8f);
 
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("B", controlMap);
+						sBuilder.speciesGroup("B");
 						sBuilder.percentGenus(10f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("C", controlMap);
+						sBuilder.speciesGroup("C");
 						sBuilder.percentGenus(20f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("F", controlMap);
+						sBuilder.speciesGroup("F");
 						sBuilder.percentGenus(30f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("H", controlMap);
+						sBuilder.speciesGroup("H");
 						sBuilder.percentGenus(30f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("S", controlMap);
+						sBuilder.speciesGroup("S");
 						sBuilder.percentGenus(10f);
 					});
 
@@ -810,7 +818,8 @@ class EstimationMethodsTest {
 			var spec = VdypSpecies.build(sb -> {
 				sb.polygonIdentifier("Test", 2026);
 				sb.layerType(LayerType.PRIMARY);
-				sb.genus("S", controlMap);
+				sb.speciesGroup("S");
+				sb.controlMap(controlMap);
 				sb.percentGenus(100f);
 			});
 
@@ -826,7 +835,8 @@ class EstimationMethodsTest {
 			var spec = VdypSpecies.build(sb -> {
 				sb.polygonIdentifier("Test", 2026);
 				sb.layerType(LayerType.PRIMARY);
-				sb.genus("S", controlMap);
+				sb.speciesGroup("S");
+				sb.controlMap(controlMap);
 				sb.percentGenus(100f);
 			});
 
@@ -843,7 +853,8 @@ class EstimationMethodsTest {
 			var spec = VdypSpecies.build(sb -> {
 				sb.polygonIdentifier("Test", 2026);
 				sb.layerType(LayerType.PRIMARY);
-				sb.genus("S", controlMap);
+				sb.speciesGroup("S");
+				sb.controlMap(controlMap);
 				sb.percentGenus(100f);
 			});
 
@@ -876,24 +887,25 @@ class EstimationMethodsTest {
 				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				pBuilder.percentAvailable(Optional.of(75f));
 				pBuilder.forestInventoryZone("");
+				pBuilder.controlMap(controlMap);
 				pBuilder.addLayer(lBuilder -> {
 					lBuilder.layerType(LayerType.PRIMARY);
 					lBuilder.crownClosure(57.8f);
 
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("B", controlMap);
+						sBuilder.speciesGroup("B");
 						sBuilder.percentGenus(2.99999993f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("C", controlMap);
+						sBuilder.speciesGroup("C");
 						sBuilder.percentGenus(30.0000012f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("H", controlMap);
+						sBuilder.speciesGroup("H");
 						sBuilder.percentGenus(48.9000022f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("S", controlMap);
+						sBuilder.speciesGroup("S");
 						sBuilder.percentGenus(18.1000009f);
 					});
 				});
@@ -919,24 +931,26 @@ class EstimationMethodsTest {
 				pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				pBuilder.percentAvailable(Optional.of(75f));
 				pBuilder.forestInventoryZone("");
+				pBuilder.controlMap(controlMap);
+
 				pBuilder.addLayer(lBuilder -> {
 					lBuilder.layerType(LayerType.PRIMARY);
 					lBuilder.crownClosure(57.8f);
 
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("B", controlMap);
+						sBuilder.speciesGroup("B");
 						sBuilder.percentGenus(2.99999993f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("C", controlMap);
+						sBuilder.speciesGroup("C");
 						sBuilder.percentGenus(30.0000012f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("H", controlMap);
+						sBuilder.speciesGroup("H");
 						sBuilder.percentGenus(48.9000022f);
 					});
 					lBuilder.addSpecies(sBuilder -> {
-						sBuilder.genus("S", controlMap);
+						sBuilder.speciesGroup("S");
 						sBuilder.percentGenus(18.1000009f);
 					});
 				});
@@ -1045,20 +1059,22 @@ class EstimationMethodsTest {
 			var spec = VdypSpecies.build(builder -> {
 				builder.polygonIdentifier("Test", 2024);
 				builder.layerType(LayerType.PRIMARY);
-				builder.genus("B", controlMap);
+				builder.speciesGroup("B");
 				builder.percentGenus(50f);
 				builder.volumeGroup(-1);
 				builder.decayGroup(-1);
 				builder.breakageGroup(-1);
+				builder.controlMap(controlMap);
 			});
 			var specPrime = VdypSpecies.build(builder -> {
 				builder.polygonIdentifier("Test", 2024);
 				builder.layerType(LayerType.PRIMARY);
-				builder.genus("H", controlMap);
+				builder.speciesGroup("H");
 				builder.percentGenus(50f);
 				builder.volumeGroup(-1);
 				builder.decayGroup(-1);
 				builder.breakageGroup(-1);
+				builder.controlMap(controlMap);
 			});
 
 			var result = emp.estimateNonPrimaryLoreyHeight(
@@ -1077,7 +1093,8 @@ class EstimationMethodsTest {
 			var spec = VdypSpecies.build(builder -> {
 				builder.polygonIdentifier("Test", 2024);
 				builder.layerType(LayerType.PRIMARY);
-				builder.genus("B", controlMap);
+				builder.speciesGroup("B");
+				builder.controlMap(controlMap);
 				builder.percentGenus(50f);
 				builder.volumeGroup(-1);
 				builder.decayGroup(-1);
@@ -1086,7 +1103,8 @@ class EstimationMethodsTest {
 			var specPrime = VdypSpecies.build(builder -> {
 				builder.polygonIdentifier("Test", 2024);
 				builder.layerType(LayerType.PRIMARY);
-				builder.genus("D", controlMap);
+				builder.speciesGroup("D");
+				builder.controlMap(controlMap);
 				builder.percentGenus(50f);
 				builder.volumeGroup(-1);
 				builder.decayGroup(-1);
@@ -1117,7 +1135,8 @@ class EstimationMethodsTest {
 			var spec = VdypSpecies.build(builder -> {
 				builder.polygonIdentifier("Test", 2024);
 				builder.layerType(LayerType.PRIMARY);
-				builder.genus("B", controlMap);
+				builder.speciesGroup("B");
+				builder.controlMap(controlMap);
 				builder.percentGenus(50f);
 				builder.volumeGroup(-1);
 				builder.decayGroup(-1);
@@ -1126,7 +1145,8 @@ class EstimationMethodsTest {
 			var specPrime = VdypSpecies.build(builder -> {
 				builder.polygonIdentifier("Test", 2024);
 				builder.layerType(LayerType.PRIMARY);
-				builder.genus("D", controlMap);
+				builder.speciesGroup("D");
+				builder.controlMap(controlMap);
 				builder.percentGenus(50f);
 				builder.volumeGroup(-1);
 				builder.decayGroup(-1);
@@ -1490,13 +1510,15 @@ class EstimationMethodsTest {
 				lb.polygonIdentifier(polygonId);
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(82.8000031f);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(33f);
 					sb.addSp64Distribution("B", 100f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(67f);
 					sb.addSp64Distribution("H", 100f);
 					sb.addSite(ib -> {
@@ -1528,13 +1550,15 @@ class EstimationMethodsTest {
 				lb.polygonIdentifier(polygonId);
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(82.8000031f);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(33f);
 					sb.addSp64Distribution("B", 100f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(67f);
 					sb.addSp64Distribution("H", 100f);
 					sb.addSite(ib -> {
@@ -1566,13 +1590,14 @@ class EstimationMethodsTest {
 				lb.polygonIdentifier(polygonId);
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(9f);// Altered this in the debugger while running VDYP7
+				lb.controlMap(controlMap);
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(33f);
 					sb.addSp64Distribution("B", 100f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(67f);
 					sb.addSp64Distribution("H", 100f);
 					sb.addSite(ib -> {
@@ -1604,13 +1629,14 @@ class EstimationMethodsTest {
 				lb.polygonIdentifier(polygonId);
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(82.8000031f);
+				lb.controlMap(controlMap);
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(33f);
 					sb.addSp64Distribution("B", 100f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(67f);
 					sb.addSp64Distribution("H", 100f);
 					sb.addSite(ib -> {
@@ -1645,13 +1671,14 @@ class EstimationMethodsTest {
 				lb.polygonIdentifier(polygonId);
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(82.8000031f);
+				lb.controlMap(controlMap);
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(33f);
 					sb.addSp64Distribution("B", 100f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(67f);
 					sb.addSp64Distribution("H", 100f);
 					sb.addSite(ib -> {
@@ -1686,13 +1713,14 @@ class EstimationMethodsTest {
 				lb.polygonIdentifier(polygonId);
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(82.8000031f);
+				lb.controlMap(controlMap);
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(33f);
 					sb.addSp64Distribution("B", 100f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(67f);
 					sb.addSp64Distribution("H", 100f);
 					sb.addSite(ib -> {
@@ -1743,13 +1771,15 @@ class EstimationMethodsTest {
 				lb.polygonIdentifier(polygonId);
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(82.8000031f);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(33f);
 					sb.addSp64Distribution("B", 100f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(67f);
 					sb.addSp64Distribution("H", 100f);
 					sb.addSite(ib -> {
@@ -1781,13 +1811,14 @@ class EstimationMethodsTest {
 				lb.polygonIdentifier(polygonId);
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(82.8000031f);
+				lb.controlMap(controlMap);
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(33f);
 					sb.addSp64Distribution("B", 100f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(67f);
 					sb.addSp64Distribution("H", 100f);
 					sb.addSite(ib -> {
@@ -1819,13 +1850,14 @@ class EstimationMethodsTest {
 				lb.polygonIdentifier(polygonId);
 				lb.layerType(LayerType.PRIMARY);
 				lb.crownClosure(82.8000031f);
+				lb.controlMap(controlMap);
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.percentGenus(33f);
 					sb.addSp64Distribution("B", 100f);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.percentGenus(67f);
 					sb.addSp64Distribution("H", 100f);
 					sb.addSite(ib -> {
