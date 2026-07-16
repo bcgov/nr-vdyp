@@ -721,14 +721,15 @@ public class BatchResultAggregationService {
 		ZipEntry zipEntry = new ZipEntry(mergedLogFileName);
 		zipOut.putNextEntry(zipEntry);
 
-		int processed = progressUpdate.polygonsProcessed() - progressUpdate.polygonsSkipped();
+		int processed = progressUpdate.polygonsProcessed();
+		int skipped = progressUpdate.polygonsSkipped();
 		String progress = String.format(
 				"""
 						Projection Type: HCSV
 						Processed %d polygons...
 						Processing summary: %d polygons processed + %d skipped = %d seen
-						Total Duration: %s""", processed, processed, progressUpdate.polygonsSkipped(),
-				progressUpdate.totalPolygons(), BatchUtils.formatDuration(duration)
+						Total Duration: %s""", processed, processed, skipped, processed + skipped,
+				BatchUtils.formatDuration(duration)
 		);
 		zipOut.write(progress.getBytes(StandardCharsets.UTF_8));
 	}
