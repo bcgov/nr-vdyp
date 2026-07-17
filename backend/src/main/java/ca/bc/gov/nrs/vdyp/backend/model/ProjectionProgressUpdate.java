@@ -6,7 +6,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public record ProjectionProgressUpdate(
-		UUID batchJobGUID, int totalPolygons, int polygonsProcessed, int projectionErrors, int workers,
-		String batchFailureTypeCode, String failureMessage
+		UUID batchJobGUID, int totalPolygons, int polygonsProcessed, int projectionErrors, int polygonsSkipped,
+		int workers, String batchFailureTypeCode, String failureMessage
 ) {
 }
