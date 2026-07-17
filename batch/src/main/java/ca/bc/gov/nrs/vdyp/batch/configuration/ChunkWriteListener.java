@@ -36,8 +36,11 @@ public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>
 
 		ExecutionContext stepCtx = stepExecution.getExecutionContext();
 
+		// A chunk's record count can include polygons extended-core itself skipped internally
+		// (meta.getSkippedPolygonCount()); those are reported separately below, so only the
+		// remainder is genuinely "processed" - otherwise they'd be double-counted.
 		int polygonsProcessed = stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
-		polygonsProcessed += meta.getPolygonRecordCount();
+		polygonsProcessed += meta.getPolygonRecordCount() - meta.getSkippedPolygonCount();
 		stepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, polygonsProcessed);
 
 		int projectionErrors = stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
