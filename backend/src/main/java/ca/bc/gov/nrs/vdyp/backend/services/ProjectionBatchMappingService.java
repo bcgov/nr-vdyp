@@ -21,6 +21,8 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 @ApplicationScoped
 public class ProjectionBatchMappingService {
@@ -69,22 +71,52 @@ public class ProjectionBatchMappingService {
 			var entity = repository.findByProjectionGUID(projectionEntity.getProjectionGUID());
 
 			if (entity.isPresent() && entity.get().getBatchJobGUID() != null) {
-				batchClient.stopBatchJob(entity.get().getBatchJobGUID());
-				repository.delete(entity.get());
-				return;
+				stopBatchJob(entity.get().getBatchJobGUID(), projectionEntity.getProjectionGUID());
+			} else {
+				// Catching a race condition in which batch has already picked up the projection but backend hasn't been
+				// informed yet
+				logger.info(
+						"No batch job GUID found for projection {}; cancelling batch job by projection GUID",
+						projectionEntity.getProjectionGUID()
+				);
+				stopBatchJobByProjection(projectionEntity.getProjectionGUID());
 			}
-
-			// Catching a race condition in which batch has already picked up the projection but backend hasn't been
-			// informed yet
-			logger.info(
-					"No batch mapping found for projection {}; cancelling batch job by projection GUID",
-					projectionEntity.getProjectionGUID()
-			);
-			batchClient.stopBatchJobByProjection(projectionEntity.getProjectionGUID());
 			entity.ifPresent(repository::delete);
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error cancelling projection batch process", e);
 		}
+	}
+
+	private void stopBatchJob(UUID batchJobGUID, UUID projectionGUID) {
+		try {
+			batchClient.stopBatchJob(batchJobGUID);
+		} catch (WebApplicationException e) {
+			if (!isNotFound(e)) {
+				throw e;
+			}
+			logger.info(
+					"Batch job {} for projection {} was not found while cancelling; deleting stale local mapping",
+					batchJobGUID, projectionGUID
+			);
+		}
+	}
+
+	private void stopBatchJobByProjection(UUID projectionGUID) {
+		try {
+			batchClient.stopBatchJobByProjection(projectionGUID);
+		} catch (WebApplicationException e) {
+			if (!isNotFound(e)) {
+				throw e;
+			}
+			logger.info(
+					"Batch job for projection {} was not found while cancelling; deleting stale local mapping if present",
+					projectionGUID
+			);
+		}
+	}
+
+	private boolean isNotFound(WebApplicationException e) {
+		return e.getResponse() != null && e.getResponse().getStatus() == Response.Status.NOT_FOUND.getStatusCode();
 	}
 
 	@Transactional
