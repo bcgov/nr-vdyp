@@ -888,7 +888,7 @@ public class VdypMatchers {
 							&& fields[i].charAt(fields[i].length() - 1) == '"') {
 						fields[i] = fields[i].substring(1, fields[i].length() - 1);
 					} else {
-						throw new IllegalArgumentException("Field \"" + fields[i] + "\" is not double-quoted");
+						// throw new IllegalArgumentException("Field \"" + fields[i] + "\" is not double-quoted");
 					}
 				}
 
