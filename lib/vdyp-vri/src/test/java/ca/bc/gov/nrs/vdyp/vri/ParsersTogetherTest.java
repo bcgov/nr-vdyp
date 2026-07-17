@@ -108,7 +108,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -124,7 +125,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -178,7 +180,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -194,7 +197,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -248,7 +252,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -264,7 +269,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -316,7 +322,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -332,7 +339,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		/*
@@ -420,7 +428,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -436,7 +445,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier("Wrong", 2000);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -481,7 +491,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -497,7 +508,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(LayerType.VETERAN);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -543,7 +555,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -559,7 +572,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier("Wrong", 2000);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -604,14 +618,16 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(LayerType.VETERAN);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -648,7 +664,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -664,7 +681,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -702,7 +720,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -718,7 +737,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("X", controlMap);
+			specBuilder.speciesGroup("X");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -764,7 +784,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(75.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -790,7 +811,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -853,7 +875,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -869,7 +892,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -919,7 +943,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -946,12 +971,14 @@ class ParsersTogetherTest {
 		speciesStream.addValue(List.of(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(80f);
 		}), VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("S", controlMap);
+			specBuilder.speciesGroup("S");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(20f);
 		})));
 		siteStream.addValue(List.of(VriSite.build(siteBuilder -> {
@@ -1011,7 +1038,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(100.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -1027,12 +1055,14 @@ class ParsersTogetherTest {
 		speciesStream.addValue(List.of(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(80f);
 		}), VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("S", controlMap);
+			specBuilder.speciesGroup("S");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(20f);
 		})));
 		siteStream.addValue(List.of(VriSite.build(siteBuilder -> {
@@ -1103,7 +1133,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(75.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -1129,7 +1160,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
@@ -1186,7 +1218,8 @@ class ParsersTogetherTest {
 		polyStream.addValue(VriPolygon.build(polyBuilder -> {
 			polyBuilder.polygonIdentifier(polygonId);
 			polyBuilder.percentAvailable(Optional.of(75.0f));
-			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.biogeoclimaticZone("IDF");
+			polyBuilder.controlMap(controlMap);
 			polyBuilder.yieldFactor(0.9f);
 		}));
 
@@ -1212,7 +1245,8 @@ class ParsersTogetherTest {
 		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
 			specBuilder.polygonIdentifier(polygonId);
 			specBuilder.layerType(layerType);
-			specBuilder.genus("B", controlMap);
+			specBuilder.speciesGroup("B");
+			specBuilder.controlMap(controlMap);
 			specBuilder.percentGenus(100f);
 		})));
 		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {

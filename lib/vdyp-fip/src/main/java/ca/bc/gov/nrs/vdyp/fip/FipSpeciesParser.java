@@ -114,7 +114,8 @@ public class FipSpeciesParser
 							return FipSpecies.build(specBuilder -> {
 								specBuilder.polygonIdentifier(polygonId);
 								specBuilder.layerType(layerType);
-								specBuilder.genus(genus, controlMap);
+								specBuilder.speciesGroup(genus);
+								specBuilder.controlMap(controlMap);
 								specBuilder.percentGenus(percentGenus);
 								specBuilder.sp64DistributionList(sp64SpeciesDistributions);
 							});

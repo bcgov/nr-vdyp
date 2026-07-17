@@ -219,7 +219,6 @@ public class ComputationMethodsTest {
 			}
 
 			cmp.computeUtilizationComponentsPrimary(bec, vdypLayer, volumeComputeMode, compatibilityVariableMode);
-
 		}
 	}
 }

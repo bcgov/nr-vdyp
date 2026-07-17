@@ -194,10 +194,12 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 		 * @param genus      the species genus
 		 * @param controlMap the control map defining the configuration
 		 * @return this builder
+		 * @deprecated use separate speciesGroup and controlMap methods
 		 */
+		@Deprecated
 		public Builder<T, I, IB> genus(String genus, Map<String, Object> controlMap) {
-			this.genus = Optional.of(genus);
-			this.genusIndex = Optional.of(GenusDefinitionParser.getIndex(genus, controlMap));
+			this.speciesGroup(genus);
+			this.controlMap(controlMap);
 			return this;
 		}
 
@@ -211,8 +213,19 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 		 * @return this builder
 		 */
 		public Builder<T, I, IB> genus(String genus, int genusIndex) {
-			this.genus = Optional.of(genus);
+			this.speciesGroup(genus);
 			this.genusIndex = Optional.of(genusIndex);
+			return this;
+		}
+
+		/**
+		 * Set the species group. If the {@link controlMap} is set the genusIdex will be calculated automatically.
+		 *
+		 * @param speciesGroup the species species group/genus/SP0
+		 * @return this builder
+		 */
+		public Builder<T, I, IB> speciesGroup(String speciesGroup) {
+			this.genus = Optional.of(speciesGroup);
 			return this;
 		}
 
@@ -267,6 +280,10 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 		protected void check(Collection<String> errors) {
 			requirePresent(polygonIdentifier, "polygonIdentifier", errors);
 			requirePresent(layerType, "layerType", errors);
+			// If the genus/speciesGroup is set and the index is not, try to look it up using the control map
+			genusIndex = orLookup(
+					"genusIndex", genusIndex, genus, GenusDefinitionParser::getIndex
+			);
 			requirePresent(genus, "genus", errors);
 			requirePresent(genusIndex, "genusIndex", errors);
 
@@ -284,7 +301,7 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 		@Override
 		protected void preProcess() {
 			super.preProcess();
-			site = siteBuilder.map(this::buildSite).or(() -> site);
+			site = siteBuilder.map(this::propagateControlMap).map(this::buildSite).or(() -> site);
 		}
 
 		@Override
@@ -343,6 +360,7 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 		}
 
 		protected abstract I buildSite(Consumer<IB> config);
+
 	}
 
 	@Override

@@ -182,11 +182,12 @@ class ProcessingEngineTest {
 				pb.percentAvailable(90f);
 				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.speciesGroup("B");
 						sb.addSp64Distribution("BL", 100);
 						sb.addSite(ib -> {
 							ib.yearsToBreastHeight(6f);
@@ -223,11 +224,12 @@ class ProcessingEngineTest {
 				pb.percentAvailable(90f);
 				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.speciesGroup("B");
 						sb.addSp64Distribution("BL", 100);
 						sb.addSite(ib -> {
 							ib.yearsToBreastHeight(6f);
@@ -264,11 +266,12 @@ class ProcessingEngineTest {
 				pb.percentAvailable(90f);
 				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.speciesGroup("B");
 						sb.addSp64Distribution("BL", 100);
 						sb.addSite(ib -> {
 							ib.yearsToBreastHeight(6f);
@@ -308,11 +311,12 @@ class ProcessingEngineTest {
 			pb.percentAvailable(90f);
 			pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
 			pb.forestInventoryZone("");
+			pb.controlMap(controlMap);
 			pb.addLayer(lb -> {
 				lb.layerType(LayerType.PRIMARY);
 
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.addSp64Distribution("BL", 100);
 					sb.addSite(ib -> {
 						ib.yearsToBreastHeight(6f);
@@ -354,11 +358,12 @@ class ProcessingEngineTest {
 				pb.percentAvailable(90f);
 				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.speciesGroup("B");
 						sb.addSp64Distribution("BL", 100);
 						sb.percentGenus(100);
 						sb.baseArea(10);
@@ -401,11 +406,12 @@ class ProcessingEngineTest {
 				pb.percentAvailable(90f);
 				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.speciesGroup("B");
 						sb.addSp64Distribution("BL", 70);
 						sb.baseArea(60);
 						sb.addSite(ib -> {
@@ -416,7 +422,7 @@ class ProcessingEngineTest {
 						sb.percentGenus(70);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("S", controlMap);
+						sb.speciesGroup("S");
 						sb.addSp64Distribution("S", 30);
 						sb.baseArea(40);
 						sb.addSite(ib -> {

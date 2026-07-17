@@ -81,7 +81,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.addLayer(lBuilder -> {
@@ -94,7 +95,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -103,7 +104,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.speciesGroup("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -117,7 +118,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -131,7 +132,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.speciesGroup("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -152,7 +153,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -186,7 +187,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.addLayer(lBuilder -> {
@@ -198,7 +200,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -207,7 +209,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.speciesGroup("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -221,7 +223,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(48.7f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -235,7 +237,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.speciesGroup("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -264,7 +266,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.addLayer(lBuilder -> {
@@ -276,7 +279,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -285,7 +288,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.speciesGroup("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -299,7 +302,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(48.7f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -313,7 +316,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.speciesGroup("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -362,7 +365,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(PolygonMode.YOUNG);
@@ -375,7 +379,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -384,7 +388,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.speciesGroup("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -398,7 +402,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -412,7 +416,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.speciesGroup("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -447,7 +451,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(PolygonMode.YOUNG);
@@ -460,7 +465,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -469,7 +474,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.speciesGroup("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -482,7 +487,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -495,7 +500,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.speciesGroup("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -531,7 +536,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(PolygonMode.YOUNG);
@@ -545,7 +551,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -554,7 +560,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.speciesGroup("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -568,7 +574,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -582,7 +588,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.speciesGroup("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -618,7 +624,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(PolygonMode.START);
@@ -632,7 +639,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -641,7 +648,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.speciesGroup("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -655,7 +662,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -669,7 +676,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.speciesGroup("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -705,7 +712,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(PolygonMode.START);
@@ -718,7 +726,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -727,7 +735,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.speciesGroup("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -741,7 +749,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -755,7 +763,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.speciesGroup("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -794,7 +802,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -807,7 +816,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -856,7 +865,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -869,7 +879,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -918,7 +928,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -933,7 +944,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -983,7 +994,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -996,7 +1008,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1046,7 +1058,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -1059,7 +1072,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1112,7 +1125,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -1125,7 +1139,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1185,7 +1199,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -1198,7 +1213,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1250,7 +1265,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -1263,7 +1279,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1317,7 +1333,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -1330,7 +1347,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1381,7 +1398,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -1394,7 +1412,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1445,7 +1463,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.mode(mode);
@@ -1458,7 +1477,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1505,7 +1524,8 @@ class VriInputValidationTest {
 
 		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
-			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pBuilder.biogeoclimaticZone("IDF");
+			pBuilder.controlMap(controlMap);
 			pBuilder.forestInventoryZone(" ");
 			pBuilder.yieldFactor(1.0f);
 			pBuilder.addLayer(lBuilder -> {
@@ -1518,7 +1538,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.speciesGroup("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1527,7 +1547,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.speciesGroup("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1541,7 +1561,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1555,7 +1575,7 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.speciesGroup("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1578,7 +1598,7 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.speciesGroup("H");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {

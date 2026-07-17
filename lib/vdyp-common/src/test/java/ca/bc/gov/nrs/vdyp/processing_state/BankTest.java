@@ -15,7 +15,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -40,20 +39,19 @@ class BankTest {
 
 		controlMap = TestUtils.loadControlMap();
 
-		var bec = Utils.getBec("CDF", controlMap);
-
 		polygon = VdypPolygon.build(pb -> {
 			pb.polygonIdentifier("Test", 2024);
 
 			pb.percentAvailable(99f);
-			pb.biogeoclimaticZone(bec);
+			pb.biogeoclimaticZone("CDF");
 			pb.forestInventoryZone("A");
+			pb.controlMap(controlMap);
 
 			pb.addLayer(lb -> {
 				lb.layerType(LayerType.PRIMARY);
 
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.speciesGroup("B");
 					sb.baseArea(0.4f);
 					sb.percentGenus(10);
 					sb.addSite(ib -> {
@@ -66,22 +64,22 @@ class BankTest {
 					});
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("C", controlMap);
+					sb.speciesGroup("C");
 					sb.baseArea(0.6f);
 					sb.percentGenus(10);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("D", controlMap);
+					sb.speciesGroup("D");
 					sb.baseArea(10f);
 					sb.percentGenus(10);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 					sb.baseArea(50f);
 					sb.percentGenus(60);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("S", controlMap);
+					sb.speciesGroup("S");
 					sb.baseArea(99.9f);
 					sb.percentGenus(10);
 					sb.addSite(ib -> {
@@ -198,13 +196,15 @@ class BankTest {
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
-				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.biogeoclimaticZone("CDF");
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
+
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.speciesGroup("H");
 
 						sb.addSite(ib -> {
 							// These intentionally do not add together
@@ -232,13 +232,14 @@ class BankTest {
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
-				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.biogeoclimaticZone("CDF");
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.speciesGroup("H");
 
 						sb.addSite(ib -> {
 							ib.yearsToBreastHeight(6f);
@@ -263,13 +264,14 @@ class BankTest {
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
-				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.biogeoclimaticZone("CDF");
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.speciesGroup("H");
 
 						sb.addSite(ib -> {
 							ib.yearsToBreastHeight(6f);
@@ -293,13 +295,14 @@ class BankTest {
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
-				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.biogeoclimaticZone("CDF");
+				pb.controlMap(controlMap);
 				pb.forestInventoryZone("");
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.speciesGroup("H");
 
 						sb.addSite(ib -> {
 							ib.yearsToBreastHeight(6f);
@@ -324,13 +327,14 @@ class BankTest {
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
-				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.biogeoclimaticZone("CDF");
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.speciesGroup("H");
 
 						sb.addSite(ib -> {
 							ib.ageTotal(250f);
@@ -354,13 +358,14 @@ class BankTest {
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
-				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.biogeoclimaticZone("CDF");
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.speciesGroup("H");
 					});
 				});
 			});
