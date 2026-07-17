@@ -2051,7 +2051,7 @@ class ProjectionServiceTest {
 		VDYPUserModel systemUser = new VDYPUserModel();
 		systemUser.setUserTypeCode(systemUserType);
 		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(
-				UUID.randomUUID(), 10, 8, 1, 0, null, null
+				UUID.randomUUID(), 10, 8, 1, 0, 0, null, null
 		);
 
 		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
@@ -2076,7 +2076,7 @@ class ProjectionServiceTest {
 		VDYPUserModel systemUser = new VDYPUserModel();
 		systemUser.setUserTypeCode(systemUserType);
 		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(
-				batchJobGUID, 10, 8, 1, 0, "PROCESS", "Projection failed"
+				batchJobGUID, 10, 8, 1, 0, 0, "PROCESS", "Projection failed"
 		);
 		BatchFailureTypeCodeEntity batchFailureTypeCode = new BatchFailureTypeCodeEntity();
 		batchFailureTypeCode.setCode("PROCESS");
@@ -2108,7 +2108,7 @@ class ProjectionServiceTest {
 
 		UUID projectionGUID = UUID.randomUUID();
 		ProjectionProgressUpdate progressUpdate = new ProjectionProgressUpdate(
-				UUID.randomUUID(), 10, 8, 1, 0, null, null
+				UUID.randomUUID(), 10, 8, 1, 0, 0, null, null
 		);
 
 		ProjectionModel model = new ProjectionModel();

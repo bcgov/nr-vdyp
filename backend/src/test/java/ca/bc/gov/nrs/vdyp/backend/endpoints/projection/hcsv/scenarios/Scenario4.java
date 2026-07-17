@@ -67,12 +67,12 @@ class Scenario4 extends Scenario {
 
 		var csvLines = entry1Content.split("\n");
 		assertThat(csvLines, arrayWithSize(104));
-		assertThat(csvLines[0], startsWith("\"TABLE_NUM\",\"FEATURE_ID\""));
+		assertThat(csvLines[0], startsWith("TABLE_NUM,FEATURE_ID"));
 
 		Integer indexOfLineOfInterest = null;
 		int nextIndex = 0;
 		for (var line : csvLines) {
-			if (line.contains("13919428") && line.contains("\"D\"")) {
+			if (line.contains("13919428,") && line.contains(",D,")) {
 				indexOfLineOfInterest = nextIndex;
 				break;
 			}

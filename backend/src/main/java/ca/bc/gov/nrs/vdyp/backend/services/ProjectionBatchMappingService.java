@@ -160,7 +160,9 @@ public class ProjectionBatchMappingService {
 	private static void applyProgress(ProjectionBatchMappingEntity entity, ProjectionProgressUpdate progressUpdate) {
 		entity.setPolygonCount(progressUpdate.totalPolygons());
 		entity.setErrorCount(progressUpdate.projectionErrors());
-		entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed());
+		// Polygons whose chunk failed and was skipped are folded into the displayed "completed" count so that
+		// completed reconciles to total once the job finishes, rather than silently under-reporting.
+		entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed() + progressUpdate.polygonsSkipped());
 		entity.setWorkerCount(progressUpdate.workers());
 	}
 
