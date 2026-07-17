@@ -13,12 +13,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
-import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -176,9 +175,10 @@ public class ComputationMethodsTest {
 				lb.empiricalRelationshipParameterIndex(1);
 				lb.inventoryTypeGroup(37);
 				lb.primaryGenus("D");
+				lb.controlMap(control.getControlMap());
 
 				lb.addSpecies(sb -> {
-					sb.genus("B", 3);
+					sb.speciesGroup("B");
 					sb.percentGenus(0.890327f);
 					sb.breakageGroup(3);
 					sb.decayGroup(7);
@@ -187,7 +187,7 @@ public class ComputationMethodsTest {
 				});
 
 				lb.addSpecies(sb -> {
-					sb.genus("C", 4);
+					sb.speciesGroup("C");
 					sb.percentGenus(0.890327f);
 					sb.breakageGroup(3);
 					sb.decayGroup(7);
