@@ -1080,7 +1080,7 @@ public class VdypMatchers {
 		};
 	}
 
-	public static <S extends BaseVdypSpecies<I>, I extends BaseVdypSite> Matcher<? extends BaseVdypLayer<S, I>>
+	public static <L extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> Matcher<L>
 			hasSpecies(String speciesGroup, Matcher<S> specMatcher) {
 		return hasProperty("species", hasSpecificEntry(speciesGroup, specMatcher));
 	}

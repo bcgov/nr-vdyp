@@ -23,9 +23,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -36,6 +39,7 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
@@ -72,6 +76,7 @@ import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -849,4 +854,156 @@ public class TestUtils {
 			}
 		}
 	}
+
+	/**
+	 * Converts a MatrixMap into a set of Java instructions that will create an identical map
+	 *
+	 * @param map
+	 * @param out
+	 * @throws IOException
+	 */
+	public static String matrixMapInit(MatrixMap<?> map, String mapName) {
+		var builder = new StringBuilder();
+		try {
+			matrixMapInit(map, mapName, builder);
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+		return builder.toString();
+	}
+
+	/**
+	 * Converts a Map into a set of Java instructions that will populate an identical map
+	 *
+	 * @param map
+	 * @param out
+	 * @throws IOException
+	 */
+	public static String mapInit(Map<?, ?> map, String mapName) {
+		var builder = new StringBuilder();
+		try {
+			mapInit(map, mapName, builder);
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+		return builder.toString();
+	}
+
+	/**
+	 * Convert a value to a java literal. This is not comprehensive.
+	 *
+	 * @param value
+	 * @return
+	 */
+	public static String javaLiteral(Object value) {
+		if (value == null) {
+			return "null";
+		}
+		// TODO use a switch with pattern matching when we upgrade to Java 21+
+		if (value instanceof Enum e) {
+			return e.getClass().getSimpleName() + "." + e.toString();
+		}
+		if (value instanceof Float f) {
+			return Float.toString(f) + "f";
+		}
+		if (value instanceof String s) {
+			return StringEscapeUtils.escapeJava(s);
+		}
+		if (value instanceof Optional<?> op) {
+			return op.map(v -> "Optional.of(" + javaLiteral(v) + ")").orElse("Optional.empty()");
+		}
+		throw new UnsupportedOperationException("Couldn't convert " + value.getClass() + " to a literal");
+	}
+
+	/**
+	 * Converts a Map into a set of Java instructions that will populate an identical map
+	 *
+	 * @param map
+	 * @param out
+	 * @throws IOException
+	 */
+	public static void mapInit(Map<?, ?> map, String mapName, Appendable out) throws IOException {
+		for (var entry : map.entrySet()) {
+
+			out.append(mapName).append(".put(").append(javaLiteral(entry.getKey())).append(", ")
+					.append(javaLiteral(entry.getValue())).append(");\n");
+		}
+	}
+
+	/**
+	 * Converts a MatrixMap into a set of Java instructions that will create an identical map
+	 *
+	 * @param map
+	 * @param out
+	 * @throws IOException
+	 */
+	public static void matrixMapInit(MatrixMap<?> map, String mapName, Appendable out) throws IOException {
+
+		final Comparator<Entry<?, Integer>> sortEntries = Collections
+				.reverseOrder(Comparator.comparingInt(e -> e.getValue()));
+
+		Optional<?> defaultValue;
+		if (map.all(v -> v instanceof Float)) {
+			@SuppressWarnings("unchecked")
+			MatrixMap<Float> m = (MatrixMap<Float>) map;
+
+			Map<Float, Integer> count = new HashMap<>();
+			m.eachKey(keys -> {
+				var v = m.getM(keys);
+				count.put(v, count.getOrDefault(v, 0) + 1);
+			});
+
+			defaultValue = count.entrySet().stream().filter(
+					e -> Objects.isNull(e.getKey()) || Float.isNaN(e.getKey()) || e.getKey() == 0f || e.getKey() == -9f
+			).sorted(sortEntries).map(Map.Entry::getKey).findFirst();
+
+		} else if (map.all(v -> v instanceof Integer)) {
+			@SuppressWarnings("unchecked")
+			MatrixMap<Integer> m = (MatrixMap<Integer>) map;
+
+			Map<Integer, Integer> count = new HashMap<>();
+			m.eachKey(keys -> {
+				var v = m.getM(keys);
+				count.put(v, count.getOrDefault(v, 0) + 1);
+			});
+
+			defaultValue = count.entrySet().stream()
+					.filter(e -> Objects.isNull(e.getKey()) || e.getKey() == 0 || e.getKey() == -9).sorted(sortEntries)
+					.map(Map.Entry::getKey).findFirst();
+
+		} else {
+			defaultValue = Optional.empty();
+		}
+		out.append(mapName).append(" = ");
+		out.append("new MatrixMap");
+		out.append(Integer.toString(map.getNumDimensions()));
+		out.append("Impl(");
+
+		for (var dimension : map.getDimensions()) {
+			out.append("List.of(");
+			out.append(dimension.stream().map(TestUtils::javaLiteral).collect(Collectors.joining(", ")));
+			out.append("), ");
+		}
+		out.append(defaultValue.map(TestUtils::javaLiteral).orElse("null"));
+		out.append(");\n");
+
+		map.eachKey(keys -> {
+			try {
+				var v = map.getM(keys);
+				if (defaultValue.map(dv -> !Objects.equals(v, dv)).orElse(true)) {
+					out.append(mapName).append(".put(");
+					for (var key : keys) {
+						out.append(javaLiteral(key));
+						out.append(", ");
+					}
+					out.append(javaLiteral(v));
+					out.append(");\n");
+
+				}
+			} catch (IOException ex) {
+				throw new IllegalStateException(ex);
+			}
+		});
+	}
+
 }
