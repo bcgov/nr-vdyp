@@ -11,4 +11,10 @@ public class ProjectionStateExceptionMapper extends AbstractApiExceptionMapper<P
 	protected Response buildResponse(ProjectionStateException e) {
 		return response(Response.Status.BAD_REQUEST, "BAD_REQUEST", e.getMessage());
 	}
+
+	@Override
+	protected void log(ProjectionStateException e) {
+		// Expected/known condition (e.g. a progress update racing against completion) - avoid a full stack trace.
+		logger.info(e.getMessage());
+	}
 }
