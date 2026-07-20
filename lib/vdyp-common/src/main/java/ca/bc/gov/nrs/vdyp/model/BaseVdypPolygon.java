@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import ca.bc.gov.nrs.vdyp.common.Utils;
+
 public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP extends BaseVdypSpecies<SI>, SI extends BaseVdypSite>
 		implements Dumpable {
 
@@ -151,6 +153,7 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 		protected Optional<PolygonIdentifier> polygonIdentifier = Optional.empty();
 		protected Optional<PA> percentAvailable = Optional.empty();
 		protected Optional<BecDefinition> biogeoclimaticZone = Optional.empty();
+		protected Optional<String> biogeoclimaticZoneId = Optional.empty();
 		protected Optional<String> forestInventoryZone = Optional.empty();
 		protected Optional<PolygonMode> mode = Optional.empty();
 		protected Optional<Integer> inventoryTypeGroup = Optional.empty();
@@ -180,6 +183,13 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 
 		public Builder<T, L, PA, SP, SI, LB, SPB, SIB> biogeoclimaticZone(BecDefinition biogeoclimaticZone) {
 			this.biogeoclimaticZone = Optional.of(biogeoclimaticZone);
+			this.biogeoclimaticZoneId = Optional.empty();
+			return this;
+		}
+
+		public Builder<T, L, PA, SP, SI, LB, SPB, SIB> biogeoclimaticZone(String id) {
+			this.biogeoclimaticZone = Optional.empty();
+			this.biogeoclimaticZoneId = Optional.of(id);
 			return this;
 		}
 
@@ -276,6 +286,9 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 		protected void check(Collection<String> errors) {
 			requirePresent(polygonIdentifier, "polygonIdentifier", errors);
 			requirePresent(percentAvailable, "percentAvailable", errors);
+			biogeoclimaticZone = orLookup(
+					"biogeoclimaticZone", biogeoclimaticZone, biogeoclimaticZoneId, Utils::getBec
+			);
 			requirePresent(biogeoclimaticZone, "biogeoclimaticZone", errors);
 			requirePresent(forestInventoryZone, "forestInventoryZone", errors);
 		}
@@ -294,7 +307,10 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 		 * Build any builders for child objects and store the results. This will clear the stored child builders.
 		 */
 		public void buildChildren() {
-			layersBuilders.stream().map(this::buildLayer).collect(Collectors.toCollection(() -> layers));
+			layersBuilders.stream()//
+					.map(this::propagateControlMap) //
+					.map(this::buildLayer)//
+					.collect(Collectors.toCollection(() -> layers));
 			layersBuilders.clear();
 		}
 

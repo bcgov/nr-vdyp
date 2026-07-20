@@ -229,7 +229,10 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 		 * Build any builders for child objects and store the results. This will clear the stored child builders.
 		 */
 		public void buildChildren() {
-			speciesBuilders.stream().map(this::buildSpecies).collect(Collectors.toCollection(() -> species));
+			speciesBuilders.stream()//
+					.map(this::propagateControlMap) //
+					.map(this::buildSpecies)//
+					.collect(Collectors.toCollection(() -> species));
 			speciesBuilders.clear();
 		}
 
