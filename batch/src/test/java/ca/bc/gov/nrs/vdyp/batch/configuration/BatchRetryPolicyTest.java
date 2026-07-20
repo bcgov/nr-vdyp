@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
@@ -33,6 +34,7 @@ import org.springframework.dao.TransientDataAccessException;
 import org.springframework.retry.RetryContext;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -311,6 +313,21 @@ class BatchRetryPolicyTest {
 		when(retryContext.getLastThrowable()).thenReturn(new IOException("test"));
 
 		assertFalse(policy.canRetry(retryContext));
+	}
+
+	@Test
+	void testCanRetry_WithAggregationOutOfSpaceException() throws BatchException {
+		BatchResultAggregationException exception = BatchResultAggregationException.handleResultAggregationFailure(
+				new IOException("No space left on device"), "Failed to aggregate results", JOB_GUID, 100L,
+				LoggerFactory.getLogger(getClass())
+		);
+
+		when(retryContext.getLastThrowable()).thenReturn(exception);
+		when(retryContext.getRetryCount()).thenReturn(1);
+
+		assertFalse(batchRetryPolicy.canRetry(retryContext));
+		verify(metricsCollector, never())
+				.recordRetryAttempt(anyLong(), any(), anyInt(), any(), anyBoolean(), anyString());
 	}
 
 	@Test
