@@ -68,20 +68,26 @@ public class ProjectionBatchMappingService {
 	@Transactional
 	public void cancelProjection(ProjectionEntity projectionEntity) throws ProjectionServiceException {
 		try {
-			var entity = repository.findByProjectionGUID(projectionEntity.getProjectionGUID());
+			var entityList = repository.listByProjectionGUID(projectionEntity.getProjectionGUID());
 
-			if (entity.isPresent() && entity.get().getBatchJobGUID() != null) {
-				stopBatchJob(entity.get().getBatchJobGUID(), projectionEntity.getProjectionGUID());
-			} else {
-				// Catching a race condition in which batch has already picked up the projection but backend hasn't been
+			if (entityList.isEmpty()) {
+				// Catching a race condition in which batch has already picked up the projection but backend hasn't
+				// been
 				// informed yet
 				logger.info(
-						"No batch job GUID found for projection {}; cancelling batch job by projection GUID",
+						"No batch job GUIDs found for projection {}; cancelling batch job by projection GUID",
 						projectionEntity.getProjectionGUID()
 				);
 				stopBatchJobByProjection(projectionEntity.getProjectionGUID());
+			} else {
+				// attempt to stop all known projection entities
+				for (var entity : entityList) {
+					if (entity.getBatchJobGUID() != null) {
+						stopBatchJob(entity.getBatchJobGUID(), projectionEntity.getProjectionGUID());
+						repository.delete(entity);
+					}
+				}
 			}
-			entity.ifPresent(repository::delete);
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error cancelling projection batch process", e);
 		}
