@@ -11,4 +11,11 @@ public class ProjectionNotFoundExceptionMapper extends AbstractApiExceptionMappe
 	protected Response buildResponse(ProjectionNotFoundException e) {
 		return response(Response.Status.NOT_FOUND, "NOT_FOUND", e.getMessage());
 	}
+
+	@Override
+	protected void log(ProjectionNotFoundException e) {
+		// Expected/known condition (e.g. a stale batch job reporting on a projection no longer known to us) avoid a
+		// full stack trace.
+		logger.info(e.getMessage());
+	}
 }
