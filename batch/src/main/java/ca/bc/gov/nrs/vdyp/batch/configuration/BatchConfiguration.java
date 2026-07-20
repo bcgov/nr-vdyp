@@ -37,6 +37,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -344,8 +345,11 @@ public class BatchConfiguration {
 	 */
 	@Bean
 	public Step postProcessingStep(PlatformTransactionManager transactionManager) {
+		DefaultTransactionAttribute transactionAttribute = new DefaultTransactionAttribute();
+		transactionAttribute.setTimeout(1800); // 30 minutes
 		return new StepBuilder(BatchConstants.Job.POST_PROCESSING_STEP_NAME, jobRepository)
-				.tasklet(resultAggregationTasklet(), transactionManager).build();
+				.tasklet(resultAggregationTasklet(), transactionManager).transactionAttribute(transactionAttribute)
+				.build();
 	}
 
 	/**
@@ -431,8 +435,10 @@ public class BatchConfiguration {
 
 	@Bean
 	public Step persistResultFileStep(ResultPersistenceTasklet tasklet, PlatformTransactionManager transactionManager) {
+		DefaultTransactionAttribute transactionAttribute = new DefaultTransactionAttribute();
+		transactionAttribute.setTimeout(1800); // 30 minutes
 		return new StepBuilder(BatchConstants.Job.PERSIST_RESULT_FILE_STEP_NAME, jobRepository)
-				.tasklet(tasklet, transactionManager).build();
+				.tasklet(tasklet, transactionManager).transactionAttribute(transactionAttribute).build();
 	}
 
 }

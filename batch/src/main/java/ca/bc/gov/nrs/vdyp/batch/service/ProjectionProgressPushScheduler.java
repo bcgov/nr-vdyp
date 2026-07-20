@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 import com.google.common.base.Strings;
 
@@ -29,19 +30,24 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 @EnableScheduling
 public class ProjectionProgressPushScheduler {
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionProgressPushScheduler.class);
+	private static final String PROJECTION_CANCELLED_REASON = "Projection cancelled";
+
 	private final JobExplorer jobExplorer;
 	private final VdypClient vdypClient;
 	private final ThreadPoolTaskExecutor progressExecutor;
+	private final BatchRecoveryMetadataService batchRecoveryMetadataService;
 
 	private final Map<String, Integer> lastProgressHashByProjection = new HashMap<>();
 
 	public ProjectionProgressPushScheduler(
 			JobExplorer jobExplorer, VdypClient vdypClient,
-			@Qualifier("backendProgressExecutor") ThreadPoolTaskExecutor executor
+			@Qualifier("backendProgressExecutor") ThreadPoolTaskExecutor executor,
+			BatchRecoveryMetadataService batchRecoveryMetadataService
 	) {
 		this.jobExplorer = jobExplorer;
 		this.vdypClient = vdypClient;
 		this.progressExecutor = executor;
+		this.batchRecoveryMetadataService = batchRecoveryMetadataService;
 	}
 
 	/**
@@ -89,6 +95,20 @@ public class ProjectionProgressPushScheduler {
 			progressExecutor.execute(() -> {
 				try {
 					vdypClient.pushProgress(projectionGUID, payload);
+				} catch (HttpClientErrorException.NotFound e) {
+					// Backend has no record of this projection - nothing further to push. Fail the job (if it
+					// isn't already terminal) rather than retrying against a projection that no longer exists.
+					logger.info(
+							"Projection {} is not known to backend; failing job {} as '{}'", projectionGUID,
+							job.getId(), PROJECTION_CANCELLED_REASON
+					);
+					batchRecoveryMetadataService.markStaleExecutionFailed(job.getId(), PROJECTION_CANCELLED_REASON);
+				} catch (HttpClientErrorException.BadRequest e) {
+					// Backend's current state for this projection doesn't permit a progress update (e.g. it has
+					// already reached a terminal state) - expected race, nothing more to do here.
+					logger.info(
+							"Backend rejected progress update for projection {}: {}", projectionGUID, e.getMessage()
+					);
 				} catch (Exception logMe) {
 					logger.error("Error pushing progress to VDYP", logMe);
 				}

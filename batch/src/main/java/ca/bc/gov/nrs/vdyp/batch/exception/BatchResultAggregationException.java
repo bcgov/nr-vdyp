@@ -12,7 +12,7 @@ public class BatchResultAggregationException extends BatchException {
 	private static final long serialVersionUID = -4895498760794332393L;
 
 	private BatchResultAggregationException(String message, Throwable cause) {
-		super(message, cause, null, true, false);
+		super(message, cause, null, false, false);
 	}
 
 	public static BatchResultAggregationException handleResultAggregationFailure(
