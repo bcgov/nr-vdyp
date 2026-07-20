@@ -86,7 +86,7 @@ public abstract class ModelClassBuilder<T> {
 	/**
 	 * Given a configuration lambda for a child builder, return a lambda that first sets the control map if it is set on
 	 * this one.
-	 * 
+	 *
 	 * @param <C>    child builder type
 	 * @param config configuration to run after setting the control map
 	 */
@@ -100,7 +100,8 @@ public abstract class ModelClassBuilder<T> {
 	protected <V, A> Optional<V> orLookup(
 			String name, Optional<V> value, Optional<A> alternate, BiFunction<A, Map<String, Object>, V> lookup
 	) {
-		// Use the value if present, otherwise if the alternate value is present, try to use the control map to look it up.
+		// Use the value if present, otherwise if the alternate value is present, try to use the control map to look it
+		// up.
 		return value.or(() -> alternate.map(alt -> {
 			var cm = this.controlMap.orElseThrow(
 					() -> new IllegalStateException(
