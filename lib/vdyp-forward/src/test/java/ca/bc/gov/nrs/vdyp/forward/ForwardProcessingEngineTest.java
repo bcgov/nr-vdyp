@@ -617,11 +617,11 @@ class ForwardProcessingEngineTest {
 			// uses real expecterd value later
 			float expected = Float.NaN; // current behavior is dropping this value but that is ok to fix when we know
 										// we have matched VDYP7
-										/*
-										 * float realExpected = (float) SiteTool.convertSiteIndexBetweenCurves(
-										 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(secondarySlot)), sourceSiteIndex,
-										 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(primarySlot)) );
-										 */
+			/*
+			 * float realExpected = (float) SiteTool.convertSiteIndexBetweenCurves(
+			 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(secondarySlot)), sourceSiteIndex,
+			 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(primarySlot)) );
+			 */
 			fixture.bank.siteIndices[primarySlot] = Float.NaN;
 			fixture.bank.siteIndices[secondarySlot] = sourceSiteIndex;
 			fixture.bank.siteIndices[fixture.slot("H")] = 16.1f;

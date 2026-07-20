@@ -614,9 +614,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			BecDefinition bec, VdypLayer vdypLayer, VolumeComputeMode volumeComputeMode,
 			CompatibilityVariableMode compatibilityVariableMode
 	) throws ProcessingException {
-		this.computers.computeUtilizationComponentsPrimary(
-				bec, vdypLayer, volumeComputeMode, compatibilityVariableMode
-		);
+		this.computers
+				.computeUtilizationComponentsPrimary(bec, vdypLayer, volumeComputeMode, compatibilityVariableMode);
 	}
 
 	/**

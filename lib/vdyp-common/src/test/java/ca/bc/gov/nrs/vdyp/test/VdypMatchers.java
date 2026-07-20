@@ -36,6 +36,9 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -44,6 +47,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
 /**
  * Custom Hamcrest Matchers
@@ -682,6 +686,16 @@ public class VdypMatchers {
 		return allOf(instanceOf(BecDefinition.class), hasProperty("alias", is(alias)));
 	}
 
+	public static <H extends VdypUtilizationHolder> Matcher<H> hasUtilization(
+			String property, float small, float all, float util1, float util2, float util3, float util4
+	) {
+		return hasProperty(property, utilization(small, all, util1, util2, util3, util4));
+	}
+
+	public static <H extends VdypUtilizationHolder> Matcher<H> hasUtilizationHeight(float small, float all) {
+		return hasProperty("loreyHeightByUtilization", utilizationHeight(small, all));
+	}
+
 	public static Matcher<Coefficients>
 			utilization(float small, float all, float util1, float util2, float util3, float util4) {
 		return new TypeSafeDiagnosingMatcher<Coefficients>() {
@@ -1064,5 +1078,10 @@ public class VdypMatchers {
 				}
 			};
 		};
+	}
+
+	public static <S extends BaseVdypSpecies<I>, I extends BaseVdypSite> Matcher<? extends BaseVdypLayer<S, I>>
+			hasSpecies(String speciesGroup, Matcher<S> specMatcher) {
+		return hasProperty("species", hasSpecificEntry(speciesGroup, specMatcher));
 	}
 }

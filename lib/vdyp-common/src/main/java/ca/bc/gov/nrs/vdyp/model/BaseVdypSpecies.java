@@ -281,9 +281,7 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 			requirePresent(polygonIdentifier, "polygonIdentifier", errors);
 			requirePresent(layerType, "layerType", errors);
 			// If the genus/speciesGroup is set and the index is not, try to look it up using the control map
-			genusIndex = orLookup(
-					"genusIndex", genusIndex, genus, GenusDefinitionParser::getIndex
-			);
+			genusIndex = orLookup("genusIndex", genusIndex, genus, GenusDefinitionParser::getIndex);
 			requirePresent(genus, "genus", errors);
 			requirePresent(genusIndex, "genusIndex", errors);
 
