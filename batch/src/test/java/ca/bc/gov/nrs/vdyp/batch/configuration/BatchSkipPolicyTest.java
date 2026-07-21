@@ -1,9 +1,12 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+
+import java.io.IOException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,7 @@ import org.springframework.batch.item.file.FlatFileParseException;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 
@@ -143,6 +147,18 @@ class BatchSkipPolicyTest {
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
 
 		assertTrue(result);
+	}
+
+	@Test
+	void testShouldSkip_WithStorageOutOfSpaceException_ReturnsFalse() throws SkipLimitExceededException {
+		BatchResultStorageException exception = BatchResultStorageException.handleResultStorageFailure(
+				new IOException("No space left on device"), "Failed to store projection results", TEST_JOB_GUID, 1L,
+				"123456789", logger
+		);
+
+		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
+
+		assertFalse(result);
 	}
 
 	@Test

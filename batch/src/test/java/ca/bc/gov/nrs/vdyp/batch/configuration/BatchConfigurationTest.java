@@ -37,11 +37,14 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.interceptor.TransactionAttribute;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -51,6 +54,7 @@ import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
+import ca.bc.gov.nrs.vdyp.batch.service.ResultPersistenceTasklet;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -190,6 +194,32 @@ class BatchConfigurationTest {
 
 		assertNotNull(result);
 		assertEquals("postProcessingStep", result.getName());
+	}
+
+	@Test
+	void testTaskletSteps_RollBackOnCheckedBatchExceptions() {
+		assertRollsBackOnCheckedException(configuration.postProcessingStep(transactionManager));
+		assertRollsBackOnCheckedException(
+				configuration.persistResultFileStep(mock(ResultPersistenceTasklet.class), transactionManager)
+		);
+	}
+
+	private void assertRollsBackOnCheckedException(Step step) {
+		Assertions.assertInstanceOf(TaskletStep.class, step);
+		TransactionAttribute transactionAttribute = (TransactionAttribute) ReflectionTestUtils
+				.getField(step, "transactionAttribute");
+		assertNotNull(transactionAttribute);
+
+		BatchResultAggregationException checkedException = BatchResultAggregationException
+				.handleResultAggregationFailure(
+						new IOException("No space left on device"), "Failed to aggregate results", TEST_JOB_GUID,
+						TEST_JOB_EXECUTION_ID, LoggerFactory.getLogger(getClass())
+				);
+
+		Assertions.assertTrue(
+				transactionAttribute.rollbackOn(checkedException),
+				"Checked BatchException failures must roll back so TaskletStep rethrows instead of repeating"
+		);
 	}
 
 	@Test

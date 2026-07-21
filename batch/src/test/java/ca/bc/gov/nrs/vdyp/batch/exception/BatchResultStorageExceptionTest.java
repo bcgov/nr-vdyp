@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,6 +33,8 @@ class BatchResultStorageExceptionTest {
 		assertTrue(exception.getMessage().contains("IOException"));
 		assertTrue(exception.getMessage().contains("Permission denied"));
 		assertSame(cause, exception.getCause());
+		assertTrue(exception.isRetryable());
+		assertTrue(exception.isSkippable());
 
 		verify(logger).error(anyString(), any(IOException.class));
 	}
@@ -53,6 +56,25 @@ class BatchResultStorageExceptionTest {
 		assertTrue(exception.getMessage().contains(String.valueOf(jobExecutionId)));
 		assertTrue(exception.getMessage().contains(featureId));
 		assertTrue(exception.getMessage().contains(errorDescription));
+		assertSame(cause, exception.getCause());
+		assertTrue(exception.isRetryable());
+		assertTrue(exception.isSkippable());
+
+		verify(logger).error(anyString(), any(IOException.class));
+	}
+
+	@Test
+	void testHandleResultStorageFailure_OutOfSpaceIsFatal() {
+		IOException cause = new IOException("No space left on device");
+		Logger logger = mock(Logger.class);
+
+		BatchResultStorageException exception = BatchResultStorageException.handleResultStorageFailure(
+				cause, "Failed to store projection results", "job-guid-123", 456L, "POLY-123", logger
+		);
+
+		assertNotNull(exception);
+		assertFalse(exception.isRetryable(), "Out-of-space storage failures should fail without retrying");
+		assertFalse(exception.isSkippable(), "Out-of-space storage failures should fail without skipping");
 		assertSame(cause, exception.getCause());
 
 		verify(logger).error(anyString(), any(IOException.class));
