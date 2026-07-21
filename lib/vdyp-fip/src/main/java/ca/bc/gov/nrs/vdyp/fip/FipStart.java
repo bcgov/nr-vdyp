@@ -350,7 +350,9 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		estimateSmallComponents(fipPolygon, result);
 
 		// YUC1
-		computeUtilizationComponentsPrimary(bec, result, VolumeComputeMode.BY_UTIL, CompatibilityVariableMode.NONE);
+		this.computers.computeUtilizationComponentsPrimary(
+				bec, result, VolumeComputeMode.BY_UTIL, CompatibilityVariableMode.NONE
+		);
 
 		return result;
 	}

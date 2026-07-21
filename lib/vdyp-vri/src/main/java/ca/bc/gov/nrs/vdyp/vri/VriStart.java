@@ -435,7 +435,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		estimateSmallComponents(sourcePoly, resultPrimaryLayer);
 
-		computeUtilizationComponentsPrimary(
+		this.computers.computeUtilizationComponentsPrimary(
 				bec, resultPrimaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC,
 				CompatibilityVariableMode.NONE
 		);

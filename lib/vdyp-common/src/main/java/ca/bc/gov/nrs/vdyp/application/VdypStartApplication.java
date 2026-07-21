@@ -609,15 +609,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		layer.getWholeStemVolumeByUtilization().setSmall(volumeSum);
 	}
 
-	// YUC1
-	public void computeUtilizationComponentsPrimary(
-			BecDefinition bec, VdypLayer vdypLayer, VolumeComputeMode volumeComputeMode,
-			CompatibilityVariableMode compatibilityVariableMode
-	) throws ProcessingException {
-		this.computers
-				.computeUtilizationComponentsPrimary(bec, vdypLayer, volumeComputeMode, compatibilityVariableMode);
-	}
-
 	/**
 	 * Sets the Layer's utilization components based on those of its species.
 	 *
