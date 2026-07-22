@@ -40,6 +40,7 @@
                     :disabled="isInputDisabled"
                     :error="!!titleError"
                     :error-messages="titleError"
+                    @focus="selectSampleTitle"
                     @blur="validateTitle"
                   ></v-text-field>
                 </v-col>
@@ -412,6 +413,12 @@ const ageIncrementError = ref<string>('')
 const startYearError = ref<string>('')
 const endYearError = ref<string>('')
 const yearIncrementError = ref<string>('')
+
+const selectSampleTitle = (event: FocusEvent) => {
+  if (localReportTitle.value === DEFAULTS.DEFAULT_VALUES.REPORT_TITLE) {
+    (event.target as HTMLInputElement).select()
+  }
+}
 
 const validateTitle = (): boolean => {
   if (!localReportTitle.value || localReportTitle.value.trim() === '') {

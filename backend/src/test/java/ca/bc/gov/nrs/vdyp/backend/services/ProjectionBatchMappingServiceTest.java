@@ -4,6 +4,7 @@ import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.projectionEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,6 +32,8 @@ import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingReposi
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectionBatchMappingServiceTest {
@@ -91,15 +94,35 @@ class ProjectionBatchMappingServiceTest {
 		mappingEntity.setBatchJobGUID(batchJobGuid);
 		mappingEntity.setProjection(projectionEntity);
 
-		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(mappingEntity));
 
 		// Act
 		service.cancelProjection(projectionEntity);
 
 		// Verify cancel called
-		verify(repository, times(1)).findByProjectionGUID(projectionGuid);
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
 		verify(batchClient, times(1)).stopBatchJob(batchJobGuid);
 		verify(repository, times(1)).delete(mappingEntity);
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void cancelProjection_multipleMappings_stopsAndDeletesAllBatchJobs() throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity firstMapping = batchMappingEntity(projectionEntity, UUID.randomUUID());
+		ProjectionBatchMappingEntity secondMapping = batchMappingEntity(projectionEntity, UUID.randomUUID());
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(firstMapping, secondMapping));
+
+		service.cancelProjection(projectionEntity);
+
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
+		verify(batchClient, times(1)).stopBatchJob(firstMapping.getBatchJobGUID());
+		verify(batchClient, times(1)).stopBatchJob(secondMapping.getBatchJobGUID());
+		verify(batchClient, never()).stopBatchJobByProjection(any());
+		verify(repository, times(1)).delete(firstMapping);
+		verify(repository, times(1)).delete(secondMapping);
 		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
 
@@ -110,14 +133,107 @@ class ProjectionBatchMappingServiceTest {
 
 		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
 
-		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.empty());
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of());
 
 		// Act
 		service.cancelProjection(projectionEntity);
 
-		verify(repository, times(1)).findByProjectionGUID(projectionGuid);
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
 		verify(batchClient, times(1)).stopBatchJobByProjection(projectionGuid);
 		verify(batchClient, never()).stopBatchJob(any());
+		verify(repository, never()).delete(any());
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void cancelProjection_mappingWithoutBatchJob_doesNotCallBatchOrDeleteMapping() throws ProjectionServiceException {
+		// Arrange
+		UUID projectionGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setProjection(projectionEntity);
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(mappingEntity));
+
+		// Act
+		service.cancelProjection(projectionEntity);
+
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
+		verify(batchClient, never()).stopBatchJobByProjection(any());
+		verify(batchClient, never()).stopBatchJob(any());
+		verify(repository, never()).delete(any());
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void cancelProjection_mixedMappings_ignoresMappingsWithoutBatchJobGuid() throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingWithoutBatchJob = batchMappingEntity(projectionEntity, null);
+		ProjectionBatchMappingEntity mappingWithBatchJob = batchMappingEntity(projectionEntity, UUID.randomUUID());
+
+		when(repository.listByProjectionGUID(projectionGuid))
+				.thenReturn(List.of(mappingWithoutBatchJob, mappingWithBatchJob));
+
+		service.cancelProjection(projectionEntity);
+
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
+		verify(batchClient, times(1)).stopBatchJob(mappingWithBatchJob.getBatchJobGUID());
+		verify(batchClient, never()).stopBatchJobByProjection(any());
+		verify(repository, times(1)).delete(mappingWithBatchJob);
+		verify(repository, never()).delete(mappingWithoutBatchJob);
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void cancelProjection_mappingWithBatchJob_batchDoesNotKnowJob_deletesMapping() throws ProjectionServiceException {
+		// Arrange
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setBatchJobGUID(batchJobGuid);
+		mappingEntity.setProjection(projectionEntity);
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(mappingEntity));
+		doThrow(new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build())).when(batchClient)
+				.stopBatchJob(batchJobGuid);
+
+		// Act
+		service.cancelProjection(projectionEntity);
+
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
+		verify(batchClient, times(1)).stopBatchJob(batchJobGuid);
+		verify(batchClient, never()).stopBatchJobByProjection(any());
+		verify(repository, times(1)).delete(mappingEntity);
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void cancelProjection_batchCancelFails_doesNotDeleteMapping() {
+		// Arrange
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setBatchJobGUID(batchJobGuid);
+		mappingEntity.setProjection(projectionEntity);
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(mappingEntity));
+		doThrow(new WebApplicationException(Response.serverError().build())).when(batchClient)
+				.stopBatchJob(batchJobGuid);
+
+		assertThrows(ProjectionServiceException.class, () -> service.cancelProjection(projectionEntity));
+
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
+		verify(batchClient, times(1)).stopBatchJob(batchJobGuid);
+		verify(batchClient, never()).stopBatchJobByProjection(any());
 		verify(repository, never()).delete(any());
 		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
@@ -257,5 +373,12 @@ class ProjectionBatchMappingServiceTest {
 				ProjectionServiceException.class,
 				() -> service.updateFailureDetails(projectionEntity, null, null, "Projection failed")
 		);
+	}
+
+	private ProjectionBatchMappingEntity batchMappingEntity(ProjectionEntity projectionEntity, UUID batchJobGuid) {
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setProjection(projectionEntity);
+		mappingEntity.setBatchJobGUID(batchJobGuid);
+		return mappingEntity;
 	}
 }

@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,8 +34,27 @@ class BatchResultAggregationExceptionTest {
 		assertTrue(exception.getMessage().contains(errorDescription));
 		assertTrue(exception.getMessage().contains("IOException"));
 		assertTrue(exception.getMessage().contains("Failed to write aggregated results"));
+		assertFalse(exception.isRetryable(), "Aggregation failures should fail the step without retrying");
+		assertFalse(exception.isSkippable(), "Aggregation failures should fail the step without skipping");
 
 		verify(mockLogger).error(exception.getMessage(), cause);
+	}
+
+	@Test
+	void testHandleResultAggregationFailure_OutOfSpaceIsNotRetryable() {
+		Logger mockLogger = mock(Logger.class);
+		Long jobExecutionId = 12345L;
+		String jobGuid = "test-guid-out-of-space";
+		IOException cause = new IOException("No space left on device");
+
+		BatchResultAggregationException exception = BatchResultAggregationException.handleResultAggregationFailure(
+				cause, "Failed to aggregate results", jobGuid, jobExecutionId, mockLogger
+		);
+
+		assertFalse(exception.isRetryable(), "Out-of-space during aggregation must fail the step without retrying");
+		assertFalse(exception.isSkippable(), "Out-of-space during aggregation must fail the step without skipping");
+		assertSame(cause, exception.getCause());
+		assertTrue(exception.getMessage().contains("No space left on device"));
 	}
 
 	@Test

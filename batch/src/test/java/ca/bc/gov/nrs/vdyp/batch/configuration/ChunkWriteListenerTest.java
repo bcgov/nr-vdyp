@@ -53,9 +53,16 @@ class ChunkWriteListenerTest {
 
 		listener.afterWrite(new Chunk<>(meta));
 
-		assertThat(executionContext.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0), is(150));
+		assertThat(executionContext.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0), is(148));
 		assertThat(executionContext.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0), is(3));
 		assertThat(executionContext.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0), is(2));
+
+		int processed = executionContext.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
+		int skipped = executionContext.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
+		assertThat(
+				"processed + skipped must not double-count polygons skipped within a successful chunk",
+				processed + skipped, is(meta.getPolygonRecordCount())
+		);
 	}
 
 	@Test

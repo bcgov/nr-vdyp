@@ -9,7 +9,6 @@ import static org.hamcrest.Matchers.equalTo;
 
 import java.util.EnumMap;
 import java.util.Map;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.junit.jupiter.api.AfterEach;
@@ -1002,7 +1001,6 @@ public class ComputationMethodsTest {
 							0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f // Seems odd?
 					)
 			);
-
 		}
 	}
 }
