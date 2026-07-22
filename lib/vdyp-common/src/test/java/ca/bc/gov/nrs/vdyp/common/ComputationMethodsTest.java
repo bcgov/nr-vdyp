@@ -7,7 +7,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasUtilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 import org.easymock.EasyMock;
@@ -555,7 +555,7 @@ public class ComputationMethodsTest {
 						LayerType.PRIMARY, -0.001636486f
 				);
 
-				Map<UtilizationClassVariable, Float> smallCv = new HashMap<>();
+				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
 				smallCv.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0f);
 				smallCv.put(UtilizationClassVariable.LOREY_HEIGHT, 0f);
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0f);
@@ -651,7 +651,7 @@ public class ComputationMethodsTest {
 						LayerType.PRIMARY, 3.4580233E-5f
 				);
 
-				Map<UtilizationClassVariable, Float> smallCv = new HashMap<>();
+				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
 				smallCv.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0023201467f);
 				smallCv.put(UtilizationClassVariable.LOREY_HEIGHT, 1.2850753E-6f);
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0010083826f);
@@ -731,7 +731,7 @@ public class ComputationMethodsTest {
 						LayerType.PRIMARY, 5.271149E-4f
 				);
 
-				Map<UtilizationClassVariable, Float> smallCv = new HashMap<>();
+				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
 				smallCv.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f);
 				smallCv.put(UtilizationClassVariable.LOREY_HEIGHT, -5.6603396E-5f);
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
@@ -815,7 +815,7 @@ public class ComputationMethodsTest {
 						LayerType.PRIMARY, 4.0655137E-5f
 				);
 
-				Map<UtilizationClassVariable, Float> smallCv = new HashMap<>();
+				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
 
 				smallCv.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f);
 				smallCv.put(UtilizationClassVariable.LOREY_HEIGHT, -1.5245796E-5f);
@@ -912,7 +912,7 @@ public class ComputationMethodsTest {
 						LayerType.PRIMARY, 3.7010195E-4f
 				);
 
-				Map<UtilizationClassVariable, Float> smallCv = new HashMap<>();
+				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
 
 				smallCv.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f);
 				smallCv.put(UtilizationClassVariable.LOREY_HEIGHT, 0.0f);

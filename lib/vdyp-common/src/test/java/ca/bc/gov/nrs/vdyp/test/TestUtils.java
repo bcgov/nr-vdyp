@@ -940,10 +940,10 @@ public class TestUtils {
 	public static void matrixMapInit(MatrixMap<?> map, String mapName, Appendable out) throws IOException {
 
 		final Comparator<Entry<?, Integer>> sortEntries = Collections
-				.reverseOrder(Comparator.comparingInt(e -> e.getValue()));
+				.reverseOrder(Comparator.comparingInt(Entry::getValue));
 
 		Optional<?> defaultValue;
-		if (map.all(v -> v instanceof Float)) {
+		if (map.all(Float.class::isInstance)) {
 			@SuppressWarnings("unchecked")
 			MatrixMap<Float> m = (MatrixMap<Float>) map;
 
@@ -957,7 +957,7 @@ public class TestUtils {
 					e -> Objects.isNull(e.getKey()) || Float.isNaN(e.getKey()) || e.getKey() == 0f || e.getKey() == -9f
 			).sorted(sortEntries).map(Map.Entry::getKey).findFirst();
 
-		} else if (map.all(v -> v instanceof Integer)) {
+		} else if (map.all(Integer.class::isInstance)) {
 			@SuppressWarnings("unchecked")
 			MatrixMap<Integer> m = (MatrixMap<Integer>) map;
 
