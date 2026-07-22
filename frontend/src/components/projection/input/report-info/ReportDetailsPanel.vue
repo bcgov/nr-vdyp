@@ -39,6 +39,7 @@
                   :disabled="isInputDisabled"
                   :error="!!titleError"
                   :error-messages="titleError"
+                  @focus="selectSampleTitle"
                   @blur="validateTitle"
                 ></v-text-field>
               </v-col>
@@ -110,7 +111,7 @@ import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { ActionPanel, PanelEditControl } from '@/components/projection'
-import { CONSTANTS, MESSAGE, OPTIONS } from '@/constants'
+import { CONSTANTS, DEFAULTS, MESSAGE, OPTIONS } from '@/constants'
 import { saveProjectionOnPanelConfirm, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import type { PanelName } from '@/types/types'
 import { PROJECTION_ERR } from '@/constants/message'
@@ -226,6 +227,12 @@ watch(localProjectionType, (v) => {
   markDirty()
 })
 watch(localReportDescription, (v) => { modelParameterStore.reportDescription = v; markDirty() })
+
+const selectSampleTitle = (event: FocusEvent) => {
+  if (localReportTitle.value === DEFAULTS.DEFAULT_VALUES.REPORT_TITLE) {
+    (event.target as HTMLInputElement).select()
+  }
+}
 
 const validateTitle = () => {
   if (!localReportTitle.value || localReportTitle.value.trim() === '') {
