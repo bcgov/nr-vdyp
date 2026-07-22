@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -38,7 +39,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-		fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.SET_COMPATIBILITY_VARIABLES);
+		fpe.processPolygon(polygon, ProcessingEngine.ExecutionStep.SET_COMPATIBILITY_VARIABLES);
 
 		// These values have been verified against the FORTRAN implementation, allowing for minor
 		// platform-specific differences.
