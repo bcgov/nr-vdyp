@@ -63,10 +63,6 @@ import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
-import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2Height;
-import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
-import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
-import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -81,6 +77,10 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2Height;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
@@ -1130,7 +1130,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 					lBuilder.copySpecies(layer, (sBuilder, species) -> {
 						sBuilder.copySiteFrom(species, (iBuilder, site) -> {
 							if (layer.getLayerType() == LayerType.PRIMARY
-									&& primaryLayer.getPrimaryGenus().map(site.getSiteGenus()::equals).orElse(false)) {
+									&& primaryLayer.getCalculationGenus().map(site.getSiteGenus()::equals)
+											.orElse(false)) {
 								iBuilder.height(inc.dominantHeight);
 							} else {
 								iBuilder.height(Optional.empty());
