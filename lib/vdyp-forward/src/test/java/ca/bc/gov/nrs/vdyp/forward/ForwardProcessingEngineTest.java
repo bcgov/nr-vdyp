@@ -107,6 +107,7 @@ class ForwardProcessingEngineTest {
 				pb.mode(PolygonMode.START);
 				pb.percentAvailable(percentAvailable);
 				pb.targetYear(2123);
+				pb.controlMap(controlMap);
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
@@ -144,7 +145,7 @@ class ForwardProcessingEngineTest {
 					);
 
 					lb.addSpecies(sb -> {
-						sb.genus("F", controlMap);
+						sb.speciesGroup("F");
 
 						sb.breakageGroup(16);
 						sb.decayGroup(27);
@@ -191,7 +192,7 @@ class ForwardProcessingEngineTest {
 					});
 
 					lb.addSpecies(sb -> {
-						sb.genus("L", controlMap);
+						sb.speciesGroup("L");
 
 						sb.breakageGroup(20);
 						sb.decayGroup(38);
@@ -284,8 +285,10 @@ class ForwardProcessingEngineTest {
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2020);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 				});
 			});
 			Bank bank = new Bank(layer, null, x -> true);
@@ -325,8 +328,10 @@ class ForwardProcessingEngineTest {
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2020);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 				});
 			});
 			Bank bank = new Bank(layer, null, x -> true);
@@ -368,11 +373,13 @@ class ForwardProcessingEngineTest {
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2020);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("S", controlMap);
+					sb.speciesGroup("S");
 				});
 			});
 			Bank bank = new Bank(layer, null, x -> true);
@@ -417,11 +424,13 @@ class ForwardProcessingEngineTest {
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2020);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("S", controlMap);
+					sb.speciesGroup("S");
 				});
 			});
 			Bank bank = new Bank(layer, null, x -> true);
@@ -463,11 +472,13 @@ class ForwardProcessingEngineTest {
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2020);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("S", controlMap);
+					sb.speciesGroup("S");
 				});
 			});
 			Bank bank = new Bank(layer, null, x -> true);
@@ -509,11 +520,13 @@ class ForwardProcessingEngineTest {
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2020);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("S", controlMap);
+					sb.speciesGroup("S");
 				});
 			});
 			Bank bank = new Bank(layer, null, x -> true);
@@ -543,11 +556,13 @@ class ForwardProcessingEngineTest {
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2020);
 				lb.layerType(LayerType.PRIMARY);
+				lb.controlMap(controlMap);
+
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.speciesGroup("H");
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("S", controlMap);
+					sb.speciesGroup("S");
 				});
 			});
 			Bank bank = new Bank(layer, null, x -> true);
@@ -898,6 +913,8 @@ class ForwardProcessingEngineTest {
 				pb.percentAvailable(90f);
 				pb.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				pb.forestInventoryZone("");
+				pb.controlMap(controlMap);
+
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 					lb.primaryGenus("F");
@@ -931,7 +948,7 @@ class ForwardProcessingEngineTest {
 				float dominantHeight, float totalAge, float yearsToBreastHeight, float yearsAtBreastHeight
 		) {
 			layerBuilder.addSpecies(sb -> {
-				sb.genus(genus, controlMap);
+				sb.speciesGroup(genus);
 				sb.percentGenus(percentGenus);
 				sb.baseArea(10.0f);
 				sb.treesPerHectare(300.0f);
@@ -1088,11 +1105,12 @@ class ForwardProcessingEngineTest {
 				pb.forestInventoryZone(" ");
 				pb.mode(PolygonMode.START);
 				pb.percentAvailable(100.0f);
+				pb.controlMap(controlMap);
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.speciesGroup("H");
 						sb.baseArea(1.0f);
 						sb.treesPerHectare(100.0f);
 						sb.quadMeanDiameter(20.0f);

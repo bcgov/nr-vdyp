@@ -345,11 +345,22 @@ public class BatchConfiguration {
 	 */
 	@Bean
 	public Step postProcessingStep(PlatformTransactionManager transactionManager) {
-		DefaultTransactionAttribute transactionAttribute = new DefaultTransactionAttribute();
-		transactionAttribute.setTimeout(1800); // 30 minutes
 		return new StepBuilder(BatchConstants.Job.POST_PROCESSING_STEP_NAME, jobRepository)
-				.tasklet(resultAggregationTasklet(), transactionManager).transactionAttribute(transactionAttribute)
-				.build();
+				.tasklet(resultAggregationTasklet(), transactionManager)
+				.transactionAttribute(taskletTransactionAttribute()).build();
+	}
+
+	private DefaultTransactionAttribute taskletTransactionAttribute() {
+		DefaultTransactionAttribute transactionAttribute = new DefaultTransactionAttribute() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public boolean rollbackOn(Throwable ex) {
+				return true;
+			}
+		};
+		transactionAttribute.setTimeout(1800); // 30 minutes
+		return transactionAttribute;
 	}
 
 	/**
@@ -435,10 +446,8 @@ public class BatchConfiguration {
 
 	@Bean
 	public Step persistResultFileStep(ResultPersistenceTasklet tasklet, PlatformTransactionManager transactionManager) {
-		DefaultTransactionAttribute transactionAttribute = new DefaultTransactionAttribute();
-		transactionAttribute.setTimeout(1800); // 30 minutes
 		return new StepBuilder(BatchConstants.Job.PERSIST_RESULT_FILE_STEP_NAME, jobRepository)
-				.tasklet(tasklet, transactionManager).transactionAttribute(transactionAttribute).build();
+				.tasklet(tasklet, transactionManager).transactionAttribute(taskletTransactionAttribute()).build();
 	}
 
 }

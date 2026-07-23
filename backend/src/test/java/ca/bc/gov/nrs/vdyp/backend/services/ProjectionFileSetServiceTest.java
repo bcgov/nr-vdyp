@@ -142,6 +142,9 @@ class ProjectionFileSetServiceTest {
 			return null;
 		}).when(repository).persist(any(ProjectionFileSetEntity.class));
 
+		COMSBucket bucket = new COMSBucket("bucket", "bucket-name", "coms-bucket-id", "region", "endpoint", "key");
+		when(comsClient.createBucket(any())).thenReturn(bucket);
+
 		ProjectionFileSetModel result = service
 				.createEmptyFileSet(fileSetTypeCodeModel(FileSetTypeCodeModel.POLYGON), actingUser);
 
@@ -156,6 +159,9 @@ class ProjectionFileSetServiceTest {
 		assertThat(persisted.getOwnerUser()).isSameAs(ownerEntity);
 		assertThat(persisted.getFileSetTypeCode()).isSameAs(typeEntity);
 
+		assertThat(persisted.getComsBucketId()).isEqualTo("coms-bucket-id");
+		verify(comsClient).createBucket(any());
+
 		verify(em).find(VDYPUserEntity.class, ownerId);
 		verify(fileSetTypeCodeLookup).requireEntity(FileSetTypeCodeModel.POLYGON);
 	}
@@ -165,16 +171,35 @@ class ProjectionFileSetServiceTest {
 	// ------------------------------------------------------------
 
 	@Test
-	void deleteFileSetById_deletesById() throws ProjectionServiceException {
+	void deleteFileSetById_usesCachedBucketId_deletesById() throws ProjectionServiceException {
 		UUID id = UUID.randomUUID();
+		var entity = fileSetEntity(id);
+		entity.setComsBucketId("coms-bucket-id");
 
+		when(repository.findByIdOptional(id)).thenReturn(Optional.of(entity));
+
+		service.deleteFileSetById(id);
+
+		verify(repository).findByIdOptional(id);
+		verify(repository).deleteById(id);
+		verifyNoMoreInteractions(repository);
+		verify(comsClient).deleteBucket("coms-bucket-id", true);
+		verify(comsClient, never()).searchForBucket(any(), any(), any(), any());
+	}
+
+	@Test
+	void deleteFileSetById_legacyFileSetWithoutCachedBucketId_fallsBackToCOMSLookup()
+			throws ProjectionServiceException {
+		UUID id = UUID.randomUUID();
+		var entity = fileSetEntity(id);
+
+		when(repository.findByIdOptional(id)).thenReturn(Optional.of(entity));
 		COMSBucket bucket = new COMSBucket("bucket", "bucket-name", "coms-bucket-id", "region", "endpoint", "key");
 		when(comsClient.searchForBucket(any(), any(), any(), any())).thenReturn(List.of(bucket));
 
 		service.deleteFileSetById(id);
 
 		verify(repository).deleteById(id);
-		verifyNoMoreInteractions(repository);
 		verify(comsClient).deleteBucket("coms-bucket-id", true);
 	}
 
@@ -260,6 +285,27 @@ class ProjectionFileSetServiceTest {
 
 		service.addNewFileToFileSet(fileSetGuid, actingUser, null);
 		verify(fileMappingService).createNewFile("coms-bucket-id", entity, null);
+		verify(comsClient, never()).createBucket(any());
+	}
+
+	@Test
+	void addFileToSet_validUser_usesCachedBucketId_skipsCOMSLookup() throws Exception {
+		UUID fileSetGuid = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		var entity = fileSetEntity(fileSetGuid, ownerId);
+		entity.setComsBucketId("coms-bucket-id");
+		VDYPUserModel actingUser = new VDYPUserModel();
+		actingUser.setVdypUserGUID(ownerId.toString());
+
+		when(repository.findByIdOptional(fileSetGuid)).thenReturn(Optional.of(entity));
+
+		FileMappingModel fakeResult = new FileMappingModel();
+		when(fileMappingService.createNewFile("coms-bucket-id", entity, null)).thenReturn(fakeResult);
+
+		service.addNewFileToFileSet(fileSetGuid, actingUser, null);
+
+		verify(fileMappingService).createNewFile("coms-bucket-id", entity, null);
+		verify(comsClient, never()).searchForBucket(any(), any(), any(), any());
 		verify(comsClient, never()).createBucket(any());
 	}
 

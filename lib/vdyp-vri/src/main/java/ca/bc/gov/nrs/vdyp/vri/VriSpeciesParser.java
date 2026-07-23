@@ -133,7 +133,8 @@ public class VriSpeciesParser
 							return VriSpecies.build(specBuilder -> {
 								specBuilder.polygonIdentifier(polygonId);
 								specBuilder.layerType(layerType);
-								specBuilder.genus(genus, control);
+								specBuilder.speciesGroup(genus);
+								specBuilder.controlMap(control);
 								specBuilder.percentGenus(percentGenus);
 								specBuilder.sp64DistributionList(sp64DistributionList);
 							});

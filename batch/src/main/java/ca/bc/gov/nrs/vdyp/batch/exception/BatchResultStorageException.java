@@ -13,8 +13,10 @@ public class BatchResultStorageException extends BatchException {
 
 	private static final long serialVersionUID = 2563311795099971052L;
 
-	private BatchResultStorageException(String message, IOException cause, String featureId) {
-		super(message, cause, featureId, true, true);
+	private BatchResultStorageException(
+			String message, IOException cause, String featureId, boolean retryable, boolean skippable
+	) {
+		super(message, cause, featureId, retryable, skippable);
 	}
 
 	public static BatchResultStorageException handleResultStorageFailure(
@@ -33,12 +35,31 @@ public class BatchResultStorageException extends BatchException {
 		);
 
 		logger.error(contextualMessage, cause);
-		return new BatchResultStorageException(contextualMessage, cause, featureId);
+		boolean fatalStorageFailure = isOutOfSpace(cause);
+		return new BatchResultStorageException(
+				contextualMessage, cause, featureId, !fatalStorageFailure, !fatalStorageFailure
+		);
 	}
 
 	public static BatchResultStorageException handleResultStorageFailure(
 			IOException cause, String errorDescription, String jobGuid, Long jobExecutionId, Logger logger
 	) {
 		return handleResultStorageFailure(cause, errorDescription, jobGuid, jobExecutionId, null, logger);
+	}
+
+	private static boolean isOutOfSpace(IOException cause) {
+		Throwable current = cause;
+		while (current != null) {
+			String message = current.getMessage();
+			if (message != null) {
+				String lowerMessage = message.toLowerCase();
+				if (lowerMessage.contains("no space left on device")
+						|| lowerMessage.contains("not enough space on the disk")) {
+					return true;
+				}
+			}
+			current = current.getCause();
+		}
+		return false;
 	}
 }

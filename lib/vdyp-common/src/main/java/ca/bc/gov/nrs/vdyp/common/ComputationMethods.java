@@ -195,8 +195,7 @@ public class ComputationMethods {
 			for (var uc : VdypStartApplication.UTIL_CLASSES) {
 				treesPerHectareUtil.set(
 						uc,
-						BaseAreaTreeDensityDiameter
-								.treesPerHectare(basalAreaUtil.getCoe(uc.index), quadMeanDiameterUtil.get(uc))
+						BaseAreaTreeDensityDiameter.treesPerHectare(basalAreaUtil.get(uc), quadMeanDiameterUtil.get(uc))
 				);
 			}
 

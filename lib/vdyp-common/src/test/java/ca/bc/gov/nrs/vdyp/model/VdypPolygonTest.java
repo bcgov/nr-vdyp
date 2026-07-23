@@ -215,6 +215,7 @@ class VdypPolygonTest {
 			pb.mode(PolygonMode.START);
 			pb.percentAvailable(percentAvailable);
 			pb.targetYear(2123);
+			pb.controlMap(controlMap);
 
 			pb.addLayer(lb -> {
 				lb.layerType(LayerType.PRIMARY);
@@ -248,7 +249,7 @@ class VdypPolygonTest {
 				);
 
 				lb.addSpecies(sb -> {
-					sb.genus("F", controlMap);
+					sb.speciesGroup("F");
 
 					sb.breakageGroup(16);
 					sb.decayGroup(27);
@@ -293,7 +294,7 @@ class VdypPolygonTest {
 				});
 
 				lb.addSpecies(sb -> {
-					sb.genus("L", controlMap);
+					sb.speciesGroup("L");
 
 					sb.breakageGroup(20);
 					sb.decayGroup(38);

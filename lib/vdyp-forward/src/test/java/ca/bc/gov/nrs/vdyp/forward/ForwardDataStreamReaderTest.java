@@ -27,7 +27,8 @@ class ForwardDataStreamReaderTest {
 			var spec = VdypSpecies.build(sb -> {
 				sb.polygonIdentifier("Test", 2025);
 				sb.layerType(LayerType.PRIMARY);
-				sb.genus("F", controlMap);
+				sb.speciesGroup("F");
+				sb.controlMap(controlMap);
 				sb.baseArea(40f);
 			});
 
@@ -53,7 +54,8 @@ class ForwardDataStreamReaderTest {
 			var spec = VdypSpecies.build(sb -> {
 				sb.polygonIdentifier("Test", 2025);
 				sb.layerType(LayerType.PRIMARY);
-				sb.genus("F", controlMap);
+				sb.speciesGroup("F");
+				sb.controlMap(controlMap);
 				sb.baseArea(40f);
 			});
 
