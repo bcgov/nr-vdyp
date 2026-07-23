@@ -655,6 +655,32 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_14_00",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_14_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_14/00/ddl/tables/app-vdyp.projection_file_set.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection_file_set\" DROP COLUMN IF EXISTS \"coms_bucket_id\""
+          }
+        ]
+      }
     }
   ]
 }

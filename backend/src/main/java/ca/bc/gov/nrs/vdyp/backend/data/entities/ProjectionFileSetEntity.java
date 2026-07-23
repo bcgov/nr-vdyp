@@ -30,6 +30,9 @@ public class ProjectionFileSetEntity extends AuditableEntity {
 	@Column(name = "file_set_name", length = 4000)
 	private String fileSetName;
 
+	@Column(name = "coms_bucket_id")
+	private String comsBucketId;
+
 	public UUID getProjectionFileSetGUID() {
 		return projectionFileSetGUID;
 	}
@@ -46,6 +49,10 @@ public class ProjectionFileSetEntity extends AuditableEntity {
 		return ownerUser;
 	}
 
+	public String getComsBucketId() {
+		return comsBucketId;
+	}
+
 	public void setProjectionFileSetGUID(UUID projectionFileSetGUID) {
 		this.projectionFileSetGUID = projectionFileSetGUID;
 	}
@@ -60,6 +67,10 @@ public class ProjectionFileSetEntity extends AuditableEntity {
 
 	public void setOwnerUser(VDYPUserEntity ownerUser) {
 		this.ownerUser = ownerUser;
+	}
+
+	public void setComsBucketId(String comsBucketId) {
+		this.comsBucketId = comsBucketId;
 	}
 
 }

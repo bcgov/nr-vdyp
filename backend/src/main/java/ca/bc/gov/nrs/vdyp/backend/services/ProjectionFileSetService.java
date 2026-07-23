@@ -81,16 +81,22 @@ public class ProjectionFileSetService {
 		saveEntity.setOwnerUser(em.find(VDYPUserEntity.class, UUID.fromString(actingUser.getVdypUserGUID())));
 		saveEntity.setFileSetTypeCode(lookup.requireEntity(typeCodeModel.getCode()));
 		repository.persist(saveEntity);
+
+		// Create the COMS bucket up front and cache its id, so later file adds/deletes never need to look it up.
+		saveEntity.setComsBucketId(createCOMSBucket(saveEntity.getProjectionFileSetGUID()));
+
 		return assembler.toModel(saveEntity);
 	}
 
 	@Transactional
 	public void deleteFileSetById(UUID polygonFileSetGuid) throws ProjectionServiceException {
+		var entity = getProjectionFileSetEntity(polygonFileSetGuid);
+
 		// delete the files
 		fileMappingService.deleteFilesForSet(polygonFileSetGuid);
 
 		// delete the bucket in COMS
-		String bucketID = getCOMSBucketGUID(polygonFileSetGuid, false);
+		String bucketID = resolveBucketId(entity, false);
 		if (bucketID != null) {
 			comsClient.deleteBucket(bucketID, true); // recursive because we have should have already deleted the files
 		}
@@ -120,6 +126,7 @@ public class ProjectionFileSetService {
 		}
 	}
 
+	@Transactional
 	public FileMappingModel addNewFileToFileSet(UUID fileSetGUID, VDYPUserModel user, FileUpload file)
 			throws ProjectionServiceException {
 		// Check that the file set exists
@@ -127,7 +134,7 @@ public class ProjectionFileSetService {
 
 		ensureAuthorizedAccess(entity, user);
 
-		String bucketID = getCOMSBucketGUID(fileSetGUID, true);
+		String bucketID = resolveBucketId(entity, true);
 
 		// Ask File Mapping Service to create the file based on the meta data
 		return fileMappingService.createNewFile(bucketID, entity, file);
@@ -138,7 +145,7 @@ public class ProjectionFileSetService {
 	public FileMappingModel startFileSetFileUpload(UUID fileSetGUID, String filename)
 			throws ProjectionServiceException {
 		var entity = getProjectionFileSetEntity(fileSetGUID);
-		String bucketID = getCOMSBucketGUID(fileSetGUID, true);
+		String bucketID = resolveBucketId(entity, true);
 		return fileMappingService.createPlaceholderFile(bucketID, entity, filename);
 	}
 
@@ -146,16 +153,35 @@ public class ProjectionFileSetService {
 		return String.format("vdyp/fileset/%s", fileSetGUID);
 	}
 
-	private String getCOMSBucketGUID(UUID fileSetGUID, boolean createIfNotExist) {
+	private String createCOMSBucket(UUID fileSetGUID) {
 		String filePrefix = getBucketPrefix(fileSetGUID);
+		COMSCreateBucketRequest request = buildCreateBucketRequest(fileSetGUID, filePrefix);
+		return comsClient.createBucket(request).bucketId();
+	}
+
+	/**
+	 * Returns the fileset's COMS bucket id, preferring the cached value on the entity. Only filesets created before the
+	 * bucket id was cached (or where creation failed to persist it) fall back to a COMS lookup, whose result is then
+	 * cached on the entity for next time.
+	 */
+	private String resolveBucketId(ProjectionFileSetEntity entity, boolean createIfNotExist) {
+		if (entity.getComsBucketId() != null) {
+			return entity.getComsBucketId();
+		}
+
+		String filePrefix = getBucketPrefix(entity.getProjectionFileSetGUID());
 		List<COMSBucket> searchResponse = comsClient.searchForBucket(null, true, filePrefix, null);
 		String bucketGUID = null;
 		if (!searchResponse.isEmpty()) {
 			bucketGUID = searchResponse.get(0).bucketId();
 		} else if (createIfNotExist) {
-			COMSCreateBucketRequest request = buildCreateBucketRequest(fileSetGUID, filePrefix);
+			COMSCreateBucketRequest request = buildCreateBucketRequest(entity.getProjectionFileSetGUID(), filePrefix);
 			COMSBucket createBucketResponse = comsClient.createBucket(request);
 			bucketGUID = createBucketResponse.bucketId();
+		}
+
+		if (bucketGUID != null) {
+			entity.setComsBucketId(bucketGUID);
 		}
 		return bucketGUID;
 	}
@@ -219,11 +245,12 @@ public class ProjectionFileSetService {
 		return fileMappingService.getFilesForFileSet(fileSetGUID, download);
 	}
 
+	@Transactional
 	public void duplicateFilesFromTo(ProjectionFileSetEntity fromFileSet, ProjectionFileSetEntity toFileSet)
 			throws ProjectionServiceException {
 		List<FileMappingModel> filesToDuplicate = fileMappingService
 				.getFilesForFileSet(fromFileSet.getProjectionFileSetGUID(), true);
-		String bucketID = getCOMSBucketGUID(toFileSet.getProjectionFileSetGUID(), true);
+		String bucketID = resolveBucketId(toFileSet, true);
 		for (FileMappingModel file : filesToDuplicate) {
 			fileMappingService.duplicateFile(file, toFileSet, bucketID);
 		}
