@@ -88,4 +88,8 @@ public class VDYPUserModel {
 	public boolean isSystemUser() {
 		return this.userTypeCode != null && userTypeCode.isSystemUser();
 	}
+
+	public boolean isAdmin() {
+		return this.userTypeCode != null && userTypeCode.isAdmin();
+	}
 }

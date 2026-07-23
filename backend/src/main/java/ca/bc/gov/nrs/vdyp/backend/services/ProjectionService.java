@@ -629,7 +629,12 @@ public class ProjectionService {
 			return;
 		UUID vdypUserGuid = UUID.fromString(actingUser.getVdypUserGUID());
 		switch (action) {
-		case READ, UPDATE, DELETE, CANCEL:
+		case READ, CANCEL:
+			if (!actingUser.isAdmin() && !entity.getOwnerUser().getVdypUserGUID().equals(vdypUserGuid)) {
+				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
+			}
+			break;
+		case UPDATE, DELETE:
 			if (!entity.getOwnerUser().getVdypUserGUID().equals(vdypUserGuid)) {
 				throw new ProjectionUnauthorizedException(entity.getProjectionGUID(), vdypUserGuid);
 			}

@@ -29,4 +29,8 @@ public class UserTypeCodeModel extends CodeTableModel {
 		return SYSTEM.equalsIgnoreCase(this.userTypeCode);
 	}
 
+	public boolean isAdmin() {
+		return ADMIN.equalsIgnoreCase(this.userTypeCode);
+	}
+
 }
