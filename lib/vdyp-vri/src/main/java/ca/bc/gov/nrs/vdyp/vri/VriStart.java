@@ -479,7 +479,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var primarySpeciesDensity = primarySpeciesPercent * primaryLayerDensity;
 
 		// HDL1 or HT_L1
-		float leadHeight = requirePositive(calculationSite.getHeight(), "Height for primary layer");
+		float leadHeight = requirePositive(
+				calculationSite.getHeight().or(primarySiteIn::getHeight), "Height for primary layer"
+		);
 
 		// HLPL1
 		// EMP050 Method 1
@@ -1130,8 +1132,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 					lBuilder.copySpecies(layer, (sBuilder, species) -> {
 						sBuilder.copySiteFrom(species, (iBuilder, site) -> {
 							if (layer.getLayerType() == LayerType.PRIMARY
-									&& primaryLayer.getCalculationGenus().map(site.getSiteGenus()::equals)
-											.orElse(false)) {
+									&& primaryLayer.getPrimaryGenus().map(site.getSiteGenus()::equals).orElse(false)) {
 								iBuilder.height(inc.dominantHeight);
 							} else {
 								iBuilder.height(Optional.empty());
@@ -1285,6 +1286,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, StandProcessingException {
 
 		final VriLayer primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
+		final VriSite primarySite = primaryLayer.getPrimarySite().orElseThrow(
+				() -> new FatalProcessingException("Primary layer, " + primaryLayer + ", does not have a primary site")
+		);
 		final VriSite calculationSite = primaryLayer.getCalculationSite().orElseThrow(
 				() -> new FatalProcessingException(
 						"Primary layer, " + primaryLayer + ", does not have a calculation site"
@@ -1294,14 +1298,15 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final Optional<VriLayer> veteranLayer = Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 		BecDefinition bec = poly.getBiogeoclimaticZone();
 
-		final float primaryHeight = calculationSite.getHeight().orElseThrow(
-				() -> new FatalProcessingException("Primary site, " + calculationSite + ", does not have a height")
+		final float primaryHeight = primarySite.getHeight().orElseThrow(
+				() -> new FatalProcessingException("Primary site, " + primarySite + ", does not have a height")
 		);
-		final float primaryBreastHeightAge = calculationSite.getYearsAtBreastHeight().orElseThrow(
-				() -> new FatalProcessingException(
-						"Primary site, " + calculationSite + ", does not have a breast height age"
-				)
-		);
+		final float primaryBreastHeightAge = primarySite.getYearsAtBreastHeight()
+				.or(calculationSite::getYearsAtBreastHeight).orElseThrow(
+						() -> new FatalProcessingException(
+								"Primary site, " + primarySite + ", does not have a breast height age"
+						)
+				);
 		final Optional<Float> veteranBaseArea = veteranLayer.flatMap(VriLayer::getBaseArea);
 
 		final int primaryEmpiricalRelationshipParameterIndex = primaryLayer.getEmpiricalRelationshipParameterIndex()
