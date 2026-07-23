@@ -627,6 +627,57 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void test1170() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+
+		logger.info("Starting test1170");
+
+		Map<String, List<String>> paramMap = new HashMap<>();
+		var parameters = new Parameters();
+		try (
+				InputStream paramStream = MainTest.class.getResourceAsStream("vdyp-1170/input/parms.txt");
+				InputStreamReader reader = new InputStreamReader(paramStream);
+				BufferedReader bufReader = new BufferedReader(reader); var lines = bufReader.lines();
+		) {
+			ParamsReader.parseParameters(paramMap, lines);
+			ParamsReader.parseParameters(parameters, paramMap);
+		}
+
+		try (
+				InputStream polyStream = MainTest.class.getResourceAsStream("vdyp-1170/input/VDYP7_INPUT_POLY.csv");
+				InputStream layerStream = MainTest.class.getResourceAsStream("vdyp-1170/input/VDYP7_INPUT_LAYER.csv");
+		) {
+
+			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
+					.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
+					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
+					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
+					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
+					.post("/projection/hcsv?trialRun=false") //
+					.then().statusCode(201) //
+					.and().contentType("application/octet-stream") //
+					.and().header("content-disposition", Matchers.startsWith("attachment;filename=\"vdyp-output-")) //
+					.extract().body().asInputStream();
+
+			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
+			ZipEntry entry1 = zipFile.getNextEntry();
+			assertEquals("YieldTable.csv", entry1.getName());
+			String vdyp8YieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry1));
+			assertThat(vdyp8YieldTableContent, not(emptyString()));
+			try (
+					CSVReader vdyp7Stream = new CSVReader(
+							new InputStreamReader(
+									MainTest.class.getResourceAsStream("vdyp-1170/output/VDYP7YieldTable.csv")
+							)
+					); CSVReader vdyp8Stream = new CSVReader(new StringReader(vdyp8YieldTableContent));
+			) {
+				Pattern ignorePattern = Pattern.compile("");
+				evaluator.compareResults(vdyp8Stream, vdyp7Stream, ignorePattern);
+			}
+		}
+	}
+
+	@Test
 	void test1180() throws IOException, ResourceParseException, URISyntaxException, CsvException {
 		logger.info("Starting vdyp-1180");
 		// Two of these polygons do not have enough information to produce a proper projection for the primary species,
