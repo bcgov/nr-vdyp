@@ -627,11 +627,31 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void test1170() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+		logger.info("Starting vdyp-1170");
+		// Two of these polygons do not have enough information to produce a proper projection for the primary species,
+		// VDYP-1176 is a fix for dominant height looing into the other values that do not match would be scope creep
+		// there are other tickets hat will likely fix these edge cases
+		// ignore species specific values VDYP-1265 for polygon 13284892
+		Pattern ignorePattern = Pattern.compile(
+				"PRJ_SP1_VOL_WS|PRJ_SP1_VOL_CU|PRJ_SP1_VOL_D|PRJ_SP1_VOL_DW|PRJ_SP1_VOL_DWB|PRJ_SP2_VOL_WS|PRJ_SP2_VOL_CU|PRJ_SP2_VOL_D|PRJ_SP2_VOL_DW|PRJ_SP2_VOL_DWB|PRJ_SP3_VOL_WS|PRJ_SP3_VOL_CU|PRJ_SP3_VOL_D|PRJ_SP3_VOL_DW|PRJ_SP3_VOL_DWB|PRJ_SP4_VOL_WS|PRJ_SP4_VOL_CU|PRJ_SP4_VOL_D|PRJ_SP4_VOL_DW|PRJ_SP4_VOL_DWB|PRJ_SP5_VOL_WS|PRJ_SP5_VOL_CU|PRJ_SP5_VOL_D|PRJ_SP5_VOL_DW|PRJ_SP5_VOL_DWB|PRJ_SP6_VOL_WS|PRJ_SP6_VOL_CU|PRJ_SP6_VOL_D|PRJ_SP6_VOL_DW|PRJ_SP6_VOL_DWB"
+		);
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1170/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1170", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void test1180() throws IOException, ResourceParseException, URISyntaxException, CsvException {
 		logger.info("Starting vdyp-1180");
 		// Two of these polygons do not have enough information to produce a proper projection for the primary species,
 		// VDYP-1176 is a fix for dominant height looing into the other values that do not match would be scope creep
 		// there are other tickets hat will likely fix these edge cases
+		// ignore species specific values VDYP-1265 for polygon
 		Pattern ignorePattern = Pattern.compile("");
 		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1180/output/VDYP7YieldTable.csv")) {
 			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());

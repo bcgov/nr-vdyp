@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
@@ -72,16 +73,18 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 		decayEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
 		breakageEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
 
-		String becZoneAlias = getBecZone().getAlias();
+		BecDefinition becZoneAlias = getBecZone();
 		for (int i : bank.getIndices()) {
 			String speciesName = bank.speciesNames[i];
-			volumeEquationGroups[i] = volumeEquationGroupMatrix.get(speciesName, becZoneAlias);
+			volumeEquationGroups[i] = volumeEquationGroupMatrix
+					.get(speciesName, becZoneAlias.getVolumeBec().getAlias());
 			// From VGRPFIND, volumeEquationGroup 10 is mapped to 11.
 			if (volumeEquationGroups[i] == 10) {
 				volumeEquationGroups[i] = 11;
 			}
-			decayEquationGroups[i] = decayEquationGroupMatrix.get(speciesName, becZoneAlias);
-			breakageEquationGroups[i] = breakageEquationGroupMatrix.get(speciesName, becZoneAlias);
+			decayEquationGroups[i] = decayEquationGroupMatrix.get(speciesName, becZoneAlias.getDecayBec().getAlias());
+			breakageEquationGroups[i] = breakageEquationGroupMatrix
+					.get(speciesName, becZoneAlias.getDecayBec().getAlias());
 		}
 	}
 
