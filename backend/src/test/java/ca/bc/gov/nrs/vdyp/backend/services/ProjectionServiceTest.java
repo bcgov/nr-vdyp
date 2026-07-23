@@ -381,6 +381,41 @@ class ProjectionServiceTest {
 		);
 	}
 
+	@Test
+	void checkUserCanPerformAction_allowsAdmin_toViewAndCancelOthersProjection() {
+		UUID ownerId = UUID.randomUUID();
+		UUID adminId = UUID.randomUUID();
+		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), ownerId);
+		VDYPUserModel adminUser = user(adminId);
+		UserTypeCodeModel adminUserType = new UserTypeCodeModel();
+		adminUserType.setCode(UserTypeCodeModel.ADMIN);
+		adminUser.setUserTypeCode(adminUserType);
+
+		assertDoesNotThrow(
+				() -> service.checkUserCanPerformAction(entity, adminUser, ProjectionService.ProjectionAction.READ)
+		);
+		assertDoesNotThrow(
+				() -> service.checkUserCanPerformAction(entity, adminUser, ProjectionService.ProjectionAction.CANCEL)
+		);
+	}
+
+	@Test
+	void checkUserCanPerformAction_throwsUnauthorized_whenNonAdminAccessesOthersProjection() {
+		UUID ownerId = UUID.randomUUID();
+		UUID otherUserId = UUID.randomUUID();
+		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), ownerId);
+		VDYPUserModel actingUser = user(otherUserId);
+
+		assertThrows(
+				ProjectionUnauthorizedException.class,
+				() -> service.checkUserCanPerformAction(entity, actingUser, ProjectionService.ProjectionAction.READ)
+		);
+		assertThrows(
+				ProjectionUnauthorizedException.class,
+				() -> service.checkUserCanPerformAction(entity, actingUser, ProjectionService.ProjectionAction.CANCEL)
+		);
+	}
+
 	// ==========================================================
 	// checkProjectionStatusPermitsAction
 	// ==========================================================
