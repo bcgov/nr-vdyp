@@ -156,6 +156,7 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 		protected Optional<Float> utilization = Optional.empty();
 		protected Optional<Float> percentAvailable = Optional.empty();
 		protected Optional<String> primaryGenus = Optional.empty();
+		protected Optional<String> calculationGenus = Optional.empty();
 		protected Optional<String> secondaryGenus = Optional.empty();
 		protected Optional<Integer> empiricalRelationshipParameterIndex = Optional.empty();
 		protected Optional<Float> ageIncrease = Optional.empty();
@@ -227,6 +228,11 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 			return primaryGenus(Optional.of(primaryGenus));
 		}
 
+		public Builder calculationGenus(Optional<String> calculationGenus) {
+			this.calculationGenus = calculationGenus;
+			return this;
+		}
+
 		public Builder secondaryGenus(Optional<String> secondaryGenus) {
 			this.secondaryGenus = secondaryGenus;
 			return this;
@@ -265,6 +271,7 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 					empiricalRelationshipParameterIndex, //
 					ageIncrease.orElse(DEFAULT_AGE_INCREASE)
 			);
+			result.setCalculationGenus(calculationGenus);
 			result.setInventoryTypeGroup(inventoryTypeGroup);
 			return result;
 		}
@@ -285,6 +292,7 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 			this.crownClosure(toCopy.getCrownClosure());
 			this.utilization(toCopy.getUtilization());
 			this.primaryGenus(toCopy.getPrimaryGenus());
+			this.calculationGenus(toCopy.getCalculationGenus());
 			this.secondaryGenus(toCopy.getSecondaryGenus());
 			this.empiricalRelationshipParameterIndex(toCopy.getEmpiricalRelationshipParameterIndex());
 			return this;
@@ -302,6 +310,7 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 		public BaseVdypLayer.Builder<VriLayer, VriSpecies, VriSite, VriSpecies.Builder, VriSite.Builder>
 				copySpecies(VriLayer toCopy, BiConsumer<VriSpecies.Builder, VriSpecies> config) {
 			this.primaryGenus(toCopy.getPrimaryGenus());
+			this.calculationGenus(toCopy.getCalculationGenus());
 			return super.copySpecies(toCopy, config);
 		}
 
