@@ -14,6 +14,8 @@
 #'
 #' @param BaseRESTAPIURL character, Specifies where your you are accessing VDYP8 REST API.
 #'
+#' @param apiKey character, Specifies the API key for accessing VDYP8 REST API via API Gateway.
+#'
 #' @param timeSeries character, Specifies time series for the simulation from
 #'                              either \code{age}, \code{year} or \code{NULL}.
 #'                              If \code{NULL}, forceYear must be specified.
@@ -83,7 +85,8 @@
 VDYP8Run <- function(polyFile,
                      layerFile,
                      utilTable,
-                     BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
+                     BaseRESTAPIURL = "https://vdyp.api.gov.bc.ca/api/v8/projection/hcsv?trialRun=false",
+                     apiKey = "",
                      timeSeries,
                      startTime,
                      endTime,
@@ -236,7 +239,7 @@ VDYP8Run <- function(polyFile,
   resp <- httr2::request(endpoint) |>
     httr2::req_url_query(trialRun = "false") |> 
     httr2::req_timeout(seconds = 120) |>
-    httr2::req_headers(`X-Consumer-Username` = "r-user") |>
+    httr2::req_headers(`X-API-KEY` = apiKey) |>
     httr2::req_body_multipart(
       # JSON part
       `Projection Parameters` = curl::form_data(
