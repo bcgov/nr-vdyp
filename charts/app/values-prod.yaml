@@ -271,7 +271,7 @@ batch:
     enabled: true
   pvc:
     enabled: true
-    size: 120Gi
+    size: 110Gi
     storageClassName: netapp-file-standard
     accessModes: ReadWriteMany
     mountPath: /opt/vdyp-batch/data
