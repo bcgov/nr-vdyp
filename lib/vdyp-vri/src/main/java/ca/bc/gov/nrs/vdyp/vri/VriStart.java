@@ -63,10 +63,6 @@ import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
-import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2Height;
-import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
-import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
-import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -81,6 +77,10 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
+import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2Height;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.vri.model.VriDebugSettings;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
@@ -479,7 +479,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var primarySpeciesDensity = primarySpeciesPercent * primaryLayerDensity;
 
 		// HDL1 or HT_L1
-		float leadHeight = requirePositive(calculationSite.getHeight(), "Height for primary layer");
+		float leadHeight = requirePositive(
+				calculationSite.getHeight().or(primarySiteIn::getHeight), "Height for primary layer"
+		);
 
 		// HLPL1
 		// EMP050 Method 1
@@ -1284,6 +1286,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, StandProcessingException {
 
 		final VriLayer primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
+		final VriSite primarySite = primaryLayer.getPrimarySite().orElseThrow(
+				() -> new FatalProcessingException("Primary layer, " + primaryLayer + ", does not have a primary site")
+		);
 		final VriSite calculationSite = primaryLayer.getCalculationSite().orElseThrow(
 				() -> new FatalProcessingException(
 						"Primary layer, " + primaryLayer + ", does not have a calculation site"
@@ -1293,14 +1298,15 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final Optional<VriLayer> veteranLayer = Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 		BecDefinition bec = poly.getBiogeoclimaticZone();
 
-		final float primaryHeight = calculationSite.getHeight().orElseThrow(
-				() -> new FatalProcessingException("Primary site, " + calculationSite + ", does not have a height")
+		final float primaryHeight = primarySite.getHeight().orElseThrow(
+				() -> new FatalProcessingException("Primary site, " + primarySite + ", does not have a height")
 		);
-		final float primaryBreastHeightAge = calculationSite.getYearsAtBreastHeight().orElseThrow(
-				() -> new FatalProcessingException(
-						"Primary site, " + calculationSite + ", does not have a breast height age"
-				)
-		);
+		final float primaryBreastHeightAge = primarySite.getYearsAtBreastHeight()
+				.or(calculationSite::getYearsAtBreastHeight).orElseThrow(
+						() -> new FatalProcessingException(
+								"Primary site, " + primarySite + ", does not have a breast height age"
+						)
+				);
 		final Optional<Float> veteranBaseArea = veteranLayer.flatMap(VriLayer::getBaseArea);
 
 		final int primaryEmpiricalRelationshipParameterIndex = primaryLayer.getEmpiricalRelationshipParameterIndex()
