@@ -23,6 +23,7 @@
 		<quarkus.platform.version>3.10.1</quarkus.platform.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
 		<testcontainers.version>2.0.2</testcontainers.version>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml,${project.build.directory}/jacoco-report/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -420,5 +421,15 @@
         <quarkus.native.enabled>true</quarkus.native.enabled>
       </properties>
     </profile>
+		<profile>
+			<id>coverage</id>
+			<dependencies>
+				<dependency>
+					<groupId>io.quarkus</groupId>
+					<artifactId>quarkus-jacoco</artifactId>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
 	</profiles>
 </project>
