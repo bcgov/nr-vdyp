@@ -24,7 +24,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.VDYPUserResourceAssembler;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.IdentityProviderCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.IdentityProviderCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.VDYPUserRepository;
@@ -42,6 +44,9 @@ class VDYPUserServiceTest {
 	UserTypeCodeLookup userTypeLookup;
 
 	@Mock
+	IdentityProviderCodeLookup identityProviderLookup;
+
+	@Mock
 	SecurityIdentity identity;
 
 	@Mock
@@ -52,7 +57,7 @@ class VDYPUserServiceTest {
 	@BeforeEach
 	void setUp() {
 		assembler = new VDYPUserResourceAssembler();
-		service = new VDYPUserService(userRepository, assembler, userTypeLookup) {
+		service = new VDYPUserService(userRepository, assembler, userTypeLookup, identityProviderLookup) {
 
 		};
 	}
@@ -131,6 +136,7 @@ class VDYPUserServiceTest {
 		when(jwt.getName()).thenReturn("1234567890@fakeid");
 		when(jwt.getClaim("given_name")).thenReturn("Russell");
 		when(jwt.getClaim("family_name")).thenReturn("Wilson");
+		when(jwt.getClaim("identity_provider")).thenReturn(null);
 
 		// no existing user
 		when(userRepository.findByOIDC("1234567890@fakeid")).thenReturn(Optional.empty());
@@ -152,6 +158,61 @@ class VDYPUserServiceTest {
 		assertThat(result.getFirstName()).isEqualTo("Russell");
 		assertThat(result.getLastName()).isEqualTo("Wilson");
 		assertThat(result.getUserTypeCode()).isEqualTo(userTypeCode);
+	}
+
+	@Test
+	void ensureVDYPUserFromSecurityIdentity_createsNewUser_setsIdentityProviderCode() {
+		when(identity.isAnonymous()).thenReturn(false);
+		when(identity.getPrincipal()).thenReturn(jwt);
+		when(jwt.getName()).thenReturn("1234567890@fakeid");
+		when(jwt.getClaim("given_name")).thenReturn("Russell");
+		when(jwt.getClaim("family_name")).thenReturn("Wilson");
+		when(jwt.getClaim("identity_provider")).thenReturn("azureidir");
+
+		when(userRepository.findByOIDC("1234567890@fakeid")).thenReturn(Optional.empty());
+
+		Set<String> roles = Set.of("Admin");
+		when(identity.getRoles()).thenReturn(roles);
+
+		UserTypeCodeModel userTypeCode = new UserTypeCodeModel();
+		userTypeCode.setCode("ADMIN");
+		when(userTypeLookup.getUserTypeCodeFromExternalRoles(roles)).thenReturn(userTypeCode);
+
+		IdentityProviderCodeModel idpCode = new IdentityProviderCodeModel();
+		idpCode.setCode(IdentityProviderCodeModel.IDIR);
+		when(identityProviderLookup.getIdentityProviderCodeFromClaim("azureidir")).thenReturn(Optional.of(idpCode));
+
+		VDYPUserModel result = service.ensureVDYPUserFromSecurityIdentity(identity);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getIdentityProviderCode()).isEqualTo(idpCode);
+	}
+
+	@Test
+	void ensureVDYPUserFromSecurityIdentity_updatesIdentityProviderCode_onExistingUser() {
+		when(identity.isAnonymous()).thenReturn(false);
+		when(identity.getPrincipal()).thenReturn(jwt);
+		when(jwt.getName()).thenReturn("1234567890@fakeid");
+		when(jwt.getClaim("identity_provider")).thenReturn("bceidbusiness");
+
+		VDYPUserEntity entity = new VDYPUserEntity();
+		UUID internalID = UUID.randomUUID();
+		entity.setVdypUserGUID(internalID);
+		when(userRepository.findByOIDC("1234567890@fakeid")).thenReturn(Optional.of(entity));
+
+		IdentityProviderCodeModel idpCode = new IdentityProviderCodeModel();
+		idpCode.setCode(IdentityProviderCodeModel.BCEID);
+		when(identityProviderLookup.getIdentityProviderCodeFromClaim("bceidbusiness"))
+				.thenReturn(Optional.of(idpCode));
+
+		IdentityProviderCodeEntity idpEntity = new IdentityProviderCodeEntity();
+		idpEntity.setCode(IdentityProviderCodeModel.BCEID);
+		when(identityProviderLookup.requireEntity(IdentityProviderCodeModel.BCEID)).thenReturn(idpEntity);
+
+		VDYPUserModel result = service.ensureVDYPUserFromSecurityIdentity(identity);
+
+		assertThat(result.getVdypUserGUID()).isEqualTo(internalID.toString());
+		assertThat(result.getIdentityProviderCode().getCode()).isEqualTo(IdentityProviderCodeModel.BCEID);
 	}
 
 	@Test

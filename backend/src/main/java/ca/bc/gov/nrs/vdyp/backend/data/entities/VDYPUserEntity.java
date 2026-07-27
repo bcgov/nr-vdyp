@@ -31,6 +31,12 @@ public class VDYPUserEntity extends AuditableEntity {
 	@JoinColumn(name = "user_type_code", referencedColumnName = "user_type_code", nullable = false, updatable = true)
 	private UserTypeCodeEntity userTypeCode;
 
+	@ManyToOne
+	@JoinColumn(
+			name = "identity_provider_code", referencedColumnName = "identity_provider_code", nullable = true, updatable = true
+	)
+	private IdentityProviderCodeEntity identityProviderCode;
+
 	@Column(name = "first_name", length = 50)
 	private String firstName;
 
@@ -53,6 +59,10 @@ public class VDYPUserEntity extends AuditableEntity {
 
 	public UserTypeCodeEntity getUserTypeCode() {
 		return userTypeCode;
+	}
+
+	public IdentityProviderCodeEntity getIdentityProviderCode() {
+		return identityProviderCode;
 	}
 
 	public String getFirstName() {
@@ -81,6 +91,10 @@ public class VDYPUserEntity extends AuditableEntity {
 
 	public void setUserTypeCode(UserTypeCodeEntity userTypeCode) {
 		this.userTypeCode = userTypeCode;
+	}
+
+	public void setIdentityProviderCode(IdentityProviderCodeEntity identityProviderCode) {
+		this.identityProviderCode = identityProviderCode;
 	}
 
 	public void setFirstName(String firstName) {
