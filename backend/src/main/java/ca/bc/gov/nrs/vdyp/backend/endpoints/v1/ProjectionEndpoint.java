@@ -202,6 +202,16 @@ public class ProjectionEndpoint implements Endpoint {
 		return Response.ok(projections).status(Response.Status.OK).build();
 	}
 
+	@GET
+	@RolesAllowed("ADMIN")
+	@Path("/all")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(name = "Get Running Projections", description = "(Admin Only) Get all RUNNING projections across all users.")
+	public Response getAllRunningProjections() {
+		var projections = projectionService.getAllRunningProjections();
+		return Response.ok(projections).status(Response.Status.OK).build();
+	}
+
 	@POST
 	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/new")

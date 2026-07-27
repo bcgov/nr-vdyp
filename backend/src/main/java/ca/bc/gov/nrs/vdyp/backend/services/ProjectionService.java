@@ -456,6 +456,13 @@ public class ProjectionService {
 		return entities.stream().map(e -> toRichModel(e, batchMappings)).toList();
 	}
 
+	public List<ProjectionModel> getAllRunningProjections() {
+		List<ProjectionEntity> entities = repository.findByStatus(ProjectionStatusCodeModel.RUNNING);
+		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
+
+		return entities.stream().map(e -> toRichModel(e, batchMappings)).toList();
+	}
+
 	@Transactional
 	public ProjectionModel createNewProjection(
 			VDYPUserModel actingUser, Parameters params, ModelParameters modelParameters, String reportDescription
