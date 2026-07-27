@@ -24,6 +24,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class Grow10StoreSpeciesDetails {
 
@@ -68,22 +69,22 @@ class Grow10StoreSpeciesDetails {
 		// VDYP7 reports [], -9, -9, 35.473381, -9, -9)
 		Bank bank = fpe.fps.getPrimaryLayerProcessingState().getBank();
 		assertThat(
-				ForwardTestUtils.toFloatArray(bank.dominantHeights),
+				TestUtils.toFloatArray(bank.dominantHeights),
 				is(arrayCloseTo(0.0f, Float.NaN, Float.NaN, 35.47338f, Float.NaN, Float.NaN))
 		);
 		// VDYP7 reports [], -9, -9, 35, -9, -9)
 		assertThat(
-				ForwardTestUtils.toFloatArray(bank.ageTotals),
+				TestUtils.toFloatArray(bank.ageTotals),
 				is(arrayCloseTo(0.0f, Float.NaN, Float.NaN, 56.0f, Float.NaN, Float.NaN))
 		);
 		// VDYP7 reports [], -9, -9, 56, -9, -9)
 		assertThat(
-				ForwardTestUtils.toFloatArray(bank.siteIndices),
+				TestUtils.toFloatArray(bank.siteIndices),
 				is(arrayCloseTo(35.0f, Float.NaN, Float.NaN, 35.0f, Float.NaN, Float.NaN))
 		);
 		// VDYP7 reports [], -9, -9, 55, -9, -9)
 		assertThat(
-				ForwardTestUtils.toFloatArray(bank.yearsAtBreastHeight),
+				TestUtils.toFloatArray(bank.yearsAtBreastHeight),
 				is(arrayCloseTo(0.0f, Float.NaN, Float.NaN, 55.0f, Float.NaN, Float.NaN))
 		);
 	}
