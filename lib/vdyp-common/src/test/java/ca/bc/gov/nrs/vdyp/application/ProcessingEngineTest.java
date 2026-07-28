@@ -1,10 +1,12 @@
 package ca.bc.gov.nrs.vdyp.application;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.asFloat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notANumber;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -633,6 +635,81 @@ class ProcessingEngineTest {
 				assertThat(
 						bank.siteIndices,
 						VdypMatchers.unboxedArrayCloseTo(11.424034f, 13.110651f, 13.4f, 15.2992f, Float.NaN, 11.424034f)
+				);
+
+				em.verify();
+
+			}
+
+			@Test
+			void testPrimarySiteEstimateFailed() throws Exception {
+				var em = EasyMock.createControl();
+				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
+
+				var layer = VdypLayer.build(lb -> {
+					lb.polygonIdentifier("Test", 1970);
+					lb.layerType(LayerType.PRIMARY);
+					lb.controlMap(controlMap);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.230089f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+
+				});
+				var bec = Utils.getBec("CWH", controlMap);
+				Bank bank = new Bank(layer, bec, x -> true);
+
+				EasyMock.expect(lps.getBank()).andStubReturn(bank);
+				EasyMock.expect(lps.getPrimarySpeciesIndex()).andStubReturn(3);
+				EasyMock.expect(lps.getIndices()).andStubReturn(new int[] { 1, 2, 3, 4, 5 });
+				EasyMock.expect(lps.getSiteCurveNumber(1)).andStubReturn(118);
+				EasyMock.expect(lps.getSiteCurveNumber(2)).andStubReturn(11);
+				EasyMock.expect(lps.getSiteCurveNumber(3)).andStubReturn(99);
+				EasyMock.expect(lps.getSiteCurveNumber(4)).andStubReturn(99);
+				EasyMock.expect(lps.getSiteCurveNumber(5)).andStubReturn(59);
+
+				em.replay();
+
+				Float result = ProcessingEngine.estimateMissingNonPrimarySiteIndices(lps, 2, null);
+
+				assertThat(result, asFloat(notANumber()));
+
+				assertThat(
+						bank.siteIndices,
+						VdypMatchers.unboxedArrayCloseTo(
+								0.0f, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN
+						)
 				);
 
 				em.verify();

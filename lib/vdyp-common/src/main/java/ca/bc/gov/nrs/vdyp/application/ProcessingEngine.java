@@ -4,6 +4,8 @@ import static ca.bc.gov.nrs.vdyp.model.VdypEntity.MISSING_FLOAT_VALUE;
 
 import java.text.MessageFormat;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.DoubleAdder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -204,6 +206,29 @@ public class ProcessingEngine {
 		return pspSiteIndex;
 	}
 
+	protected static Optional<Float>
+			convertSiteIndex(SiteIndexEquation pspSiteCurve, double pspSiteIndex, SiteIndexEquation spSiteCurve)
+					throws ProcessingException {
+		try {
+			double mappedSiteIndex = SiteTool.convertSiteIndexBetweenCurves(pspSiteCurve, pspSiteIndex, spSiteCurve);
+			return Optional.of((float) mappedSiteIndex);
+		} catch (NoAnswerException e) {
+			logger.warn(
+					MessageFormat
+							.format("there is no conversion between curves {0} and {1}.", pspSiteCurve, spSiteCurve)
+			);
+			return Optional.empty();
+		} catch (CurveErrorException | SpeciesErrorException e) {
+			throw new ProcessingException(
+					MessageFormat.format(
+							"convertSiteIndexBetweenCurves on {0}, {1} and {2} failed", pspSiteCurve, pspSiteIndex,
+							spSiteCurve
+					), e
+			);
+		}
+
+	}
+
 	protected static float estimateMissingNonPrimarySiteIndex(
 			SiteIndexEquation pspSiteCurve, Bank bank, float pspSiteIndex, int spIndex, final int siteCurveNumber
 	) throws ProcessingException {
@@ -211,30 +236,13 @@ public class ProcessingEngine {
 		if (Float.isNaN(spSiteIndex)) {
 			SiteIndexEquation spSiteCurve = SiteIndexEquation.getByIndex(siteCurveNumber);
 
-			try {
-				double mappedSiteIndex = SiteTool
-						.convertSiteIndexBetweenCurves(pspSiteCurve, pspSiteIndex, spSiteCurve);
-				if (mappedSiteIndex > 1.3f) {
-					pspSiteIndex = (float) mappedSiteIndex;
-				}
-				if (mappedSiteIndex > 0.0f) {
-					bank.siteIndices[spIndex] = (float) mappedSiteIndex;
-				}
-			} catch (NoAnswerException e) {
-				logger.warn(
-						MessageFormat.format(
-								"there is no conversion between curves {0} and {1}. Not calculating site index for species {2}",
-								pspSiteCurve, spSiteCurve, bank.speciesNames[spIndex]
-						)
-				);
-			} catch (CurveErrorException | SpeciesErrorException e) {
-				throw new ProcessingException(
-						MessageFormat.format(
-								"convertSiteIndexBetweenCurves on {0}, {1} and {2} failed", pspSiteCurve, pspSiteIndex,
-								spSiteCurve
-						), e
-				);
-			}
+			var mappedSiteIndex = convertSiteIndex(pspSiteCurve, pspSiteIndex, spSiteCurve).filter(msi -> msi > 0.0f);
+			mappedSiteIndex.filter(msi -> msi > 1.3).ifPresentOrElse(
+					msi -> bank.siteIndices[spIndex] = msi,
+					() -> logger.info("Not calculating site index for species {}", bank.speciesNames[spIndex])
+			);
+			pspSiteIndex = mappedSiteIndex.filter(msi -> msi > 1.3f).orElse(pspSiteIndex);
+
 		}
 		return pspSiteIndex;
 	}
@@ -245,8 +253,8 @@ public class ProcessingEngine {
 		Bank bank = lps.getBank();
 		if (Float.isNaN(bank.siteIndices[pspIndex])) {
 
-			double otherSiteIndicesSum = 0.0f;
-			int nOtherSiteIndices = 0;
+			DoubleAdder otherSiteIndicesSum = new DoubleAdder();
+			AtomicInteger nOtherSiteIndices = new AtomicInteger();
 
 			for (int spIndex : lps.getIndices()) {
 
@@ -259,35 +267,21 @@ public class ProcessingEngine {
 				if (!Float.isNaN(spSiteIndex)) {
 					SiteIndexEquation spSiteCurve = SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex));
 
-					try {
-						double mappedSiteIndex = SiteTool
-								.convertSiteIndexBetweenCurves(spSiteCurve, spSiteIndex, pspSiteCurve);
-						if (mappedSiteIndex > 1.3) {
-							otherSiteIndicesSum += mappedSiteIndex;
-							nOtherSiteIndices += 1;
-						}
-					} catch (NoAnswerException e) {
-						logger.warn(
-								MessageFormat.format(
-										"there is no conversion from curves {0} to {1}. Excluding species {2}"
-												+ " from the estimation of the site index of {3}",
-										spSiteCurve, pspSiteCurve, bank.speciesNames[spIndex],
-										bank.speciesNames[pspIndex]
-								)
-						);
-					} catch (CurveErrorException | SpeciesErrorException e) {
-						throw new ProcessingException(
-								MessageFormat.format(
-										"convertSiteIndexBetweenCurves on {0}, {1} and {2} failed", spSiteCurve,
-										spSiteIndex, pspSiteCurve
-								), e
-						);
-					}
+					var mappedSiteIndex = convertSiteIndex(spSiteCurve, spSiteIndex, pspSiteCurve);
+
+					mappedSiteIndex.ifPresentOrElse(msi -> {
+						otherSiteIndicesSum.add(msi);
+						nOtherSiteIndices.incrementAndGet();
+					}, () -> logger.info(
+							"Excluding species {2} from the estimation of the site index of {3}",
+							bank.speciesNames[spIndex], bank.speciesNames[pspIndex]
+					));
+
 				}
 			}
 
-			if (nOtherSiteIndices > 0) {
-				bank.siteIndices[pspIndex] = (float) (otherSiteIndicesSum / nOtherSiteIndices);
+			if (nOtherSiteIndices.get() > 0) {
+				bank.siteIndices[pspIndex] = (float) (otherSiteIndicesSum.doubleValue() / nOtherSiteIndices.get());
 			}
 		}
 
