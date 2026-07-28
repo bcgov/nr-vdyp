@@ -428,10 +428,6 @@ public class ProcessingEngine {
 		}
 	}
 
-	protected enum AgeToUse {
-		TOTAL, AT_BREAST_HEIGHT
-	}
-
 	protected enum SpeciesToApplyTo {
 		/**
 		 * Apply only to primary species

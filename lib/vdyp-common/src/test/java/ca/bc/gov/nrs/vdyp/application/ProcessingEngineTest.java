@@ -54,6 +54,7 @@ import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.LessThan13Exception;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -1251,6 +1252,7 @@ class ProcessingEngineTest {
 				unit = EasyMock.partialMockBuilder(ProcessingEngine.class) //
 						.addMockedMethod("getSiteIndexEquationByIndex") //
 						.addMockedMethod("yearsToBreastHeight") //
+						.addMockedMethod("heightAndSiteIndexToAge") //
 						.withConstructor() //
 						.createMock(em);
 				lps = em.createMock(LayerProcessingState.class);
@@ -1464,6 +1466,167 @@ class ProcessingEngineTest {
 									invalidValue, invalidValue, invalidValue, 5.7f, invalidValue, invalidValue
 							)
 					);
+
+					em.verify();
+				}
+
+			}
+
+			@Nested
+			class EstimateAgesFromHeightAndSiteIndex {
+				@ParameterizedTest
+				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
+				void testSkipIfNonPrimarySiInvalid(float invalidValue)
+						throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(4)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					EasyMock.expect(
+							unit.heightAndSiteIndexToAge(
+									SiteIndexEquation.SI_ACB_HUANG, 25f, SiteIndexAgeType.SI_AT_BREAST, 42f, 1.5f
+							)
+					).andStubReturn(60.0);
+					EasyMock.expect(
+							unit.heightAndSiteIndexToAge(
+									SiteIndexEquation.SI_ACB_HUANG, 25f, SiteIndexAgeType.SI_AT_TOTAL, 42f, 1.5f
+							)
+					).andStubReturn(62.0);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, invalidValue);
+					Arrays.fill(bank.dominantHeights, 25f);
+					Arrays.fill(bank.yearsAtBreastHeight, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, 1.5f);
+					Arrays.fill(bank.ageTotals, Float.NaN);
+
+					bank.siteIndices[3] = 13.4f;// Primary, should be ignored
+					bank.siteIndices[4] = 42.0f; // Subsequent non valid value should not be ignored
+
+					unit.estimateAgesFromHeightAndSiteIndex(lps, bank, 3, SpeciesToApplyTo.NONPRIMARY);
+
+					// 4 changed, the others are not. 3 because it was primary, the others because SI was invalid
+					assertThat(
+							bank.yearsAtBreastHeight,
+							unboxedArrayCloseTo(Float.NaN, Float.NaN, Float.NaN, Float.NaN, 60f, Float.NaN)
+					);
+					assertThat(
+							bank.ageTotals,
+							unboxedArrayCloseTo(Float.NaN, Float.NaN, Float.NaN, Float.NaN, 62f, Float.NaN)
+					);
+
+					em.verify();
+				}
+
+				@ParameterizedTest
+				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
+				void testSkipIfNonPrimaryHeightInvalid(float invalidValue)
+						throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(4)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					EasyMock.expect(
+							unit.heightAndSiteIndexToAge(
+									SiteIndexEquation.SI_ACB_HUANG, 25f, SiteIndexAgeType.SI_AT_BREAST, 42f, 1.5f
+							)
+					).andStubReturn(60.0);
+					EasyMock.expect(
+							unit.heightAndSiteIndexToAge(
+									SiteIndexEquation.SI_ACB_HUANG, 25f, SiteIndexAgeType.SI_AT_TOTAL, 42f, 1.5f
+							)
+					).andStubReturn(62.0);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, 42f);
+					Arrays.fill(bank.dominantHeights, invalidValue);
+					Arrays.fill(bank.yearsAtBreastHeight, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, 1.5f);
+					Arrays.fill(bank.ageTotals, Float.NaN);
+
+					bank.dominantHeights[3] = 13.4f;// Primary, should be ignored
+					bank.dominantHeights[4] = 25.0f; // Subsequent non valid value should not be ignored
+
+					unit.estimateAgesFromHeightAndSiteIndex(lps, bank, 3, SpeciesToApplyTo.NONPRIMARY);
+
+					// 4 changed, the others are not. 3 because it was primary, the others because height was invalid
+					assertThat(
+							bank.yearsAtBreastHeight,
+							unboxedArrayCloseTo(Float.NaN, Float.NaN, Float.NaN, Float.NaN, 60f, Float.NaN)
+					);
+					assertThat(
+							bank.ageTotals,
+							unboxedArrayCloseTo(Float.NaN, Float.NaN, Float.NaN, Float.NaN, 62f, Float.NaN)
+					);
+
+					em.verify();
+				}
+
+				@Test
+				void testPrimary() throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(3)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					EasyMock.expect(
+							unit.heightAndSiteIndexToAge(
+									SiteIndexEquation.SI_ACB_HUANG, 25f, SiteIndexAgeType.SI_AT_BREAST, 42f, 1.5f
+							)
+					).andStubReturn(60.0);
+					EasyMock.expect(
+							unit.heightAndSiteIndexToAge(
+									SiteIndexEquation.SI_ACB_HUANG, 25f, SiteIndexAgeType.SI_AT_TOTAL, 42f, 1.5f
+							)
+					).andStubReturn(62.0);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, 13f);
+					Arrays.fill(bank.dominantHeights, 25f);
+					Arrays.fill(bank.yearsAtBreastHeight, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, 1.5f);
+					Arrays.fill(bank.ageTotals, Float.NaN);
+
+					bank.siteIndices[3] = 42.0f;// Primary, should not be ignored
+
+					unit.estimateAgesFromHeightAndSiteIndex(lps, bank, 3, SpeciesToApplyTo.PRIMARY);
+
+					// 3 changed, the others are not.
+					assertThat(
+							bank.yearsAtBreastHeight,
+							unboxedArrayCloseTo(Float.NaN, Float.NaN, Float.NaN, 60f, Float.NaN, Float.NaN)
+					);
+					assertThat(
+							bank.ageTotals,
+							unboxedArrayCloseTo(Float.NaN, Float.NaN, Float.NaN, 62f, Float.NaN, Float.NaN)
+					);
+
+					em.verify();
+				}
+
+				@Test
+				void testException() throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(3)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					var cause = new LessThan13Exception();
+					EasyMock.expect(
+							unit.heightAndSiteIndexToAge(
+									SiteIndexEquation.SI_ACB_HUANG, 25f, SiteIndexAgeType.SI_AT_BREAST, 42f, 1.5f
+							)
+					).andStubThrow(cause);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, 13f);
+					Arrays.fill(bank.dominantHeights, 25f);
+					Arrays.fill(bank.yearsAtBreastHeight, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, 1.5f);
+					Arrays.fill(bank.ageTotals, Float.NaN);
+
+					bank.siteIndices[3] = 42.0f;
+
+					var ex = assertThrows(
+							ProcessingException.class,
+							() -> unit.estimateAgesFromHeightAndSiteIndex(lps, bank, 3, SpeciesToApplyTo.PRIMARY)
+					);
+
+					assertThat(ex, causedBy(is(cause)));
 
 					em.verify();
 				}
