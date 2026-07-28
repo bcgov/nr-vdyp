@@ -9,6 +9,7 @@ public class VDYPUserModel {
 	private String vdypUserGUID;
 	private String oidcGUID;
 	private UserTypeCodeModel userTypeCode;
+	private IdentityProviderCodeModel identityProviderCode;
 	private String firstName;
 	private String lastName;
 	private String displayName;
@@ -24,6 +25,10 @@ public class VDYPUserModel {
 
 	public UserTypeCodeModel getUserTypeCode() {
 		return userTypeCode;
+	}
+
+	public IdentityProviderCodeModel getIdentityProviderCode() {
+		return identityProviderCode;
 	}
 
 	public String getFirstName() {
@@ -52,6 +57,10 @@ public class VDYPUserModel {
 
 	public void setUserTypeCode(UserTypeCodeModel userTypeCode) {
 		this.userTypeCode = userTypeCode;
+	}
+
+	public void setIdentityProviderCode(IdentityProviderCodeModel identityProviderCode) {
+		this.identityProviderCode = identityProviderCode;
 	}
 
 	public void setFirstName(String firstName) {

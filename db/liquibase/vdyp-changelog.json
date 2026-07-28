@@ -681,6 +681,75 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_15_00",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_15_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_15/00/ddl/tables/app-vdyp.identity_provider_code.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_15/00/ddl/tables/app-vdyp.vdyp_user.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_15/00/dml/app-vdyp.identity_provider_code.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"vdyp_user\" DROP CONSTRAINT IF EXISTS \"user_idpcode_fk\""
+          },
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"vdyp_user\" DROP COLUMN IF EXISTS \"identity_provider_code\""
+          },
+          {
+            "sql": "DROP TABLE IF EXISTS \"app-vdyp\".\"identity_provider_code\""
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_15_01",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_15_01"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_15/01/grants/app-vdyp.ddl.apply_grants.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ]
+      }
     }
   ]
 }

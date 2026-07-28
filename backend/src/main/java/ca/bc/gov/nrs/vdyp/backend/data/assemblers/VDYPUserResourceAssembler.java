@@ -10,9 +10,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class VDYPUserResourceAssembler {
 
 	UserTypeCodeResourceAssembler utra;
+	IdentityProviderCodeResourceAssembler ipcra;
 
 	public VDYPUserResourceAssembler() {
 		utra = new UserTypeCodeResourceAssembler();
+		ipcra = new IdentityProviderCodeResourceAssembler();
 	}
 
 	public VDYPUserEntity toEntity(VDYPUserModel model) {
@@ -24,6 +26,7 @@ public class VDYPUserResourceAssembler {
 		entity.setVdypUserGUID(model.getVdypUserGUID() == null ? null : UUID.fromString(model.getVdypUserGUID()));
 		entity.setOidcGUID(model.getOidcGUID());
 		entity.setUserTypeCode(utra.toEntity(model.getUserTypeCode()));
+		entity.setIdentityProviderCode(ipcra.toEntity(model.getIdentityProviderCode()));
 		entity.setFirstName(model.getFirstName());
 		entity.setLastName(model.getLastName());
 		entity.setDisplayName(model.getDisplayName());
@@ -40,6 +43,7 @@ public class VDYPUserResourceAssembler {
 		model.setVdypUserGUID(entity.getVdypUserGUID() == null ? null : entity.getVdypUserGUID().toString());
 		model.setOidcGUID(entity.getOidcGUID());
 		model.setUserTypeCode(utra.toModel(entity.getUserTypeCode()));
+		model.setIdentityProviderCode(ipcra.toModel(entity.getIdentityProviderCode()));
 		model.setFirstName(entity.getFirstName());
 		model.setLastName(entity.getLastName());
 		model.setDisplayName(entity.getDisplayName());

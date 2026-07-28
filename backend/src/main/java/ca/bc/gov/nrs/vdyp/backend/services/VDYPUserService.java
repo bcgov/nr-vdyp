@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.VDYPUserResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.IdentityProviderCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.VDYPUserRepository;
@@ -27,15 +28,18 @@ public class VDYPUserService {
 	private final VDYPUserRepository userRepository;
 	private final VDYPUserResourceAssembler assembler;
 	private final UserTypeCodeLookup userTypeLookup;
+	private final IdentityProviderCodeLookup identityProviderLookup;
 
 	private VDYPUserModel systemUserCache = null;
 
 	public VDYPUserService(
-			VDYPUserRepository userRepository, VDYPUserResourceAssembler assembler, UserTypeCodeLookup userTypeLookup
+			VDYPUserRepository userRepository, VDYPUserResourceAssembler assembler, UserTypeCodeLookup userTypeLookup,
+			IdentityProviderCodeLookup identityProviderLookup
 	) {
 		this.userRepository = userRepository;
 		this.assembler = assembler;
 		this.userTypeLookup = userTypeLookup;
+		this.identityProviderLookup = identityProviderLookup;
 
 	}
 
@@ -83,6 +87,10 @@ public class VDYPUserService {
 		if (identityToken instanceof JsonWebToken jwt) {
 			String oidcId = jwt.getName();
 			logger.debug("Checking for user with oidcId {}", oidcId);
+			String identityProviderClaim = jwt.getClaim("identity_provider");
+			IdentityProviderCodeModel identityProviderCode = identityProviderLookup
+					.getIdentityProviderCodeFromClaim(identityProviderClaim).orElse(null);
+
 			Optional<VDYPUserEntity> userOption = userRepository.findByOIDC(oidcId);
 			if (userOption.isEmpty()) {
 				Set<String> roles = identity.getRoles();
@@ -104,6 +112,7 @@ public class VDYPUserService {
 					newUser.setLastName(lastName);
 					newUser.setDisplayName(displayName);
 					newUser.setEmail(email);
+					newUser.setIdentityProviderCode(identityProviderCode);
 
 					logger.debug(
 							"Creating new user with oidcId {}, firstName {}, lastName {}, usertypeCode {}", oidcId,
@@ -115,7 +124,12 @@ public class VDYPUserService {
 					return getSystemUser();
 				}
 			}
-			return assembler.toModel(userOption.get());
+			VDYPUserEntity existingUser = userOption.get();
+			if (identityProviderCode != null) {
+				existingUser
+						.setIdentityProviderCode(identityProviderLookup.requireEntity(identityProviderCode.getCode()));
+			}
+			return assembler.toModel(existingUser);
 		} else {
 			return null;
 		}
