@@ -243,7 +243,7 @@ public class ProcessingEngine {
 	) throws ProcessingException {
 		float spSiteIndex = bank.siteIndices[spIndex];
 		if (Float.isNaN(spSiteIndex)) {
-			SiteIndexEquation spSiteCurve = SiteIndexEquation.getByIndex(siteCurveNumber);
+			SiteIndexEquation spSiteCurve = getSiteIndexEquationByIndex(siteCurveNumber);
 
 			var mappedSiteIndex = convertSiteIndex(pspSiteCurve, pspSiteIndex, spSiteCurve).filter(msi -> msi > 0.0f);
 			mappedSiteIndex.ifPresentOrElse(
@@ -274,7 +274,7 @@ public class ProcessingEngine {
 				float spSiteIndex = bank.siteIndices[spIndex];
 
 				if (!Float.isNaN(spSiteIndex)) {
-					SiteIndexEquation spSiteCurve = SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex));
+					SiteIndexEquation spSiteCurve = getSiteIndexEquationByIndex(lps.getSiteCurveNumber(spIndex));
 
 					var mappedSiteIndex = convertSiteIndex(spSiteCurve, spSiteIndex, pspSiteCurve);
 
@@ -385,7 +385,7 @@ public class ProcessingEngine {
 
 		final int pspIndex = lps.getPrimarySpeciesIndex();
 		final int nSpecies = lps.getNSpecies(); // Should correspond to NSPL1.
-		final SiteIndexEquation pspSiteCurve = SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(pspIndex));
+		final SiteIndexEquation pspSiteCurve = getSiteIndexEquationByIndex(lps.getSiteCurveNumber(pspIndex));
 
 		for (int debugSlot = 11; debugSlot <= 20; debugSlot++) {
 			int choice = debugSettings.getValue(debugSlot);
@@ -449,7 +449,7 @@ public class ProcessingEngine {
 
 			try {
 				double ytbh = yearsToBreastHeight(
-						SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)), bank.siteIndices[spIndex]
+						getSiteIndexEquationByIndex(lps.getSiteCurveNumber(spIndex)), bank.siteIndices[spIndex]
 				);
 				if (ytbh > 0.0) {
 					bank.yearsToBreastHeight[spIndex] = (float) ytbh;
@@ -491,16 +491,14 @@ public class ProcessingEngine {
 				// TODO this has been changed pretty considerably from VDYP7 make sure it is acceptable
 				if (Float.isNaN(bank.yearsAtBreastHeight[spIndex]) || bank.yearsAtBreastHeight[spIndex] <= 0.0f) {
 					bank.yearsAtBreastHeight[spIndex] = (float) heightAndSiteIndexToAge(
-							SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)),
-							bank.dominantHeights[spIndex], SiteIndexAgeType.SI_AT_BREAST, bank.siteIndices[spIndex],
-							bank.yearsToBreastHeight[spIndex]
+							getSiteIndexEquationByIndex(lps.getSiteCurveNumber(spIndex)), bank.dominantHeights[spIndex],
+							SiteIndexAgeType.SI_AT_BREAST, bank.siteIndices[spIndex], bank.yearsToBreastHeight[spIndex]
 					);
 				}
 				if (Float.isNaN(bank.ageTotals[spIndex]) || bank.ageTotals[spIndex] <= 0.0f) {
 					bank.ageTotals[spIndex] = (float) heightAndSiteIndexToAge(
-							SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)),
-							bank.dominantHeights[spIndex], SiteIndexAgeType.SI_AT_TOTAL, bank.siteIndices[spIndex],
-							bank.yearsToBreastHeight[spIndex]
+							getSiteIndexEquationByIndex(lps.getSiteCurveNumber(spIndex)), bank.dominantHeights[spIndex],
+							SiteIndexAgeType.SI_AT_TOTAL, bank.siteIndices[spIndex], bank.yearsToBreastHeight[spIndex]
 					);
 				} else {
 					bank.yearsAtBreastHeight[spIndex] = bank.ageTotals[spIndex] - bank.yearsToBreastHeight[spIndex];
@@ -551,7 +549,7 @@ public class ProcessingEngine {
 
 			try {
 				double siteIndex = heightAndAgeToSiteIndex(
-						SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)), age,
+						getSiteIndexEquationByIndex(lps.getSiteCurveNumber(spIndex)), age,
 						ageAtBreastHeight ? SiteIndexAgeType.SI_AT_BREAST : SiteIndexAgeType.SI_AT_TOTAL,
 						bank.dominantHeights[spIndex], SiteIndexEstimationType.SI_EST_DIRECT
 				);
@@ -561,7 +559,7 @@ public class ProcessingEngine {
 
 					if (Float.isNaN(bank.yearsToBreastHeight[spIndex]) || bank.yearsToBreastHeight[spIndex] <= 0.0f) {
 						double ytbh = yearsToBreastHeight(
-								SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex)), siteIndex
+								getSiteIndexEquationByIndex(lps.getSiteCurveNumber(spIndex)), siteIndex
 						);
 						if (ytbh > 0.0) {
 							bank.yearsToBreastHeight[spIndex] = (float) ytbh;
@@ -691,7 +689,7 @@ public class ProcessingEngine {
 					continue;
 				}
 
-				SiteIndexEquation spCurve = SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(spIndex));
+				SiteIndexEquation spCurve = getSiteIndexEquationByIndex(lps.getSiteCurveNumber(spIndex));
 
 				try {
 					double mapped = convertSiteIndexBetweenCurves(pspSiteCurve, pspSiteIndex, spCurve);
@@ -763,7 +761,7 @@ public class ProcessingEngine {
 						movedSiteIndex = spSiteIndex;
 					}
 
-					SiteIndexEquation fromCurve = SiteIndexEquation.getByIndex(spCurveNo);
+					SiteIndexEquation fromCurve = getSiteIndexEquationByIndex(spCurveNo);
 
 					try {
 						double mapped = convertSiteIndexBetweenCurves(fromCurve, spSiteIndex, pspSiteCurve);
@@ -816,6 +814,10 @@ public class ProcessingEngine {
 	double convertSiteIndexBetweenCurves(SiteIndexEquation siteCurve1, double siteIndex1, SiteIndexEquation siteCurve2)
 			throws CurveErrorException, SpeciesErrorException, NoAnswerException {
 		return SiteTool.convertSiteIndexBetweenCurves(siteCurve1, siteIndex1, siteCurve2);
+	}
+
+	public SiteIndexEquation getSiteIndexEquationByIndex(int n) {
+		return SiteIndexEquation.getByIndex(n);
 	}
 
 }

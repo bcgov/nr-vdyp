@@ -5,6 +5,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.unboxedArrayCloseTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notANumber;
@@ -14,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -23,6 +25,8 @@ import org.easymock.IMocksControl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -47,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
@@ -1229,5 +1234,236 @@ class ProcessingEngineTest {
 			}
 		}
 
+		@Nested
+		class ExtendedChoices {
+
+			IMocksControl em;
+			LayerProcessingState<?> lps;
+			VdypLayer layer;
+			Bank bank;
+
+			ProcessingEngine unit;
+
+			@BeforeEach
+			void setup() {
+				em = EasyMock.createControl();
+				unit = EasyMock.partialMockBuilder(ProcessingEngine.class) //
+						.addMockedMethod("getSiteIndexEquationByIndex") //
+						.addMockedMethod("yearsToBreastHeight") //
+						.withConstructor() //
+						.createMock(em);
+				lps = em.createMock(LayerProcessingState.class);
+
+				layer = VdypLayer.build(lb -> {
+					lb.polygonIdentifier("Test", 1970);
+					lb.layerType(LayerType.PRIMARY);
+					lb.controlMap(controlMap);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.230089f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.addSite(ib -> {
+							// Empty
+						});
+					});
+
+				});
+
+				EasyMock.expect(lps.getBank()).andStubReturn(bank);
+				EasyMock.expect(lps.getIndices()).andStubReturn(new int[] { 1, 2, 3, 4, 5 });
+				var bec = Utils.getBec("CWH", controlMap);
+				bank = new Bank(layer, bec, x -> true);
+
+			}
+
+			void initArray(float[] array, float... values) {
+				if (values.length != array.length) {
+					throw new IllegalArgumentException("Array length missmatch");
+				}
+				System.arraycopy(array, 0, values, 0, 6);
+			}
+
+			@Nested
+			class CalculateYearsToBreastHeightFromSiteIndex {
+				@ParameterizedTest
+				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
+				void testSkipIfNonPrimarySiInvalid(float invalidValue)
+						throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(4)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					EasyMock.expect(unit.yearsToBreastHeight(SiteIndexEquation.SI_ACB_HUANG, 42.0)).andStubReturn(2.3);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, invalidValue);
+					Arrays.fill(bank.yearsToBreastHeight, Float.NaN);
+
+					bank.siteIndices[3] = 13.4f;// Primary, should be ignored
+					bank.siteIndices[4] = 42.0f; // Subsequent non valid value should not be ignored
+
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, false);
+
+					// 4 changed, the others are not. 3 because it was primary, the others because SI was invalid
+					assertThat(
+							bank.yearsToBreastHeight,
+							unboxedArrayCloseTo(Float.NaN, Float.NaN, Float.NaN, Float.NaN, 2.3f, Float.NaN)
+					);
+
+					em.verify();
+				}
+
+				@Test
+				void testSkipIfCalculatedYtbhZero() throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(1)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					EasyMock.expect(unit.yearsToBreastHeight(SiteIndexEquation.SI_ACB_HUANG, 42.0)).andStubReturn(0.0);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, Float.NaN);
+
+					bank.siteIndices[3] = 13.4f;// Primary, should be ignored
+					bank.siteIndices[1] = 42f;
+
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, false);
+
+					// 1 should still be NaN instead of 0.0
+					assertThat(
+							bank.yearsToBreastHeight,
+							unboxedArrayCloseTo(Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN)
+					);
+
+					em.verify();
+				}
+
+				@ParameterizedTest
+				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
+				void testSkipIfExistingYtbh(float invalidValue) throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(4)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					EasyMock.expect(unit.yearsToBreastHeight(SiteIndexEquation.SI_ACB_HUANG, 42.0)).andStubReturn(2.3);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, 42f);
+					Arrays.fill(bank.yearsToBreastHeight, 5.7f);
+
+					bank.yearsToBreastHeight[3] = invalidValue;// Primary, should be ignored
+					bank.yearsToBreastHeight[4] = invalidValue;// Should be filled in
+
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, false);
+
+					// 3 should not change because it's primary, 4 should be changed to 2.3. others should remain 5.7
+					assertThat(
+							bank.yearsToBreastHeight, unboxedArrayCloseTo(5.7f, 5.7f, 5.7f, invalidValue, 2.3f, 5.7f)
+					);
+
+					em.verify();
+				}
+
+				@Test
+				void testWrapCommonCalculatorException() throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(1)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					var cause = new CurveErrorException();
+					EasyMock.expect(unit.yearsToBreastHeight(SiteIndexEquation.SI_ACB_HUANG, 42.0)).andStubThrow(cause);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, Float.NaN);
+
+					bank.siteIndices[3] = 13.4f;// Primary, should be ignored
+					bank.siteIndices[1] = 42f;
+
+					var ex = assertThrows(
+							ProcessingException.class,
+							() -> unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, false)
+					);
+
+					assertThat(ex, causedBy(is(cause)));
+
+					em.verify();
+				}
+
+				@ParameterizedTest
+				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
+				void testFillInPrimary(float invalidValue) throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(3)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					EasyMock.expect(unit.yearsToBreastHeight(SiteIndexEquation.SI_ACB_HUANG, 42.0)).andStubReturn(2.3);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, 42f);
+					Arrays.fill(bank.yearsToBreastHeight, invalidValue);
+
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, true);
+
+					// 3 should change because it's primary,others should remain invalid
+					assertThat(
+							bank.yearsToBreastHeight, unboxedArrayCloseTo(
+									invalidValue, invalidValue, invalidValue, 2.3f, invalidValue, invalidValue
+							)
+					);
+
+					em.verify();
+				}
+
+				@ParameterizedTest
+				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
+				void testIgnorePrimaryIfSet(float invalidValue) throws ProcessingException, CommonCalculatorException {
+
+					EasyMock.expect(lps.getSiteCurveNumber(3)).andStubReturn(17);
+					EasyMock.expect(unit.getSiteIndexEquationByIndex(17)).andStubReturn(SiteIndexEquation.SI_ACB_HUANG);
+					EasyMock.expect(unit.yearsToBreastHeight(SiteIndexEquation.SI_ACB_HUANG, 42.0)).andStubReturn(2.3);
+					em.replay();
+
+					Arrays.fill(bank.siteIndices, 42f);
+					Arrays.fill(bank.yearsToBreastHeight, invalidValue);
+
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, true);
+					bank.yearsToBreastHeight[3] = 5.7f;
+
+					// 3 should remain 5.7 because it's set, others should remain invalid because they are non-primary
+					assertThat(
+							bank.yearsToBreastHeight, unboxedArrayCloseTo(
+									invalidValue, invalidValue, invalidValue, 5.7f, invalidValue, invalidValue
+							)
+					);
+
+					em.verify();
+				}
+
+			}
+		}
 	}
 }
