@@ -1,13 +1,16 @@
 package ca.bc.gov.nrs.vdyp.application;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.asFloat;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notANumber;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
@@ -16,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -43,6 +47,9 @@ import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
@@ -558,7 +565,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				ProcessingEngine.estimateMissingSiteIndices(lps);
+				new ProcessingEngine().estimateMissingSiteIndices(lps);
 
 				assertThat(
 						bank.siteIndices,
@@ -630,7 +637,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				ProcessingEngine.estimateMissingSiteIndices(lps);
+				new ProcessingEngine().estimateMissingSiteIndices(lps);
 
 				assertThat(
 						bank.siteIndices,
@@ -701,21 +708,119 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				Float result = ProcessingEngine.estimateMissingNonPrimarySiteIndices(lps, 2, null);
+				Float result = new ProcessingEngine().estimateMissingNonPrimarySiteIndices(lps, 2, null);
 
 				assertThat(result, asFloat(notANumber()));
 
 				assertThat(
 						bank.siteIndices,
-						VdypMatchers.unboxedArrayCloseTo(
-								0.0f, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN
-						)
+						VdypMatchers.unboxedArrayCloseTo(0.0f, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN)
 				);
 
 				em.verify();
 
 			}
 
+			@Nested
+			class ConvertSite {
+				IMocksControl em;
+				ProcessingEngine unit;
+
+				@BeforeEach
+				void setup() {
+					em = EasyMock.createControl();
+					unit = EasyMock.partialMockBuilder(ProcessingEngine.class) //
+							.addMockedMethod("convertSiteIndexBetweenCurves")//
+							.withConstructor()//
+							.createMock(em);
+
+				}
+
+				@Test
+				void testSuccess() throws Exception {
+
+					unit.convertSiteIndexBetweenCurves(
+							SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
+					);
+					EasyMock.expectLastCall().andStubReturn(64.0);
+
+					em.replay();
+
+					var result = assertDoesNotThrow(
+							() -> unit.convertSiteIndex(
+									SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
+							)
+					);
+					assertThat(result, VdypMatchers.present(is(64.0f)));
+
+					em.verify();
+				}
+
+				@Test
+				void testNoAnswer() throws Exception {
+
+					unit.convertSiteIndexBetweenCurves(
+							SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
+					);
+					EasyMock.expectLastCall().andThrow(new NoAnswerException());
+
+					em.replay();
+
+					var result = assertDoesNotThrow(
+							() -> unit.convertSiteIndex(
+									SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
+							)
+					);
+					assertThat(result, VdypMatchers.notPresent());
+
+					em.verify();
+				}
+
+				@Test
+				void testCurveError() throws Exception {
+
+					unit.convertSiteIndexBetweenCurves(
+							SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
+					);
+					final CurveErrorException cause = new CurveErrorException();
+					EasyMock.expectLastCall().andThrow(cause);
+
+					em.replay();
+
+					var ex = assertThrows(
+							ProcessingException.class,
+							() -> unit.convertSiteIndex(
+									SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
+							)
+					);
+					assertThat(ex, causedBy(sameInstance(cause)));
+
+					em.verify();
+				}
+
+				@Test
+				void testSpeciesError() throws Exception {
+
+					unit.convertSiteIndexBetweenCurves(
+							SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
+					);
+					final SpeciesErrorException cause = new SpeciesErrorException();
+					EasyMock.expectLastCall().andThrow(cause);
+
+					em.replay();
+
+					var ex = assertThrows(
+							ProcessingException.class,
+							() -> unit.convertSiteIndex(
+									SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
+							)
+					);
+					assertThat(ex, causedBy(sameInstance(cause)));
+
+					em.verify();
+				}
+
+			}
 		}
 
 		@Nested
@@ -731,6 +836,7 @@ class ProcessingEngineTest {
 				float expected = Float.NaN; // current behavior is dropping this value but that is ok to fix when we
 											// know
 											// we have matched VDYP7
+
 				/*
 				 * float realExpected = (float) SiteTool.convertSiteIndexBetweenCurves(
 				 * SiteIndexEquation.getByIndex(fixture.lps.getSiteCurveNumber(secondarySlot)), sourceSiteIndex,
@@ -1090,7 +1196,7 @@ class ProcessingEngineTest {
 			}
 
 			private void runEstimateExtended(LayerFixture fixture) throws ProcessingException {
-				ProcessingEngine.estimateMissingSiteIndicesAndAgesExtended(fixture.lps, fds);
+				new ProcessingEngine().estimateMissingSiteIndicesAndAgesExtended(fixture.lps, fds);
 			}
 
 			private float yearsToBreastHeight(SiteIndexEquation curve, float siteIndex) throws Exception {
