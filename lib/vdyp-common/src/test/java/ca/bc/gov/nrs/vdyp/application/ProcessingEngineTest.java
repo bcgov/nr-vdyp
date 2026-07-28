@@ -17,15 +17,20 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.SpeciesToApplyTo;
@@ -1631,6 +1636,90 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+			}
+
+			@Nested
+			class FillMissingAgeOfTriplet {
+				static List<Arguments> correctAges() {
+					return List.of(Arguments.of(12f, 7f, 5f), Arguments.of(12f, 6f, 6f), Arguments.of(12f, 5f, 7f));
+				}
+
+				@ParameterizedTest
+				@CsvSource({ "12, 4, 5", "NaN, NaN, 5", "12, NaN, NaN", "NaN, 4, NaN", "NaN, NaN, NaN" })
+				void testWrongNumberMissing(float total, float atBH, float toBH) {
+					em.replay();
+					Arrays.fill(bank.ageTotals, Float.NaN);
+					Arrays.fill(bank.yearsAtBreastHeight, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, Float.NaN);
+
+					bank.ageTotals[1] = total;
+					bank.yearsAtBreastHeight[1] = atBH;
+					bank.yearsToBreastHeight[1] = toBH;
+
+					unit.fillMissingAgeOfTriplet(lps, bank);
+
+					assertThat(bank.ageTotals[1], is(total));
+					assertThat(bank.yearsAtBreastHeight[1], is(atBH));
+					assertThat(bank.yearsToBreastHeight[1], is(toBH));
+					em.verify();
+				}
+
+				@ParameterizedTest
+				@MethodSource("correctAges")
+				void testTotalMissing(float total, float atBH, float toBH) {
+					em.replay();
+					Arrays.fill(bank.ageTotals, Float.NaN);
+					Arrays.fill(bank.yearsAtBreastHeight, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, Float.NaN);
+
+					bank.yearsAtBreastHeight[1] = atBH;
+					bank.yearsToBreastHeight[1] = toBH;
+
+					unit.fillMissingAgeOfTriplet(lps, bank);
+
+					assertThat(bank.ageTotals[1], is(total));
+					assertThat(bank.yearsAtBreastHeight[1], is(atBH));
+					assertThat(bank.yearsToBreastHeight[1], is(toBH));
+					em.verify();
+				}
+
+				@ParameterizedTest
+				@MethodSource("correctAges")
+				void testToBreastHeightMissing(float total, float atBH, float toBH) {
+					em.replay();
+					Arrays.fill(bank.ageTotals, Float.NaN);
+					Arrays.fill(bank.yearsAtBreastHeight, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, Float.NaN);
+
+					bank.ageTotals[1] = total;
+					bank.yearsAtBreastHeight[1] = atBH;
+
+					unit.fillMissingAgeOfTriplet(lps, bank);
+
+					assertThat(bank.ageTotals[1], is(total));
+					assertThat(bank.yearsAtBreastHeight[1], is(atBH));
+					assertThat(bank.yearsToBreastHeight[1], is(toBH));
+					em.verify();
+				}
+
+				@ParameterizedTest
+				@MethodSource("correctAges")
+				void testAtBreastHeightMissing(float total, float atBH, float toBH) {
+					em.replay();
+					Arrays.fill(bank.ageTotals, Float.NaN);
+					Arrays.fill(bank.yearsAtBreastHeight, Float.NaN);
+					Arrays.fill(bank.yearsToBreastHeight, Float.NaN);
+
+					bank.ageTotals[1] = total;
+					bank.yearsToBreastHeight[1] = toBH;
+
+					unit.fillMissingAgeOfTriplet(lps, bank);
+
+					assertThat(bank.ageTotals[1], is(total));
+					assertThat(bank.yearsAtBreastHeight[1], is(atBH));
+					assertThat(bank.yearsToBreastHeight[1], is(toBH));
+					em.verify();
+				}
 			}
 		}
 	}
