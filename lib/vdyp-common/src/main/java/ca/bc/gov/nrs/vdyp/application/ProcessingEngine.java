@@ -325,28 +325,36 @@ public class ProcessingEngine {
 			(l, b, pi, n, psc) -> moveTotalAgeFromNonPriamryToPrimary(l, b, pi),
 
 			// 5
-			(l, b, pi, n, psc) -> estimateDominantHeightFromLoreyHeight(l, b, pi, true),
+			(l, b, pi, n, psc) -> estimateDominantHeightFromLoreyHeight(l, b, pi, SpeciesToApplyTo.PRIMARY),
 			// 6
-			(l, b, pi, n, psc) -> estimateDominantHeightFromLoreyHeight(l, b, pi, false),
+			(l, b, pi, n, psc) -> estimateDominantHeightFromLoreyHeight(l, b, pi, SpeciesToApplyTo.NONPRIMARY),
 
 			// 7
-			(l, b, pi, n, psc) -> estimateSiteIndexFromHeightAndAge(l, b, pi, false, true),
+			(
+					l, b, pi, n, psc
+			) -> estimateSiteIndexFromHeightAndAge(l, b, pi, SiteIndexAgeType.SI_AT_TOTAL, SpeciesToApplyTo.PRIMARY),
 			// 8
-			(l, b, pi, n, psc) -> estimateSiteIndexFromHeightAndAge(l, b, pi, true, true),
+			(
+					l, b, pi, n, psc
+			) -> estimateSiteIndexFromHeightAndAge(l, b, pi, SiteIndexAgeType.SI_AT_BREAST, SpeciesToApplyTo.PRIMARY),
 			// 9
-			(l, b, pi, n, psc) -> estimateSiteIndexFromHeightAndAge(l, b, pi, false, false),
+			(
+					l, b, pi, n, psc
+			) -> estimateSiteIndexFromHeightAndAge(l, b, pi, SiteIndexAgeType.SI_AT_TOTAL, SpeciesToApplyTo.NONPRIMARY),
 			// 10
-			(l, b, pi, n, psc) -> estimateSiteIndexFromHeightAndAge(l, b, pi, true, false),
+			(l, b, pi, n, psc) -> estimateSiteIndexFromHeightAndAge(
+					l, b, pi, SiteIndexAgeType.SI_AT_BREAST, SpeciesToApplyTo.NONPRIMARY
+			),
 
 			// 11
-			(l, b, pi, n, psc) -> estimateAgesFromHeightAndSiteIndex(l, b, pi, true),
+			(l, b, pi, n, psc) -> estimateAgesFromHeightAndSiteIndex(l, b, pi, SpeciesToApplyTo.PRIMARY),
 			// 12
-			(l, b, pi, n, psc) -> estimateAgesFromHeightAndSiteIndex(l, b, pi, false),
+			(l, b, pi, n, psc) -> estimateAgesFromHeightAndSiteIndex(l, b, pi, SpeciesToApplyTo.NONPRIMARY),
 
 			// 13
-			(l, b, pi, n, psc) -> calculateYearsToBreastHeightFromSiteIndex(l, b, pi, true),
+			(l, b, pi, n, psc) -> calculateYearsToBreastHeightFromSiteIndex(l, b, pi, SpeciesToApplyTo.PRIMARY),
 			// 14
-			(l, b, pi, n, psc) -> calculateYearsToBreastHeightFromSiteIndex(l, b, pi, false),
+			(l, b, pi, n, psc) -> calculateYearsToBreastHeightFromSiteIndex(l, b, pi, SpeciesToApplyTo.NONPRIMARY),
 
 			// 15 Same as 1 but only if age total between 0 and 30 exclusive
 			(l, b, pi, n, psc) -> {
@@ -420,21 +428,48 @@ public class ProcessingEngine {
 		}
 	}
 
+	protected enum AgeToUse {
+		TOTAL, AT_BREAST_HEIGHT
+	}
+
+	protected enum SpeciesToApplyTo {
+		/**
+		 * Apply only to primary species
+		 */
+		PRIMARY {
+			@Override
+			boolean applies(int spIndex, int primaryIndex) {
+				return spIndex == primaryIndex;
+			}
+		},
+		/**
+		 * Apply only to non-primary species
+		 */
+		NONPRIMARY {
+			@Override
+			boolean applies(int spIndex, int primaryIndex) {
+				return spIndex != primaryIndex;
+			}
+		};
+
+		abstract boolean applies(int spIndex, int primaryIndex);
+	}
+
 	/**
 	 * Calculate years to breast height from site index.
 	 *
 	 * @param lps
 	 * @param bank
 	 * @param pspIndex
-	 * @param applyToPrimary Do this for the primary species if true, otherwise the non-primary species
+	 * @param applyTo  Which species should this be applied to
 	 * @throws ProcessingException
 	 */
 	protected void calculateYearsToBreastHeightFromSiteIndex(
-			LayerProcessingState<?> lps, Bank bank, int pspIndex, boolean applyToPrimary
+			LayerProcessingState<?> lps, Bank bank, int pspIndex, SpeciesToApplyTo applyTo
 	) throws ProcessingException {
 		for (int spIndex : lps.getIndices()) {
 
-			boolean applies = (spIndex == pspIndex) == applyToPrimary;
+			boolean applies = applyTo.applies(spIndex, pspIndex);
 
 			if (!applies) {
 				continue;
@@ -466,16 +501,16 @@ public class ProcessingEngine {
 	 * @param lps
 	 * @param bank
 	 * @param pspIndex
-	 * @param applyToPrimary Do this for the primary species if true, otherwise the non-primary species
+	 * @param applyTo  Which species should this be applied to
 	 * @throws ProcessingException
 	 */
 	protected void estimateAgesFromHeightAndSiteIndex(
-			LayerProcessingState<?> lps, Bank bank, int pspIndex, boolean applyToPrimary
+			LayerProcessingState<?> lps, Bank bank, int pspIndex, SpeciesToApplyTo applyTo
 	) throws ProcessingException {
 
 		for (int spIndex : lps.getIndices()) {
 
-			boolean applies = (spIndex == pspIndex) == applyToPrimary;
+			boolean applies = applyTo.applies(spIndex, pspIndex);
 
 			if (!applies) {
 				continue;
@@ -517,12 +552,12 @@ public class ProcessingEngine {
 	 * @param lps
 	 * @param bank
 	 * @param pspIndex
-	 * @param ageAtBreastHeight Do this using age at breast height if true, otherwise total age.
-	 * @param applyToPrimary    Do this for the primary species if true, otherwise the non-primary species
+	 * @param ageToUse Which age to use
+	 * @param applyTo  Which species should this be applied to
 	 * @throws ProcessingException
 	 */
 	protected void estimateSiteIndexFromHeightAndAge(
-			LayerProcessingState<?> lps, Bank bank, int pspIndex, boolean ageAtBreastHeight, boolean applyToPrimary
+			LayerProcessingState<?> lps, Bank bank, int pspIndex, SiteIndexAgeType ageToUse, SpeciesToApplyTo applyTo
 	) throws ProcessingException {
 
 		for (int spIndex : lps.getIndices()) {
@@ -531,7 +566,7 @@ public class ProcessingEngine {
 				continue;
 			}
 
-			boolean applies = (spIndex == pspIndex) == applyToPrimary;
+			boolean applies = applyTo.applies(spIndex, pspIndex);
 
 			if (!applies) {
 				continue;
@@ -541,7 +576,13 @@ public class ProcessingEngine {
 				continue;
 			}
 
-			float age = ageAtBreastHeight ? bank.yearsAtBreastHeight[spIndex] : bank.ageTotals[spIndex];
+			float age = switch (ageToUse) {
+			case SI_AT_BREAST -> bank.yearsAtBreastHeight[spIndex];
+			case SI_AT_TOTAL -> bank.ageTotals[spIndex];
+			default -> {
+				throw new UnsupportedOperationException();
+			}
+			};
 
 			if (Float.isNaN(age) || age <= 0.0f) {
 				continue;
@@ -549,8 +590,7 @@ public class ProcessingEngine {
 
 			try {
 				double siteIndex = heightAndAgeToSiteIndex(
-						getSiteIndexEquationByIndex(lps.getSiteCurveNumber(spIndex)), age,
-						ageAtBreastHeight ? SiteIndexAgeType.SI_AT_BREAST : SiteIndexAgeType.SI_AT_TOTAL,
+						getSiteIndexEquationByIndex(lps.getSiteCurveNumber(spIndex)), age, ageToUse,
 						bank.dominantHeights[spIndex], SiteIndexEstimationType.SI_EST_DIRECT
 				);
 
@@ -579,11 +619,11 @@ public class ProcessingEngine {
 	 * @param lps
 	 * @param bank
 	 * @param pspIndex
-	 * @param applyToPrimary Do this for the primary species if true, otherwise the non-primary species
+	 * @param applyTo  Which species should this be applied to
 	 * @throws ProcessingException
 	 */
 	protected void estimateDominantHeightFromLoreyHeight(
-			LayerProcessingState<?> lps, Bank bank, int pspIndex, boolean applyToPrimary
+			LayerProcessingState<?> lps, Bank bank, int pspIndex, SpeciesToApplyTo applyTo
 	) throws ProcessingException {
 
 		for (int spIndex : lps.getIndices()) {
@@ -591,7 +631,7 @@ public class ProcessingEngine {
 				continue;
 			}
 
-			boolean applies = (spIndex == pspIndex) == applyToPrimary;
+			boolean applies = applyTo.applies(spIndex, pspIndex);
 
 			if (!applies) {
 				continue;

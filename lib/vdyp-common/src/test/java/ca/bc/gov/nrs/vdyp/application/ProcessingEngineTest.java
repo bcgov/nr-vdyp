@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.SpeciesToApplyTo;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
@@ -1328,7 +1329,7 @@ class ProcessingEngineTest {
 					bank.siteIndices[3] = 13.4f;// Primary, should be ignored
 					bank.siteIndices[4] = 42.0f; // Subsequent non valid value should not be ignored
 
-					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, false);
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, SpeciesToApplyTo.NONPRIMARY);
 
 					// 4 changed, the others are not. 3 because it was primary, the others because SI was invalid
 					assertThat(
@@ -1353,7 +1354,7 @@ class ProcessingEngineTest {
 					bank.siteIndices[3] = 13.4f;// Primary, should be ignored
 					bank.siteIndices[1] = 42f;
 
-					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, false);
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, SpeciesToApplyTo.NONPRIMARY);
 
 					// 1 should still be NaN instead of 0.0
 					assertThat(
@@ -1379,7 +1380,7 @@ class ProcessingEngineTest {
 					bank.yearsToBreastHeight[3] = invalidValue;// Primary, should be ignored
 					bank.yearsToBreastHeight[4] = invalidValue;// Should be filled in
 
-					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, false);
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, SpeciesToApplyTo.NONPRIMARY);
 
 					// 3 should not change because it's primary, 4 should be changed to 2.3. others should remain 5.7
 					assertThat(
@@ -1406,7 +1407,9 @@ class ProcessingEngineTest {
 
 					var ex = assertThrows(
 							ProcessingException.class,
-							() -> unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, false)
+							() -> unit.calculateYearsToBreastHeightFromSiteIndex(
+									lps, bank, 3, SpeciesToApplyTo.NONPRIMARY
+							)
 					);
 
 					assertThat(ex, causedBy(is(cause)));
@@ -1426,11 +1429,12 @@ class ProcessingEngineTest {
 					Arrays.fill(bank.siteIndices, 42f);
 					Arrays.fill(bank.yearsToBreastHeight, invalidValue);
 
-					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, true);
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, SpeciesToApplyTo.PRIMARY);
 
 					// 3 should change because it's primary,others should remain invalid
 					assertThat(
-							bank.yearsToBreastHeight, unboxedArrayCloseTo(
+							bank.yearsToBreastHeight,
+							unboxedArrayCloseTo(
 									invalidValue, invalidValue, invalidValue, 2.3f, invalidValue, invalidValue
 							)
 					);
@@ -1450,12 +1454,13 @@ class ProcessingEngineTest {
 					Arrays.fill(bank.siteIndices, 42f);
 					Arrays.fill(bank.yearsToBreastHeight, invalidValue);
 
-					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, true);
+					unit.calculateYearsToBreastHeightFromSiteIndex(lps, bank, 3, SpeciesToApplyTo.PRIMARY);
 					bank.yearsToBreastHeight[3] = 5.7f;
 
 					// 3 should remain 5.7 because it's set, others should remain invalid because they are non-primary
 					assertThat(
-							bank.yearsToBreastHeight, unboxedArrayCloseTo(
+							bank.yearsToBreastHeight,
+							unboxedArrayCloseTo(
 									invalidValue, invalidValue, invalidValue, 5.7f, invalidValue, invalidValue
 							)
 					);
