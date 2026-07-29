@@ -95,13 +95,6 @@ public class ForwardTestUtils {
 		}
 	}
 
-	public static Float[] toFloatArray(float[] af) {
-		Float[] aF = new Float[af.length];
-		for (int i = 0; i < af.length; i++)
-			aF[i] = af[i];
-		return aF;
-	}
-
 	/**
 	 * Explicitly override the per-polygon or overall target year settings to use the given value instead. This will
 	 * apply for all polygons not yet processed, unless it is called again later, of course.
