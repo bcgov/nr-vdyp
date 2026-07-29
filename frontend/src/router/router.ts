@@ -1,13 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from './routes'
 import { useAuthStore } from '@/stores/common/authStore'
+import { authReadyPromise } from '@/services/keycloak'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const hash = to.hash || ''
   if (
     hash.includes('code=') &&
@@ -31,6 +32,8 @@ router.beforeEach((to, _from, next) => {
   }
 
   if (to.name !== 'Unauthorized') {
+    await authReadyPromise
+
     const authStore = useAuthStore()
     if (authStore.authenticated && authStore.getAllRoles().length === 0) {
       next({ name: 'Unauthorized' })
