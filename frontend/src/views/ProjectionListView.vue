@@ -2,7 +2,7 @@
   <v-container fluid class="projection-list-container">
     <!-- Header with Title and New Projection Button -->
     <div class="page-header">
-      <h1 class="page-heading">Projections</h1>
+      <h1 class="page-heading">My Projections</h1>
       <v-menu>
         <template v-slot:activator="{ props }">
           <AppButton
