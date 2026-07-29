@@ -282,7 +282,7 @@ public class ProcessingEngine {
 						otherSiteIndicesSum.add(msi);
 						nOtherSiteIndices.incrementAndGet();
 					}, () -> logger.info(
-							"Excluding species {2} from the estimation of the site index of {3}",
+							"Excluding species {} from the estimation of the site index of {}",
 							bank.speciesNames[spIndex], bank.speciesNames[pspIndex]
 					));
 
