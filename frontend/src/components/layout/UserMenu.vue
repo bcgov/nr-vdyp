@@ -9,6 +9,12 @@
       </v-btn>
     </template>
     <v-list>
+      <v-list-item v-if="isAdmin" @click="goToMyProjections">
+        <v-list-item-title>My Projections</v-list-item-title>
+      </v-list-item>
+      <v-list-item v-if="isAdmin" @click="goToAdminDashboard">
+        <v-list-item-title>Admin Dashboard</v-list-item-title>
+      </v-list-item>
       <v-list-item @click="logout">
         <v-list-item-title>{{ logoutText }}</v-list-item-title>
       </v-list-item>
@@ -18,7 +24,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/common/authStore'
+import { ROUTE_PATH, USER_ROLE } from '@/constants/constants'
 
 const props = defineProps({
   userIcon: {
@@ -43,8 +51,18 @@ const props = defineProps({
   },
 })
 
+const router = useRouter()
 const authStore = useAuthStore()
 const userInfo = computed(() => authStore.getParsedIdToken())
+const isAdmin = computed(() => authStore.hasRole(USER_ROLE.ADMIN))
+
+const goToAdminDashboard = () => {
+  router.push(ROUTE_PATH.ADMIN_DASHBOARD)
+}
+
+const goToMyProjections = () => {
+  router.push(ROUTE_PATH.PROJECTION_LIST)
+}
 
 const displayName = computed(() => {
   if (userInfo.value || props.givenName || props.familyName) {
