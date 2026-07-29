@@ -289,6 +289,40 @@ class ProjectionServiceTest {
 
 		verify(repository).findByOwner(doesNotExist);
 	}
+
+	@Test
+	void getAllRunningProjections_returnsEmpty_whenNoneRunning() {
+		when(repository.findByStatus(ProjectionStatusCodeModel.RUNNING)).thenReturn(Collections.emptyList());
+
+		List<ProjectionModel> results = service.getAllRunningProjections();
+
+		assertNotNull(results);
+		assertTrue(results.isEmpty());
+		verify(repository).findByStatus(ProjectionStatusCodeModel.RUNNING);
+	}
+
+	@Test
+	void getAllRunningProjections_returnsList_acrossAllOwners() {
+		ProjectionEntity entityResult = new ProjectionEntity();
+		entityResult.setProjectionGUID(UUID.randomUUID());
+		entityResult.setReportTitle("Running Projection");
+		entityResult.setReportDescription("Running Description");
+
+		when(repository.findByStatus(ProjectionStatusCodeModel.RUNNING)).thenReturn(List.of(entityResult));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		List<ProjectionModel> results = service.getAllRunningProjections();
+
+		assertNotNull(results);
+		assertThat(results).hasSize(1);
+
+		ProjectionModel result = results.get(0);
+		assertThat(result.getProjectionGUID()).isEqualTo(entityResult.getProjectionGUID().toString());
+		assertThat(result.getReportTitle()).isEqualTo("Running Projection");
+		assertThat(result.getReportDescription()).isEqualTo("Running Description");
+
+		verify(repository).findByStatus(ProjectionStatusCodeModel.RUNNING);
+	}
 	// ==========================================================
 	// getProjectionEntity
 	// ==========================================================
@@ -1869,6 +1903,27 @@ class ProjectionServiceTest {
 
 		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 		assertThat(response.getEntity()).isEqualTo("service failed");
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - getAllRunningProjections
+	// ==========================================================
+
+	@Test
+	void endpoint_getAllRunningProjections_returnsOk_withProjectionsFromService() {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		ProjectionModel running = new ProjectionModel();
+		running.setProjectionGUID(UUID.randomUUID().toString());
+		when(mockService.getAllRunningProjections()).thenReturn(List.of(running));
+
+		Response response = endpoint.getAllRunningProjections();
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		assertThat(response.getEntity()).isEqualTo(List.of(running));
+		verify(mockService).getAllRunningProjections();
 	}
 
 	// ==========================================================
