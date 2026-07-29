@@ -26,7 +26,10 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/common/authStore'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
+import { useUnsavedChangesStore } from '@/stores/common/unsavedChangesStore'
 import { ROUTE_PATH, USER_ROLE } from '@/constants/constants'
+import { MESSAGE } from '@/constants'
 
 const props = defineProps({
   userIcon: {
@@ -53,8 +56,19 @@ const props = defineProps({
 
 const router = useRouter()
 const authStore = useAuthStore()
+const alertDialogStore = useAlertDialogStore()
+const unsavedChangesStore = useUnsavedChangesStore()
 const userInfo = computed(() => authStore.getParsedIdToken())
 const isAdmin = computed(() => authStore.hasRole(USER_ROLE.ADMIN))
+
+const confirmDiscardUnsavedChanges = async (): Promise<boolean> => {
+  if (!(await unsavedChangesStore.hasUnsavedChanges())) return true
+  return await alertDialogStore.openDialog(
+    MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+    MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+    { variant: 'warning' },
+  )
+}
 
 const goToAdminDashboard = () => {
   router.push(ROUTE_PATH.ADMIN_DASHBOARD)
@@ -75,7 +89,10 @@ const displayName = computed(() => {
   return props.guestName || 'Guest'
 })
 
-const logout = () => {
+const logout = async () => {
+  // Logout redirects the whole page rather than navigating via vue-router, so it bypasses
+  // ProjectionDetail's onBeforeRouteLeave guard and needs its own unsaved-changes check.
+  if (!(await confirmDiscardUnsavedChanges())) return
   authStore.logout()
 }
 </script>

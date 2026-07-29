@@ -55,16 +55,16 @@ describe('Confirm Dialog Store Unit Tests', () => {
     const promise = alertDialogStore.openDialog('Test', 'Test message')
     alertDialogStore.agree()
     const result = await promise
-    expect(result).to.be.true
-    expect(alertDialogStore.dialog).to.be.false
+    expect(result).to.equal(true)
+    expect(alertDialogStore.dialog).to.equal(false)
   })
 
   it('should resolve promise with false when cancel is called', async () => {
     const promise = alertDialogStore.openDialog('Test', 'Test message')
     alertDialogStore.cancel()
     const result = await promise
-    expect(result).to.be.false
-    expect(alertDialogStore.dialog).to.be.false
+    expect(result).to.equal(false)
+    expect(alertDialogStore.dialog).to.equal(false)
   })
 
   it('should reset state after agree or cancel', () => {
@@ -113,9 +113,9 @@ describe('Confirm Dialog Store Unit Tests', () => {
 
   it('should not resolve promise if dialog is not open', () => {
     alertDialogStore.agree()
-    expect(alertDialogStore.dialog).to.be.false
+    expect(alertDialogStore.dialog).to.equal(false)
 
     alertDialogStore.cancel()
-    expect(alertDialogStore.dialog).to.be.false
+    expect(alertDialogStore.dialog).to.equal(false)
   })
 })

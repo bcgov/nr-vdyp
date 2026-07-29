@@ -279,6 +279,7 @@ import { loadProjectionSession, clearProjectionSession, saveExistingProjectionSe
 import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip, getResultsDownloadUrl, isProjectionReadOnly } from '@/services/projectionService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
+import { useUnsavedChangesStore } from '@/stores/common/unsavedChangesStore'
 import { runProjection, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import { runProjectionFileUpload, hasReportConfigUnsavedChanges, hasMinimumDBHUnsavedChanges } from '@/services/projection/fileUploadService'
 import {
@@ -297,6 +298,7 @@ import type { ProjectionModel } from '@/services/vdyp-api'
 const router = useRouter()
 const { isLoading: isProjectionLoading, loadProjection } = useProjectionLoader()
 const alertDialogStore = useAlertDialogStore()
+const unsavedChangesStore = useUnsavedChangesStore()
 
 const reportSettingsPanelRef = ref<{ onConfirm: () => Promise<boolean>; isDirty: boolean; resetDirty: () => Promise<void> }>()
 
@@ -792,11 +794,23 @@ const hasAnyUnsavedChanges = async (): Promise<boolean> => {
   return false
 }
 
+// Registered so the user menu (My Projections / Admin Dashboard / Logout) can check for
+// unsaved changes without depending on stale store state once this page has unmounted.
+onMounted(() => {
+  unsavedChangesStore.registerChecker(hasAnyUnsavedChanges)
+})
+
+onUnmounted(() => {
+  unsavedChangesStore.unregisterChecker()
+})
+
 // Clear session when navigating away so stale data doesn't persist to a new session.
 // NOTE: onBeforeRouteLeave does NOT fire on browser refresh, so the session correctly
 // persists across refreshes while still being cleaned up on normal navigation.
-onBeforeRouteLeave(async (to) => {
-  if (to.name === 'ProjectionListView' && await hasAnyUnsavedChanges()) {
+// Applies to any destination (My Projections, Admin Dashboard, etc.) so admins switching
+// views mid-edit get the same unsaved-changes confirmation as any other navigation away.
+onBeforeRouteLeave(async () => {
+  if (await hasAnyUnsavedChanges()) {
     const proceed = await alertDialogStore.openDialog(
       MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
       MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
