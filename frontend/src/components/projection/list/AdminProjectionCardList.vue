@@ -1,5 +1,41 @@
 <template>
   <div class="cards-container">
+    <!-- Sort Dropdown for Card View -->
+    <label class="bcds-select-label" for="adminCardSortBy">Sort By:</label>
+    <v-select
+      id="adminCardSortBy"
+      :model-value="sortValue"
+      :items="sortOptions"
+      item-title="title"
+      item-value="value"
+      label="Sort by"
+      variant="outlined"
+      density="compact"
+      class="sort-dropdown"
+      append-inner-icon="mdi-chevron-down"
+      @update:model-value="handleSortChange"
+    >
+      <template #selection="{ item }">
+        <span>{{ item.title }}</span>
+      </template>
+      <template #item="{ item, props: itemProps }">
+        <v-list-item v-bind="itemProps" class="sort-option-item">
+          <template #title>
+            <div class="sort-option">
+              <span class="sort-option-text">{{ item.raw.title }}</span>
+              <v-icon
+                size="small"
+                class="sort-check-icon"
+                :class="{ invisible: item.raw.value !== sortValue }"
+              >
+                mdi-check
+              </v-icon>
+            </div>
+          </template>
+        </v-list-item>
+      </template>
+    </v-select>
+
     <!-- Empty state when no projections -->
     <v-card v-if="projections.length === 0" class="empty-state-card" elevation="0">
       <div class="empty-state-content">
@@ -87,21 +123,28 @@
 </template>
 
 <script setup lang="ts">
-import type { AdminProjection } from '@/interfaces/interfaces'
+import type { AdminProjection, SortOption } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS } from '@/constants/constants'
 import { formatNumber } from '@/utils/util'
 import { AppButton } from '@/components'
 
 interface Props {
   projections: AdminProjection[]
+  sortOptions: SortOption[]
+  sortValue: string
   now: number
 }
 
 const props = defineProps<Props>()
 
-defineEmits<{
+const emit = defineEmits<{
+  (e: 'sort', value: string): void
   (e: 'cancel', projectionGUID: string): void
 }>()
+
+const handleSortChange = (value: string) => {
+  emit('sort', value)
+}
 
 const getProgressPercent = (projection: AdminProjection): number => {
   if (!projection.polygonCount) return 0
@@ -131,6 +174,47 @@ const formatElapsedTime = (startDate: string | null): string => {
   flex-direction: column;
   gap: var(--layout-margin-small);
   width: 100%;
+}
+
+.sort-dropdown {
+  max-width: 300px;
+}
+
+/* Increase dropdown max-height to prevent scrollbar */
+.sort-dropdown + .v-overlay__content,
+.v-overlay__content.v-select__content {
+  max-height: 400px !important;
+}
+
+.v-list .sort-option-item {
+  padding: 0 !important;
+}
+
+.v-list .sort-option-item .v-list-item__content {
+  padding: 0;
+}
+
+.v-list .sort-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.v-list .sort-option-text {
+  flex: 1;
+}
+
+.v-list .sort-option .sort-check-icon {
+  width: 20px;
+  min-width: 20px;
+  margin-left: 8px;
+}
+
+.v-list .sort-option .sort-check-icon.invisible {
+  visibility: hidden;
 }
 
 .admin-projection-card {

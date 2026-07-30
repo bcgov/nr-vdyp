@@ -36,7 +36,10 @@
     <AdminProjectionCardList
       v-else
       :projections="paginatedProjections"
+      :sort-options="cardSortOptions"
+      :sort-value="cardSortBy"
       :now="now"
+      @sort="handleCardSort"
       @cancel="handleCancel"
     />
 
@@ -53,7 +56,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import type { AdminProjection, UserTypeCode } from '@/interfaces/interfaces'
+import type { AdminProjection, UserTypeCode, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TYPE_CODE, REFRESH_INTERVAL_MS } from '@/constants/constants'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
@@ -78,8 +81,20 @@ const userTypeFilterOptions = [
 ]
 const selectedUserType = ref<UserTypeCode | null>(null)
 
-const sortBy = ref<string>('')
-const sortOrder = ref<SortOrder>(SORT_ORDER.ASC)
+// Default sort: Threads (Highest First)
+const sortBy = ref<string>(ADMIN_DASHBOARD_HEADER_KEY.THREADS)
+const sortOrder = ref<SortOrder>(SORT_ORDER.DESC)
+const cardSortBy = ref<string>(`${ADMIN_DASHBOARD_HEADER_KEY.THREADS}-${SORT_ORDER.DESC}`)
+
+const cardSortOptions: SortOption[] = [
+  { title: 'Threads (Highest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.THREADS}-${SORT_ORDER.DESC}` },
+  { title: 'Threads (Lowest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.THREADS}-${SORT_ORDER.ASC}` },
+  { title: 'Progress (Highest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.PROGRESS}-${SORT_ORDER.DESC}` },
+  { title: 'Progress (Lowest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.PROGRESS}-${SORT_ORDER.ASC}` },
+  { title: 'Polygons (Highest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.POLYGONS}-${SORT_ORDER.DESC}` },
+  { title: 'Polygons (Lowest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.POLYGONS}-${SORT_ORDER.ASC}` },
+]
+
 const currentPage = ref<number>(PAGINATION.DEFAULT_PAGE)
 const itemsPerPage = ref<number>(PAGINATION.DEFAULT_ITEMS_PER_PAGE)
 const itemsPerPageOptions = defaultItemsPerPageOptions
@@ -155,6 +170,14 @@ const handleSort = (key: string) => {
     sortBy.value = key
     sortOrder.value = SORT_ORDER.ASC
   }
+  cardSortBy.value = `${sortBy.value}-${sortOrder.value}`
+}
+
+const handleCardSort = (value: string) => {
+  cardSortBy.value = value
+  const [key, order] = value.split('-')
+  sortBy.value = key
+  sortOrder.value = order as SortOrder
 }
 
 const handleCancel = async (projectionGUID: string) => {

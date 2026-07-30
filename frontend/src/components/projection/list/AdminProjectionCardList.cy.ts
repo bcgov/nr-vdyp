@@ -2,7 +2,7 @@ import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import AdminProjectionCardList from './AdminProjectionCardList.vue'
-import type { AdminProjection } from '@/interfaces/interfaces'
+import type { AdminProjection, SortOption } from '@/interfaces/interfaces'
 
 const vuetify = createVuetify({
   defaults: {
@@ -11,6 +11,15 @@ const vuetify = createVuetify({
     },
   },
 })
+
+const sortOptions: SortOption[] = [
+  { title: 'Threads (Highest First)', value: 'workerCount-desc' },
+  { title: 'Threads (Lowest First)', value: 'workerCount-asc' },
+  { title: 'Progress (Highest First)', value: 'progress-desc' },
+  { title: 'Progress (Lowest First)', value: 'progress-asc' },
+  { title: 'Polygons (Highest First)', value: 'completedPolygonCount-desc' },
+  { title: 'Polygons (Lowest First)', value: 'completedPolygonCount-asc' },
+]
 
 describe('AdminProjectionCardList.vue', () => {
   const createProjection = (
@@ -33,7 +42,7 @@ describe('AdminProjectionCardList.vue', () => {
     eventHandlers: Record<string, Cypress.Agent<sinon.SinonSpy>> = {},
   ) => {
     return mount(AdminProjectionCardList, {
-      props: { projections, now: Date.now() },
+      props: { projections, sortOptions, sortValue: 'workerCount-desc', now: Date.now() },
       global: { plugins: [vuetify] },
       attrs: eventHandlers,
     })

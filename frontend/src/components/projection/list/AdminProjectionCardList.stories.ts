@@ -1,6 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import AdminProjectionCardList from './AdminProjectionCardList.vue'
-import type { AdminProjection } from '@/interfaces/interfaces'
+import type { AdminProjection, SortOption } from '@/interfaces/interfaces'
+
+const sortOptions: SortOption[] = [
+  { title: 'Threads (Highest First)', value: 'workerCount-desc' },
+  { title: 'Threads (Lowest First)', value: 'workerCount-asc' },
+  { title: 'Progress (Highest First)', value: 'progress-desc' },
+  { title: 'Progress (Lowest First)', value: 'progress-asc' },
+  { title: 'Polygons (Highest First)', value: 'completedPolygonCount-desc' },
+  { title: 'Polygons (Lowest First)', value: 'completedPolygonCount-asc' },
+]
 
 const sampleProjections: AdminProjection[] = [
   {
@@ -40,6 +49,8 @@ type Story = StoryObj<typeof AdminProjectionCardList>
 export const Default: Story = {
   args: {
     projections: sampleProjections,
+    sortOptions,
+    sortValue: 'workerCount-desc',
     now: Date.now(),
   },
 }
@@ -47,6 +58,8 @@ export const Default: Story = {
 export const EmptyList: Story = {
   args: {
     projections: [],
+    sortOptions,
+    sortValue: 'workerCount-desc',
     now: Date.now(),
   },
 }
