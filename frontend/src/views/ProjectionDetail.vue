@@ -405,7 +405,7 @@ const pollProjectionProgress = async () => {
 
 const startPolling = () => {
   stopPolling()
-  pollingTimer = setInterval(pollProjectionProgress, 5_000) // poll projection progress (polygon counts, status) every 5 seconds
+  pollingTimer = setInterval(pollProjectionProgress, CONSTANTS.REFRESH_INTERVAL_MS.PROJECTION_DETAIL_DATA_POLL)
 }
 
 onUnmounted(() => {

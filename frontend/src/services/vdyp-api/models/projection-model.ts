@@ -4,12 +4,20 @@ export interface UserTypeCodeModel {
   code: string
 }
 
+export interface IdentityProviderCodeModel {
+  description: string
+  displayOrder: number
+  code: string
+}
+
 export interface VDYPUserModel {
   vdypUserGUID: string
   oidcGUID: string
   userTypeCode: UserTypeCodeModel
+  identityProviderCode: IdentityProviderCodeModel | null
   firstName: string
   lastName: string
+  displayName: string | null
 }
 
 export interface FileSetTypeCodeModel {

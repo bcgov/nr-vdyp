@@ -8,11 +8,21 @@
         </span>
       </v-btn>
     </template>
-    <v-list>
-      <v-list-item v-if="isAdmin" @click="goToMyProjections">
+    <v-list class="user-menu-list">
+      <v-list-item
+        v-if="isAdmin"
+        :class="{ 'active-menu-item': isOnMyProjections }"
+        :aria-current="isOnMyProjections ? 'page' : undefined"
+        @click="goToMyProjections"
+      >
         <v-list-item-title>My Projections</v-list-item-title>
       </v-list-item>
-      <v-list-item v-if="isAdmin" @click="goToAdminDashboard">
+      <v-list-item
+        v-if="isAdmin"
+        :class="{ 'active-menu-item': isOnAdminDashboard }"
+        :aria-current="isOnAdminDashboard ? 'page' : undefined"
+        @click="goToAdminDashboard"
+      >
         <v-list-item-title>Admin Dashboard</v-list-item-title>
       </v-list-item>
       <v-list-item @click="logout">
@@ -24,7 +34,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/common/authStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { useUnsavedChangesStore } from '@/stores/common/unsavedChangesStore'
@@ -55,11 +65,14 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const alertDialogStore = useAlertDialogStore()
 const unsavedChangesStore = useUnsavedChangesStore()
 const userInfo = computed(() => authStore.getParsedIdToken())
 const isAdmin = computed(() => authStore.hasRole(USER_ROLE.ADMIN))
+const isOnMyProjections = computed(() => route.path === ROUTE_PATH.PROJECTION_LIST)
+const isOnAdminDashboard = computed(() => route.path === ROUTE_PATH.ADMIN_DASHBOARD)
 
 const confirmDiscardUnsavedChanges = async (): Promise<boolean> => {
   if (!(await unsavedChangesStore.hasUnsavedChanges())) return true
@@ -119,6 +132,18 @@ const logout = async () => {
 .header-user-icon {
   margin-right: 0.25rem;
   color: var(--typography-color-primary);
+}
+
+.user-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--layout-padding-xsmall);
+}
+
+.active-menu-item {
+  background: var(--surface-color-menus-hover);
+  border-radius: var(--layout-border-radius-medium) !important;
 }
 
 .header-user-name {

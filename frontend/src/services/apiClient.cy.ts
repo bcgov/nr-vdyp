@@ -93,6 +93,19 @@ describe('apiClient Unit Tests', () => {
     })
   })
 
+  context('getAllRunningProjections', () => {
+    it('should fetch all running projections successfully', () => {
+      const mockResponse = { data: [{ id: 1, name: 'Running Projection' }] }
+      cy.stub(ProjectionApi.prototype, 'getAllRunningProjections').resolves(mockResponse)
+
+      cy.wrap(apiClient.getAllRunningProjections()).then((result: unknown) => {
+        const response = result as { data: unknown }
+        expect(ProjectionApi.prototype.getAllRunningProjections).to.be.calledOnce
+        expect(response.data).to.deep.equal([{ id: 1, name: 'Running Projection' }])
+      })
+    })
+  })
+
   context('createProjection', () => {
     it('should create a projection successfully', () => {
       const mockResponse = { data: { id: 'new-guid', status: 'DRAFT' } }

@@ -97,7 +97,7 @@ watch(() => props.startDate, () => {
 onMounted(() => {
   clockTimer = setInterval(() => {
     currentTime.value = Date.now()
-  }, 60_000) // refresh Time Elapsed display every 1 minute
+  }, CONSTANTS.REFRESH_INTERVAL_MS.PROJECTION_DETAIL_CLOCK_TICK)
 })
 
 onUnmounted(() => {

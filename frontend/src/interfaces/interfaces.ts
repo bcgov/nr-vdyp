@@ -57,6 +57,20 @@ export interface Projection {
   status: ProjectionStatus
 }
 
+export type UserTypeCode = 'IDIR' | 'BCEID'
+
+export interface AdminProjection {
+  projectionGUID: string
+  title: string
+  ownerDisplayName: string
+  userType: UserTypeCode | null
+  startDate: string | null
+  status: ProjectionStatus
+  workerCount: number
+  completedPolygonCount: number
+  polygonCount: number
+}
+
 export interface TableHeader {
   key: string
   title: string

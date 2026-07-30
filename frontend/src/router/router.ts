@@ -39,6 +39,12 @@ router.beforeEach(async (to, _from, next) => {
       next({ name: 'Unauthorized' })
       return
     }
+
+    const requiredRole = to.meta.requiresRole as string | undefined
+    if (requiredRole && !authStore.hasRole(requiredRole)) {
+      next({ name: 'Unauthorized' })
+      return
+    }
   }
 
   next()

@@ -135,6 +135,26 @@ describe('apiActions Unit Tests', () => {
     })
   })
 
+  context('getAllRunningProjections', () => {
+    it('should fetch all running projections successfully', () => {
+      const mockResponse = {
+        data: [
+          { projectionGUID: '1', status: 'RUNNING' },
+          { projectionGUID: '2', status: 'RUNNING' },
+        ],
+      }
+      cy.stub(apiClient, 'getAllRunningProjections').resolves(mockResponse)
+
+      cy.wrap(apiActions.getAllRunningProjections()).then((result) => {
+        expect(apiClient.getAllRunningProjections).to.be.calledOnce
+        expect(result).to.deep.equal([
+          { projectionGUID: '1', status: 'RUNNING' },
+          { projectionGUID: '2', status: 'RUNNING' },
+        ])
+      })
+    })
+  })
+
   context('createProjection', () => {
     it('should create a projection successfully with all parameters', () => {
       const parameters = { projectionYear: 2024 }
