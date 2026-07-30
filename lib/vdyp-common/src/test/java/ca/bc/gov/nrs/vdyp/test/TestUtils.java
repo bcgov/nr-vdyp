@@ -1006,4 +1006,11 @@ public class TestUtils {
 		});
 	}
 
+	public static Float[] toFloatArray(float[] af) {
+		Float[] aF = new Float[af.length];
+		for (int i = 0; i < af.length; i++)
+			aF[i] = af[i];
+		return aF;
+	}
+
 }

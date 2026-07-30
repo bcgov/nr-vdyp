@@ -986,6 +986,29 @@ public class VdypMatchers {
 		};
 	}
 
+	public static Matcher<float[]> unboxedArrayCloseTo(float... values) {
+		var delegate = arrayCloseTo(values);
+		return new TypeSafeDiagnosingMatcher<float[]>() {
+
+			@Override
+			public void describeTo(Description description) {
+				delegate.describeTo(description);
+			}
+
+			@Override
+			protected boolean matchesSafely(float[] item, Description mismatchDescription) {
+				var boxedItem = TestUtils.toFloatArray(item);
+				if (delegate.matches(boxedItem)) {
+					return true;
+				} else {
+					delegate.describeMismatch(boxedItem, mismatchDescription);
+					return false;
+				}
+			}
+
+		};
+	}
+
 	public static Matcher<Float[]> arrayCloseTo(float... values) {
 		return new TypeSafeDiagnosingMatcher<Float[]>() {
 
