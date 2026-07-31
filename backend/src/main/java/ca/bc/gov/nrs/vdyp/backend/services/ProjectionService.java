@@ -461,11 +461,9 @@ public class ProjectionService {
 		List<ProjectionEntity> entities = repository.findByStatus(ProjectionStatusCodeModel.RUNNING);
 		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
 
-		// Default Admin Dashboard sort: Threads (workerCount) highest first. Sorted here rather than via a
-		// Sort.by(...) on the repository query because workerCount lives on ProjectionBatchMappingEntity, a
-		// separate table only reachable from ProjectionEntity via a one-directional @OneToOne(mappedBy=...);
-		// ordering by it in JPQL would require an implicit join that could silently exclude any RUNNING
-		// projection that doesn't yet have a batch mapping row.
+		// Default Admin Dashboard sort: Threads (workerCount) highest first. Sorted here in Java, not via the
+		// repository query, since workerCount lives on a separate entity only reachable through a one-directional
+		// association; sorting via a DB join risks silently dropping projections without a batch mapping row yet.
 		Comparator<ProjectionEntity> byWorkerCountDesc = Comparator.comparingInt((ProjectionEntity e) -> {
 			ProjectionBatchMappingModel mapping = batchMappings.get(e.getProjectionGUID());
 			return mapping != null && mapping.getWorkerCount() != null ? mapping.getWorkerCount() : 0;

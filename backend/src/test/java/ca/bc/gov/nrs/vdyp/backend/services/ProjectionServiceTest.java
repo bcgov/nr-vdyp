@@ -323,6 +323,47 @@ class ProjectionServiceTest {
 
 		verify(repository).findByStatus(ProjectionStatusCodeModel.RUNNING);
 	}
+
+	@Test
+	void getAllRunningProjections_sortsByWorkerCountDescending_treatingMissingOrNullWorkerCountAsZero() {
+		ProjectionEntity highThreads = new ProjectionEntity();
+		highThreads.setProjectionGUID(UUID.randomUUID());
+		highThreads.setReportTitle("High Threads");
+
+		ProjectionEntity lowThreads = new ProjectionEntity();
+		lowThreads.setProjectionGUID(UUID.randomUUID());
+		lowThreads.setReportTitle("Low Threads");
+
+		ProjectionEntity noMapping = new ProjectionEntity();
+		noMapping.setProjectionGUID(UUID.randomUUID());
+		noMapping.setReportTitle("No Mapping");
+
+		ProjectionEntity nullWorkerCount = new ProjectionEntity();
+		nullWorkerCount.setProjectionGUID(UUID.randomUUID());
+		nullWorkerCount.setReportTitle("Null Worker Count");
+
+		when(repository.findByStatus(ProjectionStatusCodeModel.RUNNING))
+				.thenReturn(List.of(noMapping, nullWorkerCount, lowThreads, highThreads));
+
+		ProjectionBatchMappingModel highMapping = batchMappingModel(UUID.randomUUID());
+		highMapping.setWorkerCount(20);
+		ProjectionBatchMappingModel lowMapping = batchMappingModel(UUID.randomUUID());
+		lowMapping.setWorkerCount(5);
+		ProjectionBatchMappingModel mappingWithNullWorkerCount = batchMappingModel(UUID.randomUUID());
+
+		Map<UUID, ProjectionBatchMappingModel> batchMappings = new HashMap<>();
+		batchMappings.put(highThreads.getProjectionGUID(), highMapping);
+		batchMappings.put(lowThreads.getProjectionGUID(), lowMapping);
+		batchMappings.put(nullWorkerCount.getProjectionGUID(), mappingWithNullWorkerCount);
+
+		when(batchMappingService.getLatestBatchMappingsForProjections(any())).thenReturn(batchMappings);
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		List<ProjectionModel> results = service.getAllRunningProjections();
+
+		assertThat(results).extracting(ProjectionModel::getReportTitle)
+				.containsExactly("High Threads", "Low Threads", "No Mapping", "Null Worker Count");
+	}
 	// ==========================================================
 	// getProjectionEntity
 	// ==========================================================
