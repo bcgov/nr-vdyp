@@ -79,6 +79,11 @@ export interface ProjectionModel {
   lastUpdatedDate: string | null
   reportTitle: string | null
   reportDescription: string | null
+  adminCancelReason: string | null
   expiryDate: string | null
   batchMapping: BatchMappingModel | null
+}
+
+export interface CancelProjectionRequest {
+  adminCancelReason?: string
 }

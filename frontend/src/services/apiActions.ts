@@ -147,13 +147,15 @@ export const runProjection = async (
 /**
  * Cancels a running projection.
  * @param projectionGUID The projection GUID.
- * @returns A promise that resolves to the updated ProjectionModel with DRAFT status.
+ * @param adminCancelReason Optional justification, set by an Admin when cancelling on a user's behalf.
+ * @returns A promise that resolves to the updated ProjectionModel.
  */
 export const cancelProjection = async (
   projectionGUID: string,
+  adminCancelReason?: string,
 ): Promise<ProjectionModel> => {
   try {
-    const response = await apiClient.cancelProjection(projectionGUID)
+    const response = await apiClient.cancelProjection(projectionGUID, adminCancelReason)
     return response.data
   } catch (error) {
     console.error('Error cancelling projection:', error)

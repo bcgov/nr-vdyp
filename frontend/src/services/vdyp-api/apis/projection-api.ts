@@ -9,6 +9,7 @@ import type {
   Parameters,
   FileUpload,
   ModelParameters,
+  CancelProjectionRequest,
 } from '../models'
 import { ParameterNamesEnum } from '../models'
 import { env } from '@/env'
@@ -595,6 +596,7 @@ export const ProjectionApiAxiosParamCreator = function (
      */
     cancelProjection: async (
       projectionGUID: string,
+      cancelProjectionRequest?: CancelProjectionRequest,
       options: AxiosRequestConfig = {},
     ): Promise<RequestArgs> => {
       if (projectionGUID === null || projectionGUID === undefined) {
@@ -615,12 +617,15 @@ export const ProjectionApiAxiosParamCreator = function (
       }
       const localVarHeaderParameter = {} as Record<string, string>
 
+      localVarHeaderParameter['Content-Type'] = 'application/json'
+
       const headersFromBaseOptions = baseOptions?.headers ?? {}
       localVarRequestOptions.headers = {
         ...localVarHeaderParameter,
         ...headersFromBaseOptions,
         ...options.headers,
       }
+      localVarRequestOptions.data = cancelProjectionRequest ?? {}
 
       return {
         url:
@@ -1110,6 +1115,7 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
 
     async cancelProjection(
       projectionGUID: string,
+      cancelProjectionRequest?: CancelProjectionRequest,
       options?: AxiosRequestConfig,
     ): Promise<
       (
@@ -1120,6 +1126,7 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
       const localVarAxiosArgs =
         await ProjectionApiAxiosParamCreator(configuration).cancelProjection(
           projectionGUID,
+          cancelProjectionRequest,
           options,
         )
       return (
@@ -1347,10 +1354,11 @@ export const ProjectionApiFactory = function (
 
     async cancelProjection(
       projectionGUID: string,
+      cancelProjectionRequest?: CancelProjectionRequest,
       options?: AxiosRequestConfig,
     ): Promise<AxiosResponse<ProjectionModel>> {
       return ProjectionApiFp(configuration)
-        .cancelProjection(projectionGUID, options)
+        .cancelProjection(projectionGUID, cancelProjectionRequest, options)
         .then((request) => request(axios, basePath))
     },
 
@@ -1545,10 +1553,11 @@ export class ProjectionApi extends BaseAPI {
    */
   public async cancelProjection(
     projectionGUID: string,
+    cancelProjectionRequest?: CancelProjectionRequest,
     options?: AxiosRequestConfig,
   ): Promise<AxiosResponse<ProjectionModel>> {
     return ProjectionApiFp(this.configuration)
-      .cancelProjection(projectionGUID, options)
+      .cancelProjection(projectionGUID, cancelProjectionRequest, options)
       .then((request) => request(this.axios, this.basePath))
   }
 

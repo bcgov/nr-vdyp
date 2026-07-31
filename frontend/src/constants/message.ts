@@ -285,6 +285,15 @@ export const UNSAVED_CHANGES_DIALOG = Object.freeze({
   MESSAGE: 'You have unsaved changes that will be lost if you navigate away. Do you wish to continue?',
 })
 
+export const ADMIN_CANCEL_DIALOG = Object.freeze({
+  TITLE: (projectionName: string) => `Cancel Projection: ${projectionName}`,
+  WARNING:
+    'Warning: Cancelling this running projection will halt all ongoing polygon processing. This action cannot be undone.',
+  REASON_LABEL: 'Reason for Cancellation (visible to user): (required)',
+  KEEP_RUNNING: 'Keep Running',
+  CONFIRM_CANCELLATION: 'Confirm Cancellation',
+})
+
 export const VALIDATION_WARN = Object.freeze({
   FORM_REF_NULL: 'Form reference is null. Validation skipped.',
 })

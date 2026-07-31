@@ -191,15 +191,18 @@ export const runProjection = async (
 
 /**
  * Cancels a running projection by sending a cancel request to the backend.
- * The projection status should return to DRAFT after cancellation.
+ * The projection status returns to DRAFT after cancellation, unless an Admin
+ * supplies a justification reason, in which case it is set to Admin Cancelled.
  * @param projectionGUID The projection GUID
- * @returns A promise that resolves to the updated ProjectionModel with DRAFT status
+ * @param adminCancelReason Optional justification, set by an Admin when cancelling on a user's behalf.
+ * @returns A promise that resolves to the updated ProjectionModel
  */
 export const cancelProjection = async (
   projectionGUID: string,
+  adminCancelReason?: string,
 ): Promise<ProjectionModel> => {
   try {
-    return await apiCancelProjection(projectionGUID)
+    return await apiCancelProjection(projectionGUID, adminCancelReason)
   } catch (error) {
     console.error('Error cancelling projection:', error)
     throw error

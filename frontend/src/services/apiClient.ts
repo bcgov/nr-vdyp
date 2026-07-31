@@ -152,11 +152,12 @@ export const apiClient = {
   /**
    * Cancels a running projection.
    * @param projectionGUID The projection GUID.
+   * @param adminCancelReason Optional justification, set by an Admin when cancelling on a user's behalf.
    * @param options Optional Axios request configuration.
-   * @returns The Axios promise for the updated projection with DRAFT status.
+   * @returns The Axios promise for the updated projection with DRAFT (or ADMN_CNCLD) status.
    */
-  cancelProjection: (projectionGUID: string, options?: AxiosRequestConfig) => {
-    return projectionApiInstance.cancelProjection(projectionGUID, options)
+  cancelProjection: (projectionGUID: string, adminCancelReason?: string, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.cancelProjection(projectionGUID, adminCancelReason ? { adminCancelReason } : undefined, options)
   },
 
   /**

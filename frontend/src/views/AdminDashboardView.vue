@@ -50,6 +50,12 @@
       :items-per-page-options="itemsPerPageOptions"
     />
 
+    <AdminCancelProjectionDialog
+      v-model="isCancelDialogOpen"
+      :projection-title="projectionPendingCancel?.title ?? ''"
+      @confirm="handleConfirmCancel"
+    />
+
     <AppProgressCircular :is-show="isProgressVisible" :message="progressMessage" />
   </v-container>
 </template>
@@ -62,18 +68,18 @@ import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TY
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { AppProgressCircular } from '@/components'
-import { ProjectionPagination, AdminProjectionTable, AdminProjectionCardList } from '@/components/projection'
+import { ProjectionPagination, AdminProjectionTable, AdminProjectionCardList, AdminCancelProjectionDialog } from '@/components/projection'
 import { fetchAllRunningProjections } from '@/services/adminService'
 import { cancelProjection } from '@/services/projectionService'
-import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
-const alertDialogStore = useAlertDialogStore()
 const notificationStore = useNotificationStore()
 
 const projections = ref<AdminProjection[]>([])
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
+const isCancelDialogOpen = ref(false)
+const projectionPendingCancel = ref<AdminProjection | null>(null)
 
 const userTypeFilterOptions = [
   { title: 'IDIR', value: USER_TYPE_CODE.IDIR },
@@ -180,18 +186,20 @@ const handleCardSort = (value: string) => {
   sortOrder.value = order as SortOrder
 }
 
-const handleCancel = async (projectionGUID: string) => {
-  const confirmed = await alertDialogStore.openDialog(
-    PROJECTION_ERR.CANCEL_CONFIRM_TITLE,
-    PROJECTION_ERR.CANCEL_CONFIRM,
-    { variant: 'confirmation' },
-  )
-  if (!confirmed) return
+const handleCancel = (projectionGUID: string) => {
+  projectionPendingCancel.value = projections.value.find((p) => p.projectionGUID === projectionGUID) ?? null
+  isCancelDialogOpen.value = true
+}
+
+const handleConfirmCancel = async (reason: string) => {
+  const projectionGUID = projectionPendingCancel.value?.projectionGUID
+  projectionPendingCancel.value = null
+  if (!projectionGUID) return
 
   isProgressVisible.value = true
   progressMessage.value = PROGRESS_MSG.CANCELLING_PROJECTION
   try {
-    await cancelProjection(projectionGUID)
+    await cancelProjection(projectionGUID, reason)
     notificationStore.showSuccessMessage(SUCCESS_MSG.PROJECTION_CANCELLED, SUCCESS_MSG.PROJECTION_CANCELLED_TITLE)
     await loadProjections()
   } catch (err) {
