@@ -1,4 +1,6 @@
 export { default as ActionPanel } from './input/ActionPanel.vue'
+export { default as AdminProjectionCardList } from './list/AdminProjectionCardList.vue'
+export { default as AdminProjectionTable } from './list/AdminProjectionTable.vue'
 export { default as PanelEditControl } from './input/PanelEditControl.vue'
 export { default as SpeciesListInput } from './input/species-info/SpeciesListInput.vue'
 export { default as SpeciesGroupsDisplay } from './input/species-info/SpeciesGroupsDisplay.vue'

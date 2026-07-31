@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -460,7 +461,15 @@ public class ProjectionService {
 		List<ProjectionEntity> entities = repository.findByStatus(ProjectionStatusCodeModel.RUNNING);
 		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
 
-		return entities.stream().map(e -> toRichModel(e, batchMappings)).toList();
+		// Default Admin Dashboard sort: Threads (workerCount) highest first. Sorted here in Java, not via the
+		// repository query, since workerCount lives on a separate entity only reachable through a one-directional
+		// association; sorting via a DB join risks silently dropping projections without a batch mapping row yet.
+		Comparator<ProjectionEntity> byWorkerCountDesc = Comparator.comparingInt((ProjectionEntity e) -> {
+			ProjectionBatchMappingModel mapping = batchMappings.get(e.getProjectionGUID());
+			return mapping != null && mapping.getWorkerCount() != null ? mapping.getWorkerCount() : 0;
+		}).reversed();
+
+		return entities.stream().sorted(byWorkerCountDesc).map(e -> toRichModel(e, batchMappings)).toList();
 	}
 
 	@Transactional

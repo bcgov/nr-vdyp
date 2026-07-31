@@ -2,7 +2,7 @@
   <v-container fluid class="projection-list-container">
     <!-- Header with Title and New Projection Button -->
     <div class="page-header">
-      <h1 class="page-heading">Projections</h1>
+      <h1 class="page-heading">My Projections</h1>
       <v-menu>
         <template v-slot:activator="{ props }">
           <AppButton
@@ -101,7 +101,7 @@ import { useRouter } from 'vue-router'
 import type { Projection, TableHeader, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
-import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, METHOD_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH, MESSAGE_TYPE } from '@/constants/constants'
+import { PROJECTION_LIST_HEADER_KEY, SORT_ORDER, BREAKPOINT, PAGINATION, METHOD_SELECTION, PROJECTION_VIEW_MODE, PROJECTION_STATUS, PROJECTION_INPUT_METHOD, ROUTE_PATH, MESSAGE_TYPE, REFRESH_INTERVAL_MS } from '@/constants/constants'
 import { saveExistingProjectionSession, saveNewProjectionSession } from '@/utils/projectionSession'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { downloadFile, downloadURL, sanitizeFileName } from '@/utils/util'
@@ -789,7 +789,7 @@ const pollRunningProjections = async () => {
 const startPollingIfNeeded = () => {
   if (projections.value.some(p => p.status === PROJECTION_STATUS.RUNNING)) {
     stopPolling()
-    pollingTimer = setInterval(pollRunningProjections, 120_000) // poll running projections status every 2 minutes
+    pollingTimer = setInterval(pollRunningProjections, REFRESH_INTERVAL_MS.PROJECTION_LIST_DATA_POLL)
   } else {
     stopPolling()
   }

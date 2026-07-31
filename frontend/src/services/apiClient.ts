@@ -86,6 +86,15 @@ export const apiClient = {
   },
 
   /**
+   * (Admin Only) Retrieves all RUNNING projections across all users.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the list of running projections.
+   */
+  getAllRunningProjections: async (options?: AxiosRequestConfig) => {
+    return projectionApiInstance.getAllRunningProjections(options)
+  },
+
+  /**
    * Creates a new empty projection with default parameters.
    * @param parameters The projection parameters.
    * @param modelParameters Optional model parameters for Manual Input mode.

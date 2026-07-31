@@ -261,6 +261,25 @@ export const PROJECTION_LIST_HEADER_KEY = Object.freeze({
   STATUS: 'status',
 })
 
+export const ADMIN_DASHBOARD_HEADER_KEY = Object.freeze({
+  TITLE: 'title',
+  OWNER: 'ownerDisplayName',
+  USER_TYPE: 'userType',
+  ELAPSED: 'startDate',
+  THREADS: 'workerCount',
+  PROGRESS: 'progress',
+  POLYGONS: 'completedPolygonCount',
+})
+
+export const USER_TYPE_CODE = Object.freeze({
+  IDIR: 'IDIR',
+  BCEID: 'BCEID',
+})
+
+export const USER_ROLE = Object.freeze({
+  ADMIN: 'ADMIN',
+})
+
 export const PROJECTION_USER_ACTION = Object.freeze({
   EDIT: 'edit',
   VIEW: 'view',
@@ -309,6 +328,7 @@ export const ROUTE_PATH = Object.freeze({
   PROJECTION_LIST: '/',
   PROJECTION_DETAIL: '/projection-detail',
   UNAUTHORIZED: '/unauthorized',
+  ADMIN_DASHBOARD: '/admin-dashboard',
 })
 
 export const BREAKPOINT = Object.freeze({
@@ -319,4 +339,12 @@ export const PAGINATION = Object.freeze({
   DEFAULT_PAGE: 1,
   DEFAULT_ITEMS_PER_PAGE: 20,
   DEFAULT_CARD_SORT_BY: 'lastUpdated-desc'
+})
+
+export const REFRESH_INTERVAL_MS = Object.freeze({
+  PROJECTION_DETAIL_CLOCK_TICK: 60_000, // 60sec, detail page Time Elapsed display tick
+  PROJECTION_DETAIL_DATA_POLL: 5_000, // 5sec, detail page status/polygon data poll
+  PROJECTION_LIST_DATA_POLL: 120_000, // 2min, my-projections list page running-projections status poll
+  ADMIN_DASHBOARD_CLOCK_TICK: 1_000, // 1sec, admin dashboard Elapsed display tick
+  ADMIN_DASHBOARD_DATA_POLL: 5_000, // 5sec, admin dashboard running-projections data poll
 })

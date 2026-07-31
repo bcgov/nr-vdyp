@@ -94,6 +94,20 @@ export const getUserProjections = async (): Promise<ProjectionModel[]> => {
 }
 
 /**
+ * (Admin Only) Fetches all RUNNING projections across all users.
+ * @returns A promise that resolves to an array of ProjectionModel.
+ */
+export const getAllRunningProjections = async (): Promise<ProjectionModel[]> => {
+  try {
+    const response = await apiClient.getAllRunningProjections()
+    return response.data
+  } catch (error) {
+    console.error('Error fetching all running projections:', error)
+    throw error
+  }
+}
+
+/**
  * Creates a new empty projection with default parameters.
  * @param parameters The projection parameters.
  * @param modelParameters Optional model parameters for Manual Input mode.

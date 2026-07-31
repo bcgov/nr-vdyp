@@ -8,11 +8,12 @@ const meta = {
   component: UserMenu,
   tags: ['autodocs'],
   decorators: [
-    () => ({
+    (_story, context) => ({
       setup() {
         const pinia = createPinia()
         setActivePinia(pinia)
         const authStore = useAuthStore()
+        authStore.hasRole = () => Boolean(context.parameters.isAdmin)
         authStore.getParsedIdToken = () => ({
           at_hash: null,
           aud: null,
@@ -90,5 +91,16 @@ export const PropBasedName: Story = {
     familyName: 'Smith',
     guestName: 'Guest',
     logoutText: 'Logout',
+  },
+}
+
+export const AdminUser: Story = {
+  args: {
+    userIcon: 'mdi-account-circle',
+    guestName: 'Guest',
+    logoutText: 'Logout',
+  },
+  parameters: {
+    isAdmin: true,
   },
 }

@@ -10,6 +10,17 @@ import { getActivePinia } from 'pinia'
 
 let keycloakInstance: Keycloak | null = null
 
+/**
+ * Resolves once the initial Keycloak/auth bootstrap (success or failure) has completed.
+ * The router's navigation guard awaits this before evaluating role-based access, since
+ * Vue Router fires its initial navigation as soon as the router plugin is installed,
+ * which happens before initializeKeycloak() is awaited in main.ts.
+ */
+let resolveAuthReady: () => void
+export const authReadyPromise = new Promise<void>((resolve) => {
+  resolveAuthReady = resolve
+})
+
 const ssoTokenIssuer= env.VITE_SSO_TOKEN_ISSUER
 const ssoAuthServerUrl = env.VITE_SSO_AUTH_SERVER_URL
 const ssoClientId = env.VITE_SSO_CLIENT_ID
@@ -150,6 +161,8 @@ export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
     console.error('Keycloak initialization failed (Error: AUTH_004):', err)
     keycloakInstance = null
     throw err
+  } finally {
+    resolveAuthReady()
   }
 }
 

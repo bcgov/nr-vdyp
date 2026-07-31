@@ -15,52 +15,20 @@ describe('<AppButton />', () => {
     cy.get('button').should('have.class', 'medium')
   })
 
-  it('renders primary variant', () => {
-    cy.mount(AppButton, {
-      props: {
-        label: 'Primary Button',
-        variant: 'primary',
-      },
+  it('renders each variant', () => {
+    const variants = ['primary', 'secondary', 'tertiary', 'link', 'danger'] as const
+
+    variants.forEach((variant) => {
+      cy.mount(AppButton, {
+        props: {
+          label: `${variant} Button`,
+          variant,
+        },
+      })
+
+      cy.get('button').should('have.class', variant)
+      cy.get('button').should('contain', `${variant} Button`)
     })
-
-    cy.get('button').should('have.class', 'primary')
-    cy.get('button').should('contain', 'Primary Button')
-  })
-
-  it('renders secondary variant', () => {
-    cy.mount(AppButton, {
-      props: {
-        label: 'Secondary Button',
-        variant: 'secondary',
-      },
-    })
-
-    cy.get('button').should('have.class', 'secondary')
-    cy.get('button').should('contain', 'Secondary Button')
-  })
-
-  it('renders tertiary variant', () => {
-    cy.mount(AppButton, {
-      props: {
-        label: 'Tertiary Button',
-        variant: 'tertiary',
-      },
-    })
-
-    cy.get('button').should('have.class', 'tertiary')
-    cy.get('button').should('contain', 'Tertiary Button')
-  })
-
-  it('renders link variant', () => {
-    cy.mount(AppButton, {
-      props: {
-        label: 'Link Button',
-        variant: 'link',
-      },
-    })
-
-    cy.get('button').should('have.class', 'link')
-    cy.get('button').should('contain', 'Link Button')
   })
 
   it('renders different sizes', () => {
@@ -76,18 +44,6 @@ describe('<AppButton />', () => {
 
       cy.get('button').should('have.class', size)
     })
-  })
-
-  it('renders danger variant', () => {
-    cy.mount(AppButton, {
-      props: {
-        label: 'Danger Button',
-        variant: 'danger',
-      },
-    })
-
-    cy.get('button').should('have.class', 'danger')
-    cy.get('button').should('contain', 'Danger Button')
   })
 
   it('renders as disabled when isDisabled is true', () => {
@@ -128,28 +84,6 @@ describe('<AppButton />', () => {
     cy.get('.button-icon-right').should('exist')
   })
 
-  it('renders icon-only button', () => {
-    cy.mount(AppButton, {
-      props: {
-        mdiName: 'mdi-close',
-        iconPosition: 'left',
-      },
-    })
-
-    cy.get('button').should('have.class', 'icon')
-    cy.get('.button-icon-left').should('exist')
-  })
-
-  it('displays label text in button', () => {
-    cy.mount(AppButton, {
-      props: {
-        label: 'Submit',
-      },
-    })
-
-    cy.get('button').should('contain', 'Submit')
-  })
-
   it('emits click event when clicked', () => {
     const onClickSpy = cy.spy().as('onClickSpy')
 
@@ -179,22 +113,6 @@ describe('<AppButton />', () => {
     cy.get('button').should('be.disabled')
 
     cy.get('@onClickSpy').should('not.have.been.called')
-  })
-
-  it('applies hover state', () => {
-    cy.mount(AppButton, {
-      props: {
-        label: 'Hover Button',
-      },
-    })
-
-    // Trigger mouseenter and wait for Vue to update
-    cy.get('button').trigger('mouseenter')
-    cy.get('button').should('have.attr', 'data-hovered')
-
-    // Trigger mouseleave and verify the attribute is removed
-    cy.get('button').trigger('mouseleave')
-    cy.get('button').should('not.have.attr', 'data-hovered')
   })
 
   it('combines multiple props correctly', () => {

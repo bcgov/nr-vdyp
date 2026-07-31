@@ -34,10 +34,9 @@
       <v-select
         :model-value="itemsPerPage"
         :items="itemsPerPageOptions"
-        variant="outlined"
-        density="compact"
         class="items-per-page-select"
-        hide-details
+        hide-details="auto"
+        append-inner-icon="mdi-chevron-down"
         @update:model-value="updateItemsPerPage"
       ></v-select>
       <span class="pagination-label">entries</span>
@@ -186,6 +185,6 @@ const updateItemsPerPage = (value: number) => {
 }
 
 .items-per-page-select {
-  width: 80px;
+  width: 90px;
 }
 </style>

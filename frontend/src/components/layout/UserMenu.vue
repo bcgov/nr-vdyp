@@ -8,7 +8,23 @@
         </span>
       </v-btn>
     </template>
-    <v-list>
+    <v-list class="user-menu-list">
+      <v-list-item
+        v-if="isAdmin"
+        :class="{ 'active-menu-item': isOnMyProjections }"
+        :aria-current="isOnMyProjections ? 'page' : undefined"
+        @click="goToMyProjections"
+      >
+        <v-list-item-title>My Projections</v-list-item-title>
+      </v-list-item>
+      <v-list-item
+        v-if="isAdmin"
+        :class="{ 'active-menu-item': isOnAdminDashboard }"
+        :aria-current="isOnAdminDashboard ? 'page' : undefined"
+        @click="goToAdminDashboard"
+      >
+        <v-list-item-title>Admin Dashboard</v-list-item-title>
+      </v-list-item>
       <v-list-item @click="logout">
         <v-list-item-title>{{ logoutText }}</v-list-item-title>
       </v-list-item>
@@ -18,7 +34,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/common/authStore'
+import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
+import { useUnsavedChangesStore } from '@/stores/common/unsavedChangesStore'
+import { ROUTE_PATH, USER_ROLE } from '@/constants/constants'
+import { MESSAGE } from '@/constants'
 
 const props = defineProps({
   userIcon: {
@@ -43,8 +64,32 @@ const props = defineProps({
   },
 })
 
+const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
+const alertDialogStore = useAlertDialogStore()
+const unsavedChangesStore = useUnsavedChangesStore()
 const userInfo = computed(() => authStore.getParsedIdToken())
+const isAdmin = computed(() => authStore.hasRole(USER_ROLE.ADMIN))
+const isOnMyProjections = computed(() => route.path === ROUTE_PATH.PROJECTION_LIST)
+const isOnAdminDashboard = computed(() => route.path === ROUTE_PATH.ADMIN_DASHBOARD)
+
+const confirmDiscardUnsavedChanges = async (): Promise<boolean> => {
+  if (!(await unsavedChangesStore.hasUnsavedChanges())) return true
+  return await alertDialogStore.openDialog(
+    MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+    MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+    { variant: 'warning' },
+  )
+}
+
+const goToAdminDashboard = () => {
+  router.push(ROUTE_PATH.ADMIN_DASHBOARD)
+}
+
+const goToMyProjections = () => {
+  router.push(ROUTE_PATH.PROJECTION_LIST)
+}
 
 const displayName = computed(() => {
   if (userInfo.value || props.givenName || props.familyName) {
@@ -57,7 +102,10 @@ const displayName = computed(() => {
   return props.guestName || 'Guest'
 })
 
-const logout = () => {
+const logout = async () => {
+  // Logout redirects the whole page rather than navigating via vue-router, so it bypasses
+  // ProjectionDetail's onBeforeRouteLeave guard and needs its own unsaved-changes check.
+  if (!(await confirmDiscardUnsavedChanges())) return
   authStore.logout()
 }
 </script>
@@ -84,6 +132,18 @@ const logout = () => {
 .header-user-icon {
   margin-right: 0.25rem;
   color: var(--typography-color-primary);
+}
+
+.user-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--layout-padding-xsmall);
+}
+
+.active-menu-item {
+  background: var(--surface-color-menus-hover);
+  border-radius: var(--layout-border-radius-medium) !important;
 }
 
 .header-user-name {
