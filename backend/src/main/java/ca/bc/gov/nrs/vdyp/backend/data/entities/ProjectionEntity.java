@@ -51,6 +51,8 @@ public class ProjectionEntity extends AuditableEntity {
 	private String reportTitle;
 	@Column(name = "report_description")
 	private String reportDescription;
+	@Column(name = "admin_cancel_reason", length = 255)
+	private String adminCancelReason;
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "calculation_engine_code", referencedColumnName = "calculation_engine_code")
@@ -112,6 +114,10 @@ public class ProjectionEntity extends AuditableEntity {
 		return reportDescription;
 	}
 
+	public String getAdminCancelReason() {
+		return adminCancelReason;
+	}
+
 	public void setProjectionGUID(UUID projectionGUID) {
 		this.projectionGUID = projectionGUID;
 	}
@@ -162,5 +168,9 @@ public class ProjectionEntity extends AuditableEntity {
 
 	public void setReportDescription(String reportDescription) {
 		this.reportDescription = reportDescription;
+	}
+
+	public void setAdminCancelReason(String adminCancelReason) {
+		this.adminCancelReason = adminCancelReason;
 	}
 }

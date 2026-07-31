@@ -24,6 +24,7 @@ public class ProjectionModel {
 	private OffsetDateTime createDate;
 	private String reportTitle;
 	private String reportDescription;
+	private String adminCancelReason;
 	private ProjectionBatchMappingModel batchMapping;
 
 	public String getProjectionGUID() {
@@ -90,6 +91,10 @@ public class ProjectionModel {
 		return reportDescription;
 	}
 
+	public String getAdminCancelReason() {
+		return adminCancelReason;
+	}
+
 	public void setProjectionGUID(String projectionGUID) {
 		this.projectionGUID = projectionGUID;
 	}
@@ -152,6 +157,10 @@ public class ProjectionModel {
 
 	public void setReportTitle(String reportTitle) {
 		this.reportTitle = reportTitle;
+	}
+
+	public void setAdminCancelReason(String adminCancelReason) {
+		this.adminCancelReason = adminCancelReason;
 	}
 
 	public void setBatchMapping(ProjectionBatchMappingModel batchMapping) {

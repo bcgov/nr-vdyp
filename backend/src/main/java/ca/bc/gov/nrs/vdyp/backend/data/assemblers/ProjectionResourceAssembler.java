@@ -40,6 +40,7 @@ public class ProjectionResourceAssembler {
 		entity.setOwnerUser(vura.toEntity(model.getOwnerUser()));
 		entity.setReportDescription(model.getReportDescription());
 		entity.setReportTitle(model.getReportTitle());
+		entity.setAdminCancelReason(model.getAdminCancelReason());
 		return entity;
 	}
 
@@ -65,6 +66,7 @@ public class ProjectionResourceAssembler {
 		model.setLastUpdatedDate(entity.getUpdateDate());
 		model.setReportTitle(entity.getReportTitle());
 		model.setReportDescription(entity.getReportDescription());
+		model.setAdminCancelReason(entity.getAdminCancelReason());
 		return model;
 	}
 

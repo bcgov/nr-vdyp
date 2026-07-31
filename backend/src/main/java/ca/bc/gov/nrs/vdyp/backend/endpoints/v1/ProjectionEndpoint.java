@@ -20,6 +20,7 @@ import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
+import ca.bc.gov.nrs.vdyp.backend.model.CancelProjectionRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
@@ -327,11 +328,13 @@ public class ProjectionEndpoint implements Endpoint {
 	@POST
 	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/cancel")
+	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Tag(name = "Cancel A Projection", description = "Cancels a running projection.")
-	public Response cancelProjection(@PathParam("projectionGUID") UUID projectionGUID)
+	public Response cancelProjection(@PathParam("projectionGUID") UUID projectionGUID, CancelProjectionRequest request)
 			throws ProjectionServiceException {
-		var started = projectionService.cancelBatchProjection(currentUser.getUser(), projectionGUID);
+		String adminCancelReason = request != null ? request.adminCancelReason() : null;
+		var started = projectionService.cancelBatchProjection(currentUser.getUser(), projectionGUID, adminCancelReason);
 		return Response.status(Status.OK).entity(started).build();
 	}
 
