@@ -10,6 +10,7 @@
             :label="newProjectionLabel"
             mdi-name="mdi-plus"
             variant="primary"
+            class="new-projection-button"
           />
         </template>
         <v-list>
@@ -193,7 +194,7 @@ const cardSortBy = ref<string>(PAGINATION.DEFAULT_CARD_SORT_BY)
 
 // Computed
 const isCardView = computed(() => windowWidth.value <= BREAKPOINT.CARD_VIEW)
-const newProjectionLabel = computed(() => windowWidth.value <= 360 ? 'Projection' : 'New Projection')
+const newProjectionLabel = computed(() => windowWidth.value <= 430 ? 'Projection' : 'New Projection')
 console.log(`windowWidth: ${windowWidth.value}px`)
 
 // Selected projections (full objects) from the full projections list
@@ -823,8 +824,10 @@ onUnmounted(() => {
 /* Header with Title and Button */
 .page-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: var(--layout-margin-small);
   margin-bottom: var(--layout-margin-large);
 }
 
@@ -832,12 +835,28 @@ onUnmounted(() => {
   font: var(--typography-bold-h4);
   color: var(--typography-color-primary);
   margin: 0;
+  white-space: nowrap;
 }
 
-/* Prevent button label from wrapping on narrow screens */
+/* Prevent the title and button text from wrapping onto a second line within
+   themselves; if they don't both fit on one row, the button drops to its own
+   row (via flex-wrap above) instead of breaking mid-word. */
 .page-header :deep(.v-btn) {
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.new-projection-button :deep(.button-label) {
+  white-space: nowrap;
+}
+
+/* Match the New Projection button's icon/text spacing to the Download Report
+   button (16px image icon) instead of the default 24px mdi icon size, so the
+   button is reduced from 181.88px to 173.88px in width */
+.new-projection-button :deep(.v-icon) {
+  font-size: var(--icons-size-small);
+  width: var(--icons-size-small);
+  height: var(--icons-size-small);
 }
 
 .new-projection-menu-item {
