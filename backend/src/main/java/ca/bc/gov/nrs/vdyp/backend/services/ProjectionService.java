@@ -613,7 +613,7 @@ public class ProjectionService {
 	}
 
 	@Transactional
-	public ProjectionModel cancelBatchProjection(VDYPUserModel user, UUID projectionGUID)
+	public ProjectionModel cancelBatchProjection(VDYPUserModel user, UUID projectionGUID, String adminCancelReason)
 			throws ProjectionServiceException {
 		var entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, user, ProjectionAction.CANCEL);
@@ -622,7 +622,13 @@ public class ProjectionService {
 		if (!tryCancelQueuedProjection(projectionGUID, entity)) {
 			batchMappingService.cancelProjection(entity);
 		}
-		entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
+
+		if (user.isAdmin() && adminCancelReason != null && !adminCancelReason.isBlank()) {
+			entity.setAdminCancelReason(adminCancelReason);
+			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.ADMN_CNCLD));
+		} else {
+			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.DRAFT));
+		}
 
 		return toModelWithExpiry(entity);
 	}
@@ -667,6 +673,8 @@ public class ProjectionService {
 
 	Map<String, Set<ProjectionAction>> permittedActionsByStatus = Map.of(
 			ProjectionStatusCodeModel.DRAFT,
+			Set.of(ProjectionAction.UPDATE, ProjectionAction.DELETE, ProjectionAction.READ),
+			ProjectionStatusCodeModel.ADMN_CNCLD,
 			Set.of(ProjectionAction.UPDATE, ProjectionAction.DELETE, ProjectionAction.READ),
 			ProjectionStatusCodeModel.RUNNING,
 			Set.of(

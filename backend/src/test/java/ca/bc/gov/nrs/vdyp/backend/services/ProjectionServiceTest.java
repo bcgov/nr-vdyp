@@ -81,6 +81,7 @@ import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionUnauthorizedException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionValidationException;
 import ca.bc.gov.nrs.vdyp.backend.messaging.publisher.BatchJobPublisher;
+import ca.bc.gov.nrs.vdyp.backend.model.CancelProjectionRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
@@ -1523,7 +1524,9 @@ class ProjectionServiceTest {
 
 		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
 
-		assertThrows(ProjectionStateException.class, () -> service.cancelBatchProjection(actingUser, projectionGUID));
+		assertThrows(
+				ProjectionStateException.class, () -> service.cancelBatchProjection(actingUser, projectionGUID, null)
+		);
 	}
 
 	@Test
@@ -1541,11 +1544,60 @@ class ProjectionServiceTest {
 				.thenReturn(statusCode(ProjectionStatusCodeModel.DRAFT));
 
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
-		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID);
+		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID, null);
 		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
 
 		verify(batchMappingService, times(1)).cancelProjection(any());
 		verify(batchJobPublisher, never()).deleteQueuedRequest(any());
+	}
+
+	@Test
+	void cancelBatchProcessing_adminWithReason_statusAdminCancelled() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		UserTypeCodeModel adminType = new UserTypeCodeModel();
+		adminType.setCode(UserTypeCodeModel.ADMIN);
+		actingUser.setUserTypeCode(adminType);
+
+		actingUser.setVdypUserGUID(UUID.randomUUID().toString());
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.ADMN_CNCLD))
+				.thenReturn(statusCode(ProjectionStatusCodeModel.ADMN_CNCLD));
+
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+		ProjectionModel model = service
+				.cancelBatchProjection(actingUser, projectionGUID, "Cancelled due to high system load.");
+		assertEquals(ProjectionStatusCodeModel.ADMN_CNCLD, model.getProjectionStatusCode().getCode());
+		assertEquals("Cancelled due to high system load.", model.getAdminCancelReason());
+
+		verify(batchMappingService, times(1)).cancelProjection(any());
+	}
+
+	@Test
+	void cancelBatchProcessing_adminWithoutReason_statusDraft() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
+		VDYPUserModel actingUser = new VDYPUserModel();
+		UserTypeCodeModel adminType = new UserTypeCodeModel();
+		adminType.setCode(UserTypeCodeModel.ADMIN);
+		actingUser.setUserTypeCode(adminType);
+
+		actingUser.setVdypUserGUID(UUID.randomUUID().toString());
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(projectionStatusCodeLookup.requireEntity(ProjectionStatusCodeModel.DRAFT))
+				.thenReturn(statusCode(ProjectionStatusCodeModel.DRAFT));
+
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID, null);
+		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
+		assertNull(model.getAdminCancelReason());
 	}
 
 	@Test
@@ -1564,7 +1616,7 @@ class ProjectionServiceTest {
 				.thenReturn(statusCode(ProjectionStatusCodeModel.DRAFT));
 
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
-		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID);
+		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID, null);
 		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
 
 		verify(batchJobPublisher, times(1)).deleteQueuedRequest(projectionGUID);
@@ -1587,7 +1639,7 @@ class ProjectionServiceTest {
 				.thenReturn(statusCode(ProjectionStatusCodeModel.DRAFT));
 
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
-		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID);
+		ProjectionModel model = service.cancelBatchProjection(actingUser, projectionGUID, null);
 		assertEquals(ProjectionStatusCodeModel.DRAFT, model.getProjectionStatusCode().getCode());
 
 		verify(batchJobPublisher, times(1)).deleteQueuedRequest(projectionGUID);
@@ -2042,6 +2094,54 @@ class ProjectionServiceTest {
 		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
 		assertThat(response.getEntity()).isSameAs(updated);
 		verify(mockService).editProjectionParameters(projectionGUID, params, null, reportDescription, actingUser);
+	}
+
+	// ==========================================================
+	// ProjectionEndpoint - cancelProjection
+	// ==========================================================
+
+	@Test
+	void endpoint_cancelProjection_returnsOk_whenNoRequestBody() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		ProjectionModel cancelled = new ProjectionModel();
+		cancelled.setProjectionGUID(projectionGUID.toString());
+		when(mockService.cancelBatchProjection(actingUser, projectionGUID, null)).thenReturn(cancelled);
+
+		Response response = endpoint.cancelProjection(projectionGUID, null);
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		assertThat(response.getEntity()).isSameAs(cancelled);
+		verify(mockService).cancelBatchProjection(actingUser, projectionGUID, null);
+	}
+
+	@Test
+	void endpoint_cancelProjection_returnsOk_andPassesAdminCancelReason() throws ProjectionServiceException {
+		ProjectionService mockService = mock(ProjectionService.class);
+		CurrentVDYPUser currentVDYPUser = mock(CurrentVDYPUser.class);
+		VDYPUserModel actingUser = user(UUID.randomUUID());
+		when(currentVDYPUser.getUser()).thenReturn(actingUser);
+
+		ProjectionEndpoint endpoint = new ProjectionEndpoint(mockService, currentVDYPUser);
+
+		UUID projectionGUID = UUID.randomUUID();
+		String reason = "Cancelled due to high system load.";
+		ProjectionModel cancelled = new ProjectionModel();
+		cancelled.setProjectionGUID(projectionGUID.toString());
+		cancelled.setAdminCancelReason(reason);
+		when(mockService.cancelBatchProjection(actingUser, projectionGUID, reason)).thenReturn(cancelled);
+
+		Response response = endpoint.cancelProjection(projectionGUID, new CancelProjectionRequest(reason));
+
+		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+		assertThat(response.getEntity()).isSameAs(cancelled);
+		verify(mockService).cancelBatchProjection(actingUser, projectionGUID, reason);
 	}
 
 	@Test

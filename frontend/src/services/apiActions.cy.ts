@@ -221,6 +221,20 @@ describe('apiActions Unit Tests', () => {
         expect(result).to.deep.equal(mockProjection)
       })
     })
+
+    it('should pass an admin cancel reason through to the API client', () => {
+      const projectionGUID = 'test-guid-123'
+      const reason = 'Cancelled due to high system load.'
+      const mockProjection = { projectionGUID, status: 'ADMN_CNCLD', adminCancelReason: reason }
+      const mockResponse = { data: mockProjection }
+
+      cy.stub(apiClient, 'cancelProjection').resolves(mockResponse)
+
+      cy.wrap(apiActions.cancelProjection(projectionGUID, reason)).then((result) => {
+        expect(apiClient.cancelProjection).to.be.calledOnceWith(projectionGUID, reason)
+        expect(result).to.deep.equal(mockProjection)
+      })
+    })
   })
 
   context('duplicateProjection', () => {

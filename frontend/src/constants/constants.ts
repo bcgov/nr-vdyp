@@ -271,6 +271,13 @@ export const ADMIN_DASHBOARD_HEADER_KEY = Object.freeze({
   POLYGONS: 'completedPolygonCount',
 })
 
+export const ADMIN_CANCEL_REASON = Object.freeze({
+  MIN_LENGTH: 5,
+  MAX_LENGTH: 100,
+  DEFAULT_TEXT:
+    'Projection cancelled by system administrator due to high system load and resource optimization.',
+})
+
 export const USER_TYPE_CODE = Object.freeze({
   IDIR: 'IDIR',
   BCEID: 'BCEID',
