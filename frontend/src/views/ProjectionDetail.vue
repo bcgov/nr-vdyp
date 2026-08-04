@@ -9,7 +9,7 @@
     <div>
       <router-link to="/" class="return-to-list-link">
         <img :src="MenuIcon" alt="" class="return-to-list-icon" />
-        <span>Return to Projections List</span>
+        <span>Return to My Projections List</span>
       </router-link>
       <div id="modelSelectionCard" class="model-selection-header">
         <h3
