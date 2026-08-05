@@ -304,15 +304,14 @@ const formatElapsedTime = (startDate: string | null): string => {
 .progress-track {
   flex: 1;
   height: 8px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
+  background-color: #e8e8e8;
+  border: 1px solid #d8d8d8;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   background-color: #003366;
-  border-radius: 4px;
   transition: width 0.4s ease;
 }
 

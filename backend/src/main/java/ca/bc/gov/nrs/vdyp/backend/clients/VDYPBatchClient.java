@@ -6,7 +6,9 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.reactive.RestForm;
 
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -36,5 +38,10 @@ public interface VDYPBatchClient {
 	@POST
 	@Path("/status/{batchJobGUID}")
 	BatchJobModel batchJobStatus(@PathParam("batchJobGUID") UUID batchJobGUID);
+
+	@GET
+	@Path("/capacity")
+	@Produces(MediaType.APPLICATION_JSON)
+	BatchThreadCapacityModel threadCapacity();
 
 }

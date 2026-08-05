@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
@@ -211,6 +212,18 @@ public class ProjectionEndpoint implements Endpoint {
 	public Response getAllRunningProjections() {
 		var projections = projectionService.getAllRunningProjections();
 		return Response.ok(projections).status(Response.Status.OK).build();
+	}
+
+	@GET
+	@RolesAllowed("ADMIN")
+	@Path("/thread-capacity")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Get Thread Capacity", description = "(Admin Only) Get the batch service's configured thread pool capacity."
+	)
+	public Response getThreadCapacity() {
+		var threadCapacity = new BatchThreadCapacityModel(projectionService.getThreadCapacity());
+		return Response.ok(threadCapacity).status(Response.Status.OK).build();
 	}
 
 	@POST

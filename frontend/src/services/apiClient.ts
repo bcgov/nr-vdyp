@@ -95,6 +95,15 @@ export const apiClient = {
   },
 
   /**
+   * (Admin Only) Retrieves the batch service's configured thread pool capacity.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the thread capacity.
+   */
+  getThreadCapacity: async (options?: AxiosRequestConfig) => {
+    return projectionApiInstance.getThreadCapacity(options)
+  },
+
+  /**
    * Creates a new empty projection with default parameters.
    * @param parameters The projection parameters.
    * @param modelParameters Optional model parameters for Manual Input mode.

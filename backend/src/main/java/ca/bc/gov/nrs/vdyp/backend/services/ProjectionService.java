@@ -472,6 +472,14 @@ public class ProjectionService {
 		return entities.stream().sorted(byWorkerCountDesc).map(e -> toRichModel(e, batchMappings)).toList();
 	}
 
+	/**
+	 * Retrieves the batch service's configured thread pool capacity, used by the Admin Dashboard to show current thread
+	 * load relative to system capacity.
+	 */
+	public int getThreadCapacity() {
+		return batchMappingService.getThreadCapacity();
+	}
+
 	@Transactional
 	public ProjectionModel createNewProjection(
 			VDYPUserModel actingUser, Parameters params, ModelParameters modelParameters, String reportDescription

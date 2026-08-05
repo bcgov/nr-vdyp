@@ -19,6 +19,13 @@
           class="filter-select"
         />
       </div>
+
+      <AdminResourceSummary
+        :total-running="totalRunningCount"
+        :threads-in-use="threadsInUseCount"
+        :thread-capacity="threadCapacity"
+        :thread-usage-percent="threadUsagePercent"
+      />
     </div>
 
     <!-- Desktop/Tablet Table View (above 1025px) -->
@@ -68,14 +75,15 @@ import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TY
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { AppProgressCircular } from '@/components'
-import { ProjectionPagination, AdminProjectionTable, AdminProjectionCardList, AdminCancelProjectionDialog } from '@/components/projection'
-import { fetchAllRunningProjections } from '@/services/adminService'
+import { ProjectionPagination, AdminProjectionTable, AdminProjectionCardList, AdminCancelProjectionDialog, AdminResourceSummary } from '@/components/projection'
+import { fetchAllRunningProjections, fetchThreadCapacity } from '@/services/adminService'
 import { cancelProjection } from '@/services/projectionService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const notificationStore = useNotificationStore()
 
 const projections = ref<AdminProjection[]>([])
+const threadCapacity = ref<number>(0)
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
 const isCancelDialogOpen = ref(false)
@@ -123,6 +131,17 @@ const loadProjections = async () => {
   }
 }
 
+// Silent by design: thread capacity is secondary/contextual to the Threads in Use metric, so a
+// failure here shouldn't block the dashboard or interrupt the user with a notification. The
+// summary card degrades gracefully to 0/0 (0%) per the zero-data state requirement.
+const loadThreadCapacity = async () => {
+  try {
+    threadCapacity.value = await fetchThreadCapacity()
+  } catch (err) {
+    console.error('Error loading thread capacity:', err)
+  }
+}
+
 // Silent refresh used by polling so transient failures don't spam the user with
 // a notification every 5 seconds; errors are still logged for diagnostics.
 const refreshProjections = async () => {
@@ -138,6 +157,17 @@ const filteredProjections = computed(() =>
     (p) => !selectedUserType.value || p.userType === selectedUserType.value,
   ),
 )
+
+const totalRunningCount = computed(() => filteredProjections.value.length)
+
+const threadsInUseCount = computed(() =>
+  filteredProjections.value.reduce((sum, p) => sum + p.workerCount, 0),
+)
+
+const threadUsagePercent = computed(() => {
+  if (!threadCapacity.value) return 0
+  return Math.min(100, Math.round((threadsInUseCount.value / threadCapacity.value) * 100))
+})
 
 const getProgressPercent = (projection: AdminProjection): number => {
   if (!projection.polygonCount) return 0
@@ -221,6 +251,7 @@ let dataPollingTimer: ReturnType<typeof setInterval> | null = null
 onMounted(async () => {
   window.addEventListener('resize', handleResize)
   await loadProjections()
+  await loadThreadCapacity()
   clockTimer = setInterval(() => {
     now.value = Date.now()
   }, REFRESH_INTERVAL_MS.ADMIN_DASHBOARD_CLOCK_TICK)
@@ -258,6 +289,9 @@ onUnmounted(() => {
 
 .filter-row {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: var(--layout-margin-medium);
   margin-bottom: var(--layout-margin-medium);
 }
@@ -271,5 +305,18 @@ onUnmounted(() => {
 
 .filter-select {
   max-width: 240px;
+}
+
+/* Below 540px, User Type and the Total Running/Threads in Use row are
+   always stacked (never side by side), so this only affects the vertical
+   gap between them and between that row and "Sort By:". 30px matches the
+   actual rendered gap between "Sort By:"'s select and the first card
+   (its 8px flex gap plus the select's own reserved, empty v-input details
+   row beneath it), so the whole column reads with one consistent rhythm. */
+@media (max-width: 540px) {
+  .filter-row {
+    gap: 30px;
+    margin-bottom: 30px;
+  }
 }
 </style>

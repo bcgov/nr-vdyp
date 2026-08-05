@@ -42,6 +42,7 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -73,12 +74,17 @@ class BatchControllerTest {
 	@Mock
 	private JobParameters jobParameters;
 
+	private BatchProperties batchProperties;
+
 	private BatchController batchController;
 
 	@BeforeEach
 	void setUp() {
+		batchProperties = new BatchProperties();
+		batchProperties.getThreadPool().setCorePoolSize(21);
+
 		batchController = new BatchController(
-				jobLauncher, fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator
+				jobLauncher, fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator, batchProperties
 		);
 
 		// Use system temp directory for cross-platform compatibility
@@ -97,6 +103,15 @@ class BatchControllerTest {
 		assertNotNull(response.getBody());
 		assertEquals("UP", response.getBody().get("status"));
 		assertEquals("VDYP Batch Processing Service", response.getBody().get("service"));
+	}
+
+	@Test
+	void testCapacity_ReturnsConfiguredThreadPoolCorePoolSize() {
+		ResponseEntity<Map<String, Object>> response = batchController.capacity();
+
+		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals(21, response.getBody().get(BatchConstants.Capacity.THREAD_CAPACITY));
 	}
 
 	@Test

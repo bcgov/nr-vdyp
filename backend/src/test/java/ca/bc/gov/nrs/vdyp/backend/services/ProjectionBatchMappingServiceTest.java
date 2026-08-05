@@ -28,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionBatchMappingResource
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
@@ -373,6 +374,28 @@ class ProjectionBatchMappingServiceTest {
 				ProjectionServiceException.class,
 				() -> service.updateFailureDetails(projectionEntity, null, null, "Projection failed")
 		);
+	}
+
+	@Test
+	void getThreadCapacity_happyPath_returnsCapacityFromBatchClient() {
+		when(batchClient.threadCapacity()).thenReturn(new BatchThreadCapacityModel(21));
+
+		int result = service.getThreadCapacity();
+
+		assertEquals(21, result);
+		verify(batchClient, times(1)).threadCapacity();
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void getThreadCapacity_batchClientThrows_returnsZero() {
+		when(batchClient.threadCapacity()).thenThrow(new WebApplicationException(Response.serverError().build()));
+
+		int result = service.getThreadCapacity();
+
+		assertEquals(0, result);
+		verify(batchClient, times(1)).threadCapacity();
+		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
 
 	private ProjectionBatchMappingEntity batchMappingEntity(ProjectionEntity projectionEntity, UUID batchJobGuid) {
