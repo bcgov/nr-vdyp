@@ -3,10 +3,13 @@ package ca.bc.gov.nrs.vdyp.application;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.asFloat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasMessage;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.unboxedArrayCloseTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notANumber;
 import static org.hamcrest.Matchers.sameInstance;
@@ -21,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.AgeTriplet;
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.SpeciesToApplyTo;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -40,8 +44,10 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -51,6 +57,8 @@ import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.PrimarySpeciesDetails;
+import ca.bc.gov.nrs.vdyp.processing_state.ProcessingStateTestUtils;
 import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.processing_state.TestLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
@@ -1710,6 +1718,498 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 			}
+		}
+	}
+
+	@Nested
+	class CalculateDominantHeightAgeSiteIndex {
+		MatrixMap2Impl<String, Region, Coefficients> hl1Coefficients;
+		Map<String, Object> controlMap;
+
+		IMocksControl em;
+		LayerProcessingState<?> lps;
+
+		ProcessingEngine unit;
+
+		@BeforeEach
+		void setup() throws IOException, ResourceParseException {
+			em = EasyMock.createControl();
+			unit = EasyMock.partialMockBuilder(ProcessingEngine.class) //
+					.addMockedMethod("getSiteIndexEquationByIndex") //
+					.addMockedMethod("yearsToBreastHeight") //
+					.addMockedMethod("heightAndSiteIndexToAge") //
+					.addMockedMethod("convertSiteIndexBetweenCurves") //
+					.withConstructor() //
+					.createMock(em);
+			lps = em.createMock(LayerProcessingState.class);
+
+			var parser = new ProcessingControlParser();
+			controlMap = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
+
+			hl1Coefficients = new MatrixMap2Impl<>(
+					List.of("AC", "AT", "B", "C", "D", "E", "F", "H", "L", "MB", "PA", "PL", "PW", "PY", "S", "Y"),
+					List.of(Region.COASTAL, Region.INTERIOR), (s, r) -> Coefficients.empty(3, 1)
+			);
+			hl1Coefficients
+					.put("AC", Region.COASTAL, new Coefficients(new float[] { 1.0016f, 0.20508f, -0.0013743f }, 1));
+			hl1Coefficients
+					.put("AC", Region.INTERIOR, new Coefficients(new float[] { 1.00337f, 0.26975f, -0.0012802f }, 1));
+			hl1Coefficients
+					.put("AT", Region.COASTAL, new Coefficients(new float[] { 0.98946f, 0.15312f, -0.0013087f }, 1));
+			hl1Coefficients
+					.put("AT", Region.INTERIOR, new Coefficients(new float[] { 0.98946f, 0.15312f, -0.0013087f }, 1));
+			hl1Coefficients
+					.put("B", Region.COASTAL, new Coefficients(new float[] { 0.97183f, 0.18096f, -0.001858f }, 1));
+			hl1Coefficients
+					.put("B", Region.INTERIOR, new Coefficients(new float[] { 0.95942f, 0.31474f, -0.0011697f }, 1));
+			hl1Coefficients
+					.put("C", Region.COASTAL, new Coefficients(new float[] { 0.99412f, 0.1801f, -0.0021747f }, 1));
+			hl1Coefficients
+					.put("C", Region.INTERIOR, new Coefficients(new float[] { 1.01352f, 0.43532f, -9.144E-4f }, 1));
+			hl1Coefficients
+					.put("D", Region.COASTAL, new Coefficients(new float[] { 1.00358f, 0.09603f, -0.0038217f }, 1));
+			hl1Coefficients
+					.put("D", Region.INTERIOR, new Coefficients(new float[] { 1.00358f, 0.09603f, -0.0038217f }, 1));
+			hl1Coefficients
+					.put("E", Region.COASTAL, new Coefficients(new float[] { 1.01384f, 0.1352f, -0.0031488f }, 1));
+			hl1Coefficients
+					.put("E", Region.INTERIOR, new Coefficients(new float[] { 1.01384f, 0.1352f, -0.0031488f }, 1));
+			hl1Coefficients
+					.put("F", Region.COASTAL, new Coefficients(new float[] { 0.99518f, 0.18193f, -0.0017202f }, 1));
+			hl1Coefficients
+					.put("F", Region.INTERIOR, new Coefficients(new float[] { 0.9802f, 0.24054f, -0.0016229f }, 1));
+			hl1Coefficients
+					.put("H", Region.COASTAL, new Coefficients(new float[] { 0.96537f, 0.16792f, -0.0011664f }, 1));
+			hl1Coefficients
+					.put("H", Region.INTERIOR, new Coefficients(new float[] { 0.99065f, 0.29502f, -0.00125f }, 1));
+			hl1Coefficients
+					.put("L", Region.COASTAL, new Coefficients(new float[] { 0.99315f, 0.17747f, -0.0022617f }, 1));
+			hl1Coefficients
+					.put("L", Region.INTERIOR, new Coefficients(new float[] { 0.99315f, 0.17747f, -0.0022617f }, 1));
+			hl1Coefficients
+					.put("MB", Region.COASTAL, new Coefficients(new float[] { 0.99951f, 0.11329f, -0.0068948f }, 1));
+			hl1Coefficients
+					.put("MB", Region.INTERIOR, new Coefficients(new float[] { 0.99951f, 0.11329f, -0.0068948f }, 1));
+			hl1Coefficients
+					.put("PA", Region.COASTAL, new Coefficients(new float[] { 0.99952f, 0.20278f, -0.0020051f }, 1));
+			hl1Coefficients
+					.put("PA", Region.INTERIOR, new Coefficients(new float[] { 0.99952f, 0.20278f, -0.0020051f }, 1));
+			hl1Coefficients
+					.put("PL", Region.COASTAL, new Coefficients(new float[] { 0.95856f, 0.13349f, -9.818E-4f }, 1));
+			hl1Coefficients
+					.put("PL", Region.INTERIOR, new Coefficients(new float[] { 0.97312f, 0.17339f, -0.0010287f }, 1));
+			hl1Coefficients
+					.put("PW", Region.COASTAL, new Coefficients(new float[] { 0.98775f, 0.17671f, -0.0029754f }, 1));
+			hl1Coefficients
+					.put("PW", Region.INTERIOR, new Coefficients(new float[] { 0.98775f, 0.17671f, -0.0029754f }, 1));
+			hl1Coefficients
+					.put("PY", Region.COASTAL, new Coefficients(new float[] { 0.95955f, 0.17742f, -0.0019664f }, 1));
+			hl1Coefficients
+					.put("PY", Region.INTERIOR, new Coefficients(new float[] { 0.95955f, 0.17742f, -0.0019664f }, 1));
+			hl1Coefficients
+					.put("S", Region.COASTAL, new Coefficients(new float[] { 0.99424f, 0.12502f, -0.0020471f }, 1));
+			hl1Coefficients
+					.put("S", Region.INTERIOR, new Coefficients(new float[] { 0.97776f, 0.2563f, -0.001448f }, 1));
+			hl1Coefficients
+					.put("Y", Region.COASTAL, new Coefficients(new float[] { 0.97184f, 0.24781f, -0.0014371f }, 1));
+			hl1Coefficients
+					.put("Y", Region.INTERIOR, new Coefficients(new float[] { 0.97184f, 0.24781f, -0.0014371f }, 1));
+		}
+
+		@Test
+		void testAll() throws Exception {
+
+			var bec = Utils.getBec("CWH", controlMap);
+			Bank bank = ProcessingStateTestUtils.mockBank(bec, 1);
+
+			ProcessingStateTestUtils.fill(bank.speciesNames, null, "C");
+
+			ProcessingStateTestUtils.fill(bank.dominantHeights, 0f, Float.NaN);
+			ProcessingStateTestUtils.fill(bank.loreyHeights[0], 6.4601994f, 22.9584f);
+			ProcessingStateTestUtils.fill(bank.loreyHeights[1], 6.4602f, 22.9584f);
+			ProcessingStateTestUtils
+					.fill(bank.treesPerHectare[0], 4.444444f, 84.303024f, 16.28283f, 18.050505f, 16.71717f, 33.25252f);
+			ProcessingStateTestUtils
+					.fill(bank.treesPerHectare[1], 4.444444f, 84.303024f, 16.28283f, 18.050505f, 16.71717f, 33.25252f);
+
+			ProcessingStateTestUtils.fill(bank.ageTotals, 0f, 22f);
+			ProcessingStateTestUtils.fill(bank.yearsAtBreastHeight, 0f, Float.NaN);
+			ProcessingStateTestUtils.fill(bank.yearsToBreastHeight, 0f, 7.7f);
+
+			ProcessingStateTestUtils.fill(bank.siteIndices, 34.0f, 34.0f);
+
+			EasyMock.expect(lps.getBank()).andStubReturn(bank);
+			EasyMock.expect(lps.getBecZone()).andStubReturn(bec);
+			EasyMock.expect(lps.getSecondarySpeciesIndex()).andStubReturn(Optional.empty());
+			EasyMock.expect(lps.getSiteCurveNumber(1)).andStubReturn(122);
+			EasyMock.expect(lps.getSiteCurveNumber(0)).andStubReturn(122);
+
+			EasyMock.expect(lps.getNSpecies()).andStubReturn(1);
+			EasyMock.expect(lps.getPrimarySpeciesIndex()).andStubReturn(1);
+			EasyMock.expect(unit.getSiteIndexEquationByIndex(122)).andStubReturn(SiteIndexEquation.SI_CWC_NIGH);
+			EasyMock.expect(
+					unit.convertSiteIndexBetweenCurves(
+							SiteIndexEquation.SI_CWC_NIGH, 34.0, SiteIndexEquation.SI_CWC_NIGH
+					)
+			).andStubThrow(new NoAnswerException());
+
+			Capture<PrimarySpeciesDetails> detailsCapture = EasyMock.newCapture();
+
+			lps.setPrimarySpeciesDetails(EasyMock.capture(detailsCapture));
+			EasyMock.expectLastCall().once();
+
+			em.replay();
+
+			unit.calculateDominantHeightAgeSiteIndex(lps, hl1Coefficients);
+
+			em.verify();
+
+			var result = detailsCapture.getValue();
+			assertThat("dominant height", result.primarySpeciesDominantHeight(), closeTo(22.95f));
+			assertThat("total age", result.primarySpeciesTotalAge(), closeTo(22f));
+			assertThat("at breast height", result.primarySpeciesAgeAtBreastHeight(), asFloat(notANumber()));
+			assertThat("to breast height", result.primarySpeciesAgeToBreastHeight(), closeTo(7.7f));
+			assertThat("site index", result.primarySpeciesSiteIndex(), closeTo(34f));
+		}
+
+		@Nested
+		class DominantHeight {
+			@Test
+			void testSimple() throws ProcessingException {
+				var bec = Utils.getBec("CDF", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+				int primarySpeciesIndex = 3;
+
+				bank.dominantHeights[primarySpeciesIndex] = Float.NaN;
+				bank.loreyHeights[primarySpeciesIndex][1] = 33.744f;
+				bank.speciesNames[primarySpeciesIndex] = "D";
+				bank.treesPerHectare[primarySpeciesIndex][1] = 290.61615f;
+
+				float result = ProcessingEngine.calculatePrimarySpeciesDominantHeight(
+						Region.COASTAL, hl1Coefficients, bank, primarySpeciesIndex
+				);
+
+				assertThat(result, closeTo(35.312016f));
+			}
+
+			@Test
+			void testCoastal() throws ProcessingException {
+				var bec = Utils.getBec("CDF", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+				int primarySpeciesIndex = 3;
+
+				bank.dominantHeights[primarySpeciesIndex] = Float.NaN;
+				bank.loreyHeights[primarySpeciesIndex][1] = 33.744f;
+				bank.speciesNames[primarySpeciesIndex] = "F"; // hl1Coefficients differs between regions
+				bank.treesPerHectare[primarySpeciesIndex][1] = 290.61615f;
+
+				float result = ProcessingEngine.calculatePrimarySpeciesDominantHeight(
+						Region.COASTAL, hl1Coefficients, bank, primarySpeciesIndex
+				);
+
+				assertThat(result, closeTo(35.657f));
+			}
+
+			@Test
+			void testInterior() throws ProcessingException {
+				var bec = Utils.getBec("IDF", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+				int primarySpeciesIndex = 3;
+
+				bank.dominantHeights[primarySpeciesIndex] = Float.NaN;
+				bank.loreyHeights[primarySpeciesIndex][1] = 33.744f;
+				bank.speciesNames[primarySpeciesIndex] = "F";// hl1Coefficients differs between regions
+				bank.treesPerHectare[primarySpeciesIndex][1] = 290.61615f;
+
+				float result = ProcessingEngine.calculatePrimarySpeciesDominantHeight(
+						Region.INTERIOR, hl1Coefficients, bank, primarySpeciesIndex
+				);
+
+				assertThat(result, closeTo(36.712f));
+			}
+
+			@Test
+			void testDominantAlreadySet() throws ProcessingException {
+				var bec = Utils.getBec("CDF", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+				int primarySpeciesIndex = 3;
+
+				bank.dominantHeights[primarySpeciesIndex] = 42f;
+				bank.loreyHeights[primarySpeciesIndex][1] = 33.744f;
+				bank.speciesNames[primarySpeciesIndex] = "D";
+				bank.treesPerHectare[primarySpeciesIndex][1] = 290.61615f;
+
+				float result = ProcessingEngine.calculatePrimarySpeciesDominantHeight(
+						Region.COASTAL, hl1Coefficients, bank, primarySpeciesIndex
+				);
+
+				assertThat(result, closeTo(42f));
+			}
+
+			@Test
+			void testLoreyNotSet() {
+				var bec = Utils.getBec("CDF", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+				int primarySpeciesIndex = 3;
+
+				bank.dominantHeights[primarySpeciesIndex] = Float.NaN;
+				bank.loreyHeights[primarySpeciesIndex][1] = Float.NaN;
+				bank.speciesNames[primarySpeciesIndex] = "D";
+				bank.treesPerHectare[primarySpeciesIndex][1] = 290.61615f;
+
+				var ex = assertThrows(
+						ProcessingException.class,
+						() -> ProcessingEngine.calculatePrimarySpeciesDominantHeight(
+								Region.COASTAL, hl1Coefficients, bank, primarySpeciesIndex
+						)
+				);
+
+				assertThat(ex, hasMessage(containsString("primary species D")));
+				assertThat(ex, hasProperty("errorNumber", present(is(2))));
+
+			}
+
+		}
+
+		@Nested
+		class Ages {
+			@Test
+			void testWithSecondaryAndYTBH() throws ProcessingException {
+				var bec = Utils.getBec("CWH", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+				int primarySpeciesIndex = 3;
+
+				ProcessingStateTestUtils.fill(bank.ageTotals, 0f, 15f, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+				ProcessingStateTestUtils
+						.fill(bank.yearsAtBreastHeight, 0f, 11f, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+				ProcessingStateTestUtils.fill(bank.yearsToBreastHeight, 0f, 4f, 7.7f, 1f, 4.6f, 5.4f);
+
+				AgeTriplet result = ProcessingEngine
+						.calculatePrimarySpeciesAges(bank, primarySpeciesIndex, Optional.of(4));
+				assertThat("total", result.total(), closeTo(15f));
+				assertThat("atBreastHeight", result.atBreastHeight(), closeTo(14f));
+				assertThat("toBreastHeight", result.toBreastHeight(), closeTo(1f));
+			}
+
+			@Test
+			void testWithSecondaryAndYABH() throws ProcessingException {
+				var bec = Utils.getBec("CWH", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+				int primarySpeciesIndex = 3;
+
+				ProcessingStateTestUtils.fill(bank.ageTotals, 0f, 15f, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+				ProcessingStateTestUtils.fill(bank.yearsAtBreastHeight, 0f, 11f, 7.3f, 14f, 10.4f, 9.6f);
+				ProcessingStateTestUtils
+						.fill(bank.yearsToBreastHeight, 0f, 4f, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+
+				AgeTriplet result = ProcessingEngine
+						.calculatePrimarySpeciesAges(bank, primarySpeciesIndex, Optional.of(4));
+				assertThat("total", result.total(), closeTo(15f));
+				assertThat("atBreastHeight", result.atBreastHeight(), closeTo(14f));
+				assertThat("toBreastHeight", result.toBreastHeight(), closeTo(1f));
+			}
+
+			@Test
+			void testWithSecondaryAndNoOtherAges() throws ProcessingException {
+				var bec = Utils.getBec("CWH", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+				int primarySpeciesIndex = 3;
+
+				ProcessingStateTestUtils.fill(bank.ageTotals, 0f, 15f, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+				ProcessingStateTestUtils
+						.fill(bank.yearsAtBreastHeight, 0f, 11f, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+				ProcessingStateTestUtils
+						.fill(bank.yearsToBreastHeight, 0f, 4f, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+
+				AgeTriplet result = ProcessingEngine
+						.calculatePrimarySpeciesAges(bank, primarySpeciesIndex, Optional.of(4));
+				assertThat("total", result.total(), closeTo(15f));
+				assertThat("atBreastHeight", result.atBreastHeight(), closeTo(11f));
+				assertThat("toBreastHeight", result.toBreastHeight(), closeTo(4f));
+			}
+
+			@Test
+			void testNoTotals() {
+				var bec = Utils.getBec("CWH", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+				int primarySpeciesIndex = 3;
+
+				ProcessingStateTestUtils
+						.fill(bank.ageTotals, 0f, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+				ProcessingStateTestUtils
+						.fill(bank.yearsAtBreastHeight, 0f, 11f, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+				ProcessingStateTestUtils.fill(bank.yearsToBreastHeight, 0f, 4f, 7.7f, 1f, 4.6f, 5.4f);
+
+				var ex = assertThrows(
+						ProcessingException.class,
+						() -> ProcessingEngine.calculatePrimarySpeciesAges(bank, primarySpeciesIndex, Optional.of(4))
+				);
+
+				assertThat(ex, hasProperty("errorNumber", present(is(5))));
+			}
+
+			@Test
+			void testWithoutSecondary() throws ProcessingException {
+				var bec = Utils.getBec("CWH", controlMap);
+				Bank bank = ProcessingStateTestUtils.mockBank(bec, 1);
+				int primarySpeciesIndex = 1;
+
+				ProcessingStateTestUtils.fill(bank.ageTotals, 0f, 22f);
+				ProcessingStateTestUtils.fill(bank.yearsAtBreastHeight, 0f, Float.NaN);
+				ProcessingStateTestUtils.fill(bank.yearsToBreastHeight, 0f, 7.7f);
+
+				AgeTriplet result = ProcessingEngine
+						.calculatePrimarySpeciesAges(bank, primarySpeciesIndex, Optional.of(4));
+				assertThat("total", result.total(), closeTo(22f));
+				assertThat("atBreastHeight", result.atBreastHeight(), asFloat(notANumber()));
+				assertThat("toBreastHeight", result.toBreastHeight(), closeTo(7.7f));
+			}
+		}
+
+		@Nested
+		class SiteIndex {
+
+			@Test
+			void testSuccess() throws Exception {
+
+				float[] siteIndices = { Float.NaN, Float.NaN, 34f, Float.NaN, Float.NaN, Float.NaN };
+				int primarySpeciesIndex = 3;
+
+				EasyMock.expect(lps.getNSpecies()).andStubReturn(5);
+				EasyMock.expect(lps.getSecondarySpeciesIndex()).andStubReturn(Optional.of(4));
+				EasyMock.expect(lps.getSiteCurveNumber(2)).andStubReturn(2);
+				EasyMock.expect(lps.getSiteCurveNumber(0)).andStubReturn(64);
+
+				EasyMock.expect(unit.getSiteIndexEquationByIndex(64)).andStubReturn(SiteIndexEquation.SI_SW_HUANG_PLA);
+				EasyMock.expect(unit.getSiteIndexEquationByIndex(2)).andStubReturn(SiteIndexEquation.SI_AT_HUANG);
+				EasyMock.expect(
+						unit.convertSiteIndexBetweenCurves(
+								SiteIndexEquation.SI_AT_HUANG, 34.0, SiteIndexEquation.SI_SW_HUANG_PLA
+						)
+				).andStubReturn(
+						SiteTool.convertSiteIndexBetweenCurves(
+								SiteIndexEquation.SI_AT_HUANG, 34.0, SiteIndexEquation.SI_SW_HUANG_PLA
+						)
+				);
+
+				em.replay();
+
+				var result = unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex);
+
+				assertThat("result", result, closeTo(30.929f));
+
+				em.verify();
+			}
+
+			@Test
+			void testNoConversion() throws Exception {
+
+				float[] siteIndices = { Float.NaN, Float.NaN, 34f, Float.NaN, Float.NaN, Float.NaN };
+				int primarySpeciesIndex = 3;
+
+				EasyMock.expect(lps.getNSpecies()).andStubReturn(5);
+				EasyMock.expect(lps.getSecondarySpeciesIndex()).andStubReturn(Optional.of(4));
+				EasyMock.expect(lps.getSiteCurveNumber(2)).andStubReturn(122);
+				EasyMock.expect(lps.getSiteCurveNumber(0)).andStubReturn(13);
+
+				EasyMock.expect(unit.getSiteIndexEquationByIndex(122)).andStubReturn(SiteIndexEquation.SI_CWC_NIGH);
+				EasyMock.expect(unit.getSiteIndexEquationByIndex(13)).andStubReturn(SiteIndexEquation.SI_DR_NIGH);
+				EasyMock.expect(
+						unit.convertSiteIndexBetweenCurves(
+								SiteIndexEquation.SI_CWC_NIGH, 34.0, SiteIndexEquation.SI_DR_NIGH
+						)
+				).andStubThrow(new NoAnswerException());
+
+				em.replay();
+
+				var result = unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex);
+
+				assertThat("result", result, closeTo(34.0f));
+
+				em.verify();
+			}
+
+			@Test
+			void testSmallIndex() throws Exception {
+
+				float[] siteIndices = { Float.NaN, Float.NaN, 34f, Float.NaN, Float.NaN, Float.NaN };
+				int primarySpeciesIndex = 3;
+
+				EasyMock.expect(lps.getNSpecies()).andStubReturn(5);
+				EasyMock.expect(lps.getSecondarySpeciesIndex()).andStubReturn(Optional.of(4));
+				EasyMock.expect(lps.getSiteCurveNumber(2)).andStubReturn(2);
+				EasyMock.expect(lps.getSiteCurveNumber(0)).andStubReturn(64);
+
+				EasyMock.expect(unit.getSiteIndexEquationByIndex(64)).andStubReturn(SiteIndexEquation.SI_SW_HUANG_PLA);
+				EasyMock.expect(unit.getSiteIndexEquationByIndex(2)).andStubReturn(SiteIndexEquation.SI_AT_HUANG);
+				EasyMock.expect(
+						unit.convertSiteIndexBetweenCurves(
+								SiteIndexEquation.SI_AT_HUANG, 34.0, SiteIndexEquation.SI_SW_HUANG_PLA
+						)
+				).andStubReturn(1.2);
+
+				em.replay();
+
+				var result = unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex);
+
+				assertThat("result", result, closeTo(34.0f));
+
+				em.verify();
+			}
+
+			@Test
+			void testAlreadySet() throws Exception {
+
+				float[] siteIndices = { Float.NaN, Float.NaN, 34f, 27f, Float.NaN, Float.NaN };
+				int primarySpeciesIndex = 3;
+
+				EasyMock.expect(lps.getNSpecies()).andStubReturn(5);
+				EasyMock.expect(lps.getSecondarySpeciesIndex()).andStubReturn(Optional.of(4));
+				EasyMock.expect(lps.getSiteCurveNumber(3)).andStubReturn(2);
+				EasyMock.expect(lps.getSiteCurveNumber(0)).andStubReturn(64);
+
+				EasyMock.expect(unit.getSiteIndexEquationByIndex(64)).andStubReturn(SiteIndexEquation.SI_SW_HUANG_PLA);
+				EasyMock.expect(unit.getSiteIndexEquationByIndex(2)).andStubReturn(SiteIndexEquation.SI_AT_HUANG);
+				EasyMock.expect(
+						unit.convertSiteIndexBetweenCurves(
+								SiteIndexEquation.SI_AT_HUANG, 27.0, SiteIndexEquation.SI_SW_HUANG_PLA
+						)
+				).andStubReturn(
+						SiteTool.convertSiteIndexBetweenCurves(
+								SiteIndexEquation.SI_AT_HUANG, 27.0, SiteIndexEquation.SI_SW_HUANG_PLA
+						)
+				);
+
+				em.replay();
+
+				var result = unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex);
+
+				assertThat("result", result, closeTo(25.3446f));
+
+				em.verify();
+			}
+
+			@Test
+			void testNoIndices() {
+
+				float[] siteIndices = { Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN };
+				int primarySpeciesIndex = 3;
+
+				EasyMock.expect(lps.getNSpecies()).andStubReturn(5);
+				EasyMock.expect(lps.getSecondarySpeciesIndex()).andStubReturn(Optional.of(4));
+
+				em.replay();
+
+				var ex = assertThrows(
+						ProcessingException.class,
+						() -> unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex)
+				);
+
+				assertThat(ex, hasProperty("errorNumber", present(is(7))));
+
+				em.verify();
+			}
+
 		}
 	}
 }

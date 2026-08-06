@@ -907,10 +907,15 @@ public class TestUtils {
 			return Float.toString(f) + "f";
 		}
 		if (value instanceof String s) {
-			return StringEscapeUtils.escapeJava(s);
+			return "\"" + StringEscapeUtils.escapeJava(s) + "\"";
 		}
 		if (value instanceof Optional<?> op) {
 			return op.map(v -> "Optional.of(" + javaLiteral(v) + ")").orElse("Optional.empty()");
+		}
+		if (value instanceof Coefficients op) {
+			return "new Coefficients(new float[]{"
+					+ op.stream().map(TestUtils::javaLiteral).collect(Collectors.joining(", ")) + "} , "
+					+ op.getIndexFrom() + ")";
 		}
 		throw new UnsupportedOperationException("Couldn't convert " + value.getClass() + " to a literal");
 	}
