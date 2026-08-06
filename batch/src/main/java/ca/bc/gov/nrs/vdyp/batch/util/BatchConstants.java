@@ -109,6 +109,13 @@ public final class BatchConstants {
 		}
 	}
 
+	public static final class Capacity {
+		public static final String THREAD_CAPACITY = "threadCapacity";
+
+		private Capacity() {
+		}
+	}
+
 	private BatchConstants() {
 	}
 }

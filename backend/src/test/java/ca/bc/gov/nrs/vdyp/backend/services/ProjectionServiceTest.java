@@ -148,6 +148,16 @@ class ProjectionServiceTest {
 	}
 
 	@Test
+	void getThreadCapacity_delegatesToBatchMappingService() {
+		when(batchMappingService.getThreadCapacity()).thenReturn(21);
+
+		int result = service.getThreadCapacity();
+
+		assertEquals(21, result);
+		verify(batchMappingService, times(1)).getThreadCapacity();
+	}
+
+	@Test
 	void validateMaximumPolygons_allowsFilesAtLimit(@TempDir Path tempDir) throws Exception {
 		Path polygonFile = tempDir.resolve("polygon.csv");
 		Files.writeString(polygonFile, "FEATURE_ID,MAP_ID,POLYGON_NUMBER\n\n1,082G055,1234\n2,082G055,5678\n");

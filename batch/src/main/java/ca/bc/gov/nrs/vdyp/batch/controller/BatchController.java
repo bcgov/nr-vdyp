@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -54,6 +55,7 @@ public class BatchController {
 	private final JobOperator jobOperator;
 	@SuppressWarnings("unused")
 	private final BatchMetricsCollector metricsCollector;
+	private final BatchProperties batchProperties;
 
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
@@ -70,13 +72,14 @@ public class BatchController {
 	public BatchController(
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, JobOperator jobOperator
+			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties
 	) {
 		this.jobLauncher = jobLauncher;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
 		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
 		this.jobOperator = jobOperator;
+		this.batchProperties = batchProperties;
 	}
 
 	/**
@@ -306,9 +309,21 @@ public class BatchController {
 				"availableEndpoints",
 				Arrays.asList(
 						"/api/batch/startWithGUIDs", "/api/batch/stop/{jobGuid}", "/api/batch/status/{jobGuid}",
-						"/api/batch/health"
+						"/api/batch/health", "/api/batch/capacity"
 				)
 		);
+		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+		return ResponseEntity.ok(response);
+	}
+
+	/**
+	 * Exposes this instance's configured thread pool capacity (batch.thread-pool.core-pool-size /
+	 * BATCH_THREAD_POOL_SIZE) so callers can display current thread load relative to system capacity.
+	 */
+	@GetMapping(value = "/capacity", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> capacity() {
+		Map<String, Object> response = new HashMap<>();
+		response.put(BatchConstants.Capacity.THREAD_CAPACITY, batchProperties.getThreadPool().getCorePoolSize());
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
 	}

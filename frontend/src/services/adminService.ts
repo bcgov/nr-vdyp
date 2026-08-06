@@ -1,4 +1,7 @@
-import { getAllRunningProjections as apiGetAllRunningProjections } from '@/services/apiActions'
+import {
+  getAllRunningProjections as apiGetAllRunningProjections,
+  getThreadCapacity as apiGetThreadCapacity,
+} from '@/services/apiActions'
 import type { ProjectionModel, VDYPUserModel } from '@/services/vdyp-api'
 import type { AdminProjection, UserTypeCode } from '@/interfaces/interfaces'
 import { mapProjectionStatus } from '@/services/projectionService'
@@ -50,4 +53,13 @@ export const transformAdminProjection = (model: ProjectionModel): AdminProjectio
 export const fetchAllRunningProjections = async (): Promise<AdminProjection[]> => {
   const projectionModels = await apiGetAllRunningProjections()
   return projectionModels.map(transformAdminProjection)
+}
+
+/**
+ * (Admin Only) Fetches the batch service's configured thread pool capacity, used to show
+ * current thread load relative to system capacity on the Admin Dashboard.
+ * @returns A promise that resolves to the thread capacity.
+ */
+export const fetchThreadCapacity = async (): Promise<number> => {
+  return apiGetThreadCapacity()
 }

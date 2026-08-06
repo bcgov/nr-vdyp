@@ -204,6 +204,20 @@ public class ProjectionBatchMappingService {
 		entity.setWorkerCount(progressUpdate.workers());
 	}
 
+	/**
+	 * Retrieves the batch service's configured thread pool capacity, used to show current thread load relative to
+	 * system capacity on the Admin Dashboard. Returns 0 if the batch service is unreachable so the caller can degrade
+	 * gracefully rather than fail the whole dashboard load.
+	 */
+	public int getThreadCapacity() {
+		try {
+			return batchClient.threadCapacity().threadCapacity();
+		} catch (Exception e) {
+			logger.warn("Unable to retrieve thread capacity from batch service", e);
+			return 0;
+		}
+	}
+
 	public Map<UUID, ProjectionBatchMappingModel> getLatestBatchMappingsForProjections(List<UUID> projectionGUIDs) {
 		Map<UUID, ProjectionBatchMappingEntity> latestEntities = repository
 				.findLatestByProjectionGUIDs(projectionGUIDs);

@@ -108,6 +108,20 @@ export const getAllRunningProjections = async (): Promise<ProjectionModel[]> => 
 }
 
 /**
+ * (Admin Only) Fetches the batch service's configured thread pool capacity.
+ * @returns A promise that resolves to the thread capacity.
+ */
+export const getThreadCapacity = async (): Promise<number> => {
+  try {
+    const response = await apiClient.getThreadCapacity()
+    return response.data.threadCapacity
+  } catch (error) {
+    console.error('Error fetching thread capacity:', error)
+    throw error
+  }
+}
+
+/**
  * Creates a new empty projection with default parameters.
  * @param parameters The projection parameters.
  * @param modelParameters Optional model parameters for Manual Input mode.
