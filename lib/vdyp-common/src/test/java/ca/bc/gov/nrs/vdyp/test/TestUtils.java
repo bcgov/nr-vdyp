@@ -46,6 +46,7 @@ import org.hamcrest.Matchers;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.test.TestDebugSettings;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
@@ -907,10 +908,15 @@ public class TestUtils {
 			return Float.toString(f) + "f";
 		}
 		if (value instanceof String s) {
-			return StringEscapeUtils.escapeJava(s);
+			return "\"" + StringEscapeUtils.escapeJava(s) + "\"";
 		}
 		if (value instanceof Optional<?> op) {
 			return op.map(v -> "Optional.of(" + javaLiteral(v) + ")").orElse("Optional.empty()");
+		}
+		if (value instanceof Coefficients op) {
+			return "new Coefficients(new float[]{"
+					+ op.stream().map(TestUtils::javaLiteral).collect(Collectors.joining(", ")) + "} , "
+					+ op.getIndexFrom() + ")";
 		}
 		throw new UnsupportedOperationException("Couldn't convert " + value.getClass() + " to a literal");
 	}

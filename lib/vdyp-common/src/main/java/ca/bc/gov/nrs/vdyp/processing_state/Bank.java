@@ -66,15 +66,11 @@ public class Bank {
 	public final float[/* nSpecies + 1, including 0 */][/* all ucs */] treesPerHectare; // BANK1 TPHB
 	public final float[/* nSpecies + 1, including 0 */][/* all ucs */] wholeStemVolumes; // BANK1 VOLWSB
 
-	public Bank(VdypLayer layer, BecDefinition becZone, Predicate<VdypSpecies> retainCriteria) {
-
+	private Bank(VdypLayer layer, BecDefinition becZone, int nSpecies) {
 		this.layer = layer;
 		this.becZone = becZone;
 
-		List<VdypSpecies> speciesToRetain = layer.getSpecies().values().stream().filter(s -> retainCriteria.test(s))
-				.sorted((s1, s2) -> s1.getGenusIndex() - s2.getGenusIndex()).toList();
-
-		this.nSpecies = speciesToRetain.size();
+		this.nSpecies = nSpecies;
 		this.indices = IntStream.range(1, nSpecies + 1).toArray();
 
 		// In the following, index 0 is unused
@@ -99,6 +95,11 @@ public class Bank {
 		treesPerHectare = new float[nSpecies + 1][N_UTILIZATION_CLASSES];
 		wholeStemVolumes = new float[nSpecies + 1][N_UTILIZATION_CLASSES];
 
+	}
+
+	private Bank(VdypLayer layer, BecDefinition becZone, List<VdypSpecies> speciesToRetain) {
+		this(layer, becZone, speciesToRetain.size());
+
 		int nextSlot = 1;
 		for (VdypSpecies s : speciesToRetain) {
 			transferSpeciesIntoBank(nextSlot++, s);
@@ -110,6 +111,15 @@ public class Bank {
 		// provided in the input.)
 
 		setCalculateUtilizationClassAllValues();
+	}
+
+	public Bank(VdypLayer layer, BecDefinition becZone, Predicate<VdypSpecies> retainCriteria) {
+
+		this(
+				layer, becZone,
+				layer.getSpecies().values().stream().filter(s -> retainCriteria.test(s))
+						.sorted((s1, s2) -> s1.getGenusIndex() - s2.getGenusIndex()).toList()
+		);
 	}
 
 	public Bank(Bank source) {
@@ -463,5 +473,10 @@ public class Bank {
 	private Sp64DistributionSet[] copy(Sp64DistributionSet[] sp64Distributions) {
 		return Arrays.stream(sp64Distributions).map(s -> s == null ? null : s.copy())
 				.toArray(Sp64DistributionSet[]::new);
+	}
+
+	// For testing. Returns a bank with null layer and the specified number of species
+	static Bank mockBank(BecDefinition becZone, int nSpecies) {
+		return new Bank(null, becZone, nSpecies);
 	}
 }

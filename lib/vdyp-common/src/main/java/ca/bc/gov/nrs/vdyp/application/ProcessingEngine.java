@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
@@ -854,6 +856,152 @@ public class ProcessingEngine {
 
 	public SiteIndexEquation getSiteIndexEquationByIndex(int n) {
 		return SiteIndexEquation.getByIndex(n);
+	}
+
+	static record AgeTriplet(float total, float toBreastHeight, float atBreastHeight) {
+	};
+
+	/**
+	 * VHDOM1 METH_H = 2, METH_A = 2, METH_SI = 2.
+	 *
+	 * @param lps             layer processing state
+	 * @param hl1Coefficients the configured dominant height recalculation coefficients
+	 *
+	 * @throws ProcessingException
+	 */
+	public void calculateDominantHeightAgeSiteIndex(
+			LayerProcessingState<?> lps, MatrixMap2<String, Region, Coefficients> hl1Coefficients
+	) throws ProcessingException {
+
+		Bank bank = lps.getBank();
+
+		// Calculate primary species values
+		int primarySpeciesIndex = lps.getPrimarySpeciesIndex();
+
+		float primarySpeciesDominantHeight = calculatePrimarySpeciesDominantHeight(
+				lps.getBecZone().getRegion(), hl1Coefficients, bank, primarySpeciesIndex
+		);
+
+		var primarySpeciesAges = calculatePrimarySpeciesAges(bank, primarySpeciesIndex, lps.getSecondarySpeciesIndex());
+
+		float primarySpeciesSiteIndex = calculatePrimarySpeciesSiteIndex(lps, bank.siteIndices, primarySpeciesIndex);
+
+		lps.setPrimarySpeciesDetails(
+				new PrimarySpeciesDetails(
+						primarySpeciesDominantHeight, primarySpeciesSiteIndex, primarySpeciesAges.total(),
+						primarySpeciesAges.atBreastHeight(), primarySpeciesAges.toBreastHeight()
+				)
+		);
+	}
+
+	float calculatePrimarySpeciesSiteIndex(LayerProcessingState<?> lps, float[] siteIndices, int primarySpeciesIndex)
+			throws ProcessingException {
+		Optional<Integer> activeIndex;
+		// (3) Site Index
+		float primarySpeciesSiteIndex = siteIndices[primarySpeciesIndex];
+		if (Float.isNaN(primarySpeciesSiteIndex)) {
+
+			activeIndex = findIndexInOneIndexedFloatArray(
+					lps.getSecondarySpeciesIndex(), siteIndices, lps.getNSpecies()
+			);
+
+			primarySpeciesSiteIndex = siteIndices[activeIndex
+					.orElseThrow(() -> new ProcessingException("Site Index data unavailable for ALL species", 7))];
+		} else {
+			activeIndex = Optional.of(primarySpeciesIndex);
+		}
+
+		SiteIndexEquation siteCurve1 = getSiteIndexEquationByIndex(lps.getSiteCurveNumber(activeIndex.get()));
+		SiteIndexEquation siteCurve2 = getSiteIndexEquationByIndex(lps.getSiteCurveNumber(0));
+
+		try {
+			double newSI = convertSiteIndexBetweenCurves(siteCurve1, primarySpeciesSiteIndex, siteCurve2);
+			if (newSI > 1.3) {
+				primarySpeciesSiteIndex = (float) newSI;
+			}
+		} catch (CommonCalculatorException e) {
+			// do nothing. primarySpeciesSiteIndex will not be modified.
+		}
+		return primarySpeciesSiteIndex;
+	}
+
+	static AgeTriplet
+			calculatePrimarySpeciesAges(Bank bank, int primarySpeciesIndex, Optional<Integer> secondarySpeciesIndex)
+					throws ProcessingException {
+		// (2) Age (total, years at breast height, years to breast height
+		float primarySpeciesTotalAge = bank.ageTotals[primarySpeciesIndex];
+		float primarySpeciesYearsAtBreastHeight = bank.yearsAtBreastHeight[primarySpeciesIndex];
+		float primarySpeciesYearsToBreastHeight = bank.yearsToBreastHeight[primarySpeciesIndex];
+
+		Optional<Integer> activeIndex;
+
+		if (Float.isNaN(primarySpeciesTotalAge)) {
+
+			activeIndex = findIndexInOneIndexedFloatArray(secondarySpeciesIndex, bank.ageTotals, bank.getNSpecies());
+
+			var index = activeIndex
+					.orElseThrow(() -> new ProcessingException("Age data unavailable for ALL species", 5));
+
+			primarySpeciesTotalAge = bank.ageTotals[index];
+			if (!Float.isNaN(primarySpeciesYearsToBreastHeight)) {
+				primarySpeciesYearsAtBreastHeight = primarySpeciesTotalAge - primarySpeciesYearsToBreastHeight;
+			} else if (!Float.isNaN(primarySpeciesYearsAtBreastHeight)) {
+				primarySpeciesYearsToBreastHeight = primarySpeciesTotalAge - primarySpeciesYearsAtBreastHeight;
+			} else {
+				primarySpeciesYearsAtBreastHeight = bank.yearsAtBreastHeight[index];
+				primarySpeciesYearsToBreastHeight = bank.yearsToBreastHeight[index];
+			}
+		}
+
+		var primarySpeciesAges = new AgeTriplet(
+				primarySpeciesTotalAge, primarySpeciesYearsToBreastHeight, primarySpeciesYearsAtBreastHeight
+		);
+		return primarySpeciesAges;
+	}
+
+	static float calculatePrimarySpeciesDominantHeight(
+			Region primarySpeciesRegion, MatrixMap2<String, Region, Coefficients> hl1Coefficients, Bank bank,
+			int primarySpeciesIndex
+	) throws ProcessingException {
+		// (1) Dominant Height
+		float primarySpeciesDominantHeight = bank.dominantHeights[primarySpeciesIndex];
+		if (Float.isNaN(primarySpeciesDominantHeight)) {
+			float loreyHeight = bank.loreyHeights[primarySpeciesIndex][UC_ALL_INDEX];
+
+			if (Float.isNaN(loreyHeight)) {
+				throw new ProcessingException(
+						MessageFormat.format(
+								"Neither dominant nor lorey height[All] is available for primary species {0}",
+								bank.speciesNames[primarySpeciesIndex]
+						), 2
+				);
+			}
+
+			// Estimate dominant height from the lorey height
+			String primarySpeciesAlias = bank.speciesNames[primarySpeciesIndex];
+
+			var coefficients = hl1Coefficients.get(primarySpeciesAlias, primarySpeciesRegion);
+			float a0 = coefficients.getCoe(1);
+			float a1 = coefficients.getCoe(2);
+			float a2 = coefficients.getCoe(3);
+
+			float treesPerHectare = bank.treesPerHectare[primarySpeciesIndex][UC_ALL_INDEX];
+			float hMult = a0 - a1 + a1 * FloatMath.exp(a2 * (treesPerHectare - 100.0f));
+
+			primarySpeciesDominantHeight = 1.3f + (loreyHeight - 1.3f) / hMult;
+		}
+		return primarySpeciesDominantHeight;
+	}
+
+	static Optional<Integer> findIndexInOneIndexedFloatArray(Optional<Integer> tryFirst, float[] array, int arraySize) {
+		return tryFirst.filter(index -> !Float.isNaN(array[index])).or(() -> {
+			for (int i = 1; i <= arraySize; i++) {
+				if (!Float.isNaN(array[i])) {
+					return Optional.of(i);
+				}
+			}
+			return Optional.empty();
+		});
 	}
 
 }
