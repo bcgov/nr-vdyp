@@ -859,7 +859,7 @@ public class ProcessingEngine {
 	}
 
 	static record AgeTriplet(float total, float toBreastHeight, float atBreastHeight) {
-	};
+	}
 
 	/**
 	 * VHDOM1 METH_H = 2, METH_A = 2, METH_SI = 2.
@@ -953,10 +953,9 @@ public class ProcessingEngine {
 			}
 		}
 
-		var primarySpeciesAges = new AgeTriplet(
+		return new AgeTriplet(
 				primarySpeciesTotalAge, primarySpeciesYearsToBreastHeight, primarySpeciesYearsAtBreastHeight
 		);
-		return primarySpeciesAges;
 	}
 
 	static float calculatePrimarySpeciesDominantHeight(

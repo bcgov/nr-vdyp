@@ -8,7 +8,7 @@ public class ProcessingStateTestUtils {
 		return Bank.mockBank(bec, nSpecies);
 	}
 
-	static public void fill(float[] array, float... values) {
+	public static void fill(float[] array, float... values) {
 		if (values.length != array.length) {
 			throw new IllegalArgumentException(
 					"Tried to fill array of size" + array.length + " with " + values.length + " values"
@@ -18,7 +18,7 @@ public class ProcessingStateTestUtils {
 	}
 
 	@SafeVarargs
-	static public <T> void fill(T[] array, T... values) {
+	public static <T> void fill(T[] array, T... values) {
 		if (values.length != array.length) {
 			throw new IllegalArgumentException(
 					"Tried to fill array of size" + array.length + " with " + values.length + " values"

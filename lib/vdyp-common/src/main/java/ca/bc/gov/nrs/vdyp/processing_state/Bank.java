@@ -117,7 +117,7 @@ public class Bank {
 
 		this(
 				layer, becZone,
-				layer.getSpecies().values().stream().filter(s -> retainCriteria.test(s))
+				layer.getSpecies().values().stream().filter(retainCriteria::test)
 						.sorted((s1, s2) -> s1.getGenusIndex() - s2.getGenusIndex()).toList()
 		);
 	}

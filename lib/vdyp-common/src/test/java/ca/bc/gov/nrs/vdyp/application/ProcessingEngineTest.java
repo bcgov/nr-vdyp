@@ -1947,7 +1947,7 @@ class ProcessingEngineTest {
 			}
 
 			@Test
-			void testLoreyNotSet() throws ProcessingException {
+			void testLoreyNotSet() {
 				var bec = Utils.getBec("CDF", controlMap);
 				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
 				int primarySpeciesIndex = 3;
@@ -2029,7 +2029,7 @@ class ProcessingEngineTest {
 			}
 
 			@Test
-			void testNoTotals() throws ProcessingException {
+			void testNoTotals() {
 				var bec = Utils.getBec("CWH", controlMap);
 				Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
 				int primarySpeciesIndex = 3;
@@ -2190,7 +2190,7 @@ class ProcessingEngineTest {
 			}
 
 			@Test
-			void testNoIndices() throws Exception {
+			void testNoIndices() {
 
 				float[] siteIndices = { Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN };
 				int primarySpeciesIndex = 3;
