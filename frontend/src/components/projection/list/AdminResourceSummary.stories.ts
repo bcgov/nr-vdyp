@@ -22,6 +22,10 @@ const meta: Meta<typeof AdminResourceSummary> = {
       control: { type: 'number' },
       description: 'Thread usage percentage shown in the progress bar',
     },
+    stuckCount: {
+      control: { type: 'number' },
+      description: 'Total number of projections currently flagged as stuck',
+    },
   },
 }
 
@@ -34,5 +38,6 @@ export const Default: Story = {
     threadsInUse: 3,
     threadCapacity: 10,
     threadUsagePercent: 30,
+    stuckCount: 1,
   },
 }

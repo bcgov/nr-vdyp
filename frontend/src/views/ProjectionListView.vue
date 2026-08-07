@@ -207,10 +207,11 @@ const canBulkDownload = computed(() =>
   selectedProjections.value.some(p => p.status === PROJECTION_STATUS.READY || p.status === PROJECTION_STATUS.FAILED)
 )
 const canBulkCancel = computed(() =>
-  selectedProjections.value.length > 0 && selectedProjections.value.every(p => p.status === PROJECTION_STATUS.RUNNING)
+  selectedProjections.value.length > 0 &&
+  selectedProjections.value.every(p => p.status === PROJECTION_STATUS.RUNNING || p.status === PROJECTION_STATUS.STUCK)
 )
 const canBulkDelete = computed(() =>
-  selectedProjections.value.some(p => p.status !== PROJECTION_STATUS.RUNNING)
+  selectedProjections.value.some(p => p.status !== PROJECTION_STATUS.RUNNING && p.status !== PROJECTION_STATUS.STUCK)
 )
 
 const sortedProjections = computed(() => {
@@ -442,7 +443,11 @@ const handleCancel = async (projectionGUID: string) => {
     const latestProjection = await getProjectionById(projectionGUID)
     const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT)
 
-    if (latestStatus !== PROJECTION_STATUS.RUNNING && latestStatus !== PROJECTION_STATUS.QUEUED) {
+    if (
+      latestStatus !== PROJECTION_STATUS.RUNNING &&
+      latestStatus !== PROJECTION_STATUS.STUCK &&
+      latestStatus !== PROJECTION_STATUS.QUEUED
+    ) {
       // Projection is no longer running - update the single item and show appropriate message
       updateProjectionInList(latestProjection)
 
@@ -655,7 +660,7 @@ const handleBulkCancel = async () => {
         // Update frontend status if it differs
         updateProjectionInList(latestProjection)
 
-        if (latestStatus !== PROJECTION_STATUS.RUNNING) {
+        if (latestStatus !== PROJECTION_STATUS.RUNNING && latestStatus !== PROJECTION_STATUS.STUCK) {
           skipCount++
           continue
         }
@@ -717,7 +722,7 @@ const handleBulkDelete = async () => {
         // Update frontend status if it differs
         updateProjectionInList(latestProjection)
 
-        if (latestStatus === PROJECTION_STATUS.RUNNING) {
+        if (latestStatus === PROJECTION_STATUS.RUNNING || latestStatus === PROJECTION_STATUS.STUCK) {
           skipCount++
           continue
         }
@@ -762,8 +767,11 @@ const stopPolling = () => {
   }
 }
 
+const isActiveStatus = (status: string) =>
+  status === PROJECTION_STATUS.RUNNING || status === PROJECTION_STATUS.STUCK
+
 const pollRunningProjections = async () => {
-  const runningProjections = projections.value.filter(p => p.status === PROJECTION_STATUS.RUNNING)
+  const runningProjections = projections.value.filter(p => isActiveStatus(p.status))
   if (runningProjections.length === 0) {
     stopPolling()
     return
@@ -773,7 +781,7 @@ const pollRunningProjections = async () => {
     try {
       const latest = await getProjectionById(projection.projectionGUID)
       const latestStatus = mapProjectionStatus(latest.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT)
-      if (latestStatus !== PROJECTION_STATUS.RUNNING) {
+      if (!isActiveStatus(latestStatus)) {
         updateProjectionInList(latest)
       }
     } catch (err) {
@@ -782,13 +790,13 @@ const pollRunningProjections = async () => {
   }
 
   // Stop polling if no more running projections after updates
-  if (!projections.value.some(p => p.status === PROJECTION_STATUS.RUNNING)) {
+  if (!projections.value.some(p => isActiveStatus(p.status))) {
     stopPolling()
   }
 }
 
 const startPollingIfNeeded = () => {
-  if (projections.value.some(p => p.status === PROJECTION_STATUS.RUNNING)) {
+  if (projections.value.some(p => isActiveStatus(p.status))) {
     stopPolling()
     pollingTimer = setInterval(pollRunningProjections, REFRESH_INTERVAL_MS.PROJECTION_LIST_DATA_POLL)
   } else {

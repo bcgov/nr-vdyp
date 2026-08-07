@@ -243,6 +243,9 @@ export const PROJECTION_STATUS = Object.freeze({
   DRAFT: 'Draft',
   READY: 'Ready', // complete
   RUNNING: 'Running',
+  // STUCK is a RUNNING projection that hasn't reported progress in a while; it behaves identically to
+  // RUNNING everywhere in the UI (read-only guards, cancel eligibility, polling).
+  STUCK: 'Stuck',
   QUEUED: 'Queued',
   FAILED: 'Failed',
   // Frontend-only transient UI state: backend has no CANCELLED status code.

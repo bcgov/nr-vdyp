@@ -5,19 +5,36 @@
     </div>
 
     <div class="filter-row">
-      <div class="filter-field">
-        <label class="bcds-select-label" for="user-type-select">User Type</label>
-        <v-select
-          id="user-type-select"
-          v-model="selectedUserType"
-          :items="userTypeFilterOptions"
-          clearable
-          hide-details="auto"
-          persistent-placeholder
-          placeholder="Select"
-          append-inner-icon="mdi-chevron-down"
-          class="filter-select"
-        />
+      <div class="filter-group">
+        <div class="filter-field">
+          <label class="bcds-select-label" for="projection-status-select">Projection Status</label>
+          <v-select
+            id="projection-status-select"
+            v-model="selectedStatus"
+            :items="statusFilterOptions"
+            clearable
+            hide-details="auto"
+            persistent-placeholder
+            placeholder="Select"
+            append-inner-icon="mdi-chevron-down"
+            class="filter-select"
+          />
+        </div>
+
+        <div class="filter-field">
+          <label class="bcds-select-label" for="user-type-select">User Type</label>
+          <v-select
+            id="user-type-select"
+            v-model="selectedUserType"
+            :items="userTypeFilterOptions"
+            clearable
+            hide-details="auto"
+            persistent-placeholder
+            placeholder="Select"
+            append-inner-icon="mdi-chevron-down"
+            class="filter-select"
+          />
+        </div>
       </div>
 
       <AdminResourceSummary
@@ -25,6 +42,7 @@
         :threads-in-use="threadsInUseCount"
         :thread-capacity="threadCapacity"
         :thread-usage-percent="threadUsagePercent"
+        :stuck-count="stuckCount"
       />
     </div>
 
@@ -71,7 +89,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { AdminProjection, UserTypeCode, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
-import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TYPE_CODE, REFRESH_INTERVAL_MS } from '@/constants/constants'
+import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TYPE_CODE, REFRESH_INTERVAL_MS, PROJECTION_STATUS } from '@/constants/constants'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { AppProgressCircular } from '@/components'
@@ -94,6 +112,15 @@ const userTypeFilterOptions = [
   { title: 'BCeID', value: USER_TYPE_CODE.BCEID },
 ]
 const selectedUserType = ref<UserTypeCode | null>(null)
+
+// 'All' is a UI-only filter value (not a real projection status) meaning "no status filter applied".
+const STATUS_FILTER_ALL = 'All'
+const statusFilterOptions = [
+  { title: 'Running', value: PROJECTION_STATUS.RUNNING },
+  { title: 'Stuck', value: PROJECTION_STATUS.STUCK },
+  { title: STATUS_FILTER_ALL, value: STATUS_FILTER_ALL },
+]
+const selectedStatus = ref<string | null>(null)
 
 // Default sort: Threads (Highest First)
 const sortBy = ref<string>(ADMIN_DASHBOARD_HEADER_KEY.THREADS)
@@ -154,11 +181,19 @@ const refreshProjections = async () => {
 
 const filteredProjections = computed(() =>
   projections.value.filter(
-    (p) => !selectedUserType.value || p.userType === selectedUserType.value,
+    (p) =>
+      (!selectedUserType.value || p.userType === selectedUserType.value) &&
+      (!selectedStatus.value ||
+        selectedStatus.value === STATUS_FILTER_ALL ||
+        p.status === selectedStatus.value),
   ),
 )
 
 const totalRunningCount = computed(() => filteredProjections.value.length)
+
+const stuckCount = computed(
+  () => filteredProjections.value.filter((p) => p.status === PROJECTION_STATUS.STUCK).length,
+)
 
 const threadsInUseCount = computed(() =>
   filteredProjections.value.reduce((sum, p) => sum + p.workerCount, 0),
@@ -294,6 +329,12 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: var(--layout-margin-medium);
   margin-bottom: var(--layout-margin-medium);
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--layout-margin-medium);
 }
 
 .filter-field {

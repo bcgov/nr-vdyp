@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.projectionEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
@@ -11,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,11 +27,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ca.bc.gov.nrs.vdyp.backend.clients.VDYPBatchClient;
+import ca.bc.gov.nrs.vdyp.backend.config.ProjectionStuckConfig;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionBatchMappingResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
@@ -46,6 +52,10 @@ class ProjectionBatchMappingServiceTest {
 	@Mock
 	BatchFailureTypeCodeLookup failureLookup;
 	@Mock
+	ProjectionStatusCodeLookup statusLookup;
+	@Mock
+	ProjectionStuckConfig stuckConfig;
+	@Mock
 	@RestClient
 	VDYPBatchClient batchClient;
 
@@ -53,7 +63,9 @@ class ProjectionBatchMappingServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		service = new ProjectionBatchMappingService(repository, assembler, failureLookup, batchClient);
+		service = new ProjectionBatchMappingService(
+				repository, assembler, failureLookup, statusLookup, stuckConfig, batchClient
+		);
 	}
 
 	@Test
@@ -297,6 +309,74 @@ class ProjectionBatchMappingServiceTest {
 		assertEquals(20, mappingEntity.getErrorCount());
 		assertEquals(15, mappingEntity.getCompletedPolygonCount());
 		assertEquals(3, mappingEntity.getWorkerCount());
+	}
+
+	@Test
+	void updateProgress_polygonsOrErrorsIncrease_setsLastProgressTime() throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setBatchJobGUID(batchJobGuid);
+		mappingEntity.setCompletedPolygonCount(0);
+		mappingEntity.setErrorCount(0);
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
+
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 0, 0, 3, null, null);
+
+		service.updateProgress(projectionEntity, update);
+
+		assertNotNull(mappingEntity.getLastProgressTime());
+	}
+
+	@Test
+	void updateProgress_noChangeInPolygonsOrErrors_doesNotSetLastProgressTime() throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setBatchJobGUID(batchJobGuid);
+		mappingEntity.setCompletedPolygonCount(15);
+		mappingEntity.setErrorCount(20);
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
+
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(batchJobGuid, 100, 10, 20, 5, 3, null, null);
+
+		service.updateProgress(projectionEntity, update);
+
+		assertNull(mappingEntity.getLastProgressTime());
+	}
+
+	@Test
+	void updateStuckProjectionStatuses_marksStaleRunningAsStuck_andRevertsRecoveredStuckToRunning() {
+		OffsetDateTime threshold = OffsetDateTime.now().minusMinutes(120);
+		when(stuckConfig.threshold()).thenReturn(threshold);
+		when(stuckConfig.thresholdMinutes()).thenReturn(120);
+
+		ProjectionEntity staleProjectionEntity = projectionEntity(UUID.randomUUID(), UUID.randomUUID());
+		ProjectionBatchMappingEntity staleMapping = new ProjectionBatchMappingEntity();
+		staleMapping.setProjection(staleProjectionEntity);
+
+		ProjectionEntity recoveredProjectionEntity = projectionEntity(UUID.randomUUID(), UUID.randomUUID());
+		ProjectionBatchMappingEntity recoveredMapping = new ProjectionBatchMappingEntity();
+		recoveredMapping.setProjection(recoveredProjectionEntity);
+
+		when(repository.findStaleRunningMappings(threshold)).thenReturn(List.of(staleMapping));
+		when(repository.findRecoveredStuckMappings(threshold)).thenReturn(List.of(recoveredMapping));
+
+		ProjectionStatusCodeEntity stuckStatus = new ProjectionStatusCodeEntity();
+		stuckStatus.setCode(ProjectionStatusCodeModel.STUCK);
+		ProjectionStatusCodeEntity runningStatus = new ProjectionStatusCodeEntity();
+		runningStatus.setCode(ProjectionStatusCodeModel.RUNNING);
+		when(statusLookup.requireEntity(ProjectionStatusCodeModel.STUCK)).thenReturn(stuckStatus);
+		when(statusLookup.requireEntity(ProjectionStatusCodeModel.RUNNING)).thenReturn(runningStatus);
+
+		service.updateStuckProjectionStatuses();
+
+		assertEquals(stuckStatus, staleProjectionEntity.getProjectionStatusCode());
+		assertEquals(runningStatus, recoveredProjectionEntity.getProjectionStatusCode());
 	}
 
 	@Test

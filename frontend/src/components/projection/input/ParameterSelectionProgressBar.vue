@@ -66,6 +66,7 @@ const showStatus = computed(() => {
   const status = props.projectionStatus
   return (
     status === CONSTANTS.PROJECTION_STATUS.RUNNING ||
+    status === CONSTANTS.PROJECTION_STATUS.STUCK ||
     status === CONSTANTS.PROJECTION_STATUS.QUEUED ||
     status === CONSTANTS.PROJECTION_STATUS.READY ||
     status === CONSTANTS.PROJECTION_STATUS.FAILED
@@ -77,6 +78,8 @@ const statusIcon = computed(() => {
     Draft: DraftStatusIcon,
     Ready: ReadyStatusIcon,
     Running: RunningStatusIcon,
+    // TODO: replace with a dedicated Stuck icon;
+    Stuck: FailedStatusIcon,
     Failed: FailedStatusIcon,
   }
   return iconMap[props.projectionStatus] || ''
@@ -87,6 +90,7 @@ const statusTextClass = computed(() => {
     Draft: 'status-text status-text--draft',
     Ready: 'status-text status-text--ready',
     Running: 'status-text status-text--running',
+    Stuck: 'status-text status-text--stuck',
     Failed: 'status-text status-text--failed',
   }
   return classMap[props.projectionStatus] || 'status-text'
@@ -94,6 +98,7 @@ const statusTextClass = computed(() => {
 
 const progressColor = computed(() => {
   if (props.projectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED) return 'error'
+  if (props.projectionStatus === CONSTANTS.PROJECTION_STATUS.STUCK) return 'error'
   if (props.projectionStatus === CONSTANTS.PROJECTION_STATUS.READY) return 'success'
   if (props.projectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING) return 'warning'
   if (props.projectionStatus === CONSTANTS.PROJECTION_STATUS.QUEUED) return 'warning'
@@ -160,6 +165,10 @@ const progressColor = computed(() => {
 
 .status-text--running {
   color: var(--support-border-color-warning);
+}
+
+.status-text--stuck {
+  color: var(--support-border-color-danger);
 }
 
 .status-text--failed {

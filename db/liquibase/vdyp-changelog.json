@@ -787,6 +787,43 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_17_00",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_17_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_17/00/ddl/tables/app-vdyp.projection_batch_mapping.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_17/00/dml/app-vdyp.projection_status_code.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "DELETE FROM \"app-vdyp\".\"projection_status_code\" WHERE \"projection_status_code\" = 'STUCK'"
+          },
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection_batch_mapping\" DROP COLUMN IF EXISTS \"last_progress_time\""
+          }
+        ]
+      }
     }
   ]
 }

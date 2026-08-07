@@ -58,7 +58,7 @@
       <tbody>
         <tr v-if="projections.length === 0" class="empty-state-row">
           <td colspan="8" class="empty-state-cell">
-            <span class="empty-state-message">No running projections found.</span>
+            <span class="empty-state-message">No projections found.</span>
           </td>
         </tr>
         <tr
@@ -71,7 +71,13 @@
             <div class="projection-name-cell">
               <span class="projection-title">{{ projection.title }}</span>
               <span
-                v-if="projection.status === PROJECTION_STATUS.RUNNING"
+                v-if="projection.status === PROJECTION_STATUS.STUCK"
+                class="status-badge status-stuck"
+              >
+                Stuck
+              </span>
+              <span
+                v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
                 class="status-badge status-running"
               >
                 Running
@@ -85,13 +91,18 @@
             </span>
             <span v-else>-</span>
           </td>
-          <td class="table-cell">{{ formatElapsedTime(projection.startDate) }}</td>
+          <td class="table-cell">
+            <span :class="{ 'elapsed-stuck': projection.status === PROJECTION_STATUS.STUCK }">
+              {{ formatElapsedTime(projection.startDate) }}
+            </span>
+          </td>
           <td class="table-cell">{{ projection.workerCount }}</td>
           <td class="table-cell">
             <div class="progress-cell">
               <div class="progress-track">
                 <div
                   class="progress-fill"
+                  :class="{ 'progress-fill-danger': projection.status === PROJECTION_STATUS.STUCK }"
                   :style="{ width: `${getProgressPercent(projection)}%` }"
                 />
               </div>
@@ -294,6 +305,16 @@ const formatElapsedTime = (startDate: string | null): string => {
   background: var(--support-surface-color-success);
 }
 
+.status-badge.status-stuck {
+  border: 1px solid var(--support-border-color-danger);
+  background: var(--support-surface-color-danger);
+  color: var(--support-border-color-danger);
+}
+
+.elapsed-stuck {
+  color: var(--typography-color-danger);
+}
+
 .progress-cell {
   display: flex;
   align-items: center;
@@ -313,6 +334,10 @@ const formatElapsedTime = (startDate: string | null): string => {
   height: 100%;
   background-color: #003366;
   transition: width 0.4s ease;
+}
+
+.progress-fill.progress-fill-danger {
+  background-color: var(--support-border-color-danger);
 }
 
 .progress-percent {

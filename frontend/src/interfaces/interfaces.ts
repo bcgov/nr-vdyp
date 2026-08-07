@@ -44,7 +44,7 @@ export interface Tab {
 }
 
 // 'Cancelled' is a frontend-only transient UI state (not a real backend status code).
-export type ProjectionStatus = 'Draft' | 'Ready' | 'Running' | 'Failed' | 'Cancelled' | 'Queued'
+export type ProjectionStatus = 'Draft' | 'Ready' | 'Running' | 'Stuck' | 'Failed' | 'Cancelled' | 'Queued'
 
 export interface Projection {
   projectionGUID: string

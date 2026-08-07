@@ -35,6 +35,7 @@ public class ProjectionBatchMappingResourceAssembler {
 		entity.setWorkerCount(model.getWorkerCount());
 		entity.setBatchFailureTypeCode(bftcra.toEntity(model.getBatchFailureTypeCode()));
 		entity.setFailureMessage(model.getFailureMessage());
+		entity.setLastProgressTime(model.getLastProgressTime());
 		return entity;
 	}
 
@@ -57,6 +58,7 @@ public class ProjectionBatchMappingResourceAssembler {
 		model.setWorkerCount(entity.getWorkerCount());
 		model.setBatchFailureTypeCode(bftcra.toModel(entity.getBatchFailureTypeCode()));
 		model.setFailureMessage(entity.getFailureMessage());
+		model.setLastProgressTime(entity.getLastProgressTime());
 		return model;
 	}
 }

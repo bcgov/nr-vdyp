@@ -303,13 +303,15 @@ class ProjectionServiceTest {
 
 	@Test
 	void getAllRunningProjections_returnsEmpty_whenNoneRunning() {
-		when(repository.findByStatus(ProjectionStatusCodeModel.RUNNING)).thenReturn(Collections.emptyList());
+		when(
+				repository.findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK))
+		).thenReturn(Collections.emptyList());
 
 		List<ProjectionModel> results = service.getAllRunningProjections();
 
 		assertNotNull(results);
 		assertTrue(results.isEmpty());
-		verify(repository).findByStatus(ProjectionStatusCodeModel.RUNNING);
+		verify(repository).findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK));
 	}
 
 	@Test
@@ -319,7 +321,8 @@ class ProjectionServiceTest {
 		entityResult.setReportTitle("Running Projection");
 		entityResult.setReportDescription("Running Description");
 
-		when(repository.findByStatus(ProjectionStatusCodeModel.RUNNING)).thenReturn(List.of(entityResult));
+		when(repository.findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK)))
+				.thenReturn(List.of(entityResult));
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 
 		List<ProjectionModel> results = service.getAllRunningProjections();
@@ -332,7 +335,7 @@ class ProjectionServiceTest {
 		assertThat(result.getReportTitle()).isEqualTo("Running Projection");
 		assertThat(result.getReportDescription()).isEqualTo("Running Description");
 
-		verify(repository).findByStatus(ProjectionStatusCodeModel.RUNNING);
+		verify(repository).findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK));
 	}
 
 	@Test
@@ -353,7 +356,7 @@ class ProjectionServiceTest {
 		nullWorkerCount.setProjectionGUID(UUID.randomUUID());
 		nullWorkerCount.setReportTitle("Null Worker Count");
 
-		when(repository.findByStatus(ProjectionStatusCodeModel.RUNNING))
+		when(repository.findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK)))
 				.thenReturn(List.of(noMapping, nullWorkerCount, lowThreads, highThreads));
 
 		ProjectionBatchMappingModel highMapping = batchMappingModel(UUID.randomUUID());
@@ -575,6 +578,45 @@ class ProjectionServiceTest {
 		assertDoesNotThrow(
 				() -> service
 						.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.STORE_RESULTS)
+		);
+	}
+
+	@Test
+	void checkProjectionStatusPermitsAction_stuckBehavesIdenticallyToRunning() {
+		ProjectionEntity entity = new ProjectionEntity();
+		entity.setProjectionGUID(UUID.randomUUID());
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.STUCK);
+		entity.setProjectionStatusCode(statusEntity);
+
+		assertDoesNotThrow(
+				() -> service.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.READ)
+		);
+		assertDoesNotThrow(
+				() -> service.checkProjectionStatusPermitsAction(
+						entity, ProjectionService.ProjectionAction.COMPLETE_PROJECTION
+				)
+		);
+		assertDoesNotThrow(
+				() -> service
+						.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.STORE_RESULTS)
+		);
+		assertDoesNotThrow(
+				() -> service.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.CANCEL)
+		);
+		assertDoesNotThrow(
+				() -> service
+						.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.UPDATE_PROGRESS)
+		);
+
+		assertThrows(
+				ProjectionStateException.class,
+				() -> service.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.UPDATE)
+		);
+		assertThrows(
+				ProjectionStateException.class,
+				() -> service.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.DELETE)
 		);
 	}
 

@@ -8,6 +8,14 @@
       <span class="pill-value">{{ totalRunning }}</span>
     </div>
 
+    <div class="summary-pill summary-pill--stuck">
+      <span class="pill-icon" aria-hidden="true">
+        <img :src="ExclamationMarkIcon" alt="" class="pill-icon-img pill-icon-img--stuck" />
+      </span>
+      <span class="pill-label">Stuck:</span>
+      <span class="pill-value">{{ stuckCount }}</span>
+    </div>
+
     <div class="summary-pill summary-pill--threads">
       <div class="pill-header">
         <span class="pill-label">Threads in Use</span>
@@ -27,13 +35,14 @@
 </template>
 
 <script setup lang="ts">
-import { ChartLineIcon } from '@/assets'
+import { ChartLineIcon, ExclamationMarkIcon } from '@/assets'
 
 defineProps<{
   totalRunning: number
   threadsInUse: number
   threadCapacity: number
   threadUsagePercent: number
+  stuckCount: number
 }>()
 </script>
 
@@ -57,7 +66,8 @@ defineProps<{
   border-radius: var(--layout-borderRadius-circular, 9999px);
 }
 
-.summary-pill--total {
+.summary-pill--total,
+.summary-pill--stuck {
   display: inline-flex;
   height: 32px;
   padding: var(--layout-margin-hair, 2px) var(--layout-padding-medium, 16px);
@@ -69,9 +79,8 @@ defineProps<{
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 0 var(--layout-padding-medium);
   gap: 6px;
-  min-width: 220px;
+  min-width: 189px;
   background: none;
   border-radius: 0;
 }
@@ -95,6 +104,12 @@ defineProps<{
   flex-shrink: 0;
 }
 
+.pill-icon-img--stuck {
+  width: 14px;
+  height: 14px;
+  aspect-ratio: 1 / 1;
+}
+
 .pill-label {
   font: var(--typography-regular-body);
   color: var(--typography-color-primary);
@@ -107,7 +122,9 @@ defineProps<{
 }
 
 .summary-pill--total .pill-label,
-.summary-pill--total .pill-value {
+.summary-pill--total .pill-value,
+.summary-pill--stuck .pill-label,
+.summary-pill--stuck .pill-value {
   font: var(--typography-regular-label);
   color: var(--typography-color-primary);
 }
@@ -129,32 +146,33 @@ defineProps<{
   transform: translateY(-2px);
 }
 
-/* On phone-width viewports, the left/right padding on this row and on the
-   threads pill pushed both pills out of alignment with the "User Type"/
-   "Sort By" fields to the left. Dropping that padding lets Total Running's
-   left edge (and Threads in Use's, when it wraps to its own line) line up
-   with those fields, and frees up enough width for both pills to fit on one
-   line more often. */
-@media (max-width: 540px) {
+/* Below the card-view breakpoint (matches BREAKPOINT.CARD_VIEW in
+   AdminDashboardView.vue), this row must always sit on its own line below
+   "User Type", never beside it. Relying on flex-wrap's organic wrapping
+   (i.e. only wrapping once "User Type" + this row's natural width no longer
+   fit the line) is not reliable across the whole range: at some widths in
+   this range (e.g. 820px) there's just enough spare room for both to still
+   fit on one line, which also isn't future-proof once System Storage (a
+   later ticket) adds a 4th item here and further changes the natural width.
+   flex-basis: 100% forces this row to claim the full line width, which
+   guarantees flex-wrap pushes it onto its own line for every width in this
+   range regardless of its actual content width. */
+@media (max-width: 1025px) {
   .resource-summary {
+    flex-basis: 100%;
     padding-left: 0;
     padding-right: 0;
-    /* This 20px bottom padding stacked with .filter-row's 30px margin-bottom
-       (AdminDashboardView.vue) to push Sort By ~50px away from Threads in
-       Use instead of the intended 30px, so it's dropped here. */
+    /* This 20px bottom padding stacked with .filter-row's margin-bottom
+       (AdminDashboardView.vue) to push the next row further away than
+       intended, so it's dropped here. */
     padding-bottom: 0;
     /* The margin-top above only exists to line this row up with the User
-       Type select box when they share a row. Below 540px the User Type
-       field and this row are always stacked (one per line), so the offset
-       is unwanted here — it would otherwise inflate the User Type -> Total
-       Running gap beyond the 30px rhythm used everywhere else in this
+       Type select box when they share a row. In the card-view range the
+       User Type field and this row are always stacked (one per line), so
+       the offset is unwanted here — it would otherwise inflate the User
+       Type -> Total Running gap beyond the rhythm used elsewhere in this
        column. */
     margin-top: 0;
-  }
-
-  .summary-pill--threads {
-    padding-left: 0;
-    padding-right: 0;
   }
 }
 

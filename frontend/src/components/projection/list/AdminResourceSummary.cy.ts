@@ -12,6 +12,7 @@ describe('AdminResourceSummary.vue', () => {
       threadsInUse?: number
       threadCapacity?: number
       threadUsagePercent?: number
+      stuckCount?: number
     } = {},
   ) => {
     return mount(AdminResourceSummary, {
@@ -20,6 +21,7 @@ describe('AdminResourceSummary.vue', () => {
         threadsInUse: 3,
         threadCapacity: 10,
         threadUsagePercent: 30,
+        stuckCount: 1,
         ...props,
       },
       global: {
@@ -36,16 +38,24 @@ describe('AdminResourceSummary.vue', () => {
     cy.get('.thread-progress-bar').should('exist')
   })
 
+  it('renders the stuck projections count', () => {
+    mountComponent({ stuckCount: 4 })
+
+    cy.get('.summary-pill--stuck .pill-value').should('contain', '4')
+  })
+
   it('renders zero values correctly', () => {
     mountComponent({
       totalRunning: 0,
       threadsInUse: 0,
       threadCapacity: 10,
       threadUsagePercent: 0,
+      stuckCount: 0,
     })
 
     cy.get('.summary-pill--total .pill-value').should('contain', '0')
     cy.get('.summary-pill--threads .pill-value').should('contain', '0/ 10')
+    cy.get('.summary-pill--stuck .pill-value').should('contain', '0')
   })
 
   it('reflects threadUsagePercent in the progress bar', () => {

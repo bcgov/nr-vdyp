@@ -15,6 +15,7 @@ public class ProjectionStatusCodeModel extends CodeTableModel {
 	public static final String FAILED = "FAILED";
 	public static final String QUEUED = "QUEUED";
 	public static final String ADMN_CNCLD = "ADMN_CNCLD";
+	public static final String STUCK = "STUCK";
 
 	private String projectionStatusCode;
 
