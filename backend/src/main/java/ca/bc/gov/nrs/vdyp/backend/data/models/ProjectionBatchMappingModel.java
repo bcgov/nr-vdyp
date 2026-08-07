@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
+import java.time.OffsetDateTime;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
@@ -14,6 +16,7 @@ public class ProjectionBatchMappingModel {
 	private Integer workerCount;
 	private BatchFailureTypeCodeModel batchFailureTypeCode;
 	private String failureMessage;
+	private OffsetDateTime lastProgressTime;
 
 	public String getProjectionBatchMappingGUID() {
 		return projectionBatchMappingGUID;
@@ -93,5 +96,13 @@ public class ProjectionBatchMappingModel {
 
 	public void setWorkerCount(Integer workerCount) {
 		this.workerCount = workerCount;
+	}
+
+	public OffsetDateTime getLastProgressTime() {
+		return lastProgressTime;
+	}
+
+	public void setLastProgressTime(OffsetDateTime lastProgressTime) {
+		this.lastProgressTime = lastProgressTime;
 	}
 }

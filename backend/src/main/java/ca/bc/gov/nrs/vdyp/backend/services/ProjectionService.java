@@ -458,7 +458,8 @@ public class ProjectionService {
 	}
 
 	public List<ProjectionModel> getAllRunningProjections() {
-		List<ProjectionEntity> entities = repository.findByStatus(ProjectionStatusCodeModel.RUNNING);
+		List<ProjectionEntity> entities = repository
+				.findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK));
 		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
 
 		// Default Admin Dashboard sort: Threads (workerCount) highest first. Sorted here in Java, not via the
@@ -685,6 +686,12 @@ public class ProjectionService {
 			ProjectionStatusCodeModel.ADMN_CNCLD,
 			Set.of(ProjectionAction.UPDATE, ProjectionAction.DELETE, ProjectionAction.READ),
 			ProjectionStatusCodeModel.RUNNING,
+			Set.of(
+					ProjectionAction.READ, ProjectionAction.COMPLETE_PROJECTION, ProjectionAction.STORE_RESULTS,
+					ProjectionAction.CANCEL, ProjectionAction.UPDATE_PROGRESS
+			),
+			// STUCK behaves identically to RUNNING for all actions
+			ProjectionStatusCodeModel.STUCK,
 			Set.of(
 					ProjectionAction.READ, ProjectionAction.COMPLETE_PROJECTION, ProjectionAction.STORE_RESULTS,
 					ProjectionAction.CANCEL, ProjectionAction.UPDATE_PROGRESS

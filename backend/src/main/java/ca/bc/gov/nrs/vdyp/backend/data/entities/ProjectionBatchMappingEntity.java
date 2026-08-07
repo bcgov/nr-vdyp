@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.data.entities;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
@@ -49,6 +50,9 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 	@Column(name = "failure_message")
 	private String failureMessage;
 
+	@Column(name = "last_progress_time")
+	private OffsetDateTime lastProgressTime;
+
 	public UUID getProjectionBatchMappingGUID() {
 		return projectionBatchMappingGUID;
 	}
@@ -89,6 +93,10 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 		return failureMessage;
 	}
 
+	public OffsetDateTime getLastProgressTime() {
+		return lastProgressTime;
+	}
+
 	public void setProjectionBatchMappingGUID(UUID projectionBatchMappingGUID) {
 		this.projectionBatchMappingGUID = projectionBatchMappingGUID;
 	}
@@ -127,6 +135,10 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 
 	public void setFailureMessage(String failureMessage) {
 		this.failureMessage = failureMessage;
+	}
+
+	public void setLastProgressTime(OffsetDateTime lastProgressTime) {
+		this.lastProgressTime = lastProgressTime;
 	}
 
 }

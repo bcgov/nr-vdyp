@@ -75,6 +75,10 @@ spec:
               value: {{ .Values.backend.env.BATCH_BASE_URL | quote }}
             - name: VDYP_PROJECTION_EXPIRY_DAYS
               value: {{ .Values.backend.env.VDYP_PROJECTION_EXPIRY_DAYS | quote }}
+            - name: VDYP_PROJECTION_STUCK_THRESHOLD_MINUTES
+              value: {{ .Values.backend.env.VDYP_PROJECTION_STUCK_THRESHOLD_MINUTES | quote }}
+            - name: VDYP_PROJECTION_STUCK_CHECK_INTERVAL
+              value: {{ .Values.backend.env.VDYP_PROJECTION_STUCK_CHECK_INTERVAL | quote }}
             - name: VDYP_API_GATEWAY_JWT_JWKS_URI
               value: {{ .Values.backend.env.VDYP_API_GATEWAY_JWT_JWKS_URI | quote }}
             - name: VDYP_API_GATEWAY_JWT_ISSUER

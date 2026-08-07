@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -10,12 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.clients.VDYPBatchClient;
+import ca.bc.gov.nrs.vdyp.backend.config.ProjectionStuckConfig;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.ProjectionBatchMappingResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.BatchFailureTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
@@ -31,16 +34,21 @@ public class ProjectionBatchMappingService {
 	private ProjectionBatchMappingRepository repository;
 	private ProjectionBatchMappingResourceAssembler assembler;
 	private BatchFailureTypeCodeLookup batchFailureTypeCodeLookup;
+	private ProjectionStatusCodeLookup statusLookup;
+	private ProjectionStuckConfig stuckConfig;
 
 	private VDYPBatchClient batchClient;
 
 	public ProjectionBatchMappingService(
 			ProjectionBatchMappingRepository repository, ProjectionBatchMappingResourceAssembler assembler,
-			BatchFailureTypeCodeLookup batchFailureTypeCodeLookup, @RestClient VDYPBatchClient batchClient
+			BatchFailureTypeCodeLookup batchFailureTypeCodeLookup, ProjectionStatusCodeLookup statusLookup,
+			ProjectionStuckConfig stuckConfig, @RestClient VDYPBatchClient batchClient
 	) {
 		this.repository = repository;
 		this.assembler = assembler;
 		this.batchFailureTypeCodeLookup = batchFailureTypeCodeLookup;
+		this.statusLookup = statusLookup;
+		this.stuckConfig = stuckConfig;
 		this.batchClient = batchClient;
 	}
 
@@ -196,11 +204,21 @@ public class ProjectionBatchMappingService {
 	}
 
 	private static void applyProgress(ProjectionBatchMappingEntity entity, ProjectionProgressUpdate progressUpdate) {
+		int newCompletedPolygonCount = progressUpdate.polygonsProcessed() + progressUpdate.polygonsSkipped();
+		int previousCompletedPolygonCount = entity.getCompletedPolygonCount() != null
+				? entity.getCompletedPolygonCount() : 0;
+		int previousErrorCount = entity.getErrorCount() != null ? entity.getErrorCount() : 0;
+
+		if (newCompletedPolygonCount > previousCompletedPolygonCount
+				|| progressUpdate.projectionErrors() > previousErrorCount) {
+			entity.setLastProgressTime(OffsetDateTime.now());
+		}
+
 		entity.setPolygonCount(progressUpdate.totalPolygons());
 		entity.setErrorCount(progressUpdate.projectionErrors());
 		// Polygons whose chunk failed and was skipped are folded into the displayed "completed" count so that
 		// completed reconciles to total once the job finishes, rather than silently under-reporting.
-		entity.setCompletedPolygonCount(progressUpdate.polygonsProcessed() + progressUpdate.polygonsSkipped());
+		entity.setCompletedPolygonCount(newCompletedPolygonCount);
 		entity.setWorkerCount(progressUpdate.workers());
 	}
 
@@ -215,6 +233,37 @@ public class ProjectionBatchMappingService {
 		} catch (Exception e) {
 			logger.warn("Unable to retrieve thread capacity from batch service", e);
 			return 0;
+		}
+	}
+
+	/**
+	 * Flags RUNNING projections that haven't reported progress within the configured threshold as STUCK, and reverts
+	 * STUCK projections that have resumed reporting progress back to RUNNING. Intended to be called periodically by a
+	 * scheduled job.
+	 */
+	@Transactional
+	public void updateStuckProjectionStatuses() {
+		OffsetDateTime threshold = stuckConfig.threshold();
+
+		List<ProjectionBatchMappingEntity> staleRunning = repository.findStaleRunningMappings(threshold);
+		for (ProjectionBatchMappingEntity mapping : staleRunning) {
+			mapping.getProjection()
+					.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.STUCK));
+		}
+		if (!staleRunning.isEmpty()) {
+			logger.info(
+					"Marked {} projection(s) as STUCK (no progress in over {} minutes)", staleRunning.size(),
+					stuckConfig.thresholdMinutes()
+			);
+		}
+
+		List<ProjectionBatchMappingEntity> recoveredStuck = repository.findRecoveredStuckMappings(threshold);
+		for (ProjectionBatchMappingEntity mapping : recoveredStuck) {
+			mapping.getProjection()
+					.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.RUNNING));
+		}
+		if (!recoveredStuck.isEmpty()) {
+			logger.info("Reverted {} projection(s) from STUCK to RUNNING (progress resumed)", recoveredStuck.size());
 		}
 	}
 

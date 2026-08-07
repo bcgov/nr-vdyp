@@ -23,6 +23,11 @@ public class ProjectionRepository implements PanacheRepositoryBase<ProjectionEnt
 		return list("projectionStatusCode.projectionStatusCode = ?1", sort, projectionStatusCode);
 	}
 
+	public List<ProjectionEntity> findByStatuses(List<String> projectionStatusCodes) {
+		Sort sort = Sort.by("updateDate").descending();
+		return list("projectionStatusCode.projectionStatusCode in ?1", sort, projectionStatusCodes);
+	}
+
 	public long countUsesFileSet(UUID fileSetGUID) {
 		// Check for this fileSet in polygon or layer file sets in any projection
 		// Potential improvement, could remove result file set, confident we shouldn't share that one under any
