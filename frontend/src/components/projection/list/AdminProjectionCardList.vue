@@ -321,12 +321,6 @@ const formatElapsedTime = (startDate: string | null): string => {
 
 .elapsed-stuck {
   color: #d8292f;
-  font-family: Menlo, monospace;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 16px;
-  text-transform: capitalize;
 }
 
 .polygons-value {
