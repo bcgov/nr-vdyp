@@ -58,7 +58,7 @@
       <tbody>
         <tr v-if="projections.length === 0" class="empty-state-row">
           <td colspan="8" class="empty-state-cell">
-            <span class="empty-state-message">No running projections found.</span>
+            <span class="empty-state-message">No projections found.</span>
           </td>
         </tr>
         <tr

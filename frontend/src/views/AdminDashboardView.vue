@@ -5,19 +5,36 @@
     </div>
 
     <div class="filter-row">
-      <div class="filter-field">
-        <label class="bcds-select-label" for="user-type-select">User Type</label>
-        <v-select
-          id="user-type-select"
-          v-model="selectedUserType"
-          :items="userTypeFilterOptions"
-          clearable
-          hide-details="auto"
-          persistent-placeholder
-          placeholder="Select"
-          append-inner-icon="mdi-chevron-down"
-          class="filter-select"
-        />
+      <div class="filter-group">
+        <div class="filter-field">
+          <label class="bcds-select-label" for="projection-status-select">Projection Status</label>
+          <v-select
+            id="projection-status-select"
+            v-model="selectedStatus"
+            :items="statusFilterOptions"
+            clearable
+            hide-details="auto"
+            persistent-placeholder
+            placeholder="Select"
+            append-inner-icon="mdi-chevron-down"
+            class="filter-select"
+          />
+        </div>
+
+        <div class="filter-field">
+          <label class="bcds-select-label" for="user-type-select">User Type</label>
+          <v-select
+            id="user-type-select"
+            v-model="selectedUserType"
+            :items="userTypeFilterOptions"
+            clearable
+            hide-details="auto"
+            persistent-placeholder
+            placeholder="Select"
+            append-inner-icon="mdi-chevron-down"
+            class="filter-select"
+          />
+        </div>
       </div>
 
       <AdminResourceSummary
@@ -96,6 +113,15 @@ const userTypeFilterOptions = [
 ]
 const selectedUserType = ref<UserTypeCode | null>(null)
 
+// 'All' is a UI-only filter value (not a real projection status) meaning "no status filter applied".
+const STATUS_FILTER_ALL = 'All'
+const statusFilterOptions = [
+  { title: 'Running', value: PROJECTION_STATUS.RUNNING },
+  { title: 'Stuck', value: PROJECTION_STATUS.STUCK },
+  { title: STATUS_FILTER_ALL, value: STATUS_FILTER_ALL },
+]
+const selectedStatus = ref<string | null>(null)
+
 // Default sort: Threads (Highest First)
 const sortBy = ref<string>(ADMIN_DASHBOARD_HEADER_KEY.THREADS)
 const sortOrder = ref<SortOrder>(SORT_ORDER.DESC)
@@ -155,7 +181,11 @@ const refreshProjections = async () => {
 
 const filteredProjections = computed(() =>
   projections.value.filter(
-    (p) => !selectedUserType.value || p.userType === selectedUserType.value,
+    (p) =>
+      (!selectedUserType.value || p.userType === selectedUserType.value) &&
+      (!selectedStatus.value ||
+        selectedStatus.value === STATUS_FILTER_ALL ||
+        p.status === selectedStatus.value),
   ),
 )
 
@@ -299,6 +329,12 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: var(--layout-margin-medium);
   margin-bottom: var(--layout-margin-medium);
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--layout-margin-medium);
 }
 
 .filter-field {

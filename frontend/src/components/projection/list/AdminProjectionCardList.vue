@@ -39,7 +39,7 @@
     <!-- Empty state when no projections -->
     <v-card v-if="projections.length === 0" class="empty-state-card" elevation="0">
       <div class="empty-state-content">
-        <span class="empty-state-message">No running projections found.</span>
+        <span class="empty-state-message">No projections found.</span>
       </div>
     </v-card>
 
