@@ -303,7 +303,8 @@ const onConfirm = async () => {
 const isHeaderEditActive = computed(() => {
   const status = appStore.currentProjectionStatus
   if (
-    status === CONSTANTS.PROJECTION_STATUS.RUNNING  || 
+    status === CONSTANTS.PROJECTION_STATUS.RUNNING  ||
+    status === CONSTANTS.PROJECTION_STATUS.STUCK    ||
     status === CONSTANTS.PROJECTION_STATUS.QUEUED   ||
     status === CONSTANTS.PROJECTION_STATUS.READY
   )
@@ -314,7 +315,8 @@ const isHeaderEditActive = computed(() => {
 const editTooltipText = computed(() => {
   const status = appStore.currentProjectionStatus
   if (
-    status === CONSTANTS.PROJECTION_STATUS.RUNNING  || 
+    status === CONSTANTS.PROJECTION_STATUS.RUNNING  ||
+    status === CONSTANTS.PROJECTION_STATUS.STUCK    ||
     status === CONSTANTS.PROJECTION_STATUS.QUEUED   ||
     status === CONSTANTS.PROJECTION_STATUS.READY
   ) {

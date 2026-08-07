@@ -25,6 +25,7 @@
         :threads-in-use="threadsInUseCount"
         :thread-capacity="threadCapacity"
         :thread-usage-percent="threadUsagePercent"
+        :stuck-count="stuckCount"
       />
     </div>
 
@@ -71,7 +72,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { AdminProjection, UserTypeCode, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
-import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TYPE_CODE, REFRESH_INTERVAL_MS } from '@/constants/constants'
+import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TYPE_CODE, REFRESH_INTERVAL_MS, PROJECTION_STATUS } from '@/constants/constants'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { AppProgressCircular } from '@/components'
@@ -159,6 +160,10 @@ const filteredProjections = computed(() =>
 )
 
 const totalRunningCount = computed(() => filteredProjections.value.length)
+
+const stuckCount = computed(
+  () => filteredProjections.value.filter((p) => p.status === PROJECTION_STATUS.STUCK).length,
+)
 
 const threadsInUseCount = computed(() =>
   filteredProjections.value.reduce((sum, p) => sum + p.workerCount, 0),

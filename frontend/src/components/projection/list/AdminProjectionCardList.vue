@@ -55,7 +55,13 @@
         <div class="card-header-row">
           <span class="card-title">{{ projection.title }}</span>
           <span
-            v-if="projection.status === PROJECTION_STATUS.RUNNING"
+            v-if="projection.status === PROJECTION_STATUS.STUCK"
+            class="status-badge status-stuck"
+          >
+            Stuck
+          </span>
+          <span
+            v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
             class="status-badge status-running"
           >
             Running
@@ -76,7 +82,12 @@
           </div>
           <div class="card-info-item">
             <span class="card-info-label">Elapsed</span>
-            <span class="card-info-value">{{ formatElapsedTime(projection.startDate) }}</span>
+            <span
+              class="card-info-value"
+              :class="{ 'elapsed-stuck': projection.status === PROJECTION_STATUS.STUCK }"
+            >
+              {{ formatElapsedTime(projection.startDate) }}
+            </span>
           </div>
           <div class="card-info-item">
             <span class="card-info-label">Threads</span>
@@ -91,6 +102,7 @@
               <div class="progress-track">
                 <div
                   class="progress-fill"
+                  :class="{ 'progress-fill-danger': projection.status === PROJECTION_STATUS.STUCK }"
                   :style="{ width: `${getProgressPercent(projection)}%` }"
                 />
               </div>
@@ -260,6 +272,12 @@ const formatElapsedTime = (startDate: string | null): string => {
   background: var(--support-surface-color-success);
 }
 
+.status-badge.status-stuck {
+  border: 1px solid var(--support-border-color-danger);
+  background: var(--support-surface-color-danger);
+  color: var(--support-border-color-danger);
+}
+
 .card-content {
   padding: var(--layout-padding-medium);
   display: flex;
@@ -301,6 +319,16 @@ const formatElapsedTime = (startDate: string | null): string => {
   color: var(--typography-color-primary);
 }
 
+.elapsed-stuck {
+  color: #d8292f;
+  font-family: Menlo, monospace;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  text-transform: capitalize;
+}
+
 .polygons-value {
   white-space: nowrap;
 }
@@ -329,6 +357,10 @@ const formatElapsedTime = (startDate: string | null): string => {
   background-color: #003366;
   border-radius: 4px;
   transition: width 0.4s ease;
+}
+
+.progress-fill.progress-fill-danger {
+  background-color: var(--support-border-color-danger);
 }
 
 .progress-percent {

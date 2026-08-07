@@ -24,35 +24,43 @@
             <div class="status-section">
               <v-menu v-if="isQueued">
                 <template #activator="{ props }">
-                  <button v-bind="props" class="running-status-menu-button">
+                  <button
+                    v-bind="props"
+                    type="button"
+                    class="queued-status-menu-button"
+                  >
                     <img
                       :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.QUEUED)"
                       alt="Queued"
-                      class="running-status-icon"
+                      class="queued-status-icon"
                     />
-                    <span class="running-status-text">Queued</span>
+                    <span class="queued-status-text">Queued</span>
                     <v-icon size="small">mdi-chevron-down</v-icon>
                   </button>
                 </template>
-                <v-list class="running-status-menu-list">
+                <v-list class="queued-status-menu-list">
                   <v-list-item
-                    class="running-status-menu-item"
+                    class="queued-status-menu-item"
                     @click="cancelRunHandler"
                   >
-                    <div class="running-menu-item-content">
+                    <div class="queued-menu-item-content">
                       <img
                         src="@/assets/icons/Cancel_Icon_Menu.png"
                         alt="Cancel"
-                        class="running-menu-icon"
+                        class="queued-menu-icon"
                       />
-                      <span class="running-menu-text">Cancel</span>
+                      <span class="queued-menu-text">Cancel</span>
                     </div>
                   </v-list-item>
                 </v-list>
               </v-menu>
               <v-menu v-if="isRunning">
                 <template #activator="{ props }">
-                  <button v-bind="props" class="running-status-menu-button">
+                  <button
+                    v-bind="props"
+                    type="button"
+                    class="running-status-menu-button"
+                  >
                     <img
                       :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
                       alt="Running"
@@ -74,6 +82,38 @@
                         class="running-menu-icon"
                       />
                       <span class="running-menu-text">Cancel</span>
+                    </div>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+              <v-menu v-else-if="isStuck">
+                <template #activator="{ props }">
+                  <button
+                    v-bind="props"
+                    type="button"
+                    class="stuck-status-menu-button"
+                  >
+                    <img
+                      :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.STUCK)"
+                      alt="Stuck"
+                      class="stuck-status-icon"
+                    />
+                    <span class="stuck-status-text">Stuck</span>
+                    <v-icon size="small">mdi-chevron-down</v-icon>
+                  </button>
+                </template>
+                <v-list class="stuck-status-menu-list">
+                  <v-list-item
+                    class="stuck-status-menu-item"
+                    @click="cancelRunHandler"
+                  >
+                    <div class="stuck-menu-item-content">
+                      <img
+                        src="@/assets/icons/Cancel_Icon_Menu.png"
+                        alt="Cancel"
+                        class="stuck-menu-icon"
+                      />
+                      <span class="stuck-menu-text">Cancel</span>
                     </div>
                   </v-list-item>
                 </v-list>
@@ -110,7 +150,7 @@
             <!-- RunProgressBar visible: Cancel (Running) or Download (Ready) -->
             <template v-if="isRunProgressBarVisible">
               <AppButton
-                v-if="isRunning || isQueued"
+                v-if="isRunning || isStuck || isQueued"
                 label="Cancel"
                 variant="secondary"
                 mdi-name="mdi-stop-circle-outline"
@@ -186,10 +226,10 @@
         <StandInfoPanel class="panel-spacing" />
         <ReportSettingsPanel ref="reportSettingsPanelRef" class="panel-spacing" />
         <RunProjectionButtonPanel
-          v-if="!appStore.isReadOnly || isRunning"
+          v-if="!appStore.isReadOnly || isRunning || isStuck"
           :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
-          :showCancelButton="isRunning || isQueued"
-          :showRevertCancelButton="!(isRunning||isQueued)"
+          :showCancelButton="isRunning || isStuck || isQueued"
+          :showRevertCancelButton="!(isRunning||isStuck||isQueued)"
           :isRevertCancelDisabled="isCancelDisabled"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
@@ -324,6 +364,7 @@ const projectionStore = useProjectionStore()
 const notificationStore = useNotificationStore()
 
 const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
+const isStuck = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.STUCK)
 const isQueued = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.QUEUED)
 const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
 const isDraft = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.DRAFT)
@@ -335,14 +376,14 @@ const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONS
 const isRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD &&
-    (isRunning.value || isQueued.value || isReady.value || isFailed.value || isCancelled.value),
+    (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value || isCancelled.value),
 )
 
 // Shown for Manual Input mode when projection has been run (Running/Ready/Failed/Cancelled)
 const isManualInputRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT &&
-    (isRunning.value || isQueued.value|| isReady.value || isFailed.value || isCancelled.value),
+    (isRunning.value || isStuck.value || isQueued.value|| isReady.value || isFailed.value || isCancelled.value),
 )
 
 // Batch mapping data updated via polling
@@ -383,7 +424,11 @@ const pollProjectionProgress = async () => {
     }
     const latestStatus = mapProjectionStatus(projection.projectionStatusCode?.code ?? '')
     appStore.setCurrentProjectionStatus(latestStatus)
-    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING && latestStatus !== CONSTANTS.PROJECTION_STATUS.QUEUED) {
+    if (
+      latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING &&
+      latestStatus !== CONSTANTS.PROJECTION_STATUS.STUCK &&
+      latestStatus !== CONSTANTS.PROJECTION_STATUS.QUEUED
+    ) {
       stopPolling()
       if (projection.endDate) runEndDate.value = projection.endDate
       if (latestStatus === CONSTANTS.PROJECTION_STATUS.READY) {
@@ -689,7 +734,11 @@ const fetchBatchData = async (guid: string) => {
     applyBatchMapping(projection.batchMapping)
     if (projection.startDate) runStartDate.value = projection.startDate
     const fetchedStatus = mapProjectionStatus(projection.projectionStatusCode?.code ?? '')
-    if (projection.endDate && fetchedStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING) {
+    if (
+      projection.endDate &&
+      fetchedStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING &&
+      fetchedStatus !== CONSTANTS.PROJECTION_STATUS.STUCK
+    ) {
       runEndDate.value = projection.endDate
     }
   } catch (error) {
@@ -710,9 +759,9 @@ onMounted(async () => {
   }
 
   const guid = appStore.currentProjectionGUID
-  if (guid && (isRunning.value || isQueued.value || isReady.value || isFailed.value)) {
+  if (guid && (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value)) {
     await fetchBatchData(guid)
-    if (isRunning.value || isQueued.value) {
+    if (isRunning.value || isStuck.value || isQueued.value) {
       startPolling()
     } else if (isReady.value && appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
       fetchAndPopulateResults(false)
@@ -978,7 +1027,11 @@ const cancelRunHandler = async () => {
     const latestProjection = await getProjectionById(projectionGUID)
     const latestStatus = mapProjectionStatus(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
 
-    if (latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING && latestStatus !== CONSTANTS.PROJECTION_STATUS.QUEUED) {
+    if (
+      latestStatus !== CONSTANTS.PROJECTION_STATUS.RUNNING &&
+      latestStatus !== CONSTANTS.PROJECTION_STATUS.STUCK &&
+      latestStatus !== CONSTANTS.PROJECTION_STATUS.QUEUED
+    ) {
       // Projection is no longer running - update state and show appropriate message
       updateProjectionState(latestProjection.projectionStatusCode?.code || CONSTANTS.PROJECTION_STATUS.DRAFT)
 
@@ -1152,6 +1205,126 @@ h3 {
   color: var(--typography-color-primary);
 }
 
+.queued-status-menu-button {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  border-radius: var(--layout-border-radius-small);
+  transition: background-color 0.2s;
+}
+
+.queued-status-menu-button:hover {
+  background-color: var(--surface-color-background-light-gray);
+}
+
+.queued-status-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.queued-status-text {
+  font: var(--typography-bold-h4);
+  color: var(--support-border-color-warning);
+}
+
+.queued-status-menu-list {
+  min-width: 120px;
+}
+
+.queued-status-menu-item {
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.queued-status-menu-item:hover {
+  background-color: #eceae8;
+}
+
+.queued-menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-medium);
+}
+
+.queued-menu-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.queued-menu-text {
+  font: var(--typography-regular-body);
+  color: var(--typography-color-primary);
+}
+
+.stuck-status-menu-button {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  border-radius: var(--layout-border-radius-small);
+  transition: background-color 0.2s;
+}
+
+.stuck-status-menu-button:hover {
+  background-color: var(--surface-color-background-light-gray);
+}
+
+.stuck-status-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.stuck-status-text {
+  font: var(--typography-bold-h4);
+  color: var(--support-border-color-danger);
+}
+
+.stuck-status-menu-list {
+  min-width: 120px;
+}
+
+.stuck-status-menu-item {
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.stuck-status-menu-item:hover {
+  background-color: #eceae8;
+}
+
+.stuck-menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-medium);
+}
+
+.stuck-menu-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.stuck-menu-text {
+  font: var(--typography-regular-body);
+  color: var(--typography-color-primary);
+}
+
 .ready-status-container {
   display: flex;
   align-items: center;
@@ -1294,6 +1467,8 @@ h3 {
 
 @media (max-width: 1280px) {
   .running-status-icon,
+  .queued-status-icon,
+  .stuck-status-icon,
   .ready-status-icon,
   .draft-status-icon,
   .failed-status-icon {
@@ -1302,6 +1477,8 @@ h3 {
   }
 
   .running-status-text,
+  .queued-status-text,
+  .stuck-status-text,
   .ready-status-text,
   .draft-status-text,
   .failed-status-text {

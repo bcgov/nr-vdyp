@@ -188,7 +188,7 @@
           </template>
 
           <!-- Running: Cancel -->
-          <template v-else-if="projection.status === PROJECTION_STATUS.RUNNING || projection.status === PROJECTION_STATUS.QUEUED">
+          <template v-else-if="projection.status === PROJECTION_STATUS.RUNNING || projection.status === PROJECTION_STATUS.STUCK || projection.status === PROJECTION_STATUS.QUEUED">
             <AppButton
               label="Cancel"
               variant="tertiary"
@@ -296,7 +296,7 @@ const handleCardClick = (event: MouseEvent, projection: Projection) => {
   font: var(--typography-bold-h5);
   color: var(--typography-color-primary);
   flex: 1;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Last Updated */
@@ -364,7 +364,7 @@ const handleCardClick = (event: MouseEvent, projection: Projection) => {
 .card-description-value {
   font: var(--typography-bold-body);
   color: var(--typography-color-primary);
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Card Actions with gray background */
