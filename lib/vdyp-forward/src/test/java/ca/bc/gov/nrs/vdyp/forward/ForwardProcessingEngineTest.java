@@ -608,7 +608,7 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
@@ -631,7 +631,7 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
@@ -654,7 +654,7 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
+			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
 			float baStart = bank.basalAreas[0][UtilizationClass.ALL.ordinal()];
@@ -694,7 +694,7 @@ class ForwardProcessingEngineTest {
 				});
 			});
 
-			fpe.fps.setPolygon(polygon);
+			fpe.getState().setPolygon(polygon);
 
 			assertFalse(
 					fpe.growUsingPartialSpeciesDynamics(
@@ -764,7 +764,7 @@ class ForwardProcessingEngineTest {
 					EasyMock.anyObject()
 			);
 			EasyMock.expectLastCall().andAnswer(() -> {
-				Bank bank = fpe.fps.getPrimaryLayerProcessingState().getBank();
+				Bank bank = fpe.getState().getPrimaryLayerProcessingState().getBank();
 				for (int i : bank.getIndices()) {
 					bank.treesPerHectare[i][UtilizationClass.ALL.ordinal()] = 0.0f;
 				}

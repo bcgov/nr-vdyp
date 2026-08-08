@@ -6,14 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
-import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
 public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLayerProcessingState> {
@@ -23,20 +20,8 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 	private static final String UNSET_CV_BASAL_AREAS = "unset cvBasalAreas";
 	private static final Logger logger = LoggerFactory.getLogger(ForwardLayerProcessingState.class);
 
-	// L1COM1, L1COM4 and L1COM5 - these common blocks mirror BANK1, BANK2 and BANK3 and are initialized
-	// when copied to "active" in ForwardProcessingEngine.
-
-	/**
-	 * State of the layer during processing.
-	 */
-	public Bank bank;
-
 	// L1COM2 - equation groups. From the configuration, narrowed to the
 	// polygon's BEC zone.
-
-	private int[] volumeEquationGroups;
-	private int[] decayEquationGroups;
-	private int[] breakageEquationGroups;
 
 	// L1COM3 - just shadows of fields of L1COM5
 	// AGETOTL1 = wallet.ageTotals[primarySpeciesIndex]
@@ -56,57 +41,10 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 
 		super(fps, fps.getCurrentPolygon(), layer.getLayerType());
 
-		bank = new Bank(
-				layer, fps.getCurrentBecZone(),
-				s -> s.getBaseAreaByUtilization().get(UtilizationClass.ALL) >= ForwardProcessingEngine.MIN_BASAL_AREA
-		);
-
-		var volumeEquationGroupMatrix = this.ps.controlMap.getVolumeEquationGroups();
-		var decayEquationGroupMatrix = this.ps.controlMap.getDecayEquationGroups();
-		var breakageEquationGroupMatrix = this.ps.controlMap.getBreakageEquationGroups();
-
-		volumeEquationGroups = new int[bank.getNSpecies() + 1];
-		decayEquationGroups = new int[bank.getNSpecies() + 1];
-		breakageEquationGroups = new int[bank.getNSpecies() + 1];
-
-		volumeEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
-		decayEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
-		breakageEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
-
-		BecDefinition becZoneAlias = getBecZone();
-		for (int i : bank.getIndices()) {
-			String speciesName = bank.speciesNames[i];
-			volumeEquationGroups[i] = volumeEquationGroupMatrix
-					.get(speciesName, becZoneAlias.getVolumeBec().getAlias());
-			// From VGRPFIND, volumeEquationGroup 10 is mapped to 11.
-			if (volumeEquationGroups[i] == 10) {
-				volumeEquationGroups[i] = 11;
-			}
-			decayEquationGroups[i] = decayEquationGroupMatrix.get(speciesName, becZoneAlias.getDecayBec().getAlias());
-			breakageEquationGroups[i] = breakageEquationGroupMatrix
-					.get(speciesName, becZoneAlias.getDecayBec().getAlias());
-		}
 	}
 
 	public static Logger getLogger() {
 		return logger;
-	}
-
-	@Override
-	public Bank getBank() {
-		return bank;
-	}
-
-	public int[] getVolumeEquationGroups() {
-		return volumeEquationGroups;
-	}
-
-	public int[] getDecayEquationGroups() {
-		return decayEquationGroups;
-	}
-
-	public int[] getBreakageEquationGroups() {
-		return breakageEquationGroups;
 	}
 
 	/**
@@ -145,12 +83,12 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 	@Override
 	protected VdypLayer updateLayerFromBank() {
 
-		VdypLayer updatedLayer = bank.buildLayerFromBank();
+		VdypLayer updatedLayer = getBank().buildLayerFromBank();
 
 		if (getLayerType().equals(LayerType.PRIMARY)) {
 			// Inject the compatibility variable values.
 			for (int i = 1; i < getNSpecies() + 1; i++) {
-				VdypSpecies species = updatedLayer.getSpeciesBySp0(bank.speciesNames[i]);
+				VdypSpecies species = updatedLayer.getSpeciesBySp0(getBank().speciesNames[i]);
 
 				applyCompatibilityVariablesToSpecies(i, species);
 			}

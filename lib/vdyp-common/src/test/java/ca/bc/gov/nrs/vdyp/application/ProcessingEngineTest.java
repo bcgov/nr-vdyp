@@ -58,6 +58,7 @@ import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.PrimarySpeciesDetails;
+import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingStateTestUtils;
 import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.processing_state.TestLayerProcessingState;
@@ -526,9 +527,11 @@ class ProcessingEngineTest {
 		@Nested
 		class Simple {
 
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			@Test
 			void testPrimarySitePresent() throws Exception {
 				var em = EasyMock.createControl();
+				ProcessingState<?> ps = em.mock(ProcessingState.class);
 				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
 
 				var layer = VdypLayer.build(lb -> {
@@ -585,7 +588,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				new ProcessingEngine().estimateMissingSiteIndices(lps);
+				new ProcessingEngine(ps).estimateMissingSiteIndices(lps);
 
 				assertThat(
 						bank.siteIndices,
@@ -596,9 +599,11 @@ class ProcessingEngineTest {
 
 			}
 
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			@Test
 			void testPrimarySiteMissing() throws Exception {
 				var em = EasyMock.createControl();
+				ProcessingState<?> ps = em.mock(ProcessingState.class);
 				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
 
 				var layer = VdypLayer.build(lb -> {
@@ -657,7 +662,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				new ProcessingEngine().estimateMissingSiteIndices(lps);
+				new ProcessingEngine(ps).estimateMissingSiteIndices(lps);
 
 				assertThat(
 						bank.siteIndices,
@@ -671,6 +676,7 @@ class ProcessingEngineTest {
 			@Test
 			void testPrimarySiteEstimateFailed() throws Exception {
 				var em = EasyMock.createControl();
+				ProcessingState<?> ps = em.mock(ProcessingState.class);
 				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
 
 				var layer = VdypLayer.build(lb -> {
@@ -728,7 +734,8 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				Float result = new ProcessingEngine().estimateMissingNonPrimarySiteIndices(lps, 2, null);
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				Float result = new ProcessingEngine(ps).estimateMissingNonPrimarySiteIndices(lps, 2, null);
 
 				assertThat(result, asFloat(notANumber()));
 
@@ -744,14 +751,17 @@ class ProcessingEngineTest {
 			@Nested
 			class ConvertSite {
 				IMocksControl em;
+				@SuppressWarnings("rawtypes")
 				ProcessingEngine unit;
+				ProcessingState<?> ps;
 
 				@BeforeEach
 				void setup() {
 					em = EasyMock.createControl();
+					ps = em.createMock(ProcessingState.class);
 					unit = EasyMock.partialMockBuilder(ProcessingEngine.class) //
 							.addMockedMethod("convertSiteIndexBetweenCurves")//
-							.withConstructor()//
+							.withConstructor(ps)//
 							.createMock(em);
 
 				}
@@ -766,12 +776,13 @@ class ProcessingEngineTest {
 
 					em.replay();
 
-					var result = assertDoesNotThrow(
+					@SuppressWarnings("unchecked")
+					Optional<Float> result = assertDoesNotThrow(
 							() -> unit.convertSiteIndex(
 									SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
 							)
 					);
-					assertThat(result, VdypMatchers.present(is(64.0f)));
+					assertThat(result, present(closeTo(64.0f)));
 
 					em.verify();
 				}
@@ -786,12 +797,13 @@ class ProcessingEngineTest {
 
 					em.replay();
 
-					var result = assertDoesNotThrow(
+					@SuppressWarnings("unchecked")
+					Optional<Float> result = assertDoesNotThrow(
 							() -> unit.convertSiteIndex(
 									SiteIndexEquation.SI_ACB_HUANG, 42.0, SiteIndexEquation.SI_ACT_THROWER
 							)
 					);
-					assertThat(result, VdypMatchers.notPresent());
+					assertThat(result, notPresent());
 
 					em.verify();
 				}
@@ -1204,8 +1216,9 @@ class ProcessingEngineTest {
 				}
 			}
 
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			private void runEstimateExtended(LayerFixture fixture) throws ProcessingException {
-				new ProcessingEngine().estimateMissingSiteIndicesAndAgesExtended(fixture.lps, fds);
+				new ProcessingEngine(null).estimateMissingSiteIndicesAndAgesExtended(fixture.lps, fds);
 			}
 
 			private float yearsToBreastHeight(SiteIndexEquation curve, float siteIndex) throws Exception {
@@ -1246,16 +1259,19 @@ class ProcessingEngineTest {
 			VdypLayer layer;
 			Bank bank;
 
+			@SuppressWarnings("rawtypes")
 			ProcessingEngine unit;
+			ProcessingState<?> ps;
 
 			@BeforeEach
 			void setup() {
 				em = EasyMock.createControl();
+				ps = em.createMock(ProcessingState.class);
 				unit = EasyMock.partialMockBuilder(ProcessingEngine.class) //
 						.addMockedMethod("getSiteIndexEquationByIndex") //
 						.addMockedMethod("yearsToBreastHeight") //
 						.addMockedMethod("heightAndSiteIndexToAge") //
-						.withConstructor() //
+						.withConstructor(ps) //
 						.createMock(em);
 				lps = em.createMock(LayerProcessingState.class);
 
@@ -1317,6 +1333,7 @@ class ProcessingEngineTest {
 
 			@Nested
 			class CalculateYearsToBreastHeightFromSiteIndex {
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
 				void testSkipIfNonPrimarySiInvalid(float invalidValue)
@@ -1344,6 +1361,7 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+				@SuppressWarnings("unchecked")
 				@Test
 				void testSkipIfCalculatedYtbhZero() throws ProcessingException, CommonCalculatorException {
 
@@ -1369,6 +1387,7 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
 				void testSkipIfExistingYtbh(float invalidValue) throws ProcessingException, CommonCalculatorException {
@@ -1409,6 +1428,7 @@ class ProcessingEngineTest {
 					bank.siteIndices[3] = 13.4f;// Primary, should be ignored
 					bank.siteIndices[1] = 42f;
 
+					@SuppressWarnings("unchecked")
 					var ex = assertThrows(
 							ProcessingException.class,
 							() -> unit.calculateYearsToBreastHeightFromSiteIndex(
@@ -1421,6 +1441,7 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
 				void testFillInPrimary(float invalidValue) throws ProcessingException, CommonCalculatorException {
@@ -1446,6 +1467,7 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
 				void testIgnorePrimaryIfSet(float invalidValue) throws ProcessingException, CommonCalculatorException {
@@ -1476,6 +1498,7 @@ class ProcessingEngineTest {
 
 			@Nested
 			class EstimateAgesFromHeightAndSiteIndex {
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
 				void testSkipIfNonPrimarySiInvalid(float invalidValue)
@@ -1519,6 +1542,7 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@ValueSource(floats = { Float.NaN, 0.0f, -0.1f, -9f })
 				void testSkipIfNonPrimaryHeightInvalid(float invalidValue)
@@ -1562,6 +1586,7 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+				@SuppressWarnings("unchecked")
 				@Test
 				void testPrimary() throws ProcessingException, CommonCalculatorException {
 
@@ -1623,6 +1648,7 @@ class ProcessingEngineTest {
 
 					bank.siteIndices[3] = 42.0f;
 
+					@SuppressWarnings("unchecked")
 					var ex = assertThrows(
 							ProcessingException.class,
 							() -> unit.estimateAgesFromHeightAndSiteIndex(lps, bank, 3, SpeciesToApplyTo.PRIMARY)
@@ -1641,6 +1667,7 @@ class ProcessingEngineTest {
 					return List.of(Arguments.of(12f, 7f, 5f), Arguments.of(12f, 6f, 6f), Arguments.of(12f, 5f, 7f));
 				}
 
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@CsvSource({ "12, 4, 5", "NaN, NaN, 5", "12, NaN, NaN", "NaN, 4, NaN", "NaN, NaN, NaN" })
 				void testWrongNumberMissing(float total, float atBH, float toBH) {
@@ -1661,6 +1688,7 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@MethodSource("correctAges")
 				void testTotalMissing(float total, float atBH, float toBH) {
@@ -1680,6 +1708,7 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@MethodSource("correctAges")
 				void testToBreastHeightMissing(float total, float atBH, float toBH) {
@@ -1699,6 +1728,7 @@ class ProcessingEngineTest {
 					em.verify();
 				}
 
+				@SuppressWarnings("unchecked")
 				@ParameterizedTest
 				@MethodSource("correctAges")
 				void testAtBreastHeightMissing(float total, float atBH, float toBH) {
@@ -1727,19 +1757,22 @@ class ProcessingEngineTest {
 		Map<String, Object> controlMap;
 
 		IMocksControl em;
+		ProcessingState<?> ps;
 		LayerProcessingState<?> lps;
 
+		@SuppressWarnings("rawtypes")
 		ProcessingEngine unit;
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException {
 			em = EasyMock.createControl();
+			ps = em.createMock(ProcessingState.class);
 			unit = EasyMock.partialMockBuilder(ProcessingEngine.class) //
 					.addMockedMethod("getSiteIndexEquationByIndex") //
 					.addMockedMethod("yearsToBreastHeight") //
 					.addMockedMethod("heightAndSiteIndexToAge") //
 					.addMockedMethod("convertSiteIndexBetweenCurves") //
-					.withConstructor() //
+					.withConstructor(ps) //
 					.createMock(em);
 			lps = em.createMock(LayerProcessingState.class);
 
@@ -1816,6 +1849,7 @@ class ProcessingEngineTest {
 					.put("Y", Region.INTERIOR, new Coefficients(new float[] { 0.97184f, 0.24781f, -0.0014371f }, 1));
 		}
 
+		@SuppressWarnings("unchecked")
 		@Test
 		void testAll() throws Exception {
 
@@ -2094,6 +2128,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
+				@SuppressWarnings("unchecked")
 				var result = unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex);
 
 				assertThat("result", result, closeTo(30.929f));
@@ -2122,6 +2157,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
+				@SuppressWarnings("unchecked")
 				var result = unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex);
 
 				assertThat("result", result, closeTo(34.0f));
@@ -2150,6 +2186,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
+				@SuppressWarnings("unchecked")
 				var result = unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex);
 
 				assertThat("result", result, closeTo(34.0f));
@@ -2182,6 +2219,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
+				@SuppressWarnings("unchecked")
 				var result = unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex);
 
 				assertThat("result", result, closeTo(25.3446f));
@@ -2200,6 +2238,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
+				@SuppressWarnings("unchecked")
 				var ex = assertThrows(
 						ProcessingException.class,
 						() -> unit.calculatePrimarySpeciesSiteIndex(lps, siteIndices, primarySpeciesIndex)

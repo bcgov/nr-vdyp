@@ -27,7 +27,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
@@ -45,9 +47,33 @@ import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.PrimarySpeciesDetails;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
-import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
 
 class LayerProcessingStateTest {
+
+	ProcessingResolvedControlMap controlMap;
+	ProcessingResolvedControlMap realControlMap;
+	ProcessingState<TestLayerProcessingState> parent;
+	BecDefinition becZone;
+	IMocksControl em;
+
+	@BeforeEach
+	void setup() {
+		var map = ProcessingTestUtils.loadControlMap();
+		realControlMap = new ProcessingResolvedControlMapImpl(map);
+		em = EasyMock.createStrictControl();
+
+		controlMap = em.createMock("controlMap", ProcessingResolvedControlMap.class);
+		becZone = realControlMap.getBecLookup().get("CDF").get();
+
+		EasyMock.expect(controlMap.getVolumeEquationGroups()).andStubDelegateTo(realControlMap);
+		EasyMock.expect(controlMap.getDecayEquationGroups()).andStubDelegateTo(realControlMap);
+		EasyMock.expect(controlMap.getBreakageEquationGroups()).andStubDelegateTo(realControlMap);
+
+		parent = em.createMock("parent", ProcessingState.class);
+		EasyMock.expect(parent.getControlMap()).andStubReturn(controlMap);
+
+	}
 
 	static class TestLayerProcessingState extends LayerProcessingState<TestLayerProcessingState> {
 
@@ -81,13 +107,12 @@ class LayerProcessingStateTest {
 
 		@Test
 		void testConstructNoSpecies() throws ProcessingException {
-			var em = EasyMock.createStrictControl();
-			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
-				pb.biogeoclimaticZone(TestUtils.mockBec());
+				pb.biogeoclimaticZone(becZone);
 				pb.forestInventoryZone("A");
 				pb.percentAvailable(90f);
+				pb.controlMap(realControlMap.getControlMap());
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
@@ -107,19 +132,19 @@ class LayerProcessingStateTest {
 
 		@Test
 		void testConstructOneSpecies() throws ProcessingException {
-			var em = EasyMock.createStrictControl();
-			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
+
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
-				pb.biogeoclimaticZone(TestUtils.mockBec());
+				pb.biogeoclimaticZone(becZone);
 				pb.forestInventoryZone("A");
 				pb.percentAvailable(90f);
+				pb.controlMap(realControlMap.getControlMap());
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("A", 1);
+						sb.speciesGroup("AT");
 					});
 				});
 			});
@@ -137,7 +162,6 @@ class LayerProcessingStateTest {
 
 	@Nested
 	class SetCompatibilityVariables {
-		IMocksControl em;
 		LayerProcessingState<?> unit;
 
 		MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume;
@@ -148,19 +172,19 @@ class LayerProcessingStateTest {
 		@BeforeEach
 		@SuppressWarnings("unchecked")
 		void setup() throws ProcessingException {
-			var em = EasyMock.createStrictControl();
-			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
+
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
-				pb.biogeoclimaticZone(TestUtils.mockBec());
+				pb.biogeoclimaticZone(becZone);
 				pb.forestInventoryZone("A");
 				pb.percentAvailable(90f);
+				pb.controlMap(realControlMap.getControlMap());
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("A", 1);
+						sb.speciesGroup("AT");
 					});
 				});
 			});
@@ -262,23 +286,21 @@ class LayerProcessingStateTest {
 	@Nested
 	class RankingDetails {
 		LayerProcessingState<?> unit;
-		IMocksControl em;
 
 		@BeforeEach
 		void setup() throws Exception {
-			em = EasyMock.createStrictControl();
-			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
-				pb.biogeoclimaticZone(TestUtils.mockBec());
+				pb.biogeoclimaticZone(becZone);
 				pb.forestInventoryZone("A");
 				pb.percentAvailable(90f);
+				pb.controlMap(realControlMap.getControlMap());
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("A", 1);
+						sb.speciesGroup("AT");
 					});
 				});
 			});
@@ -333,7 +355,7 @@ class LayerProcessingStateTest {
 			assertThat(unit, hasProperty("areRankingDetailsSet", is(true)));
 			assertThat(unit, hasProperty("inventoryTypeGroup", is(12)));
 			assertThat(unit, hasProperty("primarySpeciesIndex", is(1)));
-			assertThat(unit, hasProperty("primarySpeciesAlias", is("A")));
+			assertThat(unit, hasProperty("primarySpeciesAlias", is("AT")));
 			assertThat(unit, hasProperty("secondarySpeciesIndex", notPresent()));
 			assertThat(unit, hasProperty("primarySpeciesGroupNumber", is(13)));
 			assertThat(unit, hasProperty("primarySpeciesStratumNumber", is(14)));
@@ -346,7 +368,7 @@ class LayerProcessingStateTest {
 			assertThat(unit, hasProperty("areRankingDetailsSet", is(true)));
 			assertThat(unit, hasProperty("inventoryTypeGroup", is(12)));
 			assertThat(unit, hasProperty("primarySpeciesIndex", is(1)));
-			assertThat(unit, hasProperty("primarySpeciesAlias", is("A")));
+			assertThat(unit, hasProperty("primarySpeciesAlias", is("AT")));
 			assertThat(unit, hasProperty("secondarySpeciesIndex", present(is(2))));
 			assertThat(unit, hasProperty("primarySpeciesGroupNumber", is(13)));
 			assertThat(unit, hasProperty("primarySpeciesStratumNumber", is(14)));
@@ -372,33 +394,28 @@ class LayerProcessingStateTest {
 	@Nested
 	class PrimaryDetails {
 		LayerProcessingState<?> unit;
-		IMocksControl em;
 		ProcessingControlVariables controlVariables;
 
 		@BeforeEach
 		void setup() throws Exception {
 			controlVariables = new ProcessingControlVariables(new Integer[] {});
 
-			em = EasyMock.createStrictControl();
-			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
-			ProcessingResolvedControlMap controlMap = em.createMock("controlMap", ProcessingResolvedControlMap.class);
-
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
-				pb.biogeoclimaticZone(TestUtils.mockBec());
+				pb.biogeoclimaticZone(becZone);
 				pb.forestInventoryZone("A");
 				pb.percentAvailable(90f);
+				pb.controlMap(realControlMap.getControlMap());
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("A", 1);
+						sb.speciesGroup("AT");
 					});
 				});
 			});
 
-			EasyMock.expect(parent.getControlMap()).andStubReturn(controlMap);
 			EasyMock.expect(controlMap.getControlVariables()).andStubReturn(controlVariables);
 
 			em.replay();
@@ -553,31 +570,27 @@ class LayerProcessingStateTest {
 	class SiteCurves {
 
 		LayerProcessingState<?> unit;
-		IMocksControl em;
 		ProcessingControlVariables controlVariables;
 
 		@BeforeEach
 		void setup() throws Exception {
 			controlVariables = new ProcessingControlVariables(new Integer[] {});
 
-			em = EasyMock.createStrictControl();
-			ProcessingState<TestLayerProcessingState> parent = em.createMock("parent", ProcessingState.class);
-			ProcessingResolvedControlMap controlMap = em.createMock("controlMap", ProcessingResolvedControlMap.class);
-
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
-				pb.biogeoclimaticZone(TestUtils.mockBec());
+				pb.biogeoclimaticZone(becZone);
 				pb.forestInventoryZone("A");
 				pb.percentAvailable(90f);
+				pb.controlMap(realControlMap.getControlMap());
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("A", 1);
+						sb.speciesGroup("AT");
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("B", 1);
+						sb.speciesGroup("B");
 					});
 				});
 			});

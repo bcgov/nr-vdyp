@@ -25,6 +25,7 @@ import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
 class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessingEngineTest {
 
@@ -43,7 +44,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		// These values have been verified against the FORTRAN implementation, allowing for minor
 		// platform-specific differences.
 
-		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 
 		assertThat(
 				lps.getVolumeEquationGroups(),
