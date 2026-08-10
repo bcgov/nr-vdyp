@@ -383,7 +383,7 @@ public class BatchConfiguration {
 			LocalDateTime startTime = jobExecution.getStartTime();
 			ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
 			Duration duration = Duration
-					.between(now, startTime == null ? now : startTime.atZone(ZoneId.systemDefault()));
+					.between(startTime == null ? now : startTime.atZone(ZoneId.systemDefault()), now);
 
 			boolean cleanupEnabled = batchProperties.getPartition().getInterimDirsCleanupEnabled();
 
