@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.DoubleAdder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
@@ -959,7 +960,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 
 		Coefficients aAdjust = new Coefficients(new float[] { 0.0f, 0.0f, 0.0f, 0.0f }, 1);
 
-		var growthDetails = getState().controlMap.getControlVariables();
+		var growthDetails = getState().getControlMap().getControlVariables();
 		var lps = getState().getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
@@ -1028,7 +1029,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 				if (growthDetails.allowCalculation(baseVolume, V_BASE_MIN, (l, r) -> l > r)) {
 
 					// EMP094
-					getState().estimators.estimateNetDecayAndWasteVolume(
+					getState().getEstimators().estimateNetDecayAndWasteVolume(
 							lps.getBecZone().getRegion(), uc, aAdjust, bank.speciesNames[s], spLoreyHeight_All,
 							quadMeanDiameters, closeUtilizationVolumes, closeUtilizationVolumesNetOfDecay,
 							closeUtilizationVolumesNetOfDecayAndWaste
@@ -1050,7 +1051,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 
 					// EMP093
 					int decayGroup = lps.getDecayEquationGroups()[s];
-					getState().estimators.estimateNetDecayVolume(
+					getState().getEstimators().estimateNetDecayVolume(
 							bank.speciesNames[s], lps.getBecZone().getRegion(), uc, aAdjust, decayGroup,
 							lps.getPrimarySpeciesAgeAtBreastHeight(), quadMeanDiameters, closeUtilizationVolumes,
 							closeUtilizationVolumesNetOfDecay
@@ -1071,7 +1072,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 
 					// EMP092
 					int volumeGroup = lps.getVolumeEquationGroups()[s];
-					getState().estimators.estimateCloseUtilizationVolume(
+					getState().getEstimators().estimateCloseUtilizationVolume(
 							uc, aAdjust, volumeGroup, spLoreyHeight_All, quadMeanDiameters, wholeStemVolumes,
 							closeUtilizationVolumes
 					);
@@ -1086,12 +1087,12 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 
 			int primarySpeciesVolumeGroup = lps.getVolumeEquationGroups()[s];
 			float primarySpeciesQMDAll = bank.quadMeanDiameters[s][UC_ALL_INDEX];
-			var wholeStemVolume = bank.treesPerHectare[s][UC_ALL_INDEX] * getState().estimators
+			var wholeStemVolume = bank.treesPerHectare[s][UC_ALL_INDEX] * getState().getEstimators()
 					.estimateWholeStemVolumePerTree(primarySpeciesVolumeGroup, spLoreyHeight_All, primarySpeciesQMDAll);
 
 			wholeStemVolumes.setCoe(UC_ALL_INDEX, wholeStemVolume);
 
-			getState().estimators.estimateWholeStemVolume(
+			getState().getEstimators().estimateWholeStemVolume(
 					UtilizationClass.ALL, 0.0f, primarySpeciesVolumeGroup, spLoreyHeight_All, quadMeanDiameters,
 					basalAreas, wholeStemVolumes
 			);
@@ -1108,9 +1109,10 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 				cvVolume[s].put(uc, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, adjustment);
 			}
 
-			getState().estimators.estimateQuadMeanDiameterByUtilization(lps.getBecZone(), quadMeanDiameters, genusName);
+			getState().getEstimators()
+					.estimateQuadMeanDiameterByUtilization(lps.getBecZone(), quadMeanDiameters, genusName);
 
-			getState().estimators
+			getState().getEstimators()
 					.estimateBaseAreaByUtilization(lps.getBecZone(), quadMeanDiameters, basalAreas, genusName);
 
 			// Calculate trees-per-hectare per utilization
@@ -1163,21 +1165,22 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 	private HashMap<UtilizationClassVariable, Float>
 			calculateSmallCompatibilityVariables(int speciesIndex, ProcessingControlVariables forwardControlVariables) {
 
-		L lps = getState().getPrimaryLayerProcessingState();
-		Bank bank = lps.getBank();
+		final L lps = getState().getPrimaryLayerProcessingState();
+		final Bank bank = lps.getBank();
+		final EstimationMethods estimators = getState().getEstimators();
 
-		Region region = lps.getBecZone().getRegion();
-		String speciesName = bank.speciesNames[speciesIndex];
+		final Region region = lps.getBecZone().getRegion();
+		final String speciesName = bank.speciesNames[speciesIndex];
 
-		float spLoreyHeight_All = bank.loreyHeights[speciesIndex][UC_ALL_INDEX]; // HLsp
-		float spQuadMeanDiameter_All = bank.quadMeanDiameters[speciesIndex][UC_ALL_INDEX]; // DQsp
+		final float spLoreyHeight_All = bank.loreyHeights[speciesIndex][UC_ALL_INDEX]; // HLsp
+		final float spQuadMeanDiameter_All = bank.quadMeanDiameters[speciesIndex][UC_ALL_INDEX]; // DQsp
 
 		// this WHOLE operation on Actual BA's, not 100% occupancy.
 		// TODO: verify this: float fractionAvailable = polygon.getPercentForestLand();
-		float spBaseArea_All = bank.basalAreas[speciesIndex][UC_ALL_INDEX] /* * fractionAvailable */;
+		final float spBaseArea_All = bank.basalAreas[speciesIndex][UC_ALL_INDEX] /* * fractionAvailable */;
 
 		// EMP080
-		float smallProbability = getState().estimators.estimateSmallComponentProbability(
+		final float smallProbability = estimators.estimateSmallComponentProbability(
 				speciesName, //
 				lps.getBank().yearsAtBreastHeight[lps.getPrimarySpeciesIndex()], //
 				spLoreyHeight_All, //
@@ -1185,51 +1188,51 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 		); // PROBsp
 
 		// EMP081
-		float conditionalExpectedBaseArea = getState().estimators.estimateSmallComponentConditionalExpectedBasalArea(
+		final float conditionalExpectedBaseArea = estimators.estimateSmallComponentConditionalExpectedBasalArea(
 				speciesName, spBaseArea_All, spLoreyHeight_All, region
 		); // BACONDsp
 
 		// TODO (see previous TODO): conditionalExpectedBaseArea /= fractionAvailable;
 
-		float spBaSmall = smallProbability * conditionalExpectedBaseArea;
+		final float spBaSmall = smallProbability * conditionalExpectedBaseArea;
 
 		// EMP082
-		float spDqSmall = getState().estimators.estimateSmallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
+		final float spDqSmall = estimators.estimateSmallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
 
 		// EMP085
-		float spLhSmall = getState().estimators
+		final float spLhSmall = estimators
 				.estimateSmallComponentLoreyHeight(speciesName, spLoreyHeight_All, spDqSmall, spQuadMeanDiameter_All); // HLSMsp
 
 		// EMP086
-		float spMeanVolumeSmall = getState().estimators.estimateMeanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
+		final float spMeanVolumeSmall = estimators.estimateMeanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
 
-		var spCvSmall = new HashMap<UtilizationClassVariable, Float>();
+		final var spCvSmall = new HashMap<UtilizationClassVariable, Float>();
 
-		float spInputBasalArea_Small = bank.basalAreas[speciesIndex][UC_SMALL_INDEX];
+		final float spInputBasalArea_Small = bank.basalAreas[speciesIndex][UC_SMALL_INDEX];
 		spCvSmall.put(UtilizationClassVariable.BASAL_AREA, spInputBasalArea_Small - spBaSmall);
 
 		if (forwardControlVariables.allowCalculation(spInputBasalArea_Small, B_BASE_MIN, (l, r) -> l > r)) {
-			float spInputQuadMeanDiameter_Small = bank.quadMeanDiameters[speciesIndex][UC_SMALL_INDEX];
+			final float spInputQuadMeanDiameter_Small = bank.quadMeanDiameters[speciesIndex][UC_SMALL_INDEX];
 			spCvSmall.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, spInputQuadMeanDiameter_Small - spDqSmall);
 		} else {
 			spCvSmall.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f);
 		}
 
-		float spInputLoreyHeight_Small = bank.loreyHeights[speciesIndex][UC_SMALL_INDEX];
+		final float spInputLoreyHeight_Small = bank.loreyHeights[speciesIndex][UC_SMALL_INDEX];
 		if (spInputLoreyHeight_Small > 1.3f && spLhSmall > 1.3f && spInputBasalArea_Small > 0.0f) {
-			float cvLoreyHeight = FloatMath.log( (spInputLoreyHeight_Small - 1.3f) / (spLhSmall - 1.3f));
+			final float cvLoreyHeight = FloatMath.log( (spInputLoreyHeight_Small - 1.3f) / (spLhSmall - 1.3f));
 			spCvSmall.put(UtilizationClassVariable.LOREY_HEIGHT, cvLoreyHeight);
 		} else {
 			spCvSmall.put(UtilizationClassVariable.LOREY_HEIGHT, 0.0f);
 		}
 
-		float spInputWholeStemVolume_Small = bank.wholeStemVolumes[speciesIndex][UC_SMALL_INDEX];
+		final float spInputWholeStemVolume_Small = bank.wholeStemVolumes[speciesIndex][UC_SMALL_INDEX];
 		if (spInputWholeStemVolume_Small > 0.0f && spMeanVolumeSmall > 0.0f
 				&& forwardControlVariables.allowCalculation(spInputBasalArea_Small, B_BASE_MIN, (l, r) -> l >= r)) {
 
-			float spInputTreePerHectare_Small = bank.treesPerHectare[speciesIndex][UC_SMALL_INDEX];
+			final float spInputTreePerHectare_Small = bank.treesPerHectare[speciesIndex][UC_SMALL_INDEX];
 
-			var spWsVolumeSmall = FloatMath
+			final var spWsVolumeSmall = FloatMath
 					.log(spInputWholeStemVolume_Small / spInputTreePerHectare_Small / spMeanVolumeSmall);
 			spCvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, spWsVolumeSmall);
 

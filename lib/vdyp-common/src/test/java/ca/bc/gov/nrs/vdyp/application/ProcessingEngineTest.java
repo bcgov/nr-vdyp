@@ -1,14 +1,30 @@
 package ca.bc.gov.nrs.vdyp.application;
 
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.OVER225;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U125TO175;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U175TO225;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U75TO125;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.BASAL_AREA;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.LOREY_HEIGHT;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.QUAD_MEAN_DIAMETER;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.WHOLE_STEM_VOLUME;
+import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL;
+import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY;
+import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE;
+import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.WHOLE_STEM_VOL;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.asFloat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasMessage;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.unboxedArrayCloseTo;
+import static org.easymock.EasyMock.capture;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notANumber;
@@ -38,21 +54,29 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.AgeTriplet;
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.SpeciesToApplyTo;
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
+import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
@@ -2248,6 +2272,563 @@ class ProcessingEngineTest {
 
 				em.verify();
 			}
+
+		}
+	}
+
+	@Nested
+	class SetCompatibilityVariables {
+		ProcessingResolvedControlMap controlMap;
+
+		EstimationMethods emp;
+		ComputationMethods cmp;
+
+		@BeforeEach
+		void setup() throws IOException, ResourceParseException, ValueParseException {
+			var parser = new ProcessingControlParser();
+			controlMap = new ProcessingResolvedControlMapImpl(
+					TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR")
+			);
+			emp = new EstimationMethods(controlMap);
+			cmp = new ComputationMethods(emp, VdypApplicationIdentifier.VDYP_FORWARD);
+
+		}
+
+		@Test
+		void test() throws ProcessingException {
+			final var em = EasyMock.createControl();
+			final BecDefinition bec = controlMap.getBecLookup().get("CWH").get();
+
+			ProcessingState ps = em.createMock(ProcessingState.class);
+			LayerProcessingState lps = em.createMock(LayerProcessingState.class);
+
+			EasyMock.expect(ps.getComputers()).andStubReturn(cmp);
+			EasyMock.expect(ps.getEstimators()).andStubReturn(emp);
+			EasyMock.expect(ps.getControlMap()).andStubReturn(controlMap);
+
+			EasyMock.expect(ps.getPrimaryLayerProcessingState()).andStubReturn(lps);
+			EasyMock.expect(lps.getIndices()).andStubReturn(new int[] { 1, 2, 3, 4, 5 });
+			EasyMock.expect(lps.getNSpecies()).andStubReturn(5);
+			EasyMock.expect(lps.getBecZone()).andStubReturn(bec);
+
+			EasyMock.expect(lps.getVolumeEquationGroups()).andStubReturn(new int[] { -9, 12, 20, 25, 37, 66 });
+			EasyMock.expect(lps.getDecayEquationGroups()).andStubReturn(new int[] { -9, 7, 14, 19, 31, 54 });
+
+			EasyMock.expect(lps.getPrimarySpeciesAgeAtBreastHeight()).andStubReturn(54f);
+			EasyMock.expect(lps.getPrimarySpeciesIndex()).andStubReturn(3);
+
+			Capture<MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[]> capCvVolume = EasyMock
+					.newCapture();
+			Capture<MatrixMap2<UtilizationClass, LayerType, Float>[]> capCvBasalArea = EasyMock.newCapture();
+			Capture<MatrixMap2<UtilizationClass, LayerType, Float>[]> capCvQuadraticMeanDiameter = EasyMock
+					.newCapture();
+			Capture<Map<UtilizationClassVariable, Float>[]> capCvPrimaryLayerSmall = EasyMock.newCapture();
+
+			Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
+
+			ProcessingStateTestUtils.fill(bank.speciesNames, null, "B", "C", "D", "H", "S");
+
+			ProcessingStateTestUtils.fill(bank.ageTotals, 0f, Float.NaN, Float.NaN, 55f, Float.NaN, Float.NaN);
+			ProcessingStateTestUtils
+					.fill(bank.yearsAtBreastHeight, 0f, Float.NaN, Float.NaN, 54f, Float.NaN, Float.NaN);
+			ProcessingStateTestUtils.fill(bank.yearsToBreastHeight, 0f, 5.0f, 7.5f, 1.0f, 4.5f, 5.2f);
+
+			ProcessingStateTestUtils.fill(bank.loreyHeights[0], 7.016903f, 30.97237f);
+			ProcessingStateTestUtils.fill(bank.loreyHeights[1], 8.0272f, 36.7553f);
+			ProcessingStateTestUtils.fill(bank.loreyHeights[2], 6.4602f, 22.9584f);
+			ProcessingStateTestUtils.fill(bank.loreyHeights[3], 10.6033f, 33.744f);
+			ProcessingStateTestUtils.fill(bank.loreyHeights[4], 7.5464f, 22.7704f);
+			ProcessingStateTestUtils.fill(bank.loreyHeights[5], 8.2003f, 32.0125f);
+
+			ProcessingStateTestUtils
+					.fill(bank.basalAreas[0], 0.015282828f, 45.386444f, 0.5363535f, 1.2914546f, 2.353737f, 41.2049f);
+			ProcessingStateTestUtils
+					.fill(bank.basalAreas[1], 0.0f, 0.40698987f, 0.005070707f, 0.013767676f, 0.023070706f, 0.36508077f);
+			ProcessingStateTestUtils
+					.fill(bank.basalAreas[2], 0.012555555f, 5.096949f, 0.12951516f, 0.3131616f, 0.5185757f, 4.1356964f);
+			ProcessingStateTestUtils.fill(
+					bank.basalAreas[3], 0.0015656565f, 29.598463f, 0.014262626f, 0.051797975f, 0.46197978f, 29.070423f
+			);
+			ProcessingStateTestUtils
+					.fill(bank.basalAreas[4], 0.0f, 5.8687477f, 0.3650303f, 0.83281815f, 1.0865252f, 3.5843737f);
+			ProcessingStateTestUtils.fill(
+					bank.basalAreas[5], 0.0011616162f, 4.4152927f, 0.022474747f, 0.079909086f, 0.26358584f, 4.049323f
+			);
+
+			ProcessingStateTestUtils.fill(
+					bank.quadMeanDiameters[0], 6.0632977f, 30.998875f, 10.21287f, 15.043846f, 20.077644f, 36.7306f
+			);
+			ProcessingStateTestUtils
+					.fill(bank.quadMeanDiameters[1], 6.1f, 31.500628f, 9.1706505f, 13.66034f, 18.178656f, 42.070774f);
+			ProcessingStateTestUtils.fill(
+					bank.quadMeanDiameters[2], 5.997418f, 27.745249f, 10.063532f, 14.862596f, 19.873747f, 39.793953f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.quadMeanDiameters[3], 6.4799547f, 36.01055f, 10.470092f, 15.579478f, 20.52722f, 36.869785f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.quadMeanDiameters[4], Float.NaN, 20.989742f, 10.276456f, 15.108315f, 20.090958f, 31.892609f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.quadMeanDiameters[5], 6.3775334f, 32.9989f, 10.186823f, 15.028074f, 19.852716f, 37.923714f
+			);
+
+			ProcessingStateTestUtils
+					.fill(bank.treesPerHectare[0], 5.2828283f, 601.3737f, 65.47475f, 72.666664f, 74.35353f, 388.87875f);
+			ProcessingStateTestUtils
+					.fill(bank.treesPerHectare[1], 0.0f, 5.222222f, 0.7676767f, 0.9393939f, 0.88888884f, 2.6262624f);
+			ProcessingStateTestUtils
+					.fill(bank.treesPerHectare[2], 4.444444f, 84.303024f, 16.28283f, 18.050505f, 16.71717f, 33.25252f);
+			ProcessingStateTestUtils.fill(
+					bank.treesPerHectare[3], 0.47474745f, 290.61615f, 1.6565655f, 2.7171717f, 13.959595f, 272.2828f
+			);
+			ProcessingStateTestUtils
+					.fill(bank.treesPerHectare[4], 0.0f, 169.60605f, 44.010098f, 46.454544f, 34.272724f, 44.868683f);
+			ProcessingStateTestUtils
+					.fill(bank.treesPerHectare[5], 0.36363637f, 51.62626f, 2.7575758f, 4.50505f, 8.515151f, 35.848484f);
+
+			ProcessingStateTestUtils
+					.fill(bank.wholeStemVolumes[0], 0.06363636f, 627.24994f, 2.6241412f, 9.197676f, 22.62818f, 592.8f);
+			ProcessingStateTestUtils.fill(
+					bank.wholeStemVolumes[1], 0.0f, 6.272525f, 0.018686868f, 0.076464646f, 0.17656565f, 6.000808f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.wholeStemVolumes[2], 0.05121212f, 43.907677f, 0.60878783f, 1.9431312f, 3.861616f, 37.49414f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.wholeStemVolumes[3], 0.007878787f, 464.165f, 0.110202014f, 0.56585854f, 6.073636f, 457.4153f
+			);
+			ProcessingStateTestUtils
+					.fill(bank.wholeStemVolumes[4], 0.0f, 56.45232f, 1.7560605f, 5.9258585f, 9.749595f, 39.020805f);
+			ProcessingStateTestUtils.fill(
+					bank.wholeStemVolumes[5], 0.004545454f, 56.45242f, 0.13040403f, 0.6863636f, 2.7667675f, 52.868885f
+			);
+
+			ProcessingStateTestUtils.fill(
+					bank.closeUtilizationVolumes[0], 0.0f, 598.18396f, 0.38727272f, 6.9943438f, 20.327776f, 570.47455f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.closeUtilizationVolumes[1], 0.0f, 6.0193934f, 9.0909086E-4f, 0.05030303f, 0.15363635f,
+					5.814545f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.closeUtilizationVolumes[2], 0.0f, 39.838383f, 0.11272726f, 1.4245454f, 3.3496969f, 34.951412f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.closeUtilizationVolumes[3], 0.0f, 448.56998f, 0.057676766f, 0.50989896f, 5.6983833f, 442.30402f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.closeUtilizationVolumes[4], 0.0f, 50.332424f, 0.19444443f, 4.460101f, 8.661818f, 37.01606f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.closeUtilizationVolumes[5], 0.0f, 53.423737f, 0.02151515f, 0.549495f, 2.4642422f, 50.388485f
+			);
+
+			ProcessingStateTestUtils
+					.fill(bank.cuVolumesMinusDecay[0], 0.0f, 586.02844f, 0.3832323f, 6.916161f, 20.089392f, 558.63965f);
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecay[1], 0.0f, 5.9056563f, 9.0909086E-4f, 0.050202016f, 0.15292929f, 5.701616f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecay[2], 0.0f, 36.629692f, 0.110505044f, 1.3848485f, 3.2451513f, 31.889189f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecay[3], 0.0f, 440.93735f, 0.057171714f, 0.5057576f, 5.65404f, 434.72037f
+			);
+			ProcessingStateTestUtils
+					.fill(bank.cuVolumesMinusDecay[4], 0.0f, 49.569794f, 0.19323231f, 4.428889f, 8.587777f, 36.359898f);
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecay[5], 0.0f, 52.985954f, 0.02141414f, 0.5464646f, 2.4494948f, 49.968582f
+			);
+
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecayAndWastage[0], 0.0f, 583.4573f, 0.38252524f, 6.901414f, 20.037878f,
+					556.13544f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecayAndWastage[1], 0.0f, 5.87505f, 9.0909086E-4f, 0.05010101f, 0.15272726f,
+					5.671313f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecayAndWastage[2], 0.0f, 35.64939f, 0.110101f, 1.3765656f, 3.2180805f,
+					30.944645f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecayAndWastage[3], 0.0f, 439.67856f, 0.057070702f, 0.50555557f, 5.651313f,
+					433.46463f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecayAndWastage[4], 0.0f, 49.34848f, 0.1930303f, 4.423131f, 8.568384f, 36.163937f
+			);
+			ProcessingStateTestUtils.fill(
+					bank.cuVolumesMinusDecayAndWastage[5], 0.0f, 52.90575f, 0.02141414f, 0.54606056f, 2.4473736f,
+					49.890903f
+			);
+
+			EasyMock.expect(lps.getBank()).andStubReturn(bank);
+
+			// The call we are testing for
+			lps.setCompatibilityVariableDetails(
+					capture(capCvVolume), //
+					capture(capCvBasalArea), //
+					capture(capCvQuadraticMeanDiameter), //
+					capture(capCvPrimaryLayerSmall) //
+			);
+			EasyMock.expectLastCall().once();
+
+			var unit = new ProcessingEngine(ps);
+			em.replay();
+
+			unit.setCompatibilityVariables();
+
+			em.verify();
+
+			assertThat(
+					"CvVolume[1]", capCvVolume.getValue()[1],
+					allOf(
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.0063990355f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-0.00016450882f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[2]", capCvVolume.getValue()[2],
+					allOf(
+							mmHasEntry(is(-0.00024962425f), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-0.00011026859f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-0.000006198883f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.000024557114f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[3]", capCvVolume.getValue()[3],
+					allOf(
+							mmHasEntry(is(0.00623063f), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.0010375977f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.0001244545f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.0000038146973f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[4]", capCvVolume.getValue()[4],
+					allOf(
+							mmHasEntry(is(-0.00013566017f), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.00033128262f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.00021290779f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-0.0000059604645f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[5]", capCvVolume.getValue()[5],
+					allOf(
+							mmHasEntry(is(-8.8346004E-4F), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-0.0002478361f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.0008614063f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-0.0000052452087f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[1]", capCvVolume.getValue()[1],
+					allOf(
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(-0.0048389435f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(1.3446808E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[2]", capCvVolume.getValue()[2],
+					allOf(
+							mmHasEntry(is(0.01768279f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(0.0010006428f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(2.2292137E-4f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(-1.9311905E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[3]", capCvVolume.getValue()[3],
+					allOf(
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(0.010708809f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(7.4100494E-4f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(-2.4795532E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[4]", capCvVolume.getValue()[4],
+					allOf(
+							mmHasEntry(is(0.011499405f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(-0.0010294914f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(-9.3603134E-4f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(-5.4836273E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[5]", capCvVolume.getValue()[5],
+					allOf(
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(0.010175705f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(-0.0014338493f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
+							mmHasEntry(is(-2.9087067E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[1]", capCvVolume.getValue()[1],
+					allOf(
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
+							mmHasEntry(
+									is(0.035768032f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							),
+							mmHasEntry(
+									is(-0.0016698837f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							)
+					)
+			);
+			assertThat(
+					"CvVolume[2]", capCvVolume.getValue()[2],
+					allOf(
+							mmHasEntry(
+									is(-0.16244507f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							),
+							mmHasEntry(
+									is(-0.0045113564f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							),
+							mmHasEntry(
+									is(-0.0030164719f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							),
+							mmHasEntry(
+									is(3.528595E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY
+							)
+					)
+			);
+			assertThat(
+					"CvVolume[3]", capCvVolume.getValue()[3],
+					allOf(
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
+							mmHasEntry(is(0.0f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
+							mmHasEntry(
+									is(4.1484833E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							)
+					)
+			);
+			assertThat(
+					"CvVolume[4]", capCvVolume.getValue()[4],
+					allOf(
+							mmHasEntry(
+									is(-0.13775301f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							),
+							mmHasEntry(
+									is(0.005630493f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							),
+							mmHasEntry(
+									is(0.0028266907f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							),
+							mmHasEntry(
+									is(3.7765503E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+									LayerType.PRIMARY
+							)
+					)
+			);
+			assertThat(
+					"CvVolume[5]", capCvVolume.getValue()[5],
+					allOf(
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
+							mmHasEntry(is(0.0f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
+							mmHasEntry(
+									is(5.378723E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY
+							)
+					)
+			);
+			assertThat(
+					"CvVolume[1]", capCvVolume.getValue()[1],
+					allOf(
+							mmHasEntry(is(0.0f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-2.5427341E-4f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(0.0023429394F), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-7.033348E-5f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[2]", capCvVolume.getValue()[2],
+					allOf(
+							mmHasEntry(is(-2.9444695E-5f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(4.208088E-5f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-2.4318695E-5f), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(9.536743E-7f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[3]", capCvVolume.getValue()[3],
+					allOf(
+							mmHasEntry(is(0.0013506413f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(4.787445E-4f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(3.9100647E-5f), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-1.4305115E-6f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[4]", capCvVolume.getValue()[4],
+					allOf(
+							mmHasEntry(is(-7.891655E-5f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(2.7656555E-5f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(4.196167E-5f), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-1.0967255E-5f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvVolume[5]", capCvVolume.getValue()[5],
+					allOf(
+							mmHasEntry(is(1.8835068E-5f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-1.0085106E-4f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(1.6236305E-4f), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
+							mmHasEntry(is(-7.390976E-6f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvBasalArea[1]", capCvBasalArea.getValue()[1],
+					allOf(
+							mmHasEntry(is(1.4913082E-4f), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(-5.034916E-5f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(-7.482059E-5f), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(-2.397038E-5f), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvBasalArea[2]", capCvBasalArea.getValue()[2],
+					allOf(
+							mmHasEntry(is(-2.193451E-5f), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(5.4836273E-6f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(9.596348E-6f), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(6.660819E-6f), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvBasalArea[3]", capCvBasalArea.getValue()[3],
+					allOf(
+							mmHasEntry(is(9.918213E-5f), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(-1.5150756E-5f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(-7.9244375E-5f), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(-4.341826E-6f), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvBasalArea[4]", capCvBasalArea.getValue()[4],
+					allOf(
+							mmHasEntry(is(1.9073486E-4f), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(-8.2850456E-5f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(-5.2928925E-5f), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(-5.531311E-5f), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvBasalArea[5]", capCvBasalArea.getValue()[5],
+					allOf(
+							mmHasEntry(is(1.2397766E-4f), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(-3.7431717E-5f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(-7.364154E-5f), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(-1.289323E-5f), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvQuadraticMeanDiameter[1]", capCvQuadraticMeanDiameter.getValue()[1],
+					allOf(
+							mmHasEntry(is(0.007255554F), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(-0.014289856f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(-0.044784546F), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(0.0f), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvQuadraticMeanDiameter[2]", capCvQuadraticMeanDiameter.getValue()[2],
+					allOf(
+							mmHasEntry(is(6.942749E-4f), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(-2.0217896E-4f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(6.008148E-4f), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(-1.2207031E-4f), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvQuadraticMeanDiameter[3]", capCvQuadraticMeanDiameter.getValue()[3],
+					allOf(
+							mmHasEntry(is(3.6621094E-4F), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(-0.008190155f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(-0.0019168854f), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(-0.008535385F), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvQuadraticMeanDiameter[4]", capCvQuadraticMeanDiameter.getValue()[4],
+					allOf(
+							mmHasEntry(is(-0.0010547638f), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(-7.696152E-4f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(-0.0012798309f), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(1.7547607E-4f), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvQuadraticMeanDiameter[5]", capCvQuadraticMeanDiameter.getValue()[5],
+					allOf(
+							mmHasEntry(is(-2.4032593E-4F), OVER225, LayerType.PRIMARY),
+							mmHasEntry(is(9.880066E-4f), U125TO175, LayerType.PRIMARY),
+							mmHasEntry(is(-0.005464554F), U175TO225, LayerType.PRIMARY),
+							mmHasEntry(is(-7.9631805E-4F), U75TO125, LayerType.PRIMARY)
+					)
+			);
+			assertThat(
+					"CvPrimaryLayerSmall[1]", capCvPrimaryLayerSmall.getValue()[1],
+					allOf(
+							hasEntry(is(BASAL_AREA), closeTo(-2.1831444E-7f)),
+							hasEntry(is(QUAD_MEAN_DIAMETER), is(0.0f)), hasEntry(is(LOREY_HEIGHT), is(0.0f)),
+							hasEntry(is(WHOLE_STEM_VOLUME), is(0.0f))
+					)
+			);
+			assertThat(
+					"CvPrimaryLayerSmall[2]", capCvPrimaryLayerSmall.getValue()[2],
+					allOf(
+							hasEntry(is(BASAL_AREA), closeTo(-4.496146E-5f)),
+							hasEntry(is(QUAD_MEAN_DIAMETER), closeTo(0.0023674965F)),
+							hasEntry(is(LOREY_HEIGHT), closeTo(1.3113013E-6f)),
+							hasEntry(is(WHOLE_STEM_VOLUME), closeTo(0.0010289619f))
+					)
+			);
+			assertThat(
+					"CvPrimaryLayerSmall[3]", capCvPrimaryLayerSmall.getValue()[3],
+					allOf(
+							hasEntry(is(BASAL_AREA), closeTo(4.9466034E-6f)),
+							hasEntry(is(QUAD_MEAN_DIAMETER), is(0.0f)),
+							hasEntry(is(LOREY_HEIGHT), closeTo(-1.5556934E-5f)),
+							hasEntry(is(WHOLE_STEM_VOLUME), is(0.0f))
+					)
+			);
+			assertThat(
+					"CvPrimaryLayerSmall[4]", capCvPrimaryLayerSmall.getValue()[4],
+					allOf(
+							hasEntry(is(BASAL_AREA), is(0.0f)), hasEntry(is(QUAD_MEAN_DIAMETER), is(0.0f)),
+							hasEntry(is(LOREY_HEIGHT), is(0.0f)), hasEntry(is(WHOLE_STEM_VOLUME), is(0.0f))
+					)
+			);
+			assertThat(
+					"CvPrimaryLayerSmall[5]", capCvPrimaryLayerSmall.getValue()[5],
+					allOf(
+							hasEntry(is(BASAL_AREA), closeTo(3.4208642E-6f)),
+							hasEntry(is(QUAD_MEAN_DIAMETER), is(0.0f)),
+							hasEntry(is(LOREY_HEIGHT), closeTo(-5.7758567E-5f)),
+							hasEntry(is(WHOLE_STEM_VOLUME), is(0.0f))
+					)
+			);
 
 		}
 	}
