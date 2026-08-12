@@ -26,9 +26,9 @@
         </div>
       </v-list-item>
 
-      <!-- Edit: for Draft and Failed -->
+      <!-- Edit: for Draft, Failed, and Cancelled By Administrator -->
       <v-list-item
-        v-if="status === PROJECTION_STATUS.DRAFT || status === PROJECTION_STATUS.FAILED"
+        v-if="status === PROJECTION_STATUS.DRAFT || status === PROJECTION_STATUS.FAILED || status === PROJECTION_STATUS.ADMN_CNCLD"
         class="action-menu-item"
         @click="$emit(PROJECTION_USER_ACTION.EDIT)"
       >
@@ -42,9 +42,9 @@
         </div>
       </v-list-item>
 
-      <!-- Duplicate: for Draft, Failed, Ready -->
+      <!-- Duplicate: for Draft, Failed, Ready, Cancelled By Administrator -->
       <v-list-item
-        v-if="status === PROJECTION_STATUS.DRAFT || status === PROJECTION_STATUS.FAILED || status === PROJECTION_STATUS.READY"
+        v-if="status === PROJECTION_STATUS.DRAFT || status === PROJECTION_STATUS.FAILED || status === PROJECTION_STATUS.READY || status === PROJECTION_STATUS.ADMN_CNCLD"
         class="action-menu-item"
         @click="$emit(PROJECTION_USER_ACTION.DUPLICATE)"
       >
@@ -90,9 +90,9 @@
         </div>
       </v-list-item>
 
-      <!-- Delete: for Draft, Failed, Ready only (not Running) -->
+      <!-- Delete: for Draft, Failed, Ready, Cancelled By Administrator (not Running) -->
       <v-list-item
-        v-if="status === PROJECTION_STATUS.DRAFT || status === PROJECTION_STATUS.FAILED || status === PROJECTION_STATUS.READY"
+        v-if="status === PROJECTION_STATUS.DRAFT || status === PROJECTION_STATUS.FAILED || status === PROJECTION_STATUS.READY || status === PROJECTION_STATUS.ADMN_CNCLD"
         class="action-menu-item danger"
         @click="$emit(PROJECTION_USER_ACTION.DELETE)"
       >

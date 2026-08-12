@@ -295,11 +295,20 @@ const loadAndNavigateToProjection = async (projectionGUID: string, isViewMode: b
   progressMessage.value = PROGRESS_MSG.LOADING_PROJECTION
 
   try {
-    const viewMode = isViewMode ? PROJECTION_VIEW_MODE.VIEW : PROJECTION_VIEW_MODE.EDIT
-    const success = await loadProjection(projectionGUID, viewMode)
+    const requestedViewMode = isViewMode ? PROJECTION_VIEW_MODE.VIEW : PROJECTION_VIEW_MODE.EDIT
+    const success = await loadProjection(projectionGUID, requestedViewMode)
 
     if (success) {
-      saveExistingProjectionSession(projectionGUID, viewMode)
+      // The requested viewMode is based on the list's (possibly stale) cached status. Re-derive
+      // it from the freshly-fetched backend status so a status change picked up mid-flight
+      // (e.g. an admin cancelling the projection) doesn't leave the page stuck in the wrong mode.
+      const actualViewMode = isProjectionReadOnly(appStore.currentProjectionStatus)
+        ? PROJECTION_VIEW_MODE.VIEW
+        : PROJECTION_VIEW_MODE.EDIT
+      if (actualViewMode !== requestedViewMode) {
+        appStore.setViewMode(actualViewMode)
+      }
+      saveExistingProjectionSession(projectionGUID, actualViewMode)
       router.push(ROUTE_PATH.PROJECTION_DETAIL)
     } else {
       notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)

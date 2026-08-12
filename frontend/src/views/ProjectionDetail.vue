@@ -142,6 +142,14 @@
                 />
                 <span class="failed-status-text">Failed</span>
               </div>
+              <div v-else-if="isAdminCancelled" class="admin-cancelled-status-container">
+                <img
+                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)"
+                  alt="Cancelled By Administrator"
+                  class="admin-cancelled-status-icon"
+                />
+                <span class="admin-cancelled-status-text">Cancelled By Administrator</span>
+              </div>
             </div>
           </template>
 
@@ -165,6 +173,14 @@
                 class="header-download-report-button"
                 @click="handleDownloadReport"
               />
+              <div v-else-if="isAdminCancelled" class="admin-cancelled-status-container">
+                <img
+                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)"
+                  alt="Cancelled By Administrator"
+                  class="admin-cancelled-status-icon"
+                />
+                <span class="admin-cancelled-status-text">Cancelled By Administrator</span>
+              </div>
             </template>
             <!-- Draft: show Draft status badge -->
             <div v-else-if="isDraft" class="draft-status-container">
@@ -197,6 +213,11 @@
         :endDate="runEndDate"
         class="panel-spacing"
       />
+      <AdminCancellationBanner
+        v-if="isAdminCancelled && adminCancelReason"
+        :reason="adminCancelReason"
+        class="panel-spacing"
+      />
       <div class="tabs-with-download" :style="isManualInputRunProgressBarVisible ? { marginTop: '16px' } : {}">
         <AppTabs
           v-model:currentTab="modelParamActiveTab"
@@ -227,7 +248,7 @@
         <ReportSettingsPanel ref="reportSettingsPanelRef" class="panel-spacing" />
         <RunProjectionButtonPanel
           v-if="!appStore.isReadOnly || isRunning || isStuck"
-          :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
+          :isDisabled="!modelParameterStore.runModelEnabled || !isEditableProjectionStatus"
           :showCancelButton="isRunning || isStuck || isQueued"
           :showRevertCancelButton="!(isRunning||isStuck||isQueued)"
           :isRevertCancelDisabled="isCancelDisabled"
@@ -256,9 +277,14 @@
           :endDate="runEndDate"
           class="panel-spacing"
         />
+        <AdminCancellationBanner
+          v-if="isAdminCancelled && adminCancelReason"
+          :reason="adminCancelReason"
+          class="panel-spacing"
+        />
         <!-- Draft: show the section-completion progress bar -->
         <ParameterSelectionProgressBar
-          v-else
+          v-if="isDraft"
           :sections="fileUploadProgressSections"
           :percentage="fileUploadPercentage"
           :completedCount="fileUploadCompletedCount"
@@ -269,8 +295,8 @@
         <MinimumDBHPanel class="panel-spacing" />
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
-          v-if="!isRunProgressBarVisible"
-          :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
+          v-if="isEditableProjectionStatus"
+          :isDisabled="!fileUploadStore.runModelEnabled || !isEditableProjectionStatus"
           :showCancelButton="false"
           :disabledText="fileUploadDisabledText"
           cardActionsClass="card-actions"
@@ -311,7 +337,8 @@ import {
   MinimumDBHPanel,
   ParameterSelectionProgressBar,
   ProjectionRunProgressBar,
-  RunProjectionButtonPanel
+  RunProjectionButtonPanel,
+  AdminCancellationBanner
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
@@ -370,20 +397,24 @@ const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PR
 const isDraft = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.DRAFT)
 const isFailed = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED)
 const isCancelled = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.CANCELLED)
+const isAdminCancelled = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)
 const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
+// Draft, Failed, and Admin Cancelled all share the same backend permitted-action set (UPDATE/DELETE/READ)
+// and can be edited and re-run
+const isEditableProjectionStatus = computed(() => isDraft.value || isFailed.value || isAdminCancelled.value)
 
-// Shown for File Upload mode when projection has been run (Running/Ready/Failed/Cancelled)
+// Shown for File Upload mode when projection has been run (Running/Ready/Failed/Cancelled/Admin Cancelled)
 const isRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD &&
-    (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value || isCancelled.value),
+    (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value || isCancelled.value || isAdminCancelled.value),
 )
 
-// Shown for Manual Input mode when projection has been run (Running/Ready/Failed/Cancelled)
+// Shown for Manual Input mode when projection has been run (Running/Ready/Failed/Cancelled/Admin Cancelled)
 const isManualInputRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT &&
-    (isRunning.value || isStuck.value || isQueued.value|| isReady.value || isFailed.value || isCancelled.value),
+    (isRunning.value || isStuck.value || isQueued.value|| isReady.value || isFailed.value || isCancelled.value || isAdminCancelled.value),
 )
 
 // Batch mapping data updated via polling
@@ -394,6 +425,7 @@ const batchFailureTypeDescription = ref<string | null>(null)
 const batchFailureMessage = ref<string | null>(null)
 const runStartDate = ref<string | null>(null)
 const runEndDate = ref<string | null>(null)
+const adminCancelReason = ref<string | null>(null)
 
 const applyBatchMapping = (batchMapping: ProjectionModel['batchMapping']) => {
   batchPolygonCount.value = batchMapping?.polygonCount ?? null
@@ -419,6 +451,7 @@ const pollProjectionProgress = async () => {
   try {
     const projection = await getProjectionById(projectionGUID)
     applyBatchMapping(projection.batchMapping)
+    adminCancelReason.value = projection.adminCancelReason ?? null
     if (projection.startDate) {
       runStartDate.value = projection.startDate
     }
@@ -615,7 +648,7 @@ const fileUploadCompletedCount = computed(() => {
 })
 
 const fileUploadDisabledText = computed(() => {
-  if (!appStore.isDraft) {
+  if (!isEditableProjectionStatus.value) {
     return `This projection may not be run with a status of ${appStore.currentProjectionStatus}`
   }
   if (!fileUploadStore.runModelEnabled) {
@@ -713,16 +746,21 @@ const restoreFromSession = async (): Promise<boolean> => {
     return false
   }
 
-  // Guard against sessionStorage viewMode manipulation:
-  // Verify the requested viewMode is valid for the actual status returned by the backend.
-  // READY/RUNNING projections are read-only; force VIEW mode if 'edit' was requested.
-  if (isProjectionReadOnly(appStore.currentProjectionStatus) &&
-      appStore.viewMode !== CONSTANTS.PROJECTION_VIEW_MODE.VIEW) {
+  // Guard against a stale cached viewMode (e.g. sessionStorage still says 'view' from before
+  // an admin cancelled the projection, or the backend status otherwise changed since the mode
+  // was cached). viewMode must always match the current status's read-only-ness.
+  const shouldBeReadOnly = isProjectionReadOnly(appStore.currentProjectionStatus)
+  if (shouldBeReadOnly && appStore.viewMode !== CONSTANTS.PROJECTION_VIEW_MODE.VIEW) {
+    // READY/RUNNING/STUCK/QUEUED projections are read-only; force VIEW mode if 'edit' was requested.
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
     notificationStore.showWarningMessage(
       MESSAGE.PROJECTION_ERR.VIEW_MODE_FORCED,
       MESSAGE.PROJECTION_ERR.VIEW_MODE_FORCED_TITLE,
     )
+  } else if (!shouldBeReadOnly && appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.VIEW) {
+    // Draft/Failed/Admin Cancelled projections are editable; correct a stale cached VIEW mode
+    // back to EDIT so panels and the Run Projection button are interactive.
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
   }
 
   return true
@@ -732,6 +770,7 @@ const fetchBatchData = async (guid: string) => {
   try {
     const projection = await getProjectionById(guid)
     applyBatchMapping(projection.batchMapping)
+    adminCancelReason.value = projection.adminCancelReason ?? null
     if (projection.startDate) runStartDate.value = projection.startDate
     const fetchedStatus = mapProjectionStatus(projection.projectionStatusCode?.code ?? '')
     if (
@@ -759,7 +798,7 @@ onMounted(async () => {
   }
 
   const guid = appStore.currentProjectionGUID
-  if (guid && (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value)) {
+  if (guid && (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value || isAdminCancelled.value)) {
     await fetchBatchData(guid)
     if (isRunning.value || isStuck.value || isQueued.value) {
       startPolling()
@@ -1171,7 +1210,7 @@ h3 {
 
 .running-status-text {
   font: var(--typography-bold-h4);
-  color: var(--support-border-color-warning);
+  color: #FCBA19;
 }
 
 .running-status-menu-list {
@@ -1231,7 +1270,7 @@ h3 {
 
 .queued-status-text {
   font: var(--typography-bold-h4);
-  color: var(--support-border-color-warning);
+  color: var(--typography-color-placeholder);
 }
 
 .queued-status-menu-list {
@@ -1343,7 +1382,7 @@ h3 {
 
 .ready-status-text {
   font: var(--typography-bold-h4);
-  color: var(--support-border-color-success);
+  color: #279D14;
 }
 
 .draft-status-container {
@@ -1386,6 +1425,25 @@ h3 {
 .failed-status-text {
   font: var(--typography-bold-h4);
   color: var(--support-border-color-error);
+}
+
+.admin-cancelled-status-container {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  padding-right: 0px;
+}
+
+.admin-cancelled-status-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.admin-cancelled-status-text {
+  font: var(--typography-bold-h4);
+  color: #CE3E39;
 }
 
 .panel-spacing {
@@ -1471,7 +1529,8 @@ h3 {
   .stuck-status-icon,
   .ready-status-icon,
   .draft-status-icon,
-  .failed-status-icon {
+  .failed-status-icon,
+  .admin-cancelled-status-icon {
     width: 16px;
     height: 16px;
   }
@@ -1481,7 +1540,8 @@ h3 {
   .stuck-status-text,
   .ready-status-text,
   .draft-status-text,
-  .failed-status-text {
+  .failed-status-text,
+  .admin-cancelled-status-text {
     font-size: 16px;
   }
 }

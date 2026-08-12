@@ -58,12 +58,14 @@
             v-if="projection.status === PROJECTION_STATUS.STUCK"
             class="status-badge status-stuck"
           >
+            <img :src="StuckIcon14px" alt="" class="status-badge-icon" />
             Stuck
           </span>
           <span
             v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
             class="status-badge status-running"
           >
+            <img :src="RunningIcon" alt="" class="status-badge-icon" />
             Running
           </span>
         </div>
@@ -139,6 +141,7 @@ import type { AdminProjection, SortOption } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS } from '@/constants/constants'
 import { formatNumber } from '@/utils/util'
 import { AppButton } from '@/components'
+import { RunningIcon, StuckIcon14px } from '@/assets/'
 
 interface Props {
   projections: AdminProjection[]
@@ -265,6 +268,12 @@ const formatElapsedTime = (startDate: string | null): string => {
   font: var(--typography-regular-small-body);
   color: var(--typography-color-primary);
   white-space: nowrap;
+}
+
+.status-badge-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .status-badge.status-running {

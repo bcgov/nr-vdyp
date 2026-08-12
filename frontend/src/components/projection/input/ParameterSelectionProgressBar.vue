@@ -46,6 +46,8 @@ import {
   FailedStatusIcon,
   ReadyStatusIcon,
   RunningStatusIcon,
+  QueuedIcon16px,
+  StuckIcon16px,
 } from '@/assets/'
 
 export interface ProgressSection {
@@ -78,9 +80,9 @@ const statusIcon = computed(() => {
     Draft: DraftStatusIcon,
     Ready: ReadyStatusIcon,
     Running: RunningStatusIcon,
-    // TODO: replace with a dedicated Stuck icon;
-    Stuck: FailedStatusIcon,
+    Stuck: StuckIcon16px,
     Failed: FailedStatusIcon,
+    Queued: QueuedIcon16px,
   }
   return iconMap[props.projectionStatus] || ''
 })
@@ -92,6 +94,7 @@ const statusTextClass = computed(() => {
     Running: 'status-text status-text--running',
     Stuck: 'status-text status-text--stuck',
     Failed: 'status-text status-text--failed',
+    Queued: 'status-text status-text--queued',
   }
   return classMap[props.projectionStatus] || 'status-text'
 })
@@ -165,6 +168,10 @@ const progressColor = computed(() => {
 
 .status-text--running {
   color: var(--support-border-color-warning);
+}
+
+.status-text--queued {
+  color: var(--typography-color-placeholder);
 }
 
 .status-text--stuck {

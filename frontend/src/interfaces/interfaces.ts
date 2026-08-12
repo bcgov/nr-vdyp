@@ -44,7 +44,16 @@ export interface Tab {
 }
 
 // 'Cancelled' is a frontend-only transient UI state (not a real backend status code).
-export type ProjectionStatus = 'Draft' | 'Ready' | 'Running' | 'Stuck' | 'Failed' | 'Cancelled' | 'Queued'
+// 'Cancelled By Administrator' maps to the backend ADMN_CNCLD status code.
+export type ProjectionStatus =
+  | 'Draft'
+  | 'Ready'
+  | 'Running'
+  | 'Stuck'
+  | 'Failed'
+  | 'Cancelled'
+  | 'Queued'
+  | 'Cancelled By Administrator'
 
 export interface Projection {
   projectionGUID: string
