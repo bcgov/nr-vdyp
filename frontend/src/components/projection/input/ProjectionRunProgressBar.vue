@@ -72,6 +72,9 @@ import {
   FailedIcon20px,
   DraftIcon20px,
   CancelIcon20px,
+  AdminCancelledIcon20px,
+  QueuedIcon20px,
+  StuckIcon20px,
 } from '@/assets/'
 
 const props = defineProps<{
@@ -109,12 +112,12 @@ onUnmounted(() => {
 const statusIcon20px = computed(() => {
   const map: Record<string, string> = {
     [CONSTANTS.PROJECTION_STATUS.RUNNING]: RunningIcon20px,
-    // TODO: replace with a dedicated Stuck icon;
-    [CONSTANTS.PROJECTION_STATUS.STUCK]: FailedIcon20px,
-    [CONSTANTS.PROJECTION_STATUS.QUEUED]: RunningIcon20px,
+    [CONSTANTS.PROJECTION_STATUS.STUCK]: StuckIcon20px,
+    [CONSTANTS.PROJECTION_STATUS.QUEUED]: QueuedIcon20px,
     [CONSTANTS.PROJECTION_STATUS.READY]: ReadyIcon20px,
     [CONSTANTS.PROJECTION_STATUS.FAILED]: FailedIcon20px,
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: CancelIcon20px,
+    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: AdminCancelledIcon20px,
   }
   return map[props.status] ?? DraftIcon20px
 })

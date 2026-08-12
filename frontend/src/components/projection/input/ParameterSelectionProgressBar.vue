@@ -46,6 +46,8 @@ import {
   FailedStatusIcon,
   ReadyStatusIcon,
   RunningStatusIcon,
+  QueuedIcon16px,
+  StuckIcon16px,
 } from '@/assets/'
 
 export interface ProgressSection {
@@ -78,9 +80,9 @@ const statusIcon = computed(() => {
     Draft: DraftStatusIcon,
     Ready: ReadyStatusIcon,
     Running: RunningStatusIcon,
-    // TODO: replace with a dedicated Stuck icon;
-    Stuck: FailedStatusIcon,
+    Stuck: StuckIcon16px,
     Failed: FailedStatusIcon,
+    Queued: QueuedIcon16px,
   }
   return iconMap[props.projectionStatus] || ''
 })
