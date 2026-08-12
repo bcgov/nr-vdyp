@@ -745,16 +745,21 @@ const restoreFromSession = async (): Promise<boolean> => {
     return false
   }
 
-  // Guard against sessionStorage viewMode manipulation:
-  // Verify the requested viewMode is valid for the actual status returned by the backend.
-  // READY/RUNNING projections are read-only; force VIEW mode if 'edit' was requested.
-  if (isProjectionReadOnly(appStore.currentProjectionStatus) &&
-      appStore.viewMode !== CONSTANTS.PROJECTION_VIEW_MODE.VIEW) {
+  // Guard against a stale cached viewMode (e.g. sessionStorage still says 'view' from before
+  // an admin cancelled the projection, or the backend status otherwise changed since the mode
+  // was cached). viewMode must always match the current status's read-only-ness.
+  const shouldBeReadOnly = isProjectionReadOnly(appStore.currentProjectionStatus)
+  if (shouldBeReadOnly && appStore.viewMode !== CONSTANTS.PROJECTION_VIEW_MODE.VIEW) {
+    // READY/RUNNING/STUCK/QUEUED projections are read-only; force VIEW mode if 'edit' was requested.
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
     notificationStore.showWarningMessage(
       MESSAGE.PROJECTION_ERR.VIEW_MODE_FORCED,
       MESSAGE.PROJECTION_ERR.VIEW_MODE_FORCED_TITLE,
     )
+  } else if (!shouldBeReadOnly && appStore.viewMode === CONSTANTS.PROJECTION_VIEW_MODE.VIEW) {
+    // Draft/Failed/Admin Cancelled projections are editable; correct a stale cached VIEW mode
+    // back to EDIT so panels and the Run Projection button are interactive.
+    appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.EDIT)
   }
 
   return true
