@@ -1,4 +1,5 @@
 export { default as ActionPanel } from './input/ActionPanel.vue'
+export { default as AdminCancellationBanner } from './input/AdminCancellationBanner.vue'
 export { default as AdminCancelProjectionDialog } from './list/AdminCancelProjectionDialog.vue'
 export { default as AdminProjectionCardList } from './list/AdminProjectionCardList.vue'
 export { default as AdminProjectionTable } from './list/AdminProjectionTable.vue'

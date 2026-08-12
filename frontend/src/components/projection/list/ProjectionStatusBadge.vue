@@ -1,7 +1,7 @@
 <template>
   <div class="status-badge">
     <img
-      :src="getStatusIcon(status)"
+      :src="statusIcon"
       :alt="status"
       class="status-icon"
     />
@@ -14,6 +14,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { getStatusIcon } from '@/utils/util'
+import { CONSTANTS } from '@/constants'
+import { AdminCancelledIcon16px, QueuedIcon16px, StuckIcon16px } from '@/assets/'
 
 interface Props {
   status: string
@@ -21,8 +23,18 @@ interface Props {
 
 const props = defineProps<Props>()
 
+// This badge always renders its icon at 16px, so the dedicated 16px assets are used directly
+// here rather than the larger assets getStatusIcon() returns for the projection detail header badge.
+const statusIcon16pxOverrides: Record<string, string> = {
+  [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: AdminCancelledIcon16px,
+  [CONSTANTS.PROJECTION_STATUS.QUEUED]: QueuedIcon16px,
+  [CONSTANTS.PROJECTION_STATUS.STUCK]: StuckIcon16px,
+}
+
+const statusIcon = computed(() => statusIcon16pxOverrides[props.status] ?? getStatusIcon(props.status))
+
 const statusClass = computed(() => {
-  return `status-${props.status.toLowerCase()}`
+  return `status-${props.status.toLowerCase().replace(/\s+/g, '-')}`
 })
 </script>
 
@@ -52,21 +64,31 @@ const statusClass = computed(() => {
 
 .status-text.status-ready {
   font: var(--typography-bold-body);
-  color: var(--support-border-color-success);
+  color: #279D14;
 }
 
 .status-text.status-failed {
   font: var(--typography-bold-body);
-  color: var(--support-border-color-error);
+  color: #CE3E39;
 }
 
 .status-text.status-running {
   font: var(--typography-bold-body);
-  color: var(--support-border-color-warning);
+  color: #FCBA19;
 }
 
 .status-text.status-queued {
   font: var(--typography-bold-body);
-  color: var(--support-border-color-warning);
+  color: var(--typography-color-placeholder);
+}
+
+.status-text.status-stuck {
+  font: var(--typography-bold-body);
+  color: #CE3E39;
+}
+
+.status-text.status-cancelled-by-administrator {
+  font: var(--typography-bold-body);
+  color: #CE3E39;
 }
 </style>

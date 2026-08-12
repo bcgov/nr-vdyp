@@ -72,6 +72,9 @@ import {
   FailedIcon20px,
   DraftIcon20px,
   CancelIcon20px,
+  AdminCancelledIcon20px,
+  QueuedIcon20px,
+  StuckIcon20px,
 } from '@/assets/'
 
 const props = defineProps<{
@@ -109,12 +112,12 @@ onUnmounted(() => {
 const statusIcon20px = computed(() => {
   const map: Record<string, string> = {
     [CONSTANTS.PROJECTION_STATUS.RUNNING]: RunningIcon20px,
-    // TODO: replace with a dedicated Stuck icon;
-    [CONSTANTS.PROJECTION_STATUS.STUCK]: FailedIcon20px,
-    [CONSTANTS.PROJECTION_STATUS.QUEUED]: RunningIcon20px,
+    [CONSTANTS.PROJECTION_STATUS.STUCK]: StuckIcon20px,
+    [CONSTANTS.PROJECTION_STATUS.QUEUED]: QueuedIcon20px,
     [CONSTANTS.PROJECTION_STATUS.READY]: ReadyIcon20px,
     [CONSTANTS.PROJECTION_STATUS.FAILED]: FailedIcon20px,
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: CancelIcon20px,
+    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: AdminCancelledIcon20px,
   }
   return map[props.status] ?? DraftIcon20px
 })
@@ -129,6 +132,7 @@ const statusValueClass = computed(() => {
     [CONSTANTS.PROJECTION_STATUS.READY]: 'tile-value--ready',
     [CONSTANTS.PROJECTION_STATUS.FAILED]: 'tile-value--failed',
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: 'tile-value--cancelled',
+    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: 'tile-value--admin-cancelled',
   }
   return map[props.status] ?? ''
 })
@@ -179,7 +183,8 @@ const progressFillClass = computed(() => {
   if (
     props.status === CONSTANTS.PROJECTION_STATUS.FAILED ||
     props.status === CONSTANTS.PROJECTION_STATUS.STUCK ||
-    props.status === CONSTANTS.PROJECTION_STATUS.CANCELLED
+    props.status === CONSTANTS.PROJECTION_STATUS.CANCELLED ||
+    props.status === CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD
   ) {
     return 'progress-fill--red'
   }
@@ -194,6 +199,7 @@ const progressLeftText = computed(() => {
     [CONSTANTS.PROJECTION_STATUS.READY]: 'Projection Complete',
     [CONSTANTS.PROJECTION_STATUS.FAILED]: 'Projection Run Failed',
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: 'Projection Run Cancelled',
+    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: 'Projection Cancelled by Administrator',
   }
   return map[props.status] ?? ''
 })
@@ -293,27 +299,31 @@ const failureDetailsText = computed(() => {
 }
 
 .tile-value--running {
-  color: #c27f00;
+  color: #FCBA19;
 }
 
 .tile-value--queued {
-  color: #c27f00;
+  color: #9f9d9c;
 }
 
 .tile-value--stuck {
-  color: #d14a46;
+  color: #CE3E39;
 }
 
 .tile-value--ready {
-  color: #2e7d32;
+  color: #279D14;
 }
 
 .tile-value--failed {
-  color: #d14a46;
+  color: #CE3E39;
 }
 
 .tile-value--cancelled {
   color: #2d2d2d;
+}
+
+.tile-value--admin-cancelled {
+  color: #CE3E39;
 }
 
 /* Progress Bar */
