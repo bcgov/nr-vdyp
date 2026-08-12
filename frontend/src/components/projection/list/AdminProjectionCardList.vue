@@ -270,6 +270,12 @@ const formatElapsedTime = (startDate: string | null): string => {
   white-space: nowrap;
 }
 
+.status-badge-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .status-badge.status-running {
   border: 1px solid var(--support-border-color-success);
   background: var(--support-surface-color-success);

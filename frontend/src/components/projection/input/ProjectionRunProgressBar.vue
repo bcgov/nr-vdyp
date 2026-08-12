@@ -132,6 +132,7 @@ const statusValueClass = computed(() => {
     [CONSTANTS.PROJECTION_STATUS.READY]: 'tile-value--ready',
     [CONSTANTS.PROJECTION_STATUS.FAILED]: 'tile-value--failed',
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: 'tile-value--cancelled',
+    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: 'tile-value--admin-cancelled',
   }
   return map[props.status] ?? ''
 })
@@ -298,27 +299,31 @@ const failureDetailsText = computed(() => {
 }
 
 .tile-value--running {
-  color: #c27f00;
+  color: #FCBA19;
 }
 
 .tile-value--queued {
-  color: #c27f00;
+  color: #9f9d9c;
 }
 
 .tile-value--stuck {
-  color: #d14a46;
+  color: #CE3E39;
 }
 
 .tile-value--ready {
-  color: #2e7d32;
+  color: #279D14;
 }
 
 .tile-value--failed {
-  color: #d14a46;
+  color: #CE3E39;
 }
 
 .tile-value--cancelled {
   color: #2d2d2d;
+}
+
+.tile-value--admin-cancelled {
+  color: #CE3E39;
 }
 
 /* Progress Bar */

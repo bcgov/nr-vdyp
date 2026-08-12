@@ -1202,7 +1202,7 @@ h3 {
 
 .running-status-text {
   font: var(--typography-bold-h4);
-  color: var(--support-border-color-warning);
+  color: #FCBA19;
 }
 
 .running-status-menu-list {
@@ -1262,7 +1262,7 @@ h3 {
 
 .queued-status-text {
   font: var(--typography-bold-h4);
-  color: var(--support-border-color-warning);
+  color: var(--typography-color-placeholder);
 }
 
 .queued-status-menu-list {
@@ -1374,7 +1374,7 @@ h3 {
 
 .ready-status-text {
   font: var(--typography-bold-h4);
-  color: var(--support-border-color-success);
+  color: #279D14;
 }
 
 .draft-status-container {

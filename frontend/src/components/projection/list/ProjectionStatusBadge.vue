@@ -64,21 +64,31 @@ const statusClass = computed(() => {
 
 .status-text.status-ready {
   font: var(--typography-bold-body);
-  color: var(--support-border-color-success);
+  color: #279D14;
 }
 
 .status-text.status-failed {
   font: var(--typography-bold-body);
-  color: var(--support-border-color-error);
+  color: #CE3E39;
 }
 
 .status-text.status-running {
   font: var(--typography-bold-body);
-  color: var(--support-border-color-warning);
+  color: #FCBA19;
 }
 
 .status-text.status-queued {
   font: var(--typography-bold-body);
-  color: var(--support-border-color-warning);
+  color: var(--typography-color-placeholder);
+}
+
+.status-text.status-stuck {
+  font: var(--typography-bold-body);
+  color: #CE3E39;
+}
+
+.status-text.status-cancelled-by-administrator {
+  font: var(--typography-bold-body);
+  color: #CE3E39;
 }
 </style>
