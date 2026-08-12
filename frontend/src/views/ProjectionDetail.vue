@@ -248,7 +248,7 @@
         <ReportSettingsPanel ref="reportSettingsPanelRef" class="panel-spacing" />
         <RunProjectionButtonPanel
           v-if="!appStore.isReadOnly || isRunning || isStuck"
-          :isDisabled="!modelParameterStore.runModelEnabled || !appStore.isDraft"
+          :isDisabled="!modelParameterStore.runModelEnabled || !isDraftOrAdminCancelled"
           :showCancelButton="isRunning || isStuck || isQueued"
           :showRevertCancelButton="!(isRunning||isStuck||isQueued)"
           :isRevertCancelDisabled="isCancelDisabled"
@@ -295,8 +295,8 @@
         <MinimumDBHPanel class="panel-spacing" />
         <AttachmentsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
-          v-if="!isRunProgressBarVisible"
-          :isDisabled="!fileUploadStore.runModelEnabled || !appStore.isDraft"
+          v-if="!isRunProgressBarVisible || isAdminCancelled"
+          :isDisabled="!fileUploadStore.runModelEnabled || !isDraftOrAdminCancelled"
           :showCancelButton="false"
           :disabledText="fileUploadDisabledText"
           cardActionsClass="card-actions"
@@ -399,6 +399,8 @@ const isFailed = computed(() => appStore.currentProjectionStatus === CONSTANTS.P
 const isCancelled = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.CANCELLED)
 const isAdminCancelled = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)
 const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
+// ADMN_CNCLD behaves like Draft
+const isDraftOrAdminCancelled = computed(() => isDraft.value || isAdminCancelled.value)
 
 // Shown for File Upload mode when projection has been run (Running/Ready/Failed/Cancelled/Admin Cancelled)
 const isRunProgressBarVisible = computed(
@@ -645,7 +647,7 @@ const fileUploadCompletedCount = computed(() => {
 })
 
 const fileUploadDisabledText = computed(() => {
-  if (!appStore.isDraft) {
+  if (!isDraftOrAdminCancelled.value) {
     return `This projection may not be run with a status of ${appStore.currentProjectionStatus}`
   }
   if (!fileUploadStore.runModelEnabled) {
