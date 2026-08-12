@@ -123,6 +123,31 @@
             />
           </template>
 
+          <!-- Cancelled By Administrator: Edit, Duplicate, Delete (behaves like Draft) -->
+          <template v-else-if="projection.status === PROJECTION_STATUS.ADMN_CNCLD">
+            <AppButton
+              label="Edit"
+              variant="tertiary"
+              icon-position="top"
+              :icon-src="EditIcon"
+              @click="$emit(PROJECTION_USER_ACTION.EDIT, projection.projectionGUID)"
+            />
+            <AppButton
+              label="Duplicate"
+              variant="tertiary"
+              icon-position="top"
+              :icon-src="DuplicateIcon"
+              @click="$emit(PROJECTION_USER_ACTION.DUPLICATE, projection.projectionGUID)"
+            />
+            <AppButton
+              label="Delete"
+              variant="tertiary"
+              icon-position="top"
+              :icon-src="DeleteIcon"
+              @click="$emit(PROJECTION_USER_ACTION.DELETE, projection.projectionGUID)"
+            />
+          </template>
+
           <!-- Failed: Edit, Duplicate, Download, Delete -->
           <template v-else-if="projection.status === PROJECTION_STATUS.FAILED">
             <AppButton
