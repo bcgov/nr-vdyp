@@ -252,6 +252,7 @@ export const PROJECTION_STATUS = Object.freeze({
   // After cancellation the backend immediately returns DRAFT.
   // It is never sent to or received from the backend, and is lost on page refresh or navigation.
   CANCELLED: 'Cancelled',
+  ADMN_CNCLD: 'Cancelled By Administrator',
 })
 
 export const PROJECTION_LIST_HEADER_KEY = Object.freeze({

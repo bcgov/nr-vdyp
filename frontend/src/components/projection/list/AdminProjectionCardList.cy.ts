@@ -75,6 +75,6 @@ describe('AdminProjectionCardList.vue', () => {
     mountComponent([])
 
     cy.get('.empty-state-card').should('exist')
-    cy.get('.empty-state-message').should('contain.text', 'No running projections found.')
+    cy.get('.empty-state-message').should('contain.text', 'No projections found.')
   })
 })

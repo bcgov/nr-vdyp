@@ -142,6 +142,14 @@
                 />
                 <span class="failed-status-text">Failed</span>
               </div>
+              <div v-else-if="isAdminCancelled" class="admin-cancelled-status-container">
+                <img
+                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)"
+                  alt="Cancelled By Administrator"
+                  class="admin-cancelled-status-icon"
+                />
+                <span class="admin-cancelled-status-text">Cancelled By Administrator</span>
+              </div>
             </div>
           </template>
 
@@ -165,6 +173,14 @@
                 class="header-download-report-button"
                 @click="handleDownloadReport"
               />
+              <div v-else-if="isAdminCancelled" class="admin-cancelled-status-container">
+                <img
+                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)"
+                  alt="Cancelled By Administrator"
+                  class="admin-cancelled-status-icon"
+                />
+                <span class="admin-cancelled-status-text">Cancelled By Administrator</span>
+              </div>
             </template>
             <!-- Draft: show Draft status badge -->
             <div v-else-if="isDraft" class="draft-status-container">
@@ -195,6 +211,11 @@
         :failureMessage="batchFailureMessage"
         :startDate="runStartDate"
         :endDate="runEndDate"
+        class="panel-spacing"
+      />
+      <AdminCancellationBanner
+        v-if="isAdminCancelled && adminCancelReason"
+        :reason="adminCancelReason"
         class="panel-spacing"
       />
       <div class="tabs-with-download" :style="isManualInputRunProgressBarVisible ? { marginTop: '16px' } : {}">
@@ -256,9 +277,14 @@
           :endDate="runEndDate"
           class="panel-spacing"
         />
+        <AdminCancellationBanner
+          v-if="isAdminCancelled && adminCancelReason"
+          :reason="adminCancelReason"
+          class="panel-spacing"
+        />
         <!-- Draft: show the section-completion progress bar -->
         <ParameterSelectionProgressBar
-          v-else
+          v-if="isDraft"
           :sections="fileUploadProgressSections"
           :percentage="fileUploadPercentage"
           :completedCount="fileUploadCompletedCount"
@@ -311,7 +337,8 @@ import {
   MinimumDBHPanel,
   ParameterSelectionProgressBar,
   ProjectionRunProgressBar,
-  RunProjectionButtonPanel
+  RunProjectionButtonPanel,
+  AdminCancellationBanner
 } from '@/components/projection'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
@@ -370,20 +397,21 @@ const isReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PR
 const isDraft = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.DRAFT)
 const isFailed = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.FAILED)
 const isCancelled = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.CANCELLED)
+const isAdminCancelled = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)
 const isDownloadReady = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.READY)
 
-// Shown for File Upload mode when projection has been run (Running/Ready/Failed/Cancelled)
+// Shown for File Upload mode when projection has been run (Running/Ready/Failed/Cancelled/Admin Cancelled)
 const isRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.FILE_UPLOAD &&
-    (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value || isCancelled.value),
+    (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value || isCancelled.value || isAdminCancelled.value),
 )
 
-// Shown for Manual Input mode when projection has been run (Running/Ready/Failed/Cancelled)
+// Shown for Manual Input mode when projection has been run (Running/Ready/Failed/Cancelled/Admin Cancelled)
 const isManualInputRunProgressBarVisible = computed(
   () =>
     appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT &&
-    (isRunning.value || isStuck.value || isQueued.value|| isReady.value || isFailed.value || isCancelled.value),
+    (isRunning.value || isStuck.value || isQueued.value|| isReady.value || isFailed.value || isCancelled.value || isAdminCancelled.value),
 )
 
 // Batch mapping data updated via polling
@@ -394,6 +422,7 @@ const batchFailureTypeDescription = ref<string | null>(null)
 const batchFailureMessage = ref<string | null>(null)
 const runStartDate = ref<string | null>(null)
 const runEndDate = ref<string | null>(null)
+const adminCancelReason = ref<string | null>(null)
 
 const applyBatchMapping = (batchMapping: ProjectionModel['batchMapping']) => {
   batchPolygonCount.value = batchMapping?.polygonCount ?? null
@@ -419,6 +448,7 @@ const pollProjectionProgress = async () => {
   try {
     const projection = await getProjectionById(projectionGUID)
     applyBatchMapping(projection.batchMapping)
+    adminCancelReason.value = projection.adminCancelReason ?? null
     if (projection.startDate) {
       runStartDate.value = projection.startDate
     }
@@ -732,6 +762,7 @@ const fetchBatchData = async (guid: string) => {
   try {
     const projection = await getProjectionById(guid)
     applyBatchMapping(projection.batchMapping)
+    adminCancelReason.value = projection.adminCancelReason ?? null
     if (projection.startDate) runStartDate.value = projection.startDate
     const fetchedStatus = mapProjectionStatus(projection.projectionStatusCode?.code ?? '')
     if (
@@ -759,7 +790,7 @@ onMounted(async () => {
   }
 
   const guid = appStore.currentProjectionGUID
-  if (guid && (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value)) {
+  if (guid && (isRunning.value || isStuck.value || isQueued.value || isReady.value || isFailed.value || isAdminCancelled.value)) {
     await fetchBatchData(guid)
     if (isRunning.value || isStuck.value || isQueued.value) {
       startPolling()
@@ -1388,6 +1419,25 @@ h3 {
   color: var(--support-border-color-error);
 }
 
+.admin-cancelled-status-container {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
+  padding-right: 0px;
+}
+
+.admin-cancelled-status-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.admin-cancelled-status-text {
+  font: var(--typography-bold-h4);
+  color: #CE3E39;
+}
+
 .panel-spacing {
   margin-top: var(--layout-margin-medium);
 }
@@ -1471,7 +1521,8 @@ h3 {
   .stuck-status-icon,
   .ready-status-icon,
   .draft-status-icon,
-  .failed-status-icon {
+  .failed-status-icon,
+  .admin-cancelled-status-icon {
     width: 16px;
     height: 16px;
   }
@@ -1481,7 +1532,8 @@ h3 {
   .stuck-status-text,
   .ready-status-text,
   .draft-status-text,
-  .failed-status-text {
+  .failed-status-text,
+  .admin-cancelled-status-text {
     font-size: 16px;
   }
 }

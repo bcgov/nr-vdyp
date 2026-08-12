@@ -79,6 +79,6 @@ describe('AdminProjectionTable.vue', () => {
     mountComponent([])
 
     cy.get('.empty-state-row').should('exist')
-    cy.get('.empty-state-message').should('contain.text', 'No running projections found.')
+    cy.get('.empty-state-message').should('contain.text', 'No projections found.')
   })
 })

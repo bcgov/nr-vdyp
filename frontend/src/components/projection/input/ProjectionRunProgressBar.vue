@@ -179,7 +179,8 @@ const progressFillClass = computed(() => {
   if (
     props.status === CONSTANTS.PROJECTION_STATUS.FAILED ||
     props.status === CONSTANTS.PROJECTION_STATUS.STUCK ||
-    props.status === CONSTANTS.PROJECTION_STATUS.CANCELLED
+    props.status === CONSTANTS.PROJECTION_STATUS.CANCELLED ||
+    props.status === CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD
   ) {
     return 'progress-fill--red'
   }
@@ -194,6 +195,7 @@ const progressLeftText = computed(() => {
     [CONSTANTS.PROJECTION_STATUS.READY]: 'Projection Complete',
     [CONSTANTS.PROJECTION_STATUS.FAILED]: 'Projection Run Failed',
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: 'Projection Run Cancelled',
+    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: 'Projection Cancelled by Administrator',
   }
   return map[props.status] ?? ''
 })
