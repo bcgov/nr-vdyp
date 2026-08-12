@@ -3,12 +3,12 @@ package ca.bc.gov.nrs.vdyp.backend.services.upload;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import ca.bc.gov.nrs.vdyp.backend.config.CsvUploadConfig;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileUploadException;
@@ -24,7 +24,7 @@ public class CsvUploadValidator {
 			"bat", "cmd", "com", "dll", "elf", "exe", "gif", "htm", "html", "jar", "jpeg", "jpg", "js", "msi", "pdf",
 			"php", "png", "ps1", "scr", "sh", "svg", "vbs", "xls", "xlsx", "zip"
 	);
-	private static final Pattern NEGATIVE_NUMBER = Pattern.compile("-((\\d+(\\.\\d*)?)|(\\.\\d+))");
+	private static final int MAX_HEADER_BYTES = 64 * 1024;
 
 	private final CsvUploadConfig config;
 
@@ -50,11 +50,8 @@ public class CsvUploadValidator {
 
 	public InputStream validatingStream(InputStream source, String fileSetTypeCode) {
 		CsvUploadSchemas.HeaderSchema headerSchema = CsvUploadSchemas.expectedHeaders(fileSetTypeCode).orElse(null);
-		StreamingCsvParser parser = new StreamingCsvParser(
-				config.maxFileSizeBytes(), config.maxColumns(), config.maxFieldChars(), config.maxRecordBytes(),
-				headerSchema
-		);
-		return new ValidatingInputStream(source, parser);
+		UploadSniffer sniffer = new UploadSniffer(config.maxFileSizeBytes(), headerSchema);
+		return new ValidatingInputStream(source, sniffer);
 	}
 
 	public long maxFileSizeBytes() {
@@ -134,12 +131,12 @@ public class CsvUploadValidator {
 	}
 
 	private static final class ValidatingInputStream extends FilterInputStream {
-		private final StreamingCsvParser parser;
+		private final UploadSniffer sniffer;
 		private boolean finished;
 
-		private ValidatingInputStream(InputStream in, StreamingCsvParser parser) {
+		private ValidatingInputStream(InputStream in, UploadSniffer sniffer) {
 			super(in);
-			this.parser = parser;
+			this.sniffer = sniffer;
 		}
 
 		@Override
@@ -161,7 +158,7 @@ public class CsvUploadValidator {
 				return -1;
 			}
 			try {
-				parser.process(b, off, read);
+				sniffer.process(b, off, read);
 			} catch (ProjectionFileUploadException e) {
 				throw new CsvUploadValidationIOException(e);
 			}
@@ -170,7 +167,7 @@ public class CsvUploadValidator {
 
 		private void process(int value) throws IOException {
 			try {
-				parser.processByte(value & 0xFF);
+				sniffer.processByte(value & 0xFF);
 			} catch (ProjectionFileUploadException e) {
 				throw new CsvUploadValidationIOException(e);
 			}
@@ -182,70 +179,82 @@ public class CsvUploadValidator {
 			}
 			finished = true;
 			try {
-				parser.finish();
+				sniffer.finish();
 			} catch (ProjectionFileUploadException e) {
 				throw new CsvUploadValidationIOException(e);
 			}
 		}
 	}
 
-	private static final class StreamingCsvParser {
+	private static final class UploadSniffer {
 		private final long maxFileBytes;
-		private final int maxColumns;
-		private final int maxFieldChars;
-		private final int maxRecordBytes;
 		private final CsvUploadSchemas.HeaderSchema headerSchema;
-		private final List<String> headerFields;
-		private final StringBuilder currentField = new StringBuilder();
 		private final byte[] prefix = new byte[16];
+		private final byte[] headerBytes = new byte[MAX_HEADER_BYTES];
 
 		private long bytesRead;
-		private int utf8Remaining;
-		private int utf8CodePoint;
-		private int utf8MinCodePoint;
-		private boolean seenChar;
-		private boolean inQuotes;
-		private boolean afterQuote;
-		private boolean atFieldStart = true;
+		private int headerLength;
+		private boolean headerComplete;
 		private boolean previousCarriageReturn;
-		private boolean recordOpen;
-		private int fieldCount;
-		private int expectedColumnCount = -1;
-		private int recordBytes;
-		private long recordNumber;
 
-		private StreamingCsvParser(
-				long maxFileBytes, int maxColumns, int maxFieldChars, int maxRecordBytes,
-				CsvUploadSchemas.HeaderSchema headerSchema
-		) {
+		private UploadSniffer(long maxFileBytes, CsvUploadSchemas.HeaderSchema headerSchema) {
 			this.maxFileBytes = maxFileBytes;
-			this.maxColumns = maxColumns;
-			this.maxFieldChars = maxFieldChars;
-			this.maxRecordBytes = maxRecordBytes;
 			this.headerSchema = headerSchema;
-			this.headerFields = headerSchema == null ? null : new ArrayList<>(headerSchema.requiredPrefix().size());
 		}
 
 		void process(byte[] buffer, int offset, int length) throws ProjectionFileUploadException {
-			for (int i = offset; i < offset + length; i++) {
+			if (length <= 0) {
+				return;
+			}
+			if (headerComplete) {
+				countBytes(length);
+				return;
+			}
+
+			int end = offset + length;
+			int i = offset;
+			for (; i < end && !headerComplete; i++) {
 				processByte(buffer[i] & 0xFF);
+			}
+			if (i < end) {
+				countBytes(end - i);
 			}
 		}
 
 		private void processByte(int b) throws ProjectionFileUploadException {
-			bytesRead++;
-			if (bytesRead > maxFileBytes) {
-				throw ProjectionFileUploadException.payloadTooLarge("CSV upload exceeds the 1000000000 byte limit.");
-			}
-			recordBytes++;
-			if (recordBytes > maxRecordBytes) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload contains a record that is too large.");
+			countBytes(1);
+			if (headerComplete) {
+				return;
 			}
 			if (b == 0) {
 				throw ProjectionFileUploadException.invalidCsv("CSV upload contains binary content.");
 			}
 			capturePrefix(b);
-			decodeUtf8(b);
+			if (headerSchema == null) {
+				if (bytesRead >= prefix.length) {
+					headerComplete = true;
+				}
+				return;
+			}
+			if (b == '\n') {
+				if (previousCarriageReturn && headerLength > 0) {
+					headerLength--;
+				}
+				validateHeader();
+				return;
+			}
+			if (headerLength >= headerBytes.length) {
+				throw ProjectionFileUploadException.invalidCsv("CSV upload header is too large.");
+			}
+			headerBytes[headerLength++] = (byte) b;
+			previousCarriageReturn = b == '\r';
+		}
+
+		private void countBytes(int length) throws ProjectionFileUploadException {
+			bytesRead += length;
+			if (bytesRead > maxFileBytes) {
+				throw ProjectionFileUploadException.payloadTooLarge("CSV upload exceeds the 1000000000 byte limit.");
+			}
 		}
 
 		private void capturePrefix(int b) throws ProjectionFileUploadException {
@@ -281,179 +290,60 @@ public class CsvUploadValidator {
 			return true;
 		}
 
-		private void decodeUtf8(int b) throws ProjectionFileUploadException {
-			if (utf8Remaining == 0) {
-				if (b <= 0x7F) {
-					emitCodePoint(b);
-				} else if (b >= 0xC2 && b <= 0xDF) {
-					utf8Remaining = 1;
-					utf8CodePoint = b & 0x1F;
-					utf8MinCodePoint = 0x80;
-				} else if (b >= 0xE0 && b <= 0xEF) {
-					utf8Remaining = 2;
-					utf8CodePoint = b & 0x0F;
-					utf8MinCodePoint = 0x800;
-				} else if (b >= 0xF0 && b <= 0xF4) {
-					utf8Remaining = 3;
-					utf8CodePoint = b & 0x07;
-					utf8MinCodePoint = 0x10000;
-				} else {
-					throw ProjectionFileUploadException.invalidCsv("CSV upload is not valid UTF-8.");
-				}
+		private void validateHeader() throws ProjectionFileUploadException {
+			headerComplete = true;
+			if (headerSchema == null) {
 				return;
 			}
 
-			if ( (b & 0xC0) != 0x80) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload is not valid UTF-8.");
+			String headerLine = new String(headerBytes, 0, headerLength, StandardCharsets.UTF_8);
+			if (!headerLine.isEmpty() && headerLine.charAt(0) == '\uFEFF') {
+				headerLine = headerLine.substring(1);
 			}
-			utf8CodePoint = (utf8CodePoint << 6) | (b & 0x3F);
-			utf8Remaining--;
-			if (utf8Remaining == 0) {
-				if (utf8CodePoint < utf8MinCodePoint || utf8CodePoint > 0x10FFFF
-						|| (utf8CodePoint >= 0xD800 && utf8CodePoint <= 0xDFFF)) {
-					throw ProjectionFileUploadException.invalidCsv("CSV upload is not valid UTF-8.");
-				}
-				emitCodePoint(utf8CodePoint);
-			}
-		}
-
-		private void emitCodePoint(int codePoint) throws ProjectionFileUploadException {
-			if (!seenChar && codePoint == 0xFEFF) {
-				seenChar = true;
-				return;
-			}
-			seenChar = true;
-			if (codePoint < 0x20 && codePoint != '\r' && codePoint != '\n' && codePoint != '\t') {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload contains disallowed control characters.");
-			}
-			for (char c : Character.toChars(codePoint)) {
-				processChar(c);
-			}
-		}
-
-		private void processChar(char c) throws ProjectionFileUploadException {
-			if (previousCarriageReturn) {
-				previousCarriageReturn = false;
-				if (c == '\n') {
-					recordBytes = 0;
-					return;
-				}
-			}
-
-			if (inQuotes) {
-				if (c == '"') {
-					inQuotes = false;
-					afterQuote = true;
-				} else {
-					append(c);
-				}
-				return;
-			}
-
-			if (afterQuote) {
-				if (c == '"') {
-					append(c);
-					inQuotes = true;
-					afterQuote = false;
-				} else if (c == ',') {
-					endField();
-					afterQuote = false;
-				} else if (c == '\r' || c == '\n') {
-					endRecord(c == '\r');
-					afterQuote = false;
-				} else {
-					throw ProjectionFileUploadException.invalidCsv("CSV upload contains malformed quoting.");
-				}
-				return;
-			}
-
-			if (c == '\r' || c == '\n') {
-				endRecord(c == '\r');
-			} else if (c == ',') {
-				endField();
-				recordOpen = true;
-			} else if (c == '"') {
-				if (!atFieldStart) {
-					throw ProjectionFileUploadException.invalidCsv("CSV upload contains malformed quoting.");
-				}
-				inQuotes = true;
-				atFieldStart = false;
-				recordOpen = true;
-			} else {
-				append(c);
-			}
-		}
-
-		private void append(char c) throws ProjectionFileUploadException {
-			if (currentField.length() + 1 > maxFieldChars) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload contains a field that is too large.");
-			}
-			currentField.append(c);
-			atFieldStart = false;
-			recordOpen = true;
-		}
-
-		private void endField() throws ProjectionFileUploadException {
-			String value = currentField.toString();
-			validateFormulaPolicy(value);
-			fieldCount++;
-			if (fieldCount > maxColumns) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload contains too many columns.");
-			}
-			if (recordNumber == 0 && headerFields != null) {
-				headerFields.add(value);
-			}
-			currentField.setLength(0);
-			atFieldStart = true;
-		}
-
-		private void validateFormulaPolicy(String value) throws ProjectionFileUploadException {
-			String trimmed = value.stripLeading();
-			if (trimmed.isEmpty()) {
-				return;
-			}
-			char first = trimmed.charAt(0);
-			if (first == '=' || first == '+' || first == '@'
-					|| (first == '-' && !NEGATIVE_NUMBER.matcher(trimmed).matches())) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload contains a spreadsheet formula-like cell.");
-			}
-		}
-
-		private void endRecord(boolean carriageReturn) throws ProjectionFileUploadException {
-			endField();
-			if (expectedColumnCount < 0) {
-				expectedColumnCount = fieldCount;
-			} else if (fieldCount != expectedColumnCount) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload has inconsistent column counts.");
-			}
-			if (recordNumber == 0 && headerSchema != null && !headerSchema.matches(headerFields)) {
+			if (!headerSchema.matches(parseCsvHeader(headerLine))) {
 				throw ProjectionFileUploadException.invalidCsv("CSV upload headers do not match the expected schema.");
 			}
-			recordNumber++;
-			fieldCount = 0;
-			currentField.setLength(0);
-			atFieldStart = true;
-			recordOpen = false;
-			recordBytes = 0;
-			previousCarriageReturn = carriageReturn;
 		}
 
 		void finish() throws ProjectionFileUploadException {
 			if (bytesRead == 0) {
 				throw ProjectionFileUploadException.invalidCsv("CSV upload must not be empty.");
 			}
-			if (utf8Remaining != 0) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload is not valid UTF-8.");
+			if (!headerComplete) {
+				validateHeader();
 			}
-			if (inQuotes) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload contains an incomplete quoted field.");
+		}
+
+		private List<String> parseCsvHeader(String headerLine) {
+			List<String> headers = new ArrayList<>();
+			StringBuilder current = new StringBuilder();
+			boolean inQuotes = false;
+
+			for (int i = 0; i < headerLine.length(); i++) {
+				char c = headerLine.charAt(i);
+				if (inQuotes) {
+					if (c == '"') {
+						if (i + 1 < headerLine.length() && headerLine.charAt(i + 1) == '"') {
+							current.append('"');
+							i++;
+						} else {
+							inQuotes = false;
+						}
+					} else {
+						current.append(c);
+					}
+				} else if (c == '"') {
+					inQuotes = true;
+				} else if (c == ',') {
+					headers.add(current.toString().trim());
+					current.setLength(0);
+				} else {
+					current.append(c);
+				}
 			}
-			if (recordOpen || currentField.length() > 0 || fieldCount > 0) {
-				endRecord(false);
-			}
-			if (recordNumber == 0) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload must contain at least one CSV record.");
-			}
+
+			headers.add(current.toString().trim());
+			return headers;
 		}
 	}
 }

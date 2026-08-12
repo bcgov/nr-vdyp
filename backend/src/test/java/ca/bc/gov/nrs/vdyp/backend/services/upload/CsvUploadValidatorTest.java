@@ -200,78 +200,11 @@ class CsvUploadValidatorTest {
 	}
 
 	@Test
-	void invalidUtf8IsRejected() {
-		assertThrows(
-				ProjectionFileUploadException.class,
-				() -> validate(
-						validator(), new byte[] { 'A', '\n', (byte) 0xC3, 0x28 }, "input.csv", "text/csv",
-						FileSetTypeCodeModel.RESULTS
-				)
-		);
-	}
-
-	@Test
 	void nulByteIsRejected() {
 		assertThrows(
 				ProjectionFileUploadException.class,
 				() -> validate(
 						validator(), new byte[] { 'A', '\n', 0, '\n' }, "input.csv", "text/csv",
-						FileSetTypeCodeModel.RESULTS
-				)
-		);
-	}
-
-	@Test
-	void malformedQuotingIsRejected() {
-		assertThrows(
-				ProjectionFileUploadException.class,
-				() -> validate(
-						validator(), "A\n\"unterminated\n".getBytes(StandardCharsets.UTF_8), "input.csv", "text/csv",
-						FileSetTypeCodeModel.RESULTS
-				)
-		);
-	}
-
-	@Test
-	void oversizedFieldIsRejected() {
-		assertThrows(
-				ProjectionFileUploadException.class,
-				() -> validate(
-						validator(1_000_000_000L, 512, 4, 10_485_760), "A\n12345\n".getBytes(StandardCharsets.UTF_8),
-						"input.csv", "text/csv", FileSetTypeCodeModel.RESULTS
-				)
-		);
-	}
-
-	@Test
-	void oversizedRecordIsRejected() {
-		assertThrows(
-				ProjectionFileUploadException.class,
-				() -> validate(
-						validator(1_000_000_000L, 512, 1_048_576, 4), "A,B,C,D,E\n".getBytes(StandardCharsets.UTF_8),
-						"input.csv", "text/csv", FileSetTypeCodeModel.RESULTS
-				)
-		);
-	}
-
-	@Test
-	void oversizedColumnCountIsRejected() {
-		assertThrows(
-				ProjectionFileUploadException.class,
-				() -> validate(
-						validator(1_000_000_000L, 2, 1_048_576, 10_485_760),
-						"A,B,C\n1,2,3\n".getBytes(StandardCharsets.UTF_8), "input.csv", "text/csv",
-						FileSetTypeCodeModel.RESULTS
-				)
-		);
-	}
-
-	@Test
-	void inconsistentColumnCountsAreRejected() {
-		assertThrows(
-				ProjectionFileUploadException.class,
-				() -> validate(
-						validator(), "A,B\n1\n".getBytes(StandardCharsets.UTF_8), "input.csv", "text/csv",
 						FileSetTypeCodeModel.RESULTS
 				)
 		);
@@ -328,18 +261,11 @@ class CsvUploadValidatorTest {
 	}
 
 	@Test
-	void formulaLikeCellsAreRejectedButNegativeNumbersAreAccepted() {
-		assertThrows(
-				ProjectionFileUploadException.class,
-				() -> validate(
-						validator(), "A\n=1+1\n".getBytes(StandardCharsets.UTF_8), "formula.csv", "text/csv",
-						FileSetTypeCodeModel.RESULTS
-				)
-		);
+	void uploadValidationStopsInspectingAfterHeader() {
 		assertDoesNotThrow(
 				() -> validate(
-						validator(), "A\n-1.25\n".getBytes(StandardCharsets.UTF_8), "negative.csv", "text/csv",
-						FileSetTypeCodeModel.RESULTS
+						validator(), "A,B\n1234567890123456,\u0000\n".getBytes(StandardCharsets.UTF_8), "input.csv",
+						"text/csv", FileSetTypeCodeModel.RESULTS
 				)
 		);
 	}

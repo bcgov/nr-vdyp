@@ -177,7 +177,7 @@ class TestFileMappingService {
 		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
 
 		Path uploaded = tempDir.resolve("input.csv");
-		Files.writeString(uploaded, "A\n\"unterminated\n");
+		Files.writeString(uploaded, "%PDF-1.7\n");
 
 		when(fileUpload.fileName()).thenReturn("input.csv");
 		when(fileUpload.contentType()).thenReturn("text/csv");
