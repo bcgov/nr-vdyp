@@ -117,8 +117,7 @@ class TestFileMappingService {
 		);
 		when(
 				comsClient.createObject(
-						eq("bucket-guid-123"), startsWith("attachment; filename="), eq(8L), eq("text/csv"),
-						any()
+						eq("bucket-guid-123"), startsWith("attachment; filename="), eq(8L), eq("text/csv"), any()
 				)
 		).thenAnswer(invocation -> {
 			InputStream in = invocation.getArgument(4);
