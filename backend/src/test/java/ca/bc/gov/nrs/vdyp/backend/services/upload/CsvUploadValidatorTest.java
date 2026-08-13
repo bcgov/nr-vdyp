@@ -126,20 +126,9 @@ class CsvUploadValidatorTest {
 	@ParameterizedTest
 	@ValueSource(
 			strings = { "input", "input.txt", "file.csv.exe", "..\\input.csv", "../input.csv", "bad\u0001.csv",
-					"payload.exe.csv" }
+					"payload.exe.csv", "", " ", ".csv" }
 	)
 	void unsafeFilenamesAreRejected(String filename) {
-		ProjectionFileUploadException ex = assertThrows(
-				ProjectionFileUploadException.class,
-				() -> validate(validator(), CSV_BYTES, filename, "text/csv", FileSetTypeCodeModel.RESULTS)
-		);
-
-		assertEquals(Response.Status.UNSUPPORTED_MEDIA_TYPE, ex.getStatus());
-	}
-
-	@ParameterizedTest
-	@ValueSource(strings = { "", " ", ".csv" })
-	void missingOrNamelessFilenamesAreRejected(String filename) {
 		ProjectionFileUploadException ex = assertThrows(
 				ProjectionFileUploadException.class,
 				() -> validate(validator(), CSV_BYTES, filename, "text/csv", FileSetTypeCodeModel.RESULTS)
@@ -387,6 +376,7 @@ class CsvUploadValidatorTest {
 						.validatingStream(new ByteArrayInputStream(CSV_BYTES), FileSetTypeCodeModel.RESULTS)
 		) {
 			while (validating.read() >= 0) {
+				// read to the end
 			}
 
 			assertEquals(-1, validating.read());
@@ -399,9 +389,7 @@ class CsvUploadValidatorTest {
 				InputStream validating = validator()
 						.validatingStream(new ByteArrayInputStream(new byte[] { 0 }), FileSetTypeCodeModel.RESULTS)
 		) {
-			CsvUploadValidationIOException ex = assertThrows(
-					CsvUploadValidationIOException.class, () -> validating.read()
-			);
+			CsvUploadValidationIOException ex = assertThrows(CsvUploadValidationIOException.class, validating::read);
 
 			assertEquals(Response.Status.BAD_REQUEST, ex.validationException().getStatus());
 		}
@@ -473,30 +461,4 @@ class CsvUploadValidatorTest {
 		return combined;
 	}
 
-	private static final class OneByteAtATimeInputStream extends InputStream {
-		private final byte[] bytes;
-		private int offset;
-
-		private OneByteAtATimeInputStream(byte[] bytes) {
-			this.bytes = bytes;
-		}
-
-		@Override
-		public int read() {
-			if (offset >= bytes.length) {
-				return -1;
-			}
-			return bytes[offset++] & 0xFF;
-		}
-
-		@Override
-		public int read(byte[] b, int off, int len) {
-			int value = read();
-			if (value < 0) {
-				return -1;
-			}
-			b[off] = (byte) value;
-			return 1;
-		}
-	}
 }
