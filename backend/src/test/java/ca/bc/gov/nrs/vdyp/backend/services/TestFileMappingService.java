@@ -83,9 +83,6 @@ class TestFileMappingService {
 	void setUp() {
 		assembler = new FileMappingResourceAssembler();
 		lenient().when(csvUploadConfig.maxFileSizeBytes()).thenReturn(1_000_000_000L);
-		lenient().when(csvUploadConfig.maxColumns()).thenReturn(512);
-		lenient().when(csvUploadConfig.maxFieldChars()).thenReturn(1_048_576);
-		lenient().when(csvUploadConfig.maxRecordBytes()).thenReturn(10_485_760);
 		service = new FileMappingService(
 				repository, assembler, comsClient, httpClient, persistenceService,
 				new CsvUploadValidator(csvUploadConfig)
