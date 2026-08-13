@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,6 +20,7 @@ import ca.bc.gov.nrs.vdyp.backend.config.CsvUploadConfig;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileUploadException;
 import ca.bc.gov.nrs.vdyp.backend.services.upload.CsvUploadValidator.CsvUploadValidationIOException;
+import ca.bc.gov.nrs.vdyp.backend.services.upload.CsvUploadValidator.ValidatedUpload;
 import jakarta.ws.rs.core.Response;
 
 class CsvUploadValidatorTest {
@@ -114,12 +117,39 @@ class CsvUploadValidatorTest {
 		);
 	}
 
+	@Test
+	void filenameAndContentTypeAreNormalized() throws ProjectionFileUploadException {
+		ValidatedUpload upload = validator()
+				.validateMetadata(" cafe\u0301.csv ", " Text/CSV; charset=UTF-8 ", CSV_BYTES.length);
+
+		assertEquals("caf\u00e9.csv", upload.filename());
+		assertEquals(CSV_BYTES.length, upload.contentLength());
+		assertEquals("text/csv", upload.contentType());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "text/csv", "application/csv", "application/vnd.ms-excel" })
+	void allowedContentTypesAreAccepted(String contentType) {
+		assertDoesNotThrow(() -> validator().validateMetadata("input.csv", contentType, CSV_BYTES.length));
+	}
+
 	@ParameterizedTest
 	@ValueSource(
 			strings = { "input", "input.txt", "file.csv.exe", "..\\input.csv", "../input.csv", "bad\u0001.csv",
 					"payload.exe.csv" }
 	)
 	void unsafeFilenamesAreRejected(String filename) {
+		ProjectionFileUploadException ex = assertThrows(
+				ProjectionFileUploadException.class,
+				() -> validate(validator(), CSV_BYTES, filename, "text/csv", FileSetTypeCodeModel.RESULTS)
+		);
+
+		assertEquals(Response.Status.UNSUPPORTED_MEDIA_TYPE, ex.getStatus());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "", " ", ".csv" })
+	void missingOrNamelessFilenamesAreRejected(String filename) {
 		ProjectionFileUploadException ex = assertThrows(
 				ProjectionFileUploadException.class,
 				() -> validate(validator(), CSV_BYTES, filename, "text/csv", FileSetTypeCodeModel.RESULTS)
@@ -136,6 +166,15 @@ class CsvUploadValidatorTest {
 		);
 
 		assertEquals(Response.Status.UNSUPPORTED_MEDIA_TYPE, ex.getStatus());
+	}
+
+	@Test
+	void emptyDeclaredLengthIsRejectedEarly() {
+		ProjectionFileUploadException ex = assertThrows(
+				ProjectionFileUploadException.class, () -> validator().validateMetadata("input.csv", "text/csv", 0L)
+		);
+
+		assertEquals(Response.Status.BAD_REQUEST, ex.getStatus());
 	}
 
 	@Test
@@ -219,6 +258,39 @@ class CsvUploadValidatorTest {
 	}
 
 	@Test
+	void polygonHeaderWithBomQuotesAndCrLfIsAccepted() {
+		CsvUploadSchemas.HeaderSchema schema = CsvUploadSchemas.expectedHeaders(FileSetTypeCodeModel.POLYGON)
+				.orElseThrow();
+		List<String> headers = new ArrayList<>(schema.requiredPrefix());
+		headers.set(0, "\"" + headers.get(0) + "\"");
+		String csv = "\uFEFF" + String.join(",", headers) + "\r\n";
+
+		assertDoesNotThrow(
+				() -> validate(
+						validator(), csv.getBytes(StandardCharsets.UTF_8), "polygon.csv", "text/csv",
+						FileSetTypeCodeModel.POLYGON
+				)
+		);
+	}
+
+	@Test
+	void polygonHeaderWithExtraColumnIsRejected() {
+		CsvUploadSchemas.HeaderSchema schema = CsvUploadSchemas.expectedHeaders(FileSetTypeCodeModel.POLYGON)
+				.orElseThrow();
+		String csv = String.join(",", concat(schema.requiredPrefix(), List.of("EXTRA_COLUMN"))) + "\n";
+
+		ProjectionFileUploadException ex = assertThrows(
+				ProjectionFileUploadException.class,
+				() -> validate(
+						validator(), csv.getBytes(StandardCharsets.UTF_8), "polygon.csv", "text/csv",
+						FileSetTypeCodeModel.POLYGON
+				)
+		);
+
+		assertEquals(Response.Status.BAD_REQUEST, ex.getStatus());
+	}
+
+	@Test
 	void uploadValidationDoesNotRunPerRowProjectionDomainValidation() {
 		CsvUploadSchemas.HeaderSchema schema = CsvUploadSchemas.expectedHeaders(FileSetTypeCodeModel.POLYGON)
 				.orElseThrow();
@@ -261,6 +333,41 @@ class CsvUploadValidatorTest {
 	}
 
 	@Test
+	void layerHeadersRejectDuplicateOptionalTailColumn() {
+		CsvUploadSchemas.HeaderSchema schema = CsvUploadSchemas.expectedHeaders(FileSetTypeCodeModel.LAYER)
+				.orElseThrow();
+		String optionalColumn = schema.allowedOptionalTail().iterator().next();
+		String csv = String.join(",", concat(schema.requiredPrefix(), List.of(optionalColumn, optionalColumn))) + "\n";
+
+		ProjectionFileUploadException ex = assertThrows(
+				ProjectionFileUploadException.class,
+				() -> validate(
+						validator(), csv.getBytes(StandardCharsets.UTF_8), "layer.csv", "text/csv",
+						FileSetTypeCodeModel.LAYER
+				)
+		);
+
+		assertEquals(Response.Status.BAD_REQUEST, ex.getStatus());
+	}
+
+	@Test
+	void layerHeadersRejectUnknownOptionalTailColumn() {
+		CsvUploadSchemas.HeaderSchema schema = CsvUploadSchemas.expectedHeaders(FileSetTypeCodeModel.LAYER)
+				.orElseThrow();
+		String csv = String.join(",", concat(schema.requiredPrefix(), List.of("UNKNOWN_OPTIONAL_COLUMN"))) + "\n";
+
+		ProjectionFileUploadException ex = assertThrows(
+				ProjectionFileUploadException.class,
+				() -> validate(
+						validator(), csv.getBytes(StandardCharsets.UTF_8), "layer.csv", "text/csv",
+						FileSetTypeCodeModel.LAYER
+				)
+		);
+
+		assertEquals(Response.Status.BAD_REQUEST, ex.getStatus());
+	}
+
+	@Test
 	void uploadValidationStopsInspectingAfterHeader() {
 		assertDoesNotThrow(
 				() -> validate(
@@ -268,6 +375,46 @@ class CsvUploadValidatorTest {
 						"text/csv", FileSetTypeCodeModel.RESULTS
 				)
 		);
+	}
+
+	@Test
+	void oversizedHeaderIsRejected() {
+		ProjectionFileUploadException ex = assertThrows(
+				ProjectionFileUploadException.class,
+				() -> validate(
+						validator(), "A".repeat(64 * 1024 + 1).getBytes(StandardCharsets.UTF_8), "polygon.csv",
+						"text/csv", FileSetTypeCodeModel.POLYGON
+				)
+		);
+
+		assertEquals(Response.Status.BAD_REQUEST, ex.getStatus());
+	}
+
+	@Test
+	void singleByteReadPathFinishesIdempotently() throws IOException {
+		try (
+				InputStream validating = validator()
+						.validatingStream(new ByteArrayInputStream(CSV_BYTES), FileSetTypeCodeModel.RESULTS)
+		) {
+			while (validating.read() >= 0) {
+			}
+
+			assertEquals(-1, validating.read());
+		}
+	}
+
+	@Test
+	void singleByteReadPathWrapsValidationFailures() throws IOException {
+		try (
+				InputStream validating = validator()
+						.validatingStream(new ByteArrayInputStream(new byte[] { 0 }), FileSetTypeCodeModel.RESULTS)
+		) {
+			CsvUploadValidationIOException ex = assertThrows(
+					CsvUploadValidationIOException.class, () -> validating.read()
+			);
+
+			assertEquals(Response.Status.BAD_REQUEST, ex.validationException().getStatus());
+		}
 	}
 
 	private void validate(CsvUploadValidator validator, byte[] bytes, String filename, String contentType, String type)
