@@ -48,8 +48,7 @@ class CsvUploadValidatorTest {
 	void exactConfiguredFileSizeIsAcceptedFromStream() {
 		assertDoesNotThrow(
 				() -> validate(
-						validator(CSV_BYTES.length, 512, 1_048_576, 10_485_760), CSV_BYTES, "input.csv", "text/csv",
-						FileSetTypeCodeModel.RESULTS
+						validator(CSV_BYTES.length), CSV_BYTES, "input.csv", "text/csv", FileSetTypeCodeModel.RESULTS
 				)
 		);
 	}
@@ -59,8 +58,8 @@ class CsvUploadValidatorTest {
 		ProjectionFileUploadException ex = assertThrows(
 				ProjectionFileUploadException.class,
 				() -> validate(
-						validator(CSV_BYTES.length - 1L, 512, 1_048_576, 10_485_760), CSV_BYTES, "input.csv",
-						"text/csv", FileSetTypeCodeModel.RESULTS, CSV_BYTES.length - 1L
+						validator(CSV_BYTES.length - 1L), CSV_BYTES, "input.csv", "text/csv",
+						FileSetTypeCodeModel.RESULTS, CSV_BYTES.length - 1L
 				)
 		);
 
@@ -420,38 +419,24 @@ class CsvUploadValidatorTest {
 	}
 
 	private CsvUploadValidator validator() {
-		return validator(1_000_000_000L, 512, 1_048_576, 10_485_760);
+		return validator(1_000_000_000L);
 	}
 
-	private CsvUploadValidator validator(long maxBytes, int maxColumns, int maxFieldChars, int maxRecordBytes) {
-		return new CsvUploadValidator(config(maxBytes, maxColumns, maxFieldChars, maxRecordBytes));
+	private CsvUploadValidator validator(long maxBytes) {
+		return new CsvUploadValidator(config(maxBytes));
 	}
 
 	private CsvUploadConfig config() {
-		return config(1_000_000_000L, 512, 1_048_576, 10_485_760);
+		return config(1_000_000_000L);
 	}
 
-	private CsvUploadConfig config(long maxBytes, int maxColumns, int maxFieldChars, int maxRecordBytes) {
+	private CsvUploadConfig config(long maxBytes) {
 		return new CsvUploadConfig() {
 			@Override
 			public long maxFileSizeBytes() {
 				return maxBytes;
 			}
 
-			@Override
-			public int maxColumns() {
-				return maxColumns;
-			}
-
-			@Override
-			public int maxFieldChars() {
-				return maxFieldChars;
-			}
-
-			@Override
-			public int maxRecordBytes() {
-				return maxRecordBytes;
-			}
 		};
 	}
 
