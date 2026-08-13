@@ -100,7 +100,7 @@ class BackProcessingEngineTest {
 				});
 			});
 
-			var state = new BackProcessingState(controlMap);
+			state = new BackProcessingState(controlMap);
 
 			state.setPolygon(polygon);
 
@@ -161,7 +161,7 @@ class BackProcessingEngineTest {
 				});
 			});
 
-			var state = new BackProcessingState(controlMap);
+			state = new BackProcessingState(controlMap);
 
 			state.setPolygon(polygon);
 
@@ -176,7 +176,7 @@ class BackProcessingEngineTest {
 
 				em.replay();
 
-				var state = primaryAndVeteran();
+				state = primaryAndVeteran();
 
 				engine.prepare(state);
 
@@ -214,7 +214,7 @@ class BackProcessingEngineTest {
 					});
 				});
 
-				var state = new BackProcessingState(controlMap);
+				state = new BackProcessingState(controlMap);
 
 				state.setPolygon(polygon);
 				engine.prepare(state);
@@ -232,7 +232,7 @@ class BackProcessingEngineTest {
 
 				em.replay();
 
-				var state = primaryOnlyWithSingleSpecies();
+				state = primaryOnlyWithSingleSpecies();
 
 				engine.prepare(state);
 
@@ -253,7 +253,7 @@ class BackProcessingEngineTest {
 
 				em.replay();
 
-				var state = primaryOnlyWithSingleSpecies();
+				state = primaryOnlyWithSingleSpecies();
 
 				engine.prepare(state);
 
@@ -285,7 +285,7 @@ class BackProcessingEngineTest {
 
 				em.replay();
 
-				var state = primaryOnlyWithSingleSpecies();
+				state = primaryOnlyWithSingleSpecies();
 
 				engine.prepare(state);
 

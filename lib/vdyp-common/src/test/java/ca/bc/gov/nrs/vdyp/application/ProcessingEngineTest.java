@@ -2284,7 +2284,7 @@ class ProcessingEngineTest {
 		ComputationMethods cmp;
 
 		@BeforeEach
-		void setup() throws IOException, ResourceParseException, ValueParseException {
+		void setup() throws IOException, ResourceParseException {
 			var parser = new ProcessingControlParser();
 			controlMap = new ProcessingResolvedControlMapImpl(
 					TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR")
@@ -2294,12 +2294,15 @@ class ProcessingEngineTest {
 
 		}
 
+		@SuppressWarnings("unchecked")
 		@Test
 		void test() throws ProcessingException {
 			final var em = EasyMock.createControl();
 			final BecDefinition bec = controlMap.getBecLookup().get("CWH").get();
 
+			@SuppressWarnings("rawtypes")
 			ProcessingState ps = em.createMock(ProcessingState.class);
+			@SuppressWarnings("rawtypes")
 			LayerProcessingState lps = em.createMock(LayerProcessingState.class);
 
 			EasyMock.expect(ps.getComputers()).andStubReturn(cmp);
@@ -2476,7 +2479,7 @@ class ProcessingEngineTest {
 			);
 			EasyMock.expectLastCall().once();
 
-			var unit = new ProcessingEngine(ps);
+			var unit = new ProcessingEngine<>(ps);
 			em.replay();
 
 			unit.setCompatibilityVariables();

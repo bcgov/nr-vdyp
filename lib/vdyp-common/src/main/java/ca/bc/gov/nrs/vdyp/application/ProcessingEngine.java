@@ -5,10 +5,13 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.model.VdypEntity.MISSING_FLOAT_VALUE;
 
 import java.text.MessageFormat;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.DoubleAdder;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -973,10 +976,12 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 		// INL1VGRP is built, rather than when LCOM1 VGRPL is built in the
 		// original code.)
 
-		var cvVolume = new MatrixMap3[lps.getNSpecies() + 1];
-		var cvBasalArea = new ca.bc.gov.nrs.vdyp.model.MatrixMap2[lps.getNSpecies() + 1];
-		var cvQuadraticMeanDiameter = new ca.bc.gov.nrs.vdyp.model.MatrixMap2[lps.getNSpecies() + 1];
-		var cvSmall = new HashMap[lps.getNSpecies() + 1];
+		MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume = new MatrixMap3[lps.getNSpecies()
+				+ 1];
+		MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea = new MatrixMap2[lps.getNSpecies() + 1];
+		MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter = new MatrixMap2[lps.getNSpecies()
+				+ 1];
+		var cvSmall = new Map[lps.getNSpecies() + 1];
 
 		for (int s : lps.getIndices()) {
 
@@ -992,13 +997,11 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 			UtilizationVector quadMeanDiameters = Utils.utilizationVector();
 			UtilizationVector treesPerHectare = Utils.utilizationVector();
 
-			cvVolume[s] = new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
+			cvVolume[s] = new MatrixMap3Impl<>(
 					UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, LayerType.ALL_USED, (k1, k2, k3) -> 0f
 			);
-			cvBasalArea[s] = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
-					UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f
-			);
-			cvQuadraticMeanDiameter[s] = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
+			cvBasalArea[s] = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f);
+			cvQuadraticMeanDiameter[s] = new MatrixMap2Impl<>(
 					UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f
 			);
 
@@ -1019,70 +1022,11 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 
 			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
 
-				float adjustment;
-				float baseVolume;
-
-				// Volume less decay and waste
-				adjustment = 0.0f;
-				baseVolume = bank.cuVolumesMinusDecay[s][uc.ordinal()];
-
-				if (growthDetails.allowCalculation(baseVolume, V_BASE_MIN, (l, r) -> l > r)) {
-
-					// EMP094
-					getState().getEstimators().estimateNetDecayAndWasteVolume(
-							lps.getBecZone().getRegion(), uc, aAdjust, bank.speciesNames[s], spLoreyHeight_All,
-							quadMeanDiameters, closeUtilizationVolumes, closeUtilizationVolumesNetOfDecay,
-							closeUtilizationVolumesNetOfDecayAndWaste
-					);
-
-					float actualVolume = bank.cuVolumesMinusDecayAndWastage[s][uc.ordinal()];
-					float staticVolume = closeUtilizationVolumesNetOfDecayAndWaste.getCoe(uc.index);
-					adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
-				}
-
-				cvVolume[s]
-						.put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY, adjustment);
-
-				// Volume less decay
-				adjustment = 0.0f;
-				baseVolume = bank.closeUtilizationVolumes[s][uc.ordinal()];
-
-				if (growthDetails.allowCalculation(baseVolume, V_BASE_MIN, (l, r) -> l > r)) {
-
-					// EMP093
-					int decayGroup = lps.getDecayEquationGroups()[s];
-					getState().getEstimators().estimateNetDecayVolume(
-							bank.speciesNames[s], lps.getBecZone().getRegion(), uc, aAdjust, decayGroup,
-							lps.getPrimarySpeciesAgeAtBreastHeight(), quadMeanDiameters, closeUtilizationVolumes,
-							closeUtilizationVolumesNetOfDecay
-					);
-
-					float actualVolume = bank.cuVolumesMinusDecay[s][uc.ordinal()];
-					float staticVolume = closeUtilizationVolumesNetOfDecay.getCoe(uc.index);
-					adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
-				}
-
-				cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY, adjustment);
-
-				// Volume
-				adjustment = 0.0f;
-				baseVolume = bank.wholeStemVolumes[s][uc.ordinal()];
-
-				if (growthDetails.allowCalculation(baseVolume, V_BASE_MIN, (l, r) -> l > r)) {
-
-					// EMP092
-					int volumeGroup = lps.getVolumeEquationGroups()[s];
-					getState().getEstimators().estimateCloseUtilizationVolume(
-							uc, aAdjust, volumeGroup, spLoreyHeight_All, quadMeanDiameters, wholeStemVolumes,
-							closeUtilizationVolumes
-					);
-
-					float actualVolume = bank.closeUtilizationVolumes[s][uc.ordinal()];
-					float staticVolume = closeUtilizationVolumes.getCoe(uc.index);
-					adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
-				}
-
-				cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, adjustment);
+				calculateCvVolumeForSpecies(
+						aAdjust, growthDetails, lps, cvVolume, s, spLoreyHeight_All, wholeStemVolumes,
+						closeUtilizationVolumes, closeUtilizationVolumesNetOfDecay,
+						closeUtilizationVolumesNetOfDecayAndWaste, quadMeanDiameters, uc
+				);
 			}
 
 			int primarySpeciesVolumeGroup = lps.getVolumeEquationGroups()[s];
@@ -1154,6 +1098,83 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 		lps.setCompatibilityVariableDetails(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvSmall);
 	}
 
+	protected void calculateCvVolumeForSpecies(
+			Coefficients aAdjust, ProcessingControlVariables growthDetails, L lps,
+			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume, int s, float spLoreyHeight_All,
+			UtilizationVector wholeStemVolumes, UtilizationVector closeUtilizationVolumes,
+			UtilizationVector closeUtilizationVolumesNetOfDecay,
+			UtilizationVector closeUtilizationVolumesNetOfDecayAndWaste, UtilizationVector quadMeanDiameters,
+			UtilizationClass uc
+	) throws ProcessingException {
+
+		final Bank bank = lps.getBank();
+		final Predicate<Float> allowCalculation = bv -> growthDetails.allowCalculation(bv, V_BASE_MIN, (l, r) -> l > r);
+
+		float adjustment;
+		float baseVolume;
+
+		// Volume less decay and waste
+		adjustment = 0.0f;
+		baseVolume = bank.cuVolumesMinusDecay[s][uc.ordinal()];
+
+		if (allowCalculation.test(baseVolume)) {
+
+			// EMP094
+			getState().getEstimators().estimateNetDecayAndWasteVolume(
+					lps.getBecZone().getRegion(), uc, aAdjust, bank.speciesNames[s], spLoreyHeight_All,
+					quadMeanDiameters, closeUtilizationVolumes, closeUtilizationVolumesNetOfDecay,
+					closeUtilizationVolumesNetOfDecayAndWaste
+			);
+
+			float actualVolume = bank.cuVolumesMinusDecayAndWastage[s][uc.ordinal()];
+			float staticVolume = closeUtilizationVolumesNetOfDecayAndWaste.getCoe(uc.index);
+			adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
+		}
+
+		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY, adjustment);
+
+		// Volume less decay
+		adjustment = 0.0f;
+		baseVolume = bank.closeUtilizationVolumes[s][uc.ordinal()];
+
+		if (allowCalculation.test(baseVolume)) {
+
+			// EMP093
+			int decayGroup = lps.getDecayEquationGroups()[s];
+			getState().getEstimators().estimateNetDecayVolume(
+					bank.speciesNames[s], lps.getBecZone().getRegion(), uc, aAdjust, decayGroup,
+					lps.getPrimarySpeciesAgeAtBreastHeight(), quadMeanDiameters, closeUtilizationVolumes,
+					closeUtilizationVolumesNetOfDecay
+			);
+
+			float actualVolume = bank.cuVolumesMinusDecay[s][uc.ordinal()];
+			float staticVolume = closeUtilizationVolumesNetOfDecay.getCoe(uc.index);
+			adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
+		}
+
+		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY, adjustment);
+
+		// Volume
+		adjustment = 0.0f;
+		baseVolume = bank.wholeStemVolumes[s][uc.ordinal()];
+
+		if (allowCalculation.test(baseVolume)) {
+
+			// EMP092
+			int volumeGroup = lps.getVolumeEquationGroups()[s];
+			getState().getEstimators().estimateCloseUtilizationVolume(
+					uc, aAdjust, volumeGroup, spLoreyHeight_All, quadMeanDiameters, wholeStemVolumes,
+					closeUtilizationVolumes
+			);
+
+			float actualVolume = bank.closeUtilizationVolumes[s][uc.ordinal()];
+			float staticVolume = closeUtilizationVolumes.getCoe(uc.index);
+			adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
+		}
+
+		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, adjustment);
+	}
+
 	/**
 	 * Function that calculates values for the small component compatibility variables and returns the result.
 	 *
@@ -1162,7 +1183,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 	 *
 	 * @throws ProcessingException
 	 */
-	private HashMap<UtilizationClassVariable, Float>
+	private Map<UtilizationClassVariable, Float>
 			calculateSmallCompatibilityVariables(int speciesIndex, ProcessingControlVariables forwardControlVariables) {
 
 		final L lps = getState().getPrimaryLayerProcessingState();
@@ -1206,7 +1227,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 		// EMP086
 		final float spMeanVolumeSmall = estimators.estimateMeanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
 
-		final var spCvSmall = new HashMap<UtilizationClassVariable, Float>();
+		final var spCvSmall = new EnumMap<UtilizationClassVariable, Float>(UtilizationClassVariable.class);
 
 		final float spInputBasalArea_Small = bank.basalAreas[speciesIndex][UC_SMALL_INDEX];
 		spCvSmall.put(UtilizationClassVariable.BASAL_AREA, spInputBasalArea_Small - spBaSmall);
