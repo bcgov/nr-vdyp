@@ -277,8 +277,9 @@ const formatElapsedTime = (startDate: string | null): string => {
 }
 
 .status-badge.status-running {
-  border: 1px solid var(--support-border-color-success);
-  background: var(--support-surface-color-success);
+  border: 1px solid var(--support-border-color-warning);
+  background: var(--support-surface-color-warning);
+  color: #FCBA19;
 }
 
 .status-badge.status-stuck {
