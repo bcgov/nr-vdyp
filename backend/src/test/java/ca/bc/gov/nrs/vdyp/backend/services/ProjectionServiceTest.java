@@ -304,14 +304,24 @@ class ProjectionServiceTest {
 	@Test
 	void getAllRunningProjections_returnsEmpty_whenNoneRunning() {
 		when(
-				repository.findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK))
+				repository.findByStatuses(
+						List.of(
+								ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK,
+								ProjectionStatusCodeModel.QUEUED
+						)
+				)
 		).thenReturn(Collections.emptyList());
 
 		List<ProjectionModel> results = service.getAllRunningProjections();
 
 		assertNotNull(results);
 		assertTrue(results.isEmpty());
-		verify(repository).findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK));
+		verify(repository).findByStatuses(
+				List.of(
+						ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK,
+						ProjectionStatusCodeModel.QUEUED
+				)
+		);
 	}
 
 	@Test
@@ -321,8 +331,14 @@ class ProjectionServiceTest {
 		entityResult.setReportTitle("Running Projection");
 		entityResult.setReportDescription("Running Description");
 
-		when(repository.findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK)))
-				.thenReturn(List.of(entityResult));
+		when(
+				repository.findByStatuses(
+						List.of(
+								ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK,
+								ProjectionStatusCodeModel.QUEUED
+						)
+				)
+		).thenReturn(List.of(entityResult));
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 
 		List<ProjectionModel> results = service.getAllRunningProjections();
@@ -335,7 +351,12 @@ class ProjectionServiceTest {
 		assertThat(result.getReportTitle()).isEqualTo("Running Projection");
 		assertThat(result.getReportDescription()).isEqualTo("Running Description");
 
-		verify(repository).findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK));
+		verify(repository).findByStatuses(
+				List.of(
+						ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK,
+						ProjectionStatusCodeModel.QUEUED
+				)
+		);
 	}
 
 	@Test
@@ -356,8 +377,14 @@ class ProjectionServiceTest {
 		nullWorkerCount.setProjectionGUID(UUID.randomUUID());
 		nullWorkerCount.setReportTitle("Null Worker Count");
 
-		when(repository.findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK)))
-				.thenReturn(List.of(noMapping, nullWorkerCount, lowThreads, highThreads));
+		when(
+				repository.findByStatuses(
+						List.of(
+								ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK,
+								ProjectionStatusCodeModel.QUEUED
+						)
+				)
+		).thenReturn(List.of(noMapping, nullWorkerCount, lowThreads, highThreads));
 
 		ProjectionBatchMappingModel highMapping = batchMappingModel(UUID.randomUUID());
 		highMapping.setWorkerCount(20);
