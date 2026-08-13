@@ -189,7 +189,9 @@ const filteredProjections = computed(() =>
   ),
 )
 
-const totalRunningCount = computed(() => filteredProjections.value.length)
+const totalRunningCount = computed(
+  () => filteredProjections.value.filter((p) => p.status === PROJECTION_STATUS.RUNNING).length,
+)
 
 const stuckCount = computed(
   () => filteredProjections.value.filter((p) => p.status === PROJECTION_STATUS.STUCK).length,
