@@ -153,7 +153,7 @@ class TestFileMappingService {
 	}
 
 	@Test
-	void createNewFile_validationFailure_doesNotCreateObjectOrPersist(@TempDir Path tempDir) throws Exception {
+	void createNewFile_validationFailure_doesNotCreateObjectOrPersist() {
 		UUID fileSetGUID = UUID.randomUUID();
 		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
 		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);

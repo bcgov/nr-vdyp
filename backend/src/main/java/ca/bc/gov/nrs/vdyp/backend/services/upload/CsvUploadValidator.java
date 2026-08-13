@@ -16,6 +16,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class CsvUploadValidator {
+	private static final String CSV_FILENAME_INVALID_ERROR_MESSAGE = "CSV upload filename is invalid.";
+	private static final String CSV_CONTENT_INVALID_ERROR_MESSAGE = "CSV upload filename contains invalid characters.";
+	private static final String CSV_ONLY_ERROR_MESSAGE = "Only CSV uploads are supported.";
+	private static final String CONTENT_TYPE_NOT_SUPPORTED_ERROR_MESSAGE = "Content type is not supported.";
+
 	private static final String CSV_EXTENSION = ".csv";
 	private static final int MAX_FILENAME_LENGTH = 255;
 	private static final Set<String> ALLOWED_CONTENT_TYPES = Set
@@ -37,13 +42,13 @@ public class CsvUploadValidator {
 		String safeFilename = validateFilename(filename);
 		String normalizedContentType = validateContentType(contentType);
 		if (declaredContentLength < 0) {
-			throw ProjectionFileUploadException.invalidCsv("CSV upload content length is required for object storage.");
+			throw ProjectionFileUploadException.invalidCsv(CONTENT_TYPE_NOT_SUPPORTED_ERROR_MESSAGE);
 		}
 		if (declaredContentLength == 0) {
-			throw ProjectionFileUploadException.invalidCsv("CSV upload must not be empty.");
+			throw ProjectionFileUploadException.invalidCsv(CSV_CONTENT_INVALID_ERROR_MESSAGE);
 		}
 		if (declaredContentLength > config.maxFileSizeBytes()) {
-			throw ProjectionFileUploadException.payloadTooLarge("CSV upload exceeds the 1000000000 byte limit.");
+			throw ProjectionFileUploadException.payloadTooLarge(CSV_CONTENT_INVALID_ERROR_MESSAGE);
 		}
 		return new ValidatedUpload(safeFilename, declaredContentLength, normalizedContentType);
 	}
@@ -60,39 +65,38 @@ public class CsvUploadValidator {
 
 	private String validateFilename(String filename) throws ProjectionFileUploadException {
 		if (filename == null || filename.isBlank()) {
-			throw ProjectionFileUploadException.unsupportedMediaType("CSV upload filename is required.");
+			throw ProjectionFileUploadException.unsupportedMediaType(CSV_FILENAME_INVALID_ERROR_MESSAGE);
 		}
 		if (filename.length() > MAX_FILENAME_LENGTH) {
-			throw ProjectionFileUploadException.unsupportedMediaType("CSV upload filename is too long.");
+			throw ProjectionFileUploadException.unsupportedMediaType(CSV_FILENAME_INVALID_ERROR_MESSAGE);
 		}
 		for (int i = 0; i < filename.length(); i++) {
 			char c = filename.charAt(i);
 			if (c == 0 || Character.isISOControl(c)) {
-				throw ProjectionFileUploadException
-						.unsupportedMediaType("CSV upload filename contains invalid characters.");
+				throw ProjectionFileUploadException.unsupportedMediaType(CSV_CONTENT_INVALID_ERROR_MESSAGE);
 			}
 		}
 		if (filename.contains("/") || filename.contains("\\") || filename.contains(":") || filename.contains("..")) {
-			throw ProjectionFileUploadException.unsupportedMediaType("CSV upload filename is invalid.");
+			throw ProjectionFileUploadException.unsupportedMediaType(CSV_FILENAME_INVALID_ERROR_MESSAGE);
 		}
 
 		String normalized = Normalizer.normalize(filename, Normalizer.Form.NFC).trim();
 		if (normalized.isBlank() || normalized.length() > MAX_FILENAME_LENGTH) {
-			throw ProjectionFileUploadException.unsupportedMediaType("CSV upload filename is invalid.");
+			throw ProjectionFileUploadException.unsupportedMediaType(CSV_FILENAME_INVALID_ERROR_MESSAGE);
 		}
 
 		String lower = normalized.toLowerCase(Locale.ROOT);
 		if (!lower.endsWith(CSV_EXTENSION)) {
-			throw ProjectionFileUploadException.unsupportedMediaType("Only CSV uploads are supported.");
+			throw ProjectionFileUploadException.unsupportedMediaType(CSV_ONLY_ERROR_MESSAGE);
 		}
 
 		String base = lower.substring(0, lower.length() - CSV_EXTENSION.length());
 		int previousDot = base.lastIndexOf('.');
 		if (previousDot >= 0 && DANGEROUS_DOUBLE_EXTENSIONS.contains(base.substring(previousDot + 1))) {
-			throw ProjectionFileUploadException.unsupportedMediaType("CSV upload filename has a misleading extension.");
+			throw ProjectionFileUploadException.unsupportedMediaType(CSV_FILENAME_INVALID_ERROR_MESSAGE);
 		}
 		if (base.isBlank()) {
-			throw ProjectionFileUploadException.unsupportedMediaType("CSV upload filename is invalid.");
+			throw ProjectionFileUploadException.unsupportedMediaType(CSV_FILENAME_INVALID_ERROR_MESSAGE);
 		}
 		return normalized;
 	}
@@ -100,7 +104,7 @@ public class CsvUploadValidator {
 	private String validateContentType(String contentType) throws ProjectionFileUploadException {
 		String normalized = normalizedContentType(contentType);
 		if (!ALLOWED_CONTENT_TYPES.contains(normalized)) {
-			throw ProjectionFileUploadException.unsupportedMediaType("CSV upload content type is not supported.");
+			throw ProjectionFileUploadException.unsupportedMediaType(CONTENT_TYPE_NOT_SUPPORTED_ERROR_MESSAGE);
 		}
 		return normalized;
 	}
@@ -227,7 +231,7 @@ public class CsvUploadValidator {
 				return;
 			}
 			if (b == 0) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload contains binary content.");
+				throw ProjectionFileUploadException.invalidCsv(CSV_CONTENT_INVALID_ERROR_MESSAGE);
 			}
 			capturePrefix(b);
 			if (headerSchema == null) {
@@ -244,7 +248,7 @@ public class CsvUploadValidator {
 				return;
 			}
 			if (headerLength >= headerBytes.length) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload header is too large.");
+				throw ProjectionFileUploadException.invalidCsv(CSV_CONTENT_INVALID_ERROR_MESSAGE);
 			}
 			headerBytes[headerLength++] = (byte) b;
 			previousCarriageReturn = b == '\r';
@@ -253,7 +257,7 @@ public class CsvUploadValidator {
 		private void countBytes(int length) throws ProjectionFileUploadException {
 			bytesRead += length;
 			if (bytesRead > maxFileBytes) {
-				throw ProjectionFileUploadException.payloadTooLarge("CSV upload exceeds the 1000000000 byte limit.");
+				throw ProjectionFileUploadException.payloadTooLarge(CSV_CONTENT_INVALID_ERROR_MESSAGE);
 			}
 		}
 
@@ -274,7 +278,7 @@ public class CsvUploadValidator {
 					|| startsWith(prefix, prefixLength, new byte[] { 'G', 'I', 'F', '8' })
 					|| startsWith(prefix, prefixLength, new byte[] { 'M', 'Z' })
 					|| startsWith(prefix, prefixLength, new byte[] { 0x7F, 'E', 'L', 'F' })) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload content is not valid CSV text.");
+				throw ProjectionFileUploadException.invalidCsv(CSV_CONTENT_INVALID_ERROR_MESSAGE);
 			}
 		}
 
@@ -301,13 +305,13 @@ public class CsvUploadValidator {
 				headerLine = headerLine.substring(1);
 			}
 			if (!headerSchema.matches(parseCsvHeader(headerLine))) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload headers do not match the expected schema.");
+				throw ProjectionFileUploadException.invalidCsv(CSV_CONTENT_INVALID_ERROR_MESSAGE);
 			}
 		}
 
 		void finish() throws ProjectionFileUploadException {
 			if (bytesRead == 0) {
-				throw ProjectionFileUploadException.invalidCsv("CSV upload must not be empty.");
+				throw ProjectionFileUploadException.invalidCsv(CSV_CONTENT_INVALID_ERROR_MESSAGE);
 			}
 			if (!headerComplete) {
 				validateHeader();

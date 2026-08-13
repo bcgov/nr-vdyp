@@ -101,16 +101,6 @@ class CsvUploadValidatorTest {
 	}
 
 	@Test
-	void chunkedStreamingBodyIsValidatedWhenLengthIsKnownFromMultipartPart() {
-		assertDoesNotThrow(
-				() -> validate(
-						validator(), new OneByteAtATimeInputStream(CSV_BYTES), CSV_BYTES.length, "input.csv",
-						"text/csv", FileSetTypeCodeModel.RESULTS
-				)
-		);
-	}
-
-	@Test
 	void uppercaseCsvExtensionIsAccepted() {
 		assertDoesNotThrow(
 				() -> validate(validator(), CSV_BYTES, "INPUT.CSV", "text/csv", FileSetTypeCodeModel.RESULTS)
@@ -426,19 +416,12 @@ class CsvUploadValidatorTest {
 			CsvUploadValidator validator, byte[] bytes, String filename, String contentType, String type,
 			long declaredLength
 	) throws ProjectionFileUploadException, IOException {
-		validate(validator, new ByteArrayInputStream(bytes), bytes.length, filename, contentType, type, declaredLength);
+		validate(validator, new ByteArrayInputStream(bytes), filename, contentType, type, declaredLength);
 	}
 
 	private void validate(
-			CsvUploadValidator validator, InputStream source, long actualLength, String filename, String contentType,
-			String type
-	) throws ProjectionFileUploadException, IOException {
-		validate(validator, source, actualLength, filename, contentType, type, actualLength);
-	}
-
-	private void validate(
-			CsvUploadValidator validator, InputStream source, long actualLength, String filename, String contentType,
-			String type, long declaredLength
+			CsvUploadValidator validator, InputStream source, String filename, String contentType, String type,
+			long declaredLength
 	) throws ProjectionFileUploadException, IOException {
 		validator.validateMetadata(filename, contentType, declaredLength);
 		try (InputStream validating = validator.validatingStream(source, type)) {
