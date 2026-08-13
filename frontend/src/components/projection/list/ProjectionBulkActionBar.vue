@@ -1,6 +1,6 @@
 <template>
   <div v-if="isVisible" class="bulk-action-bar">
-    <button class="bulk-bar-close-btn" title="Clear selection" @click="$emit('close')">
+    <button type="button" class="bulk-bar-close-btn" title="Clear selection" @click="$emit('close')">
       <v-icon size="16">mdi-close</v-icon>
     </button>
 
@@ -9,6 +9,7 @@
     <div class="bulk-bar-divider" />
 
     <button
+      type="button"
       class="bulk-bar-action-btn"
       title="Download"
       :disabled="!canDownload"
@@ -19,12 +20,20 @@
       <span>Download</span>
     </button>
 
-    <button class="bulk-bar-action-btn" title="Duplicate" @click="$emit('duplicate')">
+    <button
+      type="button"
+      class="bulk-bar-action-btn"
+      title="Duplicate"
+      :disabled="!canDuplicate"
+      :class="{ 'bulk-bar-action-btn--disabled': !canDuplicate }"
+      @click="canDuplicate && $emit('duplicate')"
+    >
       <img :src="DuplicateIcon" alt="Duplicate" class="bulk-bar-icon" />
       <span>Duplicate</span>
     </button>
 
     <button
+      type="button"
       class="bulk-bar-action-btn"
       title="Cancel"
       :disabled="!canCancel"
@@ -36,6 +45,7 @@
     </button>
 
     <button
+      type="button"
       class="bulk-bar-action-btn"
       title="Delete"
       :disabled="!canDelete"
@@ -55,6 +65,7 @@ defineProps<{
   isVisible: boolean
   selectedCount: number
   canDownload: boolean
+  canDuplicate: boolean
   canCancel: boolean
   canDelete: boolean
 }>()

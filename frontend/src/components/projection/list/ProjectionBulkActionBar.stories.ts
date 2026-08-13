@@ -18,6 +18,10 @@ const meta: Meta<typeof ProjectionBulkActionBar> = {
       control: { type: 'boolean' },
       description: 'Enables the Download action button.',
     },
+    canDuplicate: {
+      control: { type: 'boolean' },
+      description: 'Enables the Duplicate action button.',
+    },
     canCancel: {
       control: { type: 'boolean' },
       description: 'Enables the Cancel action button.',
@@ -36,7 +40,7 @@ A bulk action bar displayed when one or more projections are selected in the lis
 **Actions:**
 - **Close**: Clears the current selection
 - **Download**: Downloads selected projections (disabled when \`canDownload\` is false)
-- **Duplicate**: Duplicates selected projections (always enabled)
+- **Duplicate**: Duplicates selected projections (disabled when \`canDuplicate\` is false)
 - **Cancel**: Cancels selected projections (disabled when \`canCancel\` is false)
 - **Delete**: Deletes selected projections (disabled when \`canDelete\` is false)
         `,
@@ -70,6 +74,7 @@ export const Default: Story = {
     isVisible: true,
     selectedCount: 3,
     canDownload: true,
+    canDuplicate: true,
     canCancel: true,
     canDelete: true,
   },
@@ -103,6 +108,7 @@ export const SingleSelection: Story = {
     isVisible: true,
     selectedCount: 1,
     canDownload: true,
+    canDuplicate: true,
     canCancel: true,
     canDelete: true,
   },
@@ -136,13 +142,14 @@ export const AllActionsDisabled: Story = {
     isVisible: true,
     selectedCount: 2,
     canDownload: false,
+    canDuplicate: false,
     canCancel: false,
     canDelete: false,
   },
   parameters: {
     docs: {
       description: {
-        story: 'Download, Cancel, and Delete are disabled. Duplicate is always enabled.',
+        story: 'Download, Duplicate, Cancel, and Delete are all disabled.',
       },
     },
   },
@@ -169,6 +176,7 @@ export const Hidden: Story = {
     isVisible: false,
     selectedCount: 0,
     canDownload: false,
+    canDuplicate: false,
     canCancel: false,
     canDelete: false,
   },
