@@ -13,10 +13,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.ApiError;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.ProjectionFileUploadExceptionMapper;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.ProjectionNotFoundExceptionMapper;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.ProjectionStateExceptionMapper;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.ProjectionUnauthorizedExceptionMapper;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.UnhandledExceptionMapper;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileUploadException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionNotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionStateException;
@@ -131,6 +133,20 @@ class ExceptionMappingTest {
 			assertNotNull(response.getEntity());
 			assertInstanceOf(ApiError.class, response.getEntity());
 
+		}
+	}
+
+	@Test
+	void fileUploadTooLargeExceptionTest() {
+		ProjectionFileUploadExceptionMapper mapper = new ProjectionFileUploadExceptionMapper();
+
+		try (
+				Response response = mapper
+						.toResponse(ProjectionFileUploadException.payloadTooLarge("CSV upload exceeds the limit."))
+		) {
+			assertEquals(Response.Status.REQUEST_ENTITY_TOO_LARGE.getStatusCode(), response.getStatus());
+			assertNotNull(response.getEntity());
+			assertInstanceOf(ApiError.class, response.getEntity());
 		}
 	}
 }
