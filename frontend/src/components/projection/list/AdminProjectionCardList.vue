@@ -68,6 +68,13 @@
             <img :src="RunningIcon" alt="" class="status-badge-icon" />
             Running
           </span>
+          <span
+            v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
+            class="status-badge status-queued"
+          >
+            <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
+            Queued
+          </span>
         </div>
       </div>
 
@@ -93,14 +100,17 @@
           </div>
           <div class="card-info-item">
             <span class="card-info-label">Threads</span>
-            <span class="card-info-value">{{ projection.workerCount }}</span>
+            <span class="card-info-value">
+              {{ projection.status === PROJECTION_STATUS.QUEUED ? '-' : projection.workerCount }}
+            </span>
           </div>
         </div>
 
         <div class="card-progress-row">
           <div class="card-info-item card-progress-item">
             <span class="card-info-label">Progress</span>
-            <div class="progress-cell">
+            <span v-if="projection.status === PROJECTION_STATUS.QUEUED" class="card-info-value">-</span>
+            <div v-else class="progress-cell">
               <div class="progress-track">
                 <div
                   class="progress-fill"
@@ -113,7 +123,8 @@
           </div>
           <div class="card-info-item">
             <span class="card-info-label">Polygons</span>
-            <span class="card-info-value polygons-value">
+            <span v-if="projection.status === PROJECTION_STATUS.QUEUED" class="card-info-value">-</span>
+            <span v-else class="card-info-value polygons-value">
               {{ formatNumber(projection.completedPolygonCount) }}
               <span class="polygons-total">/ {{ formatNumber(projection.polygonCount) }}</span>
             </span>
@@ -141,7 +152,7 @@ import type { AdminProjection, SortOption } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS } from '@/constants/constants'
 import { formatNumber } from '@/utils/util'
 import { AppButton } from '@/components'
-import { RunningIcon, StuckIcon14px } from '@/assets/'
+import { RunningIcon, StuckIcon14px, QueuedIcon14px } from '@/assets/'
 
 interface Props {
   projections: AdminProjection[]
@@ -286,6 +297,12 @@ const formatElapsedTime = (startDate: string | null): string => {
   border: 1px solid var(--support-border-color-danger);
   background: var(--support-surface-color-danger);
   color: var(--support-border-color-danger);
+}
+
+.status-badge.status-queued {
+  border: 1px solid var(--support-border-color-info);
+  background: var(--support-surface-color-info);
+  color: var(--typography-color-primary);
 }
 
 .card-content {
