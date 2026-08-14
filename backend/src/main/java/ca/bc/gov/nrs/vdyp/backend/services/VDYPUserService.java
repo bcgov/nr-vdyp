@@ -129,6 +129,13 @@ public class VDYPUserService {
 				existingUser
 						.setIdentityProviderCode(identityProviderLookup.requireEntity(identityProviderCode.getCode()));
 			}
+
+			Set<String> roles = identity.getRoles();
+			UserTypeCodeModel userType = userTypeLookup.getUserTypeCodeFromExternalRoles(roles);
+			if (userType != null && !userType.isSystemUser()) {
+				existingUser.setUserTypeCode(userTypeLookup.requireEntity(userType.getCode()));
+			}
+
 			return assembler.toModel(existingUser);
 		} else {
 			return null;
