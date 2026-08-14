@@ -3,10 +3,66 @@
     <table class="admin-table">
       <thead>
         <tr>
-          <th class="table-header">Projection Name</th>
-          <th class="table-header">Owner</th>
-          <th class="table-header">User Type</th>
-          <th class="table-header">Elapsed</th>
+          <th
+            class="table-header sortable"
+            @click="handleSort(ADMIN_DASHBOARD_HEADER_KEY.TITLE)"
+          >
+            <div class="header-content">
+              <span>Projection Name</span>
+              <v-icon
+                v-if="sortBy === ADMIN_DASHBOARD_HEADER_KEY.TITLE"
+                size="small"
+                class="sort-icon"
+              >
+                {{ sortOrder === SORT_ORDER.ASC ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </div>
+          </th>
+          <th
+            class="table-header sortable"
+            @click="handleSort(ADMIN_DASHBOARD_HEADER_KEY.OWNER)"
+          >
+            <div class="header-content">
+              <span>Owner</span>
+              <v-icon
+                v-if="sortBy === ADMIN_DASHBOARD_HEADER_KEY.OWNER"
+                size="small"
+                class="sort-icon"
+              >
+                {{ sortOrder === SORT_ORDER.ASC ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </div>
+          </th>
+          <th
+            class="table-header sortable"
+            @click="handleSort(ADMIN_DASHBOARD_HEADER_KEY.USER_TYPE)"
+          >
+            <div class="header-content">
+              <span>User Type</span>
+              <v-icon
+                v-if="sortBy === ADMIN_DASHBOARD_HEADER_KEY.USER_TYPE"
+                size="small"
+                class="sort-icon"
+              >
+                {{ sortOrder === SORT_ORDER.ASC ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </div>
+          </th>
+          <th
+            class="table-header sortable"
+            @click="handleSort(ADMIN_DASHBOARD_HEADER_KEY.ELAPSED)"
+          >
+            <div class="header-content">
+              <span>Elapsed</span>
+              <v-icon
+                v-if="sortBy === ADMIN_DASHBOARD_HEADER_KEY.ELAPSED"
+                size="small"
+                class="sort-icon"
+              >
+                {{ sortOrder === SORT_ORDER.ASC ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </div>
+          </th>
           <th
             class="table-header sortable"
             @click="handleSort(ADMIN_DASHBOARD_HEADER_KEY.THREADS)"
@@ -84,6 +140,13 @@
                 <img :src="RunningIcon" alt="" class="status-badge-icon" />
                 Running
               </span>
+              <span
+                v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
+                class="status-badge status-queued"
+              >
+                <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
+                Queued
+              </span>
             </div>
           </td>
           <td class="table-cell">{{ projection.ownerDisplayName }}</td>
@@ -98,9 +161,13 @@
               {{ formatElapsedTime(projection.startDate) }}
             </span>
           </td>
-          <td class="table-cell">{{ projection.workerCount }}</td>
           <td class="table-cell">
-            <div class="progress-cell">
+            <span v-if="projection.status === PROJECTION_STATUS.QUEUED">-</span>
+            <span v-else>{{ projection.workerCount }}</span>
+          </td>
+          <td class="table-cell">
+            <span v-if="projection.status === PROJECTION_STATUS.QUEUED">-</span>
+            <div v-else class="progress-cell">
               <div class="progress-track">
                 <div
                   class="progress-fill"
@@ -112,7 +179,8 @@
             </div>
           </td>
           <td class="table-cell">
-            <div class="polygons-cell">
+            <span v-if="projection.status === PROJECTION_STATUS.QUEUED">-</span>
+            <div v-else class="polygons-cell">
               <span class="polygons-completed">{{ formatNumber(projection.completedPolygonCount) }}</span>
               <span class="polygons-total">/ {{ formatNumber(projection.polygonCount) }}</span>
             </div>
@@ -139,7 +207,7 @@ import type { SortOrder } from '@/types/types'
 import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PROJECTION_STATUS } from '@/constants/constants'
 import { formatNumber } from '@/utils/util'
 import { AppButton } from '@/components'
-import { RunningIcon, StuckIcon14px } from '@/assets/'
+import { RunningIcon, StuckIcon14px, QueuedIcon14px } from '@/assets/'
 
 interface Props {
   projections: AdminProjection[]
@@ -319,6 +387,12 @@ const formatElapsedTime = (startDate: string | null): string => {
   border: 1px solid var(--support-border-color-danger);
   background: var(--support-surface-color-danger);
   color: #CE3E39;
+}
+
+.status-badge.status-queued {
+  border: 1px solid var(--support-border-color-info);
+  background: var(--support-surface-color-info);
+  color: var(--typography-color-primary);
 }
 
 .elapsed-stuck {

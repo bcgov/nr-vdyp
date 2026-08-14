@@ -26,6 +26,10 @@ const meta: Meta<typeof AdminResourceSummary> = {
       control: { type: 'number' },
       description: 'Total number of projections currently flagged as stuck',
     },
+    queuedCount: {
+      control: { type: 'number' },
+      description: 'Total number of projections currently waiting in the queue',
+    },
   },
 }
 
@@ -39,5 +43,6 @@ export const Default: Story = {
     threadCapacity: 10,
     threadUsagePercent: 30,
     stuckCount: 1,
+    queuedCount: 2,
   },
 }

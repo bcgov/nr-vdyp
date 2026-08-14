@@ -36,6 +36,7 @@
       :is-visible="selectedGUIDs.length > 0"
       :selected-count="selectedGUIDs.length"
       :can-download="canBulkDownload"
+      :can-duplicate="canBulkDuplicate"
       :can-cancel="canBulkCancel"
       :can-delete="canBulkDelete"
       @close="clearSelection"
@@ -206,12 +207,28 @@ const selectedProjections = computed<Projection[]>(() =>
 const canBulkDownload = computed(() =>
   selectedProjections.value.some(p => p.status === PROJECTION_STATUS.READY || p.status === PROJECTION_STATUS.FAILED)
 )
+const canBulkDuplicate = computed(() =>
+  selectedProjections.value.length > 0 &&
+  selectedProjections.value.every(p =>
+    p.status !== PROJECTION_STATUS.RUNNING && p.status !== PROJECTION_STATUS.STUCK && p.status !== PROJECTION_STATUS.QUEUED,
+  )
+)
 const canBulkCancel = computed(() =>
   selectedProjections.value.length > 0 &&
-  selectedProjections.value.every(p => p.status === PROJECTION_STATUS.RUNNING || p.status === PROJECTION_STATUS.STUCK)
+  selectedProjections.value.every(
+    p =>
+      p.status === PROJECTION_STATUS.RUNNING ||
+      p.status === PROJECTION_STATUS.STUCK ||
+      p.status === PROJECTION_STATUS.QUEUED,
+  )
 )
 const canBulkDelete = computed(() =>
-  selectedProjections.value.some(p => p.status !== PROJECTION_STATUS.RUNNING && p.status !== PROJECTION_STATUS.STUCK)
+  selectedProjections.value.some(
+    p =>
+      p.status !== PROJECTION_STATUS.RUNNING &&
+      p.status !== PROJECTION_STATUS.STUCK &&
+      p.status !== PROJECTION_STATUS.QUEUED,
+  )
 )
 
 const sortedProjections = computed(() => {
@@ -609,8 +626,17 @@ const handleBulkDuplicate = async () => {
   let successCount = 0
   let failCount = 0
 
+  const duplicableGUIDs = selectedGUIDs.value.filter(guid => {
+    const p = projections.value.find(p => p.projectionGUID === guid)
+    return (
+      p?.status !== PROJECTION_STATUS.RUNNING &&
+      p?.status !== PROJECTION_STATUS.STUCK &&
+      p?.status !== PROJECTION_STATUS.QUEUED
+    )
+  })
+
   try {
-    for (const guid of selectedGUIDs.value) {
+    for (const guid of duplicableGUIDs) {
       try {
         await duplicateProjection(guid)
         successCount++
@@ -641,7 +667,7 @@ const handleBulkDuplicate = async () => {
 }
 
 /**
- * Cancels all selected projections that are Running (checks backend status).
+ * Cancels all selected projections that are Running, Stuck, or Queued (checks backend status).
  */
 const handleBulkCancel = async () => {
   if (selectedGUIDs.value.length === 0) return
@@ -669,7 +695,11 @@ const handleBulkCancel = async () => {
         // Update frontend status if it differs
         updateProjectionInList(latestProjection)
 
-        if (latestStatus !== PROJECTION_STATUS.RUNNING && latestStatus !== PROJECTION_STATUS.STUCK) {
+        if (
+          latestStatus !== PROJECTION_STATUS.RUNNING &&
+          latestStatus !== PROJECTION_STATUS.STUCK &&
+          latestStatus !== PROJECTION_STATUS.QUEUED
+        ) {
           skipCount++
           continue
         }
@@ -702,7 +732,7 @@ const handleBulkCancel = async () => {
 }
 
 /**
- * Deletes all selected projections that are not Running (checks backend status).
+ * Deletes all selected projections that are not Running, Stuck, or Queued (checks backend status).
  */
 const handleBulkDelete = async () => {
   if (selectedGUIDs.value.length === 0) return
@@ -731,7 +761,11 @@ const handleBulkDelete = async () => {
         // Update frontend status if it differs
         updateProjectionInList(latestProjection)
 
-        if (latestStatus === PROJECTION_STATUS.RUNNING || latestStatus === PROJECTION_STATUS.STUCK) {
+        if (
+          latestStatus === PROJECTION_STATUS.RUNNING ||
+          latestStatus === PROJECTION_STATUS.STUCK ||
+          latestStatus === PROJECTION_STATUS.QUEUED
+        ) {
           skipCount++
           continue
         }
@@ -751,7 +785,7 @@ const handleBulkDelete = async () => {
     }
     if (skipCount > 0) {
       notificationStore.showWarningMessage(
-        `${skipCount} running projection(s) were skipped and could not be deleted.`,
+        `${skipCount} running or queued projection(s) were skipped and could not be deleted.`,
         'Running Projections Skipped',
       )
     }

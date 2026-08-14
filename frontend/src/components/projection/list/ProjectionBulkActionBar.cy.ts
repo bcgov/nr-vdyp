@@ -5,6 +5,7 @@ describe('ProjectionBulkActionBar.vue', () => {
     isVisible: true,
     selectedCount: 3,
     canDownload: true,
+    canDuplicate: true,
     canCancel: true,
     canDelete: true,
   }
@@ -40,9 +41,10 @@ describe('ProjectionBulkActionBar.vue', () => {
     cy.get('@closeSpy').should('have.been.calledOnce')
   })
 
-  it('emits duplicate when clicked', () => {
+  it('is enabled and emits duplicate when canDuplicate is true', () => {
     const onDuplicateSpy = cy.spy().as('duplicateSpy')
-    mountComponent({}, { onDuplicate: onDuplicateSpy })
+    mountComponent({ canDuplicate: true }, { onDuplicate: onDuplicateSpy })
+    cy.get('button[title="Duplicate"]').should('not.have.attr', 'disabled')
     cy.get('button[title="Duplicate"]').click()
     cy.get('@duplicateSpy').should('have.been.calledOnce')
   })
@@ -71,23 +73,27 @@ describe('ProjectionBulkActionBar.vue', () => {
     cy.get('@deleteSpy').should('have.been.calledOnce')
   })
 
-  it('disables Download, Cancel, and Delete buttons and suppresses their events when can-flags are false', () => {
+  it('disables Download, Duplicate, Cancel, and Delete buttons and suppresses their events when can-flags are false', () => {
     const onDownloadSpy = cy.spy().as('downloadSpy')
+    const onDuplicateSpy = cy.spy().as('duplicateSpy')
     const onCancelSpy = cy.spy().as('cancelSpy')
     const onDeleteSpy = cy.spy().as('deleteSpy')
     mountComponent(
-      { canDownload: false, canCancel: false, canDelete: false },
-      { onDownload: onDownloadSpy, onCancel: onCancelSpy, onDelete: onDeleteSpy },
+      { canDownload: false, canDuplicate: false, canCancel: false, canDelete: false },
+      { onDownload: onDownloadSpy, onDuplicate: onDuplicateSpy, onCancel: onCancelSpy, onDelete: onDeleteSpy },
     )
 
     cy.get('button[title="Download"]').should('have.attr', 'disabled')
     cy.get('button[title="Download"]').click({ force: true })
+    cy.get('button[title="Duplicate"]').should('have.attr', 'disabled')
+    cy.get('button[title="Duplicate"]').click({ force: true })
     cy.get('button[title="Cancel"]').should('have.attr', 'disabled')
     cy.get('button[title="Cancel"]').click({ force: true })
     cy.get('button[title="Delete"]').should('have.attr', 'disabled')
     cy.get('button[title="Delete"]').click({ force: true })
 
     cy.get('@downloadSpy').should('not.have.been.called')
+    cy.get('@duplicateSpy').should('not.have.been.called')
     cy.get('@cancelSpy').should('not.have.been.called')
     cy.get('@deleteSpy').should('not.have.been.called')
   })

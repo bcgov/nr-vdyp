@@ -272,7 +272,7 @@ export const ADMIN_DASHBOARD_HEADER_KEY = Object.freeze({
   ELAPSED: 'startDate',
   THREADS: 'workerCount',
   PROGRESS: 'progress',
-  POLYGONS: 'completedPolygonCount',
+  POLYGONS: 'polygonCount',
 })
 
 export const ADMIN_CANCEL_REASON = Object.freeze({

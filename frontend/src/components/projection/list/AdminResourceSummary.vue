@@ -8,6 +8,14 @@
       <span class="pill-value">{{ totalRunning }}</span>
     </div>
 
+    <div class="summary-pill summary-pill--queued">
+      <span class="pill-icon" aria-hidden="true">
+        <img :src="QueuedIcon14px" alt="" class="pill-icon-img pill-icon-img--queued" />
+      </span>
+      <span class="pill-label">Total Queued:</span>
+      <span class="pill-value">{{ queuedCount }}</span>
+    </div>
+
     <div class="summary-pill summary-pill--stuck">
       <span class="pill-icon" aria-hidden="true">
         <img :src="ExclamationMarkIcon" alt="" class="pill-icon-img pill-icon-img--stuck" />
@@ -35,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChartLineIcon, ExclamationMarkIcon } from '@/assets'
+import { ChartLineIcon, ExclamationMarkIcon, QueuedIcon14px } from '@/assets'
 
 defineProps<{
   totalRunning: number
@@ -43,6 +51,7 @@ defineProps<{
   threadCapacity: number
   threadUsagePercent: number
   stuckCount: number
+  queuedCount: number
 }>()
 </script>
 
@@ -67,7 +76,8 @@ defineProps<{
 }
 
 .summary-pill--total,
-.summary-pill--stuck {
+.summary-pill--stuck,
+.summary-pill--queued {
   display: inline-flex;
   height: 32px;
   padding: var(--layout-margin-hair, 2px) var(--layout-padding-medium, 16px);
@@ -104,7 +114,8 @@ defineProps<{
   flex-shrink: 0;
 }
 
-.pill-icon-img--stuck {
+.pill-icon-img--stuck,
+.pill-icon-img--queued {
   width: 14px;
   height: 14px;
   aspect-ratio: 1 / 1;
@@ -124,7 +135,9 @@ defineProps<{
 .summary-pill--total .pill-label,
 .summary-pill--total .pill-value,
 .summary-pill--stuck .pill-label,
-.summary-pill--stuck .pill-value {
+.summary-pill--stuck .pill-value,
+.summary-pill--queued .pill-label,
+.summary-pill--queued .pill-value {
   font: var(--typography-regular-label);
   color: var(--typography-color-primary);
 }

@@ -77,4 +77,16 @@ describe('AdminProjectionCardList.vue', () => {
     cy.get('.empty-state-card').should('exist')
     cy.get('.empty-state-message').should('contain.text', 'No projections found.')
   })
+
+  it('shows the Queued badge and placeholder values for queued projections', () => {
+    mountComponent([
+      createProjection({ status: 'Queued', startDate: null, workerCount: 0 }),
+    ])
+
+    cy.get('.status-badge').should('contain.text', 'Queued')
+    cy.get('.card-info-value').eq(2).should('contain.text', '-') // Elapsed
+    cy.get('.card-info-value').eq(3).should('contain.text', '-') // Threads
+    cy.get('.card-info-value').eq(4).should('contain.text', '-') // Progress
+    cy.get('.card-info-value').eq(5).should('contain.text', '-') // Polygons
+  })
 })

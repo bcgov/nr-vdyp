@@ -458,8 +458,12 @@ public class ProjectionService {
 	}
 
 	public List<ProjectionModel> getAllRunningProjections() {
-		List<ProjectionEntity> entities = repository
-				.findByStatuses(List.of(ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK));
+		List<ProjectionEntity> entities = repository.findByStatuses(
+				List.of(
+						ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK,
+						ProjectionStatusCodeModel.QUEUED
+				)
+		);
 		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
 
 		// Default Admin Dashboard sort: Threads (workerCount) highest first. Sorted here in Java, not via the

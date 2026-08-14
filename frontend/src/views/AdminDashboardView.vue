@@ -43,6 +43,7 @@
         :thread-capacity="threadCapacity"
         :thread-usage-percent="threadUsagePercent"
         :stuck-count="stuckCount"
+        :queued-count="queuedCount"
       />
     </div>
 
@@ -116,8 +117,9 @@ const selectedUserType = ref<UserTypeCode | null>(null)
 // 'All' is a UI-only filter value (not a real projection status) meaning "no status filter applied".
 const STATUS_FILTER_ALL = 'All'
 const statusFilterOptions = [
-  { title: 'Running', value: PROJECTION_STATUS.RUNNING },
   { title: 'Stuck', value: PROJECTION_STATUS.STUCK },
+  { title: 'Running', value: PROJECTION_STATUS.RUNNING },
+  { title: 'Queued', value: PROJECTION_STATUS.QUEUED },
   { title: STATUS_FILTER_ALL, value: STATUS_FILTER_ALL },
 ]
 const selectedStatus = ref<string | null>(null)
@@ -128,6 +130,14 @@ const sortOrder = ref<SortOrder>(SORT_ORDER.DESC)
 const cardSortBy = ref<string>(`${ADMIN_DASHBOARD_HEADER_KEY.THREADS}-${SORT_ORDER.DESC}`)
 
 const cardSortOptions: SortOption[] = [
+  { title: 'Projection Name (A-Z)', value: `${ADMIN_DASHBOARD_HEADER_KEY.TITLE}-${SORT_ORDER.ASC}` },
+  { title: 'Projection Name (Z-A)', value: `${ADMIN_DASHBOARD_HEADER_KEY.TITLE}-${SORT_ORDER.DESC}` },
+  { title: 'Owner (A-Z)', value: `${ADMIN_DASHBOARD_HEADER_KEY.OWNER}-${SORT_ORDER.ASC}` },
+  { title: 'Owner (Z-A)', value: `${ADMIN_DASHBOARD_HEADER_KEY.OWNER}-${SORT_ORDER.DESC}` },
+  { title: 'User Type (A-Z)', value: `${ADMIN_DASHBOARD_HEADER_KEY.USER_TYPE}-${SORT_ORDER.ASC}` },
+  { title: 'User Type (Z-A)', value: `${ADMIN_DASHBOARD_HEADER_KEY.USER_TYPE}-${SORT_ORDER.DESC}` },
+  { title: 'Elapsed (Highest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.ELAPSED}-${SORT_ORDER.DESC}` },
+  { title: 'Elapsed (Lowest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.ELAPSED}-${SORT_ORDER.ASC}` },
   { title: 'Threads (Highest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.THREADS}-${SORT_ORDER.DESC}` },
   { title: 'Threads (Lowest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.THREADS}-${SORT_ORDER.ASC}` },
   { title: 'Progress (Highest First)', value: `${ADMIN_DASHBOARD_HEADER_KEY.PROGRESS}-${SORT_ORDER.DESC}` },
@@ -189,10 +199,16 @@ const filteredProjections = computed(() =>
   ),
 )
 
-const totalRunningCount = computed(() => filteredProjections.value.length)
+const totalRunningCount = computed(
+  () => filteredProjections.value.filter((p) => p.status === PROJECTION_STATUS.RUNNING).length,
+)
 
 const stuckCount = computed(
   () => filteredProjections.value.filter((p) => p.status === PROJECTION_STATUS.STUCK).length,
+)
+
+const queuedCount = computed(
+  () => filteredProjections.value.filter((p) => p.status === PROJECTION_STATUS.QUEUED).length,
 )
 
 const threadsInUseCount = computed(() =>
@@ -212,19 +228,68 @@ const getProgressPercent = (projection: AdminProjection): number => {
   )
 }
 
-const getSortValue = (projection: AdminProjection, key: string): number => {
-  if (key === ADMIN_DASHBOARD_HEADER_KEY.PROGRESS) return getProgressPercent(projection)
-  if (key === ADMIN_DASHBOARD_HEADER_KEY.THREADS) return projection.workerCount
-  if (key === ADMIN_DASHBOARD_HEADER_KEY.POLYGONS) return projection.polygonCount
+const getSortValue = (projection: AdminProjection, key: string): string | number => {
+  if (key === ADMIN_DASHBOARD_HEADER_KEY.TITLE) return projection.title.toLowerCase()
+  if (key === ADMIN_DASHBOARD_HEADER_KEY.OWNER) return projection.ownerDisplayName.toLowerCase()
+  if (key === ADMIN_DASHBOARD_HEADER_KEY.USER_TYPE) return (projection.userType ?? '').toLowerCase()
+  if (key === ADMIN_DASHBOARD_HEADER_KEY.ELAPSED) {
+    // Queued projections display '-' (no startDate yet), so they're sorted as lower than any
+    // running projection's elapsed time: below it in descending order, above it (first) in
+    // ascending order.
+    if (!projection.startDate) return -1
+    return now.value - new Date(projection.startDate).getTime()
+  }
+  if (key === ADMIN_DASHBOARD_HEADER_KEY.PROGRESS) {
+    // Queued projections display '-' (processing hasn't started) rather than their underlying 0%
+    // progress, so they're sorted as lower than any 0% running projection: below it in descending
+    // order, above it (first) in ascending order.
+    if (projection.status === PROJECTION_STATUS.QUEUED) return -1
+    return getProgressPercent(projection)
+  }
+  if (key === ADMIN_DASHBOARD_HEADER_KEY.THREADS) {
+    // Queued projections display '-' (no real thread count) rather than their underlying 0
+    // workerCount, so they're sorted as lower than any 0-thread running projection: below it in
+    // descending order, above it (first) in ascending order.
+    if (projection.status === PROJECTION_STATUS.QUEUED) return -1
+    return projection.workerCount
+  }
   return 0
+}
+
+// Polygons sorts by the total (denominator) count, since the Progress column already covers the
+// completed/total ratio. Queued projections display '-' (no polygon counts yet), so they're
+// sorted as lower than any running projection's counts: below it in descending order, above it
+// (first) in ascending order.
+const getPolygonSortValues = (projection: AdminProjection): [number, number] => {
+  if (projection.status === PROJECTION_STATUS.QUEUED) return [-1, -1]
+  return [projection.polygonCount, projection.completedPolygonCount]
+}
+
+// When two projections have the same total polygon count, break the tie by completed count.
+const comparePolygons = (a: AdminProjection, b: AdminProjection): number => {
+  const [aTotal, aCompleted] = getPolygonSortValues(a)
+  const [bTotal, bCompleted] = getPolygonSortValues(b)
+  if (aTotal !== bTotal) {
+    return sortOrder.value === SORT_ORDER.ASC ? aTotal - bTotal : bTotal - aTotal
+  }
+  return sortOrder.value === SORT_ORDER.ASC ? aCompleted - bCompleted : bCompleted - aCompleted
 }
 
 const sortedProjections = computed(() => {
   if (!sortBy.value) return filteredProjections.value
   return [...filteredProjections.value].sort((a, b) => {
+    if (sortBy.value === ADMIN_DASHBOARD_HEADER_KEY.POLYGONS) return comparePolygons(a, b)
+
     const aValue = getSortValue(a, sortBy.value)
     const bValue = getSortValue(b, sortBy.value)
-    return sortOrder.value === SORT_ORDER.ASC ? aValue - bValue : bValue - aValue
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortOrder.value === SORT_ORDER.ASC
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue)
+    }
+    return sortOrder.value === SORT_ORDER.ASC
+      ? (aValue as number) - (bValue as number)
+      : (bValue as number) - (aValue as number)
   })
 })
 
