@@ -1,28 +1,46 @@
 package ca.bc.gov.nrs.vdyp.application;
 
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.model.VdypEntity.MISSING_FLOAT_VALUE;
 
 import java.text.MessageFormat;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.DoubleAdder;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
+import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
+import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.PrimarySpeciesDetails;
+import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.Reference;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
@@ -33,11 +51,18 @@ import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
 
-public class ProcessingEngine {
+public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProcessingState<L>> {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProcessingEngine.class);
 	protected static final int UC_ALL_INDEX = UtilizationClass.ALL.ordinal();
 	protected static final int UC_SMALL_INDEX = UtilizationClass.SMALL.ordinal();
+	private static final float[] DEFAULT_QUAD_MEAN_DIAMETERS = new float[] { Float.NaN, 10.0f, 15.0f, 20.0f, 25.0f };
+	private static final float V_BASE_MIN = 0.1f;
+	private static final float B_BASE_MIN = 0.01f;
+
+	public ProcessingEngine(S processingState) {
+		this.state = processingState;
+	}
 
 	/**
 	 * Calculate the siteCurve number of all species for which one was not supplied. All calculations are done in the
@@ -257,6 +282,8 @@ public class ProcessingEngine {
 		}
 		return pspSiteIndex;
 	}
+
+	private final S state;
 
 	protected float
 			estimateMissingPrimarySiteIndex(LayerProcessingState<?> lps, int pspIndex, SiteIndexEquation pspSiteCurve)
@@ -925,6 +952,318 @@ public class ProcessingEngine {
 		return primarySpeciesSiteIndex;
 	}
 
+	/**
+	 * CVSET1 - computes cvVolume, cvBasalArea, cvQuadraticMeanDiameter and cvSmall and assigns them to the current
+	 * LayerProcessingState.
+	 *
+	 * @throws ProcessingException
+	 */
+	@SuppressWarnings("unchecked")
+	protected void setCompatibilityVariables() throws ProcessingException {
+
+		Coefficients aAdjust = new Coefficients(new float[] { 0.0f, 0.0f, 0.0f, 0.0f }, 1);
+
+		var growthDetails = getState().getControlMap().getControlVariables();
+		var lps = getState().getPrimaryLayerProcessingState();
+		Bank bank = lps.getBank();
+
+		// Note: L1COM2 (INL1VGRP, INL1DGRP, INL1BGRP) is initialized when
+		// PolygonProcessingState (volumeEquationGroups, decayEquationGroups
+		// breakageEquationGroups, respectively) is constructed. Copying
+		// the values into LCOM1 is not necessary. Note, however, that
+		// VolumeEquationGroup 10 is mapped to 11 (VGRPFIND) - this is done
+		// when volumeEquationGroups is built (i.e., when the equivalent to
+		// INL1VGRP is built, rather than when LCOM1 VGRPL is built in the
+		// original code.)
+
+		MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume = new MatrixMap3[lps.getNSpecies()
+				+ 1];
+		MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea = new MatrixMap2[lps.getNSpecies() + 1];
+		MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter = new MatrixMap2[lps.getNSpecies()
+				+ 1];
+		var cvSmall = new Map[lps.getNSpecies() + 1];
+
+		for (int s : lps.getIndices()) {
+
+			String genusName = bank.speciesNames[s];
+
+			float spLoreyHeight_All = bank.loreyHeights[s][UtilizationClass.ALL.ordinal()];
+
+			UtilizationVector basalAreas = Utils.utilizationVector();
+			UtilizationVector wholeStemVolumes = Utils.utilizationVector();
+			UtilizationVector closeUtilizationVolumes = Utils.utilizationVector();
+			UtilizationVector closeUtilizationVolumesNetOfDecay = Utils.utilizationVector();
+			UtilizationVector closeUtilizationVolumesNetOfDecayAndWaste = Utils.utilizationVector();
+			UtilizationVector quadMeanDiameters = Utils.utilizationVector();
+			UtilizationVector treesPerHectare = Utils.utilizationVector();
+
+			cvVolume[s] = new MatrixMap3Impl<>(
+					UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, LayerType.ALL_USED, (k1, k2, k3) -> 0f
+			);
+			cvBasalArea[s] = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f);
+			cvQuadraticMeanDiameter[s] = new MatrixMap2Impl<>(
+					UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f
+			);
+
+			for (UtilizationClass uc : UtilizationClass.ALL_BUT_SMALL) {
+
+				basalAreas.setCoe(uc.index, bank.basalAreas[s][uc.ordinal()]);
+				wholeStemVolumes.setCoe(uc.index, bank.wholeStemVolumes[s][uc.ordinal()]);
+				closeUtilizationVolumes.setCoe(uc.index, bank.closeUtilizationVolumes[s][uc.ordinal()]);
+				closeUtilizationVolumesNetOfDecay.setCoe(uc.index, bank.cuVolumesMinusDecay[s][uc.ordinal()]);
+				closeUtilizationVolumesNetOfDecayAndWaste
+						.setCoe(uc.index, bank.cuVolumesMinusDecayAndWastage[s][uc.ordinal()]);
+
+				quadMeanDiameters.setCoe(uc.index, bank.quadMeanDiameters[s][uc.ordinal()]);
+				if (uc != UtilizationClass.ALL && quadMeanDiameters.getCoe(uc.index) <= 0.0f) {
+					quadMeanDiameters.setCoe(uc.index, DEFAULT_QUAD_MEAN_DIAMETERS[uc.ordinal()]);
+				}
+			}
+
+			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
+
+				calculateCvVolumeForSpecies(
+						aAdjust, growthDetails, lps, cvVolume, s, spLoreyHeight_All, wholeStemVolumes,
+						closeUtilizationVolumes, closeUtilizationVolumesNetOfDecay,
+						closeUtilizationVolumesNetOfDecayAndWaste, quadMeanDiameters, uc
+				);
+			}
+
+			int primarySpeciesVolumeGroup = lps.getVolumeEquationGroups()[s];
+			float primarySpeciesQMDAll = bank.quadMeanDiameters[s][UC_ALL_INDEX];
+			var wholeStemVolume = bank.treesPerHectare[s][UC_ALL_INDEX] * getState().getEstimators()
+					.estimateWholeStemVolumePerTree(primarySpeciesVolumeGroup, spLoreyHeight_All, primarySpeciesQMDAll);
+
+			wholeStemVolumes.setCoe(UC_ALL_INDEX, wholeStemVolume);
+
+			getState().getEstimators().estimateWholeStemVolume(
+					UtilizationClass.ALL, 0.0f, primarySpeciesVolumeGroup, spLoreyHeight_All, quadMeanDiameters,
+					basalAreas, wholeStemVolumes
+			);
+
+			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
+				float adjustment = 0.0f;
+				float basalArea = basalAreas.getCoe(uc.index);
+				if (growthDetails.allowCalculation(basalArea, B_BASE_MIN, (l, r) -> l > r)) {
+					adjustment = calculateWholeStemVolume(
+							bank.wholeStemVolumes[s][uc.ordinal()], basalArea, wholeStemVolumes.getCoe(uc.index)
+					);
+				}
+
+				cvVolume[s].put(uc, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, adjustment);
+			}
+
+			getState().getEstimators()
+					.estimateQuadMeanDiameterByUtilization(lps.getBecZone(), quadMeanDiameters, genusName);
+
+			getState().getEstimators()
+					.estimateBaseAreaByUtilization(lps.getBecZone(), quadMeanDiameters, basalAreas, genusName);
+
+			// Calculate trees-per-hectare per utilization
+			treesPerHectare.setCoe(UtilizationClass.ALL.index, bank.treesPerHectare[s][UC_ALL_INDEX]);
+			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
+				treesPerHectare.setCoe(
+						uc.index,
+						BaseAreaTreeDensityDiameter
+								.treesPerHectare(basalAreas.getCoe(uc.index), quadMeanDiameters.getCoe(uc.index))
+				);
+			}
+
+			ReconcilationMethods.reconcileComponents(basalAreas, treesPerHectare, quadMeanDiameters);
+
+			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
+				float baCvValue = bank.basalAreas[s][uc.ordinal()] - basalAreas.getCoe(uc.index);
+				cvBasalArea[s].put(uc, LayerType.PRIMARY, baCvValue);
+
+				float originalQmd = bank.quadMeanDiameters[s][uc.ordinal()];
+				float adjustedQmd = quadMeanDiameters.getCoe(uc.index);
+
+				float qmdCvValue;
+				if (growthDetails.allowCalculation(() -> bank.basalAreas[s][uc.ordinal()] < B_BASE_MIN)) {
+					qmdCvValue = 0.0f;
+				} else if (originalQmd > 0 && adjustedQmd > 0) {
+					qmdCvValue = originalQmd - adjustedQmd;
+				} else {
+					qmdCvValue = 0.0f;
+				}
+
+				cvQuadraticMeanDiameter[s].put(uc, LayerType.PRIMARY, qmdCvValue);
+			}
+
+			// Small components
+
+			cvSmall[s] = calculateSmallCompatibilityVariables(s, growthDetails);
+		}
+
+		lps.setCompatibilityVariableDetails(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvSmall);
+	}
+
+	protected void calculateCvVolumeForSpecies(
+			Coefficients aAdjust, ProcessingControlVariables growthDetails, L lps,
+			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume, int s, float spLoreyHeight_All,
+			UtilizationVector wholeStemVolumes, UtilizationVector closeUtilizationVolumes,
+			UtilizationVector closeUtilizationVolumesNetOfDecay,
+			UtilizationVector closeUtilizationVolumesNetOfDecayAndWaste, UtilizationVector quadMeanDiameters,
+			UtilizationClass uc
+	) throws ProcessingException {
+
+		final Bank bank = lps.getBank();
+		final Predicate<Float> allowCalculation = bv -> growthDetails.allowCalculation(bv, V_BASE_MIN, (l, r) -> l > r);
+
+		float adjustment;
+		float baseVolume;
+
+		// Volume less decay and waste
+		adjustment = 0.0f;
+		baseVolume = bank.cuVolumesMinusDecay[s][uc.ordinal()];
+
+		if (allowCalculation.test(baseVolume)) {
+
+			// EMP094
+			getState().getEstimators().estimateNetDecayAndWasteVolume(
+					lps.getBecZone().getRegion(), uc, aAdjust, bank.speciesNames[s], spLoreyHeight_All,
+					quadMeanDiameters, closeUtilizationVolumes, closeUtilizationVolumesNetOfDecay,
+					closeUtilizationVolumesNetOfDecayAndWaste
+			);
+
+			float actualVolume = bank.cuVolumesMinusDecayAndWastage[s][uc.ordinal()];
+			float staticVolume = closeUtilizationVolumesNetOfDecayAndWaste.getCoe(uc.index);
+			adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
+		}
+
+		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY, adjustment);
+
+		// Volume less decay
+		adjustment = 0.0f;
+		baseVolume = bank.closeUtilizationVolumes[s][uc.ordinal()];
+
+		if (allowCalculation.test(baseVolume)) {
+
+			// EMP093
+			int decayGroup = lps.getDecayEquationGroups()[s];
+			getState().getEstimators().estimateNetDecayVolume(
+					bank.speciesNames[s], lps.getBecZone().getRegion(), uc, aAdjust, decayGroup,
+					lps.getPrimarySpeciesAgeAtBreastHeight(), quadMeanDiameters, closeUtilizationVolumes,
+					closeUtilizationVolumesNetOfDecay
+			);
+
+			float actualVolume = bank.cuVolumesMinusDecay[s][uc.ordinal()];
+			float staticVolume = closeUtilizationVolumesNetOfDecay.getCoe(uc.index);
+			adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
+		}
+
+		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY, adjustment);
+
+		// Volume
+		adjustment = 0.0f;
+		baseVolume = bank.wholeStemVolumes[s][uc.ordinal()];
+
+		if (allowCalculation.test(baseVolume)) {
+
+			// EMP092
+			int volumeGroup = lps.getVolumeEquationGroups()[s];
+			getState().getEstimators().estimateCloseUtilizationVolume(
+					uc, aAdjust, volumeGroup, spLoreyHeight_All, quadMeanDiameters, wholeStemVolumes,
+					closeUtilizationVolumes
+			);
+
+			float actualVolume = bank.closeUtilizationVolumes[s][uc.ordinal()];
+			float staticVolume = closeUtilizationVolumes.getCoe(uc.index);
+			adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
+		}
+
+		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, adjustment);
+	}
+
+	/**
+	 * Function that calculates values for the small component compatibility variables and returns the result.
+	 *
+	 * @param speciesIndex            the index of the species for which this operation is to be performed
+	 * @param forwardControlVariables the control variables for this run
+	 *
+	 * @throws ProcessingException
+	 */
+	private Map<UtilizationClassVariable, Float>
+			calculateSmallCompatibilityVariables(int speciesIndex, ProcessingControlVariables forwardControlVariables) {
+
+		final L lps = getState().getPrimaryLayerProcessingState();
+		final Bank bank = lps.getBank();
+		final EstimationMethods estimators = getState().getEstimators();
+
+		final Region region = lps.getBecZone().getRegion();
+		final String speciesName = bank.speciesNames[speciesIndex];
+
+		final float spLoreyHeight_All = bank.loreyHeights[speciesIndex][UC_ALL_INDEX]; // HLsp
+		final float spQuadMeanDiameter_All = bank.quadMeanDiameters[speciesIndex][UC_ALL_INDEX]; // DQsp
+
+		// this WHOLE operation on Actual BA's, not 100% occupancy.
+		// TODO: verify this: float fractionAvailable = polygon.getPercentForestLand();
+		final float spBaseArea_All = bank.basalAreas[speciesIndex][UC_ALL_INDEX] /* * fractionAvailable */;
+
+		// EMP080
+		final float smallProbability = estimators.estimateSmallComponentProbability(
+				speciesName, //
+				lps.getBank().yearsAtBreastHeight[lps.getPrimarySpeciesIndex()], //
+				spLoreyHeight_All, //
+				region
+		); // PROBsp
+
+		// EMP081
+		final float conditionalExpectedBaseArea = estimators.estimateSmallComponentConditionalExpectedBasalArea(
+				speciesName, spBaseArea_All, spLoreyHeight_All, region
+		); // BACONDsp
+
+		// TODO (see previous TODO): conditionalExpectedBaseArea /= fractionAvailable;
+
+		final float spBaSmall = smallProbability * conditionalExpectedBaseArea;
+
+		// EMP082
+		final float spDqSmall = estimators.estimateSmallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
+
+		// EMP085
+		final float spLhSmall = estimators
+				.estimateSmallComponentLoreyHeight(speciesName, spLoreyHeight_All, spDqSmall, spQuadMeanDiameter_All); // HLSMsp
+
+		// EMP086
+		final float spMeanVolumeSmall = estimators.estimateMeanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
+
+		final var spCvSmall = new EnumMap<UtilizationClassVariable, Float>(UtilizationClassVariable.class);
+
+		final float spInputBasalArea_Small = bank.basalAreas[speciesIndex][UC_SMALL_INDEX];
+		spCvSmall.put(UtilizationClassVariable.BASAL_AREA, spInputBasalArea_Small - spBaSmall);
+
+		if (forwardControlVariables.allowCalculation(spInputBasalArea_Small, B_BASE_MIN, (l, r) -> l > r)) {
+			final float spInputQuadMeanDiameter_Small = bank.quadMeanDiameters[speciesIndex][UC_SMALL_INDEX];
+			spCvSmall.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, spInputQuadMeanDiameter_Small - spDqSmall);
+		} else {
+			spCvSmall.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f);
+		}
+
+		final float spInputLoreyHeight_Small = bank.loreyHeights[speciesIndex][UC_SMALL_INDEX];
+		if (spInputLoreyHeight_Small > 1.3f && spLhSmall > 1.3f && spInputBasalArea_Small > 0.0f) {
+			final float cvLoreyHeight = FloatMath.log( (spInputLoreyHeight_Small - 1.3f) / (spLhSmall - 1.3f));
+			spCvSmall.put(UtilizationClassVariable.LOREY_HEIGHT, cvLoreyHeight);
+		} else {
+			spCvSmall.put(UtilizationClassVariable.LOREY_HEIGHT, 0.0f);
+		}
+
+		final float spInputWholeStemVolume_Small = bank.wholeStemVolumes[speciesIndex][UC_SMALL_INDEX];
+		if (spInputWholeStemVolume_Small > 0.0f && spMeanVolumeSmall > 0.0f
+				&& forwardControlVariables.allowCalculation(spInputBasalArea_Small, B_BASE_MIN, (l, r) -> l >= r)) {
+
+			final float spInputTreePerHectare_Small = bank.treesPerHectare[speciesIndex][UC_SMALL_INDEX];
+
+			final var spWsVolumeSmall = FloatMath
+					.log(spInputWholeStemVolume_Small / spInputTreePerHectare_Small / spMeanVolumeSmall);
+			spCvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, spWsVolumeSmall);
+
+		} else {
+			spCvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
+		}
+
+		return spCvSmall;
+	}
+
 	static AgeTriplet
 			calculatePrimarySpeciesAges(Bank bank, int primarySpeciesIndex, Optional<Integer> secondarySpeciesIndex)
 					throws ProcessingException {
@@ -1001,6 +1340,56 @@ public class ProcessingEngine {
 			}
 			return Optional.empty();
 		});
+	}
+
+	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
+
+		float staticRatio = staticVolume / baseVolume;
+		float staticLogit;
+		if (staticRatio <= 0.0f) {
+			staticLogit = -7.0f;
+		} else if (staticRatio >= 1.0f) {
+			staticLogit = 7.0f;
+		} else {
+			staticLogit = clamp(log(staticRatio / (1.0f - staticRatio)), -7.0f, 7.0f);
+		}
+
+		float actualRatio = actualVolume / baseVolume;
+		float actualLogit;
+		if (actualRatio <= 0.0f) {
+			actualLogit = -7.0f;
+		} else if (actualRatio >= 1.0f) {
+			actualLogit = 7.0f;
+		} else {
+			actualLogit = clamp(log(actualRatio / (1.0f - actualRatio)), -7.0f, 7.0f);
+		}
+
+		return actualLogit - staticLogit;
+	}
+
+	private static float calculateWholeStemVolume(float actualVolume, float basalArea, float staticVolume) {
+
+		float staticRatio = staticVolume / basalArea;
+		float staticLogit;
+		if (staticRatio <= 0.0f) {
+			staticLogit = -2.0f;
+		} else {
+			staticLogit = log(staticRatio);
+		}
+
+		float actualRatio = actualVolume / basalArea;
+		float actualLogit;
+		if (actualRatio <= 0.0f) {
+			actualLogit = -2.0f;
+		} else {
+			actualLogit = log(actualRatio);
+		}
+
+		return actualLogit - staticLogit;
+	}
+
+	public S getState() {
+		return state;
 	}
 
 }

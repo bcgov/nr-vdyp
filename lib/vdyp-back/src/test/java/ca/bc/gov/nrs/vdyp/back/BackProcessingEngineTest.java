@@ -11,6 +11,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
@@ -46,9 +48,16 @@ class BackProcessingEngineTest {
 
 	BecLookup becLookup;
 
+	IMocksControl em;
+
+	BackProcessingState state;
+
 	@BeforeEach
 	void setup() {
-		engine = new BackProcessingEngine();
+		em = EasyMock.createControl();
+		state = em.createMock(BackProcessingState.class);
+
+		engine = new BackProcessingEngine(state);
 
 		controlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
 
@@ -91,7 +100,7 @@ class BackProcessingEngineTest {
 				});
 			});
 
-			var state = new BackProcessingState(controlMap);
+			state = new BackProcessingState(controlMap);
 
 			state.setPolygon(polygon);
 
@@ -152,7 +161,7 @@ class BackProcessingEngineTest {
 				});
 			});
 
-			var state = new BackProcessingState(controlMap);
+			state = new BackProcessingState(controlMap);
 
 			state.setPolygon(polygon);
 
@@ -165,17 +174,25 @@ class BackProcessingEngineTest {
 			@Test
 			void testSetBavIfVeteranPresent() throws ProcessingException {
 
-				var state = primaryAndVeteran();
+				em.replay();
+
+				state = primaryAndVeteran();
 
 				engine.prepare(state);
 
 				var result = state.getBaseAreaVeteran();
 
 				assertThat(result, present(is(20f)));
+
+				em.verify();
+
 			}
 
 			@Test
 			void testSetBavIfVeteranPresentAndTotalIsWrong() throws ProcessingException {
+
+				em.replay();
+
 				var polygon = VdypPolygon.build(pb -> {
 					pb.polygonIdentifier("Test", 2024);
 
@@ -197,7 +214,7 @@ class BackProcessingEngineTest {
 					});
 				});
 
-				var state = new BackProcessingState(controlMap);
+				state = new BackProcessingState(controlMap);
 
 				state.setPolygon(polygon);
 				engine.prepare(state);
@@ -205,18 +222,26 @@ class BackProcessingEngineTest {
 				var result = state.getBaseAreaVeteran();
 
 				assertThat(result, present(is(20f))); // Should be calculated from the species
+
+				em.verify();
+
 			}
 
 			@Test
 			void testSetBavIfNoVeteranPresent() throws ProcessingException {
 
-				var state = primaryOnlyWithSingleSpecies();
+				em.replay();
+
+				state = primaryOnlyWithSingleSpecies();
 
 				engine.prepare(state);
 
 				var result = state.getBaseAreaVeteran();
 
 				assertThat(result, notPresent());
+
+				em.verify();
+
 			}
 		}
 
@@ -226,7 +251,9 @@ class BackProcessingEngineTest {
 			@Test
 			void testSingleSpecies() throws ProcessingException {
 
-				var state = primaryOnlyWithSingleSpecies();
+				em.replay();
+
+				state = primaryOnlyWithSingleSpecies();
 
 				engine.prepare(state);
 
@@ -244,6 +271,8 @@ class BackProcessingEngineTest {
 				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U175TO225, is(29f)));
 				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.OVER225, is(32f)));
 
+				em.verify();
+
 			}
 
 		}
@@ -254,13 +283,17 @@ class BackProcessingEngineTest {
 			@Test
 			void testSingleSpecies() throws ProcessingException {
 
-				var state = primaryOnlyWithSingleSpecies();
+				em.replay();
+
+				state = primaryOnlyWithSingleSpecies();
 
 				engine.prepare(state);
 
 				var result = state.getLimits(1);
 
 				assertThat(result, componentSizeLimits(39.9f, 75.8f, 0.792f, 2.155f, 0.0001f));
+
+				em.verify();
 
 			}
 		}

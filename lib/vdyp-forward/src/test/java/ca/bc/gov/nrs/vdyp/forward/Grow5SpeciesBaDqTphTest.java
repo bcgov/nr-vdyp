@@ -66,7 +66,7 @@ class Grow5SpeciesBaDqTphTest {
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 
 		float baStart = 45.3864441f;
 		float baDelta = 0.351852179f;
@@ -121,12 +121,12 @@ class Grow5SpeciesBaDqTphTest {
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
-		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 
 		float baChangeRate = 0.00775236264f;
 		float tphChangeRate = 0.987927794f;
 
-		fpe.fps.controlMap.getDebugSettings().setValue(ProcessingDebugSettings.SPECIES_DYNAMICS, 1);
+		fpe.getState().controlMap.getDebugSettings().setValue(ProcessingDebugSettings.SPECIES_DYNAMICS, 1);
 
 		fpe.growUsingNoSpeciesDynamics(baChangeRate, tphChangeRate);
 
@@ -163,9 +163,9 @@ class Grow5SpeciesBaDqTphTest {
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
-		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 
-		fpe.fps.controlMap.getDebugSettings().setValue(ProcessingDebugSettings.SPECIES_DYNAMICS, 0);
+		fpe.getState().controlMap.getDebugSettings().setValue(ProcessingDebugSettings.SPECIES_DYNAMICS, 0);
 
 		float baStart = 45.3864441f;
 		float baDelta = 0.351852179f;

@@ -16,6 +16,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
@@ -111,6 +112,12 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	public boolean areSiteCurveNumbersSet = false;
 
+	private int[] volumeEquationGroups;
+
+	private int[] decayEquationGroups;
+
+	private int[] breakageEquationGroups;
+
 	protected LayerProcessingState(ProcessingState<Self> ps, VdypPolygon polygon, LayerType subjectLayerType)
 			throws ProcessingException {
 
@@ -122,6 +129,31 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 		this.bank = new Bank(polygon.getLayers().get(subjectLayerType), becZone, getBankFilter());
 
+		var volumeEquationGroupMatrix = this.ps.getControlMap().getVolumeEquationGroups();
+		var decayEquationGroupMatrix = this.ps.getControlMap().getDecayEquationGroups();
+		var breakageEquationGroupMatrix = this.ps.getControlMap().getBreakageEquationGroups();
+
+		volumeEquationGroups = new int[bank.getNSpecies() + 1];
+		decayEquationGroups = new int[bank.getNSpecies() + 1];
+		breakageEquationGroups = new int[bank.getNSpecies() + 1];
+
+		volumeEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
+		decayEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
+		breakageEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
+
+		BecDefinition becZoneAlias = getBecZone();
+		for (int i : bank.getIndices()) {
+			String speciesName = bank.speciesNames[i];
+			volumeEquationGroups[i] = volumeEquationGroupMatrix
+					.get(speciesName, becZoneAlias.getVolumeBec().getAlias());
+			// From VGRPFIND, volumeEquationGroup 10 is mapped to 11.
+			if (volumeEquationGroups[i] == 10) {
+				volumeEquationGroups[i] = 11;
+			}
+			decayEquationGroups[i] = decayEquationGroupMatrix.get(speciesName, becZoneAlias.getDecayBec().getAlias());
+			breakageEquationGroups[i] = breakageEquationGroupMatrix
+					.get(speciesName, becZoneAlias.getDecayBec().getAlias());
+		}
 	}
 
 	protected abstract Predicate<VdypSpecies> getBankFilter();
@@ -396,6 +428,18 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 		this.siteCurveNumbers = Arrays.copyOf(siteCurveNumbers, siteCurveNumbers.length);
 
 		areSiteCurveNumbersSet = true;
+	}
+
+	public int[] getVolumeEquationGroups() {
+		return volumeEquationGroups;
+	}
+
+	public int[] getDecayEquationGroups() {
+		return decayEquationGroups;
+	}
+
+	public int[] getBreakageEquationGroups() {
+		return breakageEquationGroups;
 	}
 
 }

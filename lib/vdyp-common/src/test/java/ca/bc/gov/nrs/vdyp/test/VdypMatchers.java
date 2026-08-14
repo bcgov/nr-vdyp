@@ -168,6 +168,8 @@ public class VdypMatchers {
 	/**
 	 * Matches an Optional if it is present and its value matches the given matcher
 	 *
+	 * @param <U>
+	 *
 	 * @param delegate matcher for the optional's value
 	 * @return
 	 */
@@ -1027,7 +1029,7 @@ public class VdypMatchers {
 				for (int i = 0; i < item.length; i++) {
 					final float expected = values[i];
 					final float actual = item[i];
-					final Matcher<Float> subMatcher;
+					final Matcher<? super Float> subMatcher;
 					if (Float.isFinite(expected)) {
 						subMatcher = closeTo(expected);
 					} else if (Float.isNaN(expected)) {
