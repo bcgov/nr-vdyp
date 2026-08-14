@@ -21,9 +21,9 @@ class ProcessPolygonBasicTest extends AbstractForwardProcessingEngineTest {
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 
-		assertThat(fpe.fps.controlMap.getBecLookup(), notNullValue());
-		assertThat(fpe.fps.controlMap.getGenusDefinitionMap(), notNullValue());
-		assertThat(fpe.fps.controlMap.getSiteCurveMap(), notNullValue());
+		assertThat(fpe.getState().controlMap.getBecLookup(), notNullValue());
+		assertThat(fpe.getState().controlMap.getGenusDefinitionMap(), notNullValue());
+		assertThat(fpe.getState().controlMap.getSiteCurveMap(), notNullValue());
 
 		int nPolygonsProcessed = 0;
 		var polygon = forwardDataStreamReader.readNextPolygon();

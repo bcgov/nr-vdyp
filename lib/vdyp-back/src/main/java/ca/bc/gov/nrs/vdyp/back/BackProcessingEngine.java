@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
+import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -20,7 +21,11 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 
-public class BackProcessingEngine extends ProcessingEngine {
+public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, BackLayerProcessingState> {
+
+	public BackProcessingEngine(BackProcessingState processingState) {
+		super(processingState);
+	}
 
 	/**
 	 *

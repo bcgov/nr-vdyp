@@ -23,9 +23,13 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.FileMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.FileMappingRepository;
+import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileUploadException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObject;
 import ca.bc.gov.nrs.vdyp.backend.model.COMSObjectVersion;
+import ca.bc.gov.nrs.vdyp.backend.services.upload.CsvUploadValidator;
+import ca.bc.gov.nrs.vdyp.backend.services.upload.CsvUploadValidator.CsvUploadValidationIOException;
+import ca.bc.gov.nrs.vdyp.backend.services.upload.CsvUploadValidator.ValidatedUpload;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -39,43 +43,59 @@ public class FileMappingService {
 	private final HttpClient httpClient;
 	private final COMSClient comsClient;
 	private final FileMappingPersistenceService persistenceService;
+	private final CsvUploadValidator csvUploadValidator;
 
 	public FileMappingService(
 			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient,
-			HttpClient httpClient, FileMappingPersistenceService persistenceService
+			HttpClient httpClient, FileMappingPersistenceService persistenceService,
+			CsvUploadValidator csvUploadValidator
 	) {
 		this.repository = repository;
 		this.assembler = assembler;
 		this.comsClient = comsClient;
 		this.httpClient = httpClient;
 		this.persistenceService = persistenceService;
+		this.csvUploadValidator = csvUploadValidator;
 	}
 
 	public FileMappingModel
 			createNewFile(String comsBucketGUID, ProjectionFileSetEntity projectionFileSetEntity, FileUpload file)
 					throws ProjectionServiceException {
-		try {
-			String contentDisposition = buildContentDisposition(file.fileName());
-			long contentLength = Files.size(file.uploadedFile());
+		if (file == null) {
+			throw ProjectionFileUploadException.invalidCsv("CSV upload file is required.");
+		}
 
-			String contentType = file.contentType() != null ? file.contentType() : MediaType.APPLICATION_OCTET_STREAM;
-			try (InputStream fileStream = Files.newInputStream(file.uploadedFile())) {
+		String fileSetTypeCode = projectionFileSetEntity.getFileSetTypeCode() == null ? null
+				: projectionFileSetEntity.getFileSetTypeCode().getCode();
+		ValidatedUpload upload = csvUploadValidator.validateMetadata(file.fileName(), file.contentType(), file.size());
+		UUID objectGUID = null;
+		try {
+			String contentDisposition = buildContentDisposition(upload.filename());
+			try (
+					InputStream source = Files.newInputStream(file.uploadedFile());
+					InputStream fileStream = csvUploadValidator.validatingStream(source, fileSetTypeCode)
+			) {
 				logger.debug(
 						"Data for object bucketId {}, contentDisposistion {}, contentLength {}, contentType {}",
-						comsBucketGUID, contentDisposition, contentLength, contentType
+						comsBucketGUID, contentDisposition, upload.contentLength(), upload.contentType()
 				);
 				COMSObject createObjectResponse = comsClient.createObject(
-						comsBucketGUID, contentDisposition, contentLength, contentType, fileStream
+						comsBucketGUID, contentDisposition, upload.contentLength(), upload.contentType(), fileStream
 
 				);
-				UUID objectGUID = UUID.fromString(createObjectResponse.id());
+				objectGUID = UUID.fromString(createObjectResponse.id());
 
 				// persist a record here for the file
 				return persistenceService.persistFileMapping(
-						objectGUID, projectionFileSetEntity.getProjectionFileSetGUID(), file.fileName()
+						objectGUID, projectionFileSetEntity.getProjectionFileSetGUID(), upload.filename()
 				);
 			}
+		} catch (CsvUploadValidationIOException e) {
+			throw e.validationException();
 		} catch (Exception e) {
+			if (objectGUID != null) {
+				deleteComsObjectQuietly(objectGUID, e);
+			}
 			throw new ProjectionServiceException("Error uploading file to COMS", e);
 		}
 	}
@@ -83,8 +103,37 @@ public class FileMappingService {
 	private static String buildContentDisposition(String filename) {
 		// Minimal safe implementation. COMS spec wants RFC6266 with filename/filename*.
 		// Start with this; add RFC8187 encoding later if you have non-ASCII names.
-		String safe = filename == null ? "upload.bin" : filename.replace("\"", "");
+		String safe = filename == null ? "upload.csv" : filename.replace("\\", "").replace("\"", "");
 		return "attachment; filename=\"" + safe + "\"";
+	}
+
+	private void deleteComsObjectQuietly(UUID objectGUID, Exception originalException) {
+		try {
+			deleteComsObject(objectGUID);
+		} catch (Exception cleanupException) {
+			originalException.addSuppressed(cleanupException);
+			logger.warn("Failed to clean up COMS object after upload failure");
+		}
+	}
+
+	private void deleteComsObject(UUID objectGUID) throws ProjectionServiceException {
+		String comsObjectID = objectGUID.toString();
+		List<COMSObjectVersion> versions = comsClient.getObjectVersions(comsObjectID);
+		if (versions != null && !versions.isEmpty()) {
+			for (COMSObjectVersion version : versions) {
+				try (Response response = comsClient.deleteObjectVersion(comsObjectID, version.s3VersionId())) {
+					if (response.getStatusInfo().getStatusCode() != Response.Status.OK.getStatusCode()) {
+						throw new ProjectionServiceException("Could not delete object in COMS after upload failure");
+					}
+				}
+			}
+		} else {
+			try (Response response = comsClient.deleteObject(comsObjectID)) {
+				if (response.getStatusInfo().getStatusCode() >= 400) {
+					throw new ProjectionServiceException("Could not delete object in COMS after upload failure");
+				}
+			}
+		}
 	}
 
 	private FileMappingEntity getFileMappingEntity(UUID fileMappingGUID) throws ProjectionServiceException {
