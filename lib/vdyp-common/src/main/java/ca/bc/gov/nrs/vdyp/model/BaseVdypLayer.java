@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.model;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +25,7 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 
 	private LinkedHashMap<String, S> speciesBySp0 = new LinkedHashMap<>();
 	private HashMap<Integer, S> speciesByIndex = new HashMap<>();
+	private List<S> orderedSpecies = new ArrayList<>();
 
 	protected BaseVdypLayer(
 			PolygonIdentifier polygonIdentifier, LayerType layerType, Optional<Integer> inventoryTypeGroup
@@ -47,6 +49,15 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 		return speciesBySp0;
 	}
 
+	/**
+	 * Get the Species for application type ordered by the Genus as is done in several places by VDYP7
+	 * 
+	 * @return a list of Species in the Layer ordered by Genus Descending
+	 */
+	public List<S> getOrderedSpecies() {
+		return orderedSpecies;
+	}
+
 	public void setSpecies(Map<String, S> species) {
 		setSpecies(species.values());
 	}
@@ -54,10 +65,13 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 	public void setSpecies(Collection<S> species) {
 		this.speciesBySp0.clear();
 		this.speciesByIndex.clear();
+		orderedSpecies.clear();
 		species.forEach(spec -> {
 			this.speciesBySp0.put(spec.getGenus(), spec);
 			this.speciesByIndex.put(spec.getGenusIndex(), spec);
+			this.orderedSpecies.add(spec);
 		});
+		this.orderedSpecies.sort((s1, s2) -> s1.getGenus().compareTo(s2.getGenus()));
 	}
 
 	public S getSpeciesBySp0(String sp0) {
