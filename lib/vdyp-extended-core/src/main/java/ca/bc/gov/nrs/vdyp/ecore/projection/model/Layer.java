@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.model;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -874,7 +875,7 @@ public class Layer implements Comparable<Layer> {
 				leadingSp0 = unsortedSiteSpecies.stream().skip(nthLeading).findFirst();
 			} else {
 				leadingSp0 = unsortedSiteSpecies.stream()
-						.max((o1, o2) -> (int) (o1.getTotalSpeciesPercent() - o2.getTotalSpeciesPercent()));
+						.max(Comparator.comparingDouble(SiteSpecies::getTotalSpeciesPercent));
 			}
 			if (leadingSp0.isPresent()) {
 				stand = leadingSp0.get().getStand();
