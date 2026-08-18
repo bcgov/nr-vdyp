@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -856,11 +857,12 @@ public class Layer implements Comparable<Layer> {
 	 * alphabetical order until the requested species is located.
 	 * </ul>
 	 *
-	 * @param nthLeading the zero-based ordinal identifying the rank to be returned. If there are fewer species in the
-	 *                   layer than this number, <code>null</code> is returned.
+	 * @param nthLeading       the zero-based ordinal identifying the rank to be returned. If there are fewer species in
+	 *                         the layer than this number, <code>null</code> is returned.
+	 * @param useSuppliedOrder true if the unmodified supplied order is sdesired by the application.
 	 * @return as described
 	 */
-	public Stand determineLeadingSp0(Integer nthLeading) {
+	public Stand determineLeadingSp0(Integer nthLeading, boolean useSuppliedOrder) {
 		Stand stand = null;
 		if (siteSpecies != null) {
 			if (nthLeading < siteSpecies.size()) {
@@ -868,20 +870,28 @@ public class Layer implements Comparable<Layer> {
 			}
 		} else if (unsortedSiteSpecies != null) {
 
-			var leadingSp0 = unsortedSiteSpecies.stream().max(new Comparator<SiteSpecies>() {
+			Optional<SiteSpecies> leadingSp0;
+			if (useSuppliedOrder) {
+				leadingSp0 = unsortedSiteSpecies.stream().skip(nthLeading).findFirst();
+			} else {
+				leadingSp0 = unsortedSiteSpecies.stream().max(new Comparator<SiteSpecies>() {
 
-				@Override
-				public int compare(SiteSpecies o1, SiteSpecies o2) {
-					return (int) (o1.getTotalSpeciesPercent() - o2.getTotalSpeciesPercent());
-				}
-			});
-
+					@Override
+					public int compare(SiteSpecies o1, SiteSpecies o2) {
+						return (int) (o1.getTotalSpeciesPercent() - o2.getTotalSpeciesPercent());
+					}
+				});
+			}
 			if (leadingSp0.isPresent()) {
 				stand = leadingSp0.get().getStand();
 			}
 		}
 
 		return stand;
+	}
+
+	public Stand determineLeadingSp0(Integer nthLeading) {
+		return determineLeadingSp0(nthLeading, false);
 	}
 
 	/**
@@ -891,19 +901,23 @@ public class Layer implements Comparable<Layer> {
 	 * @return as described. If <code>nthLeading</code> is not between 0 and the (number of species groups) - 1,
 	 *         inclusive, or the identified species group has no species, <code>null</code> is returned.
 	 */
-	public Species determineLeadingSp64(Integer nthLeading) {
+	public Species determineLeadingSp64(Integer nthLeading, boolean useSuppliedOrder) {
 
 		Species species = null;
 
 		if (unsortedSiteSpecies != null && nthLeading < unsortedSiteSpecies.size()) {
 
-			Stand stand = determineLeadingSp0(nthLeading);
-			if (stand != null && stand.getSpeciesByPercent().size() > 0) {
+			Stand stand = determineLeadingSp0(nthLeading, useSuppliedOrder);
+			if (stand != null && !stand.getSpeciesByPercent().isEmpty()) {
 				species = stand.getSpeciesByPercent().get(0);
 			}
 		}
 
 		return species;
+	}
+
+	public Species determineLeadingSp64(Integer nthLeading) {
+		return determineLeadingSp64(nthLeading, false);
 	}
 
 	/**
@@ -1283,8 +1297,9 @@ public class Layer implements Comparable<Layer> {
 			return;
 		}
 
-		Stand stand = determineLeadingSp0(0 /* first */);
-		Species siteSpecies = determineLeadingSp64(0 /* first */);
+		// Site Info is completed using the SUPPLIED order to determine primary species in VDYP7
+		Stand stand = determineLeadingSp0(0 /* first */, true);
+		Species siteSpecies = determineLeadingSp64(0 /* first */, true);
 		if (stand == null || siteSpecies == null) {
 			logger.error("{}: leading site species could not be determined; cannot continue", this);
 
