@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -21,7 +19,6 @@ import ca.bc.gov.nrs.vdyp.controlmap.CachingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
-import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -198,10 +195,7 @@ public class VdypOutputWriter implements Closeable {
 
 		for (var layer : sortedLayers) {
 			writeUtilization(polygon, layer, layer);
-			List<VdypSpecies> specs = new ArrayList<>(layer.getSpecies().size());
-			specs.addAll(layer.getSpecies().values());
-			specs.sort(Utils.compareUsing(BaseVdypSpecies::getGenus));
-			for (var species : specs) {
+			for (var species : layer.getOrderedSpecies()) {
 				writeSpecies(layer, species);
 				writeUtilization(polygon, layer, species);
 			}
