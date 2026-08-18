@@ -51,7 +51,7 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 
 	/**
 	 * Get the Species for application type ordered by the Genus as is done in several places by VDYP7
-	 * 
+	 *
 	 * @return a list of Species in the Layer ordered by Genus Descending
 	 */
 	public List<S> getOrderedSpecies() {
