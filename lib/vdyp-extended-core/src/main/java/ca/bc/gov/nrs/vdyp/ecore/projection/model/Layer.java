@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.model;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -874,13 +873,8 @@ public class Layer implements Comparable<Layer> {
 			if (useSuppliedOrder) {
 				leadingSp0 = unsortedSiteSpecies.stream().skip(nthLeading).findFirst();
 			} else {
-				leadingSp0 = unsortedSiteSpecies.stream().max(new Comparator<SiteSpecies>() {
-
-					@Override
-					public int compare(SiteSpecies o1, SiteSpecies o2) {
-						return (int) (o1.getTotalSpeciesPercent() - o2.getTotalSpeciesPercent());
-					}
-				});
+				leadingSp0 = unsortedSiteSpecies.stream()
+						.max((o1, o2) -> (int) (o1.getTotalSpeciesPercent() - o2.getTotalSpeciesPercent()));
 			}
 			if (leadingSp0.isPresent()) {
 				stand = leadingSp0.get().getStand();
@@ -1299,8 +1293,8 @@ public class Layer implements Comparable<Layer> {
 
 		// Site Info is completed using the SUPPLIED order to determine primary species in VDYP7
 		Stand stand = determineLeadingSp0(0 /* first */, true);
-		Species siteSpecies = determineLeadingSp64(0 /* first */, true);
-		if (stand == null || siteSpecies == null) {
+		Species leadSp64 = determineLeadingSp64(0 /* first */, true);
+		if (stand == null || leadSp64 == null) {
 			logger.error("{}: leading site species could not be determined; cannot continue", this);
 
 			throw new PolygonValidationException(new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, this));
@@ -1311,26 +1305,25 @@ public class Layer implements Comparable<Layer> {
 				stand.getSpeciesGroup().getDominantHeight(), stand.getSpeciesGroup().getSiteIndex()
 		);
 		logger.debug(
-				"{}: located Site SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
-				siteSpecies.getSpeciesCode(), siteSpecies.getTotalAge(), siteSpecies.getDominantHeight(),
-				siteSpecies.getSiteIndex()
+				"{}: located Site SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this, leadSp64.getSpeciesCode(),
+				leadSp64.getTotalAge(), leadSp64.getDominantHeight(), leadSp64.getSiteIndex()
 		);
 
 		Species speciesGroup = stand.getSpeciesGroup();
 
-		if (siteSpecies.getTotalAge() != null && //
-				(siteSpecies.getDominantHeight() != null || siteSpecies.getSiteIndex() != null)) {
+		if (leadSp64.getTotalAge() != null && //
+				(leadSp64.getDominantHeight() != null || leadSp64.getSiteIndex() != null)) {
 
-			logger.debug("{}: leading site species {} already has site information", this, siteSpecies);
+			logger.debug("{}: leading site species {} already has site information", this, leadSp64);
 		} else {
-			siteSpecies.calculateUndefinedFieldValues(context);
-			speciesGroup.setSiteCurve(siteSpecies.getSiteCurve());
-			Species donorSpecies = getDonorSpeciesForSiteInfo(context, siteSpecies);
+			leadSp64.calculateUndefinedFieldValues(context);
+			speciesGroup.setSiteCurve(leadSp64.getSiteCurve());
+			Species donorSpecies = getDonorSpeciesForSiteInfo(context, leadSp64);
 			if (donorSpecies != null) {
-				copyDonorSpeciesSiteInfo(context, siteSpecies, donorSpecies, speciesGroup);
+				copyDonorSpeciesSiteInfo(context, leadSp64, donorSpecies, speciesGroup);
 			}
 		}
-		speciesGroup.updateSiteInfo(siteSpecies);
+		speciesGroup.updateSiteInfo(leadSp64);
 		speciesGroup.calculateUndefinedFieldValues(context);
 	}
 
