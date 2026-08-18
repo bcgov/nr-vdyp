@@ -49,7 +49,19 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 
 	@Computed
 	public Optional<Float> getComputedYearsAtBreastHeight() {
-		return this.getPrimarySite().flatMap(BaseVdypSite::getComputedYearsAtBreastHeight);
+		// Serves as a stand-in for a rare case where a combined species with no data is primary
+		// BHAge of the layer comess from the first alphabetical species genus with a BHAge in that case)
+		Optional<Float> layerBHAge = getPrimarySite().flatMap(VdypSite::getComputedYearsAtBreastHeight);
+		if (layerBHAge.isEmpty()) {
+			for (var spec : getOrderedSpecies()) {
+				Optional<Float> candidateBHAge = spec.getSite().flatMap(VdypSite::getComputedYearsAtBreastHeight);
+				if (candidateBHAge.isPresent()) {
+					layerBHAge = candidateBHAge;
+					break;
+				}
+			}
+		}
+		return layerBHAge;
 	}
 
 	@Computed
