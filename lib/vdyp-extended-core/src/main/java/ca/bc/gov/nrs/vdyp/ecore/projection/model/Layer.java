@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -856,11 +857,12 @@ public class Layer implements Comparable<Layer> {
 	 * alphabetical order until the requested species is located.
 	 * </ul>
 	 *
-	 * @param nthLeading the zero-based ordinal identifying the rank to be returned. If there are fewer species in the
-	 *                   layer than this number, <code>null</code> is returned.
+	 * @param nthLeading       the zero-based ordinal identifying the rank to be returned. If there are fewer species in
+	 *                         the layer than this number, <code>null</code> is returned.
+	 * @param useSuppliedOrder true if the unmodified supplied order is sdesired by the application.
 	 * @return as described
 	 */
-	public Stand determineLeadingSp0(Integer nthLeading) {
+	public Stand determineLeadingSp0(Integer nthLeading, boolean useSuppliedOrder) {
 		Stand stand = null;
 		if (siteSpecies != null) {
 			if (nthLeading < siteSpecies.size()) {
@@ -868,20 +870,23 @@ public class Layer implements Comparable<Layer> {
 			}
 		} else if (unsortedSiteSpecies != null) {
 
-			var leadingSp0 = unsortedSiteSpecies.stream().max(new Comparator<SiteSpecies>() {
-
-				@Override
-				public int compare(SiteSpecies o1, SiteSpecies o2) {
-					return (int) (o1.getTotalSpeciesPercent() - o2.getTotalSpeciesPercent());
-				}
-			});
-
+			Optional<SiteSpecies> leadingSp0;
+			if (useSuppliedOrder) {
+				leadingSp0 = unsortedSiteSpecies.stream().skip(nthLeading).findFirst();
+			} else {
+				leadingSp0 = unsortedSiteSpecies.stream()
+						.max(Comparator.comparingDouble(SiteSpecies::getTotalSpeciesPercent));
+			}
 			if (leadingSp0.isPresent()) {
 				stand = leadingSp0.get().getStand();
 			}
 		}
 
 		return stand;
+	}
+
+	public Stand determineLeadingSp0(Integer nthLeading) {
+		return determineLeadingSp0(nthLeading, false);
 	}
 
 	/**
@@ -891,19 +896,23 @@ public class Layer implements Comparable<Layer> {
 	 * @return as described. If <code>nthLeading</code> is not between 0 and the (number of species groups) - 1,
 	 *         inclusive, or the identified species group has no species, <code>null</code> is returned.
 	 */
-	public Species determineLeadingSp64(Integer nthLeading) {
+	public Species determineLeadingSp64(Integer nthLeading, boolean useSuppliedOrder) {
 
 		Species species = null;
 
 		if (unsortedSiteSpecies != null && nthLeading < unsortedSiteSpecies.size()) {
 
-			Stand stand = determineLeadingSp0(nthLeading);
-			if (stand != null && stand.getSpeciesByPercent().size() > 0) {
+			Stand stand = determineLeadingSp0(nthLeading, useSuppliedOrder);
+			if (stand != null && !stand.getSpeciesByPercent().isEmpty()) {
 				species = stand.getSpeciesByPercent().get(0);
 			}
 		}
 
 		return species;
+	}
+
+	public Species determineLeadingSp64(Integer nthLeading) {
+		return determineLeadingSp64(nthLeading, false);
 	}
 
 	/**
@@ -1283,9 +1292,10 @@ public class Layer implements Comparable<Layer> {
 			return;
 		}
 
-		Stand stand = determineLeadingSp0(0 /* first */);
-		Species siteSpecies = determineLeadingSp64(0 /* first */);
-		if (stand == null || siteSpecies == null) {
+		// Site Info is completed using the SUPPLIED order to determine primary species in VDYP7
+		Stand stand = determineLeadingSp0(0 /* first */, true);
+		Species leadSp64 = determineLeadingSp64(0 /* first */, true);
+		if (stand == null || leadSp64 == null) {
 			logger.error("{}: leading site species could not be determined; cannot continue", this);
 
 			throw new PolygonValidationException(new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, this));
@@ -1296,26 +1306,25 @@ public class Layer implements Comparable<Layer> {
 				stand.getSpeciesGroup().getDominantHeight(), stand.getSpeciesGroup().getSiteIndex()
 		);
 		logger.debug(
-				"{}: located Site SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
-				siteSpecies.getSpeciesCode(), siteSpecies.getTotalAge(), siteSpecies.getDominantHeight(),
-				siteSpecies.getSiteIndex()
+				"{}: located Site SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this, leadSp64.getSpeciesCode(),
+				leadSp64.getTotalAge(), leadSp64.getDominantHeight(), leadSp64.getSiteIndex()
 		);
 
 		Species speciesGroup = stand.getSpeciesGroup();
 
-		if (siteSpecies.getTotalAge() != null && //
-				(siteSpecies.getDominantHeight() != null || siteSpecies.getSiteIndex() != null)) {
+		if (leadSp64.getTotalAge() != null && //
+				(leadSp64.getDominantHeight() != null || leadSp64.getSiteIndex() != null)) {
 
-			logger.debug("{}: leading site species {} already has site information", this, siteSpecies);
+			logger.debug("{}: leading site species {} already has site information", this, leadSp64);
 		} else {
-			siteSpecies.calculateUndefinedFieldValues(context);
-			speciesGroup.setSiteCurve(siteSpecies.getSiteCurve());
-			Species donorSpecies = getDonorSpeciesForSiteInfo(context, siteSpecies);
+			leadSp64.calculateUndefinedFieldValues(context);
+			speciesGroup.setSiteCurve(leadSp64.getSiteCurve());
+			Species donorSpecies = getDonorSpeciesForSiteInfo(context, leadSp64);
 			if (donorSpecies != null) {
-				copyDonorSpeciesSiteInfo(context, siteSpecies, donorSpecies, speciesGroup);
+				copyDonorSpeciesSiteInfo(context, leadSp64, donorSpecies, speciesGroup);
 			}
 		}
-		speciesGroup.updateSiteInfo(siteSpecies);
+		speciesGroup.updateSiteInfo(leadSp64);
 		speciesGroup.calculateUndefinedFieldValues(context);
 	}
 

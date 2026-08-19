@@ -103,12 +103,94 @@ class VDYPUserServiceTest {
 		entity.setVdypUserGUID(internalID);
 		when(userRepository.findByOIDC("1234567890@fakeid")).thenReturn(Optional.of(entity));
 
+		Set<String> roles = Set.of("User");
+		when(identity.getRoles()).thenReturn(roles);
+		when(userTypeLookup.getUserTypeCodeFromExternalRoles(roles)).thenReturn(null);
+
 		VDYPUserModel result = service.ensureVDYPUserFromSecurityIdentity(identity);
 
 		assertThat(result.getVdypUserGUID()).isEqualTo(internalID.toString());
 
 		verify(userRepository).findByOIDC("1234567890@fakeid");
-		verifyNoInteractions(userTypeLookup);
+	}
+
+	@Test
+	void ensureVDYPUserFromSecurityIdentity_updatesUserTypeCode_onExistingUser_whenRoleChanged() {
+		when(identity.isAnonymous()).thenReturn(false);
+		when(identity.getPrincipal()).thenReturn(jwt);
+		when(jwt.getName()).thenReturn("1234567890@fakeid");
+		when(jwt.getClaim("identity_provider")).thenReturn(null);
+
+		VDYPUserEntity entity = new VDYPUserEntity();
+		UUID internalID = UUID.randomUUID();
+		entity.setVdypUserGUID(internalID);
+		when(userRepository.findByOIDC("1234567890@fakeid")).thenReturn(Optional.of(entity));
+
+		Set<String> roles = Set.of("Admin");
+		when(identity.getRoles()).thenReturn(roles);
+
+		UserTypeCodeModel adminType = new UserTypeCodeModel();
+		adminType.setCode(UserTypeCodeModel.ADMIN);
+		when(userTypeLookup.getUserTypeCodeFromExternalRoles(roles)).thenReturn(adminType);
+
+		var adminEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.UserTypeCodeEntity();
+		adminEntity.setCode(UserTypeCodeModel.ADMIN);
+		when(userTypeLookup.requireEntity(UserTypeCodeModel.ADMIN)).thenReturn(adminEntity);
+
+		VDYPUserModel result = service.ensureVDYPUserFromSecurityIdentity(identity);
+
+		assertThat(result.getUserTypeCode().getCode()).isEqualTo(UserTypeCodeModel.ADMIN);
+	}
+
+	@Test
+	void ensureVDYPUserFromSecurityIdentity_doesNotUpdateUserTypeCode_onExistingUser_whenNoValidRole() {
+		when(identity.isAnonymous()).thenReturn(false);
+		when(identity.getPrincipal()).thenReturn(jwt);
+		when(jwt.getName()).thenReturn("1234567890@fakeid");
+		when(jwt.getClaim("identity_provider")).thenReturn(null);
+
+		VDYPUserEntity entity = new VDYPUserEntity();
+		UUID internalID = UUID.randomUUID();
+		entity.setVdypUserGUID(internalID);
+		var existingType = new ca.bc.gov.nrs.vdyp.backend.data.entities.UserTypeCodeEntity();
+		existingType.setCode(UserTypeCodeModel.USER);
+		entity.setUserTypeCode(existingType);
+		when(userRepository.findByOIDC("1234567890@fakeid")).thenReturn(Optional.of(entity));
+
+		Set<String> roles = Set.of("UnknownRole");
+		when(identity.getRoles()).thenReturn(roles);
+		when(userTypeLookup.getUserTypeCodeFromExternalRoles(roles)).thenReturn(null);
+
+		VDYPUserModel result = service.ensureVDYPUserFromSecurityIdentity(identity);
+
+		assertThat(result.getUserTypeCode().getCode()).isEqualTo(UserTypeCodeModel.USER);
+	}
+
+	@Test
+	void ensureVDYPUserFromSecurityIdentity_doesNotUpdateUserTypeCode_onExistingUser_whenSystemRole() {
+		when(identity.isAnonymous()).thenReturn(false);
+		when(identity.getPrincipal()).thenReturn(jwt);
+		when(jwt.getName()).thenReturn("1234567890@fakeid");
+		when(jwt.getClaim("identity_provider")).thenReturn(null);
+
+		VDYPUserEntity entity = new VDYPUserEntity();
+		UUID internalID = UUID.randomUUID();
+		entity.setVdypUserGUID(internalID);
+		var existingType = new ca.bc.gov.nrs.vdyp.backend.data.entities.UserTypeCodeEntity();
+		existingType.setCode(UserTypeCodeModel.USER);
+		entity.setUserTypeCode(existingType);
+		when(userRepository.findByOIDC("1234567890@fakeid")).thenReturn(Optional.of(entity));
+
+		Set<String> roles = Set.of("System");
+		when(identity.getRoles()).thenReturn(roles);
+
+		UserTypeCodeModel systemType = new UserTypeCodeModel();
+		systemType.setCode(UserTypeCodeModel.SYSTEM);
+		when(userTypeLookup.getUserTypeCodeFromExternalRoles(roles)).thenReturn(systemType);
+
+		VDYPUserModel result = service.ensureVDYPUserFromSecurityIdentity(identity);
+
+		assertThat(result.getUserTypeCode().getCode()).isEqualTo(UserTypeCodeModel.USER);
 	}
 
 	@Test

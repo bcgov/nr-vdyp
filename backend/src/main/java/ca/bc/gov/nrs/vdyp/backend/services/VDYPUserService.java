@@ -84,54 +84,64 @@ public class VDYPUserService {
 			return null;
 		}
 		Principal identityToken = identity.getPrincipal();
-		if (identityToken instanceof JsonWebToken jwt) {
-			String oidcId = jwt.getName();
-			logger.debug("Checking for user with oidcId {}", oidcId);
-			String identityProviderClaim = jwt.getClaim("identity_provider");
-			IdentityProviderCodeModel identityProviderCode = identityProviderLookup
-					.getIdentityProviderCodeFromClaim(identityProviderClaim).orElse(null);
-
-			Optional<VDYPUserEntity> userOption = userRepository.findByOIDC(oidcId);
-			if (userOption.isEmpty()) {
-				Set<String> roles = identity.getRoles();
-				UserTypeCodeModel userType = userTypeLookup.getUserTypeCodeFromExternalRoles(roles);
-				if (userType == null) {
-					logger.debug("No valid role found");
-					return null;
-				}
-				if (!userType.isSystemUser()) {
-					String firstName = jwt.getClaim("given_name");
-					String lastName = jwt.getClaim("family_name");
-					String displayName = jwt.getClaim("display_name");
-					String email = jwt.getClaim("email");
-
-					VDYPUserModel newUser = new VDYPUserModel();
-					newUser.setUserTypeCode(userType);
-					newUser.setOidcGUID(oidcId);
-					newUser.setFirstName(firstName);
-					newUser.setLastName(lastName);
-					newUser.setDisplayName(displayName);
-					newUser.setEmail(email);
-					newUser.setIdentityProviderCode(identityProviderCode);
-
-					logger.debug(
-							"Creating new user with oidcId {}, firstName {}, lastName {}, usertypeCode {}", oidcId,
-							firstName, lastName, newUser.getUserTypeCode().getCode()
-					);
-
-					return createUser(newUser);
-				} else {
-					return getSystemUser();
-				}
-			}
-			VDYPUserEntity existingUser = userOption.get();
-			if (identityProviderCode != null) {
-				existingUser
-						.setIdentityProviderCode(identityProviderLookup.requireEntity(identityProviderCode.getCode()));
-			}
-			return assembler.toModel(existingUser);
-		} else {
+		if (! (identityToken instanceof JsonWebToken jwt)) {
 			return null;
+		}
+
+		String oidcId = jwt.getName();
+		logger.debug("Checking for user with oidcId {}", oidcId);
+		IdentityProviderCodeModel identityProviderCode = identityProviderLookup
+				.getIdentityProviderCodeFromClaim(jwt.getClaim("identity_provider")).orElse(null);
+
+		Optional<VDYPUserEntity> userOption = userRepository.findByOIDC(oidcId);
+		if (userOption.isEmpty()) {
+			return createUserFromJwt(jwt, oidcId, identity.getRoles(), identityProviderCode);
+		}
+
+		VDYPUserEntity existingUser = userOption.get();
+		syncExistingUser(existingUser, identity.getRoles(), identityProviderCode);
+		return assembler.toModel(existingUser);
+	}
+
+	private VDYPUserModel createUserFromJwt(
+			JsonWebToken jwt, String oidcId, Set<String> roles, IdentityProviderCodeModel identityProviderCode
+	) {
+		UserTypeCodeModel userType = userTypeLookup.getUserTypeCodeFromExternalRoles(roles);
+		if (userType == null) {
+			logger.debug("No valid role found");
+			return null;
+		}
+		if (userType.isSystemUser()) {
+			return getSystemUser();
+		}
+
+		VDYPUserModel newUser = new VDYPUserModel();
+		newUser.setUserTypeCode(userType);
+		newUser.setOidcGUID(oidcId);
+		newUser.setFirstName(jwt.getClaim("given_name"));
+		newUser.setLastName(jwt.getClaim("family_name"));
+		newUser.setDisplayName(jwt.getClaim("display_name"));
+		newUser.setEmail(jwt.getClaim("email"));
+		newUser.setIdentityProviderCode(identityProviderCode);
+
+		logger.debug(
+				"Creating new user with oidcId {}, firstName {}, lastName {}, usertypeCode {}", oidcId,
+				newUser.getFirstName(), newUser.getLastName(), newUser.getUserTypeCode().getCode()
+		);
+
+		return createUser(newUser);
+	}
+
+	private void syncExistingUser(
+			VDYPUserEntity existingUser, Set<String> roles, IdentityProviderCodeModel identityProviderCode
+	) {
+		if (identityProviderCode != null) {
+			existingUser.setIdentityProviderCode(identityProviderLookup.requireEntity(identityProviderCode.getCode()));
+		}
+
+		UserTypeCodeModel userType = userTypeLookup.getUserTypeCodeFromExternalRoles(roles);
+		if (userType != null && !userType.isSystemUser()) {
+			existingUser.setUserTypeCode(userTypeLookup.requireEntity(userType.getCode()));
 		}
 	}
 

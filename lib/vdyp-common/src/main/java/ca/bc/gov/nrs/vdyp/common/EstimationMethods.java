@@ -566,7 +566,6 @@ public class EstimationMethods {
 	 * @param adjustCloseUtil
 	 * @param volumeGroup
 	 * @param hlSp
-	 * @param wholeStemUtilizationComponentMap
 	 * @param quadMeanDiameterUtil
 	 * @param baseAreaUtil
 	 * @param wholeStemVolumeUtil
@@ -866,7 +865,7 @@ public class EstimationMethods {
 	 * @param estimateBasalAreaYieldCoefficients estimate basal area yield coefficients
 	 * @param dominantHeight                     dominant height (m)
 	 * @param breastHeightAge                    breast height age (years)
-	 * @param veteranBaseArea                    basal area of overstory (>= 0)
+	 * @param veteranBasalArea                   basal area of overstory (>= 0)
 	 * @param fullOccupancy                      if true, the empirically fitted curve is increased to become a full
 	 *                                           occupancy curve. If false, BAP is for mean conditions
 	 * @param upperBoundBasalArea                limit on the resulting basal area
@@ -1061,7 +1060,6 @@ public class EstimationMethods {
 	 * EMP107 - estimate DQ yield for the primary layer (from IPSJF161.doc)
 	 *
 	 * @param coefficients               coefficients weighted by species and decay bec zone
-	 * @param controlVariable2Setting    the value of control variable 2
 	 * @param dominantHeight             dominant height (m)
 	 * @param breastHeightAge            breast height age (years)
 	 * @param veteranBaseArea            basal area of overstory (>= 0)
@@ -1285,7 +1283,7 @@ public class EstimationMethods {
 	 *
 	 * @param <S>
 	 *
-	 * @param species                   Species with ALL component set for Lorey height and quadratic mean diameter
+	 * @param spec                      Species with ALL component set for Lorey height and quadratic mean diameter
 	 * @param quadMeanDiameterSpecSmall Small component quadratic mean diameter
 	 * @return
 	 */

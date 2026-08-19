@@ -85,7 +85,7 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 	public List<VriSite> getPriorityOrderedSites() {
 		var result = new LinkedList<VriSite>();
 		Optional<VriSite> primarySite = getPrimarySite();
-		for (VriSpecies species : this.getSpecies().values()) {
+		for (VriSpecies species : getOrderedSpecies()) {
 			VriSite check = species.getSite().orElse(null);
 			if (!Objects.equals(primarySite.orElse(null), check)) {
 				result.addLast(check);
