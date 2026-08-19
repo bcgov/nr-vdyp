@@ -92,8 +92,7 @@ class VDYPJobFailedListenerTest {
 		when(jobExecution.getStepExecutions()).thenReturn(List.of());
 		when(jobExecution.getAllFailureExceptions()).thenReturn(List.of());
 
-		doThrow(new RuntimeException("backend unreachable")).when(vdypClient)
-				.markComplete(any(), eq(false), any());
+		doThrow(new RuntimeException("backend unreachable")).when(vdypClient).markComplete(any(), eq(false), any());
 
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
 
