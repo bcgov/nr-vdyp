@@ -680,6 +680,20 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void test1182() throws IOException, ResourceParseException, CsvException {
+		logger.info("Starting vdyp-1182");
+		// Ignore site index, something about polygon
+		Pattern ignorePattern = Pattern.compile("PRJ_SITE_INDEX");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1182/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1182", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void testStockabilityEdgeCases() throws IOException, ResourceParseException, URISyntaxException, CsvException {
 		logger.info("Starting vdyp-1178");
 		// Two of these polygons do not have enough information to produce a proper projection for the primary species,

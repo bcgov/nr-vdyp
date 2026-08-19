@@ -68,6 +68,123 @@ class VdypLayerTest {
 	}
 
 	@Test
+	void getComputedYearsAtBreastHeightUsesPrimarySite() {
+		var result = VdypLayer.build(lb -> {
+			lb.polygonIdentifier("Test", 2024);
+			lb.layerType(LayerType.PRIMARY);
+			lb.primaryGenus("PL");
+
+			lb.addSpecies(sb -> {
+				sb.genus("PL", 12);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.ageTotal(42f);
+					ib.yearsToBreastHeight(2f);
+					ib.siteCurveNumber(0);
+				});
+			});
+
+			lb.addSpecies(sb -> {
+				sb.genus("B", 3);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.ageTotal(75f);
+					ib.yearsToBreastHeight(5f);
+					ib.siteCurveNumber(0);
+				});
+			});
+		});
+
+		assertThat(result.getComputedYearsAtBreastHeight(), is(Optional.of(40f)));
+	}
+
+	@Test
+	void getComputedYearsAtBreastHeightUsesFirstAlphabeticalSpeciesWhenPrimarySiteCannotCompute() {
+		var result = VdypLayer.build(lb -> {
+			lb.polygonIdentifier("Test", 2024);
+			lb.layerType(LayerType.PRIMARY);
+			lb.primaryGenus("C");
+
+			lb.addSpecies(sb -> {
+				sb.genus("C", 6);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+			});
+
+			lb.addSpecies(sb -> {
+				sb.genus("PL", 12);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.ageTotal(75f);
+					ib.yearsToBreastHeight(5f);
+					ib.siteCurveNumber(0);
+				});
+			});
+
+			lb.addSpecies(sb -> {
+				sb.genus("B", 3);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.ageTotal(42f);
+					ib.yearsToBreastHeight(2f);
+					ib.siteCurveNumber(0);
+				});
+			});
+		});
+
+		assertThat(result.getComputedYearsAtBreastHeight(), is(Optional.of(40f)));
+	}
+
+	@Test
+	void getComputedYearsAtBreastHeightIsEmptyWhenNoSpeciesCanCompute() {
+		var result = VdypLayer.build(lb -> {
+			lb.polygonIdentifier("Test", 2024);
+			lb.layerType(LayerType.PRIMARY);
+			lb.primaryGenus("PL");
+
+			lb.addSpecies(sb -> {
+				sb.genus("PL", 12);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.ageTotal(42f);
+					ib.siteCurveNumber(0);
+				});
+			});
+
+			lb.addSpecies(sb -> {
+				sb.genus("B", 3);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.yearsToBreastHeight(2f);
+					ib.siteCurveNumber(0);
+				});
+			});
+		});
+
+		assertThat(result.getComputedYearsAtBreastHeight(), is(Optional.empty()));
+	}
+
+	@Test
 	void buildForPolygon() {
 
 		Map<String, Object> controlMap = new HashMap<>();

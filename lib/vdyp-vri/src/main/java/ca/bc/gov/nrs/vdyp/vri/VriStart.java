@@ -485,11 +485,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		// HLPL1
 		// EMP050 Method 1
-		// Note: this seems to be what happens in VDY7. All the values credited with calculationSite are actullly
-		// assigned to a common variable for the layer
-		// Confirmation of this behaviro is asssigned to FIXME VDYP-1048
 		var primaryHeight = estimationMethods.estimatePrimaryHeightFromLeadHeight(
-				leadHeight, calculationSite.getSiteGenus(), bec.getRegion(), primarySpeciesDensity
+				leadHeight, primarySiteIn.getSiteGenus(), bec.getRegion(), primarySpeciesDensity
 		);
 
 		float layerQuadMeanDiameter = quadMeanDiameter(primaryBaseArea, primaryLayerDensity);
