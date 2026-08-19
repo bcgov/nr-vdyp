@@ -1,9 +1,11 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -75,6 +77,27 @@ class VDYPJobFailedListenerTest {
 		verify(vdypClient, atLeastOnce()).markComplete(eq("test-proj-123"), eq(false), progressCaptor.capture());
 		assertEquals(BatchConstants.FailureType.INPUT, progressCaptor.getValue().batchFailureTypeCode());
 		assertEquals("Input failed", progressCaptor.getValue().failureMessage());
+	}
+
+	@Test
+	void testAfterJob_swallowsExceptionFromVdypClient_soCompositeListenerChainContinues() {
+		JobParameters jobParameters = new JobParametersBuilder().addLong(BatchConstants.Partition.NUMBER, 4L)
+				.addString(BatchConstants.Job.GUID, "test-guid-123")
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, "test-proj-123").toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(1L);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.FAILED);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(jobExecution.getStepExecutions()).thenReturn(List.of());
+		when(jobExecution.getAllFailureExceptions()).thenReturn(List.of());
+
+		doThrow(new RuntimeException("backend unreachable")).when(vdypClient)
+				.markComplete(any(), eq(false), any());
+
+		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+
+		verify(vdypClient, atLeastOnce()).markComplete(eq("test-proj-123"), eq(false), any());
 	}
 
 	@ParameterizedTest
