@@ -1,8 +1,9 @@
 import {
   getAllRunningProjections as apiGetAllRunningProjections,
   getThreadCapacity as apiGetThreadCapacity,
+  getStorageStatus as apiGetStorageStatus,
 } from '@/services/apiActions'
-import type { ProjectionModel, VDYPUserModel } from '@/services/vdyp-api'
+import type { ProjectionModel, StorageStatusModel, VDYPUserModel } from '@/services/vdyp-api'
 import type { AdminProjection, UserTypeCode } from '@/interfaces/interfaces'
 import { mapProjectionStatus } from '@/services/projectionService'
 import { PROJECTION_STATUS } from '@/constants/constants'
@@ -62,4 +63,13 @@ export const fetchAllRunningProjections = async (): Promise<AdminProjection[]> =
  */
 export const fetchThreadCapacity = async (): Promise<number> => {
   return apiGetThreadCapacity()
+}
+
+/**
+ * (Admin Only) Fetches the batch service's PVC storage status (percent full, out-of-spec flag),
+ * used to show system storage health on the Admin Dashboard.
+ * @returns A promise that resolves to the storage status.
+ */
+export const fetchStorageStatus = async (): Promise<StorageStatusModel> => {
+  return apiGetStorageStatus()
 }

@@ -24,6 +24,34 @@
       <span class="pill-value">{{ stuckCount }}</span>
     </div>
 
+    <v-tooltip location="top">
+      <template #activator="{ props: tooltipProps }">
+        <div
+          class="summary-pill summary-pill--storage"
+          :class="{ 'summary-pill--storage-alert': storageOutOfSpec }"
+          v-bind="tooltipProps"
+        >
+          <div class="pill-header">
+            <span class="pill-label">System Storage</span>
+            <span class="pill-value">{{ storagePercent }}%</span>
+          </div>
+          <v-progress-linear
+            :model-value="storagePercent"
+            :color="storageOutOfSpec ? 'var(--progress-alert-color)' : 'var(--theme-primary-color, #003366)'"
+            bg-color="var(--progress-track-color)"
+            :bg-opacity="1"
+            height="12"
+            rounded="pill"
+            class="thread-progress-bar"
+          />
+        </div>
+      </template>
+      <span>
+        {{ formatBytes(storageUsedBytes) }} / {{ formatBytes(storageTotalBytes) }} used
+        <template v-if="storageOutOfSpec"> — Out of Spec</template>
+      </span>
+    </v-tooltip>
+
     <div class="summary-pill summary-pill--threads">
       <div class="pill-header">
         <span class="pill-label">Threads in Use</span>
@@ -32,7 +60,7 @@
       <v-progress-linear
         :model-value="threadUsagePercent"
         color="var(--theme-primary-color, #003366)"
-        bg-color="#E5E7EB"
+        bg-color="var(--progress-track-color)"
         :bg-opacity="1"
         height="12"
         rounded="pill"
@@ -52,20 +80,36 @@ defineProps<{
   threadUsagePercent: number
   stuckCount: number
   queuedCount: number
+  storagePercent: number
+  storageUsedBytes: number
+  storageTotalBytes: number
+  storageOutOfSpec: boolean
 }>()
+
+const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
+
+/**
+ * Formats a byte count as a human-readable string for the hover tooltip, auto-scaling to the
+ * smallest unit that keeps at least one significant digit.
+ */
+const formatBytes = (bytes: number): string => {
+  if (bytes <= 0) return '0 B'
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), BYTE_UNITS.length - 1)
+  const value = bytes / 1024 ** exponent
+  return `${exponent === 0 ? value : value.toFixed(2)} ${BYTE_UNITS[exponent]}`
+}
 </script>
 
 <style scoped>
 .resource-summary {
+  --progress-track-color: #e5e7eb;
+  --progress-alert-color: var(--support-color-danger, #d32f2f);
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 30px;
   padding: 0 15px 20px 24px;
-  /* Offsets this row down to align with the User Type <select> box's top (not the
-     "User Type" label above it): matches the label's own rendered height
-     (font-size * line-height + padding-bottom) plus the filter-field gap that
-     separates the label from the select, so it tracks those tokens if they change. */
+  /* Drops this row to align with the User Type <select>'s top, not its label above it. */
   margin-top: calc(var(--typography-font-size-label) * 1.5 + 4px + var(--layout-padding-xsmall) - 3px);
   border-radius: 4px;
 }
@@ -85,7 +129,8 @@ defineProps<{
   gap: var(--layout-margin-small, 8px);
 }
 
-.summary-pill--threads {
+.summary-pill--threads,
+.summary-pill--storage {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -93,6 +138,10 @@ defineProps<{
   min-width: 189px;
   background: none;
   border-radius: 0;
+}
+
+.summary-pill--storage-alert .pill-value {
+  color: var(--progress-alert-color);
 }
 
 .pill-header {
@@ -142,12 +191,14 @@ defineProps<{
   color: var(--typography-color-primary);
 }
 
-.summary-pill--threads .pill-label {
+.summary-pill--threads .pill-label,
+.summary-pill--storage .pill-label {
   font: var(--typography-regular-label);
   color: var(--typography-color-primary);
 }
 
-.summary-pill--threads .pill-value {
+.summary-pill--threads .pill-value,
+.summary-pill--storage .pill-value {
   font: var(--typography-regular-label);
   color: var(--typography-color-secondary, #4a5565);
   text-align: right;
@@ -159,32 +210,19 @@ defineProps<{
   transform: translateY(-2px);
 }
 
-/* Below the card-view breakpoint (matches BREAKPOINT.CARD_VIEW in
-   AdminDashboardView.vue), this row must always sit on its own line below
-   "User Type", never beside it. Relying on flex-wrap's organic wrapping
-   (i.e. only wrapping once "User Type" + this row's natural width no longer
-   fit the line) is not reliable across the whole range: at some widths in
-   this range (e.g. 820px) there's just enough spare room for both to still
-   fit on one line, which also isn't future-proof once System Storage (a
-   later ticket) adds a 4th item here and further changes the natural width.
-   flex-basis: 100% forces this row to claim the full line width, which
-   guarantees flex-wrap pushes it onto its own line for every width in this
-   range regardless of its actual content width. */
+/* Card-view breakpoint (matches BREAKPOINT.CARD_VIEW in AdminDashboardView.vue): this
+   row must always wrap onto its own line below "User Type". Natural flex-wrap isn't
+   reliable for that at every width in this range (e.g. 820px can still fit both on one
+   line), so flex-basis: 100% forces the wrap unconditionally. */
 @media (max-width: 1025px) {
   .resource-summary {
     flex-basis: 100%;
     padding-left: 0;
     padding-right: 0;
-    /* This 20px bottom padding stacked with .filter-row's margin-bottom
-       (AdminDashboardView.vue) to push the next row further away than
-       intended, so it's dropped here. */
+    /* Avoids stacking with .filter-row's margin-bottom (AdminDashboardView.vue). */
     padding-bottom: 0;
-    /* The margin-top above only exists to line this row up with the User
-       Type select box when they share a row. In the card-view range the
-       User Type field and this row are always stacked (one per line), so
-       the offset is unwanted here — it would otherwise inflate the User
-       Type -> Total Running gap beyond the rhythm used elsewhere in this
-       column. */
+    /* margin-top above only aligns this row with the User Type <select> when they
+       share a line; here they're always stacked, so drop it to keep normal rhythm. */
     margin-top: 0;
   }
 }

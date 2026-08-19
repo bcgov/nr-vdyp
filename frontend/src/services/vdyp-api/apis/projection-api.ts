@@ -11,6 +11,7 @@ import type {
   ModelParameters,
   CancelProjectionRequest,
   ThreadCapacityModel,
+  StorageStatusModel,
 } from '../models'
 import { ParameterNamesEnum } from '../models'
 import { env } from '@/env'
@@ -113,6 +114,49 @@ export const ProjectionApiAxiosParamCreator = function (
       options: AxiosRequestConfig = {},
     ): Promise<RequestArgs> => {
       const localVarPath = `/api/v8/projection/thread-capacity`
+      const localVarUrlObj = new URL(localVarPath, env.VITE_API_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+      const localVarRequestOptions: AxiosRequestConfig = {
+        method: 'GET',
+        ...baseOptions,
+        ...options,
+      }
+      const localVarHeaderParameter = {} as Record<string, string>
+      const localVarQueryParameter = {} as Record<string, string>
+
+      const query = new URLSearchParams(localVarUrlObj.search)
+      for (const key in localVarQueryParameter) {
+        query.set(key, localVarQueryParameter[key])
+      }
+      for (const key in options.params) {
+        query.set(key, options.params[key])
+      }
+      localVarUrlObj.search = new URLSearchParams(query).toString()
+      const headersFromBaseOptions = baseOptions?.headers ?? {}
+      localVarRequestOptions.headers = {
+        ...localVarHeaderParameter,
+        ...headersFromBaseOptions,
+        ...options.headers,
+      }
+
+      return {
+        url:
+          localVarUrlObj.pathname + localVarUrlObj.search + localVarUrlObj.hash,
+        options: localVarRequestOptions,
+      }
+    },
+
+    /**
+     * (Admin Only) Get the batch service's PVC storage status
+     * @GET /api/v8/projection/storage-status
+     */
+    getStorageStatus: async (
+      options: AxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      const localVarPath = `/api/v8/projection/storage-status`
       const localVarUrlObj = new URL(localVarPath, env.VITE_API_URL)
       let baseOptions
       if (configuration) {
@@ -925,6 +969,30 @@ export const ProjectionApiFp = function (configuration?: Configuration) {
       }
     },
 
+    async getStorageStatus(
+      options?: AxiosRequestConfig,
+    ): Promise<
+      (
+        axios?: AxiosInstance,
+        basePath?: string,
+      ) => Promise<AxiosResponse<StorageStatusModel>>
+    > {
+      const localVarAxiosArgs =
+        await ProjectionApiAxiosParamCreator(configuration).getStorageStatus(
+          options,
+        )
+      return (
+        axios: AxiosInstance = globalAxios,
+        basePath: string = BASE_PATH,
+      ) => {
+        const axiosRequestArgs: AxiosRequestConfig = {
+          ...localVarAxiosArgs.options,
+          url: basePath + localVarAxiosArgs.url,
+        }
+        return axios.request(axiosRequestArgs)
+      }
+    },
+
     async createProjection(
       parameters: Parameters,
       modelParameters?: ModelParameters,
@@ -1330,6 +1398,14 @@ export const ProjectionApiFactory = function (
         .then((request) => request(axios, basePath))
     },
 
+    async getStorageStatus(
+      options?: AxiosRequestConfig,
+    ): Promise<AxiosResponse<StorageStatusModel>> {
+      return ProjectionApiFp(configuration)
+        .getStorageStatus(options)
+        .then((request) => request(axios, basePath))
+    },
+
     async createProjection(
       parameters: Parameters,
       modelParameters?: ModelParameters,
@@ -1507,6 +1583,17 @@ export class ProjectionApi extends BaseAPI {
   ): Promise<AxiosResponse<ThreadCapacityModel>> {
     return ProjectionApiFp(this.configuration)
       .getThreadCapacity(options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   * (Admin Only) Get the batch service's PVC storage status
+   */
+  public async getStorageStatus(
+    options?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<StorageStatusModel>> {
+    return ProjectionApiFp(this.configuration)
+      .getStorageStatus(options)
       .then((request) => request(this.axios, this.basePath))
   }
 
