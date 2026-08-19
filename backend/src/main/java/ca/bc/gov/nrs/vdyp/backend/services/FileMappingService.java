@@ -65,6 +65,10 @@ public class FileMappingService {
 			throw ProjectionFileUploadException.invalidCsv("CSV upload file is required.");
 		}
 
+		logger.info(
+				"Attempting validation of upload of file.fileName {}, file.contentType {}, file.size {}",
+				file.fileName(), file.contentType(), file.size()
+		);
 		String fileSetTypeCode = projectionFileSetEntity.getFileSetTypeCode() == null ? null
 				: projectionFileSetEntity.getFileSetTypeCode().getCode();
 		ValidatedUpload upload = csvUploadValidator.validateMetadata(file.fileName(), file.contentType(), file.size());

@@ -42,13 +42,16 @@ public class CsvUploadValidator {
 		String safeFilename = validateFilename(filename);
 		String normalizedContentType = validateContentType(contentType);
 		if (declaredContentLength < 0) {
-			throw ProjectionFileUploadException.invalidCsv(CONTENT_TYPE_NOT_SUPPORTED_ERROR_MESSAGE);
+
+			throw ProjectionFileUploadException
+					.invalidCsv(CONTENT_TYPE_NOT_SUPPORTED_ERROR_MESSAGE + " declared length < 0");
 		}
 		if (declaredContentLength == 0) {
-			throw ProjectionFileUploadException.invalidCsv(CSV_CONTENT_INVALID_ERROR_MESSAGE);
+			throw ProjectionFileUploadException.invalidCsv(CSV_CONTENT_INVALID_ERROR_MESSAGE + " declared length == 0");
 		}
 		if (declaredContentLength > config.maxFileSizeBytes()) {
-			throw ProjectionFileUploadException.payloadTooLarge(CSV_CONTENT_INVALID_ERROR_MESSAGE);
+			throw ProjectionFileUploadException
+					.payloadTooLarge(CSV_CONTENT_INVALID_ERROR_MESSAGE + " declared length < 0");
 		}
 		return new ValidatedUpload(safeFilename, declaredContentLength, normalizedContentType);
 	}
@@ -104,7 +107,10 @@ public class CsvUploadValidator {
 	private String validateContentType(String contentType) throws ProjectionFileUploadException {
 		String normalized = normalizedContentType(contentType);
 		if (!ALLOWED_CONTENT_TYPES.contains(normalized)) {
-			throw ProjectionFileUploadException.unsupportedMediaType(CONTENT_TYPE_NOT_SUPPORTED_ERROR_MESSAGE);
+			throw ProjectionFileUploadException.unsupportedMediaType(
+					CONTENT_TYPE_NOT_SUPPORTED_ERROR_MESSAGE + contentType + " normalized " + normalized
+							+ " not in allowed list"
+			);
 		}
 		return normalized;
 	}
