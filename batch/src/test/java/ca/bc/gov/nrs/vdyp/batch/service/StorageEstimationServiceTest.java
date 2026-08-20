@@ -47,6 +47,7 @@ class StorageEstimationServiceTest {
 	void setUp() {
 		batchProperties = new BatchProperties();
 		batchProperties.getStorage().setThresholdPercent(115);
+		batchProperties.getStorage().setMinPercentFullForOutOfSpec(50);
 		batchProperties.getStorage().setBytesPerCompleteLine(200);
 		batchProperties.getStorage().setFallbackYearRange(200);
 		batchProperties.getStorage().setFallbackAgeIncrement(10);
@@ -157,10 +158,23 @@ class StorageEstimationServiceTest {
 		assertEquals(16000L, status.expectedBytes());
 	}
 
-	@ParameterizedTest(name = "actual={0} threshold={1} outOfSpec={2}")
-	@CsvSource({ "1150, 115, false", "1151, 115, true", "900, 115, false" })
-	void testIsOutOfSpec(long actualBytes, int thresholdPercent, boolean expectedOutOfSpec) {
-		assertEquals(expectedOutOfSpec, service.isOutOfSpec(1000L, actualBytes, thresholdPercent));
+	@ParameterizedTest(name = "actual={0} threshold={1} percentFull={2} minPercentFull={3} outOfSpec={4}")
+	@CsvSource(
+		{ "1150, 115, 100, 50, false", // at the ratio boundary, PVC well above the floor -> not out of spec
+				"1151, 115, 100, 50, true", // just over the ratio boundary, PVC well above the floor -> out of spec
+				"900, 115, 100, 50, false", // under the ratio boundary -> not out of spec
+				"1151, 115, 50, 50, true", // exactly at the percent-full floor -> ratio check still applies
+				"1151, 115, 49, 50, false", // just under the percent-full floor -> gated off despite a bad ratio
+				"1000000, 115, 5, 50, false" } // wildly over ratio, but PVC nearly empty -> gated off
+	)
+	void testIsOutOfSpec(
+			long actualBytes, int thresholdPercent, double percentFull, int minPercentFullForOutOfSpec,
+			boolean expectedOutOfSpec
+	) {
+		assertEquals(
+				expectedOutOfSpec,
+				service.isOutOfSpec(1000L, actualBytes, thresholdPercent, percentFull, minPercentFullForOutOfSpec)
+		);
 	}
 
 	@Test

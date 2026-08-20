@@ -46,17 +46,30 @@ public class StorageEstimationService {
 	public StorageStatus computeStorageStatus() {
 		long expectedBytes = estimateExpectedFootprintBytes();
 		StorageUsage usage = readActualUsage();
-		int thresholdPercent = batchProperties.getStorage().getThresholdPercent();
-		boolean outOfSpec = isOutOfSpec(expectedBytes, usage.usedBytes(), thresholdPercent);
+		BatchProperties.StorageProperties storage = batchProperties.getStorage();
+		int thresholdPercent = storage.getThresholdPercent();
 		double percentFull = usage.totalBytes() == 0 ? 0.0 : (usage.usedBytes() * 100.0) / usage.totalBytes();
+		boolean outOfSpec = isOutOfSpec(
+				expectedBytes, usage.usedBytes(), thresholdPercent, percentFull, storage.getMinPercentFullForOutOfSpec()
+		);
 
 		return new StorageStatus(
 				percentFull, usage.usedBytes(), usage.totalBytes(), expectedBytes, outOfSpec, thresholdPercent
 		);
 	}
 
-	boolean isOutOfSpec(long expectedBytes, long actualUsedBytes, int thresholdPercent) {
-		if (expectedBytes <= 0) {
+	/**
+	 * expectedBytes only accounts for currently running jobs, while actualUsedBytes is the PVC's total real usage
+	 * (which may include leftover/orphaned data from jobs that didn't clean up, unrelated to any job running now). That
+	 * mismatch can make the expected/actual ratio look arbitrarily bad even when the PVC is nearly empty, so the ratio
+	 * check only applies once we're already meaningfully full - below that, running out of space isn't a near-term risk
+	 * regardless of the ratio.
+	 */
+	boolean isOutOfSpec(
+			long expectedBytes, long actualUsedBytes, int thresholdPercent, double percentFull,
+			int minPercentFullForOutOfSpec
+	) {
+		if (expectedBytes <= 0 || percentFull < minPercentFullForOutOfSpec) {
 			return false;
 		}
 		return actualUsedBytes > (expectedBytes * thresholdPercent) / 100.0;

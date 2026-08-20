@@ -252,6 +252,7 @@ public class BatchProperties {
 
 	public static class StorageProperties {
 		private int thresholdPercent;
+		private int minPercentFullForOutOfSpec;
 		private long bytesPerCompleteLine;
 		private int fallbackYearRange;
 		private int fallbackAgeIncrement;
@@ -264,6 +265,14 @@ public class BatchProperties {
 
 		public void setThresholdPercent(int thresholdPercent) {
 			this.thresholdPercent = thresholdPercent;
+		}
+
+		public int getMinPercentFullForOutOfSpec() {
+			return minPercentFullForOutOfSpec;
+		}
+
+		public void setMinPercentFullForOutOfSpec(int minPercentFullForOutOfSpec) {
+			this.minPercentFullForOutOfSpec = minPercentFullForOutOfSpec;
 		}
 
 		public long getBytesPerCompleteLine() {
