@@ -67,7 +67,7 @@ describe('ProjectionStatusBadge.vue', () => {
 
       cy.get('.status-icon')
         .should('have.attr', 'src')
-        .and('include', 'Draft_Icon_Status')
+        .and('include', 'data:image/svg+xml')
     })
 
     it('displays Ready icon for Ready status', () => {
@@ -75,7 +75,7 @@ describe('ProjectionStatusBadge.vue', () => {
 
       cy.get('.status-icon')
         .should('have.attr', 'src')
-        .and('include', 'Ready_Icon_Status')
+        .and('include', 'Ready_Icon_16px')
     })
 
     it('displays Running icon for Running status', () => {
@@ -83,7 +83,7 @@ describe('ProjectionStatusBadge.vue', () => {
 
       cy.get('.status-icon')
         .should('have.attr', 'src')
-        .and('include', 'Running_Icon_Status')
+        .and('include', 'Running_Icon_16px')
     })
 
     it('displays Failed icon for Failed status', () => {
@@ -91,7 +91,7 @@ describe('ProjectionStatusBadge.vue', () => {
 
       cy.get('.status-icon')
         .should('have.attr', 'src')
-        .and('include', 'Failed_Icon_Status')
+        .and('include', 'data:image/svg+xml')
     })
   })
 })
