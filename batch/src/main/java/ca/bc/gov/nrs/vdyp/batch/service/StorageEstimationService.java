@@ -148,11 +148,11 @@ public class StorageEstimationService {
 	}
 
 	/**
-	 * Per the VDYP-1274 algorithm, a running job's expected footprint should track polygons actually completed so
-	 * far, not its final total - otherwise the estimate is pinned to the job's end state from the moment it starts,
-	 * and can never be caught growing faster than expected while still in progress. Completed count alone still
-	 * undercounts what's genuinely on disk though: each active worker has a chunk's worth of polygons in flight -
-	 * already written as interim files - that haven't been counted as 'processed' yet, so that's added in too.
+	 * Per the VDYP-1274 algorithm, a running job's expected footprint should track polygons actually completed so far,
+	 * not its final total - otherwise the estimate is pinned to the job's end state from the moment it starts, and can
+	 * never be caught growing faster than expected while still in progress. Completed count alone still undercounts
+	 * what's genuinely on disk though: each active worker has a chunk's worth of polygons in flight - already written
+	 * as interim files - that haven't been counted as 'processed' yet, so that's added in too.
 	 */
 	private int numPolygonsForJob(JobExecution job) {
 		int polygonsProcessed = job.getStepExecutions().stream()
