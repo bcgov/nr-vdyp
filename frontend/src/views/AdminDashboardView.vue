@@ -254,7 +254,9 @@ const threadUsagePercent = computed(() => {
   return Math.min(100, Math.round((threadsInUseCount.value / threadCapacity.value) * 100))
 })
 
-const storagePercent = computed(() => Math.round(storageStatus.value.percentFull))
+// Rounds up rather than to nearest, matching the 'df' convention admins compare this against,
+// so any nonzero usage never displays as 0%.
+const storagePercent = computed(() => Math.ceil(storageStatus.value.percentFull))
 
 const getProgressPercent = (projection: AdminProjection): number => {
   if (!projection.polygonCount) return 0
