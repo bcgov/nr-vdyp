@@ -75,6 +75,10 @@ spec:
               value: {{ .Values.batch.env.BATCH_MAX_JOB_THREADS | quote }}
             - name: BATCH_DB_CONNECITON_POOL_SIZE
               value: {{ .Values.batch.env.BATCH_DB_CONNECITON_POOL_SIZE | quote }}
+            - name: BATCH_STORAGE_THRESHOLD_PERCENT
+              value: {{ .Values.batch.env.BATCH_STORAGE_THRESHOLD_PERCENT | quote }}
+            - name: BATCH_STORAGE_MIN_PERCENT_FULL_FOR_OUT_OF_SPEC
+              value: {{ .Values.batch.env.BATCH_STORAGE_MIN_PERCENT_FULL_FOR_OUT_OF_SPEC | quote }}
             - name: NATS_ENABLED
               value: {{ .Values.batch.env.NATS_ENABLED | quote }}
             - name: NATS_URL
