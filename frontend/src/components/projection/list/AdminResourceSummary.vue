@@ -96,7 +96,7 @@ const formatBytes = (bytes: number): string => {
   if (bytes <= 0) return '0 B'
   const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), BYTE_UNITS.length - 1)
   const value = bytes / 1024 ** exponent
-  return `${exponent === 0 ? value : value.toFixed(1)} ${BYTE_UNITS[exponent]}`
+  return `${exponent === 0 ? value : value.toFixed(2)} ${BYTE_UNITS[exponent]}`
 }
 </script>
 
