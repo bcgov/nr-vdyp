@@ -146,14 +146,21 @@ public class StorageEstimationService {
 		}
 	}
 
+	/**
+	 * Per the VDYP-1274 algorithm, a running job's expected footprint should track polygons actually completed so
+	 * far, not its final total - otherwise the estimate is pinned to the job's end state from the moment it starts,
+	 * and can never be caught growing faster than expected while still in progress.
+	 */
 	private int numPolygonsForJob(JobExecution job) {
-		int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
-		if (totalPolygons > 0) {
-			return totalPolygons;
-		}
-		return job.getStepExecutions().stream()
+		int polygonsProcessed = job.getStepExecutions().stream()
 				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME))
 				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0)).sum();
+		if (polygonsProcessed > 0) {
+			return polygonsProcessed;
+		}
+		// No worker progress recorded yet (e.g. the job just started) - fall back to its declared total so the
+		// estimate isn't zero the instant a job begins.
+		return job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
 	}
 
 	private StorageUsage readActualUsage() {

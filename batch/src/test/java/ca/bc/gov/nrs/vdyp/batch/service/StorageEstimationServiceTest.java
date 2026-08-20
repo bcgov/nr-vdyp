@@ -156,6 +156,30 @@ class StorageEstimationServiceTest {
 		assertEquals(16000L, status.expectedBytes());
 	}
 
+	@Test
+	void testComputeStorageStatus_WorkerProgressAndTotalBothPresent_PrefersActualProgress() {
+		// Per the VDYP-1274 algorithm, a running job's expected footprint should track polygons actually
+		// completed so far, not its final declared total, so early progress on a large job keeps the estimate
+		// - and thus the sensitivity of the out-of-spec check - proportionate to what's actually happened.
+		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());
+		ExecutionContext jobCtx = new ExecutionContext();
+		jobCtx.putInt(BatchConstants.Job.TOTAL_POLYGONS, 53042);
+		job.setExecutionContext(jobCtx);
+
+		StepExecution workerStep = new StepExecution("workerStep0", job);
+		ExecutionContext stepCtx = new ExecutionContext();
+		stepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 4);
+		workerStep.setExecutionContext(stepCtx);
+		job.addStepExecutions(java.util.List.of(workerStep));
+
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
+
+		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
+
+		assertEquals(16000L, status.expectedBytes());
+	}
+
 	@ParameterizedTest(name = "actual={0} threshold={1} outOfSpec={2}")
 	@CsvSource(
 		{ "1150, 115, false", // at the ratio boundary -> not out of spec
