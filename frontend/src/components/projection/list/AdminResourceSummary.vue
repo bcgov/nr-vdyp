@@ -48,7 +48,10 @@
       </template>
       <span>
         {{ formatBytes(storageUsedBytes) }} / {{ formatBytes(storageTotalBytes) }} used
-        <template v-if="storageOutOfSpec"> — Out of Spec</template>
+        <template v-if="storageOutOfSpec">
+          <span class="tooltip-separator">&bull;</span>
+          <strong class="tooltip-alert">Out of Spec</strong>
+        </template>
       </span>
     </v-tooltip>
 
@@ -141,6 +144,15 @@ const formatBytes = (bytes: number): string => {
 }
 
 .summary-pill--storage-alert .pill-value {
+  color: var(--progress-alert-color);
+}
+
+.tooltip-separator {
+  margin: 0 4px;
+  opacity: 0.6;
+}
+
+.tooltip-alert {
   color: var(--progress-alert-color);
 }
 
