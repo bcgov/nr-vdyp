@@ -21,6 +21,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameter;
@@ -46,6 +47,7 @@ class StorageEstimationServiceTest {
 	@BeforeEach
 	void setUp() {
 		batchProperties = new BatchProperties();
+		batchProperties.getReader().setDefaultChunkSize(150);
 		batchProperties.getStorage().setThresholdPercent(115);
 		batchProperties.getStorage().setBytesPerCompleteLine(200);
 		batchProperties.getStorage().setFallbackYearRange(200);
@@ -178,6 +180,49 @@ class StorageEstimationServiceTest {
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
 		assertEquals(16000L, status.expectedBytes());
+	}
+
+	@Test
+	void testComputeStorageStatus_ActiveWorkersInFlight_AddsChunkSizePerActiveWorker() {
+		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());
+		job.setExecutionContext(new ExecutionContext());
+
+		StepExecution workerStep0 = new StepExecution("workerStep0", job);
+		ExecutionContext step0Ctx = new ExecutionContext();
+		step0Ctx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 4);
+		workerStep0.setExecutionContext(step0Ctx);
+		workerStep0.setStatus(BatchStatus.STARTED);
+
+		StepExecution workerStep1 = new StepExecution("workerStep1", job);
+		workerStep1.setExecutionContext(new ExecutionContext());
+		workerStep1.setStatus(BatchStatus.STARTED);
+
+		job.addStepExecutions(java.util.List.of(workerStep0, workerStep1));
+
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
+
+		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
+
+		assertEquals(304L * 4000L, status.expectedBytes());
+	}
+
+	@Test
+	void testComputeStorageStatus_NoProgressButWorkersActive_UsesInFlightEstimateOnly() {
+		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());
+		job.setExecutionContext(new ExecutionContext());
+
+		StepExecution workerStep = new StepExecution("workerStep0", job);
+		workerStep.setExecutionContext(new ExecutionContext());
+		workerStep.setStatus(BatchStatus.STARTED);
+		job.addStepExecutions(java.util.List.of(workerStep));
+
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
+
+		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
+
+		assertEquals(150L * 4000L, status.expectedBytes());
 	}
 
 	@ParameterizedTest(name = "actual={0} threshold={1} outOfSpec={2}")

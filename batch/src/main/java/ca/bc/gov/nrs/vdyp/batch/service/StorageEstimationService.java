@@ -18,6 +18,7 @@ import com.google.common.base.Strings;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 
@@ -149,17 +150,23 @@ public class StorageEstimationService {
 	/**
 	 * Per the VDYP-1274 algorithm, a running job's expected footprint should track polygons actually completed so
 	 * far, not its final total - otherwise the estimate is pinned to the job's end state from the moment it starts,
-	 * and can never be caught growing faster than expected while still in progress.
+	 * and can never be caught growing faster than expected while still in progress. Completed count alone still
+	 * undercounts what's genuinely on disk though: each active worker has a chunk's worth of polygons in flight -
+	 * already written as interim files - that haven't been counted as 'processed' yet, so that's added in too.
 	 */
 	private int numPolygonsForJob(JobExecution job) {
 		int polygonsProcessed = job.getStepExecutions().stream()
 				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME))
 				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0)).sum();
-		if (polygonsProcessed > 0) {
-			return polygonsProcessed;
+		int chunkSize = Math.max(batchProperties.getReader().getDefaultChunkSize(), 1);
+		int inFlightPolygons = BatchUtils.calculateActiveWorkers(job, true) * chunkSize;
+
+		int estimatedPolygons = polygonsProcessed + inFlightPolygons;
+		if (estimatedPolygons > 0) {
+			return estimatedPolygons;
 		}
-		// No worker progress recorded yet (e.g. the job just started) - fall back to its declared total so the
-		// estimate isn't zero the instant a job begins.
+		// No progress or in-flight work recorded yet (e.g. the job just started) - fall back to its declared
+		// total so the estimate isn't zero the instant a job begins.
 		return job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
 	}
 
