@@ -252,6 +252,7 @@ public class BatchProperties {
 
 	public static class StorageProperties {
 		private int thresholdPercent;
+		private int unknownPolygonCountPlaceholder;
 		private long bytesPerCompleteLine;
 		private int fallbackYearRange;
 		private int fallbackAgeIncrement;
@@ -264,6 +265,14 @@ public class BatchProperties {
 
 		public void setThresholdPercent(int thresholdPercent) {
 			this.thresholdPercent = thresholdPercent;
+		}
+
+		public int getUnknownPolygonCountPlaceholder() {
+			return unknownPolygonCountPlaceholder;
+		}
+
+		public void setUnknownPolygonCountPlaceholder(int unknownPolygonCountPlaceholder) {
+			this.unknownPolygonCountPlaceholder = unknownPolygonCountPlaceholder;
 		}
 
 		public long getBytesPerCompleteLine() {

@@ -49,6 +49,7 @@ class StorageEstimationServiceTest {
 		batchProperties = new BatchProperties();
 		batchProperties.getReader().setDefaultChunkSize(150);
 		batchProperties.getStorage().setThresholdPercent(115);
+		batchProperties.getStorage().setUnknownPolygonCountPlaceholder(600000);
 		batchProperties.getStorage().setBytesPerCompleteLine(200);
 		batchProperties.getStorage().setFallbackYearRange(200);
 		batchProperties.getStorage().setFallbackAgeIncrement(10);
@@ -82,6 +83,19 @@ class StorageEstimationServiceTest {
 
 		assertEquals(0L, status.expectedBytes());
 		assertEquals(115, status.thresholdPercent());
+	}
+
+	@Test
+	void testComputeStorageStatus_JobStillDownloadingInput_UsesPlaceholderPolygonCount() {
+		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());
+		job.setExecutionContext(new ExecutionContext());
+
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
+
+		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
+
+		assertEquals(600000L * 4000L, status.expectedBytes());
 	}
 
 	static Stream<Arguments> computeStorageStatusExpectedBytesCases() {

@@ -167,7 +167,14 @@ public class StorageEstimationService {
 		}
 		// No progress or in-flight work recorded yet (e.g. the job just started) - fall back to its declared
 		// total so the estimate isn't zero the instant a job begins.
-		return job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+		int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+		if (totalPolygons > 0) {
+			return totalPolygons;
+		}
+		// The job hasn't finished downloading/partitioning its input yet, so even its total polygon count isn't
+		// known - use a configured placeholder so it isn't mistaken for unexplained leftover usage while it's
+		// legitimately downloading its own (potentially large) input files.
+		return batchProperties.getStorage().getUnknownPolygonCountPlaceholder();
 	}
 
 	private StorageUsage readActualUsage() {

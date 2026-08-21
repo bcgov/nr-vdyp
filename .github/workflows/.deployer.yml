@@ -199,6 +199,7 @@ jobs:
             --set batch.env.BATCH_MAX_JOB_THREADS=${{ vars.BATCH_MAX_JOB_THREADS }} \
             --set batch.env.BATCH_DB_CONNECITON_POOL_SIZE=${{ vars.BATCH_DB_CONNECITON_POOL_SIZE }} \
             --set batch.env.BATCH_STORAGE_THRESHOLD_PERCENT=${{ vars.BATCH_STORAGE_THRESHOLD_PERCENT }} \
+            --set batch.env.BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER=${{ vars.BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER }} \
             --set frontend.env.BACKEND_URL=${{ vars.BACKEND_URL }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
             --set frontend.env.VITE_SSO_CLIENT_ID=${{ secrets.VITE_SSO_CLIENT_ID }} \
