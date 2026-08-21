@@ -57,9 +57,8 @@ public class StorageEstimationService {
 	}
 
 	/**
-	 * expectedBytes only accounts for currently running jobs. If none are running, any actual usage is unexplained
-	 * (e.g. leftover files from a job that didn't clean up) and is flagged directly, since proving that possibility
-	 * with the real numbers - not compensating for it in the calculation - is the point of this check.
+	 * expectedBytes only covers currently running jobs, so with none running, any actual usage is unexplained (e.g.
+	 * leftover files) and flagged directly - proving that with the real numbers is the point of this check.
 	 */
 	boolean isOutOfSpec(long expectedBytes, long actualUsedBytes, int thresholdPercent) {
 		if (expectedBytes <= 0) {
@@ -71,17 +70,13 @@ public class StorageEstimationService {
 	private long estimateExpectedFootprintBytes() {
 		long expectedBytes = 0;
 		for (JobExecution job : jobExplorer.findRunningJobExecutions(FETCH_AND_PARTITION_JOB_NAME)) {
-			expectedBytes += perPolygonBytesForJob(job) * numPolygonsForJob(job);
+			expectedBytes += outputBytesPerPolygonForJob(job) * numPolygonsForOutput(job)
+					+ batchProperties.getStorage().getBytesPerInputLine() * numPolygonsForInput(job);
 		}
 		return expectedBytes;
 	}
 
-	/**
-	 * Estimates a polygon's total footprint as output (yield table/interim result) bytes plus input bytes unconsumed
-	 * input-partition files stay on disk for as long as their worker is still processing them, so they're real usage
-	 * too, not just the output side.
-	 */
-	private long perPolygonBytesForJob(JobExecution job) {
+	private long outputBytesPerPolygonForJob(JobExecution job) {
 		BatchProperties.StorageProperties storage = batchProperties.getStorage();
 		Optional<Parameters> parameters = parseParameters(job);
 
@@ -96,7 +91,7 @@ public class StorageEstimationService {
 		if (parameters.map(p -> hasExecutionOption(p, ExecutionOption.DO_ENABLE_DEBUG_LOGGING)).orElse(false)) {
 			outputBytes += storage.getOptionalDebugLogBytesPerPolygon();
 		}
-		return outputBytes + storage.getBytesPerInputLine();
+		return outputBytes;
 	}
 
 	private boolean hasExecutionOption(Parameters parameters, ExecutionOption option) {
@@ -153,13 +148,10 @@ public class StorageEstimationService {
 	}
 
 	/**
-	 * Per the VDYP-1274 algorithm, a running job's expected footprint should track polygons actually completed so far,
-	 * not its final total - otherwise the estimate is pinned to the job's end state from the moment it starts, and can
-	 * never be caught growing faster than expected while still in progress. Completed count alone still undercounts
-	 * what's genuinely on disk though: each active worker has a chunk's worth of polygons in flight - already written
-	 * as interim files - that haven't been counted as 'processed' yet, so that's added in too.
+	 * Tracks polygons completed so far plus one chunk in flight per active worker, so the estimate keeps pace with
+	 * progress instead of lagging behind or pinning to the job's final total from the start.
 	 */
-	private int numPolygonsForJob(JobExecution job) {
+	private int numPolygonsForOutput(JobExecution job) {
 		int polygonsProcessed = job.getStepExecutions().stream()
 				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME))
 				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0)).sum();
@@ -170,15 +162,36 @@ public class StorageEstimationService {
 		if (estimatedPolygons > 0) {
 			return estimatedPolygons;
 		}
-		// No progress or in-flight work recorded yet (e.g. the job just started) - fall back to its declared
-		// total so the estimate isn't zero the instant a job begins.
+		return fallbackPolygonCount(job);
+	}
+
+	/**
+	 * Input-partition files are wiped in one bulk pass (postProcessingStep) only after every worker finishes, so the
+	 * full input stays until all polygons are processed or skipped - not a fraction per active worker.
+	 */
+	private int numPolygonsForInput(JobExecution job) {
+		int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+		if (totalPolygons <= 0) {
+			// Still downloading/partitioning - its total isn't known yet.
+			return batchProperties.getStorage().getUnknownPolygonCountPlaceholder();
+		}
+		int polygonsAccountedFor = job.getStepExecutions().stream()
+				.filter(se -> se.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME))
+				.mapToInt(
+						se -> se.getExecutionContext().getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0)
+								+ se.getExecutionContext().getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0)
+				).sum();
+		return polygonsAccountedFor >= totalPolygons ? 0 : totalPolygons;
+	}
+
+	private int fallbackPolygonCount(JobExecution job) {
+		// No progress/in-flight work yet - use the declared total so a just-started job isn't estimated at zero.
 		int totalPolygons = job.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
 		if (totalPolygons > 0) {
 			return totalPolygons;
 		}
-		// The job hasn't finished downloading/partitioning its input yet, so even its total polygon count isn't
-		// known - use a configured placeholder so it isn't mistaken for unexplained leftover usage while it's
-		// legitimately downloading its own (potentially large) input files.
+		// Total isn't known yet either (still downloading/partitioning) - use a placeholder so this isn't
+		// mistaken for unexplained leftover usage while legitimately downloading its own input.
 		return batchProperties.getStorage().getUnknownPolygonCountPlaceholder();
 	}
 

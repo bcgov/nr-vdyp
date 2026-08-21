@@ -170,14 +170,11 @@ class StorageEstimationServiceTest {
 
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
-		assertEquals(16400L, status.expectedBytes());
+		assertEquals(4L * 4000L + 600000L * 100L, status.expectedBytes());
 	}
 
 	@Test
-	void testComputeStorageStatus_WorkerProgressAndTotalBothPresent_PrefersActualProgress() {
-		// Per the VDYP-1274 algorithm, a running job's expected footprint should track polygons actually
-		// completed so far, not its final declared total, so early progress on a large job keeps the estimate
-		// - and thus the sensitivity of the out-of-spec check - proportionate to what's actually happened.
+	void testComputeStorageStatus_WorkerProgressAndTotalBothPresent_PrefersActualProgressForOutput() {
 		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
 		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());
 		ExecutionContext jobCtx = new ExecutionContext();
@@ -194,14 +191,16 @@ class StorageEstimationServiceTest {
 
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
-		assertEquals(16400L, status.expectedBytes());
+		assertEquals(16000L + 5_304_200L, status.expectedBytes());
 	}
 
 	@Test
-	void testComputeStorageStatus_ActiveWorkersInFlight_AddsChunkSizePerActiveWorker() {
+	void testComputeStorageStatus_ActiveWorkersInFlight_AddsChunkSizePerActiveWorkerForOutput() {
 		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
 		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());
-		job.setExecutionContext(new ExecutionContext());
+		ExecutionContext jobCtx = new ExecutionContext();
+		jobCtx.putInt(BatchConstants.Job.TOTAL_POLYGONS, 1000);
+		job.setExecutionContext(jobCtx);
 
 		StepExecution workerStep0 = new StepExecution("workerStep0", job);
 		ExecutionContext step0Ctx = new ExecutionContext();
@@ -219,14 +218,16 @@ class StorageEstimationServiceTest {
 
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
-		assertEquals(304L * 4100L, status.expectedBytes());
+		assertEquals(1_216_000L + 100_000L, status.expectedBytes());
 	}
 
 	@Test
-	void testComputeStorageStatus_NoProgressButWorkersActive_UsesInFlightEstimateOnly() {
+	void testComputeStorageStatus_NoProgressButWorkersActive_UsesInFlightEstimateOnlyForOutput() {
 		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
 		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());
-		job.setExecutionContext(new ExecutionContext());
+		ExecutionContext jobCtx = new ExecutionContext();
+		jobCtx.putInt(BatchConstants.Job.TOTAL_POLYGONS, 500);
+		job.setExecutionContext(jobCtx);
 
 		StepExecution workerStep = new StepExecution("workerStep0", job);
 		workerStep.setExecutionContext(new ExecutionContext());
@@ -237,7 +238,51 @@ class StorageEstimationServiceTest {
 
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
-		assertEquals(150L * 4100L, status.expectedBytes());
+		assertEquals(600_000L + 50_000L, status.expectedBytes());
+	}
+
+	@Test
+	void testComputeStorageStatus_SomePolygonsUnaccountedFor_InputStaysAtFullTotal() {
+		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());
+		ExecutionContext jobCtx = new ExecutionContext();
+		jobCtx.putInt(BatchConstants.Job.TOTAL_POLYGONS, 1000);
+		job.setExecutionContext(jobCtx);
+
+		StepExecution workerStep = new StepExecution("workerStep0", job);
+		ExecutionContext stepCtx = new ExecutionContext();
+		stepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 200);
+		workerStep.setExecutionContext(stepCtx);
+		workerStep.setStatus(BatchStatus.STARTED);
+		job.addStepExecutions(java.util.List.of(workerStep));
+
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
+
+		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
+
+		assertEquals(1_400_000L + 100_000L, status.expectedBytes());
+	}
+
+	@Test
+	void testComputeStorageStatus_AllPolygonsAccountedFor_InputDropsToZero() {
+		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());
+		ExecutionContext jobCtx = new ExecutionContext();
+		jobCtx.putInt(BatchConstants.Job.TOTAL_POLYGONS, 1000);
+		job.setExecutionContext(jobCtx);
+
+		StepExecution workerStep = new StepExecution("workerStep0", job);
+		ExecutionContext stepCtx = new ExecutionContext();
+		stepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 1000);
+		workerStep.setExecutionContext(stepCtx);
+		workerStep.setStatus(BatchStatus.COMPLETED);
+		job.addStepExecutions(java.util.List.of(workerStep));
+
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
+
+		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
+
+		assertEquals(4_000_000L, status.expectedBytes());
 	}
 
 	@ParameterizedTest(name = "actual={0} threshold={1} outOfSpec={2}")
