@@ -116,6 +116,18 @@ public final class BatchConstants {
 		}
 	}
 
+	public static final class Storage {
+		public static final String PERCENT_FULL = "percentFull";
+		public static final String USED_BYTES = "usedBytes";
+		public static final String TOTAL_BYTES = "totalBytes";
+		public static final String EXPECTED_BYTES = "expectedBytes";
+		public static final String OUT_OF_SPEC = "outOfSpec";
+		public static final String THRESHOLD_PERCENT = "thresholdPercent";
+
+		private Storage() {
+		}
+	}
+
 	private BatchConstants() {
 	}
 }

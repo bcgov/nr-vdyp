@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
@@ -56,6 +57,7 @@ public class BatchController {
 	@SuppressWarnings("unused")
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
+	private final StorageEstimationService storageEstimationService;
 
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
@@ -72,7 +74,8 @@ public class BatchController {
 	public BatchController(
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties
+			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties,
+			StorageEstimationService storageEstimationService
 	) {
 		this.jobLauncher = jobLauncher;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
@@ -80,6 +83,7 @@ public class BatchController {
 		this.metricsCollector = metricsCollector;
 		this.jobOperator = jobOperator;
 		this.batchProperties = batchProperties;
+		this.storageEstimationService = storageEstimationService;
 	}
 
 	/**
@@ -309,7 +313,7 @@ public class BatchController {
 				"availableEndpoints",
 				Arrays.asList(
 						"/api/batch/startWithGUIDs", "/api/batch/stop/{jobGuid}", "/api/batch/status/{jobGuid}",
-						"/api/batch/health", "/api/batch/capacity"
+						"/api/batch/health", "/api/batch/capacity", "/api/batch/storage"
 				)
 		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
@@ -324,6 +328,25 @@ public class BatchController {
 	public ResponseEntity<Map<String, Object>> capacity() {
 		Map<String, Object> response = new HashMap<>();
 		response.put(BatchConstants.Capacity.THREAD_CAPACITY, batchProperties.getThreadPool().getCorePoolSize());
+		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+		return ResponseEntity.ok(response);
+	}
+
+	/**
+	 * Exposes the estimated PVC storage footprint of currently running projections alongside actual filesystem usage,
+	 * so callers can display storage percent-full and flag 'out of spec' conditions
+	 */
+	@GetMapping(value = "/storage", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> storage() {
+		StorageEstimationService.StorageStatus status = storageEstimationService.computeStorageStatus();
+
+		Map<String, Object> response = new HashMap<>();
+		response.put(BatchConstants.Storage.PERCENT_FULL, status.percentFull());
+		response.put(BatchConstants.Storage.USED_BYTES, status.usedBytes());
+		response.put(BatchConstants.Storage.TOTAL_BYTES, status.totalBytes());
+		response.put(BatchConstants.Storage.EXPECTED_BYTES, status.expectedBytes());
+		response.put(BatchConstants.Storage.OUT_OF_SPEC, status.outOfSpec());
+		response.put(BatchConstants.Storage.THRESHOLD_PERCENT, status.thresholdPercent());
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
 	}

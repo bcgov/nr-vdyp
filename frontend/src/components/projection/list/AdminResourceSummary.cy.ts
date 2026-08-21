@@ -14,6 +14,10 @@ describe('AdminResourceSummary.vue', () => {
       threadUsagePercent?: number
       stuckCount?: number
       queuedCount?: number
+      storagePercent?: number
+      storageUsedBytes?: number
+      storageTotalBytes?: number
+      storageOutOfSpec?: boolean
     } = {},
   ) => {
     return mount(AdminResourceSummary, {
@@ -24,6 +28,10 @@ describe('AdminResourceSummary.vue', () => {
         threadUsagePercent: 30,
         stuckCount: 1,
         queuedCount: 2,
+        storagePercent: 20,
+        storageUsedBytes: 20 * 1024 ** 3,
+        storageTotalBytes: 100 * 1024 ** 3,
+        storageOutOfSpec: false,
         ...props,
       },
       global: {
@@ -37,7 +45,7 @@ describe('AdminResourceSummary.vue', () => {
 
     cy.get('.summary-pill--total .pill-value').should('contain', '5')
     cy.get('.summary-pill--threads .pill-value').should('contain', '3/ 10')
-    cy.get('.thread-progress-bar').should('exist')
+    cy.get('.summary-pill--threads .thread-progress-bar').should('exist')
   })
 
   it('renders the stuck projections count', () => {
@@ -69,10 +77,33 @@ describe('AdminResourceSummary.vue', () => {
   it('reflects threadUsagePercent in the progress bar', () => {
     mountComponent({ threadUsagePercent: 90 })
 
-    cy.get('.thread-progress-bar').should(
+    cy.get('.summary-pill--threads .thread-progress-bar').should(
       'have.attr',
       'aria-valuenow',
       '90',
     )
+  })
+
+  it('renders the system storage percentage and progress bar', () => {
+    mountComponent({ storagePercent: 42 })
+
+    cy.get('.summary-pill--storage .pill-value').should('contain', '42%')
+    cy.get('.summary-pill--storage .thread-progress-bar').should(
+      'have.attr',
+      'aria-valuenow',
+      '42',
+    )
+  })
+
+  it('flags the storage pill as an alert when out of spec', () => {
+    mountComponent({ storageOutOfSpec: true })
+
+    cy.get('.summary-pill--storage-alert').should('exist')
+  })
+
+  it('does not flag the storage pill as an alert when within spec', () => {
+    mountComponent({ storageOutOfSpec: false })
+
+    cy.get('.summary-pill--storage-alert').should('not.exist')
   })
 })

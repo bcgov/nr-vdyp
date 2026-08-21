@@ -6,6 +6,7 @@ import type {
   Parameters,
   FileMappingModel,
   ModelParameters,
+  StorageStatusModel,
 } from '@/services/vdyp-api'
 
 /**
@@ -117,6 +118,20 @@ export const getThreadCapacity = async (): Promise<number> => {
     return response.data.threadCapacity
   } catch (error) {
     console.error('Error fetching thread capacity:', error)
+    throw error
+  }
+}
+
+/**
+ * (Admin Only) Fetches the batch service's PVC storage status.
+ * @returns A promise that resolves to the storage status.
+ */
+export const getStorageStatus = async (): Promise<StorageStatusModel> => {
+  try {
+    const response = await apiClient.getStorageStatus()
+    return response.data
+  } catch (error) {
+    console.error('Error fetching storage status:', error)
     throw error
   }
 }

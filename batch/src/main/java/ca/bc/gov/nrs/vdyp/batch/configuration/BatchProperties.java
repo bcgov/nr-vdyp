@@ -18,6 +18,7 @@ public class BatchProperties {
 	private RetryProperties retry = new RetryProperties();
 	private SkipProperties skip = new SkipProperties();
 	private ReaderProperties reader = new ReaderProperties();
+	private StorageProperties storage = new StorageProperties();
 	private String rootDirectory;
 
 	public static class JobProperties {
@@ -249,6 +250,81 @@ public class BatchProperties {
 		}
 	}
 
+	public static class StorageProperties {
+		private int thresholdPercent;
+		private int unknownPolygonCountPlaceholder;
+		private long bytesPerCompleteLine;
+		private long bytesPerInputLine;
+		private int fallbackYearRange;
+		private int fallbackAgeIncrement;
+		private long reasonableErrorBytesPerPolygon;
+		private long optionalDebugLogBytesPerPolygon;
+
+		public int getThresholdPercent() {
+			return thresholdPercent;
+		}
+
+		public void setThresholdPercent(int thresholdPercent) {
+			this.thresholdPercent = thresholdPercent;
+		}
+
+		public int getUnknownPolygonCountPlaceholder() {
+			return unknownPolygonCountPlaceholder;
+		}
+
+		public void setUnknownPolygonCountPlaceholder(int unknownPolygonCountPlaceholder) {
+			this.unknownPolygonCountPlaceholder = unknownPolygonCountPlaceholder;
+		}
+
+		public long getBytesPerCompleteLine() {
+			return bytesPerCompleteLine;
+		}
+
+		public void setBytesPerCompleteLine(long bytesPerCompleteLine) {
+			this.bytesPerCompleteLine = bytesPerCompleteLine;
+		}
+
+		public long getBytesPerInputLine() {
+			return bytesPerInputLine;
+		}
+
+		public void setBytesPerInputLine(long bytesPerInputLine) {
+			this.bytesPerInputLine = bytesPerInputLine;
+		}
+
+		public int getFallbackYearRange() {
+			return fallbackYearRange;
+		}
+
+		public void setFallbackYearRange(int fallbackYearRange) {
+			this.fallbackYearRange = fallbackYearRange;
+		}
+
+		public int getFallbackAgeIncrement() {
+			return fallbackAgeIncrement;
+		}
+
+		public void setFallbackAgeIncrement(int fallbackAgeIncrement) {
+			this.fallbackAgeIncrement = fallbackAgeIncrement;
+		}
+
+		public long getReasonableErrorBytesPerPolygon() {
+			return reasonableErrorBytesPerPolygon;
+		}
+
+		public void setReasonableErrorBytesPerPolygon(long reasonableErrorBytesPerPolygon) {
+			this.reasonableErrorBytesPerPolygon = reasonableErrorBytesPerPolygon;
+		}
+
+		public long getOptionalDebugLogBytesPerPolygon() {
+			return optionalDebugLogBytesPerPolygon;
+		}
+
+		public void setOptionalDebugLogBytesPerPolygon(long optionalDebugLogBytesPerPolygon) {
+			this.optionalDebugLogBytesPerPolygon = optionalDebugLogBytesPerPolygon;
+		}
+	}
+
 	public JobProperties getJob() {
 		return job;
 	}
@@ -311,5 +387,13 @@ public class BatchProperties {
 
 	public void setRootDirectory(String rootDirectory) {
 		this.rootDirectory = rootDirectory;
+	}
+
+	public StorageProperties getStorage() {
+		return storage;
+	}
+
+	public void setStorage(StorageProperties storage) {
+		this.storage = storage;
 	}
 }

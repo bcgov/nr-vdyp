@@ -6,6 +6,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.reactive.RestForm;
 
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchStorageStatusModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -43,5 +44,10 @@ public interface VDYPBatchClient {
 	@Path("/capacity")
 	@Produces(MediaType.APPLICATION_JSON)
 	BatchThreadCapacityModel threadCapacity();
+
+	@GET
+	@Path("/storage")
+	@Produces(MediaType.APPLICATION_JSON)
+	BatchStorageStatusModel storageStatus();
 
 }

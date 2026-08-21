@@ -104,6 +104,15 @@ export const apiClient = {
   },
 
   /**
+   * (Admin Only) Retrieves the batch service's PVC storage status.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the storage status.
+   */
+  getStorageStatus: async (options?: AxiosRequestConfig) => {
+    return projectionApiInstance.getStorageStatus(options)
+  },
+
+  /**
    * Creates a new empty projection with default parameters.
    * @param parameters The projection parameters.
    * @param modelParameters Optional model parameters for Manual Input mode.

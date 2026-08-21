@@ -44,6 +44,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchStorageStatusModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
@@ -483,6 +484,13 @@ public class ProjectionService {
 	 */
 	public int getThreadCapacity() {
 		return batchMappingService.getThreadCapacity();
+	}
+
+	/**
+	 * Retrieves the batch service's PVC storage status, used by the Admin Dashboard to show system storage health.
+	 */
+	public BatchStorageStatusModel getStorageStatus() {
+		return batchMappingService.getStorageStatus();
 	}
 
 	@Transactional

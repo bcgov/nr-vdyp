@@ -64,6 +64,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.BatchFailureTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchStorageStatusModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
@@ -155,6 +156,17 @@ class ProjectionServiceTest {
 
 		assertEquals(21, result);
 		verify(batchMappingService, times(1)).getThreadCapacity();
+	}
+
+	@Test
+	void getStorageStatus_delegatesToBatchMappingService() {
+		BatchStorageStatusModel expected = new BatchStorageStatusModel(42.5, 1000L, 2000L, 900L, true, 115);
+		when(batchMappingService.getStorageStatus()).thenReturn(expected);
+
+		BatchStorageStatusModel result = service.getStorageStatus();
+
+		assertEquals(expected, result);
+		verify(batchMappingService, times(1)).getStorageStatus();
 	}
 
 	@Test

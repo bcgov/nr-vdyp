@@ -44,6 +44,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -74,6 +75,9 @@ class BatchControllerTest {
 	@Mock
 	private JobParameters jobParameters;
 
+	@Mock
+	private StorageEstimationService storageEstimationService;
+
 	private BatchProperties batchProperties;
 
 	private BatchController batchController;
@@ -84,7 +88,8 @@ class BatchControllerTest {
 		batchProperties.getThreadPool().setCorePoolSize(21);
 
 		batchController = new BatchController(
-				jobLauncher, fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator, batchProperties
+				jobLauncher, fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator, batchProperties,
+				storageEstimationService
 		);
 
 		// Use system temp directory for cross-platform compatibility
@@ -112,6 +117,35 @@ class BatchControllerTest {
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
 		assertEquals(21, response.getBody().get(BatchConstants.Capacity.THREAD_CAPACITY));
+	}
+
+	@Test
+	void testStorage_ReturnsStorageStatusFromEstimationService() {
+		StorageEstimationService.StorageStatus status = new StorageEstimationService.StorageStatus(
+				42.5, 1000L, 2000L, 900L, true, 115
+		);
+		when(storageEstimationService.computeStorageStatus()).thenReturn(status);
+
+		ResponseEntity<Map<String, Object>> response = batchController.storage();
+
+		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals(42.5, response.getBody().get(BatchConstants.Storage.PERCENT_FULL));
+		assertEquals(1000L, response.getBody().get(BatchConstants.Storage.USED_BYTES));
+		assertEquals(2000L, response.getBody().get(BatchConstants.Storage.TOTAL_BYTES));
+		assertEquals(900L, response.getBody().get(BatchConstants.Storage.EXPECTED_BYTES));
+		assertEquals(true, response.getBody().get(BatchConstants.Storage.OUT_OF_SPEC));
+		assertEquals(115, response.getBody().get(BatchConstants.Storage.THRESHOLD_PERCENT));
+	}
+
+	@Test
+	void testHealth_ListsStorageEndpoint() {
+		ResponseEntity<Map<String, Object>> response = batchController.health();
+
+		assertNotNull(response.getBody());
+		@SuppressWarnings("unchecked")
+		List<String> endpoints = (List<String>) response.getBody().get("availableEndpoints");
+		assertTrue(endpoints.contains("/api/batch/storage"));
 	}
 
 	@Test

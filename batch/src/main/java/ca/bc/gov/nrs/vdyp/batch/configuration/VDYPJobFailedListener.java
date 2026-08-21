@@ -32,7 +32,14 @@ public class VDYPJobFailedListener implements JobExecutionListener {
 					"[GUID: {}] [Job Failed Listener] Job execution ID: {} Projection GUID: {} Status:{} Updating Vdyp backend",
 					jobGuid, projectionGUID, jobExecution.getId(), status
 			);
-			vdypClient.markComplete(projectionGUID, false, BatchUtils.buildFailureProgress(jobGuid, jobExecution));
+			try {
+				vdypClient.markComplete(projectionGUID, false, BatchUtils.buildFailureProgress(jobGuid, jobExecution));
+			} catch (Exception e) {
+				logger.error(
+						"[GUID: {}] Failed to notify Vdyp backend of job failure for projection {}: {}", jobGuid,
+						projectionGUID, e.getMessage()
+				);
+			}
 		}
 	}
 }

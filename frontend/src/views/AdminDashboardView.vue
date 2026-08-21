@@ -44,6 +44,10 @@
         :thread-usage-percent="threadUsagePercent"
         :stuck-count="stuckCount"
         :queued-count="queuedCount"
+        :storage-percent="storagePercent"
+        :storage-used-bytes="storageStatus.usedBytes"
+        :storage-total-bytes="storageStatus.totalBytes"
+        :storage-out-of-spec="storageStatus.outOfSpec"
       />
     </div>
 
@@ -95,7 +99,8 @@ import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/o
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
 import { AppProgressCircular } from '@/components'
 import { ProjectionPagination, AdminProjectionTable, AdminProjectionCardList, AdminCancelProjectionDialog, AdminResourceSummary } from '@/components/projection'
-import { fetchAllRunningProjections, fetchThreadCapacity } from '@/services/adminService'
+import type { StorageStatusModel } from '@/services/vdyp-api'
+import { fetchAllRunningProjections, fetchThreadCapacity, fetchStorageStatus } from '@/services/adminService'
 import { cancelProjection } from '@/services/projectionService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
@@ -103,6 +108,14 @@ const notificationStore = useNotificationStore()
 
 const projections = ref<AdminProjection[]>([])
 const threadCapacity = ref<number>(0)
+const storageStatus = ref<StorageStatusModel>({
+  percentFull: 0,
+  usedBytes: 0,
+  totalBytes: 0,
+  expectedBytes: 0,
+  outOfSpec: false,
+  thresholdPercent: 0,
+})
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
 const isCancelDialogOpen = ref(false)
@@ -179,6 +192,17 @@ const loadThreadCapacity = async () => {
   }
 }
 
+// Silent by design, same rationale as loadThreadCapacity: storage status is contextual to the
+// dashboard, not a primary action, so a failure here shouldn't interrupt the user. Degrades
+// gracefully to the zero-data state (0%, not out of spec) if the batch service is unreachable.
+const loadStorageStatus = async () => {
+  try {
+    storageStatus.value = await fetchStorageStatus()
+  } catch (err) {
+    console.error('Error loading storage status:', err)
+  }
+}
+
 // Silent refresh used by polling so transient failures don't spam the user with
 // a notification every 5 seconds; errors are still logged for diagnostics.
 const refreshProjections = async () => {
@@ -186,6 +210,16 @@ const refreshProjections = async () => {
     projections.value = await fetchAllRunningProjections()
   } catch (err) {
     console.error('Error refreshing running projections:', err)
+  }
+}
+
+// Polled alongside refreshProjections so the System Storage indicator stays current with the
+// same cadence as the rest of the dashboard.
+const refreshStorageStatus = async () => {
+  try {
+    storageStatus.value = await fetchStorageStatus()
+  } catch (err) {
+    console.error('Error refreshing storage status:', err)
   }
 }
 
@@ -219,6 +253,10 @@ const threadUsagePercent = computed(() => {
   if (!threadCapacity.value) return 0
   return Math.min(100, Math.round((threadsInUseCount.value / threadCapacity.value) * 100))
 })
+
+// Rounds up rather than to nearest, matching the 'df' convention admins compare this against,
+// so any nonzero usage never displays as 0%.
+const storagePercent = computed(() => Math.ceil(storageStatus.value.percentFull))
 
 const getProgressPercent = (projection: AdminProjection): number => {
   if (!projection.polygonCount) return 0
@@ -352,10 +390,14 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
   await loadProjections()
   await loadThreadCapacity()
+  await loadStorageStatus()
   clockTimer = setInterval(() => {
     now.value = Date.now()
   }, REFRESH_INTERVAL_MS.ADMIN_DASHBOARD_CLOCK_TICK)
-  dataPollingTimer = setInterval(refreshProjections, REFRESH_INTERVAL_MS.ADMIN_DASHBOARD_DATA_POLL)
+  dataPollingTimer = setInterval(() => {
+    refreshProjections()
+    refreshStorageStatus()
+  }, REFRESH_INTERVAL_MS.ADMIN_DASHBOARD_DATA_POLL)
 })
 
 onUnmounted(() => {

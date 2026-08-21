@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchStorageStatusModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
@@ -224,6 +225,18 @@ public class ProjectionEndpoint implements Endpoint {
 	public Response getThreadCapacity() {
 		var threadCapacity = new BatchThreadCapacityModel(projectionService.getThreadCapacity());
 		return Response.ok(threadCapacity).status(Response.Status.OK).build();
+	}
+
+	@GET
+	@RolesAllowed("ADMIN")
+	@Path("/storage-status")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Get Storage Status", description = "(Admin Only) Get the batch service's PVC storage status (percent full, out-of-spec flag)."
+	)
+	public Response getStorageStatus() {
+		BatchStorageStatusModel storageStatus = projectionService.getStorageStatus();
+		return Response.ok(storageStatus).status(Response.Status.OK).build();
 	}
 
 	@POST
