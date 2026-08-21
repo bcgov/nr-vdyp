@@ -76,6 +76,11 @@ public class StorageEstimationService {
 		return expectedBytes;
 	}
 
+	/**
+	 * Estimates a polygon's total footprint as output (yield table/interim result) bytes plus input bytes unconsumed
+	 * input-partition files stay on disk for as long as their worker is still processing them, so they're real usage
+	 * too, not just the output side.
+	 */
 	private long perPolygonBytesForJob(JobExecution job) {
 		BatchProperties.StorageProperties storage = batchProperties.getStorage();
 		Optional<Parameters> parameters = parseParameters(job);
@@ -84,14 +89,14 @@ public class StorageEstimationService {
 				.orElseGet(() -> new RangeSpan(storage.getFallbackYearRange(), storage.getFallbackAgeIncrement()));
 		long increments = rangeSpan.ageIncrement() <= 0 ? 0 : rangeSpan.yearRange() / rangeSpan.ageIncrement();
 
-		long bytes = storage.getBytesPerCompleteLine() * increments;
+		long outputBytes = storage.getBytesPerCompleteLine() * increments;
 		if (parameters.map(p -> hasExecutionOption(p, ExecutionOption.DO_ENABLE_ERROR_LOGGING)).orElse(false)) {
-			bytes += storage.getReasonableErrorBytesPerPolygon();
+			outputBytes += storage.getReasonableErrorBytesPerPolygon();
 		}
 		if (parameters.map(p -> hasExecutionOption(p, ExecutionOption.DO_ENABLE_DEBUG_LOGGING)).orElse(false)) {
-			bytes += storage.getOptionalDebugLogBytesPerPolygon();
+			outputBytes += storage.getOptionalDebugLogBytesPerPolygon();
 		}
-		return bytes;
+		return outputBytes + storage.getBytesPerInputLine();
 	}
 
 	private boolean hasExecutionOption(Parameters parameters, ExecutionOption option) {

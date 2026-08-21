@@ -254,6 +254,7 @@ public class BatchProperties {
 		private int thresholdPercent;
 		private int unknownPolygonCountPlaceholder;
 		private long bytesPerCompleteLine;
+		private long bytesPerInputLine;
 		private int fallbackYearRange;
 		private int fallbackAgeIncrement;
 		private long reasonableErrorBytesPerPolygon;
@@ -281,6 +282,14 @@ public class BatchProperties {
 
 		public void setBytesPerCompleteLine(long bytesPerCompleteLine) {
 			this.bytesPerCompleteLine = bytesPerCompleteLine;
+		}
+
+		public long getBytesPerInputLine() {
+			return bytesPerInputLine;
+		}
+
+		public void setBytesPerInputLine(long bytesPerInputLine) {
+			this.bytesPerInputLine = bytesPerInputLine;
 		}
 
 		public int getFallbackYearRange() {

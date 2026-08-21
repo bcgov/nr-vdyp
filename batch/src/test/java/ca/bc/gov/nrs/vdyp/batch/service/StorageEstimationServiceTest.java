@@ -51,6 +51,7 @@ class StorageEstimationServiceTest {
 		batchProperties.getStorage().setThresholdPercent(115);
 		batchProperties.getStorage().setUnknownPolygonCountPlaceholder(600000);
 		batchProperties.getStorage().setBytesPerCompleteLine(200);
+		batchProperties.getStorage().setBytesPerInputLine(100);
 		batchProperties.getStorage().setFallbackYearRange(200);
 		batchProperties.getStorage().setFallbackAgeIncrement(10);
 		batchProperties.getStorage().setReasonableErrorBytesPerPolygon(2048);
@@ -95,47 +96,47 @@ class StorageEstimationServiceTest {
 
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
-		assertEquals(600000L * 4000L, status.expectedBytes());
+		assertEquals(600000L * 4100L, status.expectedBytes());
 	}
 
 	static Stream<Arguments> computeStorageStatusExpectedBytesCases() {
 		return Stream.of(
 				Arguments.of(
 						"UsesJobsOwnAgeParameters", 10, "{\"ageStart\":\"0\",\"ageEnd\":\"80\",\"ageIncrement\":\"5\"}",
-						32000L
+						33000L
 				),
 				Arguments.of(
 						"ReflectsThatJobsFootprint", 2,
-						"{\"ageStart\":\"10\",\"ageEnd\":\"50\",\"ageIncrement\":\"10\"}", 1600L
+						"{\"ageStart\":\"10\",\"ageEnd\":\"50\",\"ageIncrement\":\"10\"}", 1800L
 				),
 				Arguments.of(
 						"UsesYearStartYearEndWhenAgeFieldsAreNull", 10,
 						"{\"ageStart\":null,\"ageEnd\":null,\"yearStart\":\"2000\",\"yearEnd\":\"2080\","
 								+ "\"ageIncrement\":\"5\"}",
-						32000L
+						33000L
 				),
 				Arguments.of(
 						"MissingAgeIncrementFallsBackToConfiguredDefaults", 10,
-						"{\"ageStart\":\"0\",\"ageEnd\":\"80\",\"ageIncrement\":null}", 40000L
-				), Arguments.of("MissingParametersJsonFallsBackToConfiguredDefaults", 10, null, 40000L),
-				Arguments.of("UnparseableParametersJsonFallsBackToConfiguredDefaults", 10, "not valid json", 40000L),
+						"{\"ageStart\":\"0\",\"ageEnd\":\"80\",\"ageIncrement\":null}", 41000L
+				), Arguments.of("MissingParametersJsonFallsBackToConfiguredDefaults", 10, null, 41000L),
+				Arguments.of("UnparseableParametersJsonFallsBackToConfiguredDefaults", 10, "not valid json", 41000L),
 				Arguments.of(
 						"ErrorLoggingRequested_AddsReasonableErrorBytes", 10,
 						"{\"ageStart\":\"0\",\"ageEnd\":\"80\",\"ageIncrement\":\"5\","
 								+ "\"selectedExecutionOptions\":[\"doEnableErrorLogging\"]}",
-						52480L
+						53480L
 				),
 				Arguments.of(
 						"DebugLoggingRequested_AddsOptionalDebugLogBytes", 10,
 						"{\"ageStart\":\"0\",\"ageEnd\":\"80\",\"ageIncrement\":\"5\","
 								+ "\"selectedExecutionOptions\":[\"doEnableDebugLogging\"]}",
-						72960L
+						73960L
 				),
 				Arguments.of(
 						"BothLoggingOptionsRequested_AddsBothBuffers", 10,
 						"{\"ageStart\":\"0\",\"ageEnd\":\"80\",\"ageIncrement\":\"5\","
 								+ "\"selectedExecutionOptions\":[\"doEnableErrorLogging\",\"doEnableDebugLogging\"]}",
-						93440L
+						94440L
 				)
 		);
 	}
@@ -169,7 +170,7 @@ class StorageEstimationServiceTest {
 
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
-		assertEquals(16000L, status.expectedBytes());
+		assertEquals(16400L, status.expectedBytes());
 	}
 
 	@Test
@@ -193,7 +194,7 @@ class StorageEstimationServiceTest {
 
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
-		assertEquals(16000L, status.expectedBytes());
+		assertEquals(16400L, status.expectedBytes());
 	}
 
 	@Test
@@ -218,7 +219,7 @@ class StorageEstimationServiceTest {
 
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
-		assertEquals(304L * 4000L, status.expectedBytes());
+		assertEquals(304L * 4100L, status.expectedBytes());
 	}
 
 	@Test
@@ -236,7 +237,7 @@ class StorageEstimationServiceTest {
 
 		StorageEstimationService.StorageStatus status = service.computeStorageStatus();
 
-		assertEquals(150L * 4000L, status.expectedBytes());
+		assertEquals(150L * 4100L, status.expectedBytes());
 	}
 
 	@ParameterizedTest(name = "actual={0} threshold={1} outOfSpec={2}")
