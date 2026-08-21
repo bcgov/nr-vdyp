@@ -3,7 +3,7 @@
     {
       "objectQuotingStrategy": "QUOTE_ALL_OBJECTS"
     },
-     {
+    {
       "changeSet": {
         "id": "01_00_09_00",
         "author": "pminter",
@@ -23,12 +23,40 @@
           }
         ],
         "rollback": [
+          {
             "sqlFile": {
               "dbms": "postgresql",
               "endDelimiter": ";",
               "path": "scripts/01_00_09/00/ddl/tables/schema-drop-postgresql.sql",
               "relativeToChangelogFile": true
             }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_18_00",
+        "author": "codex",
+        "changes": [
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_18/00/ddl/tables/batch-job-claim.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_18/00/ddl/tables/batch-job-claim-drop.sql",
+              "relativeToChangelogFile": true
+            }
+          }
         ]
       }
     }
