@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS batch_job_claim;
+DROP TABLE IF EXISTS "batch"."batch_job_claim";
