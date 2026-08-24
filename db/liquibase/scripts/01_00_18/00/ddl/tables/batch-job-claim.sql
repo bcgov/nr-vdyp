@@ -26,8 +26,7 @@ COMMENT ON COLUMN "batch"."batch_job_claim"."owner_id"
 	IS 'Owner ID is a unique identifier known by the replica that owns the claim to the Job.'
 ;
 
-COMMENT
-ON COLUMN "batch"."batch_job_claim"."lease_token"
+COMMENT ON COLUMN "batch"."batch_job_claim"."lease_token"
 	IS 'Lease Token is a randomly generated UUID to secure updates to the claim.'
 ;
 
