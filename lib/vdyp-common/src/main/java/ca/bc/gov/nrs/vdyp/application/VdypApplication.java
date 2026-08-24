@@ -369,13 +369,11 @@ public abstract class VdypApplication<D extends DebugSettings> extends VdypCompo
 
 			if (tol > 0.0 && Math.abs(lastFs[0]) < tol / 2) {
 
-				if (Math.abs(lastFs[0]) < tol) {
+				// Decide if we want to propagate the exception or try to use the last result.
+				handleRootForQuadMeanDiameterFractionalErrorException(ex);
 
-					// Decide if we want to propagate the exception or try to use the last result.
-					handleRootForQuadMeanDiameterFractionalErrorException(ex);
+				return (float) lastXes[0];
 
-					return (float) lastXes[0];
-				}
 			}
 
 			throw new FatalProcessingException(
@@ -410,9 +408,10 @@ public abstract class VdypApplication<D extends DebugSettings> extends VdypCompo
 			if (f2 * f1 > 0d) {
 				float lowFactor = 1.0f - p;
 				float highFactor = 1.0f + p;
-				for (var key : maxDq.keySet()) {
+				for (var entry : maxDq.entrySet()) {
+					var key = entry.getKey();
 					minDq.put(key, base + lowFactor * (minDq.get(key) - base));
-					maxDq.put(key, base + highFactor * (maxDq.get(key) - base));
+					maxDq.put(key, base + highFactor * (entry.getValue() - base));
 				}
 			}
 		});
@@ -427,10 +426,10 @@ public abstract class VdypApplication<D extends DebugSettings> extends VdypCompo
 
 		// The Fortran solver library, $ZERO, included an ability to search for a better interval if given one where
 		// the function values at the end points have the same sign. This replicates that.
-		interval = findInterval(new Interval(min, max), errorFunc, (i, x) -> i >= 2 && Math.abs(x) > 20);
+		interval = findInterval(interval, errorFunc, (i, x) -> i >= 2 && Math.abs(x) > 20);
 
-		double x = solver.solve(100, errorFunc, interval.start(), interval.end(), interval.mid());
-		return x;
+		return solver.solve(100, errorFunc, interval.start(), interval.end(), interval.mid());
+
 	}
 
 	private void handleRootForQuadMeanDiameterFractionalErrorException(RuntimeException ex)

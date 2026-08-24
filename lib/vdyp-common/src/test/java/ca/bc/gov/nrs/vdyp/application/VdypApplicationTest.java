@@ -415,54 +415,6 @@ public class VdypApplicationTest {
 			}
 
 			@Test
-			void testComputeGraph() {
-
-				Map<String, Float> initialDqs = Utils.constMap(map -> {
-					map.put("B", 12.0803461f);
-					map.put("C", 8.66746521f);
-					map.put("F", 11.8044939f);
-					map.put("H", 9.06493855f);
-					map.put("S", 10.4460621f);
-				});
-				Map<String, Float> baseAreas = Utils.constMap(map -> {
-					map.put("B", 0.634290636f);
-					map.put("C", 1.26858127f);
-					map.put("F", 1.90287197f);
-					map.put("H", 1.90287197f);
-					map.put("S", 0.634290636f);
-
-				});
-				Map<String, Float> minDq = Utils.constMap(map -> {
-					map.put("B", 7.6f);
-					map.put("C", 7.6f);
-					map.put("F", 7.6f);
-					map.put("H", 7.6f);
-					map.put("S", 7.6f);
-				});
-				Map<String, Float> maxDq = Utils.constMap(map -> {
-					map.put("B", 13.8423338f);
-					map.put("C", 16.6669998f);
-					map.put("F", 15.5116472f);
-					map.put("H", 12.5369997f);
-					map.put("S", 12.6630001f);
-				});
-
-				float tph = 748.402222f;
-
-				var resultPerSpecies = new HashMap<String, Float>();
-
-				for (float x = -3.9f; x <= 2f; x += 0.01f) {
-
-					float result = app.quadMeanDiameterFractionalError(
-							x, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
-					);
-
-					System.out.println(String.format("%f\t%f", x, result));
-
-				}
-			}
-
-			@Test
 			void testComputeXClamppedHigh() {
 
 				Map<String, Float> initialDqs = Utils.constMap(map -> {
@@ -1163,7 +1115,7 @@ public class VdypApplicationTest {
 			@Test
 			void testCompute() throws ProcessingException {
 
-				VdypLayer layer = VdypLayer.build((lb) -> {
+				VdypLayer layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 2024);
 					lb.layerType(LayerType.PRIMARY);
 					lb.controlMap(controlMap);
@@ -1276,7 +1228,7 @@ public class VdypApplicationTest {
 			@Test
 			void testApply() {
 
-				VdypLayer layer = VdypLayer.build((lb) -> {
+				VdypLayer layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 2024);
 					lb.layerType(LayerType.PRIMARY);
 					lb.controlMap(controlMap);
@@ -1364,7 +1316,7 @@ public class VdypApplicationTest {
 			@Test
 			void testCompute() throws ProcessingException {
 
-				VdypLayer layer = VdypLayer.build((lb) -> {
+				VdypLayer layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 2024);
 					lb.layerType(LayerType.PRIMARY);
 					lb.baseAreaByUtilization(6.34290648f);
@@ -1435,7 +1387,7 @@ public class VdypApplicationTest {
 			@Test
 			void testVDYP942Primary() throws ProcessingException {
 
-				VdypLayer layer = VdypLayer.build((lb) -> {
+				VdypLayer layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 2024);
 					lb.layerType(LayerType.PRIMARY);
 					lb.baseAreaByUtilization(66.666664f);
