@@ -9,4 +9,13 @@ public interface NonFipDebugSettings extends DebugSettings {
 	 */
 	Optional<Float> getMaxBreastHeightAge();
 
+	/**
+	 * Factor to expand DQ to recover TPH
+	 */
+	Optional<Float> getExpandDiameterForTPHRecovery();
+
+	/**
+	 * Are BA and TPH errors in Mode 1 fatal
+	 */
+	boolean getMode1ErrorsFatal();
 }
