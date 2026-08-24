@@ -37,7 +37,7 @@
     {
       "changeSet": {
         "id": "01_00_18_00",
-				"author": "pminter",
+        "author": "pminter",
         "changes": [
           {
             "sqlFile": {
@@ -54,32 +54,32 @@
               "dbms": "postgresql",
               "endDelimiter": ";",
               "path": "scripts/01_00_18/00/ddl/tables/batch-job-claim-drop.sql",
-							"relativeToChangelogFile": true
-						}
-					}
-				]
-			}
-		},
-		{
-			"changeSet": {
-				"id": "01_00_18_01",
-				"author": "pminter",
-				"changes": [
-					{
-						"sqlFile": {
-							"dbms": "postgresql",
-							"endDelimiter": ";",
-							"path": "scripts/01_00_18/01/ddl/tables/batch-job-claim-lease-token-guid.sql",
-							"relativeToChangelogFile": true
-						}
-					}
-				],
-				"rollback": [
-					{
-						"sqlFile": {
-							"dbms": "postgresql",
-							"endDelimiter": ";",
-							"path": "scripts/01_00_18/01/ddl/tables/batch-job-claim-lease-token-guid-rollback.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_18_01",
+        "author": "pminter",
+        "changes": [
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_18/01/ddl/tables/batch-job-claim-lease-token-guid.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_18/01/ddl/tables/batch-job-claim-lease-token-guid-rollback.sql",
               "relativeToChangelogFile": true
             }
           }
