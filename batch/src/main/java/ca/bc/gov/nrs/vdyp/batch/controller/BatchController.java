@@ -5,9 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -58,6 +61,7 @@ public class BatchController {
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
 	private final StorageEstimationService storageEstimationService;
+	private final TaskExecutor prioritizationExecutor;
 
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
@@ -75,7 +79,8 @@ public class BatchController {
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
 			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties,
-			StorageEstimationService storageEstimationService
+			StorageEstimationService storageEstimationService,
+			@Qualifier("prioritizationExecutor") TaskExecutor prioritizationExecutor
 	) {
 		this.jobLauncher = jobLauncher;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
@@ -84,6 +89,7 @@ public class BatchController {
 		this.jobOperator = jobOperator;
 		this.batchProperties = batchProperties;
 		this.storageEstimationService = storageEstimationService;
+		this.prioritizationExecutor = prioritizationExecutor;
 	}
 
 	/**
@@ -222,6 +228,150 @@ public class BatchController {
 		}
 	}
 
+	/**
+	 * Prioritizes a running job by pausing every other currently running job (freeing shared thread-pool capacity for
+	 * this job's already-queued partitions) and, once they've actually stopped, resuming them in the order they were
+	 * originally started.
+	 */
+	@PostMapping(value = "/prioritize/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> prioritizeBatchJob(@PathVariable UUID jobGuid) {
+		Map<String, Object> response = new HashMap<>();
+
+		JobExecution targetExecution;
+		try {
+			logger.debug("Attempting to prioritize job with GUID: {}", jobGuid);
+			targetExecution = findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), true);
+		} catch (NoSuchJobExecutionException e) {
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.ERROR, "Job execution not found");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"No job execution found with GUID: " + jobGuid + ". Please verify the GUID is correct."
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+			logger.error("Job execution not found with GUID: {}", jobGuid);
+			return ResponseEntity.status(404).body(response);
+		}
+
+		if (!targetExecution.getStatus().isRunning()) {
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.EXECUTION_ID, targetExecution.getId());
+			response.put(BatchConstants.Job.ERROR, "Job is not currently running");
+			response.put(BatchConstants.Job.MESSAGE, "Only a currently running job can be prioritized.");
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+			logger.warn("[GUID: {}] Refusing to prioritize job that is not currently running.", jobGuid);
+			return ResponseEntity.badRequest().body(response);
+		}
+
+		List<JobExecution> others = findOtherRunningExecutions(targetExecution);
+
+		response.put(BatchConstants.Job.GUID, jobGuid);
+		response.put(BatchConstants.Prioritize.TARGET_EXECUTION_ID, targetExecution.getId());
+		response.put(BatchConstants.Prioritize.OTHERS_PAUSED_COUNT, others.size());
+		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+		if (others.isEmpty()) {
+			response.put(BatchConstants.Job.STATUS, "ALREADY_PRIORITIZED");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"No other running jobs to pause; this job already has full thread capacity available."
+			);
+			logger.info("[GUID: {}] No other running jobs found; nothing to pause.", jobGuid);
+			return ResponseEntity.ok(response);
+		}
+
+		response.put(BatchConstants.Job.STATUS, "PRIORITIZE_REQUESTED");
+		response.put(
+				BatchConstants.Job.MESSAGE,
+				"Prioritization requested. " + others.size()
+						+ " other running job(s) will be paused and resumed in their original start order."
+		);
+
+		logger.info("[GUID: {}] Prioritizing job. Pausing {} other running job(s).", jobGuid, others.size());
+		prioritizationExecutor.execute(() -> prioritizeAsync(jobGuid.toString(), others));
+
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+	}
+
+	/**
+	 * Finds all other currently running executions of the fetch-and-partition job (BatchConstants.Job.JOB_NAME),
+	 * excluding the given target, ordered by start time ascending - the order they should later be resumed in.
+	 */
+	private List<JobExecution> findOtherRunningExecutions(JobExecution target) {
+		Set<JobExecution> runningExecutions = jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME);
+
+		return runningExecutions.stream()
+				.filter(execution -> !execution.getId().equals(target.getId()))
+				.sorted(
+						Comparator
+								.comparing(JobExecution::getStartTime, Comparator.nullsLast(Comparator.naturalOrder()))
+				)
+				.toList();
+	}
+
+	/**
+	 * Pauses each of the given job executions (in order) and, once each has actually stopped, resumes it by relaunching
+	 * it with its original job parameters - same pattern as StartupRecoveryService, so already completed steps are
+	 * skipped and no input re-download occurs.
+	 */
+	private void prioritizeAsync(String prioritizedJobGuid, List<JobExecution> others) {
+		for (JobExecution execution : others) {
+			Long executionId = execution.getId();
+			try {
+				jobOperator.stop(executionId);
+			} catch (JobExecutionNotRunningException e) {
+				logger.debug(
+						"[GUID: {}] Job execution {} was already stopping/stopped.", prioritizedJobGuid, executionId
+				);
+			} catch (Exception e) {
+				logger.warn(
+						"[GUID: {}] Failed to stop job execution {} while prioritizing; skipping it. {}",
+						prioritizedJobGuid, executionId, e.getMessage(), e
+				);
+				continue;
+			}
+
+			waitUntilStopped(executionId);
+
+			try {
+				JobExecution resumed = jobLauncher.run(fetchAndPartitionJob, execution.getJobParameters());
+				logger.info(
+						"[GUID: {}] Resumed paused job execution {} as new execution {}.", prioritizedJobGuid,
+						executionId, resumed.getId()
+				);
+			} catch (Exception e) {
+				logger.error(
+						"[GUID: {}] Failed to resume paused job execution {}. {}", prioritizedJobGuid, executionId,
+						e.getMessage(), e
+				);
+			}
+		}
+	}
+
+	private void waitUntilStopped(Long executionId) {
+		int timeoutSeconds = batchProperties.getPrioritize().getStopWaitTimeoutSeconds();
+		int pollIntervalMillis = batchProperties.getPrioritize().getStopPollIntervalMillis();
+		long deadline = System.currentTimeMillis() + (timeoutSeconds * 1000L);
+
+		while (System.currentTimeMillis() < deadline) {
+			JobExecution current = jobExplorer.getJobExecution(executionId);
+			if (current == null || !current.getStatus().isRunning()) {
+				return;
+			}
+			try {
+				Thread.sleep(pollIntervalMillis);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				return;
+			}
+		}
+
+		logger.warn(
+				"Timed out after {}s waiting for job execution {} to stop; proceeding to resume other jobs anyway.",
+				timeoutSeconds, executionId
+		);
+	}
+
 	@GetMapping(value = "/status/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable UUID jobGuid) {
 		Map<String, Object> response = new HashMap<>();
@@ -312,8 +462,8 @@ public class BatchController {
 		response.put(
 				"availableEndpoints",
 				Arrays.asList(
-						"/api/batch/startWithGUIDs", "/api/batch/stop/{jobGuid}", "/api/batch/status/{jobGuid}",
-						"/api/batch/health", "/api/batch/capacity", "/api/batch/storage"
+						"/api/batch/startWithGUIDs", "/api/batch/stop/{jobGuid}", "/api/batch/prioritize/{jobGuid}",
+						"/api/batch/status/{jobGuid}", "/api/batch/health", "/api/batch/capacity", "/api/batch/storage"
 				)
 		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());

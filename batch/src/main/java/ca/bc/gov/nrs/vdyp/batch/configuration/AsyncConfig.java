@@ -19,4 +19,18 @@ public class AsyncConfig {
 		ex.initialize();
 		return ex;
 	}
+
+	/**
+	 * Single-threaded: only one prioritization can be in flight at a time.
+	 */
+	@Bean(name = "prioritizationExecutor")
+	public ThreadPoolTaskExecutor prioritizationExecutor() {
+		ThreadPoolTaskExecutor ex = new ThreadPoolTaskExecutor();
+		ex.setCorePoolSize(1);
+		ex.setMaxPoolSize(1);
+		ex.setQueueCapacity(4);
+		ex.setThreadNamePrefix("batch-prioritize-");
+		ex.initialize();
+		return ex;
+	}
 }
