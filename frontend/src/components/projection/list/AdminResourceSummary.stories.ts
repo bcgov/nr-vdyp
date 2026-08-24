@@ -30,6 +30,22 @@ const meta: Meta<typeof AdminResourceSummary> = {
       control: { type: 'number' },
       description: 'Total number of projections currently waiting in the queue',
     },
+    storagePercent: {
+      control: { type: 'number' },
+      description: 'PVC storage usage percentage shown in the progress bar',
+    },
+    storageUsedBytes: {
+      control: { type: 'number' },
+      description: 'Absolute PVC storage bytes used, shown in the hover tooltip',
+    },
+    storageTotalBytes: {
+      control: { type: 'number' },
+      description: 'Absolute PVC storage total capacity in bytes, shown in the hover tooltip',
+    },
+    storageOutOfSpec: {
+      control: { type: 'boolean' },
+      description: 'Whether PVC storage usage exceeds the configured out-of-spec threshold',
+    },
   },
 }
 
@@ -44,5 +60,18 @@ export const Default: Story = {
     threadUsagePercent: 30,
     stuckCount: 1,
     queuedCount: 2,
+    storagePercent: 20,
+    storageUsedBytes: 20 * 1024 ** 3,
+    storageTotalBytes: 100 * 1024 ** 3,
+    storageOutOfSpec: false,
+  },
+}
+
+export const StorageOutOfSpec: Story = {
+  args: {
+    ...Default.args,
+    storagePercent: 92,
+    storageUsedBytes: 92 * 1024 ** 3,
+    storageOutOfSpec: true,
   },
 }

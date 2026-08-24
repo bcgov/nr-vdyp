@@ -15,7 +15,15 @@
 import { computed } from 'vue'
 import { getStatusIcon } from '@/utils/util'
 import { CONSTANTS } from '@/constants'
-import { AdminCancelledIcon16px, QueuedIcon16px, StuckIcon16px } from '@/assets/'
+import {
+  AdminCancelledIcon16px,
+  QueuedIcon16px,
+  StuckIcon16px,
+  DraftIcon16px,
+  ReadyIcon16px,
+  RunningIcon16px,
+  FailedIcon16px,
+} from '@/assets/'
 
 interface Props {
   status: string
@@ -29,6 +37,10 @@ const statusIcon16pxOverrides: Record<string, string> = {
   [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: AdminCancelledIcon16px,
   [CONSTANTS.PROJECTION_STATUS.QUEUED]: QueuedIcon16px,
   [CONSTANTS.PROJECTION_STATUS.STUCK]: StuckIcon16px,
+  [CONSTANTS.PROJECTION_STATUS.DRAFT]: DraftIcon16px,
+  [CONSTANTS.PROJECTION_STATUS.READY]: ReadyIcon16px,
+  [CONSTANTS.PROJECTION_STATUS.RUNNING]: RunningIcon16px,
+  [CONSTANTS.PROJECTION_STATUS.FAILED]: FailedIcon16px,
 }
 
 const statusIcon = computed(() => statusIcon16pxOverrides[props.status] ?? getStatusIcon(props.status))

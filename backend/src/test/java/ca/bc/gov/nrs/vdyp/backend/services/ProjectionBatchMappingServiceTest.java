@@ -33,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchStorageStatusModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
@@ -475,6 +476,29 @@ class ProjectionBatchMappingServiceTest {
 
 		assertEquals(0, result);
 		verify(batchClient, times(1)).threadCapacity();
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void getStorageStatus_happyPath_returnsStatusFromBatchClient() {
+		BatchStorageStatusModel expected = new BatchStorageStatusModel(42.5, 1000L, 2000L, 900L, true, 115);
+		when(batchClient.storageStatus()).thenReturn(expected);
+
+		BatchStorageStatusModel result = service.getStorageStatus();
+
+		assertEquals(expected, result);
+		verify(batchClient, times(1)).storageStatus();
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void getStorageStatus_batchClientThrows_returnsZeroedNotOutOfSpecStatus() {
+		when(batchClient.storageStatus()).thenThrow(new WebApplicationException(Response.serverError().build()));
+
+		BatchStorageStatusModel result = service.getStorageStatus();
+
+		assertEquals(new BatchStorageStatusModel(0, 0, 0, 0, false, 0), result);
+		verify(batchClient, times(1)).storageStatus();
 		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
 

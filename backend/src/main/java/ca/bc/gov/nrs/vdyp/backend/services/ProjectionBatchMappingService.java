@@ -17,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.BatchFailureTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionBatchMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.BatchStorageStatusModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
@@ -233,6 +234,20 @@ public class ProjectionBatchMappingService {
 		} catch (Exception e) {
 			logger.warn("Unable to retrieve thread capacity from batch service", e);
 			return 0;
+		}
+	}
+
+	/**
+	 * Retrieves the batch service's PVC storage status (percent full, out-of-spec flag), used by the Admin Dashboard to
+	 * show system storage health. Returns a zeroed, not-out-of-spec status if the batch service is unreachable so the
+	 * caller can degrade gracefully rather than fail the whole dashboard load.
+	 */
+	public BatchStorageStatusModel getStorageStatus() {
+		try {
+			return batchClient.storageStatus();
+		} catch (Exception e) {
+			logger.warn("Unable to retrieve storage status from batch service", e);
+			return new BatchStorageStatusModel(0, 0, 0, 0, false, 0);
 		}
 	}
 
