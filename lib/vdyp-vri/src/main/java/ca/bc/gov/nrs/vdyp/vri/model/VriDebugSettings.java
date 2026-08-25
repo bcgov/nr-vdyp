@@ -44,6 +44,7 @@ public class VriDebugSettings extends BaseDebugSettings implements NonFipDebugSe
 	/**
 	 * Are BA and TPH errors in Mode 1 fatal
 	 */
+	@Override
 	public boolean getMode1ErrorsFatal() {
 		return (Boolean) getProcessedValue(MODE_1_ERRORS_FATAL);
 	}
@@ -51,6 +52,7 @@ public class VriDebugSettings extends BaseDebugSettings implements NonFipDebugSe
 	/**
 	 * Factor to expand DQ to recover TPH
 	 */
+	@Override
 	@SuppressWarnings("unchecked")
 	public Optional<Float> getExpandDiameterForTPHRecovery() {
 		return (Optional<Float>) getProcessedValue(EXPAND_DQ_FOR_TPH_RECOVERY);
