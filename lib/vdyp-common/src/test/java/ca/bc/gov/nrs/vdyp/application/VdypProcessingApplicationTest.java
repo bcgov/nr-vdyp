@@ -28,6 +28,9 @@ import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
 
 class VdypProcessingApplicationTest {
@@ -77,6 +80,11 @@ class VdypProcessingApplicationTest {
 					this.resolvedControlMap = new ProcessingResolvedControlMapImpl(
 							ProcessingTestUtils.loadControlMap()
 					);
+				}
+
+				@Override
+				protected ComponentSizeLimits getLimitsForSpecies(VdypSpecies spec, Region region) {
+					return estimationMethods.getLimitsForHeightAndDiameter(spec.getGenus(), region);
 				}
 
 			};

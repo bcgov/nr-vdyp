@@ -285,4 +285,22 @@ public class ProcessingDebugSettings extends BaseDebugSettings implements NonFip
 		return (Boolean) getProcessedValue(DO_LIMIT_BA_WHEN_DQ_LIMITED);
 	}
 
+	@Override
+	public Optional<Float> getExpandDiameterForTPHRecovery() {
+		// Forward uses NDEBUG(9) for DO_LIMIT_BA_WHEN_DQ_LIMITED as a boolean, but ROOTV01 assumes it's the VRIStart
+		// meaning of a percentage of the starting interval to adjust by to try to find a better interval.
+
+		// TODO provide some way to deconflate these
+		return Optional.empty();
+	}
+
+	@Override
+	public boolean getMode1ErrorsFatal() {
+		// Forward uses NDEBUG(1) for SPECIES_DYNAMICS as a boolean, but ROOTV01 assumes it's the VRIStart meaning of a
+		// enabling stricter error handling
+
+		// TODO provide some way to deconflate these
+		return false;
+	}
+
 }

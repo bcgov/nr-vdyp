@@ -20,7 +20,10 @@ import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
+import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 
 public class TestStartApplication
 		extends VdypStartApplication<TestPolygon, TestLayer, TestSpecies, TestSite, TestDebugSettings> {
@@ -112,6 +115,11 @@ public class TestStartApplication
 	@Override
 	protected void process() throws ProcessingException {
 		// Do Nothing
+	}
+
+	@Override
+	protected ComponentSizeLimits getLimitsForSpecies(VdypSpecies spec, Region region) {
+		return estimationMethods.getLimitsForHeightAndDiameter(spec.getGenus(), region);
 	}
 
 }
