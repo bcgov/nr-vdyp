@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 
@@ -66,6 +67,9 @@ class BatchItemWriterTest {
 	@Mock
 	private ObjectMapper objectMapper;
 
+	@Mock
+	private JobOwnershipService ownershipService;
+
 	private BatchItemWriter writer;
 	private Parameters mockParameters;
 
@@ -77,7 +81,7 @@ class BatchItemWriterTest {
 		// Configure ObjectMapper to return the mock Parameters when reading the valid JSON
 		when(objectMapper.readValue(VALID_PARAMETERS_JSON, Parameters.class)).thenReturn(mockParameters);
 
-		writer = new BatchItemWriter(batchProjectionService, objectMapper);
+		writer = new BatchItemWriter(batchProjectionService, objectMapper, ownershipService);
 	}
 
 	@Test
@@ -95,7 +99,7 @@ class BatchItemWriterTest {
 		assertDoesNotThrow(() -> writer.beforeStep(stepExecution));
 
 		verify(stepExecution).getJobExecutionId();
-		verify(stepExecution).getJobExecution();
+		verify(stepExecution, atLeastOnce()).getJobExecution();
 		verify(stepExecution).getExecutionContext();
 		verify(stepExecution, atLeastOnce()).getJobParameters();
 	}

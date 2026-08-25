@@ -3,10 +3,10 @@ package ca.bc.gov.nrs.vdyp.batch.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +16,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -24,6 +23,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -43,6 +43,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
+import ca.bc.gov.nrs.vdyp.batch.ownership.ServerCapacityService;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -74,6 +76,10 @@ class BatchControllerTest {
 
 	@Mock
 	private JobParameters jobParameters;
+	@Mock
+	private BatchJobLaunchService batchJobLaunchService;
+	@Mock
+	private ServerCapacityService serverCapacityService;
 
 	@Mock
 	private StorageEstimationService storageEstimationService;
@@ -89,7 +95,7 @@ class BatchControllerTest {
 
 		batchController = new BatchController(
 				jobLauncher, fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator, batchProperties,
-				storageEstimationService
+				storageEstimationService, batchJobLaunchService, serverCapacityService
 		);
 
 		// Use system temp directory for cross-platform compatibility
@@ -111,12 +117,20 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testCapacity_ReturnsConfiguredThreadPoolCorePoolSize() {
+	void testCapacity_ReturnsExecutorThreadUsage() {
+		when(serverCapacityService.maximumThreads()).thenReturn(21);
+		when(serverCapacityService.activeThreads()).thenReturn(8);
+		when(serverCapacityService.availableThreads()).thenReturn(13);
 		ResponseEntity<Map<String, Object>> response = batchController.capacity();
 
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
 		assertEquals(21, response.getBody().get(BatchConstants.Capacity.THREAD_CAPACITY));
+		assertEquals(8, response.getBody().get(BatchConstants.Capacity.ACTIVE_THREADS));
+		assertEquals(13, response.getBody().get(BatchConstants.Capacity.AVAILABLE_THREADS));
+		verify(serverCapacityService).maximumThreads();
+		verify(serverCapacityService).activeThreads();
+		verify(serverCapacityService).availableThreads();
 	}
 
 	@Test
@@ -149,8 +163,9 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse() throws JobExecutionAlreadyRunningException,
-			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
+	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse()
+			throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException,
+			JobParametersInvalidException, IOException, JobExecutionException {
 		UUID projectionGUID = UUID.randomUUID();
 
 		// Mock job execution
@@ -161,7 +176,7 @@ class BatchControllerTest {
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn("test-guid");
-		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
+		when(batchJobLaunchService.launchNewJob(projectionGUID, "{}")).thenReturn(jobExecution);
 
 		ResponseEntity<Map<String, Object>> response = batchController.startBatchJobPersistedID(projectionGUID, "{}");
 
@@ -169,9 +184,7 @@ class BatchControllerTest {
 		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
 
-		ArgumentCaptor<JobParameters> parametersCaptor = ArgumentCaptor.forClass(JobParameters.class);
-		verify(jobLauncher).run(any(), parametersCaptor.capture());
-		assertEquals(150L, parametersCaptor.getValue().getLong(BatchConstants.Chunk.SIZE));
+		verify(batchJobLaunchService).launchNewJob(projectionGUID, "{}");
 	}
 
 	@Test

@@ -1,8 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.messaging.consumer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -11,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -23,11 +20,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -36,7 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.NatsBatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.BatchRequestMessage;
-import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
+import ca.bc.gov.nrs.vdyp.batch.service.StartupRecoveryService;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamSubscription;
@@ -79,6 +75,11 @@ class BatchRequestConsumerTest {
 	private ThreadPoolTaskExecutor taskExecutor;
 
 	@Mock
+	private BatchJobLaunchService launchService;
+	@Mock
+	private StartupRecoveryService recoveryService;
+
+	@Mock
 	private Message message;
 
 	@TempDir
@@ -90,97 +91,76 @@ class BatchRequestConsumerTest {
 
 	@BeforeEach
 	void setUp() {
-		consumer = new BatchRequestConsumer(
-				natsConnection, PROPERTIES, objectMapper, jobLauncher, vdypBatchJob, batchProperties, taskExecutor
-		);
+		consumer = new BatchRequestConsumer(natsConnection, PROPERTIES, objectMapper, launchService, recoveryService);
 	}
 
 	@Test
 	void handleMessage_WhenThreadPoolHasCapacity_LaunchesJobAndAcksMessage() throws Exception {
-		UUID jobId = UUID.randomUUID();
+		UUID projectionId = UUID.randomUUID();
 
-		givenThreadPoolHasCapacity();
-		givenBatchProperties(2);
-		givenMessageData(jobId, "{}");
+		when(launchService.hasCapacity()).thenReturn(true);
+		givenMessageData(projectionId, "{}");
 
 		consumer.handleMessage(message);
 
-		ArgumentCaptor<JobParameters> parametersCaptor = ArgumentCaptor.forClass(JobParameters.class);
-		verify(jobLauncher).run(eq(vdypBatchJob), parametersCaptor.capture());
-
-		JobParameters parameters = parametersCaptor.getValue();
-		assertNotNull(parameters.getString(BatchConstants.Job.GUID));
-		assertEquals("{}", parameters.getString(BatchConstants.Projection.PARAMETERS_JSON));
-		assertNotNull(parameters.getString(BatchConstants.Job.TIMESTAMP));
-		assertTrue(Files.exists(Path.of(parameters.getString(BatchConstants.Job.BASE_DIR))));
-		assertEquals(jobId.toString(), parameters.getString(BatchConstants.GuidInput.PROJECTION_GUID));
-		assertEquals(2L, parameters.getLong(BatchConstants.Partition.NUMBER));
-		assertEquals(150L, parameters.getLong(BatchConstants.Chunk.SIZE));
+		verify(launchService).launch(projectionId, "{}");
 		verify(message).ack();
 		verify(message, never()).nak();
 	}
 
 	@Test
-	void handleMessage_WhenThreadPoolHasNoCapacity_NaksMessageWithoutLaunchingJob() throws Exception {
-		when(taskExecutor.getActiveCount()).thenReturn(1);
-		when(taskExecutor.getMaxPoolSize()).thenReturn(1);
+	void handleMessage_WhenExpiredWorkIsRecovered_NaksNewMessageWithoutLaunchingIt() throws Exception {
+		when(recoveryService.recoverNextExpiredExecution()).thenReturn(true);
 
 		consumer.handleMessage(message);
 
-		verify(jobLauncher, never()).run(eq(vdypBatchJob), any(JobParameters.class));
+		verify(launchService, never()).launch(any(), any());
+		verify(message).nak();
+		verify(message, never()).ack();
+	}
+
+	@Test
+	void handleMessage_WhenThreadPoolHasNoCapacity_NaksMessageWithoutLaunchingJob() throws Exception {
+		when(launchService.hasCapacity()).thenReturn(false);
+
+		consumer.handleMessage(message);
+
+		verify(launchService, never()).launch(any(), any());
 		verify(message).nak();
 		verify(message, never()).ack();
 	}
 
 	@Test
 	void handleMessage_WhenPayloadCannotBeParsed_NaksMessageWithoutLaunchingJob() throws Exception {
-		givenThreadPoolHasCapacity();
+		when(launchService.hasCapacity()).thenReturn(true);
 		when(message.getData()).thenReturn("not-json".getBytes(StandardCharsets.UTF_8));
 
 		consumer.handleMessage(message);
 
-		verify(jobLauncher, never()).run(eq(vdypBatchJob), any(JobParameters.class));
+		verify(launchService, never()).launch(any(), any());
 		verify(message).nak();
 		verify(message, never()).ack();
 	}
 
 	@Test
 	void handleMessage_WhenJobLauncherFails_NaksMessageWithoutAcking() throws Exception {
-		UUID jobId = UUID.randomUUID();
+		UUID projectionId = UUID.randomUUID();
 
-		givenThreadPoolHasCapacity();
-		givenBatchProperties(3);
-		givenMessageData(jobId, "{\"mode\":\"test\"}");
-		when(jobLauncher.run(eq(vdypBatchJob), any(JobParameters.class))).thenThrow(new RuntimeException("boom"));
+		when(launchService.hasCapacity()).thenReturn(true);
+		givenMessageData(projectionId, "{\"mode\":\"test\"}");
+		when(launchService.launch(projectionId, "{\"mode\":\"test\"}")).thenThrow(new RuntimeException("boom"));
 
 		consumer.handleMessage(message);
 
-		verify(jobLauncher).run(eq(vdypBatchJob), any(JobParameters.class));
+		verify(launchService).launch(projectionId, "{\"mode\":\"test\"}");
 		verify(message).nak();
 		verify(message, never()).ack();
 	}
 
 	@Test
-	void hasJobLaunchCapacity_WhenThreadPoolHasAvailableWorker_ReturnsTrue() {
-		when(taskExecutor.getActiveCount()).thenReturn(1);
-		when(taskExecutor.getMaxPoolSize()).thenReturn(2);
-
-		assertTrue(consumer.hasJobLaunchCapacity());
-	}
-
-	@Test
-	void hasJobLaunchCapacity_WhenThreadPoolIsFull_ReturnsFalse() {
-		when(taskExecutor.getActiveCount()).thenReturn(2);
-		when(taskExecutor.getMaxPoolSize()).thenReturn(2);
-
-		assertFalse(consumer.hasJobLaunchCapacity());
-	}
-
-	@Test
 	void start_WhenNatsIsDisabled_DoesNotStartWorker() throws Exception {
 		BatchRequestConsumer disabledConsumer = new BatchRequestConsumer(
-				natsConnection, natsProperties(false), objectMapper, jobLauncher, vdypBatchJob, batchProperties,
-				taskExecutor
+				natsConnection, natsProperties(false), objectMapper, launchService, recoveryService
 		);
 
 		disabledConsumer.start();
@@ -193,11 +173,10 @@ class BatchRequestConsumerTest {
 	void start_WhenNatsIsEnabled_SubscribesAndFetchesBatchMessages() throws Exception {
 		CountDownLatch fetchCalled = new CountDownLatch(1);
 
-		when(taskExecutor.getActiveCount()).thenReturn(0);
-		when(taskExecutor.getMaxPoolSize()).thenReturn(1);
+		when(launchService.hasCapacity()).thenReturn(true);
 		when(natsConnection.jetStream()).thenReturn(jetStream);
 		when(jetStream.subscribe(eq(PROPERTIES.subject()), any(PullSubscribeOptions.class))).thenReturn(subscription);
-		when(subscription.fetch(PROPERTIES.batchSize(), PROPERTIES.pollTimeout())).thenAnswer(invocation -> {
+		when(subscription.fetch(1, PROPERTIES.pollTimeout())).thenAnswer(invocation -> {
 			consumer.stop();
 			fetchCalled.countDown();
 			return List.of();
@@ -209,7 +188,7 @@ class BatchRequestConsumerTest {
 			assertTrue(fetchCalled.await(1, TimeUnit.SECONDS));
 			assertFalse(consumer.isRunning());
 			verify(jetStream).subscribe(eq(PROPERTIES.subject()), any(PullSubscribeOptions.class));
-			verify(subscription).fetch(PROPERTIES.batchSize(), PROPERTIES.pollTimeout());
+			verify(subscription).fetch(1, PROPERTIES.pollTimeout());
 		} finally {
 			consumer.stop();
 		}
@@ -219,29 +198,26 @@ class BatchRequestConsumerTest {
 	void start_WhenNoJobLaunchCapacityInitially_PausesUntilCapacityIsAvailableBeforeFetching() throws Exception {
 		NatsBatchProperties shortPollProperties = natsProperties(true, Duration.ofMillis(1));
 		BatchRequestConsumer capacityLimitedConsumer = new BatchRequestConsumer(
-				natsConnection, shortPollProperties, objectMapper, jobLauncher, vdypBatchJob, batchProperties,
-				taskExecutor
+				natsConnection, shortPollProperties, objectMapper, launchService, recoveryService
 		);
 		CountDownLatch fetchCalled = new CountDownLatch(1);
 
-		when(taskExecutor.getActiveCount()).thenReturn(1, 1, 0);
-		when(taskExecutor.getMaxPoolSize()).thenReturn(1);
+		when(launchService.hasCapacity()).thenReturn(false, false, true);
 		when(natsConnection.jetStream()).thenReturn(jetStream);
 		when(jetStream.subscribe(eq(shortPollProperties.subject()), any(PullSubscribeOptions.class)))
 				.thenReturn(subscription);
-		when(subscription.fetch(shortPollProperties.batchSize(), shortPollProperties.pollTimeout()))
-				.thenAnswer(invocation -> {
-					capacityLimitedConsumer.stop();
-					fetchCalled.countDown();
-					return List.of();
-				});
+		when(subscription.fetch(1, shortPollProperties.pollTimeout())).thenAnswer(invocation -> {
+			capacityLimitedConsumer.stop();
+			fetchCalled.countDown();
+			return List.of();
+		});
 
 		try {
 			capacityLimitedConsumer.start();
 
 			assertTrue(fetchCalled.await(1, TimeUnit.SECONDS));
 			assertFalse(capacityLimitedConsumer.isRunning());
-			verify(subscription).fetch(shortPollProperties.batchSize(), shortPollProperties.pollTimeout());
+			verify(subscription).fetch(1, shortPollProperties.pollTimeout());
 		} finally {
 			capacityLimitedConsumer.stop();
 		}

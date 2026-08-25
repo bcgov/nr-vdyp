@@ -3,7 +3,11 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,13 +16,16 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.explore.JobExplorer;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobClaim;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
+import ca.bc.gov.nrs.vdyp.batch.ownership.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -31,70 +38,173 @@ public class StartupRecoveryService implements SmartLifecycle {
 	private static final String MISSING_PARTITION_INPUTS_EXIT_DESCRIPTION = "Marked FAILED during startup recovery because partition input directories are missing";
 
 	private final JobExplorer jobExplorer;
-	private final JobLauncher jobLauncher;
 	private final Job fetchAndPartitionJob;
 	private final BatchRecoveryMetadataService recoveryMetadataService;
 	private final VdypClient vdypClient;
+	private final BatchOwnershipProperties ownershipProperties;
+	private final JobOwnershipService ownershipService;
+	private final ServerCapacityService serverCapacityService;
+	private final ClaimBoundJobLauncher claimBoundJobLauncher;
 
-	private volatile boolean running = false;
+	private final AtomicBoolean running = new AtomicBoolean(false);
+	private Thread recoveryThread;
 
 	public StartupRecoveryService(
-			JobExplorer jobExplorer, @Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
-			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob,
-			BatchRecoveryMetadataService recoveryMetadataService, VdypClient vdypClient
+			JobExplorer jobExplorer, @Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob,
+			BatchRecoveryMetadataService recoveryMetadataService, VdypClient vdypClient,
+			BatchOwnershipProperties ownershipProperties, JobOwnershipService ownershipService,
+			ServerCapacityService serverCapacityService, ClaimBoundJobLauncher claimBoundJobLauncher
 	) {
 		this.jobExplorer = jobExplorer;
-		this.jobLauncher = jobLauncher;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
 		this.recoveryMetadataService = recoveryMetadataService;
 		this.vdypClient = vdypClient;
+		this.ownershipProperties = ownershipProperties;
+		this.ownershipService = ownershipService;
+		this.serverCapacityService = serverCapacityService;
+		this.claimBoundJobLauncher = claimBoundJobLauncher;
 	}
 
 	@Override
 	public void start() {
+		if (!running.compareAndSet(false, true)) {
+			return;
+		}
+		recoveryThread = new Thread(this::recoveryLoop, "vdyp-batch-recovery");
+		recoveryThread.start();
+	}
+
+	private void recoveryLoop() {
+		while (running.get()) {
+			try {
+				recoverClaimableExecutions();
+				sleepWithJitter();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				running.set(false);
+			} catch (Exception e) {
+				logger.error("Batch recovery scan failed; will retry on next interval", e);
+				try {
+					sleepWithJitter();
+				} catch (InterruptedException interrupted) {
+					Thread.currentThread().interrupt();
+					running.set(false);
+				}
+			}
+		}
+	}
+
+	void recoverClaimableExecutions() {
 		try {
 			Set<JobExecution> runningExecutions = jobExplorer.findRunningJobExecutions(JOB_NAME);
 
 			if (runningExecutions.isEmpty()) {
-				logger.info("No stale running executions found for job {}", JOB_NAME);
-				this.running = true;
+				logger.debug("No running executions found for job {}", JOB_NAME);
 				return;
 			}
 
 			for (JobExecution jobExecution : runningExecutions) {
-				Long oldExecutionId = jobExecution.getId();
-
-				logger.warn(
-						"Recovering stale job execution. jobName={}, executionId={}, status={}", JOB_NAME,
-						oldExecutionId, jobExecution.getStatus()
-				);
-
-				if (cannotRestartCompletedPartitionStep(jobExecution)) {
-					JobExecution failedExecution = recoveryMetadataService
-							.markStaleExecutionFailed(oldExecutionId, MISSING_PARTITION_INPUTS_EXIT_DESCRIPTION);
-					notifyBackendOfRecoveryFailure(failedExecution);
-					logger.warn(
-							"Not restarting stale job execution because partition inputs are missing. executionId={}",
-							oldExecutionId
-					);
-					continue;
-				}
-
-				recoveryMetadataService.markStaleExecutionFailed(oldExecutionId);
-
-				JobExecution newExecution = jobLauncher.run(fetchAndPartitionJob, jobExecution.getJobParameters());
-
-				logger.info(
-						"Restarted stale job execution. oldExecutionId={}, newExecutionId={}", oldExecutionId,
-						newExecution.getId()
-				);
+				recoverIfClaimable(jobExecution);
 			}
-
-			this.running = true;
 		} catch (Exception e) {
-			logger.error("Batch startup recovery failed. Refusing to start batch consumer.", e);
-			throw new IllegalStateException("Batch startup recovery failed", e);
+			logger.error("Batch recovery pass failed", e);
 		}
+	}
+
+	/**
+	 * Attempts one expired execution before a worker accepts new queue work.
+	 *
+	 * @return true when an expired execution was claimed and restarted
+	 */
+	public boolean recoverNextExpiredExecution() {
+		try {
+			for (JobExecution jobExecution : jobExplorer.findRunningJobExecutions(JOB_NAME)) {
+				if (recoverIfClaimable(jobExecution)) {
+					return true;
+				}
+			}
+			return false;
+		} catch (Exception e) {
+			logger.error("Prioritized batch recovery check failed", e);
+			return false;
+		}
+	}
+
+	private boolean recoverIfClaimable(JobExecution jobExecution) throws Exception {
+		Long oldExecutionId = jobExecution.getId();
+		String projectionGuid = projectionGuid(jobExecution);
+		if (ownershipService.isOwnedLocally(projectionGuid)) {
+			return false;
+		}
+
+		Optional<JobClaim> existingClaim = ownershipService.findProjectionClaim(projectionGuid);
+		if (existingClaim.isEmpty() && !ownershipProperties.isRecoverLegacyExecutionsWithoutClaim()) {
+			logger.warn(
+					"Skipping running legacy execution with no claim. projectionGuid={}, executionId={}. Drain old workers or enable batch.ownership.recover-legacy-executions-without-claim after confirming no old replicas are active.",
+					projectionGuid, oldExecutionId
+			);
+			return false;
+		}
+		if (existingClaim.isPresent() && existingClaim.get().leaseExpiryTime().isAfter(Instant.now())) {
+			logger.debug(
+					"Skipping live claimed execution. projectionGuid={}, executionId={}, ownerId={}, leaseExpiryTime={}",
+					projectionGuid, oldExecutionId, existingClaim.get().ownerId(), existingClaim.get().leaseExpiryTime()
+			);
+			return false;
+		}
+
+		if (!serverCapacityService.hasAvailableCapacity()) {
+			logger.debug(
+					"No local batch thread capacity available for recovery. projectionGuid={}, executionId={}",
+					projectionGuid, oldExecutionId
+			);
+			return false;
+		}
+
+		JobClaim claim = ownershipService.tryAcquire(projectionGuid, "recovery").orElse(null);
+		if (claim == null) {
+			return false;
+		}
+
+		logger.warn(
+				"Recovering claimed stale job execution. projectionGuid={}, oldExecutionId={}, status={}",
+				projectionGuid, oldExecutionId, jobExecution.getStatus()
+		);
+
+		if (cannotRestartCompletedPartitionStep(jobExecution)) {
+			JobExecution failedExecution = recoveryMetadataService
+					.markStaleExecutionFailed(oldExecutionId, MISSING_PARTITION_INPUTS_EXIT_DESCRIPTION);
+			notifyBackendOfRecoveryFailure(failedExecution);
+			ownershipService.releaseUnboundClaim(claim);
+			logger.warn(
+					"Not restarting stale execution because partition inputs are missing. executionId={}",
+					oldExecutionId
+			);
+			return false;
+		}
+
+		recoveryMetadataService.markStaleExecutionFailed(oldExecutionId);
+		JobExecution newExecution = claimBoundJobLauncher
+				.launch(fetchAndPartitionJob, jobExecution.getJobParameters(), claim);
+		logger.info(
+				"Restarted stale job execution. projectionGuid={}, oldExecutionId={}, newExecutionId={}",
+				projectionGuid, oldExecutionId, newExecution.getId()
+		);
+		return true;
+	}
+
+	private String projectionGuid(JobExecution jobExecution) {
+		String projectionGuid = jobExecution.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
+		if (projectionGuid == null || projectionGuid.isBlank()) {
+			throw new IllegalStateException("Running batch execution has no projection GUID: " + jobExecution.getId());
+		}
+		return projectionGuid;
+	}
+
+	private void sleepWithJitter() throws InterruptedException {
+		long baseMillis = Math.max(1, ownershipProperties.getRecoveryScanInterval().toMillis());
+		long jitterMillis = new Random().nextLong(Math.max(1, baseMillis / 4));
+		Thread.sleep(baseMillis + jitterMillis);
 	}
 
 	private boolean cannotRestartCompletedPartitionStep(JobExecution jobExecution) {
@@ -163,12 +273,15 @@ public class StartupRecoveryService implements SmartLifecycle {
 
 	@Override
 	public void stop() {
-		this.running = false;
+		this.running.set(false);
+		if (recoveryThread != null) {
+			recoveryThread.interrupt();
+		}
 	}
 
 	@Override
 	public boolean isRunning() {
-		return this.running;
+		return this.running.get();
 	}
 
 	@Override

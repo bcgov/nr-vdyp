@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +37,7 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultPersistenceException;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -44,6 +47,8 @@ class ResultPersistenceTaskletTest {
 	ComsFileService comsFileService;
 	@Mock
 	VdypClient vdypClient;
+	@Mock
+	JobOwnershipService ownershipService;
 
 	@Mock
 	ChunkContext chunkContext;
@@ -68,7 +73,7 @@ class ResultPersistenceTaskletTest {
 
 	@BeforeEach
 	void setup() {
-		tasklet = new ResultPersistenceTasklet(comsFileService, vdypClient);
+		tasklet = new ResultPersistenceTasklet(comsFileService, vdypClient, ownershipService);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -204,6 +209,23 @@ class ResultPersistenceTaskletTest {
 		verify(vdypClient).completeFileSetFileUpload(
 				projectionGuid.toString(), resultFileSetGuid.toString(), placeholderFileMappingGuid.toString()
 		);
+	}
+
+	@Test
+	void testExecute_whenOwnershipIsLostAtEntry_DoesNotStartPersistence() throws Exception {
+		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-123")
+				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString())
+				.addString(BatchConstants.Job.TIMESTAMP, BatchUtils.createJobTimestamp())
+				.addLong(BatchConstants.Partition.NUMBER, 4L)
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		doThrow(new IllegalStateException("fenced")).when(ownershipService).assertCurrentOwner(jobExecution);
+
+		assertThrows(IllegalStateException.class, () -> tasklet.execute(stepContribution, chunkContext));
+
+		verify(vdypClient, never()).getProjectionDetails(any());
+		verify(comsFileService, never()).updateStoredObject(any(UUID.class), any(Path.class), any(String.class));
+		verify(vdypClient, never()).markComplete(any(), eq(true), any());
 	}
 
 	@Test

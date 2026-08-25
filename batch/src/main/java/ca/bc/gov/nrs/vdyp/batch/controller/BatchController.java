@@ -36,6 +36,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
+import ca.bc.gov.nrs.vdyp.batch.ownership.ServerCapacityService;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -58,6 +60,8 @@ public class BatchController {
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
 	private final StorageEstimationService storageEstimationService;
+	private final BatchJobLaunchService batchJobLaunchService;
+	private final ServerCapacityService serverCapacityService;
 
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
@@ -75,7 +79,8 @@ public class BatchController {
 			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
 			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties,
-			StorageEstimationService storageEstimationService
+			StorageEstimationService storageEstimationService, BatchJobLaunchService batchJobLaunchService,
+			ServerCapacityService serverCapacityService
 	) {
 		this.jobLauncher = jobLauncher;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
@@ -84,6 +89,8 @@ public class BatchController {
 		this.jobOperator = jobOperator;
 		this.batchProperties = batchProperties;
 		this.storageEstimationService = storageEstimationService;
+		this.batchJobLaunchService = batchJobLaunchService;
+		this.serverCapacityService = serverCapacityService;
 	}
 
 	/**
@@ -313,7 +320,7 @@ public class BatchController {
 				"availableEndpoints",
 				Arrays.asList(
 						"/api/batch/startWithGUIDs", "/api/batch/stop/{jobGuid}", "/api/batch/status/{jobGuid}",
-						"/api/batch/health", "/api/batch/capacity", "/api/batch/storage"
+						"/api/batch/health", "/api/batch/capacity"
 				)
 		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
@@ -321,13 +328,14 @@ public class BatchController {
 	}
 
 	/**
-	 * Exposes this instance's configured thread pool capacity (batch.thread-pool.core-pool-size /
-	 * BATCH_THREAD_POOL_SIZE) so callers can display current thread load relative to system capacity.
+	 * Exposes this instance's shared Batch executor usage and maximum capacity.
 	 */
 	@GetMapping(value = "/capacity", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> capacity() {
 		Map<String, Object> response = new HashMap<>();
-		response.put(BatchConstants.Capacity.THREAD_CAPACITY, batchProperties.getThreadPool().getCorePoolSize());
+		response.put(BatchConstants.Capacity.THREAD_CAPACITY, serverCapacityService.maximumThreads());
+		response.put(BatchConstants.Capacity.ACTIVE_THREADS, serverCapacityService.activeThreads());
+		response.put(BatchConstants.Capacity.AVAILABLE_THREADS, serverCapacityService.availableThreads());
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
 	}
@@ -363,22 +371,12 @@ public class BatchController {
 		validateParametersJSON(projectionParametersJson);
 
 		try {
-			String jobGuid = BatchUtils.createJobGuid();
-			String jobTimestamp = BatchUtils.createJobTimestamp();
+			JobExecution jobExecution = batchJobLaunchService.launchNewJob(projectionGuid, projectionParametersJson);
 
-			Path jobBaseDir = ensureProjectionDirectoryExists(jobGuid);
-
-			logger.debug("[GUID: {}] Starting GUID-based job", jobGuid);
-
-			// Thread count will be computed dynamically by DownloadAndPartitionTasklet after files are fetched.
-			// Pass defaultNumPartitions as a safe fallback in case the tasklet cannot determine the count.
-			JobParameters jobParameters = buildJobParameters(
-					projectionParametersJson, defaultNumPartitions, jobGuid, jobTimestamp, jobBaseDir.toString(),
-					projectionGuid, defaultChunkSize
+			logger.info(
+					"[GUID: {}] Batch job started - Execution ID: {}",
+					jobExecution.getJobParameters().getString(BatchConstants.Job.GUID), jobExecution.getId()
 			);
-			JobExecution jobExecution = jobLauncher.run(fetchAndPartitionJob, jobParameters);
-
-			logger.info("[GUID: {}] Batch job started - Execution ID: {}", jobGuid, jobExecution.getId());
 
 			return jobExecution;
 
