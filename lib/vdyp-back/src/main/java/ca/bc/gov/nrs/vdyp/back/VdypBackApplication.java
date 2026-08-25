@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypProcessingApplication;
+import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 
 public class VdypBackApplication extends VdypProcessingApplication {
 
@@ -35,5 +38,11 @@ public class VdypBackApplication extends VdypProcessingApplication {
 	@Override
 	public VdypApplicationIdentifier getId() {
 		return VdypApplicationIdentifier.VDYP_BACK;
+	}
+
+	@Override
+	protected ComponentSizeLimits getLimitsForSpecies(VdypSpecies spec, Region region) {
+		// TODO
+		throw new UnsupportedOperationException();
 	}
 }

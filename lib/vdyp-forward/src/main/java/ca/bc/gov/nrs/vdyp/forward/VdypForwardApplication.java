@@ -7,6 +7,9 @@ import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypProcessingApplication;
+import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 
 public class VdypForwardApplication extends VdypProcessingApplication {
 
@@ -34,6 +37,11 @@ public class VdypForwardApplication extends VdypProcessingApplication {
 	@Override
 	protected Processor getProcessor() {
 		return new ForwardProcessor();
+	}
+
+	@Override
+	protected ComponentSizeLimits getLimitsForSpecies(VdypSpecies spec, Region region) {
+		throw new UnsupportedOperationException();
 	}
 
 }

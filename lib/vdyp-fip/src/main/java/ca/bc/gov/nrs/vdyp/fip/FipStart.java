@@ -68,6 +68,7 @@ import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -1013,6 +1014,11 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	@Override
 	protected String getDefaultControlFileName() {
 		return "fipstart.ctr";
+	}
+
+	@Override
+	protected ComponentSizeLimits getLimitsForSpecies(VdypSpecies spec, Region region) {
+		throw new UnsupportedOperationException();
 	}
 
 }
