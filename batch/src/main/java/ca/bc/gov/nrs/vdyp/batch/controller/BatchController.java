@@ -300,13 +300,11 @@ public class BatchController {
 	private List<JobExecution> findOtherRunningExecutions(JobExecution target) {
 		Set<JobExecution> runningExecutions = jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME);
 
-		return runningExecutions.stream()
-				.filter(execution -> !execution.getId().equals(target.getId()))
+		return runningExecutions.stream().filter(execution -> !execution.getId().equals(target.getId()))
 				.sorted(
 						Comparator
 								.comparing(JobExecution::getStartTime, Comparator.nullsLast(Comparator.naturalOrder()))
-				)
-				.toList();
+				).toList();
 	}
 
 	/**

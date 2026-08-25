@@ -347,6 +347,17 @@ public class ProjectionEndpoint implements Endpoint {
 		return Response.status(Status.OK).entity(started).build();
 	}
 
+	@POST
+	@RolesAllowed("ADMIN")
+	@Path("/{projectionGUID}/prioritize")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Tag(name = "Prioritize A Projection", description = "(Admin only) Prioritizes a running projection.")
+	public Response prioritizeProjection(@PathParam("projectionGUID") UUID projectionGUID)
+			throws ProjectionServiceException {
+		var prioritized = projectionService.prioritizeBatchProjection(currentUser.getUser(), projectionGUID);
+		return Response.status(Status.OK).entity(prioritized).build();
+	}
+
 	private <T> String serialize(T entity) throws JsonProcessingException {
 		return mapper.writeValueAsString(entity);
 	}

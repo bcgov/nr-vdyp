@@ -102,6 +102,23 @@ public class ProjectionBatchMappingService {
 		}
 	}
 
+	@Transactional
+	public void prioritizeProjection(ProjectionEntity projectionEntity) throws ProjectionServiceException {
+		try {
+			var mapping = repository.listByProjectionGUID(projectionEntity.getProjectionGUID()).stream()
+					.filter(entity -> entity.getBatchJobGUID() != null).findFirst().orElseThrow(
+							() -> new ProjectionServiceException(
+									"No batch job mapping found for projection " + projectionEntity.getProjectionGUID()
+							)
+					);
+			batchClient.prioritizeBatchJob(mapping.getBatchJobGUID());
+		} catch (ProjectionServiceException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Error prioritizing projection batch process", e);
+		}
+	}
+
 	private void stopBatchJob(UUID batchJobGUID, UUID projectionGUID) {
 		try {
 			batchClient.stopBatchJob(batchJobGUID);
