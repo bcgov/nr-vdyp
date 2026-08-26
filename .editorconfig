@@ -25,3 +25,7 @@ indent_size = 2
 [postgres-changelog.json]
 indent_style = space
 indent_size = 2
+
+[batch-changelog.json]
+indent_style = space
+indent_size = 2
