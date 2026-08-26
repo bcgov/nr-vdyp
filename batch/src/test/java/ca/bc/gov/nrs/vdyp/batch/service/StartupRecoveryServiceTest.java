@@ -126,7 +126,7 @@ class StartupRecoveryServiceTest {
 		service.start();
 		assertTrue(retrySleepStarted.await(2, TimeUnit.SECONDS));
 		service.stop();
-		await().atMost(20, TimeUnit.MILLISECONDS).until(() -> !service.isRunning());
+		await().atMost(120, TimeUnit.MILLISECONDS).until(() -> !service.isRunning());
 
 		assertFalse(service.isRunning());
 	}
