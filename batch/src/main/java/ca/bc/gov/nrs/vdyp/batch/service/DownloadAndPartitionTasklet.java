@@ -51,6 +51,10 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 				throw new IllegalArgumentException("Missing required job parameters for COMS download mode.");
 			}
 
+			// The asynchronous job itself already occupies one executor thread, even though no worker partitions exist
+			// yet.
+			pushProgress(0, 1);
+
 			VdypProjectionDetails projectionDetails = vdypClient.getProjectionDetails(projectionGUID);
 
 			List<FileMappingDetails> polyGonFiles = vdypClient
@@ -106,8 +110,8 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 					.handlePartitionFailure(e, "Could not fetch and partition input files", jobGuid, logger);
 		}
 
-		// Push initial progress so the backend can update status to RUNNING as soon as polygon count is known.
-		pushInitialProgress(partitionedCount);
+		// Update the polygon total while continuing to report the job's coordinator thread.
+		pushProgress(partitionedCount, 1);
 
 		logger.debug("Completed download and partitioning of input files.");
 	}
@@ -135,12 +139,15 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 		return Math.max(batchProperties.getReader().getDefaultChunkSize(), 1);
 	}
 
-	private void pushInitialProgress(int totalPolygons) {
+	private void pushProgress(int totalPolygons, int threadsInUse) {
 		try {
 			vdypClient
-					.pushProgress(projectionGUID, new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, 0, 0, 0, 0));
+					.pushProgress(
+							projectionGUID,
+							new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, 0, 0, 0, threadsInUse)
+					);
 		} catch (Exception e) {
-			logger.warn("[GUID: {}] Failed to push initial progress to backend: {}", jobGuid, e.getMessage());
+			logger.warn("[GUID: {}] Failed to push progress to backend: {}", jobGuid, e.getMessage());
 		}
 	}
 }
