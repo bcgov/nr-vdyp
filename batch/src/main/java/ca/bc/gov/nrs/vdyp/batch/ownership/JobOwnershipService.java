@@ -146,6 +146,7 @@ public class JobOwnershipService {
 			try {
 				boolean renewed = repository.renew(ownedJob.claim(), properties.getLeaseDuration());
 				if (!renewed) {
+					renewFailure = true;
 					handleConfirmedLeaseLoss(ownedJob);
 				}
 			} catch (Exception e) {

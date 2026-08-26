@@ -256,8 +256,7 @@ class BatchJobExecutionListenerTest {
 		when(jobExecution.getStatus()).thenReturn(BatchStatus.STOPPED);
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
 		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
-		doThrow(new IllegalStateException("fenced")).when(ownershipService)
-				.assertCurrentOwner(jobExecution);
+		doThrow(new IllegalStateException("fenced")).when(ownershipService).assertCurrentOwner(jobExecution);
 
 		listener.beforeJob(jobExecution);
 

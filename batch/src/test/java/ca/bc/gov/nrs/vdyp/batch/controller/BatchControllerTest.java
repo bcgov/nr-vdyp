@@ -145,8 +145,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse()
-			throws IOException, JobExecutionException {
+	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse() throws IOException, JobExecutionException {
 		UUID projectionGUID = UUID.randomUUID();
 
 		// Mock job execution
