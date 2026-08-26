@@ -680,6 +680,19 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void test1181() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+		logger.info("Starting vdyp-1181");
+		Pattern ignorePattern = Pattern.compile("");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1181/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1181", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void test1182() throws IOException, ResourceParseException, CsvException {
 		logger.info("Starting vdyp-1182");
 		// Ignore site index, something about polygon
