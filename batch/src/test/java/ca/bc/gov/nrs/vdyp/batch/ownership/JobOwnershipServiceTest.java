@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -127,7 +128,7 @@ class JobOwnershipServiceTest {
 
 		ArgumentCaptor<UUID> token = ArgumentCaptor.forClass(UUID.class);
 		verify(repository).acquire(eq("projection-1"), eq(OWNER_ID), token.capture(), eq(LEASE_DURATION));
-		assertFalse(new UUID(0, 0).equals(token.getValue()));
+		Assertions.assertNotEquals(new UUID(0, 0), token.getValue());
 	}
 
 	@Test

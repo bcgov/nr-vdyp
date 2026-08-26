@@ -100,7 +100,7 @@ class JobOwnershipRepositoryPostgresTest {
 	}
 
 	@Test
-	void expiredClaimIsTakenOverOnceAndReplacesLeaseToken() throws Exception {
+	void expiredClaimIsTakenOverOnceAndReplacesLeaseToken() {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobClaim first = repository.acquire(projectionGuid, "owner-a", UUID.randomUUID(), Duration.ofMillis(100))
 				.orElseThrow();
@@ -131,7 +131,7 @@ class JobOwnershipRepositoryPostgresTest {
 	}
 
 	@Test
-	void staleOwnerCannotRenewOrReleaseAfterTakeover() throws Exception {
+	void staleOwnerCannotRenewOrReleaseAfterTakeover() {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobClaim first = repository.acquire(projectionGuid, "owner-a", UUID.randomUUID(), Duration.ofMillis(100))
 				.orElseThrow();

@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -94,7 +96,7 @@ class StartupRecoveryServiceTest {
 
 		assertFalse(service.isRunning());
 		assertTrue(service.isAutoStartup());
-		assertTrue(service.getPhase() == Integer.MIN_VALUE);
+		assertEquals(Integer.MIN_VALUE, service.getPhase());
 		service.start();
 		service.start();
 
@@ -124,7 +126,7 @@ class StartupRecoveryServiceTest {
 		service.start();
 		assertTrue(retrySleepStarted.await(2, TimeUnit.SECONDS));
 		service.stop();
-		Thread.sleep(20);
+		await().atMost(20, TimeUnit.MILLISECONDS).until(() -> !service.isRunning());
 
 		assertFalse(service.isRunning());
 	}
@@ -183,7 +185,7 @@ class StartupRecoveryServiceTest {
 	}
 
 	@Test
-	void prioritizedRecoverySkipsLocallyOwnedExecution() throws Exception {
+	void prioritizedRecoverySkipsLocallyOwnedExecution() {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobExecution execution = runningExecution(projectionGuid);
 		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(execution));
@@ -194,7 +196,7 @@ class StartupRecoveryServiceTest {
 	}
 
 	@Test
-	void prioritizedRecoverySkipsWhenCapacityIsUnavailable() throws Exception {
+	void prioritizedRecoverySkipsWhenCapacityIsUnavailable() {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobExecution execution = runningExecution(projectionGuid);
 		JobClaim oldClaim = expiredClaim(projectionGuid);
@@ -207,7 +209,7 @@ class StartupRecoveryServiceTest {
 	}
 
 	@Test
-	void prioritizedRecoverySkipsWhenClaimCannotBeAcquired() throws Exception {
+	void prioritizedRecoverySkipsWhenClaimCannotBeAcquired() {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobExecution execution = runningExecution(projectionGuid);
 		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(execution));
@@ -333,7 +335,7 @@ class StartupRecoveryServiceTest {
 	}
 
 	@Test
-	void completedFetchStepWithoutBaseDirectoryHandlesBlankFailureProjection() throws Exception {
+	void completedFetchStepWithoutBaseDirectoryHandlesBlankFailureProjection() {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobExecution execution = completedFetchExecution(projectionGuid, null, 1L, false);
 		JobClaim newClaim = claim(projectionGuid, Instant.now(), Instant.now().plus(Duration.ofMinutes(2)));
@@ -385,7 +387,7 @@ class StartupRecoveryServiceTest {
 	}
 
 	@Test
-	void backendNotificationFailureDoesNotPreventClaimRelease() throws Exception {
+	void backendNotificationFailureDoesNotPreventClaimRelease() {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobExecution execution = completedFetchExecution(projectionGuid, "", 1L, false);
 		JobClaim newClaim = claim(projectionGuid, Instant.now(), Instant.now().plus(Duration.ofMinutes(2)));

@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -156,8 +157,8 @@ class BatchJobLaunchServiceTest {
 		assertEquals(3L, value.getLong(BatchConstants.Partition.NUMBER));
 		assertEquals(25L, value.getLong(BatchConstants.Chunk.SIZE));
 		assertTrue(Files.isDirectory(Path.of(value.getString(BatchConstants.Job.BASE_DIR))));
-		assertTrue(value.getString(BatchConstants.Job.GUID) != null);
-		assertTrue(value.getString(BatchConstants.Job.TIMESTAMP) != null);
+		assertNotNull(value.getString(BatchConstants.Job.GUID));
+		assertNotNull(value.getString(BatchConstants.Job.TIMESTAMP));
 	}
 
 	@Test
