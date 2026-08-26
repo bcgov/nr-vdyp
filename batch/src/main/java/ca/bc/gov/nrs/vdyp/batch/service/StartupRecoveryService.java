@@ -23,9 +23,8 @@ import org.springframework.stereotype.Component;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
-import ca.bc.gov.nrs.vdyp.batch.ownership.JobClaim;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
-import ca.bc.gov.nrs.vdyp.batch.ownership.ServerCapacityService;
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 

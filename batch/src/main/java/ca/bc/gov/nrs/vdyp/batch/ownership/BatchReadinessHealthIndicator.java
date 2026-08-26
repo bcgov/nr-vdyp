@@ -4,6 +4,8 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
+import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
+
 @Component("batchReadiness")
 public class BatchReadinessHealthIndicator implements HealthIndicator {
 

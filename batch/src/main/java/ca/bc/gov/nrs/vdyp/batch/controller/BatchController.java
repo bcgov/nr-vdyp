@@ -35,10 +35,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
-import ca.bc.gov.nrs.vdyp.batch.ownership.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -62,6 +63,7 @@ public class BatchController {
 	private final StorageEstimationService storageEstimationService;
 	private final BatchJobLaunchService batchJobLaunchService;
 	private final ServerCapacityService serverCapacityService;
+	private final BatchOwnershipProperties ownershipProperties;
 
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
@@ -80,7 +82,7 @@ public class BatchController {
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
 			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties,
 			StorageEstimationService storageEstimationService, BatchJobLaunchService batchJobLaunchService,
-			ServerCapacityService serverCapacityService
+			ServerCapacityService serverCapacityService, BatchOwnershipProperties ownershipProperties
 	) {
 		this.jobLauncher = jobLauncher;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
@@ -91,6 +93,7 @@ public class BatchController {
 		this.storageEstimationService = storageEstimationService;
 		this.batchJobLaunchService = batchJobLaunchService;
 		this.serverCapacityService = serverCapacityService;
+		this.ownershipProperties = ownershipProperties;
 	}
 
 	/**
@@ -320,7 +323,7 @@ public class BatchController {
 				"availableEndpoints",
 				Arrays.asList(
 						"/api/batch/startWithGUIDs", "/api/batch/stop/{jobGuid}", "/api/batch/status/{jobGuid}",
-						"/api/batch/health", "/api/batch/capacity"
+						"/api/batch/health", "/api/batch/capacity", "/api/batch/storage"
 				)
 		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
@@ -333,9 +336,10 @@ public class BatchController {
 	@GetMapping(value = "/capacity", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> capacity() {
 		Map<String, Object> response = new HashMap<>();
-		response.put(BatchConstants.Capacity.THREAD_CAPACITY, serverCapacityService.maximumThreads());
-		response.put(BatchConstants.Capacity.ACTIVE_THREADS, serverCapacityService.activeThreads());
-		response.put(BatchConstants.Capacity.AVAILABLE_THREADS, serverCapacityService.availableThreads());
+		response.put(
+				BatchConstants.Capacity.THREAD_CAPACITY,
+				serverCapacityService.getAllReplicaCapacity(ownershipProperties.getHeartbeatInterval().getSeconds() * 2)
+		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
 	}

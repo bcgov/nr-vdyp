@@ -10,6 +10,9 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
+import ca.bc.gov.nrs.vdyp.batch.persistence.repository.JobOwnershipRepository;
+import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 

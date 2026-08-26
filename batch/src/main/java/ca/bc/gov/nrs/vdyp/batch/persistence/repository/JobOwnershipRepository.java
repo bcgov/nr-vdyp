@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.batch.ownership;
+package ca.bc.gov.nrs.vdyp.batch.persistence.repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,6 +9,8 @@ import java.util.UUID;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
 
 @Repository
 public class JobOwnershipRepository {

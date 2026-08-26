@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.batch.ownership;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
+
 public class OwnedJob {
 
 	private final JobClaim claim;

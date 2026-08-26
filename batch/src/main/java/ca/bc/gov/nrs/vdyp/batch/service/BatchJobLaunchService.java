@@ -20,9 +20,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
-import ca.bc.gov.nrs.vdyp.batch.ownership.JobClaim;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
-import ca.bc.gov.nrs.vdyp.batch.ownership.ServerCapacityService;
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 

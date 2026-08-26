@@ -23,8 +23,8 @@ import org.springframework.batch.core.JobParametersValidator;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.core.task.TaskExecutor;
 
-import ca.bc.gov.nrs.vdyp.batch.ownership.JobClaim;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
 
 @ExtendWith(MockitoExtension.class)
 class ClaimBoundJobLauncherTest {

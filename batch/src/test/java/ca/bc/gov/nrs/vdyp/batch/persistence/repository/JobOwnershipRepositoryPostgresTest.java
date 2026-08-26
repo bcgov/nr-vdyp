@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.batch.ownership;
+package ca.bc.gov.nrs.vdyp.batch.persistence.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -20,6 +20,8 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
 
 @Testcontainers
 class JobOwnershipRepositoryPostgresTest {

@@ -13,8 +13,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
-import ca.bc.gov.nrs.vdyp.batch.ownership.JobClaim;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
 
 /**
  * Creates a Spring Batch execution, registers its already-acquired claim locally, then submits it for execution.

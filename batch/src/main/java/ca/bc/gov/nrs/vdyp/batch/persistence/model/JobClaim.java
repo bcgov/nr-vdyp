@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.batch.ownership;
+package ca.bc.gov.nrs.vdyp.batch.persistence.model;
 
 import java.time.Instant;
 import java.util.UUID;

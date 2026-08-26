@@ -3,11 +3,14 @@ package ca.bc.gov.nrs.vdyp.batch.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,10 +45,11 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
-import ca.bc.gov.nrs.vdyp.batch.ownership.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -85,6 +89,7 @@ class BatchControllerTest {
 	private StorageEstimationService storageEstimationService;
 
 	private BatchProperties batchProperties;
+	private BatchOwnershipProperties ownershipProperties;
 
 	private BatchController batchController;
 
@@ -93,9 +98,12 @@ class BatchControllerTest {
 		batchProperties = new BatchProperties();
 		batchProperties.getThreadPool().setCorePoolSize(21);
 
+		ownershipProperties = new BatchOwnershipProperties();
+		ownershipProperties.setHeartbeatInterval(Duration.of(300, ChronoUnit.SECONDS));
+
 		batchController = new BatchController(
 				jobLauncher, fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator, batchProperties,
-				storageEstimationService, batchJobLaunchService, serverCapacityService
+				storageEstimationService, batchJobLaunchService, serverCapacityService, ownershipProperties
 		);
 
 		// Use system temp directory for cross-platform compatibility
@@ -118,19 +126,13 @@ class BatchControllerTest {
 
 	@Test
 	void testCapacity_ReturnsExecutorThreadUsage() {
-		when(serverCapacityService.maximumThreads()).thenReturn(21);
-		when(serverCapacityService.activeThreads()).thenReturn(8);
-		when(serverCapacityService.availableThreads()).thenReturn(13);
+		when(serverCapacityService.getAllReplicaCapacity(anyLong())).thenReturn(21L);
 		ResponseEntity<Map<String, Object>> response = batchController.capacity();
 
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
-		assertEquals(21, response.getBody().get(BatchConstants.Capacity.THREAD_CAPACITY));
-		assertEquals(8, response.getBody().get(BatchConstants.Capacity.ACTIVE_THREADS));
-		assertEquals(13, response.getBody().get(BatchConstants.Capacity.AVAILABLE_THREADS));
-		verify(serverCapacityService).maximumThreads();
-		verify(serverCapacityService).activeThreads();
-		verify(serverCapacityService).availableThreads();
+		assertEquals(21L, response.getBody().get(BatchConstants.Capacity.THREAD_CAPACITY));
+		verify(serverCapacityService).getAllReplicaCapacity(anyLong());
 	}
 
 	@Test

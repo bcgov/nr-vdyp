@@ -13,12 +13,17 @@ public class JobOwnershipHeartbeatService implements SmartLifecycle {
 
 	private final BatchOwnershipProperties properties;
 	private final JobOwnershipService ownershipService;
+	private final ServerCapacityService capacityService;
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	private Thread heartbeatThread;
 
-	public JobOwnershipHeartbeatService(BatchOwnershipProperties properties, JobOwnershipService ownershipService) {
+	public JobOwnershipHeartbeatService(
+			BatchOwnershipProperties properties, JobOwnershipService ownershipService,
+			ServerCapacityService capacityService
+	) {
 		this.properties = properties;
 		this.ownershipService = ownershipService;
+		this.capacityService = capacityService;
 	}
 
 	@Override
@@ -35,6 +40,7 @@ public class JobOwnershipHeartbeatService implements SmartLifecycle {
 			try {
 				Thread.sleep(properties.getHeartbeatInterval().toMillis());
 				ownershipService.heartbeatOwnedJobs();
+				capacityService.recordThreadCapacityHeartbeat(ownershipService.isAcceptingNewWork());
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				running.set(false);
