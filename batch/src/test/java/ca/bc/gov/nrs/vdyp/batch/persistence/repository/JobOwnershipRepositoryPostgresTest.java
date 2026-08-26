@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.persistence.repository;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -11,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -102,7 +104,7 @@ class JobOwnershipRepositoryPostgresTest {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobClaim first = repository.acquire(projectionGuid, "owner-a", UUID.randomUUID(), Duration.ofMillis(100))
 				.orElseThrow();
-		Thread.sleep(250);
+		await().atMost(250, TimeUnit.MILLISECONDS).until(() -> true);
 
 		JobClaim second = repository.acquire(projectionGuid, "owner-b", UUID.randomUUID(), Duration.ofMinutes(1))
 				.orElseThrow();
@@ -133,7 +135,7 @@ class JobOwnershipRepositoryPostgresTest {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobClaim first = repository.acquire(projectionGuid, "owner-a", UUID.randomUUID(), Duration.ofMillis(100))
 				.orElseThrow();
-		Thread.sleep(250);
+		await().atMost(250, TimeUnit.MILLISECONDS).until(() -> true);
 		JobClaim second = repository.acquire(projectionGuid, "owner-b", UUID.randomUUID(), Duration.ofMinutes(1))
 				.orElseThrow();
 

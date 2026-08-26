@@ -3,12 +3,12 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.context.SmartLifecycle;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 
-@Component
+@Service
 public class JobOwnershipHeartbeatService implements SmartLifecycle {
 
 	private final BatchOwnershipProperties properties;

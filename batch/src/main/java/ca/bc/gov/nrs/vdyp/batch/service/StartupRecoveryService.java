@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.item.ExecutionContext;
@@ -47,6 +48,7 @@ public class StartupRecoveryService implements SmartLifecycle {
 
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	private Thread recoveryThread;
+	private Random random;
 
 	public StartupRecoveryService(
 			JobExplorer jobExplorer, @Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob,
@@ -62,6 +64,7 @@ public class StartupRecoveryService implements SmartLifecycle {
 		this.ownershipService = ownershipService;
 		this.serverCapacityService = serverCapacityService;
 		this.claimBoundJobLauncher = claimBoundJobLauncher;
+		this.random = new Random();
 	}
 
 	@Override
@@ -129,7 +132,7 @@ public class StartupRecoveryService implements SmartLifecycle {
 		}
 	}
 
-	private boolean recoverIfClaimable(JobExecution jobExecution) throws Exception {
+	private boolean recoverIfClaimable(JobExecution jobExecution) throws JobExecutionException {
 		Long oldExecutionId = jobExecution.getId();
 		String projectionGuid = projectionGuid(jobExecution);
 		if (ownershipService.isOwnedLocally(projectionGuid)) {
@@ -202,7 +205,7 @@ public class StartupRecoveryService implements SmartLifecycle {
 
 	private void sleepWithJitter() throws InterruptedException {
 		long baseMillis = Math.max(1, ownershipProperties.getRecoveryScanInterval().toMillis());
-		long jitterMillis = new Random().nextLong(Math.max(1, baseMillis / 4));
+		long jitterMillis = random.nextLong(Math.max(1, baseMillis / 4));
 		Thread.sleep(baseMillis + jitterMillis);
 	}
 

@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -19,16 +18,11 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.NatsBatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.BatchRequestMessage;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
@@ -57,33 +51,12 @@ class BatchRequestConsumerTest {
 	private JetStreamSubscription subscription;
 
 	@Mock
-	private JobLauncher jobLauncher;
-
-	@Mock
-	private Job vdypBatchJob;
-
-	@Mock
-	private BatchProperties batchProperties;
-
-	@Mock
-	private BatchProperties.PartitionProperties partitionProperties;
-
-	@Mock
-	private BatchProperties.ReaderProperties readerProperties;
-
-	@Mock
-	private ThreadPoolTaskExecutor taskExecutor;
-
-	@Mock
 	private BatchJobLaunchService launchService;
 	@Mock
 	private StartupRecoveryService recoveryService;
 
 	@Mock
 	private Message message;
-
-	@TempDir
-	private Path tempDir;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -221,19 +194,6 @@ class BatchRequestConsumerTest {
 		} finally {
 			capacityLimitedConsumer.stop();
 		}
-	}
-
-	private void givenThreadPoolHasCapacity() {
-		when(taskExecutor.getActiveCount()).thenReturn(0);
-		when(taskExecutor.getMaxPoolSize()).thenReturn(1);
-	}
-
-	private void givenBatchProperties(int numberOfPartitions) {
-		when(batchProperties.getPartition()).thenReturn(partitionProperties);
-		when(partitionProperties.getDefaultNumberOfPartitions()).thenReturn(numberOfPartitions);
-		when(batchProperties.getReader()).thenReturn(readerProperties);
-		when(readerProperties.getDefaultChunkSize()).thenReturn(150);
-		when(batchProperties.getRootDirectory()).thenReturn(tempDir.toString());
 	}
 
 	private void givenMessageData(UUID projectionId, String parameterJson) throws Exception {

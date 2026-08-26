@@ -7,13 +7,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.ownership.OwnedJobRegistry;
 
-@Component
+@Service
 public class BatchShutdownDrainService implements SmartLifecycle {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchShutdownDrainService.class);

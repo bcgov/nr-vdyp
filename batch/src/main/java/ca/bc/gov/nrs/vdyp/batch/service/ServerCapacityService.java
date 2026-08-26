@@ -3,7 +3,7 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.ownership.BatchWorkerIdentity;
 import ca.bc.gov.nrs.vdyp.batch.persistence.repository.ServerCapacityRepository;
@@ -12,7 +12,7 @@ import ca.bc.gov.nrs.vdyp.batch.persistence.repository.ServerCapacityRepository;
  * Reports the capacity of the shared Batch executor. Jobs are intentionally not assigned fixed slots because their
  * worker-thread requirements vary with input size.
  */
-@Component
+@Service
 public class ServerCapacityService {
 
 	private final ObjectProvider<ThreadPoolTaskExecutor> taskExecutorProvider;

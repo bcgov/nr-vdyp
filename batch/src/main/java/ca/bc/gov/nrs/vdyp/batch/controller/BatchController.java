@@ -1,9 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -12,18 +8,14 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -36,7 +28,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
-import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
@@ -53,13 +44,10 @@ public class BatchController {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchController.class);
 
-	private final JobLauncher jobLauncher;
-	private final Job fetchAndPartitionJob;
 	private final JobExplorer jobExplorer;
 	private final JobOperator jobOperator;
 	@SuppressWarnings("unused")
 	private final BatchMetricsCollector metricsCollector;
-	private final BatchProperties batchProperties;
 	private final StorageEstimationService storageEstimationService;
 	private final BatchJobLaunchService batchJobLaunchService;
 	private final ServerCapacityService serverCapacityService;
@@ -78,18 +66,13 @@ public class BatchController {
 	private Integer defaultChunkSize;
 
 	public BatchController(
-			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
-			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties,
+			JobExplorer jobExplorer, BatchMetricsCollector metricsCollector, JobOperator jobOperator,
 			StorageEstimationService storageEstimationService, BatchJobLaunchService batchJobLaunchService,
 			ServerCapacityService serverCapacityService, BatchOwnershipProperties ownershipProperties
 	) {
-		this.jobLauncher = jobLauncher;
-		this.fetchAndPartitionJob = fetchAndPartitionJob;
 		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
 		this.jobOperator = jobOperator;
-		this.batchProperties = batchProperties;
 		this.storageEstimationService = storageEstimationService;
 		this.batchJobLaunchService = batchJobLaunchService;
 		this.serverCapacityService = serverCapacityService;
@@ -412,36 +395,6 @@ public class BatchController {
 					)
 			);
 		}
-	}
-
-	private Path ensureProjectionDirectoryExists(String jobGuid) throws IOException {
-		Path batchRootDir = Paths.get(batchRootDirectory);
-
-		if (!Files.exists(batchRootDir)) {
-			Files.createDirectories(batchRootDir);
-			logger.debug("Created batch root directory: {}", batchRootDir);
-		}
-
-		String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobGuid);
-		Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
-		Files.createDirectories(jobBaseDir);
-
-		logger.debug("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
-		return jobBaseDir;
-	}
-
-	/** Builds job parameters for GUID-based flow (files fetched from COMS by DownloadAndPartitionTasklet). */
-	private JobParameters buildJobParameters(
-			String projectionParametersJson, Integer numPartitions, String jobGuid, String jobTimestamp,
-			String jobBaseDir, UUID projectionGUID, Integer chunkSize
-	) {
-		return new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
-				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
-				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
-				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
-				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGUID.toString())
-				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue())
-				.addLong(BatchConstants.Chunk.SIZE, chunkSize.longValue(), false).toJobParameters();
 	}
 
 	private void buildSuccessResponse(Map<String, Object> response, JobExecution jobExecution) {

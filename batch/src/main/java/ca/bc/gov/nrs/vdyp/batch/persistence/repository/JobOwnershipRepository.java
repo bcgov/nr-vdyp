@@ -24,17 +24,17 @@ public class JobOwnershipRepository {
 	public Optional<JobClaim> acquire(String projectionGuid, String ownerId, UUID leaseToken, Duration leaseDuration) {
 		String sql = """
 				INSERT INTO batch_job_claim (
-					projection_guid, owner_id, lease_token_guid, acquired_time, lease_expiry_time
+				    projection_guid, owner_id, lease_token_guid, acquired_time, lease_expiry_time
 				)
 				VALUES (?::uuid, ?, ?::uuid, clock_timestamp(), clock_timestamp() + (? * interval '1 millisecond'))
 				ON CONFLICT (projection_guid) DO UPDATE
 				SET owner_id = EXCLUDED.owner_id,
-					lease_token_guid = EXCLUDED.lease_token_guid,
-					acquired_time = clock_timestamp(),
-					lease_expiry_time = clock_timestamp() + (? * interval '1 millisecond'),
-					version = batch_job_claim.version + 1
+				    lease_token_guid = EXCLUDED.lease_token_guid,
+				    acquired_time = clock_timestamp(),
+				    lease_expiry_time = clock_timestamp() + (? * interval '1 millisecond'),
+				    version = batch_job_claim.version + 1
 				WHERE batch_job_claim.lease_expiry_time <= clock_timestamp()
-					OR (batch_job_claim.owner_id = ? AND batch_job_claim.lease_token_guid = ?::uuid)
+				    OR (batch_job_claim.owner_id = ? AND batch_job_claim.lease_token_guid = ?::uuid)
 				RETURNING projection_guid::text AS projection_guid, owner_id, lease_token_guid, acquired_time, lease_expiry_time
 				""";
 		List<JobClaim> claims = jdbcTemplate.query(

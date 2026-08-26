@@ -24,29 +24,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
-import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
-import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
@@ -56,13 +49,6 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class BatchControllerTest {
-
-	@Mock
-	private JobLauncher jobLauncher;
-
-	@Mock
-	private Job fetchAndPartitionJob;
-
 	@Mock
 	private JobExplorer jobExplorer;
 
@@ -88,22 +74,16 @@ class BatchControllerTest {
 	@Mock
 	private StorageEstimationService storageEstimationService;
 
-	private BatchProperties batchProperties;
-	private BatchOwnershipProperties ownershipProperties;
-
 	private BatchController batchController;
 
 	@BeforeEach
 	void setUp() {
-		batchProperties = new BatchProperties();
-		batchProperties.getThreadPool().setCorePoolSize(21);
-
-		ownershipProperties = new BatchOwnershipProperties();
+		BatchOwnershipProperties ownershipProperties = new BatchOwnershipProperties();
 		ownershipProperties.setHeartbeatInterval(Duration.of(300, ChronoUnit.SECONDS));
 
 		batchController = new BatchController(
-				jobLauncher, fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator, batchProperties,
-				storageEstimationService, batchJobLaunchService, serverCapacityService, ownershipProperties
+				jobExplorer, metricsCollector, jobOperator, storageEstimationService, batchJobLaunchService,
+				serverCapacityService, ownershipProperties
 		);
 
 		// Use system temp directory for cross-platform compatibility
@@ -166,8 +146,7 @@ class BatchControllerTest {
 
 	@Test
 	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse()
-			throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException,
-			JobParametersInvalidException, IOException, JobExecutionException {
+			throws IOException, JobExecutionException {
 		UUID projectionGUID = UUID.randomUUID();
 
 		// Mock job execution

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -255,7 +256,7 @@ class BatchJobExecutionListenerTest {
 		when(jobExecution.getStatus()).thenReturn(BatchStatus.STOPPED);
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
 		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
-		org.mockito.Mockito.doThrow(new IllegalStateException("fenced")).when(ownershipService)
+		doThrow(new IllegalStateException("fenced")).when(ownershipService)
 				.assertCurrentOwner(jobExecution);
 
 		listener.beforeJob(jobExecution);
