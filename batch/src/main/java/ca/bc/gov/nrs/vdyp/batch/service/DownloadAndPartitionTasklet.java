@@ -141,11 +141,9 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 
 	private void pushProgress(int totalPolygons, int threadsInUse) {
 		try {
-			vdypClient
-					.pushProgress(
-							projectionGUID,
-							new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, 0, 0, 0, threadsInUse)
-					);
+			vdypClient.pushProgress(
+					projectionGUID, new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, 0, 0, 0, threadsInUse)
+			);
 		} catch (Exception e) {
 			logger.warn("[GUID: {}] Failed to push progress to backend: {}", jobGuid, e.getMessage());
 		}
