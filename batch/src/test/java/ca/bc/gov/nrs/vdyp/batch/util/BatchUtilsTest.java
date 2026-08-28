@@ -120,6 +120,38 @@ class BatchUtilsTest {
 	}
 
 	@Test
+	void calculateActiveWorkers_countsOnlyStartedWorkerSteps() {
+		JobExecution jobExecution = mock(JobExecution.class);
+		StepExecution startedWorker = stepExecution(
+				BatchConstants.Job.WORKER_STEP_NAME + ":partition0", BatchStatus.STARTED
+		);
+		StepExecution completedWorker = stepExecution(
+				BatchConstants.Job.WORKER_STEP_NAME + ":partition1", BatchStatus.COMPLETED
+		);
+		StepExecution masterStep = stepExecution(BatchConstants.Job.MASTER_STEP_NAME, BatchStatus.STARTED);
+		when(jobExecution.getStepExecutions()).thenReturn(List.of(startedWorker, completedWorker, masterStep));
+
+		assertEquals(1, BatchUtils.calculateActiveWorkers(jobExecution, true));
+	}
+
+	@Test
+	void calculateThreadsInUse_runningJob_includesJobThread() {
+		JobExecution jobExecution = mock(JobExecution.class);
+		StepExecution worker0 = stepExecution(BatchConstants.Job.WORKER_STEP_NAME + ":partition0", BatchStatus.STARTED);
+		StepExecution worker1 = stepExecution(BatchConstants.Job.WORKER_STEP_NAME + ":partition1", BatchStatus.STARTED);
+		when(jobExecution.getStepExecutions()).thenReturn(List.of(worker0, worker1));
+
+		assertEquals(3, BatchUtils.calculateThreadsInUse(jobExecution, true));
+	}
+
+	@Test
+	void calculateThreadsInUse_nonRunningJob_returnsZero() {
+		JobExecution jobExecution = mock(JobExecution.class);
+
+		assertEquals(0, BatchUtils.calculateThreadsInUse(jobExecution, false));
+	}
+
+	@Test
 	void buildFinalProgress_emptySteps_returnsZeroCounts() {
 		JobExecution jobExecution = mock(JobExecution.class);
 		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
@@ -298,5 +330,12 @@ class BatchUtilsTest {
 		when(jobExecution.getStepExecutions()).thenReturn(List.of(failedStep));
 
 		return jobExecution;
+	}
+
+	private static StepExecution stepExecution(String stepName, BatchStatus status) {
+		StepExecution stepExecution = mock(StepExecution.class);
+		when(stepExecution.getStepName()).thenReturn(stepName);
+		when(stepExecution.getStatus()).thenReturn(status);
+		return stepExecution;
 	}
 }

@@ -270,7 +270,7 @@ public class BatchController {
 				.mapToInt(se -> se.getExecutionContext().getInt(BatchConstants.Job.PROJECTION_ERRORS, 0)) //
 				.sum();
 		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
-		int workers = BatchUtils.calculateActiveWorkers(jobExecution, isRunning);
+		int workers = BatchUtils.calculateThreadsInUse(jobExecution, isRunning);
 
 		response.put(BatchConstants.Job.GUID, jobGuid);
 		response.put(BatchConstants.Job.EXECUTION_ID, executionId);
