@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.JobExecution;
@@ -40,6 +42,7 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -193,7 +196,12 @@ class DownloadAndPartitionTaskletTest {
 				eq(tempDir.resolve("input/polygon.csv")), eq(tempDir.resolve("input/layer.csv")), anyInt(), eq(tempDir),
 				eq("job-123"), anyInt()
 		);
-		verify(vdypClient).pushProgress(eq(projectionGuid.toString()), any());
+		ArgumentCaptor<VDYPProjectionProgressUpdate> progressCaptor = ArgumentCaptor
+				.forClass(VDYPProjectionProgressUpdate.class);
+		verify(vdypClient, times(2)).pushProgress(eq(projectionGuid.toString()), progressCaptor.capture());
+		assertEquals(0, progressCaptor.getAllValues().get(0).totalPolygons());
+		assertEquals(1, progressCaptor.getAllValues().get(0).workers());
+		assertEquals(1, progressCaptor.getAllValues().get(1).workers());
 
 		// Verify original input files are deleted after partitioning
 		assertFalse(Files.exists(inputDir.resolve("polygon.csv")), "polygon.csv should be deleted after partitioning");
