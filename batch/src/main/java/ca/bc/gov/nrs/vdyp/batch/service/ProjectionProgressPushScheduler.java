@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
@@ -37,7 +36,7 @@ public class ProjectionProgressPushScheduler {
 	private final ThreadPoolTaskExecutor progressExecutor;
 	private final BatchRecoveryMetadataService batchRecoveryMetadataService;
 
-	private final Map<String, Integer> lastProgressHashByProjection = new HashMap<>();
+	private final Map<String, ProgressSnapshot> lastProgressByProjection = new HashMap<>();
 
 	public ProjectionProgressPushScheduler(
 			JobExplorer jobExplorer, VdypClient vdypClient,
@@ -73,7 +72,7 @@ public class ProjectionProgressPushScheduler {
 		}
 
 		// Clean up any projections that are no longer running to prevent memory leak in the map
-		lastProgressHashByProjection.keySet().removeIf(guid -> !currentlyRunningProjectionGUIDs.contains(guid));
+		lastProgressByProjection.keySet().removeIf(guid -> !currentlyRunningProjectionGUIDs.contains(guid));
 	}
 
 	private void pushProgressForJob(JobExecution job, String projectionGUID) {
@@ -83,11 +82,8 @@ public class ProjectionProgressPushScheduler {
 			return;
 		}
 
-		Triple<Integer, Integer, Integer> checkTriple = Triple
-				.of(progress.polygonsProcessed(), progress.errorCount(), progress.polygonsSkipped());
-		int newHash = checkTriple.hashCode();
-		Integer previousHash = lastProgressHashByProjection.put(projectionGUID, newHash);
-		if (previousHash == null || previousHash != newHash) {
+		ProgressSnapshot previousProgress = lastProgressByProjection.put(projectionGUID, progress);
+		if (!progress.equals(previousProgress)) {
 			VDYPProjectionProgressUpdate payload = new VDYPProjectionProgressUpdate(
 					batchJobGUID, progress.totalPolygons(), progress.polygonsProcessed(), progress.errorCount(),
 					progress.polygonsSkipped(), progress.workers()
@@ -133,7 +129,7 @@ public class ProjectionProgressPushScheduler {
 			}
 		}
 
-		int workers = BatchUtils.calculateActiveWorkers(runningJob, true);
+		int workers = BatchUtils.calculateThreadsInUse(runningJob, true);
 		int polygonsProcessed = 0;
 		int errorCount = 0;
 		int polygonsSkipped = 0;
@@ -163,7 +159,7 @@ public class ProjectionProgressPushScheduler {
 			int totalPolygons, int polygonsProcessed, int errorCount, int polygonsSkipped, int workers
 	) {
 		boolean isEmpty() {
-			return totalPolygons == 0 && progressTotal() == 0;
+			return totalPolygons == 0 && progressTotal() == 0 && workers == 0;
 		}
 
 		int progressTotal() {

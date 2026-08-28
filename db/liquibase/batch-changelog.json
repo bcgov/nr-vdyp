@@ -85,6 +85,32 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_19_00",
+        "author": "pminter",
+        "changes": [
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_19/00/ddl/tables/batch-worker-registry.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_19/00/ddl/tables/batch-worker-registry-drop.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ]
+      }
     }
   ]
 }
