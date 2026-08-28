@@ -61,12 +61,11 @@ class ServerCapacityServiceTest {
 	@Test
 	void heartbeatRecordsOwnerAvailableThreadsAndAcceptanceState() {
 		when(identity.ownerId()).thenReturn("worker-1");
-		when(taskExecutor.getActiveCount()).thenReturn(3);
 		when(taskExecutor.getMaxPoolSize()).thenReturn(8);
 
 		service.recordThreadCapacityHeartbeat(false);
 
-		verify(repository).recordCapacityHeartbeat("worker-1", 5, false);
+		verify(repository).recordCapacityHeartbeat("worker-1", 8, false);
 	}
 
 	@Test
