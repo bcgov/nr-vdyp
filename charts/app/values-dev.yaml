@@ -258,7 +258,7 @@ batch:
     enabled: true
     minReplicas: 1
     maxReplicas: 4
-    targetCPUUtilizationPercentage: 300
+    targetCPUUtilizationPercentage: 11000
   #-- replica count - batch processing usually runs single instance
   replicaCount: 1
   terminationGracePeriodSeconds: 390
