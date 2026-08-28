@@ -8,7 +8,7 @@ metadata:
 spec:
   strategy:
     type: {{ .Values.batch.deploymentStrategy }}
-  {{- if not .Values.batch.autoscaling.enabled }}
+  {{- if not (and .Values.global.autoscaling .Values.batch.autoscaling .Values.batch.autoscaling.enabled) }}
   replicas: {{ .Values.batch.replicaCount }}
   {{- end }}
   selector:
@@ -28,7 +28,7 @@ spec:
       securityContext:
         {{- toYaml .Values.batch.podSecurityContext | nindent 12 }}
       {{- end }}
-      terminationGracePeriodSeconds: 300  # 5min
+      terminationGracePeriodSeconds: {{ .Values.batch.terminationGracePeriodSeconds | default 330 }}
       containers:
         - name: {{ include "batch.fullname" . }}
           {{- if .Values.batch.securityContext }}
@@ -47,6 +47,10 @@ spec:
               value: {{ .Values.batch.env.SPRING_PROFILES_ACTIVE | quote }}
             - name: SERVER_PORT
               value: "8081"
+            - name: KUBERNETES_POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
             - name: COMS_BASE_URL
               value: {{ .Values.backend.env.COMS_BASE_URL | quote }}
             - name: COMS_S3_ACCESSKEYID
@@ -73,6 +77,16 @@ spec:
               value: {{ .Values.batch.env.BATCH_THREAD_POOL_SIZE | quote }}
             - name: BATCH_MAX_JOB_THREADS
               value: {{ .Values.batch.env.BATCH_MAX_JOB_THREADS | quote }}
+            - name: BATCH_OWNERSHIP_HEARTBEAT_INTERVAL
+              value: {{ .Values.batch.env.BATCH_OWNERSHIP_HEARTBEAT_INTERVAL | quote }}
+            - name: BATCH_OWNERSHIP_LEASE_DURATION
+              value: {{ .Values.batch.env.BATCH_OWNERSHIP_LEASE_DURATION | quote }}
+            - name: BATCH_OWNERSHIP_RECOVERY_SCAN_INTERVAL
+              value: {{ .Values.batch.env.BATCH_OWNERSHIP_RECOVERY_SCAN_INTERVAL | quote }}
+            - name: BATCH_OWNERSHIP_SHUTDOWN_WAIT
+              value: {{ .Values.batch.env.BATCH_OWNERSHIP_SHUTDOWN_WAIT | quote }}
+            - name: BATCH_RECOVER_LEGACY_EXECUTIONS_WITHOUT_CLAIM
+              value: {{ .Values.batch.env.BATCH_RECOVER_LEGACY_EXECUTIONS_WITHOUT_CLAIM | quote }}
             - name: BATCH_DB_CONNECITON_POOL_SIZE
               value: {{ .Values.batch.env.BATCH_DB_CONNECITON_POOL_SIZE | quote }}
             - name: BATCH_STORAGE_THRESHOLD_PERCENT
@@ -138,7 +152,7 @@ spec:
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: /vdyp-batch/actuator/health
+              path: /vdyp-batch/actuator/health/readiness
               port: 8081
               scheme: HTTP
             initialDelaySeconds: 120
@@ -150,7 +164,7 @@ spec:
             successThreshold: 1
             failureThreshold: 5
             httpGet:
-              path: /vdyp-batch/actuator/health
+              path: /vdyp-batch/actuator/health/liveness
               port: 8081
               scheme: HTTP
             initialDelaySeconds: 180

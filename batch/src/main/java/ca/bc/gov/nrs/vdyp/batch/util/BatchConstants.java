@@ -111,6 +111,8 @@ public final class BatchConstants {
 
 	public static final class Capacity {
 		public static final String THREAD_CAPACITY = "threadCapacity";
+		public static final String ACTIVE_THREADS = "activeThreads";
+		public static final String AVAILABLE_THREADS = "availableThreads";
 
 		private Capacity() {
 		}

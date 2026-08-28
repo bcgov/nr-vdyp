@@ -22,6 +22,7 @@ import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -34,9 +35,9 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 
 	public DownloadAndPartitionTasklet(
 			ComsFileService comsFileService, BatchInputPartitioner inputPartitioner, VdypClient vdypClient,
-			BatchProperties batchProperties
+			BatchProperties batchProperties, JobOwnershipService ownershipService
 	) {
-		super(comsFileService, vdypClient);
+		super(comsFileService, vdypClient, ownershipService);
 		this.inputPartitioner = inputPartitioner;
 		this.batchProperties = batchProperties;
 	}

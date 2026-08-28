@@ -1,34 +1,22 @@
 package ca.bc.gov.nrs.vdyp.batch.messaging.consumer;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecutionException;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.NatsBatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.BatchRequestMessage;
-import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
-import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
+import ca.bc.gov.nrs.vdyp.batch.service.StartupRecoveryService;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamSubscription;
@@ -44,26 +32,21 @@ public class BatchRequestConsumer implements SmartLifecycle {
 	private final Connection natsConnection;
 	private final NatsBatchProperties properties;
 	private final ObjectMapper objectMapper;
-	private final JobLauncher jobLauncher;
-	private final Job vdypBatchJob;
-	private final BatchProperties batchProperties;
-	private final ThreadPoolTaskExecutor taskExecutor;
+	private final BatchJobLaunchService launchService;
+	private final StartupRecoveryService recoveryService;
 
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	private Thread workerThread;
 
 	public BatchRequestConsumer(
 			Connection natsConnection, NatsBatchProperties properties, ObjectMapper objectMapper,
-			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, @Qualifier("fetchAndPartitionJob") Job vdypBatchJob,
-			BatchProperties batchProperties, @Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor
+			BatchJobLaunchService launchService, StartupRecoveryService recoveryService
 	) {
 		this.natsConnection = natsConnection;
 		this.properties = properties;
 		this.objectMapper = objectMapper;
-		this.jobLauncher = jobLauncher;
-		this.vdypBatchJob = vdypBatchJob;
-		this.batchProperties = batchProperties;
-		this.taskExecutor = taskExecutor;
+		this.launchService = launchService;
+		this.recoveryService = recoveryService;
 	}
 
 	@Override
@@ -90,12 +73,19 @@ public class BatchRequestConsumer implements SmartLifecycle {
 			JetStreamSubscription subscription = jetStream.subscribe(properties.subject(), options);
 
 			while (running.get()) {
-				if (!hasJobLaunchCapacity()) {
+				if (recoveryService.recoverNextExpiredExecution()) {
+					continue;
+				}
+
+				if (!launchService.hasCapacity()) {
 					pauseUntilCapacityAvailable();
 					continue;
 				}
 
-				List<Message> messages = subscription.fetch(properties.batchSize(), properties.pollTimeout());
+				List<Message> messages = subscription.fetch(1, properties.pollTimeout());
+				if (messages.isEmpty()) {
+					continue;
+				}
 
 				for (Message message : messages) {
 					handleMessage(message);
@@ -111,20 +101,22 @@ public class BatchRequestConsumer implements SmartLifecycle {
 	}
 
 	void handleMessage(Message message) {
-		try {
-			if (!hasJobLaunchCapacity()) {
-				logger.info(
-						"No batch thread pool capacity available; deferring NATS batch request. active={}, max={}",
-						taskExecutor.getActiveCount(), taskExecutor.getMaxPoolSize()
-				);
-				message.nak();
-				return;
-			}
+		if (recoveryService.recoverNextExpiredExecution()) {
+			logger.info("Recovered expired batch work before accepting a new NATS batch request.");
+			message.nak();
+			return;
+		}
 
+		if (!launchService.hasCapacity()) {
+			logger.info("No local batch thread capacity available; deferring NATS batch request.");
+			message.nak();
+			return;
+		}
+		try {
 			String json = new String(message.getData(), StandardCharsets.UTF_8);
 			BatchRequestMessage request = objectMapper.readValue(json, BatchRequestMessage.class);
 
-			launchSpringBatchJob(request);
+			launchService.launch(request.projectionID(), request.parameterJSON());
 
 			message.ack();
 		} catch (Exception ex) {
@@ -135,10 +127,6 @@ public class BatchRequestConsumer implements SmartLifecycle {
 		}
 	}
 
-	boolean hasJobLaunchCapacity() {
-		return taskExecutor.getActiveCount() < taskExecutor.getMaxPoolSize();
-	}
-
 	private void pauseUntilCapacityAvailable() throws InterruptedException {
 		Duration pollTimeout = properties.pollTimeout();
 		long sleepMillis = 1000;
@@ -147,38 +135,8 @@ public class BatchRequestConsumer implements SmartLifecycle {
 			sleepMillis = Math.max(1, pollTimeout.toMillis());
 		}
 
-		logger.debug(
-				"Waiting for batch thread pool capacity before fetching another NATS request. active={}, max={}",
-				taskExecutor.getActiveCount(), taskExecutor.getMaxPoolSize()
-		);
+		logger.debug("Waiting for local batch job capacity before fetching another NATS request.");
 		Thread.sleep(sleepMillis);
-	}
-
-	private void launchSpringBatchJob(BatchRequestMessage request) throws IOException, JobExecutionException {
-		String jobGuid = BatchUtils.createJobGuid();
-		String jobTimestamp = BatchUtils.createJobTimestamp();
-		Integer numPartitions = batchProperties.getPartition().getDefaultNumberOfPartitions();
-		Integer chunkSize = batchProperties.getReader().getDefaultChunkSize();
-		Path jobBaseDir = createJobBaseDirectory(jobGuid);
-
-		JobParameters parameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
-				.addString(BatchConstants.Projection.PARAMETERS_JSON, request.parameterJSON())
-				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
-				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString())
-				.addString(BatchConstants.GuidInput.PROJECTION_GUID, request.projectionID().toString())
-				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue())
-				.addLong(BatchConstants.Chunk.SIZE, chunkSize.longValue(), false).toJobParameters();
-
-		logger.info("[GUID: {}] Launching NATS batch request for projection {}", jobGuid, request.projectionID());
-		jobLauncher.run(vdypBatchJob, parameters);
-	}
-
-	private Path createJobBaseDirectory(String jobGuid) throws IOException {
-		Path batchRootDir = Paths.get(batchProperties.getRootDirectory());
-		String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobGuid);
-		Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
-		Files.createDirectories(jobBaseDir);
-		return jobBaseDir;
 	}
 
 	@Override
@@ -197,6 +155,6 @@ public class BatchRequestConsumer implements SmartLifecycle {
 
 	@Override
 	public int getPhase() {
-		return 0;
+		return 1000;
 	}
 }

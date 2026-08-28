@@ -43,6 +43,7 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,6 +61,8 @@ class DownloadAndPartitionTaskletTest {
 	BatchProperties.ReaderProperties readerProperties;
 	@Mock
 	BatchProperties.ThreadPoolProperties threadPoolProperties;
+	@Mock
+	JobOwnershipService ownershipService;
 
 	@Mock
 	ChunkContext chunkContext;
@@ -86,7 +89,9 @@ class DownloadAndPartitionTaskletTest {
 
 	@BeforeEach
 	void setup() {
-		tasklet = new DownloadAndPartitionTasklet(comsFileService, inputPartitioner, vdypClient, batchProperties);
+		tasklet = new DownloadAndPartitionTasklet(
+				comsFileService, inputPartitioner, vdypClient, batchProperties, ownershipService
+		);
 
 		lenient().when(chunkContext.getStepContext()).thenReturn(stepContext);
 		lenient().when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -212,7 +217,7 @@ class DownloadAndPartitionTaskletTest {
 	@Test
 	void testDeleteOriginalInputDirectory_ioExceptionIsSwallowedAsWarning() {
 		DownloadAndPartitionTasklet testTasklet = new DownloadAndPartitionTasklet(
-				comsFileService, inputPartitioner, vdypClient, batchProperties
+				comsFileService, inputPartitioner, vdypClient, batchProperties, ownershipService
 		) {
 			@Override
 			protected void deleteDirectory(Path dir) throws IOException {
