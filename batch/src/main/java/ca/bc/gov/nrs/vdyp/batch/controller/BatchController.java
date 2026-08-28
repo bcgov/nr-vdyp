@@ -1,14 +1,11 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,12 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
@@ -39,9 +35,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.ClaimBoundJobLauncher;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
+import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -55,7 +57,6 @@ public class BatchController {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchController.class);
 
-	private final JobLauncher jobLauncher;
 	private final Job fetchAndPartitionJob;
 	private final JobExplorer jobExplorer;
 	private final JobOperator jobOperator;
@@ -63,6 +64,11 @@ public class BatchController {
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
 	private final StorageEstimationService storageEstimationService;
+	private final BatchJobLaunchService batchJobLaunchService;
+	private final ServerCapacityService serverCapacityService;
+	private final BatchOwnershipProperties ownershipProperties;
+	private final JobOwnershipService ownershipService;
+	private final ClaimBoundJobLauncher claimBoundJobLauncher;
 	private final TaskExecutor prioritizationExecutor;
 	private final TaskExecutor resumeRetryExecutor;
 	private final PrioritizationPauseTracker pauseTracker;
@@ -80,20 +86,25 @@ public class BatchController {
 	private Integer defaultChunkSize;
 
 	public BatchController(
-			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
 			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties,
-			StorageEstimationService storageEstimationService,
+			StorageEstimationService storageEstimationService, BatchJobLaunchService batchJobLaunchService,
+			ServerCapacityService serverCapacityService, BatchOwnershipProperties ownershipProperties,
+			JobOwnershipService ownershipService, ClaimBoundJobLauncher claimBoundJobLauncher,
 			@Qualifier("prioritizationExecutor") TaskExecutor prioritizationExecutor,
 			@Qualifier("resumeRetryExecutor") TaskExecutor resumeRetryExecutor, PrioritizationPauseTracker pauseTracker
 	) {
-		this.jobLauncher = jobLauncher;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
 		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
 		this.jobOperator = jobOperator;
 		this.batchProperties = batchProperties;
 		this.storageEstimationService = storageEstimationService;
+		this.batchJobLaunchService = batchJobLaunchService;
+		this.serverCapacityService = serverCapacityService;
+		this.ownershipProperties = ownershipProperties;
+		this.ownershipService = ownershipService;
+		this.claimBoundJobLauncher = claimBoundJobLauncher;
 		this.prioritizationExecutor = prioritizationExecutor;
 		this.resumeRetryExecutor = resumeRetryExecutor;
 		this.pauseTracker = pauseTracker;
@@ -236,9 +247,9 @@ public class BatchController {
 	}
 
 	/**
-	 * Prioritizes a running job by pausing every other currently running job (freeing shared thread-pool capacity for
-	 * this job's already-queued partitions) and, once they've actually stopped, resuming them in the order they were
-	 * originally started.
+	 * Prioritizes a running job by pausing every other currently running job owned by this instance (freeing shared
+	 * thread-pool capacity for this job's already-queued partitions) and, once they've actually stopped, resuming them
+	 * in the order they were originally started.
 	 */
 	@PostMapping(value = "/prioritize/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> prioritizeBatchJob(@PathVariable UUID jobGuid) {
@@ -267,6 +278,21 @@ public class BatchController {
 			response.put(BatchConstants.Job.MESSAGE, "Only a currently running job can be prioritized.");
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 			logger.warn("[GUID: {}] Refusing to prioritize job that is not currently running.", jobGuid);
+			return ResponseEntity.badRequest().body(response);
+		}
+
+		// Pausing other jobs only frees this replica's thread-pool capacity, so it only helps when the target
+		// job is actually running here; a job owned by another replica must be prioritized on that replica instead.
+		if (!ownershipService.isOwnedLocally(projectionGuid(targetExecution))) {
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.EXECUTION_ID, targetExecution.getId());
+			response.put(BatchConstants.Job.ERROR, "Job is not running on this instance");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"This replica does not own the job execution, so it has no local capacity to free for it."
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+			logger.warn("[GUID: {}] Refusing to prioritize job not owned by this instance.", jobGuid);
 			return ResponseEntity.badRequest().body(response);
 		}
 
@@ -301,13 +327,16 @@ public class BatchController {
 	}
 
 	/**
-	 * Finds all other currently running executions of the fetch-and-partition job (BatchConstants.Job.JOB_NAME),
-	 * excluding the given target, ordered by start time ascending - the order they should later be resumed in.
+	 * Finds all other currently running executions of the fetch-and-partition job (BatchConstants.Job.JOB_NAME) that
+	 * are owned by this instance, excluding the given target, ordered by start time ascending - the order they should
+	 * later be resumed in. A job owned by another replica is left untouched: it does not compete with the target job
+	 * for this replica's thread-pool capacity, and this replica cannot reliably stop it anyway.
 	 */
 	private List<JobExecution> findOtherRunningExecutions(JobExecution target) {
 		Set<JobExecution> runningExecutions = jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME);
 
 		return runningExecutions.stream().filter(execution -> !execution.getId().equals(target.getId()))
+				.filter(execution -> ownershipService.isOwnedLocally(projectionGuid(execution)))
 				.sorted(
 						Comparator
 								.comparing(JobExecution::getStartTime, Comparator.nullsLast(Comparator.naturalOrder()))
@@ -341,48 +370,63 @@ public class BatchController {
 		}
 	}
 
-	// Retries relaunching a paused job until it succeeds or the timeout elapses
+	// Retries relaunching a paused job until it succeeds or the timeout elapses - Spring Batch's graceful
+	// stop can still report STOPPING (and reject a relaunch) well after the job was signalled to stop.
+	// Stopping a job releases its ownership claim (see VDYPJobMetricListener.afterJob), so resuming must
+	// reacquire one and relaunch through claimBoundJobLauncher - the same pattern as StartupRecoveryService -
+	// rather than launching directly, or the resumed execution would be fenced out by ownership checks.
 	private void resumeWithRetry(String prioritizedJobGuid, JobExecution execution) {
 		Long executionId = execution.getId();
+		String projectionGuid = projectionGuid(execution);
 		int timeoutSeconds = batchProperties.getPrioritize().getStopWaitTimeoutSeconds();
 		int pollIntervalMillis = batchProperties.getPrioritize().getStopPollIntervalMillis();
 		long deadline = System.currentTimeMillis() + (timeoutSeconds * 1000L);
 
 		try {
 			while (true) {
-				try {
-					JobExecution resumed = jobLauncher.run(fetchAndPartitionJob, execution.getJobParameters());
-					logger.info(
-							"[GUID: {}] Resumed paused job execution {} as new execution {}.", prioritizedJobGuid,
-							executionId, resumed.getId()
-					);
-					return;
-				} catch (JobExecutionAlreadyRunningException e) {
-					if (System.currentTimeMillis() >= deadline) {
+				Optional<JobClaim> claim = ownershipService.tryAcquire(projectionGuid, "prioritize-resume");
+				if (claim.isPresent()) {
+					try {
+						JobExecution resumed = claimBoundJobLauncher
+								.launch(fetchAndPartitionJob, execution.getJobParameters(), claim.get());
+						logger.info(
+								"[GUID: {}] Resumed paused job execution {} as new execution {}.", prioritizedJobGuid,
+								executionId, resumed.getId()
+						);
+						return;
+					} catch (JobExecutionAlreadyRunningException e) {
+						// Still stopping (Spring Batch only halts at the next chunk boundary) - fall through to retry.
+					} catch (JobExecutionException e) {
 						logger.error(
-								"[GUID: {}] Gave up resuming job execution {} after {}s; it is still reported as "
-										+ "running (likely still STOPPING). It will remain stopped until manually restarted.",
-								prioritizedJobGuid, executionId, timeoutSeconds
+								"[GUID: {}] Failed to resume paused job execution {}. {}", prioritizedJobGuid,
+								executionId, e.getMessage(), e
 						);
 						return;
 					}
-					try {
-						Thread.sleep(pollIntervalMillis);
-					} catch (InterruptedException ie) {
-						Thread.currentThread().interrupt();
-						return;
-					}
-				} catch (Exception e) {
+				}
+
+				if (System.currentTimeMillis() >= deadline) {
 					logger.error(
-							"[GUID: {}] Failed to resume paused job execution {}. {}", prioritizedJobGuid, executionId,
-							e.getMessage(), e
+							"[GUID: {}] Gave up resuming job execution {} after {}s; it is still reported as "
+									+ "running (likely still STOPPING). It will remain stopped until manually restarted.",
+							prioritizedJobGuid, executionId, timeoutSeconds
 					);
+					return;
+				}
+				try {
+					Thread.sleep(pollIntervalMillis);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
 					return;
 				}
 			}
 		} finally {
 			pauseTracker.unmark(executionId);
 		}
+	}
+
+	private String projectionGuid(JobExecution jobExecution) {
+		return jobExecution.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
 	}
 
 	@GetMapping(value = "/status/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -484,13 +528,15 @@ public class BatchController {
 	}
 
 	/**
-	 * Exposes this instance's configured thread pool capacity (batch.thread-pool.core-pool-size /
-	 * BATCH_THREAD_POOL_SIZE) so callers can display current thread load relative to system capacity.
+	 * Exposes this instance's shared Batch executor usage and maximum capacity.
 	 */
 	@GetMapping(value = "/capacity", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> capacity() {
 		Map<String, Object> response = new HashMap<>();
-		response.put(BatchConstants.Capacity.THREAD_CAPACITY, batchProperties.getThreadPool().getCorePoolSize());
+		response.put(
+				BatchConstants.Capacity.THREAD_CAPACITY,
+				serverCapacityService.getAllReplicaCapacity(ownershipProperties.getHeartbeatInterval().getSeconds() * 2)
+		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
 	}
@@ -526,22 +572,12 @@ public class BatchController {
 		validateParametersJSON(projectionParametersJson);
 
 		try {
-			String jobGuid = BatchUtils.createJobGuid();
-			String jobTimestamp = BatchUtils.createJobTimestamp();
+			JobExecution jobExecution = batchJobLaunchService.launchNewJob(projectionGuid, projectionParametersJson);
 
-			Path jobBaseDir = ensureProjectionDirectoryExists(jobGuid);
-
-			logger.debug("[GUID: {}] Starting GUID-based job", jobGuid);
-
-			// Thread count will be computed dynamically by DownloadAndPartitionTasklet after files are fetched.
-			// Pass defaultNumPartitions as a safe fallback in case the tasklet cannot determine the count.
-			JobParameters jobParameters = buildJobParameters(
-					projectionParametersJson, defaultNumPartitions, jobGuid, jobTimestamp, jobBaseDir.toString(),
-					projectionGuid, defaultChunkSize
+			logger.info(
+					"[GUID: {}] Batch job started - Execution ID: {}",
+					jobExecution.getJobParameters().getString(BatchConstants.Job.GUID), jobExecution.getId()
 			);
-			JobExecution jobExecution = jobLauncher.run(fetchAndPartitionJob, jobParameters);
-
-			logger.info("[GUID: {}] Batch job started - Execution ID: {}", jobGuid, jobExecution.getId());
 
 			return jobExecution;
 
@@ -573,36 +609,6 @@ public class BatchController {
 					)
 			);
 		}
-	}
-
-	private Path ensureProjectionDirectoryExists(String jobGuid) throws IOException {
-		Path batchRootDir = Paths.get(batchRootDirectory);
-
-		if (!Files.exists(batchRootDir)) {
-			Files.createDirectories(batchRootDir);
-			logger.debug("Created batch root directory: {}", batchRootDir);
-		}
-
-		String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobGuid);
-		Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
-		Files.createDirectories(jobBaseDir);
-
-		logger.debug("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
-		return jobBaseDir;
-	}
-
-	/** Builds job parameters for GUID-based flow (files fetched from COMS by DownloadAndPartitionTasklet). */
-	private JobParameters buildJobParameters(
-			String projectionParametersJson, Integer numPartitions, String jobGuid, String jobTimestamp,
-			String jobBaseDir, UUID projectionGUID, Integer chunkSize
-	) {
-		return new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
-				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
-				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
-				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
-				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGUID.toString())
-				.addLong(BatchConstants.Partition.NUMBER, numPartitions.longValue())
-				.addLong(BatchConstants.Chunk.SIZE, chunkSize.longValue(), false).toJobParameters();
 	}
 
 	private void buildSuccessResponse(Map<String, Object> response, JobExecution jobExecution) {

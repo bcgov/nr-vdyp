@@ -1,0 +1,44 @@
+{{- if .Values.global.autoscaling }}
+{{- if and .Values.batch.autoscaling .Values.batch.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "batch.fullname" . }}
+  labels:
+    {{- include "batch.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "batch.fullname" . }}
+  minReplicas: {{ .Values.batch.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.batch.autoscaling.maxReplicas }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.batch.autoscaling.scaleDownStabilizationWindowSeconds | default 900 }}
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+      selectPolicy: Max
+  metrics:
+    {{- if .Values.batch.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.batch.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+{{- end }}

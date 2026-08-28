@@ -255,9 +255,13 @@ batch:
   #-- autoscaling for the component. it is optional and is an object.
   autoscaling:
     #-- enable or disable autoscaling.
-    enabled: false
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 11000
   #-- replica count - batch processing usually runs single instance
   replicaCount: 1
+  terminationGracePeriodSeconds: 390
   #-- pod security context
   podSecurityContext: {}
   #-- container security context
@@ -286,6 +290,11 @@ batch:
     BATCH_DEFAULT_PARTITION_NUMBER: ~
     BATCH_THREAD_POOL_SIZE: ~
     BATCH_MAX_JOB_THREADS: ~
+    BATCH_OWNERSHIP_HEARTBEAT_INTERVAL: "60s"
+    BATCH_OWNERSHIP_LEASE_DURATION: "240s"
+    BATCH_OWNERSHIP_RECOVERY_SCAN_INTERVAL: "90s"
+    BATCH_OWNERSHIP_SHUTDOWN_WAIT: "300s"
+    BATCH_RECOVER_LEGACY_EXECUTIONS_WITHOUT_CLAIM: "true"
     BATCH_DB_CONNECITON_POOL_SIZE: ~
     BATCH_STORAGE_THRESHOLD_PERCENT: ~
     BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER: ~

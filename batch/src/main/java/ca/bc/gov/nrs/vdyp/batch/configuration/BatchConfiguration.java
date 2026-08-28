@@ -46,6 +46,7 @@ import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
@@ -67,15 +68,17 @@ public class BatchConfiguration {
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
 	private final BatchResultAggregationService resultAggregationService;
+	private final JobOwnershipService ownershipService;
 
 	public BatchConfiguration(
 			JobRepository jobRepository, BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			BatchResultAggregationService resultAggregationService
+			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService
 	) {
 		this.jobRepository = jobRepository;
 		this.metricsCollector = metricsCollector;
 		this.batchProperties = batchProperties;
 		this.resultAggregationService = resultAggregationService;
+		this.ownershipService = ownershipService;
 	}
 
 	@Bean(name = "asyncJobLauncher")
@@ -121,7 +124,9 @@ public class BatchConfiguration {
 		executor.setQueueCapacity(corePoolSize);
 		executor.setThreadNamePrefix(threadNamePrefix);
 		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-		executor.setWaitForTasksToCompleteOnShutdown(true);
+		// BatchShutdownDrainService (phase 900) owns the graceful wait. Stop this executor only after that drain.
+		executor.setPhase(800);
+		executor.setWaitForTasksToCompleteOnShutdown(false);
 		executor.setAwaitTerminationSeconds(awaitTerminationSeconds);
 		executor.initialize();
 		return executor;
@@ -252,9 +257,12 @@ public class BatchConfiguration {
 	@Bean
 	public VDYPJobMetricListener vdypJobMetricListener(
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			BatchResultAggregationService resultAggregationService, PrioritizationPauseTracker pauseTracker
+			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService,
+			PrioritizationPauseTracker pauseTracker
 	) {
-		return new VDYPJobMetricListener(metricsCollector, batchProperties, resultAggregationService, pauseTracker);
+		return new VDYPJobMetricListener(
+				metricsCollector, batchProperties, resultAggregationService, ownershipService, pauseTracker
+		);
 	}
 
 	/**
@@ -338,7 +346,7 @@ public class BatchConfiguration {
 	@Bean
 	@StepScope
 	public BatchItemWriter partitionWriter(BatchProjectionService batchProjectionService, ObjectMapper objectMapper) {
-		return new BatchItemWriter(batchProjectionService, objectMapper);
+		return new BatchItemWriter(batchProjectionService, objectMapper, ownershipService);
 	}
 
 	/**
@@ -380,6 +388,7 @@ public class BatchConfiguration {
 
 			// Get job parameters for aggregation
 			JobExecution jobExecution = stepExecution.getJobExecution();
+			ownershipService.assertCurrentOwner(jobExecution);
 			String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
 			String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 			LocalDateTime startTime = jobExecution.getStartTime();

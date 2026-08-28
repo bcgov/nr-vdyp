@@ -20,6 +20,7 @@ import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
@@ -35,6 +36,9 @@ class VDYPJobMetricListenerTest {
 	@Mock
 	private BatchResultAggregationService resultAggregationService;
 
+	@Mock
+	private JobOwnershipService ownershipService;
+
 	private BatchProperties batchProperties;
 	private PrioritizationPauseTracker pauseTracker;
 	private VDYPJobMetricListener listener;
@@ -44,7 +48,9 @@ class VDYPJobMetricListenerTest {
 		batchProperties = new BatchProperties();
 		batchProperties.getPartition().setInterimDirsCleanupEnabled(true);
 		pauseTracker = new PrioritizationPauseTracker();
-		listener = new VDYPJobMetricListener(metricsCollector, batchProperties, resultAggregationService, pauseTracker);
+		listener = new VDYPJobMetricListener(
+				metricsCollector, batchProperties, resultAggregationService, ownershipService, pauseTracker
+		);
 	}
 
 	private JobExecution stoppedExecution(long executionId, String jobBaseDir) {
