@@ -5,8 +5,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -48,7 +48,6 @@ public class StartupRecoveryService implements SmartLifecycle {
 
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	private Thread recoveryThread;
-	private Random random;
 
 	public StartupRecoveryService(
 			JobExplorer jobExplorer, @Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob,
@@ -64,7 +63,6 @@ public class StartupRecoveryService implements SmartLifecycle {
 		this.ownershipService = ownershipService;
 		this.serverCapacityService = serverCapacityService;
 		this.claimBoundJobLauncher = claimBoundJobLauncher;
-		this.random = new Random();
 	}
 
 	@Override
@@ -205,7 +203,7 @@ public class StartupRecoveryService implements SmartLifecycle {
 
 	private void sleepWithJitter() throws InterruptedException {
 		long baseMillis = Math.max(1, ownershipProperties.getRecoveryScanInterval().toMillis());
-		long jitterMillis = random.nextLong(Math.max(1, baseMillis / 4));
+		long jitterMillis = ThreadLocalRandom.current().nextLong(Math.max(1, baseMillis / 4));
 		Thread.sleep(baseMillis + jitterMillis);
 	}
 
