@@ -255,7 +255,7 @@ batch:
   #-- autoscaling for the component. it is optional and is an object.
   autoscaling:
     #-- enable or disable autoscaling.
-    enabled: false
+    enabled: true
     minReplicas: 1
     maxReplicas: 4
     targetCPUUtilizationPercentage: 300
