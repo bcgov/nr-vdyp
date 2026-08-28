@@ -33,4 +33,17 @@ public class AsyncConfig {
 		ex.initialize();
 		return ex;
 	}
+
+	// Separate from prioritizationExecutor so a slow-to-stop job's resume retries don't block that
+	// single thread and delay pausing the other jobs.
+	@Bean(name = "resumeRetryExecutor")
+	public ThreadPoolTaskExecutor resumeRetryExecutor() {
+		ThreadPoolTaskExecutor ex = new ThreadPoolTaskExecutor();
+		ex.setCorePoolSize(4);
+		ex.setMaxPoolSize(8);
+		ex.setQueueCapacity(16);
+		ex.setThreadNamePrefix("batch-resume-retry-");
+		ex.initialize();
+		return ex;
+	}
 }

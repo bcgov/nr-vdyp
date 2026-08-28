@@ -25,6 +25,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
@@ -40,6 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -62,6 +64,8 @@ public class BatchController {
 	private final BatchProperties batchProperties;
 	private final StorageEstimationService storageEstimationService;
 	private final TaskExecutor prioritizationExecutor;
+	private final TaskExecutor resumeRetryExecutor;
+	private final PrioritizationPauseTracker pauseTracker;
 
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
@@ -80,7 +84,8 @@ public class BatchController {
 			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
 			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties,
 			StorageEstimationService storageEstimationService,
-			@Qualifier("prioritizationExecutor") TaskExecutor prioritizationExecutor
+			@Qualifier("prioritizationExecutor") TaskExecutor prioritizationExecutor,
+			@Qualifier("resumeRetryExecutor") TaskExecutor resumeRetryExecutor, PrioritizationPauseTracker pauseTracker
 	) {
 		this.jobLauncher = jobLauncher;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
@@ -90,6 +95,8 @@ public class BatchController {
 		this.batchProperties = batchProperties;
 		this.storageEstimationService = storageEstimationService;
 		this.prioritizationExecutor = prioritizationExecutor;
+		this.resumeRetryExecutor = resumeRetryExecutor;
+		this.pauseTracker = pauseTracker;
 	}
 
 	/**
@@ -307,14 +314,14 @@ public class BatchController {
 				).toList();
 	}
 
-	/**
-	 * Pauses each of the given job executions (in order) and, once each has actually stopped, resumes it by relaunching
-	 * it with its original job parameters - same pattern as StartupRecoveryService, so already completed steps are
-	 * skipped and no input re-download occurs.
-	 */
+	// Stops each job (in start-time order) then hands off its resume to resumeRetryExecutor, so one
+	// slow-to-stop job can't delay stopping the rest or block the next prioritize request.
 	private void prioritizeAsync(String prioritizedJobGuid, List<JobExecution> others) {
 		for (JobExecution execution : others) {
 			Long executionId = execution.getId();
+			// Mark before stop() so VDYPJobMetricListener's afterJob skips deleting this job's interim
+			// partition directories, which it still needs to resume.
+			pauseTracker.markPausedForResume(executionId);
 			try {
 				jobOperator.stop(executionId);
 			} catch (JobExecutionNotRunningException e) {
@@ -326,48 +333,56 @@ public class BatchController {
 						"[GUID: {}] Failed to stop job execution {} while prioritizing; skipping it. {}",
 						prioritizedJobGuid, executionId, e.getMessage(), e
 				);
+				pauseTracker.unmark(executionId);
 				continue;
 			}
 
-			waitUntilStopped(executionId);
-
-			try {
-				JobExecution resumed = jobLauncher.run(fetchAndPartitionJob, execution.getJobParameters());
-				logger.info(
-						"[GUID: {}] Resumed paused job execution {} as new execution {}.", prioritizedJobGuid,
-						executionId, resumed.getId()
-				);
-			} catch (Exception e) {
-				logger.error(
-						"[GUID: {}] Failed to resume paused job execution {}. {}", prioritizedJobGuid, executionId,
-						e.getMessage(), e
-				);
-			}
+			resumeRetryExecutor.execute(() -> resumeWithRetry(prioritizedJobGuid, execution));
 		}
 	}
 
-	private void waitUntilStopped(Long executionId) {
+	// Retries relaunching a paused job until it succeeds or the timeout elapses
+	private void resumeWithRetry(String prioritizedJobGuid, JobExecution execution) {
+		Long executionId = execution.getId();
 		int timeoutSeconds = batchProperties.getPrioritize().getStopWaitTimeoutSeconds();
 		int pollIntervalMillis = batchProperties.getPrioritize().getStopPollIntervalMillis();
 		long deadline = System.currentTimeMillis() + (timeoutSeconds * 1000L);
 
-		while (System.currentTimeMillis() < deadline) {
-			JobExecution current = jobExplorer.getJobExecution(executionId);
-			if (current == null || !current.getStatus().isRunning()) {
-				return;
+		try {
+			while (true) {
+				try {
+					JobExecution resumed = jobLauncher.run(fetchAndPartitionJob, execution.getJobParameters());
+					logger.info(
+							"[GUID: {}] Resumed paused job execution {} as new execution {}.", prioritizedJobGuid,
+							executionId, resumed.getId()
+					);
+					return;
+				} catch (JobExecutionAlreadyRunningException e) {
+					if (System.currentTimeMillis() >= deadline) {
+						logger.error(
+								"[GUID: {}] Gave up resuming job execution {} after {}s; it is still reported as "
+										+ "running (likely still STOPPING). It will remain stopped until manually restarted.",
+								prioritizedJobGuid, executionId, timeoutSeconds
+						);
+						return;
+					}
+					try {
+						Thread.sleep(pollIntervalMillis);
+					} catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+						return;
+					}
+				} catch (Exception e) {
+					logger.error(
+							"[GUID: {}] Failed to resume paused job execution {}. {}", prioritizedJobGuid, executionId,
+							e.getMessage(), e
+					);
+					return;
+				}
 			}
-			try {
-				Thread.sleep(pollIntervalMillis);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				return;
-			}
+		} finally {
+			pauseTracker.unmark(executionId);
 		}
-
-		logger.warn(
-				"Timed out after {}s waiting for job execution {} to stop; proceeding to resume other jobs anyway.",
-				timeoutSeconds, executionId
-		);
 	}
 
 	@GetMapping(value = "/status/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)

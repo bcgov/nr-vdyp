@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,15 +48,15 @@ class BatchMetricsCollectorTest {
 	}
 
 	@Test
-	void testInitializeMetrics_DuplicateJobGuid_ThrowsException() throws BatchMetricsException {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
+	void testInitializeMetrics_DuplicateJobGuid_ReplacesWithFreshMetricsForNewExecution() throws BatchMetricsException {
+		BatchMetrics original = batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
 
-		BatchMetricsException exception = assertThrows(
-				BatchMetricsException.class,
-				() -> batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID + 1, JOB_GUID)
-		);
+		BatchMetrics replaced = batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID + 1, JOB_GUID);
 
-		assertTrue(exception.getMessage().contains("Job metrics already exists"));
+		assertEquals(JOB_EXECUTION_ID + 1, replaced.getJobExecutionId());
+		BatchMetrics retrievedMetrics = batchMetricsCollector.getJobMetrics(JOB_GUID);
+		assertSame(replaced, retrievedMetrics);
+		assertNotSame(original, retrievedMetrics);
 	}
 
 	@Test

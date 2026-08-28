@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -51,6 +53,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -88,6 +91,11 @@ class BatchControllerTest {
 	@Mock
 	private TaskExecutor prioritizationExecutor;
 
+	@Mock
+	private TaskExecutor resumeRetryExecutor;
+
+	private PrioritizationPauseTracker pauseTracker;
+
 	private BatchProperties batchProperties;
 
 	private BatchController batchController;
@@ -98,16 +106,22 @@ class BatchControllerTest {
 		batchProperties.getThreadPool().setCorePoolSize(21);
 		batchProperties.getPrioritize().setStopWaitTimeoutSeconds(1);
 		batchProperties.getPrioritize().setStopPollIntervalMillis(5);
+		pauseTracker = new PrioritizationPauseTracker();
 
 		batchController = new BatchController(
 				jobLauncher, fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator, batchProperties,
-				storageEstimationService, prioritizationExecutor
+				storageEstimationService, prioritizationExecutor, resumeRetryExecutor, pauseTracker
 		);
 
 		doAnswer(invocation -> {
 			((Runnable) invocation.getArgument(0)).run();
 			return null;
 		}).when(prioritizationExecutor).execute(any());
+
+		doAnswer(invocation -> {
+			((Runnable) invocation.getArgument(0)).run();
+			return null;
+		}).when(resumeRetryExecutor).execute(any());
 
 		// Use system temp directory for cross-platform compatibility
 		String tempDir = System.getProperty("java.io.tmpdir");
@@ -727,7 +741,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testPrioritizeBatchJob_PollTimeoutExceeded_StillResumes() throws Exception {
+	void testPrioritizeBatchJob_ResumeAlreadyRunning_RetriesThenSucceeds() throws Exception {
 		UUID jobGuid = UUID.randomUUID();
 		JobInstance targetInstance = new JobInstance(1L, "testJob");
 		JobParameters targetParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
@@ -745,12 +759,38 @@ class BatchControllerTest {
 				.thenReturn(Set.of(targetExecution, other));
 
 		when(jobOperator.stop(200L)).thenReturn(true);
-		when(jobExplorer.getJobExecution(200L)).thenReturn(runningExecution(200L, LocalDateTime.now().minusMinutes(1)));
-		when(jobLauncher.run(any(), any())).thenReturn(new JobExecution(999L));
+		when(jobLauncher.run(any(), any())).thenThrow(new JobExecutionAlreadyRunningException("still stopping"))
+				.thenReturn(new JobExecution(999L));
 
 		batchController.prioritizeBatchJob(jobGuid);
 
-		verify(jobLauncher).run(fetchAndPartitionJob, other.getJobParameters());
+		verify(jobLauncher, times(2)).run(fetchAndPartitionJob, other.getJobParameters());
+	}
+
+	@Test
+	void testPrioritizeBatchJob_ResumeAlreadyRunning_GivesUpAfterTimeout() throws Exception {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance targetInstance = new JobInstance(1L, "testJob");
+		JobParameters targetParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution targetExecution = new JobExecution(targetInstance, 100L, targetParams);
+		targetExecution.setStatus(BatchStatus.STARTED);
+
+		JobExecution other = runningExecution(200L, LocalDateTime.now().minusMinutes(1));
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(targetInstance));
+		when(jobExplorer.getJobExecutions(targetInstance)).thenReturn(List.of(targetExecution));
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
+				.thenReturn(Set.of(targetExecution, other));
+
+		when(jobOperator.stop(200L)).thenReturn(true);
+		when(jobLauncher.run(any(), any())).thenThrow(new JobExecutionAlreadyRunningException("still stopping"));
+
+		batchController.prioritizeBatchJob(jobGuid);
+
+		verify(jobLauncher, atLeast(2)).run(fetchAndPartitionJob, other.getJobParameters());
 	}
 
 	@Test
