@@ -59,6 +59,7 @@ export interface BatchMappingModel {
   errorCount: number | null
   warningCount: number | null
   workerCount?: number | null
+  isPrioritized?: boolean | null
   batchFailureTypeCode?: BatchFailureTypeCodeModel | null
   failureMessage?: string | null
 }

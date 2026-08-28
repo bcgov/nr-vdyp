@@ -174,6 +174,23 @@ export const runProjection = async (
 }
 
 /**
+ * (Admin Only) Prioritizes a running projection.
+ * @param projectionGUID The projection GUID.
+ * @returns A promise that resolves to the updated ProjectionModel.
+ */
+export const prioritizeProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    const response = await apiClient.prioritizeProjection(projectionGUID)
+    return response.data
+  } catch (error) {
+    console.error('Error prioritizing projection:', error)
+    throw error
+  }
+}
+
+/**
  * Cancels a running projection.
  * @param projectionGUID The projection GUID.
  * @param adminCancelReason Optional justification, set by an Admin when cancelling on a user's behalf.

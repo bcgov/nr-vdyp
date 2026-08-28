@@ -75,6 +75,10 @@
             <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
             Queued
           </span>
+          <span v-if="projection.isPrioritized" class="status-badge status-priority">
+            <img :src="ArrowUpWhiteIcon" alt="" class="status-badge-icon" />
+            High Priority
+          </span>
         </div>
       </div>
 
@@ -135,6 +139,16 @@
       <!-- Action Buttons -->
       <v-card-actions class="card-actions">
         <AppButton
+          v-if="!projection.isPrioritized"
+          label="Prioritize"
+          variant="secondary"
+          size="small"
+          :icon-src="ArrowUpIcon"
+          class="prioritize-button"
+          :is-disabled="projection.status !== PROJECTION_STATUS.RUNNING"
+          @click="$emit('prioritize', projection.projectionGUID)"
+        />
+        <AppButton
           label="Cancel"
           variant="secondary"
           size="small"
@@ -152,7 +166,7 @@ import type { AdminProjection, SortOption } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS } from '@/constants/constants'
 import { formatNumber } from '@/utils/util'
 import { AppButton } from '@/components'
-import { RunningIcon, StuckIcon14px, QueuedIcon14px } from '@/assets/'
+import { RunningIcon, StuckIcon14px, QueuedIcon14px, ArrowUpIcon, ArrowUpWhiteIcon } from '@/assets/'
 
 interface Props {
   projections: AdminProjection[]
@@ -166,6 +180,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'sort', value: string): void
   (e: 'cancel', projectionGUID: string): void
+  (e: 'prioritize', projectionGUID: string): void
 }>()
 
 const handleSortChange = (value: string) => {
@@ -305,6 +320,12 @@ const formatElapsedTime = (startDate: string | null): string => {
   color: var(--typography-color-primary);
 }
 
+.status-badge.status-priority {
+  border: 1px solid #003366;
+  background: #003366;
+  color: #ffffff;
+}
+
 .card-content {
   padding: var(--layout-padding-medium);
   display: flex;
@@ -403,6 +424,10 @@ const formatElapsedTime = (startDate: string | null): string => {
 
 .cancel-button :deep(.v-icon) {
   color: var(--support-border-color-danger);
+}
+
+.prioritize-button {
+  margin-right: var(--layout-padding-small);
 }
 
 .empty-state-card {
