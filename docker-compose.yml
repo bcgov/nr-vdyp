@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile
     command:
       [
-        "--url=jdbc:postgresql://db:5432/${BATCH_DB_NAME}?user=${BATCH_DB_USER}&password=${BATCH_DB_PASSWORD}&currentSchema=batch",
+        "--url=jdbc:postgresql://db:5432/${BATCH_DB_DATABASE}?user=${BATCH_DB_USER}&password=${BATCH_DB_PASSWORD}&currentSchema=batch",
         "--changelog-file=batch-changelog.json",
         "--searchPath=/liquibase/",
         "update"

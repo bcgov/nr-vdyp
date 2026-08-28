@@ -3,11 +3,14 @@ package ca.bc.gov.nrs.vdyp.batch.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,47 +19,36 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
-import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class BatchControllerTest {
-
-	@Mock
-	private JobLauncher jobLauncher;
-
-	@Mock
-	private Job fetchAndPartitionJob;
-
 	@Mock
 	private JobExplorer jobExplorer;
 
@@ -74,22 +66,24 @@ class BatchControllerTest {
 
 	@Mock
 	private JobParameters jobParameters;
+	@Mock
+	private BatchJobLaunchService batchJobLaunchService;
+	@Mock
+	private ServerCapacityService serverCapacityService;
 
 	@Mock
 	private StorageEstimationService storageEstimationService;
-
-	private BatchProperties batchProperties;
 
 	private BatchController batchController;
 
 	@BeforeEach
 	void setUp() {
-		batchProperties = new BatchProperties();
-		batchProperties.getThreadPool().setCorePoolSize(21);
+		BatchOwnershipProperties ownershipProperties = new BatchOwnershipProperties();
+		ownershipProperties.setHeartbeatInterval(Duration.of(300, ChronoUnit.SECONDS));
 
 		batchController = new BatchController(
-				jobLauncher, fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator, batchProperties,
-				storageEstimationService
+				jobExplorer, metricsCollector, jobOperator, storageEstimationService, batchJobLaunchService,
+				serverCapacityService, ownershipProperties
 		);
 
 		// Use system temp directory for cross-platform compatibility
@@ -111,12 +105,14 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testCapacity_ReturnsConfiguredThreadPoolCorePoolSize() {
+	void testCapacity_ReturnsExecutorThreadUsage() {
+		when(serverCapacityService.getAllReplicaCapacity(anyLong())).thenReturn(21L);
 		ResponseEntity<Map<String, Object>> response = batchController.capacity();
 
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
-		assertEquals(21, response.getBody().get(BatchConstants.Capacity.THREAD_CAPACITY));
+		assertEquals(21L, response.getBody().get(BatchConstants.Capacity.THREAD_CAPACITY));
+		verify(serverCapacityService).getAllReplicaCapacity(anyLong());
 	}
 
 	@Test
@@ -149,8 +145,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse() throws JobExecutionAlreadyRunningException,
-			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
+	void testStartBatchJob_WithValidGUIDs_ReturnsSuccessResponse() throws IOException, JobExecutionException {
 		UUID projectionGUID = UUID.randomUUID();
 
 		// Mock job execution
@@ -161,7 +156,7 @@ class BatchControllerTest {
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn("test-guid");
-		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
+		when(batchJobLaunchService.launchNewJob(projectionGUID, "{}")).thenReturn(jobExecution);
 
 		ResponseEntity<Map<String, Object>> response = batchController.startBatchJobPersistedID(projectionGUID, "{}");
 
@@ -169,9 +164,7 @@ class BatchControllerTest {
 		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
 
-		ArgumentCaptor<JobParameters> parametersCaptor = ArgumentCaptor.forClass(JobParameters.class);
-		verify(jobLauncher).run(any(), parametersCaptor.capture());
-		assertEquals(150L, parametersCaptor.getValue().getLong(BatchConstants.Chunk.SIZE));
+		verify(batchJobLaunchService).launchNewJob(projectionGUID, "{}");
 	}
 
 	@Test

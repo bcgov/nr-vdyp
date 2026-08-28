@@ -13,6 +13,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.lang.NonNull;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -22,14 +23,16 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
 	private final BatchResultAggregationService resultAggregationService;
+	private final JobOwnershipService ownershipService;
 
 	public VDYPJobMetricListener(
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			BatchResultAggregationService resultAggregationService
+			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService
 	) {
 		this.metricsCollector = metricsCollector;
 		this.batchProperties = batchProperties;
 		this.resultAggregationService = resultAggregationService;
+		this.ownershipService = ownershipService;
 	}
 
 	@Override
@@ -102,5 +105,6 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 		}
 
 		logger.info("[GUID: {}] === VDYP Batch Job Completed === Execution ID: {}", jobGuid, jobExecution.getId());
+		ownershipService.finalizeOwnedExecution(jobExecution);
 	}
 }

@@ -9,11 +9,13 @@ import org.springframework.batch.repeat.RepeatStatus;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 public abstract class VdypFileTasklet implements Tasklet {
 	final ComsFileService comsFileService;
 	final VdypClient vdypClient;
+	final JobOwnershipService ownershipService;
 	Long jobId;
 	String jobGuid;
 	String baseDir;
@@ -21,9 +23,10 @@ public abstract class VdypFileTasklet implements Tasklet {
 	String jobTimestamp;
 	String projectionGUID;
 
-	VdypFileTasklet(ComsFileService comsFileService, VdypClient vdypClient) {
+	VdypFileTasklet(ComsFileService comsFileService, VdypClient vdypClient, JobOwnershipService ownershipService) {
 		this.comsFileService = comsFileService;
 		this.vdypClient = vdypClient;
+		this.ownershipService = ownershipService;
 	}
 
 	abstract void performVdypFileOperation(StepExecution stepExecution) throws BatchException;
@@ -42,6 +45,7 @@ public abstract class VdypFileTasklet implements Tasklet {
 		jobTimestamp = params.getString(BatchConstants.Job.TIMESTAMP);
 		projectionGUID = params.getString(BatchConstants.GuidInput.PROJECTION_GUID);
 
+		ownershipService.assertCurrentOwner(jobExecution);
 		performVdypFileOperation(stepExecution);
 
 		return RepeatStatus.FINISHED;

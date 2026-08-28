@@ -16,6 +16,7 @@ import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -30,6 +31,11 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 	// Thread safety for afterJob execution - using job execution ID as key
 	private final Map<Long, Boolean> jobCompletionTracker = new HashMap<>();
 	private final Object lock = new Object();
+	private final JobOwnershipService ownershipService;
+
+	public BatchJobExecutionListener(JobOwnershipService ownershipService) {
+		this.ownershipService = ownershipService;
+	}
 
 	@Override
 	public void beforeJob(@NonNull JobExecution jobExecution) {
@@ -70,7 +76,7 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 				return;
 			}
 
-			if (jobBasePath != null) {
+			if (jobBasePath != null && stillOwnsExecution(jobExecution, jobGuid, jobExecutionId)) {
 				cleanupJobDirectory(jobGuid, jobBasePath);
 			}
 
@@ -100,6 +106,19 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 			logger.info(separator);
 
 			cleanupOldJobTracker(jobExecutionId);
+		}
+	}
+
+	private boolean stillOwnsExecution(JobExecution jobExecution, String jobGuid, Long jobExecutionId) {
+		try {
+			ownershipService.assertCurrentOwner(jobExecution);
+			return true;
+		} catch (IllegalStateException e) {
+			logger.warn(
+					"[GUID: {}] Skipping job directory cleanup because this process no longer owns execution {}: {}",
+					jobGuid, jobExecutionId, e.getMessage()
+			);
+			return false;
 		}
 	}
 
