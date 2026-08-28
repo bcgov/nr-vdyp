@@ -467,15 +467,21 @@ public class ProjectionService {
 		);
 		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
 
-		// Default Admin Dashboard sort: Threads (workerCount) highest first. Sorted here in Java, not via the
-		// repository query, since workerCount lives on a separate entity only reachable through a one-directional
-		// association; sorting via a DB join risks silently dropping projections without a batch mapping row yet.
 		Comparator<ProjectionEntity> byWorkerCountDesc = Comparator.comparingInt((ProjectionEntity e) -> {
 			ProjectionBatchMappingModel mapping = batchMappings.get(e.getProjectionGUID());
 			return mapping != null && mapping.getWorkerCount() != null ? mapping.getWorkerCount() : 0;
 		}).reversed();
+		Comparator<ProjectionEntity> byPrioritizedThenWorkerCountDesc = Comparator
+				.comparing((ProjectionEntity e) -> isPrioritized(e, batchMappings)).reversed()
+				.thenComparing(byWorkerCountDesc);
 
-		return entities.stream().sorted(byWorkerCountDesc).map(e -> toRichModel(e, batchMappings)).toList();
+		return entities.stream().sorted(byPrioritizedThenWorkerCountDesc).map(e -> toRichModel(e, batchMappings))
+				.toList();
+	}
+
+	private boolean isPrioritized(ProjectionEntity entity, Map<UUID, ProjectionBatchMappingModel> batchMappings) {
+		ProjectionBatchMappingModel mapping = batchMappings.get(entity.getProjectionGUID());
+		return mapping != null && mapping.isPrioritized();
 	}
 
 	/**

@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -106,11 +107,14 @@ public class ProjectionBatchMappingService {
 	public void prioritizeProjection(ProjectionEntity projectionEntity) throws ProjectionServiceException {
 		try {
 			var mapping = repository.listByProjectionGUID(projectionEntity.getProjectionGUID()).stream()
-					.filter(entity -> entity.getBatchJobGUID() != null).findFirst().orElseThrow(
+					.filter(entity -> entity.getBatchJobGUID() != null)
+					.max(Comparator.comparing(ProjectionBatchMappingEntity::getCreateDate)).orElseThrow(
 							() -> new ProjectionServiceException(
 									"No batch job mapping found for projection " + projectionEntity.getProjectionGUID()
 							)
 					);
+			repository.clearAllPrioritized();
+			mapping.setPrioritized(true);
 			batchClient.prioritizeBatchJob(mapping.getBatchJobGUID());
 		} catch (ProjectionServiceException e) {
 			throw e;

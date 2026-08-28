@@ -417,6 +417,44 @@ class ProjectionServiceTest {
 		assertThat(results).extracting(ProjectionModel::getReportTitle)
 				.containsExactly("High Threads", "Low Threads", "No Mapping", "Null Worker Count");
 	}
+
+	@Test
+	void getAllRunningProjections_prioritizedProjection_sortsFirstRegardlessOfWorkerCount() {
+		ProjectionEntity highThreadsNotPrioritized = new ProjectionEntity();
+		highThreadsNotPrioritized.setProjectionGUID(UUID.randomUUID());
+		highThreadsNotPrioritized.setReportTitle("High Threads Not Prioritized");
+
+		ProjectionEntity lowThreadsPrioritized = new ProjectionEntity();
+		lowThreadsPrioritized.setProjectionGUID(UUID.randomUUID());
+		lowThreadsPrioritized.setReportTitle("Low Threads Prioritized");
+
+		when(
+				repository.findByStatuses(
+						List.of(
+								ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK,
+								ProjectionStatusCodeModel.QUEUED
+						)
+				)
+		).thenReturn(List.of(highThreadsNotPrioritized, lowThreadsPrioritized));
+
+		ProjectionBatchMappingModel highMapping = batchMappingModel(UUID.randomUUID());
+		highMapping.setWorkerCount(20);
+		ProjectionBatchMappingModel prioritizedMapping = batchMappingModel(UUID.randomUUID());
+		prioritizedMapping.setWorkerCount(2);
+		prioritizedMapping.setPrioritized(true);
+
+		Map<UUID, ProjectionBatchMappingModel> batchMappings = new HashMap<>();
+		batchMappings.put(highThreadsNotPrioritized.getProjectionGUID(), highMapping);
+		batchMappings.put(lowThreadsPrioritized.getProjectionGUID(), prioritizedMapping);
+
+		when(batchMappingService.getLatestBatchMappingsForProjections(any())).thenReturn(batchMappings);
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		List<ProjectionModel> results = service.getAllRunningProjections();
+
+		assertThat(results).extracting(ProjectionModel::getReportTitle)
+				.containsExactly("Low Threads Prioritized", "High Threads Not Prioritized");
+	}
 	// ==========================================================
 	// getProjectionEntity
 	// ==========================================================
