@@ -100,7 +100,7 @@ public class CfsBiomassCalculator {
 			layer = polygon.getPrimaryLayer();
 		}
 		if (layer != null) {
-			Species species = layer.determineLeadingSp64(0);
+			Species species = layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0);
 			sp64Code = species != null ? species.getSpeciesCode() : null;
 		} else {
 			logger.error("Could not determine a primary layer for Polygon: {}. Cannot determine SP64 code.", polygon);
