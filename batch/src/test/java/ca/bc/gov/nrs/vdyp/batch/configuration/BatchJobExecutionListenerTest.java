@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +31,7 @@ import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -41,12 +44,14 @@ class BatchJobExecutionListenerTest {
 
 	@Mock
 	private JobInstance jobInstance;
+	@Mock
+	private JobOwnershipService ownershipService;
 
 	private BatchJobExecutionListener listener;
 
 	@BeforeEach
 	void setUp() {
-		listener = new BatchJobExecutionListener();
+		listener = new BatchJobExecutionListener(ownershipService);
 	}
 
 	@Test
@@ -279,5 +284,31 @@ class BatchJobExecutionListenerTest {
 
 		assertTrue(Files.exists(warningsPath));
 		assertTrue(Files.exists(warningsPath.resolve("nested.txt")));
+	}
+
+	@Test
+	void testAfterJob_WhenOwnershipLost_SkipsJobDirectoryCleanup(@TempDir Path tempDir) throws IOException {
+		Long jobId = 8L;
+		String jobGuid = "guid-008";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.STOPPED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+		doThrow(new IllegalStateException("fenced")).when(ownershipService).assertCurrentOwner(jobExecution);
+
+		listener.beforeJob(jobExecution);
+
+		try (MockedStatic<BatchUtils> batchUtilsMock = mockStatic(BatchUtils.class)) {
+			assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+			batchUtilsMock.verify(() -> BatchUtils.deleteDirectoryRecursively(any(Path.class)), never());
+		}
+
+		assertTrue(Files.exists(jobBaseDir));
 	}
 }

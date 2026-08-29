@@ -1,0 +1,25 @@
+services:
+  vdyp-batch:
+    # A fixed published port prevents Compose from creating more than one replica.
+    # Publish an ephemeral host port for each replica so every instance remains
+    # independently reachable by the local verification script.
+    ports: !override
+      - target: 8081
+        published: "0"
+        protocol: tcp
+    environment:
+      # Keep the ownership lifecycle quick enough for local scale-down testing.
+      # Production-like defaults remain in batch/.env.vdypBatch and the Helm values.
+      BATCH_OWNERSHIP_HEARTBEAT_INTERVAL: "2s"
+      BATCH_OWNERSHIP_LEASE_DURATION: "10s"
+      BATCH_OWNERSHIP_RECOVERY_SCAN_INTERVAL: "3s"
+      BATCH_OWNERSHIP_SHUTDOWN_WAIT: "15s"
+      BATCH_RECOVER_LEGACY_EXECUTIONS_WITHOUT_CLAIM: "false"
+    volumes:
+      # All local replicas need the same projection files so a recovered job can
+      # continue after its original owner is removed during scale-down.
+      - batch_projection_files:/app/work
+    stop_grace_period: 20s
+
+volumes:
+  batch_projection_files:
