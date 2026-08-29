@@ -54,31 +54,33 @@
       <div class="card-header-section">
         <div class="card-header-row">
           <span class="card-title">{{ projection.title }}</span>
-          <span
-            v-if="projection.status === PROJECTION_STATUS.STUCK"
-            class="status-badge status-stuck"
-          >
-            <img :src="StuckIcon14px" alt="" class="status-badge-icon" />
-            Stuck
-          </span>
-          <span
-            v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
-            class="status-badge status-running"
-          >
-            <img :src="RunningIcon" alt="" class="status-badge-icon" />
-            Running
-          </span>
-          <span
-            v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
-            class="status-badge status-queued"
-          >
-            <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
-            Queued
-          </span>
-          <span v-if="projection.isPrioritized" class="status-badge status-priority">
-            <img :src="ArrowUpWhiteIcon" alt="" class="status-badge-icon" />
-            High Priority
-          </span>
+          <div class="status-badge-row">
+            <span
+              v-if="projection.status === PROJECTION_STATUS.STUCK"
+              class="status-badge status-stuck"
+            >
+              <img :src="StuckIcon14px" alt="" class="status-badge-icon" />
+              Stuck
+            </span>
+            <span
+              v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
+              class="status-badge status-running"
+            >
+              <img :src="RunningIcon" alt="" class="status-badge-icon" />
+              Running
+            </span>
+            <span
+              v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
+              class="status-badge status-queued"
+            >
+              <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
+              Queued
+            </span>
+            <span v-if="projection.isPrioritized" class="status-badge status-priority">
+              <img :src="ArrowUpWhiteIcon" alt="" class="status-badge-icon" />
+              High Priority
+            </span>
+          </div>
         </div>
       </div>
 
@@ -282,6 +284,20 @@ const formatElapsedTime = (startDate: string | null): string => {
   color: var(--typography-color-primary);
   flex: 1;
   overflow-wrap: break-word;
+}
+
+.status-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 430px) {
+  .status-badge-row {
+    flex-direction: column;
+    align-items: flex-end;
+  }
 }
 
 .status-badge {
