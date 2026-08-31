@@ -45,7 +45,7 @@ public class ServerCapacityService {
 	}
 
 	public void recordThreadCapacityHeartbeat(boolean isAcceptingWork) {
-		repository.recordCapacityHeartbeat(identity.ownerId(), availableThreads(), isAcceptingWork);
+		repository.recordCapacityHeartbeat(identity.ownerId(), maximumThreads(), isAcceptingWork);
 	}
 
 	public Long getAllReplicaCapacity(long maxHeartBeatAgeSeconds) {

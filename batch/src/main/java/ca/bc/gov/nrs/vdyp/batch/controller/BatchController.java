@@ -1,14 +1,19 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.explore.JobExplorer;
@@ -16,7 +21,10 @@ import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +36,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.ClaimBoundJobLauncher;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -44,14 +57,21 @@ public class BatchController {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchController.class);
 
+	private final Job fetchAndPartitionJob;
 	private final JobExplorer jobExplorer;
 	private final JobOperator jobOperator;
 	@SuppressWarnings("unused")
 	private final BatchMetricsCollector metricsCollector;
+	private final BatchProperties batchProperties;
 	private final StorageEstimationService storageEstimationService;
 	private final BatchJobLaunchService batchJobLaunchService;
 	private final ServerCapacityService serverCapacityService;
 	private final BatchOwnershipProperties ownershipProperties;
+	private final JobOwnershipService ownershipService;
+	private final ClaimBoundJobLauncher claimBoundJobLauncher;
+	private final TaskExecutor prioritizationExecutor;
+	private final TaskExecutor resumeRetryExecutor;
+	private final PrioritizationPauseTracker pauseTracker;
 
 	@Value("${batch.root-directory}")
 	private String batchRootDirectory;
@@ -66,17 +86,28 @@ public class BatchController {
 	private Integer defaultChunkSize;
 
 	public BatchController(
-			JobExplorer jobExplorer, BatchMetricsCollector metricsCollector, JobOperator jobOperator,
+			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
+			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties,
 			StorageEstimationService storageEstimationService, BatchJobLaunchService batchJobLaunchService,
-			ServerCapacityService serverCapacityService, BatchOwnershipProperties ownershipProperties
+			ServerCapacityService serverCapacityService, BatchOwnershipProperties ownershipProperties,
+			JobOwnershipService ownershipService, ClaimBoundJobLauncher claimBoundJobLauncher,
+			@Qualifier("prioritizationExecutor") TaskExecutor prioritizationExecutor,
+			@Qualifier("resumeRetryExecutor") TaskExecutor resumeRetryExecutor, PrioritizationPauseTracker pauseTracker
 	) {
+		this.fetchAndPartitionJob = fetchAndPartitionJob;
 		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
 		this.jobOperator = jobOperator;
+		this.batchProperties = batchProperties;
 		this.storageEstimationService = storageEstimationService;
 		this.batchJobLaunchService = batchJobLaunchService;
 		this.serverCapacityService = serverCapacityService;
 		this.ownershipProperties = ownershipProperties;
+		this.ownershipService = ownershipService;
+		this.claimBoundJobLauncher = claimBoundJobLauncher;
+		this.prioritizationExecutor = prioritizationExecutor;
+		this.resumeRetryExecutor = resumeRetryExecutor;
+		this.pauseTracker = pauseTracker;
 	}
 
 	/**
@@ -215,6 +246,189 @@ public class BatchController {
 		}
 	}
 
+	/**
+	 * Prioritizes a running job by pausing every other currently running job owned by this instance (freeing shared
+	 * thread-pool capacity for this job's already-queued partitions) and, once they've actually stopped, resuming them
+	 * in the order they were originally started.
+	 */
+	@PostMapping(value = "/prioritize/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> prioritizeBatchJob(@PathVariable UUID jobGuid) {
+		Map<String, Object> response = new HashMap<>();
+
+		JobExecution targetExecution;
+		try {
+			logger.debug("Attempting to prioritize job with GUID: {}", jobGuid);
+			targetExecution = findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), true);
+		} catch (NoSuchJobExecutionException e) {
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.ERROR, "Job execution not found");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"No job execution found with GUID: " + jobGuid + ". Please verify the GUID is correct."
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+			logger.error("Job execution not found with GUID: {}", jobGuid);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+		}
+
+		if (!targetExecution.getStatus().isRunning()) {
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.EXECUTION_ID, targetExecution.getId());
+			response.put(BatchConstants.Job.ERROR, "Job is not currently running");
+			response.put(BatchConstants.Job.MESSAGE, "Only a currently running job can be prioritized.");
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+			logger.warn("[GUID: {}] Refusing to prioritize job that is not currently running.", jobGuid);
+			return ResponseEntity.badRequest().body(response);
+		}
+
+		// Pausing other jobs only frees this replica's thread-pool capacity, so it only helps when the target
+		// job is actually running here; a job owned by another replica must be prioritized on that replica instead.
+		if (!ownershipService.isOwnedLocally(projectionGuid(targetExecution))) {
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.EXECUTION_ID, targetExecution.getId());
+			response.put(BatchConstants.Job.ERROR, "Job is not running on this instance");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"This replica does not own the job execution, so it has no local capacity to free for it."
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+			logger.warn("[GUID: {}] Refusing to prioritize job not owned by this instance.", jobGuid);
+			return ResponseEntity.badRequest().body(response);
+		}
+
+		List<JobExecution> others = findOtherRunningExecutions(targetExecution);
+
+		response.put(BatchConstants.Job.GUID, jobGuid);
+		response.put(BatchConstants.Prioritize.TARGET_EXECUTION_ID, targetExecution.getId());
+		response.put(BatchConstants.Prioritize.OTHERS_PAUSED_COUNT, others.size());
+		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+		if (others.isEmpty()) {
+			response.put(BatchConstants.Job.STATUS, "ALREADY_PRIORITIZED");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"No other running jobs to pause; this job already has full thread capacity available."
+			);
+			logger.info("[GUID: {}] No other running jobs found; nothing to pause.", jobGuid);
+			return ResponseEntity.ok(response);
+		}
+
+		response.put(BatchConstants.Job.STATUS, "PRIORITIZE_REQUESTED");
+		response.put(
+				BatchConstants.Job.MESSAGE,
+				"Prioritization requested. " + others.size()
+						+ " other running job(s) will be paused and resumed in their original start order."
+		);
+
+		logger.info("[GUID: {}] Prioritizing job. Pausing {} other running job(s).", jobGuid, others.size());
+		prioritizationExecutor.execute(() -> prioritizeAsync(jobGuid.toString(), others));
+
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+	}
+
+	/**
+	 * Finds all other currently running executions of the fetch-and-partition job (BatchConstants.Job.JOB_NAME) that
+	 * are owned by this instance, excluding the given target, ordered by start time ascending - the order they should
+	 * later be resumed in. A job owned by another replica is left untouched: it does not compete with the target job
+	 * for this replica's thread-pool capacity, and this replica cannot reliably stop it anyway.
+	 */
+	private List<JobExecution> findOtherRunningExecutions(JobExecution target) {
+		Set<JobExecution> runningExecutions = jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME);
+
+		return runningExecutions.stream().filter(execution -> !execution.getId().equals(target.getId()))
+				.filter(execution -> ownershipService.isOwnedLocally(projectionGuid(execution)))
+				.sorted(
+						Comparator
+								.comparing(JobExecution::getStartTime, Comparator.nullsLast(Comparator.naturalOrder()))
+				).toList();
+	}
+
+	// Stops each job (in start-time order) then hands off its resume to resumeRetryExecutor, so one
+	// slow-to-stop job can't delay stopping the rest or block the next prioritize request.
+	private void prioritizeAsync(String prioritizedJobGuid, List<JobExecution> others) {
+		for (JobExecution execution : others) {
+			Long executionId = execution.getId();
+			// Mark before stop() so VDYPJobMetricListener's afterJob skips deleting this job's interim
+			// partition directories, which it still needs to resume.
+			pauseTracker.markPausedForResume(executionId);
+			try {
+				jobOperator.stop(executionId);
+			} catch (JobExecutionNotRunningException e) {
+				logger.debug(
+						"[GUID: {}] Job execution {} was already stopping/stopped.", prioritizedJobGuid, executionId
+				);
+			} catch (Exception e) {
+				logger.warn(
+						"[GUID: {}] Failed to stop job execution {} while prioritizing; skipping it. {}",
+						prioritizedJobGuid, executionId, e.getMessage(), e
+				);
+				pauseTracker.unmark(executionId);
+				continue;
+			}
+
+			resumeRetryExecutor.execute(() -> resumeWithRetry(prioritizedJobGuid, execution));
+		}
+	}
+
+	// Retries relaunching a paused job until it succeeds or the timeout elapses - Spring Batch's graceful
+	// stop can still report STOPPING (and reject a relaunch) well after the job was signalled to stop.
+	// Stopping a job releases its ownership claim (see VDYPJobMetricListener.afterJob), so resuming must
+	// reacquire one and relaunch through claimBoundJobLauncher - the same pattern as StartupRecoveryService -
+	// rather than launching directly, or the resumed execution would be fenced out by ownership checks.
+	private void resumeWithRetry(String prioritizedJobGuid, JobExecution execution) {
+		Long executionId = execution.getId();
+		String projectionGuid = projectionGuid(execution);
+		int timeoutSeconds = batchProperties.getPrioritize().getStopWaitTimeoutSeconds();
+		int pollIntervalMillis = batchProperties.getPrioritize().getStopPollIntervalMillis();
+		long deadline = System.currentTimeMillis() + (timeoutSeconds * 1000L);
+
+		try {
+			while (true) {
+				Optional<JobClaim> claim = ownershipService.tryAcquire(projectionGuid, "prioritize-resume");
+				if (claim.isPresent()) {
+					try {
+						JobExecution resumed = claimBoundJobLauncher
+								.launch(fetchAndPartitionJob, execution.getJobParameters(), claim.get());
+						logger.info(
+								"[GUID: {}] Resumed paused job execution {} as new execution {}.", prioritizedJobGuid,
+								executionId, resumed.getId()
+						);
+						return;
+					} catch (JobExecutionAlreadyRunningException e) {
+						// Still stopping (Spring Batch only halts at the next chunk boundary) - fall through to retry.
+					} catch (JobExecutionException e) {
+						logger.error(
+								"[GUID: {}] Failed to resume paused job execution {}. {}", prioritizedJobGuid,
+								executionId, e.getMessage(), e
+						);
+						return;
+					}
+				}
+
+				if (System.currentTimeMillis() >= deadline) {
+					logger.error(
+							"[GUID: {}] Gave up resuming job execution {} after {}s; it is still reported as "
+									+ "running (likely still STOPPING). It will remain stopped until manually restarted.",
+							prioritizedJobGuid, executionId, timeoutSeconds
+					);
+					return;
+				}
+				try {
+					Thread.sleep(pollIntervalMillis);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					return;
+				}
+			}
+		} finally {
+			pauseTracker.unmark(executionId);
+		}
+	}
+
+	private String projectionGuid(JobExecution jobExecution) {
+		return jobExecution.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
+	}
+
 	@GetMapping(value = "/status/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable UUID jobGuid) {
 		Map<String, Object> response = new HashMap<>();
@@ -305,8 +519,8 @@ public class BatchController {
 		response.put(
 				"availableEndpoints",
 				Arrays.asList(
-						"/api/batch/startWithGUIDs", "/api/batch/stop/{jobGuid}", "/api/batch/status/{jobGuid}",
-						"/api/batch/health", "/api/batch/capacity", "/api/batch/storage"
+						"/api/batch/startWithGUIDs", "/api/batch/stop/{jobGuid}", "/api/batch/prioritize/{jobGuid}",
+						"/api/batch/status/{jobGuid}", "/api/batch/health", "/api/batch/capacity", "/api/batch/storage"
 				)
 		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());

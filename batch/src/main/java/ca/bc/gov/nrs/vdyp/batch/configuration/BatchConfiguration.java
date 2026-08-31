@@ -51,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.service.DownloadAndPartitionTasklet;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.service.ResultPersistenceTasklet;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -183,9 +184,10 @@ public class BatchConfiguration {
 
 		return new StepBuilder(BatchConstants.Job.WORKER_STEP_NAME, jobRepository)
 				.<BatchChunkMetadata, BatchChunkMetadata>chunk(stepChunkSize, transactionManager)
-				.reader(partitionReader).processor(batchItemProcessor).writer(partitionWriter).listener(partitionWriter)
-				.listener(retryPolicy).listener(skipPolicy).faultTolerant().retryPolicy(retryPolicy)
-				.skipPolicy(skipPolicy).listener(new StepExecutionListener() {
+				.transactionAttribute(taskletTransactionAttribute()).reader(partitionReader)
+				.processor(batchItemProcessor).writer(partitionWriter).listener(partitionWriter).listener(retryPolicy)
+				.listener(skipPolicy).faultTolerant().retryPolicy(retryPolicy).skipPolicy(skipPolicy)
+				.listener(new StepExecutionListener() {
 					@Override
 					@SuppressWarnings("java:S2637") // jobGuid, jobExecutionId, partitionName cannot be null in batch
 													// context
@@ -255,9 +257,12 @@ public class BatchConfiguration {
 	@Bean
 	public VDYPJobMetricListener vdypJobMetricListener(
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService
+			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService,
+			PrioritizationPauseTracker pauseTracker
 	) {
-		return new VDYPJobMetricListener(metricsCollector, batchProperties, resultAggregationService, ownershipService);
+		return new VDYPJobMetricListener(
+				metricsCollector, batchProperties, resultAggregationService, ownershipService, pauseTracker
+		);
 	}
 
 	/**

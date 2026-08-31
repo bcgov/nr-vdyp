@@ -417,6 +417,44 @@ class ProjectionServiceTest {
 		assertThat(results).extracting(ProjectionModel::getReportTitle)
 				.containsExactly("High Threads", "Low Threads", "No Mapping", "Null Worker Count");
 	}
+
+	@Test
+	void getAllRunningProjections_prioritizedProjection_sortsFirstRegardlessOfWorkerCount() {
+		ProjectionEntity highThreadsNotPrioritized = new ProjectionEntity();
+		highThreadsNotPrioritized.setProjectionGUID(UUID.randomUUID());
+		highThreadsNotPrioritized.setReportTitle("High Threads Not Prioritized");
+
+		ProjectionEntity lowThreadsPrioritized = new ProjectionEntity();
+		lowThreadsPrioritized.setProjectionGUID(UUID.randomUUID());
+		lowThreadsPrioritized.setReportTitle("Low Threads Prioritized");
+
+		when(
+				repository.findByStatuses(
+						List.of(
+								ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK,
+								ProjectionStatusCodeModel.QUEUED
+						)
+				)
+		).thenReturn(List.of(highThreadsNotPrioritized, lowThreadsPrioritized));
+
+		ProjectionBatchMappingModel highMapping = batchMappingModel(UUID.randomUUID());
+		highMapping.setWorkerCount(20);
+		ProjectionBatchMappingModel prioritizedMapping = batchMappingModel(UUID.randomUUID());
+		prioritizedMapping.setWorkerCount(2);
+		prioritizedMapping.setPrioritized(true);
+
+		Map<UUID, ProjectionBatchMappingModel> batchMappings = new HashMap<>();
+		batchMappings.put(highThreadsNotPrioritized.getProjectionGUID(), highMapping);
+		batchMappings.put(lowThreadsPrioritized.getProjectionGUID(), prioritizedMapping);
+
+		when(batchMappingService.getLatestBatchMappingsForProjections(any())).thenReturn(batchMappings);
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		List<ProjectionModel> results = service.getAllRunningProjections();
+
+		assertThat(results).extracting(ProjectionModel::getReportTitle)
+				.containsExactly("Low Threads Prioritized", "High Threads Not Prioritized");
+	}
 	// ==========================================================
 	// getProjectionEntity
 	// ==========================================================
@@ -544,6 +582,35 @@ class ProjectionServiceTest {
 		);
 	}
 
+	@Test
+	void checkUserCanPerformAction_prioritize_adminUser_doesNotThrow() {
+		UUID ownerId = UUID.randomUUID();
+		UUID adminId = UUID.randomUUID();
+		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), ownerId);
+		VDYPUserModel adminUser = user(adminId);
+		UserTypeCodeModel adminUserType = new UserTypeCodeModel();
+		adminUserType.setCode(UserTypeCodeModel.ADMIN);
+		adminUser.setUserTypeCode(adminUserType);
+
+		assertDoesNotThrow(
+				() -> service
+						.checkUserCanPerformAction(entity, adminUser, ProjectionService.ProjectionAction.PRIORITIZE)
+		);
+	}
+
+	@Test
+	void checkUserCanPerformAction_prioritize_nonAdminOwner_throwsUnauthorized() {
+		UUID ownerId = UUID.randomUUID();
+		ProjectionEntity entity = projectionEntity(UUID.randomUUID(), ownerId);
+		VDYPUserModel actingUser = user(ownerId);
+
+		assertThrows(
+				ProjectionUnauthorizedException.class,
+				() -> service
+						.checkUserCanPerformAction(entity, actingUser, ProjectionService.ProjectionAction.PRIORITIZE)
+		);
+	}
+
 	// ==========================================================
 	// checkProjectionStatusPermitsAction
 	// ==========================================================
@@ -656,6 +723,50 @@ class ProjectionServiceTest {
 		assertThrows(
 				ProjectionStateException.class,
 				() -> service.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.DELETE)
+		);
+	}
+
+	@Test
+	void checkProjectionStatusPermitsAction_prioritize_runningStatus_doesNotThrow() {
+		ProjectionEntity entity = new ProjectionEntity();
+		entity.setProjectionGUID(UUID.randomUUID());
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.RUNNING);
+		entity.setProjectionStatusCode(statusEntity);
+
+		assertDoesNotThrow(
+				() -> service.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.PRIORITIZE)
+		);
+	}
+
+	@Test
+	void checkProjectionStatusPermitsAction_prioritize_stuckStatus_throwsProjectionStateException() {
+		ProjectionEntity entity = new ProjectionEntity();
+		entity.setProjectionGUID(UUID.randomUUID());
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.STUCK);
+		entity.setProjectionStatusCode(statusEntity);
+
+		assertThrows(
+				ProjectionStateException.class,
+				() -> service.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.PRIORITIZE)
+		);
+	}
+
+	@Test
+	void checkProjectionStatusPermitsAction_prioritize_draftStatus_throwsProjectionStateException() {
+		ProjectionEntity entity = new ProjectionEntity();
+		entity.setProjectionGUID(UUID.randomUUID());
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.DRAFT);
+		entity.setProjectionStatusCode(statusEntity);
+
+		assertThrows(
+				ProjectionStateException.class,
+				() -> service.checkProjectionStatusPermitsAction(entity, ProjectionService.ProjectionAction.PRIORITIZE)
 		);
 	}
 
@@ -1640,6 +1751,68 @@ class ProjectionServiceTest {
 
 		verify(batchMappingService, times(1)).cancelProjection(any());
 		verify(batchJobPublisher, never()).deleteQueuedRequest(any());
+	}
+
+	@Test
+	void prioritizeBatchProjection_happyPath_callsMappingService_andReturnsModelWithRunningStatus()
+			throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+		UUID adminId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
+		VDYPUserModel adminUser = user(adminId);
+		UserTypeCodeModel adminUserType = new UserTypeCodeModel();
+		adminUserType.setCode(UserTypeCodeModel.ADMIN);
+		adminUser.setUserTypeCode(adminUserType);
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+
+		ProjectionModel model = service.prioritizeBatchProjection(adminUser, projectionGUID);
+
+		assertEquals(ProjectionStatusCodeModel.RUNNING, model.getProjectionStatusCode().getCode());
+		verify(batchMappingService, times(1)).prioritizeProjection(entity);
+	}
+
+	@Test
+	void prioritizeBatchProjection_nonAdminUser_throwsUnauthorized() throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID ownerId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, ownerId, ProjectionStatusCodeModel.RUNNING);
+		VDYPUserModel actingUser = user(ownerId);
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+
+		assertThrows(
+				ProjectionUnauthorizedException.class,
+				() -> service.prioritizeBatchProjection(actingUser, projectionGUID)
+		);
+		verify(batchMappingService, never()).prioritizeProjection(any());
+	}
+
+	@ParameterizedTest
+	@ValueSource(
+			strings = { ProjectionStatusCodeModel.DRAFT, ProjectionStatusCodeModel.READY,
+					ProjectionStatusCodeModel.FAILED, ProjectionStatusCodeModel.STUCK }
+	)
+	void prioritizeBatchProjection_notRunning_throwsException(String statusCode) throws ProjectionServiceException {
+		UUID projectionGUID = UUID.randomUUID();
+		UUID adminId = UUID.randomUUID();
+
+		ProjectionEntity entity = projectionEntity(projectionGUID, UUID.randomUUID(), statusCode);
+		VDYPUserModel adminUser = user(adminId);
+		UserTypeCodeModel adminUserType = new UserTypeCodeModel();
+		adminUserType.setCode(UserTypeCodeModel.ADMIN);
+		adminUser.setUserTypeCode(adminUserType);
+
+		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
+
+		assertThrows(
+				ProjectionStateException.class, () -> service.prioritizeBatchProjection(adminUser, projectionGUID)
+		);
+		verify(batchMappingService, never()).prioritizeProjection(any());
 	}
 
 	@Test

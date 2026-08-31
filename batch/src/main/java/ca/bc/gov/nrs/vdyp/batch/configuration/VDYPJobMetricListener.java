@@ -16,6 +16,7 @@ import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 public class VDYPJobMetricListener implements JobExecutionListener {
@@ -24,14 +25,17 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 	private final BatchProperties batchProperties;
 	private final BatchResultAggregationService resultAggregationService;
 	private final JobOwnershipService ownershipService;
+	private final PrioritizationPauseTracker pauseTracker;
 
 	public VDYPJobMetricListener(
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService
+			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService,
+			PrioritizationPauseTracker pauseTracker
 	) {
 		this.metricsCollector = metricsCollector;
 		this.batchProperties = batchProperties;
 		this.resultAggregationService = resultAggregationService;
+		this.pauseTracker = pauseTracker;
 		this.ownershipService = ownershipService;
 	}
 
@@ -41,11 +45,7 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 	public void beforeJob(@NonNull JobExecution jobExecution) {
 		// Initialize job metrics
 		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
-		try {
-			metricsCollector.initializeMetrics(jobExecution.getId(), jobGuid);
-		} catch (BatchMetricsException e) {
-			logger.error("Failed to initialize job metrics: {}", e.getMessage());
-		}
+		metricsCollector.initializeMetrics(jobExecution.getId(), jobGuid);
 		logger.info("[GUID: {}] === VDYP Batch Job Starting === Execution ID: {}", jobGuid, jobExecution.getId());
 	}
 
@@ -77,8 +77,10 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 			logger.error("Failed to finalize job metrics: {}", e.getMessage());
 		}
 
+		// Skip cleanup for jobs paused for prioritization - they're STOPPED but still need these directories to resume.
 		if (jobExecution.getStatus() == BatchStatus.STOPPED
-				&& batchProperties.getPartition().getInterimDirsCleanupEnabled()) {
+				&& batchProperties.getPartition().getInterimDirsCleanupEnabled()
+				&& !pauseTracker.isPausedForResume(jobExecution.getId())) {
 			try {
 				String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 				if (jobBaseDir != null) {

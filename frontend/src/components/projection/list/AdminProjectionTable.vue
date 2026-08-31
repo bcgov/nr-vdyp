@@ -126,27 +126,33 @@
           <td class="table-cell">
             <div class="projection-name-cell">
               <span class="projection-title">{{ projection.title }}</span>
-              <span
-                v-if="projection.status === PROJECTION_STATUS.STUCK"
-                class="status-badge status-stuck"
-              >
-                <img :src="StuckIcon14px" alt="" class="status-badge-icon" />
-                Stuck
-              </span>
-              <span
-                v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
-                class="status-badge status-running"
-              >
-                <img :src="RunningIcon" alt="" class="status-badge-icon" />
-                Running
-              </span>
-              <span
-                v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
-                class="status-badge status-queued"
-              >
-                <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
-                Queued
-              </span>
+              <div class="status-badge-row">
+                <span
+                  v-if="projection.status === PROJECTION_STATUS.STUCK"
+                  class="status-badge status-stuck"
+                >
+                  <img :src="StuckIcon14px" alt="" class="status-badge-icon" />
+                  Stuck
+                </span>
+                <span
+                  v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
+                  class="status-badge status-running"
+                >
+                  <img :src="RunningIcon" alt="" class="status-badge-icon" />
+                  Running
+                </span>
+                <span
+                  v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
+                  class="status-badge status-queued"
+                >
+                  <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
+                  Queued
+                </span>
+                <span v-if="projection.isPrioritized" class="status-badge status-priority">
+                  <img :src="ArrowUpWhiteIcon" alt="" class="status-badge-icon" />
+                  High Priority
+                </span>
+              </div>
             </div>
           </td>
           <td class="table-cell">{{ projection.ownerDisplayName }}</td>
@@ -187,6 +193,16 @@
           </td>
           <td class="table-cell actions-cell">
             <AppButton
+              v-if="!projection.isPrioritized"
+              label="Prioritize"
+              variant="secondary"
+              size="small"
+              :icon-src="ArrowUpIcon"
+              class="prioritize-button"
+              :is-disabled="projection.status !== PROJECTION_STATUS.RUNNING"
+              @click="$emit('prioritize', projection.projectionGUID)"
+            />
+            <AppButton
               label="Cancel"
               variant="secondary"
               size="small"
@@ -207,7 +223,7 @@ import type { SortOrder } from '@/types/types'
 import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PROJECTION_STATUS } from '@/constants/constants'
 import { formatNumber } from '@/utils/util'
 import { AppButton } from '@/components'
-import { RunningIcon, StuckIcon14px, QueuedIcon14px } from '@/assets/'
+import { RunningIcon, StuckIcon14px, QueuedIcon14px, ArrowUpIcon, ArrowUpWhiteIcon } from '@/assets/'
 
 interface Props {
   projections: AdminProjection[]
@@ -221,6 +237,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'sort', key: string): void
   (e: 'cancel', projectionGUID: string): void
+  (e: 'prioritize', projectionGUID: string): void
 }>()
 
 const handleSort = (key: string) => {
@@ -333,6 +350,10 @@ const formatElapsedTime = (startDate: string | null): string => {
   color: var(--support-border-color-danger);
 }
 
+.prioritize-button {
+  margin-right: var(--layout-padding-small);
+}
+
 .user-type-chip {
   display: inline-flex;
   align-items: center;
@@ -352,6 +373,13 @@ const formatElapsedTime = (startDate: string | null): string => {
   flex-direction: column;
   align-items: flex-start;
   gap: var(--layout-padding-xsmall);
+}
+
+.status-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .projection-title {
@@ -393,6 +421,12 @@ const formatElapsedTime = (startDate: string | null): string => {
   border: 1px solid var(--support-border-color-info);
   background: var(--support-surface-color-info);
   color: var(--typography-color-primary);
+}
+
+.status-badge.status-priority {
+  border: 1px solid #003366;
+  background: #003366;
+  color: #ffffff;
 }
 
 .elapsed-stuck {

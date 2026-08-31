@@ -3,27 +3,41 @@ package ca.bc.gov.nrs.vdyp.batch.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
@@ -35,13 +49,20 @@ import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.item.ExecutionContext;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
+import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
+import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.ClaimBoundJobLauncher;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -49,6 +70,10 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class BatchControllerTest {
+
+	@Mock
+	private Job fetchAndPartitionJob;
+
 	@Mock
 	private JobExplorer jobExplorer;
 
@@ -66,25 +91,67 @@ class BatchControllerTest {
 
 	@Mock
 	private JobParameters jobParameters;
+
 	@Mock
 	private BatchJobLaunchService batchJobLaunchService;
+
 	@Mock
 	private ServerCapacityService serverCapacityService;
 
 	@Mock
 	private StorageEstimationService storageEstimationService;
 
+	@Mock
+	private JobOwnershipService ownershipService;
+
+	@Mock
+	private ClaimBoundJobLauncher claimBoundJobLauncher;
+
+	@Mock
+	private TaskExecutor prioritizationExecutor;
+
+	@Mock
+	private TaskExecutor resumeRetryExecutor;
+
+	private PrioritizationPauseTracker pauseTracker;
+
+	private BatchProperties batchProperties;
+
+	private BatchOwnershipProperties ownershipProperties;
+
 	private BatchController batchController;
 
 	@BeforeEach
 	void setUp() {
-		BatchOwnershipProperties ownershipProperties = new BatchOwnershipProperties();
+		batchProperties = new BatchProperties();
+		batchProperties.getThreadPool().setCorePoolSize(21);
+		batchProperties.getPrioritize().setStopWaitTimeoutSeconds(1);
+		batchProperties.getPrioritize().setStopPollIntervalMillis(5);
+		pauseTracker = new PrioritizationPauseTracker();
+
+		ownershipProperties = new BatchOwnershipProperties();
 		ownershipProperties.setHeartbeatInterval(Duration.of(300, ChronoUnit.SECONDS));
 
 		batchController = new BatchController(
-				jobExplorer, metricsCollector, jobOperator, storageEstimationService, batchJobLaunchService,
-				serverCapacityService, ownershipProperties
+				fetchAndPartitionJob, jobExplorer, metricsCollector, jobOperator, batchProperties,
+				storageEstimationService, batchJobLaunchService, serverCapacityService, ownershipProperties,
+				ownershipService, claimBoundJobLauncher, prioritizationExecutor, resumeRetryExecutor, pauseTracker
 		);
+
+		// By default treat every projection as owned by this instance, matching a single-replica setup;
+		// tests that care about cross-replica behaviour override this explicitly. any() (not anyString())
+		// so it also matches a null projection GUID in tests that don't set one.
+		when(ownershipService.isOwnedLocally(any())).thenReturn(true);
+
+		doAnswer(invocation -> {
+			((Runnable) invocation.getArgument(0)).run();
+			return null;
+		}).when(prioritizationExecutor).execute(any());
+
+		doAnswer(invocation -> {
+			((Runnable) invocation.getArgument(0)).run();
+			return null;
+		}).when(resumeRetryExecutor).execute(any());
 
 		// Use system temp directory for cross-platform compatibility
 		String tempDir = System.getProperty("java.io.tmpdir");
@@ -102,6 +169,16 @@ class BatchControllerTest {
 		assertNotNull(response.getBody());
 		assertEquals("UP", response.getBody().get("status"));
 		assertEquals("VDYP Batch Processing Service", response.getBody().get("service"));
+	}
+
+	@Test
+	void testHealth_ListsPrioritizeEndpoint() {
+		ResponseEntity<Map<String, Object>> response = batchController.health();
+
+		assertNotNull(response.getBody());
+		@SuppressWarnings("unchecked")
+		List<String> endpoints = (List<String>) response.getBody().get("availableEndpoints");
+		assertTrue(endpoints.contains("/api/batch/prioritize/{jobGuid}"));
 	}
 
 	@Test
@@ -572,5 +649,321 @@ class BatchControllerTest {
 		assertNotNull(response.getBody());
 		assertEquals(jobGuid, response.getBody().get(BatchConstants.Job.GUID));
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
+	}
+
+	@Test
+	void testPrioritizeBatchJob_TargetNotFound_ReturnsNotFound() {
+		UUID jobGuid = UUID.randomUUID();
+
+		when(jobExplorer.getJobNames()).thenReturn(Collections.emptyList());
+
+		ResponseEntity<Map<String, Object>> response = batchController.prioritizeBatchJob(jobGuid);
+
+		assertEquals(404, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("Job execution not found", response.getBody().get(BatchConstants.Job.ERROR));
+		verifyNoInteractions(jobOperator, prioritizationExecutor);
+	}
+
+	@Test
+	void testPrioritizeBatchJob_TargetNotRunning_ReturnsBadRequest() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance instance = new JobInstance(1L, "testJob");
+		JobParameters params = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution execution = new JobExecution(instance, 100L, params);
+		execution.setStatus(BatchStatus.COMPLETED);
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(instance));
+		when(jobExplorer.getJobExecutions(instance)).thenReturn(List.of(execution));
+
+		ResponseEntity<Map<String, Object>> response = batchController.prioritizeBatchJob(jobGuid);
+
+		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("Job is not currently running", response.getBody().get(BatchConstants.Job.ERROR));
+		verifyNoInteractions(jobOperator, prioritizationExecutor);
+	}
+
+	@Test
+	void testPrioritizeBatchJob_TargetNotOwnedLocally_ReturnsBadRequest() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
+		UUID projectionGuid = UUID.randomUUID();
+		JobInstance instance = new JobInstance(1L, "testJob");
+		JobParameters params = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
+		JobExecution execution = new JobExecution(instance, 100L, params);
+		execution.setStatus(BatchStatus.STARTED);
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(instance));
+		when(jobExplorer.getJobExecutions(instance)).thenReturn(List.of(execution));
+		when(ownershipService.isOwnedLocally(projectionGuid.toString())).thenReturn(false);
+
+		ResponseEntity<Map<String, Object>> response = batchController.prioritizeBatchJob(jobGuid);
+
+		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("Job is not running on this instance", response.getBody().get(BatchConstants.Job.ERROR));
+		verifyNoInteractions(jobOperator, prioritizationExecutor);
+	}
+
+	@Test
+	void testPrioritizeBatchJob_NoOtherRunningJobs_ReturnsAlreadyPrioritized() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance instance = new JobInstance(1L, "testJob");
+		JobParameters params = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution execution = new JobExecution(instance, 100L, params);
+		execution.setStatus(BatchStatus.STARTED);
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(instance));
+		when(jobExplorer.getJobExecutions(instance)).thenReturn(List.of(execution));
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME)).thenReturn(Set.of(execution));
+
+		ResponseEntity<Map<String, Object>> response = batchController.prioritizeBatchJob(jobGuid);
+
+		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("ALREADY_PRIORITIZED", response.getBody().get(BatchConstants.Job.STATUS));
+		assertEquals(0, response.getBody().get(BatchConstants.Prioritize.OTHERS_PAUSED_COUNT));
+		verifyNoInteractions(jobOperator, prioritizationExecutor);
+	}
+
+	@Test
+	void testPrioritizeBatchJob_IgnoresRunningJobsOwnedByOtherReplicas() throws NoSuchJobException {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance instance = new JobInstance(1L, "testJob");
+		JobParameters params = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution execution = new JobExecution(instance, 100L, params);
+		execution.setStatus(BatchStatus.STARTED);
+
+		JobExecution remoteOther = runningExecution(200L, LocalDateTime.now().minusMinutes(10));
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(instance));
+		when(jobExplorer.getJobExecutions(instance)).thenReturn(List.of(execution));
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
+				.thenReturn(Set.of(execution, remoteOther));
+		when(
+				ownershipService.isOwnedLocally(
+						remoteOther.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID)
+				)
+		).thenReturn(false);
+
+		ResponseEntity<Map<String, Object>> response = batchController.prioritizeBatchJob(jobGuid);
+
+		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("ALREADY_PRIORITIZED", response.getBody().get(BatchConstants.Job.STATUS));
+		assertEquals(0, response.getBody().get(BatchConstants.Prioritize.OTHERS_PAUSED_COUNT));
+		verifyNoInteractions(jobOperator, prioritizationExecutor);
+	}
+
+	@Test
+	void testPrioritizeBatchJob_PausesOthersInStartTimeOrder_AndResumesWithSameParameters() throws Exception {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance targetInstance = new JobInstance(1L, "testJob");
+		JobParameters targetParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution targetExecution = new JobExecution(targetInstance, 100L, targetParams);
+		targetExecution.setStatus(BatchStatus.STARTED);
+
+		JobExecution firstOther = runningExecution(200L, LocalDateTime.now().minusMinutes(10));
+		JobExecution secondOther = runningExecution(300L, LocalDateTime.now().minusMinutes(5));
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(targetInstance));
+		when(jobExplorer.getJobExecutions(targetInstance)).thenReturn(List.of(targetExecution));
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
+				.thenReturn(Set.of(targetExecution, firstOther, secondOther));
+
+		when(jobOperator.stop(200L)).thenReturn(true);
+		when(jobOperator.stop(300L)).thenReturn(true);
+		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
+		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(new JobExecution(999L));
+
+		ResponseEntity<Map<String, Object>> response = batchController.prioritizeBatchJob(jobGuid);
+
+		assertEquals(202, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("PRIORITIZE_REQUESTED", response.getBody().get(BatchConstants.Job.STATUS));
+		assertEquals(2, response.getBody().get(BatchConstants.Prioritize.OTHERS_PAUSED_COUNT));
+
+		InOrder order = inOrder(jobOperator, claimBoundJobLauncher);
+		order.verify(jobOperator).stop(200L);
+		order.verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(firstOther.getJobParameters()), any());
+		order.verify(jobOperator).stop(300L);
+		order.verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(secondOther.getJobParameters()), any());
+
+		verify(jobOperator, never()).stop(100L);
+	}
+
+	@Test
+	void testPrioritizeBatchJob_StopThrowsAlreadyNotRunning_StillResumes() throws Exception {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance targetInstance = new JobInstance(1L, "testJob");
+		JobParameters targetParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution targetExecution = new JobExecution(targetInstance, 100L, targetParams);
+		targetExecution.setStatus(BatchStatus.STARTED);
+
+		JobExecution other = runningExecution(200L, LocalDateTime.now().minusMinutes(1));
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(targetInstance));
+		when(jobExplorer.getJobExecutions(targetInstance)).thenReturn(List.of(targetExecution));
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
+				.thenReturn(Set.of(targetExecution, other));
+
+		when(jobOperator.stop(200L)).thenThrow(new JobExecutionNotRunningException("already stopped"));
+		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
+		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(new JobExecution(999L));
+
+		batchController.prioritizeBatchJob(jobGuid);
+
+		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any());
+	}
+
+	@Test
+	void testPrioritizeBatchJob_ResumeAlreadyRunning_RetriesThenSucceeds() throws Exception {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance targetInstance = new JobInstance(1L, "testJob");
+		JobParameters targetParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution targetExecution = new JobExecution(targetInstance, 100L, targetParams);
+		targetExecution.setStatus(BatchStatus.STARTED);
+
+		JobExecution other = runningExecution(200L, LocalDateTime.now().minusMinutes(1));
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(targetInstance));
+		when(jobExplorer.getJobExecutions(targetInstance)).thenReturn(List.of(targetExecution));
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
+				.thenReturn(Set.of(targetExecution, other));
+
+		when(jobOperator.stop(200L)).thenReturn(true);
+		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
+		when(claimBoundJobLauncher.launch(any(), any(), any()))
+				.thenThrow(new JobExecutionAlreadyRunningException("still stopping"))
+				.thenReturn(new JobExecution(999L));
+
+		batchController.prioritizeBatchJob(jobGuid);
+
+		verify(claimBoundJobLauncher, times(2)).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any());
+	}
+
+	@Test
+	void testPrioritizeBatchJob_ResumeAlreadyRunning_GivesUpAfterTimeout() throws Exception {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance targetInstance = new JobInstance(1L, "testJob");
+		JobParameters targetParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution targetExecution = new JobExecution(targetInstance, 100L, targetParams);
+		targetExecution.setStatus(BatchStatus.STARTED);
+
+		JobExecution other = runningExecution(200L, LocalDateTime.now().minusMinutes(1));
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(targetInstance));
+		when(jobExplorer.getJobExecutions(targetInstance)).thenReturn(List.of(targetExecution));
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
+				.thenReturn(Set.of(targetExecution, other));
+
+		when(jobOperator.stop(200L)).thenReturn(true);
+		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
+		when(claimBoundJobLauncher.launch(any(), any(), any()))
+				.thenThrow(new JobExecutionAlreadyRunningException("still stopping"));
+
+		batchController.prioritizeBatchJob(jobGuid);
+
+		verify(claimBoundJobLauncher, atLeast(2)).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any());
+	}
+
+	@Test
+	void testPrioritizeBatchJob_OneStopFails_OthersStillProcessed() throws Exception {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance targetInstance = new JobInstance(1L, "testJob");
+		JobParameters targetParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution targetExecution = new JobExecution(targetInstance, 100L, targetParams);
+		targetExecution.setStatus(BatchStatus.STARTED);
+
+		JobExecution firstOther = runningExecution(200L, LocalDateTime.now().minusMinutes(10));
+		JobExecution secondOther = runningExecution(300L, LocalDateTime.now().minusMinutes(5));
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(targetInstance));
+		when(jobExplorer.getJobExecutions(targetInstance)).thenReturn(List.of(targetExecution));
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
+				.thenReturn(Set.of(targetExecution, firstOther, secondOther));
+
+		when(jobOperator.stop(200L)).thenThrow(new RuntimeException("boom"));
+		when(jobOperator.stop(300L)).thenReturn(true);
+		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
+		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(new JobExecution(999L));
+
+		batchController.prioritizeBatchJob(jobGuid);
+
+		verify(claimBoundJobLauncher, never())
+				.launch(eq(fetchAndPartitionJob), eq(firstOther.getJobParameters()), any());
+		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(secondOther.getJobParameters()), any());
+	}
+
+	@Test
+	void testPrioritizeBatchJob_ClaimUnavailable_RetriesUntilAcquired() throws Exception {
+		UUID jobGuid = UUID.randomUUID();
+		JobInstance targetInstance = new JobInstance(1L, "testJob");
+		JobParameters targetParams = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid.toString())
+				.toJobParameters();
+		JobExecution targetExecution = new JobExecution(targetInstance, 100L, targetParams);
+		targetExecution.setStatus(BatchStatus.STARTED);
+
+		JobExecution other = runningExecution(200L, LocalDateTime.now().minusMinutes(1));
+
+		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
+		when(jobExplorer.getJobInstanceCount("testJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(List.of(targetInstance));
+		when(jobExplorer.getJobExecutions(targetInstance)).thenReturn(List.of(targetExecution));
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
+				.thenReturn(Set.of(targetExecution, other));
+
+		when(jobOperator.stop(200L)).thenReturn(true);
+		// First poll finds the claim still held (e.g. lease not yet expired); second poll succeeds.
+		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.empty())
+				.thenReturn(Optional.of(claim("resume")));
+		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(new JobExecution(999L));
+
+		batchController.prioritizeBatchJob(jobGuid);
+
+		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any());
+	}
+
+	private JobExecution runningExecution(long executionId, LocalDateTime startTime) {
+		JobInstance instance = new JobInstance(executionId, "testJob");
+		JobParameters params = new JobParametersBuilder()
+				.addString(BatchConstants.Job.GUID, UUID.randomUUID().toString())
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, UUID.randomUUID().toString()).toJobParameters();
+		JobExecution execution = new JobExecution(instance, executionId, params);
+		execution.setStatus(BatchStatus.STARTED);
+		execution.setStartTime(startTime);
+		return execution;
+	}
+
+	private JobClaim claim(String reason) {
+		Instant now = Instant.now();
+		return new JobClaim(UUID.randomUUID().toString(), reason, UUID.randomUUID(), now, now.plusSeconds(120));
 	}
 }

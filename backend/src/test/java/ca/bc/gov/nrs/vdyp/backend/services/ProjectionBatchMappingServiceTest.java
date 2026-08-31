@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -249,6 +250,110 @@ class ProjectionBatchMappingServiceTest {
 		verify(batchClient, times(1)).stopBatchJob(batchJobGuid);
 		verify(batchClient, never()).stopBatchJobByProjection(any());
 		verify(repository, never()).delete(any());
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void prioritizeProjection_happyPath_callsBatchClientPrioritize() throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingEntity = batchMappingEntity(projectionEntity, batchJobGuid);
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(mappingEntity));
+
+		service.prioritizeProjection(projectionEntity);
+
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
+		verify(repository, times(1)).clearAllPrioritized();
+		verify(batchClient, times(1)).prioritizeBatchJob(batchJobGuid);
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void prioritizeProjection_happyPath_setsFlagAndClearsOthers() throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingEntity = batchMappingEntity(projectionEntity, batchJobGuid);
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(mappingEntity));
+
+		service.prioritizeProjection(projectionEntity);
+
+		verify(repository, times(1)).clearAllPrioritized();
+		assertTrue(mappingEntity.isPrioritized());
+	}
+
+	@Test
+	void prioritizeProjection_multipleMappingsAcrossReruns_usesMostRecentMapping()
+			throws ProjectionServiceException, InterruptedException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID staleBatchJobGuid = UUID.randomUUID();
+		UUID currentBatchJobGuid = UUID.randomUUID();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity staleMapping = batchMappingEntity(projectionEntity, staleBatchJobGuid);
+		staleMapping.beforeInsert();
+		Thread.sleep(5);
+		ProjectionBatchMappingEntity currentMapping = batchMappingEntity(projectionEntity, currentBatchJobGuid);
+		currentMapping.beforeInsert();
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(staleMapping, currentMapping));
+
+		service.prioritizeProjection(projectionEntity);
+
+		verify(batchClient, times(1)).prioritizeBatchJob(currentBatchJobGuid);
+		verify(batchClient, never()).prioritizeBatchJob(staleBatchJobGuid);
+	}
+
+	@Test
+	void prioritizeProjection_noMapping_throwsProjectionServiceException() {
+		UUID projectionGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of());
+
+		assertThrows(ProjectionServiceException.class, () -> service.prioritizeProjection(projectionEntity));
+
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
+		verify(batchClient, never()).prioritizeBatchJob(any());
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void prioritizeProjection_mappingWithoutBatchJobGuid_throwsProjectionServiceException() {
+		UUID projectionGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingEntity = batchMappingEntity(projectionEntity, null);
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(mappingEntity));
+
+		assertThrows(ProjectionServiceException.class, () -> service.prioritizeProjection(projectionEntity));
+
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
+		verify(batchClient, never()).prioritizeBatchJob(any());
+		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void prioritizeProjection_batchClientThrows_wrapsAsProjectionServiceException() {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingEntity = batchMappingEntity(projectionEntity, batchJobGuid);
+
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(mappingEntity));
+		doThrow(new WebApplicationException(Response.serverError().build())).when(batchClient)
+				.prioritizeBatchJob(batchJobGuid);
+
+		assertThrows(ProjectionServiceException.class, () -> service.prioritizeProjection(projectionEntity));
+
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
+		verify(repository, times(1)).clearAllPrioritized();
+		verify(batchClient, times(1)).prioritizeBatchJob(batchJobGuid);
 		verifyNoMoreInteractions(batchClient, repository, assembler);
 	}
 

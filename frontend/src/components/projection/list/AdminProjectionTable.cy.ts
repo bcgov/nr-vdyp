@@ -25,6 +25,7 @@ describe('AdminProjectionTable.vue', () => {
     workerCount: 16,
     completedPolygonCount: 184320,
     polygonCount: 256000,
+    isPrioritized: false,
     ...overrides,
   })
 
@@ -73,6 +74,51 @@ describe('AdminProjectionTable.vue', () => {
 
     cy.get('.cancel-button').click()
     cy.get('@cancelSpy').should('have.been.calledWith', 'test-guid')
+  })
+
+  it('emits prioritize event with correct GUID when Prioritize is clicked', () => {
+    const onPrioritizeSpy = cy.spy().as('prioritizeSpy')
+    mountComponent([createProjection({ projectionGUID: 'test-guid' })], { onPrioritize: onPrioritizeSpy })
+
+    cy.get('.prioritize-button').click()
+    cy.get('@prioritizeSpy').should('have.been.calledWith', 'test-guid')
+  })
+
+  it('enables the Prioritize button only for Running projections', () => {
+    mountComponent([createProjection({ status: 'Running' })])
+
+    cy.get('.prioritize-button').should('not.have.attr', 'data-disabled')
+  })
+
+  it('disables the Prioritize button for Stuck projections', () => {
+    mountComponent([createProjection({ status: 'Stuck' })])
+
+    cy.get('.prioritize-button').should('have.attr', 'data-disabled')
+  })
+
+  it('disables the Prioritize button for Queued projections', () => {
+    mountComponent([createProjection({ status: 'Queued' })])
+
+    cy.get('.prioritize-button').should('have.attr', 'data-disabled')
+  })
+
+  it('shows the High Priority badge when isPrioritized is true', () => {
+    mountComponent([createProjection({ isPrioritized: true })])
+
+    cy.get('.status-badge.status-priority').should('contain.text', 'High Priority')
+  })
+
+  it('does not show the High Priority badge when isPrioritized is false', () => {
+    mountComponent([createProjection({ isPrioritized: false })])
+
+    cy.get('.status-badge.status-priority').should('not.exist')
+  })
+
+  it('hides the Prioritize button once a projection is already prioritized', () => {
+    mountComponent([createProjection({ isPrioritized: true })])
+
+    cy.get('.prioritize-button').should('not.exist')
+    cy.get('.cancel-button').should('exist')
   })
 
   it('shows empty state message when projections array is empty', () => {

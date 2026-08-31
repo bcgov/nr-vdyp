@@ -54,27 +54,33 @@
       <div class="card-header-section">
         <div class="card-header-row">
           <span class="card-title">{{ projection.title }}</span>
-          <span
-            v-if="projection.status === PROJECTION_STATUS.STUCK"
-            class="status-badge status-stuck"
-          >
-            <img :src="StuckIcon14px" alt="" class="status-badge-icon" />
-            Stuck
-          </span>
-          <span
-            v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
-            class="status-badge status-running"
-          >
-            <img :src="RunningIcon" alt="" class="status-badge-icon" />
-            Running
-          </span>
-          <span
-            v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
-            class="status-badge status-queued"
-          >
-            <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
-            Queued
-          </span>
+          <div class="status-badge-row">
+            <span
+              v-if="projection.status === PROJECTION_STATUS.STUCK"
+              class="status-badge status-stuck"
+            >
+              <img :src="StuckIcon14px" alt="" class="status-badge-icon" />
+              Stuck
+            </span>
+            <span
+              v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
+              class="status-badge status-running"
+            >
+              <img :src="RunningIcon" alt="" class="status-badge-icon" />
+              Running
+            </span>
+            <span
+              v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
+              class="status-badge status-queued"
+            >
+              <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
+              Queued
+            </span>
+            <span v-if="projection.isPrioritized" class="status-badge status-priority">
+              <img :src="ArrowUpWhiteIcon" alt="" class="status-badge-icon" />
+              High Priority
+            </span>
+          </div>
         </div>
       </div>
 
@@ -135,6 +141,16 @@
       <!-- Action Buttons -->
       <v-card-actions class="card-actions">
         <AppButton
+          v-if="!projection.isPrioritized"
+          label="Prioritize"
+          variant="secondary"
+          size="small"
+          :icon-src="ArrowUpIcon"
+          class="prioritize-button"
+          :is-disabled="projection.status !== PROJECTION_STATUS.RUNNING"
+          @click="$emit('prioritize', projection.projectionGUID)"
+        />
+        <AppButton
           label="Cancel"
           variant="secondary"
           size="small"
@@ -152,7 +168,7 @@ import type { AdminProjection, SortOption } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS } from '@/constants/constants'
 import { formatNumber } from '@/utils/util'
 import { AppButton } from '@/components'
-import { RunningIcon, StuckIcon14px, QueuedIcon14px } from '@/assets/'
+import { RunningIcon, StuckIcon14px, QueuedIcon14px, ArrowUpIcon, ArrowUpWhiteIcon } from '@/assets/'
 
 interface Props {
   projections: AdminProjection[]
@@ -166,6 +182,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'sort', value: string): void
   (e: 'cancel', projectionGUID: string): void
+  (e: 'prioritize', projectionGUID: string): void
 }>()
 
 const handleSortChange = (value: string) => {
@@ -269,6 +286,20 @@ const formatElapsedTime = (startDate: string | null): string => {
   overflow-wrap: break-word;
 }
 
+.status-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 430px) {
+  .status-badge-row {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
+
 .status-badge {
   display: flex;
   align-items: center;
@@ -303,6 +334,12 @@ const formatElapsedTime = (startDate: string | null): string => {
   border: 1px solid var(--support-border-color-info);
   background: var(--support-surface-color-info);
   color: var(--typography-color-primary);
+}
+
+.status-badge.status-priority {
+  border: 1px solid #003366;
+  background: #003366;
+  color: #ffffff;
 }
 
 .card-content {
@@ -403,6 +440,10 @@ const formatElapsedTime = (startDate: string | null): string => {
 
 .cancel-button :deep(.v-icon) {
   color: var(--support-border-color-danger);
+}
+
+.prioritize-button {
+  margin-right: var(--layout-padding-small);
 }
 
 .empty-state-card {

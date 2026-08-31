@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.lang.NonNull;
@@ -76,7 +77,9 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 				return;
 			}
 
-			if (jobBasePath != null && stillOwnsExecution(jobExecution, jobGuid, jobExecutionId)) {
+			// STOPPED/FAILED jobs are still resumable and reuse these directories, so only clean up on COMPLETED.
+			if (jobBasePath != null && stillOwnsExecution(jobExecution, jobGuid, jobExecutionId)
+					&& jobExecution.getStatus() == BatchStatus.COMPLETED) {
 				cleanupJobDirectory(jobGuid, jobBasePath);
 			}
 

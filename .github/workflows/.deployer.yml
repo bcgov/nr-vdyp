@@ -200,6 +200,8 @@ jobs:
             --set batch.env.BATCH_DB_CONNECITON_POOL_SIZE=${{ vars.BATCH_DB_CONNECITON_POOL_SIZE }} \
             --set batch.env.BATCH_STORAGE_THRESHOLD_PERCENT=${{ vars.BATCH_STORAGE_THRESHOLD_PERCENT }} \
             --set batch.env.BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER=${{ vars.BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER }} \
+            --set batch.env.BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS=${{ vars.BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS }} \
+            --set batch.env.BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS=${{ vars.BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS }} \
             --set frontend.env.BACKEND_URL=${{ vars.BACKEND_URL }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
             --set frontend.env.VITE_SSO_CLIENT_ID=${{ secrets.VITE_SSO_CLIENT_ID }} \

@@ -33,6 +33,14 @@ public class ProjectionBatchMappingRepository implements PanacheRepositoryBase<P
 	}
 
 	/**
+	 * Clears the prioritized flag on every mapping that currently has it set. Only one projection can hold priority at
+	 * a time, so this is called before prioritizing a new one.
+	 */
+	public void clearAllPrioritized() {
+		update("isPrioritized = false where isPrioritized = true");
+	}
+
+	/**
 	 * RUNNING batch mappings that have gone quiet: no progress update since the given cutoff. Falls back to the
 	 * mapping's create date when no progress update has ever been received, so a projection that never reports any
 	 * throughput is still caught once it's old enough.
