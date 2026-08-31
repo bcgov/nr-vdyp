@@ -258,7 +258,7 @@ batch:
     enabled: true
     minReplicas: 1
     maxReplicas: 4
-    targetCPUUtilizationPercentage: 300
+    targetCPUUtilizationPercentage: 11000
   #-- replica count - batch processing usually runs single instance
   replicaCount: 1
   terminationGracePeriodSeconds: 390
@@ -298,6 +298,8 @@ batch:
     BATCH_DB_CONNECITON_POOL_SIZE: ~
     BATCH_STORAGE_THRESHOLD_PERCENT: ~
     BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER: ~
+    BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS: ~
+    BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS: ~
     NATS_ENABLED: "true"
     NATS_URL: nats://vdyp-nats-dev:4222
     NATS_SECRET_NAME: vdyp-nats-dev-auth

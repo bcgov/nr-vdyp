@@ -42,7 +42,7 @@ backend:
     #-- the maximum number of replicas.
     maxReplicas: 3
     #-- the target cpu utilization percentage, is from request cpu and NOT LIMIT CPU.
-    targetCPUUtilizationPercentage: 80
+    targetCPUUtilizationPercentage: 11000
   #-- vault, for injecting secrets from vault. it is optional and is an object. it creates an initContainer which reads from vault and app container can source those secrets. for referring to a working example with vault follow this link: https://github.com/bcgov/onroutebc/blob/main/charts/onroutebc/values.yaml#L171-L186
   vault:
     #-- enable or disable vault.
@@ -298,6 +298,8 @@ batch:
     NATS_USERNAME_SECRET_KEY: username
     NATS_PASSWORD_SECRET_KEY: password
     BATCH_MAX_JOB_THREADS: ~
+    BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS: ~
+    BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS: ~
     BATCH_OWNERSHIP_HEARTBEAT_INTERVAL: "60s"
     BATCH_OWNERSHIP_LEASE_DURATION: "240s"
     BATCH_OWNERSHIP_RECOVERY_SCAN_INTERVAL: "90s"

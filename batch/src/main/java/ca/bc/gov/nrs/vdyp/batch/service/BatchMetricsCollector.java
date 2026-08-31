@@ -26,12 +26,14 @@ public class BatchMetricsCollector {
 	private final LinkedList<String> jobMetricsByArrivalTime = new LinkedList<>();
 	private final Object lock = new Object();
 
-	public BatchMetrics initializeMetrics(@NonNull Long jobExecutionId, @NonNull String jobGuid)
-			throws BatchMetricsException {
+	public BatchMetrics initializeMetrics(@NonNull Long jobExecutionId, @NonNull String jobGuid) {
 		synchronized (lock) {
 			if (jobMetricsMap.containsKey(jobGuid)) {
-				throw BatchMetricsException
-						.handleMetricsFailure("Job metrics already exists", jobGuid, jobExecutionId, logger);
+				logger.debug(
+						"[GUID: {}, EXEID: {}] Replacing metrics from a previous execution of this job GUID", jobGuid,
+						jobExecutionId
+				);
+				jobMetricsByArrivalTime.remove(jobGuid);
 			}
 
 			BatchMetrics metrics = new BatchMetrics(jobExecutionId, jobGuid);

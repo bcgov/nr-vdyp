@@ -60,6 +60,7 @@
       :now="now"
       @sort="handleSort"
       @cancel="handleCancel"
+      @prioritize="handlePrioritize"
     />
 
     <!-- Mobile Card View (1025px and below) -->
@@ -71,6 +72,7 @@
       :now="now"
       @sort="handleCardSort"
       @cancel="handleCancel"
+      @prioritize="handlePrioritize"
     />
 
     <ProjectionPagination
@@ -101,7 +103,7 @@ import { AppProgressCircular } from '@/components'
 import { ProjectionPagination, AdminProjectionTable, AdminProjectionCardList, AdminCancelProjectionDialog, AdminResourceSummary } from '@/components/projection'
 import type { StorageStatusModel } from '@/services/vdyp-api'
 import { fetchAllRunningProjections, fetchThreadCapacity, fetchStorageStatus } from '@/services/adminService'
-import { cancelProjection } from '@/services/projectionService'
+import { cancelProjection, prioritizeProjection } from '@/services/projectionService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const notificationStore = useNotificationStore()
@@ -316,6 +318,9 @@ const comparePolygons = (a: AdminProjection, b: AdminProjection): number => {
 const sortedProjections = computed(() => {
   if (!sortBy.value) return filteredProjections.value
   return [...filteredProjections.value].sort((a, b) => {
+    // Prioritized projection always floats to the top, regardless of the active column sort.
+    if (a.isPrioritized !== b.isPrioritized) return a.isPrioritized ? -1 : 1
+
     if (sortBy.value === ADMIN_DASHBOARD_HEADER_KEY.POLYGONS) return comparePolygons(a, b)
 
     const aValue = getSortValue(a, sortBy.value)
@@ -375,6 +380,20 @@ const handleConfirmCancel = async (reason: string) => {
     notificationStore.showErrorMessage(PROJECTION_ERR.CANCEL_FAILED, PROJECTION_ERR.CANCEL_FAILED_TITLE)
   } finally {
     isProgressVisible.value = false
+  }
+}
+
+const handlePrioritize = async (projectionGUID: string) => {
+  try {
+    await prioritizeProjection(projectionGUID)
+    notificationStore.showSuccessMessage(
+      SUCCESS_MSG.PRIORITIZATION_REQUESTED,
+      SUCCESS_MSG.PRIORITIZATION_REQUESTED_TITLE,
+    )
+    await loadProjections()
+  } catch (err) {
+    console.error('Error prioritizing projection:', err)
+    notificationStore.showErrorMessage(PROJECTION_ERR.PRIORITIZE_FAILED, PROJECTION_ERR.PRIORITIZE_FAILED_TITLE)
   }
 }
 

@@ -15,7 +15,8 @@ public class IncomingSecurityConfiguration {
 				csrf -> csrf.ignoringRequestMatchers(
 						"/api/batch/startWithGUIDs", //
 						"/api/batch/stop/**", //
-						"/api/batch/status/**" //
+						"/api/batch/status/**", //
+						"/api/batch/prioritize/**" //
 				)
 		).authorizeHttpRequests(a -> a.anyRequest().permitAll())//
 				.oauth2Login(AbstractHttpConfigurer::disable)//

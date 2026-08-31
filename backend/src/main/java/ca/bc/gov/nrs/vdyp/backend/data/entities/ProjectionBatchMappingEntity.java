@@ -42,6 +42,8 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 	private Integer warningCount;
 	@Column(name = "worker_count")
 	private Integer workerCount;
+	@Column(name = "is_prioritized", nullable = false)
+	private boolean isPrioritized;
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "batch_failure_type_code", referencedColumnName = "batch_failure_type_code")
@@ -83,6 +85,10 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 
 	public Integer getWorkerCount() {
 		return workerCount;
+	}
+
+	public boolean isPrioritized() {
+		return isPrioritized;
 	}
 
 	public BatchFailureTypeCodeEntity getBatchFailureTypeCode() {
@@ -127,6 +133,10 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 
 	public void setWorkerCount(Integer workerCount) {
 		this.workerCount = workerCount;
+	}
+
+	public void setPrioritized(boolean prioritized) {
+		this.isPrioritized = prioritized;
 	}
 
 	public void setBatchFailureTypeCode(BatchFailureTypeCodeEntity batchFailureTypeCode) {

@@ -185,6 +185,50 @@ class BatchJobExecutionListenerTest {
 	}
 
 	@Test
+	void testAfterJob_StoppedJob_DoesNotDeletePartitionDirectories(@TempDir Path tempDir) throws IOException {
+		Long jobId = 8L;
+		String jobGuid = "guid-008";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir-stopped"));
+		Path partitionDir = Files.createDirectory(jobBaseDir.resolve("input-partition5"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.STOPPED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+
+		listener.beforeJob(jobExecution);
+		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+
+		assertTrue(Files.exists(jobBaseDir));
+		assertTrue(Files.exists(partitionDir));
+	}
+
+	@Test
+	void testAfterJob_FailedJob_DoesNotDeletePartitionDirectories(@TempDir Path tempDir) throws IOException {
+		Long jobId = 9L;
+		String jobGuid = "guid-009";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir-failed"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.FAILED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+
+		listener.beforeJob(jobExecution);
+		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+
+		assertTrue(Files.exists(jobBaseDir));
+	}
+
+	@Test
 	void testAfterJob_JobBasePathDeleteThrowsIOException(@TempDir Path tempDir) throws IOException {
 		Long jobId = 6L;
 		String jobGuid = "guid-006";

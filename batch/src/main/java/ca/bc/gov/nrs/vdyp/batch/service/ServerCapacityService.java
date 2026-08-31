@@ -41,11 +41,11 @@ public class ServerCapacityService {
 	}
 
 	public boolean hasAvailableCapacity() {
-		return activeThreads() < maximumThreads();
+		return maximumThreads() - activeThreads() >= 2;
 	}
 
 	public void recordThreadCapacityHeartbeat(boolean isAcceptingWork) {
-		repository.recordCapacityHeartbeat(identity.ownerId(), availableThreads(), isAcceptingWork);
+		repository.recordCapacityHeartbeat(identity.ownerId(), maximumThreads(), isAcceptingWork);
 	}
 
 	public Long getAllReplicaCapacity(long maxHeartBeatAgeSeconds) {

@@ -93,6 +93,10 @@ spec:
               value: {{ .Values.batch.env.BATCH_STORAGE_THRESHOLD_PERCENT | quote }}
             - name: BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER
               value: {{ .Values.batch.env.BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER | quote }}
+            - name: BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS
+              value: {{ .Values.batch.env.BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS | quote }}
+            - name: BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS
+              value: {{ .Values.batch.env.BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS | quote }}
             - name: NATS_ENABLED
               value: {{ .Values.batch.env.NATS_ENABLED | quote }}
             - name: NATS_URL

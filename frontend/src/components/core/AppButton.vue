@@ -317,6 +317,11 @@ const onClick = (event: Event) => {
   image-rendering: crisp-edges;
 }
 
+/* img icons can't follow the disabled text color via 'color', so dim them directly */
+.bcds-button[data-disabled] .button-icon-img {
+  opacity: 0.4;
+}
+
 .button-icon-img.button-icon-left {
   margin-right: var(--layout-padding-xsmall, 4px);
 }

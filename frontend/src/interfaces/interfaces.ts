@@ -78,6 +78,7 @@ export interface AdminProjection {
   workerCount: number
   completedPolygonCount: number
   polygonCount: number
+  isPrioritized: boolean
 }
 
 export interface TableHeader {
