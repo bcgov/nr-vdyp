@@ -41,7 +41,7 @@ public class ServerCapacityService {
 	}
 
 	public boolean hasAvailableCapacity() {
-		return activeThreads() < maximumThreads();
+		return maximumThreads() - activeThreads() >= 2;
 	}
 
 	public void recordThreadCapacityHeartbeat(boolean isAcceptingWork) {
