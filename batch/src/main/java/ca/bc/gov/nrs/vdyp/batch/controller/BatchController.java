@@ -268,7 +268,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 			logger.error("Job execution not found with GUID: {}", jobGuid);
-			return ResponseEntity.status(404).body(response);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
 
 		if (!targetExecution.getStatus().isRunning()) {
