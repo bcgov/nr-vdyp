@@ -42,7 +42,19 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
 
 	private Optional<ComponentSizeLimits[]> speciesLimits = Optional.empty();
-	private Optional<float[]> finalQuadraticMeanDiameters = Optional.empty();
+	private Optional<float[]> finalQuadraticMeanDiameters = Optional.empty(); // BACK8/DQFinal
+
+	private Optional<Float> dominantHeightBackupFactor = Optional.empty(); // BACK5/BFH
+	private Optional<Float> basalAreaBackupFactor = Optional.empty(); // BACK5/BFB
+	private Optional<Float> quadMeanDiameterBackupFactor = Optional.empty(); // BACK5/BFDQ
+
+	private Optional<float[]> speciesLoreyHeightBackupFactor = Optional.empty(); // BACK5/BFLHI
+	private Optional<float[]> speciesQuadMeanDiameterBackupFactor = Optional.empty(); // BACK5/BFDQI
+
+	private Optional<Float> quadMeanDiameterBackupFactorMinimum = Optional.empty(); // BACK5/BFMINDQ
+	private Optional<float[]> speciesQuadMeanDiameterBackupFactorMinimum = Optional.empty(); // BACK5/BFMINDQI
+
+	private Optional<float[]> speciesLoreyHeightBackupFactorMaximum = Optional.empty(); // BACK5/BFMAXHLI
 
 	public BackProcessingState(Map<String, Object> controlMap) throws ProcessingException {
 		super(controlMap, VdypApplicationIdentifier.VDYP_BACK);

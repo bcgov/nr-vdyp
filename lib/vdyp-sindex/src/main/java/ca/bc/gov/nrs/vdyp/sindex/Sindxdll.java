@@ -2795,9 +2795,35 @@ public class Sindxdll {
 			Reference<Double> height
 	) throws CommonCalculatorException {
 
-		height.set(SiteIndex2Height.indexToHeight(curve, age, ageType, siteIndex, y2bh, 0.5));
+		height.set(AgeSIToHt(curve, age, ageType, siteIndex, y2bh));
 
 		return 0;
+	}
+
+	/**
+	 * Converts an Age and Site Index to a Height for a particular Site Index Curve.
+	 *
+	 * @param curve     Integer curve index. The particular site index curve to project the height and age along
+	 * @param age       Floating point age. The age of the trees indicated by the curve selection. The interpretation of
+	 *                  this age is modified by the 'ageType' parameter.
+	 * @param ageType   Integer age type. Must be one of: SI_AT_TOTAL The age is the total age of the stand in years
+	 *                  since planting. SI_AT_BREAST The age indicates the number of years since the stand reached
+	 *                  breast height.
+	 * @param siteIndex Floating point site index. The site index value of the stand
+	 * @param y2bh      Floating point years to breast height. The number of years it takes the stand to reach breast
+	 *                  height.
+	 *
+	 * @throws GrowthInterceptMinimumException when bhage < 0.5
+	 * @throws GrowthInterceptMaximumException when bhage > GI range
+	 * @throws NoAnswerException               when computed SI > 999
+	 * @throws GrowthInterceptTotalException   when total age and GI curve
+	 * @throws LessThan13Exception             when site index <= 1.3
+	 */
+	public static double
+			AgeSIToHt(SiteIndexEquation curve, double age, SiteIndexAgeType ageType, double siteIndex, double y2bh)
+					throws CommonCalculatorException {
+
+		return SiteIndex2Height.indexToHeight(curve, age, ageType, siteIndex, y2bh, 0.5);
 	}
 
 	/**

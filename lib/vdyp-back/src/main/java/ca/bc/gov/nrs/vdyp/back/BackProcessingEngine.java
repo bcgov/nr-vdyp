@@ -20,6 +20,10 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.sindex.Sindxdll;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 
 public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, BackLayerProcessingState> {
 
@@ -120,5 +124,70 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		state.setLimits(limits);
 		state.setFinalQuadMeanDiameters(finalDiameters);
 
+	}
+
+	void applyBackupFactors(int currentYear /* IYRCUR */) {
+		int layerIndex = 1;
+		int instance = 2;
+		final BackLayerProcessingState plps = this.getState().getPrimaryLayerProcessingState();
+
+		final Bank bank = plps.getBank();
+
+		float regress = this.getState().getCurrentStartingYear() - currentYear;
+
+		bank.yearsAtBreastHeight[0] -= regress;
+		bank.ageTotals[0] -= regress;
+
+	}
+
+	/**
+	 * Get dominant height from site curve
+	 *
+	 * @throws ProcessingException
+	 */
+	// SITEHADJ
+	public float heightFromSiteCurve(
+			int siteCurveNumber, float yearsAtBreastHeight, float yearsToBreastHeight, float siteIndex
+	) throws ProcessingException {
+		if (siteCurveNumber < 0) {
+			throw new IllegalArgumentException("siteCurveNumber was negative: " + siteCurveNumber);
+		}
+		final var maximumAgeBySiteCurveNumberMap = this.getState().getControlMap().getMaximumAgeBySiteCurveNumber();
+		final var ageLimits = maximumAgeBySiteCurveNumberMap.get(siteCurveNumber);
+		if (ageLimits == null) {
+			throw new IllegalArgumentException("unknown siteCurveNumber: " + siteCurveNumber);
+		}
+
+		float breastHeightAgeToUse = yearsAtBreastHeight; // AGEBHUse
+		final float totalAge = breastHeightAgeToUse + yearsToBreastHeight; // TAGE
+		final float totalAgeLimit = ageLimits.getAgeMaximum(this.getState().getCurrentBecZone().getRegion()); // TAGELIM
+
+		if (totalAge > totalAgeLimit) {
+			breastHeightAgeToUse = totalAgeLimit - yearsToBreastHeight;
+		}
+
+		final var ageType = SiteIndexAgeType.SI_AT_BREAST;
+		final var equation = SiteIndexEquation.getByIndex(siteCurveNumber);
+
+		try {
+			final double hdd = Sindxdll
+					.AgeSIToHt(equation, breastHeightAgeToUse, ageType, siteIndex, yearsToBreastHeight); // HDD
+
+			var ageDelta = yearsAtBreastHeight - (totalAgeLimit - yearsToBreastHeight); // DELT
+
+			if (ageLimits.getT1() <= 0 || ageDelta <= 0) {
+				return (float) hdd;
+			} else {
+				final double hddNext = Sindxdll
+						.AgeSIToHt(equation, breastHeightAgeToUse + 1, ageType, siteIndex, yearsToBreastHeight);// HDD2
+				final double rate = max(hddNext - hdd, 0.0005); // RATE0
+				final var a = Math.log(0.5) / ageLimits.getT1(); // A
+				ageDelta = Math.min(ageDelta, ageLimits.getT2());
+				return (float) (hdd - rate / a * (1 - Math.exp(a * ageDelta)));
+			}
+		} catch (CommonCalculatorException e) {
+			// TODO might want to be more specific
+			throw new ProcessingException(e);
+		}
 	}
 }

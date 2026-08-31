@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.vdyp.back;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static org.easymock.EasyMock.expect;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -24,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
@@ -375,5 +378,36 @@ class BackProcessingEngineTest {
 
 	static Matcher<BackProcessingState> backCV(String name, Object p1, Matcher<Float> expected) {
 		return compatibilityVariable(name, expected, BackProcessingState.class, p1);
+	}
+
+	@Nested
+	class HeightFromSiteCurve {
+		@Test
+		void testYoung() throws ProcessingException {
+
+			expect(state.getControlMap()).andStubReturn(new ProcessingResolvedControlMapImpl(controlMap));
+			expect(state.getCurrentBecZone()).andStubReturn(becLookup.get("MS").get());
+
+			em.replay();
+
+			var height = engine.heightFromSiteCurve(45, 4.3f, 8.2f, 12.39f);
+			assertThat(height, closeTo(1.90864f));
+
+			em.verify();
+		}
+
+		@Test
+		void testOld() throws ProcessingException {
+
+			expect(state.getControlMap()).andStubReturn(new ProcessingResolvedControlMapImpl(controlMap));
+			expect(state.getCurrentBecZone()).andStubReturn(becLookup.get("MS").get());
+
+			em.replay();
+
+			var height = engine.heightFromSiteCurve(45, 150f, 8.2f, 12.39f);
+			assertThat(height, closeTo(20.43617f));
+
+			em.verify();
+		}
 	}
 }
