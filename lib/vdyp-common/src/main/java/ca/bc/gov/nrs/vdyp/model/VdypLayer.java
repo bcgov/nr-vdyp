@@ -47,6 +47,22 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 		return this.getPrimarySite().flatMap(BaseVdypSite::getYearsAtBreastHeight);
 	}
 
+	/**
+	 * Get the strict difference between the total age and years to breast height without the offset. The rest of the
+	 * application uses the offset to compute the years at breast height, this method gets the strict difference, which
+	 * is used in EMP093 in VDYP7, this may be an option for a calculation improvement once we are not trying to match
+	 * VDYP7 like for like
+	 */
+	@Computed
+	public Optional<Float> getStrictYearsAtBreastHeight() {
+		VdypSite primary = this.getPrimarySite().orElse(null);
+		if (primary == null) {
+			return Optional.empty();
+		}
+		return Utils
+				.mapBoth(primary.getAgeTotal(), primary.getYearsToBreastHeight(), (age, yearsToBH) -> age - yearsToBH);
+	}
+
 	@Computed
 	public Optional<Float> getComputedYearsAtBreastHeight() {
 		// Serves as a stand-in for a rare case where a combined species with no data is primary
