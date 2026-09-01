@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.messaging.consumer;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,7 @@ public class PrioritizeRequestListener implements SmartLifecycle {
 	private final JobOwnershipService ownershipService;
 	private final BatchPrioritizationService prioritizationService;
 
-	private volatile Dispatcher dispatcher;
+	private final AtomicReference<Dispatcher> dispatcher = new AtomicReference<>();
 
 	public PrioritizeRequestListener(
 			Connection natsConnection, NatsPrioritizeProperties properties, ObjectMapper objectMapper,
@@ -59,8 +60,9 @@ public class PrioritizeRequestListener implements SmartLifecycle {
 
 	@Override
 	public void start() {
-		dispatcher = natsConnection.createDispatcher(this::handleMessage);
-		dispatcher.subscribe(properties.subject());
+		Dispatcher newDispatcher = natsConnection.createDispatcher(this::handleMessage);
+		newDispatcher.subscribe(properties.subject());
+		dispatcher.set(newDispatcher);
 	}
 
 	void handleMessage(Message message) {
@@ -113,14 +115,14 @@ public class PrioritizeRequestListener implements SmartLifecycle {
 
 	@Override
 	public void stop() {
-		if (dispatcher != null) {
-			natsConnection.closeDispatcher(dispatcher);
-			dispatcher = null;
+		Dispatcher currentDispatcher = dispatcher.getAndSet(null);
+		if (currentDispatcher != null) {
+			natsConnection.closeDispatcher(currentDispatcher);
 		}
 	}
 
 	@Override
 	public boolean isRunning() {
-		return dispatcher != null;
+		return dispatcher.get() != null;
 	}
 }
