@@ -52,10 +52,9 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 		if (this.getPrimarySite().isEmpty()) {
 			return Optional.empty();
 		}
-		return Utils.mapBoth(
-				this.getPrimarySite().get().getAgeTotal(), this.getPrimarySite().get().getYearsToBreastHeight(),
-				(age, yearsToBH) -> age - yearsToBH
-		);
+		VdypSite primary = this.getPrimarySite().get();
+		return Utils
+				.mapBoth(primary.getAgeTotal(), primary.getYearsToBreastHeight(), (age, yearsToBH) -> age - yearsToBH);
 	}
 
 	@Computed
