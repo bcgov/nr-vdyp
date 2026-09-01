@@ -1791,9 +1791,7 @@ public class YieldTable implements Closeable {
 	private double getYieldDiameter(double basalArea, double treesPerHectare) {
 		double diameter;
 		if (basalArea > 0 && treesPerHectare > 0) {
-			diameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(
-					Double.valueOf(basalArea).floatValue(), Double.valueOf(treesPerHectare).floatValue()
-			);
+			diameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(basalArea, treesPerHectare);
 		} else {
 			diameter = Vdyp7Constants.EMPTY_DECIMAL;
 		}
