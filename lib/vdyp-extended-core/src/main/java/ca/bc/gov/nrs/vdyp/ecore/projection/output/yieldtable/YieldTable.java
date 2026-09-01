@@ -46,7 +46,6 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.si32.bec.BecZoneMethods;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2Height;
@@ -1527,13 +1526,11 @@ public class YieldTable implements Closeable {
 				// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
 				// and so some years may be missing from polygonProjectionsByYear.
 
-				var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
-				var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
-
-				layerYields = getYields(
-						rowContext, calendarYear, ucReportingLevel, projectedSp0,
-						stand == null ? projectedLayer : projectedSp0
-				);
+				if (stand == null) {
+					layerYields = getYields(rowContext, calendarYear, projectedSp0, projectedLayer);
+				} else {
+					layerYields = getYields(rowContext, calendarYear, projectedSp0);
+				}
 			}
 
 		}
@@ -1638,54 +1635,51 @@ public class YieldTable implements Closeable {
 		}
 	}
 
-	LayerYields getYields(
-			YieldTableRowContext rowContext, int calendarYear, UtilizationClassSet ucReportingLevel,
-			VdypSpecies projectedSp0, VdypUtilizationHolder entity
-	) throws StandYieldCalculationException {
-		if (projectedSp0 == null || entity == null) {
+	/**
+	 * Get Layer Yields for a VdypLayer, this sums the yields for all species at their reporting level (which may vary
+	 * between species)
+	 *
+	 * @param rowContext   - the row for which yeilds are being processed
+	 * @param calendarYear - the year for which yields are being processed
+	 * @param projectedSp0 - the primary species of the layer for species specific data
+	 * @param entity       - the layer that is having yields calculated
+	 * @return layer yields as a summation of species yields at the reporting level for the species
+	 * @throws StandYieldCalculationException if the layer or primary species is null
+	 */
+	LayerYields getYields(YieldTableRowContext rowContext, int calendarYear, VdypSpecies projectedSp0, VdypLayer entity)
+			throws StandYieldCalculationException {
+		if (entity == null) {
 			throw standYieldCalculationException(
 					rowContext, new IllegalArgumentException("Cannot calculate yields with a null primary Species")
 			);
 		}
+		LayerYields specYields = getSpeciesYieldData(rowContext, projectedSp0);
 
-		double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
-		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
-		double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
-		int siteCurve = Vdyp7Constants.EMPTY_INT;
-		boolean isDominantSpecies = projectedSp0.getIsPrimary();
-
-		if (projectedSp0.getSite().isPresent()) {
-			var site = projectedSp0.getSite().get();
-
-			totalAge = site.getAgeTotal().map(v -> v.doubleValue()).orElse(null);
-			dominantHeight = site.getHeight().map(v -> v.doubleValue()).orElse(null);
-			siteIndex = site.getSiteIndex().map(v -> v.doubleValue()).orElse(null);
-			siteCurve = site.getSiteCurveNumber().orElse(null);
-		}
-
-		var treesPerHectare = ucReportingLevel.sumOf(entity.getTreesPerHectareByUtilization());
-		var wholeStemVolume = ucReportingLevel.sumOf(entity.getWholeStemVolumeByUtilization());
-		var closeUtilizationVolume = ucReportingLevel.sumOf(entity.getCloseUtilizationVolumeByUtilization());
-		var cuVolumeLessDecay = ucReportingLevel.sumOf(entity.getCloseUtilizationVolumeNetOfDecayByUtilization());
-		var cuVolumeLessDecayWastage = ucReportingLevel
-				.sumOf(entity.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization());
-		var cuVolumeLessDecayWastageBreakage = ucReportingLevel
-				.sumOf(entity.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization());
-
-		var basalArea = ucReportingLevel.sumOf(entity.getBaseAreaByUtilization());
+		// do a summation based on species utilization levels
+		double treesPerHectare = 0.0;
+		double wholeStemVolume = 0.0;
+		double closeUtilizationVolume = 0.0;
+		double cuVolumeLessDecay = 0.0;
+		double cuVolumeLessDecayWastage = 0.0;
+		double cuVolumeLessDecayWastageBreakage = 0.0;
+		double basalArea = 0.0;
 		var basalArea75cmPlus = UtilizationClassSet._7_5.sumOf(entity.getBaseAreaByUtilization());
 		var basalArea125cmPlus = UtilizationClassSet._12_5.sumOf(entity.getBaseAreaByUtilization());
 
-		double diameter;
-		if (basalArea > 0 && treesPerHectare > 0) {
-			diameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(
-					Double.valueOf(basalArea).floatValue(), Double.valueOf(treesPerHectare).floatValue()
-			);
-		} else {
-			diameter = Vdyp7Constants.EMPTY_DECIMAL;
+		for (VdypSpecies spec : entity.getOrderedSpecies()) {
+			var specUcReportingLevel = context.getParams().getUtils().get(SP0Name.forText(spec.getGenus()));
+			treesPerHectare += specUcReportingLevel.sumOf(spec.getTreesPerHectareByUtilization());
+			wholeStemVolume += specUcReportingLevel.sumOf(spec.getWholeStemVolumeByUtilization());
+			closeUtilizationVolume += specUcReportingLevel.sumOf(spec.getCloseUtilizationVolumeByUtilization());
+			cuVolumeLessDecay += specUcReportingLevel.sumOf(spec.getCloseUtilizationVolumeNetOfDecayByUtilization());
+			cuVolumeLessDecayWastage += specUcReportingLevel
+					.sumOf(spec.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization());
+			cuVolumeLessDecayWastageBreakage += specUcReportingLevel
+					.sumOf(spec.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization());
+			basalArea += specUcReportingLevel.sumOf(spec.getBaseAreaByUtilization());
 		}
 
-		var reportedStandPercent = projectedSp0.getPercentGenus();
+		double diameter = getYieldDiameter(basalArea, treesPerHectare);
 
 		double loreyHeight = entity.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
 
@@ -1697,11 +1691,113 @@ public class YieldTable implements Closeable {
 		 */
 
 		return new LayerYields(
-				true, isDominantSpecies, projectedSp0.getGenus(), calendarYear, totalAge, dominantHeight, loreyHeight,
-				siteIndex, diameter, treesPerHectare, wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay,
-				cuVolumeLessDecayWastage, cuVolumeLessDecayWastageBreakage, basalArea, basalArea75cmPlus,
-				basalArea125cmPlus, reportedStandPercent, siteCurve
+				true, specYields.isDominantSp0(), specYields.sp0Name(), calendarYear, specYields.speciesAge(),
+				specYields.dominantHeight(), loreyHeight, specYields.siteIndex(), diameter, treesPerHectare,
+				wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay, cuVolumeLessDecayWastage,
+				cuVolumeLessDecayWastageBreakage, basalArea, basalArea75cmPlus, basalArea125cmPlus,
+				specYields.reportedStandPercent(), specYields.siteIndexCurve()
 		);
+	}
+
+	/**
+	 * Get the yields for a specific species in a layer, generally used to get the yield for a secondary dominant height
+	 *
+	 * @param rowContext   - the row the yields are being caluclated for
+	 * @param calendarYear the calendar year the yields are being calculated for
+	 * @param projectedSp0 - the species the yields are being calculated for
+	 * @return - the yieldss as a summation for the species utilization class passed in in projection parameters
+	 * @throws StandYieldCalculationException if the species is null
+	 */
+	LayerYields getYields(YieldTableRowContext rowContext, int calendarYear, VdypSpecies projectedSp0)
+			throws StandYieldCalculationException {
+		LayerYields specYields = getSpeciesYieldData(rowContext, projectedSp0);
+		UtilizationClassSet ucReportingLevel = context.getParams().getUtils()
+				.get(SP0Name.forText(projectedSp0.getGenus()));
+		// I accept that this could be simplified, the lift hardly seems worth the effort
+		double treesPerHectare = ucReportingLevel.sumOf(projectedSp0.getTreesPerHectareByUtilization());
+		double wholeStemVolume = ucReportingLevel.sumOf(projectedSp0.getWholeStemVolumeByUtilization());
+		double closeUtilizationVolume = ucReportingLevel.sumOf(projectedSp0.getCloseUtilizationVolumeByUtilization());
+		double cuVolumeLessDecay = ucReportingLevel
+				.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayByUtilization());
+		double cuVolumeLessDecayWastage = ucReportingLevel
+				.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization());
+		double cuVolumeLessDecayWastageBreakage = ucReportingLevel
+				.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization());
+
+		double basalArea = ucReportingLevel.sumOf(projectedSp0.getBaseAreaByUtilization());
+
+		var basalArea75cmPlus = UtilizationClassSet._7_5.sumOf(projectedSp0.getBaseAreaByUtilization());
+		var basalArea125cmPlus = UtilizationClassSet._12_5.sumOf(projectedSp0.getBaseAreaByUtilization());
+
+		double diameter = getYieldDiameter(basalArea, treesPerHectare);
+
+		double loreyHeight = projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
+
+		return new LayerYields(
+				true, specYields.isDominantSp0(), specYields.sp0Name(), calendarYear, specYields.speciesAge(),
+				specYields.dominantHeight(), loreyHeight, specYields.siteIndex(), diameter, treesPerHectare,
+				wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay, cuVolumeLessDecayWastage,
+				cuVolumeLessDecayWastageBreakage, basalArea, basalArea75cmPlus, basalArea125cmPlus,
+				specYields.reportedStandPercent(), specYields.siteIndexCurve()
+		);
+	}
+
+	/**
+	 * Get A partial LayerYields record populated only with the values pulled from the species shared code between Layer
+	 * and Species
+	 *
+	 * @param rowContext   - the row context from which to throw an exception if there is an issse
+	 * @param projectedSp0 - the species for which the values will be pulled
+	 * @return partial LayerYields record
+	 * @throws StandYieldCalculationException if species pass in is null
+	 */
+	LayerYields getSpeciesYieldData(YieldTableRowContext rowContext, VdypSpecies projectedSp0)
+			throws StandYieldCalculationException {
+		if (projectedSp0 == null) {
+			throw standYieldCalculationException(
+					rowContext, new IllegalArgumentException("Cannot calculate yields with a null primary Species")
+			);
+		}
+		double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
+		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
+		double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
+		int siteCurve = Vdyp7Constants.EMPTY_INT;
+		boolean isDominantSpecies = projectedSp0.getIsPrimary();
+
+		if (projectedSp0.getSite().isPresent()) {
+			var site = projectedSp0.getSite().get();
+
+			totalAge = site.getAgeTotal().map(Float::doubleValue).orElse(Vdyp7Constants.EMPTY_DECIMAL);
+			dominantHeight = site.getHeight().map(Float::doubleValue).orElse(Vdyp7Constants.EMPTY_DECIMAL);
+			siteIndex = site.getSiteIndex().map(Float::doubleValue).orElse(Vdyp7Constants.EMPTY_DECIMAL);
+			siteCurve = site.getSiteCurveNumber().orElse(Vdyp7Constants.EMPTY_INT);
+
+		}
+		var reportedStandPercent = projectedSp0.getPercentGenus();
+
+		return new LayerYields(
+				true, isDominantSpecies, projectedSp0.getGenus(), 0, totalAge, dominantHeight, 0, siteIndex, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, reportedStandPercent, siteCurve
+		);
+	}
+
+	/**
+	 * Get the Diameter for the yield table row based on basal area and diameter
+	 *
+	 * @param basalArea       - the row basal area for the entity
+	 * @param treesPerHectare t the row trees per hectare for the entity
+	 * @return the diameter for the row
+	 */
+	private double getYieldDiameter(double basalArea, double treesPerHectare) {
+		double diameter;
+		if (basalArea > 0 && treesPerHectare > 0) {
+			diameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(
+					Double.valueOf(basalArea).floatValue(), Double.valueOf(treesPerHectare).floatValue()
+			);
+		} else {
+			diameter = Vdyp7Constants.EMPTY_DECIMAL;
+		}
+		return diameter;
 	}
 
 	private LayerType getLayerType(ProjectionTypeCode projectionType) {
