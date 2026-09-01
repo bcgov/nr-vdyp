@@ -697,6 +697,23 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void testStemBiomassEdgeCases() throws IOException, ResourceParseException, CsvException {
+		logger.info("Starting vdyp-1174");
+		// Ignore volume details some biomass projections seemed to include them, these did not in VDYP7 but do in 8
+		Pattern ignorePattern = Pattern.compile(
+				"PRJ_LOREY_HT|PRJ_PCNT_STOCK|PRJ_SITE_INDEX|PRJ_DOM_HT|PRJ_DIAMETER|PRJ_TPH|PRJ_BA|PRJ_SCND_HT"
+		);
+
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1174/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1174", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void test1175() throws IOException, ResourceParseException, URISyntaxException, CsvException {
 		logger.info("Starting vdyp-1175");
 		// Two of these polygons do not have enough information to produce a proper projection for the primary species,
