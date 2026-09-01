@@ -54,6 +54,10 @@ public class PrioritizeRemoteGateway {
 
 			String json = new String(reply.getData(), StandardCharsets.UTF_8);
 			return Optional.of(objectMapper.readValue(json, PrioritizeReplyMessage.class));
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			logger.error("[GUID: {}] Interrupted while broadcasting prioritize request over NATS: {}", jobGuid, e.getMessage(), e);
+			return Optional.empty();
 		} catch (Exception e) {
 			logger.error("[GUID: {}] Failed to broadcast prioritize request over NATS: {}", jobGuid, e.getMessage(), e);
 			return Optional.empty();
