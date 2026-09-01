@@ -297,7 +297,7 @@ public class Utils {
 	}
 
 	/**
-	 * Create map, allow it to be modified, then return an unmodifiable view of it.
+	 * Create a map, allow it to be modified, then return an unmodifiable view of it.
 	 *
 	 * @param <K>
 	 * @param <V>
@@ -305,9 +305,23 @@ public class Utils {
 	 * @return
 	 */
 	public static <K, V> Map<K, V> constMap(Consumer<Map<K, V>> body) {
+		var map = makeMap(body);
+		return Collections.unmodifiableMap(map);
+	}
+
+	/**
+	 * Create a map, allow it to be modified, then return it. Like {@link constMap} but doesn't make the result
+	 * unmodifiable.
+	 *
+	 * @param <K>
+	 * @param <V>
+	 * @param body
+	 * @return
+	 */
+	public static <K, V> Map<K, V> makeMap(Consumer<Map<K, V>> body) {
 		var map = new HashMap<K, V>();
 		body.accept(map);
-		return Collections.unmodifiableMap(map);
+		return map;
 	}
 
 	public static UtilizationVector heightVector(float small, float all) {

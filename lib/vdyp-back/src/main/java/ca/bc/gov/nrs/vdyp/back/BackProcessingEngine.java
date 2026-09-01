@@ -10,7 +10,11 @@ import java.util.Map;
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
+import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -126,17 +130,118 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 	}
 
-	void applyBackupFactors(int currentYear /* IYRCUR */) {
+	// BACKAPPL
+	void applyBackupFactors(int currentYear /* IYRCUR */) throws ProcessingException {
 		int layerIndex = 1;
 		int instance = 2;
-		final BackLayerProcessingState plps = this.getState().getPrimaryLayerProcessingState();
+		final BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
+		final BecDefinition bec = plps.getPolygon().getBiogeoclimaticZone();
 
 		final Bank bank = plps.getBank();
+		final EstimationMethods estimators = getState().estimators;
+		var primaryLayer = plps.getPolygon().getLayers().get(LayerType.PRIMARY);
 
-		float regress = this.getState().getCurrentStartingYear() - currentYear;
+		float regress = getState().getCurrentStartingYear() - currentYear;
 
-		bank.yearsAtBreastHeight[0] -= regress;
-		bank.ageTotals[0] -= regress;
+		bank.yearsAtBreastHeight[0] -= regress; // AGEBHP
+		bank.ageTotals[0] -= regress; // AGETOTP
+
+		// SITEHADJ
+		bank.dominantHeights[0] = heightFromSiteCurve(
+				bank.siteCurveNumbers[0], bank.yearsAtBreastHeight[0], bank.yearsToBreastHeight[0], bank.siteIndices[0]
+		);
+
+		bank.dominantHeights[0] = FloatMath.offsetMultiply(
+				bank.dominantHeights[0], getState().getConvergenceDominantHeight().get(),
+				getState().getDominantHeightBackupFactor().get()
+		);
+
+		// BAYield = EMP106(...)
+		var basalAreaYield = estimators.estimateBaseAreaYield(
+				bank.dominantHeights[0], bank.yearsAtBreastHeight[0], getState().getBaseAreaVeteran(), true,
+				primaryLayer.getSpecies().values(), primaryLayer.getPrimaryGenus().orElseThrow(), bec,
+				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+		);
+
+		// DQYield = EMP107(...)
+		var quadraticMeanDiameterYield = estimators.estimateQuadMeanDiameterYield(
+				bank.dominantHeights[0], bank.yearsAtBreastHeight[0], getState().getBaseAreaVeteran(),
+				primaryLayer.getSpecies().values(), primaryLayer.getPrimaryGenus().orElseThrow(), bec,
+				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+		);
+
+		if (basalAreaYield < 0.995f * getState().getConvergenceBasalArea().orElseThrow()) {
+			throw new ProcessingException(
+					"basalAreaYield is low: " + basalAreaYield + " < "
+							+ 0.995f * getState().getConvergenceBasalArea().orElseThrow()
+			);
+		}
+
+		float bap = FloatMath.offsetMultiply(
+				basalAreaYield, getState().getConvergenceBasalArea().orElseThrow(),
+				getState().getBasalAreaBackupFactor().orElseThrow()
+		);
+		float dqp = FloatMath.offsetMultiply(
+				basalAreaYield, getState().getConvergenceQuadraticMeanDiameter().orElseThrow(),
+				getState().getQuadMeanDiameterBackupFactor().orElseThrow()
+		);
+		if (getState().getQuadMeanDiameterBackupFactor().orElseThrow() <= 0) {
+			final float lowDQ = getState().getFinalQuadraticMeanDiameter(0) - regress;
+			final float highDQ = getState().getFinalQuadraticMeanDiameter(0) + regress;
+
+			dqp = FloatMath.clamp(dqp, lowDQ, highDQ);
+		}
+		dqp = max(dqp, getState().getQuadMeanDiameterBackupFactorMinimum().orElseThrow());
+
+		// Lorey Height for ALL UC.
+
+		// EMP051
+		float hlpl1 = estimators.primaryHeightFromLeadHeightInitial(
+				bank.dominantHeights[0], primaryLayer.getPrimaryGenus().orElseThrow(), bec.getRegion()
+		);
+		bank.loreyHeights[plps.getPrimarySpeciesIndex()][UC_ALL_INDEX] = hlpl1;
+
+		for (int i : plps.getIndices()) {
+			if (i == plps.getPrimarySpeciesIndex())
+				continue;
+			// EMP053
+			bank.loreyHeights[i][UC_ALL_INDEX] = estimators.estimateNonPrimaryLoreyHeight(
+					bank.speciesNames[i], primaryLayer.getPrimaryGenus().orElseThrow(), bec, bank.dominantHeights[0],
+					hlpl1
+			);
+		}
+
+		float sumBaHl = 0;
+		for (int i : plps.getIndices()) {
+			float bf = getState().getSpeciesLoreyHeightBackupFactor(i);
+			if (bf == 1f)
+				continue;
+			bank.loreyHeights[i][UC_ALL_INDEX] = FloatMath.offsetMultiply(
+					bank.loreyHeights[i][UC_ALL_INDEX], getState().getSpeciesConvergenceLoreyHeight(i),
+					getState().getSpeciesLoreyHeightBackupFactor(i)
+			);
+			bank.loreyHeights[i][UC_ALL_INDEX] = min(
+					bank.loreyHeights[i][UC_ALL_INDEX], getState().getSpeciesLoreyHeightBackupFactorMaximum(i)
+			);
+
+			sumBaHl += bank.loreyHeights[i][UC_ALL_INDEX] * bank.basalAreas[i][UC_ALL_INDEX];
+		}
+		bank.loreyHeights[0][UC_ALL_INDEX] = sumBaHl / bank.basalAreas[0][UC_ALL_INDEX];
+
+		bank.basalAreas[0][UC_ALL_INDEX] = bap;
+		bank.quadMeanDiameters[0][UC_ALL_INDEX] = bap;
+		bank.treesPerHectare[0][UC_ALL_INDEX] = BaseAreaTreeDensityDiameter.treesPerHectare(bap, dqp);
+
+		if (plps.getNSpecies() == 1) {
+			bank.basalAreas[1][UC_ALL_INDEX] = bank.basalAreas[0][UC_ALL_INDEX];
+			bank.quadMeanDiameters[1][UC_ALL_INDEX] = bank.quadMeanDiameters[0][UC_ALL_INDEX];
+			bank.treesPerHectare[1][UC_ALL_INDEX] = bank.treesPerHectare[0][UC_ALL_INDEX];
+		} else {
+
+			// TODO this is slow and we might want to rework getDqBySpecies to avoid it.
+			primaryLayer = bank.buildLayerFromBank();
+
+		}
 
 	}
 

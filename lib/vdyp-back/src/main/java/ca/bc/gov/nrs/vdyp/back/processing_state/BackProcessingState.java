@@ -41,6 +41,14 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 	private Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter;
 	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
 
+	private Optional<Integer> convergenceYear = Optional.empty(); // BACK2/IYR_CNV
+	private Optional<Float> convergenceAge = Optional.empty(); // BACK2/AGE_CNV
+	private Optional<Float> convergenceDominantHeight = Optional.empty(); // BACK2/HD_CNV
+	private Optional<Float> convergenceBasalArea = Optional.empty(); // BACK2/BA_CNV
+
+	private Optional<Float> convergenceQuadraticMeanDiameter = Optional.empty(); // BACK3/DQ_CNV
+	private Optional<float[]> speciesConvergenceLoreyHeight = Optional.empty(); // BACK3/HLI_CNV
+
 	private Optional<ComponentSizeLimits[]> speciesLimits = Optional.empty();
 	private Optional<float[]> finalQuadraticMeanDiameters = Optional.empty(); // BACK8/DQFinal
 
@@ -151,6 +159,86 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 
 	public void setFinalQuadMeanDiameters(float[] finalDiameters) {
 		finalQuadraticMeanDiameters = Optional.of(finalDiameters);
+	}
+
+	public Optional<Integer> getConvergenceYear() {
+		return convergenceYear;
+	}
+
+	public void setConvergenceYear(Optional<Integer> convergenceYear) {
+		this.convergenceYear = convergenceYear;
+	}
+
+	public Optional<Float> getConvergenceAge() {
+		return convergenceAge;
+	}
+
+	public void setConvergenceAge(Optional<Float> convergenceAge) {
+		this.convergenceAge = convergenceAge;
+	}
+
+	public Optional<Float> getConvergenceDominantHeight() {
+		return convergenceDominantHeight;
+	}
+
+	public void setConvergenceDominantHeight(Optional<Float> convergenceDominantHeight) {
+		this.convergenceDominantHeight = convergenceDominantHeight;
+	}
+
+	public Optional<Float> getConvergenceBasalArea() {
+		return convergenceBasalArea;
+	}
+
+	public void setConvergenceBasalArea(Optional<Float> convergenceBasalArea) {
+		this.convergenceBasalArea = convergenceBasalArea;
+	}
+
+	public Optional<Float> getConvergenceQuadraticMeanDiameter() {
+		return convergenceQuadraticMeanDiameter;
+	}
+
+	public void setConvergenceQuadraticMeanDiameter(Optional<Float> convergenceLoreyHeight) {
+		this.convergenceQuadraticMeanDiameter = convergenceLoreyHeight;
+	}
+
+	public float getSpeciesConvergenceLoreyHeight(int i) {
+		return speciesConvergenceLoreyHeight.orElseThrow()[i];
+	}
+
+	public void setSpeciesConvergenceLoreyHeight(float[] speciesConvergenceLoreyHeight) {
+		this.speciesConvergenceLoreyHeight = Optional.of(speciesConvergenceLoreyHeight);
+	}
+
+	public Optional<Float> getDominantHeightBackupFactor() {
+		return dominantHeightBackupFactor;
+	}
+
+	public Optional<Float> getBasalAreaBackupFactor() {
+		return basalAreaBackupFactor;
+	}
+
+	public Optional<Float> getQuadMeanDiameterBackupFactor() {
+		return quadMeanDiameterBackupFactor;
+	}
+
+	public float getSpeciesLoreyHeightBackupFactor(int i) {
+		return speciesLoreyHeightBackupFactor.orElseThrow()[i];
+	}
+
+	public float getSpeciesQuadMeanDiameterBackupFactor(int i) {
+		return speciesQuadMeanDiameterBackupFactor.orElseThrow()[i];
+	}
+
+	public Optional<Float> getQuadMeanDiameterBackupFactorMinimum() {
+		return quadMeanDiameterBackupFactorMinimum;
+	}
+
+	public float getSpeciesQuadMeanDiameterBackupFactorMinimum(int i) {
+		return speciesQuadMeanDiameterBackupFactorMinimum.orElseThrow()[i];
+	}
+
+	public float getSpeciesLoreyHeightBackupFactorMaximum(int i) {
+		return speciesLoreyHeightBackupFactorMaximum.orElseThrow()[i];
 	}
 
 }

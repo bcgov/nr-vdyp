@@ -9,7 +9,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -19,13 +18,9 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.solvers.BrentSolver;
-import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +35,6 @@ import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
-import ca.bc.gov.nrs.vdyp.exceptions.CouldNotFindBracketingIntervalException;
 import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
@@ -65,7 +59,6 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
-import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.ModelClassBuilder;
@@ -75,7 +68,6 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
-import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2Height;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
@@ -430,7 +422,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 						.setAll(resultPrimaryLayer.getTreesPerHectareByUtilization().getAll());
 			}
 		} else {
-			getDqBySpecies(resultPrimaryLayer, bec.getRegion());
+			computers.getDqBySpecies(
+					resultPrimaryLayer, bec.getRegion(), estimationMethods::getLimitsForHeightAndDiameter
+			);
 		}
 
 		estimateSmallComponents(sourcePoly, resultPrimaryLayer);
@@ -563,12 +557,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		lBuilder.loreyHeightByUtilization(sumBaseAreaLoreyHeight / primaryBaseArea);
 
-	}
-
-	@Override
-	protected ComponentSizeLimits getLimitsForSpecies(VdypSpecies spec, Region region) {
-		// EMP061
-		return estimationMethods.getLimitsForHeightAndDiameter(spec.getGenus(), region);
 	}
 
 	private record VeteranResult(float treesPerHectare, boolean lowDq) {
