@@ -48,6 +48,17 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 	}
 
 	@Computed
+	public Optional<Float> getStrictYearsAtBreastHeight() {
+		if (this.getPrimarySite().isEmpty()) {
+			return Optional.empty();
+		}
+		return Utils.mapBoth(
+				this.getPrimarySite().get().getAgeTotal(), this.getPrimarySite().get().getYearsToBreastHeight(),
+				(age, yearsToBH) -> age - yearsToBH
+		);
+	}
+
+	@Computed
 	public Optional<Float> getComputedYearsAtBreastHeight() {
 		// Serves as a stand-in for a rare case where a combined species with no data is primary
 		// BHAge of the layer comess from the first alphabetical species genus with a BHAge in that case)
