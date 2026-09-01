@@ -27,10 +27,9 @@ public class OwnedJobRegistry {
 	}
 
 	/**
-	 * Removes the entry for projectionGuid only if it's still the one identified by expectedLeaseToken.
-	 * A pause/resume replaces the registered entry with one for a new claim before the paused execution's own cleanup
-	 * runs; without this check that cleanup would remove the newer entry too, since both are keyed by the same
-	 * projection GUID.
+	 * Removes the entry for projectionGuid only if it's still the one identified by expectedLeaseToken. A pause/resume
+	 * replaces the registered entry with one for a new claim before the paused execution's own cleanup runs; without
+	 * this check that cleanup would remove the newer entry too, since both are keyed by the same projection GUID.
 	 */
 	public Optional<OwnedJob> removeIfCurrent(String projectionGuid, UUID expectedLeaseToken) {
 		AtomicReference<OwnedJob> removed = new AtomicReference<>();
