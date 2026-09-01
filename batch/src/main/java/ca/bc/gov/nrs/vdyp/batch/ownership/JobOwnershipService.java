@@ -21,6 +21,8 @@ public class JobOwnershipService {
 
 	private static final Logger logger = LoggerFactory.getLogger(JobOwnershipService.class);
 
+	public static final String LEASE_TOKEN_CONTEXT_KEY = "vdyp.batch.ownership.leaseToken";
+
 	private final BatchOwnershipProperties properties;
 	private final BatchWorkerIdentity identity;
 	private final JobOwnershipRepository repository;
@@ -166,11 +168,13 @@ public class JobOwnershipService {
 	}
 
 	public void finalizeOwnedExecution(JobExecution jobExecution) {
-		finalizeOwnedClaim(projectionGuid(jobExecution));
+		String projectionGuid = projectionGuid(jobExecution);
+		UUID leaseToken = UUID.fromString(jobExecution.getExecutionContext().getString(LEASE_TOKEN_CONTEXT_KEY));
+		finalizeOwnedClaim(projectionGuid, leaseToken);
 	}
 
-	public void finalizeOwnedClaim(String projectionGuid) {
-		registry.removeByProjectionGuid(projectionGuid).ifPresent(ownedJob -> {
+	public void finalizeOwnedClaim(String projectionGuid, UUID expectedLeaseToken) {
+		registry.removeIfCurrent(projectionGuid, expectedLeaseToken).ifPresent(ownedJob -> {
 			if (properties.isEnabled() && !ownedJob.leaseLost()) {
 				repository.release(ownedJob.claim());
 			}

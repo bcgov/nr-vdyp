@@ -46,12 +46,15 @@ public class ClaimBoundJobLauncher {
 			throw e;
 		}
 		ownershipService.registerClaim(claim);
+		// Lets finalizeOwnedExecution later tell this claim apart from one a pause/resume has since replaced it with.
+		jobExecution.getExecutionContext()
+				.putString(JobOwnershipService.LEASE_TOKEN_CONTEXT_KEY, claim.leaseToken().toString());
 
 		try {
 			taskExecutor.execute(() -> job.execute(jobExecution));
 		} catch (RuntimeException e) {
 			failUnstartedExecution(jobExecution, "Could not submit the batch execution: " + e.getMessage());
-			ownershipService.finalizeOwnedClaim(claim.projectionGuid());
+			ownershipService.finalizeOwnedClaim(claim.projectionGuid(), claim.leaseToken());
 			throw e;
 		}
 
