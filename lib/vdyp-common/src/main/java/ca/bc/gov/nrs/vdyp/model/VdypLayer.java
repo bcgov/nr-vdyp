@@ -51,7 +51,7 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 	public Optional<Float> getStrictYearsAtBreastHeight() {
 		VdypSite primary = this.getPrimarySite().orElse(null);
 		if (primary == null) {
-			return null;
+			return Optional.empty();
 		}
 		return Utils
 				.mapBoth(primary.getAgeTotal(), primary.getYearsToBreastHeight(), (age, yearsToBH) -> age - yearsToBH);
