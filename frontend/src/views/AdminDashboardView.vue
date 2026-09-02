@@ -225,6 +225,17 @@ const refreshStorageStatus = async () => {
   }
 }
 
+// Polled alongside refreshProjections so the Threads in Use denominator stays current as pods
+// scale up/down, instead of only updating on a full page reload. Silent by design, same
+// rationale as loadThreadCapacity.
+const refreshThreadCapacity = async () => {
+  try {
+    threadCapacity.value = await fetchThreadCapacity()
+  } catch (err) {
+    console.error('Error refreshing thread capacity:', err)
+  }
+}
+
 const filteredProjections = computed(() =>
   projections.value.filter(
     (p) =>
@@ -416,6 +427,7 @@ onMounted(async () => {
   dataPollingTimer = setInterval(() => {
     refreshProjections()
     refreshStorageStatus()
+    refreshThreadCapacity()
   }, REFRESH_INTERVAL_MS.ADMIN_DASHBOARD_DATA_POLL)
 })
 
