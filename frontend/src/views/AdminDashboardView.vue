@@ -129,21 +129,24 @@ const progressMessage = ref('')
 const isCancelDialogOpen = ref(false)
 const projectionPendingCancel = ref<AdminProjection | null>(null)
 
+// 'All' is a UI-only filter value (not a real user type)
+const USER_TYPE_FILTER_ALL = 'All'
 const userTypeFilterOptions = [
+  { title: USER_TYPE_FILTER_ALL, value: USER_TYPE_FILTER_ALL },
   { title: 'IDIR', value: USER_TYPE_CODE.IDIR },
   { title: 'BCeID', value: USER_TYPE_CODE.BCEID },
 ]
-const selectedUserType = ref<UserTypeCode | null>(null)
+const selectedUserType = ref<UserTypeCode | string | null>(USER_TYPE_FILTER_ALL)
 
-// 'All' is a UI-only filter value (not a real projection status) meaning "no status filter applied".
+// 'All' is a UI-only filter value (not a real projection status)
 const STATUS_FILTER_ALL = 'All'
 const statusFilterOptions = [
+  { title: STATUS_FILTER_ALL, value: STATUS_FILTER_ALL },
   { title: 'Stuck', value: PROJECTION_STATUS.STUCK },
   { title: 'Running', value: PROJECTION_STATUS.RUNNING },
   { title: 'Queued', value: PROJECTION_STATUS.QUEUED },
-  { title: STATUS_FILTER_ALL, value: STATUS_FILTER_ALL },
 ]
-const selectedStatus = ref<string | null>(null)
+const selectedStatus = ref<string | null>(STATUS_FILTER_ALL)
 
 // Default sort: Threads (Highest First)
 const sortBy = ref<string>(ADMIN_DASHBOARD_HEADER_KEY.THREADS)
@@ -245,7 +248,9 @@ const refreshThreadCapacity = async () => {
 const filteredProjections = computed(() =>
   projections.value.filter(
     (p) =>
-      (!selectedUserType.value || p.userType === selectedUserType.value) &&
+      (!selectedUserType.value ||
+        selectedUserType.value === USER_TYPE_FILTER_ALL ||
+        p.userType === selectedUserType.value) &&
       (!selectedStatus.value ||
         selectedStatus.value === STATUS_FILTER_ALL ||
         p.status === selectedStatus.value),
