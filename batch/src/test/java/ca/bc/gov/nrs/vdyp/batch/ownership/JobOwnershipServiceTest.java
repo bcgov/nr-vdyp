@@ -255,7 +255,7 @@ class JobOwnershipServiceTest {
 		JobClaim claim = claim("projection-1");
 		service.registerClaim(claim);
 
-		service.finalizeOwnedExecution(execution("projection-1"));
+		service.finalizeOwnedExecution(execution("projection-1", claim.leaseToken()));
 
 		verify(repository).release(claim);
 		assertFalse(service.isOwnedLocally("projection-1"));
@@ -263,17 +263,32 @@ class JobOwnershipServiceTest {
 	}
 
 	@Test
+	void finalizeOwnedExecutionDoesNotWipeOutANewerClaimForTheSameProjection() {
+		JobClaim oldClaim = claim("projection-1");
+		service.registerClaim(oldClaim);
+
+		JobClaim newClaim = claim("projection-1");
+		service.registerClaim(newClaim);
+
+		service.finalizeOwnedExecution(execution("projection-1", oldClaim.leaseToken()));
+
+		verify(repository, never()).release(any());
+		assertTrue(service.isOwnedLocally("projection-1"));
+		assertEquals(1, service.activeLocalJobs());
+	}
+
+	@Test
 	void finalizeDoesNotReleaseLostOrDisabledClaims() {
 		JobClaim lostClaim = claim("projection-1");
 		service.registerClaim(lostClaim);
 		registry.findByProjectionGuid("projection-1").orElseThrow().markLeaseLost();
-		service.finalizeOwnedClaim("projection-1");
+		service.finalizeOwnedClaim("projection-1", lostClaim.leaseToken());
 
 		JobClaim disabledClaim = claim("projection-2");
 		service.registerClaim(disabledClaim);
 		properties.setEnabled(false);
-		service.finalizeOwnedClaim("projection-2");
-		service.finalizeOwnedClaim("not-registered");
+		service.finalizeOwnedClaim("projection-2", disabledClaim.leaseToken());
+		service.finalizeOwnedClaim("not-registered", UUID.randomUUID());
 
 		verify(repository, never()).release(any());
 		assertEquals(0, service.activeLocalJobs());
@@ -311,5 +326,12 @@ class JobOwnershipServiceTest {
 		}
 		JobParameters jobParameters = parameters.toJobParameters();
 		return new JobExecution(new JobInstance(1L, "job"), 2L, jobParameters);
+	}
+
+	private JobExecution execution(String projectionGuid, UUID leaseToken) {
+		JobExecution jobExecution = execution(projectionGuid);
+		jobExecution.getExecutionContext()
+				.putString(JobOwnershipService.LEASE_TOKEN_CONTEXT_KEY, leaseToken.toString());
+		return jobExecution;
 	}
 }

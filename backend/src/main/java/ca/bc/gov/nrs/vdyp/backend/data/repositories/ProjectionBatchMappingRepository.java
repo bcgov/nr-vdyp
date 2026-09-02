@@ -33,11 +33,11 @@ public class ProjectionBatchMappingRepository implements PanacheRepositoryBase<P
 	}
 
 	/**
-	 * Clears the prioritized flag on every mapping that currently has it set. Only one projection can hold priority at
-	 * a time, so this is called before prioritizing a new one.
+	 * Clears the prioritized flag on every mapping. Deliberately unconditional: locking every row serializes concurrent
+	 * prioritize calls instead of letting two overlapping transactions both end up true.
 	 */
 	public void clearAllPrioritized() {
-		update("isPrioritized = false where isPrioritized = true");
+		update("isPrioritized = false");
 	}
 
 	/**
