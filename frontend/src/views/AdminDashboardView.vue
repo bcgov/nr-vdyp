@@ -1,5 +1,10 @@
 <template>
   <v-container fluid class="admin-dashboard-container">
+    <router-link :to="ROUTE_PATH.PROJECTION_LIST" class="return-to-list-link">
+      <img :src="MenuIcon" alt="" class="return-to-list-icon" />
+      <span>Return to My Projections List</span>
+    </router-link>
+
     <div class="page-header">
       <h1 class="page-heading">Admin Dashboard</h1>
     </div>
@@ -96,9 +101,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { AdminProjection, UserTypeCode, SortOption } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
-import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TYPE_CODE, REFRESH_INTERVAL_MS, PROJECTION_STATUS } from '@/constants/constants'
+import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TYPE_CODE, REFRESH_INTERVAL_MS, PROJECTION_STATUS, ROUTE_PATH } from '@/constants/constants'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
 import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
+import { MenuIcon } from '@/assets/'
 import { AppProgressCircular } from '@/components'
 import { ProjectionPagination, AdminProjectionTable, AdminProjectionCardList, AdminCancelProjectionDialog, AdminResourceSummary } from '@/components/projection'
 import type { StorageStatusModel } from '@/services/vdyp-api'
@@ -448,6 +454,26 @@ onUnmounted(() => {
   max-width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
+}
+
+.return-to-list-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--layout-padding-small);
+  text-decoration: none;
+  color: var(--typography-color-link);
+  font: var(--typography-regular-body);
+  margin-bottom: var(--layout-margin-small);
+}
+
+.return-to-list-link:hover {
+  text-decoration: underline;
+}
+
+.return-to-list-icon {
+  width: 20px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .page-header {
