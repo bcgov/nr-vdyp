@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
+import org.eclipse.microprofile.openapi.annotations.Operation;
+
 import ca.bc.gov.nrs.vdyp.backend.config.OidcConfig;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.buffer.Buffer;
@@ -38,6 +40,7 @@ public class AuthorizationProxyEndpoint {
 	@Path("/realms/standard/protocol/openid-connect/token")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(hidden = true)
 	public Response token(@Context UriInfo uriInfo, MultivaluedMap<String, String> form) {
 		// Inject client auth for Keycloak confidential client
 		form.putSingle("client_secret", cfg.clientSecret());
@@ -55,6 +58,7 @@ public class AuthorizationProxyEndpoint {
 
 	@GET
 	@Path("/realms/standard/protocol/openid-connect/auth")
+	@Operation(hidden = true)
 	public Response authorize(@Context UriInfo uriInfo) {
 
 		return forwardSimpleRequest("/protocol/openid-connect/auth", uriInfo);
@@ -63,6 +67,7 @@ public class AuthorizationProxyEndpoint {
 	@GET
 	@Path("/realms/standard/.well-known/openid-configuration")
 	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(hidden = true)
 	public Response forwardConfig(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/.well-known/openid-configuration", uriInfo);
 	}
@@ -70,6 +75,7 @@ public class AuthorizationProxyEndpoint {
 	@GET
 	@Path("/realms/standard/protocol/openid-connect/token/introspect")
 	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(hidden = true)
 	public Response forwardIntrospect(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/protocol/openid-connect/token/introspect", uriInfo);
 	}
@@ -77,6 +83,7 @@ public class AuthorizationProxyEndpoint {
 	@GET
 	@Path("/realms/standard/protocol/openid-connect/userinfo")
 	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(hidden = true)
 	public Response forwardUserInfo(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/protocol/openid-connect/userinfo", uriInfo);
 	}
@@ -84,6 +91,7 @@ public class AuthorizationProxyEndpoint {
 	@GET
 	@Path("/realms/standard/protocol/openid-connect/certs")
 	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(hidden = true)
 	public Response forwardCerts(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/protocol/openid-connect/certs", uriInfo);
 	}
@@ -91,6 +99,7 @@ public class AuthorizationProxyEndpoint {
 	@GET
 	@Path("/realms/standard/protocol/openid-connect/logout")
 	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(hidden = true)
 	public Response forwardLogout(@Context UriInfo uriInfo) {
 		return forwardSimpleRequest("/protocol/openid-connect/logout", uriInfo);
 	}
@@ -103,6 +112,7 @@ public class AuthorizationProxyEndpoint {
 
 	@GET
 	@Path("/realms/standard/protocol/openid-connect/3p-cookies/{page}")
+	@Operation(hidden = true)
 	public Uni<Response> forward3pCookies(
 			@Context UriInfo uriInfo, @Context jakarta.ws.rs.core.HttpHeaders headers,
 			@jakarta.ws.rs.PathParam("page") String page
@@ -129,6 +139,7 @@ public class AuthorizationProxyEndpoint {
 
 	@GET
 	@Path("/realms/standard/protocol/openid-connect/login-status-iframe.html")
+	@Operation(hidden = true)
 	public Uni<Response>
 			forwardLoginStatusIframe(@Context UriInfo uriInfo, @Context jakarta.ws.rs.core.HttpHeaders headers) {
 
@@ -148,6 +159,7 @@ public class AuthorizationProxyEndpoint {
 
 	@GET
 	@Path("/resources/{path:.*}")
+	@Operation(hidden = true)
 	public Uni<Response> forwardResources(
 			@Context UriInfo uriInfo, @Context jakarta.ws.rs.core.HttpHeaders headers,
 			@jakarta.ws.rs.PathParam("path") String path

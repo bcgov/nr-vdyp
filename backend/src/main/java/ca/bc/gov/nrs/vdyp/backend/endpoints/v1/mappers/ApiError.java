@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
@@ -7,5 +9,9 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * its accessors and Jackson fails to serialize it, turning every error response into a 500.
  */
 @RegisterForReflection
-public record ApiError(String code, String message) {
+@Schema(description = "Standard error response.")
+public record ApiError(
+		@Schema(example = "BAD_REQUEST", description = "Stable machine-readable error code.") String code,
+		@Schema(description = "Human-readable error detail.") String message
+) {
 }
