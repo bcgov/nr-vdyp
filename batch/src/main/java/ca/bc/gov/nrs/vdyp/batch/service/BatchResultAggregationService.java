@@ -728,7 +728,7 @@ public class BatchResultAggregationService {
 						Projection Type: HCSV
 						Processed %d polygons...
 						Processing summary: %d polygons Projected Successfully + %d Failed to Project = %d Processed
-						Total Duration: %s""", processed, processed, skipped, processed + skipped,
+						Total Duration: %s""", processed + skipped, processed, skipped, processed + skipped,
 				BatchUtils.formatDuration(duration)
 		);
 		zipOut.write(progress.getBytes(StandardCharsets.UTF_8));
