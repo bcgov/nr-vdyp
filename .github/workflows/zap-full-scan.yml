@@ -1,0 +1,230 @@
+name: OWASP ZAP Full Scan
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: Environment to actively scan
+        required: true
+        type: choice
+        default: dev
+        options:
+          - dev
+      fail_on_findings:
+        description: Fail the workflow when ZAP reports findings
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: zap-full-scan-${{ inputs.target_environment }}
+  cancel-in-progress: false
+
+env:
+  FRONTEND_URL: https://vdyp-ui-${{ inputs.target_environment }}.apps.silver.devops.gov.bc.ca
+  BACKEND_URL: https://nr-vdyp-${{ inputs.target_environment }}-backend.apps.silver.devops.gov.bc.ca
+  # These are the two public origins in the Common SSO DEV Business BCeID flow.
+  SSO_ORIGIN: https://dev.loginproxy.gov.bc.ca
+  BCEID_ORIGIN: https://logontest7.gov.bc.ca
+
+jobs:
+  frontend-full-scan:
+    # The SPA authenticates through Keycloak JS using browser session state.
+    # A service-account bearer token does not establish that browser session,
+    # so this scan intentionally covers the unauthenticated frontend surface.
+    name: Unauthenticated frontend full scan (${{ inputs.target_environment }})
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Wait for the frontend
+        run: |
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 12 \
+            --retry-all-errors \
+            --retry-delay 10 \
+            --max-time 30 \
+            --proto "=https" \
+            "${FRONTEND_URL}/env.js" \
+            --output /dev/null
+
+      - name: Run OWASP ZAP frontend full scan
+        uses: zaproxy/action-full-scan@3c58388149901b9a03b7718852c5ba889646c27c # v0.13.0
+        with:
+          target: ${{ env.FRONTEND_URL }}
+          cmd_options: "-j -m 5 -T 60"
+          allow_issue_writing: false
+          fail_action: ${{ inputs.fail_on_findings }}
+          artifact_name: zap-full-frontend-${{ inputs.target_environment }}-${{ github.run_id }}
+
+  backend-api-scan:
+    name: Authenticated backend API scan (${{ inputs.target_environment }})
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    environment: ${{ inputs.target_environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend test dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Wait for the backend OpenAPI document
+        run: |
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 12 \
+            --retry-all-errors \
+            --retry-delay 10 \
+            --max-time 30 \
+            --proto "=https" \
+            "${BACKEND_URL}/q/openapi?format=json" \
+            --output /dev/null
+
+      # Use the application's normal Authorization Code + PKCE browser flow.
+      # Keep authentication in this job so the password and bearer token never
+      # cross a job boundary. The DEV Business BCeID account must be dedicated
+      # to DAST and assigned only the VDYP USER client role.
+      - name: Authenticate as the DEV Business BCeID DAST user
+        env:
+          CYPRESS_frontendUrl: ${{ env.FRONTEND_URL }}
+          CYPRESS_ssoOrigin: ${{ env.SSO_ORIGIN }}
+          CYPRESS_bceidOrigin: ${{ env.BCEID_ORIGIN }}
+          CYPRESS_bceidUsername: ${{ secrets.ZAP_BCEID_USERNAME }}
+          CYPRESS_bceidPassword: ${{ secrets.ZAP_BCEID_PASSWORD }}
+          CYPRESS_tokenPath: ${{ runner.temp }}/zap-business-bceid-access-token
+        working-directory: frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${CYPRESS_bceidUsername:-}" ]]; then
+            echo "::error::The ZAP_BCEID_USERNAME secret is not configured in the '${{ inputs.target_environment }}' GitHub Environment."
+            exit 1
+          fi
+          if [[ -z "${CYPRESS_bceidPassword:-}" ]]; then
+            echo "::error::The ZAP_BCEID_PASSWORD secret is not configured in the '${{ inputs.target_environment }}' GitHub Environment."
+            exit 1
+          fi
+
+          npm exec -- cypress run \
+            --e2e \
+            --browser electron \
+            --spec cypress/e2e/zap-business-bceid-auth.cy.ts \
+            --config 'video=false,screenshotOnRunFailure=false'
+
+      - name: Verify the Business BCeID token and configure ZAP
+        env:
+          TOKEN_FILE: ${{ runner.temp }}/zap-business-bceid-access-token
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! -s "${TOKEN_FILE}" ]]; then
+            echo "::error::The Business BCeID login did not produce an access token."
+            exit 1
+          fi
+
+          access_token="$(< "${TOKEN_FILE}")"
+
+          echo "::add-mask::${access_token}"
+
+          token_payload_segment="$(printf '%s' "${access_token}" | cut -d. -f2)"
+          case $((${#token_payload_segment} % 4)) in
+            2) token_payload_segment="${token_payload_segment}==" ;;
+            3) token_payload_segment="${token_payload_segment}=" ;;
+          esac
+          token_payload="$(printf '%s' "${token_payload_segment}" \
+            | tr '_-' '/+' \
+            | base64 --decode 2>/dev/null)" || {
+              echo "::error::The OIDC access token is not a decodable JWT."
+              exit 1
+            }
+
+          if ! jq -e '
+            .identity_provider == "bceidbusiness" and
+            (.client_roles | type == "array") and
+            ((.client_roles | map(ascii_upcase) | index("USER")) != null) and
+            ((.client_roles | map(ascii_upcase) | index("ADMIN")) == null) and
+            ((.client_roles | map(ascii_upcase) | index("SYSTEM")) == null)
+          ' <<< "${token_payload}" > /dev/null; then
+            echo "::error::The ZAP identity must have USER in client_roles and must not have ADMIN or SYSTEM."
+            exit 1
+          fi
+
+          expires_at="$(jq -er '.exp | select(type == "number")' <<< "${token_payload}")"
+          seconds_remaining="$((expires_at - $(date +%s)))"
+          if (( seconds_remaining < 120 )); then
+            echo "::error::The Business BCeID access token has less than two minutes remaining."
+            exit 1
+          fi
+
+          if ! jq -e '
+            (.given_name | type == "string" and length > 0) and
+            (.family_name | type == "string" and length > 0) and
+            (.display_name | type == "string" and length > 0) and
+            (.email | type == "string" and length > 0)
+          ' <<< "${token_payload}" > /dev/null; then
+            echo "::error::The ZAP token must contain non-empty given_name, family_name, display_name, and email claims."
+            exit 1
+          fi
+
+          authenticated_status="$(curl \
+            --silent \
+            --show-error \
+            --location \
+            --connect-timeout 15 \
+            --max-time 45 \
+            --proto "=https" \
+            --header "Authorization: Bearer ${access_token}" \
+            --output /dev/null \
+            --write-out "%{http_code}" \
+            "${BACKEND_URL}/api/v8")"
+
+          if [[ "${authenticated_status}" != 2* ]]; then
+            echo "::error::The OIDC token was issued, but the backend authentication check returned HTTP ${authenticated_status}."
+            exit 1
+          fi
+
+          {
+            echo "ZAP_AUTH_HEADER=Authorization"
+            echo "ZAP_AUTH_HEADER_VALUE=Bearer ${access_token}"
+            echo "ZAP_AUTH_HEADER_SITE=${BACKEND_URL#https://}"
+          } >> "${GITHUB_ENV}"
+
+          echo "Business BCeID USER token accepted by the backend; ${seconds_remaining} seconds remain."
+
+      - name: Run authenticated OWASP ZAP backend API scan
+        uses: zaproxy/action-api-scan@5158fe4d9d8fcc75ea204db81317cce7f9e5453d # v0.10.0
+        with:
+          target: ${{ env.BACKEND_URL }}/q/openapi?format=json
+          format: openapi
+          cmd_options: "-T 60"
+          allow_issue_writing: false
+          fail_action: ${{ inputs.fail_on_findings }}
+          artifact_name: zap-api-backend-${{ inputs.target_environment }}-${{ github.run_id }}
+
+      - name: Remove the temporary access-token file
+        if: always()
+        env:
+          TOKEN_FILE: ${{ runner.temp }}/zap-business-bceid-access-token
+        shell: bash
+        run: rm -f "${TOKEN_FILE}"
