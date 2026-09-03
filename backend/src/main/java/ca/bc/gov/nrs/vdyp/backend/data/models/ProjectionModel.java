@@ -2,9 +2,12 @@ package ca.bc.gov.nrs.vdyp.backend.data.models;
 
 import java.time.OffsetDateTime;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
+@Schema(description = "A VDYP projection, including ownership, configuration, status, and file sets.")
 public class ProjectionModel {
 	public static final int DAYS_UNTIL_EXPIRY = 30;
 

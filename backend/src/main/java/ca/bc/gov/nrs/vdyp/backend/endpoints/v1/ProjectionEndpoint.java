@@ -6,6 +6,14 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirements;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
@@ -20,7 +28,14 @@ import ca.bc.gov.nrs.vdyp.backend.context.CurrentVDYPUser;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchStorageStatusModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.ApiError;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.openapi.ProjectionRequestSchemas.DcsvProjectionRequest;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.openapi.ProjectionRequestSchemas.HcsvProjectionRequest;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.openapi.ProjectionRequestSchemas.ProjectionConfigurationRequest;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.openapi.ProjectionRequestSchemas.ProjectionFileUploadRequest;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.openapi.ProjectionRequestSchemas.ScsvProjectionRequest;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.CancelProjectionRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
@@ -57,7 +72,16 @@ import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.StreamingOutput;
 
 @Path("/api/v8/projection")
-@Tag(name = "Projection API", description = "the projection API")
+@Tag(name = "Projections", description = "Create, configure, execute, monitor, and retrieve VDYP projections.")
+@APIResponse(responseCode = "401", description = "A valid bearer token is required.")
+@APIResponse(
+		responseCode = "403", description = "The authenticated identity does not have the permission to access this projection."
+)
+@APIResponse(
+		responseCode = "500", description = "An unexpected service error occurred.", content = @Content(
+				mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ApiError.class)
+		)
+)
 @RegisterForReflection
 @ApplicationScoped
 public class ProjectionEndpoint implements Endpoint {
@@ -86,11 +110,21 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/dcsv")
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Run DCSV Projection", description = "Run a projection of polygons in the supplied DCSV formatted input file as controlled by the parameters in the supplied projection parameters file."
+	@Operation(
+			operationId = "runDcsvProjection", summary = "Run a DCSV projection", description = "Runs a projection using a DCSV input file and the supplied projection parameters. This operation is not currently implemented."
 	)
+	@RequestBody(
+			required = true, description = "DCSV projection parameters and input data.", content = @Content(
+					mediaType = MediaType.MULTIPART_FORM_DATA, schema = @Schema(
+							implementation = DcsvProjectionRequest.class
+					)
+			)
+	)
+	@APIResponse(responseCode = "501", description = "DCSV projection processing is not implemented.")
 	public Response projectionDcsvPost(
-			@QueryParam(value = ParameterNames.TRIAL_RUN) @DefaultValue("false") Boolean trialRun, //
+			@Parameter(
+					description = "Run validation without retaining projection output.", example = "false"
+			) @QueryParam(value = ParameterNames.TRIAL_RUN) @DefaultValue("false") Boolean trialRun, //
 			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
 			) Parameters parameters, //
@@ -114,11 +148,34 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed({ "USER", "ADMIN", "KONG_API_GATEWAY" })
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Run HCSV Projection", description = "Run a projection of polygons in the supplied polygon and layers input files as controlled by the parameters in the supplied projection parameters file."
+	@Operation(
+			operationId = "runHcsvProjection", summary = "Run an HCSV projection", description = "Runs a projection using HCSV polygon and layer files and returns a ZIP archive of projection output."
+	)
+	@RequestBody(
+			required = true, description = "HCSV projection parameters and input files.", content = @Content(
+					mediaType = MediaType.MULTIPART_FORM_DATA, schema = @Schema(
+							implementation = HcsvProjectionRequest.class
+					)
+			)
+	)
+	@APIResponse(
+			responseCode = "200", description = "Projection output ZIP archive.", content = @Content(
+					mediaType = MediaType.APPLICATION_OCTET_STREAM, schema = @Schema(
+							type = SchemaType.STRING, format = "binary"
+					)
+			)
+	)
+	@APIResponse(
+			responseCode = "400", description = "The parameters or input files failed validation.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(
+							implementation = ValidationMessageListResource.class
+					)
+			)
 	)
 	public Response projectionHcsvPost(
-			@QueryParam(value = ParameterNames.TRIAL_RUN) @DefaultValue("false") Boolean trialRun, //
+			@Parameter(
+					description = "Run validation without retaining projection output.", example = "false"
+			) @QueryParam(value = ParameterNames.TRIAL_RUN) @DefaultValue("false") Boolean trialRun, //
 			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
 			) Parameters parameters, //
@@ -164,11 +221,22 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/scsv")
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Run SCSV Projection", description = "Run a projection of polygons in the supplied SCSV input files as controlled by the parameters in the supplied projection parameters file."
+	@SecurityRequirements
+	@Operation(
+			operationId = "runScsvProjection", summary = "Run an SCSV projection", description = "Runs a projection using SCSV input files and the supplied projection parameters. This operation is not currently implemented."
 	)
+	@RequestBody(
+			required = true, description = "SCSV projection parameters and input files.", content = @Content(
+					mediaType = MediaType.MULTIPART_FORM_DATA, schema = @Schema(
+							implementation = ScsvProjectionRequest.class
+					)
+			)
+	)
+	@APIResponse(responseCode = "501", description = "SCSV projection processing is not implemented.")
 	public Response projectionScsvPost(
-			@QueryParam(value = ParameterNames.TRIAL_RUN) @DefaultValue("false") Boolean trialRun, //
+			@Parameter(
+					description = "Run validation without retaining projection output.", example = "false"
+			) @QueryParam(value = ParameterNames.TRIAL_RUN) @DefaultValue("false") Boolean trialRun, //
 			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
 			) Parameters parameters, //
@@ -199,7 +267,14 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/me")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Get Projection List", description = "Get all projections for the current user.")
+	@Operation(
+			operationId = "getCurrentUserProjections", summary = "List the current user's projections", description = "Returns every projection owned by the authenticated user."
+	)
+	@APIResponse(
+			responseCode = "200", description = "The current user's projections.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel[].class)
+			)
+	)
 	public Response getAuthenticatedUserProjections() {
 		var projections = projectionService.getAllProjectionsForUser(currentUser.getUserId());
 		return Response.ok(projections).status(Response.Status.OK).build();
@@ -209,7 +284,14 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed("ADMIN")
 	@Path("/all")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Get Running Projections", description = "(Admin Only) Get all RUNNING projections across all users.")
+	@Operation(
+			operationId = "getAllRunningProjections", summary = "List all running projections", description = "Returns all running projections across all users. Requires the ADMIN role."
+	)
+	@APIResponse(
+			responseCode = "200", description = "All running projections.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel[].class)
+			)
+	)
 	public Response getAllRunningProjections() {
 		var projections = projectionService.getAllRunningProjections();
 		return Response.ok(projections).status(Response.Status.OK).build();
@@ -219,8 +301,15 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed("ADMIN")
 	@Path("/thread-capacity")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Get Thread Capacity", description = "(Admin Only) Get the batch service's configured thread pool capacity."
+	@Operation(
+			operationId = "getBatchThreadCapacity", summary = "Get batch thread capacity", description = "Returns the batch service's configured worker capacity. Requires the ADMIN role."
+	)
+	@APIResponse(
+			responseCode = "200", description = "Batch worker capacity.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(
+							implementation = BatchThreadCapacityModel.class
+					)
+			)
 	)
 	public Response getThreadCapacity() {
 		var threadCapacity = new BatchThreadCapacityModel(projectionService.getThreadCapacity());
@@ -231,8 +320,15 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed("ADMIN")
 	@Path("/storage-status")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Get Storage Status", description = "(Admin Only) Get the batch service's PVC storage status (percent full, out-of-spec flag)."
+	@Operation(
+			operationId = "getBatchStorageStatus", summary = "Get batch storage status", description = "Returns batch-service persistent-storage utilization and threshold status. Requires the ADMIN role."
+	)
+	@APIResponse(
+			responseCode = "200", description = "Batch storage utilization.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(
+							implementation = BatchStorageStatusModel.class
+					)
+			)
 	)
 	public Response getStorageStatus() {
 		BatchStorageStatusModel storageStatus = projectionService.getStorageStatus();
@@ -244,8 +340,20 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/new")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Create Default Projection", description = "Create a new empty projection with a full set of parameters set to defaults."
+	@Operation(
+			operationId = "createProjection", summary = "Create a projection", description = "Creates an empty projection owned by the authenticated user using the supplied configuration."
+	)
+	@RequestBody(
+			required = true, description = "Initial projection configuration.", content = @Content(
+					mediaType = MediaType.MULTIPART_FORM_DATA, schema = @Schema(
+							implementation = ProjectionConfigurationRequest.class
+					)
+			)
+	)
+	@APIResponse(
+			responseCode = "201", description = "The projection was created.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel.class)
+			)
 	)
 	public Response createEmptyProjection(
 			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
@@ -265,8 +373,24 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed({ "USER", "ADMIN", "SYSTEM" })
 	@Path("/{projectionGUID}")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Get Projection Details", description = "Get all the details of an existing projection")
-	public Response getProjection(@PathParam("projectionGUID") UUID projectionGUID) throws ProjectionServiceException {
+	@Operation(
+			operationId = "getProjection", summary = "Get a projection", description = "Returns the configuration, status, ownership, and file-set details for a projection."
+	)
+	@APIResponse(
+			responseCode = "200", description = "Projection details.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel.class)
+			)
+	)
+	@APIResponse(
+			responseCode = "404", description = "The projection does not exist.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ApiError.class)
+			)
+	)
+	public Response getProjection(
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID
+	) throws ProjectionServiceException {
 		var fetched = projectionService.getProjectionByID(projectionGUID, currentUser.getUser());
 		return Response.status(Status.OK).entity(fetched).build();
 	}
@@ -276,11 +400,25 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/{projectionGUID}/params")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Edit Projection Parameters", description = "Update an existing projection with a full set of parameters. Parameters will not be merged pass the full set every time"
+	@Operation(
+			operationId = "replaceProjectionParameters", summary = "Replace projection parameters", description = "Replaces the complete projection, model, and report configuration. Values are not merged with the existing configuration."
+	)
+	@RequestBody(
+			required = true, description = "Replacement projection configuration.", content = @Content(
+					mediaType = MediaType.MULTIPART_FORM_DATA, schema = @Schema(
+							implementation = ProjectionConfigurationRequest.class
+					)
+			)
+	)
+	@APIResponse(
+			responseCode = "200", description = "The updated projection.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel.class)
+			)
 	)
 	public Response editProjectionParameters(
-			@PathParam("projectionGUID") UUID projectionGUID,
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID,
 			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
 			) Parameters parameters,
@@ -298,9 +436,15 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Delete Projection", description = "Delete an existing projection.")
-	public Response deleteProjection(@PathParam("projectionGUID") UUID projectionGUID)
-			throws ProjectionServiceException {
+	@Operation(
+			operationId = "deleteProjection", summary = "Delete a projection", description = "Deletes a projection owned by the authenticated user."
+	)
+	@APIResponse(responseCode = "204", description = "The projection was deleted.")
+	public Response deleteProjection(
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID
+	) throws ProjectionServiceException {
 		projectionService.deleteProjection(projectionGUID, currentUser.getUser());
 		return Response.status(Status.NO_CONTENT).build();
 	}
@@ -309,8 +453,19 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/run")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Run a Projection", description = "Send a Projection to the processing engine to be run.")
-	public Response runProjection(@PathParam("projectionGUID") UUID projectionGUID) throws ProjectionServiceException {
+	@Operation(
+			operationId = "runProjection", summary = "Run a projection", description = "Queues a configured projection for batch processing."
+	)
+	@APIResponse(
+			responseCode = "200", description = "The queued projection.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel.class)
+			)
+	)
+	public Response runProjection(
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID
+	) throws ProjectionServiceException {
 		var started = projectionService.queueForBatchProjection(currentUser.getUser(), projectionGUID);
 		return Response.status(Status.OK).entity(started).build();
 	}
@@ -320,11 +475,21 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/{projectionGUID}/progress")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Consumes({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Update Progress of a running projection", description = "(System Only) Updates the progress of a running projection."
+	@Operation(
+			operationId = "updateProjectionProgress", summary = "Update projection progress", description = "Updates processing progress for a running projection. Requires the SYSTEM role."
 	)
+	@APIResponse(responseCode = "200", description = "The progress update was accepted.")
 	public Response updateCompleteProjectionProgress(
-			@PathParam("projectionGUID") UUID projectionGUID, ProjectionProgressUpdate progressUpdate
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID,
+			@RequestBody(
+					required = true, description = "Current batch progress.", content = @Content(
+							mediaType = MediaType.APPLICATION_JSON, schema = @Schema(
+									implementation = ProjectionProgressUpdate.class
+							)
+					)
+			) ProjectionProgressUpdate progressUpdate
 	) throws ProjectionServiceException {
 		projectionService.updateProgress(currentUser.getUser(), projectionGUID, progressUpdate);
 		return Response.status(Status.OK).build();
@@ -335,12 +500,28 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/{projectionGUID}/complete")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Consumes({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Set a Projections Status", description = "(System Only) Updates as a projection status to complete after processing."
+	@Operation(
+			operationId = "completeProjection", summary = "Complete a projection", description = "Records final processing metrics and marks a projection complete or failed. Requires the SYSTEM role."
+	)
+	@APIResponse(
+			responseCode = "200", description = "The completed projection.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel.class)
+			)
 	)
 	public Response updateCompleteProjectionStatus(
-			@PathParam("projectionGUID") UUID projectionGUID, @QueryParam("success") boolean success,
-			ProjectionProgressUpdate progressUpdate
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID,
+			@Parameter(
+					description = "Whether processing completed successfully.", required = true, example = "true"
+			) @QueryParam("success") boolean success,
+			@RequestBody(
+					required = true, description = "Final batch progress and failure details.", content = @Content(
+							mediaType = MediaType.APPLICATION_JSON, schema = @Schema(
+									implementation = ProjectionProgressUpdate.class
+							)
+					)
+			) ProjectionProgressUpdate progressUpdate
 	) throws ProjectionServiceException {
 		var started = projectionService
 				.updateCompleteStatus(currentUser.getUser(), projectionGUID, success, progressUpdate);
@@ -351,9 +532,19 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed("ADMIN")
 	@Path("/{projectionGUID}/prioritize")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Prioritize A Projection", description = "(Admin only) Prioritizes a running projection.")
-	public Response prioritizeProjection(@PathParam("projectionGUID") UUID projectionGUID)
-			throws ProjectionServiceException {
+	@Operation(
+			operationId = "prioritizeProjection", summary = "Prioritize a projection", description = "Moves a running projection ahead in the batch queue. Requires the ADMIN role."
+	)
+	@APIResponse(
+			responseCode = "200", description = "The prioritized projection.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel.class)
+			)
+	)
+	public Response prioritizeProjection(
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID
+	) throws ProjectionServiceException {
 		var prioritized = projectionService.prioritizeBatchProjection(currentUser.getUser(), projectionGUID);
 		return Response.status(Status.OK).entity(prioritized).build();
 	}
@@ -367,9 +558,26 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/{projectionGUID}/cancel")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Cancel A Projection", description = "Cancels a running projection.")
-	public Response cancelProjection(@PathParam("projectionGUID") UUID projectionGUID, CancelProjectionRequest request)
-			throws ProjectionServiceException {
+	@Operation(
+			operationId = "cancelProjection", summary = "Cancel a projection", description = "Cancels a queued or running projection. Administrators may provide a cancellation reason."
+	)
+	@APIResponse(
+			responseCode = "200", description = "The cancelled projection.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel.class)
+			)
+	)
+	public Response cancelProjection(
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID,
+			@RequestBody(
+					description = "Optional administrative cancellation detail.", content = @Content(
+							mediaType = MediaType.APPLICATION_JSON, schema = @Schema(
+									implementation = CancelProjectionRequest.class
+							)
+					)
+			) CancelProjectionRequest request
+	) throws ProjectionServiceException {
 		String adminCancelReason = request != null ? request.adminCancelReason() : null;
 		var started = projectionService.cancelBatchProjection(currentUser.getUser(), projectionGUID, adminCancelReason);
 		return Response.status(Status.OK).entity(started).build();
@@ -379,9 +587,19 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/duplicate")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Duplicate A Projection", description = "Duplicates the inputs of an existing projection.")
-	public Response duplicateProjection(@PathParam("projectionGUID") UUID projectionGUID)
-			throws ProjectionServiceException {
+	@Operation(
+			operationId = "duplicateProjection", summary = "Duplicate a projection", description = "Creates a new projection by copying the configuration and input files of an existing projection."
+	)
+	@APIResponse(
+			responseCode = "200", description = "The duplicated projection.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel.class)
+			)
+	)
+	public Response duplicateProjection(
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID
+	) throws ProjectionServiceException {
 		var started = projectionService.duplicateProjection(projectionGUID, currentUser.getUser());
 		return Response.status(Status.OK).entity(started).build();
 	}
@@ -389,14 +607,22 @@ public class ProjectionEndpoint implements Endpoint {
 	@GET
 	@RolesAllowed({ "USER", "ADMIN", "SYSTEM" })
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}")
-	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Get lightweight details of files in a fileset for a projection", description = "Gets a list of all files in a projection file set"
+	@Operation(
+			operationId = "getProjectionFileSetFiles", summary = "List files in a projection file set", description = "Returns metadata for every file attached to a projection file set."
+	)
+	@APIResponse(
+			responseCode = "200", description = "File metadata for the file set.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FileMappingModel[].class)
+			)
 	)
 	public Response getFileSetFiles(
-			@PathParam("projectionGUID") UUID projectionGUID, //
-			@PathParam("fileSetGUID") UUID fileSetGUID
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID, //
+			@Parameter(description = "Projection file-set identifier.", required = true) @PathParam(
+				"fileSetGUID"
+			) UUID fileSetGUID
 	) throws ProjectionServiceException {
 		var found = projectionService.getAllFileSetFiles(projectionGUID, fileSetGUID, currentUser.getUser());
 		return Response.status(Status.OK).entity(found).build();
@@ -406,9 +632,20 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/resultZip")
 	@Produces("application/zip")
-	@Tag(name = "Results Zip", description = "Stream the results ZIP from s3 storage to prevent CORS issues")
-	public Response streamResultsZip(@PathParam("projectionGUID") UUID projectionGUID, @Context HttpHeaders headers)
-			throws ProjectionServiceException {
+	@Operation(
+			operationId = "downloadProjectionResults", summary = "Download projection results", description = "Streams the projection result ZIP archive from object storage."
+	)
+	@APIResponse(
+			responseCode = "200", description = "Projection result ZIP archive.", content = @Content(
+					mediaType = "application/zip", schema = @Schema(type = SchemaType.STRING, format = "binary")
+			)
+	)
+	@APIResponse(responseCode = "404", description = "The projection has no result files.")
+	public Response streamResultsZip(
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID, @Context HttpHeaders headers
+	) throws ProjectionServiceException {
 		var projection = projectionService.getProjectionEntity(projectionGUID);
 		List<FileMappingModel> resultFiles = projectionService.getAllFileSetFiles(
 				projectionGUID, projection.getResultFileSet().getProjectionFileSetGUID(), currentUser.getUser()
@@ -454,12 +691,24 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed("SYSTEM")
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/start")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Start a direct file upload for a FileSet", description = "(System Only) Creates a placeholder object in COMS and registers it in the DB. The caller should then PUT the file content directly to COMS and call the /complete endpoint."
+	@Operation(
+			operationId = "startProjectionFileUpload", summary = "Start a direct file upload", description = "Creates an object-storage placeholder and database record before a system caller uploads file content directly."
+	)
+	@APIResponse(
+			responseCode = "201", description = "The pending file mapping and direct-upload location.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FileMappingModel.class)
+			)
 	)
 	public Response startFileSetFileUpload(
-			@PathParam("projectionGUID") UUID projectionGUID, @PathParam("fileSetGUID") UUID fileSetGUID,
-			@QueryParam("filename") String filename
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID,
+			@Parameter(description = "Projection file-set identifier.", required = true) @PathParam(
+				"fileSetGUID"
+			) UUID fileSetGUID,
+			@Parameter(
+					description = "Name of the file being uploaded.", required = true, example = "results.zip"
+			) @QueryParam("filename") String filename
 	) throws ProjectionServiceException {
 		var created = projectionService.startFileSetFileUpload(projectionGUID, fileSetGUID, filename);
 		return Response.status(Status.CREATED).entity(created).build();
@@ -469,12 +718,24 @@ public class ProjectionEndpoint implements Endpoint {
 	@RolesAllowed("SYSTEM")
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}/complete")
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Complete a direct file upload for a FileSet", description = "(System Only) Confirms that a direct COMS upload has finished and returns the final file mapping record."
+	@Operation(
+			operationId = "completeProjectionFileUpload", summary = "Complete a direct file upload", description = "Confirms that a system caller completed a direct object-storage upload and returns the final file mapping."
+	)
+	@APIResponse(
+			responseCode = "200", description = "The completed file mapping.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FileMappingModel.class)
+			)
 	)
 	public Response completeFileSetFileUpload(
-			@PathParam("projectionGUID") UUID projectionGUID, @PathParam("fileSetGUID") UUID fileSetGUID,
-			@PathParam("fileMappingGUID") UUID fileMappingGUID
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID,
+			@Parameter(description = "Projection file-set identifier.", required = true) @PathParam(
+				"fileSetGUID"
+			) UUID fileSetGUID,
+			@Parameter(description = "File mapping identifier.", required = true) @PathParam(
+				"fileMappingGUID"
+			) UUID fileMappingGUID
 	) throws ProjectionServiceException {
 		var result = projectionService.completeFileSetFileUpload(projectionGUID, fileSetGUID, fileMappingGUID);
 		return Response.status(Status.OK).entity(result).build();
@@ -485,12 +746,28 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file")
 	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Upload a file for a FileSet", description = "Stores a file in COMS and attaches it to the projection file set that is chosen"
+	@Operation(
+			operationId = "uploadProjectionFile", summary = "Upload a projection file", description = "Stores a multipart file in object storage and attaches it to a projection file set."
+	)
+	@RequestBody(
+			required = true, description = "File content to upload.", content = @Content(
+					mediaType = MediaType.MULTIPART_FORM_DATA, schema = @Schema(
+							implementation = ProjectionFileUploadRequest.class
+					)
+			)
+	)
+	@APIResponse(
+			responseCode = "200", description = "The projection with the newly attached file.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProjectionModel.class)
+			)
 	)
 	public Response addProjectionFile(
-			@PathParam("projectionGUID") UUID projectionGUID, //
-			@PathParam("fileSetGUID") UUID fileSetGUID, //
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID, //
+			@Parameter(description = "Projection file-set identifier.", required = true) @PathParam(
+				"fileSetGUID"
+			) UUID fileSetGUID, //
 			@RestForm("file") FileUpload file //
 	) throws ProjectionServiceException {
 		var created = projectionService.addProjectionFile(projectionGUID, fileSetGUID, file, currentUser.getUser());
@@ -500,13 +777,25 @@ public class ProjectionEndpoint implements Endpoint {
 	@GET
 	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}")
-	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(name = "Get a file for download", description = "Gets the mapped file with a presigned url for download")
+	@Operation(
+			operationId = "getProjectionFileDownload", summary = "Get a projection file download", description = "Returns file metadata containing a temporary object-storage download URL."
+	)
+	@APIResponse(
+			responseCode = "200", description = "File metadata and download URL.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FileMappingModel.class)
+			)
+	)
 	public Response downloadProjectionFile(
-			@PathParam("projectionGUID") UUID projectionGUID, //
-			@PathParam("fileSetGUID") UUID fileSetGUID, //
-			@PathParam("fileMappingGUID") UUID fileMappingGUID
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID, //
+			@Parameter(description = "Projection file-set identifier.", required = true) @PathParam(
+				"fileSetGUID"
+			) UUID fileSetGUID, //
+			@Parameter(description = "File mapping identifier.", required = true) @PathParam(
+				"fileMappingGUID"
+			) UUID fileMappingGUID
 	) throws ProjectionServiceException {
 		var found = projectionService
 				.getFileForDownload(projectionGUID, fileSetGUID, fileMappingGUID, currentUser.getUser());
@@ -516,15 +805,21 @@ public class ProjectionEndpoint implements Endpoint {
 	@DELETE
 	@RolesAllowed({ "USER", "ADMIN" })
 	@Path("/{projectionGUID}/fileset/{fileSetGUID}/file/{fileMappingGUID}")
-	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces({ MediaType.APPLICATION_JSON })
-	@Tag(
-			name = "Delete a file from a fileset for a projection", description = "Deletes a file from a projection file sets"
+	@Operation(
+			operationId = "deleteProjectionFile", summary = "Delete a projection file", description = "Deletes an attached file from a projection file set and object storage."
 	)
+	@APIResponse(responseCode = "200", description = "The file was deleted.")
 	public Response deleteProjectionFile(
-			@PathParam("projectionGUID") UUID projectionGUID, //
-			@PathParam("fileSetGUID") UUID fileSetGUID, //
-			@PathParam("fileMappingGUID") UUID fileMappingGUID
+			@Parameter(description = "Projection identifier.", required = true) @PathParam(
+				"projectionGUID"
+			) UUID projectionGUID, //
+			@Parameter(description = "Projection file-set identifier.", required = true) @PathParam(
+				"fileSetGUID"
+			) UUID fileSetGUID, //
+			@Parameter(description = "File mapping identifier.", required = true) @PathParam(
+				"fileMappingGUID"
+			) UUID fileMappingGUID
 	) throws ProjectionServiceException {
 		projectionService.deleteFile(projectionGUID, fileSetGUID, fileMappingGUID, currentUser.getUser());
 		return Response.status(Status.OK).build();
