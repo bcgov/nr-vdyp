@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -13,6 +15,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 
 @JsonSubTypes({ @Type(value = ValidationMessageResource.class, name = ResourceTypes.VALIDATION_MESSAGE_RESOURCE) })
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
+@Schema(description = "A projection-input validation message and its formatting arguments.")
 public class ValidationMessageResource implements Serializable, Comparable<ValidationMessageResource> {
 
 	private static final long serialVersionUID = -2783912229763612724L;

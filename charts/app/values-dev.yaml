@@ -76,6 +76,8 @@ backend:
     minAvailable: 1 # the minimum number of pods that must be available during the disruption budget.
   env:
     QUARKUS_OIDC_AUTH_SERVER_URL: ~
+    QUARKUS_SMALLRYE_OPENAPI_ENABLE: "true"
+    QUARKUS_HTTP_AUTH_PERMISSION_OPENAPI_POLICY: "permit"
     VDYP_DB_SECRET_NAME: crunchy-postgres-dev-pguser-app-vdyp
     VDYP_PROXY_DB_SECRET_NAME: crunchy-postgres-dev-pguser-proxy-vdyp-rest
     COMS_BASE_URL: ~
