@@ -83,7 +83,10 @@ jobs:
 
       - name: Install frontend test dependencies
         working-directory: frontend
-        run: npm ci
+        run: |
+          npm ci --ignore-scripts
+          node ./node_modules/cypress/bin/cypress install
+          node ./node_modules/cypress/bin/cypress verify
 
       - name: Wait for the backend OpenAPI document
         run: |
@@ -125,7 +128,7 @@ jobs:
             exit 1
           fi
 
-          npm exec -- cypress run \
+          node ./node_modules/cypress/bin/cypress run \
             --e2e \
             --browser electron \
             --spec cypress/e2e/zap-business-bceid-auth.cy.ts \
