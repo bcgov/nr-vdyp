@@ -32,22 +32,24 @@ import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.launch.JobExecutionNotRunningException;
-import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.http.ResponseEntity;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.PrioritizeReplyMessage;
+import ca.bc.gov.nrs.vdyp.batch.messaging.message.StopReplyMessage;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchPrioritizationService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchPrioritizationService.PrioritizeOutcome;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchStopService;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchStopService.StopOutcome;
 import ca.bc.gov.nrs.vdyp.batch.service.JobExecutionLookupService;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizeRemoteGateway;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
+import ca.bc.gov.nrs.vdyp.batch.service.StopRemoteGateway;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -63,9 +65,6 @@ class BatchControllerTest {
 
 	@Mock
 	private JobInstance jobInstance;
-
-	@Mock
-	private JobOperator jobOperator;
 
 	@Mock
 	private JobParameters jobParameters;
@@ -91,6 +90,12 @@ class BatchControllerTest {
 	@Mock
 	private PrioritizeRemoteGateway remoteGateway;
 
+	@Mock
+	private BatchStopService stopService;
+
+	@Mock
+	private StopRemoteGateway remoteStopGateway;
+
 	private BatchOwnershipProperties ownershipProperties;
 
 	private BatchController batchController;
@@ -101,8 +106,9 @@ class BatchControllerTest {
 		ownershipProperties.setHeartbeatInterval(Duration.of(300, ChronoUnit.SECONDS));
 
 		batchController = new BatchController(
-				metricsCollector, jobOperator, storageEstimationService, batchJobLaunchService, serverCapacityService,
-				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.of(remoteGateway)
+				metricsCollector, storageEstimationService, batchJobLaunchService, serverCapacityService,
+				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.of(remoteGateway),
+				stopService, Optional.of(remoteStopGateway)
 		);
 	}
 
@@ -189,8 +195,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStopBatchJob_WithValidJobGuid_StopsJob()
-			throws NoSuchJobExecutionException, JobExecutionNotRunningException {
+	void testStopBatchJob_OwnedLocally_StopsJob() throws NoSuchJobExecutionException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
@@ -199,7 +204,9 @@ class BatchControllerTest {
 		when(jobExecution.getId()).thenReturn(executionId);
 		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false))
 				.thenReturn(jobExecution);
-		when(jobOperator.stop(executionId)).thenReturn(true);
+		when(ownershipService.isOwnedLocally(null)).thenReturn(true);
+		when(stopService.stopLocally(jobGuid.toString(), jobExecution))
+				.thenReturn(new StopOutcome("STOP_REQUESTED", "Stop request sent successfully.", executionId));
 
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
 
@@ -208,11 +215,11 @@ class BatchControllerTest {
 		assertEquals("STOP_REQUESTED", response.getBody().get(BatchConstants.Job.STATUS));
 		assertEquals(jobGuid.toString(), response.getBody().get(BatchConstants.Job.GUID));
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
+		verifyNoInteractions(remoteStopGateway);
 	}
 
 	@Test
-	void testStopBatchJobByProjectionGuid_WithValidProjectionGuid_StopsJob()
-			throws NoSuchJobExecutionException, JobExecutionNotRunningException {
+	void testStopBatchJobByProjectionGuid_OwnedLocally_StopsJob() throws NoSuchJobExecutionException {
 		UUID projectionGuid = UUID.randomUUID();
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
@@ -226,7 +233,9 @@ class BatchControllerTest {
 						BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString(), true
 				)
 		).thenReturn(jobExecution);
-		when(jobOperator.stop(executionId)).thenReturn(true);
+		when(ownershipService.isOwnedLocally(projectionGuid.toString())).thenReturn(true);
+		when(stopService.stopLocally(jobGuid.toString(), jobExecution))
+				.thenReturn(new StopOutcome("STOP_REQUESTED", "Stop request sent successfully.", executionId));
 
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJobByProjectionGuid(projectionGuid);
 
@@ -236,12 +245,11 @@ class BatchControllerTest {
 		assertEquals(jobGuid.toString(), response.getBody().get(BatchConstants.Job.GUID));
 		assertEquals(projectionGuid.toString(), response.getBody().get(BatchConstants.GuidInput.PROJECTION_GUID));
 		assertEquals(executionId, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
-		verify(jobOperator).stop(executionId);
+		verify(stopService).stopLocally(jobGuid.toString(), jobExecution);
 	}
 
 	@Test
-	void testStopBatchJob_WhenStopFails_ReturnsBadRequest()
-			throws NoSuchJobExecutionException, JobExecutionNotRunningException {
+	void testStopBatchJob_WhenStopFails_ReturnsBadRequest() throws NoSuchJobExecutionException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
@@ -250,7 +258,12 @@ class BatchControllerTest {
 		when(jobExecution.getId()).thenReturn(executionId);
 		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false))
 				.thenReturn(jobExecution);
-		when(jobOperator.stop(executionId)).thenReturn(false);
+		when(ownershipService.isOwnedLocally(null)).thenReturn(true);
+		when(stopService.stopLocally(jobGuid.toString(), jobExecution)).thenReturn(
+				new StopOutcome(
+						"STOP_FAILED", "Job execution could not be stopped. It may not be running.", executionId
+				)
+		);
 
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
 
@@ -260,8 +273,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStopBatchJob_WhenJobAlreadyStopping_ReturnsAccepted()
-			throws NoSuchJobExecutionException, JobExecutionNotRunningException {
+	void testStopBatchJob_WhenJobAlreadyStopping_ReturnsAccepted() throws NoSuchJobExecutionException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
@@ -270,7 +282,13 @@ class BatchControllerTest {
 		when(jobExecution.getId()).thenReturn(executionId);
 		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false))
 				.thenReturn(jobExecution);
-		when(jobOperator.stop(executionId)).thenThrow(new JobExecutionNotRunningException("Already stopping"));
+		when(ownershipService.isOwnedLocally(null)).thenReturn(true);
+		when(stopService.stopLocally(jobGuid.toString(), jobExecution)).thenReturn(
+				new StopOutcome(
+						"ALREADY_STOPPING", "Job is already in the process of stopping or has already been stopped.",
+						executionId
+				)
+		);
 
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
 
@@ -291,11 +309,12 @@ class BatchControllerTest {
 		assertEquals(404, response.getStatusCode().value());
 		assertNotNull(response.getBody());
 		assertEquals("Job execution not found", response.getBody().get(BatchConstants.Job.ERROR));
+		verifyNoInteractions(stopService, remoteStopGateway);
 	}
 
 	@Test
-	void testStopBatchJob_WhenUnexpectedError_ReturnsInternalServerError()
-			throws NoSuchJobExecutionException, JobExecutionNotRunningException {
+	void testStopBatchJob_OwnedLocally_NotOwnedGatewayNotUsed_WhenUnexpectedError_ReturnsInternalServerError()
+			throws NoSuchJobExecutionException {
 		UUID jobGuid = UUID.randomUUID();
 		Long executionId = 123L;
 
@@ -304,7 +323,9 @@ class BatchControllerTest {
 		when(jobExecution.getId()).thenReturn(executionId);
 		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false))
 				.thenReturn(jobExecution);
-		when(jobOperator.stop(executionId)).thenThrow(new RuntimeException("Unexpected error"));
+		when(ownershipService.isOwnedLocally(null)).thenReturn(true);
+		when(stopService.stopLocally(jobGuid.toString(), jobExecution))
+				.thenThrow(new RuntimeException("Unexpected error"));
 
 		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
 
@@ -561,8 +582,9 @@ class BatchControllerTest {
 		execution.setStatus(BatchStatus.STARTED);
 
 		BatchController controllerWithoutNats = new BatchController(
-				metricsCollector, jobOperator, storageEstimationService, batchJobLaunchService, serverCapacityService,
-				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.empty()
+				metricsCollector, storageEstimationService, batchJobLaunchService, serverCapacityService,
+				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.empty(),
+				stopService, Optional.empty()
 		);
 
 		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), true))
@@ -575,5 +597,77 @@ class BatchControllerTest {
 		assertNotNull(response.getBody());
 		assertEquals("Job is not running on this instance", response.getBody().get(BatchConstants.Job.ERROR));
 		verifyNoInteractions(prioritizationService);
+	}
+
+	@Test
+	void testStopBatchJob_NotOwnedLocally_DelegatesToRemoteGateway() throws NoSuchJobExecutionException {
+		UUID jobGuid = UUID.randomUUID();
+		UUID projectionGuid = UUID.randomUUID();
+
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
+		when(jobParameters.getString(BatchConstants.GuidInput.PROJECTION_GUID)).thenReturn(projectionGuid.toString());
+		when(jobExecution.getId()).thenReturn(123L);
+		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false))
+				.thenReturn(jobExecution);
+		when(ownershipService.isOwnedLocally(projectionGuid.toString())).thenReturn(false);
+		when(remoteStopGateway.requestStop(jobGuid.toString(), projectionGuid.toString()))
+				.thenReturn(Optional.of(new StopReplyMessage("STOP_REQUESTED", "Stopped elsewhere.", 100L)));
+
+		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
+
+		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("STOP_REQUESTED", response.getBody().get(BatchConstants.Job.STATUS));
+		assertEquals(100L, response.getBody().get(BatchConstants.Job.EXECUTION_ID));
+		verifyNoInteractions(stopService);
+	}
+
+	@Test
+	void testStopBatchJob_NotOwnedLocally_NoReplicaResponds_ReturnsNotFound() throws NoSuchJobExecutionException {
+		UUID jobGuid = UUID.randomUUID();
+		UUID projectionGuid = UUID.randomUUID();
+
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
+		when(jobParameters.getString(BatchConstants.GuidInput.PROJECTION_GUID)).thenReturn(projectionGuid.toString());
+		when(jobExecution.getId()).thenReturn(123L);
+		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false))
+				.thenReturn(jobExecution);
+		when(ownershipService.isOwnedLocally(projectionGuid.toString())).thenReturn(false);
+		when(remoteStopGateway.requestStop(jobGuid.toString(), projectionGuid.toString())).thenReturn(Optional.empty());
+
+		ResponseEntity<Map<String, Object>> response = batchController.stopBatchJob(jobGuid);
+
+		assertEquals(404, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("Could not locate the replica running this job", response.getBody().get(BatchConstants.Job.ERROR));
+	}
+
+	@Test
+	void testStopBatchJob_NotOwnedLocally_NoGatewayAvailable_ReturnsBadRequest() throws NoSuchJobExecutionException {
+		UUID jobGuid = UUID.randomUUID();
+		UUID projectionGuid = UUID.randomUUID();
+
+		BatchController controllerWithoutNats = new BatchController(
+				metricsCollector, storageEstimationService, batchJobLaunchService, serverCapacityService,
+				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.empty(),
+				stopService, Optional.empty()
+		);
+
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(jobGuid.toString());
+		when(jobParameters.getString(BatchConstants.GuidInput.PROJECTION_GUID)).thenReturn(projectionGuid.toString());
+		when(jobExecution.getId()).thenReturn(123L);
+		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false))
+				.thenReturn(jobExecution);
+		when(ownershipService.isOwnedLocally(projectionGuid.toString())).thenReturn(false);
+
+		ResponseEntity<Map<String, Object>> response = controllerWithoutNats.stopBatchJob(jobGuid);
+
+		assertEquals(400, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals("Job is not running on this instance", response.getBody().get(BatchConstants.Job.ERROR));
+		verifyNoInteractions(stopService);
 	}
 }
