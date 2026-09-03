@@ -155,7 +155,8 @@ jobs:
             --retry-all-errors \
             --retry-delay 10 \
             --max-time 30 \
-            https://vdyp-ui-dev.apps.silver.devops.gov.bc.ca/health
+            --proto "=https" \
+            https://vdyp-ui-dev.apps.silver.devops.gov.bc.ca/env.js
 
       # Keep the first scans advisory while existing findings are triaged. Once
       # accepted findings are captured in a ZAP rules file, set fail_action to
