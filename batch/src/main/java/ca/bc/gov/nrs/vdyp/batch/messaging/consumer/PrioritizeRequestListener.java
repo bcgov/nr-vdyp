@@ -1,14 +1,12 @@
 package ca.bc.gov.nrs.vdyp.batch.messaging.consumer;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +20,6 @@ import ca.bc.gov.nrs.vdyp.batch.service.BatchPrioritizationService.PrioritizeOut
 import ca.bc.gov.nrs.vdyp.batch.service.JobExecutionLookupService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import io.nats.client.Connection;
-import io.nats.client.Dispatcher;
 import io.nats.client.Message;
 
 /**
@@ -32,39 +29,26 @@ import io.nats.client.Message;
  */
 @Component
 @ConditionalOnProperty(name = "vdyp.nats.enabled", havingValue = "true", matchIfMissing = true)
-public class PrioritizeRequestListener implements SmartLifecycle {
+public class PrioritizeRequestListener extends AbstractNatsBroadcastListener {
 
 	private static final Logger logger = LoggerFactory.getLogger(PrioritizeRequestListener.class);
 
-	private final Connection natsConnection;
-	private final NatsPrioritizeProperties properties;
-	private final ObjectMapper objectMapper;
 	private final JobExecutionLookupService lookupService;
 	private final JobOwnershipService ownershipService;
 	private final BatchPrioritizationService prioritizationService;
-
-	private final AtomicReference<Dispatcher> dispatcher = new AtomicReference<>();
 
 	public PrioritizeRequestListener(
 			Connection natsConnection, NatsPrioritizeProperties properties, ObjectMapper objectMapper,
 			JobExecutionLookupService lookupService, JobOwnershipService ownershipService,
 			BatchPrioritizationService prioritizationService
 	) {
-		this.natsConnection = natsConnection;
-		this.properties = properties;
-		this.objectMapper = objectMapper;
+		super(natsConnection, objectMapper, properties.subject());
 		this.lookupService = lookupService;
 		this.ownershipService = ownershipService;
 		this.prioritizationService = prioritizationService;
 	}
 
 	@Override
-	public void start() {
-		Dispatcher newDispatcher = natsConnection.createDispatcher(this::handleMessage);
-		newDispatcher.subscribe(properties.subject());
-		dispatcher.set(newDispatcher);
-	}
-
 	void handleMessage(Message message) {
 		String replyTo = message.getReplyTo();
 		if (replyTo == null) {
@@ -102,27 +86,5 @@ public class PrioritizeRequestListener implements SmartLifecycle {
 		} catch (Exception e) {
 			logger.warn("Failed to handle prioritize broadcast request: {}", e.getMessage(), e);
 		}
-	}
-
-	private void reply(String replyTo, PrioritizeReplyMessage reply) {
-		try {
-			byte[] payload = objectMapper.writeValueAsBytes(reply);
-			natsConnection.publish(replyTo, payload);
-		} catch (Exception e) {
-			logger.warn("Failed to publish prioritize reply: {}", e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void stop() {
-		Dispatcher currentDispatcher = dispatcher.getAndSet(null);
-		if (currentDispatcher != null) {
-			natsConnection.closeDispatcher(currentDispatcher);
-		}
-	}
-
-	@Override
-	public boolean isRunning() {
-		return dispatcher.get() != null;
 	}
 }
