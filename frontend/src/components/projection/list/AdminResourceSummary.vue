@@ -2,9 +2,9 @@
   <div class="resource-summary">
     <div class="summary-pill summary-pill--total">
       <span class="pill-icon" aria-hidden="true">
-        <img :src="ChartLineIcon" alt="" class="pill-icon-img" />
+        <img :src="RunningBadgeIcon14px" alt="" class="pill-icon-img pill-icon-img--running" />
       </span>
-      <span class="pill-label">Total Running:</span>
+      <span class="pill-label">Running:</span>
       <span class="pill-value">{{ totalRunning }}</span>
     </div>
 
@@ -12,7 +12,7 @@
       <span class="pill-icon" aria-hidden="true">
         <img :src="QueuedIcon14px" alt="" class="pill-icon-img pill-icon-img--queued" />
       </span>
-      <span class="pill-label">Total Queued:</span>
+      <span class="pill-label">Queued:</span>
       <span class="pill-value">{{ queuedCount }}</span>
     </div>
 
@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChartLineIcon, ExclamationMarkIcon, QueuedIcon14px } from '@/assets'
+import { ExclamationMarkIcon, RunningBadgeIcon14px, QueuedIcon14px } from '@/assets'
 
 defineProps<{
   totalRunning: number
@@ -169,13 +169,11 @@ const formatBytes = (bytes: number): string => {
 }
 
 .pill-icon-img {
-  width: 11.2px;
-  height: 10.4px;
-  aspect-ratio: 14 / 13;
   flex-shrink: 0;
 }
 
 .pill-icon-img--stuck,
+.pill-icon-img--running,
 .pill-icon-img--queued {
   width: 14px;
   height: 14px;

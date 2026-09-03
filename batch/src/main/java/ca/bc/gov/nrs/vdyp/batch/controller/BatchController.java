@@ -1,30 +1,19 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionException;
-import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobOperator;
-import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,13 +25,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
-import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
+import ca.bc.gov.nrs.vdyp.batch.messaging.message.PrioritizeReplyMessage;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
-import ca.bc.gov.nrs.vdyp.batch.persistence.model.JobClaim;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.service.ClaimBoundJobLauncher;
-import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchPrioritizationService;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchPrioritizationService.PrioritizeOutcome;
+import ca.bc.gov.nrs.vdyp.batch.service.JobExecutionLookupService;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizeRemoteGateway;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -57,57 +47,35 @@ public class BatchController {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchController.class);
 
-	private final Job fetchAndPartitionJob;
-	private final JobExplorer jobExplorer;
 	private final JobOperator jobOperator;
 	@SuppressWarnings("unused")
 	private final BatchMetricsCollector metricsCollector;
-	private final BatchProperties batchProperties;
 	private final StorageEstimationService storageEstimationService;
 	private final BatchJobLaunchService batchJobLaunchService;
 	private final ServerCapacityService serverCapacityService;
 	private final BatchOwnershipProperties ownershipProperties;
 	private final JobOwnershipService ownershipService;
-	private final ClaimBoundJobLauncher claimBoundJobLauncher;
-	private final TaskExecutor prioritizationExecutor;
-	private final TaskExecutor resumeRetryExecutor;
-	private final PrioritizationPauseTracker pauseTracker;
-
-	@Value("${batch.root-directory}")
-	private String batchRootDirectory;
-
-	@Value("${batch.partition.default-number-of-partitions}")
-	private Integer defaultNumPartitions;
-
-	@Value("${batch.partition.job-search-chunk-size}")
-	private int jobSearchChunkSize;
-
-	@Value("${batch.reader.default-chunk-size}")
-	private Integer defaultChunkSize;
+	private final JobExecutionLookupService lookupService;
+	private final BatchPrioritizationService prioritizationService;
+	private final Optional<PrioritizeRemoteGateway> remoteGateway;
 
 	public BatchController(
-			@Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, JobOperator jobOperator, BatchProperties batchProperties,
+			BatchMetricsCollector metricsCollector, JobOperator jobOperator,
 			StorageEstimationService storageEstimationService, BatchJobLaunchService batchJobLaunchService,
 			ServerCapacityService serverCapacityService, BatchOwnershipProperties ownershipProperties,
-			JobOwnershipService ownershipService, ClaimBoundJobLauncher claimBoundJobLauncher,
-			@Qualifier("prioritizationExecutor") TaskExecutor prioritizationExecutor,
-			@Qualifier("resumeRetryExecutor") TaskExecutor resumeRetryExecutor, PrioritizationPauseTracker pauseTracker
+			JobOwnershipService ownershipService, JobExecutionLookupService lookupService,
+			BatchPrioritizationService prioritizationService, Optional<PrioritizeRemoteGateway> remoteGateway
 	) {
-		this.fetchAndPartitionJob = fetchAndPartitionJob;
-		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
 		this.jobOperator = jobOperator;
-		this.batchProperties = batchProperties;
 		this.storageEstimationService = storageEstimationService;
 		this.batchJobLaunchService = batchJobLaunchService;
 		this.serverCapacityService = serverCapacityService;
 		this.ownershipProperties = ownershipProperties;
 		this.ownershipService = ownershipService;
-		this.claimBoundJobLauncher = claimBoundJobLauncher;
-		this.prioritizationExecutor = prioritizationExecutor;
-		this.resumeRetryExecutor = resumeRetryExecutor;
-		this.pauseTracker = pauseTracker;
+		this.lookupService = lookupService;
+		this.prioritizationService = prioritizationService;
+		this.remoteGateway = remoteGateway;
 	}
 
 	/**
@@ -160,7 +128,7 @@ public class BatchController {
 		try {
 			logger.debug("Attempting to stop job with {}: {}", guidDescription, requestedGuid);
 
-			JobExecution jobExecution = findJobExecutionByJobParameter(
+			JobExecution jobExecution = lookupService.findJobExecutionByJobParameter(
 					jobParameterName, requestedGuid.toString(),
 					BatchConstants.GuidInput.PROJECTION_GUID.equals(jobParameterName)
 			);
@@ -247,9 +215,11 @@ public class BatchController {
 	}
 
 	/**
-	 * Prioritizes a running job by pausing every other currently running job owned by this instance (freeing shared
-	 * thread-pool capacity for this job's already-queued partitions) and, once they've actually stopped, resuming them
-	 * in the order they were originally started.
+	 * Prioritizes a running job by pausing every other currently running job owned by the same instance as the target
+	 * (freeing that instance's shared thread-pool capacity for the target job's already-queued partitions) and, once
+	 * they've actually stopped, resuming them in the order they were originally started. If this instance isn't the
+	 * owner, the request is broadcast over NATS to find the instance that is (see PrioritizeRemoteGateway), so the
+	 * outcome doesn't depend on which replica happened to receive the initial HTTP call.
 	 */
 	@PostMapping(value = "/prioritize/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> prioritizeBatchJob(@PathVariable UUID jobGuid) {
@@ -258,7 +228,8 @@ public class BatchController {
 		JobExecution targetExecution;
 		try {
 			logger.debug("Attempting to prioritize job with GUID: {}", jobGuid);
-			targetExecution = findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), true);
+			targetExecution = lookupService
+					.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), true);
 		} catch (NoSuchJobExecutionException e) {
 			response.put(BatchConstants.Job.GUID, jobGuid);
 			response.put(BatchConstants.Job.ERROR, "Job execution not found");
@@ -281,9 +252,13 @@ public class BatchController {
 			return ResponseEntity.badRequest().body(response);
 		}
 
-		// Pausing other jobs only frees this replica's thread-pool capacity, so it only helps when the target
-		// job is actually running here; a job owned by another replica must be prioritized on that replica instead.
-		if (!ownershipService.isOwnedLocally(projectionGuid(targetExecution))) {
+		String projectionGuid = targetExecution.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
+		Optional<PrioritizeOutcome> outcome;
+		if (ownershipService.isOwnedLocally(projectionGuid)) {
+			outcome = Optional.of(prioritizationService.prioritizeLocally(jobGuid.toString(), targetExecution));
+		} else if (remoteGateway.isPresent()) {
+			outcome = remoteGateway.get().requestPrioritize(jobGuid.toString(), projectionGuid).map(this::toOutcome);
+		} else {
 			response.put(BatchConstants.Job.GUID, jobGuid);
 			response.put(BatchConstants.Job.EXECUTION_ID, targetExecution.getId());
 			response.put(BatchConstants.Job.ERROR, "Job is not running on this instance");
@@ -296,137 +271,36 @@ public class BatchController {
 			return ResponseEntity.badRequest().body(response);
 		}
 
-		List<JobExecution> others = findOtherRunningExecutions(targetExecution);
-
-		response.put(BatchConstants.Job.GUID, jobGuid);
-		response.put(BatchConstants.Prioritize.TARGET_EXECUTION_ID, targetExecution.getId());
-		response.put(BatchConstants.Prioritize.OTHERS_PAUSED_COUNT, others.size());
-		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
-
-		if (others.isEmpty()) {
-			response.put(BatchConstants.Job.STATUS, "ALREADY_PRIORITIZED");
+		if (outcome.isEmpty()) {
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.EXECUTION_ID, targetExecution.getId());
+			response.put(BatchConstants.Job.ERROR, "Could not locate the replica running this job");
 			response.put(
 					BatchConstants.Job.MESSAGE,
-					"No other running jobs to pause; this job already has full thread capacity available."
+					"No replica responded as the owner of this job execution within the timeout. It may have just "
+							+ "finished; please retry."
 			);
-			logger.info("[GUID: {}] No other running jobs found; nothing to pause.", jobGuid);
-			return ResponseEntity.ok(response);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+			logger.warn("[GUID: {}] No replica claimed ownership of this job when asked to prioritize it.", jobGuid);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
 
-		response.put(BatchConstants.Job.STATUS, "PRIORITIZE_REQUESTED");
-		response.put(
-				BatchConstants.Job.MESSAGE,
-				"Prioritization requested. " + others.size()
-						+ " other running job(s) will be paused and resumed in their original start order."
+		response.put(BatchConstants.Job.GUID, jobGuid);
+		response.put(BatchConstants.Prioritize.TARGET_EXECUTION_ID, outcome.get().targetExecutionId());
+		response.put(BatchConstants.Prioritize.OTHERS_PAUSED_COUNT, outcome.get().othersPausedCount());
+		response.put(BatchConstants.Job.STATUS, outcome.get().status());
+		response.put(BatchConstants.Job.MESSAGE, outcome.get().message());
+		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+		HttpStatus httpStatus = "PRIORITIZE_REQUESTED".equals(outcome.get().status()) ? HttpStatus.ACCEPTED
+				: HttpStatus.OK;
+		return ResponseEntity.status(httpStatus).body(response);
+	}
+
+	private PrioritizeOutcome toOutcome(PrioritizeReplyMessage reply) {
+		return new PrioritizeOutcome(
+				reply.status(), reply.message(), reply.othersPausedCount(), reply.targetExecutionId()
 		);
-
-		logger.info("[GUID: {}] Prioritizing job. Pausing {} other running job(s).", jobGuid, others.size());
-		prioritizationExecutor.execute(() -> prioritizeAsync(jobGuid.toString(), others));
-
-		return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
-	}
-
-	/**
-	 * Finds all other currently running executions of the fetch-and-partition job (BatchConstants.Job.JOB_NAME) that
-	 * are owned by this instance, excluding the given target, ordered by start time ascending - the order they should
-	 * later be resumed in. A job owned by another replica is left untouched: it does not compete with the target job
-	 * for this replica's thread-pool capacity, and this replica cannot reliably stop it anyway.
-	 */
-	private List<JobExecution> findOtherRunningExecutions(JobExecution target) {
-		Set<JobExecution> runningExecutions = jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME);
-
-		return runningExecutions.stream().filter(execution -> !execution.getId().equals(target.getId()))
-				.filter(execution -> ownershipService.isOwnedLocally(projectionGuid(execution)))
-				.sorted(
-						Comparator
-								.comparing(JobExecution::getStartTime, Comparator.nullsLast(Comparator.naturalOrder()))
-				).toList();
-	}
-
-	// Stops each job (in start-time order) then hands off its resume to resumeRetryExecutor, so one
-	// slow-to-stop job can't delay stopping the rest or block the next prioritize request.
-	private void prioritizeAsync(String prioritizedJobGuid, List<JobExecution> others) {
-		for (JobExecution execution : others) {
-			Long executionId = execution.getId();
-			// Mark before stop() so VDYPJobMetricListener's afterJob skips deleting this job's interim
-			// partition directories, which it still needs to resume.
-			pauseTracker.markPausedForResume(executionId);
-			try {
-				jobOperator.stop(executionId);
-			} catch (JobExecutionNotRunningException e) {
-				logger.debug(
-						"[GUID: {}] Job execution {} was already stopping/stopped.", prioritizedJobGuid, executionId
-				);
-			} catch (Exception e) {
-				logger.warn(
-						"[GUID: {}] Failed to stop job execution {} while prioritizing; skipping it. {}",
-						prioritizedJobGuid, executionId, e.getMessage(), e
-				);
-				pauseTracker.unmark(executionId);
-				continue;
-			}
-
-			resumeRetryExecutor.execute(() -> resumeWithRetry(prioritizedJobGuid, execution));
-		}
-	}
-
-	// Retries relaunching a paused job until it succeeds or the timeout elapses - Spring Batch's graceful
-	// stop can still report STOPPING (and reject a relaunch) well after the job was signalled to stop.
-	// Stopping a job releases its ownership claim (see VDYPJobMetricListener.afterJob), so resuming must
-	// reacquire one and relaunch through claimBoundJobLauncher - the same pattern as StartupRecoveryService -
-	// rather than launching directly, or the resumed execution would be fenced out by ownership checks.
-	private void resumeWithRetry(String prioritizedJobGuid, JobExecution execution) {
-		Long executionId = execution.getId();
-		String projectionGuid = projectionGuid(execution);
-		int timeoutSeconds = batchProperties.getPrioritize().getStopWaitTimeoutSeconds();
-		int pollIntervalMillis = batchProperties.getPrioritize().getStopPollIntervalMillis();
-		long deadline = System.currentTimeMillis() + (timeoutSeconds * 1000L);
-
-		try {
-			while (true) {
-				Optional<JobClaim> claim = ownershipService.tryAcquire(projectionGuid, "prioritize-resume");
-				if (claim.isPresent()) {
-					try {
-						JobExecution resumed = claimBoundJobLauncher
-								.launch(fetchAndPartitionJob, execution.getJobParameters(), claim.get());
-						logger.info(
-								"[GUID: {}] Resumed paused job execution {} as new execution {}.", prioritizedJobGuid,
-								executionId, resumed.getId()
-						);
-						return;
-					} catch (JobExecutionAlreadyRunningException e) {
-						// Still stopping (Spring Batch only halts at the next chunk boundary) - fall through to retry.
-					} catch (JobExecutionException e) {
-						logger.error(
-								"[GUID: {}] Failed to resume paused job execution {}. {}", prioritizedJobGuid,
-								executionId, e.getMessage(), e
-						);
-						return;
-					}
-				}
-
-				if (System.currentTimeMillis() >= deadline) {
-					logger.error(
-							"[GUID: {}] Gave up resuming job execution {} after {}s; it is still reported as "
-									+ "running (likely still STOPPING). It will remain stopped until manually restarted.",
-							prioritizedJobGuid, executionId, timeoutSeconds
-					);
-					return;
-				}
-				try {
-					Thread.sleep(pollIntervalMillis);
-				} catch (InterruptedException ie) {
-					Thread.currentThread().interrupt();
-					return;
-				}
-			}
-		} finally {
-			pauseTracker.unmark(executionId);
-		}
-	}
-
-	private String projectionGuid(JobExecution jobExecution) {
-		return jobExecution.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
 	}
 
 	@GetMapping(value = "/status/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -439,7 +313,8 @@ public class BatchController {
 		try {
 			logger.debug("Getting status for job with GUID: {}", jobGuid);
 
-			jobExecution = findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false);
+			jobExecution = lookupService
+					.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), false);
 			executionId = jobExecution.getId();
 
 			logger.debug("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
@@ -645,120 +520,6 @@ public class BatchController {
 		return ResponseEntity.internalServerError().body(errorResponse);
 	}
 
-	private JobExecution
-			findJobExecutionByJobParameter(String parameterName, String expectedValue, boolean preferRunning)
-					throws NoSuchJobExecutionException {
-		List<String> jobNames = jobExplorer.getJobNames();
-		JobExecution fallbackMatch = null;
-
-		for (String jobName : jobNames) {
-			JobExecutionSearchResult result = searchJobExecutionsByName(
-					jobName, parameterName, expectedValue, preferRunning
-			);
-			if (result.primaryMatch() != null) {
-				return result.primaryMatch();
-			}
-			if (fallbackMatch == null) {
-				fallbackMatch = result.fallbackMatch();
-			}
-		}
-
-		if (fallbackMatch != null) {
-			return fallbackMatch;
-		}
-
-		throw new NoSuchJobExecutionException("No job execution found with " + parameterName + ": " + expectedValue);
-	}
-
-	/**
-	 * Searches for a job execution by job name and job parameter value.
-	 *
-	 * @param jobName The name of the job to search
-	 * @return matching executions, preferring a running match when requested
-	 */
-	private JobExecutionSearchResult searchJobExecutionsByName(
-			String jobName, String parameterName, String expectedValue, boolean preferRunning
-	) {
-		JobExecution fallbackMatch = null;
-		try {
-			long totalInstances = jobExplorer.getJobInstanceCount(jobName);
-
-			for (long start = 0; start < totalInstances; start += jobSearchChunkSize) {
-				JobExecutionSearchResult result = searchJobExecutionsInChunk(
-						jobName, parameterName, expectedValue, start, preferRunning
-				);
-				if (result.primaryMatch() != null) {
-					return result;
-				}
-				if (fallbackMatch == null) {
-					fallbackMatch = result.fallbackMatch();
-				}
-			}
-		} catch (NoSuchJobException e) {
-			logger.error(
-					"Job {} not found while searching for {} {}: {}", jobName, parameterName, expectedValue,
-					e.getMessage()
-			);
-		}
-
-		return new JobExecutionSearchResult(null, fallbackMatch);
-	}
-
-	/**
-	 * Searches for a job execution within a chunk of job instances.
-	 *
-	 * @param jobName The name of the job
-	 * @param start   The starting index for the chunk
-	 * @return matching executions, preferring a running match when requested
-	 */
-	private JobExecutionSearchResult searchJobExecutionsInChunk(
-			String jobName, String parameterName, String expectedValue, long start, boolean preferRunning
-	) {
-		List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, (int) start, jobSearchChunkSize);
-		JobExecution fallbackMatch = null;
-
-		for (JobInstance jobInstance : jobInstances) {
-			JobExecutionSearchResult result = findMatchingExecution(
-					jobInstance, parameterName, expectedValue, preferRunning
-			);
-			if (result.primaryMatch() != null) {
-				return result;
-			}
-			if (fallbackMatch == null) {
-				fallbackMatch = result.fallbackMatch();
-			}
-		}
-
-		return new JobExecutionSearchResult(null, fallbackMatch);
-	}
-
-	/**
-	 * Finds a job execution matching the given job parameter within a job instance.
-	 *
-	 * @param jobInstance The job instance to search
-	 * @return matching executions, preferring a running match when requested
-	 */
-	private JobExecutionSearchResult findMatchingExecution(
-			JobInstance jobInstance, String parameterName, String expectedValue, boolean preferRunning
-	) {
-		List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
-		JobExecution fallbackMatch = null;
-
-		for (JobExecution execution : jobExecutions) {
-			String parameterValue = execution.getJobParameters().getString(parameterName);
-			if (expectedValue.equals(parameterValue)) {
-				if (!preferRunning || (execution.getStatus() != null && execution.getStatus().isRunning())) {
-					return new JobExecutionSearchResult(execution, null);
-				}
-				if (fallbackMatch == null) {
-					fallbackMatch = execution;
-				}
-			}
-		}
-
-		return new JobExecutionSearchResult(null, fallbackMatch);
-	}
-
 	private void addJobIdentifiers(
 			Map<String, Object> response, JobExecution jobExecution, UUID requestedGuid, String jobParameterName
 	) {
@@ -775,8 +536,5 @@ public class BatchController {
 
 	private void addRequestedGuid(Map<String, Object> response, UUID requestedGuid, String jobParameterName) {
 		response.put(jobParameterName, requestedGuid);
-	}
-
-	private record JobExecutionSearchResult(JobExecution primaryMatch, JobExecution fallbackMatch) {
 	}
 }

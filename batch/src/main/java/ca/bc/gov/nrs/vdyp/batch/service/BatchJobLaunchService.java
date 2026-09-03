@@ -116,7 +116,7 @@ public class BatchJobLaunchService {
 				Optional<JobExecution> match = jobExplorer.getJobInstances(JOB_NAME, (int) start, chunkSize).stream()
 						.flatMap(jobInstance -> jobExplorer.getJobExecutions(jobInstance).stream())
 						.filter(
-								execution -> projectionGuid.equals(
+								execution -> execution.getStatus().isRunning() && projectionGuid.equals(
 										execution.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID)
 								)
 						).findFirst();
