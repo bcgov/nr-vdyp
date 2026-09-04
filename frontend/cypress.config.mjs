@@ -1,4 +1,5 @@
 import { defineConfig } from 'cypress'
+import { chmodSync, writeFileSync } from 'node:fs'
 
 export default defineConfig({
   viewportWidth: 1024,
@@ -8,6 +9,24 @@ export default defineConfig({
       on('task', {
         log(message) {
           console.log(message)
+          return null
+        },
+        writeZapAccessToken({ filePath, token }) {
+          if (
+            typeof filePath !== 'string' ||
+            filePath.length === 0 ||
+            typeof token !== 'string' ||
+            token.length === 0
+          ) {
+            throw new Error('A token and destination path are required.')
+          }
+
+          writeFileSync(filePath, token, {
+            encoding: 'utf8',
+            flag: 'w',
+            mode: 0o600,
+          })
+          chmodSync(filePath, 0o600)
           return null
         },
       })
