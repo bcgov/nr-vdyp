@@ -182,11 +182,9 @@ jobs:
 
           if ! jq -e '
             (.given_name | type == "string" and length > 0) and
-            (.family_name | type == "string" and length > 0) and
-            (.display_name | type == "string" and length > 0) and
-            (.email | type == "string" and length > 0)
+            (.family_name | type == "string" and length > 0)
           ' <<< "${token_payload}" > /dev/null; then
-            echo "::error::The ZAP token must contain non-empty given_name, family_name, display_name, and email claims."
+            echo "::error::The ZAP token must contain non-empty given_name, abd family_name claims."
             exit 1
           fi
 
