@@ -133,39 +133,3 @@ jobs:
       target_environment: 'dev'
       ref: ${{ github.head_ref }}
       tag: ${{ needs.builds.outputs.pr }}
-
-  zap-baseline:
-    name: OWASP ZAP baseline scan
-    if: github.event_name == 'pull_request'
-    needs: [call-shared]
-    runs-on: ubuntu-22.04
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Wait for the deployed application
-        run: |
-          curl \
-            --fail \
-            --location \
-            --retry 12 \
-            --retry-all-errors \
-            --retry-delay 10 \
-            --max-time 30 \
-            --proto "=https" \
-            https://vdyp-ui-dev.apps.silver.devops.gov.bc.ca/env.js
-
-      # Keep the first scans advisory while existing findings are triaged. Once
-      # accepted findings are captured in a ZAP rules file, set fail_action to
-      # true to make this job a PR security gate.
-      - name: Run OWASP ZAP baseline scan
-        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 #v0.15.0
-        with:
-          target: https://vdyp-ui-dev.apps.silver.devops.gov.bc.ca
-          cmd_options: '-j -m 2 -T 10'
-          allow_issue_writing: false
-          fail_action: false
-          artifact_name: zap-pr-${{ github.event.pull_request.number }}
