@@ -101,6 +101,26 @@ class ProjectionProgressPushSchedulerTest {
 	}
 
 	@Test
+	void pushProgress_stoppingJob_skipsJob() {
+		String projectionGuid = java.util.UUID.randomUUID().toString();
+		String batchJobGuid = java.util.UUID.randomUUID().toString();
+		var params = new HashMap<String, JobParameter<?>>();
+		params.put(BatchConstants.GuidInput.PROJECTION_GUID, new JobParameter<>(projectionGuid, String.class, true));
+		params.put(BatchConstants.Job.GUID, new JobParameter<>(batchJobGuid, String.class, true));
+		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters(params));
+		job.setStatus(BatchStatus.STOPPING);
+
+		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(1);
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
+
+		scheduler.pushProgress();
+
+		verify(jobExplorer, never()).getJobExecutions(any());
+		verify(taskExecutor, never()).execute(any(Runnable.class));
+	}
+
+	@Test
 	void pushProgress_missingProjectionGuid_skipsJob() {
 		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
 		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters());

@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
@@ -63,6 +64,15 @@ public class ProjectionProgressPushScheduler {
 
 		Set<String> currentlyRunningProjectionGUIDs = new HashSet<>();
 		for (JobExecution job : jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")) {
+			// STOPPING (not yet STOPPED) counts as "running" in Spring Batch's own status model, but a job on its
+			// way out shouldn't keep reporting progress: if a re-run has already started a fresh execution for the
+			// same projection, a late push from the stopping one would recreate/overwrite the mapping row with its
+			// own (stale) batch job GUID, making every subsequent update from the new execution look "stale" and
+			// get silently dropped - freezing the dashboard on the old job's last numbers.
+			if (job.getStatus() == BatchStatus.STOPPING) {
+				continue;
+			}
+
 			String projectionGUID = job.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
 			if (Strings.isNullOrEmpty(projectionGUID))
 				continue;
