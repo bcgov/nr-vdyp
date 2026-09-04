@@ -1,11 +1,11 @@
 package ca.bc.gov.nrs.vdyp.batch.messaging.consumer;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,6 @@ import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchPrioritizationService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchPrioritizationService.PrioritizeOutcome;
 import ca.bc.gov.nrs.vdyp.batch.service.JobExecutionLookupService;
-import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import io.nats.client.Connection;
 import io.nats.client.Message;
 
@@ -33,8 +32,6 @@ public class PrioritizeRequestListener extends AbstractNatsBroadcastListener {
 
 	private static final Logger logger = LoggerFactory.getLogger(PrioritizeRequestListener.class);
 
-	private final JobExecutionLookupService lookupService;
-	private final JobOwnershipService ownershipService;
 	private final BatchPrioritizationService prioritizationService;
 
 	public PrioritizeRequestListener(
@@ -42,9 +39,7 @@ public class PrioritizeRequestListener extends AbstractNatsBroadcastListener {
 			JobExecutionLookupService lookupService, JobOwnershipService ownershipService,
 			BatchPrioritizationService prioritizationService
 	) {
-		super(natsConnection, objectMapper, properties.subject());
-		this.lookupService = lookupService;
-		this.ownershipService = ownershipService;
+		super(natsConnection, objectMapper, properties.subject(), ownershipService, lookupService);
 		this.prioritizationService = prioritizationService;
 	}
 
@@ -59,23 +54,15 @@ public class PrioritizeRequestListener extends AbstractNatsBroadcastListener {
 			String json = new String(message.getData(), StandardCharsets.UTF_8);
 			PrioritizeRequestMessage request = objectMapper.readValue(json, PrioritizeRequestMessage.class);
 
-			if (!ownershipService.isOwnedLocally(request.projectionGuid())) {
+			Optional<JobExecution> targetExecution = getJobExecutionForProjectionGuid(
+					request.projectionGuid(), request.jobGuid()
+			);
+			if (targetExecution.isEmpty() || !targetExecution.get().getStatus().isRunning()) {
 				return;
 			}
 
-			JobExecution targetExecution;
-			try {
-				targetExecution = lookupService
-						.findJobExecutionByJobParameter(BatchConstants.Job.GUID, request.jobGuid(), true);
-			} catch (NoSuchJobExecutionException e) {
-				return;
-			}
-
-			if (!targetExecution.getStatus().isRunning()) {
-				return;
-			}
-
-			PrioritizeOutcome outcome = prioritizationService.prioritizeLocally(request.jobGuid(), targetExecution);
+			PrioritizeOutcome outcome = prioritizationService
+					.prioritizeLocally(request.jobGuid(), targetExecution.get());
 			reply(
 					replyTo,
 					new PrioritizeReplyMessage(
