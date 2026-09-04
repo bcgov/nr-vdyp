@@ -1707,7 +1707,7 @@ class ProjectionServiceTest {
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.queueForBatchProjection(actingUser, projectionGUID);
 		assertEquals(ProjectionStatusCodeModel.QUEUED, model.getProjectionStatusCode().getCode());
-
+		verify(batchMappingService, times(1)).deleteMappingsForProjection(entity);
 	}
 
 	@ParameterizedTest
