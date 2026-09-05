@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
@@ -35,18 +36,20 @@ public class ProjectionProgressPushScheduler {
 	private final VdypClient vdypClient;
 	private final ThreadPoolTaskExecutor progressExecutor;
 	private final BatchRecoveryMetadataService batchRecoveryMetadataService;
+	private final PrioritizationPauseTracker pauseTracker;
 
 	private final Map<String, ProgressSnapshot> lastProgressByProjection = new HashMap<>();
 
 	public ProjectionProgressPushScheduler(
 			JobExplorer jobExplorer, VdypClient vdypClient,
 			@Qualifier("backendProgressExecutor") ThreadPoolTaskExecutor executor,
-			BatchRecoveryMetadataService batchRecoveryMetadataService
+			BatchRecoveryMetadataService batchRecoveryMetadataService, PrioritizationPauseTracker pauseTracker
 	) {
 		this.jobExplorer = jobExplorer;
 		this.vdypClient = vdypClient;
 		this.progressExecutor = executor;
 		this.batchRecoveryMetadataService = batchRecoveryMetadataService;
+		this.pauseTracker = pauseTracker;
 	}
 
 	/**
@@ -63,6 +66,16 @@ public class ProjectionProgressPushScheduler {
 
 		Set<String> currentlyRunningProjectionGUIDs = new HashSet<>();
 		for (JobExecution job : jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")) {
+			// A job STOPPING because it was paused for prioritization still owns its mapping row (it resumes under
+			// the same batch job GUID), so its progress must keep updating - that's how the dashboard shows its
+			// thread count actually drop. A job STOPPING for any other reason (e.g. cancelled) is on its way out for
+			// good: if a re-run has already started a fresh execution for the same projection, a late push from the
+			// dying one would recreate/overwrite the mapping row with its own (stale) batch job GUID, making every
+			// subsequent update from the new execution look "stale" and get silently dropped.
+			if (job.getStatus() == BatchStatus.STOPPING && !pauseTracker.isPausedForResume(job.getId())) {
+				continue;
+			}
+
 			String projectionGUID = job.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
 			if (Strings.isNullOrEmpty(projectionGUID))
 				continue;

@@ -58,6 +58,12 @@ public class ProjectionBatchMappingService {
 	public ProjectionBatchMappingModel startProjectionInBatch(ProjectionEntity projectionEntity)
 			throws ProjectionServiceException {
 		try {
+			// Starting supersedes any prior mapping for this projection. Without this, a stray row left behind by a
+			// cancel/re-run race (a stale progress callback recreating one after cancel deleted it, but before this
+			// runs) would coexist with the new one and break findByProjectionGUID's "current mapping" lookup for
+			// every future progress update on this projection.
+			repository.listByProjectionGUID(projectionEntity.getProjectionGUID()).forEach(repository::delete);
+
 			BatchJobModel model = batchClient.startBatchProcessWithGUID(
 					projectionEntity.getProjectionGUID(), projectionEntity.getProjectionParameters()
 			);
