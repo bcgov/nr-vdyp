@@ -36,18 +36,20 @@ public class ProjectionProgressPushScheduler {
 	private final VdypClient vdypClient;
 	private final ThreadPoolTaskExecutor progressExecutor;
 	private final BatchRecoveryMetadataService batchRecoveryMetadataService;
+	private final PrioritizationPauseTracker pauseTracker;
 
 	private final Map<String, ProgressSnapshot> lastProgressByProjection = new HashMap<>();
 
 	public ProjectionProgressPushScheduler(
 			JobExplorer jobExplorer, VdypClient vdypClient,
 			@Qualifier("backendProgressExecutor") ThreadPoolTaskExecutor executor,
-			BatchRecoveryMetadataService batchRecoveryMetadataService
+			BatchRecoveryMetadataService batchRecoveryMetadataService, PrioritizationPauseTracker pauseTracker
 	) {
 		this.jobExplorer = jobExplorer;
 		this.vdypClient = vdypClient;
 		this.progressExecutor = executor;
 		this.batchRecoveryMetadataService = batchRecoveryMetadataService;
+		this.pauseTracker = pauseTracker;
 	}
 
 	/**
@@ -64,12 +66,13 @@ public class ProjectionProgressPushScheduler {
 
 		Set<String> currentlyRunningProjectionGUIDs = new HashSet<>();
 		for (JobExecution job : jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")) {
-			// STOPPING (not yet STOPPED) counts as "running" in Spring Batch's own status model, but a job on its
-			// way out shouldn't keep reporting progress: if a re-run has already started a fresh execution for the
-			// same projection, a late push from the stopping one would recreate/overwrite the mapping row with its
-			// own (stale) batch job GUID, making every subsequent update from the new execution look "stale" and
-			// get silently dropped - freezing the dashboard on the old job's last numbers.
-			if (job.getStatus() == BatchStatus.STOPPING) {
+			// A job STOPPING because it was paused for prioritization still owns its mapping row (it resumes under
+			// the same batch job GUID), so its progress must keep updating - that's how the dashboard shows its
+			// thread count actually drop. A job STOPPING for any other reason (e.g. cancelled) is on its way out for
+			// good: if a re-run has already started a fresh execution for the same projection, a late push from the
+			// dying one would recreate/overwrite the mapping row with its own (stale) batch job GUID, making every
+			// subsequent update from the new execution look "stale" and get silently dropped.
+			if (job.getStatus() == BatchStatus.STOPPING && !pauseTracker.isPausedForResume(job.getId())) {
 				continue;
 			}
 
