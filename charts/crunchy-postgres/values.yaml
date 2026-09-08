@@ -8,6 +8,23 @@ imagePullPolicy: IfNotPresent
 #Set this to true for OpenShift deployments to avoid incompatible securityContext values
 openshift: true
 
+# Bootstrap a NEW cluster using the same deployment configuration.
+# Keep these values on subsequent upgrades; they are not an in-place restore trigger.
+restore:
+  enabled: false
+  repository: repo2 # repo1: source cluster PVC; repo2: direct S3
+  sourceCluster: "" # required for both paths; also guards destination naming
+  backupLabel: ""
+  recoveryTarget: "" # blank: backup consistent state; otherwise timestamp with timezone
+  s3:
+    # Original directory under /pgbackrest/postgres-operator (not destination).
+    directoryName: ""
+    # Reuses the existing environment S3 Secret in the same namespace.
+    # Defaults to the chart's bucket/endpoint/region.
+    bucket: ""
+    endpoint: ""
+    region: ""
+
 instances:
   name: ha # high availability
   replicas: #{DB_REPLICAS}#
