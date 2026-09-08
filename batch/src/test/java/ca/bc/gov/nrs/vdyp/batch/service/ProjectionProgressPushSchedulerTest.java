@@ -58,13 +58,15 @@ class ProjectionProgressPushSchedulerTest {
 	BlockingQueue<Runnable> queue;
 	@Mock
 	BatchRecoveryMetadataService batchRecoveryMetadataService;
+	@Mock
+	PrioritizationPauseTracker pauseTracker;
 
 	ProjectionProgressPushScheduler scheduler;
 
 	@BeforeEach
 	void setUp() {
 		scheduler = new ProjectionProgressPushScheduler(
-				jobExplorer, vdypClient, taskExecutor, batchRecoveryMetadataService
+				jobExplorer, vdypClient, taskExecutor, batchRecoveryMetadataService, pauseTracker
 		);
 		when(taskExecutor.getThreadPoolExecutor()).thenReturn(threadPoolExecutor);
 		when(threadPoolExecutor.getQueue()).thenReturn(queue);
@@ -98,6 +100,44 @@ class ProjectionProgressPushSchedulerTest {
 		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(0);
 		scheduler.pushProgress();
 		verify(jobExplorer, never()).findJobInstancesByJobName(any(), anyInt(), anyInt());
+	}
+
+	@Test
+	void pushProgress_stoppingAndNotPausedForResume_skipsJob() {
+		String projectionGuid = java.util.UUID.randomUUID().toString();
+		String batchJobGuid = java.util.UUID.randomUUID().toString();
+		var params = new HashMap<String, JobParameter<?>>();
+		params.put(BatchConstants.GuidInput.PROJECTION_GUID, new JobParameter<>(projectionGuid, String.class, true));
+		params.put(BatchConstants.Job.GUID, new JobParameter<>(batchJobGuid, String.class, true));
+		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+		JobExecution job = new JobExecution(jobInstance, 1L, new JobParameters(params));
+		job.setStatus(BatchStatus.STOPPING);
+
+		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(1);
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
+		when(pauseTracker.isPausedForResume(job.getId())).thenReturn(false);
+
+		scheduler.pushProgress();
+
+		verify(jobExplorer, never()).getJobExecutions(any());
+		verify(taskExecutor, never()).execute(any(Runnable.class));
+	}
+
+	@Test
+	void pushProgress_stoppingButPausedForResume_stillPushes() {
+		String projectionGuid = java.util.UUID.randomUUID().toString();
+		String batchJobGuid = java.util.UUID.randomUUID().toString();
+		JobExecution job = runningJobWithProgress(projectionGuid, batchJobGuid);
+		job.setStatus(BatchStatus.STOPPING);
+		when(pauseTracker.isPausedForResume(job.getId())).thenReturn(true);
+
+		try (MockedStatic<BatchUtils> batchUtils = mockStatic(BatchUtils.class)) {
+			batchUtils.when(() -> BatchUtils.calculateThreadsInUse(job, true)).thenReturn(1);
+
+			scheduler.pushProgress();
+		}
+
+		verify(taskExecutor).execute(any(Runnable.class));
 	}
 
 	@Test

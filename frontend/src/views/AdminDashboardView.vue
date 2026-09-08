@@ -2,7 +2,7 @@
   <v-container fluid class="admin-dashboard-container">
     <router-link :to="ROUTE_PATH.PROJECTION_LIST" class="return-to-list-link">
       <img :src="MenuIcon" alt="" class="return-to-list-icon" />
-      <span>Return to My Projections List</span>
+      <span>Return to my Projections List</span>
     </router-link>
 
     <div class="page-header">

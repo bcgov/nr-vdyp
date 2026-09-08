@@ -31,23 +31,20 @@ describe('ZAP Business BCeID authentication', () => {
 
     cy.visit(frontendUrl)
 
-    cy.origin(ssoOrigin, () => {
-      cy.get('#social-bceidbusiness', { timeout: 60_000 })
-        .should('be.visible')
-        .click()
-    })
+    // Cypress 13 injects document.domain and treats these gov.bc.ca hosts as
+    // one superdomain. Assert each destination before entering credentials;
+    // cy.origin() is only needed here after upgrading to Cypress 14 or later.
+    cy.location('origin', { timeout: 60_000 }).should('equal', ssoOrigin)
+    cy.get('#social-bceidbusiness', { timeout: 60_000 })
+      .should('be.visible')
+      .click()
 
-    cy.origin(
-      bceidOrigin,
-      { args: { username, password } },
-      ({ username, password }) => {
-        cy.get('#user', { timeout: 60_000 })
-          .should('be.visible')
-          .type(username, { log: false })
-        cy.get('#password').type(password, { log: false })
-        cy.get('[name=btnSubmit]').click()
-      },
-    )
+    cy.location('origin', { timeout: 60_000 }).should('equal', bceidOrigin)
+    cy.get('#user', { timeout: 60_000 })
+      .should('be.visible')
+      .type(username, { log: false })
+    cy.get('#password').type(password, { log: false })
+    cy.get('[name=btnSubmit]').click()
 
     cy.location('origin', { timeout: 120_000 }).should('equal', frontendOrigin)
 

@@ -86,15 +86,39 @@ class ProjectionBatchMappingServiceTest {
 
 		when(batchClient.startBatchProcessWithGUID(projectionGuid, projectionParameters.toString()))
 				.thenReturn(mockModel);
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of());
 
 		service.startProjectionInBatch(projectionEntity);
 
 		// Verify persist called and capture entity
 		verify(batchClient, times(1)).startBatchProcessWithGUID(projectionGuid, projectionParameters.toString());
+		verify(repository, times(1)).listByProjectionGUID(projectionGuid);
 		verify(repository, times(1)).persist(any(ProjectionBatchMappingEntity.class));
 		verify(assembler, times(1)).toModel(any(ProjectionBatchMappingEntity.class));
 
 		verifyNoMoreInteractions(batchClient, repository, assembler);
+	}
+
+	@Test
+	void startProjectionInBatch_staleMappingExists_deletesItBeforePersistingNew() throws Exception {
+		UUID projectionGuid = UUID.randomUUID();
+		Parameters projectionParameters = new Parameters();
+
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		projectionEntity.setProjectionParameters(projectionParameters.toString());
+
+		UUID batchJobGuid = UUID.randomUUID();
+		BatchJobModel mockModel = new BatchJobModel(batchJobGuid.toString(), 0, 0);
+		ProjectionBatchMappingEntity staleMapping = new ProjectionBatchMappingEntity();
+
+		when(batchClient.startBatchProcessWithGUID(projectionGuid, projectionParameters.toString()))
+				.thenReturn(mockModel);
+		when(repository.listByProjectionGUID(projectionGuid)).thenReturn(List.of(staleMapping));
+
+		service.startProjectionInBatch(projectionEntity);
+
+		verify(repository, times(1)).delete(staleMapping);
+		verify(repository, times(1)).persist(any(ProjectionBatchMappingEntity.class));
 	}
 
 	@Test

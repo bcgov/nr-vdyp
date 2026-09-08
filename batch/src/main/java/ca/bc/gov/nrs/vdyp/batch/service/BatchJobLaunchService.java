@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionException;
@@ -116,7 +117,7 @@ public class BatchJobLaunchService {
 				Optional<JobExecution> match = jobExplorer.getJobInstances(JOB_NAME, (int) start, chunkSize).stream()
 						.flatMap(jobInstance -> jobExplorer.getJobExecutions(jobInstance).stream())
 						.filter(
-								execution -> execution.getStatus().isRunning() && projectionGuid.equals(
+								execution -> isActivelyRunning(execution.getStatus()) && projectionGuid.equals(
 										execution.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID)
 								)
 						).findFirst();
@@ -132,5 +133,12 @@ public class BatchJobLaunchService {
 			);
 			return Optional.empty();
 		}
+	}
+
+	// Deliberately narrower than BatchStatus.isRunning(): that also treats STOPPING as running, which would make a
+	// re-launch attempted while an old execution is still winding down silently reuse that dying execution instead
+	// of either starting fresh or surfacing the real "claim still held" conflict from tryAcquire.
+	private static boolean isActivelyRunning(BatchStatus status) {
+		return status == BatchStatus.STARTING || status == BatchStatus.STARTED;
 	}
 }

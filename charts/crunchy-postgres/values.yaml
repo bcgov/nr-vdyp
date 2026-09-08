@@ -101,6 +101,7 @@ patroni:
       min_wal_size: 32MB
       max_wal_size: 64MB # default is 1GB
       max_slot_wal_keep_size: 128MB # default is -1, allowing unlimited wal growth when replicas fall behind
+      max_connections: 200
 
 proxy:
   pgBouncer:

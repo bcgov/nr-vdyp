@@ -591,6 +591,11 @@ public class ProjectionService {
 			throw new ProjectionValidationException("Invalid parameter JSON", e, projectionGUID);
 		}
 
+		// A prior run's mapping row (e.g. left behind by a cancel/re-run race) must not survive into this run: once
+		// the new job starts, updateProgress() would keep matching that stale row and silently discard every
+		// progress update from the new job as "stale", freezing the dashboard's numbers.
+		batchMappingService.deleteMappingsForProjection(entity);
+
 		BatchRequestMessage request = new BatchRequestMessage(
 				entity.getProjectionGUID(), entity.getProjectionParameters()
 		);

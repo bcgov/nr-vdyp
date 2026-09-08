@@ -11,8 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.launch.JobExecutionNotRunningException;
-import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,14 +24,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.PrioritizeReplyMessage;
+import ca.bc.gov.nrs.vdyp.batch.messaging.message.StopReplyMessage;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchPrioritizationService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchPrioritizationService.PrioritizeOutcome;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchStopService;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchStopService.StopOutcome;
 import ca.bc.gov.nrs.vdyp.batch.service.JobExecutionLookupService;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizeRemoteGateway;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
+import ca.bc.gov.nrs.vdyp.batch.service.StopRemoteGateway;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -47,7 +49,6 @@ public class BatchController {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchController.class);
 
-	private final JobOperator jobOperator;
 	@SuppressWarnings("unused")
 	private final BatchMetricsCollector metricsCollector;
 	private final StorageEstimationService storageEstimationService;
@@ -58,16 +59,18 @@ public class BatchController {
 	private final JobExecutionLookupService lookupService;
 	private final BatchPrioritizationService prioritizationService;
 	private final Optional<PrioritizeRemoteGateway> remoteGateway;
+	private final BatchStopService stopService;
+	private final Optional<StopRemoteGateway> remoteStopGateway;
 
 	public BatchController(
-			BatchMetricsCollector metricsCollector, JobOperator jobOperator,
-			StorageEstimationService storageEstimationService, BatchJobLaunchService batchJobLaunchService,
-			ServerCapacityService serverCapacityService, BatchOwnershipProperties ownershipProperties,
-			JobOwnershipService ownershipService, JobExecutionLookupService lookupService,
-			BatchPrioritizationService prioritizationService, Optional<PrioritizeRemoteGateway> remoteGateway
+			BatchMetricsCollector metricsCollector, StorageEstimationService storageEstimationService,
+			BatchJobLaunchService batchJobLaunchService, ServerCapacityService serverCapacityService,
+			BatchOwnershipProperties ownershipProperties, JobOwnershipService ownershipService,
+			JobExecutionLookupService lookupService, BatchPrioritizationService prioritizationService,
+			Optional<PrioritizeRemoteGateway> remoteGateway, BatchStopService stopService,
+			Optional<StopRemoteGateway> remoteStopGateway
 	) {
 		this.metricsCollector = metricsCollector;
-		this.jobOperator = jobOperator;
 		this.storageEstimationService = storageEstimationService;
 		this.batchJobLaunchService = batchJobLaunchService;
 		this.serverCapacityService = serverCapacityService;
@@ -76,6 +79,8 @@ public class BatchController {
 		this.lookupService = lookupService;
 		this.prioritizationService = prioritizationService;
 		this.remoteGateway = remoteGateway;
+		this.stopService = stopService;
+		this.remoteStopGateway = remoteStopGateway;
 	}
 
 	/**
@@ -123,64 +128,14 @@ public class BatchController {
 	private ResponseEntity<Map<String, Object>>
 			stopBatchJob(UUID requestedGuid, String jobParameterName, String guidDescription) {
 		Map<String, Object> response = new HashMap<>();
-		Long executionId = null;
 
+		JobExecution jobExecution;
 		try {
 			logger.debug("Attempting to stop job with {}: {}", guidDescription, requestedGuid);
-
-			JobExecution jobExecution = lookupService.findJobExecutionByJobParameter(
+			jobExecution = lookupService.findJobExecutionByJobParameter(
 					jobParameterName, requestedGuid.toString(),
 					BatchConstants.GuidInput.PROJECTION_GUID.equals(jobParameterName)
 			);
-			executionId = jobExecution.getId();
-			addJobIdentifiers(response, jobExecution, requestedGuid, jobParameterName);
-
-			String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
-			logger.debug("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
-
-			// Stop the job execution - this sends a stop signal to the running job
-			boolean stopped = jobOperator.stop(executionId);
-
-			if (stopped) {
-				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
-				response.put(BatchConstants.Job.STATUS, "STOP_REQUESTED");
-				response.put(
-						BatchConstants.Job.MESSAGE,
-						"Stop request sent successfully. Job will stop after completing current chunk."
-				);
-				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
-
-				logger.info("[GUID: {}] Stop request sent successfully for JobExecution ID: {}", jobGuid, executionId);
-
-				return ResponseEntity.ok(response);
-			} else {
-				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
-				response.put(BatchConstants.Job.STATUS, "STOP_FAILED");
-				response.put(BatchConstants.Job.MESSAGE, "Job execution could not be stopped. It may not be running.");
-				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
-
-				logger.warn(
-						"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", jobGuid, executionId
-				);
-
-				return ResponseEntity.badRequest().body(response);
-			}
-
-		} catch (JobExecutionNotRunningException e) {
-			// Job is already stopping or has stopped - this is not an error, just inform the user
-			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
-			response.put(BatchConstants.Job.STATUS, "ALREADY_STOPPING");
-			response.put(
-					BatchConstants.Job.MESSAGE,
-					"Job is already in the process of stopping or has already been stopped. "
-							+ "Please check job status for current state."
-			);
-			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
-
-			logger.debug("[{}: {}] Job is already stopping or stopped", guidDescription, requestedGuid);
-			// Return 202 Accepted - the stop request was already accepted and is being processed
-			return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
-
 		} catch (NoSuchJobExecutionException e) {
 			addRequestedGuid(response, requestedGuid, jobParameterName);
 			response.put(BatchConstants.Job.ERROR, "Job execution not found");
@@ -193,12 +148,32 @@ public class BatchController {
 
 			logger.error("Job execution not found with {}: {}", guidDescription, requestedGuid);
 			return ResponseEntity.status(404).body(response);
+		}
 
-		} catch (Exception e) {
-			addRequestedGuid(response, requestedGuid, jobParameterName);
-			if (executionId != null) {
+		Long executionId = jobExecution.getId();
+		addJobIdentifiers(response, jobExecution, requestedGuid, jobParameterName);
+		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
+		String projectionGuid = jobExecution.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
+		logger.debug("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
+
+		Optional<StopOutcome> outcome;
+		try {
+			if (ownershipService.isOwnedLocally(projectionGuid)) {
+				outcome = Optional.of(stopService.stopLocally(jobGuid, jobExecution));
+			} else if (remoteStopGateway.isPresent()) {
+				outcome = remoteStopGateway.get().requestStop(jobGuid, projectionGuid).map(this::toStopOutcome);
+			} else {
 				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+				response.put(BatchConstants.Job.ERROR, "Job is not running on this instance");
+				response.put(
+						BatchConstants.Job.MESSAGE, "This replica does not own the job execution, so it cannot stop it."
+				);
+				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+				logger.warn("[GUID: {}] Refusing to stop job not owned by this instance.", jobGuid);
+				return ResponseEntity.badRequest().body(response);
 			}
+		} catch (Exception e) {
+			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 			response.put(BatchConstants.Job.ERROR, "Failed to stop job execution");
 			response.put(
 					BatchConstants.Job.MESSAGE,
@@ -212,6 +187,35 @@ public class BatchController {
 			);
 			return ResponseEntity.internalServerError().body(response);
 		}
+
+		if (outcome.isEmpty()) {
+			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+			response.put(BatchConstants.Job.ERROR, "Could not locate the replica running this job");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"No replica responded as the owner of this job execution within the timeout. It may have just "
+							+ "finished; please retry."
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+			logger.warn("[GUID: {}] No replica claimed ownership of this job when asked to stop it.", jobGuid);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+		}
+
+		response.put(BatchConstants.Job.EXECUTION_ID, outcome.get().executionId());
+		response.put(BatchConstants.Job.STATUS, outcome.get().status());
+		response.put(BatchConstants.Job.MESSAGE, outcome.get().message());
+		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+		HttpStatus httpStatus = switch (outcome.get().status()) {
+		case "ALREADY_STOPPING" -> HttpStatus.ACCEPTED;
+		case "STOP_FAILED" -> HttpStatus.BAD_REQUEST;
+		default -> HttpStatus.OK;
+		};
+		return ResponseEntity.status(httpStatus).body(response);
+	}
+
+	private StopOutcome toStopOutcome(StopReplyMessage reply) {
+		return new StopOutcome(reply.status(), reply.message(), reply.executionId());
 	}
 
 	/**
