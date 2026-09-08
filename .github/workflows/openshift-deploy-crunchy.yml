@@ -43,6 +43,7 @@ jobs:
           DB_REPLICAS: ${{ vars.DB_INSTANCE_HA_REPLICAS }}
           DB_WAL_VOLUME_SIZE: ${{ vars.DB_WAL_VOLUME_SIZE }}
           DB_BACKUP_VOLUME_SIZE: ${{ vars.DB_BACKUP_VOLUME_SIZE }}
+          DB_BACKUP_RETENTION_DAYS: ${{ inputs.ENVIRONMENT_NAME == 'prod' && '60' || '14' }}
           BOUNCER_REPLICAS: ${{ vars.DB_LOADBALANCER_HA_REPLICAS}}
           COMS_DB_USER: ${{ vars.COMS_DB_ROLE}}
           COMS_DB_NAME: ${{ vars.COMS_DB_DATABASE}}
