@@ -101,11 +101,14 @@ patroni:
       min_wal_size: 32MB
       max_wal_size: 64MB # default is 1GB
       max_slot_wal_keep_size: 128MB # default is -1, allowing unlimited wal growth when replicas fall behind
+      max_connections: 300
 
 proxy:
   pgBouncer:
     image: # it's not necessary to specify an image as the images specified in the Crunchy Postgres Operator will be pulled by default
     replicas: #{BOUNCER_REPLICAS}#
+    defaultPoolSize: 100
+    maxClientConn: 500
     requests:
       cpu: 1m
       memory: 64Mi
