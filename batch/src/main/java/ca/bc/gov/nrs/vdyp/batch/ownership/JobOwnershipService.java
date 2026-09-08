@@ -102,7 +102,7 @@ public class JobOwnershipService {
 			);
 		} else {
 			claimFailed.increment();
-			logger.info(
+			logger.debug(
 					"Could not acquire batch job claim. projectionGuid={}, ownerId={}, reason={}", projectionGuid,
 					identity.ownerId(), reason
 			);

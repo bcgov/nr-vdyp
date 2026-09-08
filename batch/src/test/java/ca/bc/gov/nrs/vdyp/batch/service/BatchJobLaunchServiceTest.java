@@ -124,6 +124,25 @@ class BatchJobLaunchServiceTest {
 	}
 
 	@Test
+	void stoppingExecutionIsNotTreatedAsADuplicate() throws Exception {
+		UUID projectionId = UUID.randomUUID();
+		JobInstance instance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+		JobExecution stopping = execution(instance, projectionId.toString());
+		stopping.setStatus(org.springframework.batch.core.BatchStatus.STOPPING);
+		JobClaim claim = claim(projectionId.toString());
+		JobExecution launched = execution(new JobInstance(3L, "VdypFetchAndPartitionJob"), projectionId.toString());
+		allowLaunch();
+		when(jobExplorer.getJobInstanceCount("VdypFetchAndPartitionJob")).thenReturn(1L);
+		when(jobExplorer.getJobInstances("VdypFetchAndPartitionJob", 0, 2)).thenReturn(List.of(instance));
+		when(jobExplorer.getJobExecutions(instance)).thenReturn(List.of(stopping));
+		when(ownershipService.tryAcquire(projectionId.toString(), "new-launch")).thenReturn(Optional.of(claim));
+		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(launched);
+
+		assertEquals(launched, service.launch(projectionId, "{}"));
+		verify(ownershipService).tryAcquire(projectionId.toString(), "new-launch");
+	}
+
+	@Test
 	void unavailableClaimRaisesAlreadyRunningException() throws Exception {
 		UUID projectionId = UUID.randomUUID();
 		allowLaunch();

@@ -8646,5 +8646,21 @@
 		"allDeclaredConstructors": true,
 		"allPublicMethods": true,
 		"allPublicFields": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.batch.messaging.message.StopRequestMessage",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.batch.messaging.message.StopReplyMessage",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
 	}
 ]
