@@ -689,29 +689,32 @@ public class ComputationMethods {
 		}
 	}
 
+	public static record PerSpeciesLimits(Map<String, Float> minimum, Map<String, Float> maximum) {
+	};
+	
 	// ROOTV01
-	public void
+	public PerSpeciesLimits
 			getDqBySpecies(VdypLayer layer, Region region, BiFunction<String, Region, ComponentSizeLimits> getLimits)
 					throws FatalProcessingException {
 
-		// DQ_TOT
+		// RCOM2/DQ_TOT
 		float quadMeanDiameterTotal = layer.getQuadraticMeanDiameterByUtilization().getAll();
-		// BA_TOT
+		// RCOM2/BA_TOT
 		float baseAreaTotal = layer.getBaseAreaByUtilization().getAll();
-		// TPH_TOT
+		// RCOM2/TPH_TOT
 		float treeDensityTotal = treesPerHectare(baseAreaTotal, quadMeanDiameterTotal);
 
 		float loreyHeightTotal = layer.getLoreyHeightByUtilization().getAll();
 
-		// DQV
+		// RCOM2/DQV
 		Map<String, Float> initialDqEstimate = new LinkedHashMap<>(layer.getSpecies().size());
-		// BAV
+		// RCOM2/BAV
 		Map<String, Float> baseAreaPerSpecies = new LinkedHashMap<>(layer.getSpecies().size());
-		// DQMIN
+		// RCOM2/DQMIN
 		Map<String, Float> minPerSpecies = new LinkedHashMap<>(layer.getSpecies().size());
-		// DQMAX
+		// RCOM2/DQMAX
 		Map<String, Float> maxPerSpecies = new LinkedHashMap<>(layer.getSpecies().size());
-		// DQFINAL
+		// RCOM2/DQFINAL
 		Map<String, Float> resultsPerSpecies = new LinkedHashMap<>(layer.getSpecies().size());
 
 		getDqBySpeciesInitial(
@@ -729,6 +732,8 @@ public class ComputationMethods {
 		);
 
 		applyDqBySpecies(layer, baseAreaTotal, baseAreaPerSpecies, resultsPerSpecies);
+
+		return new PerSpeciesLimits(minPerSpecies, maxPerSpecies);
 	}
 
 	void getDqBySpeciesInitial(

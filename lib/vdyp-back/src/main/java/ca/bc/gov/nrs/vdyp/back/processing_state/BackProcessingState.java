@@ -48,8 +48,10 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 
 	private Optional<Float> convergenceQuadraticMeanDiameter = Optional.empty(); // BACK3/DQ_CNV
 	private Optional<float[]> speciesConvergenceLoreyHeight = Optional.empty(); // BACK3/HLI_CNV
+	private Optional<float[]> speciesConvergenceQuadraticMeanDiameter = Optional.empty(); // BACK3/DQI_CNV
 
-	private Optional<ComponentSizeLimits[]> speciesLimits = Optional.empty();
+	private Optional<ComponentSizeLimits[]> speciesLimits = Optional.empty(); // BACK7/...
+
 	private Optional<float[]> finalQuadraticMeanDiameters = Optional.empty(); // BACK8/DQFinal
 
 	private Optional<Float> dominantHeightBackupFactor = Optional.empty(); // BACK5/BFH
@@ -207,6 +209,14 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 
 	public void setSpeciesConvergenceLoreyHeight(float[] speciesConvergenceLoreyHeight) {
 		this.speciesConvergenceLoreyHeight = Optional.of(speciesConvergenceLoreyHeight);
+	}
+
+	public float getSpeciesConvergenceQuadraticMeanDiameter(int i) {
+		return speciesConvergenceQuadraticMeanDiameter.orElseThrow()[i];
+	}
+
+	public void setSpeciesConvergenceQuadraticMeanDiameter(float[] speciesConvergenceQuadraticMeanDiameter) {
+		this.speciesConvergenceQuadraticMeanDiameter = Optional.of(speciesConvergenceQuadraticMeanDiameter);
 	}
 
 	public Optional<Float> getDominantHeightBackupFactor() {

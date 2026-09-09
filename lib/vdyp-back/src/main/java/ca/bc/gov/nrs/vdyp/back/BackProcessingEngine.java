@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.vdyp.back;
 
+import static ca.bc.gov.nrs.vdyp.common.Utils.optInt;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.offsetMultiply;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -7,13 +10,18 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -22,6 +30,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.sindex.Sindxdll;
@@ -30,6 +39,8 @@ import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 
 public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, BackLayerProcessingState> {
+
+	private static final Logger logger = LoggerFactory.getLogger(BackProcessingEngine.class);
 
 	public BackProcessingEngine(BackProcessingState processingState) {
 		super(processingState);
@@ -132,41 +143,61 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 	// BACKAPPL
 	void applyBackupFactors(int currentYear /* IYRCUR */) throws ProcessingException {
-		int layerIndex = 1;
-		int instance = 2;
 		final BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
 		final BecDefinition bec = plps.getPolygon().getBiogeoclimaticZone();
 
-		final Bank bank = plps.getBank();
-		final EstimationMethods estimators = getState().estimators;
-		var primaryLayer = plps.getPolygon().getLayers().get(LayerType.PRIMARY);
+		final EstimationMethods estimators = getState().getEstimators();
 
+		final var primaryLayer = plps.getPolygon().getLayers().get(LayerType.PRIMARY);
+		final var primarySpecies = primaryLayer.getPrimarySpeciesRecord().orElseThrow(
+				() -> new ProcessingException("No Primary species")
+		);
+		final var primarySite = primaryLayer.getPrimarySite().orElseThrow(
+				() -> new ProcessingException("No site information in primary species")
+		);
 		float regress = getState().getCurrentStartingYear() - currentYear;
 
-		bank.yearsAtBreastHeight[0] -= regress; // AGEBHP
-		bank.ageTotals[0] -= regress; // AGETOTP
+		// AGEBHP
+		final float yearsAtBreastHeight = primarySite.getYearsAtBreastHeight().map(y -> y - regress).orElseThrow(
+				() -> new ProcessingException("Missing age information in primary species")
+		);
+		primarySite.setYearsAtBreastHeight(yearsAtBreastHeight);
+		// AGETOTP
+		final float ageTotal = primarySite.getAgeTotal().map(y -> y - regress).orElseThrow(
+				() -> new ProcessingException("Missing age information in primary species")
+		);
+		primarySite.setAgeTotal(ageTotal);
+
+		int primarySpeciesIndex = plps.getPrimarySpeciesIndex();
 
 		// SITEHADJ
-		bank.dominantHeights[0] = heightFromSiteCurve(
-				bank.siteCurveNumbers[0], bank.yearsAtBreastHeight[0], bank.yearsToBreastHeight[0], bank.siteIndices[0]
-		);
-
-		bank.dominantHeights[0] = FloatMath.offsetMultiply(
-				bank.dominantHeights[0], getState().getConvergenceDominantHeight().get(),
+		final float dominantHeight = FloatMath.offsetMultiply(
+				heightFromSiteCurve(primarySite), //
+				getState().getConvergenceDominantHeight().get(), //
 				getState().getDominantHeightBackupFactor().get()
 		);
+		primarySite.setHeight(dominantHeight);
 
 		// BAYield = EMP106(...)
 		var basalAreaYield = estimators.estimateBaseAreaYield(
-				bank.dominantHeights[0], bank.yearsAtBreastHeight[0], getState().getBaseAreaVeteran(), true,
-				primaryLayer.getSpecies().values(), primaryLayer.getPrimaryGenus().orElseThrow(), bec,
+				dominantHeight, //
+				yearsAtBreastHeight, //
+				getState().getBaseAreaVeteran(), //
+				true, //
+				primaryLayer.getSpecies().values(), //
+				primaryLayer.getPrimaryGenus().orElseThrow(), //
+				bec, //
 				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
 		);
 
 		// DQYield = EMP107(...)
 		var quadraticMeanDiameterYield = estimators.estimateQuadMeanDiameterYield(
-				bank.dominantHeights[0], bank.yearsAtBreastHeight[0], getState().getBaseAreaVeteran(),
-				primaryLayer.getSpecies().values(), primaryLayer.getPrimaryGenus().orElseThrow(), bec,
+				dominantHeight, //
+				yearsAtBreastHeight, //
+				getState().getBaseAreaVeteran(), //
+				primaryLayer.getSpecies().values(), //
+				primaryLayer.getPrimaryGenus().orElseThrow(), //
+				bec, //
 				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
 		);
 
@@ -182,7 +213,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 				getState().getBasalAreaBackupFactor().orElseThrow()
 		);
 		float dqp = FloatMath.offsetMultiply(
-				basalAreaYield, getState().getConvergenceQuadraticMeanDiameter().orElseThrow(),
+				basalAreaYield, //
+				getState().getConvergenceQuadraticMeanDiameter().orElseThrow(), //
 				getState().getQuadMeanDiameterBackupFactor().orElseThrow()
 		);
 		if (getState().getQuadMeanDiameterBackupFactor().orElseThrow() <= 0) {
@@ -197,18 +229,23 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		// EMP051
 		float hlpl1 = estimators.primaryHeightFromLeadHeightInitial(
-				bank.dominantHeights[0], primaryLayer.getPrimaryGenus().orElseThrow(), bec.getRegion()
+				dominantHeight, primaryLayer.getPrimaryGenus().orElseThrow(), bec.getRegion()
 		);
-		bank.loreyHeights[plps.getPrimarySpeciesIndex()][UC_ALL_INDEX] = hlpl1;
 
-		for (int i : plps.getIndices()) {
-			if (i == plps.getPrimarySpeciesIndex())
+		primarySpecies.getLoreyHeightByUtilization().setAll(hlpl1);
+
+		for (var species : primaryLayer.getOrderedSpecies()) {
+			if (species == primarySpecies)
 				continue;
 			// EMP053
-			bank.loreyHeights[i][UC_ALL_INDEX] = estimators.estimateNonPrimaryLoreyHeight(
-					bank.speciesNames[i], primaryLayer.getPrimaryGenus().orElseThrow(), bec, bank.dominantHeights[0],
+
+			final float specLoreyHeight = estimators.estimateNonPrimaryLoreyHeight(
+					species, //
+					primarySpecies, //
+					bec, dominantHeight, //
 					hlpl1
 			);
+			species.getLoreyHeightByUtilization().setAll(specLoreyHeight);
 		}
 
 		float sumBaHl = 0;
@@ -216,33 +253,102 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			float bf = getState().getSpeciesLoreyHeightBackupFactor(i);
 			if (bf == 1f)
 				continue;
-			bank.loreyHeights[i][UC_ALL_INDEX] = FloatMath.offsetMultiply(
-					bank.loreyHeights[i][UC_ALL_INDEX], getState().getSpeciesConvergenceLoreyHeight(i),
-					getState().getSpeciesLoreyHeightBackupFactor(i)
-			);
-			bank.loreyHeights[i][UC_ALL_INDEX] = min(
-					bank.loreyHeights[i][UC_ALL_INDEX], getState().getSpeciesLoreyHeightBackupFactorMaximum(i)
-			);
+			final var species = Utils.getSpeciesByIndexWithinLayer(primaryLayer, i);
 
-			sumBaHl += bank.loreyHeights[i][UC_ALL_INDEX] * bank.basalAreas[i][UC_ALL_INDEX];
+			float speciesLoreyHeight = min(
+					FloatMath.offsetMultiply(
+							species.getLoreyHeightByUtilization().getAll(), //
+							getState().getSpeciesConvergenceLoreyHeight(i), //
+							getState().getSpeciesLoreyHeightBackupFactor(i)
+					), getState().getSpeciesLoreyHeightBackupFactorMaximum(i)
+			);
+			species.getLoreyHeightByUtilization().setAll(speciesLoreyHeight);
+
+			sumBaHl += speciesLoreyHeight * species.getBaseAreaByUtilization().getAll();
 		}
-		bank.loreyHeights[0][UC_ALL_INDEX] = sumBaHl / bank.basalAreas[0][UC_ALL_INDEX];
+		primaryLayer.getLoreyHeightByUtilization().setAll(sumBaHl / primaryLayer.getBaseAreaByUtilization().getAll());
 
-		bank.basalAreas[0][UC_ALL_INDEX] = bap;
-		bank.quadMeanDiameters[0][UC_ALL_INDEX] = bap;
-		bank.treesPerHectare[0][UC_ALL_INDEX] = BaseAreaTreeDensityDiameter.treesPerHectare(bap, dqp);
+		primaryLayer.getBaseAreaByUtilization().setAll(bap);
+		primaryLayer.getQuadraticMeanDiameterByUtilization().setAll(dqp);
+		BaseAreaTreeDensityDiameter.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
 
 		if (plps.getNSpecies() == 1) {
-			bank.basalAreas[1][UC_ALL_INDEX] = bank.basalAreas[0][UC_ALL_INDEX];
-			bank.quadMeanDiameters[1][UC_ALL_INDEX] = bank.quadMeanDiameters[0][UC_ALL_INDEX];
-			bank.treesPerHectare[1][UC_ALL_INDEX] = bank.treesPerHectare[0][UC_ALL_INDEX];
+			primarySpecies.getBaseAreaByUtilization().setAll(primaryLayer.getBaseAreaByUtilization().getAll());
+			primarySpecies.getQuadraticMeanDiameterByUtilization().setAll(
+					primaryLayer.getQuadraticMeanDiameterByUtilization().getAll()
+			);
+			primarySpecies.getTreesPerHectareByUtilization().setAll(
+					primaryLayer.getTreesPerHectareByUtilization().getAll()
+			);
 		} else {
 
-			// TODO this is slow and we might want to rework getDqBySpecies to avoid it.
-			primaryLayer = bank.buildLayerFromBank();
+			var dqLimits = getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(), (s, r) ->
+
+			getState().getLimits(Utils.indexOfSpeciesWithinLayer(s, primaryLayer))
+
+			);
+
+			//Apply backup factors for DQ by species and calculate TPH
+
+			float treesPerHectareSum = 0;
+
+			for (int i : plps.getIndices()) {
+				var species = primaryLayer.getSpeciesByIndex(i);
+				if (getState().getSpeciesQuadMeanDiameterBackupFactor(i) > 0) {
+					species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
+							UtilizationClass.ALL, v -> clamp(
+									offsetMultiply(
+											v, //
+											getState().getSpeciesConvergenceQuadraticMeanDiameter(i), //
+											getState().getSpeciesQuadMeanDiameterBackupFactor(i) //
+									),
+									dqLimits.minimum().get(species.getGenus()), //
+									dqLimits.maximum().get(species.getGenus())
+							)
+					);
+				} else {
+					final int yearDiff = getState().getCurrentStartingYear() - getState().getConvergenceYear().get();
+					float slope = (getState().getSpeciesConvergenceQuadraticMeanDiameter(i) //
+							- species.getQuadraticMeanDiameterByUtilization().getAll()) //
+							/ yearDiff;
+					float dqLimit = species.getQuadraticMeanDiameterByUtilization().getAll() + 2 * slope * yearDiff;
+					species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
+							UtilizationClass.ALL, v -> min(v, dqLimit)
+					);
+				}
+
+				species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
+						UtilizationClass.ALL, v -> max(
+								v, getState().getSpeciesQuadMeanDiameterBackupFactorMinimum(i)
+						)
+				);
+				treesPerHectareSum += BaseAreaTreeDensityDiameter.reconcileTreesPerHectare(
+						primaryLayer, UtilizationClass.ALL
+				);
+			}
+			var err = treesPerHectareSum = primaryLayer.getTreesPerHectareByUtilization().getAll();
+
+			if (Math.abs(err) > 0.5 && treesPerHectareSum > 0.5) {
+				logger.warn(
+						"Total TPH modified from {} to {}. Indicates a minor flaw in the system that could cause error in starting TPH. ",
+						primaryLayer.getTreesPerHectareByUtilization().getAll(), treesPerHectareSum
+				);
+			}
+
+			primaryLayer.getTreesPerHectareByUtilization().set(UtilizationClass.ALL, treesPerHectareSum);
+			BaseAreaTreeDensityDiameter.reconcileQuadraticMeanDiameter(primaryLayer, UtilizationClass.ALL);
 
 		}
 
+	}
+
+	public float heightFromSiteCurve(VdypSite site) throws ProcessingException {
+		return heightFromSiteCurve(
+				site.getSiteCurveNumber().orElseThrow(),
+				site.getYearsAtBreastHeight().orElseThrow(),
+				site.getYearsToBreastHeight().orElseThrow(),
+				site.getSiteIndex().orElseThrow()
+		);
 	}
 
 	/**

@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -22,8 +23,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
@@ -41,13 +46,14 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class BackProcessingEngineTest {
 
 	BackProcessingEngine engine;
 
-	Map<String, Object> controlMap;
+	Map<String, Object> rawControlMap;
 
 	BecLookup becLookup;
 
@@ -55,17 +61,26 @@ class BackProcessingEngineTest {
 
 	BackProcessingState state;
 
+	ProcessingResolvedControlMapImpl controlMap;
+
 	@BeforeEach
 	void setup() {
 		em = EasyMock.createControl();
 		state = em.createMock(BackProcessingState.class);
 
+
 		engine = new BackProcessingEngine(state);
 
-		controlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
+		rawControlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
 
-		becLookup = Utils.parsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get();
+		becLookup = Utils.parsedControl(rawControlMap, ControlKey.BEC_DEF, BecLookup.class).get();
 
+		controlMap = new ProcessingResolvedControlMapImpl(rawControlMap);
+		var emp = new EstimationMethods(controlMap);
+		var cmp = new ComputationMethods(emp, VdypApplicationIdentifier.VDYP_BACK);
+
+		expect(state.getEstimators()).andStubReturn(emp);
+		expect(state.getComputers()).andStubReturn(cmp);
 	}
 
 	@Nested
@@ -79,7 +94,7 @@ class BackProcessingEngineTest {
 				pb.percentAvailable(80f);
 				pb.biogeoclimaticZone(becLookup.get("IDF").get());
 				pb.forestInventoryZone("");
-				pb.controlMap(controlMap);
+				pb.controlMap(rawControlMap);
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
@@ -103,7 +118,7 @@ class BackProcessingEngineTest {
 				});
 			});
 
-			state = new BackProcessingState(controlMap);
+			state = new BackProcessingState(rawControlMap);
 
 			state.setPolygon(polygon);
 
@@ -148,7 +163,7 @@ class BackProcessingEngineTest {
 				pb.percentAvailable(80f);
 				pb.biogeoclimaticZone(becLookup.get("IDF").get());
 				pb.forestInventoryZone("");
-				pb.controlMap(controlMap);
+				pb.controlMap(rawControlMap);
 
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.PRIMARY);
@@ -164,7 +179,7 @@ class BackProcessingEngineTest {
 				});
 			});
 
-			state = new BackProcessingState(controlMap);
+			state = new BackProcessingState(rawControlMap);
 
 			state.setPolygon(polygon);
 
@@ -202,7 +217,7 @@ class BackProcessingEngineTest {
 					pb.percentAvailable(80f);
 					pb.biogeoclimaticZone(becLookup.get("IDF").get());
 					pb.forestInventoryZone("");
-					pb.controlMap(controlMap);
+					pb.controlMap(rawControlMap);
 
 					pb.addLayer(lb -> {
 						lb.layerType(LayerType.PRIMARY);
@@ -217,7 +232,7 @@ class BackProcessingEngineTest {
 					});
 				});
 
-				state = new BackProcessingState(controlMap);
+				state = new BackProcessingState(rawControlMap);
 
 				state.setPolygon(polygon);
 				engine.prepare(state);
@@ -385,7 +400,7 @@ class BackProcessingEngineTest {
 		@Test
 		void testYoung() throws ProcessingException {
 
-			expect(state.getControlMap()).andStubReturn(new ProcessingResolvedControlMapImpl(controlMap));
+			expect(state.getControlMap()).andStubReturn(new ProcessingResolvedControlMapImpl(rawControlMap));
 			expect(state.getCurrentBecZone()).andStubReturn(becLookup.get("MS").get());
 
 			em.replay();
@@ -399,7 +414,7 @@ class BackProcessingEngineTest {
 		@Test
 		void testOld() throws ProcessingException {
 
-			expect(state.getControlMap()).andStubReturn(new ProcessingResolvedControlMapImpl(controlMap));
+			expect(state.getControlMap()).andStubReturn(new ProcessingResolvedControlMapImpl(rawControlMap));
 			expect(state.getCurrentBecZone()).andStubReturn(becLookup.get("MS").get());
 
 			em.replay();
@@ -409,5 +424,233 @@ class BackProcessingEngineTest {
 
 			em.verify();
 		}
+	}
+
+	@Nested
+	class ApplyBackupFactors {
+		@Test
+		void test() throws ProcessingException {
+
+			expect(state.getControlMap()).andStubReturn(new ProcessingResolvedControlMapImpl(rawControlMap));
+			expect(state.getCurrentBecZone()).andStubReturn(becLookup.get("MS").get());
+
+			// HD_CNV
+			expect(state.getConvergenceDominantHeight()).andStubReturn(Optional.of(9.17361069f));
+
+			// BFH
+			expect(state.getDominantHeightBackupFactor()).andStubReturn(Optional.of(1.00081587f));
+
+			// BFHLI
+			expect(state.getSpeciesLoreyHeightBackupFactor(1)).andStubReturn(1f);
+			expect(state.getSpeciesLoreyHeightBackupFactor(2)).andStubReturn(1.05425811f);
+			expect(state.getSpeciesLoreyHeightBackupFactor(3)).andStubReturn(1.65608633f);
+
+			// HLI_CNV
+			expect(state.getSpeciesConvergenceLoreyHeight(1)).andStubReturn(8.26395798f);
+			expect(state.getSpeciesConvergenceLoreyHeight(2)).andStubReturn(7.30057955f);
+			expect(state.getSpeciesConvergenceLoreyHeight(3)).andStubReturn(7.28091431f);
+
+			// BFMAXHLI
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(1)).andStubReturn(12.8473997f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(2)).andStubReturn(13.8270998f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(3)).andStubReturn(16.6229f);
+
+			// BA_CNV
+			expect(state.getConvergenceBasalArea()).andStubReturn(Optional.of(10.6703072f));
+
+			// BFB
+			expect(state.getBasalAreaBackupFactor()).andStubReturn(Optional.of(1.40641582f));
+
+			// DQ_CNV
+			expect(state.getConvergenceQuadraticMeanDiameter()).andStubReturn(Optional.of(10.2024593f));
+
+			// BFDQ
+			expect(state.getQuadMeanDiameterBackupFactor()).andStubReturn(Optional.of(1.86042416f));
+
+			// BFMINDQ
+			expect(state.getQuadMeanDiameterBackupFactorMinimum()).andStubReturn(Optional.of(10.2024593f));
+
+			// BAV
+			expect(state.getBaseAreaVeteran()).andStubReturn(Optional.empty());
+
+			// BACK7
+			expect(state.getLimits(1)).andStubReturn(new ComponentSizeLimits(32.4f, 38.4f, 0.744f, 1.541f));
+			expect(state.getLimits(2)).andStubReturn(new ComponentSizeLimits(32.0f, 40.7f, 0.757f, 1.705f));
+			expect(state.getLimits(3)).andStubReturn(new ComponentSizeLimits(39.1f, 57.2f, 0.796f, 1.809f));
+
+			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
+			expect(layerState.getPrimarySpeciesIndex()).andStubReturn(2);
+			expect(layerState.getIndices()).andStubReturn(new int[] { 1, 2, 3 });
+			expect(layerState.getNSpecies()).andStubReturn(3);
+
+			expect(state.getPrimaryLayerProcessingState()).andStubReturn(layerState);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("092P037  72999905UNK 2011");
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.percentAvailable(61f);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(10);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(12);
+						sb.percentGenus(70);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(45);
+							ib.yearsAtBreastHeight(61.3f);
+							ib.yearsToBreastHeight(8.2f);
+							ib.ageTotal(69f);
+							ib.siteIndex(12.39f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(15);
+						sb.percentGenus(20);
+					});
+					lb.primaryGenus("PL");
+					lb.empiricalRelationshipParameterIndex(118);
+				});
+			});
+			var primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+
+			// Fill in Utilization
+
+			primaryLayer.setLoreyHeightByUtilization(Utils.heightVector(6.11998129f, 12.3255749f));
+			primaryLayer.setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0546229482f, 33.975399f, 3.78800011f, 11.8987055f, 14.0205078f, 11.2764416f
+					)
+			);
+			primaryLayer.setTreesPerHectareByUtilization(
+					Utils.utilizationVector(20.5737705f, 1999.31055f, 466.262329f, 677.950806f, 464.049194f, 195f)
+			);
+			primaryLayer.setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.81501532f, 14.7094765f, 10.1703596f, 14.9486017f, 19.613493f, 27.1346054f)
+			);
+			primaryLayer.setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.163934425f, 251.342957f, 15.7932787f, 65.5157318f, 88.3898392f, 81.6440964f
+					)
+			);
+			primaryLayer.setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 204.092285f, 2.0988524f, 48.9055748f, 77.6209793f, 75.4668808f)
+			);
+			primaryLayer.setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 199.286377f, 2.05327868f, 47.9527855f, 76.0255737f, 73.2547531f)
+			);
+			primaryLayer.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 197.866379f, 2.04245877f, 47.7080307f, 75.5704956f, 72.5454102f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setLoreyHeightByUtilization(
+					Utils.heightVector(5.72300005f, 11.6197081f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.028147541f, 3.3975358f, 1.34257376f, 1.134377f, 0.789475381f, 0.831934452f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(
+							11.0819674f, 284.674377f, 175.262299f, 68.0819626f, 26.8688507f, 14.4590158f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.6867857f, 13.5389805f, 9.87597275f, 14.5652428f, 19.3419304f, 27.0663853f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.0836065561f, 22.3908195f, 5.31590176f, 6.03557348f, 4.96803236f, 6.07131147f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 14.2563934f, 0.357704908f, 4.15590143f, 4.18754101f, 5.55524588f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 13.4095078f, 0.339508206f, 3.94229484f, 3.96098328f, 5.16672134f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 13.1586876f, 0.334262282f, 3.87737703f, 3.88999987f, 5.05704927f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setLoreyHeightByUtilization(
+					Utils.heightVector(7.18720007f, 11.9535027f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0106229503f, 23.7827759f, 1.96814752f, 9.33654118f, 11.2569828f, 6.12688494f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(3.67213106f, 1250.29932f, 232.590164f, 528.704895f, 373.098358f, 115.91803f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(
+							6.06901979f, 17.0923748f, 10.3797817f, 14.9948254f, 19.5999241f, 25.9417591f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.0390163921f, 174.294434f, 8.95180321f, 52.6093445f, 71.0681992f, 41.665081f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 142.948029f, 1.6654098f, 39.9722939f, 62.7765579f, 38.5337677f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 140.00705f, 1.63885248f, 39.2903252f, 61.5590134f, 37.5188522f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 139.179657f, 1.63344252f, 39.124752f, 61.2242622f, 37.1972122f)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setLoreyHeightByUtilization(
+					Utils.heightVector(6.1097002f, 13.9807625f)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0158524588f, 6.79508448f, 0.47727865f, 1.42778683f, 1.97404909f, 4.31762266f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(
+							5.81967211f, 268.288696f, 58.4098358f, 81.1639328f, 64.0819626f, 64.6229477f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.88917017f, 19.7230644f, 10.1999512f, 14.9659815f, 19.8046036f, 29.166481f)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.0413114727f, 54.6577034f, 1.52557373f, 6.87081909f, 12.3536062f, 33.9077034f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 46.887867f, 0.0757376999f, 4.77737713f, 10.6568851f, 31.3778667f)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 45.8698349f, 0.0749180317f, 4.72016382f, 10.5055733f, 30.5691795f)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 45.5280304f, 0.0747540966f, 4.70590162f, 10.4562292f, 30.2911472f)
+			);
+
+			// Create bank
+
+			var bank = new Bank(primaryLayer, polygon.getBiogeoclimaticZone(), x -> true);
+
+			expect(layerState.getPolygon()).andStubReturn(polygon);
+			expect(layerState.getBank()).andStubReturn(bank);
+			expect(state.getCurrentStartingYear()).andStubReturn(2011); // IYRFIRST
+
+			em.replay();
+
+			engine.applyBackupFactors(1995);
+
+			em.verify();
+		}
+
 	}
 }

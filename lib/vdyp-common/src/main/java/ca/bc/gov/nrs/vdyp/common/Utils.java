@@ -25,6 +25,9 @@ import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -735,6 +738,57 @@ public class Utils {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get the index of the species within the layer as used in Bank. This is distinct from the species identifier
+	 * index.
+	 * 
+	 * @throws IllegalArgumentException if spec is not a species of layer
+	 */
+	public static <L extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> int
+			indexOfSpeciesWithinLayer(
+					S spec, L layer
+			) {
+		int i = 1;
+		for (var foundSpec : layer.getOrderedSpecies()) {
+			if (foundSpec.getGenusIndex() == spec.getGenusIndex()) {
+				return i;
+			}
+			i++;
+		}
+		throw new IllegalArgumentException(spec.toString() + " not found in " + layer.toString());
+	}
+
+	/**
+	 * Get the index of the species within the layer as used in Bank. This is distinct from the species identifier
+	 * index.
+	 * 
+	 * @throws IllegalArgumentException if spec is not a species of layer
+	 */
+	public static int
+			indexOfSpeciesWithinLayer(
+					String spec, BaseVdypLayer<?, ?> layer
+			) {
+		int i = 1;
+		for (var foundSpec : layer.getOrderedSpecies()) {
+			if (foundSpec.getGenus() == spec) {
+				return i;
+			}
+			i++;
+		}
+		throw new IllegalArgumentException(spec.toString() + " not found in " + layer.toString());
+	}
+
+	/**
+	 * Get a species from the layer based on the index as used by Bank. This is distinct from the species identifier
+	 * index.
+	 * 
+	 * @throws IllegalArgumentException if spec is not a species of layer
+	 */
+	public static <L extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> S
+			getSpeciesByIndexWithinLayer(L layer, int index) {
+		return layer.getOrderedSpecies().get(index - 1);
 	}
 
 }

@@ -214,7 +214,7 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 		 */
 		public Builder<T, I, IB> genus(String genus, int genusIndex) {
 			this.speciesGroup(genus);
-			this.genusIndex = Optional.of(genusIndex);
+			this.speciesIndex(genusIndex);
 			return this;
 		}
 
@@ -226,6 +226,11 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 		 */
 		public Builder<T, I, IB> speciesGroup(String speciesGroup) {
 			this.genus = Optional.of(speciesGroup);
+			return this;
+		}
+
+		public Builder<T, I, IB> speciesIndex(int speciesIndex) {
+			this.genusIndex = Optional.of(speciesIndex);
 			return this;
 		}
 
@@ -280,8 +285,7 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 		protected void check(Collection<String> errors) {
 			requirePresent(polygonIdentifier, "polygonIdentifier", errors);
 			requirePresent(layerType, "layerType", errors);
-			// If the genus/speciesGroup is set and the index is not, try to look it up using the control map
-			genusIndex = orLookup("genusIndex", genusIndex, genus, GenusDefinitionParser::getIndex);
+
 			requirePresent(genus, "genus", errors);
 			requirePresent(genusIndex, "genusIndex", errors);
 
@@ -299,6 +303,14 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 		@Override
 		protected void preProcess() {
 			super.preProcess();
+
+			// If one of the genus/speciesGroup or the index is set, try to look it the other using the control map
+			// Need to do this before we try to build sites.
+			genusIndex = orLookup("genusIndex", genusIndex, genus, GenusDefinitionParser::getIndex);
+			genus = orLookup(
+					"genus", genus, genusIndex, (i, cm) -> GenusDefinitionParser.getSpeciesByIndex(i, cm).getAlias()
+			);
+
 			site = siteBuilder.map(this::propagateControlMap).map(this::buildSite).or(() -> site);
 		}
 
