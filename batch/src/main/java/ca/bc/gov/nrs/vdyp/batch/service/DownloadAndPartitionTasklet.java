@@ -32,14 +32,17 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 	private static final Logger logger = LoggerFactory.getLogger(DownloadAndPartitionTasklet.class);
 	private final BatchInputPartitioner inputPartitioner;
 	private final BatchProperties batchProperties;
+	private final ThreadReservationService threadReservationService;
 
 	public DownloadAndPartitionTasklet(
 			ComsFileService comsFileService, BatchInputPartitioner inputPartitioner, VdypClient vdypClient,
-			BatchProperties batchProperties, JobOwnershipService ownershipService
+			BatchProperties batchProperties, JobOwnershipService ownershipService,
+			ThreadReservationService threadReservationService
 	) {
 		super(comsFileService, vdypClient, ownershipService);
 		this.inputPartitioner = inputPartitioner;
 		this.batchProperties = batchProperties;
+		this.threadReservationService = threadReservationService;
 	}
 
 	@Override
@@ -90,7 +93,16 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 
 			int chunkSize = resolveChunkSize(stepExecution);
 			int maxJobThreads = batchProperties.getThreadPool().getMaxJobThreads();
+			// Based only on this job's own workload, not current pool availability - this count is fixed for the
+			// job's entire lifetime, so shrinking it here would permanently block Prioritize from ever letting this
+			// job grow later into capacity freed by pausing other jobs.
 			computedPartitions = BatchUtils.calculateThreadsForJob(totalPolygons, chunkSize, maxJobThreads);
+
+			// Recorded in the demand ledger only for BatchJobLaunchService.hasCapacity()'s admission check on other,
+			// not-yet-launched jobs - never used to shrink computedPartitions above.
+			int reservedThreads = threadReservationService.reserve(computedPartitions);
+			stepExecution.getJobExecution().getExecutionContext()
+					.putInt(BatchConstants.Job.RESERVED_THREADS, reservedThreads);
 
 			logger.debug(
 					"[GUID: {}] Computed {} partitions for {} polygons (chunkSize={}, maxJobThreads={})", jobGuid,

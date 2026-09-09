@@ -46,6 +46,8 @@ class BatchJobLaunchServiceTest {
 	@Mock
 	ServerCapacityService serverCapacityService;
 	@Mock
+	ThreadReservationService threadReservationService;
+	@Mock
 	JobOwnershipService ownershipService;
 	@Mock
 	JobExplorer jobExplorer;
@@ -66,18 +68,39 @@ class BatchJobLaunchServiceTest {
 		batchProperties.getPartition().setJobSearchChunkSize(2);
 		batchProperties.getReader().setDefaultChunkSize(25);
 		service = new BatchJobLaunchService(
-				vdypBatchJob, batchProperties, serverCapacityService, ownershipService, jobExplorer,
-				claimBoundJobLauncher
+				vdypBatchJob, batchProperties, serverCapacityService, threadReservationService, ownershipService,
+				jobExplorer, claimBoundJobLauncher
 		);
 	}
 
 	@Test
-	void hasCapacityRequiresBothThreadsAndOwnershipIntake() {
-		when(serverCapacityService.hasAvailableCapacity()).thenReturn(false, true, true);
-		when(ownershipService.isAcceptingNewWork()).thenReturn(false, true);
+	void hasCapacityRejectsWorkWithoutServerCapacity() {
+		when(serverCapacityService.hasAvailableCapacity()).thenReturn(false);
 
 		assertFalse(service.hasCapacity());
+	}
+
+	@Test
+	void hasCapacityRejectsWorkWithoutReservedThreadHeadroom() {
+		when(serverCapacityService.hasAvailableCapacity()).thenReturn(true);
+		when(threadReservationService.availableThreads()).thenReturn(1);
+
 		assertFalse(service.hasCapacity());
+	}
+
+	@Test
+	void hasCapacityRejectsWorkWhenOwnershipIsNotAcceptingWork() {
+		when(serverCapacityService.hasAvailableCapacity()).thenReturn(true);
+		when(threadReservationService.availableThreads()).thenReturn(2);
+		when(ownershipService.isAcceptingNewWork()).thenReturn(false);
+
+		assertFalse(service.hasCapacity());
+	}
+
+	@Test
+	void hasCapacityAllowsLaunchWhenAllGuardsPass() {
+		allowLaunch();
+
 		assertTrue(service.hasCapacity());
 	}
 
@@ -197,6 +220,7 @@ class BatchJobLaunchServiceTest {
 
 	private void allowLaunch() {
 		when(serverCapacityService.hasAvailableCapacity()).thenReturn(true);
+		when(threadReservationService.availableThreads()).thenReturn(2);
 		when(ownershipService.isAcceptingNewWork()).thenReturn(true);
 	}
 

@@ -35,25 +35,28 @@ public class BatchJobLaunchService {
 	private final Job vdypBatchJob;
 	private final BatchProperties batchProperties;
 	private final ServerCapacityService serverCapacityService;
+	private final ThreadReservationService threadReservationService;
 	private final JobOwnershipService ownershipService;
 	private final JobExplorer jobExplorer;
 	private final ClaimBoundJobLauncher claimBoundJobLauncher;
 
 	public BatchJobLaunchService(
 			@Qualifier("fetchAndPartitionJob") Job vdypBatchJob, BatchProperties batchProperties,
-			ServerCapacityService serverCapacityService, JobOwnershipService ownershipService, JobExplorer jobExplorer,
-			ClaimBoundJobLauncher claimBoundJobLauncher
+			ServerCapacityService serverCapacityService, ThreadReservationService threadReservationService,
+			JobOwnershipService ownershipService, JobExplorer jobExplorer, ClaimBoundJobLauncher claimBoundJobLauncher
 	) {
 		this.vdypBatchJob = vdypBatchJob;
 		this.batchProperties = batchProperties;
 		this.serverCapacityService = serverCapacityService;
+		this.threadReservationService = threadReservationService;
 		this.ownershipService = ownershipService;
 		this.jobExplorer = jobExplorer;
 		this.claimBoundJobLauncher = claimBoundJobLauncher;
 	}
 
 	public boolean hasCapacity() {
-		return serverCapacityService.hasAvailableCapacity() && ownershipService.isAcceptingNewWork();
+		return serverCapacityService.hasAvailableCapacity() && threadReservationService.availableThreads() >= 2
+				&& ownershipService.isAcceptingNewWork();
 	}
 
 	public JobExecution launch(UUID projectionId, String parametersJson) throws IOException, JobExecutionException {
