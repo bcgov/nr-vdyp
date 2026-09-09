@@ -23,7 +23,7 @@ global:
   #-- domain of the application, it is required, apps.silver.devops.gov.bc.ca for silver cluster and apps.devops.gov.bc.ca for gold cluster
   domain: "apps.silver.devops.gov.bc.ca" # it is apps.gold.devops.gov.bc.ca for gold cluster
   #-- the database Alias gives a nice way to switch to different databases, crunchy, patroni ... etc.
-  databaseAlias: crunchy-postgres-dev-new
+  databaseAlias: crunchy-postgres-dev
   postgresql:
     auth:
       password: unused
@@ -78,8 +78,8 @@ backend:
     QUARKUS_OIDC_AUTH_SERVER_URL: ~
     QUARKUS_SMALLRYE_OPENAPI_ENABLE: "true"
     QUARKUS_HTTP_AUTH_PERMISSION_OPENAPI_POLICY: "permit"
-    VDYP_DB_SECRET_NAME: crunchy-postgres-dev-new-pguser-app-vdyp
-    VDYP_PROXY_DB_SECRET_NAME: crunchy-postgres-dev-new-pguser-proxy-vdyp-rest
+    VDYP_DB_SECRET_NAME: crunchy-postgres-dev-pguser-app-vdyp
+    VDYP_PROXY_DB_SECRET_NAME: crunchy-postgres-dev-pguser-proxy-vdyp-rest
     COMS_BASE_URL: ~
     CORS_FRONTEND_BASE_URL: ~
     OIDC_CLIENT_SECRET_SECRET_NAME: vdyp-oidc
@@ -218,7 +218,7 @@ backup:
 
 coms:
   enabled: true
-  db_secret: crunchy-postgres-dev-new-pguser-coms
+  db_secret: crunchy-postgres-dev-pguser-coms
   image:
     repository: ghcr.io/bcgov/common-object-management-service
     tag: ~
@@ -285,7 +285,7 @@ batch:
     mountPath: /opt/vdyp-batch/data
   env:
     SPRING_PROFILES_ACTIVE: "dev"
-    BATCH_DB_SECRET_NAME: crunchy-postgres-dev-new-pguser-batch
+    BATCH_DB_SECRET_NAME: crunchy-postgres-dev-pguser-batch
     VDYP_BASE_URL: ~
     BATCH_SYSTEM_LOGGING_LEVEL: ~
     VDYP_SYSTEM_LOGGING_LEVEL: ~
