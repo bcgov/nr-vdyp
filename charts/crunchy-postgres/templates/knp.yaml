@@ -2,7 +2,7 @@
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: allow-same-namespace
+  name: {{ if .Values.restore.enabled }}{{ .Release.Name }}-allow-same-namespace{{ else }}allow-same-namespace{{ end }}
 spec:
   podSelector: {}
   ingress:

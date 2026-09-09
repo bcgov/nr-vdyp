@@ -1,5 +1,20 @@
 # Crunchy Postgres chart
 
+## Backup restoration
+
+The same chart supports normal deployment and restoration into a new Helm release.
+Set `restore.enabled: true`, a distinct `fullnameOverride`, `restore.sourceCluster`,
+`restore.repository` (`repo1` PVC or `repo2` S3), and `restore.backupLabel`.
+For S3, also set `restore.s3.directoryName` to the original backup directory.
+`restore.recoveryTarget` optionally selects a PITR timestamp with timezone.
+
+The restored release uses all normal chart configuration, owns a separate credential
+Secret, and writes S3 backups under `vdyp-pgbackrest-<destination-cluster>/repo2`.
+Bootstrap SQL is skipped during recovery. Keep the restore values on subsequent
+upgrades to preserve names and backup paths; these values do not trigger in-place
+recovery. See [RESTORE.md](RESTORE.md) for workflow inputs, manual Helm examples,
+recovery validation and application cutover.
+
 A chart to provision a [Crunchy Postgres](https://www.crunchydata.com/) cluster.
 
 ## Configuration
@@ -40,10 +55,11 @@ A chart to provision a [Crunchy Postgres](https://www.crunchydata.com/) cluster.
 | Parameter                                            | Description                                                   | Default                |
 | ---------------------------------------------------- | ------------------------------------------------------------- | ---------------------- |
 | `pgBackRest.image`                                   | Crunchy pgBackRest                                            |                        |
-| `pgBackRest.retention`                               | Number of backups/days to keep depending on retentionFullType | `2`                    |
-| `pgBackRest.retentionFullType`                       | Either 'count' or 'time'                                      | `count`                |
-| `pgBackRest.repos.schedules.full`                    | Full backup schedule                                          | `0 8 * * *`            |
-| `pgBackRest.repos.schedules.incremental`             | Incremental backup schedule                                   | `0 0,4,12,16,20 * * *` |
+| `pgBackRest.retentionFull`                           | Days of full backups to retain (14 for dev/test, 60 for prod)  | Environment-specific   |
+| `pgBackRest.retentionFullType`                       | Either 'count' or 'time'                                      | `time`                 |
+| `pgBackRest.repos.schedules.full`                    | Weekly full backup schedule                                   | `0 8 * * 0`            |
+| `pgBackRest.repos.schedules.differential`            | Daily differential schedule, except on full-backup day         | `0 8 * * 1-6`          |
+| `pgBackRest.repos.schedules.incremental`             | Daily incremental backup schedule                              | `0 0 * * *`            |
 | `pgBackRest.repos.schedules.volume.addessModes`      | Access modes                                                  | `ReadWriteOnce`        |
 | `pgBackRest.repos.schedules.volume.storage`          | Access modes                                                  | `64Mi`                 |
 | `pgBackRest.repos.schedules.volume.storageClassName` | Storage class name modes                                      | `netapp-file-backup`   |

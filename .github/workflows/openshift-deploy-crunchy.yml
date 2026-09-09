@@ -2,6 +2,26 @@ name: Openshift DB deploy/update
 run-name: Deploy PostgresCluster to ${{ inputs.ENVIRONMENT_NAME}}
 
 on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT_NAME:
+        required: true
+        type: string
+      TARGET_CLUSTER:
+        default: ''
+        type: string
+      REPOSITORY:
+        default: repo2
+        type: string
+      BACKUP_LABEL:
+        default: ''
+        type: string
+      RECOVERY_TARGET:
+        default: ''
+        type: string
+      POSTGRES_VERSION:
+        default: ''
+        type: string
   workflow_dispatch:
     inputs:
       ENVIRONMENT_NAME:
@@ -43,6 +63,7 @@ jobs:
           DB_REPLICAS: ${{ vars.DB_INSTANCE_HA_REPLICAS }}
           DB_WAL_VOLUME_SIZE: ${{ vars.DB_WAL_VOLUME_SIZE }}
           DB_BACKUP_VOLUME_SIZE: ${{ vars.DB_BACKUP_VOLUME_SIZE }}
+          DB_BACKUP_RETENTION_DAYS: ${{ inputs.ENVIRONMENT_NAME == 'prod' && '60' || '14' }}
           BOUNCER_REPLICAS: ${{ vars.DB_LOADBALANCER_HA_REPLICAS}}
           COMS_DB_USER: ${{ vars.COMS_DB_ROLE}}
           COMS_DB_NAME: ${{ vars.COMS_DB_DATABASE}}
@@ -75,6 +96,65 @@ jobs:
           namespace: ${{ secrets.oc_namespace }}
 
       - name: zip and install helm chart
+        if: inputs.TARGET_CLUSTER == ''
+        env:
+          SOURCE_ENVIRONMENT: ${{ inputs.ENVIRONMENT_NAME }}
         run: |
           cd staging && tar -czvf crunchy-postgres.tar.gz crunchy-postgres
-          helm upgrade -i crunchy-postgres-${{inputs.ENVIRONMENT_NAME}} ./crunchy-postgres.tar.gz
+          helm upgrade -i crunchy-postgres-$SOURCE_ENVIRONMENT ./crunchy-postgres.tar.gz
+
+      - name: Install restored cluster using the deployment chart
+        if: inputs.TARGET_CLUSTER != ''
+        shell: bash
+        env:
+          NAMESPACE: ${{ secrets.oc_namespace }}
+          SOURCE_ENVIRONMENT: ${{ inputs.ENVIRONMENT_NAME }}
+          TARGET_CLUSTER: ${{ inputs.TARGET_CLUSTER }}
+          REPOSITORY: ${{ inputs.REPOSITORY }}
+          BACKUP_LABEL: ${{ inputs.BACKUP_LABEL }}
+          RECOVERY_TARGET: ${{ inputs.RECOVERY_TARGET }}
+          POSTGRES_VERSION: ${{ inputs.POSTGRES_VERSION }}
+        run: |
+          set -euo pipefail
+          [[ "$TARGET_CLUSTER" =~ ^[a-z]([-a-z0-9]*[a-z0-9])?$ && ${#TARGET_CLUSTER} -le 40 ]]
+          [[ "$TARGET_CLUSTER" != "crunchy-postgres-$SOURCE_ENVIRONMENT" ]]
+          [[ "$REPOSITORY" == repo1 || "$REPOSITORY" == repo2 ]]
+          # Recovery and future backups reuse the original namespace's S3 Secret.
+          oc -n "$NAMESPACE" get secret "$SOURCE_ENVIRONMENT-postgres-s3-secret" -o name >/dev/null
+          if [[ -n "$RECOVERY_TARGET" ]]; then date --date="$RECOVERY_TARGET" >/dev/null; fi
+          if [[ -n "$(oc -n "$NAMESPACE" get postgrescluster "$TARGET_CLUSTER" --ignore-not-found -o name)" ]]; then
+            echo 'Destination exists; use a new cluster name.' >&2
+            exit 1
+          fi
+          umask 077
+          jq -n --arg target "$TARGET_CLUSTER" --arg source "crunchy-postgres-$SOURCE_ENVIRONMENT" \
+            --arg repo "$REPOSITORY" --arg backup "$BACKUP_LABEL" --arg time "$RECOVERY_TARGET" \
+            --arg directory "vdyp-pgbackrest-$SOURCE_ENVIRONMENT" \
+            '{fullnameOverride:$target, restore:{enabled:true, repository:$repo, sourceCluster:$source, backupLabel:$backup, recoveryTarget:$time, s3:{directoryName:$directory}}}' \
+            > "$RUNNER_TEMP/restore-values.json"
+          version_args=()
+          if [[ -n "$POSTGRES_VERSION" ]]; then
+            [[ "$POSTGRES_VERSION" =~ ^[0-9]{2}$ ]]
+            version_args+=(--set "postgresVersion=$POSTGRES_VERSION")
+          fi
+          # Render the shared chart to check the effective version for PVC recovery.
+          # Rendered output contains Secrets: never print or upload it.
+          helm template "$TARGET_CLUSTER" staging/crunchy-postgres \
+            -f "$RUNNER_TEMP/restore-values.json" "${version_args[@]}" \
+            --show-only templates/PostgresCluster.yaml > "$RUNNER_TEMP/restore-cluster.yaml"
+          if [[ "$REPOSITORY" == repo1 ]]; then
+            version=$(awk '/^  postgresVersion:/ {print $2}' "$RUNNER_TEMP/restore-cluster.yaml")
+            oc -n "$NAMESPACE" get postgrescluster "crunchy-postgres-$SOURCE_ENVIRONMENT" -o json \
+              | jq -e --argjson version "$version" '.spec.postgresVersion == $version and any(.spec.backups.pgbackrest.repos[]; .name == "repo1" and .volume != null)' >/dev/null
+          fi
+          oc -n "$NAMESPACE" create --dry-run=server -f "$RUNNER_TEMP/restore-cluster.yaml"
+          # Install only: never upgrade/overwrite an existing database during recovery.
+          # Do not use --atomic: retain resources for diagnosis if restoration fails.
+          helm install "$TARGET_CLUSTER" staging/crunchy-postgres -n "$NAMESPACE" \
+            -f "$RUNNER_TEMP/restore-values.json" "${version_args[@]}"
+          {
+            echo '## Database restoration submitted'
+            printf '\nHelm release / cluster: `%s`\n\nRepository: `%s`\n\nBackup: `%s`\n' "$TARGET_CLUSTER" "$REPOSITORY" "$BACKUP_LABEL"
+            echo 'Crunchy manages the restore Job asynchronously; submission success is not recovery completion.'
+            echo 'Follow charts/crunchy-postgres/RESTORE.md for monitoring, validation and application cutover.'
+          } >> "$GITHUB_STEP_SUMMARY"
