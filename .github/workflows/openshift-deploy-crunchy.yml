@@ -97,9 +97,11 @@ jobs:
 
       - name: zip and install helm chart
         if: inputs.TARGET_CLUSTER == ''
+        env:
+          SOURCE_ENVIRONMENT: ${{ inputs.ENVIRONMENT_NAME }}
         run: |
           cd staging && tar -czvf crunchy-postgres.tar.gz crunchy-postgres
-          helm upgrade -i crunchy-postgres-${{inputs.ENVIRONMENT_NAME}} ./crunchy-postgres.tar.gz
+          helm upgrade -i crunchy-postgres-$SOURCE_ENVIRONMENT ./crunchy-postgres.tar.gz
 
       - name: Install restored cluster using the deployment chart
         if: inputs.TARGET_CLUSTER != ''
