@@ -27,8 +27,8 @@ public class ThreadReservationService {
 	}
 
 	/**
-	 * Atomically records a job's full thread demand in the ledger, uncapped by current pool availability. Returns
-	 * the same amount for symmetry with release(int).
+	 * Atomically records a job's full thread demand in the ledger, uncapped by current pool availability. Returns the
+	 * same amount for symmetry with release(int).
 	 */
 	public int reserve(int requestedThreads) {
 		int wanted = Math.max(1, requestedThreads);
