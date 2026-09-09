@@ -8,6 +8,23 @@ imagePullPolicy: IfNotPresent
 #Set this to true for OpenShift deployments to avoid incompatible securityContext values
 openshift: true
 
+# Bootstrap a NEW cluster using the same deployment configuration.
+# Keep these values on subsequent upgrades; they are not an in-place restore trigger.
+restore:
+  enabled: false
+  repository: repo2 # repo1: source cluster PVC; repo2: direct S3
+  sourceCluster: "" # required for both paths; also guards destination naming
+  backupLabel: ""
+  recoveryTarget: "" # blank: backup consistent state; otherwise timestamp with timezone
+  s3:
+    # Original directory under /pgbackrest/postgres-operator (not destination).
+    directoryName: ""
+    # Reuses the existing environment S3 Secret in the same namespace.
+    # Defaults to the chart's bucket/endpoint/region.
+    bucket: ""
+    endpoint: ""
+    region: ""
+
 instances:
   name: ha # high availability
   replicas: #{DB_REPLICAS}#
@@ -39,12 +56,12 @@ instances:
 
 pgBackRest:
   image: # it's not necessary to specify an image as the images specified in the Crunchy Postgres Operator will be pulled by default
-  retentionFull: "2" # Ideally a larger number such as 30 backups/days
+  retentionFull: "#{DB_BACKUP_RETENTION_DAYS}#"
   retentionDifferential: "5"
 
   # If retention-full-type set to 'count' then the oldest backups will expire when the number of backups reach the number defined in retention
   # If retention-full-type set to 'time' then the number defined in retention will take that many days worth of full backups before expiration
-  retentionFullType: count
+  retentionFullType: time
 
   #How many backups worth of WAL files to keep, and what type of backup to count for expiring WAL files
   retentionArchiveType: diff
@@ -58,11 +75,11 @@ pgBackRest:
     schedules:
       full: 0 8 * * 0
       differential: 0 8 * * 1-6
-      incremental: 0 0,12 * * *
+      incremental: 0 0 * * *
     schedulesOffset:
       full: 0 10 * * 0
       differential: 0 10 * * 1-6
-      incremental: 0 2,14 * * *
+      incremental: 0 2 * * *
     volume:
       accessModes: "ReadWriteOnce"
       storageClassName: netapp-file-backup
