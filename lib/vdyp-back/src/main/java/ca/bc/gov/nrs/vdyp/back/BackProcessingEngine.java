@@ -145,6 +145,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	void applyBackupFactors(int currentYear /* IYRCUR */) throws ProcessingException {
 		final BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
 		final BecDefinition bec = plps.getPolygon().getBiogeoclimaticZone();
+		final var bank = plps.getBank();
 
 		final EstimationMethods estimators = getState().getEstimators();
 
@@ -276,6 +277,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		primaryLayer.getQuadraticMeanDiameterByUtilization().setAll(dqp);
 		BaseAreaTreeDensityDiameter.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
 
+		// Assign BA and DQ by species
+
 		if (plps.getNSpecies() == 1) {
 			primarySpecies.getBaseAreaByUtilization().setAll(primaryLayer.getBaseAreaByUtilization().getAll());
 			primarySpecies.getQuadraticMeanDiameterByUtilization().setAll(
@@ -286,13 +289,19 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			);
 		} else {
 
-			var dqLimits = getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(), (s, r) ->
+			for (int i : plps.getIndices()) {
+				var species = Utils.getSpeciesByIndexWithinLayer(primaryLayer, i);
+				// Odd that this uses the bank rather than the percentage from main model data structure, but that's what VDYP7 did
+				species.getBaseAreaByUtilization().setAll(bap * bank.percentagesOfForestedLand[i] / 100);
+			}
 
-			getState().getLimits(Utils.indexOfSpeciesWithinLayer(s, primaryLayer))
-
+			// ROOTV01
+			var dqLimits = getState().getComputers().getDqBySpecies(
+					primaryLayer, bec.getRegion(),
+					(s, r) -> getState().getLimits(Utils.indexOfSpeciesWithinLayer(s, primaryLayer))
 			);
 
-			//Apply backup factors for DQ by species and calculate TPH
+			// Apply backup factors for DQ by species and calculate TPH
 
 			float treesPerHectareSum = 0;
 
@@ -311,6 +320,9 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 							)
 					);
 				} else {
+					// We do not have a good backup factor for this species.  Therefore, do not apply one.  
+					// But do put a cap on things that = actual at input year;
+
 					final int yearDiff = getState().getCurrentStartingYear() - getState().getConvergenceYear().get();
 					float slope = (getState().getSpeciesConvergenceQuadraticMeanDiameter(i) //
 							- species.getQuadraticMeanDiameterByUtilization().getAll()) //

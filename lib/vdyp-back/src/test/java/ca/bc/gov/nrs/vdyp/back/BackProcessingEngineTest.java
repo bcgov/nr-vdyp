@@ -51,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.processing_state.ProcessingStateTestUtils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
@@ -660,6 +661,7 @@ class BackProcessingEngineTest {
 			// Create bank
 
 			var bank = new Bank(primaryLayer, polygon.getBiogeoclimaticZone(), x -> true);
+			ProcessingStateTestUtils.fill(bank.percentagesOfForestedLand, 0f, 10f, 70f, 20f);
 
 			expect(layerState.getPolygon()).andStubReturn(polygon);
 			expect(layerState.getBank()).andStubReturn(bank);
@@ -676,11 +678,12 @@ class BackProcessingEngineTest {
 			assertThat(primarySite, hasProperty("ageTotal", present(closeTo(69f))));
 			assertThat(primarySite, hasProperty("yearsAtBreastHeight", present(closeTo(61.3f))));
 			assertThat(primarySite, hasProperty("yearsToBreastHeight", present(closeTo(8.2f))));
+
 			assertThat(
 					primaryLayer, allOf(
 							hasProperty("loreyHeightByUtilization", utilizationAllOnly(12.3255749f)),
 							hasProperty("baseAreaByUtilization", utilizationAllOnly(33.975399f)),
-							hasProperty("quadMeanDiameterByUtilization", utilizationAllOnly(14.7094793f)),
+							hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(14.7094793f)),
 							hasProperty("treesPerHectareByUtilization", utilizationAllOnly(1999.30969f))
 					)
 			);
@@ -689,7 +692,7 @@ class BackProcessingEngineTest {
 							"B", allOf(
 									hasProperty("loreyHeightByUtilization", utilizationAllOnly(11.6197081f)),
 									hasProperty("baseAreaByUtilization", utilizationAllOnly(3.3975358f)),
-									hasProperty("quadMeanDiameterByUtilization", utilizationAllOnly(12.2343445f)),
+									hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(12.2343445f)),
 									hasProperty("treesPerHectareByUtilization", utilizationAllOnly(289.009918f))
 							)
 					)
@@ -699,7 +702,7 @@ class BackProcessingEngineTest {
 							"PL", allOf(
 									hasProperty("loreyHeightByUtilization", utilizationAllOnly(11.9535027f)),
 									hasProperty("baseAreaByUtilization", utilizationAllOnly(23.7827759f)),
-									hasProperty("quadMeanDiameterByUtilization", utilizationAllOnly(14.7683105f)),
+									hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(14.7683105f)),
 									hasProperty("treesPerHectareByUtilization", utilizationAllOnly(1388.38855f))
 							)
 					)
@@ -709,7 +712,7 @@ class BackProcessingEngineTest {
 							"S", allOf(
 									hasProperty("loreyHeightByUtilization", utilizationAllOnly(13.9807625f)),
 									hasProperty("baseAreaByUtilization", utilizationAllOnly(6.79508448f)),
-									hasProperty("quadMeanDiameterByUtilization", utilizationAllOnly(16.39398f)),
+									hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(16.39398f)),
 									hasProperty("treesPerHectareByUtilization", utilizationAllOnly(321.911285f))
 							)
 					)
