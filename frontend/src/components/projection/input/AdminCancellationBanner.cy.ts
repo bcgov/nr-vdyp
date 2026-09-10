@@ -2,7 +2,7 @@ import { mount } from 'cypress/vue'
 import AdminCancellationBanner from './AdminCancellationBanner.vue'
 
 describe('AdminCancellationBanner.vue', () => {
-  it('renders the given reason text', () => {
+  it('renders the given reason text prefixed with "Cancel Reason:"', () => {
     mount(AdminCancellationBanner, {
       props: { reason: 'Cancelled by admin for maintenance' },
     })
@@ -10,7 +10,7 @@ describe('AdminCancellationBanner.vue', () => {
     cy.get('.admin-cancellation-banner').should('exist')
     cy.get('.admin-cancellation-banner--text').should(
       'contain',
-      'Cancelled by admin for maintenance',
+      'Cancel Reason: Cancelled by admin for maintenance',
     )
   })
 })
