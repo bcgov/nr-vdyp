@@ -53,6 +53,7 @@ import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.service.DownloadAndPartitionTasklet;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.service.ResultPersistenceTasklet;
+import ca.bc.gov.nrs.vdyp.batch.service.ThreadReservationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -258,10 +259,11 @@ public class BatchConfiguration {
 	public VDYPJobMetricListener vdypJobMetricListener(
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
 			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService,
-			PrioritizationPauseTracker pauseTracker
+			PrioritizationPauseTracker pauseTracker, ThreadReservationService threadReservationService
 	) {
 		return new VDYPJobMetricListener(
-				metricsCollector, batchProperties, resultAggregationService, ownershipService, pauseTracker
+				metricsCollector, batchProperties, resultAggregationService, ownershipService, pauseTracker,
+				threadReservationService
 		);
 	}
 

@@ -150,8 +150,9 @@ public class BatchPrioritizationService {
 				Optional<JobClaim> claim = ownershipService.tryAcquire(projectionGuid, "prioritize-resume");
 				if (claim.isPresent()) {
 					try {
+						// reservedThreads=0: the resumed execution keeps the paused job's existing reservation.
 						JobExecution resumed = claimBoundJobLauncher
-								.launch(fetchAndPartitionJob, execution.getJobParameters(), claim.get());
+								.launch(fetchAndPartitionJob, execution.getJobParameters(), claim.get(), 0);
 						logger.info(
 								"[GUID: {}] Resumed paused job execution {} as new execution {}.", prioritizedJobGuid,
 								executionId, resumed.getId()

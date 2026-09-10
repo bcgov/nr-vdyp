@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
@@ -32,14 +33,17 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 	private static final Logger logger = LoggerFactory.getLogger(DownloadAndPartitionTasklet.class);
 	private final BatchInputPartitioner inputPartitioner;
 	private final BatchProperties batchProperties;
+	private final ThreadReservationService threadReservationService;
 
 	public DownloadAndPartitionTasklet(
 			ComsFileService comsFileService, BatchInputPartitioner inputPartitioner, VdypClient vdypClient,
-			BatchProperties batchProperties, JobOwnershipService ownershipService
+			BatchProperties batchProperties, JobOwnershipService ownershipService,
+			ThreadReservationService threadReservationService
 	) {
 		super(comsFileService, vdypClient, ownershipService);
 		this.inputPartitioner = inputPartitioner;
 		this.batchProperties = batchProperties;
+		this.threadReservationService = threadReservationService;
 	}
 
 	@Override
@@ -90,7 +94,24 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 
 			int chunkSize = resolveChunkSize(stepExecution);
 			int maxJobThreads = batchProperties.getThreadPool().getMaxJobThreads();
+			// Based only on this job's own workload, not current pool availability - this count is fixed for the
+			// job's entire lifetime, so shrinking it here would permanently block Prioritize from ever letting this
+			// job grow later into capacity freed by pausing other jobs.
 			computedPartitions = BatchUtils.calculateThreadsForJob(totalPolygons, chunkSize, maxJobThreads);
+
+			// BatchJobLaunchService already reserved an upfront estimate at admission time. True it up to the real,
+			// polygon-count-based need instead of reserving fresh, which would double-count this job's demand.
+			ExecutionContext jobExecutionContext = stepExecution.getJobExecution().getExecutionContext();
+			int alreadyReserved = jobExecutionContext.getInt(BatchConstants.Job.RESERVED_THREADS, 0);
+			int reservedThreads = alreadyReserved;
+			if (computedPartitions > alreadyReserved) {
+				reservedThreads = alreadyReserved
+						+ threadReservationService.reserve(computedPartitions - alreadyReserved);
+			} else if (computedPartitions < alreadyReserved) {
+				threadReservationService.release(alreadyReserved - computedPartitions);
+				reservedThreads = computedPartitions;
+			}
+			jobExecutionContext.putInt(BatchConstants.Job.RESERVED_THREADS, reservedThreads);
 
 			logger.debug(
 					"[GUID: {}] Computed {} partitions for {} polygons (chunkSize={}, maxJobThreads={})", jobGuid,
