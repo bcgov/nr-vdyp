@@ -9,9 +9,9 @@ reference in the system. These orphaned files will need an automated claenup sys
 2. Verify the restored database and intended S3 endpoint/bucket. Do not run against
    environments sharing the same bucket and `vdyp/fileset/` namespace.
 3. With an ADMIN bearer token, preview:
-   `POST /api/v8/admin/coms/orphan-file-sets` (defaults to `dryRun=true`).
+   `POST /api/v8/admin/orphan-file-sets` (defaults to `dryRun=true`).
    Save and review the JSON report.
-4. Delete using `POST /api/v8/admin/coms/orphan-file-sets?dryRun=false`.
+4. Delete using `POST /api/v8/admin/orphan-file-sets?dryRun=false`.
    This performs a fresh inventory and reference check, not a saved preview.
    Run only one maintenance operation at a time across all backend replicas.
 5. Review failures, rerun preview and retry as needed before resuming writers.
