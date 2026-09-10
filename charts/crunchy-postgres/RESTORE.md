@@ -15,8 +15,6 @@ Run **Openshift DB restore** to restore into a new Helm release and PostgresClus
 
 The workflow uses the same GitHub environment variables and `oc_namespace`/`oc_token` secrets as deployment. Its token needs permissions for Helm release Secrets and chart resources (PostgresClusters, Secrets, ConfigMaps and NetworkPolicies). Recovery validation also needs pod/Job inspection and database exec access. Ensure namespace quota covers another cluster and backup PVC, and network policies permit repository and application traffic.
 
-The destination's own backups include both repo1 and repo2, exactly as for deployment. Therefore both restore modes require the normal S3 deployment settings for **future destination backups**, even though reading a PVC backup does not itself need S3 credentials.
-
 ## Choose and submit a recovery
 
 If the source exists, find its repository host and list backups:
@@ -34,53 +32,6 @@ For PVC, the source `crunchy-postgres-<environment>`, repository host and backup
 For S3, the source cluster need not exist. The workflow reads the original path `/pgbackrest/postgres-operator/vdyp-pgbackrest-<environment>/repo2` using the configured S3 credentials. If restoring a backup of a previously recovered cluster, use manual chart overrides with its actual source directory instead of that original environment path.
 
 Run the restore workflow with a unique destination. It validates the generated PostgresCluster against the installed CRD and calls `helm install`, never `upgrade --install`, for recovery. **Workflow success means submission, not completed recovery.** Proceed to monitoring below.
-
-## Chart restore values and manual installation
-
-Use a copy of the chart with deployment tokens resolved by the normal deployment process, or supply a complete resolved environment values file. The repository's raw `#{...}#` placeholders are not directly deployable; do not duplicate the database configuration into a new restore chart. Match the backup's PostgreSQL major version and any extension images, using an appropriate chart revision for historical recovery.
-
-Create `restore-values.yaml` containing only recovery-specific overrides. For PVC:
-
-```yaml
-fullnameOverride: crunchy-postgres-recovered
-restore:
-  enabled: true
-  repository: repo1
-  sourceCluster: crunchy-postgres-prod
-  backupLabel: "20260906-080000F"
-  recoveryTarget: ""
-```
-
-For S3:
-
-```yaml
-fullnameOverride: crunchy-postgres-recovered
-restore:
-  enabled: true
-  repository: repo2
-  sourceCluster: crunchy-postgres-prod
-  backupLabel: "20260906-100000F"
-  recoveryTarget: ""
-  s3:
-    directoryName: vdyp-pgbackrest-prod
-```
-
-Replace example labels with successful backups. `sourceCluster` is a name guard for S3 and is not looked up. For PITR, set `recoveryTarget: "2026-09-08T10:00:00-07:00"` to the actual target. S3 source `bucket`, `endpoint` and `region` can be overridden under `restore.s3`; otherwise they use normal chart settings. Recovery and future backups reuse `pgBackRest.repos.configuration.secretName`, which must already exist in the same namespace.
-
-Render, validate and install from a token-resolved chart (example location `staging/crunchy-postgres`):
-
-```sh
-helm lint staging/crunchy-postgres -f restore-values.yaml
-helm template crunchy-postgres-recovered staging/crunchy-postgres -f restore-values.yaml --show-only templates/PostgresCluster.yaml > restore-cluster.yaml
-oc -n <namespace> create --dry-run=server -f restore-cluster.yaml
-helm install crunchy-postgres-recovered staging/crunchy-postgres -n <namespace> -f restore-values.yaml
-```
-
-Use `helm install` with a new release/cluster name. Check `oc get postgrescluster <destination>` first and do not adopt an existing database. For both restore modes, install in the original namespace. Do not use `--atomic`, which can remove resources needed to investigate failed recovery. Do not print full rendered charts or upload them as artifacts because they include S3 credentials.
-
-The chart skips bootstrap SQL for recovery. All other database settings come from the normal chart. Both restore paths create new data/WAL/backup PVCs. The restored release references the existing environment S3 Secret without creating or adopting it, and writes S3 backups to `/pgbackrest/postgres-operator/vdyp-pgbackrest-<destination>/repo2`. The original source directory is used only for reading. The chart rejects identical source/destination names and identical S3 source/destination directories.
-
-Persist the override file for later Helm upgrades. Keep `restore.enabled: true` and the same destination identity: these bootstrap values do not request another restore on an initialized cluster, and disabling them would change the chart's backup path and Secret ownership. Changing backup label or recovery target on an existing cluster is not a recovery operation; use a new destination for another restore.
 
 ## Shared S3 credentials
 
@@ -111,11 +62,11 @@ Resources and the Helm release remain available on failure. Inspect the release 
 
 ### 1. Establish the write boundary
 
-Record the running application release/image versions, Helm values, deployment replica counts and current database Secret references. Pause automatic deployment and migration jobs during the recovery. Put the application into maintenance, stop new submissions, drain or explicitly account for in-flight work, and stop backend, batch and COMS writers. Suspend relevant CronJobs and autoscaling controllers so they cannot recreate writers while configuration changes are being made.
+Record the running application release/image versions, Helm values, deployment replica counts and current database
+Secret references. Ensure system is not subject to deployments or projections before starting the cutover.
 
-Discover the actual resource names with `oc -n <namespace> get deployments,cronjobs,hpa`; scale the selected writer deployments to zero with `oc -n <namespace> scale deployment/<name> --replicas=0`. Check for KEDA ScaledObjects or other controllers too. Record what was suspended so it can be restored later. Do not scale the database down as part of this step.
-
-For planned recovery with no intended data loss, stop writers **before the final backup/recovery target is selected**, and ensure their final transactions are archived and recovered. For incident PITR, explicitly account for data intentionally excluded after the target. Writes made to the original after the restored point do not appear automatically in the destination.
+Discover the actual resource names with `oc -n <namespace> get deployments,cronjobs,hpa`; scale the selected writer
+deployments to zero with `oc -n <namespace> scale deployment/<name> --replicas=0`.
 
 ### 2. Change application Secret references
 
@@ -138,27 +89,13 @@ Validate a connection using each destination application role before reopening t
 
 `global.databaseAlias` is used in legacy generated host strings and database NetworkPolicy selectors. Changing it alone does not change the Secret-based connections above. Inspect the rendered chart before updating it: some host strings prepend the Helm release name, whereas the operator's service is `<destination>-primary`.
 
-Restoration now uses the chart's normal pod labels. The `app.kubernetes.io/name` label comes from the chart name or `nameOverride`, not necessarily `fullnameOverride`. Inspect the destination's actual labels before changing `global.databaseAlias`; the destination cluster name alone is not sufficient to predict that label. Configure destination policies using its actual labels, such as `postgres-operator.crunchydata.com/cluster: crunchy-postgres-recovered`, and allow TCP 5432 from the backend, batch, COMS and migration pods. Check egress policies and DNS access as well. The chart installs the same-namespace access policy for recovery too, using a release-specific resource name to avoid conflict with the original release. Verify connectivity from application pods and preserve the intended namespace access restrictions.
-
 Update the Liquibase chart's `crunchy.pguserSecretName`, `crunchy.adminSecretName` and `crunchy.batchSecretName` to destination Secrets. Its current Job templates consume `host` and `jdbc-uri` from those Secrets, so changing `crunchy.host` alone is insufficient. The templates in `charts/liquibase/values.yaml` still generate source-cluster names; adjust the persisted recovery deployment configuration before running the DDL workflow again. Confirm the application version is compatible with recovered Liquibase history; do not automatically run migrations just to test restoration.
 
-### 4. Deploy and validate before reopening traffic
-
-Render/review the application Helm changes and deploy through the normal application deployment process, retaining the writer pause until ready to validate. Changes to Secret references create new pod templates; if only Secret contents changed, restart the affected deployments because environment variables are read at pod startup.
-
-Restore the recorded deployment replica counts for controlled validation while maintenance access is still in place. Watch `oc -n <namespace> rollout status deployment/<name>` for each application. Verify backend database access, a representative VDYP operation, a controlled batch job, and COMS metadata/object access. Check logs for authentication, DNS, TLS and permission errors. Confirm sessions reach the destination and that the original has no application writers.
-
-Database restoration does not rewind NATS messages, object storage or other external state. Reconcile queued jobs and COMS objects with the recovered database before resuming consumers; otherwise old messages may replay work or database metadata may refer to a different object state.
-
-Reenable traffic, scheduled work and autoscaling after these checks. Record the cutover time and the first successful application transactions.
-
-### 5. Keep configuration and rollback deliberate
+### 4. Keep configuration and rollback deliberate
 
 The restored cluster is owned by its own Helm release, named after the destination. Normal manual DB deployment still targets `crunchy-postgres-<environment>`; keep it paused until routine deployment targets the accepted destination. Upgrade the destination release with the same environment configuration and persisted restore overrides. Keep `restore.enabled`, destination name and restore settings unchanged: they preserve shared Secret usage and the destination S3 path and do not trigger in-place recovery. Do not rerun the restore workflow to perform an upgrade; it deliberately uses install-only behavior. Validate new repo1 and repo2 backups before considering recovery complete.
 
 Before the destination accepts writes, reverting the application configuration can return clients to the original if its data is suitable. After destination writes begin, switching back would lose or diverge those writes: stop writers and plan data reconciliation or another recovery first. Retain the original cluster and recovery evidence until the agreed acceptance period ends, then retire it explicitly.
-
-Reference: [Crunchy 5.7 PostgresCluster API](https://access.crunchydata.com/documentation/postgres-operator/latest/references/crd/5.7.x/postgrescluster).
 
 
 
