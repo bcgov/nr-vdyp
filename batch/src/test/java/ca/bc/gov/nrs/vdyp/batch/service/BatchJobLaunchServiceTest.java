@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -125,7 +126,8 @@ class BatchJobLaunchServiceTest {
 
 		assertEquals(existing, service.launch(projectionId, "{}"));
 		verify(ownershipService, never()).tryAcquire(any(), any());
-		verify(claimBoundJobLauncher, never()).launch(any(), any(), any());
+		verify(claimBoundJobLauncher, never()).launch(any(), any(), any(), anyInt());
+		verify(threadReservationService, never()).reserve(anyInt());
 	}
 
 	@Test
@@ -159,7 +161,7 @@ class BatchJobLaunchServiceTest {
 		when(jobExplorer.getJobInstances("VdypFetchAndPartitionJob", 0, 2)).thenReturn(List.of(instance));
 		when(jobExplorer.getJobExecutions(instance)).thenReturn(List.of(stopping));
 		when(ownershipService.tryAcquire(projectionId.toString(), "new-launch")).thenReturn(Optional.of(claim));
-		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(launched);
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt())).thenReturn(launched);
 
 		assertEquals(launched, service.launch(projectionId, "{}"));
 		verify(ownershipService).tryAcquire(projectionId.toString(), "new-launch");
@@ -173,7 +175,8 @@ class BatchJobLaunchServiceTest {
 		when(ownershipService.tryAcquire(projectionId.toString(), "new-launch")).thenReturn(Optional.empty());
 
 		assertThrows(JobExecutionAlreadyRunningException.class, () -> service.launch(projectionId, "{}"));
-		verify(claimBoundJobLauncher, never()).launch(any(), any(), any());
+		verify(claimBoundJobLauncher, never()).launch(any(), any(), any(), anyInt());
+		verify(threadReservationService, never()).reserve(anyInt());
 	}
 
 	@Test
@@ -185,14 +188,16 @@ class BatchJobLaunchServiceTest {
 		allowLaunch();
 		when(jobExplorer.getJobInstanceCount("VdypFetchAndPartitionJob")).thenReturn(0L);
 		when(ownershipService.tryAcquire(projectionId.toString(), "new-launch")).thenReturn(Optional.of(claim));
-		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(launched);
+		when(threadReservationService.reserve(3)).thenReturn(3);
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt())).thenReturn(launched);
 
 		assertEquals(launched, service.launchNewJob(projectionId, "{\"ageStart\": 10}"));
 
 		verify(claimBoundJobLauncher).launch(
 				org.mockito.ArgumentMatchers.eq(vdypBatchJob), parameters.capture(),
-				org.mockito.ArgumentMatchers.eq(claim)
+				org.mockito.ArgumentMatchers.eq(claim), org.mockito.ArgumentMatchers.eq(3)
 		);
+		verify(threadReservationService).reserve(3);
 		JobParameters value = parameters.getValue();
 		assertEquals(projectionId.toString(), value.getString(BatchConstants.GuidInput.PROJECTION_GUID));
 		assertEquals("{\"ageStart\": 10}", value.getString(BatchConstants.Projection.PARAMETERS_JSON));
@@ -212,10 +217,28 @@ class BatchJobLaunchServiceTest {
 		when(jobExplorer.getJobInstanceCount("VdypFetchAndPartitionJob"))
 				.thenThrow(new IllegalStateException("repository unavailable"));
 		when(ownershipService.tryAcquire(projectionId.toString(), "new-launch")).thenReturn(Optional.of(claim));
-		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(launched);
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt())).thenReturn(launched);
 
 		assertEquals(launched, service.launch(projectionId, "{}"));
-		verify(claimBoundJobLauncher).launch(any(), any(), any());
+		verify(claimBoundJobLauncher).launch(any(), any(), any(), anyInt());
+	}
+
+	@Test
+	void launchReservesThreadsBeforeDelegatingToClaimBoundLauncher() throws Exception {
+		UUID projectionId = UUID.randomUUID();
+		JobClaim claim = claim(projectionId.toString());
+		allowLaunch();
+		when(jobExplorer.getJobInstanceCount("VdypFetchAndPartitionJob")).thenReturn(0L);
+		when(ownershipService.tryAcquire(projectionId.toString(), "new-launch")).thenReturn(Optional.of(claim));
+		when(threadReservationService.reserve(3)).thenReturn(3);
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt()))
+				.thenThrow(new org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException("done"));
+
+		assertThrows(
+				org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException.class,
+				() -> service.launch(projectionId, "{}")
+		);
+		verify(threadReservationService).reserve(3);
 	}
 
 	private void allowLaunch() {

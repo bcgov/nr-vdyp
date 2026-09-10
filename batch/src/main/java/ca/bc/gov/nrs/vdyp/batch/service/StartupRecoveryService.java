@@ -184,8 +184,9 @@ public class StartupRecoveryService implements SmartLifecycle {
 		}
 
 		recoveryMetadataService.markStaleExecutionFailed(oldExecutionId);
+		// reservedThreads=0: recovery does not reserve upfront; any existing reservation is left as-is.
 		JobExecution newExecution = claimBoundJobLauncher
-				.launch(fetchAndPartitionJob, jobExecution.getJobParameters(), claim);
+				.launch(fetchAndPartitionJob, jobExecution.getJobParameters(), claim, 0);
 		logger.info(
 				"Restarted stale job execution. projectionGuid={}, oldExecutionId={}, newExecutionId={}",
 				projectionGuid, oldExecutionId, newExecution.getId()

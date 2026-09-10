@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
@@ -98,11 +99,19 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 			// job grow later into capacity freed by pausing other jobs.
 			computedPartitions = BatchUtils.calculateThreadsForJob(totalPolygons, chunkSize, maxJobThreads);
 
-			// Recorded in the demand ledger only for BatchJobLaunchService.hasCapacity()'s admission check on other,
-			// not-yet-launched jobs - never used to shrink computedPartitions above.
-			int reservedThreads = threadReservationService.reserve(computedPartitions);
-			stepExecution.getJobExecution().getExecutionContext()
-					.putInt(BatchConstants.Job.RESERVED_THREADS, reservedThreads);
+			// BatchJobLaunchService already reserved an upfront estimate at admission time. True it up to the real,
+			// polygon-count-based need instead of reserving fresh, which would double-count this job's demand.
+			ExecutionContext jobExecutionContext = stepExecution.getJobExecution().getExecutionContext();
+			int alreadyReserved = jobExecutionContext.getInt(BatchConstants.Job.RESERVED_THREADS, 0);
+			int reservedThreads = alreadyReserved;
+			if (computedPartitions > alreadyReserved) {
+				reservedThreads = alreadyReserved
+						+ threadReservationService.reserve(computedPartitions - alreadyReserved);
+			} else if (computedPartitions < alreadyReserved) {
+				threadReservationService.release(alreadyReserved - computedPartitions);
+				reservedThreads = computedPartitions;
+			}
+			jobExecutionContext.putInt(BatchConstants.Job.RESERVED_THREADS, reservedThreads);
 
 			logger.debug(
 					"[GUID: {}] Computed {} partitions for {} polygons (chunkSize={}, maxJobThreads={})", jobGuid,

@@ -80,7 +80,11 @@ public class BatchJobLaunchService {
 				)
 		);
 
-		return claimBoundJobLauncher.launch(vdypBatchJob, buildJobParameters(projectionId, parametersJson), claim);
+		Integer numPartitions = batchProperties.getPartition().getDefaultNumberOfPartitions();
+		JobParameters jobParameters = buildJobParameters(projectionId, parametersJson, numPartitions);
+		// Reserve on admission, not when the tasklet runs, so hasCapacity() sees this job's demand immediately.
+		int reservedThreads = threadReservationService.reserve(numPartitions);
+		return claimBoundJobLauncher.launch(vdypBatchJob, jobParameters, claim, reservedThreads);
 	}
 
 	public JobExecution launchNewJob(UUID projectionId, String parametersJson)
@@ -88,10 +92,10 @@ public class BatchJobLaunchService {
 		return launch(projectionId, parametersJson);
 	}
 
-	private JobParameters buildJobParameters(UUID projectionId, String parametersJson) throws IOException {
+	private JobParameters buildJobParameters(UUID projectionId, String parametersJson, Integer numPartitions)
+			throws IOException {
 		String jobGuid = BatchUtils.createJobGuid();
 		String jobTimestamp = BatchUtils.createJobTimestamp();
-		Integer numPartitions = batchProperties.getPartition().getDefaultNumberOfPartitions();
 		Integer chunkSize = batchProperties.getReader().getDefaultChunkSize();
 		Path jobBaseDir = createJobBaseDirectory(jobGuid);
 
