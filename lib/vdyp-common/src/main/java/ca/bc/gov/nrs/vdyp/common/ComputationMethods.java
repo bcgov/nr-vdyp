@@ -691,7 +691,7 @@ public class ComputationMethods {
 
 	public static record PerSpeciesLimits(Map<String, Float> minimum, Map<String, Float> maximum) {
 	};
-	
+
 	// ROOTV01
 	public PerSpeciesLimits
 			getDqBySpecies(VdypLayer layer, Region region, BiFunction<String, Region, ComponentSizeLimits> getLimits)

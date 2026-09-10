@@ -97,7 +97,7 @@ public class BaseAreaTreeDensityDiameter {
 	/**
 	 * Change the trees per hectare of <tt>obj</tt> for the utilization class <tt>uc</tt> to align with the basal area
 	 * and quadratic mean diameter
-	 * 
+	 *
 	 * @param obj
 	 * @param uc
 	 * @return the updated value
@@ -106,16 +106,14 @@ public class BaseAreaTreeDensityDiameter {
 		final float treesPerHectare = treesPerHectare(
 				obj.getBaseAreaByUtilization().get(uc), obj.getQuadraticMeanDiameterByUtilization().get(uc)
 		);
-		obj.getTreesPerHectareByUtilization().set(
-				uc, treesPerHectare
-		);
+		obj.getTreesPerHectareByUtilization().set(uc, treesPerHectare);
 		return treesPerHectare;
 	}
 
 	/**
 	 * Change the quadratic mean diameter of <tt>obj</tt> for the utilization class <tt>uc</tt> to align with the basal
 	 * area and trees per hectare
-	 * 
+	 *
 	 * @param obj
 	 * @param uc
 	 * @return the updated value
@@ -124,29 +122,23 @@ public class BaseAreaTreeDensityDiameter {
 		final float quadMeanDiameter = quadMeanDiameter(
 				obj.getBaseAreaByUtilization().get(uc), obj.getTreesPerHectareByUtilization().get(uc)
 		);
-		obj.getQuadraticMeanDiameterByUtilization().set(
-				uc, quadMeanDiameter
-		);
+		obj.getQuadraticMeanDiameterByUtilization().set(uc, quadMeanDiameter);
 		return quadMeanDiameter;
 	}
 
 	/**
 	 * Change the basal area of <tt>obj</tt> for the utilization class <tt>uc</tt> to align with the quadratic mean
 	 * diameter and trees per hectare
-	 * 
+	 *
 	 * @param obj
 	 * @param uc
 	 * @return the updated value
 	 */
 	public static float reconcileBasalArea(VdypUtilizationHolder obj, UtilizationClass uc) {
 		final float basalArea = basalArea(
-				obj.getQuadraticMeanDiameterByUtilization().get(uc), obj.getTreesPerHectareByUtilization().get(
-						uc
-				)
+				obj.getQuadraticMeanDiameterByUtilization().get(uc), obj.getTreesPerHectareByUtilization().get(uc)
 		);
-		obj.getBaseAreaByUtilization().set(
-				uc, basalArea
-		);
+		obj.getBaseAreaByUtilization().set(uc, basalArea);
 		return basalArea;
 	}
 }

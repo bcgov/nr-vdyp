@@ -567,9 +567,8 @@ class BackProcessingEngineTest {
 			primaryLayer.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
 					Utils.utilizationVector(0f, 197.866379f, 2.04245877f, 47.7080307f, 75.5704956f, 72.5454102f)
 			);
-			primaryLayer.getOrderedSpecies().get(0).setLoreyHeightByUtilization(
-					Utils.heightVector(5.72300005f, 12.8473997f)
-			);
+			primaryLayer.getOrderedSpecies().get(0)
+					.setLoreyHeightByUtilization(Utils.heightVector(5.72300005f, 12.8473997f));
 			primaryLayer.getOrderedSpecies().get(0).setBaseAreaByUtilization(
 					Utils.utilizationVector(
 							0.028147541f, 4.09836054f, 1.34257376f, 1.134377f, 0.789475381f, 0.831934452f
@@ -597,9 +596,8 @@ class BackProcessingEngineTest {
 			primaryLayer.getOrderedSpecies().get(0).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
 					Utils.utilizationVector(0f, 13.1586876f, 0.334262282f, 3.87737703f, 3.88999987f, 5.05704927f)
 			);
-			primaryLayer.getOrderedSpecies().get(1).setLoreyHeightByUtilization(
-					Utils.heightVector(7.18720007f, 13.8270998f)
-			);
+			primaryLayer.getOrderedSpecies().get(1)
+					.setLoreyHeightByUtilization(Utils.heightVector(7.18720007f, 13.8270998f));
 			primaryLayer.getOrderedSpecies().get(1).setBaseAreaByUtilization(
 					Utils.utilizationVector(
 							0.0106229503f, 28.6885567f, 1.96814752f, 9.33654118f, 11.2569828f, 6.12688494f
@@ -627,9 +625,8 @@ class BackProcessingEngineTest {
 			primaryLayer.getOrderedSpecies().get(1).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
 					Utils.utilizationVector(0f, 139.179657f, 1.63344252f, 39.124752f, 61.2242622f, 37.1972122f)
 			);
-			primaryLayer.getOrderedSpecies().get(2).setLoreyHeightByUtilization(
-					Utils.heightVector(6.1097002f, 16.6229f)
-			);
+			primaryLayer.getOrderedSpecies().get(2)
+					.setLoreyHeightByUtilization(Utils.heightVector(6.1097002f, 16.6229f));
 			primaryLayer.getOrderedSpecies().get(2).setBaseAreaByUtilization(
 					Utils.utilizationVector(
 							0.0158524588f, 8.19673729f, 0.47727865f, 1.42778683f, 1.97404909f, 4.31762266f
@@ -680,7 +677,8 @@ class BackProcessingEngineTest {
 			assertThat(primarySite, hasProperty("yearsToBreastHeight", present(closeTo(8.2f))));
 
 			assertThat(
-					primaryLayer, allOf(
+					primaryLayer,
+					allOf(
 							hasProperty("loreyHeightByUtilization", utilizationAllOnly(12.3255749f)),
 							hasProperty("baseAreaByUtilization", utilizationAllOnly(33.975399f)),
 							hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(14.7094793f)),
@@ -688,8 +686,10 @@ class BackProcessingEngineTest {
 					)
 			);
 			assertThat(
-					primaryLayer, hasSpecies(
-							"B", allOf(
+					primaryLayer,
+					hasSpecies(
+							"B",
+							allOf(
 									hasProperty("loreyHeightByUtilization", utilizationAllOnly(11.6197081f)),
 									hasProperty("baseAreaByUtilization", utilizationAllOnly(3.3975358f)),
 									hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(12.2343445f)),
@@ -698,8 +698,10 @@ class BackProcessingEngineTest {
 					)
 			);
 			assertThat(
-					primaryLayer, hasSpecies(
-							"PL", allOf(
+					primaryLayer,
+					hasSpecies(
+							"PL",
+							allOf(
 									hasProperty("loreyHeightByUtilization", utilizationAllOnly(11.9535027f)),
 									hasProperty("baseAreaByUtilization", utilizationAllOnly(23.7827759f)),
 									hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(14.7683105f)),
@@ -708,8 +710,10 @@ class BackProcessingEngineTest {
 					)
 			);
 			assertThat(
-					primaryLayer, hasSpecies(
-							"S", allOf(
+					primaryLayer,
+					hasSpecies(
+							"S",
+							allOf(
 									hasProperty("loreyHeightByUtilization", utilizationAllOnly(13.9807625f)),
 									hasProperty("baseAreaByUtilization", utilizationAllOnly(6.79508448f)),
 									hasProperty("quadraticMeanDiameterByUtilization", utilizationAllOnly(16.39398f)),

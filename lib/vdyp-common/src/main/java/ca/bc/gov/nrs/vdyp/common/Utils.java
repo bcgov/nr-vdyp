@@ -743,13 +743,11 @@ public class Utils {
 	/**
 	 * Get the index of the species within the layer as used in Bank. This is distinct from the species identifier
 	 * index.
-	 * 
+	 *
 	 * @throws IllegalArgumentException if spec is not a species of layer
 	 */
 	public static <L extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> int
-			indexOfSpeciesWithinLayer(
-					S spec, L layer
-			) {
+			indexOfSpeciesWithinLayer(S spec, L layer) {
 		int i = 1;
 		for (var foundSpec : layer.getOrderedSpecies()) {
 			if (foundSpec.getGenusIndex() == spec.getGenusIndex()) {
@@ -763,13 +761,10 @@ public class Utils {
 	/**
 	 * Get the index of the species within the layer as used in Bank. This is distinct from the species identifier
 	 * index.
-	 * 
+	 *
 	 * @throws IllegalArgumentException if spec is not a species of layer
 	 */
-	public static int
-			indexOfSpeciesWithinLayer(
-					String spec, BaseVdypLayer<?, ?> layer
-			) {
+	public static int indexOfSpeciesWithinLayer(String spec, BaseVdypLayer<?, ?> layer) {
 		int i = 1;
 		for (var foundSpec : layer.getOrderedSpecies()) {
 			if (foundSpec.getGenus() == spec) {
@@ -783,7 +778,7 @@ public class Utils {
 	/**
 	 * Get a species from the layer based on the index as used by Bank. This is distinct from the species identifier
 	 * index.
-	 * 
+	 *
 	 * @throws IllegalArgumentException if spec is not a species of layer
 	 */
 	public static <L extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> S
