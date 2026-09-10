@@ -168,8 +168,6 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		);
 		primarySite.setAgeTotal(ageTotal);
 
-		int primarySpeciesIndex = plps.getPrimarySpeciesIndex();
-
 		// SITEHADJ
 		final float dominantHeight = FloatMath.offsetMultiply(
 				heightFromSiteCurve(primarySite), //
@@ -213,7 +211,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 				getState().getBasalAreaBackupFactor().orElseThrow()
 		);
 		float dqp = FloatMath.offsetMultiply(
-				basalAreaYield, //
+				quadraticMeanDiameterYield, //
 				getState().getConvergenceQuadraticMeanDiameter().orElseThrow(), //
 				getState().getQuadMeanDiameterBackupFactor().orElseThrow()
 		);
@@ -225,7 +223,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		}
 		dqp = max(dqp, getState().getQuadMeanDiameterBackupFactorMinimum().orElseThrow());
 
-		// Lorey Height for ALL UC.
+		// Lorey Height for ALL UC. for Primary species
 
 		// EMP051
 		float hlpl1 = estimators.primaryHeightFromLeadHeightInitial(
@@ -233,6 +231,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		);
 
 		primarySpecies.getLoreyHeightByUtilization().setAll(hlpl1);
+
+		// Lorey Height for ALL UC. for non-primary species
 
 		for (var species : primaryLayer.getOrderedSpecies()) {
 			if (species == primarySpecies)
@@ -248,22 +248,26 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			species.getLoreyHeightByUtilization().setAll(specLoreyHeight);
 		}
 
+		// Lorey Height, apply backup factor
+
 		float sumBaHl = 0;
 		for (int i : plps.getIndices()) {
 			float bf = getState().getSpeciesLoreyHeightBackupFactor(i);
-			if (bf == 1f)
-				continue;
 			final var species = Utils.getSpeciesByIndexWithinLayer(primaryLayer, i);
+			float speciesLoreyHeight;
+			if (bf != 1f) {
 
-			float speciesLoreyHeight = min(
-					FloatMath.offsetMultiply(
-							species.getLoreyHeightByUtilization().getAll(), //
-							getState().getSpeciesConvergenceLoreyHeight(i), //
-							getState().getSpeciesLoreyHeightBackupFactor(i)
-					), getState().getSpeciesLoreyHeightBackupFactorMaximum(i)
-			);
-			species.getLoreyHeightByUtilization().setAll(speciesLoreyHeight);
-
+				speciesLoreyHeight = min(
+						FloatMath.offsetMultiply(
+								species.getLoreyHeightByUtilization().getAll(), //
+								getState().getSpeciesConvergenceLoreyHeight(i), //
+								getState().getSpeciesLoreyHeightBackupFactor(i)
+						), getState().getSpeciesLoreyHeightBackupFactorMaximum(i)
+				);
+				species.getLoreyHeightByUtilization().setAll(speciesLoreyHeight);
+			} else {
+				speciesLoreyHeight = species.getLoreyHeightByUtilization().getAll();
+			}
 			sumBaHl += speciesLoreyHeight * species.getBaseAreaByUtilization().getAll();
 		}
 		primaryLayer.getLoreyHeightByUtilization().setAll(sumBaHl / primaryLayer.getBaseAreaByUtilization().getAll());
@@ -293,7 +297,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			float treesPerHectareSum = 0;
 
 			for (int i : plps.getIndices()) {
-				var species = primaryLayer.getSpeciesByIndex(i);
+				var species = Utils.getSpeciesByIndexWithinLayer(primaryLayer, i);
 				if (getState().getSpeciesQuadMeanDiameterBackupFactor(i) > 0) {
 					species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
 							UtilizationClass.ALL, v -> clamp(

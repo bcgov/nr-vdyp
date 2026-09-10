@@ -755,7 +755,7 @@ public class VdypMatchers {
 
 			@Override
 			protected boolean matchesSafely(Coefficients item, Description mismatchDescription) {
-				if (item.size() != 6 || item.getIndexFrom() != -1) {
+				if ( (item.size() != 6 && item.size() != 2) || item.getIndexFrom() != -1) {
 					mismatchDescription.appendText("Was not a utilization vector");
 					return false;
 				}

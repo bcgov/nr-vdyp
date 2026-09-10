@@ -2,10 +2,14 @@ package ca.bc.gov.nrs.vdyp.back;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecies;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
 import static org.easymock.EasyMock.expect;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 
 import java.nio.file.Path;
@@ -48,6 +52,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class BackProcessingEngineTest {
 
@@ -67,7 +72,6 @@ class BackProcessingEngineTest {
 	void setup() {
 		em = EasyMock.createControl();
 		state = em.createMock(BackProcessingState.class);
-
 
 		engine = new BackProcessingEngine(state);
 
@@ -467,6 +471,21 @@ class BackProcessingEngineTest {
 			// BFDQ
 			expect(state.getQuadMeanDiameterBackupFactor()).andStubReturn(Optional.of(1.86042416f));
 
+			// BFDQI
+			expect(state.getSpeciesQuadMeanDiameterBackupFactor(1)).andStubReturn(1.00001431f);
+			expect(state.getSpeciesQuadMeanDiameterBackupFactor(2)).andStubReturn(0.999987602f);
+			expect(state.getSpeciesQuadMeanDiameterBackupFactor(3)).andStubReturn(1.00003755f);
+
+			// DQI_CNV
+			expect(state.getSpeciesConvergenceQuadraticMeanDiameter(1)).andStubReturn(9.88628769f);
+			expect(state.getSpeciesConvergenceQuadraticMeanDiameter(2)).andStubReturn(10.3321753f);
+			expect(state.getSpeciesConvergenceQuadraticMeanDiameter(3)).andStubReturn(9.93369484f);
+
+			// BFMINDQI
+			expect(state.getSpeciesQuadMeanDiameterBackupFactorMinimum(1)).andStubReturn(9.88628769f);
+			expect(state.getSpeciesQuadMeanDiameterBackupFactorMinimum(2)).andStubReturn(10.3321753f);
+			expect(state.getSpeciesQuadMeanDiameterBackupFactorMinimum(3)).andStubReturn(9.93369484f);
+
 			// BFMINDQ
 			expect(state.getQuadMeanDiameterBackupFactorMinimum()).andStubReturn(Optional.of(10.2024593f));
 
@@ -502,10 +521,11 @@ class BackProcessingEngineTest {
 						sb.percentGenus(70);
 						sb.addSite(ib -> {
 							ib.siteCurveNumber(45);
-							ib.yearsAtBreastHeight(61.3f);
+							ib.yearsAtBreastHeight(77.3f);
 							ib.yearsToBreastHeight(8.2f);
-							ib.ageTotal(69f);
+							ib.ageTotal(85f);
 							ib.siteIndex(12.39f);
+							ib.height(16f);
 						});
 					});
 					lb.addSpecies(sb -> {
@@ -520,17 +540,17 @@ class BackProcessingEngineTest {
 
 			// Fill in Utilization
 
-			primaryLayer.setLoreyHeightByUtilization(Utils.heightVector(6.11998129f, 12.3255749f));
+			primaryLayer.setLoreyHeightByUtilization(Utils.heightVector(6.11998129f, 14.2882891f));
 			primaryLayer.setBaseAreaByUtilization(
 					Utils.utilizationVector(
-							0.0546229482f, 33.975399f, 3.78800011f, 11.8987055f, 14.0205078f, 11.2764416f
+							0.0546229482f, 40.9836578f, 3.78800011f, 11.8987055f, 14.0205078f, 11.2764416f
 					)
 			);
 			primaryLayer.setTreesPerHectareByUtilization(
-					Utils.utilizationVector(20.5737705f, 1999.31055f, 466.262329f, 677.950806f, 464.049194f, 195f)
+					Utils.utilizationVector(20.5737705f, 1803.26233f, 466.262329f, 677.950806f, 464.049194f, 195f)
 			);
 			primaryLayer.setQuadraticMeanDiameterByUtilization(
-					Utils.utilizationVector(5.81501532f, 14.7094765f, 10.1703596f, 14.9486017f, 19.613493f, 27.1346054f)
+					Utils.utilizationVector(5.81501532f, 17.0110435f, 10.1703596f, 14.9486017f, 19.613493f, 27.1346054f)
 			);
 			primaryLayer.setWholeStemVolumeByUtilization(
 					Utils.utilizationVector(
@@ -547,11 +567,11 @@ class BackProcessingEngineTest {
 					Utils.utilizationVector(0f, 197.866379f, 2.04245877f, 47.7080307f, 75.5704956f, 72.5454102f)
 			);
 			primaryLayer.getOrderedSpecies().get(0).setLoreyHeightByUtilization(
-					Utils.heightVector(5.72300005f, 11.6197081f)
+					Utils.heightVector(5.72300005f, 12.8473997f)
 			);
 			primaryLayer.getOrderedSpecies().get(0).setBaseAreaByUtilization(
 					Utils.utilizationVector(
-							0.028147541f, 3.3975358f, 1.34257376f, 1.134377f, 0.789475381f, 0.831934452f
+							0.028147541f, 4.09836054f, 1.34257376f, 1.134377f, 0.789475381f, 0.831934452f
 					)
 			);
 			primaryLayer.getOrderedSpecies().get(0).setTreesPerHectareByUtilization(
@@ -577,11 +597,11 @@ class BackProcessingEngineTest {
 					Utils.utilizationVector(0f, 13.1586876f, 0.334262282f, 3.87737703f, 3.88999987f, 5.05704927f)
 			);
 			primaryLayer.getOrderedSpecies().get(1).setLoreyHeightByUtilization(
-					Utils.heightVector(7.18720007f, 11.9535027f)
+					Utils.heightVector(7.18720007f, 13.8270998f)
 			);
 			primaryLayer.getOrderedSpecies().get(1).setBaseAreaByUtilization(
 					Utils.utilizationVector(
-							0.0106229503f, 23.7827759f, 1.96814752f, 9.33654118f, 11.2569828f, 6.12688494f
+							0.0106229503f, 28.6885567f, 1.96814752f, 9.33654118f, 11.2569828f, 6.12688494f
 					)
 			);
 			primaryLayer.getOrderedSpecies().get(1).setTreesPerHectareByUtilization(
@@ -607,11 +627,11 @@ class BackProcessingEngineTest {
 					Utils.utilizationVector(0f, 139.179657f, 1.63344252f, 39.124752f, 61.2242622f, 37.1972122f)
 			);
 			primaryLayer.getOrderedSpecies().get(2).setLoreyHeightByUtilization(
-					Utils.heightVector(6.1097002f, 13.9807625f)
+					Utils.heightVector(6.1097002f, 16.6229f)
 			);
 			primaryLayer.getOrderedSpecies().get(2).setBaseAreaByUtilization(
 					Utils.utilizationVector(
-							0.0158524588f, 6.79508448f, 0.47727865f, 1.42778683f, 1.97404909f, 4.31762266f
+							0.0158524588f, 8.19673729f, 0.47727865f, 1.42778683f, 1.97404909f, 4.31762266f
 					)
 			);
 			primaryLayer.getOrderedSpecies().get(2).setTreesPerHectareByUtilization(
@@ -650,6 +670,50 @@ class BackProcessingEngineTest {
 			engine.applyBackupFactors(1995);
 
 			em.verify();
+
+			var primarySite = primaryLayer.getPrimarySpeciesRecord().get().getSite().get();
+			assertThat(primarySite, hasProperty("height", present(closeTo(14.0952682f))));
+			assertThat(primarySite, hasProperty("ageTotal", present(closeTo(69f))));
+			assertThat(primarySite, hasProperty("yearsAtBreastHeight", present(closeTo(61.3f))));
+			assertThat(primarySite, hasProperty("yearsToBreastHeight", present(closeTo(8.2f))));
+			assertThat(
+					primaryLayer, allOf(
+							hasProperty("loreyHeightByUtilization", utilizationAllOnly(12.3255749f)),
+							hasProperty("baseAreaByUtilization", utilizationAllOnly(33.975399f)),
+							hasProperty("quadMeanDiameterByUtilization", utilizationAllOnly(14.7094793f)),
+							hasProperty("treesPerHectareByUtilization", utilizationAllOnly(1999.30969f))
+					)
+			);
+			assertThat(
+					primaryLayer, hasSpecies(
+							"B", allOf(
+									hasProperty("loreyHeightByUtilization", utilizationAllOnly(11.6197081f)),
+									hasProperty("baseAreaByUtilization", utilizationAllOnly(3.3975358f)),
+									hasProperty("quadMeanDiameterByUtilization", utilizationAllOnly(12.2343445f)),
+									hasProperty("treesPerHectareByUtilization", utilizationAllOnly(289.009918f))
+							)
+					)
+			);
+			assertThat(
+					primaryLayer, hasSpecies(
+							"PL", allOf(
+									hasProperty("loreyHeightByUtilization", utilizationAllOnly(11.9535027f)),
+									hasProperty("baseAreaByUtilization", utilizationAllOnly(23.7827759f)),
+									hasProperty("quadMeanDiameterByUtilization", utilizationAllOnly(14.7683105f)),
+									hasProperty("treesPerHectareByUtilization", utilizationAllOnly(1388.38855f))
+							)
+					)
+			);
+			assertThat(
+					primaryLayer, hasSpecies(
+							"S", allOf(
+									hasProperty("loreyHeightByUtilization", utilizationAllOnly(13.9807625f)),
+									hasProperty("baseAreaByUtilization", utilizationAllOnly(6.79508448f)),
+									hasProperty("quadMeanDiameterByUtilization", utilizationAllOnly(16.39398f)),
+									hasProperty("treesPerHectareByUtilization", utilizationAllOnly(321.911285f))
+							)
+					)
+			);
 		}
 
 	}
