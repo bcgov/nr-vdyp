@@ -163,7 +163,7 @@ class VdypMatchersTest {
 			@Test
 			void testNoProperty() {
 
-				var toMatch = em.createMock(TestInterfaceNoProperty.class);
+				toMatch = em.createMock(TestInterfaceNoProperty.class);
 
 				em.replay();
 
@@ -181,7 +181,7 @@ class VdypMatchersTest {
 			@Test
 			void testNotIndexed() {
 
-				var toMatch = em.createMock(TestInterfaceNotIndexed.class);
+				toMatch = em.createMock(TestInterfaceNotIndexed.class);
 
 				em.replay();
 

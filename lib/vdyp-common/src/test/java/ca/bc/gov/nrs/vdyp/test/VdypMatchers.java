@@ -1102,7 +1102,7 @@ public class VdypMatchers {
 					mismatchDescription.appendText("does not exist");
 					return false;
 				}
-			};
+			}
 		};
 	}
 
@@ -1111,11 +1111,11 @@ public class VdypMatchers {
 		return hasProperty("species", hasSpecificEntry(speciesGroup, specMatcher));
 	}
 
-	static protected Method getIndexedProperty(String property, Object item) throws NoSuchMethodException {
+	protected static Method getIndexedProperty(String property, Object item) throws NoSuchMethodException {
 		return item.getClass().getMethod(property, Integer.TYPE);
 	}
 
-	static protected boolean testIndexedProperty(
+	protected static boolean testIndexedProperty(
 			String property, Object item, Description mismatchDescription, Predicate<Method> apply
 	) {
 		try {
@@ -1128,7 +1128,7 @@ public class VdypMatchers {
 
 	}
 
-	static protected boolean testIndexedValue(
+	protected static boolean testIndexedValue(
 			String property, Method method, Object item, int index, Description mismatchDescription,
 			Matcher<?> valueMatcher
 	) {

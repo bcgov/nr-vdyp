@@ -53,7 +53,6 @@ import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingStateTestUtils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class BackProcessingEngineTest {
 

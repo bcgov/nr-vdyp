@@ -18,7 +18,10 @@ import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -28,6 +31,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
@@ -171,52 +175,11 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		);
 		primarySite.setHeight(dominantHeight);
 
-		// BAYield = EMP106(...)
-		var basalAreaYield = estimators.estimateBaseAreaYield(
-				dominantHeight, //
-				yearsAtBreastHeight, //
-				getState().getBaseAreaVeteran(), //
-				true, //
-				primaryLayer.getSpecies().values(), //
-				primaryLayer.getPrimaryGenus().orElseThrow(), //
-				bec, //
-				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
-		);
+		float bap = applyBackFactorsToPrimaryBasalArea(bec, primaryLayer, yearsAtBreastHeight, dominantHeight);
 
-		// DQYield = EMP107(...)
-		var quadraticMeanDiameterYield = estimators.estimateQuadMeanDiameterYield(
-				dominantHeight, //
-				yearsAtBreastHeight, //
-				getState().getBaseAreaVeteran(), //
-				primaryLayer.getSpecies().values(), //
-				primaryLayer.getPrimaryGenus().orElseThrow(), //
-				bec, //
-				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+		float dqp = applyBackupFactorsToPrimaryDiameter(
+				bec, primaryLayer, regress, yearsAtBreastHeight, dominantHeight
 		);
-
-		if (basalAreaYield < 0.995f * getState().getConvergenceBasalArea().orElseThrow()) {
-			throw new ProcessingException(
-					"basalAreaYield is low: " + basalAreaYield + " < "
-							+ 0.995f * getState().getConvergenceBasalArea().orElseThrow()
-			);
-		}
-
-		float bap = FloatMath.offsetMultiply(
-				basalAreaYield, getState().getConvergenceBasalArea().orElseThrow(),
-				getState().getBasalAreaBackupFactor().orElseThrow()
-		);
-		float dqp = FloatMath.offsetMultiply(
-				quadraticMeanDiameterYield, //
-				getState().getConvergenceQuadraticMeanDiameter().orElseThrow(), //
-				getState().getQuadMeanDiameterBackupFactor().orElseThrow()
-		);
-		if (getState().getQuadMeanDiameterBackupFactor().orElseThrow() <= 0) {
-			final float lowDQ = getState().getFinalQuadraticMeanDiameter(0) - regress;
-			final float highDQ = getState().getFinalQuadraticMeanDiameter(0) + regress;
-
-			dqp = FloatMath.clamp(dqp, lowDQ, highDQ);
-		}
-		dqp = max(dqp, getState().getQuadMeanDiameterBackupFactorMinimum().orElseThrow());
 
 		// Lorey Height for ALL UC. for Primary species
 
@@ -281,69 +244,137 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 					.setAll(primaryLayer.getTreesPerHectareByUtilization().getAll());
 		} else {
 
-			for (int i : plps.getIndices()) {
-				var species = Utils.getSpeciesByIndexWithinLayer(primaryLayer, i);
-				// Odd that this uses the bank rather than the percentage from main model data structure, but that's
-				// what VDYP7 did
-				species.getBaseAreaByUtilization().setAll(bap * bank.percentagesOfForestedLand[i] / 100);
-			}
-
-			// ROOTV01
-			var dqLimits = getState().getComputers().getDqBySpecies(
-					primaryLayer, bec.getRegion(),
-					(s, r) -> getState().getLimits(Utils.indexOfSpeciesWithinLayer(s, primaryLayer))
-			);
-
-			// Apply backup factors for DQ by species and calculate TPH
-
-			float treesPerHectareSum = 0;
-
-			for (int i : plps.getIndices()) {
-				var species = Utils.getSpeciesByIndexWithinLayer(primaryLayer, i);
-				if (getState().getSpeciesQuadMeanDiameterBackupFactor(i) > 0) {
-					species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
-							UtilizationClass.ALL, v -> clamp(
-									offsetMultiply(
-											v, //
-											getState().getSpeciesConvergenceQuadraticMeanDiameter(i), //
-											getState().getSpeciesQuadMeanDiameterBackupFactor(i) //
-									), dqLimits.minimum().get(species.getGenus()), //
-									dqLimits.maximum().get(species.getGenus())
-							)
-					);
-				} else {
-					// We do not have a good backup factor for this species. Therefore, do not apply one.
-					// But do put a cap on things that = actual at input year;
-
-					final int yearDiff = getState().getCurrentStartingYear() - getState().getConvergenceYear().get();
-					float slope = (getState().getSpeciesConvergenceQuadraticMeanDiameter(i) //
-							- species.getQuadraticMeanDiameterByUtilization().getAll()) //
-							/ yearDiff;
-					float dqLimit = species.getQuadraticMeanDiameterByUtilization().getAll() + 2 * slope * yearDiff;
-					species.getQuadraticMeanDiameterByUtilization()
-							.scalarInPlace(UtilizationClass.ALL, v -> min(v, dqLimit));
-				}
-
-				species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
-						UtilizationClass.ALL, v -> max(v, getState().getSpeciesQuadMeanDiameterBackupFactorMinimum(i))
-				);
-				treesPerHectareSum += BaseAreaTreeDensityDiameter
-						.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
-			}
-			var err = treesPerHectareSum = primaryLayer.getTreesPerHectareByUtilization().getAll();
-
-			if (Math.abs(err) > 0.5 && treesPerHectareSum > 0.5) {
-				logger.warn(
-						"Total TPH modified from {} to {}. Indicates a minor flaw in the system that could cause error in starting TPH. ",
-						primaryLayer.getTreesPerHectareByUtilization().getAll(), treesPerHectareSum
-				);
-			}
-
-			primaryLayer.getTreesPerHectareByUtilization().set(UtilizationClass.ALL, treesPerHectareSum);
-			BaseAreaTreeDensityDiameter.reconcileQuadraticMeanDiameter(primaryLayer, UtilizationClass.ALL);
+			applyBackupFactorsSpeciesAreaAndDiameter(plps, bec, bank, primaryLayer, bap);
 
 		}
 
+	}
+
+	protected void applyBackupFactorsSpeciesAreaAndDiameter(
+			final BackLayerProcessingState plps, final BecDefinition bec, final Bank bank, final VdypLayer primaryLayer,
+			float bap
+	) throws FatalProcessingException {
+		for (int i : plps.getIndices()) {
+			var species = Utils.getSpeciesByIndexWithinLayer(primaryLayer, i);
+			// Odd that this uses the bank rather than the percentage from main model data structure, but that's
+			// what VDYP7 did
+			species.getBaseAreaByUtilization().setAll(bap * bank.percentagesOfForestedLand[i] / 100);
+		}
+
+		// ROOTV01
+		var dqLimits = getState().getComputers().getDqBySpecies(
+				primaryLayer, bec.getRegion(),
+				(s, r) -> getState().getLimits(Utils.indexOfSpeciesWithinLayer(s, primaryLayer))
+		);
+
+		// Apply backup factors for DQ by species and calculate TPH
+
+		float treesPerHectareSum = 0;
+
+		for (int i : plps.getIndices()) {
+			var species = Utils.getSpeciesByIndexWithinLayer(primaryLayer, i);
+			if (getState().getSpeciesQuadMeanDiameterBackupFactor(i) > 0) {
+				species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
+						UtilizationClass.ALL, v -> clamp(
+								offsetMultiply(
+										v, //
+										getState().getSpeciesConvergenceQuadraticMeanDiameter(i), //
+										getState().getSpeciesQuadMeanDiameterBackupFactor(i) //
+								), dqLimits.minimum().get(species.getGenus()), //
+								dqLimits.maximum().get(species.getGenus())
+						)
+				);
+			} else {
+				// We do not have a good backup factor for this species. Therefore, do not apply one.
+				// But do put a cap on things that = actual at input year;
+
+				final int yearDiff = getState().getCurrentStartingYear() - getState().getConvergenceYear().get();
+				float slope = (getState().getSpeciesConvergenceQuadraticMeanDiameter(i) //
+						- species.getQuadraticMeanDiameterByUtilization().getAll()) //
+						/ yearDiff;
+				float dqLimit = species.getQuadraticMeanDiameterByUtilization().getAll() + 2 * slope * yearDiff;
+				species.getQuadraticMeanDiameterByUtilization()
+						.scalarInPlace(UtilizationClass.ALL, v -> min(v, dqLimit));
+			}
+
+			species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
+					UtilizationClass.ALL, v -> max(v, getState().getSpeciesQuadMeanDiameterBackupFactorMinimum(i))
+			);
+			treesPerHectareSum += BaseAreaTreeDensityDiameter
+					.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
+		}
+		var err = treesPerHectareSum = primaryLayer.getTreesPerHectareByUtilization().getAll();
+
+		if (Math.abs(err) > 0.5 && treesPerHectareSum > 0.5) {
+			logger.warn(
+					"Total TPH modified from {} to {}. Indicates a minor flaw in the system that could cause error in starting TPH. ",
+					primaryLayer.getTreesPerHectareByUtilization().getAll(), treesPerHectareSum
+			);
+		}
+
+		primaryLayer.getTreesPerHectareByUtilization().set(UtilizationClass.ALL, treesPerHectareSum);
+		BaseAreaTreeDensityDiameter.reconcileQuadraticMeanDiameter(primaryLayer, UtilizationClass.ALL);
+	}
+
+	protected float applyBackupFactorsToPrimaryDiameter(
+			final BecDefinition bec, final VdypLayer primaryLayer, float regress, final float yearsAtBreastHeight,
+			final float dominantHeight
+	) throws StandProcessingException {
+		final EstimationMethods estimators = getState().getEstimators();
+		// DQYield = EMP107(...)
+		var quadraticMeanDiameterYield = estimators.estimateQuadMeanDiameterYield(
+				dominantHeight, //
+				yearsAtBreastHeight, //
+				getState().getBaseAreaVeteran(), //
+				primaryLayer.getSpecies().values(), //
+				primaryLayer.getPrimaryGenus().orElseThrow(), //
+				bec, //
+				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+		);
+
+		float dqp = FloatMath.offsetMultiply(
+				quadraticMeanDiameterYield, //
+				getState().getConvergenceQuadraticMeanDiameter().orElseThrow(), //
+				getState().getQuadMeanDiameterBackupFactor().orElseThrow()
+		);
+		if (getState().getQuadMeanDiameterBackupFactor().orElseThrow() <= 0) {
+			final float lowDQ = getState().getFinalQuadraticMeanDiameter(0) - regress;
+			final float highDQ = getState().getFinalQuadraticMeanDiameter(0) + regress;
+
+			dqp = FloatMath.clamp(dqp, lowDQ, highDQ);
+		}
+		dqp = max(dqp, getState().getQuadMeanDiameterBackupFactorMinimum().orElseThrow());
+		return dqp;
+	}
+
+	protected float applyBackFactorsToPrimaryBasalArea(
+			final BecDefinition bec, final VdypLayer primaryLayer, final float yearsAtBreastHeight,
+			final float dominantHeight
+	) throws BreastHeightAgeLowException, ProcessingException {
+		final EstimationMethods estimators = getState().getEstimators();
+		// BAYield = EMP106(...)
+		var basalAreaYield = estimators.estimateBaseAreaYield(
+				dominantHeight, //
+				yearsAtBreastHeight, //
+				getState().getBaseAreaVeteran(), //
+				true, //
+				primaryLayer.getSpecies().values(), //
+				primaryLayer.getPrimaryGenus().orElseThrow(), //
+				bec, //
+				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+		);
+		if (basalAreaYield < 0.995f * getState().getConvergenceBasalArea().orElseThrow()) {
+			throw new ProcessingException(
+					"basalAreaYield is low: " + basalAreaYield + " < "
+							+ 0.995f * getState().getConvergenceBasalArea().orElseThrow()
+			);
+		}
+
+		float bap = FloatMath.offsetMultiply(
+				basalAreaYield, getState().getConvergenceBasalArea().orElseThrow(),
+				getState().getBasalAreaBackupFactor().orElseThrow()
+		);
+		return bap;
 	}
 
 	public float heightFromSiteCurve(VdypSite site) throws ProcessingException {

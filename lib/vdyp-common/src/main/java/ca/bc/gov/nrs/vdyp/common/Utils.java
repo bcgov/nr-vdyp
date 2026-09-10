@@ -767,7 +767,7 @@ public class Utils {
 	public static int indexOfSpeciesWithinLayer(String spec, BaseVdypLayer<?, ?> layer) {
 		int i = 1;
 		for (var foundSpec : layer.getOrderedSpecies()) {
-			if (foundSpec.getGenus() == spec) {
+			if (foundSpec.getGenus().equals(spec)) {
 				return i;
 			}
 			i++;

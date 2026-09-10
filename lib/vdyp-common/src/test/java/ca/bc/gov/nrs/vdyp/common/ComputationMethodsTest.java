@@ -1281,7 +1281,7 @@ public class ComputationMethodsTest {
 		@Nested
 		class ExpandIntervalOfRootFinder {
 			@Test
-			void testNoChange() throws Exception {
+			void testNoChange() {
 
 				UnivariateFunction errorFunc = x -> x;
 
@@ -1294,7 +1294,7 @@ public class ComputationMethodsTest {
 			}
 
 			@Test
-			void testSimpleChange() throws Exception {
+			void testSimpleChange() {
 
 				UnivariateFunction errorFunc = x -> x;
 
@@ -1312,7 +1312,7 @@ public class ComputationMethodsTest {
 
 			@ParameterizedTest
 			@CsvSource({ "1, 1", "-1, 1", "1, -1", "-1, -1" })
-			void testDifficultChange(float a, float b) throws Exception {
+			void testDifficultChange(float a, float b) {
 
 				UnivariateFunction errorFunc = x -> a * (Math.exp(b * x) - 0.000001);
 
@@ -1334,7 +1334,7 @@ public class ComputationMethodsTest {
 						"-1, -0.25", "20, -0.25", "-20, -0.25", "1, 10", "-1, 10", "20, 10", "-20, 10", "1, -10",
 						"-1, -10", "20, -10", "-20, -10" }
 			)
-			void testTwoRoots(float a, float b) throws Exception {
+			void testTwoRoots(float a, float b) {
 
 				assumeThat(
 						"Fixing VDYP-942 broke the case where the starting interval exactly stradles two roots on a symetric function which shouldn't be relevant to VDYP",
@@ -1359,7 +1359,7 @@ public class ComputationMethodsTest {
 
 			@ParameterizedTest
 			@CsvSource({ "1, 1", "-1, 1", "1, -1", "-1, -1" })
-			void testImpossible(float a, float b) throws Exception {
+			void testImpossible(float a, float b) {
 
 				UnivariateFunction errorFunc = x -> a * (Math.exp(b * x) + 1);
 
@@ -1374,7 +1374,7 @@ public class ComputationMethodsTest {
 			}
 
 			@Test
-			void testFailEarly() throws Exception {
+			void testFailEarly() {
 
 				// Should find the root, but it will take a a few tries.
 				UnivariateFunction errorFunc = x -> (Math.exp(x) - 0.0001);
