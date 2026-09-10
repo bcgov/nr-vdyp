@@ -61,6 +61,11 @@
 			<artifactId>junit-jupiter-api</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
+			<scope>test</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.hamcrest</groupId>
@@ -78,6 +83,11 @@
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
 			<artifactId>vdyp-si32</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-backend</artifactId>
+			<version>1.2.0</version>
 		</dependency>
 	</dependencies>
 

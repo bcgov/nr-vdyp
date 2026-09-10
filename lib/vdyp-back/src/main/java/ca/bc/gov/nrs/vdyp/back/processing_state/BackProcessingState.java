@@ -29,9 +29,6 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 	private static final Supplier<IllegalStateException> UNSET_CV_QUAD_MEAN_DIAMETER = unset("cvQuadraticMeanDiameter");
 	private static final Supplier<IllegalStateException> UNSET_CV_SMALL = unset("cvSmall");
 	private static final Supplier<IllegalStateException> UNSET_LIMITS = unset("per species limits");
-	private static final Supplier<IllegalStateException> UNSET_FINAL_QUAD_MEAN_DIAMETER = unset(
-			"final quadratic mean diameters"
-	);
 
 	// Compatibility Variables - LCV1 & LCVS
 	private boolean areCompatibilityVariablesSet = false;
@@ -52,7 +49,7 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 
 	private Optional<ComponentSizeLimits[]> speciesLimits = Optional.empty(); // BACK7/...
 
-	private Optional<float[]> finalQuadraticMeanDiameters = Optional.empty(); // BACK8/DQFinal
+	private Optional<float[]> finalQuadraticMeanDiameter = Optional.empty(); // BACK8/DQFinal
 
 	private Optional<Float> dominantHeightBackupFactor = Optional.empty(); // BACK5/BFH
 	private Optional<Float> basalAreaBackupFactor = Optional.empty(); // BACK5/BFB
@@ -151,16 +148,12 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 	}
 
 	public float getFinalQuadraticMeanDiameter(int speciesIndex) {
-		return this.finalQuadraticMeanDiameters.orElseThrow(UNSET_FINAL_QUAD_MEAN_DIAMETER)[speciesIndex];
+		return indexAccess(finalQuadraticMeanDiameter, speciesIndex, 0, "final quadratic mean diameters");
 	}
 
 	protected static Supplier<IllegalStateException> unset(final String field) {
 		final String message = MessageFormat.format("unset {0}", field);
 		return () -> new IllegalStateException(message);
-	}
-
-	public void setFinalQuadMeanDiameters(float[] finalDiameters) {
-		finalQuadraticMeanDiameters = Optional.of(finalDiameters);
 	}
 
 	public Optional<Integer> getConvergenceYear() {
@@ -204,7 +197,7 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 	}
 
 	public float getSpeciesConvergenceLoreyHeight(int i) {
-		return speciesConvergenceLoreyHeight.orElseThrow()[i];
+		return indexAccess(speciesConvergenceLoreyHeight, i, 1, "speciesConvergenceLoreyHeight");
 	}
 
 	public void setSpeciesConvergenceLoreyHeight(float[] speciesConvergenceLoreyHeight) {
@@ -212,7 +205,7 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 	}
 
 	public float getSpeciesConvergenceQuadraticMeanDiameter(int i) {
-		return speciesConvergenceQuadraticMeanDiameter.orElseThrow()[i];
+		return indexAccess(speciesConvergenceQuadraticMeanDiameter, i, 1, "speciesConvergenceQuadraticMeanDiameter");
 	}
 
 	public void setSpeciesConvergenceQuadraticMeanDiameter(float[] speciesConvergenceQuadraticMeanDiameter) {
@@ -232,11 +225,11 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 	}
 
 	public float getSpeciesLoreyHeightBackupFactor(int i) {
-		return speciesLoreyHeightBackupFactor.orElseThrow()[i];
+		return indexAccess(speciesLoreyHeightBackupFactor, i, 1, "speciesLoreyHeightBackupFactor");
 	}
 
 	public float getSpeciesQuadMeanDiameterBackupFactor(int i) {
-		return speciesQuadMeanDiameterBackupFactor.orElseThrow()[i];
+		return indexAccess(speciesQuadMeanDiameterBackupFactor, i, 1, "speciesQuadMeanDiameterBackupFactor");
 	}
 
 	public Optional<Float> getQuadMeanDiameterBackupFactorMinimum() {
@@ -244,11 +237,56 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 	}
 
 	public float getSpeciesQuadMeanDiameterBackupFactorMinimum(int i) {
-		return speciesQuadMeanDiameterBackupFactorMinimum.orElseThrow()[i];
+		return indexAccess(
+				speciesQuadMeanDiameterBackupFactorMinimum, i, 1, "speciesQuadMeanDiameterBackupFactorMinimum"
+		);
 	}
 
 	public float getSpeciesLoreyHeightBackupFactorMaximum(int i) {
-		return speciesLoreyHeightBackupFactorMaximum.orElseThrow()[i];
+		return indexAccess(speciesLoreyHeightBackupFactorMaximum, i, 1, "speciesLoreyHeightBackupFactorMaximum");
+	}
+
+	public void setDominantHeightBackupFactor(Optional<Float> dominantHeightBackupFactor) {
+		this.dominantHeightBackupFactor = dominantHeightBackupFactor;
+	}
+
+	public void setQuadMeanDiameterBackupFactor(Optional<Float> quadMeanDiameterBackupFactor) {
+		this.quadMeanDiameterBackupFactor = quadMeanDiameterBackupFactor;
+	}
+
+	public void setQuadMeanDiameterBackupFactorMinimum(Optional<Float> quadMeanDiameterBackupFactorMinimum) {
+		this.quadMeanDiameterBackupFactorMinimum = quadMeanDiameterBackupFactorMinimum;
+	}
+
+	public void setBasalAreaBackupFactor(Optional<Float> basalAreaBackupFactor) {
+		this.basalAreaBackupFactor = basalAreaBackupFactor;
+	}
+
+	float indexAccess(Optional<float[]> array, int index, int minimumIndex, String field) {
+		if (index < minimumIndex) {
+			throw new ArrayIndexOutOfBoundsException(index);
+		}
+		return array.orElseThrow(unset(field))[index];
+	}
+
+	public void setFinalQuadraticMeanDiameter(float[] finalQuadraticMeanDiameters) {
+		this.finalQuadraticMeanDiameter = Optional.of(finalQuadraticMeanDiameters);
+	}
+
+	public void setSpeciesLoreyHeightBackupFactor(float[] speciesLoreyHeightBackupFactor) {
+		this.speciesLoreyHeightBackupFactor = Optional.of(speciesLoreyHeightBackupFactor);
+	}
+
+	public void setSpeciesQuadMeanDiameterBackupFactor(float[] speciesQuadMeanDiameterBackupFactor) {
+		this.speciesQuadMeanDiameterBackupFactor = Optional.of(speciesQuadMeanDiameterBackupFactor);
+	}
+
+	public void setSpeciesQuadMeanDiameterBackupFactorMinimum(float[] speciesQuadMeanDiameterBackupFactorMinimum) {
+		this.speciesQuadMeanDiameterBackupFactorMinimum = Optional.of(speciesQuadMeanDiameterBackupFactorMinimum);
+	}
+
+	public void setSpeciesLoreyHeightBackupFactorMaximum(float[] speciesLoreyHeightBackupFactorMaximum) {
+		this.speciesLoreyHeightBackupFactorMaximum = Optional.of(speciesLoreyHeightBackupFactorMaximum);
 	}
 
 }

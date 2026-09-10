@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.back;
 
-import static ca.bc.gov.nrs.vdyp.common.Utils.optInt;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.offsetMultiply;
 import static java.lang.Math.max;
@@ -21,7 +20,6 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
-import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -137,7 +135,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		}
 		state.setLimits(limits);
-		state.setFinalQuadMeanDiameters(finalDiameters);
+		state.setFinalQuadraticMeanDiameter(finalDiameters);
 
 	}
 

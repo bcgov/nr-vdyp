@@ -1177,6 +1177,46 @@ public class VdypMatchers {
 	}
 
 	/**
+	 * Matches if there is a method named <tt>property</tt> that takes a single integer which when called with
+	 * <tt>index</tt>, returns a value that matches <tt>valueMatcher</tt>
+	 *
+	 * @param property
+	 * @param index
+	 * @param valueMatcher
+	 * @return
+	 */
+	public static Matcher<Object>
+			hasIndexedThrowsAt(String property, int index, Matcher<? extends Throwable> exceptionMatcher) {
+		return new TypeSafeDiagnosingMatcher<Object>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("object with indexed accessor ").appendValue(property)
+						.appendText(" that throws an exception at ").appendValue(index).appendText(" that ")
+						.appendDescriptionOf(exceptionMatcher);
+			}
+
+			@Override
+			protected boolean matchesSafely(Object item, Description mismatchDescription) {
+				return testIndexedProperty(property, item, mismatchDescription, method -> {
+					try {
+						method.invoke(item, index);
+					} catch (IllegalAccessException | IllegalArgumentException e) {
+						mismatchDescription.appendText(e.getMessage());
+					} catch (InvocationTargetException e) {
+						exceptionMatcher.describeMismatch(e, mismatchDescription);
+						return exceptionMatcher.matches(e);
+					}
+					mismatchDescription.appendText("did not throw an exception");
+					return false;
+				});
+
+			}
+
+		};
+	}
+
+	/**
 	 * Matches if there is a method named <tt>property</tt> that takes a single integer. It will be called once for each
 	 * given value matcher with an index increasing from <tt>indexOffset</tt> and will pass if each result matches the
 	 * corresponding matcher
