@@ -45,6 +45,7 @@ public class StartupRecoveryService implements SmartLifecycle {
 	private final JobOwnershipService ownershipService;
 	private final ServerCapacityService serverCapacityService;
 	private final ClaimBoundJobLauncher claimBoundJobLauncher;
+	private final ThreadReservationService threadReservationService;
 
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	private Thread recoveryThread;
@@ -53,7 +54,8 @@ public class StartupRecoveryService implements SmartLifecycle {
 			JobExplorer jobExplorer, @Qualifier("fetchAndPartitionJob") Job fetchAndPartitionJob,
 			BatchRecoveryMetadataService recoveryMetadataService, VdypClient vdypClient,
 			BatchOwnershipProperties ownershipProperties, JobOwnershipService ownershipService,
-			ServerCapacityService serverCapacityService, ClaimBoundJobLauncher claimBoundJobLauncher
+			ServerCapacityService serverCapacityService, ClaimBoundJobLauncher claimBoundJobLauncher,
+			ThreadReservationService threadReservationService
 	) {
 		this.jobExplorer = jobExplorer;
 		this.fetchAndPartitionJob = fetchAndPartitionJob;
@@ -63,6 +65,7 @@ public class StartupRecoveryService implements SmartLifecycle {
 		this.ownershipService = ownershipService;
 		this.serverCapacityService = serverCapacityService;
 		this.claimBoundJobLauncher = claimBoundJobLauncher;
+		this.threadReservationService = threadReservationService;
 	}
 
 	@Override
@@ -184,9 +187,12 @@ public class StartupRecoveryService implements SmartLifecycle {
 		}
 
 		recoveryMetadataService.markStaleExecutionFailed(oldExecutionId);
-		// reservedThreads=0: recovery does not reserve upfront; any existing reservation is left as-is.
+		// Carry the old execution's reservation forward onto this pod's own ledger, since resuming past the
+		// partition tasklet (which normally reserves) would otherwise leave this job's real thread use unaccounted.
+		int carriedOverThreads = jobExecution.getExecutionContext().getInt(BatchConstants.Job.RESERVED_THREADS, 0);
+		int reservedThreads = carriedOverThreads > 0 ? threadReservationService.reserve(carriedOverThreads) : 0;
 		JobExecution newExecution = claimBoundJobLauncher
-				.launch(fetchAndPartitionJob, jobExecution.getJobParameters(), claim, 0);
+				.launch(fetchAndPartitionJob, jobExecution.getJobParameters(), claim, reservedThreads);
 		logger.info(
 				"Restarted stale job execution. projectionGuid={}, oldExecutionId={}, newExecutionId={}",
 				projectionGuid, oldExecutionId, newExecution.getId()
