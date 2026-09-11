@@ -243,6 +243,19 @@ describe('Model Parameter Store', () => {
     })
   })
 
+  it('should collapse all panels in view mode when collapseAllPanels is true (Ready projections)', () => {
+    const params = makeParsedParams({
+      reportTitle: 'My Report',
+      selectedExecutionOptions: [ExecutionOptionsEnum.ForwardGrowEnabled],
+    })
+    store.restoreFromProjectionParams(params, true, true)
+
+    ;(['reportDetails', 'speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((panel) => {
+      expect(store.panelOpenStates[panel]).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(store.panelState[panel]).to.deep.equal({ confirmed: true, editable: false })
+    })
+  })
+
   it('should restore panel flow based on reportTitle and set projectionType from options in edit mode', () => {
     store.restoreFromProjectionParams(makeParsedParams({ reportTitle: null }), false)
     expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)

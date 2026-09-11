@@ -234,6 +234,15 @@ describe('File Upload Store Unit Tests', () => {
       expect(store.runModelEnabled).to.be.false
     })
 
+    it('should collapse all panels when collapseAllPanels is true (Ready projections)', () => {
+      store.restoreFromProjectionParams(makeParsedParams({ reportTitle: 'My Report' }), true, true)
+
+      expect(store.panelOpenStates.reportConfig).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(store.panelOpenStates.minimumDBH).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.CLOSE)
+      expect(store.panelState.reportConfig).to.deep.equal({ confirmed: true, editable: false })
+    })
+
     it('should restore data fields and age range from params', () => {
       store.restoreFromProjectionParams(
         makeParsedParams({
