@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import {
   saveExistingProjectionSession,
   saveNewProjectionSession,
@@ -77,7 +78,7 @@ describe('projectionSession Unit Tests', () => {
 
   describe('loadProjectionSession', () => {
     it('should return null when sessionStorage is empty', () => {
-      expect(loadProjectionSession()).to.be.null
+      assert.isNull(loadProjectionSession())
     })
 
     it('should load and return existing projection context', () => {
@@ -97,20 +98,20 @@ describe('projectionSession Unit Tests', () => {
     it('should return null when sessionStorage contains invalid base64', () => {
       sessionStorage.setItem(PROJ_CTX_KEY, '!!!not-base64!!!')
 
-      expect(loadProjectionSession()).to.be.null
+      assert.isNull(loadProjectionSession())
     })
 
     it('should return null when sessionStorage contains invalid JSON after decoding', () => {
       sessionStorage.setItem(PROJ_CTX_KEY, btoa('not-valid-json'))
 
-      expect(loadProjectionSession()).to.be.null
+      assert.isNull(loadProjectionSession())
     })
 
     it('should return null when new projection context has an invalid model selection', () => {
       const tampered = { type: CONSTANTS.PROJECTION_SESSION_CTX.NEW_TYPE, ms: 'INVALID_MODEL' }
       sessionStorage.setItem(PROJ_CTX_KEY, btoa(JSON.stringify(tampered)))
 
-      expect(loadProjectionSession()).to.be.null
+      assert.isNull(loadProjectionSession())
     })
 
     it('should return null when existing projection context has an invalid view mode', () => {
@@ -118,50 +119,50 @@ describe('projectionSession Unit Tests', () => {
       const tampered = { type: CONSTANTS.PROJECTION_SESSION_CTX.EXISTING_TYPE, g: 'guid-xyz', m: CONSTANTS.PROJECTION_VIEW_MODE.CREATE }
       sessionStorage.setItem(PROJ_CTX_KEY, btoa(JSON.stringify(tampered)))
 
-      expect(loadProjectionSession()).to.be.null
+      assert.isNull(loadProjectionSession())
     })
 
     it('should return null when existing projection context has an empty GUID', () => {
       const tampered = { type: CONSTANTS.PROJECTION_SESSION_CTX.EXISTING_TYPE, g: '   ', m: CONSTANTS.PROJECTION_VIEW_MODE.VIEW }
       sessionStorage.setItem(PROJ_CTX_KEY, btoa(JSON.stringify(tampered)))
 
-      expect(loadProjectionSession()).to.be.null
+      assert.isNull(loadProjectionSession())
     })
 
     it('should return null when type field is unknown', () => {
       const tampered = { type: 'unknown-type', g: 'guid-xyz', m: CONSTANTS.PROJECTION_VIEW_MODE.VIEW }
       sessionStorage.setItem(PROJ_CTX_KEY, btoa(JSON.stringify(tampered)))
 
-      expect(loadProjectionSession()).to.be.null
+      assert.isNull(loadProjectionSession())
     })
 
     it('should return null when type field is missing', () => {
       const tampered = { g: 'guid-xyz', m: CONSTANTS.PROJECTION_VIEW_MODE.VIEW }
       sessionStorage.setItem(PROJ_CTX_KEY, btoa(JSON.stringify(tampered)))
 
-      expect(loadProjectionSession()).to.be.null
+      assert.isNull(loadProjectionSession())
     })
   })
 
   describe('clearProjectionSession', () => {
     it('should remove projection context from sessionStorage', () => {
       saveExistingProjectionSession('guid-123', CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
-      expect(sessionStorage.getItem(PROJ_CTX_KEY)).to.not.be.null
+      assert.isNotNull(sessionStorage.getItem(PROJ_CTX_KEY))
 
       clearProjectionSession()
-      expect(sessionStorage.getItem(PROJ_CTX_KEY)).to.be.null
+      assert.isNull(sessionStorage.getItem(PROJ_CTX_KEY))
     })
 
     it('should be a no-op when sessionStorage is already empty', () => {
       expect(() => clearProjectionSession()).to.not.throw()
-      expect(sessionStorage.getItem(PROJ_CTX_KEY)).to.be.null
+      assert.isNull(sessionStorage.getItem(PROJ_CTX_KEY))
     })
 
     it('should cause loadProjectionSession to return null after clearing', () => {
       saveNewProjectionSession(CONSTANTS.METHOD_SELECTION.FILE_UPLOAD)
       clearProjectionSession()
 
-      expect(loadProjectionSession()).to.be.null
+      assert.isNull(loadProjectionSession())
     })
   })
 })

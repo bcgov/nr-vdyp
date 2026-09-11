@@ -12,12 +12,7 @@
         <span>Return to my Projections List</span>
       </router-link>
       <div id="modelSelectionCard" class="model-selection-header">
-        <h3
-          v-if="appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT"
-        >
-          {{ CONSTANTS.HEADER_SELECTION.MANUAL_INPUT }}
-        </h3>
-        <h3 v-else>{{ CONSTANTS.HEADER_SELECTION.FILE_UPLOAD }}</h3>
+        <h3 :title="pageTitle">{{ pageTitle }}</h3>
         <div class="header-right-section">
           <!-- Manual Input mode: status badge -->
           <template v-if="appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT">
@@ -389,6 +384,18 @@ const fileUploadStore = useFileUploadStore()
 const reportingStore = useReportingStore()
 const projectionStore = useProjectionStore()
 const notificationStore = useNotificationStore()
+
+const isManualInputMode = computed(() => appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT)
+const pageTitle = computed(() => {
+  const headerLabel = isManualInputMode.value
+    ? CONSTANTS.HEADER_SELECTION.MANUAL_INPUT
+    : CONSTANTS.HEADER_SELECTION.FILE_UPLOAD
+  const reportTitle = isManualInputMode.value
+    ? modelParameterStore.reportTitle
+    : fileUploadStore.reportTitle
+
+  return reportTitle ? `${headerLabel}: ${reportTitle}` : headerLabel
+})
 
 const isRunning = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.RUNNING)
 const isStuck = computed(() => appStore.currentProjectionStatus === CONSTANTS.PROJECTION_STATUS.STUCK)
@@ -1182,6 +1189,10 @@ h3 {
   font: var(--typography-bold-h3);
   font-size: 24px;
   color: var(--typography-color-primary);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .running-status-menu-button {
@@ -1462,6 +1473,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: var(--layout-padding-medium);
+  flex-shrink: 0;
 }
 
 .status-section {
