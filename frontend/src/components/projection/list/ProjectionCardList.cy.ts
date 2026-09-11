@@ -234,7 +234,7 @@ describe('ProjectionCardList.vue', () => {
         onRowClick: onRowClickSpy,
       })
 
-      cy.get('.card-actions').click({ force: true })
+      cy.get('.card-actions').click()
       cy.get('@rowClickSpy').should('not.have.been.called')
     })
   })

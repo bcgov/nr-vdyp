@@ -83,7 +83,7 @@ describe('ReportingActions.vue', () => {
     it('does not emit when disabled', () => {
       const onPrintSpy = cy.spy().as('printSpy')
       mountComponent({ isButtonDisabled: true }, { onPrint: onPrintSpy })
-      cy.contains('button', 'Print').click({ force: true })
+      cy.contains('button', 'Print').invoke('click')
       cy.get('@printSpy').should('not.have.been.called')
     })
   })
@@ -99,7 +99,7 @@ describe('ReportingActions.vue', () => {
     it('does not emit when disabled', () => {
       const onDownloadSpy = cy.spy().as('downloadSpy')
       mountComponent({ isButtonDisabled: true }, { onDownload: onDownloadSpy })
-      cy.contains('button', 'Download Yield Table').click({ force: true })
+      cy.contains('button', 'Download Yield Table').invoke('click')
       cy.get('@downloadSpy').should('not.have.been.called')
     })
   })
