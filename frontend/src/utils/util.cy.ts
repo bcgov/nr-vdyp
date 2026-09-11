@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import {
   trimValue,
   isBlank,
@@ -41,37 +42,37 @@ describe('Util Functions Unit Tests', () => {
 
   describe('isBlank', () => {
     it('should return true for blank values and false for non-blank', () => {
-      expect(isBlank(undefined)).to.be.true
-      expect(isBlank(null)).to.be.true
-      expect(isBlank(Number.NaN)).to.be.true
-      expect(isBlank([])).to.be.true
-      expect(isBlank('')).to.be.true
-      expect(isBlank('text')).to.be.false
-      expect(isBlank(0)).to.be.false
-      expect(isBlank(false)).to.be.false
+      assert.isTrue(isBlank(undefined))
+      assert.isTrue(isBlank(null))
+      assert.isTrue(isBlank(Number.NaN))
+      assert.isTrue(isBlank([]))
+      assert.isTrue(isBlank(''))
+      assert.isFalse(isBlank('text'))
+      assert.isFalse(isBlank(0))
+      assert.isFalse(isBlank(false))
     })
   })
 
   describe('isZeroValue', () => {
     it('should return true for zero values and false otherwise', () => {
-      expect(isZeroValue(0)).to.be.true
-      expect(isZeroValue('0')).to.be.true
-      expect(isZeroValue(' 0 ')).to.be.true
-      expect(isZeroValue('-0')).to.be.true
-      expect(isZeroValue(1)).to.be.false
-      expect(isZeroValue(null)).to.be.false
-      expect(isZeroValue('abc')).to.be.false
+      assert.isTrue(isZeroValue(0))
+      assert.isTrue(isZeroValue('0'))
+      assert.isTrue(isZeroValue(' 0 '))
+      assert.isTrue(isZeroValue('-0'))
+      assert.isFalse(isZeroValue(1))
+      assert.isFalse(isZeroValue(null))
+      assert.isFalse(isZeroValue('abc'))
     })
   })
 
   describe('isEmptyOrZero', () => {
     it('should return true for empty or zero values and false otherwise', () => {
-      expect(isEmptyOrZero(0)).to.be.true
-      expect(isEmptyOrZero('0')).to.be.true
-      expect(isEmptyOrZero('')).to.be.true
-      expect(isEmptyOrZero(null)).to.be.true
-      expect(isEmptyOrZero(1)).to.be.false
-      expect(isEmptyOrZero('text')).to.be.false
+      assert.isTrue(isEmptyOrZero(0))
+      assert.isTrue(isEmptyOrZero('0'))
+      assert.isTrue(isEmptyOrZero(''))
+      assert.isTrue(isEmptyOrZero(null))
+      assert.isFalse(isEmptyOrZero(1))
+      assert.isFalse(isEmptyOrZero('text'))
     })
   })
 
@@ -206,18 +207,18 @@ describe('Util Functions Unit Tests', () => {
       const zip = new JSZip()
       zip.file(CONSTANTS.FILE_NAME.ERROR_TXT, 'Error content')
       const result = await checkZipForErrors(await zip.generateAsync({ type: 'blob' }))
-      expect(result).to.be.true
+      assert.isTrue(result)
     })
 
     it('should return false if Error.txt is missing, empty, or only whitespace/null', async () => {
       const zip = new JSZip()
-      expect(await checkZipForErrors(await zip.generateAsync({ type: 'blob' }))).to.be.false
+      assert.isFalse(await checkZipForErrors(await zip.generateAsync({ type: 'blob' })))
 
       zip.file(CONSTANTS.FILE_NAME.ERROR_TXT, '')
-      expect(await checkZipForErrors(await zip.generateAsync({ type: 'blob' }))).to.be.false
+      assert.isFalse(await checkZipForErrors(await zip.generateAsync({ type: 'blob' })))
 
       zip.file(CONSTANTS.FILE_NAME.ERROR_TXT, '  \n  \nnull\n  ')
-      expect(await checkZipForErrors(await zip.generateAsync({ type: 'blob' }))).to.be.false
+      assert.isFalse(await checkZipForErrors(await zip.generateAsync({ type: 'blob' })))
     })
   })
 
@@ -269,20 +270,20 @@ describe('Util Functions Unit Tests', () => {
 
   describe('numEq', () => {
     it('should compare numerically, treating null as equal to null only', () => {
-      expect(numEq('100.0', 100)).to.be.true
-      expect(numEq(null, null)).to.be.true
-      expect(numEq('1', null)).to.be.false
-      expect(numEq('1', 2)).to.be.false
+      assert.isTrue(numEq('100.0', 100))
+      assert.isTrue(numEq(null, null))
+      assert.isFalse(numEq('1', null))
+      assert.isFalse(numEq('1', 2))
     })
   })
 
   describe('strEq', () => {
     it('should compare strings and treat null/undefined as equivalent', () => {
-      expect(strEq('AT', 'AT')).to.be.true
-      expect(strEq(null, null)).to.be.true
-      expect(strEq(undefined, null)).to.be.true
-      expect(strEq(null, 'AT')).to.be.false
-      expect(strEq('AT', 'BT')).to.be.false
+      assert.isTrue(strEq('AT', 'AT'))
+      assert.isTrue(strEq(null, null))
+      assert.isTrue(strEq(undefined, null))
+      assert.isFalse(strEq(null, 'AT'))
+      assert.isFalse(strEq('AT', 'BT'))
     })
   })
 
@@ -306,8 +307,8 @@ describe('Util Functions Unit Tests', () => {
       const selected: ExecutionOptionsEnum[] = []
       const excluded: ExecutionOptionsEnum[] = []
       addExecutionOptionsFromMappings(selected, excluded, [])
-      expect(selected).to.be.empty
-      expect(excluded).to.be.empty
+      assert.isEmpty(selected)
+      assert.isEmpty(excluded)
     })
   })
 })

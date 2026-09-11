@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import { setActivePinia, createPinia } from 'pinia'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
@@ -83,7 +84,7 @@ describe('File Upload Store Unit Tests', () => {
       store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
 
-      expect(store.runModelEnabled).to.be.false
+      assert.isFalse(store.runModelEnabled)
     })
   })
 
@@ -107,11 +108,11 @@ describe('File Upload Store Unit Tests', () => {
       store.setPolygonFileInfo({ filename: 'poly.csv', fileMappingGUID: 'poly-guid', fileSetGUID: 'set-1' })
       store.setLayerFileInfo({ filename: 'layer.csv', fileMappingGUID: 'layer-guid', fileSetGUID: 'set-1' })
       store.updateRunModelEnabled()
-      expect(store.runModelEnabled).to.be.true
+      assert.isTrue(store.runModelEnabled)
 
       store.editPanel('reportConfig')
 
-      expect(store.runModelEnabled).to.be.false
+      assert.isFalse(store.runModelEnabled)
     })
   })
 
@@ -119,11 +120,11 @@ describe('File Upload Store Unit Tests', () => {
     it('should require all sequential panels confirmed AND both files uploaded', () => {
       store.setPolygonFileInfo({ filename: 'p.csv', fileMappingGUID: 'p-guid', fileSetGUID: 'set-1' })
       store.setLayerFileInfo({ filename: 'l.csv', fileMappingGUID: 'l-guid', fileSetGUID: 'set-1' })
-      expect(store.runModelEnabled).to.be.false // panels not confirmed yet
+      assert.isFalse(store.runModelEnabled) // panels not confirmed yet
 
       store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
-      expect(store.runModelEnabled).to.be.true
+      assert.isTrue(store.runModelEnabled)
     })
 
     it('should become false when a file is removed after being enabled', () => {
@@ -131,12 +132,12 @@ describe('File Upload Store Unit Tests', () => {
       store.setLayerFileInfo({ filename: 'l.csv', fileMappingGUID: 'l-guid', fileSetGUID: 'set-1' })
       store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
-      expect(store.runModelEnabled).to.be.true
+      assert.isTrue(store.runModelEnabled)
 
       store.setPolygonFileInfo(null)
       store.updateRunModelEnabled()
 
-      expect(store.runModelEnabled).to.be.false
+      assert.isFalse(store.runModelEnabled)
     })
   })
 
@@ -312,16 +313,16 @@ describe('File Upload Store Unit Tests', () => {
         true,
       )
 
-      expect(store.isForwardGrowEnabled).to.be.true
-      expect(store.isBackwardGrowEnabled).to.be.true
-      expect(store.isBySpeciesEnabled).to.be.true
-      expect(store.isPolygonIDEnabled).to.be.true
-      expect(store.isProjectionModeEnabled).to.be.true
-      expect(store.isCurrentYearEnabled).to.be.true
-      expect(store.isReferenceYearEnabled).to.be.true
-      expect(store.incSecondaryHeight).to.be.true
-      expect(store.isComputedMAIEnabled).to.be.true
-      expect(store.isCulminationValuesEnabled).to.be.true
+      assert.isTrue(store.isForwardGrowEnabled)
+      assert.isTrue(store.isBackwardGrowEnabled)
+      assert.isTrue(store.isBySpeciesEnabled)
+      assert.isTrue(store.isPolygonIDEnabled)
+      assert.isTrue(store.isProjectionModeEnabled)
+      assert.isTrue(store.isCurrentYearEnabled)
+      assert.isTrue(store.isReferenceYearEnabled)
+      assert.isTrue(store.incSecondaryHeight)
+      assert.isTrue(store.isComputedMAIEnabled)
+      assert.isTrue(store.isCulminationValuesEnabled)
     })
   })
 

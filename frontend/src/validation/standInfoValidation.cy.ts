@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import {
   validateRange,
   validateBALimits,
@@ -11,23 +12,23 @@ import { CONSTANTS } from '@/constants'
 describe('Stand Information Validation Unit Tests', () => {
   context('validateRange', () => {
     it('should return true for valid percentStockableArea within range', () => {
-      expect(
+      assert.isTrue(
         validateRange(
           String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN),
           null,
           null,
           null,
         ).isValid,
-      ).to.be.true
-      expect(
+      )
+      assert.isTrue(
         validateRange(
           String(CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX),
           null,
           null,
           null,
         ).isValid,
-      ).to.be.true
-      expect(validateRange('50', null, null, null).isValid).to.be.true
+      )
+      assert.isTrue(validateRange('50', null, null, null).isValid)
     })
 
     it('should return false for percentStockableArea out of range', () => {
@@ -51,7 +52,7 @@ describe('Stand Information Validation Unit Tests', () => {
     })
 
     it('should return true for null value', () => {
-      expect(validateRange(null, null, null, null).isValid).to.be.true
+      assert.isTrue(validateRange(null, null, null, null).isValid)
     })
 
     it('should return false for negative percentStockableArea', () => {
@@ -118,16 +119,16 @@ describe('Stand Information Validation Unit Tests', () => {
 
   context('validateBALimits', () => {
     it('should return true for missing inputs', () => {
-      expect(validateBALimits(null, null, null, null)).to.be.true
-      expect(validateBALimits('H', 'CWH', null, '10.0')).to.be.true
+      assert.isTrue(validateBALimits(null, null, null, null))
+      assert.isTrue(validateBALimits('H', 'CWH', null, '10.0'))
     })
 
     it('should return true for basal area within limit', () => {
-      expect(validateBALimits('H', 'CWH', '30', '10')).to.be.true
+      assert.isTrue(validateBALimits('H', 'CWH', '30', '10'))
     })
 
     it('should return false for basal area exceeding limit', () => {
-      expect(validateBALimits('H', 'CWH', '50', '10')).to.be.false
+      assert.isFalse(validateBALimits('H', 'CWH', '50', '10'))
     })
   })
 
@@ -178,7 +179,7 @@ describe('Stand Information Validation Unit Tests', () => {
     })
 
     it('should return null for invalid inputs', () => {
-      expect(validateTPHLimits(null, null, null, null, null)).to.be.null
+      assert.isNull(validateTPHLimits(null, null, null, null, null))
     })
   })
 
@@ -188,7 +189,7 @@ describe('Stand Information Validation Unit Tests', () => {
       const tph = '1000'
       const minDBHLimit = '7.5'
 
-      expect(validateQuadDiameter(basalArea, tph, minDBHLimit)).to.be.null
+      assert.isNull(validateQuadDiameter(basalArea, tph, minDBHLimit))
     })
 
     it('should return error message for quadratic diameter below minDBHLimit', () => {
@@ -202,8 +203,8 @@ describe('Stand Information Validation Unit Tests', () => {
     })
 
     it('should return null for invalid inputs', () => {
-      expect(validateQuadDiameter(null, null, null)).to.be.null
-      expect(validateQuadDiameter('10.0', null, '7.5')).to.be.null
+      assert.isNull(validateQuadDiameter(null, null, null))
+      assert.isNull(validateQuadDiameter('10.0', null, '7.5'))
     })
   })
 })

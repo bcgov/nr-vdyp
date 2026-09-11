@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAppStore } from '@/stores/projection/appStore'
 import { DEFAULTS } from '@/constants'
@@ -25,20 +26,20 @@ describe('App Store Unit Tests', () => {
   describe('isReadOnly', () => {
     it('should be true when viewMode is VIEW', () => {
       appStore.setViewMode(PROJECTION_VIEW_MODE.VIEW)
-      expect(appStore.isReadOnly).to.be.true
+      assert.isTrue(appStore.isReadOnly)
     })
 
     it('should be false when viewMode is EDIT', () => {
       appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
-      expect(appStore.isReadOnly).to.be.false
+      assert.isFalse(appStore.isReadOnly)
     })
   })
 
   describe('isDraft', () => {
     it('should be true when status is DRAFT and false otherwise', () => {
-      expect(appStore.isDraft).to.be.true
+      assert.isTrue(appStore.isDraft)
       appStore.setCurrentProjectionStatus(PROJECTION_STATUS.READY)
-      expect(appStore.isDraft).to.be.false
+      assert.isFalse(appStore.isDraft)
     })
   })
 

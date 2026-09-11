@@ -43,6 +43,7 @@ export default defineConfig(({ mode, command }) => {
     },
     optimizeDeps: {
       include: [
+        'chai',
         'vuetify/components/VBtn',
         'vuetify/components/VSnackbar',
         'vuetify/components/VTextField',
