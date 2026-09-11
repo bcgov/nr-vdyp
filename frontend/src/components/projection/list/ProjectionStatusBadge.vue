@@ -86,12 +86,12 @@ const statusClass = computed(() => {
 
 .status-text.status-running {
   font: var(--typography-bold-body);
-  color: #FCBA19;
+  color: var(--surface-color-primary-hover, #1E5189);
 }
 
 .status-text.status-queued {
   font: var(--typography-bold-body);
-  color: var(--typography-color-placeholder);
+  color: var(--theme-blue-70, #5595D9);
 }
 
 .status-text.status-stuck {
