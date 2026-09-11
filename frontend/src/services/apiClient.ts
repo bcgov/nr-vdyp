@@ -168,6 +168,16 @@ export const apiClient = {
   },
 
   /**
+   * (Admin Only) Prioritizes a running projection.
+   * @param projectionGUID The projection GUID.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the updated projection.
+   */
+  prioritizeProjection: (projectionGUID: string, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.prioritizeProjection(projectionGUID, options)
+  },
+
+  /**
    * Cancels a running projection.
    * @param projectionGUID The projection GUID.
    * @param adminCancelReason Optional justification, set by an Admin when cancelling on a user's behalf.

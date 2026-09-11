@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.Chunk;
@@ -16,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchProjectionException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultStorageException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
@@ -32,6 +34,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 
 	private final BatchProjectionService batchProjectionService;
 	private final ObjectMapper objectMapper;
+	private final JobOwnershipService ownershipService;
 
 	// Step execution context fields - initialized once in beforeStep() and never modified thereafter.
 	// Note: These fields cannot be made final due to Spring Batch's StepExecutionListener contract,
@@ -40,13 +43,18 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 	private Long jobExecutionId;
 	private String jobGuid;
 	private Parameters projectionParameters;
+	private JobExecution jobExecution;
 
 	// Protects against multiple beforeStep() calls
 	private boolean initialized = false;
 
-	public BatchItemWriter(BatchProjectionService batchProjectionService, ObjectMapper objectMapper) {
+	public BatchItemWriter(
+			BatchProjectionService batchProjectionService, ObjectMapper objectMapper,
+			JobOwnershipService ownershipService
+	) {
 		this.batchProjectionService = batchProjectionService;
 		this.objectMapper = objectMapper;
+		this.ownershipService = ownershipService;
 	}
 
 	@Override
@@ -62,6 +70,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 		}
 
 		this.jobExecutionId = stepExecution.getJobExecutionId();
+		this.jobExecution = stepExecution.getJobExecution();
 		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 
 		String partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME);
@@ -153,6 +162,7 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 		// Spring Batch chunk size is 1, so chunk contains exactly one BatchChunkMetadata
 		BatchChunkMetadata chunkMetadata = chunk.getItems().get(0);
 		String partitionName = chunkMetadata.getPartitionName();
+		ownershipService.assertCurrentOwner(jobExecution);
 
 		logger.trace(
 				"[GUID: {}, EXEID: {}, Partition: {}] Processing chunk metadata (polygonStartByte={}, polygonRecordCount={}) using BatchProjectionService",

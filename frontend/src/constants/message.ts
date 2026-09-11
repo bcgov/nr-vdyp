@@ -217,6 +217,8 @@ export const SUCCESS_MSG = Object.freeze({
   PROJECTION_DELETED_TITLE: 'Projection deleted',
   PROJECTION_CANCELLED: 'Projection has been successfully cancelled.',
   PROJECTION_CANCELLED_TITLE: 'Projection Cancelled',
+  PRIORITIZATION_REQUESTED: 'The Prioritization request is being processed',
+  PRIORITIZATION_REQUESTED_TITLE: 'Prioritization Requested',
   BATCH_PROJECTION_STARTED:
     'Projection has been submitted for processing. You can check the status in the Projection List.',
   BATCH_PROJECTION_STARTED_TITLE: 'Projection Started',
@@ -250,6 +252,8 @@ export const PROJECTION_ERR = Object.freeze({
   CANCEL_ALREADY_FAILED_TITLE: 'Projection Failed',
   CANCEL_NOT_RUNNING: 'Projection is no longer running.',
   CANCEL_NOT_RUNNING_TITLE: 'Cannot Cancel',
+  PRIORITIZE_FAILED: 'Failed to prioritize the projection. Please try again later.',
+  PRIORITIZE_FAILED_TITLE: 'Projection Prioritize Failed',
   DOWNLOAD_FAILED: (fileName: string) =>
     `${fileName} was unable to download to your device. Please try your download again.`,
   DOWNLOAD_FAILED_TITLE: 'Download Failed',

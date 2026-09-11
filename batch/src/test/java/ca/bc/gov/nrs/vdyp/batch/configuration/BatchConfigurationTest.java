@@ -51,6 +51,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchProjectionService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
@@ -107,6 +108,8 @@ class BatchConfigurationTest {
 
 	@Mock
 	private ObjectMapper objectMapper;
+	@Mock
+	private JobOwnershipService ownershipService;
 
 	@TempDir
 	Path tempDir;
@@ -118,7 +121,7 @@ class BatchConfigurationTest {
 	@BeforeEach
 	void setUp() {
 		configuration = new BatchConfiguration(
-				jobRepository, metricsCollector, batchProperties, resultAggregationService
+				jobRepository, metricsCollector, batchProperties, resultAggregationService, ownershipService
 		);
 
 		when(batchProperties.getRetry()).thenReturn(retry);

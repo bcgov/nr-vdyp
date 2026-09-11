@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -55,7 +56,9 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -1242,16 +1245,30 @@ class YieldTableTest {
 		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
 
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
-
+		context.getParams().setUtils(getUtilizationClassLookup());
 		var yieldTable = YieldTable.of(context);
 		var polygon = new Polygon.Builder().featureId(13919428).build();
 		var rowContext = YieldTableRowContext.of(context, polygon, new PolygonProjectionState(), null);
 
-		var ex = assertThrows(
-				StandYieldCalculationException.class,
-				() -> yieldTable.getYields(rowContext, 2020, UtilizationClassSet._7_5, null, null)
-		);
+		var ex = assertThrows(StandYieldCalculationException.class, () -> yieldTable.getYields(rowContext, 2020, null));
 		assertThat(ex.getMessage(), containsString("Polygon 13919428"));
+	}
+
+	private Map<SP0Name, UtilizationClassSet> getUtilizationClassLookup() {
+		return Map.ofEntries(
+				Map.entry(SP0Name.B, UtilizationClassSet._7_5), Map.entry(SP0Name.AC, UtilizationClassSet._7_5),
+				Map.entry(SP0Name.AT, UtilizationClassSet._7_5), Map.entry(SP0Name.C, UtilizationClassSet._7_5),
+				Map.entry(SP0Name.D, UtilizationClassSet._7_5), Map.entry(SP0Name.E, UtilizationClassSet._7_5),
+				Map.entry(SP0Name.F, UtilizationClassSet._7_5), Map.entry(SP0Name.H, UtilizationClassSet._7_5),
+				Map.entry(SP0Name.L, UtilizationClassSet._7_5), Map.entry(SP0Name.MB, UtilizationClassSet._7_5),
+				Map.entry(SP0Name.Y, UtilizationClassSet._7_5), Map.entry(SP0Name.PA, UtilizationClassSet._7_5),
+				Map.entry(SP0Name.PL, UtilizationClassSet._7_5), Map.entry(SP0Name.PW, UtilizationClassSet._7_5),
+				Map.entry(SP0Name.PY, UtilizationClassSet._7_5), Map.entry(SP0Name.S, UtilizationClassSet._7_5)
+		);
+	}
+
+	private Map<SP0Name, UtilizationClassSet> get125UcPLLookup() {
+		return Map.ofEntries(Map.entry(SP0Name.PL, UtilizationClassSet._12_5));
 	}
 
 	@Test
@@ -1259,6 +1276,7 @@ class YieldTableTest {
 		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
 
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		context.getParams().setUtils(getUtilizationClassLookup());
 
 		var yieldTable = YieldTable.of(context);
 		var polygon = new Polygon.Builder().featureId(13919428).build();
@@ -1267,8 +1285,7 @@ class YieldTableTest {
 				.layerType(LayerType.PRIMARY).build();
 
 		var ex = assertThrows(
-				StandYieldCalculationException.class,
-				() -> yieldTable.getYields(rowContext, 2020, UtilizationClassSet._7_5, species, null)
+				StandYieldCalculationException.class, () -> yieldTable.getYields(rowContext, 2020, species, null)
 		);
 		assertThat(ex.getMessage(), containsString("Polygon 13919428"));
 	}
@@ -1278,6 +1295,7 @@ class YieldTableTest {
 		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
 
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		context.getParams().setUtils(getUtilizationClassLookup());
 
 		var yieldTable = YieldTable.of(context);
 		var polygon = new Polygon.Builder().featureId(13919428).build();
@@ -1311,7 +1329,7 @@ class YieldTableTest {
 			);
 		});
 
-		var result = yieldTable.getYields(rowContext, 2020, UtilizationClassSet._7_5, species, species);
+		var result = yieldTable.getYields(rowContext, 2020, species);
 		assertThat(result, recordHasProperty("basalArea75cm", Matchers.closeTo(14.9620, 0.014)));
 		assertThat(result, recordHasProperty("basalArea125cm", Matchers.closeTo(12.7926, 0.012)));
 		assertThat(result, recordHasProperty("basalArea", Matchers.closeTo(14.9620, 0.014)));
@@ -1323,6 +1341,7 @@ class YieldTableTest {
 		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
 
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		context.getParams().setUtils(get125UcPLLookup());
 
 		var yieldTable = YieldTable.of(context);
 		var polygon = new Polygon.Builder().featureId(13919428).build();
@@ -1356,11 +1375,122 @@ class YieldTableTest {
 			);
 		});
 
-		var result = yieldTable.getYields(rowContext, 2020, UtilizationClassSet._12_5, species, species);
+		var result = yieldTable.getYields(rowContext, 2020, species);
 		assertThat(result, recordHasProperty("basalArea75cm", Matchers.closeTo(14.9620, 0.014)));
 		assertThat(result, recordHasProperty("basalArea125cm", Matchers.closeTo(12.7926, 0.012)));
 		assertThat(result, recordHasProperty("basalArea", Matchers.closeTo(12.7926, 0.012)));
 		assertThat(result, recordHasProperty("diameter", Matchers.closeTo(21.1947, 0.021)));
+	}
+
+	@Test
+	void testGetYieldsLayerSumsEachSpeciesAtItsReportingLevel() throws AbstractProjectionRequestException {
+		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		context.getParams()
+				.setUtils(Map.of(SP0Name.PL, UtilizationClassSet._7_5, SP0Name.S, UtilizationClassSet._12_5));
+
+		var yieldTable = YieldTable.of(context);
+		var polygon = new Polygon.Builder().featureId(13919428).build();
+		var rowContext = YieldTableRowContext.of(context, polygon, new PolygonProjectionState(), null);
+
+		var layer = VdypLayer.build(lb -> {
+			lb.polygonIdentifier("12345689", 2020);
+			lb.layerType(LayerType.PRIMARY);
+			lb.loreyHeightByUtilization(4.0f, 25.0f);
+			lb.baseAreaByUtilization(0.0f, 11.0f, 22.0f, 33.0f, 44.0f);
+
+			lb.addSpecies(sb -> {
+				sb.genus("PL", 1);
+				sb.percentGenus(60.0f);
+				sb.isPrimary(true);
+				sb.addSite(site -> {
+					site.ageTotal(80.0f);
+					site.height(30.0f);
+					site.siteIndex(25.0f);
+					site.siteCurveNumber(42);
+				});
+				sb.loreyHeight(3.0f, 20.0f);
+				sb.baseArea(0.0f, 1.0f, 2.0f, 3.0f, 4.0f);
+				sb.treesPerHectare(0.0f, 10.0f, 20.0f, 30.0f, 40.0f);
+				sb.wholeStemVolume(0.0f, 1.0f, 2.0f, 3.0f, 4.0f);
+				sb.closeUtilizationVolumeByUtilization(0.0f, 2.0f, 4.0f, 6.0f, 8.0f);
+				sb.closeUtilizationVolumeNetOfDecayByUtilization(0.0f, 3.0f, 6.0f, 9.0f, 12.0f);
+				sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(0.0f, 4.0f, 8.0f, 12.0f, 16.0f);
+				sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(0.0f, 5.0f, 10.0f, 15.0f, 20.0f);
+			});
+
+			lb.addSpecies(sb -> {
+				sb.genus("S", 2);
+				sb.percentGenus(40.0f);
+				sb.baseArea(0.0f, 10.0f, 20.0f, 30.0f, 40.0f);
+				sb.treesPerHectare(0.0f, 100.0f, 200.0f, 300.0f, 400.0f);
+				sb.wholeStemVolume(0.0f, 10.0f, 20.0f, 30.0f, 40.0f);
+				sb.closeUtilizationVolumeByUtilization(0.0f, 20.0f, 40.0f, 60.0f, 80.0f);
+				sb.closeUtilizationVolumeNetOfDecayByUtilization(0.0f, 30.0f, 60.0f, 90.0f, 120.0f);
+				sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(0.0f, 40.0f, 80.0f, 120.0f, 160.0f);
+				sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(0.0f, 50.0f, 100.0f, 150.0f, 200.0f);
+			});
+		});
+
+		var result = yieldTable.getYields(rowContext, 2030, layer.getSpeciesBySp0("PL"), layer);
+
+		assertTrue(result.bYieldsPredicted());
+		assertTrue(result.isDominantSp0());
+		assertThat(result.sp0Name(), is("PL"));
+		assertThat(result.standYear(), is(2030));
+		assertThat(result.speciesAge(), is(80.0));
+		assertThat(result.dominantHeight(), is(30.0));
+		assertThat(result.loreyHeight(), is(25.0));
+		assertThat(result.siteIndex(), is(25.0));
+		assertThat(result.diameter(), closeTo(35.6825, 0.0001));
+		assertThat(result.treesPerHectare(), is(1_000.0));
+		assertThat(result.wholeStemVolume(), is(100.0));
+		assertThat(result.closeUtilizationVolume(), is(200.0));
+		assertThat(result.cuVolumeLessDecay(), is(300.0));
+		assertThat(result.cuVolumeLessDecayWastage(), is(400.0));
+		assertThat(result.cuVolumeLessDecayWastageBreakage(), is(500.0));
+		assertThat(result.basalArea(), is(100.0));
+		assertThat(result.basalArea75cm(), is(110.0));
+		assertThat(result.basalArea125cm(), is(99.0));
+		assertThat(result.reportedStandPercent(), is(60.0));
+		assertThat(result.siteIndexCurve(), is(42));
+	}
+
+	@Test
+	void testGetYieldsSpeciesUsesDefaultsWhenSiteAndYieldDataAreMissing() throws AbstractProjectionRequestException {
+		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		context.getParams().setUtils(Map.of(SP0Name.PL, UtilizationClassSet._7_5));
+
+		var yieldTable = YieldTable.of(context);
+		var polygon = new Polygon.Builder().featureId(13919428).build();
+		var rowContext = YieldTableRowContext.of(context, polygon, new PolygonProjectionState(), null);
+		var species = VdypSpecies.build(sb -> {
+			sb.genus("PL", 1);
+			sb.polygonIdentifier("12345689", 2020);
+			sb.layerType(LayerType.PRIMARY);
+			sb.percentGenus(25.0f);
+			sb.addSite(site -> {
+				// An explicitly present site can still have no projected site values.
+			});
+		});
+
+		var result = yieldTable.getYields(rowContext, 2040, species);
+
+		assertTrue(result.bYieldsPredicted());
+		assertFalse(result.isDominantSp0());
+		assertThat(result.sp0Name(), is("PL"));
+		assertThat(result.standYear(), is(2040));
+		assertThat(result.speciesAge(), is(-9.0));
+		assertThat(result.dominantHeight(), is(-9.0));
+		assertThat(result.siteIndex(), is(-9.0));
+		assertThat(result.diameter(), is(-9.0));
+		assertThat(result.treesPerHectare(), is(0.0));
+		assertThat(result.basalArea(), is(0.0));
+		assertThat(result.reportedStandPercent(), is(25.0));
+		assertThat(result.siteIndexCurve(), is(-9));
 	}
 
 	@Test

@@ -22,6 +22,7 @@ describe('adminService Unit Tests', () => {
           workerCount: 2,
           completedPolygonCount: 5,
           polygonCount: 10,
+          isPrioritized: false,
         },
       } as unknown as ProjectionModel
 
@@ -37,6 +38,7 @@ describe('adminService Unit Tests', () => {
         workerCount: 2,
         completedPolygonCount: 5,
         polygonCount: 10,
+        isPrioritized: false,
       })
     })
 
@@ -62,6 +64,7 @@ describe('adminService Unit Tests', () => {
         workerCount: 0,
         completedPolygonCount: 0,
         polygonCount: 0,
+        isPrioritized: false,
       })
     })
   })

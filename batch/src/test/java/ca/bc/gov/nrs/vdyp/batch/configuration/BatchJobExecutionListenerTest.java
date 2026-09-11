@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +31,8 @@ import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -41,12 +45,16 @@ class BatchJobExecutionListenerTest {
 
 	@Mock
 	private JobInstance jobInstance;
+	@Mock
+	private JobOwnershipService ownershipService;
+	@Mock
+	private PrioritizationPauseTracker pauseTracker;
 
 	private BatchJobExecutionListener listener;
 
 	@BeforeEach
 	void setUp() {
-		listener = new BatchJobExecutionListener();
+		listener = new BatchJobExecutionListener(ownershipService, pauseTracker);
 	}
 
 	@Test
@@ -180,6 +188,74 @@ class BatchJobExecutionListenerTest {
 	}
 
 	@Test
+	void testAfterJob_StoppedJob_PausedForResume_DoesNotDeleteJobDirectory(@TempDir Path tempDir) throws IOException {
+		Long jobId = 8L;
+		String jobGuid = "guid-008";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir-stopped"));
+		Path partitionDir = Files.createDirectory(jobBaseDir.resolve("input-partition5"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.STOPPED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+		when(pauseTracker.isPausedForResume(jobId)).thenReturn(true);
+
+		listener.beforeJob(jobExecution);
+		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+
+		assertTrue(Files.exists(jobBaseDir));
+		assertTrue(Files.exists(partitionDir));
+	}
+
+	@Test
+	void testAfterJob_StoppedJob_NotPausedForResume_DeletesJobDirectory(@TempDir Path tempDir) throws IOException {
+		Long jobId = 10L;
+		String jobGuid = "guid-010";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir-cancelled"));
+		Files.createDirectory(jobBaseDir.resolve("input-partition5"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.STOPPED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+		when(pauseTracker.isPausedForResume(jobId)).thenReturn(false);
+
+		listener.beforeJob(jobExecution);
+		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+
+		assertTrue(Files.notExists(jobBaseDir));
+	}
+
+	@Test
+	void testAfterJob_FailedJob_DeletesJobDirectory(@TempDir Path tempDir) throws IOException {
+		Long jobId = 9L;
+		String jobGuid = "guid-009";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir-failed"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.FAILED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+
+		listener.beforeJob(jobExecution);
+		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+
+		assertTrue(Files.notExists(jobBaseDir));
+	}
+
+	@Test
 	void testAfterJob_JobBasePathDeleteThrowsIOException(@TempDir Path tempDir) throws IOException {
 		Long jobId = 6L;
 		String jobGuid = "guid-006";
@@ -235,5 +311,31 @@ class BatchJobExecutionListenerTest {
 
 		assertTrue(Files.exists(warningsPath));
 		assertTrue(Files.exists(warningsPath.resolve("nested.txt")));
+	}
+
+	@Test
+	void testAfterJob_WhenOwnershipLost_SkipsJobDirectoryCleanup(@TempDir Path tempDir) throws IOException {
+		Long jobId = 8L;
+		String jobGuid = "guid-008";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.STOPPED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+		doThrow(new IllegalStateException("fenced")).when(ownershipService).assertCurrentOwner(jobExecution);
+
+		listener.beforeJob(jobExecution);
+
+		try (MockedStatic<BatchUtils> batchUtilsMock = mockStatic(BatchUtils.class)) {
+			assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+			batchUtilsMock.verify(() -> BatchUtils.deleteDirectoryRecursively(any(Path.class)), never());
+		}
+
+		assertTrue(Files.exists(jobBaseDir));
 	}
 }

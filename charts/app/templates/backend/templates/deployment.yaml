@@ -126,6 +126,10 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.backend.env.VDYP_DB_SECRET_NAME }}
                   key: dbname
+            - name: QUARKUS_SMALLRYE_OPENAPI_ENABLE
+              value: {{ .Values.backend.env.QUARKUS_SMALLRYE_OPENAPI_ENABLE | default "false"  | quote }}
+            - name: QUARKUS_HTTP_AUTH_PERMISSION_OPENAPI_POLICY
+              value: {{ .Values.backend.env.QUARKUS_HTTP_AUTH_PERMISSION_OPENAPI_POLICY | default "authenticated" | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.backend.service.targetPort }}

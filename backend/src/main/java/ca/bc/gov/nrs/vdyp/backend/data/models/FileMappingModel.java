@@ -2,9 +2,12 @@ package ca.bc.gov.nrs.vdyp.backend.data.models;
 
 import java.net.URL;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
+@Schema(description = "Metadata and object-storage information for a file attached to a projection file set.")
 public class FileMappingModel {
 	private String fileMappingGUID;
 	private String filename;

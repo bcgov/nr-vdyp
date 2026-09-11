@@ -5,6 +5,7 @@ import {
   updateProjectionParams as apiUpdateProjectionParams,
   deleteProjection as apiDeleteProjection,
   runProjection as apiRunProjection,
+  prioritizeProjection as apiPrioritizeProjection,
   cancelProjection as apiCancelProjection,
   duplicateProjection as apiDuplicateProjection,
   deleteFileFromFileSet as apiDeleteFileFromFileSet,
@@ -185,6 +186,22 @@ export const runProjection = async (
     return await apiRunProjection(projectionGUID)
   } catch (error) {
     console.error('Error running projection:', error)
+    throw error
+  }
+}
+
+/**
+ * Prioritizes a running projection by sending a prioritize request to the backend (Admin only).
+ * @param projectionGUID The projection GUID
+ * @returns A promise that resolves to the updated ProjectionModel
+ */
+export const prioritizeProjection = async (
+  projectionGUID: string,
+): Promise<ProjectionModel> => {
+  try {
+    return await apiPrioritizeProjection(projectionGUID)
+  } catch (error) {
+    console.error('Error prioritizing projection:', error)
     throw error
   }
 }

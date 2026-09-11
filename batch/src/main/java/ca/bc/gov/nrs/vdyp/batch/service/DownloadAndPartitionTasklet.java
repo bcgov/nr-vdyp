@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,7 @@ import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -31,14 +33,17 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 	private static final Logger logger = LoggerFactory.getLogger(DownloadAndPartitionTasklet.class);
 	private final BatchInputPartitioner inputPartitioner;
 	private final BatchProperties batchProperties;
+	private final ThreadReservationService threadReservationService;
 
 	public DownloadAndPartitionTasklet(
 			ComsFileService comsFileService, BatchInputPartitioner inputPartitioner, VdypClient vdypClient,
-			BatchProperties batchProperties
+			BatchProperties batchProperties, JobOwnershipService ownershipService,
+			ThreadReservationService threadReservationService
 	) {
-		super(comsFileService, vdypClient);
+		super(comsFileService, vdypClient, ownershipService);
 		this.inputPartitioner = inputPartitioner;
 		this.batchProperties = batchProperties;
+		this.threadReservationService = threadReservationService;
 	}
 
 	@Override
@@ -50,6 +55,10 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 			if (jobGuid == null || baseDir == null || projectionGUID == null) {
 				throw new IllegalArgumentException("Missing required job parameters for COMS download mode.");
 			}
+
+			// The asynchronous job itself already occupies one executor thread, even though no worker partitions exist
+			// yet.
+			pushProgress(0, 1);
 
 			VdypProjectionDetails projectionDetails = vdypClient.getProjectionDetails(projectionGUID);
 
@@ -85,7 +94,24 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 
 			int chunkSize = resolveChunkSize(stepExecution);
 			int maxJobThreads = batchProperties.getThreadPool().getMaxJobThreads();
+			// Based only on this job's own workload, not current pool availability - this count is fixed for the
+			// job's entire lifetime, so shrinking it here would permanently block Prioritize from ever letting this
+			// job grow later into capacity freed by pausing other jobs.
 			computedPartitions = BatchUtils.calculateThreadsForJob(totalPolygons, chunkSize, maxJobThreads);
+
+			// BatchJobLaunchService already reserved an upfront estimate at admission time. True it up to the real,
+			// polygon-count-based need instead of reserving fresh, which would double-count this job's demand.
+			ExecutionContext jobExecutionContext = stepExecution.getJobExecution().getExecutionContext();
+			int alreadyReserved = jobExecutionContext.getInt(BatchConstants.Job.RESERVED_THREADS, 0);
+			int reservedThreads = alreadyReserved;
+			if (computedPartitions > alreadyReserved) {
+				reservedThreads = alreadyReserved
+						+ threadReservationService.reserve(computedPartitions - alreadyReserved);
+			} else if (computedPartitions < alreadyReserved) {
+				threadReservationService.release(alreadyReserved - computedPartitions);
+				reservedThreads = computedPartitions;
+			}
+			jobExecutionContext.putInt(BatchConstants.Job.RESERVED_THREADS, reservedThreads);
 
 			logger.debug(
 					"[GUID: {}] Computed {} partitions for {} polygons (chunkSize={}, maxJobThreads={})", jobGuid,
@@ -106,8 +132,8 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 					.handlePartitionFailure(e, "Could not fetch and partition input files", jobGuid, logger);
 		}
 
-		// Push initial progress so the backend can update status to RUNNING as soon as polygon count is known.
-		pushInitialProgress(partitionedCount);
+		// Update the polygon total while continuing to report the job's coordinator thread.
+		pushProgress(partitionedCount, 1);
 
 		logger.debug("Completed download and partitioning of input files.");
 	}
@@ -135,12 +161,13 @@ public class DownloadAndPartitionTasklet extends VdypFileTasklet {
 		return Math.max(batchProperties.getReader().getDefaultChunkSize(), 1);
 	}
 
-	private void pushInitialProgress(int totalPolygons) {
+	private void pushProgress(int totalPolygons, int threadsInUse) {
 		try {
-			vdypClient
-					.pushProgress(projectionGUID, new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, 0, 0, 0, 0));
+			vdypClient.pushProgress(
+					projectionGUID, new VDYPProjectionProgressUpdate(jobGuid, totalPolygons, 0, 0, 0, threadsInUse)
+			);
 		} catch (Exception e) {
-			logger.warn("[GUID: {}] Failed to push initial progress to backend: {}", jobGuid, e.getMessage());
+			logger.warn("[GUID: {}] Failed to push progress to backend: {}", jobGuid, e.getMessage());
 		}
 	}
 }

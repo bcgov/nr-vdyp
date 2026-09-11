@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.backend.data.models;
 
 import java.time.OffsetDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
@@ -14,6 +16,7 @@ public class ProjectionBatchMappingModel {
 	private Integer errorCount;
 	private Integer warningCount;
 	private Integer workerCount;
+	private boolean isPrioritized;
 	private BatchFailureTypeCodeModel batchFailureTypeCode;
 	private String failureMessage;
 	private OffsetDateTime lastProgressTime;
@@ -96,6 +99,15 @@ public class ProjectionBatchMappingModel {
 
 	public void setWorkerCount(Integer workerCount) {
 		this.workerCount = workerCount;
+	}
+
+	@JsonProperty("isPrioritized")
+	public boolean isPrioritized() {
+		return isPrioritized;
+	}
+
+	public void setPrioritized(boolean prioritized) {
+		this.isPrioritized = prioritized;
 	}
 
 	public OffsetDateTime getLastProgressTime() {

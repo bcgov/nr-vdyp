@@ -13,15 +13,67 @@ spec:
   image: {{ .Values.crunchyImage }}
   {{ end }}
   imagePullPolicy: {{.Values.imagePullPolicy}}
-  postgresVersion: {{ .Values.postgresVersion }}
+  {{- if .Values.restore.enabled }}
+  {{- $source := required "restore.sourceCluster is required" .Values.restore.sourceCluster }}
+  {{- if eq $source (include "crunchy-postgres.fullname" .) }}
+  {{- fail "restore requires a different destination cluster name" }}
+  {{- end }}
+  {{- if eq .Values.pgBackRest.repos.s3.directoryName (include "crunchy-postgres.backupDirectory" .) }}
+  {{- fail "restored S3 backup directory must differ from the deployment directory" }}
+  {{- end }}
+  {{- $backup := required "restore.backupLabel is required" .Values.restore.backupLabel }}
+  {{- if not (regexMatch `^[0-9]{8}-[0-9]{6}F(_[0-9]{8}-[0-9]{6}[DI])?$` $backup) }}
+  {{- fail "restore.backupLabel must be an exact pgBackRest backup label" }}
+  {{- end }}
+  {{- if and .Values.restore.recoveryTarget (not (regexMatch `^[0-9]{4}-[0-9]{2}-[0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}(Z|[+-][0-9]{2}:[0-9]{2})$` .Values.restore.recoveryTarget)) }}
+  {{- fail "restore.recoveryTarget must include a timezone" }}
+  {{- end }}
+  dataSource:
+    {{- if eq .Values.restore.repository "repo1" }}
+    postgresCluster:
+      clusterName: {{ $source | quote }}
+      repoName: repo1
+    {{- else if eq .Values.restore.repository "repo2" }}
+    {{- $directory := required "restore.s3.directoryName is required for repo2" .Values.restore.s3.directoryName }}
+    {{- if eq $directory (include "crunchy-postgres.backupDirectory" .) }}
+    {{- fail "source and destination S3 directories must differ" }}
+    {{- end }}
+    pgbackrest:
+      stanza: db
+      configuration:
+        - secret:
+            name: {{ include "crunchy-postgres.backupSecret" . | quote }}
+      global:
+        repo2-path: {{ printf "/pgbackrest/postgres-operator/%s/repo2" $directory | quote }}
+        repo2-s3-uri-style: {{ .Values.pgBackRest.s3UriStyle }}
+      repo:
+        name: repo2
+        s3:
+          bucket: {{ default .Values.pgBackRest.repos.s3.bucket .Values.restore.s3.bucket | quote }}
+          endpoint: {{ default .Values.pgBackRest.repos.s3.endpoint .Values.restore.s3.endpoint | quote }}
+          region: {{ default .Values.pgBackRest.repos.s3.region .Values.restore.s3.region | quote }}
+    {{- else }}
+    {{- fail "restore.repository must be repo1 or repo2" }}
+    {{- end }}
+      options:
+        - {{ printf "--set=%s" $backup | quote }}
+        {{- if .Values.restore.recoveryTarget }}
+        - "--type=time"
+        - {{ printf "--target=%s" .Values.restore.recoveryTarget | quote }}
+        {{- else }}
+        - "--type=immediate"
+        {{- end }}
+  {{- end }}
   openshift: {{ .Values.openshift | default true }}
   {{ if .Values.postGISVersion }}
   postGISVersion: {{ .Values.postGISVersion | quote }}
   {{ end }}
   postgresVersion: {{ .Values.postgresVersion }}
+  {{ if not .Values.restore.enabled }}
   databaseInitSQL:
       name: {{ .Values.fullnameOverride }}-init-sql
       key: init.sql
+  {{ end }}
 
   {{ if .Values.pgmonitor.enabled }}
 
@@ -111,7 +163,7 @@ spec:
       {{ end }}
       configuration:
         - secret:
-            name: {{ .Values.pgBackRest.repos.configuration.secretName }}
+            name: {{ include "crunchy-postgres.backupSecret" . }}
 
       global:
         # hardcoding repo1 until we solution allowing multiple repos
@@ -139,7 +191,7 @@ spec:
         repo2-retention-archive: {{ .Values.pgBackRest.retentionArchiveCount | quote}}
 
         repo2-s3-uri-style: {{ .Values.pgBackRest.s3UriStyle }}
-        repo2-path: /pgbackrest/postgres-operator/{{.Values.pgBackRest.repos.s3.directoryName}}/repo2
+        repo2-path: /pgbackrest/postgres-operator/{{ include "crunchy-postgres.backupDirectory" . }}/repo2
         db-timeout: {{ .Values.pgBackRest.timeout | quote}}
 
 
@@ -208,6 +260,7 @@ spec:
           min_wal_size: {{ .Values.patroni.postgresql.parameters.min_wal_size }}
           max_wal_size: {{ .Values.patroni.postgresql.parameters.max_wal_size }}
           max_slot_wal_keep_size:  {{ .Values.patroni.postgresql.parameters.max_slot_wal_keep_size }}
+          max_connections: {{ .Values.patroni.postgresql.parameters.max_connections }}
   
   proxy:
     pgBouncer:

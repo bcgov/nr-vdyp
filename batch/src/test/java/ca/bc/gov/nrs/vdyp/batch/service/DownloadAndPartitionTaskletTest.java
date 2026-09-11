@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.JobExecution;
@@ -40,6 +42,8 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchPartitionException;
+import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,6 +61,10 @@ class DownloadAndPartitionTaskletTest {
 	BatchProperties.ReaderProperties readerProperties;
 	@Mock
 	BatchProperties.ThreadPoolProperties threadPoolProperties;
+	@Mock
+	JobOwnershipService ownershipService;
+	@Mock
+	ThreadReservationService threadReservationService;
 
 	@Mock
 	ChunkContext chunkContext;
@@ -83,8 +91,12 @@ class DownloadAndPartitionTaskletTest {
 
 	@BeforeEach
 	void setup() {
-		tasklet = new DownloadAndPartitionTasklet(comsFileService, inputPartitioner, vdypClient, batchProperties);
+		tasklet = new DownloadAndPartitionTasklet(
+				comsFileService, inputPartitioner, vdypClient, batchProperties, ownershipService,
+				threadReservationService
+		);
 
+		lenient().when(threadReservationService.reserve(anyInt())).thenAnswer(invocation -> invocation.getArgument(0));
 		lenient().when(chunkContext.getStepContext()).thenReturn(stepContext);
 		lenient().when(stepContext.getStepExecution()).thenReturn(stepExecution);
 		lenient().when(stepExecution.getJobExecution()).thenReturn(jobExecution);
@@ -193,7 +205,12 @@ class DownloadAndPartitionTaskletTest {
 				eq(tempDir.resolve("input/polygon.csv")), eq(tempDir.resolve("input/layer.csv")), anyInt(), eq(tempDir),
 				eq("job-123"), anyInt()
 		);
-		verify(vdypClient).pushProgress(eq(projectionGuid.toString()), any());
+		ArgumentCaptor<VDYPProjectionProgressUpdate> progressCaptor = ArgumentCaptor
+				.forClass(VDYPProjectionProgressUpdate.class);
+		verify(vdypClient, times(2)).pushProgress(eq(projectionGuid.toString()), progressCaptor.capture());
+		assertEquals(0, progressCaptor.getAllValues().get(0).totalPolygons());
+		assertEquals(1, progressCaptor.getAllValues().get(0).workers());
+		assertEquals(1, progressCaptor.getAllValues().get(1).workers());
 
 		// Verify original input files are deleted after partitioning
 		assertFalse(Files.exists(inputDir.resolve("polygon.csv")), "polygon.csv should be deleted after partitioning");
@@ -202,9 +219,60 @@ class DownloadAndPartitionTaskletTest {
 	}
 
 	@Test
+	void testExecute_partitionCountIsNeverCappedByReservationLedger() throws Exception {
+		UUID polygonFileSetGuid = UUID.randomUUID();
+		UUID layerFileSetGuid = UUID.randomUUID();
+		polygonComsObjectGuid = UUID.randomUUID();
+		layerComsObjectGuid = UUID.randomUUID();
+
+		jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, "job-789")
+				.addString(BatchConstants.Job.BASE_DIR, tempDir.toString()).addLong(BatchConstants.Partition.NUMBER, 4L)
+				.addString(BatchConstants.GuidInput.PROJECTION_GUID, projectionGuid.toString()).toJobParameters();
+		ExecutionContext executionContext = new ExecutionContext();
+		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
+		when(details.polygonFileSet())
+				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(polygonFileSetGuid.toString()));
+		when(details.layerFileSet())
+				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(layerFileSetGuid.toString()));
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getExecutionContext()).thenReturn(executionContext);
+		when(vdypClient.getFileSetFiles(any(), matches(polygonFileSetGuid.toString()))).thenReturn(
+				List.of(new FileMappingDetails(polygonFileSetGuid.toString(), polygonComsObjectGuid.toString()))
+		);
+		when(vdypClient.getFileSetFiles(any(), matches(layerFileSetGuid.toString()))).thenReturn(
+				List.of(new FileMappingDetails(layerFileSetGuid.toString(), layerComsObjectGuid.toString()))
+		);
+
+		when(batchProperties.getReader()).thenReturn(readerProperties);
+		when(readerProperties.getDefaultChunkSize()).thenReturn(150);
+		when(batchProperties.getThreadPool()).thenReturn(threadPoolProperties);
+		when(threadPoolProperties.getMaxJobThreads()).thenReturn(15);
+		when(threadReservationService.reserve(anyInt())).thenReturn(1);
+
+		Path inputDir = tempDir.resolve("input");
+		Files.createDirectories(inputDir);
+		StringBuilder polygonCsv = new StringBuilder("FEATURE_ID\n");
+		for (int i = 0; i < 2200; i++) {
+			polygonCsv.append(i).append('\n');
+		}
+		Files.writeString(inputDir.resolve("polygon.csv"), polygonCsv.toString());
+		Files.writeString(inputDir.resolve("layer.csv"), "LAYER_ID\n");
+		doNothing().when(comsFileService).fetchObjectToFile(any(UUID.class), any(Path.class));
+
+		tasklet.execute(stepContribution, chunkContext);
+
+		verify(inputPartitioner).partitionCsvFiles(
+				eq(tempDir.resolve("input/polygon.csv")), eq(tempDir.resolve("input/layer.csv")), eq(15), eq(tempDir),
+				eq("job-789"), anyInt()
+		);
+		verify(threadReservationService).reserve(15);
+	}
+
+	@Test
 	void testDeleteOriginalInputDirectory_ioExceptionIsSwallowedAsWarning() {
 		DownloadAndPartitionTasklet testTasklet = new DownloadAndPartitionTasklet(
-				comsFileService, inputPartitioner, vdypClient, batchProperties
+				comsFileService, inputPartitioner, vdypClient, batchProperties, ownershipService,
+				threadReservationService
 		) {
 			@Override
 			protected void deleteDirectory(Path dir) throws IOException {

@@ -1,8 +1,8 @@
 <template>
   <div class="pagination-container">
     <div class="pagination-info-left">
-      Showing {{ paginationStart }} to {{ paginationEnd }} of
-      {{ totalItems }}
+      <template v-if="totalItems === 0">No records to display</template>
+      <template v-else>Showing {{ paginationStart }} to {{ paginationEnd }} of {{ totalItems }}</template>
     </div>
     <div class="pagination-center">
       <button

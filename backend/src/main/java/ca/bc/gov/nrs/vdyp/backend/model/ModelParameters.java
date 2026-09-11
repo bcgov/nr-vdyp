@@ -2,8 +2,11 @@ package ca.bc.gov.nrs.vdyp.backend.model;
 
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@Schema(description = "Parameters included in a Manual Input Projection not required for a File Upload Projection.")
 public record ModelParameters(
 		@JsonProperty("species") List<ModelSpecies> species, @JsonProperty("derivedBy") String derivedBy,
 		@JsonProperty("becZone") String becZone, @JsonProperty("ecoZone") String ecoZone,
@@ -25,6 +28,7 @@ public record ModelParameters(
 		@JsonProperty("BA") Float basalArea, @JsonProperty("TPH") Float tph,
 		@JsonProperty("minDBHLimit") String minDBHLimit, @JsonProperty("currentDiameter") String currentDiameter
 ) {
+	@Schema(description = "Species code and percentage data used by the manual input projection.")
 	public record ModelSpecies(@JsonProperty("code") String speciesCode, @JsonProperty("percent") Float percent) {
 	}
 }

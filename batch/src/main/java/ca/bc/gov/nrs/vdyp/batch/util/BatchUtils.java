@@ -260,6 +260,18 @@ public final class BatchUtils {
 				.filter(se -> BatchStatus.STARTED.equals(se.getStatus())).count() : 0;
 	}
 
+	/**
+	 * Calculates the executor threads attributed to a job. A running asynchronous job occupies one thread for the job
+	 * itself in addition to one thread for each active worker partition.
+	 *
+	 * @param job       the job execution to inspect
+	 * @param isRunning whether the job is currently running
+	 * @return active worker threads plus the job thread, or 0 if the job is not running
+	 */
+	public static int calculateThreadsInUse(JobExecution job, boolean isRunning) {
+		return isRunning ? calculateActiveWorkers(job, true) + 1 : 0;
+	}
+
 	public static VDYPProjectionProgressUpdate buildFinalProgress(String jobGuid, JobExecution jobExecution) {
 		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
 		int polygonsProcessed = 0;

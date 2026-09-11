@@ -13,8 +13,11 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.lang.NonNull;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchMetricsException;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
+import ca.bc.gov.nrs.vdyp.batch.service.ThreadReservationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 public class VDYPJobMetricListener implements JobExecutionListener {
@@ -22,14 +25,21 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
 	private final BatchResultAggregationService resultAggregationService;
+	private final JobOwnershipService ownershipService;
+	private final PrioritizationPauseTracker pauseTracker;
+	private final ThreadReservationService threadReservationService;
 
 	public VDYPJobMetricListener(
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			BatchResultAggregationService resultAggregationService
+			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService,
+			PrioritizationPauseTracker pauseTracker, ThreadReservationService threadReservationService
 	) {
 		this.metricsCollector = metricsCollector;
 		this.batchProperties = batchProperties;
 		this.resultAggregationService = resultAggregationService;
+		this.pauseTracker = pauseTracker;
+		this.ownershipService = ownershipService;
+		this.threadReservationService = threadReservationService;
 	}
 
 	@Override
@@ -38,11 +48,7 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 	public void beforeJob(@NonNull JobExecution jobExecution) {
 		// Initialize job metrics
 		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
-		try {
-			metricsCollector.initializeMetrics(jobExecution.getId(), jobGuid);
-		} catch (BatchMetricsException e) {
-			logger.error("Failed to initialize job metrics: {}", e.getMessage());
-		}
+		metricsCollector.initializeMetrics(jobExecution.getId(), jobGuid);
 		logger.info("[GUID: {}] === VDYP Batch Job Starting === Execution ID: {}", jobGuid, jobExecution.getId());
 	}
 
@@ -74,8 +80,10 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 			logger.error("Failed to finalize job metrics: {}", e.getMessage());
 		}
 
+		// Skip cleanup for jobs paused for prioritization - they're STOPPED but still need these directories to resume.
 		if (jobExecution.getStatus() == BatchStatus.STOPPED
-				&& batchProperties.getPartition().getInterimDirsCleanupEnabled()) {
+				&& batchProperties.getPartition().getInterimDirsCleanupEnabled()
+				&& !pauseTracker.isPausedForResume(jobExecution.getId())) {
 			try {
 				String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 				if (jobBaseDir != null) {
@@ -101,6 +109,19 @@ public class VDYPJobMetricListener implements JobExecutionListener {
 			logger.error("Failed to cleanup old metrics: {}", e.getMessage());
 		}
 
+		// Skip the release for jobs paused for prioritization - they are STOPPED but their threads still belong to
+		// them until the resumed execution actually finishes, otherwise the resumed run's still-active partitions
+		// would go unaccounted for while a newly launched job reserves the same threads out from under it.
+		int reservedThreads = jobExecution.getExecutionContext().getInt(BatchConstants.Job.RESERVED_THREADS, 0);
+		if (reservedThreads > 0 && !pauseTracker.isPausedForResume(jobExecution.getId())) {
+			threadReservationService.release(reservedThreads);
+			logger.debug(
+					"[GUID: {}] Released {} reserved threads for job execution ID: {}", jobGuid, reservedThreads,
+					jobExecution.getId()
+			);
+		}
+
 		logger.info("[GUID: {}] === VDYP Batch Job Completed === Execution ID: {}", jobGuid, jobExecution.getId());
+		ownershipService.finalizeOwnedExecution(jobExecution);
 	}
 }

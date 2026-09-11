@@ -208,6 +208,21 @@ describe('apiActions Unit Tests', () => {
     })
   })
 
+  context('prioritizeProjection', () => {
+    it('should prioritize a projection successfully', () => {
+      const projectionGUID = 'test-guid-123'
+      const mockProjection = { projectionGUID, status: 'RUNNING' }
+      const mockResponse = { data: mockProjection }
+
+      cy.stub(apiClient, 'prioritizeProjection').resolves(mockResponse)
+
+      cy.wrap(apiActions.prioritizeProjection(projectionGUID)).then((result) => {
+        expect(apiClient.prioritizeProjection).to.be.calledOnceWith(projectionGUID)
+        expect(result).to.deep.equal(mockProjection)
+      })
+    })
+  })
+
   context('cancelProjection', () => {
     it('should cancel a projection successfully', () => {
       const projectionGUID = 'test-guid-123'

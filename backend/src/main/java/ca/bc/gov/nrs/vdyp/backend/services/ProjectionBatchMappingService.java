@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -57,6 +58,12 @@ public class ProjectionBatchMappingService {
 	public ProjectionBatchMappingModel startProjectionInBatch(ProjectionEntity projectionEntity)
 			throws ProjectionServiceException {
 		try {
+			// Starting supersedes any prior mapping for this projection. Without this, a stray row left behind by a
+			// cancel/re-run race (a stale progress callback recreating one after cancel deleted it, but before this
+			// runs) would coexist with the new one and break findByProjectionGUID's "current mapping" lookup for
+			// every future progress update on this projection.
+			repository.listByProjectionGUID(projectionEntity.getProjectionGUID()).forEach(repository::delete);
+
 			BatchJobModel model = batchClient.startBatchProcessWithGUID(
 					projectionEntity.getProjectionGUID(), projectionEntity.getProjectionParameters()
 			);
@@ -99,6 +106,26 @@ public class ProjectionBatchMappingService {
 			}
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error cancelling projection batch process", e);
+		}
+	}
+
+	@Transactional
+	public void prioritizeProjection(ProjectionEntity projectionEntity) throws ProjectionServiceException {
+		try {
+			var mapping = repository.listByProjectionGUID(projectionEntity.getProjectionGUID()).stream()
+					.filter(entity -> entity.getBatchJobGUID() != null)
+					.max(Comparator.comparing(ProjectionBatchMappingEntity::getCreateDate)).orElseThrow(
+							() -> new ProjectionServiceException(
+									"No batch job mapping found for projection " + projectionEntity.getProjectionGUID()
+							)
+					);
+			repository.clearAllPrioritized();
+			mapping.setPrioritized(true);
+			batchClient.prioritizeBatchJob(mapping.getBatchJobGUID());
+		} catch (ProjectionServiceException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new ProjectionServiceException("Error prioritizing projection batch process", e);
 		}
 	}
 

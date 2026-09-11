@@ -37,6 +37,10 @@ public interface VDYPBatchClient {
 	BatchJobModel stopBatchJobByProjection(@PathParam("projectionGUID") UUID projectionGUID);
 
 	@POST
+	@Path("/prioritize/{batchJobGUID}")
+	BatchJobModel prioritizeBatchJob(@PathParam("batchJobGUID") UUID batchJobGUID);
+
+	@POST
 	@Path("/status/{batchJobGUID}")
 	BatchJobModel batchJobStatus(@PathParam("batchJobGUID") UUID batchJobGUID);
 

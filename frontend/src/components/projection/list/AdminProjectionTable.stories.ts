@@ -13,6 +13,7 @@ const sampleProjections: AdminProjection[] = [
     workerCount: 16,
     completedPolygonCount: 184320,
     polygonCount: 256000,
+    isPrioritized: true,
   },
   {
     projectionGUID: '63c26de0-f6f3-42c2-ccc2-3c2b1e60d033',
@@ -24,6 +25,7 @@ const sampleProjections: AdminProjection[] = [
     workerCount: 6,
     completedPolygonCount: 121584,
     polygonCount: 256000,
+    isPrioritized: false,
   },
 ]
 

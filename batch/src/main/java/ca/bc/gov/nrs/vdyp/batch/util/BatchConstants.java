@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.batch.util;
 public final class BatchConstants {
 
 	public static final class Job {
+		public static final String JOB_NAME = "VdypFetchAndPartitionJob";
 		public static final String EXECUTION_ID = "jobExecutionId";
 		public static final String GUID = "jobGuid";
 		public static final String NAME = "jobName";
@@ -26,6 +27,7 @@ public final class BatchConstants {
 		public static final String PROJECTION_ERRORS = "projectionErrors";
 		public static final String WORKERS = "workers";
 		public static final String COMPUTED_PARTITIONS = "computedPartitions";
+		public static final String RESERVED_THREADS = "reservedThreads";
 
 		private Job() {
 		}
@@ -111,8 +113,18 @@ public final class BatchConstants {
 
 	public static final class Capacity {
 		public static final String THREAD_CAPACITY = "threadCapacity";
+		public static final String ACTIVE_THREADS = "activeThreads";
+		public static final String AVAILABLE_THREADS = "availableThreads";
 
 		private Capacity() {
+		}
+	}
+
+	public static final class Prioritize {
+		public static final String TARGET_EXECUTION_ID = "targetExecutionId";
+		public static final String OTHERS_PAUSED_COUNT = "othersPausedCount";
+
+		private Prioritize() {
 		}
 	}
 

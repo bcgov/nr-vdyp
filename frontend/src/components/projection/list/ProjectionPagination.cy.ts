@@ -62,6 +62,13 @@ describe('ProjectionPagination.vue', () => {
     cy.get('.pagination-arrow').last().should('be.disabled')
   })
 
+  it('shows "No records to display" when totalItems is 0', () => {
+    mountComponent({ currentPage: 1, itemsPerPage: 10, totalItems: 0 })
+
+    cy.get('.pagination-info-left').should('have.text', 'No records to display')
+    cy.get('.pagination-info-left').should('not.contain.text', 'Showing')
+  })
+
   it('enables both arrows on middle page', () => {
     mountComponent({ currentPage: 5, itemsPerPage: 10, totalItems: 100 })
 

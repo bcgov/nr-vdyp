@@ -18,6 +18,7 @@ import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypProjectionDetails;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultPersistenceException;
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
 @Component
@@ -25,8 +26,10 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 public class ResultPersistenceTasklet extends VdypFileTasklet {
 	private static final Logger logger = LoggerFactory.getLogger(ResultPersistenceTasklet.class);
 
-	public ResultPersistenceTasklet(ComsFileService comsFileService, VdypClient vdypClient) {
-		super(comsFileService, vdypClient);
+	public ResultPersistenceTasklet(
+			ComsFileService comsFileService, VdypClient vdypClient, JobOwnershipService ownershipService
+	) {
+		super(comsFileService, vdypClient, ownershipService);
 	}
 
 	@Override

@@ -5,6 +5,19 @@ Expand the name of the chart.
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+{{/* Restored releases reuse environment credentials and write to a separate S3 path. */}}
+{{- define "crunchy-postgres.backupSecret" -}}
+{{- .Values.pgBackRest.repos.configuration.secretName -}}
+{{- end -}}
+
+{{- define "crunchy-postgres.backupDirectory" -}}
+{{- if .Values.restore.enabled -}}
+{{- printf "vdyp-pgbackrest-%s" (include "crunchy-postgres.fullname" .) -}}
+{{- else -}}
+{{- .Values.pgBackRest.repos.s3.directoryName -}}
+{{- end -}}
+{{- end -}}
+
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).

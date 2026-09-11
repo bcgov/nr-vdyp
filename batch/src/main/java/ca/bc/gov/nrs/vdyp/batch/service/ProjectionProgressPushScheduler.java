@@ -5,9 +5,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
@@ -36,18 +36,20 @@ public class ProjectionProgressPushScheduler {
 	private final VdypClient vdypClient;
 	private final ThreadPoolTaskExecutor progressExecutor;
 	private final BatchRecoveryMetadataService batchRecoveryMetadataService;
+	private final PrioritizationPauseTracker pauseTracker;
 
-	private final Map<String, Integer> lastProgressHashByProjection = new HashMap<>();
+	private final Map<String, ProgressSnapshot> lastProgressByProjection = new HashMap<>();
 
 	public ProjectionProgressPushScheduler(
 			JobExplorer jobExplorer, VdypClient vdypClient,
 			@Qualifier("backendProgressExecutor") ThreadPoolTaskExecutor executor,
-			BatchRecoveryMetadataService batchRecoveryMetadataService
+			BatchRecoveryMetadataService batchRecoveryMetadataService, PrioritizationPauseTracker pauseTracker
 	) {
 		this.jobExplorer = jobExplorer;
 		this.vdypClient = vdypClient;
 		this.progressExecutor = executor;
 		this.batchRecoveryMetadataService = batchRecoveryMetadataService;
+		this.pauseTracker = pauseTracker;
 	}
 
 	/**
@@ -64,6 +66,16 @@ public class ProjectionProgressPushScheduler {
 
 		Set<String> currentlyRunningProjectionGUIDs = new HashSet<>();
 		for (JobExecution job : jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")) {
+			// A job STOPPING because it was paused for prioritization still owns its mapping row (it resumes under
+			// the same batch job GUID), so its progress must keep updating - that's how the dashboard shows its
+			// thread count actually drop. A job STOPPING for any other reason (e.g. cancelled) is on its way out for
+			// good: if a re-run has already started a fresh execution for the same projection, a late push from the
+			// dying one would recreate/overwrite the mapping row with its own (stale) batch job GUID, making every
+			// subsequent update from the new execution look "stale" and get silently dropped.
+			if (job.getStatus() == BatchStatus.STOPPING && !pauseTracker.isPausedForResume(job.getId())) {
+				continue;
+			}
+
 			String projectionGUID = job.getJobParameters().getString(BatchConstants.GuidInput.PROJECTION_GUID);
 			if (Strings.isNullOrEmpty(projectionGUID))
 				continue;
@@ -73,7 +85,7 @@ public class ProjectionProgressPushScheduler {
 		}
 
 		// Clean up any projections that are no longer running to prevent memory leak in the map
-		lastProgressHashByProjection.keySet().removeIf(guid -> !currentlyRunningProjectionGUIDs.contains(guid));
+		lastProgressByProjection.keySet().removeIf(guid -> !currentlyRunningProjectionGUIDs.contains(guid));
 	}
 
 	private void pushProgressForJob(JobExecution job, String projectionGUID) {
@@ -83,11 +95,8 @@ public class ProjectionProgressPushScheduler {
 			return;
 		}
 
-		Triple<Integer, Integer, Integer> checkTriple = Triple
-				.of(progress.polygonsProcessed(), progress.errorCount(), progress.polygonsSkipped());
-		int newHash = checkTriple.hashCode();
-		Integer previousHash = lastProgressHashByProjection.put(projectionGUID, newHash);
-		if (previousHash == null || previousHash != newHash) {
+		ProgressSnapshot previousProgress = lastProgressByProjection.put(projectionGUID, progress);
+		if (!progress.equals(previousProgress)) {
 			VDYPProjectionProgressUpdate payload = new VDYPProjectionProgressUpdate(
 					batchJobGUID, progress.totalPolygons(), progress.polygonsProcessed(), progress.errorCount(),
 					progress.polygonsSkipped(), progress.workers()
@@ -133,7 +142,7 @@ public class ProjectionProgressPushScheduler {
 			}
 		}
 
-		int workers = BatchUtils.calculateActiveWorkers(runningJob, true);
+		int workers = BatchUtils.calculateThreadsInUse(runningJob, true);
 		int polygonsProcessed = 0;
 		int errorCount = 0;
 		int polygonsSkipped = 0;
@@ -163,7 +172,7 @@ public class ProjectionProgressPushScheduler {
 			int totalPolygons, int polygonsProcessed, int errorCount, int polygonsSkipped, int workers
 	) {
 		boolean isEmpty() {
-			return totalPolygons == 0 && progressTotal() == 0;
+			return totalPolygons == 0 && progressTotal() == 0 && workers == 0;
 		}
 
 		int progressTotal() {

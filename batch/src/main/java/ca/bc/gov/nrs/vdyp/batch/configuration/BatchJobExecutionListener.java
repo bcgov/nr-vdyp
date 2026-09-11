@@ -11,11 +11,14 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -30,6 +33,13 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 	// Thread safety for afterJob execution - using job execution ID as key
 	private final Map<Long, Boolean> jobCompletionTracker = new HashMap<>();
 	private final Object lock = new Object();
+	private final JobOwnershipService ownershipService;
+	private final PrioritizationPauseTracker pauseTracker;
+
+	public BatchJobExecutionListener(JobOwnershipService ownershipService, PrioritizationPauseTracker pauseTracker) {
+		this.ownershipService = ownershipService;
+		this.pauseTracker = pauseTracker;
+	}
 
 	@Override
 	public void beforeJob(@NonNull JobExecution jobExecution) {
@@ -70,7 +80,14 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 				return;
 			}
 
-			if (jobBasePath != null) {
+			// A job paused for prioritization is STOPPED but will be relaunched reusing this directory, so it must
+			// survive. Every other terminal outcome (COMPLETED, FAILED, or a genuine user/admin cancel) is not
+			// coming back, so its directory and warnings.txt can be cleaned up.
+			BatchStatus status = jobExecution.getStatus();
+			boolean pausedForResume = status == BatchStatus.STOPPED && pauseTracker.isPausedForResume(jobExecutionId);
+			boolean shouldCleanup = status == BatchStatus.COMPLETED || status == BatchStatus.FAILED
+					|| (status == BatchStatus.STOPPED && !pausedForResume);
+			if (jobBasePath != null && shouldCleanup && stillOwnsExecution(jobExecution, jobGuid, jobExecutionId)) {
 				cleanupJobDirectory(jobGuid, jobBasePath);
 			}
 
@@ -100,6 +117,19 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 			logger.info(separator);
 
 			cleanupOldJobTracker(jobExecutionId);
+		}
+	}
+
+	private boolean stillOwnsExecution(JobExecution jobExecution, String jobGuid, Long jobExecutionId) {
+		try {
+			ownershipService.assertCurrentOwner(jobExecution);
+			return true;
+		} catch (IllegalStateException e) {
+			logger.warn(
+					"[GUID: {}] Skipping job directory cleanup because this process no longer owns execution {}: {}",
+					jobGuid, jobExecutionId, e.getMessage()
+			);
+			return false;
 		}
 	}
 

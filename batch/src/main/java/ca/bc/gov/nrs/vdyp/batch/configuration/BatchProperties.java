@@ -19,6 +19,7 @@ public class BatchProperties {
 	private SkipProperties skip = new SkipProperties();
 	private ReaderProperties reader = new ReaderProperties();
 	private StorageProperties storage = new StorageProperties();
+	private PrioritizeProperties prioritize = new PrioritizeProperties();
 	private String rootDirectory;
 
 	public static class JobProperties {
@@ -325,6 +326,27 @@ public class BatchProperties {
 		}
 	}
 
+	public static class PrioritizeProperties {
+		private int stopWaitTimeoutSeconds;
+		private int stopPollIntervalMillis;
+
+		public int getStopWaitTimeoutSeconds() {
+			return stopWaitTimeoutSeconds;
+		}
+
+		public void setStopWaitTimeoutSeconds(int stopWaitTimeoutSeconds) {
+			this.stopWaitTimeoutSeconds = stopWaitTimeoutSeconds;
+		}
+
+		public int getStopPollIntervalMillis() {
+			return stopPollIntervalMillis;
+		}
+
+		public void setStopPollIntervalMillis(int stopPollIntervalMillis) {
+			this.stopPollIntervalMillis = stopPollIntervalMillis;
+		}
+	}
+
 	public JobProperties getJob() {
 		return job;
 	}
@@ -387,6 +409,14 @@ public class BatchProperties {
 
 	public void setRootDirectory(String rootDirectory) {
 		this.rootDirectory = rootDirectory;
+	}
+
+	public PrioritizeProperties getPrioritize() {
+		return prioritize;
+	}
+
+	public void setPrioritize(PrioritizeProperties prioritize) {
+		this.prioritize = prioritize;
 	}
 
 	public StorageProperties getStorage() {

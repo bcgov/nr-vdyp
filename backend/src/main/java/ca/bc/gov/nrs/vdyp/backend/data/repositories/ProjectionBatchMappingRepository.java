@@ -24,12 +24,26 @@ public class ProjectionBatchMappingRepository implements PanacheRepositoryBase<P
 		this.entityManager = entityManager;
 	}
 
+	/**
+	 * The current mapping for a projection. Deliberately tolerant of more than one row existing for the same projection
+	 * (a cancel/re-run race can otherwise leave a stray one behind) by returning the most recently created one rather
+	 * than asserting uniqueness, so a stray row degrades to "ignored" instead of breaking every future lookup for that
+	 * projection.
+	 */
 	public Optional<ProjectionBatchMappingEntity> findByProjectionGUID(UUID projectionGUID) {
-		return find("projection.projectionGUID = ?1", projectionGUID).singleResultOptional();
+		return find("projection.projectionGUID = ?1 order by createDate desc", projectionGUID).firstResultOptional();
 	}
 
 	public List<ProjectionBatchMappingEntity> listByProjectionGUID(UUID projectionGUID) {
 		return list("projection.projectionGUID = ?1", projectionGUID);
+	}
+
+	/**
+	 * Clears the prioritized flag on every mapping. Deliberately unconditional: locking every row serializes concurrent
+	 * prioritize calls instead of letting two overlapping transactions both end up true.
+	 */
+	public void clearAllPrioritized() {
+		update("isPrioritized = false");
 	}
 
 	/**

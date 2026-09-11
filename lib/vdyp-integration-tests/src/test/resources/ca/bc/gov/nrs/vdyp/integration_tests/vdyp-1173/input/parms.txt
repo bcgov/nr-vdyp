@@ -1,0 +1,69 @@
+-ini C:\VDYP7Test\VDYP.ini 
+-c   C:\VDYP7Test\VDYP_CFG\
+
+-ifmt hcsv
+#-ofmt YieldTable
+-ofmt csvyieldtable
+
+
+-ip $(TestDir)\InputFiles\VDYP7_INPUT_POLY.csv
+-il $(TestDir)\InputFiles\VDYP7_INPUT_LAYER.csv
+#-o $(TestDir)\Output\Output-Before.csv
+-o $(TestDir)\Output\Console-YldTbl.csv
+-e $(TestDir)\Output\Error-092G010-6-After.log
+#-d $(TestDir)\Logs\debug.log
+#-l $(TestDir)\Logs\Log-$(IDE).log
+-v7log $(TestDir)\Logs\V7Log-After.log
+
+#-dbg Yes
+#-dbgCfg $(TestDir)/VDYP7LoggingConfig.txt
+#-v7save Yes
+
+
+-back No
+-forward Yes
+-includeprojmode Yes
+-secondarySpcsHt Yes
+
+-util AC=12.5  
+-util AT=12.5   
+-util B=17.5   
+-util C=17.5   
+-util D=12.5  
+-util E=12.5  
+-util F=17.5   
+-util H=17.5    
+-util L=12.5   
+-util MB=12.5  
+-util PA=12.5 
+-util PL=12.5   
+-util PW=12.5 
+-util PY=12.5  
+-util S=17.5  
+-util Y=17.5
+
+#-filterforpolygonid    8489341
+#-filterforpolygon    4
+-forceyear 2023
+-forcerefyear Yes
+-forceCrntYear Yes
+#-yearstart 1961
+#-yearend 2061
+-agestart 0
+-ageend 400
+-inc 10
+
+-includeagerows Yes 
+-allowbatphsub Yes
+#-PROGRESSFREQUENCY 500 
+-yieldtableincpolyid  Yes
+-projectedByLayer Yes
+-projectedBySpecies Yes
+-projectedVolumes No
+-projectedCFSBiomass Yes
+
+#-metadata none
+#-metadata minident
+#-metadata version
+#-metadata main
+#-metadata all
