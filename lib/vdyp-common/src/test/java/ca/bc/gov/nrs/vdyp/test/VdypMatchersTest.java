@@ -163,16 +163,16 @@ class VdypMatchersTest {
 			@Test
 			void testNoProperty() {
 
-				toMatch = em.createMock(TestInterfaceNoProperty.class);
+				var toMatchNoProp = em.createMock(TestInterfaceNoProperty.class);
 
 				em.replay();
 
 				var matcher = VdypMatchers.hasIndexedPropertyAt("testProperty", 0, valueMatcher);
-				var matches = matcher.matches(toMatch);
+				var matches = matcher.matches(toMatchNoProp);
 				assertFalse(matches, "Matches");
 
 				Description description = new StringDescription();
-				matcher.describeMismatch(toMatch, description);
+				matcher.describeMismatch(toMatchNoProp, description);
 				assertThat(description.toString(), equalTo("did not have indexed property \"testProperty\""));
 
 				em.verify();
@@ -181,16 +181,16 @@ class VdypMatchersTest {
 			@Test
 			void testNotIndexed() {
 
-				toMatch = em.createMock(TestInterfaceNotIndexed.class);
+				var toMatchNoIndex = em.createMock(TestInterfaceNotIndexed.class);
 
 				em.replay();
 
 				var matcher = VdypMatchers.hasIndexedPropertyAt("testProperty", 0, valueMatcher);
-				var matches = matcher.matches(toMatch);
+				var matches = matcher.matches(toMatchNoIndex);
 				assertFalse(matches, "Matches");
 
 				Description description = new StringDescription();
-				matcher.describeMismatch(toMatch, description);
+				matcher.describeMismatch(toMatchNoIndex, description);
 				assertThat(description.toString(), equalTo("did not have indexed property \"testProperty\""));
 
 				em.verify();
