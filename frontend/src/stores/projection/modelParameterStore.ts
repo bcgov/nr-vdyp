@@ -514,14 +514,16 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   /**
    * Restore store state from parsed projection parameters.
-   * In view mode, all panels open and confirmed.
+   * In view mode, all panels are confirmed; panels are collapsed only when collapseAllPanels is true (Ready projections).
    * In edit mode, infers confirmed status from populated data and opens only the first incomplete panel.
    * @param params Parsed projection parameters from the backend
    * @param isViewMode If true, sets all panels to confirmed and non-editable
+   * @param collapseAllPanels If true (with isViewMode), collapses all panels instead of leaving them open
    */
   const restoreFromProjectionParams = (
     params: ParsedProjectionParameters,
     isViewMode: boolean = false,
+    collapseAllPanels: boolean = false,
   ) => {
     reportTitle.value = params.reportTitle
     copyTitle.value = params.copyTitle
@@ -537,12 +539,13 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     }
 
     if (isViewMode) {
+      const panelOpenState = collapseAllPanels ? CONSTANTS.PANEL.CLOSE : CONSTANTS.PANEL.OPEN
       panelOpenStates.value = {
-        reportDetails: CONSTANTS.PANEL.OPEN,
-        speciesInfo: CONSTANTS.PANEL.OPEN,
-        siteInfo: CONSTANTS.PANEL.OPEN,
-        standInfo: CONSTANTS.PANEL.OPEN,
-        reportSettings: CONSTANTS.PANEL.OPEN,
+        reportDetails: panelOpenState,
+        speciesInfo: panelOpenState,
+        siteInfo: panelOpenState,
+        standInfo: panelOpenState,
+        reportSettings: panelOpenState,
       }
       panelState.value = {
         reportDetails: { confirmed: true, editable: false },
