@@ -12,11 +12,18 @@
 
 <script setup lang="ts">
 import { APP_VERSION } from '@/constants/appVersion'
+import { BUILD_NUMBER } from '@/constants/buildNumber'
 
 let appVersion = ''
 if (APP_VERSION) {
-  appVersion = APP_VERSION.replace(/(-snapshot|-SNAPSHOT|-Snapshot)/i, '')
+  const baseVersion = APP_VERSION.replace(
+    /(-snapshot|-SNAPSHOT|-Snapshot)/i,
+    '',
+  )
+  appVersion = `${baseVersion}.${BUILD_NUMBER || ''}`
 }
+
+console.log(`Build Numer: ${BUILD_NUMBER}`)
 </script>
 
 <style scoped>
