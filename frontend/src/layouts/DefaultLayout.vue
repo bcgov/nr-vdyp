@@ -23,7 +23,7 @@ if (APP_VERSION) {
   appVersion = `${baseVersion}.${BUILD_NUMBER || ''}`
 }
 
-console.log(`Build Numer: ${BUILD_NUMBER}`)
+console.info(`Build Numer: ${BUILD_NUMBER}`)
 </script>
 
 <style scoped>
