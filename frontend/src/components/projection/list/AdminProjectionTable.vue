@@ -406,9 +406,9 @@ const formatElapsedTime = (startDate: string | null): string => {
 }
 
 .status-badge.status-running {
-  border: 1px solid var(--support-border-color-warning);
-  background: var(--support-surface-color-warning);
-  color: #FCBA19;
+  border: 1px solid var(--surface-color-primary-hover, #1E5189);
+  background: rgba(30, 81, 137, 0.08);
+  color: var(--surface-color-primary-hover, #1E5189);
 }
 
 .status-badge.status-stuck {
@@ -418,9 +418,9 @@ const formatElapsedTime = (startDate: string | null): string => {
 }
 
 .status-badge.status-queued {
-  border: 1px solid var(--support-border-color-info);
-  background: var(--support-surface-color-info);
-  color: var(--typography-color-primary);
+  border: 1px solid var(--theme-blue-70, #5595D9);
+  background: rgba(85, 149, 217, 0.08);
+  color: var(--theme-blue-70, #5595D9);
 }
 
 .status-badge.status-priority {

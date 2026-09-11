@@ -1,6 +1,23 @@
 import SpeciesSelectionModal from './SpeciesSelectionModal.vue'
 
 describe('SpeciesSelectionModal.vue', () => {
+  beforeEach(() => {
+    cy.document().then((doc) => {
+      const style = doc.createElement('style')
+      style.innerHTML = `
+        .v-overlay__content {
+          position: relative !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          top: 0 !important;
+          left: 0 !important;
+        }
+      `
+      doc.head.appendChild(style)
+    })
+  })
+
   const defaultProps = {
     modelValue: true,
     existingSpecies: [],
@@ -85,7 +102,7 @@ describe('SpeciesSelectionModal.vue', () => {
       props: { ...defaultProps, 'onUpdate:modelValue': onUpdateSpy },
     })
 
-    cy.contains('button', 'Cancel').click({ force: true })
+    cy.contains('button', 'Cancel').click()
     cy.get('@updateSpy').should('have.been.calledOnceWith', false)
   })
 
@@ -107,7 +124,7 @@ describe('SpeciesSelectionModal.vue', () => {
       props: { ...defaultProps, existingSpecies: ['FD'], onConfirm: onConfirmSpy },
     })
 
-    cy.contains('button', 'Confirm').click({ force: true })
+    cy.contains('button', 'Confirm').click()
     cy.get('@confirmSpy').should('have.been.calledOnce')
     cy.get('@confirmSpy').should('have.been.calledWith', ['FD'])
   })
@@ -119,7 +136,7 @@ describe('SpeciesSelectionModal.vue', () => {
       props: { ...defaultProps, 'onUpdate:modelValue': onUpdateSpy },
     })
 
-    cy.contains('button', 'Confirm').click({ force: true })
+    cy.contains('button', 'Confirm').click()
     cy.get('@updateSpy').should('have.been.calledOnceWith', false)
   })
 })

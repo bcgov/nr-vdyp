@@ -110,10 +110,10 @@ describe('<AttachmentsPanel />', () => {
 
     cy.get('.file-upload-col-left .uploaded-file-delete-btn').click()
 
-    cy.then(() => {
-      expect(alertDialogStore.dialog).to.be.true
-      alertDialogStore.cancel()
-    })
+    cy.wrap(alertDialogStore)
+      .its('dialog')
+      .should('be.true')
+      .then(() => alertDialogStore.cancel())
   })
 
   it('preserves file info when the delete dialog is cancelled', () => {

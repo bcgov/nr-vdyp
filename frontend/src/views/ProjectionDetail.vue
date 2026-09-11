@@ -1210,7 +1210,7 @@ h3 {
 
 .running-status-text {
   font: var(--typography-bold-h4);
-  color: #FCBA19;
+  color: var(--surface-color-primary-hover, #1E5189);
 }
 
 .running-status-menu-list {

@@ -259,10 +259,10 @@ describe('saveProjectionOnPanelConfirm', () => {
     appStore.setCurrentProjectionGUID('existing-guid')
 
     const mockStore = createMockFileUploadStore()
-    cy.wrap(saveProjectionOnPanelConfirm(mockStore, CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG)).then(() => {
-      expect(apiClient.updateProjectionParams).to.be.calledOnce
-      expect(apiClient.createProjection).to.not.be.called
-    })
+    cy.wrap(saveProjectionOnPanelConfirm(mockStore, CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG))
+      .then(() => apiClient.updateProjectionParams)
+      .should('be.calledOnce')
+    cy.wrap(apiClient.createProjection).should('not.be.called')
   })
 
   it('should update params when confirming a non-reportConfig panel in EDIT mode', () => {
@@ -274,9 +274,9 @@ describe('saveProjectionOnPanelConfirm', () => {
     appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
 
     const mockStore = createMockFileUploadStore()
-    cy.wrap(saveProjectionOnPanelConfirm(mockStore, CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH)).then(() => {
-      expect(apiClient.updateProjectionParams).to.be.calledOnce
-    })
+    cy.wrap(saveProjectionOnPanelConfirm(mockStore, CONSTANTS.FILE_UPLOAD_PANEL.MINIMUM_DBH))
+      .then(() => apiClient.updateProjectionParams)
+      .should('be.calledOnce')
   })
 
   it('should throw when confirming a non-reportConfig panel with no GUID in EDIT mode', () => {
@@ -354,10 +354,9 @@ describe('revertPanelToSaved', () => {
   })
 
   it('should return early without error when no projectionGUID is set', () => {
-    cy.wrap(revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG as any)).then(() => {
-      const fileUploadStore = useFileUploadStore()
-      expect(fileUploadStore.panelState.reportConfig.confirmed).to.be.false
-    })
+    cy.wrap(revertPanelToSaved(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_CONFIG as any))
+      .then(() => useFileUploadStore().panelState.reportConfig.confirmed)
+      .should('be.false')
   })
 
   it('should keep the cancelled panel open and editable after revert', () => {

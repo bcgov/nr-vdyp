@@ -84,13 +84,13 @@ describe('ProjectionBulkActionBar.vue', () => {
     )
 
     cy.get('button[title="Download"]').should('have.attr', 'disabled')
-    cy.get('button[title="Download"]').click({ force: true })
+    cy.get('button[title="Download"]').invoke('click')
     cy.get('button[title="Duplicate"]').should('have.attr', 'disabled')
-    cy.get('button[title="Duplicate"]').click({ force: true })
+    cy.get('button[title="Duplicate"]').invoke('click')
     cy.get('button[title="Cancel"]').should('have.attr', 'disabled')
-    cy.get('button[title="Cancel"]').click({ force: true })
+    cy.get('button[title="Cancel"]').invoke('click')
     cy.get('button[title="Delete"]').should('have.attr', 'disabled')
-    cy.get('button[title="Delete"]').click({ force: true })
+    cy.get('button[title="Delete"]').invoke('click')
 
     cy.get('@downloadSpy').should('not.have.been.called')
     cy.get('@duplicateSpy').should('not.have.been.called')

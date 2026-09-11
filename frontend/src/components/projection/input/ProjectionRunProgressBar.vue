@@ -299,11 +299,11 @@ const failureDetailsText = computed(() => {
 }
 
 .tile-value--running {
-  color: #FCBA19;
+  color: var(--surface-color-primary-hover, #1E5189);
 }
 
 .tile-value--queued {
-  color: #9f9d9c;
+  color: var(--theme-blue-70, #5595D9);
 }
 
 .tile-value--stuck {
