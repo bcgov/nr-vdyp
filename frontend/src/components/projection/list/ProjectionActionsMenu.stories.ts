@@ -15,22 +15,7 @@ const meta: Meta<typeof ProjectionActionsMenu> = {
       control: { type: 'text' },
       description: 'The projection title used for accessibility.',
     },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
-A dropdown menu component that displays different action options based on the projection status.
-
-**Menu items by status:**
-- **Draft**: Edit, Duplicate, Delete
-- **Ready**: View, Duplicate, Download, Delete
-- **Running**: Cancel
-- **Failed**: Edit, Duplicate, Download, Delete
-        `,
-      },
-    },
-  },
+  }
 }
 
 export default meta

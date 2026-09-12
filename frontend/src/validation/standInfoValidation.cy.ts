@@ -140,8 +140,7 @@ describe('Stand Information Validation Unit Tests', () => {
       const species = 'AC'
       const becZone = 'CWH'
 
-      expect(validateTPHLimits(basalArea, tph, spzHeight, species, becZone)).to
-        .be.null
+      assert.isNull(validateTPHLimits(basalArea, tph, spzHeight, species, becZone))
     })
 
     it('should return error message for TPH below minimum', () => {
