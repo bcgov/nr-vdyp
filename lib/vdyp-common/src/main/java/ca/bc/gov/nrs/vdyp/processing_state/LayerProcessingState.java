@@ -126,24 +126,23 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 		this.layerType = subjectLayerType;
 
 		BecDefinition becZone = polygon.getBiogeoclimaticZone();
-
 		this.bank = new Bank(polygon.getLayers().get(subjectLayerType), becZone, getBankFilter());
 
 		var volumeEquationGroupMatrix = this.ps.getControlMap().getVolumeEquationGroups();
 		var decayEquationGroupMatrix = this.ps.getControlMap().getDecayEquationGroups();
 		var breakageEquationGroupMatrix = this.ps.getControlMap().getBreakageEquationGroups();
 
-		volumeEquationGroups = new int[bank.getNSpecies() + 1];
-		decayEquationGroups = new int[bank.getNSpecies() + 1];
-		breakageEquationGroups = new int[bank.getNSpecies() + 1];
+		volumeEquationGroups = new int[getBank().getNSpecies() + 1];
+		decayEquationGroups = new int[getBank().getNSpecies() + 1];
+		breakageEquationGroups = new int[getBank().getNSpecies() + 1];
 
 		volumeEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
 		decayEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
 		breakageEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
 
 		BecDefinition becZoneAlias = getBecZone();
-		for (int i : bank.getIndices()) {
-			String speciesName = bank.speciesNames[i];
+		for (int i : getBank().getIndices()) {
+			String speciesName = getBank().speciesNames[i];
 			volumeEquationGroups[i] = volumeEquationGroupMatrix
 					.get(speciesName, becZoneAlias.getVolumeBec().getAlias());
 			// From VGRPFIND, volumeEquationGroup 10 is mapped to 11.
@@ -167,7 +166,7 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 	}
 
 	public BecDefinition getBecZone() {
-		return bank.getBecZone();
+		return getBank().getBecZone();
 	}
 
 	public static Logger getLogger() {
@@ -178,6 +177,11 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 		return ps;
 	}
 
+	/**
+	 * Get the first bank instance (<tt>i=0<tt>)
+	 *
+	 * @return
+	 */
 	public Bank getBank() {
 		return bank;
 	}
@@ -185,7 +189,7 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 	protected abstract void applyCompatibilityVariables(VdypSpecies species, int i);
 
 	public int getNSpecies() {
-		return bank.getNSpecies();
+		return getBank().getNSpecies();
 	}
 
 	protected abstract VdypLayer updateLayerFromBank();
@@ -276,7 +280,7 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 	}
 
 	public int[] getIndices() {
-		return bank.getIndices();
+		return getBank().getIndices();
 	}
 
 	protected void applyCompatibilityVariablesToSpecies(int i, VdypSpecies species) {
@@ -308,7 +312,7 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	public String getPrimarySpeciesAlias() {
 		requireRankingDetails("primarySpeciesAlias");
-		return bank.speciesNames[primarySpeciesIndex];
+		return getBank().speciesNames[primarySpeciesIndex];
 	}
 
 	public Optional<Integer> getSecondarySpeciesIndex() {
@@ -387,11 +391,11 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 		primarySpeciesAgeToBreastHeight = details.primarySpeciesAgeToBreastHeight();
 
 		// Store these values into bank if not already set - VHDOM1 lines 182 - 186
-		setIfNotSet(bank.dominantHeights, primarySpeciesIndex, primarySpeciesDominantHeight);
-		setIfNotSet(bank.siteIndices, primarySpeciesIndex, primarySpeciesSiteIndex);
-		setIfNotSet(bank.ageTotals, primarySpeciesIndex, primarySpeciesTotalAge);
-		setIfNotSet(bank.yearsAtBreastHeight, primarySpeciesIndex, primarySpeciesAgeAtBreastHeight);
-		setIfNotSet(bank.yearsToBreastHeight, primarySpeciesIndex, primarySpeciesAgeToBreastHeight);
+		setIfNotSet(getBank().dominantHeights, primarySpeciesIndex, primarySpeciesDominantHeight);
+		setIfNotSet(getBank().siteIndices, primarySpeciesIndex, primarySpeciesSiteIndex);
+		setIfNotSet(getBank().ageTotals, primarySpeciesIndex, primarySpeciesTotalAge);
+		setIfNotSet(getBank().yearsAtBreastHeight, primarySpeciesIndex, primarySpeciesAgeAtBreastHeight);
+		setIfNotSet(getBank().yearsToBreastHeight, primarySpeciesIndex, primarySpeciesAgeToBreastHeight);
 
 		arePrimarySpeciesDetailsSet = true;
 	}

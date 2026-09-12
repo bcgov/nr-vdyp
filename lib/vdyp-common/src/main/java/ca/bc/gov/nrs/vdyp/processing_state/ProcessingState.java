@@ -89,6 +89,7 @@ public abstract class ProcessingState<LS extends LayerProcessingState<LS>> {
 	}
 
 	/** @return the starting year of the current polygon. Shortcut. */
+	// Also equivalent to BACK2/IYRFIRST
 	public int getCurrentStartingYear() {
 		return polygon.getPolygonIdentifier().getYear();
 	}

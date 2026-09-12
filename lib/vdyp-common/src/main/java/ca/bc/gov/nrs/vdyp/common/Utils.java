@@ -25,6 +25,9 @@ import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -297,7 +300,7 @@ public class Utils {
 	}
 
 	/**
-	 * Create map, allow it to be modified, then return an unmodifiable view of it.
+	 * Create a map, allow it to be modified, then return an unmodifiable view of it.
 	 *
 	 * @param <K>
 	 * @param <V>
@@ -305,9 +308,23 @@ public class Utils {
 	 * @return
 	 */
 	public static <K, V> Map<K, V> constMap(Consumer<Map<K, V>> body) {
+		var map = makeMap(body);
+		return Collections.unmodifiableMap(map);
+	}
+
+	/**
+	 * Create a map, allow it to be modified, then return it. Like {@link constMap} but doesn't make the result
+	 * unmodifiable.
+	 *
+	 * @param <K>
+	 * @param <V>
+	 * @param body
+	 * @return
+	 */
+	public static <K, V> Map<K, V> makeMap(Consumer<Map<K, V>> body) {
 		var map = new HashMap<K, V>();
 		body.accept(map);
-		return Collections.unmodifiableMap(map);
+		return map;
 	}
 
 	public static UtilizationVector heightVector(float small, float all) {
@@ -721,6 +738,52 @@ public class Utils {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get the index of the species within the layer as used in Bank. This is distinct from the species identifier
+	 * index.
+	 *
+	 * @throws IllegalArgumentException if spec is not a species of layer
+	 */
+	public static <L extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> int
+			indexOfSpeciesWithinLayer(S spec, L layer) {
+		int i = 1;
+		for (var foundSpec : layer.getOrderedSpecies()) {
+			if (foundSpec.getGenusIndex() == spec.getGenusIndex()) {
+				return i;
+			}
+			i++;
+		}
+		throw new IllegalArgumentException(spec.toString() + " not found in " + layer.toString());
+	}
+
+	/**
+	 * Get the index of the species within the layer as used in Bank. This is distinct from the species identifier
+	 * index.
+	 *
+	 * @throws IllegalArgumentException if spec is not a species of layer
+	 */
+	public static int indexOfSpeciesWithinLayer(String spec, BaseVdypLayer<?, ?> layer) {
+		int i = 1;
+		for (var foundSpec : layer.getOrderedSpecies()) {
+			if (foundSpec.getGenus().equals(spec)) {
+				return i;
+			}
+			i++;
+		}
+		throw new IllegalArgumentException(spec.toString() + " not found in " + layer.toString());
+	}
+
+	/**
+	 * Get a species from the layer based on the index as used by Bank. This is distinct from the species identifier
+	 * index.
+	 *
+	 * @throws IllegalArgumentException if spec is not a species of layer
+	 */
+	public static <L extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> S
+			getSpeciesByIndexWithinLayer(L layer, int index) {
+		return layer.getOrderedSpecies().get(index - 1);
 	}
 
 }

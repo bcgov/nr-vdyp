@@ -12,11 +12,12 @@ import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 
 public class BackLayerProcessingState extends LayerProcessingState<BackLayerProcessingState> {
 
+	public static final int MAX_BANK_INSTANCES = 3;
+
 	protected BackLayerProcessingState(
 			ProcessingState<BackLayerProcessingState> ps, VdypPolygon polygon, LayerType subjectLayerType
 	) throws ProcessingException {
 		super(ps, polygon, subjectLayerType);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -36,5 +37,4 @@ public class BackLayerProcessingState extends LayerProcessingState<BackLayerProc
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 }
