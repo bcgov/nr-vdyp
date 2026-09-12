@@ -55,7 +55,7 @@ describe('AdminProjectionTable.vue', () => {
     mountComponent()
 
     cy.get('.projection-title').should('contain.text', 'Test Projection')
-    cy.get('.status-badge').should('contain.text', 'Running')
+    cy.get('.status-text').should('contain.text', 'Running')
     cy.get('.table-cell').contains('R. MacLeod').should('exist')
     cy.get('.user-type-chip').should('contain.text', 'IDIR')
   })
@@ -105,13 +105,13 @@ describe('AdminProjectionTable.vue', () => {
   it('shows the High Priority badge when isPrioritized is true', () => {
     mountComponent([createProjection({ isPrioritized: true })])
 
-    cy.get('.status-badge.status-priority').should('contain.text', 'High Priority')
+    cy.get('.status-text.status-text-priority').should('contain.text', 'High Priority')
   })
 
   it('does not show the High Priority badge when isPrioritized is false', () => {
     mountComponent([createProjection({ isPrioritized: false })])
 
-    cy.get('.status-badge.status-priority').should('not.exist')
+    cy.get('.status-text.status-text-priority').should('not.exist')
   })
 
   it('hides the Prioritize button once a projection is already prioritized', () => {
@@ -133,10 +133,10 @@ describe('AdminProjectionTable.vue', () => {
       createProjection({ status: 'Queued', startDate: null, workerCount: 0 }),
     ])
 
-    cy.get('.status-badge').should('contain.text', 'Queued')
-    cy.get('.table-cell').eq(3).should('contain.text', '-') // Elapsed
-    cy.get('.table-cell').eq(4).should('contain.text', '-') // Threads
-    cy.get('.table-cell').eq(5).should('contain.text', '-') // Progress
-    cy.get('.table-cell').eq(6).should('contain.text', '-') // Polygons
+    cy.get('.status-text').should('contain.text', 'Queued')
+    cy.get('.table-cell').eq(4).should('contain.text', '-') // Elapsed
+    cy.get('.table-cell').eq(5).should('contain.text', '-') // Threads
+    cy.get('.table-cell').eq(6).should('contain.text', '-') // Progress
+    cy.get('.table-cell').eq(7).should('contain.text', '-') // Polygons
   })
 })

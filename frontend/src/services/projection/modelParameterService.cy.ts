@@ -92,7 +92,7 @@ describe('generateFeatureId', () => {
 
 describe('generateRandomNumber', () => {
   it('should return a string whose length falls within the specified range', () => {
-    expect(generateRandomNumber(8, 8).length).to.equal(8)
+    expect(generateRandomNumber(8, 8)).to.have.lengthOf(8)
     for (let i = 0; i < 20; i++) {
       expect(generateRandomNumber(4, 6).length).to.be.at.least(4).and.at.most(6)
     }
@@ -348,9 +348,9 @@ describe('saveProjectionOnPanelConfirm', () => {
   it('should NOT create a projection when in CREATE mode but not on the REPORT_DETAILS panel', () => {
     cy.stub(apiClient, 'createProjection').resolves({ data: mockProjectionModel })
 
-    cy.wrap(saveProjectionOnPanelConfirm(createMockModelParameterStore(), CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO)).then(() => {
-      expect(apiClient.createProjection).to.not.be.called
-    })
+    cy.wrap(saveProjectionOnPanelConfirm(createMockModelParameterStore(), CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO))
+      .then(() => apiClient.createProjection)
+      .should('not.be.called')
   })
 
   it('should update an existing projection when in EDIT mode', () => {
@@ -361,9 +361,9 @@ describe('saveProjectionOnPanelConfirm', () => {
     appStore.setCurrentProjectionGUID('existing-guid')
     appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
 
-    cy.wrap(saveProjectionOnPanelConfirm(createMockModelParameterStore(), CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO)).then(() => {
-      expect(apiClient.updateProjectionParams).to.be.calledOnce
-    })
+    cy.wrap(saveProjectionOnPanelConfirm(createMockModelParameterStore(), CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO))
+      .then(() => apiClient.updateProjectionParams)
+      .should('be.calledOnce')
   })
 
   it('should throw MISSING_GUID when in EDIT mode with no GUID set', () => {
@@ -439,10 +439,9 @@ describe('revertPanelToSaved', () => {
   })
 
   it('should return early without error when no projectionGUID is set', () => {
-    cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO as any)).then(() => {
-      const modelStore = useModelParameterStore()
-      expect(modelStore.panelState.speciesInfo.confirmed).to.be.false
-    })
+    cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO as any))
+      .then(() => useModelParameterStore().panelState.speciesInfo.confirmed)
+      .should('be.false')
   })
 
   it('should revert the panel to open and editable state after restoring saved data', () => {

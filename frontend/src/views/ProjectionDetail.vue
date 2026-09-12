@@ -1192,7 +1192,6 @@ h3 {
   flex: 1 1 auto;
   min-width: 0;
   overflow-wrap: break-word;
-  word-break: break-word;
 }
 
 .running-status-menu-button {
