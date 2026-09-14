@@ -140,10 +140,10 @@
               <div v-else-if="isAdminCancelled" class="admin-cancelled-status-container">
                 <img
                   :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)"
-                  alt="Cancelled By Administrator"
+                  alt="Cancelled"
                   class="admin-cancelled-status-icon"
                 />
-                <span class="admin-cancelled-status-text">Cancelled By Administrator</span>
+                <span class="admin-cancelled-status-text">Cancelled</span>
               </div>
             </div>
           </template>
@@ -171,10 +171,10 @@
               <div v-else-if="isAdminCancelled" class="admin-cancelled-status-container">
                 <img
                   :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)"
-                  alt="Cancelled By Administrator"
+                  alt="Cancelled"
                   class="admin-cancelled-status-icon"
                 />
-                <span class="admin-cancelled-status-text">Cancelled By Administrator</span>
+                <span class="admin-cancelled-status-text">Cancelled</span>
               </div>
             </template>
             <!-- Draft: show Draft status badge -->

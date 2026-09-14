@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { CONSTANTS } from '@/constants'
-import { formatNumber } from '@/utils/util'
+import { formatNumber, getProjectionStatusDisplayText } from '@/utils/util'
 import {
   TimeElapsedIcon,
   PolygonsProcessedIcon,
@@ -122,7 +122,7 @@ const statusIcon20px = computed(() => {
   return map[props.status] ?? DraftIcon20px
 })
 
-const statusText = computed(() => props.status)
+const statusText = computed(() => getProjectionStatusDisplayText(props.status))
 
 const statusValueClass = computed(() => {
   const map: Record<string, string> = {
@@ -199,7 +199,7 @@ const progressLeftText = computed(() => {
     [CONSTANTS.PROJECTION_STATUS.READY]: 'Projection Complete',
     [CONSTANTS.PROJECTION_STATUS.FAILED]: 'Projection Run Failed',
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: 'Projection Run Cancelled',
-    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: 'Projection Cancelled by Administrator',
+    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: 'Projection Cancelled',
   }
   return map[props.status] ?? ''
 })

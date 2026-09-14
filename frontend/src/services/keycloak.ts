@@ -211,7 +211,7 @@ export const initializeKeycloakAndAuth = async (): Promise<boolean> => {
 
     // not initialized, the token not be refreshed
     if (keycloakInstance.clientId === undefined || !keycloakInstance.clientId) {
-      if (!authStore || !authStore.user) {
+      if (!authStore?.user) {
         logErrorAndLogout(
           AUTH_ERR.AUTH_010,
           'Auth load failed. (Error: AUTH_010).',
