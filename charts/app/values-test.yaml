@@ -36,7 +36,7 @@ logs:
     enabled: true
     deleteUploadedLogs: true # Only unchanged rotated files fully included in the verified ZIP.
     schedule: "0 6 * * *"
-    timeZone: America/Vancouver
+    timeZone: UTC
     scratchSize: 1Gi
     s3:
       # Empty values reuse the existing COMS object-storage configuration.
