@@ -15,28 +15,7 @@ const meta: Meta<typeof ReportingContainer> = {
       description:
         'Active reporting tab. Controls which store data is displayed and the Download button label.',
     },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
-Full-width container for a single reporting tab, composing \`ReportingActions\` and \`ReportingOutput\`.
-
-**Data source:** All display data is read reactively from \`useProjectionStore\`:
-- **Model Report** tab - displays \`txtYieldLines\`; download uses \`csvYieldLines\`
-- **View Error Messages** tab - displays and downloads \`errorMessages\`
-- **View Log File** tab - displays and downloads \`logMessages\`
-
-**Button state:** Both Print and Download buttons are disabled while the relevant download dataset is empty.
-
-**Events handled internally (not emitted upward):**
-- \`@print\` -> calls \`printReport()\` via \`reportService\`
-- \`@download\` -> calls \`downloadCSVFile\` (Model Report) or \`downloadTextFile\` (other tabs)
-- \`@downloadrawresult\` -> calls \`downloadFile()\` with the raw result ZIP from the store
-        `,
-      },
-    },
-  },
+  }
 }
 
 export default meta

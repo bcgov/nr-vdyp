@@ -294,6 +294,12 @@ const getSortValue = (projection: AdminProjection, key: string): string | number
   if (key === ADMIN_DASHBOARD_HEADER_KEY.TITLE) return projection.title.toLowerCase()
   if (key === ADMIN_DASHBOARD_HEADER_KEY.OWNER) return projection.ownerDisplayName.toLowerCase()
   if (key === ADMIN_DASHBOARD_HEADER_KEY.USER_TYPE) return (projection.userType ?? '').toLowerCase()
+  if (key === ADMIN_DASHBOARD_HEADER_KEY.STATUS) {
+    // High Priority overrides the underlying status in the Status column display, so it sorts
+    // ahead of the other statuses too.
+    if (projection.isPrioritized) return `0-${projection.status.toLowerCase()}`
+    return `1-${projection.status.toLowerCase()}`
+  }
   if (key === ADMIN_DASHBOARD_HEADER_KEY.ELAPSED) {
     // Queued projections display '-' (no startDate yet), so they're sorted as lower than any
     // running projection's elapsed time: below it in descending order, above it (first) in

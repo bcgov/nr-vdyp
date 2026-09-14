@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import { setActivePinia, createPinia } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { CONSTANTS, DEFAULTS } from '@/constants'
@@ -182,20 +183,20 @@ describe('Model Parameter Store', () => {
   it('should reflect computed conditions in isVolumeComputed and isSupplied', () => {
     store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
     store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-    expect(store.isVolumeComputed).to.be.true
+    assert.isTrue(store.isVolumeComputed)
 
     store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
-    expect(store.isVolumeComputed).to.be.false
+    assert.isFalse(store.isVolumeComputed)
 
     store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
     store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-    expect(store.isVolumeComputed).to.be.false
+    assert.isFalse(store.isVolumeComputed)
 
     store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-    expect(store.isSupplied).to.be.true
+    assert.isTrue(store.isSupplied)
 
     store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-    expect(store.isSupplied).to.be.false
+    assert.isFalse(store.isSupplied)
   })
 
   it('should reset panel states and all data fields to initial values', () => {

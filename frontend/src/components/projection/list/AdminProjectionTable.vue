@@ -20,6 +20,21 @@
           </th>
           <th
             class="table-header sortable"
+            @click="handleSort(ADMIN_DASHBOARD_HEADER_KEY.STATUS)"
+          >
+            <div class="header-content">
+              <span>Status</span>
+              <v-icon
+                v-if="sortBy === ADMIN_DASHBOARD_HEADER_KEY.STATUS"
+                size="small"
+                class="sort-icon"
+              >
+                {{ sortOrder === SORT_ORDER.ASC ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </div>
+          </th>
+          <th
+            class="table-header sortable"
             @click="handleSort(ADMIN_DASHBOARD_HEADER_KEY.OWNER)"
           >
             <div class="header-content">
@@ -113,7 +128,7 @@
       </thead>
       <tbody>
         <tr v-if="projections.length === 0" class="empty-state-row">
-          <td colspan="8" class="empty-state-cell">
+          <td colspan="9" class="empty-state-cell">
             <span class="empty-state-message">No projections found.</span>
           </td>
         </tr>
@@ -124,36 +139,34 @@
           class="table-row"
         >
           <td class="table-cell">
-            <div class="projection-name-cell">
-              <span class="projection-title">{{ projection.title }}</span>
-              <div class="status-badge-row">
-                <span
-                  v-if="projection.status === PROJECTION_STATUS.STUCK"
-                  class="status-badge status-stuck"
-                >
-                  <img :src="StuckIcon14px" alt="" class="status-badge-icon" />
-                  Stuck
-                </span>
-                <span
-                  v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
-                  class="status-badge status-running"
-                >
-                  <img :src="RunningIcon" alt="" class="status-badge-icon" />
-                  Running
-                </span>
-                <span
-                  v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
-                  class="status-badge status-queued"
-                >
-                  <img :src="QueuedIcon14px" alt="" class="status-badge-icon" />
-                  Queued
-                </span>
-                <span v-if="projection.isPrioritized" class="status-badge status-priority">
-                  <img :src="ArrowUpWhiteIcon" alt="" class="status-badge-icon" />
-                  High Priority
-                </span>
-              </div>
-            </div>
+            <span class="projection-title">{{ projection.title }}</span>
+          </td>
+          <td class="table-cell">
+            <span v-if="projection.isPrioritized" class="status-text status-text-priority">
+              <img :src="ArrowUpBlueIcon" alt="" class="status-icon" />
+              High Priority
+            </span>
+            <span
+              v-else-if="projection.status === PROJECTION_STATUS.STUCK"
+              class="status-text status-text-stuck"
+            >
+              <img :src="StuckIcon14px" alt="" class="status-icon" />
+              Stuck
+            </span>
+            <span
+              v-else-if="projection.status === PROJECTION_STATUS.RUNNING"
+              class="status-text status-text-running"
+            >
+              <img :src="RunningIcon" alt="" class="status-icon" />
+              Running
+            </span>
+            <span
+              v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
+              class="status-text status-text-queued"
+            >
+              <img :src="QueuedIcon14px" alt="" class="status-icon" />
+              Queued
+            </span>
           </td>
           <td class="table-cell">{{ projection.ownerDisplayName }}</td>
           <td class="table-cell">
@@ -223,7 +236,7 @@ import type { SortOrder } from '@/types/types'
 import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PROJECTION_STATUS } from '@/constants/constants'
 import { formatNumber } from '@/utils/util'
 import { AppButton } from '@/components'
-import { RunningIcon, StuckIcon14px, QueuedIcon14px, ArrowUpIcon, ArrowUpWhiteIcon } from '@/assets/'
+import { RunningIcon, StuckIcon14px, QueuedIcon14px, ArrowUpIcon, ArrowUpBlueIcon } from '@/assets/'
 
 interface Props {
   projections: AdminProjection[]
@@ -368,65 +381,39 @@ const formatElapsedTime = (startDate: string | null): string => {
   white-space: nowrap;
 }
 
-.projection-name-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--layout-padding-xsmall);
-}
-
-.status-badge-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
 .projection-title {
   font: var(--typography-regular-body);
   color: var(--typography-color-primary);
 }
 
-.status-badge {
-  display: flex;
+.status-text {
+  display: inline-flex;
   align-items: center;
-  height: 24px;
-  padding: var(--layout-margin-hair) var(--layout-padding-small);
   gap: var(--layout-margin-small);
-  border-radius: var(--layout-border-radius-small);
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-primary);
+  font: var(--typography-bold-body);
   white-space: nowrap;
 }
 
-.status-badge-icon {
+.status-icon {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
 }
 
-.status-badge.status-running {
-  border: 1px solid var(--surface-color-primary-hover, #1E5189);
-  background: rgba(30, 81, 137, 0.08);
+.status-text.status-text-running {
   color: var(--surface-color-primary-hover, #1E5189);
 }
 
-.status-badge.status-stuck {
-  border: 1px solid var(--support-border-color-danger);
-  background: var(--support-surface-color-danger);
+.status-text.status-text-stuck {
   color: #CE3E39;
 }
 
-.status-badge.status-queued {
-  border: 1px solid var(--theme-blue-70, #5595D9);
-  background: rgba(85, 149, 217, 0.08);
+.status-text.status-text-queued {
   color: var(--theme-blue-70, #5595D9);
 }
 
-.status-badge.status-priority {
-  border: 1px solid #003366;
-  background: #003366;
-  color: #ffffff;
+.status-text.status-text-priority {
+  color: var(--surface-color-primary-hover, #1E5189);
 }
 
 .elapsed-stuck {
