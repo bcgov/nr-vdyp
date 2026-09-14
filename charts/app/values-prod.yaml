@@ -27,6 +27,12 @@ global:
   postgresql:
     auth:
       password: unused
+# Persistent storage for application logs, including access/security audit files.
+logs:
+  enabled: true
+  size: 500Mi
+  storageClassName: netapp-file-standard
+
 #-- the components of the application, backend.
 backend:
   #-- enable or disable backend

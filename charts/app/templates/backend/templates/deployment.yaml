@@ -40,6 +40,18 @@ spec:
             - secretRef:
                 name: {{.Release.Name}}
           env:
+            - name: VDYP_ACCESS_LOG_ENABLED
+              value: {{ .Values.logs.enabled | quote }}
+            {{- if .Values.logs.enabled }}
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: VDYP_ACCESS_LOG_DIRECTORY
+              value: /work/logs
+            - name: VDYP_ACCESS_LOG_BASE_FILE_NAME
+              value: access-security-$(POD_UID)
+            {{- end }}
             - name: LOG_LEVEL
               value: info
             - name: QUARKUS_OIDC_AUTH_SERVER_URL
@@ -130,6 +142,11 @@ spec:
               value: {{ .Values.backend.env.QUARKUS_SMALLRYE_OPENAPI_ENABLE | default "false"  | quote }}
             - name: QUARKUS_HTTP_AUTH_PERMISSION_OPENAPI_POLICY
               value: {{ .Values.backend.env.QUARKUS_HTTP_AUTH_PERMISSION_OPENAPI_POLICY | default "authenticated" | quote }}
+          {{- if .Values.logs.enabled }}
+          volumeMounts:
+            - name: logs
+              mountPath: /work/logs
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.backend.service.targetPort }}
@@ -161,6 +178,12 @@ spec:
             requests:
               cpu: 50m
               memory: 150Mi
+      {{- if .Values.logs.enabled }}
+      volumes:
+        - name: logs
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name | trunc 58 | trimSuffix "-" }}-logs
+      {{- end }}
       {{- with .Values.backend.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

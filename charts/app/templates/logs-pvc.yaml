@@ -1,0 +1,15 @@
+{{- if .Values.logs.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name | trunc 58 | trimSuffix "-" }}-logs
+  labels:
+    {{- include "labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.logs.size }}
+  storageClassName: {{ .Values.logs.storageClassName }}
+{{- end }}
