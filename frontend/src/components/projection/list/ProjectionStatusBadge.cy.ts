@@ -59,6 +59,15 @@ describe('ProjectionStatusBadge.vue', () => {
         .and('have.class', 'status-failed')
       cy.get('.status-icon').should('have.attr', 'alt', 'Failed')
     })
+
+    it('renders admin-cancelled status as Cancelled', () => {
+      mountComponent('Cancelled By Administrator')
+
+      cy.get('.status-text')
+        .should('contain', 'Cancelled')
+        .and('not.contain', 'Administrator')
+        .and('have.class', 'status-cancelled')
+    })
   })
 
   describe('icon display', () => {

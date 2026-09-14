@@ -257,6 +257,18 @@ export const getStatusIcon = (status: string): string => {
 }
 
 /**
+ * Returns the user-facing display text for a projection status.
+ * The ADMN_CNCLD status is shown to users simply as 'Cancelled', since a
+ * projection cancelled by an administrator always has its reason shown separately.
+ *
+ * @param status - The projection status
+ * @returns {string} The status text to display to the user
+ */
+export const getProjectionStatusDisplayText = (status: string): string => {
+  return status === CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD ? CONSTANTS.PROJECTION_STATUS.CANCELLED : status
+}
+
+/**
  * Converts a Unix timestamp (in seconds) to a Date object.
  * Returns null if the conversion fails due to an invalid timestamp.
  *

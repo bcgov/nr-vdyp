@@ -44,7 +44,8 @@ export interface Tab {
 }
 
 // 'Cancelled' is a frontend-only transient UI state (not a real backend status code).
-// 'Cancelled By Administrator' maps to the backend ADMN_CNCLD status code.
+// 'Cancelled By Administrator' maps to the backend ADMN_CNCLD status code (displayed to
+// users as just 'Cancelled'; see getProjectionStatusDisplayText).
 export type ProjectionStatus =
   | 'Draft'
   | 'Ready'
