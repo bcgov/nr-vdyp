@@ -35,7 +35,7 @@ import { isBlank, addExecutionOptionsFromMappings, numEq, strEq } from '@/utils/
 export const generateFeatureId = (): number => {
   const timestamp = Date.now()
   const timestampPart = timestamp % 100000000
-  const randomPart = Math.floor(Math.random() * 99) + 1 // 1 to 99
+  const randomPart = Math.floor(Math.random() * 99) + 1 // NOSONAR S2245
   return Number(`${randomPart}${timestampPart}`)
 }
 
@@ -54,7 +54,7 @@ export const generateRandomNumber = (
   }
   const min = Math.pow(10, minDigits - 1)
   const max = Math.pow(10, maxDigits) - 1
-  return (Math.floor(Math.random() * (max - min + 1)) + min).toString()
+  return (Math.floor(Math.random() * (max - min + 1)) + min).toString() // NOSONAR S2245
 }
 
 /**

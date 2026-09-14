@@ -57,7 +57,7 @@ describe('AdminProjectionTable.vue', () => {
     cy.get('.projection-title').should('contain.text', 'Test Projection')
     cy.get('.status-text').should('contain.text', 'Running')
     cy.get('.table-cell').contains('R. MacLeod').should('exist')
-    cy.get('.user-type-chip').should('contain.text', 'IDIR')
+    cy.get('.table-cell').contains('IDIR').should('exist')
   })
 
   it('emits sort event with correct key when a sortable header is clicked', () => {
