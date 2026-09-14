@@ -38,15 +38,17 @@ export const projectionHcsvPost = async (
     const response = await apiClient.projectionHcsvPost(formData, trialRun)
 
     // Check status and content type
+    const contentTypeHeader = response.headers['content-type']
+    const contentType = typeof contentTypeHeader === 'string' ? contentTypeHeader : ''
     if (
       (response.status === 200 || response.status === 201) &&
-      response.headers['content-type']?.includes('application/octet-stream')
+      contentType.includes('application/octet-stream')
     ) {
       // Success response, returns a blob
       return response
     } else if (
       response.status === 400 &&
-      response.headers['content-type']?.includes('application/json')
+      contentType.includes('application/json')
     ) {
       // Errors including validation messages
       const errorData = await response.data.text()
