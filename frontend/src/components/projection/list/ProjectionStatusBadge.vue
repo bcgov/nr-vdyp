@@ -6,14 +6,14 @@
       class="status-icon"
     />
     <span :class="['status-text', statusClass]">
-      {{ status }}
+      {{ displayText }}
     </span>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { getStatusIcon } from '@/utils/util'
+import { getStatusIcon, getProjectionStatusDisplayText } from '@/utils/util'
 import { CONSTANTS } from '@/constants'
 import {
   AdminCancelledIcon16px,
@@ -45,8 +45,10 @@ const statusIcon16pxOverrides: Record<string, string> = {
 
 const statusIcon = computed(() => statusIcon16pxOverrides[props.status] ?? getStatusIcon(props.status))
 
+const displayText = computed(() => getProjectionStatusDisplayText(props.status))
+
 const statusClass = computed(() => {
-  return `status-${props.status.toLowerCase().replace(/\s+/g, '-')}`
+  return `status-${displayText.value.toLowerCase().replace(/\s+/g, '-')}`
 })
 </script>
 
@@ -99,7 +101,7 @@ const statusClass = computed(() => {
   color: #CE3E39;
 }
 
-.status-text.status-cancelled-by-administrator {
+.status-text.status-cancelled {
   font: var(--typography-bold-body);
   color: #CE3E39;
 }

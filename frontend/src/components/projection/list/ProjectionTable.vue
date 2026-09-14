@@ -95,7 +95,7 @@
             }}</span>
           </td>
           <td class="table-cell">
-            <div class="status-cell cell-with-tooltip tooltip-right" :data-tooltip="projection.status">
+            <div class="status-cell cell-with-tooltip tooltip-right" :data-tooltip="getProjectionStatusDisplayText(projection.status)">
               <ProjectionStatusBadge :status="projection.status" />
             </div>
           </td>
@@ -123,7 +123,7 @@ import type { Projection, TableHeader } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { PROJECTION_USER_ACTION, SORT_ORDER } from '@/constants/constants'
 import { ProjectionActionsMenu, ProjectionStatusBadge} from '@/components/projection'
-import { formatDateTimeDisplay, formatDateDisplay } from '@/utils/util'
+import { formatDateTimeDisplay, formatDateDisplay, getProjectionStatusDisplayText } from '@/utils/util'
 
 interface Props {
   projections: Projection[]

@@ -168,14 +168,14 @@ describe('Util Functions Unit Tests', () => {
       cy.stub(URL, 'revokeObjectURL').as('revokeObjectURL')
 
       const originalCreateElement = document.createElement.bind(document)
-      cy.stub(document, 'createElement').callsFake((tagName: string) => {
+      cy.stub(document, 'createElement').as('createElement').callsFake((tagName: string) => {
         const element = originalCreateElement(tagName)
         if (tagName === 'a') {
           cy.spy(element as HTMLAnchorElement, 'click').as('click')
           cy.spy(element as HTMLAnchorElement, 'remove').as('remove')
         }
         return element
-      }).as('createElement')
+      })
 
       cy.spy(document.body, 'appendChild').as('appendChild')
 

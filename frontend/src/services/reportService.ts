@@ -3,6 +3,8 @@ import * as messageHandler from '@/utils/messageHandler'
 import { saveAs } from 'file-saver'
 import printJS from 'print-js'
 
+type SaveAsFn = (data: Blob | string, filename?: string, options?: { autoBom: boolean }) => void
+
 /**
  * Download file as text.
  * @param {string[]} data - Array of strings to be saved as a text file.
@@ -12,7 +14,7 @@ import printJS from 'print-js'
 export const downloadTextFile = (
   data: string[],
   fileName: string,
-  saveAsFunc = saveAs,
+  saveAsFunc: SaveAsFn = saveAs,
 ) => {
   if (!data || data.length === 0 || (data.length > 0 && data.every((item) => item.trim() === ''))) {
     messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
@@ -33,7 +35,7 @@ export const downloadTextFile = (
 export const downloadCSVFile = (
   data: string[],
   fileName: string,
-  saveAsFunc = saveAs,
+  saveAsFunc: SaveAsFn = saveAs,
 ) => {
   if (!data || data.length === 0 || (data.length > 0 && data.every((item) => item.trim() === ''))) {
     messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
