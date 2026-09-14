@@ -66,7 +66,7 @@ bytes=$(stat -c '%s' "$archive")
 (( bytes <= 5368709120 )) || { echo 'Archive exceeds S3 single PUT limit' >&2; exit 1; }
 md5=$(openssl dgst -md5 -binary "$archive" | openssl base64 -A)
 prefix=${S3_PREFIX:-access-logs}; prefix=${prefix#/}; prefix=${prefix%/}
-key="${prefix:+$prefix/}$POD_NAMESPACE/$RELEASE_NAME/$day/$sha.zip"
+key="${prefix:+$prefix/}$POD_NAMESPACE/access-logs_$day.zip"
 aws --endpoint-url "$endpoint" s3api put-object --bucket "$S3_BUCKET" --key "$key" \
     --body "$archive" --content-type application/zip --content-md5 "$md5" --metadata "sha256=$sha" > /dev/null
 verification=$(aws --endpoint-url "$endpoint" s3api head-object \
