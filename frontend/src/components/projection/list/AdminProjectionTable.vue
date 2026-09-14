@@ -169,12 +169,7 @@
             </span>
           </td>
           <td class="table-cell">{{ projection.ownerDisplayName }}</td>
-          <td class="table-cell">
-            <span v-if="projection.userType" class="user-type-chip">
-              {{ projection.userType }}
-            </span>
-            <span v-else>-</span>
-          </td>
+          <td class="table-cell">{{ projection.userType || '-' }}</td>
           <td class="table-cell">
             <span :class="{ 'elapsed-stuck': projection.status === PROJECTION_STATUS.STUCK }">
               {{ formatElapsedTime(projection.startDate) }}
@@ -365,20 +360,6 @@ const formatElapsedTime = (startDate: string | null): string => {
 
 .prioritize-button {
   margin-right: var(--layout-padding-small);
-}
-
-.user-type-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 24px;
-  padding: var(--layout-margin-hair) var(--layout-padding-small);
-  border-radius: var(--layout-border-radius-small);
-  border: 1px solid var(--surface-color-border-dark);
-  background: var(--theme-gray-20);
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-primary);
-  white-space: nowrap;
 }
 
 .projection-title {
