@@ -75,28 +75,7 @@ const meta: Meta<typeof ProjectionCardList> = {
       options: sortOptions.map((opt) => opt.value),
       description: 'Currently selected sort option value.',
     },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
-A mobile-friendly card list component for displaying projections. This component is used in the ProjectionListView when the screen width is 1025px or below.
-
-**Features:**
-- Sort dropdown to change the order of projections
-- Cards display projection details including title, status, method, range type, expiration, and description
-- Action buttons vary based on projection status:
-  - **Draft**: Edit, Duplicate, Delete
-  - **Ready**: View, Duplicate, Download, Delete
-  - **Running**: Cancel
-  - **Failed**: Edit, Duplicate, Download, Delete
-
-**Responsive behavior:**
-- Description moves to a separate row on screens narrower than 700px
-        `,
-      },
-    },
-  },
+  }
 }
 
 export default meta

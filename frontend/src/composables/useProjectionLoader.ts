@@ -58,6 +58,7 @@ export function useProjectionLoader() {
     modelParameters: string | null | undefined,
     params: ReturnType<typeof parseProjectionParams>,
     isViewMode: boolean,
+    collapseAllPanels: boolean,
   ) => {
     modelParameterStore.resetStore()
 
@@ -70,7 +71,7 @@ export function useProjectionLoader() {
       }
     }
 
-    modelParameterStore.restoreFromProjectionParams(params, isViewMode)
+    modelParameterStore.restoreFromProjectionParams(params, isViewMode, collapseAllPanels)
   }
 
 /**
@@ -81,9 +82,10 @@ export function useProjectionLoader() {
     projectionModel: Awaited<ReturnType<typeof getProjectionById>>,
     params: ReturnType<typeof parseProjectionParams>,
     isViewMode: boolean,
+    collapseAllPanels: boolean,
   ) => {
     fileUploadStore.resetStore()
-    fileUploadStore.restoreFromProjectionParams(params, isViewMode)
+    fileUploadStore.restoreFromProjectionParams(params, isViewMode, collapseAllPanels)
 
     const polygonFileSetGUID = projectionModel.polygonFileSet?.projectionFileSetGUID
     const layerFileSetGUID = projectionModel.layerFileSet?.projectionFileSetGUID
@@ -110,6 +112,10 @@ export function useProjectionLoader() {
       const isViewMode = viewMode === PROJECTION_VIEW_MODE.VIEW
       const projectionModel = await getProjectionById(projectionGUID)
       const params = parseProjectionParams(projectionModel.projectionParameters)
+      const projectionStatus = mapProjectionStatus(
+        projectionModel.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT,
+      )
+      const collapseAllPanels = projectionStatus === PROJECTION_STATUS.READY
 
       const isInputModelParams = params.selectedExecutionOptions.includes(
         ExecutionOptionsEnum.DoEnableProjectionReport,
@@ -121,9 +127,7 @@ export function useProjectionLoader() {
       appStore.setModelSelection(method)
       appStore.setViewMode(viewMode)
       appStore.setCurrentProjectionGUID(projectionGUID)
-      appStore.setCurrentProjectionStatus(
-        mapProjectionStatus(projectionModel.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT),
-      )
+      appStore.setCurrentProjectionStatus(projectionStatus)
 
       // Set or clear duplicated-from info based on copyTitle in projectionParameters
       if (params.copyTitle) {
@@ -136,10 +140,10 @@ export function useProjectionLoader() {
       }
 
       if (isInputModelParams) {
-        restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode)
+        restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode, collapseAllPanels)
         modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
       } else {
-        await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode)
+        await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode, collapseAllPanels)
         fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
       }
 

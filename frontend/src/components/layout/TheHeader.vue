@@ -73,6 +73,9 @@ const skipToMain = () => {
   min-height: 65px;
   padding: var(--layout-padding-none) var(--layout-padding-medium);
   width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .bcds-header > .bcds-header--container {

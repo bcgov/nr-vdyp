@@ -117,4 +117,16 @@ public class FloatMath {
 	public static float max(float f1, float f2, float f3, float f4) {
 		return Math.max(Math.max(f1, f2), Math.max(f3, f4));
 	}
+
+	/**
+	 * Multiply value by factor while treating offset as zero.
+	 *
+	 * @param value  Value to multiply
+	 * @param offset Subtract this from value before multiplying then add to the result
+	 * @param factor Factor to multiply by
+	 * @return
+	 */
+	public static float offsetMultiply(float value, float offset, float factor) {
+		return offset + (value - offset) * factor;
+	}
 }

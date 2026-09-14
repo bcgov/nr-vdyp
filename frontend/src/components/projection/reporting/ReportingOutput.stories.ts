@@ -17,20 +17,7 @@ const meta: Meta<typeof ReportingOutput> = {
       description:
         'Active reporting tab. The MODEL_REPORT tab uses `min-height` instead of a fixed `height` to fill available space.',
     },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
-Monospace pre-formatted text output panel for reporting data.
-
-- Joins the \`data\` array with newlines and renders it in a scrollable, monospace box.
-- **MODEL_REPORT** tab: uses \`min-height: 420px\` so the panel can grow with content.
-- **All other tabs**: uses a fixed \`height: 420px\`.
-        `,
-      },
-    },
-  },
+  }
 }
 
 export default meta

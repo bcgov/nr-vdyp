@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import {
   validateDuplicateSpecies,
   validateTotalSpeciesPercent,
@@ -28,7 +29,7 @@ describe('Species Info Validation Unit Tests', () => {
     ]
 
     const result = validateDuplicateSpecies(speciesList)
-    expect(result.isValid).to.be.true
+    assert.isTrue(result.isValid)
   })
 
   it('should not treat null species as duplicates', () => {
@@ -38,7 +39,7 @@ describe('Species Info Validation Unit Tests', () => {
     ]
 
     const result = validateDuplicateSpecies(speciesList)
-    expect(result.isValid).to.be.true
+    assert.isTrue(result.isValid)
   })
 
   it('should validate total species percent correctly', () => {
@@ -46,13 +47,13 @@ describe('Species Info Validation Unit Tests', () => {
       '100.0',
       CONSTANTS.NUM_INPUT_LIMITS.TOTAL_SPECIES_PERCENT,
     )
-    expect(result.isValid).to.be.true
+    assert.isTrue(result.isValid)
 
     const resultInvalid = validateTotalSpeciesPercent(
       '90.0',
       CONSTANTS.NUM_INPUT_LIMITS.TOTAL_SPECIES_PERCENT,
     )
-    expect(resultInvalid.isValid).to.be.false
+    assert.isFalse(resultInvalid.isValid)
   })
 
   it('should fail when totalSpeciesGroupPercent does not match', () => {
@@ -60,22 +61,22 @@ describe('Species Info Validation Unit Tests', () => {
       '100.0',
       CONSTANTS.NUM_INPUT_LIMITS.TOTAL_SPECIES_PERCENT - 1,
     )
-    expect(result.isValid).to.be.false
+    assert.isFalse(result.isValid)
   })
 
   it('should validate required fields', () => {
-    expect(validateRequired('SomeValue').isValid).to.be.true
-    expect(validateRequired(null).isValid).to.be.false
-    expect(validateRequired('').isValid).to.be.false
+    assert.isTrue(validateRequired('SomeValue').isValid)
+    assert.isFalse(validateRequired(null).isValid)
+    assert.isFalse(validateRequired('').isValid)
   })
 
   it('should validate percent range correctly', () => {
-    expect(validatePercent('50').isValid).to.be.true
-    expect(validatePercent('0').isValid).to.be.true
-    expect(validatePercent('100').isValid).to.be.true
-    expect(validatePercent(null).isValid).to.be.true
-    expect(validatePercent('').isValid).to.be.true
-    expect(validatePercent('-1').isValid).to.be.false
-    expect(validatePercent('150').isValid).to.be.false
+    assert.isTrue(validatePercent('50').isValid)
+    assert.isTrue(validatePercent('0').isValid)
+    assert.isTrue(validatePercent('100').isValid)
+    assert.isTrue(validatePercent(null).isValid)
+    assert.isTrue(validatePercent('').isValid)
+    assert.isFalse(validatePercent('-1').isValid)
+    assert.isFalse(validatePercent('150').isValid)
   })
 })

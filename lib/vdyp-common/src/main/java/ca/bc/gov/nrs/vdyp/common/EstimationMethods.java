@@ -59,7 +59,7 @@ public class EstimationMethods {
 
 	public static final float EMPIRICAL_OCCUPANCY = 0.85f;
 
-	private ResolvedControlMap controlMap;
+	ResolvedControlMap controlMap;
 
 	public static final float LOW_CROWN_CLOSURE = 10f;
 

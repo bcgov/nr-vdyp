@@ -16,10 +16,10 @@ public abstract class BaseVdypSite implements Dumpable {
 	private final Optional<Integer> siteCurveNumber; // VRISI/VR_SCN
 	private final Optional<Float> siteIndex; // VRISI/VR_SI
 
-	private final Optional<Float> ageTotal; // LVCOM3/AGETOTLV, L1COM3/AGETOTL1, VRISI/VR_TAGE
-	private final Optional<Float> height; // LVCOM3/HDLV, L1COM3/HDL1, VRISI/VR_HD
-	private final Optional<Float> yearsToBreastHeight; // LVCOM3/YTBHLV, L1COM3/YTBHL1, VRISI/VR_YTBH
-	private final Optional<Float> yearsAtBreastHeight; // VRISI/VR_SCN
+	private Optional<Float> ageTotal; // LVCOM3/AGETOTLV, L1COM3/AGETOTL1, VRISI/VR_TAGE
+	private Optional<Float> height; // LVCOM3/HDLV, L1COM3/HDL1, VRISI/VR_HD
+	private Optional<Float> yearsToBreastHeight; // LVCOM3/YTBHLV, L1COM3/YTBHL1, VRISI/VR_YTBH
+	private Optional<Float> yearsAtBreastHeight; // LVCOM3/AGEBHLV, L1COM3/AGEBHL1
 
 	protected BaseVdypSite(
 			PolygonIdentifier polygonIdentifier, LayerType layerType, String siteGenus,
@@ -93,6 +93,38 @@ public abstract class BaseVdypSite implements Dumpable {
 	@Override
 	public String toString() {
 		return MessageFormat.format("{0}-{1}-{2}", polygonIdentifier.toStringCompact(), layerType, siteGenus);
+	}
+
+	public void setAgeTotal(Optional<Float> ageTotal) {
+		this.ageTotal = ageTotal;
+	}
+
+	public void setHeight(Optional<Float> height) {
+		this.height = height;
+	}
+
+	public void setYearsToBreastHeight(Optional<Float> yearsToBreastHeight) {
+		this.yearsToBreastHeight = yearsToBreastHeight;
+	}
+
+	public void setYearsAtBreastHeight(Optional<Float> yearsAtBreastHeight) {
+		this.yearsAtBreastHeight = yearsAtBreastHeight;
+	}
+
+	public void setAgeTotal(float ageTotal) {
+		this.ageTotal = Optional.of(ageTotal);
+	}
+
+	public void setHeight(float height) {
+		this.height = Optional.of(height);
+	}
+
+	public void setYearsToBreastHeight(float yearsToBreastHeight) {
+		this.yearsToBreastHeight = Optional.of(yearsToBreastHeight);
+	}
+
+	public void setYearsAtBreastHeight(float yearsAtBreastHeight) {
+		this.yearsAtBreastHeight = Optional.of(yearsAtBreastHeight);
 	}
 
 	@Override

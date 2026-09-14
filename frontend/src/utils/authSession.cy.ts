@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import { saveAuthSession, loadAuthSession, clearAuthSession } from '@/utils/authSession'
 import { CONSTANTS } from '@/constants'
 
@@ -37,7 +38,7 @@ describe('authSession Unit Tests', () => {
 
   describe('loadAuthSession', () => {
     it('should return null when sessionStorage is empty', () => {
-      expect(loadAuthSession()).to.be.null
+      assert.isNull(loadAuthSession())
     })
 
     it('should load and return a valid user', () => {
@@ -47,19 +48,19 @@ describe('authSession Unit Tests', () => {
 
     it('should return null when sessionStorage contains invalid base64', () => {
       sessionStorage.setItem(AUTH_SESSION_KEY, '!!!not-base64!!!')
-      expect(loadAuthSession()).to.be.null
+      assert.isNull(loadAuthSession())
     })
 
     it('should return null when a required token field is missing', () => {
       const incomplete = { accessToken: 'a.b.c', refToken: 'a.b.c' } // idToken missing
       sessionStorage.setItem(AUTH_SESSION_KEY, btoa(JSON.stringify(incomplete)))
-      expect(loadAuthSession()).to.be.null
+      assert.isNull(loadAuthSession())
     })
 
     it('should return null when a token field is an empty string', () => {
       const tampered = { ...VALID_USER, accessToken: '   ' }
       sessionStorage.setItem(AUTH_SESSION_KEY, btoa(JSON.stringify(tampered)))
-      expect(loadAuthSession()).to.be.null
+      assert.isNull(loadAuthSession())
     })
   })
 
@@ -67,13 +68,13 @@ describe('authSession Unit Tests', () => {
     it('should remove user session from sessionStorage', () => {
       saveAuthSession(VALID_USER)
       clearAuthSession()
-      expect(sessionStorage.getItem(AUTH_SESSION_KEY)).to.be.null
+      assert.isNull(sessionStorage.getItem(AUTH_SESSION_KEY))
     })
 
     it('should cause loadAuthSession to return null after clearing', () => {
       saveAuthSession(VALID_USER)
       clearAuthSession()
-      expect(loadAuthSession()).to.be.null
+      assert.isNull(loadAuthSession())
     })
   })
 })

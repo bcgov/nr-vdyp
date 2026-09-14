@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -24,6 +25,7 @@ import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchResultAggregationService;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
+import ca.bc.gov.nrs.vdyp.batch.service.ThreadReservationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +41,9 @@ class VDYPJobMetricListenerTest {
 	@Mock
 	private JobOwnershipService ownershipService;
 
+	@Mock
+	private ThreadReservationService threadReservationService;
+
 	private BatchProperties batchProperties;
 	private PrioritizationPauseTracker pauseTracker;
 	private VDYPJobMetricListener listener;
@@ -49,7 +54,8 @@ class VDYPJobMetricListenerTest {
 		batchProperties.getPartition().setInterimDirsCleanupEnabled(true);
 		pauseTracker = new PrioritizationPauseTracker();
 		listener = new VDYPJobMetricListener(
-				metricsCollector, batchProperties, resultAggregationService, ownershipService, pauseTracker
+				metricsCollector, batchProperties, resultAggregationService, ownershipService, pauseTracker,
+				threadReservationService
 		);
 	}
 
@@ -81,5 +87,50 @@ class VDYPJobMetricListenerTest {
 
 		verify(resultAggregationService, times(1)).cleanupInputPartitionDirectories(any(Path.class));
 		verify(resultAggregationService, times(1)).cleanupOutputPartitionDirectories(any(Path.class));
+	}
+
+	@Test
+	void afterJob_releasesReservedThreadsRecordedInExecutionContext() {
+		JobExecution execution = stoppedExecution(202L, "/tmp/job-202");
+		execution.getExecutionContext().putInt(BatchConstants.Job.RESERVED_THREADS, 4);
+
+		listener.afterJob(execution);
+
+		verify(threadReservationService).release(4);
+	}
+
+	@Test
+	void afterJob_doesNotReleaseWhenNoThreadsWereReserved() {
+		JobExecution execution = stoppedExecution(203L, "/tmp/job-203");
+
+		listener.afterJob(execution);
+
+		verify(threadReservationService, never()).release(anyInt());
+	}
+
+	@Test
+	void afterJob_stoppedAndPausedForResume_doesNotReleaseReservedThreads() {
+		JobExecution execution = stoppedExecution(204L, "/tmp/job-204");
+		execution.getExecutionContext().putInt(BatchConstants.Job.RESERVED_THREADS, 4);
+		pauseTracker.markPausedForResume(204L);
+
+		listener.afterJob(execution);
+
+		verify(threadReservationService, never()).release(anyInt());
+	}
+
+	@Test
+	void afterJob_resumedExecutionEventuallyReleasesReservationExactlyOnce() {
+		JobExecution stopped = stoppedExecution(200L, "/tmp/job-200");
+		stopped.getExecutionContext().putInt(BatchConstants.Job.RESERVED_THREADS, 4);
+		pauseTracker.markPausedForResume(200L);
+		listener.afterJob(stopped);
+
+		JobExecution resumed = stoppedExecution(205L, "/tmp/job-200");
+		resumed.setStatus(BatchStatus.COMPLETED);
+		resumed.getExecutionContext().putInt(BatchConstants.Job.RESERVED_THREADS, 4);
+		listener.afterJob(resumed);
+
+		verify(threadReservationService, times(1)).release(4);
 	}
 }

@@ -27,6 +27,7 @@ public final class BatchConstants {
 		public static final String PROJECTION_ERRORS = "projectionErrors";
 		public static final String WORKERS = "workers";
 		public static final String COMPUTED_PARTITIONS = "computedPartitions";
+		public static final String RESERVED_THREADS = "reservedThreads";
 
 		private Job() {
 		}

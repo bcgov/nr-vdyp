@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -66,6 +67,8 @@ class StartupRecoveryServiceTest {
 	ServerCapacityService serverCapacityService;
 	@Mock
 	ClaimBoundJobLauncher claimBoundJobLauncher;
+	@Mock
+	ThreadReservationService threadReservationService;
 
 	@TempDir
 	Path tempDir;
@@ -76,7 +79,7 @@ class StartupRecoveryServiceTest {
 	void setUp() {
 		service = new StartupRecoveryService(
 				jobExplorer, fetchAndPartitionJob, recoveryMetadataService, vdypClient, ownershipProperties,
-				ownershipService, serverCapacityService, claimBoundJobLauncher
+				ownershipService, serverCapacityService, claimBoundJobLauncher, threadReservationService
 		);
 	}
 
@@ -143,7 +146,7 @@ class StartupRecoveryServiceTest {
 
 		service.recoverClaimableExecutions();
 
-		verify(claimBoundJobLauncher, never()).launch(any(), any(), any());
+		verify(claimBoundJobLauncher, never()).launch(any(), any(), any(), anyInt());
 	}
 
 	@Test
@@ -153,7 +156,7 @@ class StartupRecoveryServiceTest {
 
 		service.recoverClaimableExecutions();
 
-		verify(claimBoundJobLauncher, never()).launch(any(), any(), any());
+		verify(claimBoundJobLauncher, never()).launch(any(), any(), any(), anyInt());
 	}
 
 	@Test
@@ -167,7 +170,7 @@ class StartupRecoveryServiceTest {
 		service.recoverClaimableExecutions();
 
 		verify(recoveryMetadataService, never()).markStaleExecutionFailed(any());
-		verify(claimBoundJobLauncher, never()).launch(any(), any(), any());
+		verify(claimBoundJobLauncher, never()).launch(any(), any(), any(), anyInt());
 	}
 
 	@Test
@@ -181,7 +184,7 @@ class StartupRecoveryServiceTest {
 		service.recoverClaimableExecutions();
 
 		verify(recoveryMetadataService, never()).markStaleExecutionFailed(any());
-		verify(claimBoundJobLauncher, never()).launch(any(), any(), any());
+		verify(claimBoundJobLauncher, never()).launch(any(), any(), any(), anyInt());
 	}
 
 	@Test
@@ -232,7 +235,7 @@ class StartupRecoveryServiceTest {
 				.thenReturn(Optional.of(expiredClaim(projectionGuid)));
 		when(serverCapacityService.hasAvailableCapacity()).thenReturn(true);
 		when(ownershipService.tryAcquire(projectionGuid, "recovery")).thenReturn(Optional.of(newClaim));
-		when(claimBoundJobLauncher.launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim))
+		when(claimBoundJobLauncher.launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim, 0))
 				.thenReturn(runningExecution(projectionGuid));
 
 		assertTrue(service.recoverNextExpiredExecution());
@@ -264,7 +267,7 @@ class StartupRecoveryServiceTest {
 		when(ownershipProperties.isRecoverLegacyExecutionsWithoutClaim()).thenReturn(true);
 		when(serverCapacityService.hasAvailableCapacity()).thenReturn(true);
 		when(ownershipService.tryAcquire(projectionGuid, "recovery")).thenReturn(Optional.of(newClaim));
-		when(claimBoundJobLauncher.launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim))
+		when(claimBoundJobLauncher.launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim, 0))
 				.thenReturn(runningExecution(projectionGuid));
 
 		assertTrue(service.recoverNextExpiredExecution());
@@ -283,13 +286,13 @@ class StartupRecoveryServiceTest {
 		when(ownershipService.findProjectionClaim(projectionGuid)).thenReturn(Optional.of(oldClaim));
 		when(serverCapacityService.hasAvailableCapacity()).thenReturn(true);
 		when(ownershipService.tryAcquire(projectionGuid, "recovery")).thenReturn(Optional.of(newClaim));
-		when(claimBoundJobLauncher.launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim))
+		when(claimBoundJobLauncher.launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim, 0))
 				.thenReturn(restarted);
 
 		service.recoverClaimableExecutions();
 
 		verify(recoveryMetadataService).markStaleExecutionFailed(execution.getId());
-		verify(claimBoundJobLauncher).launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim);
+		verify(claimBoundJobLauncher).launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim, 0);
 	}
 
 	@Test
@@ -308,7 +311,7 @@ class StartupRecoveryServiceTest {
 
 		verify(vdypClient).markComplete(eq(projectionGuid), eq(false), any());
 		verify(ownershipService).releaseUnboundClaim(newClaim);
-		verify(claimBoundJobLauncher, never()).launch(any(), any(), any());
+		verify(claimBoundJobLauncher, never()).launch(any(), any(), any(), anyInt());
 	}
 
 	@Test
@@ -365,7 +368,51 @@ class StartupRecoveryServiceTest {
 		stubSuccessfulRecovery(execution, projectionGuid);
 
 		assertTrue(service.recoverNextExpiredExecution());
-		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(execution.getJobParameters()), any());
+		verify(claimBoundJobLauncher)
+				.launch(eq(fetchAndPartitionJob), eq(execution.getJobParameters()), any(), anyInt());
+	}
+
+	@Test
+	void recoveryReservesCarriedOverThreadsOnLocalLedgerWhenResumingPastFetchStep() throws Exception {
+		String projectionGuid = UUID.randomUUID().toString();
+		JobExecution execution = completedFetchExecution(projectionGuid, tempDir.toString(), 2L, false);
+		execution.getExecutionContext().putInt(BatchConstants.Job.RESERVED_THREADS, 16);
+		for (int i = 0; i < 2; i++) {
+			Files.createDirectories(
+					tempDir.resolve(BatchConstants.Partition.INPUT_PREFIX + "-" + BatchConstants.Partition.PREFIX + i)
+			);
+		}
+		JobClaim newClaim = claim(projectionGuid, Instant.now(), Instant.now().plus(Duration.ofMinutes(2)));
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(execution));
+		when(ownershipService.findProjectionClaim(projectionGuid))
+				.thenReturn(Optional.of(expiredClaim(projectionGuid)));
+		when(serverCapacityService.hasAvailableCapacity()).thenReturn(true);
+		when(ownershipService.tryAcquire(projectionGuid, "recovery")).thenReturn(Optional.of(newClaim));
+		when(threadReservationService.reserve(16)).thenReturn(16);
+		when(claimBoundJobLauncher.launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim, 16))
+				.thenReturn(runningExecution(projectionGuid));
+
+		assertTrue(service.recoverNextExpiredExecution());
+
+		verify(threadReservationService).reserve(16);
+		verify(claimBoundJobLauncher).launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim, 16);
+	}
+
+	@Test
+	void recoveryReservesNothingWhenOldExecutionHadNoReservation() throws Exception {
+		String projectionGuid = UUID.randomUUID().toString();
+		JobExecution execution = completedFetchExecution(projectionGuid, tempDir.toString(), 2L, false);
+		for (int i = 0; i < 2; i++) {
+			Files.createDirectories(
+					tempDir.resolve(BatchConstants.Partition.INPUT_PREFIX + "-" + BatchConstants.Partition.PREFIX + i)
+			);
+		}
+		stubSuccessfulRecovery(execution, projectionGuid);
+
+		assertTrue(service.recoverNextExpiredExecution());
+
+		verify(threadReservationService, never()).reserve(anyInt());
+		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(execution.getJobParameters()), any(), eq(0));
 	}
 
 	@Test
@@ -464,7 +511,7 @@ class StartupRecoveryServiceTest {
 				.thenReturn(Optional.of(expiredClaim(projectionGuid)));
 		when(serverCapacityService.hasAvailableCapacity()).thenReturn(true);
 		when(ownershipService.tryAcquire(projectionGuid, "recovery")).thenReturn(Optional.of(newClaim));
-		when(claimBoundJobLauncher.launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim))
+		when(claimBoundJobLauncher.launch(fetchAndPartitionJob, execution.getJobParameters(), newClaim, 0))
 				.thenReturn(runningExecution(projectionGuid));
 	}
 

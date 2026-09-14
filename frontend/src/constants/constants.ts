@@ -267,6 +267,7 @@ export const PROJECTION_LIST_HEADER_KEY = Object.freeze({
 
 export const ADMIN_DASHBOARD_HEADER_KEY = Object.freeze({
   TITLE: 'title',
+  STATUS: 'status',
   OWNER: 'ownerDisplayName',
   USER_TYPE: 'userType',
   ELAPSED: 'startDate',

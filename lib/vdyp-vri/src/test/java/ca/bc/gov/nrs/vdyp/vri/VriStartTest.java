@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.vri;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasPrimaryLayer;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasVeteranLayer;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertOnlyPrimaryLayer;
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isBec;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isPolyId;
@@ -11,13 +10,11 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllAndBiggest;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,29 +25,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.EnumSource.Mode;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
-import ca.bc.gov.nrs.vdyp.exceptions.CouldNotFindBracketingIntervalException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
-import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BaseAreaCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLNonprimaryCoefficientParser;
@@ -85,7 +75,6 @@ import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSpecies;
-import ca.bc.gov.nrs.vdyp.vri.test.VriTestUtils;
 
 class VriStartTest {
 

@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -754,7 +755,7 @@ public class VdypMatchers {
 
 			@Override
 			protected boolean matchesSafely(Coefficients item, Description mismatchDescription) {
-				if (item.size() != 6 || item.getIndexFrom() != -1) {
+				if ( (item.size() != 6 && item.size() != 2) || item.getIndexFrom() != -1) {
 					mismatchDescription.appendText("Was not a utilization vector");
 					return false;
 				}
@@ -1101,12 +1102,163 @@ public class VdypMatchers {
 					mismatchDescription.appendText("does not exist");
 					return false;
 				}
-			};
+			}
 		};
 	}
 
 	public static <L extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> Matcher<L>
 			hasSpecies(String speciesGroup, Matcher<S> specMatcher) {
 		return hasProperty("species", hasSpecificEntry(speciesGroup, specMatcher));
+	}
+
+	protected static Method getIndexedProperty(String property, Object item) throws NoSuchMethodException {
+		return item.getClass().getMethod(property, Integer.TYPE);
+	}
+
+	protected static boolean testIndexedProperty(
+			String property, Object item, Description mismatchDescription, Predicate<Method> apply
+	) {
+		try {
+			var method = getIndexedProperty(property, item);
+			return apply.test(method);
+		} catch (NoSuchMethodException e) {
+			mismatchDescription.appendText("did not have indexed property ").appendValue(property);
+			return false;
+		}
+
+	}
+
+	protected static boolean testIndexedValue(
+			String property, Method method, Object item, int index, Description mismatchDescription,
+			Matcher<?> valueMatcher
+	) {
+		try {
+			Object value = method.invoke(item, index);
+
+			if (valueMatcher.matches(value)) {
+				return true;
+			}
+			mismatchDescription.appendText("entry ").appendValue(index).appendText(" of ").appendValue(property)
+					.appendText(" ");
+			valueMatcher.describeMismatch(value, mismatchDescription);
+			return false;
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | SecurityException e) {
+			throw new IllegalStateException("Failure running " + property, e);
+		}
+	}
+
+	/**
+	 * Matches if there is a method named <tt>property</tt> that takes a single integer which when called with
+	 * <tt>index</tt>, returns a value that matches <tt>valueMatcher</tt>
+	 *
+	 * @param property
+	 * @param index
+	 * @param valueMatcher
+	 * @return
+	 */
+	public static Matcher<Object> hasIndexedPropertyAt(String property, int index, Matcher<?> valueMatcher) {
+		return new TypeSafeDiagnosingMatcher<Object>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("object with indexed accessor ").appendValue(property).appendText(" with entry ")
+						.appendValue(index).appendText(" that ").appendDescriptionOf(valueMatcher);
+			}
+
+			@Override
+			protected boolean matchesSafely(Object item, Description mismatchDescription) {
+				return testIndexedProperty(property, item, mismatchDescription, method -> {
+					return testIndexedValue(property, method, item, index, mismatchDescription, valueMatcher);
+				});
+
+			}
+
+		};
+	}
+
+	/**
+	 * Matches if there is a method named <tt>property</tt> that takes a single integer which when called with
+	 * <tt>index</tt>, returns a value that matches <tt>valueMatcher</tt>
+	 *
+	 * @param property
+	 * @param index
+	 * @param valueMatcher
+	 * @return
+	 */
+	public static Matcher<Object>
+			hasIndexedThrowsAt(String property, int index, Matcher<? extends Throwable> exceptionMatcher) {
+		return new TypeSafeDiagnosingMatcher<Object>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("object with indexed accessor ").appendValue(property)
+						.appendText(" that throws an exception at ").appendValue(index).appendText(" that ")
+						.appendDescriptionOf(exceptionMatcher);
+			}
+
+			@Override
+			protected boolean matchesSafely(Object item, Description mismatchDescription) {
+				return testIndexedProperty(property, item, mismatchDescription, method -> {
+					try {
+						method.invoke(item, index);
+					} catch (IllegalAccessException | IllegalArgumentException e) {
+						mismatchDescription.appendText(e.getMessage());
+					} catch (InvocationTargetException e) {
+						exceptionMatcher.describeMismatch(e, mismatchDescription);
+						return exceptionMatcher.matches(e);
+					}
+					mismatchDescription.appendText("did not throw an exception");
+					return false;
+				});
+
+			}
+
+		};
+	}
+
+	/**
+	 * Matches if there is a method named <tt>property</tt> that takes a single integer. It will be called once for each
+	 * given value matcher with an index increasing from <tt>indexOffset</tt> and will pass if each result matches the
+	 * corresponding matcher
+	 *
+	 * @param property
+	 * @param indexOffset
+	 * @param valueMatchers
+	 * @return
+	 */
+	public static Matcher<Object>
+			hasIndexedPropertyFrom(String property, int indexOffset, Matcher<?>... valueMatchers) {
+		return new TypeSafeDiagnosingMatcher<Object>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("object with ").appendValue(indexOffset).appendText("indexed accessor ")
+						.appendValue(property).appendText(" with entries ");
+				boolean first = true;
+				for (var matcher : valueMatchers) {
+					if (!first) {
+						description.appendText("; ");
+					}
+					first = false;
+					description.appendDescriptionOf(matcher);
+				}
+			}
+
+			@Override
+			protected boolean matchesSafely(Object item, Description mismatchDescription) {
+				return testIndexedProperty(property, item, mismatchDescription, method -> {
+					for (int i = 0; i < valueMatchers.length; i++) {
+						final int index = indexOffset + i;
+						var valueMatcher = valueMatchers[i];
+						if (!testIndexedValue(property, method, item, index, mismatchDescription, valueMatcher)) {
+							return false;
+						}
+					}
+					return true;
+				});
+
+			}
+
+		};
 	}
 }

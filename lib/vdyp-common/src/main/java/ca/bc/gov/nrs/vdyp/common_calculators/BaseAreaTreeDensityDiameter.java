@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
+import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
+
 /**
  * Converts between trees per hectare and quad mean diameter in a given base area
  */
@@ -89,5 +92,53 @@ public class BaseAreaTreeDensityDiameter {
 
 			return quadraticMeanDiameter * quadraticMeanDiameter * PI_40K * treesPerHectare;
 		}
+	}
+
+	/**
+	 * Change the trees per hectare of <tt>obj</tt> for the utilization class <tt>uc</tt> to align with the basal area
+	 * and quadratic mean diameter
+	 *
+	 * @param obj
+	 * @param uc
+	 * @return the updated value
+	 */
+	public static float reconcileTreesPerHectare(VdypUtilizationHolder obj, UtilizationClass uc) {
+		final float treesPerHectare = treesPerHectare(
+				obj.getBaseAreaByUtilization().get(uc), obj.getQuadraticMeanDiameterByUtilization().get(uc)
+		);
+		obj.getTreesPerHectareByUtilization().set(uc, treesPerHectare);
+		return treesPerHectare;
+	}
+
+	/**
+	 * Change the quadratic mean diameter of <tt>obj</tt> for the utilization class <tt>uc</tt> to align with the basal
+	 * area and trees per hectare
+	 *
+	 * @param obj
+	 * @param uc
+	 * @return the updated value
+	 */
+	public static float reconcileQuadraticMeanDiameter(VdypUtilizationHolder obj, UtilizationClass uc) {
+		final float quadMeanDiameter = quadMeanDiameter(
+				obj.getBaseAreaByUtilization().get(uc), obj.getTreesPerHectareByUtilization().get(uc)
+		);
+		obj.getQuadraticMeanDiameterByUtilization().set(uc, quadMeanDiameter);
+		return quadMeanDiameter;
+	}
+
+	/**
+	 * Change the basal area of <tt>obj</tt> for the utilization class <tt>uc</tt> to align with the quadratic mean
+	 * diameter and trees per hectare
+	 *
+	 * @param obj
+	 * @param uc
+	 * @return the updated value
+	 */
+	public static float reconcileBasalArea(VdypUtilizationHolder obj, UtilizationClass uc) {
+		final float basalArea = basalArea(
+				obj.getQuadraticMeanDiameterByUtilization().get(uc), obj.getTreesPerHectareByUtilization().get(uc)
+		);
+		obj.getBaseAreaByUtilization().set(uc, basalArea);
+		return basalArea;
 	}
 }

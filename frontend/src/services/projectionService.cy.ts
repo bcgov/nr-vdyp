@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import { PROJECTION_STATUS, FILE_NAME } from '@/constants/constants'
 import {
   mapProjectionStatus,
@@ -79,14 +80,14 @@ describe('projectionService Unit Tests', () => {
 
   describe('isProjectionReadOnly', () => {
     it('should return true for Ready, Running, and Queued statuses', () => {
-      expect(isProjectionReadOnly(PROJECTION_STATUS.READY)).to.be.true
-      expect(isProjectionReadOnly(PROJECTION_STATUS.RUNNING)).to.be.true
-      expect(isProjectionReadOnly(PROJECTION_STATUS.QUEUED)).to.be.true
+      assert.isTrue(isProjectionReadOnly(PROJECTION_STATUS.READY))
+      assert.isTrue(isProjectionReadOnly(PROJECTION_STATUS.RUNNING))
+      assert.isTrue(isProjectionReadOnly(PROJECTION_STATUS.QUEUED))
     })
 
     it('should return false for Draft and Failed statuses', () => {
-      expect(isProjectionReadOnly(PROJECTION_STATUS.DRAFT)).to.be.false
-      expect(isProjectionReadOnly(PROJECTION_STATUS.FAILED)).to.be.false
+      assert.isFalse(isProjectionReadOnly(PROJECTION_STATUS.DRAFT))
+      assert.isFalse(isProjectionReadOnly(PROJECTION_STATUS.FAILED))
     })
   })
 

@@ -311,10 +311,12 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
    * Restore store state from parsed projection parameters
    * @param params Parsed projection parameters from the backend
    * @param isViewMode If true, sets all panels to confirmed and non-editable
+   * @param collapseAllPanels If true (with isViewMode), collapses all panels instead of leaving them open
    */
   const restoreFromProjectionParams = (
     params: ParsedProjectionParameters,
     isViewMode: boolean = false,
+    collapseAllPanels: boolean = false,
   ) => {
     reportTitle.value = params.reportTitle
     copyTitle.value = params.copyTitle
@@ -333,10 +335,11 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     savedSpeciesGroups.value = fileUploadSpeciesGroup.value.map(g => ({ ...g }))
 
     if (isViewMode) {
+      const panelOpenState = collapseAllPanels ? CONSTANTS.PANEL.CLOSE : CONSTANTS.PANEL.OPEN
       panelOpenStates.value = {
-        reportConfig: CONSTANTS.PANEL.OPEN,
-        minimumDBH: CONSTANTS.PANEL.OPEN,
-        attachments: CONSTANTS.PANEL.OPEN,
+        reportConfig: panelOpenState,
+        minimumDBH: panelOpenState,
+        attachments: panelOpenState,
       }
       panelState.value = {
         reportConfig: { confirmed: true, editable: false },

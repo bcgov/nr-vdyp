@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '@/stores/common/authStore'
 import { CONSTANTS } from '@/constants'
@@ -60,8 +61,8 @@ describe('Auth Store Unit Tests', () => {
 
     authStore.loadUserFromStorage()
 
-    expect(authStore.user).to.be.null
-    expect(authStore.authenticated).to.be.false
+    assert.isNull(authStore.user)
+    assert.isFalse(authStore.authenticated)
   })
 
   it('should parse a valid ID token', () => {
@@ -148,8 +149,8 @@ describe('Auth Store Unit Tests', () => {
     const hasAdminRole = authStore.hasRole('admin')
     const hasGuestRole = authStore.hasRole('guest')
 
-    expect(hasAdminRole).to.be.true
-    expect(hasGuestRole).to.be.false
+    assert.isTrue(hasAdminRole)
+    assert.isFalse(hasGuestRole)
   })
 
   it('should logout the user', () => {
@@ -229,8 +230,8 @@ describe('Auth Store Unit Tests', () => {
     sessionStorage.removeItem(AUTH_SESSION_KEY)
     authStore.loadUserFromStorage()
 
-    expect(authStore.user).to.be.null
-    expect(authStore.authenticated).to.be.false
+    assert.isNull(authStore.user)
+    assert.isFalse(authStore.authenticated)
   })
 
   it('should update user correctly', () => {

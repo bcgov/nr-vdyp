@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import { setActivePinia, createPinia } from 'pinia'
 import JSZip from 'jszip'
 import { useProjectionStore } from '@/stores/projection/projectionStore'
@@ -56,7 +57,7 @@ describe('Projection Store Unit Tests', () => {
     })
 
     it('should initialize rawResultZipFile as null', () => {
-      expect(store.rawResultZipFile).to.be.null
+      assert.isNull(store.rawResultZipFile)
     })
 
     it('should initialize rawResultZipFileName as empty string', () => {
@@ -201,7 +202,7 @@ describe('Projection Store Unit Tests', () => {
       } catch {
         threw = true
       }
-      expect(threw).to.be.true
+      assert.isTrue(threw)
     })
 
     it('should throw when ProgressLog.txt is missing', async () => {
@@ -212,7 +213,7 @@ describe('Projection Store Unit Tests', () => {
       } catch {
         threw = true
       }
-      expect(threw).to.be.true
+      assert.isTrue(threw)
     })
 
     it('should throw when YieldTable.csv is missing', async () => {
@@ -223,7 +224,7 @@ describe('Projection Store Unit Tests', () => {
       } catch {
         threw = true
       }
-      expect(threw).to.be.true
+      assert.isTrue(threw)
     })
 
     it('should throw when ZIP is completely empty', async () => {
@@ -235,7 +236,7 @@ describe('Projection Store Unit Tests', () => {
       } catch {
         threw = true
       }
-      expect(threw).to.be.true
+      assert.isTrue(threw)
     })
   })
 

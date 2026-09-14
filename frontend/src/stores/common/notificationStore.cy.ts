@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import { setActivePinia, createPinia } from 'pinia'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { MESSAGE_TYPE, NOTIFICATION } from '@/constants/constants'
@@ -45,8 +46,8 @@ describe('Notification Store Unit Tests', () => {
     notificationStore.showMessage('Test', MESSAGE_TYPE.INFO)
     notificationStore.resetMessage()
 
-    expect(notificationStore.isShow).to.be.false
-    expect(notificationStore.timeoutId).to.be.null
+    assert.isFalse(notificationStore.isShow)
+    assert.isNull(notificationStore.timeoutId)
   })
 
   it(

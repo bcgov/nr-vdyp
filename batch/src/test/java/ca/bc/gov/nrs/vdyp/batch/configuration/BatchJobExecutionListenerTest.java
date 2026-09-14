@@ -32,6 +32,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
+import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 
@@ -46,12 +47,14 @@ class BatchJobExecutionListenerTest {
 	private JobInstance jobInstance;
 	@Mock
 	private JobOwnershipService ownershipService;
+	@Mock
+	private PrioritizationPauseTracker pauseTracker;
 
 	private BatchJobExecutionListener listener;
 
 	@BeforeEach
 	void setUp() {
-		listener = new BatchJobExecutionListener(ownershipService);
+		listener = new BatchJobExecutionListener(ownershipService, pauseTracker);
 	}
 
 	@Test
@@ -185,7 +188,7 @@ class BatchJobExecutionListenerTest {
 	}
 
 	@Test
-	void testAfterJob_StoppedJob_DoesNotDeletePartitionDirectories(@TempDir Path tempDir) throws IOException {
+	void testAfterJob_StoppedJob_PausedForResume_DoesNotDeleteJobDirectory(@TempDir Path tempDir) throws IOException {
 		Long jobId = 8L;
 		String jobGuid = "guid-008";
 		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir-stopped"));
@@ -199,6 +202,7 @@ class BatchJobExecutionListenerTest {
 		when(jobExecution.getStatus()).thenReturn(BatchStatus.STOPPED);
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
 		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+		when(pauseTracker.isPausedForResume(jobId)).thenReturn(true);
 
 		listener.beforeJob(jobExecution);
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
@@ -208,7 +212,30 @@ class BatchJobExecutionListenerTest {
 	}
 
 	@Test
-	void testAfterJob_FailedJob_DoesNotDeletePartitionDirectories(@TempDir Path tempDir) throws IOException {
+	void testAfterJob_StoppedJob_NotPausedForResume_DeletesJobDirectory(@TempDir Path tempDir) throws IOException {
+		Long jobId = 10L;
+		String jobGuid = "guid-010";
+		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir-cancelled"));
+		Files.createDirectory(jobBaseDir.resolve("input-partition5"));
+
+		JobParameters jobParameters = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
+				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir.toString()).toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(jobId);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getStatus()).thenReturn(BatchStatus.STOPPED);
+		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now().minusMinutes(1));
+		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
+		when(pauseTracker.isPausedForResume(jobId)).thenReturn(false);
+
+		listener.beforeJob(jobExecution);
+		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+
+		assertTrue(Files.notExists(jobBaseDir));
+	}
+
+	@Test
+	void testAfterJob_FailedJob_DeletesJobDirectory(@TempDir Path tempDir) throws IOException {
 		Long jobId = 9L;
 		String jobGuid = "guid-009";
 		Path jobBaseDir = Files.createDirectory(tempDir.resolve("job-dir-failed"));
@@ -225,7 +252,7 @@ class BatchJobExecutionListenerTest {
 		listener.beforeJob(jobExecution);
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
 
-		assertTrue(Files.exists(jobBaseDir));
+		assertTrue(Files.notExists(jobBaseDir));
 	}
 
 	@Test

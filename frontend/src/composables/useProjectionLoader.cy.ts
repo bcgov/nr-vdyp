@@ -31,12 +31,12 @@ describe('useProjectionLoader Unit Tests', () => {
   describe('Initial State', () => {
     it('should initialize isLoading as false', () => {
       const { isLoading } = useProjectionLoader()
-      expect(isLoading.value).to.be.false
+      cy.wrap(isLoading.value).should('be.false')
     })
 
     it('should initialize loadError as null', () => {
       const { loadError } = useProjectionLoader()
-      expect(loadError.value).to.be.null
+      cy.wrap(loadError.value).should('be.null')
     })
   })
 
@@ -49,9 +49,7 @@ describe('useProjectionLoader Unit Tests', () => {
       })
 
       const { loadProjection } = useProjectionLoader()
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then((result: any) => {
-        expect(result).to.be.true
-      })
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).should('be.true')
     })
 
     it('should set modelSelection to INPUT_MODEL_PARAMETERS', () => {
@@ -134,9 +132,9 @@ describe('useProjectionLoader Unit Tests', () => {
       })
 
       const { loadProjection, isLoading } = useProjectionLoader()
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
-        expect(isLoading.value).to.be.false
-      })
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT))
+        .then(() => isLoading.value)
+        .should('be.false')
     })
   })
 
@@ -200,9 +198,9 @@ describe('useProjectionLoader Unit Tests', () => {
       const getFileSetFilesStub = cy.stub(apiClient, 'getFileSetFiles').resolves({ data: [] })
 
       const { loadProjection } = useProjectionLoader()
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
-        expect(getFileSetFilesStub).to.not.have.been.called
-      })
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT))
+        .then(() => getFileSetFilesStub)
+        .should('not.have.been.called')
     })
 
     it('should apply polygon file info to fileUploadStore when fileset has files', () => {
@@ -217,9 +215,7 @@ describe('useProjectionLoader Unit Tests', () => {
       })
 
       const { loadProjection } = useProjectionLoader()
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then((result: any) => {
-        expect(result).to.be.true
-      })
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).should('be.true')
     })
   })
 
@@ -255,9 +251,9 @@ describe('useProjectionLoader Unit Tests', () => {
       const appStore = useAppStore()
       appStore.setDuplicatedFromInfo({ originalName: 'Previous', duplicatedAt: '2024-01-01T00:00:00Z' })
 
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
-        expect(appStore.duplicatedFromInfo).to.be.null
-      })
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT))
+        .then(() => appStore.duplicatedFromInfo)
+        .should('be.null')
     })
 
     it('should use new Date ISO string as duplicatedAt when createDate is missing', () => {
@@ -285,9 +281,7 @@ describe('useProjectionLoader Unit Tests', () => {
       cy.stub(apiClient, 'getProjection').rejects(new Error('Network error'))
 
       const { loadProjection } = useProjectionLoader()
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then((result: any) => {
-        expect(result).to.be.false
-      })
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).should('be.false')
     })
 
     it('should set loadError when API throws', () => {
@@ -304,9 +298,9 @@ describe('useProjectionLoader Unit Tests', () => {
       cy.stub(apiClient, 'getProjection').rejects(new Error('Network error'))
 
       const { isLoading, loadProjection } = useProjectionLoader()
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
-        expect(isLoading.value).to.be.false
-      })
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT))
+        .then(() => isLoading.value)
+        .should('be.false')
     })
 
     it('should clear loadError on a subsequent successful load', () => {
@@ -322,12 +316,12 @@ describe('useProjectionLoader Unit Tests', () => {
           }),
         })
 
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
-        expect(loadError.value).to.not.be.null
-        cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
-          expect(loadError.value).to.be.null
-        })
-      })
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT))
+        .then(() => loadError.value)
+        .should('not.be.null')
+        .then(() => loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT))
+        .then(() => loadError.value)
+        .should('be.null')
     })
   })
 })

@@ -35,7 +35,8 @@ describe('SpeciesCard.vue', () => {
       props: { ...defaultProps, percent: '100.0' },
     })
 
-    cy.get('.spin-up-arrow-button').click({ force: true })
+    cy.get('.spin-up-arrow-button').trigger('mousedown')
+    cy.get('.spin-up-arrow-button').trigger('mouseup')
     cy.get('input').should('have.value', '100.0')
   })
 
@@ -44,7 +45,8 @@ describe('SpeciesCard.vue', () => {
       props: { ...defaultProps, percent: '0.0' },
     })
 
-    cy.get('.spin-down-arrow-button').click({ force: true })
+    cy.get('.spin-down-arrow-button').trigger('mousedown')
+    cy.get('.spin-down-arrow-button').trigger('mouseup')
     cy.get('input').should('have.value', '0.0')
   })
 
@@ -85,7 +87,7 @@ describe('SpeciesCard.vue', () => {
       props: { ...defaultProps, isDisabled: true, onDelete: onDeleteSpy },
     })
 
-    cy.get('.delete-btn').click({ force: true })
+    cy.get('.delete-btn').invoke('click')
     cy.get('@deleteSpy').should('not.have.been.called')
   })
 
@@ -96,7 +98,8 @@ describe('SpeciesCard.vue', () => {
       props: { ...defaultProps, 'onUpdate:percent': onUpdateSpy },
     })
 
-    cy.get('.spin-up-arrow-button').click({ force: true })
+    cy.get('.spin-up-arrow-button').trigger('mousedown')
+    cy.get('.spin-up-arrow-button').trigger('mouseup')
     cy.get('@updateSpy').should('have.been.called')
   })
 })

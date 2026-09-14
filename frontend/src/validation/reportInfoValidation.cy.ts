@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import {
   validateComparison,
   validateRequiredFields,
@@ -13,42 +14,42 @@ import { CONSTANTS } from '@/constants'
 describe('Report Info Validation Unit Tests', () => {
   context('validateComparison', () => {
     it('should return true when endValue is greater than or equal to startValue', () => {
-      expect(validateComparison('10', '20').isValid).to.be.true
-      expect(validateComparison('50', '50').isValid).to.be.true
+      assert.isTrue(validateComparison('10', '20').isValid)
+      assert.isTrue(validateComparison('50', '50').isValid)
     })
 
     it('should return false when endValue is less than startValue', () => {
-      expect(validateComparison('30', '20').isValid).to.be.false
+      assert.isFalse(validateComparison('30', '20').isValid)
     })
 
     it('should return true when startValue or endValue is null', () => {
-      expect(validateComparison(null, '30').isValid).to.be.true
-      expect(validateComparison('30', null).isValid).to.be.true
-      expect(validateComparison(null, null).isValid).to.be.true
+      assert.isTrue(validateComparison(null, '30').isValid)
+      assert.isTrue(validateComparison('30', null).isValid)
+      assert.isTrue(validateComparison(null, null).isValid)
     })
   })
 
   context('validateRequiredFields', () => {
     it('should return true when all required fields are provided', () => {
-      expect(validateRequiredFields('10', '20','5').isValid).to.be.true
+      assert.isTrue(validateRequiredFields('10', '20', '5').isValid)
     })
 
     it('should return false when any required field is null', () => {
-      expect(validateRequiredFields(null, '20', '5').isValid).to.be.false
-      expect(validateRequiredFields('10', null, '5').isValid).to.be.false
-      expect(validateRequiredFields('10', '20', null).isValid).to.be.false
+      assert.isFalse(validateRequiredFields(null, '20', '5').isValid)
+      assert.isFalse(validateRequiredFields('10', null, '5').isValid)
+      assert.isFalse(validateRequiredFields('10', '20', null).isValid)
     })
   })
 
   context('validateAgeRange', () => {
     it('should return true for valid age values within range', () => {
-      expect(
+      assert.isTrue(
         validateAgeRange(
           String(CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN),
           String(CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX),
           String(CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN),
         ).isValid,
-      ).to.be.true
+      )
     })
 
     it('should return false and errorType "startingAge" for out of range startingAge', () => {
@@ -106,19 +107,19 @@ describe('Report Info Validation Unit Tests', () => {
     })
 
     it('should return true when null values are provided', () => {
-      expect(validateAgeRange(null, null, null).isValid).to.be.true
+      assert.isTrue(validateAgeRange(null, null, null).isValid)
     })
   })
 
   context('validateYearRange', () => {
     it('should return true for valid year values within range', () => {
-      expect(
+      assert.isTrue(
         validateYearRange(
           String(CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN),
           String(CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX),
           String(CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN),
         ).isValid,
-      ).to.be.true
+      )
     })
 
     it('should return false and errorType "startYear" for out of range startYear', () => {
@@ -176,37 +177,37 @@ describe('Report Info Validation Unit Tests', () => {
     })
 
     it('should return true when null values are provided', () => {
-      expect(validateYearRange(null, null, null).isValid).to.be.true
+      assert.isTrue(validateYearRange(null, null, null).isValid)
     })
   })
 
   context('validateReportTitle', () => {
     it('should return true when report title is provided', () => {
-      expect(validateReportTitle('My Report').isValid).to.be.true
+      assert.isTrue(validateReportTitle('My Report').isValid)
     })
 
     it('should return false when report title is null', () => {
-      expect(validateReportTitle(null).isValid).to.be.false
+      assert.isFalse(validateReportTitle(null).isValid)
     })
 
     it('should return false when report title is empty or whitespace', () => {
-      expect(validateReportTitle('').isValid).to.be.false
-      expect(validateReportTitle('   ').isValid).to.be.false
+      assert.isFalse(validateReportTitle('').isValid)
+      assert.isFalse(validateReportTitle('   ').isValid)
     })
   })
 
   context('validateProjectionType', () => {
     it('should return true when projection type is provided', () => {
-      expect(validateProjectionType('AGE').isValid).to.be.true
+      assert.isTrue(validateProjectionType('AGE').isValid)
     })
 
     it('should return false when projection type is null', () => {
-      expect(validateProjectionType(null).isValid).to.be.false
+      assert.isFalse(validateProjectionType(null).isValid)
     })
 
     it('should return false when projection type is empty or whitespace', () => {
-      expect(validateProjectionType('').isValid).to.be.false
-      expect(validateProjectionType('   ').isValid).to.be.false
+      assert.isFalse(validateProjectionType('').isValid)
+      assert.isFalse(validateProjectionType('   ').isValid)
     })
   })
 })

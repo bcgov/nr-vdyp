@@ -11,22 +11,7 @@ const meta: Meta<typeof ProjectionStatusBadge> = {
       options: ['Draft', 'Ready', 'Running', 'Failed'],
       description: 'The projection status',
     },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
-A badge component that displays a projection status with an icon and styled text.
-
-**Status styles:**
-- **Draft**: Bold text with secondary color
-- **Ready**: Bold text with success color
-- **Running**: Bold text with warning color
-- **Failed**: Bold text with error color
-        `,
-      },
-    },
-  },
+  }
 }
 
 export default meta

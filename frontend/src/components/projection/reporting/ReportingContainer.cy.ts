@@ -132,7 +132,8 @@ describe('ReportingContainer.vue', () => {
   describe('button click actions', () => {
     beforeEach(() => {
       cy.window().then((win) => {
-        cy.stub(win.HTMLAnchorElement.prototype, 'click')
+        cy.stub(win.URL, 'createObjectURL').as('createObjectURL').returns('blob:mock-url')
+        cy.stub(win.URL, 'revokeObjectURL').as('revokeObjectURL')
       })
     })
 
@@ -142,11 +143,10 @@ describe('ReportingContainer.vue', () => {
         txtYieldLines: ['Text line'],
       })
       cy.contains('button', 'Download Yield Table').click()
+      cy.get('@createObjectURL').should('have.been.calledOnce')
     })
 
     it('clicking Print with data does not throw', () => {
-      // printJS appends an <iframe id="printJS"> and calls iframe.contentWindow.print().
-      // Intercept via MutationObserver before the iframe's onload fires.
       cy.window().then((win) => {
         const observer = new win.MutationObserver((mutations) => {
           for (const mutation of mutations) {
@@ -178,6 +178,7 @@ describe('ReportingContainer.vue', () => {
         csvYieldLines: ['csv,data'],
       })
       cy.contains('button', 'Print').click()
+      cy.get('#printJS').should('exist')
     })
   })
 })

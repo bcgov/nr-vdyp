@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import { setActivePinia, createPinia } from 'pinia'
 import { useReportingStore } from '@/stores/reportingStore'
 
@@ -12,29 +13,29 @@ describe('Reporting Store Unit Tests', () => {
   })
 
   it('should initialize with default state', () => {
-    expect(reportingStore.modelParamReportingTabsEnabled).to.be.false
-    expect(reportingStore.fileUploadReportingTabsEnabled).to.be.false
+    assert.isFalse(reportingStore.modelParamReportingTabsEnabled)
+    assert.isFalse(reportingStore.fileUploadReportingTabsEnabled)
   })
 
   it('should enable modelParamReportingTabs', () => {
     reportingStore.modelParamEnableTabs()
-    expect(reportingStore.modelParamReportingTabsEnabled).to.be.true
+    assert.isTrue(reportingStore.modelParamReportingTabsEnabled)
   })
 
   it('should disable modelParamReportingTabs', () => {
     reportingStore.modelParamEnableTabs() // First enable
     reportingStore.modelParamDisableTabs()
-    expect(reportingStore.modelParamReportingTabsEnabled).to.be.false
+    assert.isFalse(reportingStore.modelParamReportingTabsEnabled)
   })
 
   it('should enable fileUploadReportingTabs', () => {
     reportingStore.fileUploadEnableTabs()
-    expect(reportingStore.fileUploadReportingTabsEnabled).to.be.true
+    assert.isTrue(reportingStore.fileUploadReportingTabsEnabled)
   })
 
   it('should disable fileUploadReportingTabs', () => {
     reportingStore.fileUploadEnableTabs() // First enable
     reportingStore.fileUploadDisableTabs()
-    expect(reportingStore.fileUploadReportingTabsEnabled).to.be.false
+    assert.isFalse(reportingStore.fileUploadReportingTabsEnabled)
   })
 })

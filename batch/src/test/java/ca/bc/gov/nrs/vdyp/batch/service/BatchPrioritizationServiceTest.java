@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
@@ -139,7 +140,7 @@ class BatchPrioritizationServiceTest {
 		when(jobOperator.stop(200L)).thenReturn(true);
 		when(jobOperator.stop(300L)).thenReturn(true);
 		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
-		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(new JobExecution(999L));
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt())).thenReturn(new JobExecution(999L));
 
 		PrioritizeOutcome outcome = service.prioritizeLocally("guid", target);
 
@@ -148,9 +149,11 @@ class BatchPrioritizationServiceTest {
 
 		InOrder order = inOrder(jobOperator, claimBoundJobLauncher);
 		order.verify(jobOperator).stop(200L);
-		order.verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(firstOther.getJobParameters()), any());
+		order.verify(claimBoundJobLauncher)
+				.launch(eq(fetchAndPartitionJob), eq(firstOther.getJobParameters()), any(), anyInt());
 		order.verify(jobOperator).stop(300L);
-		order.verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(secondOther.getJobParameters()), any());
+		order.verify(claimBoundJobLauncher)
+				.launch(eq(fetchAndPartitionJob), eq(secondOther.getJobParameters()), any(), anyInt());
 
 		verify(jobOperator, never()).stop(100L);
 	}
@@ -163,11 +166,11 @@ class BatchPrioritizationServiceTest {
 
 		when(jobOperator.stop(200L)).thenThrow(new JobExecutionNotRunningException("already stopped"));
 		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
-		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(new JobExecution(999L));
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt())).thenReturn(new JobExecution(999L));
 
 		service.prioritizeLocally("guid", target);
 
-		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any());
+		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any(), anyInt());
 	}
 
 	@Test
@@ -178,13 +181,14 @@ class BatchPrioritizationServiceTest {
 
 		when(jobOperator.stop(200L)).thenReturn(true);
 		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
-		when(claimBoundJobLauncher.launch(any(), any(), any()))
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt()))
 				.thenThrow(new JobExecutionAlreadyRunningException("still stopping"))
 				.thenReturn(new JobExecution(999L));
 
 		service.prioritizeLocally("guid", target);
 
-		verify(claimBoundJobLauncher, times(2)).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any());
+		verify(claimBoundJobLauncher, times(2))
+				.launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any(), anyInt());
 	}
 
 	@Test
@@ -195,12 +199,13 @@ class BatchPrioritizationServiceTest {
 
 		when(jobOperator.stop(200L)).thenReturn(true);
 		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
-		when(claimBoundJobLauncher.launch(any(), any(), any()))
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt()))
 				.thenThrow(new JobExecutionAlreadyRunningException("still stopping"));
 
 		service.prioritizeLocally("guid", target);
 
-		verify(claimBoundJobLauncher, atLeast(2)).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any());
+		verify(claimBoundJobLauncher, atLeast(2))
+				.launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any(), anyInt());
 	}
 
 	@Test
@@ -214,13 +219,14 @@ class BatchPrioritizationServiceTest {
 		when(jobOperator.stop(200L)).thenThrow(new RuntimeException("boom"));
 		when(jobOperator.stop(300L)).thenReturn(true);
 		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.of(claim("resume")));
-		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(new JobExecution(999L));
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt())).thenReturn(new JobExecution(999L));
 
 		service.prioritizeLocally("guid", target);
 
 		verify(claimBoundJobLauncher, never())
-				.launch(eq(fetchAndPartitionJob), eq(firstOther.getJobParameters()), any());
-		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(secondOther.getJobParameters()), any());
+				.launch(eq(fetchAndPartitionJob), eq(firstOther.getJobParameters()), any(), anyInt());
+		verify(claimBoundJobLauncher)
+				.launch(eq(fetchAndPartitionJob), eq(secondOther.getJobParameters()), any(), anyInt());
 	}
 
 	@Test
@@ -232,11 +238,11 @@ class BatchPrioritizationServiceTest {
 		when(jobOperator.stop(200L)).thenReturn(true);
 		when(ownershipService.tryAcquire(anyString(), anyString())).thenReturn(Optional.empty())
 				.thenReturn(Optional.of(claim("resume")));
-		when(claimBoundJobLauncher.launch(any(), any(), any())).thenReturn(new JobExecution(999L));
+		when(claimBoundJobLauncher.launch(any(), any(), any(), anyInt())).thenReturn(new JobExecution(999L));
 
 		service.prioritizeLocally("guid", target);
 
-		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any());
+		verify(claimBoundJobLauncher).launch(eq(fetchAndPartitionJob), eq(other.getJobParameters()), any(), anyInt());
 	}
 
 	private JobExecution targetExecution() {

@@ -17,22 +17,7 @@ const meta: Meta<typeof ReportingActions> = {
       description:
         'Active reporting tab. Changes the Download button label to "Download Yield Table" on the Model Report tab.',
     },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
-Action button bar for the reporting view, providing Print and Download actions.
-
-**Buttons:**
-- **Print**: Always labelled "Print". Emits \`print\` on click.
-- **Download**: Labelled "Download Yield Table" on the Model Report tab, "Download" on all other tabs. Emits \`download\` on click.
-
-Both buttons are disabled together via the \`isButtonDisabled\` prop.
-        `,
-      },
-    },
-  },
+  }
 }
 
 export default meta

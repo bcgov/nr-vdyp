@@ -374,6 +374,6 @@ const validateAndRefreshToken = async () => {
 
 .bordered-table td {
   white-space: normal;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 </style>

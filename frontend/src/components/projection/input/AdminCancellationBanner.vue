@@ -1,6 +1,6 @@
 <template>
   <div class="admin-cancellation-banner" role="alert">
-    <p class="admin-cancellation-banner--text">{{ reason }}</p>
+    <p class="admin-cancellation-banner--text">Cancel Reason: {{ reason }}</p>
   </div>
 </template>
 

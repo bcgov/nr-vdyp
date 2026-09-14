@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import {
   validateComparison,
   validateRequiredFields,
@@ -20,42 +21,42 @@ const createFile = (content: any, fileName: any, mimeType: any) => {
 describe('File Upload Validation Unit Tests', () => {
   context('validateComparison', () => {
     it('should return true when finishingAge is greater than or equal to startingAge', () => {
-      expect(validateComparison(10, 20).isValid).to.be.true
-      expect(validateComparison(50, 50).isValid).to.be.true
+      assert.isTrue(validateComparison(10, 20).isValid)
+      assert.isTrue(validateComparison(50, 50).isValid)
     })
 
     it('should return false when finishingAge is less than startingAge', () => {
-      expect(validateComparison(30, 20).isValid).to.be.false
+      assert.isFalse(validateComparison(30, 20).isValid)
     })
 
     it('should return true when startingAge or finishingAge is null', () => {
-      expect(validateComparison(null, 30).isValid).to.be.true
-      expect(validateComparison(30, null).isValid).to.be.true
-      expect(validateComparison(null, null).isValid).to.be.true
+      assert.isTrue(validateComparison(null, 30).isValid)
+      assert.isTrue(validateComparison(30, null).isValid)
+      assert.isTrue(validateComparison(null, null).isValid)
     })
   })
 
   context('validateRequiredFields', () => {
     it('should return true when all fields are provided', () => {
-      expect(validateRequiredFields(10, 20, 5).isValid).to.be.true
+      assert.isTrue(validateRequiredFields(10, 20, 5).isValid)
     })
 
     it('should return false when any field is null', () => {
-      expect(validateRequiredFields(null, 20, 5).isValid).to.be.false
-      expect(validateRequiredFields(10, null, 5).isValid).to.be.false
-      expect(validateRequiredFields(10, 20, null).isValid).to.be.false
+      assert.isFalse(validateRequiredFields(null, 20, 5).isValid)
+      assert.isFalse(validateRequiredFields(10, null, 5).isValid)
+      assert.isFalse(validateRequiredFields(10, 20, null).isValid)
     })
   })
 
   context('validateRange', () => {
     it('should return true for valid age values within range', () => {
-      expect(
+      assert.isTrue(
         validateRange(
           CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
           CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
           CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
         ).isValid,
-      ).to.be.true
+      )
     })
 
     it('should return false and errorType "startingAge" for out of range startingAge', () => {
@@ -131,7 +132,7 @@ describe('File Upload Validation Unit Tests', () => {
         createFile('', 'polygon.csv', 'text/csv'),
         createFile('', 'layer.csv', 'text/csv'),
       )
-      expect(result.isValid).to.be.true
+      assert.isTrue(result.isValid)
     })
   })
 
@@ -229,7 +230,7 @@ describe('File Upload Validation Unit Tests', () => {
       expect(result.isValid).to.be.false
       expect(result.duplicates).to.include('COL1')
       expect(result.duplicates).to.include('COL2')
-      expect(result.duplicates.length).to.equal(2)
+      expect(result.duplicates).to.have.lengthOf(2)
     })
 
     it('should handle empty columns and whitespace correctly', async () => {
@@ -266,7 +267,7 @@ describe('File Upload Validation Unit Tests', () => {
       expect(result.isValid).to.be.false
       expect(result.duplicates).to.include('LAYER1')
       expect(result.duplicates).to.include('LAYER2')
-      expect(result.duplicates.length).to.equal(2)
+      expect(result.duplicates).to.have.lengthOf(2)
     })
 
     it('should handle empty columns and whitespace correctly', async () => {

@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import { assert } from 'chai'
 import {
   validateRequiredFields,
   validateRange,
@@ -11,107 +12,106 @@ describe('Site Info Validation Unit Tests', () => {
   context('validateRequiredFields', () => {
     it('should return false when siteSpeciesValues is Computed and any field is empty or zero', () => {
       // All fields empty
-      expect(
+      assert.isFalse(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
           null,
           null,
           null,
         ).isValid,
-      ).to.be.false
+      )
 
       // spzAge zero, others valid
-      expect(
+      assert.isFalse(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
           '0',
           '15.0',
           '20.0',
         ).isValid,
-      ).to.be.false
+      )
 
       // spzHeight empty, others valid
-      expect(
+      assert.isFalse(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
           '50',
           null,
           '20.0',
         ).isValid,
-      ).to.be.false
+      )
     })
 
     it('should return true when siteSpeciesValues is Computed and all fields are valid', () => {
-      expect(
+      assert.isTrue(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
           '50',
           '15.0',
           '20.0',
         ).isValid,
-      ).to.be.true
+      )
     })
 
     it('should return false when siteSpeciesValues is Supplied and bha50SiteIndex is empty or zero', () => {
       // bha50SiteIndex empty
-      expect(
+      assert.isFalse(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
           null,
           null,
           null,
         ).isValid,
-      ).to.be.false
+      )
 
       // bha50SiteIndex zero
-      expect(
+      assert.isFalse(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
           null,
           null,
           '0',
         ).isValid,
-      ).to.be.false
+      )
     })
 
     it('should return true when siteSpeciesValues is Supplied and bha50SiteIndex is valid', () => {
-      expect(
+      assert.isTrue(
         validateRequiredFields(
           CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
           null,
           null,
           '20.0',
         ).isValid,
-      ).to.be.true
+      )
     })
 
     it('should return true for unknown siteSpeciesValues', () => {
-      expect(validateRequiredFields('Unknown', null, null, null).isValid).to.be
-        .true
+      assert.isTrue(validateRequiredFields('Unknown', null, null, null).isValid)
     })
   })
 
   context('validateRange', () => {
     it('should return true for empty values', () => {
-      expect(validateRange(null, null, null).isValid).to.be.true
+      assert.isTrue(validateRange(null, null, null).isValid)
     })
 
     it('should validate spzAge range correctly', () => {
       // Valid range
-      expect(
+      assert.isTrue(
         validateRange(
           String(CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN),
           null,
           null,
         ).isValid,
-      ).to.be.true
-      expect(
+      )
+      assert.isTrue(
         validateRange(
           String(CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX),
           null,
           null,
         ).isValid,
-      ).to.be.true
+      )
 
       // Out of range
       const belowMinResult = validateRange(
@@ -245,14 +245,14 @@ describe('Site Info Validation Unit Tests', () => {
     })
 
     it('should return true when siteSpeciesValues and becZone are both valid', () => {
-      expect(
+      assert.isTrue(
         validatePreConfirmFields(CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED, 'SBS')
           .isValid,
-      ).to.be.true
-      expect(
+      )
+      assert.isTrue(
         validatePreConfirmFields(CONSTANTS.SITE_SPECIES_VALUES.COMPUTED, 'CWH')
           .isValid,
-      ).to.be.true
+      )
     })
   })
 })

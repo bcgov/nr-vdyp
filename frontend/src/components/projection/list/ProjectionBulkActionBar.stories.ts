@@ -30,23 +30,7 @@ const meta: Meta<typeof ProjectionBulkActionBar> = {
       control: { type: 'boolean' },
       description: 'Enables the Delete action button.',
     },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
-A bulk action bar displayed when one or more projections are selected in the list.
-
-**Actions:**
-- **Close**: Clears the current selection
-- **Download**: Downloads selected projections (disabled when \`canDownload\` is false)
-- **Duplicate**: Duplicates selected projections (disabled when \`canDuplicate\` is false)
-- **Cancel**: Cancels selected projections (disabled when \`canCancel\` is false)
-- **Delete**: Deletes selected projections (disabled when \`canDelete\` is false)
-        `,
-      },
-    },
-  },
+  }
 }
 
 export default meta
