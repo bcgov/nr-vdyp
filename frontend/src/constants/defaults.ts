@@ -16,28 +16,6 @@ export const DEFAULT_VALUES = Object.freeze({
   METHOD_SELECTION: CONSTANTS.METHOD_SELECTION.FILE_UPLOAD,
 })
 
-// Mapping Species Group to Default Utilization Level
-export const SPECIES_GROUP_DEFAULT_UTILIZATION_MAP: {
-  [key: string]: UtilizationClassSetEnum
-} = {
-  AC: UtilizationClassSetEnum._75,
-  AT: UtilizationClassSetEnum._75,
-  B: UtilizationClassSetEnum._125,
-  C: UtilizationClassSetEnum._75,
-  D: UtilizationClassSetEnum._75,
-  E: UtilizationClassSetEnum._75,
-  F: UtilizationClassSetEnum._75,
-  H: UtilizationClassSetEnum._75,
-  L: UtilizationClassSetEnum._75,
-  MB: UtilizationClassSetEnum._75,
-  PA: UtilizationClassSetEnum._75,
-  PL: UtilizationClassSetEnum._75,
-  PW: UtilizationClassSetEnum._75,
-  PY: UtilizationClassSetEnum._75,
-  S: UtilizationClassSetEnum._75,
-  Y: UtilizationClassSetEnum._75,
-}
-
 // Mapping Species Group to Default Utilization Level for Volume Projection
 export const SPECIES_GROUP_VOLUME_UTILIZATION_MAP: {
   [key: string]: UtilizationClassSetEnum

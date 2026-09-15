@@ -165,6 +165,13 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       groupMap[item.species] += Number.parseFloat(item.percent as any) || 0
     }
 
+    // Select the utilization level default map based on the currently selected projection type
+    const utilizationDefaultMap =
+      projectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
+      projectionType.value === CONSTANTS.PROJECTION_TYPE.BOTH
+        ? DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP
+        : DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP
+
     // Convert groupMap to speciesGroups array
     speciesGroups.value = Object.keys(groupMap).map((key) => {
       const group = BIZCONSTANTS.SPECIES_GROUP_MAP[key] || key
@@ -174,7 +181,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
           CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
         ),
         siteSpecies: key,
-        minimumDBHLimit: DEFAULTS.SPECIES_GROUP_DEFAULT_UTILIZATION_MAP[group],
+        minimumDBHLimit: utilizationDefaultMap[group],
       }
     })
 

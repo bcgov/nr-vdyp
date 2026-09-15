@@ -552,7 +552,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		entries.add("VDYP UI Version Number... 8.0");
 		entries.add("VDYP SRVR Version Number. 8.0");
 		entries.add("VDYP SI Version Number... 8.0");
-		entries.add(String.format("SINDEX Version Number.... %3.2f", Sindxdll.VersionNumber() / 100f);
+		entries.add(String.format("SINDEX Version Number.... %3.2f", Sindxdll.VersionNumber() / 100f));
 
 		if (lastPolygonForTrailer == null) {
 			return;

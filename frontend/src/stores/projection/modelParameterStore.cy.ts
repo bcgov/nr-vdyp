@@ -158,6 +158,36 @@ describe('Model Parameter Store', () => {
     expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('25.0')
   })
 
+  it('should apply CFS Biomass utilization defaults when projectionType is already CFS Biomass before species are added (VDYP-1372)', () => {
+    store.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+    store.speciesList[0] = { species: 'PL', percent: '50' }
+    store.speciesList[1] = { species: 'B', percent: '50' }
+    store.updateSpeciesGroup()
+
+    const plGroup = store.speciesGroups.find((g) => g.group === 'PL')
+    const bGroup = store.speciesGroups.find((g) => g.group === 'B')
+    expect(plGroup?.minimumDBHLimit).to.equal(DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP['PL'])
+    expect(bGroup?.minimumDBHLimit).to.equal(DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP['B'])
+  })
+
+  it('should apply CFS Biomass utilization defaults when projectionType is already Both before species are added (VDYP-1372)', () => {
+    store.projectionType = CONSTANTS.PROJECTION_TYPE.BOTH
+    store.speciesList[0] = { species: 'S', percent: '100' }
+    store.updateSpeciesGroup()
+
+    const sGroup = store.speciesGroups.find((g) => g.group === 'S')
+    expect(sGroup?.minimumDBHLimit).to.equal(DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP['S'])
+  })
+
+  it('should apply Volume utilization defaults when projectionType is Volume', () => {
+    store.projectionType = CONSTANTS.PROJECTION_TYPE.VOLUME
+    store.speciesList[0] = { species: 'B', percent: '100' }
+    store.updateSpeciesGroup()
+
+    const bGroup = store.speciesGroups.find((g) => g.group === 'B')
+    expect(bGroup?.minimumDBHLimit).to.equal(DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP['B'])
+  })
+
   it('should apply mode-specific siteIndexRow defaults based on derivedBy and siteSpeciesValues', () => {
     store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
     store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
