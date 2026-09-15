@@ -32,6 +32,26 @@ logs:
   enabled: true
   size: 500Mi
   storageClassName: netapp-file-standard
+  export:
+    enabled: true
+    deleteUploadedLogs: true # Only unchanged rotated files fully included in the verified ZIP.
+    schedule: "0 6 * * *"
+    timeZone: UTC
+    scratchSize: 1Gi
+    s3:
+      # Empty values reuse the existing COMS object-storage configuration.
+      existingSecret: "" # keys: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+      bucket: ""
+      endpoint: ""
+      region: ca-central-1
+      prefix: access-logs
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
 
 #-- the components of the application, backend.
 backend:

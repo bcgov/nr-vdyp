@@ -15,6 +15,7 @@ on:
           - backend
           - frontend
           - batch
+          - log-exporter
 
   push:
     branches:
@@ -22,6 +23,7 @@ on:
     paths:
       - "backend/**"
       - "batch/**"
+      - "log-exporter/**"
       - "charts/**"
       - "frontend/**"
       - "lib/**"
@@ -32,6 +34,7 @@ on:
     paths:
       - "backend/**"
       - "batch/**"
+      - "log-exporter/**"
       - "charts/**"
       - "frontend/**"
       - "lib/**"
@@ -55,7 +58,7 @@ jobs:
       pr: ${{ steps.pr.outputs.pr }}
     strategy:
       matrix:
-        package: [backend, frontend, batch]
+        package: [ backend, frontend, batch, log-exporter ]
     timeout-minutes: 15
     steps:
       - name: Check if package should be built
