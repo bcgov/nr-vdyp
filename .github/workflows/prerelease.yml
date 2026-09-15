@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         component-name: [
-          frontend, backend, batch
+          frontend, backend, batch, log-exporter
         ]
     steps:
       - uses: actions/checkout@v3

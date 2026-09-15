@@ -186,6 +186,10 @@ services:
       - "8080:8080"
     env_file:
       - backend/.env.vdypBackend
+    environment:
+      VDYP_ACCESS_LOG_ENABLED: "${VDYP_ACCESS_LOG_ENABLED:-true}"
+      VDYP_ACCESS_LOG_DIRECTORY: /work/logs
+      VDYP_ACCESS_LOG_BASE_FILE_NAME: access-security
     volumes:
       - ./logs:/work/logs
     deploy:

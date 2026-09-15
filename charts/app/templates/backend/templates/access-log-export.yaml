@@ -1,0 +1,90 @@
+{{- if and .Values.backend.enabled .Values.logs.enabled .Values.logs.export.enabled }}
+{{- $name := printf "%s-access-log-export" (.Release.Name | trunc 44 | trimSuffix "-") }}
+{{- $secret := .Values.logs.export.s3.existingSecret | default $name }}
+{{- if not .Values.logs.export.s3.existingSecret }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $secret }}
+  labels:
+    {{- include "labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: {{ .Values.coms.env.OBJECTSTORAGE_ACCESSKEYID | default "" | quote }}
+  AWS_SECRET_ACCESS_KEY: {{ .Values.coms.env.OBJECTSTORAGE_SECRETACCESSKEY | default "" | quote }}
+---
+{{- end }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.logs.export.schedule | quote }}
+  timeZone: {{ .Values.logs.export.timeZone | quote }}
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 7200
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: access-log-export
+            app.kubernetes.io/instance: {{ .Release.Name }}
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          containers:
+            - name: access-log-export
+              image: "{{ .Values.global.registry }}/{{ .Values.global.repository }}/log-exporter:{{ .Values.global.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              envFrom:
+                - secretRef:
+                    name: {{ $secret }}
+              env:
+                - name: EXPORT_TIMEZONE
+                  value: {{ .Values.logs.export.timeZone | quote }}
+                - name: DELETE_UPLOADED_LOGS
+                  value: {{ .Values.logs.export.deleteUploadedLogs | quote }}
+                - name: POD_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: RELEASE_NAME
+                  value: {{ .Release.Name | quote }}
+                - name: S3_BUCKET
+                  value: {{ .Values.logs.export.s3.bucket | default .Values.coms.env.OBJECTSTORAGE_BUCKET | default "" | quote }}
+                - name: S3_ENDPOINT
+                  value: {{ .Values.logs.export.s3.endpoint | default .Values.coms.env.OBJECTSTORAGE_ENDPOINT | default "" | quote }}
+                - name: AWS_DEFAULT_REGION
+                  value: {{ .Values.logs.export.s3.region | quote }}
+                - name: S3_PREFIX
+                  value: {{ .Values.logs.export.s3.prefix | quote }}
+                - name: AWS_EC2_METADATA_DISABLED
+                  value: "true"
+              resources:
+                {{- toYaml .Values.logs.export.resources | nindent 16 }}
+              volumeMounts:
+                - name: logs
+                  mountPath: /work/logs
+                  readOnly: false
+                - name: scratch
+                  mountPath: /tmp
+          volumes:
+            - name: logs
+              persistentVolumeClaim:
+                claimName: {{ .Release.Name | trunc 58 | trimSuffix "-" }}-logs
+            - name: scratch
+              emptyDir:
+                sizeLimit: {{ .Values.logs.export.scratchSize }}
+{{- end }}
