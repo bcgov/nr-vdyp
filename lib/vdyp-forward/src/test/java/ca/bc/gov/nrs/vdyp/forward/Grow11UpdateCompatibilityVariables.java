@@ -72,7 +72,7 @@ class Grow11UpdateCompatibilityVariables {
 		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 		assertThat(
 				// VDYP7 reports BASAL_AREA = -2.13947629e-07, all others 0.0
-				lps.getCvPrimaryLayerSmall()[1],
+				lps.getCvPrimaryLayerSmall(1),
 				allOf(
 						hasEntry(is(UtilizationClassVariable.BASAL_AREA), closeTo(-2.1394816e-07f)),
 						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), is(0.0f)),
@@ -83,7 +83,7 @@ class Grow11UpdateCompatibilityVariables {
 		assertThat(
 				// VDYP7 reports BASAL_AREA = -4.49605286e-05, QUAD_MEAN_DIAMETER = 0.00236749649
 				// LOREY_HEIGHT = 1.19209221e-06, WHOLE_STEM_VOLUME = 0.00102931913
-				lps.getCvPrimaryLayerSmall()[2],
+				lps.getCvPrimaryLayerSmall(2),
 				allOf(
 						hasEntry(is(UtilizationClassVariable.BASAL_AREA), closeTo(-4.406223e-5f)),
 						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), closeTo(0.0023196794f)),
@@ -94,7 +94,7 @@ class Grow11UpdateCompatibilityVariables {
 		assertThat(
 				// VDYP7 reports BASAL_AREA = 4.94660344e-6, QUAD_MEAN_DIAMETER = 0.0
 				// LOREY_HEIGHT = -1.55569342e-5, WHOLE_STEM_VOLUME = 0.0
-				lps.getCvPrimaryLayerSmall()[3],
+				lps.getCvPrimaryLayerSmall(3),
 				allOf(
 						hasEntry(is(UtilizationClassVariable.BASAL_AREA), closeTo(4.8476713e-6f)),
 						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), is(0.0f)),
@@ -104,7 +104,7 @@ class Grow11UpdateCompatibilityVariables {
 		);
 		assertThat(
 				// VDYP7 reports 0.0 for all
-				lps.getCvPrimaryLayerSmall()[4],
+				lps.getCvPrimaryLayerSmall(4),
 				allOf(
 						hasEntry(is(UtilizationClassVariable.BASAL_AREA), is(0.0f)),
 						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), is(0.0f)),
@@ -114,7 +114,7 @@ class Grow11UpdateCompatibilityVariables {
 		);
 		assertThat(
 				// VDYP7 reports BASAL_AREA = 3.42086423e-06, LOREY_HEIGHT = -5.7758567e-5, 0.0 for all others
-				lps.getCvPrimaryLayerSmall()[5],
+				lps.getCvPrimaryLayerSmall(5),
 				allOf(
 						hasEntry(is(UtilizationClassVariable.BASAL_AREA), closeTo(3.352447e-6f)),
 						hasEntry(is(UtilizationClassVariable.QUAD_MEAN_DIAMETER), is(0.0f)),

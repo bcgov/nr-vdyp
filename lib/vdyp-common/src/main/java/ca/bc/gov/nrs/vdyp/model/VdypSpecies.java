@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.model;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -31,10 +30,7 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 
 	// Compatibility Variables
 
-	private Optional<MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>> cvVolume = Optional.empty();
-	private Optional<MatrixMap2<UtilizationClass, LayerType, Float>> cvBasalArea = Optional.empty();
-	private Optional<MatrixMap2<UtilizationClass, LayerType, Float>> cvQuadraticMeanDiameter = Optional.empty();
-	private Optional<Map<UtilizationClassVariable, Float>> cvPrimaryLayerSmall = Optional.empty();
+	private Optional<CompatibilityVariables> compatibilityVariables = Optional.empty();
 
 	public VdypSpecies(
 			PolygonIdentifier polygonIdentifier, LayerType layer, String genus, int genusIndex,
@@ -205,47 +201,36 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization;
 	}
 
-	public void setCompatibilityVariables(
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume,
-			MatrixMap2<UtilizationClass, LayerType, Float> cvBasalArea,
-			MatrixMap2<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter,
-			Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall
-	) {
-
-		this.cvVolume = Optional.of(cvVolume);
-		this.cvBasalArea = Optional.of(cvBasalArea);
-		this.cvQuadraticMeanDiameter = Optional.of(cvQuadraticMeanDiameter);
-		this.cvPrimaryLayerSmall = Optional.of(cvPrimaryLayerSmall);
+	public void setCompatibilityVariables(CompatibilityVariables compatibilityVariables) {
+		this.compatibilityVariables = Optional.of(compatibilityVariables);
 	}
 
 	public float getCvVolume(UtilizationClass uc, VolumeVariable vv, LayerType lt) {
-		if (cvVolume.isEmpty()) {
-			throw new InitializationIncompleteException(MessageFormat.format("Species {0}: cvVolume", this));
-		}
-		return cvVolume.get().get(uc, vv, lt);
+		return compatibilityVariables.orElseThrow(
+				() -> new InitializationIncompleteException(MessageFormat.format("Species {0}: cvVolume", this))
+		).volume().get(uc, vv, lt);
 	}
 
 	public float getCvBasalArea(UtilizationClass uc, LayerType lt) {
-		if (cvBasalArea.isEmpty()) {
-			throw new InitializationIncompleteException(MessageFormat.format("Species {0}: cvBasalArea", this));
-		}
-		return cvBasalArea.get().get(uc, lt);
+		return compatibilityVariables.orElseThrow(
+				() -> new InitializationIncompleteException(MessageFormat.format("Species {0}: cvBasalArea", this))
+		).basalArea().get(uc, lt);
 	}
 
 	public float getCvQuadraticMeanDiameter(UtilizationClass uc, LayerType lt) {
-		if (cvQuadraticMeanDiameter.isEmpty()) {
-			throw new InitializationIncompleteException(
-					MessageFormat.format("Species {0}: cvQuadraticMeanDiameter", this)
-			);
-		}
-		return cvQuadraticMeanDiameter.get().get(uc, lt);
+		return compatibilityVariables.orElseThrow(
+				() -> new InitializationIncompleteException(
+						MessageFormat.format("Species {0}: cvQuadraticMeanDiameter", this)
+				)
+		).quadraticMeanDiameter().get(uc, lt);
 	}
 
 	public float getCvPrimaryLayerSmall(UtilizationClassVariable ucv) {
-		if (cvPrimaryLayerSmall.isEmpty()) {
-			throw new InitializationIncompleteException(MessageFormat.format("Species {0}: cvPrimaryLayerSmall", this));
-		}
-		return cvPrimaryLayerSmall.get().get(ucv);
+		return compatibilityVariables.orElseThrow(
+				() -> new InitializationIncompleteException(
+						MessageFormat.format("Species {0}: cvPrimaryLayerSmall", this)
+				)
+		).primaryLayerSmall().get(ucv);
 	}
 
 	/**
@@ -533,10 +518,18 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 				closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization
 		);
 
-		Dumpable.writeProperty(output, indent + 1, "cvVolume", cvVolume);
-		Dumpable.writeProperty(output, indent + 1, "cvBasalArea", cvBasalArea);
-		Dumpable.writeProperty(output, indent + 1, "cvQuadraticMeanDiameter", cvQuadraticMeanDiameter);
-		Dumpable.writeProperty(output, indent + 1, "cvPrimaryLayerSmall", cvPrimaryLayerSmall);
+		if (compatibilityVariables.isPresent()) {
+			var cv = compatibilityVariables.get();
+			Dumpable.writeProperty(output, indent + 1, "cvVolume", cv.volume());
+			Dumpable.writeProperty(output, indent + 1, "cvBasalArea", cv.basalArea());
+			Dumpable.writeProperty(output, indent + 1, "cvQuadraticMeanDiameter", cv.quadraticMeanDiameter());
+			Dumpable.writeProperty(output, indent + 1, "cvPrimaryLayerSmall", cv.primaryLayerSmall());
+		} else {
+			Dumpable.writeProperty(output, indent + 1, "cvVolume", Optional.empty());
+			Dumpable.writeProperty(output, indent + 1, "cvBasalArea", Optional.empty());
+			Dumpable.writeProperty(output, indent + 1, "cvQuadraticMeanDiameter", Optional.empty());
+			Dumpable.writeProperty(output, indent + 1, "cvPrimaryLayerSmall", Optional.empty());
+		}
 
 	}
 }

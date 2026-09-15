@@ -46,6 +46,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.CouldNotFindBracketingIntervalException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.CompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
@@ -590,7 +591,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, -2.1394816E-7f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(
@@ -686,7 +687,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0010083826f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, 4.406223E-5f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(
@@ -766,7 +767,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, 3.352447E-6f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(
@@ -851,7 +852,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, 4.8476713E-6f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(
@@ -948,7 +949,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, 0.0f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(0.0f, 5.914244f, 0.3650303f, 0.83281815f, 1.0865252f, 3.5843737f)

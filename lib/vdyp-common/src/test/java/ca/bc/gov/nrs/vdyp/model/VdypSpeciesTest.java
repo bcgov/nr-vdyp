@@ -130,7 +130,9 @@ class VdypSpeciesTest {
 		var cvQuadraticMeanDiameter = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(ucs, lts, (x, y) -> 1.0f);
 		var cvPrimaryLayerSmall = new HashMap<UtilizationClassVariable, Float>();
 
-		sp.setCompatibilityVariables(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvPrimaryLayerSmall);
+		sp.setCompatibilityVariables(
+				new CompatibilityVariables(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvPrimaryLayerSmall)
+		);
 	}
 
 	@Test
