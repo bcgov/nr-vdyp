@@ -53,7 +53,7 @@ const sampleTxtYieldLines = [
   'VDYP UI Version Number... 8.0            % Stockable Area Supplied 5.0',
   'VDYP SRVR Version Number. 8.0            CFS Eco Zone............. TaigaPlains',
   'VDYP SI Version Number... 8.0            Trees Per Hectare........ 1000.0',
-  'SINDEX Version Number.... 8.0            Measured Basal Area...... 10.0',
+  'SINDEX Version Number.... 1.51           Measured Basal Area...... 10.0',
   'Species 1................ AT  (30.0%)    Starting Total Age....... 10',
   'Species 2................ B   (25.0%)    Finishing Total Age...... 11',
   'Species 3................ H   (20.0%)    Age Increment............ 6',
