@@ -438,8 +438,13 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	public void calculateCompatibilityVariables(int currentYear /* IYRCUR */) {
 		final BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
 		int startYear = getState().getCurrentStartingYear(); // IYRFIRST
-		int convergenceYear = getState().getConvergenceYear().orElseThrow(); // IYR_CNV
-		float fraction = 1.0f * (currentYear - convergenceYear) / (startYear - convergenceYear);
+		float fraction;
+		if (currentYear >= startYear) {
+			fraction = 1f;
+		} else {
+			int convergenceYear = getState().getConvergenceYear().orElseThrow(); // IYR_CNV
+			fraction = 1.0f * (currentYear - convergenceYear) / (startYear - convergenceYear);
+		}
 		plps.setFractionalCompatibilityVariables(fraction);
 	}
 }

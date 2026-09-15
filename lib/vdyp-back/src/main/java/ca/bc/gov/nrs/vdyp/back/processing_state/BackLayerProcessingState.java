@@ -50,10 +50,9 @@ public class BackLayerProcessingState extends LayerProcessingState<BackLayerProc
 
 		this.updateCompatibilityVariables(
 				(prev, ucv, i) -> backCompatibilityVariables.get()[i].primaryLayerSmall().get(ucv),
-				(prev, uc, i) -> backCompatibilityVariables.get()[i].basalArea().get(uc, this.getLayerType()),
-				(prev, uc, i) -> backCompatibilityVariables.get()[i].quadraticMeanDiameter()
-						.get(uc, this.getLayerType()),
-				(prev, uc, vv, i) -> backCompatibilityVariables.get()[i].volume().get(uc, vv, getLayerType())
+				(prev, uc, i) -> backCompatibilityVariables.get()[i].basalArea().get(uc),
+				(prev, uc, i) -> backCompatibilityVariables.get()[i].quadraticMeanDiameter().get(uc),
+				(prev, uc, vv, i) -> backCompatibilityVariables.get()[i].volume().get(uc, vv)
 		);
 	}
 }

@@ -229,7 +229,7 @@ public class ComputationMethods {
 				for (var uc : VdypStartApplication.UTIL_CLASSES) {
 
 					float currentUcBasalArea = basalAreaUtil.get(uc);
-					basalAreaUtil.set(uc, currentUcBasalArea + spec.getCvBasalArea(uc, spec.getLayerType()));
+					basalAreaUtil.set(uc, currentUcBasalArea + spec.getCvBasalArea(uc));
 					if (basalAreaUtil.get(uc) < 0.0f) {
 						basalAreaUtil.set(uc, 0.0f);
 					}
@@ -237,7 +237,7 @@ public class ComputationMethods {
 					basalAreaSumForSpecies += basalAreaUtil.get(uc);
 
 					float newDqValue = quadMeanDiameterUtil.get(uc)
-							+ spec.getCvQuadraticMeanDiameter(uc, spec.getLayerType());
+							+ spec.getCvQuadraticMeanDiameter(uc);
 					quadMeanDiameterUtil.set(uc, FloatMath.clamp(newDqValue, uc.lowBound, uc.highBound));
 				}
 
@@ -284,7 +284,7 @@ public class ComputationMethods {
 						wholeStemVolumeUtil.set(
 								uc,
 								wholeStemVolumeUtil.get(uc) * FloatMath
-										.exp(spec.getCvVolume(uc, VolumeVariable.WHOLE_STEM_VOL, spec.getLayerType()))
+										.exp(spec.getCvVolume(uc, VolumeVariable.WHOLE_STEM_VOL))
 						);
 						wholeStemVolumeSum += wholeStemVolumeUtil.get(uc);
 					}
@@ -293,14 +293,14 @@ public class ComputationMethods {
 					// Set the adjustment factors for next three volume types
 					for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
 						adjustCloseUtil
-								.set(uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL, spec.getLayerType()));
+								.set(uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL));
 						adjustDecayUtil.set(
-								uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, spec.getLayerType())
+								uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY)
 						);
 						adjustDecayWasteUtil.set(
 								uc,
 								spec.getCvVolume(
-										uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, spec.getLayerType()
+										uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
 								)
 						);
 					}

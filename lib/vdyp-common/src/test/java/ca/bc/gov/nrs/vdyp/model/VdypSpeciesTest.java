@@ -12,13 +12,13 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
+import ca.bc.gov.nrs.vdyp.common.Utils;
 
 class VdypSpeciesTest {
 
@@ -116,19 +116,18 @@ class VdypSpeciesTest {
 
 		List<UtilizationClass> ucs = Arrays.asList(UtilizationClass.values());
 		List<VolumeVariable> vvs = Arrays.asList(VolumeVariable.values());
-		List<LayerType> lts = Arrays.asList(LayerType.values());
 
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvVolume(null, null, null));
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvBasalArea(null, null));
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvQuadraticMeanDiameter(null, null));
+		assertThrows(InitializationIncompleteException.class, () -> sp.getCvVolume(null, null));
+		assertThrows(InitializationIncompleteException.class, () -> sp.getCvBasalArea(null));
+		assertThrows(InitializationIncompleteException.class, () -> sp.getCvQuadraticMeanDiameter(null));
 		assertThrows(InitializationIncompleteException.class, () -> sp.getCvPrimaryLayerSmall(null));
 
-		var cvVolume = new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
-				ucs, vvs, lts, (x, y, z) -> 1.0f
+		var cvVolume = new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
+				ucs, vvs, (x, y) -> 1.0f
 		);
-		var cvBasalArea = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(ucs, lts, (x, y) -> 1.0f);
-		var cvQuadraticMeanDiameter = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(ucs, lts, (x, y) -> 1.0f);
-		var cvPrimaryLayerSmall = new HashMap<UtilizationClassVariable, Float>();
+		var cvBasalArea = Utils.fillNewEnumMap(UtilizationClass.values(), k -> 1.0f);
+		var cvQuadraticMeanDiameter = Utils.fillNewEnumMap(UtilizationClass.values(), k -> 1.0f);
+		var cvPrimaryLayerSmall = Utils.fillNewEnumMap(UtilizationClassVariable.values(), k -> 1.0f);
 
 		sp.setCompatibilityVariables(
 				new CompatibilityVariables(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvPrimaryLayerSmall)

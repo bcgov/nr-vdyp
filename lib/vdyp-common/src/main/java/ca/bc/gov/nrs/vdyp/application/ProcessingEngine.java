@@ -22,11 +22,8 @@ import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
-import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -975,10 +972,10 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 		// INL1VGRP is built, rather than when LCOM1 VGRPL is built in the
 		// original code.)
 
-		MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume = new MatrixMap3[lps.getNSpecies()
+		MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume = new MatrixMap2[lps.getNSpecies()
 				+ 1];
-		MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea = new MatrixMap2[lps.getNSpecies() + 1];
-		MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter = new MatrixMap2[lps.getNSpecies()
+		Map<UtilizationClass, Float>[] cvBasalArea = new Map[lps.getNSpecies() + 1];
+		Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter = new Map[lps.getNSpecies()
 				+ 1];
 		var cvSmall = new Map[lps.getNSpecies() + 1];
 
@@ -996,13 +993,11 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 			UtilizationVector quadMeanDiameters = Utils.utilizationVector();
 			UtilizationVector treesPerHectare = Utils.utilizationVector();
 
-			cvVolume[s] = new MatrixMap3Impl<>(
-					UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, LayerType.ALL_USED, (k1, k2, k3) -> 0f
+			cvVolume[s] = new MatrixMap2Impl<>(
+					UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0f
 			);
-			cvBasalArea[s] = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f);
-			cvQuadraticMeanDiameter[s] = new MatrixMap2Impl<>(
-					UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f
-			);
+			cvBasalArea[s] = new EnumMap<>(UtilizationClass.class);
+			cvQuadraticMeanDiameter[s] = new EnumMap<>(UtilizationClass.class);
 
 			for (UtilizationClass uc : UtilizationClass.ALL_BUT_SMALL) {
 
@@ -1049,7 +1044,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 					);
 				}
 
-				cvVolume[s].put(uc, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, adjustment);
+				cvVolume[s].put(uc, VolumeVariable.WHOLE_STEM_VOL, adjustment);
 			}
 
 			getState().getEstimators()
@@ -1072,7 +1067,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 
 			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
 				float baCvValue = bank.basalAreas[s][uc.ordinal()] - basalAreas.getCoe(uc.index);
-				cvBasalArea[s].put(uc, LayerType.PRIMARY, baCvValue);
+				cvBasalArea[s].put(uc, baCvValue);
 
 				float originalQmd = bank.quadMeanDiameters[s][uc.ordinal()];
 				float adjustedQmd = quadMeanDiameters.getCoe(uc.index);
@@ -1086,7 +1081,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 					qmdCvValue = 0.0f;
 				}
 
-				cvQuadraticMeanDiameter[s].put(uc, LayerType.PRIMARY, qmdCvValue);
+				cvQuadraticMeanDiameter[s].put(uc, qmdCvValue);
 			}
 
 			// Small components
@@ -1099,7 +1094,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 
 	protected void calculateCvVolumeForSpecies(
 			Coefficients aAdjust, ProcessingControlVariables growthDetails, L lps,
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume, int s, float spLoreyHeight_All,
+			MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume, int s, float spLoreyHeight_All,
 			UtilizationVector wholeStemVolumes, UtilizationVector closeUtilizationVolumes,
 			UtilizationVector closeUtilizationVolumesNetOfDecay,
 			UtilizationVector closeUtilizationVolumesNetOfDecayAndWaste, UtilizationVector quadMeanDiameters,
@@ -1130,7 +1125,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 			adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
 		}
 
-		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY, adjustment);
+		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, adjustment);
 
 		// Volume less decay
 		adjustment = 0.0f;
@@ -1151,7 +1146,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 			adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
 		}
 
-		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY, adjustment);
+		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, adjustment);
 
 		// Volume
 		adjustment = 0.0f;
@@ -1171,7 +1166,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 			adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
 		}
 
-		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, adjustment);
+		cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL, adjustment);
 	}
 
 	/**

@@ -14,7 +14,6 @@ import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
@@ -199,9 +198,9 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 	}
 
 	public void setCompatibilityVariableDetails(
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume,
-			MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea,
-			MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter,
+			MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume,
+			Map<UtilizationClass, Float>[] cvBasalArea,
+			Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
 	) {
 		setCompatibilityVariableDetails(
@@ -212,17 +211,17 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 	public float
 			getCVVolume(int speciesIndex, UtilizationClass uc, VolumeVariable volumeVariable, LayerType layerType) {
 		return this.compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV))[speciesIndex].volume()
-				.get(uc, volumeVariable, layerType);
+				.get(uc, volumeVariable);
 	}
 
 	public float getCVBasalArea(int speciesIndex, UtilizationClass uc, LayerType layerType) {
 		return this.compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV))[speciesIndex]
-				.basalArea().get(uc, layerType);
+				.basalArea().get(uc);
 	}
 
 	public float getCVQuadraticMeanDiameter(int speciesIndex, UtilizationClass uc, LayerType layerType) {
 		return this.compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV))[speciesIndex]
-				.quadraticMeanDiameter().get(uc, layerType);
+				.quadraticMeanDiameter().get(uc);
 	}
 
 	public float getCVSmall(int speciesIndex, UtilizationClassVariable variable) {
@@ -249,17 +248,17 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 			}
 			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
 				cv[i].basalArea().put(
-						uc, LayerType.PRIMARY, baUpdate.apply(cv[i].basalArea().get(uc, LayerType.PRIMARY), uc, i)
+						uc, baUpdate.apply(cv[i].basalArea().get(uc), uc, i)
 				);
 				cv[i].quadraticMeanDiameter().put(
-						uc, LayerType.PRIMARY,
-						dqUpdate.apply(cv[i].quadraticMeanDiameter().get(uc, LayerType.PRIMARY), uc, i)
+						uc,
+						dqUpdate.apply(cv[i].quadraticMeanDiameter().get(uc), uc, i)
 				);
 
 				for (VolumeVariable vv : VolumeVariable.ALL) {
 					cv[i].volume().put(
-							uc, vv, LayerType.PRIMARY,
-							volUpdate.apply(cv[i].volume().get(uc, vv, LayerType.PRIMARY), uc, vv, i)
+							uc, vv,
+							volUpdate.apply(cv[i].volume().get(uc, vv), uc, vv, i)
 					);
 				}
 			}

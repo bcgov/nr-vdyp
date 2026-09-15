@@ -205,24 +205,24 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		this.compatibilityVariables = Optional.of(compatibilityVariables);
 	}
 
-	public float getCvVolume(UtilizationClass uc, VolumeVariable vv, LayerType lt) {
+	public float getCvVolume(UtilizationClass uc, VolumeVariable vv) {
 		return compatibilityVariables.orElseThrow(
 				() -> new InitializationIncompleteException(MessageFormat.format("Species {0}: cvVolume", this))
-		).volume().get(uc, vv, lt);
+		).volume().get(uc, vv);
 	}
 
-	public float getCvBasalArea(UtilizationClass uc, LayerType lt) {
+	public float getCvBasalArea(UtilizationClass uc) {
 		return compatibilityVariables.orElseThrow(
 				() -> new InitializationIncompleteException(MessageFormat.format("Species {0}: cvBasalArea", this))
-		).basalArea().get(uc, lt);
+		).basalArea().get(uc);
 	}
 
-	public float getCvQuadraticMeanDiameter(UtilizationClass uc, LayerType lt) {
+	public float getCvQuadraticMeanDiameter(UtilizationClass uc) {
 		return compatibilityVariables.orElseThrow(
 				() -> new InitializationIncompleteException(
 						MessageFormat.format("Species {0}: cvQuadraticMeanDiameter", this)
 				)
-		).quadraticMeanDiameter().get(uc, lt);
+		).quadraticMeanDiameter().get(uc);
 	}
 
 	public float getCvPrimaryLayerSmall(UtilizationClassVariable ucv) {

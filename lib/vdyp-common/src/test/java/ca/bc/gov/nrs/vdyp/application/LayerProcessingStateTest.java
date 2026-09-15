@@ -33,8 +33,6 @@ import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
@@ -164,9 +162,9 @@ class LayerProcessingStateTest {
 	class SetCompatibilityVariables {
 		LayerProcessingState<?> unit;
 
-		MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume;
-		MatrixMap2<UtilizationClass, LayerType, Float>[] cvBa;
-		MatrixMap2<UtilizationClass, LayerType, Float>[] cvDq;
+		MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume;
+		Map<UtilizationClass, Float>[] cvBa;
+		Map<UtilizationClass, Float>[] cvDq;
 		Map<UtilizationClassVariable, Float>[] cvSm;
 
 		@BeforeEach
@@ -193,22 +191,23 @@ class LayerProcessingStateTest {
 
 			unit = new TestLayerProcessingState(parent, polygon, LayerType.PRIMARY);
 
-			cvVolume = new MatrixMap3[] { null, new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
-					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()), List.of(LayerType.values()),
-					(uc, vv, lt) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f + lt.ordinal() * 5f
+			cvVolume = new MatrixMap2[] { null, new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
+					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+					(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
 			) };
 
-			cvBa = new MatrixMap2[] { null,
-					new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
-							List.of(UtilizationClass.values()), List.of(LayerType.values()),
-							(uc, lt) -> 13f + uc.ordinal() * 3f + lt.ordinal() * 5f
-					) };
+			cvBa = new Map[] { null,
+					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			for (var uc : UtilizationClass.values()) {
+				cvBa[1].put(uc, 13f + uc.ordinal() * 3f);
+			}
 
-			cvDq = new MatrixMap2[] { null,
-					new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
-							List.of(UtilizationClass.values()), List.of(LayerType.values()),
-							(uc, lt) -> 17f + uc.ordinal() * 3f + lt.ordinal() * 5f
-					) };
+			cvDq = new Map[] { null,
+					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			for (var uc : UtilizationClass.values()) {
+				cvDq[1].put(uc, 17f + uc.ordinal() * 3f);
+			}
+
 			cvSm = new EnumMap[] { null, new EnumMap<UtilizationClassVariable, Float>(UtilizationClassVariable.class) };
 
 			for (var uc : UtilizationClassVariable.values()) {

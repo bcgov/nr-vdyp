@@ -7,6 +7,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasProperty;
@@ -26,6 +27,8 @@ import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
@@ -44,8 +47,6 @@ import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
@@ -90,6 +91,7 @@ class BackProcessingEngineTest {
 	@Nested
 	class Prepare {
 
+		@SuppressWarnings("unchecked")
 		public BackProcessingState primaryOnlyWithSingleSpecies() throws ProcessingException {
 
 			var polygon = VdypPolygon.build(pb -> {
@@ -126,30 +128,29 @@ class BackProcessingEngineTest {
 
 			state.setPolygon(polygon);
 
-			@SuppressWarnings("unchecked")
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume = new MatrixMap3[] { null,
-					new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
-							List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
-							List.of(LayerType.values()),
-							(uc, vv, lt) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f + lt.ordinal() * 5f
-					) };
+			MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume;
+			Map<UtilizationClass, Float>[] cvBa;
+			Map<UtilizationClass, Float>[] cvDq;
+			Map<UtilizationClassVariable, Float>[] cvSm;
 
-			@SuppressWarnings("unchecked")
-			MatrixMap2<UtilizationClass, LayerType, Float>[] cvBa = new MatrixMap2[] { null,
-					new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
-							List.of(UtilizationClass.values()), List.of(LayerType.values()),
-							(uc, lt) -> 13f + uc.ordinal() * 3f + lt.ordinal() * 5f
-					) };
+			cvVolume = new MatrixMap2[] { null, new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
+					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+					(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
+			) };
 
-			@SuppressWarnings("unchecked")
-			MatrixMap2<UtilizationClass, LayerType, Float>[] cvDq = new MatrixMap2[] { null,
-					new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
-							List.of(UtilizationClass.values()), List.of(LayerType.values()),
-							(uc, lt) -> 17f + uc.ordinal() * 3f + lt.ordinal() * 5f
-					) };
-			@SuppressWarnings("unchecked")
-			Map<UtilizationClassVariable, Float>[] cvSm = new EnumMap[] { null,
-					new EnumMap<UtilizationClassVariable, Float>(UtilizationClassVariable.class) };
+			cvBa = new Map[] { null,
+					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			for (var uc : UtilizationClass.values()) {
+				cvBa[1].put(uc, 13f + uc.ordinal() * 3f);
+			}
+
+			cvDq = new Map[] { null,
+					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			for (var uc : UtilizationClass.values()) {
+				cvDq[1].put(uc, 17f + uc.ordinal() * 3f);
+			}
+
+			cvSm = new EnumMap[] { null, new EnumMap<UtilizationClassVariable, Float>(UtilizationClassVariable.class) };
 
 			for (var uc : UtilizationClassVariable.values()) {
 				cvSm[1].put(uc, uc.ordinal() * 7f);
@@ -158,7 +159,7 @@ class BackProcessingEngineTest {
 			state.getPrimaryLayerProcessingState().setCompatibilityVariableDetails(cvVolume, cvBa, cvDq, cvSm);
 
 			return state;
-		};
+		}
 
 		public BackProcessingState primaryAndVeteran() throws ProcessingException {
 			var polygon = VdypPolygon.build(pb -> {
@@ -722,5 +723,54 @@ class BackProcessingEngineTest {
 			);
 		}
 
+	}
+
+	@Nested
+	class CalculateCompatibilityVariables {
+		@ParameterizedTest
+		@CsvSource(
+			{
+					"1995, 2011, 1967, 0.636363626",
+					"2006, 2011, 1967, 0.886363626",
+					"1967, 2011, 1967, 0.0",
+					"1966, 2011, 1967, -0.0227272734"
+			}
+		)
+		void testBeforeStart(int currentYear, int startingYear, int convergenceYear, float fraction) {
+			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
+
+			expect(state.getPrimaryLayerProcessingState()).andStubReturn(layerState);
+			expect(state.getCurrentStartingYear()).andStubReturn(startingYear);
+			expect(state.getConvergenceYear()).andStubReturn(Optional.of(convergenceYear));
+
+			layerState.setFractionalCompatibilityVariables(EasyMock.eq(fraction, Math.abs(fraction * 0.01f))); // Within 1%
+			expectLastCall().once();
+
+			em.replay();
+			engine.calculateCompatibilityVariables(currentYear);
+			em.verify();
+		}
+
+		@ParameterizedTest
+		@CsvSource(
+			{
+					"2011, 2011, 1967",
+					"2012, 2011, 1967"
+			}
+		)
+		void testAtOrAfterStart(int currentYear, int startingYear, int convergenceYear) {
+			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
+
+			expect(state.getPrimaryLayerProcessingState()).andStubReturn(layerState);
+			expect(state.getCurrentStartingYear()).andStubReturn(startingYear);
+			expect(state.getConvergenceYear()).andStubReturn(Optional.of(convergenceYear));
+
+			layerState.setFractionalCompatibilityVariables(EasyMock.eq(1f)); // Should be exactly 1
+			expectLastCall().once();
+
+			em.replay();
+			engine.calculateCompatibilityVariables(currentYear);
+			em.verify();
+		}
 	}
 }
