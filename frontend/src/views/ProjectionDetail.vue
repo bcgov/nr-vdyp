@@ -218,14 +218,43 @@
           v-model:currentTab="modelParamActiveTab"
           :tabs="modelParamTabs"
         />
-        <AppButton
-          label="Download Report"
-          :icon-src="DownloadIcon"
-          variant="primary"
-          :is-disabled="!isDownloadReady"
-          class="download-report-button"
-          @click="handleDownloadReport"
-        />
+        <div v-if="isReportingTabActive" class="reporting-actions-group">
+          <AppButton
+            label="Print"
+            variant="secondary"
+            mdi-name="mdi-printer"
+            :is-disabled="isReportingActionsDisabled"
+            class="reporting-print-button"
+            @click="handleReportingPrint"
+          />
+          <v-menu>
+            <template #activator="{ props: downloadMenuProps }">
+              <AppButton
+                label="Download"
+                variant="primary"
+                mdi-name="mdi-chevron-down"
+                icon-position="right"
+                :activatorProps="downloadMenuProps"
+                :is-disabled="isReportingActionsDisabled"
+                class="reporting-download-button"
+              />
+            </template>
+            <v-list class="reporting-download-menu-list">
+              <v-list-item
+                class="reporting-download-menu-item"
+                @click="handleReportingDownloadTab"
+              >
+                <span class="reporting-download-menu-text">Download {{ activeReportingTabLabel }}</span>
+              </v-list-item>
+              <v-list-item
+                class="reporting-download-menu-item"
+                @click="handleDownloadReport"
+              >
+                <span class="reporting-download-menu-text">Download all files</span>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
       </div>
       <template v-if="isModelParameterPanelsVisible">
         <ParameterSelectionProgressBar
@@ -339,6 +368,7 @@ import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import { loadProjectionSession, clearProjectionSession, saveExistingProjectionSession } from '@/utils/projectionSession'
 import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip, getResultsDownloadUrl, isProjectionReadOnly } from '@/services/projectionService'
+import { downloadTextFile, downloadCSVFile, printReport } from '@/services/reportService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { useUnsavedChangesStore } from '@/stores/common/unsavedChangesStore'
@@ -559,6 +589,55 @@ const modelParamTabs = computed<Tab[]>(() => [
     disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
 ])
+
+const activeReportingTab = computed(() => modelParamTabs.value[modelParamActiveTab.value])
+const activeReportingTabname = computed(() => activeReportingTab.value?.tabname ?? null)
+const activeReportingTabLabel = computed(() => activeReportingTab.value?.label ?? '')
+// Parameter Selection tab has no tabname; Print/Download only apply to the reporting tabs
+const isReportingTabActive = computed(() => activeReportingTabname.value !== null)
+
+// For downloads, always use CSV format for MODEL_REPORT (Yield Table)
+const reportingDownloadData = computed(() => {
+  switch (activeReportingTabname.value) {
+    case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
+      return [...projectionStore.csvYieldLines]
+    case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
+      return [...projectionStore.errorMessages]
+    case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
+      return [...projectionStore.logMessages]
+    default:
+      return []
+  }
+})
+
+const reportingPrintData = computed(() => {
+  if (activeReportingTabname.value === CONSTANTS.REPORTING_TAB.MODEL_REPORT) {
+    return [...projectionStore.txtYieldLines]
+  }
+  return reportingDownloadData.value
+})
+
+const isReportingActionsDisabled = computed(
+  () => !isDownloadReady.value || reportingDownloadData.value.length === 0,
+)
+
+const handleReportingPrint = () => {
+  printReport(reportingPrintData.value)
+}
+
+const handleReportingDownloadTab = () => {
+  switch (activeReportingTabname.value) {
+    case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
+      downloadCSVFile(reportingDownloadData.value, CONSTANTS.FILE_NAME.YIELD_TABLE_CSV)
+      break
+    case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
+      downloadTextFile(reportingDownloadData.value, CONSTANTS.FILE_NAME.ERROR_TXT)
+      break
+    case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
+      downloadTextFile(reportingDownloadData.value, CONSTANTS.FILE_NAME.LOG_TXT)
+      break
+  }
+}
 
 const isModelParameterPanelsVisible = computed(() => {
   return (
@@ -1497,10 +1576,13 @@ h3 {
   position: relative;
 }
 
-.download-report-button {
+.reporting-actions-group {
   position: absolute;
   top: 0;
   right: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-small);
 }
 
 @media (max-width: 1023px) {
@@ -1510,15 +1592,28 @@ h3 {
     gap: var(--layout-margin-small);
   }
 
-  .download-report-button {
+  .reporting-actions-group {
     position: static;
     align-self: flex-end;
     order: -1;
   }
 }
 
-.download-report-button :deep(.button-icon-img) {
-  filter: brightness(0) invert(1);
+.reporting-download-menu-list {
+  min-width: 200px;
+}
+
+.reporting-download-menu-item {
+  cursor: pointer;
+}
+
+.reporting-download-menu-item:hover {
+  background-color: #eceae8;
+}
+
+.reporting-download-menu-text {
+  font: var(--typography-regular-body);
+  color: var(--typography-color-primary);
 }
 
 @media (max-width: 600px) {
