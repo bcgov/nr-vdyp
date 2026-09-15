@@ -112,7 +112,7 @@ describe('<StandInfoPanel />', () => {
     })
   })
 
-  it('shows required error when Percent Stockable Area is empty', () => {
+  it('shows default-computed hint when Percent Stockable Area is empty', () => {
     mountPanel((ms) => {
       openPanel(ms)
       makeEditable(ms)
@@ -120,10 +120,10 @@ describe('<StandInfoPanel />', () => {
       ms.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
       ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
     })
-    cy.contains('button', 'Next').click()
     cy.get('[data-testid="percent-stockable-area"]')
-      .find('.v-messages__message')
-      .should('contain.text', MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_REQ)
+      .parent()
+      .contains(MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED)
+      .should('exist')
   })
 
   it('renders min-dbh-limit block when minDBHLimit is set', () => {
