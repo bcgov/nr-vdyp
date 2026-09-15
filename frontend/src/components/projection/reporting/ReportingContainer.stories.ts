@@ -13,7 +13,7 @@ const meta: Meta<typeof ReportingContainer> = {
       control: { type: 'select' },
       options: Object.values(REPORTING_TAB),
       description:
-        'Active reporting tab. Controls which store data is displayed and the Download button label.',
+        'Active reporting tab. Controls which store data is displayed.',
     },
   }
 }
@@ -137,7 +137,7 @@ export const ModelReport_WithData: Story = {
     docs: {
       description: {
         story:
-          'Model Report tab with yield table data loaded. Print and "Download Yield Table" buttons are enabled.',
+          'Yield Table tab with yield table data loaded.',
       },
     },
   },
@@ -162,7 +162,7 @@ export const ModelReport_Empty: Story = {
     docs: {
       description: {
         story:
-          'Model Report tab before a projection has been run. Both buttons are disabled and the output area is blank.',
+          'Yield Table tab before a projection has been run - the output area is blank.',
       },
     },
   },
@@ -186,7 +186,7 @@ export const ViewErrorMessages_WithData: Story = {
     docs: {
       description: {
         story:
-          'View Error Messages tab with validation errors and warnings. Print and Download buttons are enabled.',
+          'View Error Messages tab with validation errors and warnings.',
       },
     },
   },
@@ -209,7 +209,7 @@ export const ViewErrorMessages_Empty: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'View Error Messages tab with no errors - buttons disabled, output area is blank.',
+        story: 'View Error Messages tab with no errors - output area is blank.',
       },
     },
   },
@@ -232,7 +232,7 @@ export const ViewLogFile_WithData: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'View Log File tab with a full batch processing log. Print and Download buttons are enabled.',
+        story: 'View Log File tab with a full batch processing log.',
       },
     },
   },
@@ -255,7 +255,7 @@ export const ViewLogFile_Empty: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'View Log File tab with no log output - buttons disabled, output area is blank.',
+        story: 'View Log File tab with no log output - output area is blank.',
       },
     },
   },

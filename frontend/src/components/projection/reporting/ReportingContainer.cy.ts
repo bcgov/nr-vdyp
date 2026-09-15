@@ -11,8 +11,6 @@ describe('ReportingContainer.vue', () => {
     csvYieldLines?: string[]
     errorMessages?: string[]
     logMessages?: string[]
-    rawResultZipFile?: Blob | null
-    rawResultZipFileName?: string
   }
 
   const mountComponent = (tabname: ReportingTab, storeState: StoreState = {}) => {
@@ -23,72 +21,13 @@ describe('ReportingContainer.vue', () => {
       store.csvYieldLines = storeState.csvYieldLines ?? []
       store.errorMessages = storeState.errorMessages ?? []
       store.logMessages = storeState.logMessages ?? []
-      store.rawResultZipFile = storeState.rawResultZipFile ?? null
-      store.rawResultZipFileName = storeState.rawResultZipFileName ?? ''
     })
   }
 
   describe('rendering', () => {
-    it('renders the container and actions panel', () => {
+    it('renders the container', () => {
       mountComponent(REPORTING_TAB.MODEL_REPORT)
       cy.get('.bcds-reporting-container').should('exist')
-      cy.get('.bcds-reporting-actions-card').should('exist')
-    })
-
-    it('renders Print and Download buttons', () => {
-      mountComponent(REPORTING_TAB.MODEL_REPORT)
-      cy.contains('button', 'Print').should('exist')
-      cy.contains('button', 'Download Yield Table').should('exist')
-    })
-  })
-
-  describe('Download button label', () => {
-    it('shows "Download Yield Table" for MODEL_REPORT', () => {
-      mountComponent(REPORTING_TAB.MODEL_REPORT)
-      cy.contains('button', 'Download Yield Table').should('exist')
-    })
-
-    it('shows "Download" for non-MODEL tabs', () => {
-      mountComponent(REPORTING_TAB.VIEW_ERR_MSG)
-      cy.contains('button', 'Download').should('exist')
-      cy.contains('button', 'Download Yield Table').should('not.exist')
-    })
-  })
-
-  describe('button enabled/disabled state', () => {
-    it('disables both buttons when MODEL_REPORT csvYieldLines is empty', () => {
-      mountComponent(REPORTING_TAB.MODEL_REPORT, { csvYieldLines: [] })
-      cy.contains('button', 'Print').should('be.disabled')
-      cy.contains('button', 'Download Yield Table').should('be.disabled')
-    })
-
-    it('enables both buttons when MODEL_REPORT has data', () => {
-      mountComponent(REPORTING_TAB.MODEL_REPORT, {
-        csvYieldLines: ['header,col1', 'row1,val1'],
-        txtYieldLines: ['Text report line'],
-      })
-      cy.contains('button', 'Print').should('not.be.disabled')
-      cy.contains('button', 'Download Yield Table').should('not.be.disabled')
-    })
-
-    it('keeps Download disabled when only txtYieldLines has data but csvYieldLines is empty', () => {
-      mountComponent(REPORTING_TAB.MODEL_REPORT, {
-        txtYieldLines: ['Text report line'],
-        csvYieldLines: [],
-      })
-      cy.contains('button', 'Download Yield Table').should('be.disabled')
-    })
-
-    it('enables both buttons when VIEW_ERR_MSG has errorMessages data', () => {
-      mountComponent(REPORTING_TAB.VIEW_ERR_MSG, { errorMessages: ['ERROR: Polygon data invalid'] })
-      cy.contains('button', 'Print').should('not.be.disabled')
-      cy.contains('button', 'Download').should('not.be.disabled')
-    })
-
-    it('enables both buttons when VIEW_LOG_FILE has logMessages data', () => {
-      mountComponent(REPORTING_TAB.VIEW_LOG_FILE, { logMessages: ['Processing batch: started'] })
-      cy.contains('button', 'Print').should('not.be.disabled')
-      cy.contains('button', 'Download').should('not.be.disabled')
     })
   })
 
@@ -126,59 +65,6 @@ describe('ReportingContainer.vue', () => {
         useProjectionStore().errorMessages = ['Late-arriving error message']
       })
       cy.get('.ml-2').should('contain.text', 'Late-arriving error message')
-    })
-  })
-
-  describe('button click actions', () => {
-    beforeEach(() => {
-      cy.window().then((win) => {
-        cy.stub(win.URL, 'createObjectURL').as('createObjectURL').returns('blob:mock-url')
-        cy.stub(win.URL, 'revokeObjectURL').as('revokeObjectURL')
-      })
-    })
-
-    it('clicking Download Yield Table with data does not throw', () => {
-      mountComponent(REPORTING_TAB.MODEL_REPORT, {
-        csvYieldLines: ['header,col1', 'row1,val1'],
-        txtYieldLines: ['Text line'],
-      })
-      cy.contains('button', 'Download Yield Table').click()
-      cy.get('@createObjectURL').should('have.been.calledOnce')
-    })
-
-    it('clicking Print with data does not throw', () => {
-      cy.window().then((win) => {
-        const observer = new win.MutationObserver((mutations) => {
-          for (const mutation of mutations) {
-            for (const node of Array.from(mutation.addedNodes)) {
-              const el = node as HTMLElement
-              if (el.id === 'printJS') {
-                el.addEventListener(
-                  'load',
-                  () => {
-                    try {
-                      const cw = (el as HTMLIFrameElement).contentWindow as any
-                      cw.print = () => {}
-                      cw.focus = () => {}
-                    } catch {
-                      // ignore cross-origin errors
-                    }
-                  },
-                  true,
-                )
-              }
-            }
-          }
-        })
-        observer.observe(win.document.body, { childList: true, subtree: true })
-      })
-
-      mountComponent(REPORTING_TAB.MODEL_REPORT, {
-        txtYieldLines: ['Yield line 1'],
-        csvYieldLines: ['csv,data'],
-      })
-      cy.contains('button', 'Print').click()
-      cy.get('#printJS').should('exist')
     })
   })
 })

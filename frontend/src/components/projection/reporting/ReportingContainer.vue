@@ -1,12 +1,5 @@
 <template>
   <v-container fluid class="bcds-reporting-container">
-    <ReportingActions
-      :isButtonDisabled="isButtonDisabled"
-      :tabname="tabname"
-      @print="handlePrint"
-      @download="handleDownload"
-      @downloadrawresult="handleDownloadRawResult"
-    />
     <ReportingOutput :data="data" :tabname="tabname" />
   </v-container>
 </template>
@@ -14,17 +7,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { PropType } from 'vue'
-import { ReportingActions, ReportingOutput} from '@/components/projection'
-import {
-  downloadTextFile,
-  downloadCSVFile,
-  printReport,
-} from '@/services/reportService'
+import { ReportingOutput } from '@/components/projection'
 import { useProjectionStore } from '@/stores/projection/projectionStore'
-import { CONSTANTS, MESSAGE } from '@/constants'
+import { CONSTANTS } from '@/constants'
 import type { ReportingTab } from '@/types/types'
-import * as messageHandler from '@/utils/messageHandler'
-import { downloadFile } from '@/utils/util'
 
 const props = defineProps({
   tabname: {
@@ -46,65 +32,6 @@ const data = computed(() => {
       return []
   }
 })
-
-// For downloads, always use CSV format for MODEL_REPORT
-const downloadData = computed(() => {
-  if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT)
-    return [...projectionStore.csvYieldLines]
-  else return data.value
-})
-
-const printData = computed(() => {
-  if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT) {
-    return [...projectionStore.txtYieldLines]
-  }
-  else return data.value
-})
-
-const isButtonDisabled = computed(
-  () => !downloadData.value || downloadData.value.length === 0,
-)
-
-const handleDownload = () => {
-  if (!downloadData.value || downloadData.value.length === 0) {
-    messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
-    return
-  }
-  switch (props.tabname) {
-    case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
-      if (!downloadData.value || downloadData.value.length === 0) {
-        messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
-        return
-      }
-      downloadCSVFile(downloadData.value, CONSTANTS.FILE_NAME.YIELD_TABLE_CSV)
-      break
-    case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
-      downloadTextFile(downloadData.value, CONSTANTS.FILE_NAME.ERROR_TXT)
-      break
-    case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
-      downloadTextFile(downloadData.value, CONSTANTS.FILE_NAME.LOG_TXT)
-      break
-  }
-}
-
-const handleDownloadRawResult = () => {
-  if (
-    !projectionStore.rawResultZipFile ||
-    !projectionStore.rawResultZipFileName
-  ) {
-    messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA, null, false, false, MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA_TITLE)
-    return
-  }
-
-  downloadFile(
-    projectionStore.rawResultZipFile,
-    projectionStore.rawResultZipFileName,
-  )
-}
-
-const handlePrint = () => {
-  printReport(printData.value)
-}
 </script>
 <style scoped>
 /* BC Gov Design Standards - Full-width container for reporting tabs */
