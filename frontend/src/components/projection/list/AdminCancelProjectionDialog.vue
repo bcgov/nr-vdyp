@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="isOpen" persistent max-width="480">
+  <v-dialog v-model="isOpen" persistent max-width="560">
     <v-card class="cancel-dialog">
       <div class="cancel-dialog--header">
         <img src="@/assets/icons/warning.svg" alt="Warning" class="cancel-dialog--icon" />
@@ -13,6 +13,7 @@
         <div class="bcds-textarea">
           <label class="bcds-textarea-label" for="adminCancelReason">
             {{ ADMIN_CANCEL_DIALOG.REASON_LABEL }}
+            <span class="cancel-dialog--reason-hint">({{ ADMIN_CANCEL_DIALOG.REASON_LABEL_HINT }})</span>
           </label>
           <div class="bcds-textarea-container">
             <textarea
@@ -149,6 +150,11 @@ const handleConfirmCancellation = () => {
 
 .reason-counter {
   padding-bottom: 0px;
+}
+
+.cancel-dialog--reason-hint {
+  color: var(--typography-color-secondary);
+  font-weight: var(--typography-font-weights-regular);
 }
 
 .cancel-dialog--actions {

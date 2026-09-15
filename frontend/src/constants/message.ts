@@ -293,7 +293,8 @@ export const ADMIN_CANCEL_DIALOG = Object.freeze({
   TITLE: (projectionName: string) => `Cancel Projection: ${projectionName}`,
   WARNING:
     'Warning: Cancelling this running projection will halt all ongoing polygon processing. This action cannot be undone.',
-  REASON_LABEL: 'Reason for Cancellation (visible to user): (required)',
+  REASON_LABEL: 'Reason for Cancellation (visible to user):',
+  REASON_LABEL_HINT: 'Required, minimum of 5 characters',
   KEEP_RUNNING: 'Keep Running',
   CONFIRM_CANCELLATION: 'Confirm Cancellation',
 })
