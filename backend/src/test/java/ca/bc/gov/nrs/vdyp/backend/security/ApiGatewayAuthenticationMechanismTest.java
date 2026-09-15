@@ -124,8 +124,7 @@ class ApiGatewayAuthenticationMechanismTest {
 		ChallengeData challenge = mechanism.getChallenge(null).await().indefinitely();
 
 		assertEquals(401, challenge.status);
-		assertEquals("WWW-Authenticate", challenge.headerName.toString());
-		assertEquals("Bearer, ApiKey", challenge.headerContent);
+		assertEquals("Bearer, ApiKey", challenge.getHeaders().get("WWW-Authenticate"));
 	}
 
 	@Test
