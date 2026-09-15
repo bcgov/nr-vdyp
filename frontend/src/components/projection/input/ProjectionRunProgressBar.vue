@@ -199,7 +199,7 @@ const progressLeftText = computed(() => {
     [CONSTANTS.PROJECTION_STATUS.READY]: 'Projection Complete',
     [CONSTANTS.PROJECTION_STATUS.FAILED]: 'Projection Run Failed',
     [CONSTANTS.PROJECTION_STATUS.CANCELLED]: 'Projection Run Cancelled',
-    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: 'Projection Cancelled',
+    [CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD]: 'Projection Cancelled by Administrator',
   }
   return map[props.status] ?? ''
 })
