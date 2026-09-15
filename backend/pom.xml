@@ -20,13 +20,26 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>3.10.1</quarkus.platform.version>
-    <surefire-plugin.version>3.2.5</surefire-plugin.version>
+		<quarkus.platform.version>3.33.3.2</quarkus.platform.version>
+		<surefire-plugin.version>3.5.4</surefire-plugin.version>
+		<junit.version>6.0.3</junit.version>
+		<junit-jupiter.version>6.0.3</junit-jupiter.version>
+		<logback.version>1.5.38</logback.version>
 		<testcontainers.version>2.0.2</testcontainers.version>
 		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml,${project.build.directory}/jacoco-report/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
   <dependencyManagement>
     <dependencies>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-classic</artifactId>
+				<version>${logback.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-core</artifactId>
+				<version>${logback.version}</version>
+			</dependency>
       <dependency>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>${quarkus.platform.artifact-id}</artifactId>
@@ -169,7 +182,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-metrics</artifactId>
+			<artifactId>quarkus-micrometer-registry-prometheus</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -218,7 +231,7 @@
 		</dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
+			<artifactId>quarkus-junit</artifactId>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -343,7 +356,7 @@
 
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-junit5-mockito</artifactId>
+			<artifactId>quarkus-junit-mockito</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -393,6 +406,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
         <configuration>
 					<includes>
 						<include>**/Test*.java</include>
@@ -407,6 +421,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
         <executions>
           <execution>
             <goals>

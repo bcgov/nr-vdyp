@@ -100,7 +100,7 @@ public class ApiGatewayJwtVerifier {
 
 		authContextInfo.setIssuedBy(normalizedIssuer);
 		authContextInfo.setExpectedAudience(audiences);
-		authContextInfo.setSignatureAlgorithm(SignatureAlgorithm.RS256);
+		authContextInfo.setSignatureAlgorithm(Set.of(SignatureAlgorithm.RS256));
 		authContextInfo.setRequiredClaims(Set.of("exp"));
 		authContextInfo.setRequireNamedPrincipal(false);
 		return authContextInfo;

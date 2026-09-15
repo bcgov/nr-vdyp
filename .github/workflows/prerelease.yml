@@ -5,10 +5,12 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   tag-builds:
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     strategy:
       matrix:

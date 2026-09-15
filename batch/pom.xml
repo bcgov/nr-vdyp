@@ -10,7 +10,7 @@
     <artifactId>vdyp-batch</artifactId>
     <name>Variable Density Yield Project - Batch</name>
     <properties>
-			<spring-boot.version>3.5.11</spring-boot.version>
+			<spring-boot.version>3.5.16</spring-boot.version>
         <!-- Default: enable Spring Boot repackaging (JVM mode) -->
         <skipSpringBootRepackage>false</skipSpringBootRepackage>
     </properties>
