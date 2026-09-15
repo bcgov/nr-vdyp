@@ -32,6 +32,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
+import ca.bc.gov.nrs.vdyp.sindex.Sindxdll;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
 /**
@@ -571,7 +572,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		entries.add("VDYP UI Version Number... 8.0");
 		entries.add("VDYP SRVR Version Number. 8.0");
 		entries.add("VDYP SI Version Number... 8.0");
-		entries.add("SINDEX Version Number.... 8.0");
+		entries.add(String.format("SINDEX Version Number.... %3.2f", Sindxdll.VersionNumber() / 100f));
 
 		if (lastPolygonForTrailer == null) {
 			return;
