@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -14,9 +15,34 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 
 class FullReportYieldTableWriterTest {
+
+	@Test
+	void testBuildActualStockableAreaUsedNoteWhenNotSupplied() {
+
+		var polygon = new Polygon.Builder().featureId(1).percentStockable(84.0).build();
+		var layer = new Layer.Builder().polygon(polygon).layerId("1").percentStockable(0.0).build();
+		polygon.setPrimaryLayer(layer);
+
+		var note = FullReportYieldTableWriter.buildActualStockableAreaUsedNote(polygon);
+
+		assertThat(note, is("NOTE: Actual Percent Stockable Area Used : 84%"));
+	}
+
+	@Test
+	void testBuildActualStockableAreaUsedNoteWhenSupplied() {
+
+		var polygon = new Polygon.Builder().featureId(1).percentStockable(90.0).build();
+		var layer = new Layer.Builder().polygon(polygon).layerId("1").percentStockable(90.0).build();
+		polygon.setPrimaryLayer(layer);
+
+		var note = FullReportYieldTableWriter.buildActualStockableAreaUsedNote(polygon);
+
+		assertThat(note, is(nullValue()));
+	}
 
 	@Test
 	void testWriteRecordFailsWhenRowContextIsIncomplete() throws Exception {
