@@ -19,14 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -2020,12 +2013,12 @@ class ProjectionServiceTest {
 		var destinationModel = new ProjectionModel();
 		destinationModel.setProjectionGUID(destinationId.toString());
 		var duplicateService = spy(service);
-		org.mockito.Mockito.doReturn(destinationModel).when(duplicateService)
+		doReturn(destinationModel).when(duplicateService)
 				.createNewProjection(eq(actingUser), any(), any(), any());
 		when(repository.findByIdOptional(sourceId)).thenReturn(Optional.of(source));
 		when(repository.findByIdOptional(destinationId)).thenReturn(Optional.of(destination));
 		var copyFailure = new ProjectionServiceException("Layer copy failed");
-		org.mockito.Mockito.doNothing().when(fileSetService)
+		doNothing().when(fileSetService)
 				.duplicateFilesFromTo(source.getPolygonFileSet(), destination.getPolygonFileSet());
 		doThrow(copyFailure).when(fileSetService)
 				.duplicateFilesFromTo(source.getLayerFileSet(), destination.getLayerFileSet());
@@ -2033,7 +2026,7 @@ class ProjectionServiceTest {
 		if (cleanupFails) {
 			doThrow(cleanupFailure).when(duplicateService).deleteProjection(destinationId, actingUser);
 		} else {
-			org.mockito.Mockito.doNothing().when(duplicateService).deleteProjection(destinationId, actingUser);
+			doNothing().when(duplicateService).deleteProjection(destinationId, actingUser);
 		}
 
 		var failure = assertThrows(
