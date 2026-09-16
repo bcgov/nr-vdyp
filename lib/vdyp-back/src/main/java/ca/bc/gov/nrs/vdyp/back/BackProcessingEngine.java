@@ -434,4 +434,17 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			throw new ProcessingException(e);
 		}
 	}
+
+	public void calculateCompatibilityVariables(int currentYear /* IYRCUR */) {
+		final BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
+		int startYear = getState().getCurrentStartingYear(); // IYRFIRST
+		float fraction;
+		if (currentYear >= startYear) {
+			fraction = 1f;
+		} else {
+			int convergenceYear = getState().getConvergenceYear().orElseThrow(); // IYR_CNV
+			fraction = 1.0f * (currentYear - convergenceYear) / (startYear - convergenceYear);
+		}
+		plps.setFractionalCompatibilityVariables(fraction);
+	}
 }

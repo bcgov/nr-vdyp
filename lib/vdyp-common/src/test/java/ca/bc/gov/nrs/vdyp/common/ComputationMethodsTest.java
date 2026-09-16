@@ -46,10 +46,10 @@ import ca.bc.gov.nrs.vdyp.exceptions.CouldNotFindBracketingIntervalException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.CompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -545,43 +545,33 @@ public class ComputationMethodsTest {
 			{
 				final VdypSpecies spec = vdypLayer.getSpeciesBySp0("B");
 
-				var baCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				baCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, -2.3490973E-5f);
-				baCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, -4.934218E-5f);
-				baCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, -7.332418E-5f);
-				baCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, 1.461482E-4f);
+				var baCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				baCv.put(UtilizationClass.U75TO125, -2.3490973E-5f);
+				baCv.put(UtilizationClass.U125TO175, -4.934218E-5f);
+				baCv.put(UtilizationClass.U175TO225, -7.332418E-5f);
+				baCv.put(UtilizationClass.OVER225, 1.461482E-4f);
 
-				var dqCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				dqCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, 0.0f);
-				dqCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, -0.014004059f);
-				dqCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, -0.043888856f);
-				dqCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, 0.0071104434f);
+				var dqCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				dqCv.put(UtilizationClass.U75TO125, 0.0f);
+				dqCv.put(UtilizationClass.U125TO175, -0.014004059f);
+				dqCv.put(UtilizationClass.U175TO225, -0.043888856f);
+				dqCv.put(UtilizationClass.OVER225, 0.0071104434f);
 
-				var volCv = new MatrixMap3Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, LayerType.ALL_USED, (k1, k2, k3) -> 0.0f
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
+
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, -2.4918796E-4f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, 0.0022960806f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, 0.006271055f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -0.0047421646f);
+				volCv.put(
+						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 0.035052672f
 				);
 
-				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, -2.4918796E-4f);
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 0.0022960806f);
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 0.006271055f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, -6.892681E-5f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, -1.6121865E-4f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 1.3177872E-4f);
 				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						-0.0047421646f
-				);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, 0.035052672f
-				);
-
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, -6.892681E-5f);
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, -1.6121865E-4f);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						1.3177872E-4f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, -0.001636486f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, -0.001636486f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
@@ -590,7 +580,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, -2.1394816E-7f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(
@@ -623,61 +613,45 @@ public class ComputationMethodsTest {
 			}
 			{
 				final VdypSpecies spec = vdypLayer.getSpeciesBySp0("C");
-				var baCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				baCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, 6.5276026E-6f);
-				baCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, 5.373955E-6f);
-				baCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, 9.404421E-6f);
-				baCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, -2.149582E-5f);
+				var baCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				baCv.put(UtilizationClass.U75TO125, 6.5276026E-6f);
+				baCv.put(UtilizationClass.U125TO175, 5.373955E-6f);
+				baCv.put(UtilizationClass.U175TO225, 9.404421E-6f);
+				baCv.put(UtilizationClass.OVER225, -2.149582E-5f);
 
-				var dqCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				dqCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, -1.1962891E-4f);
-				dqCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, -1.9813539E-4f);
-				dqCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, 5.8879855E-4f);
-				dqCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, 6.803894E-4f);
+				var dqCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				dqCv.put(UtilizationClass.U75TO125, -1.1962891E-4f);
+				dqCv.put(UtilizationClass.U125TO175, -1.9813539E-4f);
+				dqCv.put(UtilizationClass.U175TO225, 5.8879855E-4f);
+				dqCv.put(UtilizationClass.OVER225, 6.803894E-4f);
 
-				var volCv = new MatrixMap3Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, LayerType.ALL_USED, (k1, k2, k3) -> 0.0f
-				);
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
 
-				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, -2.88558E-5f);
-				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, -2.4463178E-4f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, -2.88558E-5f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, -2.4463178E-4f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 0.017329136f);
 				volCv.put(
-						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						0.017329136f
+						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, -0.15919617f
 				);
-				volCv.put(
-						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, -0.15919617f
-				);
-				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 4.1239262E-5f);
-				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, -1.0806322E-4f);
-				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						9.806299E-4f
-				);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, 4.1239262E-5f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, -1.0806322E-4f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 9.806299E-4f);
 				volCv.put(
 						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, -0.0044211294f
+						-0.0044211294f
 				);
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, -2.3832321E-5f);
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, -6.0749053E-6f);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						2.1846294E-4f
-				);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, -2.3832321E-5f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, -6.0749053E-6f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 2.1846294E-4f);
 				volCv.put(
 						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, -0.0029561424f
+						-0.0029561424f
 				);
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 9.3460085E-7f);
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 2.4065972E-5f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, 9.3460085E-7f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, 2.4065972E-5f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -1.8925668E-5f);
 				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						-1.8925668E-5f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, 3.4580233E-5f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 3.4580233E-5f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
@@ -686,7 +660,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0010083826f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, 4.406223E-5f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(
@@ -719,45 +693,33 @@ public class ComputationMethodsTest {
 			}
 			{
 				final VdypSpecies spec = vdypLayer.getSpeciesBySp0("S");
-				var baCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				baCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, -1.2635365E-5f);
-				baCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, -3.6683083E-5f);
-				baCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, -7.216871E-5f);
-				baCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, 1.2149811E-4f);
+				var baCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				baCv.put(UtilizationClass.U75TO125, -1.2635365E-5f);
+				baCv.put(UtilizationClass.U125TO175, -3.6683083E-5f);
+				baCv.put(UtilizationClass.U175TO225, -7.216871E-5f);
+				baCv.put(UtilizationClass.OVER225, 1.2149811E-4f);
 
-				var dqCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				dqCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, -7.803917E-4f);
-				dqCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, 9.682465E-4f);
-				dqCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, -0.0053552627f);
-				dqCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, -2.3551942E-4f);
+				var dqCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				dqCv.put(UtilizationClass.U75TO125, -7.803917E-4f);
+				dqCv.put(UtilizationClass.U125TO175, 9.682465E-4f);
+				dqCv.put(UtilizationClass.U175TO225, -0.0053552627f);
+				dqCv.put(UtilizationClass.OVER225, -2.3551942E-4f);
 
-				var volCv = new MatrixMap3Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, LayerType.ALL_USED, (k1, k2, k3) -> 0.0f
-				);
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
 
-				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 1.8458366E-5f);
-				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, -8.657909E-4f);
-				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, -9.883404E-5f);
-				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, -2.428794E-4f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, 1.8458366E-5f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, -8.657909E-4f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, -9.883404E-5f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, -2.428794E-4f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 0.009972191f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, 1.5911579E-4f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, 8.441782E-4f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -0.0014051724f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, -7.2431567E-6f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, -5.140305E-6f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -2.8505327E-5f);
 				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						0.009972191f
-				);
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 1.5911579E-4f);
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 8.441782E-4f);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						-0.0014051724f
-				);
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, -7.2431567E-6f);
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, -5.140305E-6f);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						-2.8505327E-5f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, 5.271149E-4f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 5.271149E-4f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
@@ -766,7 +728,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, 3.352447E-6f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(
@@ -802,46 +764,34 @@ public class ComputationMethodsTest {
 			{
 				final VdypSpecies spec = vdypLayer.getSpeciesBySp0("D");
 
-				var baCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				baCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, -4.2549896E-6f);
-				baCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, -1.4847741E-5f);
-				baCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, -7.765949E-5f);
-				baCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, 9.7198485E-5f);
+				var baCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				baCv.put(UtilizationClass.U75TO125, -4.2549896E-6f);
+				baCv.put(UtilizationClass.U125TO175, -1.4847741E-5f);
+				baCv.put(UtilizationClass.U175TO225, -7.765949E-5f);
+				baCv.put(UtilizationClass.OVER225, 9.7198485E-5f);
 
-				var dqCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				dqCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, -0.008364677f);
-				dqCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, -0.008026352f);
-				dqCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, -0.0018785477f);
-				dqCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, 3.5888673E-4f);
+				var dqCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				dqCv.put(UtilizationClass.U75TO125, -0.008364677f);
+				dqCv.put(UtilizationClass.U125TO175, -0.008026352f);
+				dqCv.put(UtilizationClass.U175TO225, -0.0018785477f);
+				dqCv.put(UtilizationClass.OVER225, 3.5888673E-4f);
 
-				var volCv = new MatrixMap3Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, LayerType.ALL_USED, (k1, k2, k3) -> 0.0f
-				);
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
 
-				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 0.0013236285f);
-				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 0.0061060176f);
-				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 4.6916964E-4f);
-				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 0.0010168457f);
-				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						0.010494633f
-				);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, 0.0013236285f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, 0.0061060176f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, 4.6916964E-4f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, 0.0010168457f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 0.010494633f);
 
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 3.8318634E-5f);
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 1.2196541E-4f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, 3.8318634E-5f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, 1.2196541E-4f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 7.2618487E-4f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, -1.4019013E-6f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, 3.7384034E-6f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -2.4299621E-5f);
 				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						7.2618487E-4f
-				);
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, -1.4019013E-6f);
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 3.7384034E-6f);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						-2.4299621E-5f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, 4.0655137E-5f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 4.0655137E-5f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
@@ -851,7 +801,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, 4.8476713E-6f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(
@@ -884,61 +834,43 @@ public class ComputationMethodsTest {
 			{
 				final VdypSpecies spec = vdypLayer.getSpeciesBySp0("H");
 
-				var baCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				baCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, -5.420685E-5f);
-				baCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, -8.119345E-5f);
-				baCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, -5.1870345E-5f);
-				baCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, 1.8692017E-4f);
+				var baCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				baCv.put(UtilizationClass.U75TO125, -5.420685E-5f);
+				baCv.put(UtilizationClass.U125TO175, -8.119345E-5f);
+				baCv.put(UtilizationClass.U175TO225, -5.1870345E-5f);
+				baCv.put(UtilizationClass.OVER225, 1.8692017E-4f);
 
-				var dqCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0.0f);
-				dqCv.put(UtilizationClass.U75TO125, LayerType.PRIMARY, 1.7196656E-4f);
-				dqCv.put(UtilizationClass.U125TO175, LayerType.PRIMARY, -7.5422286E-4f);
-				dqCv.put(UtilizationClass.U175TO225, LayerType.PRIMARY, -0.0012542343f);
-				dqCv.put(UtilizationClass.OVER225, LayerType.PRIMARY, -0.0010336685f);
+				var dqCv = new EnumMap<UtilizationClass, Float>(UtilizationClass.class);
+				dqCv.put(UtilizationClass.U75TO125, 1.7196656E-4f);
+				dqCv.put(UtilizationClass.U125TO175, -7.5422286E-4f);
+				dqCv.put(UtilizationClass.U175TO225, -0.0012542343f);
+				dqCv.put(UtilizationClass.OVER225, -0.0010336685f);
 
-				var volCv = new MatrixMap3Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, LayerType.ALL_USED, (k1, k2, k3) -> 0.0f
-				);
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
 
-				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, -7.733822E-5f);
-				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, -1.3294697E-4f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, -7.733822E-5f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, -1.3294697E-4f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 0.011269417f);
 				volCv.put(
-						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						0.011269417f
+						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, -0.13499795f
 				);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, 2.7103424E-5f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, 3.2465698E-4f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -0.0010089016f);
 				volCv.put(
-						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, -0.13499795f
+						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 0.005517883f
 				);
-				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 2.7103424E-5f);
-				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 3.2465698E-4f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, 4.112244E-5f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, 2.0864964E-4f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -9.173107E-4f);
 				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						-0.0010089016f
+						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 0.0027701568f
 				);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, -1.074791E-5f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, -5.841255E-6f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -5.373955E-5f);
 				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, 0.005517883f
-				);
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, 4.112244E-5f);
-				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 2.0864964E-4f);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						-9.173107E-4f
-				);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, 0.0027701568f
-				);
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, -1.074791E-5f);
-				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, -5.841255E-6f);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY,
-						-5.373955E-5f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						LayerType.PRIMARY, 3.7010195E-4f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 3.7010195E-4f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
@@ -948,7 +880,7 @@ public class ComputationMethodsTest {
 				smallCv.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
 				smallCv.put(UtilizationClassVariable.BASAL_AREA, 0.0f);
 
-				spec.setCompatibilityVariables(volCv, baCv, dqCv, smallCv);
+				spec.setCompatibilityVariables(new CompatibilityVariables(volCv, baCv, dqCv, smallCv));
 
 				spec.setBaseAreaByUtilization(
 						Utils.utilizationVector(0.0f, 5.914244f, 0.3650303f, 0.83281815f, 1.0865252f, 3.5843737f)
