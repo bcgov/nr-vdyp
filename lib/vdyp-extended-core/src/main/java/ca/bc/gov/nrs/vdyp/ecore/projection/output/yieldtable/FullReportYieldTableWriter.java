@@ -371,15 +371,15 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			for (int i = 0; i < speciesList.size(); i++) {
 				Species species = speciesList.get(i);
 				String append = SiteTool.getSpeciesFullName(species.getSpeciesCode()) + " ("
-						+ species.getSpeciesPercent() + "%%)" + (i < speciesList.size() - 1 ? ", " : "");
+						+ species.getSpeciesPercent() + "%)" + (i < speciesList.size() - 1 ? ", " : "");
 				if (titleLine.length() + append.length() > lineChars) {
-					doWrite(centerString(titleLine.toString(), lineChars));
+					doWrite("%s\n", centerString(titleLine.toString(), lineChars));
 					titleLine = new StringBuilder();
 				}
 				titleLine.append(append);
 			}
 			if (!titleLine.isEmpty()) {
-				doWrite(centerString(titleLine.toString(), lineChars));
+				doWrite("%s\n", centerString(titleLine.toString(), lineChars));
 			}
 			doWrite("\n");
 		}

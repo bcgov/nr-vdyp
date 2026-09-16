@@ -255,8 +255,8 @@ public class BatchResultAggregationService {
 	}
 
 	/**
-	 * Merges multiple yield tables of the same type into a single file in the ZIP. Assigns TABLE_NUM based on
-	 * polygon/layer combinations.
+	 * Merges multiple yield tables of the same type into a single file in the ZIP. For CSV files, assigns TABLE_NUM
+	 * based on polygon/layer combinations. Other report formats are copied unchanged.
 	 *
 	 * @throws IOException if merging fails
 	 */
@@ -265,6 +265,15 @@ public class BatchResultAggregationService {
 	) throws IOException {
 		ZipEntry zipEntry = new ZipEntry(BatchConstants.File.YIELD_TABLE_TYPE + "." + fileType);
 		zipOut.putNextEntry(zipEntry);
+
+		if (!"csv".equals(fileType)) {
+			// Text reports contain commas too; CSV numbering would overwrite their first species.
+			for (Path tablePath : tablePaths) {
+				Files.copy(tablePath, zipOut);
+			}
+			zipOut.closeEntry();
+			return;
+		}
 
 		TableNumberAssigner tableNumberAssigner = new TableNumberAssigner();
 		boolean isFirstFile = true;
