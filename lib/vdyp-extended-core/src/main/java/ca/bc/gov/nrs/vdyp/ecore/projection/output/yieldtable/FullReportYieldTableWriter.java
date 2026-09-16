@@ -379,7 +379,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 				titleLine.append(append);
 			}
 			if (!titleLine.isEmpty()) {
-				doWrite(centerString(titleLine.toString(), lineChars));
+				doWrite("%s\n", centerString(titleLine.toString(), lineChars));
 			}
 			doWrite("\n");
 		}
@@ -846,9 +846,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 	private void doWrite(String message, Object... args) throws YieldTableGenerationException {
 
 		try {
-			String formattedString = String.format(message, args);
-			logger.info("doWrite " + formattedString);
-			outputStream.write(formattedString.getBytes());
+			outputStream.write(String.format(message, args).getBytes());
 		} catch (IOException e) {
 			throw toYieldTableGenerationException(lastPolygonForTrailer, e);
 		}
