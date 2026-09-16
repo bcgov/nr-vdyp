@@ -191,19 +191,18 @@ class LayerProcessingStateTest {
 
 			unit = new TestLayerProcessingState(parent, polygon, LayerType.PRIMARY);
 
-			cvVolume = new MatrixMap2[] { null, new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
-					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
-					(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
-			) };
+			cvVolume = new MatrixMap2[] { null,
+					new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
+							List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+							(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
+					) };
 
-			cvBa = new Map[] { null,
-					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			cvBa = new Map[] { null, new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
 			for (var uc : UtilizationClass.values()) {
 				cvBa[1].put(uc, 13f + uc.ordinal() * 3f);
 			}
 
-			cvDq = new Map[] { null,
-					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			cvDq = new Map[] { null, new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
 			for (var uc : UtilizationClass.values()) {
 				cvDq[1].put(uc, 17f + uc.ordinal() * 3f);
 			}

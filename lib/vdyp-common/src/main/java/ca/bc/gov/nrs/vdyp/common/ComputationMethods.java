@@ -236,8 +236,7 @@ public class ComputationMethods {
 
 					basalAreaSumForSpecies += basalAreaUtil.get(uc);
 
-					float newDqValue = quadMeanDiameterUtil.get(uc)
-							+ spec.getCvQuadraticMeanDiameter(uc);
+					float newDqValue = quadMeanDiameterUtil.get(uc) + spec.getCvQuadraticMeanDiameter(uc);
 					quadMeanDiameterUtil.set(uc, FloatMath.clamp(newDqValue, uc.lowBound, uc.highBound));
 				}
 
@@ -283,8 +282,8 @@ public class ComputationMethods {
 					for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
 						wholeStemVolumeUtil.set(
 								uc,
-								wholeStemVolumeUtil.get(uc) * FloatMath
-										.exp(spec.getCvVolume(uc, VolumeVariable.WHOLE_STEM_VOL))
+								wholeStemVolumeUtil.get(uc)
+										* FloatMath.exp(spec.getCvVolume(uc, VolumeVariable.WHOLE_STEM_VOL))
 						);
 						wholeStemVolumeSum += wholeStemVolumeUtil.get(uc);
 					}
@@ -292,17 +291,10 @@ public class ComputationMethods {
 
 					// Set the adjustment factors for next three volume types
 					for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-						adjustCloseUtil
-								.set(uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL));
-						adjustDecayUtil.set(
-								uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY)
-						);
-						adjustDecayWasteUtil.set(
-								uc,
-								spec.getCvVolume(
-										uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-								)
-						);
+						adjustCloseUtil.set(uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL));
+						adjustDecayUtil.set(uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY));
+						adjustDecayWasteUtil
+								.set(uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE));
 					}
 				} else {
 					// Do nothing as the adjustment vectors are already set to 0

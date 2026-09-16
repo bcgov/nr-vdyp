@@ -198,8 +198,7 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 	}
 
 	public void setCompatibilityVariableDetails(
-			MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume,
-			Map<UtilizationClass, Float>[] cvBasalArea,
+			MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume, Map<UtilizationClass, Float>[] cvBasalArea,
 			Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
 	) {
@@ -247,19 +246,11 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 				cv[i].primaryLayerSmall().put(sucv, smallUpdate.apply(cv[i].primaryLayerSmall().get(sucv), sucv, i));
 			}
 			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-				cv[i].basalArea().put(
-						uc, baUpdate.apply(cv[i].basalArea().get(uc), uc, i)
-				);
-				cv[i].quadraticMeanDiameter().put(
-						uc,
-						dqUpdate.apply(cv[i].quadraticMeanDiameter().get(uc), uc, i)
-				);
+				cv[i].basalArea().put(uc, baUpdate.apply(cv[i].basalArea().get(uc), uc, i));
+				cv[i].quadraticMeanDiameter().put(uc, dqUpdate.apply(cv[i].quadraticMeanDiameter().get(uc), uc, i));
 
 				for (VolumeVariable vv : VolumeVariable.ALL) {
-					cv[i].volume().put(
-							uc, vv,
-							volUpdate.apply(cv[i].volume().get(uc, vv), uc, vv, i)
-					);
+					cv[i].volume().put(uc, vv, volUpdate.apply(cv[i].volume().get(uc, vv), uc, vv, i));
 				}
 			}
 		}

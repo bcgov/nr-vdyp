@@ -557,31 +557,21 @@ public class ComputationMethodsTest {
 				dqCv.put(UtilizationClass.U175TO225, -0.043888856f);
 				dqCv.put(UtilizationClass.OVER225, 0.0071104434f);
 
-				var volCv = new MatrixMap2Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f
-				);
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
 
 				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, -2.4918796E-4f);
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, 0.0022960806f);
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, 0.006271055f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -0.0047421646f);
 				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						-0.0047421646f
-				);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						0.035052672f
+						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 0.035052672f
 				);
 
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, -6.892681E-5f);
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, -1.6121865E-4f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 1.3177872E-4f);
 				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						1.3177872E-4f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						-0.001636486f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, -0.001636486f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
@@ -635,49 +625,33 @@ public class ComputationMethodsTest {
 				dqCv.put(UtilizationClass.U175TO225, 5.8879855E-4f);
 				dqCv.put(UtilizationClass.OVER225, 6.803894E-4f);
 
-				var volCv = new MatrixMap2Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f
-				);
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
 
 				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, -2.88558E-5f);
 				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, -2.4463178E-4f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 0.017329136f);
 				volCv.put(
-						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						0.017329136f
-				);
-				volCv.put(
-						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						-0.15919617f
+						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, -0.15919617f
 				);
 				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, 4.1239262E-5f);
 				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, -1.0806322E-4f);
-				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						9.806299E-4f
-				);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 9.806299E-4f);
 				volCv.put(
 						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
 						-0.0044211294f
 				);
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, -2.3832321E-5f);
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, -6.0749053E-6f);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						2.1846294E-4f
-				);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 2.1846294E-4f);
 				volCv.put(
 						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
 						-0.0029561424f
 				);
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, 9.3460085E-7f);
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, 2.4065972E-5f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -1.8925668E-5f);
 				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						-1.8925668E-5f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						3.4580233E-5f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 3.4580233E-5f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
@@ -731,33 +705,21 @@ public class ComputationMethodsTest {
 				dqCv.put(UtilizationClass.U175TO225, -0.0053552627f);
 				dqCv.put(UtilizationClass.OVER225, -2.3551942E-4f);
 
-				var volCv = new MatrixMap2Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f
-				);
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
 
 				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, 1.8458366E-5f);
 				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, -8.657909E-4f);
 				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, -9.883404E-5f);
 				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, -2.428794E-4f);
-				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						0.009972191f
-				);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 0.009972191f);
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, 1.5911579E-4f);
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, 8.441782E-4f);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						-0.0014051724f
-				);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -0.0014051724f);
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, -7.2431567E-6f);
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, -5.140305E-6f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -2.8505327E-5f);
 				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						-2.8505327E-5f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						5.271149E-4f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 5.271149E-4f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
@@ -814,34 +776,22 @@ public class ComputationMethodsTest {
 				dqCv.put(UtilizationClass.U175TO225, -0.0018785477f);
 				dqCv.put(UtilizationClass.OVER225, 3.5888673E-4f);
 
-				var volCv = new MatrixMap2Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f
-				);
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
 
 				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, 0.0013236285f);
 				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, 0.0061060176f);
 				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, 4.6916964E-4f);
 				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, 0.0010168457f);
-				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						0.010494633f
-				);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 0.010494633f);
 
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, 3.8318634E-5f);
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, 1.2196541E-4f);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						7.2618487E-4f
-				);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 7.2618487E-4f);
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, -1.4019013E-6f);
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, 3.7384034E-6f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -2.4299621E-5f);
 				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						-2.4299621E-5f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						4.0655137E-5f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 4.0655137E-5f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
@@ -896,49 +846,31 @@ public class ComputationMethodsTest {
 				dqCv.put(UtilizationClass.U175TO225, -0.0012542343f);
 				dqCv.put(UtilizationClass.OVER225, -0.0010336685f);
 
-				var volCv = new MatrixMap2Impl<>(
-						UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f
-				);
+				var volCv = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0.0f);
 
 				volCv.put(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL, -7.733822E-5f);
 				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL, -1.3294697E-4f);
+				volCv.put(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, 0.011269417f);
 				volCv.put(
-						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						0.011269417f
-				);
-				volCv.put(
-						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						-0.13499795f
+						UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, -0.13499795f
 				);
 				volCv.put(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL, 2.7103424E-5f);
 				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, 3.2465698E-4f);
+				volCv.put(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -0.0010089016f);
 				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						-0.0010089016f
-				);
-				volCv.put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						 0.005517883f
+						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 0.005517883f
 				);
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL, 4.112244E-5f);
 				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL, 2.0864964E-4f);
+				volCv.put(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -9.173107E-4f);
 				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						-9.173107E-4f
-				);
-				volCv.put(
-						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						 0.0027701568f
+						UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 0.0027701568f
 				);
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL, -1.074791E-5f);
 				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL, -5.841255E-6f);
+				volCv.put(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, -5.373955E-5f);
 				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY,
-						-5.373955E-5f
-				);
-				volCv.put(
-						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-						3.7010195E-4f
+						UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 3.7010195E-4f
 				);
 
 				Map<UtilizationClassVariable, Float> smallCv = new EnumMap<>(UtilizationClassVariable.class);
