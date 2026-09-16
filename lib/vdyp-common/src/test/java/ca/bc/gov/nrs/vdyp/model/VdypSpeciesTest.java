@@ -122,9 +122,7 @@ class VdypSpeciesTest {
 		assertThrows(InitializationIncompleteException.class, () -> sp.getCvQuadraticMeanDiameter(null));
 		assertThrows(InitializationIncompleteException.class, () -> sp.getCvPrimaryLayerSmall(null));
 
-		var cvVolume = new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
-				ucs, vvs, (x, y) -> 1.0f
-		);
+		var cvVolume = new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(ucs, vvs, (x, y) -> 1.0f);
 		var cvBasalArea = Utils.fillNewEnumMap(UtilizationClass.values(), k -> 1.0f);
 		var cvQuadraticMeanDiameter = Utils.fillNewEnumMap(UtilizationClass.values(), k -> 1.0f);
 		var cvPrimaryLayerSmall = Utils.fillNewEnumMap(UtilizationClassVariable.values(), k -> 1.0f);

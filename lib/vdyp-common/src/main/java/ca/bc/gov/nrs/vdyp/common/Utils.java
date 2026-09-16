@@ -787,8 +787,9 @@ public class Utils {
 		return layer.getOrderedSpecies().get(index - 1);
 	}
 
-	public static <K extends Enum<K>, V> EnumMap<K, V> fillNewEnumMap(K[] keys, Function<K, V> initializer) {
-		EnumMap<K, V> map = new EnumMap<K, V>((Class<K>) keys[0].getClass());
+	public static <K extends Enum<K>, V> Map<K, V> fillNewEnumMap(K[] keys, Function<K, V> initializer) {
+		@SuppressWarnings("unchecked")
+		var map = new EnumMap<K, V>((Class<K>) keys[0].getClass());
 		for (var key : keys) {
 			map.put(key, initializer.apply(key));
 		}

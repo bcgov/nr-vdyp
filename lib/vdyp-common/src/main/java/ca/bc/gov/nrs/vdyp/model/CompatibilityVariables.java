@@ -3,10 +3,8 @@ package ca.bc.gov.nrs.vdyp.model;
 import java.util.Map;
 
 public record CompatibilityVariables(
-		MatrixMap2<UtilizationClass, VolumeVariable, Float> volume,
-		Map<UtilizationClass, Float> basalArea,
-		Map<UtilizationClass, Float> quadraticMeanDiameter,
-		Map<UtilizationClassVariable, Float> primaryLayerSmall
+		MatrixMap2<UtilizationClass, VolumeVariable, Float> volume, Map<UtilizationClass, Float> basalArea,
+		Map<UtilizationClass, Float> quadraticMeanDiameter, Map<UtilizationClassVariable, Float> primaryLayerSmall
 ) {
 	/**
 	 * Given species indexed arrays of each variable map, return a species indexed array of CompatibilityVariables
@@ -19,8 +17,7 @@ public record CompatibilityVariables(
 	 * @return
 	 */
 	public static CompatibilityVariables[] fromArrays(
-			MatrixMap2<UtilizationClass, VolumeVariable, Float>[] volume,
-			Map<UtilizationClass, Float>[] basalArea,
+			MatrixMap2<UtilizationClass, VolumeVariable, Float>[] volume, Map<UtilizationClass, Float>[] basalArea,
 			Map<UtilizationClass, Float>[] quadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] primaryLayerSmall
 	) {
@@ -37,5 +34,5 @@ public record CompatibilityVariables(
 		}
 
 		return result;
-	};
+	}
 }

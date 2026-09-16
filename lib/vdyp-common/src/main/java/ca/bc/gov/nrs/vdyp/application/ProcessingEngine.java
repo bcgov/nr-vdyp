@@ -972,11 +972,9 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 		// INL1VGRP is built, rather than when LCOM1 VGRPL is built in the
 		// original code.)
 
-		MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume = new MatrixMap2[lps.getNSpecies()
-				+ 1];
+		MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume = new MatrixMap2[lps.getNSpecies() + 1];
 		Map<UtilizationClass, Float>[] cvBasalArea = new Map[lps.getNSpecies() + 1];
-		Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter = new Map[lps.getNSpecies()
-				+ 1];
+		Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter = new Map[lps.getNSpecies() + 1];
 		var cvSmall = new Map[lps.getNSpecies() + 1];
 
 		for (int s : lps.getIndices()) {
@@ -993,9 +991,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 			UtilizationVector quadMeanDiameters = Utils.utilizationVector();
 			UtilizationVector treesPerHectare = Utils.utilizationVector();
 
-			cvVolume[s] = new MatrixMap2Impl<>(
-					UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0f
-			);
+			cvVolume[s] = new MatrixMap2Impl<>(UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, (k1, k2) -> 0f);
 			cvBasalArea[s] = new EnumMap<>(UtilizationClass.class);
 			cvQuadraticMeanDiameter[s] = new EnumMap<>(UtilizationClass.class);
 

@@ -133,19 +133,18 @@ class BackProcessingEngineTest {
 			Map<UtilizationClass, Float>[] cvDq;
 			Map<UtilizationClassVariable, Float>[] cvSm;
 
-			cvVolume = new MatrixMap2[] { null, new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
-					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
-					(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
-			) };
+			cvVolume = new MatrixMap2[] { null,
+					new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
+							List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+							(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
+					) };
 
-			cvBa = new Map[] { null,
-					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			cvBa = new Map[] { null, new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
 			for (var uc : UtilizationClass.values()) {
 				cvBa[1].put(uc, 13f + uc.ordinal() * 3f);
 			}
 
-			cvDq = new Map[] { null,
-					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			cvDq = new Map[] { null, new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
 			for (var uc : UtilizationClass.values()) {
 				cvDq[1].put(uc, 17f + uc.ordinal() * 3f);
 			}
@@ -729,12 +728,8 @@ class BackProcessingEngineTest {
 	class CalculateCompatibilityVariables {
 		@ParameterizedTest
 		@CsvSource(
-			{
-					"1995, 2011, 1967, 0.636363626",
-					"2006, 2011, 1967, 0.886363626",
-					"1967, 2011, 1967, 0.0",
-					"1966, 2011, 1967, -0.0227272734"
-			}
+			{ "1995, 2011, 1967, 0.636363626", "2006, 2011, 1967, 0.886363626", "1967, 2011, 1967, 0.0",
+					"1966, 2011, 1967, -0.0227272734" }
 		)
 		void testBeforeStart(int currentYear, int startingYear, int convergenceYear, float fraction) {
 			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
@@ -743,7 +738,8 @@ class BackProcessingEngineTest {
 			expect(state.getCurrentStartingYear()).andStubReturn(startingYear);
 			expect(state.getConvergenceYear()).andStubReturn(Optional.of(convergenceYear));
 
-			layerState.setFractionalCompatibilityVariables(EasyMock.eq(fraction, Math.abs(fraction * 0.01f))); // Within 1%
+			layerState.setFractionalCompatibilityVariables(EasyMock.eq(fraction, Math.abs(fraction * 0.01f))); // Within
+																												// 1%
 			expectLastCall().once();
 
 			em.replay();
@@ -752,12 +748,7 @@ class BackProcessingEngineTest {
 		}
 
 		@ParameterizedTest
-		@CsvSource(
-			{
-					"2011, 2011, 1967",
-					"2012, 2011, 1967"
-			}
-		)
+		@CsvSource({ "2011, 2011, 1967", "2012, 2011, 1967" })
 		void testAtOrAfterStart(int currentYear, int startingYear, int convergenceYear) {
 			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
 

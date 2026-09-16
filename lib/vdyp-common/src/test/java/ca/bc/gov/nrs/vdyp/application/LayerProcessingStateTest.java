@@ -191,19 +191,18 @@ class LayerProcessingStateTest {
 
 			unit = new TestLayerProcessingState(parent, polygon, LayerType.PRIMARY);
 
-			cvVolume = new MatrixMap2[] { null, new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
-					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
-					(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
-			) };
+			cvVolume = new MatrixMap2[] { null,
+					new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
+							List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+							(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
+					) };
 
-			cvBa = new Map[] { null,
-					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			cvBa = new Map[] { null, new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
 			for (var uc : UtilizationClass.values()) {
 				cvBa[1].put(uc, 13f + uc.ordinal() * 3f);
 			}
 
-			cvDq = new Map[] { null,
-					new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
+			cvDq = new Map[] { null, new EnumMap<UtilizationClass, Float>(UtilizationClass.class) };
 			for (var uc : UtilizationClass.values()) {
 				cvDq[1].put(uc, 17f + uc.ordinal() * 3f);
 			}
@@ -220,16 +219,13 @@ class LayerProcessingStateTest {
 		void testFailBeforeSet() throws ProcessingException {
 			assertThrows(
 					IllegalStateException.class,
-					() -> unit.getCVVolume(1, UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY),
-					"getCVVolume"
+					() -> unit.getCVVolume(1, UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL), "getCVVolume"
 			);
 			assertThrows(
-					IllegalStateException.class, () -> unit.getCVBasalArea(1, UtilizationClass.ALL, LayerType.PRIMARY),
-					"getCVBasalArea"
+					IllegalStateException.class, () -> unit.getCVBasalArea(1, UtilizationClass.ALL), "getCVBasalArea"
 			);
 			assertThrows(
-					IllegalStateException.class,
-					() -> unit.getCVQuadraticMeanDiameter(1, UtilizationClass.ALL, LayerType.PRIMARY),
+					IllegalStateException.class, () -> unit.getCVQuadraticMeanDiameter(1, UtilizationClass.ALL),
 					"getCVQuadraticMeanDiameter"
 			);
 			assertThrows(
@@ -241,18 +237,9 @@ class LayerProcessingStateTest {
 		@Test
 		void testSucceedAfterSet() throws ProcessingException {
 			unit.setCompatibilityVariableDetails(cvVolume, cvBa, cvDq, cvSm);
-			assertThat(
-					unit,
-					testCV(
-							"getCVVolume", 1, UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY,
-							is(16f)
-					)
-			);
-			assertThat(unit, testCV("getCVBasalArea", 1, UtilizationClass.ALL, LayerType.PRIMARY, is(16f)));
-			assertThat(
-					unit,
-					testCV("getCVQuadraticMeanDiameter", 1, UtilizationClass.U125TO175, LayerType.PRIMARY, is(26f))
-			);
+			assertThat(unit, testCV("getCVVolume", 1, UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL, is(16f)));
+			assertThat(unit, testCV("getCVBasalArea", 1, UtilizationClass.ALL, is(16f)));
+			assertThat(unit, testCV("getCVQuadraticMeanDiameter", 1, UtilizationClass.U125TO175, is(26f)));
 			assertThat(unit, testCV("getCVSmall", 1, UtilizationClassVariable.QUAD_MEAN_DIAMETER, is(7f)));
 		}
 

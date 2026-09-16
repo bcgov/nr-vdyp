@@ -2319,11 +2319,9 @@ class ProcessingEngineTest {
 			EasyMock.expect(lps.getPrimarySpeciesAgeAtBreastHeight()).andStubReturn(54f);
 			EasyMock.expect(lps.getPrimarySpeciesIndex()).andStubReturn(3);
 
-			Capture<MatrixMap2<UtilizationClass, VolumeVariable, Float>[]> capCvVolume = EasyMock
-					.newCapture();
+			Capture<MatrixMap2<UtilizationClass, VolumeVariable, Float>[]> capCvVolume = EasyMock.newCapture();
 			Capture<Map<UtilizationClass, Float>[]> capCvBasalArea = EasyMock.newCapture();
-			Capture<Map<UtilizationClass, Float>[]> capCvQuadraticMeanDiameter = EasyMock
-					.newCapture();
+			Capture<Map<UtilizationClass, Float>[]> capCvQuadraticMeanDiameter = EasyMock.newCapture();
 			Capture<Map<UtilizationClassVariable, Float>[]> capCvPrimaryLayerSmall = EasyMock.newCapture();
 
 			Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
@@ -2580,29 +2578,17 @@ class ProcessingEngineTest {
 					allOf(
 							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
 							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
-							mmHasEntry(
-									is(0.035768032f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							),
-							mmHasEntry(
-									is(-0.0016698837f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							)
+							mmHasEntry(is(0.035768032f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(-0.0016698837f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
 					"CvVolume[2]", capCvVolume.getValue()[2],
 					allOf(
-							mmHasEntry(
-									is(-0.16244507f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							),
-							mmHasEntry(
-									is(-0.0045113564f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							),
-							mmHasEntry(
-									is(-0.0030164719f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							),
-							mmHasEntry(
-									is(3.528595E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							)
+							mmHasEntry(is(-0.16244507f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(-0.0045113564f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(-0.0030164719f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(3.528595E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
@@ -2611,26 +2597,16 @@ class ProcessingEngineTest {
 							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
 							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
 							mmHasEntry(is(0.0f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
-							mmHasEntry(
-									is(4.1484833E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							)
+							mmHasEntry(is(4.1484833E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
 					"CvVolume[4]", capCvVolume.getValue()[4],
 					allOf(
-							mmHasEntry(
-									is(-0.13775301f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							),
-							mmHasEntry(
-									is(0.005630493f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							),
-							mmHasEntry(
-									is(0.0028266907f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							),
-							mmHasEntry(
-									is(3.7765503E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							)
+							mmHasEntry(is(-0.13775301f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.005630493f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.0028266907f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(3.7765503E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
@@ -2639,9 +2615,7 @@ class ProcessingEngineTest {
 							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
 							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
 							mmHasEntry(is(0.0f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
-							mmHasEntry(
-									is(5.378723E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
-							)
+							mmHasEntry(is(5.378723E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
@@ -2692,91 +2666,71 @@ class ProcessingEngineTest {
 			assertThat(
 					"CvBasalArea[1]", capCvBasalArea.getValue()[1],
 					allOf(
-							hasEntry(is(OVER225), is(1.4913082E-4f)),
-							hasEntry(is(U125TO175), is(-5.034916E-5f)),
-							hasEntry(is(U175TO225), is(-7.482059E-5f)),
-							hasEntry(is(U75TO125), is(-2.397038E-5f))
+							hasEntry(is(OVER225), is(1.4913082E-4f)), hasEntry(is(U125TO175), is(-5.034916E-5f)),
+							hasEntry(is(U175TO225), is(-7.482059E-5f)), hasEntry(is(U75TO125), is(-2.397038E-5f))
 					)
 			);
 			assertThat(
 					"CvBasalArea[2]", capCvBasalArea.getValue()[2],
 					allOf(
-							hasEntry(is(OVER225), is(-2.193451E-5f)),
-							hasEntry(is(U125TO175), is(5.4836273E-6f)),
-							hasEntry(is(U175TO225), is(9.596348E-6f)),
-							hasEntry(is(U75TO125), is(6.660819E-6f))
+							hasEntry(is(OVER225), is(-2.193451E-5f)), hasEntry(is(U125TO175), is(5.4836273E-6f)),
+							hasEntry(is(U175TO225), is(9.596348E-6f)), hasEntry(is(U75TO125), is(6.660819E-6f))
 					)
 			);
 			assertThat(
 					"CvBasalArea[3]", capCvBasalArea.getValue()[3],
 					allOf(
-							hasEntry(is(OVER225), is(9.918213E-5f)),
-							hasEntry(is(U125TO175), is(-1.5150756E-5f)),
-							hasEntry(is(U175TO225), is(-7.9244375E-5f)),
-							hasEntry(is(U75TO125), is(-4.341826E-6f))
+							hasEntry(is(OVER225), is(9.918213E-5f)), hasEntry(is(U125TO175), is(-1.5150756E-5f)),
+							hasEntry(is(U175TO225), is(-7.9244375E-5f)), hasEntry(is(U75TO125), is(-4.341826E-6f))
 					)
 			);
 			assertThat(
 					"CvBasalArea[4]", capCvBasalArea.getValue()[4],
 					allOf(
-							hasEntry(is(OVER225), is(1.9073486E-4f)),
-							hasEntry(is(U125TO175), is(-8.2850456E-5f)),
-							hasEntry(is(U175TO225), is(-5.2928925E-5f)),
-							hasEntry(is(U75TO125), is(-5.531311E-5f))
+							hasEntry(is(OVER225), is(1.9073486E-4f)), hasEntry(is(U125TO175), is(-8.2850456E-5f)),
+							hasEntry(is(U175TO225), is(-5.2928925E-5f)), hasEntry(is(U75TO125), is(-5.531311E-5f))
 					)
 			);
 			assertThat(
 					"CvBasalArea[5]", capCvBasalArea.getValue()[5],
 					allOf(
-							hasEntry(is(OVER225), is(1.2397766E-4f)),
-							hasEntry(is(U125TO175), is(-3.7431717E-5f)),
-							hasEntry(is(U175TO225), is(-7.364154E-5f)),
-							hasEntry(is(U75TO125), is(-1.289323E-5f))
+							hasEntry(is(OVER225), is(1.2397766E-4f)), hasEntry(is(U125TO175), is(-3.7431717E-5f)),
+							hasEntry(is(U175TO225), is(-7.364154E-5f)), hasEntry(is(U75TO125), is(-1.289323E-5f))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[1]", capCvQuadraticMeanDiameter.getValue()[1],
 					allOf(
-							hasEntry(is(OVER225), is(0.007255554F)),
-							hasEntry(is(U125TO175), is(-0.014289856f)),
-							hasEntry(is(U175TO225), is(-0.044784546F)),
-							hasEntry(is(U75TO125), is(0.0f))
+							hasEntry(is(OVER225), is(0.007255554F)), hasEntry(is(U125TO175), is(-0.014289856f)),
+							hasEntry(is(U175TO225), is(-0.044784546F)), hasEntry(is(U75TO125), is(0.0f))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[2]", capCvQuadraticMeanDiameter.getValue()[2],
 					allOf(
-							hasEntry(is(OVER225), is(6.942749E-4f)),
-							hasEntry(is(U125TO175), is(-2.0217896E-4f)),
-							hasEntry(is(U175TO225), is(6.008148E-4f)),
-							hasEntry(is(U75TO125), is(-1.2207031E-4f))
+							hasEntry(is(OVER225), is(6.942749E-4f)), hasEntry(is(U125TO175), is(-2.0217896E-4f)),
+							hasEntry(is(U175TO225), is(6.008148E-4f)), hasEntry(is(U75TO125), is(-1.2207031E-4f))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[3]", capCvQuadraticMeanDiameter.getValue()[3],
 					allOf(
-							hasEntry(is(OVER225), is(3.6621094E-4F)),
-							hasEntry(is(U125TO175), is(-0.008190155f)),
-							hasEntry(is(U175TO225), is(-0.0019168854f)),
-							hasEntry(is(U75TO125), is(-0.008535385F))
+							hasEntry(is(OVER225), is(3.6621094E-4F)), hasEntry(is(U125TO175), is(-0.008190155f)),
+							hasEntry(is(U175TO225), is(-0.0019168854f)), hasEntry(is(U75TO125), is(-0.008535385F))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[4]", capCvQuadraticMeanDiameter.getValue()[4],
 					allOf(
-							hasEntry(is(OVER225), is(-0.0010547638f)),
-							hasEntry(is(U125TO175), is(-7.696152E-4f)),
-							hasEntry(is(U175TO225), is(-0.0012798309f)),
-							hasEntry(is(U75TO125), is(1.7547607E-4f))
+							hasEntry(is(OVER225), is(-0.0010547638f)), hasEntry(is(U125TO175), is(-7.696152E-4f)),
+							hasEntry(is(U175TO225), is(-0.0012798309f)), hasEntry(is(U75TO125), is(1.7547607E-4f))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[5]", capCvQuadraticMeanDiameter.getValue()[5],
 					allOf(
-							hasEntry(is(OVER225), is(-2.4032593E-4F)),
-							hasEntry(is(U125TO175), is(9.880066E-4f)),
-							hasEntry(is(U175TO225), is(-0.005464554F)),
-							hasEntry(is(U75TO125), is(-7.9631805E-4F))
+							hasEntry(is(OVER225), is(-2.4032593E-4F)), hasEntry(is(U125TO175), is(9.880066E-4f)),
+							hasEntry(is(U175TO225), is(-0.005464554F)), hasEntry(is(U75TO125), is(-7.9631805E-4F))
 					)
 			);
 			assertThat(

@@ -79,7 +79,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			final int specIndex = i + 1;
 			cvVolume[specIndex] = new MatrixMap2Impl<>(
 					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
-					(uc, vv) -> primaryState.getCVVolume(specIndex, uc, vv, LayerType.PRIMARY)
+					(uc, vv) -> primaryState.getCVVolume(specIndex, uc, vv)
 			);
 
 			cvBasalArea[specIndex] = new EnumMap<>(UtilizationClass.class);
@@ -87,9 +87,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			cvPrimaryLayerSmall[specIndex] = new EnumMap<>(UtilizationClassVariable.class);
 
 			for (var uc : UtilizationClass.values()) {
-				cvBasalArea[specIndex].put(uc, primaryState.getCVBasalArea(specIndex, uc, LayerType.PRIMARY));
-				cvQuadraticMeanDiameter[specIndex]
-						.put(uc, primaryState.getCVQuadraticMeanDiameter(specIndex, uc, LayerType.PRIMARY));
+				cvBasalArea[specIndex].put(uc, primaryState.getCVBasalArea(specIndex, uc));
+				cvQuadraticMeanDiameter[specIndex].put(uc, primaryState.getCVQuadraticMeanDiameter(specIndex, uc));
 			}
 
 			for (var ucv : UtilizationClassVariable.values()) {

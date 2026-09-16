@@ -49,10 +49,10 @@ public class BackLayerProcessingState extends LayerProcessingState<BackLayerProc
 	public void setFractionalCompatibilityVariables(float fraction) {
 
 		this.updateCompatibilityVariables(
-				(prev, ucv, i) -> backCompatibilityVariables.get()[i].primaryLayerSmall().get(ucv),
-				(prev, uc, i) -> backCompatibilityVariables.get()[i].basalArea().get(uc),
-				(prev, uc, i) -> backCompatibilityVariables.get()[i].quadraticMeanDiameter().get(uc),
-				(prev, uc, vv, i) -> backCompatibilityVariables.get()[i].volume().get(uc, vv)
+				(prev, ucv, i) -> backCompatibilityVariables.get()[i].primaryLayerSmall().get(ucv) * fraction,
+				(prev, uc, i) -> backCompatibilityVariables.get()[i].basalArea().get(uc) * fraction,
+				(prev, uc, i) -> backCompatibilityVariables.get()[i].quadraticMeanDiameter().get(uc) * fraction,
+				(prev, uc, vv, i) -> backCompatibilityVariables.get()[i].volume().get(uc, vv) * fraction
 		);
 	}
 }
