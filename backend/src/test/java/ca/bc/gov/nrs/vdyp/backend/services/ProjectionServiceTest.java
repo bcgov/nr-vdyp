@@ -2013,8 +2013,7 @@ class ProjectionServiceTest {
 		var destinationModel = new ProjectionModel();
 		destinationModel.setProjectionGUID(destinationId.toString());
 		var duplicateService = spy(service);
-		doReturn(destinationModel).when(duplicateService)
-				.createNewProjection(eq(actingUser), any(), any(), any());
+		doReturn(destinationModel).when(duplicateService).createNewProjection(eq(actingUser), any(), any(), any());
 		when(repository.findByIdOptional(sourceId)).thenReturn(Optional.of(source));
 		when(repository.findByIdOptional(destinationId)).thenReturn(Optional.of(destination));
 		var copyFailure = new ProjectionServiceException("Layer copy failed");
