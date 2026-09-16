@@ -211,7 +211,7 @@ public class FileMappingService {
 			duplicateFile(FileMappingModel file, ProjectionFileSetEntity fileSetEntity, String comsBucketGUID)
 					throws ProjectionServiceException {
 		HttpRequest getReq = HttpRequest.newBuilder(URI.create(file.getDownloadURL().toString())).GET().build();
-
+		UUID objectGUID = null;
 		try {
 			HttpResponse<InputStream> resp = httpClient.send(getReq, HttpResponse.BodyHandlers.ofInputStream());
 
@@ -231,9 +231,9 @@ public class FileMappingService {
 						jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM, // String constant
 						in
 				);
-				return persistenceService.persistFileMapping(
-						UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), file.getFilename()
-				);
+				objectGUID = UUID.fromString(comsObj.id());
+				return persistenceService
+						.persistFileMapping(objectGUID, fileSetEntity.getProjectionFileSetGUID(), file.getFilename());
 			}
 		} catch (ProjectionServiceException e) {
 			throw e;
@@ -241,6 +241,9 @@ public class FileMappingService {
 			Thread.currentThread().interrupt(); // restore interrupt status
 			throw new ProjectionServiceException("Thread interrupted during COMS duplication", e);
 		} catch (Exception e) {
+			if (objectGUID != null) {
+				deleteComsObjectQuietly(objectGUID, e);
+			}
 			throw new ProjectionServiceException("Error duplicating file in COMS", e);
 		}
 	}

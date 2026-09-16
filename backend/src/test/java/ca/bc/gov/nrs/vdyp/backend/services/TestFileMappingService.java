@@ -518,6 +518,38 @@ class TestFileMappingService {
 	}
 
 	@Test
+	void duplicateFile_mappingFailure_deletesUploadedObject() throws Exception {
+		var file = new FileMappingModel();
+		file.setDownloadURL(new URI("https://example.com/file.bin").toURL());
+		file.setFilename("file.bin");
+		var fileSet = fileSetEntity(UUID.randomUUID());
+		UUID objectId = UUID.randomUUID();
+		HttpResponse<InputStream> response = (HttpResponse<InputStream>) mock(HttpResponse.class);
+		when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(response);
+		when(response.statusCode()).thenReturn(200);
+		when(response.headers()).thenReturn(HttpHeaders.of(Map.of("Content-Length", List.of("3")), (k, v) -> true));
+		when(response.body()).thenReturn(new ByteArrayInputStream(new byte[3]));
+		when(comsClient.createObject(any(), any(), anyLong(), any(), any())).thenReturn(
+				new COMSObject(
+						objectId.toString(), "/copy", false, true, "bucket", "file.bin", null, null, null, null, null,
+						null, Set.of()
+				)
+		);
+		var databaseFailure = new IllegalStateException("Database write failed");
+		when(persistenceService.persistFileMapping(objectId, fileSet.getProjectionFileSetGUID(), "file.bin"))
+				.thenThrow(databaseFailure);
+		when(comsClient.getObjectVersions(objectId.toString())).thenReturn(List.of());
+		when(comsClient.deleteObject(objectId.toString())).thenReturn(Response.noContent().build());
+
+		var failure = assertThrows(
+				ProjectionServiceException.class, () -> service.duplicateFile(file, fileSet, "bucket")
+		);
+
+		assertEquals(databaseFailure, failure.getCause());
+		verify(comsClient).deleteObject(objectId.toString());
+	}
+
+	@Test
 	void createPlaceholderFile_persistsEntityAndReturnsModel() throws Exception {
 		UUID fileSetGUID = UUID.randomUUID();
 		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
