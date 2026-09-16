@@ -373,7 +373,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 				String append = SiteTool.getSpeciesFullName(species.getSpeciesCode()) + " ("
 						+ species.getSpeciesPercent() + "%%)" + (i < speciesList.size() - 1 ? ", " : "");
 				if (titleLine.length() + append.length() > lineChars) {
-					doWrite(centerString(titleLine.toString(), lineChars));
+					doWrite("%s\n", centerString(titleLine.toString(), lineChars));
 					titleLine = new StringBuilder();
 				}
 				titleLine.append(append);
@@ -826,7 +826,9 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 	private void doWrite(String message, Object... args) throws YieldTableGenerationException {
 
 		try {
-			outputStream.write(String.format(message, args).getBytes());
+			String formattedString = String.format(message, args);
+			logger.info("doWrite " + formattedString);
+			outputStream.write(formattedString.getBytes());
 		} catch (IOException e) {
 			throw toYieldTableGenerationException(lastPolygonForTrailer, e);
 		}
