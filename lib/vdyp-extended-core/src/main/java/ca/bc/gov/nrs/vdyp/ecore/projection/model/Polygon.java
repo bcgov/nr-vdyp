@@ -1027,7 +1027,7 @@ public class Polygon implements Comparable<Polygon> {
 			logger.debug(
 					"{}: years since disturbance: total age: {}; measurement year: {}; year of disturbance {}; years since disturbance",
 					this, leadingSpecies.getSpeciesGroup().getTotalAge(), measurementYear,
-					getHistory().getDisturbanceStartYear(), years
+					getHistory() != null ? getHistory().getDisturbanceStartYear() : null, years
 			);
 		}
 

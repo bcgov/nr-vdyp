@@ -114,7 +114,6 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
     `The species '${selectedSiteSpeciesValue}' must have an BHA 50 Site Index value supplied`,
   SITE_VLD_SPCZ_REQ_SI_VAL_NEW_UI: (selectedSiteSpeciesValue: string | null) =>
     `The species '${selectedSiteSpeciesValue}' must have an BHA Site Index value supplied`,
-  DENSITY_VLD_PCT_STCB_AREA_REQ: 'Percent Stockable Area is required.',
   DENSITY_VLD_PCT_STCB_AREA_RNG:
     "'Percent Stockable Area' must range from 0 and 100",
   DENSITY_VLD_BSL_AREA_RNG: "'Basal Area' must range from 0.1000 and 250.0000",

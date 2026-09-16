@@ -543,7 +543,27 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		for (PolygonMessage message : messages) {
 			doWrite("%s\n", message.getSimpleMessageText());
 		}
+
+		String stockableAreaNote = buildActualStockableAreaUsedNote(lastPolygonForTrailer);
+		if (stockableAreaNote != null) {
+			doWrite("%s\n", stockableAreaNote);
+		}
+
 		doWrite("\n");
+	}
+
+	/**
+	 * @return the "NOTE: Actual Percent Stockable Area Used" line if the value was defaulted, or null if supplied.
+	 */
+	static String buildActualStockableAreaUsedNote(Polygon polygon) {
+		Layer primaryLayer = polygon.getPrimaryLayer();
+		Double suppliedPercentStockable = primaryLayer != null ? primaryLayer.getPercentStockable() : null;
+		Double actualPercentStockable = polygon.getPercentStockable();
+
+		if ( (suppliedPercentStockable == null || suppliedPercentStockable == 0.0) && actualPercentStockable != null) {
+			return String.format("NOTE: Actual Percent Stockable Area Used : %.0f%%", actualPercentStockable);
+		}
+		return null;
 	}
 
 	private void writeTableProperties() throws YieldTableGenerationException {

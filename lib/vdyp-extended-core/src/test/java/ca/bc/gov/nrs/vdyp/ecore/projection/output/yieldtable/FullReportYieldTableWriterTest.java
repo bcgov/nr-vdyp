@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -64,6 +65,30 @@ class FullReportYieldTableWriterTest {
 		return Files.readString(context.getExecutionFolder().resolve(FullReportYieldTableWriter.YIELD_TABLE_FILE_NAME))
 				.lines().dropWhile(line -> !line.contains("VDYP Yield Table Report")).skip(1)
 				.takeWhile(line -> !line.isBlank()).toList();
+	}
+
+	@Test
+	void testBuildActualStockableAreaUsedNoteWhenNotSupplied() {
+
+		var polygon = new Polygon.Builder().featureId(1).percentStockable(84.0).build();
+		var layer = new Layer.Builder().polygon(polygon).layerId("1").percentStockable(0.0).build();
+		polygon.setPrimaryLayer(layer);
+
+		var note = FullReportYieldTableWriter.buildActualStockableAreaUsedNote(polygon);
+
+		assertThat(note, is("NOTE: Actual Percent Stockable Area Used : 84%"));
+	}
+
+	@Test
+	void testBuildActualStockableAreaUsedNoteWhenSupplied() {
+
+		var polygon = new Polygon.Builder().featureId(1).percentStockable(90.0).build();
+		var layer = new Layer.Builder().polygon(polygon).layerId("1").percentStockable(90.0).build();
+		polygon.setPrimaryLayer(layer);
+
+		var note = FullReportYieldTableWriter.buildActualStockableAreaUsedNote(polygon);
+
+		assertThat(note, is(nullValue()));
 	}
 
 	@Test
