@@ -28,7 +28,7 @@
             <v-row no-gutters class="form-fields-row stand-fields-row">
               <v-col class="stand-field-col">
                 <AppSpinField
-                  label="Percent Stockable Area (Required)"
+                  label="Percent Stockable Area"
                   :showPercentSign="true"
                   :model-value="percentStockableArea"
                   :max="CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX"
@@ -461,11 +461,6 @@ const onConfirm = async () => {
   crownClosureError.value = ''
   basalAreaError.value = ''
   treesPerHectareError.value = ''
-
-  if (percentStockableArea.value === null || percentStockableArea.value === '') {
-    percentStockableAreaError.value = MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_REQ
-    return
-  }
 
   const isFormValid = await validateFormInputs()
 
