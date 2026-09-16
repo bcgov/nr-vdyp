@@ -69,7 +69,6 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -2320,11 +2319,9 @@ class ProcessingEngineTest {
 			EasyMock.expect(lps.getPrimarySpeciesAgeAtBreastHeight()).andStubReturn(54f);
 			EasyMock.expect(lps.getPrimarySpeciesIndex()).andStubReturn(3);
 
-			Capture<MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[]> capCvVolume = EasyMock
-					.newCapture();
-			Capture<MatrixMap2<UtilizationClass, LayerType, Float>[]> capCvBasalArea = EasyMock.newCapture();
-			Capture<MatrixMap2<UtilizationClass, LayerType, Float>[]> capCvQuadraticMeanDiameter = EasyMock
-					.newCapture();
+			Capture<MatrixMap2<UtilizationClass, VolumeVariable, Float>[]> capCvVolume = EasyMock.newCapture();
+			Capture<Map<UtilizationClass, Float>[]> capCvBasalArea = EasyMock.newCapture();
+			Capture<Map<UtilizationClass, Float>[]> capCvQuadraticMeanDiameter = EasyMock.newCapture();
 			Capture<Map<UtilizationClassVariable, Float>[]> capCvPrimaryLayerSmall = EasyMock.newCapture();
 
 			Bank bank = ProcessingStateTestUtils.mockBank(bec, 5);
@@ -2489,305 +2486,251 @@ class ProcessingEngineTest {
 			assertThat(
 					"CvVolume[1]", capCvVolume.getValue()[1],
 					allOf(
-							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.0063990355f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-0.00016450882f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL),
+							mmHasEntry(is(0.0063990355f), U175TO225, CLOSE_UTIL_VOL),
+							mmHasEntry(is(-0.00016450882f), OVER225, CLOSE_UTIL_VOL)
 					)
 			);
 			assertThat(
 					"CvVolume[2]", capCvVolume.getValue()[2],
 					allOf(
-							mmHasEntry(is(-0.00024962425f), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-0.00011026859f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-0.000006198883f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.000024557114f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(-0.00024962425f), U75TO125, CLOSE_UTIL_VOL),
+							mmHasEntry(is(-0.00011026859f), U125TO175, CLOSE_UTIL_VOL),
+							mmHasEntry(is(-0.000006198883f), U175TO225, CLOSE_UTIL_VOL),
+							mmHasEntry(is(0.000024557114f), OVER225, CLOSE_UTIL_VOL)
 					)
 			);
 			assertThat(
 					"CvVolume[3]", capCvVolume.getValue()[3],
 					allOf(
-							mmHasEntry(is(0.00623063f), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.0010375977f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.0001244545f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.0000038146973f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(0.00623063f), U75TO125, CLOSE_UTIL_VOL),
+							mmHasEntry(is(0.0010375977f), U125TO175, CLOSE_UTIL_VOL),
+							mmHasEntry(is(0.0001244545f), U175TO225, CLOSE_UTIL_VOL),
+							mmHasEntry(is(0.0000038146973f), OVER225, CLOSE_UTIL_VOL)
 					)
 			);
 			assertThat(
 					"CvVolume[4]", capCvVolume.getValue()[4],
 					allOf(
-							mmHasEntry(is(-0.00013566017f), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.00033128262f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.00021290779f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-0.0000059604645f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(-0.00013566017f), U75TO125, CLOSE_UTIL_VOL),
+							mmHasEntry(is(0.00033128262f), U125TO175, CLOSE_UTIL_VOL),
+							mmHasEntry(is(0.00021290779f), U175TO225, CLOSE_UTIL_VOL),
+							mmHasEntry(is(-0.0000059604645f), OVER225, CLOSE_UTIL_VOL)
 					)
 			);
 			assertThat(
 					"CvVolume[5]", capCvVolume.getValue()[5],
 					allOf(
-							mmHasEntry(is(-8.8346004E-4F), U75TO125, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-0.0002478361f), U125TO175, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.0008614063f), U175TO225, CLOSE_UTIL_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-0.0000052452087f), OVER225, CLOSE_UTIL_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(-8.8346004E-4F), U75TO125, CLOSE_UTIL_VOL),
+							mmHasEntry(is(-0.0002478361f), U125TO175, CLOSE_UTIL_VOL),
+							mmHasEntry(is(0.0008614063f), U175TO225, CLOSE_UTIL_VOL),
+							mmHasEntry(is(-0.0000052452087f), OVER225, CLOSE_UTIL_VOL)
 					)
 			);
 			assertThat(
 					"CvVolume[1]", capCvVolume.getValue()[1],
 					allOf(
-							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(-0.0048389435f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(1.3446808E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(-0.0048389435f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(1.3446808E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY)
 					)
 			);
 			assertThat(
 					"CvVolume[2]", capCvVolume.getValue()[2],
 					allOf(
-							mmHasEntry(is(0.01768279f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(0.0010006428f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(2.2292137E-4f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(-1.9311905E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+							mmHasEntry(is(0.01768279f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(0.0010006428f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(2.2292137E-4f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(-1.9311905E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY)
 					)
 			);
 			assertThat(
 					"CvVolume[3]", capCvVolume.getValue()[3],
 					allOf(
-							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(0.010708809f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(7.4100494E-4f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(-2.4795532E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(0.010708809f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(7.4100494E-4f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(-2.4795532E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY)
 					)
 			);
 			assertThat(
 					"CvVolume[4]", capCvVolume.getValue()[4],
 					allOf(
-							mmHasEntry(is(0.011499405f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(-0.0010294914f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(-9.3603134E-4f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(-5.4836273E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+							mmHasEntry(is(0.011499405f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(-0.0010294914f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(-9.3603134E-4f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(-5.4836273E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY)
 					)
 			);
 			assertThat(
 					"CvVolume[5]", capCvVolume.getValue()[5],
 					allOf(
-							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(0.010175705f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(-0.0014338493f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY),
-							mmHasEntry(is(-2.9087067E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY)
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(0.010175705f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(-0.0014338493f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY),
+							mmHasEntry(is(-2.9087067E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY)
 					)
 			);
 			assertThat(
 					"CvVolume[1]", capCvVolume.getValue()[1],
 					allOf(
-							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
-							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
-							mmHasEntry(
-									is(0.035768032f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							),
-							mmHasEntry(
-									is(-0.0016698837f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							)
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.035768032f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(-0.0016698837f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
 					"CvVolume[2]", capCvVolume.getValue()[2],
 					allOf(
-							mmHasEntry(
-									is(-0.16244507f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							),
-							mmHasEntry(
-									is(-0.0045113564f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							),
-							mmHasEntry(
-									is(-0.0030164719f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							),
-							mmHasEntry(
-									is(3.528595E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY
-							)
+							mmHasEntry(is(-0.16244507f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(-0.0045113564f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(-0.0030164719f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(3.528595E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
 					"CvVolume[3]", capCvVolume.getValue()[3],
 					allOf(
-							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
-							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
-							mmHasEntry(is(0.0f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
-							mmHasEntry(
-									is(4.1484833E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							)
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.0f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(4.1484833E-5f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
 					"CvVolume[4]", capCvVolume.getValue()[4],
 					allOf(
-							mmHasEntry(
-									is(-0.13775301f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							),
-							mmHasEntry(
-									is(0.005630493f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							),
-							mmHasEntry(
-									is(0.0028266907f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							),
-							mmHasEntry(
-									is(3.7765503E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-									LayerType.PRIMARY
-							)
+							mmHasEntry(is(-0.13775301f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.005630493f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.0028266907f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(3.7765503E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
 					"CvVolume[5]", capCvVolume.getValue()[5],
 					allOf(
-							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
-							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
-							mmHasEntry(is(0.0f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY),
-							mmHasEntry(
-									is(5.378723E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY
-							)
+							mmHasEntry(is(0.0f), U75TO125, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.0f), U125TO175, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(0.0f), U175TO225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+							mmHasEntry(is(5.378723E-4f), OVER225, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE)
 					)
 			);
 			assertThat(
 					"CvVolume[1]", capCvVolume.getValue()[1],
 					allOf(
-							mmHasEntry(is(0.0f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-2.5427341E-4f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(0.0023429394F), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-7.033348E-5f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(0.0f), U75TO125, WHOLE_STEM_VOL),
+							mmHasEntry(is(-2.5427341E-4f), U125TO175, WHOLE_STEM_VOL),
+							mmHasEntry(is(0.0023429394F), U175TO225, WHOLE_STEM_VOL),
+							mmHasEntry(is(-7.033348E-5f), OVER225, WHOLE_STEM_VOL)
 					)
 			);
 			assertThat(
 					"CvVolume[2]", capCvVolume.getValue()[2],
 					allOf(
-							mmHasEntry(is(-2.9444695E-5f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(4.208088E-5f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-2.4318695E-5f), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(9.536743E-7f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(-2.9444695E-5f), U75TO125, WHOLE_STEM_VOL),
+							mmHasEntry(is(4.208088E-5f), U125TO175, WHOLE_STEM_VOL),
+							mmHasEntry(is(-2.4318695E-5f), U175TO225, WHOLE_STEM_VOL),
+							mmHasEntry(is(9.536743E-7f), OVER225, WHOLE_STEM_VOL)
 					)
 			);
 			assertThat(
 					"CvVolume[3]", capCvVolume.getValue()[3],
 					allOf(
-							mmHasEntry(is(0.0013506413f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(4.787445E-4f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(3.9100647E-5f), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-1.4305115E-6f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(0.0013506413f), U75TO125, WHOLE_STEM_VOL),
+							mmHasEntry(is(4.787445E-4f), U125TO175, WHOLE_STEM_VOL),
+							mmHasEntry(is(3.9100647E-5f), U175TO225, WHOLE_STEM_VOL),
+							mmHasEntry(is(-1.4305115E-6f), OVER225, WHOLE_STEM_VOL)
 					)
 			);
 			assertThat(
 					"CvVolume[4]", capCvVolume.getValue()[4],
 					allOf(
-							mmHasEntry(is(-7.891655E-5f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(2.7656555E-5f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(4.196167E-5f), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-1.0967255E-5f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(-7.891655E-5f), U75TO125, WHOLE_STEM_VOL),
+							mmHasEntry(is(2.7656555E-5f), U125TO175, WHOLE_STEM_VOL),
+							mmHasEntry(is(4.196167E-5f), U175TO225, WHOLE_STEM_VOL),
+							mmHasEntry(is(-1.0967255E-5f), OVER225, WHOLE_STEM_VOL)
 					)
 			);
 			assertThat(
 					"CvVolume[5]", capCvVolume.getValue()[5],
 					allOf(
-							mmHasEntry(is(1.8835068E-5f), U75TO125, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-1.0085106E-4f), U125TO175, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(1.6236305E-4f), U175TO225, WHOLE_STEM_VOL, LayerType.PRIMARY),
-							mmHasEntry(is(-7.390976E-6f), OVER225, WHOLE_STEM_VOL, LayerType.PRIMARY)
+							mmHasEntry(is(1.8835068E-5f), U75TO125, WHOLE_STEM_VOL),
+							mmHasEntry(is(-1.0085106E-4f), U125TO175, WHOLE_STEM_VOL),
+							mmHasEntry(is(1.6236305E-4f), U175TO225, WHOLE_STEM_VOL),
+							mmHasEntry(is(-7.390976E-6f), OVER225, WHOLE_STEM_VOL)
 					)
 			);
 			assertThat(
 					"CvBasalArea[1]", capCvBasalArea.getValue()[1],
 					allOf(
-							mmHasEntry(is(1.4913082E-4f), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(-5.034916E-5f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(-7.482059E-5f), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(-2.397038E-5f), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(1.4913082E-4f)), hasEntry(is(U125TO175), is(-5.034916E-5f)),
+							hasEntry(is(U175TO225), is(-7.482059E-5f)), hasEntry(is(U75TO125), is(-2.397038E-5f))
 					)
 			);
 			assertThat(
 					"CvBasalArea[2]", capCvBasalArea.getValue()[2],
 					allOf(
-							mmHasEntry(is(-2.193451E-5f), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(5.4836273E-6f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(9.596348E-6f), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(6.660819E-6f), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(-2.193451E-5f)), hasEntry(is(U125TO175), is(5.4836273E-6f)),
+							hasEntry(is(U175TO225), is(9.596348E-6f)), hasEntry(is(U75TO125), is(6.660819E-6f))
 					)
 			);
 			assertThat(
 					"CvBasalArea[3]", capCvBasalArea.getValue()[3],
 					allOf(
-							mmHasEntry(is(9.918213E-5f), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(-1.5150756E-5f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(-7.9244375E-5f), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(-4.341826E-6f), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(9.918213E-5f)), hasEntry(is(U125TO175), is(-1.5150756E-5f)),
+							hasEntry(is(U175TO225), is(-7.9244375E-5f)), hasEntry(is(U75TO125), is(-4.341826E-6f))
 					)
 			);
 			assertThat(
 					"CvBasalArea[4]", capCvBasalArea.getValue()[4],
 					allOf(
-							mmHasEntry(is(1.9073486E-4f), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(-8.2850456E-5f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(-5.2928925E-5f), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(-5.531311E-5f), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(1.9073486E-4f)), hasEntry(is(U125TO175), is(-8.2850456E-5f)),
+							hasEntry(is(U175TO225), is(-5.2928925E-5f)), hasEntry(is(U75TO125), is(-5.531311E-5f))
 					)
 			);
 			assertThat(
 					"CvBasalArea[5]", capCvBasalArea.getValue()[5],
 					allOf(
-							mmHasEntry(is(1.2397766E-4f), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(-3.7431717E-5f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(-7.364154E-5f), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(-1.289323E-5f), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(1.2397766E-4f)), hasEntry(is(U125TO175), is(-3.7431717E-5f)),
+							hasEntry(is(U175TO225), is(-7.364154E-5f)), hasEntry(is(U75TO125), is(-1.289323E-5f))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[1]", capCvQuadraticMeanDiameter.getValue()[1],
 					allOf(
-							mmHasEntry(is(0.007255554F), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(-0.014289856f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(-0.044784546F), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(0.0f), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(0.007255554F)), hasEntry(is(U125TO175), is(-0.014289856f)),
+							hasEntry(is(U175TO225), is(-0.044784546F)), hasEntry(is(U75TO125), is(0.0f))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[2]", capCvQuadraticMeanDiameter.getValue()[2],
 					allOf(
-							mmHasEntry(is(6.942749E-4f), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(-2.0217896E-4f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(6.008148E-4f), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(-1.2207031E-4f), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(6.942749E-4f)), hasEntry(is(U125TO175), is(-2.0217896E-4f)),
+							hasEntry(is(U175TO225), is(6.008148E-4f)), hasEntry(is(U75TO125), is(-1.2207031E-4f))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[3]", capCvQuadraticMeanDiameter.getValue()[3],
 					allOf(
-							mmHasEntry(is(3.6621094E-4F), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(-0.008190155f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(-0.0019168854f), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(-0.008535385F), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(3.6621094E-4F)), hasEntry(is(U125TO175), is(-0.008190155f)),
+							hasEntry(is(U175TO225), is(-0.0019168854f)), hasEntry(is(U75TO125), is(-0.008535385F))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[4]", capCvQuadraticMeanDiameter.getValue()[4],
 					allOf(
-							mmHasEntry(is(-0.0010547638f), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(-7.696152E-4f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(-0.0012798309f), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(1.7547607E-4f), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(-0.0010547638f)), hasEntry(is(U125TO175), is(-7.696152E-4f)),
+							hasEntry(is(U175TO225), is(-0.0012798309f)), hasEntry(is(U75TO125), is(1.7547607E-4f))
 					)
 			);
 			assertThat(
 					"CvQuadraticMeanDiameter[5]", capCvQuadraticMeanDiameter.getValue()[5],
 					allOf(
-							mmHasEntry(is(-2.4032593E-4F), OVER225, LayerType.PRIMARY),
-							mmHasEntry(is(9.880066E-4f), U125TO175, LayerType.PRIMARY),
-							mmHasEntry(is(-0.005464554F), U175TO225, LayerType.PRIMARY),
-							mmHasEntry(is(-7.9631805E-4F), U75TO125, LayerType.PRIMARY)
+							hasEntry(is(OVER225), is(-2.4032593E-4F)), hasEntry(is(U125TO175), is(9.880066E-4f)),
+							hasEntry(is(U175TO225), is(-0.005464554F)), hasEntry(is(U75TO125), is(-7.9631805E-4F))
 					)
 			);
 			assertThat(

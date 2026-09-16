@@ -1128,8 +1128,8 @@ public class VdypMatchers {
 
 	}
 
-	protected static boolean testIndexedValue(
-			String property, Method method, Object item, int index, Description mismatchDescription,
+	protected static <I> boolean testIndexedValue(
+			String property, Method method, Object item, I index, Description mismatchDescription,
 			Matcher<?> valueMatcher
 	) {
 		try {
@@ -1145,6 +1145,39 @@ public class VdypMatchers {
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | SecurityException e) {
 			throw new IllegalStateException("Failure running " + property, e);
 		}
+	}
+
+	/**
+	 * Matches if there is a method named <tt>property</tt> that takes an enum which when called with <tt>index</tt>,
+	 * returns a value that matches <tt>valueMatcher</tt>
+	 *
+	 * @param <E>
+	 *
+	 * @param property
+	 * @param index
+	 * @param valueMatcher
+	 * @return
+	 */
+	public static <E extends Enum<E>> Matcher<Object>
+			hasEnumeratedPropertyAt(String property, E index, Matcher<?> valueMatcher) {
+		return new TypeSafeDiagnosingMatcher<Object>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("object with enumerated accessor ").appendValue(property)
+						.appendText(" with entry ").appendValue(index).appendText(" that ")
+						.appendDescriptionOf(valueMatcher);
+			}
+
+			@Override
+			protected boolean matchesSafely(Object item, Description mismatchDescription) {
+				return testIndexedProperty(property, item, mismatchDescription, method -> {
+					return testIndexedValue(property, method, item, index, mismatchDescription, valueMatcher);
+				});
+
+			}
+
+		};
 	}
 
 	/**

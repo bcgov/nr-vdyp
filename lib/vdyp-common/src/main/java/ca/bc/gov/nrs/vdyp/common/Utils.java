@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -784,6 +785,15 @@ public class Utils {
 	public static <L extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite> S
 			getSpeciesByIndexWithinLayer(L layer, int index) {
 		return layer.getOrderedSpecies().get(index - 1);
+	}
+
+	public static <K extends Enum<K>, V> Map<K, V> fillNewEnumMap(K[] keys, Function<K, V> initializer) {
+		@SuppressWarnings("unchecked")
+		var map = new EnumMap<K, V>((Class<K>) keys[0].getClass());
+		for (var key : keys) {
+			map.put(key, initializer.apply(key));
+		}
+		return map;
 	}
 
 }
