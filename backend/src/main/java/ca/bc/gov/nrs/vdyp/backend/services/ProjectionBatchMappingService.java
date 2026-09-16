@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.time.OffsetDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,19 +37,22 @@ public class ProjectionBatchMappingService {
 	private BatchFailureTypeCodeLookup batchFailureTypeCodeLookup;
 	private ProjectionStatusCodeLookup statusLookup;
 	private ProjectionStuckConfig stuckConfig;
+	private ProjectionPriorityFlagService priorityFlagService;
 
 	private VDYPBatchClient batchClient;
 
 	public ProjectionBatchMappingService(
 			ProjectionBatchMappingRepository repository, ProjectionBatchMappingResourceAssembler assembler,
 			BatchFailureTypeCodeLookup batchFailureTypeCodeLookup, ProjectionStatusCodeLookup statusLookup,
-			ProjectionStuckConfig stuckConfig, @RestClient VDYPBatchClient batchClient
+			ProjectionStuckConfig stuckConfig, ProjectionPriorityFlagService priorityFlagService,
+			@RestClient VDYPBatchClient batchClient
 	) {
 		this.repository = repository;
 		this.assembler = assembler;
 		this.batchFailureTypeCodeLookup = batchFailureTypeCodeLookup;
 		this.statusLookup = statusLookup;
 		this.stuckConfig = stuckConfig;
+		this.priorityFlagService = priorityFlagService;
 		this.batchClient = batchClient;
 	}
 
@@ -109,21 +111,10 @@ public class ProjectionBatchMappingService {
 		}
 	}
 
-	@Transactional
 	public void prioritizeProjection(ProjectionEntity projectionEntity) throws ProjectionServiceException {
+		UUID batchJobGUID = priorityFlagService.activatePriorityFlag(projectionEntity);
 		try {
-			var mapping = repository.listByProjectionGUID(projectionEntity.getProjectionGUID()).stream()
-					.filter(entity -> entity.getBatchJobGUID() != null)
-					.max(Comparator.comparing(ProjectionBatchMappingEntity::getCreateDate)).orElseThrow(
-							() -> new ProjectionServiceException(
-									"No batch job mapping found for projection " + projectionEntity.getProjectionGUID()
-							)
-					);
-			repository.clearAllPrioritized();
-			mapping.setPrioritized(true);
-			batchClient.prioritizeBatchJob(mapping.getBatchJobGUID());
-		} catch (ProjectionServiceException e) {
-			throw e;
+			batchClient.prioritizeBatchJob(batchJobGUID);
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error prioritizing projection batch process", e);
 		}
