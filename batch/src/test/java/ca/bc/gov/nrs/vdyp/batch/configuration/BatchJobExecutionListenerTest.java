@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizationPauseTracker;
@@ -49,12 +53,16 @@ class BatchJobExecutionListenerTest {
 	private JobOwnershipService ownershipService;
 	@Mock
 	private PrioritizationPauseTracker pauseTracker;
+	@Mock
+	private JobExplorer jobExplorer;
+	@Mock
+	private JobRepository jobRepository;
 
 	private BatchJobExecutionListener listener;
 
 	@BeforeEach
 	void setUp() {
-		listener = new BatchJobExecutionListener(ownershipService, pauseTracker);
+		listener = new BatchJobExecutionListener(ownershipService, pauseTracker, jobExplorer, jobRepository);
 	}
 
 	@Test
@@ -69,6 +77,43 @@ class BatchJobExecutionListenerTest {
 
 		verify(jobExecution, atLeastOnce()).getId();
 		verify(jobExecution, atLeastOnce()).getJobParameters();
+	}
+
+	@Test
+	void testBeforeJob_CaptureBaselineProgressThrows_DoesNotFailJobStart() {
+		JobParameters jobParameters = new JobParametersBuilder().addLong(BatchConstants.Partition.NUMBER, 4L)
+				.addString(BatchConstants.Job.GUID, "test-guid-123").toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(1L);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+
+		try (MockedStatic<BatchUtils> batchUtils = mockStatic(BatchUtils.class)) {
+			batchUtils.when(() -> BatchUtils.captureBaselineProgress(any(), any(), any()))
+					.thenThrow(new RuntimeException("db unavailable"));
+
+			assertDoesNotThrow(() -> listener.beforeJob(jobExecution));
+		}
+	}
+
+	@Test
+	void testBeforeJob_PriorExecutionExists_CapturesBaselineProgress() {
+		JobParameters jobParameters = new JobParametersBuilder().addLong(BatchConstants.Partition.NUMBER, 4L)
+				.addString(BatchConstants.Job.GUID, "test-guid-123").toJobParameters();
+
+		when(jobExecution.getId()).thenReturn(2L);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
+		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+
+		JobExecution priorExecution = mock(JobExecution.class);
+		when(priorExecution.getId()).thenReturn(1L);
+		when(priorExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(priorExecution.getStepExecutions()).thenReturn(List.of());
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(priorExecution, jobExecution));
+
+		listener.beforeJob(jobExecution);
+
+		verify(jobRepository).updateExecutionContext(jobExecution);
 	}
 
 	@Test

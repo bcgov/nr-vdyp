@@ -850,6 +850,32 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_20_00",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_20_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_20/00/ddl/tables/app-vdyp.projection_batch_mapping.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "DROP INDEX IF EXISTS \"app-vdyp\".\"ux_projection_batch_mapping_one_prioritized\""
+          }
+        ]
+      }
     }
   ]
 }

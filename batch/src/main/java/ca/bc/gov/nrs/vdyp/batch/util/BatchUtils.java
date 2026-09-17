@@ -11,6 +11,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,6 +21,8 @@ import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
@@ -272,17 +277,83 @@ public final class BatchUtils {
 		return isRunning ? calculateActiveWorkers(job, true) + 1 : 0;
 	}
 
-	public static VDYPProjectionProgressUpdate buildFinalProgress(String jobGuid, JobExecution jobExecution) {
-		int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+	private record WorkerStepProgress(int polygonsProcessed, int errorCount, int polygonsSkipped) {
+		int total() {
+			return polygonsProcessed + errorCount + polygonsSkipped;
+		}
+	}
+
+	private static WorkerStepProgress progressFromStep(StepExecution step) {
+		ExecutionContext stepCtx = step.getExecutionContext();
+		return new WorkerStepProgress(
+				stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0),
+				stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0),
+				stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0)
+		);
+	}
+
+	private static WorkerStepProgress maxProgress(WorkerStepProgress left, WorkerStepProgress right) {
+		return left.total() >= right.total() ? left : right;
+	}
+
+	// Captures completed-but-skipped-on-restart progress as a baseline once at job start, so reads don't rescan
+	// execution history.
+	public static void
+			captureBaselineProgress(JobExecution jobExecution, JobExplorer jobExplorer, JobRepository jobRepository) {
+		List<JobExecution> priorExecutions = jobExplorer.getJobExecutions(jobExecution.getJobInstance()).stream()
+				.filter(execution -> !execution.getId().equals(jobExecution.getId())).toList();
+		if (priorExecutions.isEmpty()) {
+			return;
+		}
+
+		int totalPolygons = 0;
+		Map<String, WorkerStepProgress> bestProgressByWorkerStep = new HashMap<>();
+		for (JobExecution execution : priorExecutions) {
+			totalPolygons = Math
+					.max(totalPolygons, execution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0));
+			for (StepExecution step : execution.getStepExecutions()) {
+				// Must be COMPLETED: Spring Batch itself carries an incomplete step's context forward onto its
+				// resuming step, so including it here too would double count.
+				if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)
+						&& step.getStatus() == BatchStatus.COMPLETED) {
+					bestProgressByWorkerStep.merge(step.getStepName(), progressFromStep(step), BatchUtils::maxProgress);
+				}
+			}
+		}
+
 		int polygonsProcessed = 0;
 		int errorCount = 0;
 		int polygonsSkipped = 0;
+		for (WorkerStepProgress progress : bestProgressByWorkerStep.values()) {
+			polygonsProcessed += progress.polygonsProcessed();
+			errorCount += progress.errorCount();
+			polygonsSkipped += progress.polygonsSkipped();
+		}
+
+		ExecutionContext jobContext = jobExecution.getExecutionContext();
+		jobContext.putInt(BatchConstants.Job.PREVIOUS_TOTAL_POLYGONS, totalPolygons);
+		jobContext.putInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, polygonsProcessed);
+		jobContext.putInt(BatchConstants.Job.PREVIOUS_PROJECTION_ERRORS, errorCount);
+		jobContext.putInt(BatchConstants.Job.PREVIOUS_POLYGONS_SKIPPED, polygonsSkipped);
+		jobRepository.updateExecutionContext(jobExecution);
+	}
+
+	public static VDYPProjectionProgressUpdate buildFinalProgress(String jobGuid, JobExecution jobExecution) {
+		ExecutionContext jobContext = jobExecution.getExecutionContext();
+		int totalPolygons = Math.max(
+				jobContext.getInt(BatchConstants.Job.TOTAL_POLYGONS, 0),
+				jobContext.getInt(BatchConstants.Job.PREVIOUS_TOTAL_POLYGONS, 0)
+		);
+
+		int polygonsProcessed = jobContext.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 0);
+		int errorCount = jobContext.getInt(BatchConstants.Job.PREVIOUS_PROJECTION_ERRORS, 0);
+		int polygonsSkipped = jobContext.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_SKIPPED, 0);
 		for (StepExecution step : jobExecution.getStepExecutions()) {
 			if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
-				ExecutionContext stepCtx = step.getExecutionContext();
-				polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
-				errorCount += stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
-				polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
+				WorkerStepProgress progress = progressFromStep(step);
+				polygonsProcessed += progress.polygonsProcessed();
+				errorCount += progress.errorCount();
+				polygonsSkipped += progress.polygonsSkipped();
 			}
 		}
 		// Finished projections report 0 workers (no active threads)

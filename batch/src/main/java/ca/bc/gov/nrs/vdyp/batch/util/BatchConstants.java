@@ -25,6 +25,11 @@ public final class BatchConstants {
 		public static final String POLYGONS_PROCESSED = "polygonsProcessed";
 		public static final String POLYGONS_SKIPPED = "polygonsSkipped";
 		public static final String PROJECTION_ERRORS = "projectionErrors";
+		// Progress baseline carried forward from earlier executions, captured once at job start
+		public static final String PREVIOUS_TOTAL_POLYGONS = "previousTotalPolygonRecords";
+		public static final String PREVIOUS_POLYGONS_PROCESSED = "previousPolygonsProcessed";
+		public static final String PREVIOUS_POLYGONS_SKIPPED = "previousPolygonsSkipped";
+		public static final String PREVIOUS_PROJECTION_ERRORS = "previousProjectionErrors";
 		public static final String WORKERS = "workers";
 		public static final String COMPUTED_PARTITIONS = "computedPartitions";
 		public static final String RESERVED_THREADS = "reservedThreads";
