@@ -499,7 +499,7 @@ public class ProjectionService {
 		return batchMappingService.getStorageStatus();
 	}
 
-	@Transactional
+	@Transactional(rollbackOn = Exception.class)
 	public ProjectionModel createNewProjection(
 			VDYPUserModel actingUser, Parameters params, ModelParameters modelParameters, String reportDescription
 	) throws ProjectionServiceException {
@@ -855,7 +855,7 @@ public class ProjectionService {
 		}
 	}
 
-	@Transactional
+	@Transactional(rollbackOn = Exception.class)
 	public void deleteProjection(UUID projectionGUID, VDYPUserModel actingUser) throws ProjectionServiceException {
 		ProjectionEntity entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.DELETE);
@@ -1018,10 +1018,11 @@ public class ProjectionService {
 		}
 	}
 
-	@Transactional
+	// Creation and mapping persistence commit independently; never keep a transaction open during file copies.
+	@Transactional(Transactional.TxType.NOT_SUPPORTED)
 	public ProjectionModel duplicateProjection(UUID projectionGUID, VDYPUserModel actingUser)
 			throws ProjectionServiceException {
-		ProjectionModel newProjection;
+		ProjectionModel newProjection = null;
 		var entity = getProjectionEntity(projectionGUID);
 		checkUserCanPerformAction(entity, actingUser, ProjectionAction.READ);
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.READ);
@@ -1049,6 +1050,17 @@ public class ProjectionService {
 				fileSetService.duplicateFilesFromTo(entity.getLayerFileSet(), newEntity.getLayerFileSet());
 			}
 		} catch (Exception e) {
+			if (newProjection != null) {
+				try {
+					deleteProjection(UUID.fromString(newProjection.getProjectionGUID()), actingUser);
+				} catch (Exception cleanupException) {
+					e.addSuppressed(cleanupException);
+					logger.error(
+							"Failed to clean up incomplete duplicate {}", newProjection.getProjectionGUID(),
+							cleanupException
+					);
+				}
+			}
 			throw new ProjectionServiceException("Failed to duplicate projection", e);
 		}
 		return newProjection;

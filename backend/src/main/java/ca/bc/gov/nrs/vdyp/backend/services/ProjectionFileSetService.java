@@ -244,7 +244,7 @@ public class ProjectionFileSetService {
 		return fileMappingService.getFilesForFileSet(fileSetGUID, download);
 	}
 
-	@Transactional
+	@Transactional(Transactional.TxType.NOT_SUPPORTED)
 	public void duplicateFilesFromTo(ProjectionFileSetEntity fromFileSet, ProjectionFileSetEntity toFileSet)
 			throws ProjectionServiceException {
 		List<FileMappingModel> filesToDuplicate = fileMappingService
