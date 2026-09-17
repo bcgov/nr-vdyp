@@ -458,7 +458,9 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		 * The current age information is needed here for one purpose: establish fractional years, as we must go back an
 		 * integer number of years.
 		 */
-		var yearFraction = primaryLayer.getYearsAtBreastHeight().get() % 1f;
+		final Float yearsAtBreastHeight = primaryLayer.getYearsAtBreastHeight()
+				.orElseThrow(() -> new ProcessingException("Years at breast height not set"));
+		var yearFraction = yearsAtBreastHeight % 1f;
 		if (yearFraction < 0.001)
 			yearFraction = 0f;
 
@@ -478,23 +480,26 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 				.map(VdypLayer::getBaseAreaByUtilization).map(UtilizationVector::getAll);
 		for (int increase = 0; increase < 1000; increase++) {
 			float candiadateConvergenceAge = yabh0 + increase;
-			if (candiadateConvergenceAge > primaryLayer.getYearsAtBreastHeight().get()) {
+			if (candiadateConvergenceAge > yearsAtBreastHeight) {
 				break;
 			}
 			float candiadateConvergenceHeight = heightFromSiteCurve(
 					primarySite.getSiteCurveNumber().orElseThrow(), candiadateConvergenceAge,
 					primarySite.getYearsToBreastHeight().orElseThrow(), primarySite.getSiteIndex().orElseThrow()
 			);
+			final String primarySpeciesId = primaryLayer.getPrimaryGenus()
+					.orElseThrow(() -> new ProcessingException("Primary species group ID not set"));
+			final Integer baseAreaGroup = primaryLayer.getEmpiricalRelationshipParameterIndex()
+					.orElseThrow(() -> new ProcessingException("Empirical relationship parameter index not set"));
 			basalArea = getState().getEstimators().estimateBaseAreaYield(
 					candiadateConvergenceHeight, candiadateConvergenceAge, overstoryArea, true,
-					primaryLayer.getOrderedSpecies(), primaryLayer.getPrimaryGenus().get(),
-					polygon.getBiogeoclimaticZone(), primaryLayer.getEmpiricalRelationshipParameterIndex().get()
+					primaryLayer.getOrderedSpecies(), primarySpeciesId, polygon.getBiogeoclimaticZone(), baseAreaGroup
 			);
 			if (candiadateConvergenceHeight >= heightTarget && candiadateConvergenceAge >= ageTarget
 					&& basalArea >= basalAreaTarget) {
 				convergenceHeight = candiadateConvergenceHeight;
 				convergenceAge = candiadateConvergenceAge;
-				yearsToRegress = (int) (primaryLayer.getYearsAtBreastHeight().get() - convergenceAge);
+				yearsToRegress = (int) (yearsAtBreastHeight - convergenceAge);
 				convergenceYear = startYear - yearsToRegress;
 				getState().setConvergenceBasalArea(basalArea);
 				break;

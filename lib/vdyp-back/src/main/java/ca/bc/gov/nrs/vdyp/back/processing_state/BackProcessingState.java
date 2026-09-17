@@ -270,16 +270,33 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 		this.dominantHeightBackupFactor = dominantHeightBackupFactor;
 	}
 
+	public void setDominantHeightBackupFactor(float dominantHeightBackupFactor) {
+		setDominantHeightBackupFactor(Optional.of(dominantHeightBackupFactor));
+
+	}
+
 	public void setQuadMeanDiameterBackupFactor(Optional<Float> quadMeanDiameterBackupFactor) {
 		this.quadMeanDiameterBackupFactor = quadMeanDiameterBackupFactor;
+	}
+
+	public void setQuadMeanDiameterBackupFactor(float quadMeanDiameterBackupFactor) {
+		setQuadMeanDiameterBackupFactor(Optional.of(quadMeanDiameterBackupFactor));
 	}
 
 	public void setQuadMeanDiameterBackupFactorMinimum(Optional<Float> quadMeanDiameterBackupFactorMinimum) {
 		this.quadMeanDiameterBackupFactorMinimum = quadMeanDiameterBackupFactorMinimum;
 	}
 
+	public void setQuadMeanDiameterBackupFactorMinimum(float quadMeanDiameterBackupFactorMinimum) {
+		setQuadMeanDiameterBackupFactorMinimum(Optional.of(quadMeanDiameterBackupFactorMinimum));
+	}
+
 	public void setBasalAreaBackupFactor(Optional<Float> basalAreaBackupFactor) {
 		this.basalAreaBackupFactor = basalAreaBackupFactor;
+	}
+
+	public void setBasalAreaBackupFactor(float basalAreaBackupFactor) {
+		setBasalAreaBackupFactor(Optional.of(basalAreaBackupFactor));
 	}
 
 	float indexAccess(Optional<float[]> array, int index, int minimumIndex, String field) {
