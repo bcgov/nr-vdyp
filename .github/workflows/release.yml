@@ -6,10 +6,12 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   promote:
+    permissions:
+      contents: read
+      packages: write
     if: github.event.release.prerelease == false
     uses: ./.github/workflows/openshift-target-environment.yml
     secrets: inherit

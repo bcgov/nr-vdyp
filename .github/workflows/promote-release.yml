@@ -21,10 +21,12 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   promote:
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/openshift-target-environment.yml
     secrets: inherit
     with:
