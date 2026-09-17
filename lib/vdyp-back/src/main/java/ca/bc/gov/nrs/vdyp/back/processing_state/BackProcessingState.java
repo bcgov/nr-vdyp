@@ -164,12 +164,20 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 		this.convergenceYear = convergenceYear;
 	}
 
+	public void setConvergenceYear(int convergenceYear) {
+		setConvergenceYear(Optional.of(convergenceYear));
+	}
+
 	public Optional<Float> getConvergenceAge() {
 		return convergenceAge;
 	}
 
 	public void setConvergenceAge(Optional<Float> convergenceAge) {
 		this.convergenceAge = convergenceAge;
+	}
+
+	public void setConvergenceAge(float convergenceAge) {
+		setConvergenceAge(Optional.of(convergenceAge));
 	}
 
 	public Optional<Float> getConvergenceDominantHeight() {
@@ -180,6 +188,10 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 		this.convergenceDominantHeight = convergenceDominantHeight;
 	}
 
+	public void setConvergenceDominantHeight(float convergenceDominantHeight) {
+		setConvergenceDominantHeight(Optional.of(convergenceDominantHeight));
+	}
+
 	public Optional<Float> getConvergenceBasalArea() {
 		return convergenceBasalArea;
 	}
@@ -188,12 +200,20 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 		this.convergenceBasalArea = convergenceBasalArea;
 	}
 
+	public void setConvergenceBasalArea(float convergenceBasalArea) {
+		setConvergenceBasalArea(Optional.of(convergenceBasalArea));
+	}
+
 	public Optional<Float> getConvergenceQuadraticMeanDiameter() {
 		return convergenceQuadraticMeanDiameter;
 	}
 
 	public void setConvergenceQuadraticMeanDiameter(Optional<Float> convergenceLoreyHeight) {
 		this.convergenceQuadraticMeanDiameter = convergenceLoreyHeight;
+	}
+
+	public void setConvergenceQuadraticMeanDiameter(float convergenceLoreyHeight) {
+		setConvergenceQuadraticMeanDiameter(Optional.of(convergenceLoreyHeight));
 	}
 
 	public float getSpeciesConvergenceLoreyHeight(int i) {
