@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -70,6 +71,30 @@ class ProjectionProgressPushSchedulerTest {
 		);
 		when(taskExecutor.getThreadPoolExecutor()).thenReturn(threadPoolExecutor);
 		when(threadPoolExecutor.getQueue()).thenReturn(queue);
+	}
+
+	private void stubRealWorkerStepAggregation(MockedStatic<BatchUtils> batchUtils) {
+		batchUtils.when(() -> BatchUtils.aggregateBestProgressByWorkerStep(any(), any())).thenAnswer(invocation -> {
+			JobExplorer explorer = invocation.getArgument(0);
+			JobInstance jobInstance = invocation.getArgument(1);
+			Map<String, BatchUtils.WorkerStepProgress> progressByStepName = new HashMap<>();
+			for (JobExecution execution : explorer.getJobExecutions(jobInstance)) {
+				for (StepExecution step : execution.getStepExecutions()) {
+					if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
+						ExecutionContext stepCtx = step.getExecutionContext();
+						progressByStepName.put(
+								step.getStepName(),
+								new BatchUtils.WorkerStepProgress(
+										stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0),
+										stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0),
+										stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0)
+								)
+						);
+					}
+				}
+			}
+			return progressByStepName;
+		});
 	}
 
 	private JobExecution runningJobWithProgress(String projectionGuid, String batchJobGuid) {
@@ -133,6 +158,7 @@ class ProjectionProgressPushSchedulerTest {
 
 		try (MockedStatic<BatchUtils> batchUtils = mockStatic(BatchUtils.class)) {
 			batchUtils.when(() -> BatchUtils.calculateThreadsInUse(job, true)).thenReturn(1);
+			stubRealWorkerStepAggregation(batchUtils);
 
 			scheduler.pushProgress();
 		}
@@ -172,6 +198,7 @@ class ProjectionProgressPushSchedulerTest {
 
 		try (MockedStatic<BatchUtils> batchUtils = mockStatic(BatchUtils.class)) {
 			batchUtils.when(() -> BatchUtils.calculateThreadsInUse(job, true)).thenReturn(0);
+			stubRealWorkerStepAggregation(batchUtils);
 
 			scheduler.pushProgress();
 			verify(taskExecutor, never()).execute(any(Runnable.class));

@@ -29,10 +29,12 @@ import org.mockito.quality.Strictness;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
@@ -48,6 +50,7 @@ import org.springframework.transaction.interceptor.TransactionAttribute;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
@@ -111,6 +114,9 @@ class BatchConfigurationTest {
 	@Mock
 	private JobOwnershipService ownershipService;
 
+	@Mock
+	private JobExplorer jobExplorer;
+
 	@TempDir
 	Path tempDir;
 
@@ -121,7 +127,8 @@ class BatchConfigurationTest {
 	@BeforeEach
 	void setUp() {
 		configuration = new BatchConfiguration(
-				jobRepository, metricsCollector, batchProperties, resultAggregationService, ownershipService
+				jobRepository, metricsCollector, batchProperties, resultAggregationService, ownershipService,
+				jobExplorer
 		);
 
 		when(batchProperties.getRetry()).thenReturn(retry);
@@ -144,6 +151,9 @@ class BatchConfigurationTest {
 	private void mockProgressContext(JobExecution jobExecution) {
 		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
 		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
+		JobInstance jobInstance = mock(JobInstance.class);
+		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Collections.singletonList(jobExecution));
 	}
 
 	@Test
@@ -176,6 +186,13 @@ class BatchConfigurationTest {
 		assertNotNull(result);
 		assertEquals("workerStep", result.getName());
 		verify(reader).getDefaultChunkSize();
+	}
+
+	@Test
+	void testVdypJobFailedListener_WithValidClient() {
+		VDYPJobFailedListener result = configuration.vdypJobFailedListener(mock(VdypClient.class));
+
+		assertNotNull(result);
 	}
 
 	@Test

@@ -269,7 +269,9 @@ public class StartupRecoveryService implements SmartLifecycle {
 		}
 
 		try {
-			vdypClient.markComplete(projectionGuid, false, BatchUtils.buildFailureProgress(jobGuid, jobExecution));
+			vdypClient.markComplete(
+					projectionGuid, false, BatchUtils.buildFailureProgress(jobGuid, jobExecution, jobExplorer)
+			);
 		} catch (Exception e) {
 			logger.warn(
 					"[GUID: {}] Failed to notify backend of unrestartable stale job {}: {}", jobGuid,

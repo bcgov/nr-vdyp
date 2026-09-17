@@ -24,10 +24,12 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.item.ExecutionContext;
@@ -59,6 +61,10 @@ class ResultPersistenceTaskletTest {
 	@Mock
 	JobExecution jobExecution;
 	@Mock
+	JobExplorer jobExplorer;
+	@Mock
+	JobInstance jobInstance;
+	@Mock
 	VdypProjectionDetails details;
 	JobParameters jobParameters;
 
@@ -73,7 +79,7 @@ class ResultPersistenceTaskletTest {
 
 	@BeforeEach
 	void setup() {
-		tasklet = new ResultPersistenceTasklet(comsFileService, vdypClient, ownershipService);
+		tasklet = new ResultPersistenceTasklet(comsFileService, vdypClient, ownershipService, jobExplorer);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -141,6 +147,8 @@ class ResultPersistenceTaskletTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
 		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
+		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
 		when(details.resultFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));
@@ -178,6 +186,8 @@ class ResultPersistenceTaskletTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
 		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
+		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
 		when(details.resultFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));
@@ -242,6 +252,8 @@ class ResultPersistenceTaskletTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
 		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
+		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 		when(vdypClient.getProjectionDetails(any())).thenReturn(details);
 		when(details.resultFileSet())
 				.thenReturn(new VdypProjectionDetails.VdypProjectionFileSet(resultFileSetGuid.toString()));

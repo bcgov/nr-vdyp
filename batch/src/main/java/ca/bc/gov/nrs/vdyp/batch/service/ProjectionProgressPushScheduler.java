@@ -9,9 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
-import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -126,46 +124,25 @@ public class ProjectionProgressPushScheduler {
 	}
 
 	private ProgressSnapshot buildRestartAwareProgress(JobExecution runningJob) {
-		Map<String, ProgressSnapshot> bestProgressByWorkerStep = new HashMap<>();
 		int totalPolygons = runningJob.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
-
 		for (JobExecution jobExecution : jobExplorer.getJobExecutions(runningJob.getJobInstance())) {
 			totalPolygons = Math.max(
 					totalPolygons, jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0)
 			);
-			for (StepExecution step : jobExecution.getStepExecutions()) {
-				if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
-					bestProgressByWorkerStep.merge(
-							step.getStepName(), progressFromStep(step), ProjectionProgressPushScheduler::maxProgress
-					);
-				}
-			}
 		}
 
 		int workers = BatchUtils.calculateThreadsInUse(runningJob, true);
 		int polygonsProcessed = 0;
 		int errorCount = 0;
 		int polygonsSkipped = 0;
-		for (ProgressSnapshot progress : bestProgressByWorkerStep.values()) {
+		for (BatchUtils.WorkerStepProgress progress : BatchUtils
+				.aggregateBestProgressByWorkerStep(jobExplorer, runningJob.getJobInstance()).values()) {
 			polygonsProcessed += progress.polygonsProcessed();
 			errorCount += progress.errorCount();
 			polygonsSkipped += progress.polygonsSkipped();
 		}
 
 		return new ProgressSnapshot(totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, workers);
-	}
-
-	private static ProgressSnapshot progressFromStep(StepExecution step) {
-		ExecutionContext stepCtx = step.getExecutionContext();
-		return new ProgressSnapshot(
-				0, stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0),
-				stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0),
-				stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0), 0
-		);
-	}
-
-	private static ProgressSnapshot maxProgress(ProgressSnapshot left, ProgressSnapshot right) {
-		return left.progressTotal() >= right.progressTotal() ? left : right;
 	}
 
 	private record ProgressSnapshot(

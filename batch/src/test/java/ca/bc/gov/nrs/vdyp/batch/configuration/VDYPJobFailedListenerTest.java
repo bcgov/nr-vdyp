@@ -25,9 +25,11 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
@@ -44,11 +46,19 @@ class VDYPJobFailedListenerTest {
 	@Mock
 	private JobExecution jobExecution;
 
+	@Mock
+	private JobExplorer jobExplorer;
+
+	@Mock
+	private JobInstance jobInstance;
+
 	private VDYPJobFailedListener listener;
 
 	@BeforeEach
 	void setUp() {
-		listener = new VDYPJobFailedListener(vdypClient);
+		listener = new VDYPJobFailedListener(vdypClient, jobExplorer);
+		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
 	}
 
 	@Test

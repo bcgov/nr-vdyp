@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.lang.NonNull;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
@@ -14,9 +15,11 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 public class VDYPJobFailedListener implements JobExecutionListener {
 	private static final Logger logger = LoggerFactory.getLogger(VDYPJobFailedListener.class);
 	private final VdypClient vdypClient;
+	private final JobExplorer jobExplorer;
 
-	public VDYPJobFailedListener(VdypClient vdypClient) {
+	public VDYPJobFailedListener(VdypClient vdypClient, JobExplorer jobExplorer) {
 		this.vdypClient = vdypClient;
+		this.jobExplorer = jobExplorer;
 	}
 
 	@Override
@@ -33,7 +36,9 @@ public class VDYPJobFailedListener implements JobExecutionListener {
 					jobGuid, projectionGUID, jobExecution.getId(), status
 			);
 			try {
-				vdypClient.markComplete(projectionGUID, false, BatchUtils.buildFailureProgress(jobGuid, jobExecution));
+				vdypClient.markComplete(
+						projectionGUID, false, BatchUtils.buildFailureProgress(jobGuid, jobExecution, jobExplorer)
+				);
 			} catch (Exception e) {
 				logger.error(
 						"[GUID: {}] Failed to notify Vdyp backend of job failure for projection {}: {}", jobGuid,

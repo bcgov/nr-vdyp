@@ -19,6 +19,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
@@ -70,16 +71,19 @@ public class BatchConfiguration {
 	private final BatchProperties batchProperties;
 	private final BatchResultAggregationService resultAggregationService;
 	private final JobOwnershipService ownershipService;
+	private final JobExplorer jobExplorer;
 
 	public BatchConfiguration(
 			JobRepository jobRepository, BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService
+			BatchResultAggregationService resultAggregationService, JobOwnershipService ownershipService,
+			JobExplorer jobExplorer
 	) {
 		this.jobRepository = jobRepository;
 		this.metricsCollector = metricsCollector;
 		this.batchProperties = batchProperties;
 		this.resultAggregationService = resultAggregationService;
 		this.ownershipService = ownershipService;
+		this.jobExplorer = jobExplorer;
 	}
 
 	@Bean(name = "asyncJobLauncher")
@@ -272,7 +276,7 @@ public class BatchConfiguration {
 	 */
 	@Bean
 	public VDYPJobFailedListener vdypJobFailedListener(VdypClient vdypClient) {
-		return new VDYPJobFailedListener(vdypClient);
+		return new VDYPJobFailedListener(vdypClient, jobExplorer);
 	}
 
 	/**
@@ -416,7 +420,8 @@ public class BatchConfiguration {
 				);
 			}
 
-			VDYPProjectionProgressUpdate finalProgress = BatchUtils.buildFinalProgress(jobGuid, jobExecution);
+			VDYPProjectionProgressUpdate finalProgress = BatchUtils
+					.buildFinalProgress(jobGuid, jobExecution, jobExplorer);
 			// Execute aggregation
 			Path consolidatedZip = resultAggregationService.aggregateResultsFromJobDir(
 					jobExecutionId, jobGuid, jobBaseDir, jobTimestamp, finalProgress, duration
