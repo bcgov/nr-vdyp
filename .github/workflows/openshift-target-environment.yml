@@ -1,47 +1,84 @@
-name: Build and Deploy to Openshift Target Environment
-permissions:
-  contents: read
-  
+name: Promote SHA-tagged images and deploy
+
 on:
   workflow_call:
     inputs:
       target_environment:
         required: true
         type: string
-      tag:
+      source_sha:
+        description: 12-character manual SHA or full release-event SHA
         required: true
         type: string
-      ref:
-        required: false
-        type: string
-  workflow_dispatch:
-    inputs:
-      target_environment:
-        description: Target environment to deploy to
+      release_version:
         required: true
-        default: dev
-        options:
-          - dev
-      tag:
-        description: Tag to deploy; use SemVer or PR Number
-        required: true
-        type: string
-      ref:
-        description: Git ref to deploy from
-        required: false
-        default: 'main'
         type: string
 
-concurrency:
-  # Cancel if re-attempted
-  group: ${{ github.event_name }}
-  cancel-in-progress: true
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  call-shared:
-    uses: ./.github/workflows/openshift-shared.yml
+  prepare:
+    runs-on: ubuntu-22.04
+    concurrency:
+      group: release-tag-${{ inputs.release_version }}
+      cancel-in-progress: false
+    outputs:
+      source_sha: ${{ steps.source.outputs.source_sha }}
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      RELEASE_VERSION: ${{ inputs.release_version }}
+      TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve source commit and validate inputs
+        id: source
+        run: |
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{12}$ || "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]] || exit 1
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            test "${#SOURCE_SHA}" -eq 12
+          fi
+          [[ "$TARGET_ENVIRONMENT" =~ ^(dev|test|prod)$ ]] || exit 1
+          [[ "$RELEASE_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || exit 1
+          test "${#RELEASE_VERSION}" -le 63
+          if [[ "${#SOURCE_SHA}" -eq 12 ]]; then
+            mapfile -t matches < <(git rev-parse "--disambiguate=$SOURCE_SHA")
+            if [[ "${#matches[@]}" -ne 1 ]]; then
+              echo 'Source SHA is missing or ambiguous' >&2
+              exit 1
+            fi
+            SOURCE_SHA="${matches[0]}"
+          fi
+          test "$(git cat-file -t "$SOURCE_SHA")" = commit
+          echo "source_sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+          echo "SHORT_SHA=${SOURCE_SHA:0:12}" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Check all source images before tagging
+        run: |
+          for component in backend frontend batch log-exporter; do
+            docker buildx imagetools inspect "ghcr.io/${GITHUB_REPOSITORY,,}/$component:$SHORT_SHA"
+          done
+      - name: Apply release tags to existing images
+        run: |
+          for component in backend frontend batch log-exporter; do
+            image="ghcr.io/${GITHUB_REPOSITORY,,}/$component"
+            docker buildx imagetools create --prefer-index=false \
+              --tag "$image:$RELEASE_VERSION" "$image:$SHORT_SHA"
+          done
+
+  deploy:
+    needs: prepare
+    uses: ./.github/workflows/.deployer.yml
     secrets: inherit
     with:
-      target_environment: ${{ inputs.target_environment }}
-      ref: ${{ inputs.ref || 'main' }}
-      tag: ${{ inputs.tag }}
+      environment: ${{ inputs.target_environment }}
+      ref: ${{ needs.prepare.outputs.source_sha }}
+      tag: ${{ inputs.release_version }}

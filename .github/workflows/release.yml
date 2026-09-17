@@ -1,8 +1,8 @@
-name: Deploy existing release candidate to test
+name: Promote existing release to production
 
 on:
   release:
-    types: [published]
+    types: [released]
 
 permissions:
   contents: read
@@ -10,10 +10,10 @@ permissions:
 
 jobs:
   promote:
-    if: github.event.release.prerelease
+    if: github.event.release.prerelease == false
     uses: ./.github/workflows/openshift-target-environment.yml
     secrets: inherit
     with:
-      target_environment: test
+      target_environment: prod
       source_sha: ${{ github.sha }}
       release_version: ${{ github.event.release.tag_name }}

@@ -13,8 +13,8 @@ on:
         required: false
         type: string
       environment:
-        description: Environment name; omit for PRs
-        required: false
+        description: Target environment (dev, test, or prod)
+        required: true
         type: string
       oc_server:
         default: https://api.silver.devops.gov.bc.ca:6443
@@ -27,13 +27,12 @@ on:
         required: false
         type: string
       ref:
-        description: 'Reference for checkout action'
-        default: 'main'
-        required: false
+        description: Full source and chart commit SHA
+        required: true
         type: string
       tag:
-        description: Specify a tag to deploy; use SemVer or PR Number
-        required: false
+        description: 12-character SHA tag or release version to deploy
+        required: true
         type: string
 
 
@@ -44,8 +43,8 @@ on:
         required: false
         type: number
       values:
-        description: 'Values file'
-        default: 'values.yaml'
+        description: Optional values file override; defaults to values-<environment>.yaml
+        default: ''
         required: false
         type: string
 
@@ -70,14 +69,46 @@ on:
         required: true
       COMS_KEYCLOAK_PUBLICKEY:
         required: true
+      NATS_PASSWORD:
+        required: true
+      POSTGRES_PASSWORD:
+        required: true
+      VDYP_DB_PASSWORD:
+        required: true
+      OBJECTSTORAGE_SECRETACCESSKEY:
+        required: true
+      COMS_SERVICE_PASSWORD:
+        required: true
 permissions:
   contents: read        # for actions/checkout
+  packages: read
 jobs:
   deployer:
     name: Helm
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-22.04
+    concurrency:
+      group: openshift-deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      SOURCE_SHA: ${{ inputs.ref }}
+      DISPLAY_TAG: ${{ inputs.tag }}
+      VALUES_FILE: ${{ inputs.values || format('values-{0}.yaml', inputs.environment) }}
     steps:
+      - name: Checkout exact source and Helm chart
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Validate source and image tag
+        run: |
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]] || exit 1
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          [[ "$DISPLAY_TAG" =~ ^[a-f0-9]{12}$ || "$DISPLAY_TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || exit 1
+          test "${#DISPLAY_TAG}" -le 63
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.19.0
+      - uses: redhat-actions/oc-installer@v1
       ### tag and release
 
       # Variables      
@@ -86,10 +117,10 @@ jobs:
         run: |
           # Vars: tag and release
 
-          # Tag defaults to PR number, but can be overridden by inputs.tag
-          tag=${{ inputs.tag }}
+          # The SHA or release version selects the application images.
+          tag="$DISPLAY_TAG"
 
-          # Release name includes run numbers to ensure uniqueness
+          # Stable Helm release name within each environment.
           release=${{ github.event.repository.name }}-${{ inputs.environment }}
 
           # Summary
@@ -109,29 +140,12 @@ jobs:
           oc login --token=${{ secrets.oc_token }} --server=${{ inputs.oc_server }}
           oc project ${{ secrets.oc_namespace }} # Safeguard!
 
-      # Only stop pre-existing deployments on PRs (status = pending-upgrade)
-      - if: github.event_name == 'pull_request'
-        name: Interrupt existing PR based deployments if we are PR based
-        run: |
-          # Interrupt any previous deployments (PR only)
-          PREVIOUS=$(helm status ${{ steps.vars.outputs.release }} -o json | jq .info.status || true)
-          if [[ ${PREVIOUS} =~ pending ]]; then
-            echo "Rollback triggered"
-            helm rollback ${{ steps.vars.outputs.release }} || \
-              helm uninstall ${{ steps.vars.outputs.release }}
-          fi
       # Secrets Management
       - name: Create Secrets
         run: |
           oc -n ${{ secrets.oc_namespace }} create secret generic "vdyp-oidc" \
           --from-literal=client-secret='${{ secrets.KEYCLOAK_CLIENT_SECRET }}' \
           --dry-run=client -o yaml | oc apply -f -
-
-      # Package Helm chart
-      - name: Checkout Helm Chart
-        uses: actions/checkout@v4
-        with:
-            ref: ${{ inputs.ref || 'main' }}  # fallback if ref is not provided
 
       - name: Deploy NATS
         working-directory: charts/nats
@@ -157,9 +171,10 @@ jobs:
       - name: Configure Helm
         working-directory: ${{ inputs.directory }}
         run: |
-          # Helm package
+          # Preserve the chart version from the checked-out Chart.yaml.
           sed -i 's/^name:.*/name: ${{ github.event.repository.name }}/' Chart.yaml
-          helm package -u . --app-version="tag-${{ steps.vars.outputs.tag }}_run-${{ github.run_number }}" --version=${{ steps.vars.outputs.tag }}
+          mkdir -p "$RUNNER_TEMP/vdyp-chart"
+          helm package . --app-version="$DISPLAY_TAG" --destination "$RUNNER_TEMP/vdyp-chart"
 
       # Deploy Helm chart as atomic, with timeout
       - name: Atomic Helm Deployment
@@ -167,9 +182,9 @@ jobs:
         run: |
           # Helm upgrade/rollout - atomic, timeout
           helm upgrade \
-            --values ${{ inputs.values }} \
+            --values "$VALUES_FILE" \
             --set-string global.repository=${{ github.repository }} \
-            --set-string global.tag=${{ steps.vars.outputs.tag }} \
+            --set-string global.tag="$DISPLAY_TAG" \
             ${{ inputs.params }} \
             --set global.secrets.databaseName=${{ vars.POSTGRES_DATABASE }} \
             --set global.secrets.databaseUser=${{ vars.POSTGRES_USER }} \
@@ -226,7 +241,7 @@ jobs:
             --set-string coms.env.KC_SERVERURL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
             --install --wait --atomic ${{ steps.vars.outputs.release }} \
             --timeout ${{ inputs.timeout-minutes }}m \
-            ./${{ github.event.repository.name }}-${{ steps.vars.outputs.tag }}.tgz
+            "$RUNNER_TEMP/vdyp-chart/"*.tgz
 
       # Helm release history
       - name: Helm Release History

@@ -1,138 +1,68 @@
 name: Build and Deploy to Openshift Dev When PR
-permissions:
-  contents: read
 
 on:
   workflow_dispatch:
     inputs:
       package:
-        description: 'Package to build (select specific or all)'
-        required: false
+        description: All builds and deploys; a single component builds only
+        required: true
         type: choice
-        default: 'all'
-        options:
-          - all
-          - backend
-          - frontend
-          - batch
-          - log-exporter
-
+        default: all
+        options: [ all, backend, frontend, batch, log-exporter ]
   push:
-    branches:
-      - main
+    branches: [ main ]
     paths:
-      - "backend/**"
-      - "batch/**"
-      - "log-exporter/**"
-      - "charts/**"
-      - "frontend/**"
-      - "lib/**"
-      - "nats/**"
-      - ".github/workflows/openshift-*.yml"
-      - ".github/workflows/.deployer.yml"
+      - 'backend/**'
+      - 'batch/**'
+      - 'log-exporter/**'
+      - 'frontend/**'
+      - 'lib/**'
+      - 'buildtools/**'
+      - 'pom.xml'
+      - '.dockerignore'
+      - 'charts/**'
+      - 'nats/**'
+      - '.github/**'
   pull_request:
+    types: [ opened, synchronize, reopened ]
     paths:
-      - "backend/**"
-      - "batch/**"
-      - "log-exporter/**"
-      - "charts/**"
-      - "frontend/**"
-      - "lib/**"
-      - "nats/**"
-      - ".github/workflows/openshift-*.yml"
-      - ".github/workflows/.deployer.yml"
+      - 'backend/**'
+      - 'batch/**'
+      - 'log-exporter/**'
+      - 'frontend/**'
+      - 'lib/**'
+      - 'buildtools/**'
+      - 'pom.xml'
+      - '.dockerignore'
+      - 'charts/**'
+      - 'nats/**'
+      - '.github/**'
+
+permissions:
+  contents: read
+  packages: write
+
+# Do not cancel a workflow while it may be executing a Helm deployment.
 concurrency:
-  # Cancel if re-attempted
-  group: ${{ github.event_name }}
-  cancel-in-progress: true
+  group: dev-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  # https://github.com/bcgov-nr/action-builder-ghcr
   builds:
-    name: Builds
-    permissions:
-      packages: write
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/build-images.yml
+    with:
+      source_sha: ${{ github.sha }}
+      pr_number: ${{ github.event_name == 'pull_request' && format('{0}', github.event.pull_request.number) || '' }}
+      package: ${{ inputs.package || 'all' }}
+    secrets: inherit
 
-    runs-on: ubuntu-22.04
-    outputs:
-      pr: ${{ steps.pr.outputs.pr }}
-    strategy:
-      matrix:
-        package: [ backend, frontend, batch, log-exporter ]
-    timeout-minutes: 15
-    steps:
-      - name: Check if package should be built
-        id: check_build
-        run: |
-          if [[ "${{ github.event_name }}" != "workflow_dispatch" ]] || \
-             [[ "${{ inputs.package }}" == "all" ]] || \
-             [[ "${{ inputs.package }}" == "${{ matrix.package }}" ]]; then
-            echo "should_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_build=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Checkout code
-        if: steps.check_build.outputs.should_build == 'true'
-        uses: actions/checkout@v3
-
-      - name: Set up JDK for Maven
-        if: steps.check_build.outputs.should_build == 'true'
-        uses: actions/setup-java@v3
-        with:
-          java-version: "17"
-          distribution: "temurin"
-
-      - name: Extract project app version from pom.xml
-        if: steps.check_build.outputs.should_build == 'true'
-        id: get_app_version
-        run: |
-          APP_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "Extracted APP_VERSION: $APP_VERSION"
-          echo "::set-output name=APP_VERSION::$APP_VERSION"
-
-      - name: Get PR Data
-        if: steps.check_build.outputs.should_build == 'true'
-        id: pr
-        uses: bcgov-nr/action-get-pr@v0.1.1
-
-      - name: Build and Tag Packages with pr number
-        if: steps.check_build.outputs.should_build == 'true'
-        uses: bcgov-nr/action-builder-ghcr@v4.2.1
-        with:
-          package: ${{ matrix.package }}
-          tags: |
-            ${{ steps.pr.outputs.pr }}
-          tag_fallback: latest
-          token: ${{ secrets.GITHUB_TOKEN }}
-          #triggers: ('${{ matrix.package }}/')
-          build_context: .
-          build_file: ./${{ matrix.package}}/Dockerfile
-          build_args: |
-            BUILD_NUMBER=${{ github.run_number }}
-            APP_VERSION=${{ steps.get_app_version.outputs.APP_VERSION }}
-
-      - if: github.event_name == 'push' && steps.check_build.outputs.should_build == 'true'
-        name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN}}
-
-      - if: github.event_name == 'push' && steps.check_build.outputs.should_build == 'true'
-        name: Tag build as latest
-        run: |
-          docker buildx imagetools create \
-            --tag ghcr.io/${{ github.repository }}/${{ matrix.package }}:latest \
-            ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }}
-       
-  
-  call-shared:
-    uses: ./.github/workflows/openshift-shared.yml
-    needs: [builds]
+  deploy:
+    needs: builds
+    if: github.event_name != 'workflow_dispatch' || inputs.package == 'all'
+    uses: ./.github/workflows/.deployer.yml
     secrets: inherit
     with:
-      target_environment: 'dev'
-      ref: ${{ github.head_ref }}
-      tag: ${{ needs.builds.outputs.pr }}
+      environment: dev
+      ref: ${{ github.sha }}
+      tag: ${{ needs.builds.outputs.short_sha }}
