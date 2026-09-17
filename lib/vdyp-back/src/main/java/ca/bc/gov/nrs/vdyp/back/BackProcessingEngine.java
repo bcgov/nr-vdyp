@@ -8,6 +8,7 @@ import static java.lang.Math.min;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,9 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
@@ -432,6 +435,80 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			// TODO might want to be more specific
 			throw new ProcessingException(e);
 		}
+	}
+
+	/**
+	 * Calculate convergence age, basal area, year, and dominant height and store them in the state.
+	 *
+	 * @return years of regression
+	 * @throws ProcessingException
+	 */
+	public int calculateConvergenceAge() throws ProcessingException {
+		int startYear = getState().getCurrentStartingYear(); // IYRFIRST
+		if (startYear <= 1600) {
+			throw new ProcessingException("Start year " + startYear + "was too early.  Expected to be after 1600 CE.");
+		}
+
+		final VdypPolygon polygon = getState().getCurrentPolygon();
+		var primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		var primarySite = primaryLayer.getPrimarySite()
+				.orElseThrow(() -> new ProcessingException("Primary layer has no site information"));
+
+		/*
+		 * The current age information is needed here for one purpose: establish fractional years, as we must go back an
+		 * integer number of years.
+		 */
+		final Float yearsAtBreastHeight = primaryLayer.getYearsAtBreastHeight()
+				.orElseThrow(() -> new ProcessingException("Years at breast height not set"));
+		var yearFraction = yearsAtBreastHeight % 1f;
+		if (yearFraction < 0.001)
+			yearFraction = 0f;
+
+		// Find an age that puts stand into suitable condition with EMP106 predicting reasonable BA
+		float basalAreaTarget = 2f;
+		float heightTarget = 9f;
+		float ageTarget = 5f;
+
+		int yearsToRegress = 0;
+		int convergenceYear = 0;
+		float convergenceHeight = 0;
+
+		float yabh0 = ageTarget - 1f + yearFraction;
+		float convergenceAge = 0;
+		float basalArea = 0;
+		var overstoryArea = Optional.ofNullable(polygon.getLayers().get(LayerType.VETERAN))
+				.map(VdypLayer::getBaseAreaByUtilization).map(UtilizationVector::getAll);
+		for (int increase = 0; increase < 1000; increase++) {
+			float candiadateConvergenceAge = yabh0 + increase;
+			if (candiadateConvergenceAge > yearsAtBreastHeight) {
+				break;
+			}
+			float candiadateConvergenceHeight = heightFromSiteCurve(
+					primarySite.getSiteCurveNumber().orElseThrow(), candiadateConvergenceAge,
+					primarySite.getYearsToBreastHeight().orElseThrow(), primarySite.getSiteIndex().orElseThrow()
+			);
+			final String primarySpeciesId = primaryLayer.getPrimaryGenus()
+					.orElseThrow(() -> new ProcessingException("Primary species group ID not set"));
+			final Integer baseAreaGroup = primaryLayer.getEmpiricalRelationshipParameterIndex()
+					.orElseThrow(() -> new ProcessingException("Empirical relationship parameter index not set"));
+			basalArea = getState().getEstimators().estimateBaseAreaYield(
+					candiadateConvergenceHeight, candiadateConvergenceAge, overstoryArea, true,
+					primaryLayer.getOrderedSpecies(), primarySpeciesId, polygon.getBiogeoclimaticZone(), baseAreaGroup
+			);
+			if (candiadateConvergenceHeight >= heightTarget && candiadateConvergenceAge >= ageTarget
+					&& basalArea >= basalAreaTarget) {
+				convergenceHeight = candiadateConvergenceHeight;
+				convergenceAge = candiadateConvergenceAge;
+				yearsToRegress = (int) (yearsAtBreastHeight - convergenceAge);
+				convergenceYear = startYear - yearsToRegress;
+				getState().setConvergenceBasalArea(basalArea);
+				break;
+			}
+		}
+		getState().setConvergenceAge(convergenceAge);
+		getState().setConvergenceYear(convergenceYear);
+		getState().setConvergenceDominantHeight(convergenceHeight);
+		return yearsToRegress;
 	}
 
 	public void calculateCompatibilityVariables(int currentYear /* IYRCUR */) {
