@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.beanutils.ConvertUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -26,7 +25,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class BackProcessingStateTest {
+class BackProcessingStateTest {
 
 	static List<Arguments> scalarAccessors() {
 		return List.of(
@@ -80,7 +79,6 @@ public class BackProcessingStateTest {
 
 	}
 
-	@Disabled("Not implemented")
 	@ParameterizedTest
 	@MethodSource("scalarAccessors")
 	void testConveninenceScalarSetter(String property, Class<? extends Number> type, Number value) throws Exception {
@@ -89,8 +87,9 @@ public class BackProcessingStateTest {
 		var unit = new BackProcessingState(rawControlMap);
 
 		var pd = new PropertyDescriptor(property, BackProcessingState.class);
+		var boxedType = ConvertUtils.primitiveToWrapper(type);
 
-		var writeMethod = pd.getWriteMethod();
+		var writeMethod = BackProcessingState.class.getMethod(pd.getWriteMethod().getName(), type);
 
 		assertThat(unit, hasProperty(property, notPresent()));
 
@@ -98,9 +97,9 @@ public class BackProcessingStateTest {
 
 		writeMethod = BackProcessingState.class.getMethod(writeMethod.getName(), type);
 
-		writeMethod.invoke(unit, type.cast(value));
+		writeMethod.invoke(unit, value);
 
-		assertThat(unit, hasProperty(property, present(is(type.cast(value)))));
+		assertThat(unit, hasProperty(property, present(is(boxedType.cast(value)))));
 
 	}
 

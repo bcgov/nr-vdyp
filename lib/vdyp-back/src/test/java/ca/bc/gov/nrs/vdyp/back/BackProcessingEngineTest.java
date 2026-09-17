@@ -6,6 +6,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecies;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
+import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -738,8 +739,8 @@ class BackProcessingEngineTest {
 			expect(state.getCurrentStartingYear()).andStubReturn(startingYear);
 			expect(state.getConvergenceYear()).andStubReturn(Optional.of(convergenceYear));
 
-			layerState.setFractionalCompatibilityVariables(EasyMock.eq(fraction, Math.abs(fraction * 0.01f))); // Within
-																												// 1%
+			layerState.setFractionalCompatibilityVariables(eq(fraction, Math.abs(fraction * 0.01f))); // Within
+																										// 1%
 			expectLastCall().once();
 
 			em.replay();
@@ -764,4 +765,182 @@ class BackProcessingEngineTest {
 			em.verify();
 		}
 	}
+
+	@Nested
+	class CalculateConvergenceAge {
+		@Test
+		void testStandard() throws ProcessingException {
+			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("092P037  72999905UNK 2011");
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.percentAvailable(61f);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(10);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(12);
+						sb.percentGenus(70);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(45);
+							ib.yearsAtBreastHeight(77.3f);
+							ib.yearsToBreastHeight(8.2f);
+							ib.ageTotal(85f);
+							ib.siteIndex(12.39f);
+							ib.height(16f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(15);
+						sb.percentGenus(20);
+					});
+					lb.primaryGenus("PL");
+					lb.empiricalRelationshipParameterIndex(118);
+				});
+			});
+
+			expect(state.getPrimaryLayerProcessingState()).andStubReturn(layerState);
+			expect(state.getCurrentStartingYear()).andStubReturn(2011);
+			expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			expect(state.getControlMap()).andStubReturn(controlMap);
+			expect(state.getCurrentBecZone()).andStubReturn(polygon.getBiogeoclimaticZone());
+
+			state.setConvergenceBasalArea(eq(10.6703072f, 0.1f));
+			expectLastCall().once();
+			state.setConvergenceDominantHeight(eq(9.17361069f, 0.09f));
+			expectLastCall().once();
+			state.setConvergenceAge(eq(33.3f, 0.33f));
+			expectLastCall().once();
+			state.setConvergenceYear(eq(1967));
+
+			em.replay();
+			var resgressionYears = engine.calculateConvergenceAge();
+			em.verify();
+			assertThat("regression year", resgressionYears, is(44));
+
+		}
+
+		@Test
+		void testFractionalYabhLow() throws ProcessingException {
+			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("092P037  72999905UNK 2011");
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.percentAvailable(61f);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(10);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(12);
+						sb.percentGenus(70);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(45);
+							ib.yearsAtBreastHeight(77.0009f);
+							ib.yearsToBreastHeight(8.4001f);
+							ib.ageTotal(85f);
+							ib.siteIndex(12.39f);
+							ib.height(16f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(15);
+						sb.percentGenus(20);
+					});
+					lb.primaryGenus("PL");
+					lb.empiricalRelationshipParameterIndex(118);
+				});
+			});
+
+			expect(state.getPrimaryLayerProcessingState()).andStubReturn(layerState);
+			expect(state.getCurrentStartingYear()).andStubReturn(2011);
+			expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			expect(state.getControlMap()).andStubReturn(controlMap);
+			expect(state.getCurrentBecZone()).andStubReturn(polygon.getBiogeoclimaticZone());
+
+			state.setConvergenceBasalArea(eq(10.3954315f, 0.1f));
+			expectLastCall().once();
+			state.setConvergenceDominantHeight(eq(9.10722828f, 0.09f));
+			expectLastCall().once();
+			state.setConvergenceAge(eq(33.0f, 0.001f));
+			expectLastCall().once();
+			state.setConvergenceYear(eq(1967));
+
+			em.replay();
+			var resgressionYears = engine.calculateConvergenceAge();
+			em.verify();
+			assertThat("regression year", resgressionYears, is(44));
+
+		}
+
+		@Test
+		void testExceedYabh() throws ProcessingException {
+			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("092P037  72999905UNK 2011");
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.percentAvailable(61f);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(10);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(12);
+						sb.percentGenus(70);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(45);
+							ib.yearsAtBreastHeight(4.3f);
+							ib.yearsToBreastHeight(8.2f);
+							ib.ageTotal(12f);
+							ib.siteIndex(12.39f);
+							ib.height(16f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(15);
+						sb.percentGenus(20);
+					});
+					lb.primaryGenus("PL");
+					lb.empiricalRelationshipParameterIndex(118);
+				});
+			});
+
+			expect(state.getPrimaryLayerProcessingState()).andStubReturn(layerState);
+			expect(state.getCurrentStartingYear()).andStubReturn(2011);
+			expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			expect(state.getControlMap()).andStubReturn(controlMap);
+			expect(state.getCurrentBecZone()).andStubReturn(polygon.getBiogeoclimaticZone());
+
+			// Don't try to set basal area per VDYP7
+			state.setConvergenceDominantHeight(eq(0f));
+			expectLastCall().once();
+			state.setConvergenceAge(eq(0f));
+			expectLastCall().once();
+			state.setConvergenceYear(eq(0));
+
+			em.replay();
+			var resgressionYears = engine.calculateConvergenceAge();
+			em.verify();
+			assertThat("regression year", resgressionYears, is(0));
+
+		}
+
+	}
+
 }
