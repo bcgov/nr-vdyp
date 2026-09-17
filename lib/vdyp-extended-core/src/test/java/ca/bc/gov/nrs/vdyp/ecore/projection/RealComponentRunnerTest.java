@@ -162,7 +162,7 @@ class RealComponentRunnerTest {
 		}
 
 		var content = new String(context.getYieldTables().get(0).getAsStream().readAllBytes());
-		long reportTitleCount = content.lines().filter(line -> line.contains("VDYP Yield Table Report")).count();
+		long reportTitleCount = content.lines().filter(line -> line.contains("VDYP Yield Table")).count();
 		assertThat(reportTitleCount, is(1L));
 		assertThat(content, containsString("CFS Biomass"));
 	}

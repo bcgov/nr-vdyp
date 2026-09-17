@@ -139,8 +139,7 @@ class BatchResultAggregationServiceTest {
 	void testAggregateResults_TextReportsPreserveSpeciesAndFormatting() throws Exception {
 		Path partition0 = Files.createDirectories(tempDir.resolve("output-partition0"));
 		Path partition1 = Files.createDirectories(tempDir.resolve("output-partition1"));
-		String report = "                              Test\r\n\r\n"
-				+ "                        VDYP Yield Table Report\r\n"
+		String report = "                              Test\r\n\r\n" + "                          VDYP Yield Table\r\n"
 				+ "Western Red Cedar (30.0%), Common Paper Birch (20.0%), Western Hemlock (15.0%), \r\n"
 				+ "  Whitebark Pine (15.0%), Silver Paper Birch (10.0%), Mountain Hemlock (10.0%)\r\n"
 				+ "           Quad                      |   Whole    |   Close\r\n\r\n";

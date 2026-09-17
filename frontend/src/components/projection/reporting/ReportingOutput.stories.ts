@@ -27,7 +27,7 @@ type Story = StoryObj<typeof ReportingOutput>
 const sampleYieldLines = [
   '                           A Sample Report Title',
   '',
-  '                            VDYP Yield Table Report',
+  '                              VDYP Yield Table',
   '         Trembling Aspen (30.0%), Balsam (25.0%), Hemlock (20.0%)',
   '',
   'TOT  HT   HT   DIA     BA        TPH     |  VOLUME    |  VOLUME    ',
@@ -78,7 +78,7 @@ export const ViewErrorMessages: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'View Error Messages tab showing projection errors. Uses a fixed height of 420px.',
+        story: 'Error Log tab showing projection errors. Uses a fixed height of 420px.',
       },
     },
   },
@@ -92,7 +92,7 @@ export const ViewLogFile: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'View Log File tab showing batch processing log lines. Uses a fixed height of 420px.',
+        story: 'Progress Log tab showing batch processing log lines. Uses a fixed height of 420px.',
       },
     },
   },
