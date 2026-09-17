@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
@@ -35,10 +37,17 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 	private final Object lock = new Object();
 	private final JobOwnershipService ownershipService;
 	private final PrioritizationPauseTracker pauseTracker;
+	private final JobExplorer jobExplorer;
+	private final JobRepository jobRepository;
 
-	public BatchJobExecutionListener(JobOwnershipService ownershipService, PrioritizationPauseTracker pauseTracker) {
+	public BatchJobExecutionListener(
+			JobOwnershipService ownershipService, PrioritizationPauseTracker pauseTracker, JobExplorer jobExplorer,
+			JobRepository jobRepository
+	) {
 		this.ownershipService = ownershipService;
 		this.pauseTracker = pauseTracker;
+		this.jobExplorer = jobExplorer;
+		this.jobRepository = jobRepository;
 	}
 
 	@Override
@@ -46,6 +55,17 @@ public class BatchJobExecutionListener implements JobExecutionListener {
 		// Initialize tracking for this job execution
 		synchronized (lock) {
 			jobCompletionTracker.put(jobExecution.getId(), false);
+		}
+
+		// beforeJob() exceptions fail the whole job launch, so this must not throw.
+		try {
+			BatchUtils.captureBaselineProgress(jobExecution, jobExplorer, jobRepository);
+		} catch (Exception e) {
+			String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
+			logger.warn(
+					"[GUID: {}] Failed to capture baseline progress for execution {}: {}", jobGuid,
+					jobExecution.getId(), e.getMessage()
+			);
 		}
 
 		String separator = "============================================================";

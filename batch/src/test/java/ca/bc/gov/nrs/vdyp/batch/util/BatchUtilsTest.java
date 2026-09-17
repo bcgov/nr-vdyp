@@ -7,7 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -28,6 +31,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
@@ -158,9 +162,8 @@ class BatchUtilsTest {
 		JobExecution jobExecution = mock(JobExecution.class);
 		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
 		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
-		JobExplorer jobExplorer = singleExecutionExplorer(jobExecution);
 
-		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution, jobExplorer);
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution);
 
 		assertEquals("job-guid", result.batchJobGUID());
 		assertEquals(0, result.totalPolygons());
@@ -186,9 +189,8 @@ class BatchUtilsTest {
 		stepContext.putInt(BatchConstants.Job.POLYGONS_SKIPPED, 1);
 		when(workerStep.getExecutionContext()).thenReturn(stepContext);
 		when(jobExecution.getStepExecutions()).thenReturn(List.of(workerStep));
-		JobExplorer jobExplorer = singleExecutionExplorer(jobExecution);
 
-		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution, jobExplorer);
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution);
 
 		assertEquals(10, result.totalPolygons());
 		assertEquals(8, result.polygonsProcessed());
@@ -197,34 +199,147 @@ class BatchUtilsTest {
 	}
 
 	@Test
-	void buildFinalProgress_sameWorkerStepAcrossExecutions_keepsHighestProgress() {
+	void buildFinalProgress_includesBaselineCarriedFromEarlierExecutions() {
+		JobExecution jobExecution = mock(JobExecution.class);
+		ExecutionContext jobContext = new ExecutionContext();
+		jobContext.putInt(BatchConstants.Job.TOTAL_POLYGONS, 10);
+		jobContext.putInt(BatchConstants.Job.PREVIOUS_TOTAL_POLYGONS, 20);
+		jobContext.putInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 3);
+		jobContext.putInt(BatchConstants.Job.PREVIOUS_PROJECTION_ERRORS, 1);
+		jobContext.putInt(BatchConstants.Job.PREVIOUS_POLYGONS_SKIPPED, 1);
+		when(jobExecution.getExecutionContext()).thenReturn(jobContext);
+
+		StepExecution workerStep = mock(StepExecution.class);
+		when(workerStep.getStepName()).thenReturn(BatchConstants.Job.WORKER_STEP_NAME + ":partition0");
+		ExecutionContext stepContext = new ExecutionContext();
+		stepContext.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 8);
+		when(workerStep.getExecutionContext()).thenReturn(stepContext);
+		when(jobExecution.getStepExecutions()).thenReturn(List.of(workerStep));
+
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution);
+
+		assertEquals(20, result.totalPolygons());
+		assertEquals(11, result.polygonsProcessed());
+		assertEquals(1, result.projectionErrors());
+		assertEquals(1, result.polygonsSkipped());
+	}
+
+	@Test
+	void captureBaselineProgress_noPriorExecutions_doesNothing() {
+		JobInstance jobInstance = mock(JobInstance.class);
+		JobExecution jobExecution = mock(JobExecution.class);
+		when(jobExecution.getId()).thenReturn(2L);
+		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
+
+		JobExplorer jobExplorer = mock(JobExplorer.class);
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
+		JobRepository jobRepository = mock(JobRepository.class);
+
+		BatchUtils.captureBaselineProgress(jobExecution, jobExplorer, jobRepository);
+
+		verify(jobRepository, never()).updateExecutionContext(any(JobExecution.class));
+	}
+
+	@Test
+	void captureBaselineProgress_priorExecutions_keepsHighestProgressPerWorkerStepAndPersists() {
 		JobInstance jobInstance = mock(JobInstance.class);
 
 		JobExecution earlierExecution = mock(JobExecution.class);
-		when(earlierExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		when(earlierExecution.getId()).thenReturn(1L);
+		ExecutionContext earlierJobCtx = new ExecutionContext();
+		earlierJobCtx.putInt(BatchConstants.Job.TOTAL_POLYGONS, 10);
+		when(earlierExecution.getExecutionContext()).thenReturn(earlierJobCtx);
 		StepExecution earlierStep = mock(StepExecution.class);
 		when(earlierStep.getStepName()).thenReturn(BatchConstants.Job.WORKER_STEP_NAME + ":partition0");
+		when(earlierStep.getStatus()).thenReturn(BatchStatus.COMPLETED);
 		ExecutionContext earlierStepCtx = new ExecutionContext();
 		earlierStepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 3);
 		when(earlierStep.getExecutionContext()).thenReturn(earlierStepCtx);
 		when(earlierExecution.getStepExecutions()).thenReturn(List.of(earlierStep));
 
-		JobExecution latestExecution = mock(JobExecution.class);
-		when(latestExecution.getExecutionContext()).thenReturn(new ExecutionContext());
-		when(latestExecution.getJobInstance()).thenReturn(jobInstance);
-		StepExecution latestStep = mock(StepExecution.class);
-		when(latestStep.getStepName()).thenReturn(BatchConstants.Job.WORKER_STEP_NAME + ":partition0");
-		ExecutionContext latestStepCtx = new ExecutionContext();
-		latestStepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 8);
-		when(latestStep.getExecutionContext()).thenReturn(latestStepCtx);
-		when(latestExecution.getStepExecutions()).thenReturn(List.of(latestStep));
+		JobExecution newExecution = mock(JobExecution.class);
+		when(newExecution.getId()).thenReturn(2L);
+		when(newExecution.getJobInstance()).thenReturn(jobInstance);
+		ExecutionContext newJobCtx = new ExecutionContext();
+		when(newExecution.getExecutionContext()).thenReturn(newJobCtx);
 
 		JobExplorer jobExplorer = mock(JobExplorer.class);
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(earlierExecution, latestExecution));
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(earlierExecution, newExecution));
+		JobRepository jobRepository = mock(JobRepository.class);
 
-		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", latestExecution, jobExplorer);
+		BatchUtils.captureBaselineProgress(newExecution, jobExplorer, jobRepository);
 
-		assertEquals(8, result.polygonsProcessed());
+		assertEquals(10, newJobCtx.getInt(BatchConstants.Job.PREVIOUS_TOTAL_POLYGONS, 0));
+		assertEquals(3, newJobCtx.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 0));
+		verify(jobRepository).updateExecutionContext(newExecution);
+	}
+
+	@Test
+	void captureBaselineProgress_duplicateWorkerStepAcrossExecutions_keepsHighestProgress() {
+		JobInstance jobInstance = mock(JobInstance.class);
+
+		JobExecution lowerExecution = mock(JobExecution.class);
+		when(lowerExecution.getId()).thenReturn(1L);
+		when(lowerExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		StepExecution lowerStep = mock(StepExecution.class);
+		when(lowerStep.getStepName()).thenReturn(BatchConstants.Job.WORKER_STEP_NAME + ":partition0");
+		when(lowerStep.getStatus()).thenReturn(BatchStatus.COMPLETED);
+		ExecutionContext lowerStepCtx = new ExecutionContext();
+		lowerStepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 2);
+		when(lowerStep.getExecutionContext()).thenReturn(lowerStepCtx);
+		when(lowerExecution.getStepExecutions()).thenReturn(List.of(lowerStep));
+
+		JobExecution higherExecution = mock(JobExecution.class);
+		when(higherExecution.getId()).thenReturn(2L);
+		when(higherExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		StepExecution higherStep = mock(StepExecution.class);
+		when(higherStep.getStepName()).thenReturn(BatchConstants.Job.WORKER_STEP_NAME + ":partition0");
+		when(higherStep.getStatus()).thenReturn(BatchStatus.COMPLETED);
+		ExecutionContext higherStepCtx = new ExecutionContext();
+		higherStepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 9);
+		when(higherStep.getExecutionContext()).thenReturn(higherStepCtx);
+		when(higherExecution.getStepExecutions()).thenReturn(List.of(higherStep));
+
+		JobExecution newExecution = mock(JobExecution.class);
+		when(newExecution.getId()).thenReturn(3L);
+		when(newExecution.getJobInstance()).thenReturn(jobInstance);
+		ExecutionContext newJobCtx = new ExecutionContext();
+		when(newExecution.getExecutionContext()).thenReturn(newJobCtx);
+
+		JobExplorer jobExplorer = mock(JobExplorer.class);
+		when(jobExplorer.getJobExecutions(jobInstance))
+				.thenReturn(List.of(lowerExecution, higherExecution, newExecution));
+
+		BatchUtils.captureBaselineProgress(newExecution, jobExplorer, mock(JobRepository.class));
+
+		assertEquals(9, newJobCtx.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 0));
+	}
+
+	@Test
+	void captureBaselineProgress_incompleteWorkerStep_excludedFromBaseline() {
+		JobInstance jobInstance = mock(JobInstance.class);
+
+		JobExecution earlierExecution = mock(JobExecution.class);
+		when(earlierExecution.getExecutionContext()).thenReturn(new ExecutionContext());
+		StepExecution stoppedStep = mock(StepExecution.class);
+		when(stoppedStep.getStepName()).thenReturn(BatchConstants.Job.WORKER_STEP_NAME + ":partition0");
+		when(stoppedStep.getStatus()).thenReturn(BatchStatus.STOPPED);
+		ExecutionContext stoppedStepCtx = new ExecutionContext();
+		stoppedStepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 5);
+		when(stoppedStep.getExecutionContext()).thenReturn(stoppedStepCtx);
+		when(earlierExecution.getStepExecutions()).thenReturn(List.of(stoppedStep));
+
+		JobExecution newExecution = mock(JobExecution.class);
+		when(newExecution.getJobInstance()).thenReturn(jobInstance);
+		ExecutionContext newJobCtx = new ExecutionContext();
+		when(newExecution.getExecutionContext()).thenReturn(newJobCtx);
+
+		JobExplorer jobExplorer = mock(JobExplorer.class);
+		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(earlierExecution, newExecution));
+
+		BatchUtils.captureBaselineProgress(newExecution, jobExplorer, mock(JobRepository.class));
+
+		assertEquals(0, newJobCtx.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 0));
 	}
 
 	@Test
@@ -234,8 +349,7 @@ class BatchUtilsTest {
 				List.of(new RuntimeException("Could not fetch input files"))
 		);
 
-		JobExplorer jobExplorer = singleExecutionExplorer(jobExecution);
-		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution, jobExplorer);
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution);
 
 		assertEquals(BatchConstants.FailureType.INPUT, result.batchFailureTypeCode());
 		assertEquals("Could not fetch input files", result.failureMessage());
@@ -249,8 +363,7 @@ class BatchUtilsTest {
 				Collections.emptyList()
 		);
 
-		JobExplorer jobExplorer = singleExecutionExplorer(jobExecution);
-		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution, jobExplorer);
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution);
 
 		assertEquals(BatchConstants.FailureType.PROCESS, result.batchFailureTypeCode());
 		assertEquals("Projection failed in worker step", result.failureMessage());
@@ -266,8 +379,7 @@ class BatchUtilsTest {
 				Collections.emptyList()
 		);
 
-		JobExplorer jobExplorer = singleExecutionExplorer(jobExecution);
-		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution, jobExplorer);
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution);
 
 		assertEquals(BatchConstants.FailureType.OUTPUT, result.batchFailureTypeCode());
 		assertEquals("Could not build output archive", result.failureMessage());
@@ -280,8 +392,7 @@ class BatchUtilsTest {
 				List.of(new RuntimeException("x".repeat(250)))
 		);
 
-		JobExplorer jobExplorer = singleExecutionExplorer(jobExecution);
-		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution, jobExplorer);
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFailureProgress("job-guid", jobExecution);
 
 		assertEquals(200, result.failureMessage().length());
 		assertTrue(result.failureMessage().endsWith("..."));
@@ -347,9 +458,8 @@ class BatchUtilsTest {
 		StepExecution nonWorkerStep = mock(StepExecution.class);
 		when(nonWorkerStep.getStepName()).thenReturn("someOtherStep");
 		when(jobExecution.getStepExecutions()).thenReturn(List.of(nonWorkerStep));
-		JobExplorer jobExplorer = singleExecutionExplorer(jobExecution);
 
-		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution, jobExplorer);
+		VDYPProjectionProgressUpdate result = BatchUtils.buildFinalProgress("job-guid", jobExecution);
 
 		assertEquals(0, result.polygonsProcessed());
 		assertEquals(0, result.projectionErrors());
@@ -377,13 +487,5 @@ class BatchUtilsTest {
 		when(stepExecution.getStepName()).thenReturn(stepName);
 		when(stepExecution.getStatus()).thenReturn(status);
 		return stepExecution;
-	}
-
-	private static JobExplorer singleExecutionExplorer(JobExecution jobExecution) {
-		JobInstance jobInstance = mock(JobInstance.class);
-		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
-		JobExplorer jobExplorer = mock(JobExplorer.class);
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
-		return jobExplorer;
 	}
 }

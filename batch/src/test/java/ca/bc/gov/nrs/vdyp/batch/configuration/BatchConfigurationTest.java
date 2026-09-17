@@ -29,12 +29,10 @@ import org.mockito.quality.Strictness;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
@@ -114,9 +112,6 @@ class BatchConfigurationTest {
 	@Mock
 	private JobOwnershipService ownershipService;
 
-	@Mock
-	private JobExplorer jobExplorer;
-
 	@TempDir
 	Path tempDir;
 
@@ -127,8 +122,7 @@ class BatchConfigurationTest {
 	@BeforeEach
 	void setUp() {
 		configuration = new BatchConfiguration(
-				jobRepository, metricsCollector, batchProperties, resultAggregationService, ownershipService,
-				jobExplorer
+				jobRepository, metricsCollector, batchProperties, resultAggregationService, ownershipService
 		);
 
 		when(batchProperties.getRetry()).thenReturn(retry);
@@ -151,9 +145,6 @@ class BatchConfigurationTest {
 	private void mockProgressContext(JobExecution jobExecution) {
 		when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
 		when(jobExecution.getStepExecutions()).thenReturn(Collections.emptyList());
-		JobInstance jobInstance = mock(JobInstance.class);
-		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(Collections.singletonList(jobExecution));
 	}
 
 	@Test

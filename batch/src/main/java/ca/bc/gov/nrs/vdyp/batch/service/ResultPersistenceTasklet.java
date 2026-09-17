@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.stereotype.Component;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.FileMappingDetails;
@@ -26,14 +25,11 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 @StepScope
 public class ResultPersistenceTasklet extends VdypFileTasklet {
 	private static final Logger logger = LoggerFactory.getLogger(ResultPersistenceTasklet.class);
-	private final JobExplorer jobExplorer;
 
 	public ResultPersistenceTasklet(
-			ComsFileService comsFileService, VdypClient vdypClient, JobOwnershipService ownershipService,
-			JobExplorer jobExplorer
+			ComsFileService comsFileService, VdypClient vdypClient, JobOwnershipService ownershipService
 	) {
 		super(comsFileService, vdypClient, ownershipService);
-		this.jobExplorer = jobExplorer;
 	}
 
 	@Override
@@ -76,8 +72,7 @@ public class ResultPersistenceTasklet extends VdypFileTasklet {
 			}
 
 			vdypClient.markComplete(
-					projectionGUID, true,
-					BatchUtils.buildFinalProgress(jobGuid, stepExecution.getJobExecution(), jobExplorer)
+					projectionGUID, true, BatchUtils.buildFinalProgress(jobGuid, stepExecution.getJobExecution())
 			);
 
 			logger.debug("Completed persistence of result zip file to COMS.");

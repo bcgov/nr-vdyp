@@ -9,7 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -123,23 +125,26 @@ public class ProjectionProgressPushScheduler {
 		}
 	}
 
+	// Baseline from earlier executions was already captured into this execution's context at job start
+	// (BatchUtils.captureBaselineProgress), so only this execution's own steps need to be read here.
 	private ProgressSnapshot buildRestartAwareProgress(JobExecution runningJob) {
-		int totalPolygons = runningJob.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
-		for (JobExecution jobExecution : jobExplorer.getJobExecutions(runningJob.getJobInstance())) {
-			totalPolygons = Math.max(
-					totalPolygons, jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0)
-			);
-		}
+		ExecutionContext jobContext = runningJob.getExecutionContext();
+		int totalPolygons = Math.max(
+				jobContext.getInt(BatchConstants.Job.TOTAL_POLYGONS, 0),
+				jobContext.getInt(BatchConstants.Job.PREVIOUS_TOTAL_POLYGONS, 0)
+		);
 
 		int workers = BatchUtils.calculateThreadsInUse(runningJob, true);
-		int polygonsProcessed = 0;
-		int errorCount = 0;
-		int polygonsSkipped = 0;
-		for (BatchUtils.WorkerStepProgress progress : BatchUtils
-				.aggregateBestProgressByWorkerStep(jobExplorer, runningJob.getJobInstance()).values()) {
-			polygonsProcessed += progress.polygonsProcessed();
-			errorCount += progress.errorCount();
-			polygonsSkipped += progress.polygonsSkipped();
+		int polygonsProcessed = jobContext.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 0);
+		int errorCount = jobContext.getInt(BatchConstants.Job.PREVIOUS_PROJECTION_ERRORS, 0);
+		int polygonsSkipped = jobContext.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_SKIPPED, 0);
+		for (StepExecution step : runningJob.getStepExecutions()) {
+			if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
+				ExecutionContext stepCtx = step.getExecutionContext();
+				polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
+				errorCount += stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
+				polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
+			}
 		}
 
 		return new ProgressSnapshot(totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, workers);

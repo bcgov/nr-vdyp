@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -73,30 +72,6 @@ class ProjectionProgressPushSchedulerTest {
 		when(threadPoolExecutor.getQueue()).thenReturn(queue);
 	}
 
-	private void stubRealWorkerStepAggregation(MockedStatic<BatchUtils> batchUtils) {
-		batchUtils.when(() -> BatchUtils.aggregateBestProgressByWorkerStep(any(), any())).thenAnswer(invocation -> {
-			JobExplorer explorer = invocation.getArgument(0);
-			JobInstance jobInstance = invocation.getArgument(1);
-			Map<String, BatchUtils.WorkerStepProgress> progressByStepName = new HashMap<>();
-			for (JobExecution execution : explorer.getJobExecutions(jobInstance)) {
-				for (StepExecution step : execution.getStepExecutions()) {
-					if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
-						ExecutionContext stepCtx = step.getExecutionContext();
-						progressByStepName.put(
-								step.getStepName(),
-								new BatchUtils.WorkerStepProgress(
-										stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0),
-										stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0),
-										stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0)
-								)
-						);
-					}
-				}
-			}
-			return progressByStepName;
-		});
-	}
-
 	private JobExecution runningJobWithProgress(String projectionGuid, String batchJobGuid) {
 		var params = new HashMap<String, JobParameter<?>>();
 		params.put(BatchConstants.GuidInput.PROJECTION_GUID, new JobParameter<>(projectionGuid, String.class, true));
@@ -116,7 +91,6 @@ class ProjectionProgressPushSchedulerTest {
 
 		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(1);
 		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(job));
 		return job;
 	}
 
@@ -158,7 +132,6 @@ class ProjectionProgressPushSchedulerTest {
 
 		try (MockedStatic<BatchUtils> batchUtils = mockStatic(BatchUtils.class)) {
 			batchUtils.when(() -> BatchUtils.calculateThreadsInUse(job, true)).thenReturn(1);
-			stubRealWorkerStepAggregation(batchUtils);
 
 			scheduler.pushProgress();
 		}
@@ -194,11 +167,9 @@ class ProjectionProgressPushSchedulerTest {
 
 		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(1);
 		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(job));
 
 		try (MockedStatic<BatchUtils> batchUtils = mockStatic(BatchUtils.class)) {
 			batchUtils.when(() -> BatchUtils.calculateThreadsInUse(job, true)).thenReturn(0);
-			stubRealWorkerStepAggregation(batchUtils);
 
 			scheduler.pushProgress();
 			verify(taskExecutor, never()).execute(any(Runnable.class));
@@ -255,7 +226,6 @@ class ProjectionProgressPushSchedulerTest {
 
 		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(1);
 		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(job));
 		ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
 		ArgumentCaptor<VDYPProjectionProgressUpdate> payloadCaptor = ArgumentCaptor
 				.forClass(VDYPProjectionProgressUpdate.class);
@@ -282,7 +252,6 @@ class ProjectionProgressPushSchedulerTest {
 		job.setExecutionContext(new ExecutionContext());
 		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(1);
 		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(job));
 
 		scheduler.pushProgress();
 
@@ -328,7 +297,6 @@ class ProjectionProgressPushSchedulerTest {
 
 		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(1);
 		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(job));
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(job));
 		ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
 
 		scheduler.pushProgress();
@@ -390,7 +358,7 @@ class ProjectionProgressPushSchedulerTest {
 	}
 
 	@Test
-	void pushProgress_restartWithNoCurrentCounts_usesPriorExecutionProgress() {
+	void pushProgress_restartWithNoCurrentCounts_usesBaselineCapturedAtStart() {
 		var params = new HashMap<String, JobParameter<?>>();
 		String projectionGuid = java.util.UUID.randomUUID().toString();
 		String batchJobGuid = java.util.UUID.randomUUID().toString();
@@ -400,31 +368,14 @@ class ProjectionProgressPushSchedulerTest {
 		JobParameters jobParameters = new JobParameters(params);
 		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
 
-		JobExecution priorExecution = new JobExecution(jobInstance, 1L, jobParameters);
-		ExecutionContext priorJobCtx = new ExecutionContext();
-		priorJobCtx.putInt(BatchConstants.Job.TOTAL_POLYGONS, 10);
-		priorExecution.setExecutionContext(priorJobCtx);
-		StepExecution priorWorker = new StepExecution("workerStep:partition0", priorExecution);
-		ExecutionContext priorStepCtx = new ExecutionContext();
-		priorStepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 7);
-		priorWorker.setExecutionContext(priorStepCtx);
-		priorExecution.addStepExecutions(List.of(priorWorker));
-
-		JobExecution olderExecution = new JobExecution(jobInstance, 0L, jobParameters);
-		olderExecution.setExecutionContext(new ExecutionContext());
-		StepExecution olderWorker = new StepExecution("workerStep:partition0", olderExecution);
-		ExecutionContext olderStepCtx = new ExecutionContext();
-		olderStepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 3);
-		olderWorker.setExecutionContext(olderStepCtx);
-		olderExecution.addStepExecutions(List.of(olderWorker));
-
 		JobExecution restartedExecution = new JobExecution(jobInstance, 2L, jobParameters);
-		restartedExecution.setExecutionContext(new ExecutionContext());
+		ExecutionContext restartedCtx = new ExecutionContext();
+		restartedCtx.putInt(BatchConstants.Job.PREVIOUS_TOTAL_POLYGONS, 10);
+		restartedCtx.putInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 7);
+		restartedExecution.setExecutionContext(restartedCtx);
 
 		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(1);
 		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(restartedExecution));
-		when(jobExplorer.getJobExecutions(jobInstance))
-				.thenReturn(List.of(restartedExecution, priorExecution, olderExecution));
 		ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
 		ArgumentCaptor<VDYPProjectionProgressUpdate> payloadCaptor = ArgumentCaptor
 				.forClass(VDYPProjectionProgressUpdate.class);
