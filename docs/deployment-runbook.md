@@ -163,9 +163,11 @@ docker buildx imagetools inspect ghcr.io/bcgov/nr-vdyp/backend:<12-character-sha
 docker buildx imagetools inspect ghcr.io/bcgov/nr-vdyp/backend:<release-version>
 ```
 
-Helm uses the chart version declared in `Chart.yaml` at the selected repository
-commit. The workflow does not generate or override that version. The package's
-application version is set to the deployed image tag; this does not change the chart version.
+Helm deployment packages use `0.0.0-sha-<12-character-source-SHA>` as their chart
+version, for example `0.0.0-sha-abcdef123456`. This valid SemVer identifies the chart's
+source commit consistently across dev, test, and prod. The override applies during
+packaging; the repository's `Chart.yaml` is not updated. The package's application
+version is set separately to the deployed image tag (SHA or release version).
 The app chart declares no dependencies; deployment packages the checked-out chart
 without resolving the historical stale `Chart.lock`. If dependencies are introduced,
 update the lock and restore locked dependency handling.
