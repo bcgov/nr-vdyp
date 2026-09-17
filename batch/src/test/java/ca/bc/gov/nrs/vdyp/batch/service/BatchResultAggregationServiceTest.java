@@ -136,6 +136,31 @@ class BatchResultAggregationServiceTest {
 	}
 
 	@Test
+	void testAggregateResults_TextReportsPreserveSpeciesAndFormatting() throws Exception {
+		Path partition0 = Files.createDirectories(tempDir.resolve("output-partition0"));
+		Path partition1 = Files.createDirectories(tempDir.resolve("output-partition1"));
+		String report = "                              Test\r\n\r\n"
+				+ "                        VDYP Yield Table Report\r\n"
+				+ "Western Red Cedar (30.0%), Common Paper Birch (20.0%), Western Hemlock (15.0%), \r\n"
+				+ "  Whitebark Pine (15.0%), Silver Paper Birch (10.0%), Mountain Hemlock (10.0%)\r\n"
+				+ "           Quad                      |   Whole    |   Close\r\n\r\n";
+		String secondReport = "    Another Report\n\n    Western Red Cedar (100.0%)\n";
+		Files.writeString(partition0.resolve("YieldReport.txt"), report);
+		Files.writeString(partition1.resolve("YieldReport.txt"), secondReport);
+		// A CSV header must not be recovered into the text report.
+		Files.writeString(partition0.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate, duration
+		);
+
+		assertEquals(report + secondReport, getZipEntryContent(resultZip, "YieldTable.txt"));
+		assertEquals(
+				YIELD_TABLE_CONTENT.lines().toList(), getZipEntryContent(resultZip, "YieldTable.csv").lines().toList()
+		);
+	}
+
+	@Test
 	void testAggregateResults_LogAggregation() throws BatchResultAggregationException, IOException {
 		// Test aggregation of different log types
 		Path partition1 = tempDir.resolve("output-partition0");
