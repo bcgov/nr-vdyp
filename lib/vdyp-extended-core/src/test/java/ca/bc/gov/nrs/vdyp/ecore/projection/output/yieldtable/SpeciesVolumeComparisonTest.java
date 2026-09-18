@@ -15,8 +15,11 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationClassSet;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 // Runs a VDYP8 projection and compares PRJ_SP{n}_VOL_* columns against a reference VDYP7 YieldTable CSV,
 // reporting any rows where the values differ by more than TOLERANCE_PCT percent.
@@ -41,6 +44,7 @@ class SpeciesVolumeComparisonTest {
 				new InputStreamReader(getClass().getClassLoader().getResourceAsStream(RESOURCE_VDYP7))
 		);
 
+
 		Parameters params = new Parameters().ageStart(0).ageEnd(250).ageIncrement(10)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
@@ -48,6 +52,8 @@ class SpeciesVolumeComparisonTest {
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.FORWARD_GROW_ENABLED);
+
+		addUtilizationParams(params);
 
 		try (ProjectionRunner runner = new ProjectionRunner(ProjectionRequestKind.HCSV, "VDYP1026", params, false)) {
 			runner.run(
@@ -63,6 +69,17 @@ class SpeciesVolumeComparisonTest {
 			ResultYieldTable vdyp8Table = new ResultYieldTable(new StringReader(vdyp8Csv));
 
 			assertSpeciesVolumesMatch(vdyp7Table, vdyp8Table);
+		}
+	}
+
+	private void addUtilizationParams(Parameters params) {
+		for (var sp0Name : SP0Name.values()) {
+			if (SP0Name.UNKNOWN.equals(sp0Name))
+				continue;
+			UtilizationParameter up = new UtilizationParameter();
+			up.setSpeciesName(sp0Name.name());
+			up.setUtilizationClass(UtilizationClassSet._7_5);
+			params.addUtilsItem(up);
 		}
 	}
 

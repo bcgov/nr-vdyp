@@ -627,6 +627,24 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	@Disabled
+	void test1376() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+		logger.info("Starting vdyp-1376");
+		// Two of these polygons do not have enough information to produce a proper projection for the primary species,
+		// VDYP-1176 is a fix for dominant height looing into the other values that do not match would be scope creep
+		// there are other tickets hat will likely fix these edge cases
+		// ignore species specific values VDYP-1265 for polygon 13284892
+		Pattern ignorePattern = Pattern.compile("");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1376/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1376", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void test1170() throws IOException, ResourceParseException, URISyntaxException, CsvException {
 		logger.info("Starting vdyp-1170");
 		// Two of these polygons do not have enough information to produce a proper projection for the primary species,
