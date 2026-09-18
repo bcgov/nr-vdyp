@@ -17,110 +17,14 @@
           <!-- Manual Input mode: status badge -->
           <template v-if="appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT">
             <div class="status-section">
-              <v-menu v-if="isQueued">
-                <template #activator="{ props }">
-                  <button
-                    v-bind="props"
-                    type="button"
-                    class="queued-status-menu-button"
-                  >
-                    <img
-                      :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.QUEUED)"
-                      alt="Queued"
-                      class="queued-status-icon"
-                    />
-                    <span class="queued-status-text">Queued</span>
-                    <v-icon size="small">mdi-chevron-down</v-icon>
-                  </button>
-                </template>
-                <v-list class="queued-status-menu-list">
-                  <v-list-item
-                    class="queued-status-menu-item"
-                    @click="cancelRunHandler"
-                  >
-                    <div class="queued-menu-item-content">
-                      <img
-                        src="@/assets/icons/Cancel_Icon_Menu.png"
-                        alt="Cancel"
-                        class="queued-menu-icon"
-                      />
-                      <span class="queued-menu-text">Cancel</span>
-                    </div>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-              <v-menu v-if="isRunning">
-                <template #activator="{ props }">
-                  <button
-                    v-bind="props"
-                    type="button"
-                    class="running-status-menu-button"
-                  >
-                    <img
-                      :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.RUNNING)"
-                      alt="Running"
-                      class="running-status-icon"
-                    />
-                    <span class="running-status-text">Running</span>
-                    <v-icon size="small">mdi-chevron-down</v-icon>
-                  </button>
-                </template>
-                <v-list class="running-status-menu-list">
-                  <v-list-item
-                    class="running-status-menu-item"
-                    @click="cancelRunHandler"
-                  >
-                    <div class="running-menu-item-content">
-                      <img
-                        src="@/assets/icons/Cancel_Icon_Menu.png"
-                        alt="Cancel"
-                        class="running-menu-icon"
-                      />
-                      <span class="running-menu-text">Cancel</span>
-                    </div>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-              <v-menu v-else-if="isStuck">
-                <template #activator="{ props }">
-                  <button
-                    v-bind="props"
-                    type="button"
-                    class="stuck-status-menu-button"
-                  >
-                    <img
-                      :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.STUCK)"
-                      alt="Stuck"
-                      class="stuck-status-icon"
-                    />
-                    <span class="stuck-status-text">Stuck</span>
-                    <v-icon size="small">mdi-chevron-down</v-icon>
-                  </button>
-                </template>
-                <v-list class="stuck-status-menu-list">
-                  <v-list-item
-                    class="stuck-status-menu-item"
-                    @click="cancelRunHandler"
-                  >
-                    <div class="stuck-menu-item-content">
-                      <img
-                        src="@/assets/icons/Cancel_Icon_Menu.png"
-                        alt="Cancel"
-                        class="stuck-menu-icon"
-                      />
-                      <span class="stuck-menu-text">Cancel</span>
-                    </div>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-              <div v-else-if="isReady" class="ready-status-container">
-                <img
-                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.READY)"
-                  alt="Ready"
-                  class="ready-status-icon"
-                />
-                <span class="ready-status-text">Ready</span>
-              </div>
+              <AppButton
+                v-if="isRunning || isStuck || isQueued"
+                label="Cancel"
+                variant="secondary"
+                mdi-name="mdi-stop-circle-outline"
+                class="header-cancel-button"
+                @click="cancelRunHandler"
+              />
               <div v-else-if="isDraft" class="draft-status-container">
                 <img
                   :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.DRAFT)"
@@ -181,14 +85,6 @@
                   </v-list-item>
                 </v-list>
               </v-menu>
-              <div v-else-if="isAdminCancelled" class="admin-cancelled-status-container">
-                <img
-                  :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)"
-                  alt="Cancelled"
-                  class="admin-cancelled-status-icon"
-                />
-                <span class="admin-cancelled-status-text">Cancelled</span>
-              </div>
             </template>
             <!-- Draft: show Draft status badge -->
             <div v-else-if="isDraft" class="draft-status-container">
@@ -1287,207 +1183,6 @@ h3 {
   overflow-wrap: break-word;
 }
 
-.running-status-menu-button {
-  display: flex;
-  align-items: center;
-  gap: var(--layout-padding-xsmall);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
-  border-radius: var(--layout-border-radius-small);
-  transition: background-color 0.2s;
-}
-
-.running-status-menu-button:hover {
-  background-color: var(--surface-color-background-light-gray);
-}
-
-.running-status-icon {
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-.running-status-text {
-  font: var(--typography-bold-h4);
-  color: var(--surface-color-primary-hover, #1E5189);
-}
-
-.running-status-menu-list {
-  min-width: 120px;
-}
-
-.running-status-menu-item {
-  cursor: pointer;
-  min-height: 32px;
-}
-
-.running-status-menu-item:hover {
-  background-color: #eceae8;
-}
-
-.running-menu-item-content {
-  display: flex;
-  align-items: center;
-  gap: var(--layout-padding-medium);
-}
-
-.running-menu-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  object-fit: contain;
-}
-
-.running-menu-text {
-  font: var(--typography-regular-body);
-  color: var(--typography-color-primary);
-}
-
-.queued-status-menu-button {
-  display: flex;
-  align-items: center;
-  gap: var(--layout-padding-xsmall);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
-  border-radius: var(--layout-border-radius-small);
-  transition: background-color 0.2s;
-}
-
-.queued-status-menu-button:hover {
-  background-color: var(--surface-color-background-light-gray);
-}
-
-.queued-status-icon {
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-.queued-status-text {
-  font: var(--typography-bold-h4);
-  color: var(--theme-blue-70, #5595d9);
-}
-
-.queued-status-menu-list {
-  min-width: 120px;
-}
-
-.queued-status-menu-item {
-  cursor: pointer;
-  min-height: 32px;
-}
-
-.queued-status-menu-item:hover {
-  background-color: #eceae8;
-}
-
-.queued-menu-item-content {
-  display: flex;
-  align-items: center;
-  gap: var(--layout-padding-medium);
-}
-
-.queued-menu-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  object-fit: contain;
-}
-
-.queued-menu-text {
-  font: var(--typography-regular-body);
-  color: var(--typography-color-primary);
-}
-
-.stuck-status-menu-button {
-  display: flex;
-  align-items: center;
-  gap: var(--layout-padding-xsmall);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
-  border-radius: var(--layout-border-radius-small);
-  transition: background-color 0.2s;
-}
-
-.stuck-status-menu-button:hover {
-  background-color: var(--surface-color-background-light-gray);
-}
-
-.stuck-status-icon {
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-.stuck-status-text {
-  font: var(--typography-bold-h4);
-  color: var(--support-border-color-danger);
-}
-
-.stuck-status-menu-list {
-  min-width: 120px;
-}
-
-.stuck-status-menu-item {
-  cursor: pointer;
-  min-height: 32px;
-}
-
-.stuck-status-menu-item:hover {
-  background-color: #eceae8;
-}
-
-.stuck-menu-item-content {
-  display: flex;
-  align-items: center;
-  gap: var(--layout-padding-medium);
-}
-
-.stuck-menu-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  object-fit: contain;
-}
-
-.stuck-menu-text {
-  font: var(--typography-regular-body);
-  color: var(--typography-color-primary);
-}
-
-.ready-status-container {
-  display: flex;
-  align-items: center;
-  gap: var(--layout-padding-xsmall);
-  padding: var(--layout-padding-xsmall) var(--layout-padding-small);
-  padding-right: 0px;
-}
-
-.ready-status-icon {
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-.ready-status-text {
-  font: var(--typography-bold-h4);
-  color: #279D14;
-}
-
 .draft-status-container {
   display: flex;
   align-items: center;
@@ -1648,10 +1343,6 @@ h3 {
 }
 
 @media (max-width: 1280px) {
-  .running-status-icon,
-  .queued-status-icon,
-  .stuck-status-icon,
-  .ready-status-icon,
   .draft-status-icon,
   .failed-status-icon,
   .admin-cancelled-status-icon {
@@ -1659,10 +1350,6 @@ h3 {
     height: 16px;
   }
 
-  .running-status-text,
-  .queued-status-text,
-  .stuck-status-text,
-  .ready-status-text,
   .draft-status-text,
   .failed-status-text,
   .admin-cancelled-status-text {
