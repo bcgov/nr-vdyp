@@ -48,6 +48,7 @@ import org.springframework.transaction.interceptor.TransactionAttribute;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
@@ -176,6 +177,13 @@ class BatchConfigurationTest {
 		assertNotNull(result);
 		assertEquals("workerStep", result.getName());
 		verify(reader).getDefaultChunkSize();
+	}
+
+	@Test
+	void testVdypJobFailedListener_WithValidClient() {
+		VDYPJobFailedListener result = configuration.vdypJobFailedListener(mock(VdypClient.class));
+
+		assertNotNull(result);
 	}
 
 	@Test

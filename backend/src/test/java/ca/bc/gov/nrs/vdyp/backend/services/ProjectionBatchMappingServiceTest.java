@@ -66,7 +66,8 @@ class ProjectionBatchMappingServiceTest {
 	@BeforeEach
 	void setUp() {
 		service = new ProjectionBatchMappingService(
-				repository, assembler, failureLookup, statusLookup, stuckConfig, batchClient
+				repository, assembler, failureLookup, statusLookup, stuckConfig,
+				new ProjectionPriorityFlagService(repository), batchClient
 		);
 	}
 

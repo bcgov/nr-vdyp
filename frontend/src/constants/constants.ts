@@ -203,10 +203,10 @@ export const METHOD_SELECTION = Object.freeze({
 })
 
 export const MANUAL_INPUT_TAB_NAME = Object.freeze({
-  MODEL_PARAM_SELECTION: 'Parameter Selection',
+  MODEL_PARAM_SELECTION: 'Parameters',
   MODEL_REPORT: 'Yield Table',
-  VIEW_LOG_FILE: 'View Log File',
-  VIEW_ERROR_MESSAGES: 'View Error Messages',
+  VIEW_LOG_FILE: 'Progress Log',
+  VIEW_ERROR_MESSAGES: 'Error Log',
 })
 
 export const MANUAL_INPUT_TAB_INDEX = {

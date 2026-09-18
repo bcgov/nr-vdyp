@@ -364,7 +364,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			}
 			doWrite("\n\n");
 
-			doWrite(centerString("VDYP Yield Table Report\n", lineChars));
+			doWrite(centerString("VDYP Yield Table\n", lineChars));
 			Layer layer = polygon.getPrimaryLayer();
 			titleLine = new StringBuilder();
 			List<Species> speciesList = layer.getSp64sAsSupplied();
