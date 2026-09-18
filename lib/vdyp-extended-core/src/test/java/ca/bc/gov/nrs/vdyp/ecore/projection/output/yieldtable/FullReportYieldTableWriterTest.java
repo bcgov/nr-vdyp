@@ -63,7 +63,7 @@ class FullReportYieldTableWriterTest {
 			writer.writePolygonTableHeader(polygon, Optional.empty(), true, 1);
 		}
 		return Files.readString(context.getExecutionFolder().resolve(FullReportYieldTableWriter.YIELD_TABLE_FILE_NAME))
-				.lines().dropWhile(line -> !line.contains("VDYP Yield Table Report")).skip(1)
+				.lines().dropWhile(line -> !line.contains("VDYP Yield Table")).skip(1)
 				.takeWhile(line -> !line.isBlank()).toList();
 	}
 

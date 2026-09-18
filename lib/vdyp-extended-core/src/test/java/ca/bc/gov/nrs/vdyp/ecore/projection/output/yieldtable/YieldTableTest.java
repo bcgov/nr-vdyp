@@ -1127,7 +1127,7 @@ class YieldTableTest {
 		var content = new String(yieldTable.getAsStream().readAllBytes());
 
 		assertThat(content.length(), greaterThan(0));
-		assertThat(content, containsString("VDYP Yield Table Report"));
+		assertThat(content, containsString("VDYP Yield Table"));
 		assertThat(content, containsString("My Testing VDYP Yield Table Report"));
 		assertThat(content, containsString("TABLE PROPERTIES..."));
 		assertThat(content, containsString("Species Parameters..."));
@@ -1219,7 +1219,7 @@ class YieldTableTest {
 
 		var content = new String(yieldTable.getAsStream().readAllBytes());
 
-		long reportTitleCount = content.lines().filter(line -> line.contains("VDYP Yield Table Report")).count();
+		long reportTitleCount = content.lines().filter(line -> line.contains("VDYP Yield Table")).count();
 		assertThat(reportTitleCount, is(1L));
 
 		assertThat(content, containsString("Whole"));

@@ -17,6 +17,8 @@
     </template>
     <!-- Right icon position -->
     <template v-else-if="iconPosition === 'right'">
+      <img v-if="leadingIconSrc" :src="leadingIconSrc" :alt="label" class="button-icon-img button-icon-left" />
+      <v-icon v-else-if="leadingMdiName" class="button-icon-left">{{ leadingMdiName }}</v-icon>
       <span v-if="label" class="button-label">{{ label }}</span>
       <img v-if="iconSrc" :src="iconSrc" :alt="label" class="button-icon-img button-icon-right" />
       <v-icon v-else-if="mdiName" class="button-icon-right">{{ mdiName }}</v-icon>
@@ -73,6 +75,14 @@ const props = defineProps({
     default: '',
   },
   iconSrc: {
+    type: String,
+    default: '',
+  },
+  leadingMdiName: {
+    type: String,
+    default: '',
+  },
+  leadingIconSrc: {
     type: String,
     default: '',
   },

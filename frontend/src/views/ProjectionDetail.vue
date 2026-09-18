@@ -232,6 +232,7 @@
               <AppButton
                 label="Download"
                 variant="primary"
+                :leading-icon-src="DownloadIcon"
                 mdi-name="mdi-chevron-down"
                 icon-position="right"
                 :activatorProps="downloadMenuProps"
@@ -244,13 +245,13 @@
                 class="reporting-download-menu-item"
                 @click="handleReportingDownloadTab"
               >
-                <span class="reporting-download-menu-text">Download {{ activeReportingTabLabel }}</span>
+                <span class="reporting-download-menu-text">{{ activeReportingTabLabel }}</span>
               </v-list-item>
               <v-list-item
                 class="reporting-download-menu-item"
                 @click="handleDownloadReport"
               >
-                <span class="reporting-download-menu-text">Download all files</span>
+                <span class="reporting-download-menu-text">ZIP of All Files</span>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -593,7 +594,7 @@ const modelParamTabs = computed<Tab[]>(() => [
 const activeReportingTab = computed(() => modelParamTabs.value[modelParamActiveTab.value])
 const activeReportingTabname = computed(() => activeReportingTab.value?.tabname ?? null)
 const activeReportingTabLabel = computed(() => activeReportingTab.value?.label ?? '')
-// Parameter Selection tab has no tabname; Print/Download only apply to the reporting tabs
+// Parameters tab has no tabname; Print/Download only apply to the reporting tabs
 const isReportingTabActive = computed(() => activeReportingTabname.value !== null)
 
 // For downloads, always use CSV format for MODEL_REPORT (Yield Table)
@@ -1359,7 +1360,7 @@ h3 {
 
 .queued-status-text {
   font: var(--typography-bold-h4);
-  color: var(--typography-color-placeholder);
+  color: var(--theme-blue-70, #5595d9);
 }
 
 .queued-status-menu-list {
@@ -1597,6 +1598,10 @@ h3 {
     align-self: flex-end;
     order: -1;
   }
+}
+
+.reporting-download-button :deep(.button-icon-left) {
+  filter: brightness(0) invert(1);
 }
 
 .reporting-download-menu-list {

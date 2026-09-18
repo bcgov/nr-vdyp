@@ -25,7 +25,7 @@ type Story = StoryObj<typeof ReportingContainer>
 const sampleTxtYieldLines = [
   '                           A Sample Report Title',
   '',
-  '                            VDYP Yield Table Report',
+  '                              VDYP Yield Table',
   '         Trembling Aspen (30.0%), Balsam (25.0%), Hemlock (20.0%),                 Limber Pine (15.0%), Engelmann Spruce (10.0%)',
   '',
   '               Quad                      |   Whole    |   Close    |    Net     | Net Decay  | Net Decay  ',
@@ -186,7 +186,7 @@ export const ViewErrorMessages_WithData: Story = {
     docs: {
       description: {
         story:
-          'View Error Messages tab with validation errors and warnings.',
+          'Error Log tab with validation errors and warnings.',
       },
     },
   },
@@ -209,7 +209,7 @@ export const ViewErrorMessages_Empty: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'View Error Messages tab with no errors - output area is blank.',
+        story: 'Error Log tab with no errors - output area is blank.',
       },
     },
   },
@@ -232,7 +232,7 @@ export const ViewLogFile_WithData: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'View Log File tab with a full batch processing log.',
+        story: 'Progress Log tab with a full batch processing log.',
       },
     },
   },
@@ -255,7 +255,7 @@ export const ViewLogFile_Empty: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'View Log File tab with no log output - output area is blank.',
+        story: 'Progress Log tab with no log output - output area is blank.',
       },
     },
   },
