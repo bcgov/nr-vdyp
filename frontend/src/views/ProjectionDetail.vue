@@ -160,14 +160,27 @@
                 class="header-cancel-button"
                 @click="cancelRunHandler"
               />
-              <AppButton
-                v-else-if="isReady"
-                label="Download Report"
-                :icon-src="DownloadIcon"
-                variant="primary"
-                class="header-download-report-button"
-                @click="handleDownloadReport"
-              />
+              <v-menu v-else-if="isReady">
+                <template #activator="{ props: downloadMenuProps }">
+                  <AppButton
+                    label="Download"
+                    variant="primary"
+                    :leading-icon-src="DownloadIcon"
+                    mdi-name="mdi-chevron-down"
+                    icon-position="right"
+                    :activatorProps="downloadMenuProps"
+                    class="header-download-report-button"
+                  />
+                </template>
+                <v-list class="reporting-download-menu-list">
+                  <v-list-item
+                    class="reporting-download-menu-item"
+                    @click="handleDownloadReport"
+                  >
+                    <span class="reporting-download-menu-text">ZIP of All Files</span>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
               <div v-else-if="isAdminCancelled" class="admin-cancelled-status-container">
                 <img
                   :src="getStatusIcon(CONSTANTS.PROJECTION_STATUS.ADMN_CNCLD)"
@@ -1569,7 +1582,7 @@ h3 {
   color: var(--support-border-color-danger);
 }
 
-.header-download-report-button :deep(.button-icon-img) {
+.header-download-report-button :deep(.button-icon-left) {
   filter: brightness(0) invert(1);
 }
 
