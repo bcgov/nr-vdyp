@@ -20,11 +20,12 @@ describe('ProjectionActionsMenu.vue', () => {
     status: ProjectionStatus,
     title: string = 'Test Projection',
     eventHandlers: Record<string, Cypress.Agent<sinon.SinonSpy>> = {},
+    canRun: boolean = false,
   ) => {
     return mount(
       {
         render() {
-          return h(VApp, {}, [h(ProjectionActionsMenu, { status, title, ...eventHandlers })])
+          return h(VApp, {}, [h(ProjectionActionsMenu, { status, title, canRun, ...eventHandlers })])
         },
       },
       {
@@ -49,6 +50,28 @@ describe('ProjectionActionsMenu.vue', () => {
         }
       `
       doc.head.appendChild(style)
+    })
+  })
+
+  describe('Run action', () => {
+    it('emits run for a Draft projection that can run', () => {
+      const onRunSpy = cy.spy().as('runSpy')
+      mountComponent('Draft', 'Test Projection', { onRun: onRunSpy }, true)
+      openMenu()
+      cy.contains('.action-menu-item', 'Run').click()
+      cy.get('@runSpy').should('have.been.calledOnce')
+    })
+
+    it('shows Run disabled for a Draft projection that cannot run', () => {
+      mountComponent('Draft', 'Test Projection', {}, false)
+      openMenu()
+      cy.contains('.action-menu-item', 'Run').should('have.class', 'action-menu-item--disabled')
+    })
+
+    it('does not show Run for a Ready projection', () => {
+      mountComponent('Ready', 'Test Projection', {}, true)
+      openMenu()
+      cy.contains('.action-menu-item', 'Run').should('not.exist')
     })
   })
 

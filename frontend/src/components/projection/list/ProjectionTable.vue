@@ -103,6 +103,8 @@
             <ProjectionActionsMenu
               :status="projection.status"
               :title="projection.title"
+              :can-run="projection.isRunnable"
+              @run="$emit(PROJECTION_USER_ACTION.RUN, projection.projectionGUID)"
               @view="$emit(PROJECTION_USER_ACTION.VIEW, projection.projectionGUID)"
               @edit="$emit(PROJECTION_USER_ACTION.EDIT, projection.projectionGUID)"
               @duplicate="$emit(PROJECTION_USER_ACTION.DUPLICATE, projection.projectionGUID)"
@@ -137,6 +139,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'sort', key: string): void
+  (e: 'run', projectionGUID: string): void
   (e: 'view', projectionGUID: string): void
   (e: 'edit', projectionGUID: string): void
   (e: 'duplicate', projectionGUID: string): void

@@ -35,11 +35,13 @@
       v-if="!isCardView"
       :is-visible="selectedGUIDs.length > 0"
       :selected-count="selectedGUIDs.length"
+      :can-run="canBulkRun"
       :can-download="canBulkDownload"
       :can-duplicate="canBulkDuplicate"
       :can-cancel="canBulkCancel"
       :can-delete="canBulkDelete"
       @close="clearSelection"
+      @run="handleBulkRun"
       @download="handleBulkDownload"
       @duplicate="handleBulkDuplicate"
       @cancel="handleBulkCancel"
@@ -55,6 +57,7 @@
       :sort-order="sortOrder"
       :selectedGUIDs="selectedGUIDs"
       @sort="sortColumn"
+      @run="handleRun"
       @view="handleView"
       @edit="handleEdit"
       @duplicate="handleDuplicate"
@@ -72,6 +75,7 @@
       :sort-options="sortOptions"
       :sort-value="cardSortBy"
       @sort="handleCardSort"
+      @run="handleRun"
       @view="handleView"
       @edit="handleEdit"
       @duplicate="handleDuplicate"
@@ -127,6 +131,9 @@ import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { useProjectionLoader } from '@/composables/useProjectionLoader'
+import { runProjection as runManualInputProjection } from '@/services/projection/modelParameterService'
+import { runProjectionFileUpload as runFileUploadProjection } from '@/services/projection/fileUploadService'
+import type { ProjectionModel } from '@/services/vdyp-api'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -204,6 +211,10 @@ const selectedProjections = computed<Projection[]>(() =>
 )
 
 // Bulk action button enable states (based on current frontend status)
+const canBulkRun = computed(() =>
+  selectedProjections.value.length > 0 &&
+  selectedProjections.value.every(p => p.status === PROJECTION_STATUS.DRAFT && p.isRunnable),
+)
 const canBulkDownload = computed(() =>
   selectedProjections.value.some(p => p.status === PROJECTION_STATUS.READY || p.status === PROJECTION_STATUS.FAILED)
 )
@@ -354,6 +365,51 @@ const handleEdit = async (projectionGUID: string) => {
     await loadAndNavigateToProjection(projectionGUID, true)
   } else {
     await loadAndNavigateToProjection(projectionGUID, false)
+  }
+}
+
+/**
+ * Runs a Draft projection by loading it into the stores and reusing the edit page's run services.
+ * Do not call concurrently (e.g. Promise.all): the stores hold a single projection at a time.
+ * @throws Error if the load fails, the projection is no longer a Draft, or files are missing
+ */
+const runProjectionFromList = async (projectionGUID: string): Promise<ProjectionModel> => {
+  const loaded = await loadProjection(projectionGUID, PROJECTION_VIEW_MODE.EDIT)
+  if (!loaded) {
+    throw new Error(PROJECTION_ERR.LOAD_FAILED)
+  }
+  if (appStore.currentProjectionStatus !== PROJECTION_STATUS.DRAFT) {
+    throw new Error(PROJECTION_ERR.RUN_FAILED)
+  }
+  if (appStore.modelSelection === METHOD_SELECTION.MANUAL_INPUT) {
+    return await runManualInputProjection()
+  }
+  if (!fileUploadStore.polygonFileInfo || !fileUploadStore.layerFileInfo) {
+    throw new Error(PROJECTION_ERR.RUN_MISSING_FILES)
+  }
+  return await runFileUploadProjection()
+}
+
+const handleRun = async (projectionGUID: string) => {
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.RUNNING_PROJECTION
+  try {
+    const runProjectionModel = await runProjectionFromList(projectionGUID)
+    updateProjectionInList(runProjectionModel)
+    startPollingIfNeeded()
+    notificationStore.showSuccessMessage(
+      SUCCESS_MSG.BATCH_PROJECTION_STARTED,
+      SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
+    )
+  } catch (err) {
+    console.error('Error running projection:', err)
+    const message = err instanceof Error && err.message === PROJECTION_ERR.RUN_MISSING_FILES
+      ? PROJECTION_ERR.RUN_MISSING_FILES
+      : PROJECTION_ERR.RUN_FAILED
+    notificationStore.showErrorMessage(message, PROJECTION_ERR.RUN_FAILED_TITLE)
+    await loadProjections()
+  } finally {
+    isProgressVisible.value = false
   }
 }
 
@@ -602,6 +658,57 @@ const handleBulkDownload = async () => {
   } catch (err) {
     console.error('Error during bulk download:', err)
     notificationStore.showErrorMessage(PROJECTION_ERR.DOWNLOAD_FAILED('Projections'), PROJECTION_ERR.DOWNLOAD_FAILED_TITLE)
+  } finally {
+    isProgressVisible.value = false
+  }
+}
+
+/**
+ * Runs all selected Draft projections one at a time, then reports how many started or failed.
+ */
+const handleBulkRun = async () => {
+  if (!canBulkRun.value) return
+
+  const confirmed = await alertDialogStore.openDialog(
+    PROJECTION_ERR.BULK_RUN_CONFIRM_TITLE,
+    PROJECTION_ERR.BULK_RUN_CONFIRM(selectedGUIDs.value.length),
+    { variant: 'confirmation' },
+  )
+  if (!confirmed) return
+
+  isProgressVisible.value = true
+  progressMessage.value = PROGRESS_MSG.RUNNING_PROJECTION
+
+  let successCount = 0
+  let failCount = 0
+
+  try {
+    for (const guid of selectedGUIDs.value) {
+      try {
+        updateProjectionInList(await runProjectionFromList(guid))
+        successCount++
+      } catch (err) {
+        console.error(`Error running projection ${guid}:`, err)
+        failCount++
+      }
+    }
+
+    if (successCount > 0) {
+      notificationStore.showSuccessMessage(
+        `${successCount} projection(s) started successfully.`,
+        SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
+      )
+    }
+    if (failCount > 0) {
+      notificationStore.showErrorMessage(
+        `${failCount} projection(s) could not be run.`,
+        PROJECTION_ERR.RUN_FAILED_TITLE,
+      )
+    }
+
+    clearSelection()
+    await loadProjections()
+    startPollingIfNeeded()
   } finally {
     isProgressVisible.value = false
   }

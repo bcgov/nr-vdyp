@@ -11,6 +11,18 @@
     <button
       type="button"
       class="bulk-bar-action-btn"
+      :title="canRun ? 'Run' : RUN_DISABLED_TOOLTIP"
+      :disabled="!canRun"
+      :class="{ 'bulk-bar-action-btn--disabled': !canRun }"
+      @click="canRun && $emit('run')"
+    >
+      <img :src="RunningIcon16px" alt="Run" class="bulk-bar-icon" />
+      <span>Run</span>
+    </button>
+
+    <button
+      type="button"
+      class="bulk-bar-action-btn"
       title="Download"
       :disabled="!canDownload"
       :class="{ 'bulk-bar-action-btn--disabled': !canDownload }"
@@ -59,11 +71,13 @@
 </template>
 
 <script setup lang="ts">
-import { DownloadIcon, DuplicateIcon, CancelIcon, DeleteIcon } from '@/assets/'
+import { DownloadIcon, DuplicateIcon, CancelIcon, DeleteIcon, RunningIcon16px } from '@/assets/'
+import { RUN_DISABLED_TOOLTIP } from '@/constants/message'
 
 defineProps<{
   isVisible: boolean
   selectedCount: number
+  canRun: boolean
   canDownload: boolean
   canDuplicate: boolean
   canCancel: boolean
@@ -72,6 +86,7 @@ defineProps<{
 
 defineEmits<{
   (e: 'close'): void
+  (e: 'run'): void
   (e: 'download'): void
   (e: 'duplicate'): void
   (e: 'cancel'): void

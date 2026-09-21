@@ -86,25 +86,95 @@ const getMethod = (parameters: Record<string, unknown>): string => {
 }
 
 /**
+ * Whether all parameters needed to run are specified (same conditions as the edit page).
+ * Uploaded files for File Upload are not included here; see hasUploadedFiles.
+ */
+const isParametersComplete = (
+  model: ProjectionModel,
+  parameters: Record<string, unknown>,
+  method: string,
+): boolean => {
+  if (!model.reportTitle?.trim()) {
+    return false
+  }
+
+  if (method === METHOD_SELECTION.FILE_UPLOAD) {
+    const utils = parameters.utils as unknown[] | undefined
+    return Array.isArray(utils) && utils.length > 0
+  }
+
+  // Report Settings (last panel) is confirmed only once the projection type and all
+  // age fields are saved; Manual Input saves the age range only.
+  const isSaved = (value: unknown) => value !== null && value !== undefined
+  if (
+    !getProjectionType(parameters) ||
+    !isSaved(parameters.ageStart) ||
+    !isSaved(parameters.ageEnd) ||
+    !isSaved(parameters.ageIncrement) ||
+    !model.modelParameters
+  ) {
+    return false
+  }
+  try {
+    const modelParameters: ModelParameters = JSON.parse(model.modelParameters)
+    const species = (modelParameters.species ?? []).filter((s) => s.code)
+    const totalPercent = species.reduce((sum, s) => sum + (s.percent ?? 0), 0)
+    return (
+      species.length > 0 &&
+      Math.abs(totalPercent - 100) < 0.01 &&
+      !!modelParameters.becZone &&
+      modelParameters.stockable !== null &&
+      modelParameters.stockable !== undefined
+    )
+  } catch {
+    return false
+  }
+}
+
+/**
  * Transforms a backend ProjectionModel to frontend Projection interface
  */
 export const transformProjection = (model: ProjectionModel): Projection => {
   const parameters = parseProjectionParameters(model.projectionParameters)
+  const method = getMethod(parameters)
 
   return {
     projectionGUID: model.projectionGUID,
     title: model.reportTitle || '',
     description: model.reportDescription || '',
-    method: getMethod(parameters),
+    method,
     projectionType: getProjectionType(parameters),
     lastUpdated: model.lastUpdatedDate || '',
     expiration: model.expiryDate || '',
     status: mapProjectionStatus(model.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT),
+    isRunnable: isParametersComplete(model, parameters, method),
   }
 }
 
 /**
- * Fetches all projections for the authenticated user and transforms them to frontend format
+ * Whether both the polygon and layer files are uploaded. The list payload has no file
+ * information, so the file sets are queried. Any lookup failure is treated as not uploaded.
+ */
+const hasUploadedFiles = async (model: ProjectionModel): Promise<boolean> => {
+  const polygonFileSetGUID = model.polygonFileSet?.projectionFileSetGUID
+  const layerFileSetGUID = model.layerFileSet?.projectionFileSetGUID
+  if (!polygonFileSetGUID || !layerFileSetGUID) {
+    return false
+  }
+  try {
+    const [polygonFiles, layerFiles] = await Promise.all([
+      getFileSetFiles(model.projectionGUID, polygonFileSetGUID),
+      getFileSetFiles(model.projectionGUID, layerFileSetGUID),
+    ])
+    return polygonFiles.length > 0 && layerFiles.length > 0
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Fetches all projections for the authenticated user and transforms them to frontend format.
+ * For Draft File Upload projections with complete parameters, isRunnable also requires both files.
  * @returns A promise that resolves to an array of Projection objects
  */
 export const fetchUserProjections = async (): Promise<Projection[]> => {
@@ -127,7 +197,18 @@ export const fetchUserProjections = async (): Promise<Projection[]> => {
     // })
     // console.log('=== End fetchUserProjections ===')
 
-    return projectionModels.map((model) => transformProjection(model))
+    return await Promise.all(
+      projectionModels.map(async (model) => {
+        const projection = transformProjection(model)
+        const needsFileCheck =
+          projection.isRunnable &&
+          projection.status === PROJECTION_STATUS.DRAFT &&
+          projection.method === METHOD_SELECTION.FILE_UPLOAD
+        return needsFileCheck
+          ? { ...projection, isRunnable: await hasUploadedFiles(model) }
+          : projection
+      }),
+    )
   } catch (error) {
     console.error('Error fetching user projections:', error)
     throw error

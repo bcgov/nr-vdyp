@@ -295,6 +295,7 @@ export const USER_ROLE = Object.freeze({
 export const PROJECTION_USER_ACTION = Object.freeze({
   EDIT: 'edit',
   VIEW: 'view',
+  RUN: 'run',
   DUPLICATE: 'duplicate',
   DOWNLOAD: 'download',
   CANCEL: 'cancel',

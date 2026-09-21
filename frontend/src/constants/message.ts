@@ -229,7 +229,15 @@ export const SUCCESS_MSG = Object.freeze({
   PROJECTION_DUPLICATED_TITLE: 'Projection Duplicated',
 })
 
+export const RUN_DISABLED_TOOLTIP =
+  'To run this projection, parameter allocations must total 100%.'
+
 export const PROJECTION_ERR = Object.freeze({
+  RUN_FAILED: 'Failed to run the projection. Please try again later.',
+  RUN_FAILED_TITLE: 'Projection Run Failed',
+  BULK_RUN_CONFIRM: (count: number) => `Are you sure you would like to Run ${count} Projection(s)?`,
+  BULK_RUN_CONFIRM_TITLE: 'Confirmation',
+  RUN_MISSING_FILES: 'Polygon and layer files must be uploaded to run this projection.',
   DELETE_FAILED: 'Failed to delete the projection. Please try again later.',
   DELETE_FAILED_TITLE: 'Projection Delete Failed',
   LOAD_FAILED: 'Failed to load the projection. Please try again later.',

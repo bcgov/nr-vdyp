@@ -24,6 +24,7 @@ const sampleProjections: Projection[] = [
     lastUpdated: '2026-01-10T14:30:00',
     expiration: '2026-01-15',
     status: 'Running',
+    isRunnable: false,
   },
   {
     projectionGUID: '63c26de0-f6f3-42c2-bbb2-3c2b1e60d033',
@@ -34,6 +35,7 @@ const sampleProjections: Projection[] = [
     lastUpdated: '2026-01-09T09:15:00',
     expiration: '2026-01-14',
     status: 'Draft',
+    isRunnable: false,
   },
   {
     projectionGUID: '63c26de0-f6f3-42c2-ccc2-3c2b1e60d033',
@@ -44,6 +46,7 @@ const sampleProjections: Projection[] = [
     lastUpdated: '2026-01-08T16:45:00',
     expiration: '2026-01-13',
     status: 'Ready',
+    isRunnable: false,
   },
   {
     projectionGUID: '63c26de0-f6f3-42c2-czz2-3c2b1e60d033',
@@ -54,6 +57,7 @@ const sampleProjections: Projection[] = [
     lastUpdated: '2026-01-07T11:20:00',
     expiration: '2026-01-12',
     status: 'Failed',
+    isRunnable: false,
   },
 ]
 
@@ -473,6 +477,7 @@ export const LongContent: Story = {
         lastUpdated: '2026-01-10T14:30:00',
         expiration: '2026-01-15',
         status: 'Ready',
+        isRunnable: false,
       },
     ],
     headers: tableHeaders,
@@ -536,6 +541,7 @@ export const ManyRows: Story = {
         lastUpdated: '2026-01-06T10:00:00',
         expiration: '2026-01-11',
         status: 'Ready',
+        isRunnable: false,
       },
       {
         projectionGUID: '63c26de0-f6f3-42c2-grr2-3c2b1e60d033',
@@ -546,6 +552,7 @@ export const ManyRows: Story = {
         lastUpdated: '2026-01-05T08:30:00',
         expiration: '2026-01-10',
         status: 'Draft',
+        isRunnable: false,
       },
       {
         projectionGUID: '63c26de0-f6f3-42c2-dec2-3c2b1e60d033',
@@ -556,6 +563,7 @@ export const ManyRows: Story = {
         lastUpdated: '2026-01-04T15:20:00',
         expiration: '2026-01-09',
         status: 'Running',
+        isRunnable: false,
       },
       {
         projectionGUID: '63c26de0-f6f3-42c2-zex2-3c2b1e60d033',
@@ -566,6 +574,7 @@ export const ManyRows: Story = {
         lastUpdated: '2026-01-03T12:45:00',
         expiration: '2026-01-08',
         status: 'Failed',
+        isRunnable: false,
       },
     ],
     headers: tableHeaders,

@@ -4,6 +4,7 @@ describe('ProjectionBulkActionBar.vue', () => {
   const defaultProps = {
     isVisible: true,
     selectedCount: 3,
+    canRun: true,
     canDownload: true,
     canDuplicate: true,
     canCancel: true,
@@ -32,6 +33,18 @@ describe('ProjectionBulkActionBar.vue', () => {
   it('displays the selected count text', () => {
     mountComponent({ selectedCount: 5 })
     cy.get('.bulk-bar-count').should('contain', '5 Selected')
+  })
+
+  it('emits run event when Run is clicked and enabled', () => {
+    const onRunSpy = cy.spy().as('runSpy')
+    mountComponent({ canRun: true }, { onRun: onRunSpy })
+    cy.contains('.bulk-bar-action-btn', 'Run').click()
+    cy.get('@runSpy').should('have.been.calledOnce')
+  })
+
+  it('disables Run when canRun is false', () => {
+    mountComponent({ canRun: false })
+    cy.contains('.bulk-bar-action-btn', 'Run').should('be.disabled')
   })
 
   it('emits close event when close button is clicked', () => {
