@@ -98,8 +98,18 @@
       <!-- Action Buttons based on status -->
       <v-card-actions class="card-actions">
         <div class="card-action-buttons">
-          <!-- Draft: Edit, Duplicate, Delete -->
+          <!-- Draft: Run, Edit, Duplicate, Delete -->
           <template v-if="projection.status === PROJECTION_STATUS.DRAFT">
+            <span :title="projection.isRunnable ? '' : RUN_DISABLED_TOOLTIP">
+              <AppButton
+                label="Run"
+                variant="tertiary"
+                icon-position="top"
+                :icon-src="RunningIcon16px"
+                :is-disabled="!projection.isRunnable"
+                @click="$emit(PROJECTION_USER_ACTION.RUN, projection.projectionGUID)"
+              />
+            </span>
             <AppButton
               label="Edit"
               variant="tertiary"
@@ -234,7 +244,8 @@ import { PROJECTION_STATUS, PROJECTION_USER_ACTION } from '@/constants/constants
 import { formatDateTimeDisplay, formatDateDisplay } from '@/utils/util'
 import { AppButton } from '@/components'
 import { ProjectionStatusBadge } from '@/components/projection'
-import { EditIcon, DuplicateIcon, DeleteIcon, ViewIcon, DownloadIcon, CancelIcon } from '@/assets/'
+import { EditIcon, DuplicateIcon, DeleteIcon, ViewIcon, DownloadIcon, CancelIcon, RunningIcon16px } from '@/assets/'
+import { RUN_DISABLED_TOOLTIP } from '@/constants/message'
 
 interface Props {
   projections: Projection[]
@@ -246,6 +257,7 @@ defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'sort', value: string): void
+  (e: 'run', projectionGUID: string): void
   (e: 'view', projectionGUID: string): void
   (e: 'edit', projectionGUID: string): void
   (e: 'duplicate', projectionGUID: string): void

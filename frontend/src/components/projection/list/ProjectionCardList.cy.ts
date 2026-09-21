@@ -31,6 +31,7 @@ describe('ProjectionCardList.vue', () => {
     lastUpdated: '2026-01-10T14:30:00',
     expiration: '2026-06-15',
     status: 'Draft',
+    isRunnable: false,
     ...overrides,
   })
 

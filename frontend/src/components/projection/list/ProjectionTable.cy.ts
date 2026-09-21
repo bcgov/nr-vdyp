@@ -32,6 +32,7 @@ const mockProjections: Projection[] = [
     lastUpdated: '2024-01-15T10:30:00',
     expiration: '2024-06-15',
     status: 'Draft',
+    isRunnable: false,
   },
   {
     projectionGUID: '63c26de0-f6f3-42c2-zzz2-3c2b1e60d033',
@@ -42,6 +43,7 @@ const mockProjections: Projection[] = [
     lastUpdated: '2024-01-16T14:45:00',
     expiration: '2024-07-16',
     status: 'Ready',
+    isRunnable: false,
   },
   {
     projectionGUID: '63c26de0-f6f3-42c2-dex2-3c2b1e60d033',
@@ -52,6 +54,7 @@ const mockProjections: Projection[] = [
     lastUpdated: '2024-01-17T09:00:00',
     expiration: '2024-08-17',
     status: 'Running',
+    isRunnable: false,
   },
 ]
 

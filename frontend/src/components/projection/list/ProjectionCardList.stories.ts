@@ -13,6 +13,7 @@ const sampleProjections: Projection[] = [
     lastUpdated: '2026-01-10T14:30:00',
     expiration: '2026-01-15',
     status: 'Running',
+    isRunnable: false,
   },
   {
     projectionGUID: '63c26de0-f6f3-42c2-ccc2-3c2b1e60d033',
@@ -23,6 +24,7 @@ const sampleProjections: Projection[] = [
     lastUpdated: '2026-01-09T09:15:00',
     expiration: '2026-01-14',
     status: 'Draft',
+    isRunnable: false,
   },
   {
     projectionGUID: '63c26de0-f6f3-42c2-ddd2-3c2b1e60d033',
@@ -33,6 +35,7 @@ const sampleProjections: Projection[] = [
     lastUpdated: '2026-01-08T16:45:00',
     expiration: '2026-01-13',
     status: 'Ready',
+    isRunnable: false,
   },
   {
     projectionGUID: '63c26de0-f6f3-42c2-sss2-3c2b1e60d033',
@@ -43,6 +46,7 @@ const sampleProjections: Projection[] = [
     lastUpdated: '2026-01-07T11:20:00',
     expiration: '2026-01-12',
     status: 'Failed',
+    isRunnable: false,
   },
 ]
 
@@ -320,6 +324,7 @@ export const LongDescription: Story = {
         lastUpdated: '2026-01-10T14:30:00',
         expiration: '2026-01-15',
         status: 'Ready',
+        isRunnable: false,
       },
     ],
     sortOptions: sortOptions,

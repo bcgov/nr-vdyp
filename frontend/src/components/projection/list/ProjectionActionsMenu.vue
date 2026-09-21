@@ -10,6 +10,35 @@
       </button>
     </template>
     <v-list class="action-menu-list">
+      <!-- Run: for Draft; disabled with a tooltip until all parameters are specified -->
+      <v-tooltip
+        v-if="status === PROJECTION_STATUS.DRAFT"
+        :disabled="canRun"
+        :text="RUN_DISABLED_TOOLTIP"
+        max-width="260"
+        location="left"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <div v-bind="tooltipProps">
+            <v-list-item
+              class="action-menu-item run-menu-item"
+              :class="{ 'action-menu-item--disabled': !canRun }"
+              :disabled="!canRun"
+              @click="canRun && $emit(PROJECTION_USER_ACTION.RUN)"
+            >
+              <div class="menu-item-content">
+                <img
+                  src="@/assets/icons/Running_Icon_16px.png"
+                  alt="Run"
+                  class="menu-icon"
+                />
+                <span class="menu-text">Run</span>
+              </div>
+            </v-list-item>
+          </div>
+        </template>
+      </v-tooltip>
+
       <!-- View: only for Ready -->
       <v-list-item
         v-if="status === PROJECTION_STATUS.READY"
@@ -113,12 +142,19 @@
 import type { ProjectionStatus } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS, PROJECTION_USER_ACTION } from '@/constants/constants'
 
-defineProps<{
-  status: ProjectionStatus
-  title: string
-}>()
+import { RUN_DISABLED_TOOLTIP } from '@/constants/message'
+
+withDefaults(
+  defineProps<{
+    status: ProjectionStatus
+    title: string
+    canRun?: boolean
+  }>(),
+  { canRun: false },
+)
 
 defineEmits<{
+  run: []
   view: []
   edit: []
   duplicate: []
@@ -161,6 +197,17 @@ defineEmits<{
 
 .action-menu-item:hover {
   background-color: #eceae8;
+}
+
+.action-menu-item--disabled,
+.action-menu-item--disabled:hover {
+  background-color: transparent;
+  cursor: not-allowed;
+}
+
+.action-menu-item--disabled .menu-icon,
+.action-menu-item--disabled .menu-text {
+  opacity: 0.4;
 }
 
 .menu-item-content {

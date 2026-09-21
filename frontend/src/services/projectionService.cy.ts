@@ -121,6 +121,45 @@ describe('projectionService Unit Tests', () => {
       expect(result.description).to.equal('')
       expect(result.status).to.equal(PROJECTION_STATUS.DRAFT)
     })
+
+    describe('isRunnable (Manual Input)', () => {
+      const buildManualModel = (parameterOverrides: Record<string, unknown> = {}) =>
+        ({
+          projectionGUID: 'guid-manual',
+          reportTitle: 'Manual Title',
+          projectionStatusCode: { code: 'DRAFT', description: '', displayOrder: 0 },
+          projectionParameters: JSON.stringify({
+            selectedExecutionOptions: ['doEnableProjectionReport', 'doIncludeProjectedMOFVolumes'],
+            ageStart: 10,
+            ageEnd: 100,
+            ageIncrement: 10,
+            ...parameterOverrides,
+          }),
+          modelParameters: JSON.stringify({
+            species: [{ code: 'AC', percent: 100 }],
+            becZone: 'CWH',
+            stockable: 55,
+          }),
+        }) as unknown as ProjectionModel
+
+      it('is true when all panels are complete', () => {
+        expect(transformProjection(buildManualModel()).isRunnable).to.equal(true)
+      })
+
+      it('is false when Report Settings are not saved yet', () => {
+        expect(transformProjection(buildManualModel({ ageStart: null })).isRunnable).to.equal(false)
+      })
+
+      it('is false when species do not total 100%', () => {
+        const model = buildManualModel()
+        model.modelParameters = JSON.stringify({
+          species: [{ code: 'AC', percent: 60 }],
+          becZone: 'CWH',
+          stockable: 55,
+        })
+        expect(transformProjection(model).isRunnable).to.equal(false)
+      })
+    })
   })
 
   describe('fetchUserProjections', () => {

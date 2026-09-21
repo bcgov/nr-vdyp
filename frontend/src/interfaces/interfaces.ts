@@ -65,6 +65,8 @@ export interface Projection {
   lastUpdated: string
   expiration: string
   status: ProjectionStatus
+  /** True when all parameters required to run are specified */
+  isRunnable: boolean
 }
 
 export type UserTypeCode = 'IDIR' | 'BCEID'
