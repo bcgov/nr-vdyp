@@ -1370,36 +1370,40 @@ public class YieldTable implements Closeable {
 		double totalBiomassDWB = 0.0;
 
 		var percentageRatio = determineSpeciesProjectionFactor(sp64, duplicateOccurrenceIndex);
+		var specUcReportingLevel = context.getParams().getUtils().get(SP0Name.forText(sp64.getStand().getSp0Code()));
 
 		if (vdypSpecies != null) {
-			float wholeStemVolumeFloat = vdypSpecies.getWholeStemVolumeByUtilization().get(UtilizationClass.ALL);
+
+			float wholeStemVolumeFloat = (float) specUcReportingLevel
+					.sumOf(vdypSpecies.getWholeStemVolumeByUtilization());
 			Double wholeStemVolume = null;
 			if (wholeStemVolumeFloat != Vdyp7Constants.EMPTY_DECIMAL) {
 				wholeStemVolume = Double.valueOf(wholeStemVolumeFloat) * percentageRatio;
 			}
 
-			float cuVolumeFloat = vdypSpecies.getCloseUtilizationVolumeByUtilization().get(UtilizationClass.ALL);
+			float cuVolumeFloat = (float) specUcReportingLevel
+					.sumOf(vdypSpecies.getCloseUtilizationVolumeByUtilization());
 			Double cuVolume = null;
 			if (cuVolumeFloat != Vdyp7Constants.EMPTY_DECIMAL) {
 				cuVolume = Double.valueOf(cuVolumeFloat) * percentageRatio;
 			}
 
-			float cuVolumeLessDecayFloat = vdypSpecies.getCloseUtilizationVolumeNetOfDecayByUtilization()
-					.get(UtilizationClass.ALL);
+			float cuVolumeLessDecayFloat = (float) specUcReportingLevel
+					.sumOf(vdypSpecies.getCloseUtilizationVolumeNetOfDecayByUtilization());
 			Double cuVolumeLessDecay = null;
 			if (cuVolumeLessDecayFloat != Vdyp7Constants.EMPTY_DECIMAL) {
 				cuVolumeLessDecay = Double.valueOf(cuVolumeLessDecayFloat) * percentageRatio;
 			}
 
-			float cuVolumeLessDecayWasteFloat = vdypSpecies.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization()
-					.get(UtilizationClass.ALL);
+			float cuVolumeLessDecayWasteFloat = (float) specUcReportingLevel
+					.sumOf(vdypSpecies.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization());
 			Double cuVolumeLessDecayWaste = null;
 			if (cuVolumeLessDecayWasteFloat != Vdyp7Constants.EMPTY_DECIMAL) {
 				cuVolumeLessDecayWaste = Double.valueOf(cuVolumeLessDecayWasteFloat) * percentageRatio;
 			}
 
-			float cuVolumeLessDecayWasteBreakageFloat = vdypSpecies
-					.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization().get(UtilizationClass.ALL);
+			float cuVolumeLessDecayWasteBreakageFloat = (float) specUcReportingLevel
+					.sumOf(vdypSpecies.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization());
 			Double cuVolumeLessDecayWasteBreakage = null;
 			if (cuVolumeLessDecayWasteBreakageFloat != Vdyp7Constants.EMPTY_DECIMAL) {
 				cuVolumeLessDecayWasteBreakage = Double.valueOf(cuVolumeLessDecayWasteBreakageFloat) * percentageRatio;
