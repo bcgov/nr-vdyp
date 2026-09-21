@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionStageCode.Back;
 import static ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionStageCode.Forward;
+import static ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionStageCode.Initial;
 
 import java.nio.file.Path;
 import java.text.MessageFormat;
@@ -352,7 +353,8 @@ public class PolygonProjectionState {
 	}
 
 	public boolean didRunProjection(ProjectionTypeCode projectionType) {
-		return didRunProjectionStage(Forward, projectionType) || didRunProjectionStage(Back, projectionType);
+		return didRunProjectionStage(Initial, projectionType) || didRunProjectionStage(Forward, projectionType)
+				|| didRunProjectionStage(Back, projectionType);
 	}
 
 	public boolean didRunProjectionStage(ProjectionStageCode stage) {
