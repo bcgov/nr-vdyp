@@ -44,7 +44,6 @@ class SpeciesVolumeComparisonTest {
 				new InputStreamReader(getClass().getClassLoader().getResourceAsStream(RESOURCE_VDYP7))
 		);
 
-
 		Parameters params = new Parameters().ageStart(0).ageEnd(250).ageIncrement(10)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
