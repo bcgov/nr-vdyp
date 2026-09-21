@@ -2,6 +2,9 @@ fullnameOverride: crunchy-postgres-#{ENV}#
 
 #crunchyImage: # it's not necessary to specify an image as the images specified in the Crunchy Postgres Operator will be pulled by default
 crunchyImage: artifacts.developer.gov.bc.ca/bcgov-docker-local/crunchy-postgres:ubi8-17.7-20260910
+# Temporarily Specified to test default image update.
+# Rollback after October 27th 2026 FIXME:VDYP-1394 to prevent future compatibility issues
+
 postgresVersion: 17
 #postGISVersion: '3.3' # use this version of POSTGIS. both crunchyImage and this property needs to have valid values for POSTGIS to be enabled.
 imagePullPolicy: IfNotPresent
