@@ -67,6 +67,15 @@ public class LayerReportingInfo {
 		orderedSpecies = sris;
 	}
 
+	/**
+	 * Method to compare two optional LayerReportingInfo classes, Convenience method for sorting by layer ID after
+	 * having sorted by projection type
+	 *
+	 * @param ol1 - an optional later reporting info if not present no change
+	 * @param ol2 - an optional later reporting info if not present no change
+	 * @return standard string comparison only if both optionals are present and have a layer id otherwise 0, if either
+	 *         is "D" sort to the end
+	 */
 	public static int compareOptional(Optional<LayerReportingInfo> ol1, Optional<LayerReportingInfo> ol2) {
 		LayerReportingInfo l1 = ol1.orElse(null);
 		LayerReportingInfo l2 = ol2.orElse(null);
