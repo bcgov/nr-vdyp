@@ -9,6 +9,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.ToDoubleFunction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +38,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.sindex.Sindxdll;
@@ -238,13 +241,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		// Assign BA and DQ by species
 
-		if (plps.getNSpecies() == 1) {
-			primarySpecies.getBaseAreaByUtilization().setAll(primaryLayer.getBaseAreaByUtilization().getAll());
-			primarySpecies.getQuadraticMeanDiameterByUtilization()
-					.setAll(primaryLayer.getQuadraticMeanDiameterByUtilization().getAll());
-			primarySpecies.getTreesPerHectareByUtilization()
-					.setAll(primaryLayer.getTreesPerHectareByUtilization().getAll());
-		} else {
+		if (assignLayerValuesToSoleSpecies(primaryLayer)) {
 
 			applyBackupFactorsSpeciesAreaAndDiameter(plps, bec, bank, primaryLayer, bap);
 
@@ -264,10 +261,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		}
 
 		// ROOTV01
-		var dqLimits = getState().getComputers().getDqBySpecies(
-				primaryLayer, bec.getRegion(),
-				(s, r) -> getState().getLimits(Utils.indexOfSpeciesWithinLayer(s, primaryLayer))
-		);
+		var dqLimits = getState().getComputers()
+				.getDqBySpecies(primaryLayer, bec.getRegion(), getRootFinderLimits(primaryLayer));
 
 		// Apply backup factors for DQ by species and calculate TPH
 
@@ -509,6 +504,147 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		getState().setConvergenceYear(convergenceYear);
 		getState().setConvergenceDominantHeight(convergenceHeight);
 		return yearsToRegress;
+	}
+
+	/**
+	 * Calculate yields at convergence and set the site values to convergence values
+	 *
+	 * @return years of regression
+	 * @throws ProcessingException
+	 */
+	public void calculateConvergenceYield() throws ProcessingException {
+		final VdypPolygon polygon = getState().getCurrentPolygon();
+		final var primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		final var primarySite = primaryLayer.getPrimarySite().orElseThrow();
+		final String primarySpeciesGroupId = primaryLayer.getPrimaryGenus().orElseThrow();
+		final VdypSpecies primarySpecies = primaryLayer.getPrimarySpeciesRecord().orElseThrow();
+		final BecDefinition bec = polygon.getBiogeoclimaticZone();
+
+		// VDYP7 is constantly messing with the global variables used to represent this data structure. In VDYP8 it
+		// might be better to just duplicate the structure.
+
+		// HD = HD_CNV, HDL1 = HD
+		final float dominantHeight = getState().getConvergenceDominantHeight().orElseThrow();
+		primarySite.setHeight(dominantHeight);
+		// AGEBHP = AGE_CNV, AGEBHL1 = AGEBHP
+		primarySite.setYearsAtBreastHeight(getState().getConvergenceAge());
+		// AGETOTP = AGE_CNV + YTBHP, AGETOTL1 = AGETOTP
+		primarySite.setAgeTotal(
+				Utils.mapBoth(
+						getState().getConvergenceAge(), primarySite.getYearsToBreastHeight(),
+						(atBh, toBh) -> atBh + toBh
+				)
+		);
+
+		// BFMAXHLI
+		getState().setSpeciesLoreyHeightBackupFactorMaximum(
+				mapTo1IndexedArray(primaryLayer.getOrderedSpecies(), e -> e.getLoreyHeightByUtilization().getAll())
+		);
+
+		// DQ_CNV = EMP107(...)
+		float convergenceDiameter = getState().estimators.estimateQuadMeanDiameterYield(
+				dominantHeight, getState().getConvergenceAge().orElseThrow(), getState().getBaseAreaVeteran(),
+				primaryLayer.getOrderedSpecies(), primarySpeciesGroupId, bec,
+				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+		);
+		getState().setConvergenceQuadraticMeanDiameter(convergenceDiameter);
+
+		// HLPL1 = EMP051(...)
+		float primaryLoreyHeight = getState().estimators
+				.primaryHeightFromLeadHeightInitial(dominantHeight, primarySpeciesGroupId, bec.getRegion());
+		primarySpecies.getLoreyHeightByUtilization().setAll(primaryLoreyHeight);
+
+		// Lorey height for non-primary species
+		for (var species : primaryLayer.getOrderedSpecies()) {
+			// HLsp = EMP053(...)
+			var specHeight = getState().estimators
+					.estimateNonPrimaryLoreyHeight(species, primarySpecies, bec, dominantHeight, primaryLoreyHeight);
+			species.getLoreyHeightByUtilization().setAll(specHeight);
+		}
+
+		// Enforce maximum values for lorey height
+		for (var species : primaryLayer.getOrderedSpecies()) {
+			species.getLoreyHeightByUtilization().scalarInPlace(
+					value -> min(value, getState().getSpeciesLoreyHeightBackupFactorMaximum(species.getGenus()))
+			);
+		}
+
+		// Calculate overall lorey height
+		float baHlSum = 0;
+		for (var species : primaryLayer.getOrderedSpecies()) {
+			baHlSum += species.getLoreyHeightByUtilization().getAll() * species.getBaseAreaByUtilization().getAll();
+		}
+		primaryLayer.getLoreyHeightByUtilization().setAll(baHlSum / primaryLayer.getBaseAreaByUtilization().getAll());
+
+		// At this point we need to estimate DQ by species. If there are
+		// multiple species, this requires reconciliation with
+		// the overall DQ.
+
+		getState().getConvergenceBasalArea().ifPresent(primaryLayer.getBaseAreaByUtilization()::setAll);
+		getState().getConvergenceQuadraticMeanDiameter()
+				.ifPresent(primaryLayer.getQuadraticMeanDiameterByUtilization()::setAll);
+		BaseAreaTreeDensityDiameter.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
+
+		if (assignLayerValuesToSoleSpecies(primaryLayer)) {
+			float layerBasalArea = primaryLayer.getBaseAreaByUtilization().getAll();
+			for (var species : primaryLayer.getOrderedSpecies()) {
+				species.getBaseAreaByUtilization().setAll(layerBasalArea * species.getPercentGenus() / 100);
+			}
+
+			// ROOTV01
+			getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(), getRootFinderLimits(primaryLayer));
+
+		}
+
+		getState().setSpeciesConvergenceLoreyHeight(
+				mapTo1IndexedArray(primaryLayer.getOrderedSpecies(), e -> e.getLoreyHeightByUtilization().getAll())
+		);
+		getState().setSpeciesConvergenceQuadraticMeanDiameter(
+				mapTo1IndexedArray(
+						primaryLayer.getOrderedSpecies(), e -> e.getQuadraticMeanDiameterByUtilization().getAll()
+				)
+		);
+
+	}
+
+	protected BiFunction<String, Region, ComponentSizeLimits> getRootFinderLimits(final VdypLayer primaryLayer) {
+		return (s, r) -> getState().getLimits(Utils.indexOfSpeciesWithinLayer(s, primaryLayer));
+	}
+
+	/**
+	 * If the layer only has one species group, assign BA, DQ, and TPH for ALL class of the species group to match the
+	 * layer and return false, otherwise return true.
+	 *
+	 * @param layer
+	 * @return false if there is exactly one species, true otherwise.
+	 */
+	private boolean assignLayerValuesToSoleSpecies(VdypLayer layer) {
+		if (layer.getOrderedSpecies().size() == 1) {
+			var primarySpecies = layer.getOrderedSpecies().get(0);
+			primarySpecies.getBaseAreaByUtilization().setAll(layer.getBaseAreaByUtilization().getAll());
+			primarySpecies.getQuadraticMeanDiameterByUtilization()
+					.setAll(layer.getQuadraticMeanDiameterByUtilization().getAll());
+			primarySpecies.getTreesPerHectareByUtilization().setAll(layer.getTreesPerHectareByUtilization().getAll());
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 *
+	 * @param <T>
+	 * @param elements
+	 * @param func
+	 * @return
+	 */
+	<T> float[] mapTo1IndexedArray(List<T> elements, ToDoubleFunction<T> func) {
+		float[] result = new float[elements.size() + 1];
+		int i = 0;
+		for (var element : elements) {
+			i++;
+			result[i] = (float) func.applyAsDouble(element);
+		}
+		return result;
 	}
 
 	public void calculateCompatibilityVariables(int currentYear /* IYRCUR */) {

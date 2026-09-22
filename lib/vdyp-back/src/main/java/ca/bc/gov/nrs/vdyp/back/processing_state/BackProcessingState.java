@@ -10,6 +10,7 @@ import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
@@ -262,8 +263,16 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 		);
 	}
 
+	public float getSpeciesQuadMeanDiameterBackupFactorMinimum(String speciesGroup) {
+		return getSpeciesQuadMeanDiameterBackupFactorMinimum(this.getSpeciesGroupIndex(speciesGroup));
+	}
+
 	public float getSpeciesLoreyHeightBackupFactorMaximum(int i) {
 		return indexAccess(speciesLoreyHeightBackupFactorMaximum, i, 1, "speciesLoreyHeightBackupFactorMaximum");
+	}
+
+	public float getSpeciesLoreyHeightBackupFactorMaximum(String speciesGroup) {
+		return getSpeciesLoreyHeightBackupFactorMaximum(getSpeciesGroupIndex(speciesGroup));
 	}
 
 	public void setDominantHeightBackupFactor(Optional<Float> dominantHeightBackupFactor) {
@@ -304,6 +313,22 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 			throw new ArrayIndexOutOfBoundsException(index);
 		}
 		return array.orElseThrow(unset(field))[index];
+	}
+
+	float speciesAccess(Optional<float[]> array, String speciesGroupId, int minimumIndex, String field) {
+		var index = getSpeciesGroupIndex(speciesGroupId);
+		return indexAccess(array, index, minimumIndex, field);
+	}
+
+	public int getSpeciesGroupIndex(String speciesGroupId) {
+		int i = 0;
+		for (var species : this.getCurrentPolygon().getLayers().get(LayerType.PRIMARY).getOrderedSpecies()) {
+			i++;
+			if (species.getGenus().equals(speciesGroupId)) {
+				return i;
+			}
+		}
+		throw new IllegalArgumentException("Species " + speciesGroupId + " is not present");
 	}
 
 	public void setFinalQuadraticMeanDiameter(float[] finalQuadraticMeanDiameters) {
