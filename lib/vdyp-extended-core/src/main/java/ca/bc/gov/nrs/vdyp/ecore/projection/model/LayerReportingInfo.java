@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.model;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 
@@ -64,6 +65,20 @@ public class LayerReportingInfo {
 		);
 		Collections.sort(sris);
 		orderedSpecies = sris;
+	}
+
+	public static int compareOptional(Optional<LayerReportingInfo> ol1, Optional<LayerReportingInfo> ol2) {
+		LayerReportingInfo l1 = ol1.orElse(null);
+		LayerReportingInfo l2 = ol2.orElse(null);
+		if (l1 == null || l2 == null || l1.getLayerID() == null || l2.getLayerID() == null) {
+			return 0;
+		} else if (l1.getLayerID().equals("D")) {
+			return 1;
+		} else if (l2.getLayerID().equals("D")) {
+			return -1;
+		} else {
+			return l1.getLayerID().compareTo(l2.getLayerID());
+		}
 	}
 
 	/**
