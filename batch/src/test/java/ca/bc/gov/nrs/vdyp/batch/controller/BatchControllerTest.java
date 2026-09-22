@@ -50,6 +50,7 @@ import ca.bc.gov.nrs.vdyp.batch.service.JobExecutionLookupService;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizeRemoteGateway;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StopRemoteGateway;
+import ca.bc.gov.nrs.vdyp.batch.service.StorageCleanupService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -79,6 +80,9 @@ class BatchControllerTest {
 	private StorageEstimationService storageEstimationService;
 
 	@Mock
+	private StorageCleanupService storageCleanupService;
+
+	@Mock
 	private JobOwnershipService ownershipService;
 
 	@Mock
@@ -106,9 +110,9 @@ class BatchControllerTest {
 		ownershipProperties.setHeartbeatInterval(Duration.of(300, ChronoUnit.SECONDS));
 
 		batchController = new BatchController(
-				metricsCollector, storageEstimationService, batchJobLaunchService, serverCapacityService,
-				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.of(remoteGateway),
-				stopService, Optional.of(remoteStopGateway)
+				metricsCollector, storageEstimationService, storageCleanupService, batchJobLaunchService,
+				serverCapacityService, ownershipProperties, ownershipService, lookupService, prioritizationService,
+				Optional.of(remoteGateway), stopService, Optional.of(remoteStopGateway)
 		);
 	}
 
@@ -582,9 +586,9 @@ class BatchControllerTest {
 		execution.setStatus(BatchStatus.STARTED);
 
 		BatchController controllerWithoutNats = new BatchController(
-				metricsCollector, storageEstimationService, batchJobLaunchService, serverCapacityService,
-				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.empty(),
-				stopService, Optional.empty()
+				metricsCollector, storageEstimationService, storageCleanupService, batchJobLaunchService,
+				serverCapacityService, ownershipProperties, ownershipService, lookupService, prioritizationService,
+				Optional.empty(), stopService, Optional.empty()
 		);
 
 		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), true))
@@ -650,9 +654,9 @@ class BatchControllerTest {
 		UUID projectionGuid = UUID.randomUUID();
 
 		BatchController controllerWithoutNats = new BatchController(
-				metricsCollector, storageEstimationService, batchJobLaunchService, serverCapacityService,
-				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.empty(),
-				stopService, Optional.empty()
+				metricsCollector, storageEstimationService, storageCleanupService, batchJobLaunchService,
+				serverCapacityService, ownershipProperties, ownershipService, lookupService, prioritizationService,
+				Optional.empty(), stopService, Optional.empty()
 		);
 
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);

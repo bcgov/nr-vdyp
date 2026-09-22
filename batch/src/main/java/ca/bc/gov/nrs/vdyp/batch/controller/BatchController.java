@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.PrioritizeReplyMessage;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.StopReplyMessage;
+import ca.bc.gov.nrs.vdyp.batch.model.StorageCleanupRequest;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
@@ -36,6 +38,7 @@ import ca.bc.gov.nrs.vdyp.batch.service.JobExecutionLookupService;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizeRemoteGateway;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StopRemoteGateway;
+import ca.bc.gov.nrs.vdyp.batch.service.StorageCleanupService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -52,6 +55,7 @@ public class BatchController {
 	@SuppressWarnings("unused")
 	private final BatchMetricsCollector metricsCollector;
 	private final StorageEstimationService storageEstimationService;
+	private final StorageCleanupService storageCleanupService;
 	private final BatchJobLaunchService batchJobLaunchService;
 	private final ServerCapacityService serverCapacityService;
 	private final BatchOwnershipProperties ownershipProperties;
@@ -64,14 +68,15 @@ public class BatchController {
 
 	public BatchController(
 			BatchMetricsCollector metricsCollector, StorageEstimationService storageEstimationService,
-			BatchJobLaunchService batchJobLaunchService, ServerCapacityService serverCapacityService,
-			BatchOwnershipProperties ownershipProperties, JobOwnershipService ownershipService,
-			JobExecutionLookupService lookupService, BatchPrioritizationService prioritizationService,
-			Optional<PrioritizeRemoteGateway> remoteGateway, BatchStopService stopService,
-			Optional<StopRemoteGateway> remoteStopGateway
+			StorageCleanupService storageCleanupService, BatchJobLaunchService batchJobLaunchService,
+			ServerCapacityService serverCapacityService, BatchOwnershipProperties ownershipProperties,
+			JobOwnershipService ownershipService, JobExecutionLookupService lookupService,
+			BatchPrioritizationService prioritizationService, Optional<PrioritizeRemoteGateway> remoteGateway,
+			BatchStopService stopService, Optional<StopRemoteGateway> remoteStopGateway
 	) {
 		this.metricsCollector = metricsCollector;
 		this.storageEstimationService = storageEstimationService;
+		this.storageCleanupService = storageCleanupService;
 		this.batchJobLaunchService = batchJobLaunchService;
 		this.serverCapacityService = serverCapacityService;
 		this.ownershipProperties = ownershipProperties;
@@ -435,6 +440,28 @@ public class BatchController {
 		response.put(BatchConstants.Storage.EXPECTED_BYTES, status.expectedBytes());
 		response.put(BatchConstants.Storage.OUT_OF_SPEC, status.outOfSpec());
 		response.put(BatchConstants.Storage.THRESHOLD_PERCENT, status.thresholdPercent());
+		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+		return ResponseEntity.ok(response);
+	}
+
+	/**
+	 * Scans the PVC root for leftover job folders and, unless dryRun is true, deletes the ones that are not protected.
+	 * Only the caller (the backend, on behalf of an ADMIN) determines which job GUIDs are protected by projection
+	 * status; this endpoint additionally protects any job GUID it finds currently running in this batch service,
+	 * re-checked immediately before each individual deletion.
+	 */
+	@PostMapping(
+			value = "/storage/cleanup", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE
+	)
+	public ResponseEntity<Map<String, Object>> cleanupStorage(@RequestBody StorageCleanupRequest request) {
+		StorageCleanupService.StorageCleanupReport report = storageCleanupService.run(request);
+
+		Map<String, Object> response = new HashMap<>();
+		response.put(BatchConstants.StorageCleanup.DRY_RUN, report.dryRun());
+		response.put(BatchConstants.StorageCleanup.SCANNED, report.scanned());
+		response.put(BatchConstants.StorageCleanup.TOTAL_BYTES, report.totalBytes());
+		response.put(BatchConstants.StorageCleanup.SETS, report.sets());
+		response.put(BatchConstants.StorageCleanup.SKIPPED_NAMES, report.skippedNames());
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
 	}
