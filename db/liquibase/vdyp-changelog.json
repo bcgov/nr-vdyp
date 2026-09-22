@@ -876,6 +876,43 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_21_00",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_21_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_21/00/ddl/tables/app-vdyp.storage_cleanup_run.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_21/00/ddl/tables/app-vdyp.storage_cleanup_deleted_folder.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "DROP TABLE IF EXISTS \"app-vdyp\".\"storage_cleanup_deleted_folder\""
+          },
+          {
+            "sql": "DROP TABLE IF EXISTS \"app-vdyp\".\"storage_cleanup_run\""
+          }
+        ]
+      }
     }
   ]
 }
