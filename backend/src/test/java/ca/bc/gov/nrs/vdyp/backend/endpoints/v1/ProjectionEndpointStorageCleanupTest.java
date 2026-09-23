@@ -21,7 +21,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 
 @QuarkusTest
-class StorageCleanupEndpointTest {
+class ProjectionEndpointStorageCleanupTest {
 
 	@InjectMock
 	@RestClient
@@ -29,22 +29,22 @@ class StorageCleanupEndpointTest {
 
 	@Test
 	@TestSecurity(user = "non-admin-test-user", roles = { "USER" })
-	void cleanup_nonAdminUser_returnsForbidden() {
-		given().basePath(TestHelper.ROOT_PATH).when().post("/admin/storage-cleanup").then().statusCode(403);
+	void cleanupStorage_nonAdminUser_returnsForbidden() {
+		given().basePath(TestHelper.ROOT_PATH).when().post("/projection/storage-cleanup").then().statusCode(403);
 	}
 
 	@Test
 	@TestSecurity(user = "admin-test-user", roles = { "ADMIN" })
-	void cleanup_adminUser_batchServiceFails_returnsBadGateway() {
+	void cleanupStorage_adminUser_batchServiceFails_returnsBadGateway() {
 		when(batchClient.cleanupStorage(any())).thenThrow(new RuntimeException("simulated batch service failure"));
 
-		given().basePath(TestHelper.ROOT_PATH).when().post("/admin/storage-cleanup").then().statusCode(502)
+		given().basePath(TestHelper.ROOT_PATH).when().post("/projection/storage-cleanup").then().statusCode(502)
 				.body("code", is("STORAGE_CLEANUP_FAILED"));
 	}
 
 	@Test
 	@TestSecurity(user = "admin-test-user", roles = { "ADMIN" })
-	void cleanup_adminUser_previewSucceeds_returnsReportFromBatchService() {
+	void cleanupStorage_adminUser_previewSucceeds_returnsReportFromBatchService() {
 		when(batchClient.cleanupStorage(any())).thenReturn(
 				new StorageCleanupReportModel(
 						true, 1, 100L,
@@ -57,13 +57,13 @@ class StorageCleanupEndpointTest {
 				)
 		);
 
-		given().basePath(TestHelper.ROOT_PATH).when().post("/admin/storage-cleanup").then().statusCode(200)
+		given().basePath(TestHelper.ROOT_PATH).when().post("/projection/storage-cleanup").then().statusCode(200)
 				.body("dryRun", is(true)).body("scanned", is(1)).body("totalBytes", is(100));
 	}
 
 	@Test
-	void cleanup_unauthenticatedUser_isRejected() {
-		given().basePath(TestHelper.ROOT_PATH).when().post("/admin/storage-cleanup").then()
+	void cleanupStorage_unauthenticatedUser_isRejected() {
+		given().basePath(TestHelper.ROOT_PATH).when().post("/projection/storage-cleanup").then()
 				.statusCode(anyOf(is(401), is(403)));
 	}
 }
