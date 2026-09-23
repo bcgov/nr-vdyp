@@ -7,6 +7,12 @@
 
     <div class="page-header">
       <h1 class="page-heading">Admin Dashboard</h1>
+      <AppButton
+        :label="STORAGE_CLEANUP_DIALOG.TITLE"
+        variant="secondary"
+        :is-disabled="!storageStatus.outOfSpec || isCleanupDialogOpen"
+        @click="handleOpenCleanupDialog"
+      />
     </div>
 
     <div class="filter-row">
@@ -93,6 +99,8 @@
       @confirm="handleConfirmCancel"
     />
 
+    <AdminStorageCleanupDialog v-model="isCleanupDialogOpen" @completed="handleCleanupCompleted" />
+
     <AppProgressCircular :is-show="isProgressVisible" :message="progressMessage" />
   </v-container>
 </template>
@@ -103,14 +111,15 @@ import type { AdminProjection, UserTypeCode, SortOption } from '@/interfaces/int
 import type { SortOrder } from '@/types/types'
 import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PAGINATION, BREAKPOINT, USER_TYPE_CODE, REFRESH_INTERVAL_MS, PROJECTION_STATUS, ROUTE_PATH } from '@/constants/constants'
 import { itemsPerPageOptions as defaultItemsPerPageOptions } from '@/constants/options'
-import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR } from '@/constants/message'
+import { PROGRESS_MSG, SUCCESS_MSG, PROJECTION_ERR, STORAGE_CLEANUP_DIALOG } from '@/constants/message'
 import { MenuIcon } from '@/assets/'
-import { AppProgressCircular } from '@/components'
-import { ProjectionPagination, AdminProjectionTable, AdminProjectionCardList, AdminCancelProjectionDialog, AdminResourceSummary } from '@/components/projection'
-import type { StorageStatusModel } from '@/services/vdyp-api'
+import { AppButton, AppProgressCircular } from '@/components'
+import { ProjectionPagination, AdminProjectionTable, AdminProjectionCardList, AdminCancelProjectionDialog, AdminStorageCleanupDialog, AdminResourceSummary } from '@/components/projection'
+import type { StorageStatusModel, StorageCleanupReportModel } from '@/services/vdyp-api'
 import { fetchAllRunningProjections, fetchThreadCapacity, fetchStorageStatus } from '@/services/adminService'
 import { cancelProjection, prioritizeProjection } from '@/services/projectionService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
+import { formatBytes } from '@/utils/util'
 
 const notificationStore = useNotificationStore()
 
@@ -128,6 +137,7 @@ const isProgressVisible = ref(false)
 const progressMessage = ref('')
 const isCancelDialogOpen = ref(false)
 const projectionPendingCancel = ref<AdminProjection | null>(null)
+const isCleanupDialogOpen = ref(false)
 
 // 'All' is a UI-only filter value (not a real user type)
 const USER_TYPE_FILTER_ALL = 'All'
@@ -411,6 +421,22 @@ const handleConfirmCancel = async (reason: string) => {
   }
 }
 
+const handleOpenCleanupDialog = () => {
+  isCleanupDialogOpen.value = true
+}
+
+const handleCleanupCompleted = async (report: StorageCleanupReportModel) => {
+  const deletedCount = report.sets.filter((set) => set.outcome === 'DELETED').length
+  const failedCount = report.sets.filter((set) => set.outcome === 'FAILED').length
+  const summary = STORAGE_CLEANUP_DIALOG.RESULT_SUMMARY(deletedCount, failedCount, formatBytes(report.totalBytes))
+  if (failedCount > 0) {
+    notificationStore.showErrorMessage(summary, PROJECTION_ERR.STORAGE_CLEANUP_FAILED_TITLE)
+  } else {
+    notificationStore.showSuccessMessage(summary, SUCCESS_MSG.STORAGE_CLEANUP_COMPLETE_TITLE)
+  }
+  await refreshStorageStatus()
+}
+
 const handlePrioritize = async (projectionGUID: string) => {
   try {
     await prioritizeProjection(projectionGUID)
@@ -488,6 +514,11 @@ onUnmounted(() => {
 }
 
 .page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--layout-padding-small);
   margin-bottom: var(--layout-margin-large);
 }
 

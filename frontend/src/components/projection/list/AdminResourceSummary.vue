@@ -75,6 +75,7 @@
 
 <script setup lang="ts">
 import { ExclamationMarkIcon, RunningBadgeIcon14px, QueuedIcon14px } from '@/assets'
+import { formatBytes } from '@/utils/util'
 
 defineProps<{
   totalRunning: number
@@ -88,19 +89,6 @@ defineProps<{
   storageTotalBytes: number
   storageOutOfSpec: boolean
 }>()
-
-const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
-
-/**
- * Formats a byte count as a human-readable string for the hover tooltip, auto-scaling to the
- * smallest unit that keeps at least one significant digit.
- */
-const formatBytes = (bytes: number): string => {
-  if (bytes <= 0) return '0 B'
-  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), BYTE_UNITS.length - 1)
-  const value = bytes / 1024 ** exponent
-  return `${exponent === 0 ? value : value.toFixed(2)} ${BYTE_UNITS[exponent]}`
-}
 </script>
 
 <style scoped>

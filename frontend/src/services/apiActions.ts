@@ -7,6 +7,7 @@ import type {
   FileMappingModel,
   ModelParameters,
   StorageStatusModel,
+  StorageCleanupReportModel,
 } from '@/services/vdyp-api'
 
 /**
@@ -134,6 +135,23 @@ export const getStorageStatus = async (): Promise<StorageStatusModel> => {
     return response.data
   } catch (error) {
     console.error('Error fetching storage status:', error)
+    throw error
+  }
+}
+
+/**
+ * (Admin Only) Scans (and optionally deletes) leftover batch PVC job folders.
+ * @param dryRun When true (the default), evaluates candidates without deleting anything.
+ * @returns A promise that resolves to the cleanup report.
+ */
+export const cleanupPvcStorage = async (
+  dryRun: boolean,
+): Promise<StorageCleanupReportModel> => {
+  try {
+    const response = await apiClient.cleanupPvcStorage(dryRun)
+    return response.data
+  } catch (error) {
+    console.error('Error running PVC storage cleanup:', error)
     throw error
   }
 }

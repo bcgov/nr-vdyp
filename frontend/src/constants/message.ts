@@ -227,6 +227,7 @@ export const SUCCESS_MSG = Object.freeze({
   PROJECTION_DUPLICATED: (title: string) =>
     `Projection "${title}" has been successfully duplicated.`,
   PROJECTION_DUPLICATED_TITLE: 'Projection Duplicated',
+  STORAGE_CLEANUP_COMPLETE_TITLE: 'Storage Cleanup Complete',
 })
 
 export const RUN_DISABLED_TOOLTIP =
@@ -268,6 +269,8 @@ export const PROJECTION_ERR = Object.freeze({
   RESULTS_LOAD_FAILED_TITLE: 'Results Load Failed',
   DUPLICATE_FAILED: 'Failed to duplicate the projection. Please try again later.',
   DUPLICATE_FAILED_TITLE: 'Projection Duplicate Failed',
+  STORAGE_CLEANUP_FAILED: 'Failed to complete the storage cleanup. Please try again later.',
+  STORAGE_CLEANUP_FAILED_TITLE: 'Storage Cleanup Failed',
   VIEW_MODE_FORCED: 'This projection is read-only in its current status and has been opened in view-only mode.',
   VIEW_MODE_FORCED_TITLE: 'View Only',
   NO_SESSION: 'No projection was selected. Please select a projection from the list.',
@@ -304,6 +307,32 @@ export const ADMIN_CANCEL_DIALOG = Object.freeze({
   REASON_LABEL_HINT: 'Required, minimum of 5 characters',
   KEEP_RUNNING: 'Keep Running',
   CONFIRM_CANCELLATION: 'Confirm Cancellation',
+})
+
+export const STORAGE_CLEANUP_DIALOG = Object.freeze({
+  TITLE: 'Free up Storage',
+  LOADING_PREVIEW: 'Checking the batch storage for leftover files...',
+  PREVIEW_ERROR: 'Could not check the batch storage. Please try again later.',
+  DELETE_ERROR: 'Could not complete the deletion. Please try again later.',
+  NOTHING_TO_DELETE: 'Nothing to delete. All batch storage folders are in use.',
+  WARNING:
+    'Warning: Deleting these files cannot be undone. Files are re-checked immediately before deletion, so the result may differ slightly from this preview.',
+  WILL_DELETE: (count: number, size: string) => `Will be deleted: ${count} item(s) (${size})`,
+  SAFE_TO_DELETE:
+    'These are orphan files that are no longer in use by any running or queued projection and can be safely deleted to free up storage for active jobs.',
+  PROTECTED: (count: number) => `Kept (in use): ${count} item(s)`,
+  SKIPPED: (count: number) => `Ignored (unrecognized): ${count} item(s)`,
+  CANCEL: 'Cancel',
+  CLOSE: 'Close',
+  RETRY: 'Retry',
+  CONFIRM_DELETE: (count: number, size: string) => `Delete ${count} Item(s) (${size})`,
+  DELETING: 'Deleting unnecessary files...',
+  RESULT_TITLE: 'Cleanup Complete',
+  RESULT_SUMMARY: (deleted: number, failed: number, freed: string) =>
+    failed > 0
+      ? `Deleted ${deleted} item(s), freeing ${freed}. ${failed} item(s) failed to delete.`
+      : `Deleted ${deleted} item(s), freeing ${freed}.`,
+  RESULT_NOTE: 'System Storage may still show "Out of Spec" if in-use projections hold files.',
 })
 
 export const VALIDATION_WARN = Object.freeze({
