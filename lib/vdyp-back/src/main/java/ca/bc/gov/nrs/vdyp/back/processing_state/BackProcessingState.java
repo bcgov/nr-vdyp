@@ -322,7 +322,7 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 
 	public int getSpeciesGroupIndex(String speciesGroupId) {
 		int i = 0;
-		for (var species : this.getCurrentPolygon().getLayers().get(LayerType.PRIMARY).getOrderedSpecies()) {
+		for (var species : this.getCurrentPolygon().requirePrimaryLayer().getOrderedSpecies()) {
 			i++;
 			if (species.getGenus().equals(speciesGroupId)) {
 				return i;

@@ -743,7 +743,7 @@ class EstimationMethodsTest {
 				});
 			});
 
-			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+			var species = polygon.requirePrimaryLayer().getSpecies().values();
 
 			var bec = becLookup.get("IDF").get();
 
@@ -794,7 +794,7 @@ class EstimationMethodsTest {
 				});
 			});
 
-			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+			var species = polygon.requirePrimaryLayer().getSpecies().values();
 
 			var bec = becLookup.get("IDF").get();
 
@@ -911,7 +911,7 @@ class EstimationMethodsTest {
 				});
 			});
 
-			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+			var species = polygon.requirePrimaryLayer().getSpecies().values();
 
 			var bec = becLookup.get("IDF").get();
 
@@ -956,7 +956,7 @@ class EstimationMethodsTest {
 				});
 			});
 
-			var species = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+			var species = polygon.requirePrimaryLayer().getSpecies().values();
 
 			var bec = becLookup.get("IDF").get();
 

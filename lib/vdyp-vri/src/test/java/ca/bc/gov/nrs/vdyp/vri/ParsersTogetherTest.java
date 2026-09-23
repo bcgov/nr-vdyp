@@ -139,7 +139,7 @@ class ParsersTogetherTest {
 		var result = app.getPolygon(polyStream, layerStream, speciesStream, siteStream);
 
 		assertThat(result, hasProperty("layers", Matchers.aMapWithSize(1)));
-		var primaryResult = result.getLayers().get(LayerType.PRIMARY);
+		var primaryResult = result.requirePrimaryLayer();
 		var veteranResult = result.getLayers().get(LayerType.VETERAN);
 		primaryResult.getPrimaryGenus();
 		assertThat(
@@ -211,7 +211,7 @@ class ParsersTogetherTest {
 		var result = app.getPolygon(polyStream, layerStream, speciesStream, siteStream);
 
 		assertThat(result, hasProperty("layers", Matchers.aMapWithSize(1)));
-		var primaryResult = result.getLayers().get(LayerType.PRIMARY);
+		var primaryResult = result.requirePrimaryLayer();
 		var veteranResult = result.getLayers().get(LayerType.VETERAN);
 		primaryResult.getPrimaryGenus();
 		assertThat(
@@ -283,8 +283,9 @@ class ParsersTogetherTest {
 		var result = app.getPolygon(polyStream, layerStream, speciesStream, siteStream);
 
 		assertThat(result, hasProperty("layers", Matchers.aMapWithSize(1)));
-		var primaryResult = result.getLayers().get(LayerType.PRIMARY);
+		var primaryResult = result.getPrimaryLayer();
 		var veteranResult = result.getLayers().get(LayerType.VETERAN);
+
 		assertThat(
 				veteranResult, allOf(
 						hasProperty("polygonIdentifier", is(polygonId)), //
@@ -298,7 +299,7 @@ class ParsersTogetherTest {
 				)
 		);
 
-		assertThat(primaryResult, nullValue());
+		assertThat(primaryResult, notPresent());
 
 		app.close();
 	}
@@ -825,7 +826,7 @@ class ParsersTogetherTest {
 		var result = app.getPolygon(polyStream, layerStream, speciesStream, siteStream);
 
 		assertThat(result, hasProperty("layers", Matchers.aMapWithSize(2)));
-		var primaryResult = result.getLayers().get(LayerType.PRIMARY);
+		var primaryResult = result.requirePrimaryLayer();
 		var veteranResult = result.getLayers().get(LayerType.VETERAN);
 		assertThat(
 				primaryResult, allOf(
@@ -906,7 +907,7 @@ class ParsersTogetherTest {
 		var result = app.getPolygon(polyStream, layerStream, speciesStream, siteStream);
 
 		assertThat(result, hasProperty("layers", Matchers.aMapWithSize(1)));
-		var primaryResult = result.getLayers().get(LayerType.PRIMARY);
+		var primaryResult = result.requirePrimaryLayer();
 		var veteranResult = result.getLayers().get(LayerType.VETERAN);
 		assertThat(
 				primaryResult, allOf(
@@ -996,7 +997,7 @@ class ParsersTogetherTest {
 		var result = app.getPolygon(polyStream, layerStream, speciesStream, siteStream);
 
 		assertThat(result, hasProperty("layers", Matchers.aMapWithSize(2)));
-		var primaryResult = result.getLayers().get(LayerType.PRIMARY);
+		var primaryResult = result.requirePrimaryLayer();
 		var veteranResult = result.getLayers().get(LayerType.VETERAN);
 		assertThat(
 				primaryResult, allOf(
@@ -1080,7 +1081,7 @@ class ParsersTogetherTest {
 		var result = app.getPolygon(polyStream, layerStream, speciesStream, siteStream);
 
 		assertThat(result, hasProperty("layers", Matchers.aMapWithSize(1)));
-		var primaryResult = result.getLayers().get(LayerType.PRIMARY);
+		var primaryResult = result.requirePrimaryLayer();
 		var veteranResult = result.getLayers().get(LayerType.VETERAN);
 		assertThat(primaryResult, allOf(hasProperty("empiricalRelationshipParameterIndex", present(is(27)))));
 		assertThat(veteranResult, nullValue());

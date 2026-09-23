@@ -39,7 +39,7 @@ public class UtilizationOperations {
 
 		List<VdypUtilizationHolder> primaryLayerUtilizationsToScale = new ArrayList<>();
 
-		VdypLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		VdypLayer primaryLayer = polygon.requirePrimaryLayer();
 		primaryLayerUtilizationsToScale.add(primaryLayer);
 		primaryLayer.getSpecies().values().stream().forEach(s -> primaryLayerUtilizationsToScale.add(s));
 

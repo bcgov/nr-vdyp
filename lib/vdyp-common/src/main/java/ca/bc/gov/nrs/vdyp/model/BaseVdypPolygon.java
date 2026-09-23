@@ -70,6 +70,18 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 		return layers;
 	}
 
+	public Optional<L> getPrimaryLayer() {
+		return Optional.ofNullable(getLayers().get(LayerType.PRIMARY));
+	}
+
+	public L requirePrimaryLayer() {
+		return getPrimaryLayer().orElseThrow(
+				() -> new IllegalStateException(
+						"Polygon " + this.getPolygonIdentifier() + " does not have a primary layer"
+				)
+		);
+	}
+
 	public void setLayers(Map<LayerType, L> layers) {
 		this.layers = layers;
 	}

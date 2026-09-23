@@ -156,7 +156,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		final EstimationMethods estimators = getState().getEstimators();
 
-		final var primaryLayer = plps.getPolygon().getLayers().get(LayerType.PRIMARY);
+		final var primaryLayer = plps.getPolygon().requirePrimaryLayer();
 		final var primarySpecies = primaryLayer.getPrimarySpeciesRecord()
 				.orElseThrow(() -> new ProcessingException("No Primary species"));
 		final var primarySite = primaryLayer.getPrimarySite()
@@ -445,7 +445,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		}
 
 		final VdypPolygon polygon = getState().getCurrentPolygon();
-		var primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		var primaryLayer = polygon.requirePrimaryLayer();
 		var primarySite = primaryLayer.getPrimarySite()
 				.orElseThrow(() -> new ProcessingException("Primary layer has no site information"));
 
@@ -514,7 +514,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	 */
 	public void calculateConvergenceYield() throws ProcessingException {
 		final VdypPolygon polygon = getState().getCurrentPolygon();
-		final var primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		final var primaryLayer = polygon.requirePrimaryLayer();
 		final var primarySite = primaryLayer.getPrimarySite().orElseThrow();
 		final String primarySpeciesGroupId = primaryLayer.getPrimaryGenus().orElseThrow();
 		final VdypSpecies primarySpecies = primaryLayer.getPrimarySpeciesRecord().orElseThrow();

@@ -134,7 +134,7 @@ class VdypPolygonTest {
 		assertThat(result, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
 		assertThat(result, hasProperty("percentAvailable", is(90f)));
 		assertThat(result, hasProperty("layers", hasEntry(is(LayerType.PRIMARY), anything())));
-		var resultLayer = result.getLayers().get(LayerType.PRIMARY);
+		var resultLayer = result.requirePrimaryLayer();
 
 		assertThat(resultLayer, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
 		assertThat(resultLayer, hasProperty("layerType", is(LayerType.PRIMARY)));
@@ -195,7 +195,7 @@ class VdypPolygonTest {
 		assertThat(result, hasProperty("forestInventoryZone", is("Z")));
 		assertThat(result, hasProperty("biogeoclimaticZone", hasProperty("alias", is("IDF"))));
 		assertThat(result, hasProperty("layers", hasEntry(is(LayerType.PRIMARY), anything())));
-		var resultLayer = result.getLayers().get(LayerType.PRIMARY);
+		var resultLayer = result.requirePrimaryLayer();
 
 		assertThat(resultLayer, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
 		assertThat(resultLayer, hasProperty("layerType", is(LayerType.PRIMARY)));

@@ -537,7 +537,7 @@ class BackProcessingEngineTest {
 					lb.empiricalRelationshipParameterIndex(118);
 				});
 			});
-			var primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			var primaryLayer = polygon.requirePrimaryLayer();
 
 			// Fill in Utilization
 
