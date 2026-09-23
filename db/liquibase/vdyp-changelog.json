@@ -913,6 +913,27 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_21_01",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_21_01"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_21/01/grants/app-vdyp.ddl.apply_grants.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ]
+      }
     }
   ]
 }
