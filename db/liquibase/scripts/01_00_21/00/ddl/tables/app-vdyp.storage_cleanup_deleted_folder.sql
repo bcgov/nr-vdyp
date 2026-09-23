@@ -10,9 +10,9 @@ CREATE TABLE "app-vdyp"."storage_cleanup_deleted_folder" (
 	"size_bytes" BIGINT NOT NULL,                  -- Size Bytes is the folder's size in bytes at the time it was deleted.
 	"revision_count" DECIMAL(10) NOT NULL DEFAULT 0, -- REVISION_COUNT is the number of times that the row of data has been changed. The column is used for optimistic locking via application code.
 	"create_user" VARCHAR(64) NOT NULL,            -- CREATE_USER is an audit column that indicates the user that created the record.
-	"create_date" DATE NOT NULL DEFAULT CURRENT_TIMESTAMP, -- CREATE_DATE is the date and time the row of data was created.
+	"create_date" TIMESTAMP NOT NULL DEFAULT now(), -- CREATE_DATE is the date and time the row of data was created.
 	"update_user" VARCHAR(64) NOT NULL,            -- UPDATE_USER is an audit column that indicates the user that updated the record.
-	"update_date" DATE NOT NULL DEFAULT CURRENT_TIMESTAMP   -- UPDATE_DATE is the date and time the row of data was updated.
+	"update_date" TIMESTAMP NOT NULL DEFAULT now()  -- UPDATE_DATE is the date and time the row of data was updated.
 )
 TABLESPACE	PG_DEFAULT
 ;
