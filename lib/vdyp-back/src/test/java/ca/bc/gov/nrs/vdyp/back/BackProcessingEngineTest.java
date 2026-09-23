@@ -26,6 +26,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -943,4 +944,65 @@ class BackProcessingEngineTest {
 
 	}
 
+	@Disabled
+	@Nested
+	class CalculateConvergenceYield {
+		@Test
+		void testStandard() throws ProcessingException {
+			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("092P037  72999905UNK 2011");
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.percentAvailable(61f);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(10);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(12);
+						sb.percentGenus(70);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(45);
+							ib.yearsAtBreastHeight(77.3f);
+							ib.yearsToBreastHeight(8.2f);
+							ib.ageTotal(85f);
+							ib.siteIndex(12.39f);
+							ib.height(16f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(15);
+						sb.percentGenus(20);
+					});
+					lb.primaryGenus("PL");
+					lb.empiricalRelationshipParameterIndex(118);
+				});
+			});
+
+			expect(state.getPrimaryLayerProcessingState()).andStubReturn(layerState);
+			expect(state.getCurrentStartingYear()).andStubReturn(2011);
+			expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			expect(state.getControlMap()).andStubReturn(controlMap);
+			expect(state.getCurrentBecZone()).andStubReturn(polygon.getBiogeoclimaticZone());
+
+			state.setConvergenceBasalArea(eq(10.6703072f, 0.1f));
+			expectLastCall().once();
+			state.setConvergenceDominantHeight(eq(9.17361069f, 0.09f));
+			expectLastCall().once();
+			state.setConvergenceAge(eq(33.3f, 0.33f));
+			expectLastCall().once();
+			state.setConvergenceYear(eq(1967));
+
+			em.replay();
+			engine.calculateConvergenceYield();
+			em.verify();
+			polygon.requirePrimaryLayer().getPrimarySite().orElseThrow();
+		}
+
+	}
 }
