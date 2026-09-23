@@ -39,6 +39,7 @@ import org.springframework.http.ResponseEntity;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.PrioritizeReplyMessage;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.StopReplyMessage;
+import ca.bc.gov.nrs.vdyp.batch.model.StorageCleanupRequest;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
@@ -164,6 +165,29 @@ class BatchControllerTest {
 		assertEquals(900L, response.getBody().get(BatchConstants.Storage.EXPECTED_BYTES));
 		assertEquals(true, response.getBody().get(BatchConstants.Storage.OUT_OF_SPEC));
 		assertEquals(115, response.getBody().get(BatchConstants.Storage.THRESHOLD_PERCENT));
+	}
+
+	@Test
+	void testCleanupStorage_ReturnsReportFromCleanupService() {
+		StorageCleanupService.CleanupSetResult set = new StorageCleanupService.CleanupSetResult(
+				"job-guid", "vdyp-batch-job-guid", 123L, StorageCleanupService.Outcome.DELETABLE, null
+		);
+		StorageCleanupService.StorageCleanupReport report = new StorageCleanupService.StorageCleanupReport(
+				true, 1, 123L, List.of(set), List.of("skipped-name")
+		);
+		StorageCleanupRequest request = new StorageCleanupRequest(true, List.of("protected-guid"));
+		when(storageCleanupService.run(request)).thenReturn(report);
+
+		ResponseEntity<Map<String, Object>> response = batchController.cleanupStorage(request);
+
+		assertEquals(200, response.getStatusCode().value());
+		assertNotNull(response.getBody());
+		assertEquals(true, response.getBody().get(BatchConstants.StorageCleanup.DRY_RUN));
+		assertEquals(1, response.getBody().get(BatchConstants.StorageCleanup.SCANNED));
+		assertEquals(123L, response.getBody().get(BatchConstants.StorageCleanup.TOTAL_BYTES));
+		assertEquals(List.of(set), response.getBody().get(BatchConstants.StorageCleanup.SETS));
+		assertEquals(List.of("skipped-name"), response.getBody().get(BatchConstants.StorageCleanup.SKIPPED_NAMES));
+		verify(storageCleanupService).run(request);
 	}
 
 	@Test

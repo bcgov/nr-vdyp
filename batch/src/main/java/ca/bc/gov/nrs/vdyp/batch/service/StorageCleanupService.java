@@ -46,7 +46,7 @@ public class StorageCleanupService {
 		DELETABLE, DELETED, PROTECTED, FAILED
 	}
 
-	public record CleanupSetResult(String jobGuid, long bytes, Outcome outcome, String detail) {
+	public record CleanupSetResult(String jobGuid, String folderName, long bytes, Outcome outcome, String detail) {
 	}
 
 	public record StorageCleanupReport(
@@ -122,10 +122,11 @@ public class StorageCleanupService {
 	private CleanupSetResult
 			evaluateAndMaybeDelete(CandidateSet candidate, boolean dryRun, Set<String> protectedJobGuids) {
 		long bytes = candidateSizeBytes(candidate);
+		String folderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, candidate.jobGuid());
 
 		if (protectedJobGuids.contains(candidate.jobGuid())) {
 			return new CleanupSetResult(
-					candidate.jobGuid(), bytes, Outcome.PROTECTED, "Projection is not in a finished state"
+					candidate.jobGuid(), folderName, bytes, Outcome.PROTECTED, "Projection is not in a finished state"
 			);
 		}
 
@@ -133,13 +134,13 @@ public class StorageCleanupService {
 		// this run was in progress is still caught immediately before its folder would otherwise be deleted.
 		if (currentlyRunningJobGuids().contains(candidate.jobGuid())) {
 			return new CleanupSetResult(
-					candidate.jobGuid(), bytes, Outcome.PROTECTED,
+					candidate.jobGuid(), folderName, bytes, Outcome.PROTECTED,
 					"Job is currently running or paused in the batch service"
 			);
 		}
 
 		if (dryRun) {
-			return new CleanupSetResult(candidate.jobGuid(), bytes, Outcome.DELETABLE, null);
+			return new CleanupSetResult(candidate.jobGuid(), folderName, bytes, Outcome.DELETABLE, null);
 		}
 
 		try {
@@ -149,10 +150,10 @@ public class StorageCleanupService {
 			if (candidate.warningsFile() != null) {
 				Files.deleteIfExists(candidate.warningsFile());
 			}
-			return new CleanupSetResult(candidate.jobGuid(), bytes, Outcome.DELETED, null);
+			return new CleanupSetResult(candidate.jobGuid(), folderName, bytes, Outcome.DELETED, null);
 		} catch (IOException e) {
 			logger.warn("Failed to delete PVC job folder set for job {}: {}", candidate.jobGuid(), e.getMessage());
-			return new CleanupSetResult(candidate.jobGuid(), bytes, Outcome.FAILED, e.getMessage());
+			return new CleanupSetResult(candidate.jobGuid(), folderName, bytes, Outcome.FAILED, e.getMessage());
 		}
 	}
 
