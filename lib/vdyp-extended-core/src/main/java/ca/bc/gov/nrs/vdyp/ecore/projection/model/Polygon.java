@@ -682,10 +682,6 @@ public class Polygon implements Comparable<Polygon> {
 		mergeLayers();
 
 		for (Layer layer : getLayers().values()) {
-			layer.doCompleteDefinition();
-		}
-
-		for (Layer layer : getLayers().values()) {
 			layer.doBuildSiteSpecies();
 			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 		}
@@ -713,6 +709,10 @@ public class Polygon implements Comparable<Polygon> {
 		}
 
 		mergeLayers();
+
+		for (Layer layer : getLayers().values()) {
+			layer.doCompleteDefinition();
+		}
 
 		doAdjustAllLayersSpeciesPercents(context);
 

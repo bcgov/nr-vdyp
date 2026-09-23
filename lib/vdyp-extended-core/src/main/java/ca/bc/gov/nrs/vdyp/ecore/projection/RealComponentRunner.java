@@ -25,6 +25,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants;
@@ -286,11 +287,13 @@ public class RealComponentRunner implements ComponentRunner {
 				// Try to line the ordering up with VDYP7 to make comparison/debugging easier.
 				// Shouldn't slow things down too much but we can probably have an option to disable it to speed things
 				// up.
+
 				var sortedLayerInfos = ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST.stream()
 						.map(
 								type -> unsortedLayerInfos.stream().filter(li -> li.getProcessedAsVDYP7Layer() == type)
 										.findFirst()
-						).filter(Optional::isPresent).map(Optional::get).toList();
+						).filter(Optional::isPresent).sorted(LayerReportingInfo::compareOptional).map(Optional::get)
+						.toList();
 
 				for (var layerReportingInfo : sortedLayerInfos) {
 
