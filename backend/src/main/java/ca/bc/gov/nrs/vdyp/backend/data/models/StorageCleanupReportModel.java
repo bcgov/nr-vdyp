@@ -6,7 +6,10 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 @Schema(description = "The result of scanning (and optionally deleting) leftover PVC job folders.")
+@RegisterForReflection
 public record StorageCleanupReportModel(
 		@JsonProperty("dryRun") @Schema(description = "Whether this run only previewed candidates.") boolean dryRun,
 		@JsonProperty("scanned") @Schema(description = "Number of PVC job folder sets evaluated.") int scanned,
