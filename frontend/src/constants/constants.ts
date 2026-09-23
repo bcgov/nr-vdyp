@@ -4,6 +4,7 @@ export const KEYCLOAK = Object.freeze({
   CHECK_LOGIN_IFRAME: false,
   IDP_AZUR_IDIR: 'azureidir', // Identity Provider: IDIR with MFA
   IDP_AZUR_BBCEID: 'bceidbusiness',
+  IDP_AZUR_BCSC: 'vdyp-service-6216',
   MAX_SESSION_DURATION: 8 * 60 * 60 * 1000, // 8 hours (in milliseconds)
   UPDATE_TOKEN_MIN_VALIDITY: 120, // 2 min, in seconds
   IS_TOKEN_EXP_MIN_VALIDITY: 120, // 2 min, in seconds

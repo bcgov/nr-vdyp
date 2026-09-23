@@ -106,7 +106,7 @@ const initializeWithFreshAuth = async (): Promise<Keycloak | undefined> => {
   console.info('Ready to parsed token payload')
   const tokenParsed = JSON.parse(atob(keycloakInstance!.token.split('.')[1]))
 
-  if (tokenParsed.identity_provider !== KEYCLOAK.IDP_AZUR_IDIR && tokenParsed.identity_provider !== KEYCLOAK.IDP_AZUR_BBCEID) {
+  if (tokenParsed.identity_provider !== KEYCLOAK.IDP_AZUR_IDIR && tokenParsed.identity_provider !== KEYCLOAK.IDP_AZUR_BBCEID && tokenParsed.identity_provider !== KEYCLOAK.IDP_AZUR_BCSC) {
     logErrorAndLogout(
       AUTH_ERR.AUTH_002,
       'Authentication failed: Invalid identity provider. (Error: AUTH_002).',
