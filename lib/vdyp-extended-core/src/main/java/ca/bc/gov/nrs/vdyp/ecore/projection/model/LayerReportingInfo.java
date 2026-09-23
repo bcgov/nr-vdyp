@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.model;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 
@@ -64,6 +65,29 @@ public class LayerReportingInfo {
 		);
 		Collections.sort(sris);
 		orderedSpecies = sris;
+	}
+
+	/**
+	 * Method to compare two optional LayerReportingInfo classes, Convenience method for sorting by layer ID after
+	 * having sorted by projection type
+	 *
+	 * @param ol1 - an optional later reporting info if not present no change
+	 * @param ol2 - an optional later reporting info if not present no change
+	 * @return standard string comparison only if both optionals are present and have a layer id otherwise 0, if either
+	 *         is "D" sort to the end
+	 */
+	public static int compareOptional(Optional<LayerReportingInfo> ol1, Optional<LayerReportingInfo> ol2) {
+		LayerReportingInfo l1 = ol1.orElse(null);
+		LayerReportingInfo l2 = ol2.orElse(null);
+		if (l1 == null || l2 == null || l1.getLayerID() == null || l2.getLayerID() == null) {
+			return 0;
+		} else if (l1.getLayerID().equals("D")) {
+			return 1;
+		} else if (l2.getLayerID().equals("D")) {
+			return -1;
+		} else {
+			return l1.getLayerID().compareTo(l2.getLayerID());
+		}
 	}
 
 	/**
