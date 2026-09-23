@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,18 +21,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ca.bc.gov.nrs.vdyp.backend.clients.VDYPBatchClient;
-import ca.bc.gov.nrs.vdyp.backend.data.entities.StorageCleanupDeletedFolderEntity;
-import ca.bc.gov.nrs.vdyp.backend.data.entities.StorageCleanupRunEntity;
-import ca.bc.gov.nrs.vdyp.backend.data.entities.VDYPUserEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CleanupOutcomeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CleanupSetResultModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.StorageCleanupReportModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.StorageCleanupRequestModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
-import ca.bc.gov.nrs.vdyp.backend.data.repositories.StorageCleanupDeletedFolderRepository;
-import ca.bc.gov.nrs.vdyp.backend.data.repositories.StorageCleanupRunRepository;
-import ca.bc.gov.nrs.vdyp.backend.data.repositories.VDYPUserRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.StorageCleanupException;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,11 +35,7 @@ class StorageCleanupServiceTest {
 	@Mock
 	ProjectionBatchMappingRepository mappingRepository;
 	@Mock
-	VDYPUserRepository userRepository;
-	@Mock
-	StorageCleanupRunRepository runRepository;
-	@Mock
-	StorageCleanupDeletedFolderRepository deletedFolderRepository;
+	StorageCleanupRecorder recorder;
 	@Mock
 	@RestClient
 	VDYPBatchClient batchClient;
@@ -56,15 +47,21 @@ class StorageCleanupServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		service = new StorageCleanupService(
-				mappingRepository, userRepository, runRepository, deletedFolderRepository, batchClient
-		);
+		service = new StorageCleanupService(mappingRepository, recorder, batchClient);
 	}
 
 	private VDYPUserModel actingUser() {
 		VDYPUserModel user = new VDYPUserModel();
 		user.setVdypUserGUID(ACTING_USER_GUID.toString());
 		return user;
+	}
+
+	private StorageCleanupReportModel deletedReport() {
+		return new StorageCleanupReportModel(
+				false, 1, 100,
+				List.of(new CleanupSetResultModel("guid", "vdyp-batch-guid", 100, CleanupOutcomeModel.DELETED, null)),
+				List.of()
+		);
 	}
 
 	@Test
@@ -84,7 +81,7 @@ class StorageCleanupServiceTest {
 	}
 
 	@Test
-	void cleanup_DryRun_DoesNotPersistAnything() {
+	void cleanup_DryRun_DoesNotRecordAnything() {
 		when(mappingRepository.findProtectedBatchJobGuids()).thenReturn(List.of());
 		StorageCleanupReportModel report = new StorageCleanupReportModel(
 				true, 1, 100,
@@ -96,61 +93,43 @@ class StorageCleanupServiceTest {
 		StorageCleanupReportModel result = service.cleanup(actingUser(), true);
 
 		assertSame(report, result);
-		verify(runRepository, never()).persist(any(StorageCleanupRunEntity.class));
-		verify(deletedFolderRepository, never()).persist(any(StorageCleanupDeletedFolderEntity.class));
-		verify(userRepository, never()).findById(any());
+		verify(recorder, never()).record(any(), any());
 	}
 
 	@Test
-	void cleanup_ActualRun_PersistsRunWithAggregatedCountsAndActingUser() {
+	void cleanup_ActualRun_RecordsTheRunAndReturnsTheReport() {
 		when(mappingRepository.findProtectedBatchJobGuids()).thenReturn(List.of());
-		VDYPUserEntity userEntity = new VDYPUserEntity();
-		when(userRepository.findById(ACTING_USER_GUID)).thenReturn(userEntity);
-
-		StorageCleanupReportModel report = new StorageCleanupReportModel(
-				false, 3, 500,
-				List.of(
-						new CleanupSetResultModel("guid-1", "vdyp-batch-guid-1", 300, CleanupOutcomeModel.DELETED, null),
-						new CleanupSetResultModel("guid-2", "vdyp-batch-guid-2", 200, CleanupOutcomeModel.DELETED, null),
-						new CleanupSetResultModel(
-								"guid-3", "vdyp-batch-guid-3", 999, CleanupOutcomeModel.FAILED, "disk error"
-						),
-						new CleanupSetResultModel(
-								"guid-4", "vdyp-batch-guid-4", 111, CleanupOutcomeModel.PROTECTED, "running"
-						)
-				),
-				List.of()
-		);
+		StorageCleanupReportModel report = deletedReport();
 		when(batchClient.cleanupStorage(any())).thenReturn(report);
+		VDYPUserModel user = actingUser();
 
-		service.cleanup(actingUser(), false);
+		StorageCleanupReportModel result = service.cleanup(user, false);
 
-		ArgumentCaptor<StorageCleanupRunEntity> runCaptor = ArgumentCaptor.forClass(StorageCleanupRunEntity.class);
-		verify(runRepository).persist(runCaptor.capture());
-		StorageCleanupRunEntity persistedRun = runCaptor.getValue();
-		assertSame(userEntity, persistedRun.getRunByUser());
-		assertEquals(2, persistedRun.getDeletedCount());
-		assertEquals(1, persistedRun.getFailedCount());
-		assertEquals(1, persistedRun.getProtectedCount());
-		assertEquals(500, persistedRun.getBytesFreed());
-
-		ArgumentCaptor<StorageCleanupDeletedFolderEntity> folderCaptor = ArgumentCaptor
-				.forClass(StorageCleanupDeletedFolderEntity.class);
-		verify(deletedFolderRepository, org.mockito.Mockito.times(2)).persist(folderCaptor.capture());
-		List<String> deletedFolderNames = folderCaptor.getAllValues().stream()
-				.map(StorageCleanupDeletedFolderEntity::getFolderName).toList();
-		assertEquals(List.of("vdyp-batch-guid-1", "vdyp-batch-guid-2"), deletedFolderNames);
+		assertSame(report, result);
+		verify(recorder).record(user, report);
 	}
 
 	@Test
-	void cleanup_BatchCallFails_ThrowsAndPersistsNothing() {
+	void cleanup_ActualRun_RecordingFails_StillReturnsTheReportBecauseFilesAreAlreadyDeleted() {
+		when(mappingRepository.findProtectedBatchJobGuids()).thenReturn(List.of());
+		StorageCleanupReportModel report = deletedReport();
+		when(batchClient.cleanupStorage(any())).thenReturn(report);
+		doThrow(new RuntimeException("permission denied for table storage_cleanup_run")).when(recorder)
+				.record(any(), any());
+
+		StorageCleanupReportModel result = service.cleanup(actingUser(), false);
+
+		assertSame(report, result);
+	}
+
+	@Test
+	void cleanup_BatchCallFails_ThrowsAndRecordsNothing() {
 		when(mappingRepository.findProtectedBatchJobGuids()).thenReturn(List.of());
 		when(batchClient.cleanupStorage(any())).thenThrow(new RuntimeException("batch unreachable"));
 
 		assertThrows(StorageCleanupException.class, () -> service.cleanup(actingUser(), false));
 
-		verify(runRepository, never()).persist(any(StorageCleanupRunEntity.class));
-		verify(deletedFolderRepository, never()).persist(any(StorageCleanupDeletedFolderEntity.class));
+		verify(recorder, never()).record(any(), any());
 	}
 
 }
