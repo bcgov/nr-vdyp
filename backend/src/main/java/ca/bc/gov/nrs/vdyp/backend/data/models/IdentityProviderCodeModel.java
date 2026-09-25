@@ -12,6 +12,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public class IdentityProviderCodeModel extends CodeTableModel {
 	public static final String IDIR = "IDIR";
 	public static final String BCEID = "BCEID";
+	public static final String BCSC = "BCSC";
 	private String identityProviderCode;
 
 	@Override
