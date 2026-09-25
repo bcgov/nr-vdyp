@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -63,7 +64,7 @@ public class StorageCleanupRecorder {
 
 		StorageCleanupRunEntity run = new StorageCleanupRunEntity();
 		run.setRunByUser(actingUserEntity);
-		run.setRunDate(OffsetDateTime.now());
+		run.setRunDate(OffsetDateTime.now(ZoneId.systemDefault()));
 		run.setDeletedCount(deletedCount);
 		run.setFailedCount(failedCount);
 		run.setProtectedCount(protectedCount);
