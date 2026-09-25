@@ -445,10 +445,8 @@ public class BatchController {
 	}
 
 	/**
-	 * Scans the PVC root for leftover job folders and, unless dryRun is true, deletes the ones that are not protected.
-	 * Only the caller (the backend, on behalf of an ADMIN) determines which job GUIDs are protected by projection
-	 * status; this endpoint additionally protects any job GUID it finds currently running in this batch service,
-	 * re-checked immediately before each individual deletion.
+	 * Scans the PVC root for leftover job folders and, unless dryRun is true, deletes the ones that are not currently
+	 * running in this batch service, re-checked immediately before each individual deletion.
 	 */
 	@PostMapping(
 			value = "/storage/cleanup", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE

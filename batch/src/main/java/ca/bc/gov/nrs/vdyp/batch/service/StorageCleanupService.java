@@ -65,16 +65,13 @@ public class StorageCleanupService {
 			return new StorageCleanupReport(request.dryRun(), 0, 0, List.of(), List.of(), System.currentTimeMillis());
 		}
 
-		Set<String> protectedJobGuids = request.protectedJobGuids() == null ? Set.of()
-				: new HashSet<>(request.protectedJobGuids());
-
 		List<String> skippedNames = new ArrayList<>();
 		List<CandidateSet> candidates = scanCandidates(root, skippedNames);
 
 		List<CleanupSetResult> results = new ArrayList<>();
 		long totalBytes = 0;
 		for (CandidateSet candidate : candidates) {
-			CleanupSetResult result = evaluateAndMaybeDelete(candidate, request.dryRun(), protectedJobGuids);
+			CleanupSetResult result = evaluateAndMaybeDelete(candidate, request.dryRun());
 			results.add(result);
 			if (result.outcome() == Outcome.DELETABLE || result.outcome() == Outcome.DELETED) {
 				totalBytes += result.bytes();
@@ -122,16 +119,9 @@ public class StorageCleanupService {
 		return candidates;
 	}
 
-	private CleanupSetResult
-			evaluateAndMaybeDelete(CandidateSet candidate, boolean dryRun, Set<String> protectedJobGuids) {
+	private CleanupSetResult evaluateAndMaybeDelete(CandidateSet candidate, boolean dryRun) {
 		long bytes = candidateSizeBytes(candidate);
 		String folderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, candidate.jobGuid());
-
-		if (protectedJobGuids.contains(candidate.jobGuid())) {
-			return new CleanupSetResult(
-					candidate.jobGuid(), folderName, bytes, Outcome.PROTECTED, "Projection is not in a finished state"
-			);
-		}
 
 		// Queried fresh for every candidate (not cached for the whole run) so a job that started or resumed while
 		// this run was in progress is still caught immediately before its folder would otherwise be deleted.

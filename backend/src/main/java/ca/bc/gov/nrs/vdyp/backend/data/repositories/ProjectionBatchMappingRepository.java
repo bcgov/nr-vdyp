@@ -71,19 +71,6 @@ public class ProjectionBatchMappingRepository implements PanacheRepositoryBase<P
 		);
 	}
 
-	/**
-	 * Batch job GUIDs that must not have their PVC job folder deleted: the mappings for projections that are currently
-	 * RUNNING or STUCK. A QUEUED projection has no batch job GUID yet (it is assigned only once a batch worker actually
-	 * picks up the job), so it needs no entry here - its folder either does not exist yet, or, once the worker starts
-	 * it, is protected by the batch service's own currently-running check instead.
-	 */
-	public List<UUID> findProtectedBatchJobGuids() {
-		return list(
-				"projection.projectionStatusCode.projectionStatusCode in (?1, ?2) and batchJobGUID is not null",
-				ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK
-		).stream().map(ProjectionBatchMappingEntity::getBatchJobGUID).distinct().toList();
-	}
-
 	public Map<UUID, ProjectionBatchMappingEntity> findLatestByProjectionGUIDs(List<UUID> projectionGUIDs) {
 		String sql = """
 				    select bm.*

@@ -26,14 +26,11 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.CleanupSetResultModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.StorageCleanupReportModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.StorageCleanupRequestModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
-import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.StorageCleanupException;
 
 @ExtendWith(MockitoExtension.class)
 class StorageCleanupServiceTest {
 
-	@Mock
-	ProjectionBatchMappingRepository mappingRepository;
 	@Mock
 	StorageCleanupRecorder recorder;
 	@Mock
@@ -42,12 +39,11 @@ class StorageCleanupServiceTest {
 
 	StorageCleanupService service;
 
-	private static final UUID RUNNING_JOB_GUID = UUID.randomUUID();
 	private static final UUID ACTING_USER_GUID = UUID.randomUUID();
 
 	@BeforeEach
 	void setUp() {
-		service = new StorageCleanupService(mappingRepository, recorder, batchClient);
+		service = new StorageCleanupService(recorder, batchClient);
 	}
 
 	private VDYPUserModel actingUser() {
@@ -65,8 +61,7 @@ class StorageCleanupServiceTest {
 	}
 
 	@Test
-	void cleanup_PassesProtectedBatchJobGuidsFromRepository() {
-		when(mappingRepository.findProtectedBatchJobGuids()).thenReturn(List.of(RUNNING_JOB_GUID));
+	void cleanup_PassesDryRunToTheBatchService() {
 		when(batchClient.cleanupStorage(any())).thenReturn(
 				new StorageCleanupReportModel(true, 0, 0, List.of(), List.of())
 		);
@@ -77,12 +72,10 @@ class StorageCleanupServiceTest {
 				.forClass(StorageCleanupRequestModel.class);
 		verify(batchClient).cleanupStorage(requestCaptor.capture());
 		assertEquals(true, requestCaptor.getValue().dryRun());
-		assertEquals(List.of(RUNNING_JOB_GUID.toString()), requestCaptor.getValue().protectedJobGuids());
 	}
 
 	@Test
 	void cleanup_DryRun_DoesNotRecordAnything() {
-		when(mappingRepository.findProtectedBatchJobGuids()).thenReturn(List.of());
 		StorageCleanupReportModel report = new StorageCleanupReportModel(
 				true, 1, 100,
 				List.of(new CleanupSetResultModel("guid", "vdyp-batch-guid", 100, CleanupOutcomeModel.DELETABLE, null)),
@@ -98,7 +91,6 @@ class StorageCleanupServiceTest {
 
 	@Test
 	void cleanup_ActualRun_RecordsTheRunAndReturnsTheReport() {
-		when(mappingRepository.findProtectedBatchJobGuids()).thenReturn(List.of());
 		StorageCleanupReportModel report = deletedReport();
 		when(batchClient.cleanupStorage(any())).thenReturn(report);
 		VDYPUserModel user = actingUser();
@@ -111,7 +103,6 @@ class StorageCleanupServiceTest {
 
 	@Test
 	void cleanup_ActualRun_RecordingFails_StillReturnsTheReportBecauseFilesAreAlreadyDeleted() {
-		when(mappingRepository.findProtectedBatchJobGuids()).thenReturn(List.of());
 		StorageCleanupReportModel report = deletedReport();
 		when(batchClient.cleanupStorage(any())).thenReturn(report);
 		doThrow(new RuntimeException("permission denied for table storage_cleanup_run")).when(recorder)
@@ -124,7 +115,6 @@ class StorageCleanupServiceTest {
 
 	@Test
 	void cleanup_BatchCallFails_ThrowsAndRecordsNothing() {
-		when(mappingRepository.findProtectedBatchJobGuids()).thenReturn(List.of());
 		when(batchClient.cleanupStorage(any())).thenThrow(new RuntimeException("batch unreachable"));
 
 		assertThrows(StorageCleanupException.class, () -> service.cleanup(actingUser(), false));

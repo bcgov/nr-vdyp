@@ -176,7 +176,7 @@ class BatchControllerTest {
 		StorageCleanupService.StorageCleanupReport report = new StorageCleanupService.StorageCleanupReport(
 				true, 1, 123L, List.of(set), List.of("skipped-name"), System.currentTimeMillis()
 		);
-		StorageCleanupRequest request = new StorageCleanupRequest(true, List.of("protected-guid"));
+		StorageCleanupRequest request = new StorageCleanupRequest(true);
 		when(storageCleanupService.run(request)).thenReturn(report);
 
 		ResponseEntity<StorageCleanupService.StorageCleanupReport> response = batchController.cleanupStorage(request);

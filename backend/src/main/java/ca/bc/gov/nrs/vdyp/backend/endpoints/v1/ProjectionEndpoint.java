@@ -358,7 +358,7 @@ public class ProjectionEndpoint implements Endpoint {
 	@Path("/storage-cleanup")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Operation(
-			operationId = "cleanupPvcStorage", summary = "Scan (and optionally delete) leftover batch PVC job folders", description = "Defaults to preview. With dryRun=false, permanently deletes job folders that are not Running, Stuck, or currently active in the batch service. Requires the ADMIN role."
+			operationId = "cleanupPvcStorage", summary = "Scan (and optionally delete) leftover batch PVC job folders", description = "Defaults to preview. With dryRun=false, permanently deletes job folders that are not currently active in the batch service. Requires the ADMIN role."
 	)
 	@APIResponse(
 			responseCode = "200", description = "The cleanup report.", content = @Content(

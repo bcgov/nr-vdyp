@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +82,7 @@ class StorageCleanupServiceTest {
 	void run_RootDirectoryMissing_ReturnsEmptyReport() {
 		batchProperties.setRootDirectory(tempDir.resolve("does-not-exist").toString());
 
-		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(true, null));
+		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(true));
 
 		assertEquals(0, report.scanned());
 		assertTrue(report.sets().isEmpty());
@@ -100,7 +98,7 @@ class StorageCleanupServiceTest {
 		Path randomFolder = tempDir.resolve("some-other-folder");
 		Files.createDirectory(randomFolder);
 
-		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false, null));
+		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false));
 
 		assertEquals(0, report.scanned());
 		assertTrue(report.sets().isEmpty());
@@ -115,7 +113,7 @@ class StorageCleanupServiceTest {
 		Path folder = createJobFolder(jobGuid, "hello");
 		Path warnings = createWarningsFile(jobGuid, "warn");
 
-		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(true, null));
+		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(true));
 
 		StorageCleanupService.CleanupSetResult result = onlyResult(report);
 		assertEquals(jobGuid, result.jobGuid());
@@ -132,28 +130,12 @@ class StorageCleanupServiceTest {
 		Path folder = createJobFolder(jobGuid, "hello");
 		Path warnings = createWarningsFile(jobGuid, "warn");
 
-		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false, null));
+		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false));
 
 		StorageCleanupService.CleanupSetResult result = onlyResult(report);
 		assertEquals(StorageCleanupService.Outcome.DELETED, result.outcome());
 		assertFalse(Files.exists(folder));
 		assertFalse(Files.exists(warnings));
-	}
-
-	@Test
-	void run_ProtectedByBackendStatus_IsNotDeletedEvenWhenDryRunFalse() throws IOException {
-		String jobGuid = "33333333-3333-3333-3333-333333333333";
-		Path folder = createJobFolder(jobGuid, "hello");
-		Path warnings = createWarningsFile(jobGuid, "warn");
-
-		StorageCleanupService.StorageCleanupReport report = service
-				.run(new StorageCleanupRequest(false, List.of(jobGuid)));
-
-		StorageCleanupService.CleanupSetResult result = onlyResult(report);
-		assertEquals(StorageCleanupService.Outcome.PROTECTED, result.outcome());
-		assertTrue(Files.exists(folder));
-		assertTrue(Files.exists(warnings));
-		verify(jobExplorer, never()).findRunningJobExecutions(BatchConstants.Job.JOB_NAME);
 	}
 
 	@Test
@@ -164,7 +146,7 @@ class StorageCleanupServiceTest {
 		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
 				.thenReturn(Set.of(runningJobExecutionWithGuid(jobGuid)));
 
-		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false, null));
+		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false));
 
 		StorageCleanupService.CleanupSetResult result = onlyResult(report);
 		assertEquals(StorageCleanupService.Outcome.PROTECTED, result.outcome());
@@ -177,7 +159,7 @@ class StorageCleanupServiceTest {
 		String jobGuid = "55555555-5555-5555-5555-555555555555";
 		Path folder = createJobFolder(jobGuid, "hello");
 
-		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false, null));
+		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false));
 
 		StorageCleanupService.CleanupSetResult result = onlyResult(report);
 		assertEquals(StorageCleanupService.Outcome.DELETED, result.outcome());
@@ -190,7 +172,7 @@ class StorageCleanupServiceTest {
 		String jobGuid = "66666666-6666-6666-6666-666666666666";
 		Path warnings = createWarningsFile(jobGuid, "warn");
 
-		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false, null));
+		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false));
 
 		StorageCleanupService.CleanupSetResult result = onlyResult(report);
 		assertEquals(StorageCleanupService.Outcome.DELETED, result.outcome());
@@ -203,7 +185,7 @@ class StorageCleanupServiceTest {
 		createJobFolder("77777777-7777-7777-7777-777777777777", "a");
 		createJobFolder("88888888-8888-8888-8888-888888888888", "bb");
 
-		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false, null));
+		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false));
 
 		assertEquals(2, report.scanned());
 		verify(jobExplorer, times(2)).findRunningJobExecutions(BatchConstants.Job.JOB_NAME);
@@ -215,9 +197,10 @@ class StorageCleanupServiceTest {
 		createJobFolder(protectedGuid, "protected-content");
 		String deletableGuid = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 		createJobFolder(deletableGuid, "hi");
+		when(jobExplorer.findRunningJobExecutions(BatchConstants.Job.JOB_NAME))
+				.thenReturn(Set.of(runningJobExecutionWithGuid(protectedGuid)));
 
-		StorageCleanupService.StorageCleanupReport report = service
-				.run(new StorageCleanupRequest(true, List.of(protectedGuid)));
+		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(true));
 
 		assertEquals(2, report.scanned());
 		assertEquals("hi".length(), report.totalBytes());
@@ -230,8 +213,7 @@ class StorageCleanupServiceTest {
 		batchProperties.setRootDirectory(notADirectory.toString());
 
 		assertThrows(
-				StorageCleanupService.StorageCleanupException.class,
-				() -> service.run(new StorageCleanupRequest(true, null))
+				StorageCleanupService.StorageCleanupException.class, () -> service.run(new StorageCleanupRequest(true))
 		);
 	}
 
