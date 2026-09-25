@@ -60,7 +60,7 @@ public class StorageCleanupService {
 
 		if (!dryRun) {
 			try {
-				recorder.record(actingUser, report);
+				recorder.recordCleanupRun(actingUser, report);
 			} catch (Exception e) {
 				logger.error(
 						"PVC storage cleanup run by {} deleted files but its run record could not be saved",

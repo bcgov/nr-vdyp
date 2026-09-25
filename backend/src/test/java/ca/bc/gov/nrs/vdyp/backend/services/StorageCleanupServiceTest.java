@@ -93,7 +93,7 @@ class StorageCleanupServiceTest {
 		StorageCleanupReportModel result = service.cleanup(actingUser(), true);
 
 		assertSame(report, result);
-		verify(recorder, never()).record(any(), any());
+		verify(recorder, never()).recordCleanupRun(any(), any());
 	}
 
 	@Test
@@ -106,7 +106,7 @@ class StorageCleanupServiceTest {
 		StorageCleanupReportModel result = service.cleanup(user, false);
 
 		assertSame(report, result);
-		verify(recorder).record(user, report);
+		verify(recorder).recordCleanupRun(user, report);
 	}
 
 	@Test
@@ -115,7 +115,7 @@ class StorageCleanupServiceTest {
 		StorageCleanupReportModel report = deletedReport();
 		when(batchClient.cleanupStorage(any())).thenReturn(report);
 		doThrow(new RuntimeException("permission denied for table storage_cleanup_run")).when(recorder)
-				.record(any(), any());
+				.recordCleanupRun(any(), any());
 
 		StorageCleanupReportModel result = service.cleanup(actingUser(), false);
 
@@ -129,7 +129,7 @@ class StorageCleanupServiceTest {
 
 		assertThrows(StorageCleanupException.class, () -> service.cleanup(actingUser(), false));
 
-		verify(recorder, never()).record(any(), any());
+		verify(recorder, never()).recordCleanupRun(any(), any());
 	}
 
 }

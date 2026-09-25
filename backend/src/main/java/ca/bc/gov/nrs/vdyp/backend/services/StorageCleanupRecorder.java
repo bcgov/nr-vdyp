@@ -43,7 +43,7 @@ public class StorageCleanupRecorder {
 	}
 
 	@Transactional(Transactional.TxType.REQUIRES_NEW)
-	public void record(VDYPUserModel actingUser, StorageCleanupReportModel report) {
+	public void recordCleanupRun(VDYPUserModel actingUser, StorageCleanupReportModel report) {
 		VDYPUserEntity actingUserEntity = userRepository.findById(UUID.fromString(actingUser.getVdypUserGUID()));
 
 		int deletedCount = 0;

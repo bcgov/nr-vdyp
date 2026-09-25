@@ -71,7 +71,7 @@ class StorageCleanupRecorderTest {
 				), List.of()
 		);
 
-		recorder.record(actingUser, report);
+		recorder.recordCleanupRun(actingUser, report);
 
 		ArgumentCaptor<StorageCleanupRunEntity> runCaptor = ArgumentCaptor.forClass(StorageCleanupRunEntity.class);
 		verify(runRepository).persist(runCaptor.capture());
