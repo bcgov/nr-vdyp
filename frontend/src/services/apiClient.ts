@@ -310,6 +310,16 @@ export const apiClient = {
       options,
     )
   },
+
+  /**
+   * (Admin Only) Scans (and optionally deletes) leftover batch PVC job folders.
+   * @param dryRun When true (the default), evaluates candidates without deleting anything.
+   * @param options Optional Axios request configuration.
+   * @returns The Axios promise for the cleanup report.
+   */
+  cleanupPvcStorage: (dryRun?: boolean, options?: AxiosRequestConfig) => {
+    return projectionApiInstance.cleanupPvcStorage(dryRun, options)
+  },
 }
 
 export default apiClient
