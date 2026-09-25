@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
@@ -173,20 +174,15 @@ class BatchControllerTest {
 				"job-guid", "vdyp-batch-job-guid", 123L, StorageCleanupService.Outcome.DELETABLE, null
 		);
 		StorageCleanupService.StorageCleanupReport report = new StorageCleanupService.StorageCleanupReport(
-				true, 1, 123L, List.of(set), List.of("skipped-name")
+				true, 1, 123L, List.of(set), List.of("skipped-name"), System.currentTimeMillis()
 		);
 		StorageCleanupRequest request = new StorageCleanupRequest(true, List.of("protected-guid"));
 		when(storageCleanupService.run(request)).thenReturn(report);
 
-		ResponseEntity<Map<String, Object>> response = batchController.cleanupStorage(request);
+		ResponseEntity<StorageCleanupService.StorageCleanupReport> response = batchController.cleanupStorage(request);
 
 		assertEquals(200, response.getStatusCode().value());
-		assertNotNull(response.getBody());
-		assertEquals(true, response.getBody().get(BatchConstants.StorageCleanup.DRY_RUN));
-		assertEquals(1, response.getBody().get(BatchConstants.StorageCleanup.SCANNED));
-		assertEquals(123L, response.getBody().get(BatchConstants.StorageCleanup.TOTAL_BYTES));
-		assertEquals(List.of(set), response.getBody().get(BatchConstants.StorageCleanup.SETS));
-		assertEquals(List.of("skipped-name"), response.getBody().get(BatchConstants.StorageCleanup.SKIPPED_NAMES));
+		assertSame(report, response.getBody());
 		verify(storageCleanupService).run(request);
 	}
 

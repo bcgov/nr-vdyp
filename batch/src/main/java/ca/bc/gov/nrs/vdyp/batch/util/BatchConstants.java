@@ -145,17 +145,6 @@ public final class BatchConstants {
 		}
 	}
 
-	public static final class StorageCleanup {
-		public static final String DRY_RUN = "dryRun";
-		public static final String SCANNED = "scanned";
-		public static final String TOTAL_BYTES = "totalBytes";
-		public static final String SETS = "sets";
-		public static final String SKIPPED_NAMES = "skippedNames";
-
-		private StorageCleanup() {
-		}
-	}
-
 	private BatchConstants() {
 	}
 }

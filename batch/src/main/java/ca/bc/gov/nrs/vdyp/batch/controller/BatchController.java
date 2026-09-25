@@ -453,17 +453,9 @@ public class BatchController {
 	@PostMapping(
 			value = "/storage/cleanup", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE
 	)
-	public ResponseEntity<Map<String, Object>> cleanupStorage(@RequestBody StorageCleanupRequest request) {
-		StorageCleanupService.StorageCleanupReport report = storageCleanupService.run(request);
-
-		Map<String, Object> response = new HashMap<>();
-		response.put(BatchConstants.StorageCleanup.DRY_RUN, report.dryRun());
-		response.put(BatchConstants.StorageCleanup.SCANNED, report.scanned());
-		response.put(BatchConstants.StorageCleanup.TOTAL_BYTES, report.totalBytes());
-		response.put(BatchConstants.StorageCleanup.SETS, report.sets());
-		response.put(BatchConstants.StorageCleanup.SKIPPED_NAMES, report.skippedNames());
-		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
-		return ResponseEntity.ok(response);
+	public ResponseEntity<StorageCleanupService.StorageCleanupReport>
+			cleanupStorage(@RequestBody StorageCleanupRequest request) {
+		return ResponseEntity.ok(storageCleanupService.run(request));
 	}
 
 	private void logRequestDetails(UUID projectionGUID, String parametersJson) {

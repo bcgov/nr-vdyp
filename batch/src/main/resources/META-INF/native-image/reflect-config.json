@@ -8686,5 +8686,13 @@
 		"allDeclaredConstructors": true,
 		"allPublicMethods": true,
 		"allPublicFields": true
+	},
+	{
+		"name": "ca.bc.gov.nrs.vdyp.batch.service.StorageCleanupService$StorageCleanupReport",
+		"allDeclaredFields": true,
+		"allDeclaredMethods": true,
+		"allDeclaredConstructors": true,
+		"allPublicMethods": true,
+		"allPublicFields": true
 	}
 ]

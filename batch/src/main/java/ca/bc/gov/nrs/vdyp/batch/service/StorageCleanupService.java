@@ -50,7 +50,8 @@ public class StorageCleanupService {
 	}
 
 	public record StorageCleanupReport(
-			boolean dryRun, int scanned, long totalBytes, List<CleanupSetResult> sets, List<String> skippedNames
+			boolean dryRun, int scanned, long totalBytes, List<CleanupSetResult> sets, List<String> skippedNames,
+			long timestamp
 	) {
 	}
 
@@ -61,7 +62,7 @@ public class StorageCleanupService {
 		Path root = Paths.get(batchProperties.getRootDirectory());
 		if (Files.notExists(root)) {
 			logger.warn("PVC root directory does not exist, nothing to clean up: {}", root);
-			return new StorageCleanupReport(request.dryRun(), 0, 0, List.of(), List.of());
+			return new StorageCleanupReport(request.dryRun(), 0, 0, List.of(), List.of(), System.currentTimeMillis());
 		}
 
 		Set<String> protectedJobGuids = request.protectedJobGuids() == null ? Set.of()
@@ -80,7 +81,9 @@ public class StorageCleanupService {
 			}
 		}
 
-		return new StorageCleanupReport(request.dryRun(), candidates.size(), totalBytes, results, skippedNames);
+		return new StorageCleanupReport(
+				request.dryRun(), candidates.size(), totalBytes, results, skippedNames, System.currentTimeMillis()
+		);
 	}
 
 	/**
