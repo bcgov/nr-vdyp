@@ -1,0 +1,12 @@
+# Local stand-in for the batch PVC, for testing the "Free up Storage" button and the System Storage bar.
+#
+# Use together with the autoscaling file (it defines the batch_projection_files volume this overrides):
+#   docker compose -f docker-compose.yml -f docker-compose.autoscaling.yml -f docker-compose.local-pvc.yml up --scale vdyp-batch=2
+#
+volumes:
+  batch_projection_files:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=${BATCH_LOCAL_PVC_SIZE:-512m},uid=1001,gid=0,mode=0775"

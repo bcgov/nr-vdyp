@@ -608,6 +608,22 @@ export const formatNumber = (value: number | null): string => {
   return (value ?? 0).toLocaleString()
 }
 
+const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
+
+/**
+ * Formats a byte count as a human-readable string, auto-scaling to the smallest unit
+ * that keeps at least one significant digit.
+ * @example
+ *   formatBytes(0)          // "0 B"
+ *   formatBytes(1536)       // "1.50 KB"
+ */
+export const formatBytes = (bytes: number): string => {
+  if (bytes <= 0) return '0 B'
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), BYTE_UNITS.length - 1)
+  const value = bytes / 1024 ** exponent
+  return `${exponent === 0 ? value : value.toFixed(2)} ${BYTE_UNITS[exponent]}`
+}
+
 /**
  * Adds execution options to selected or excluded arrays based on flag mappings.
  *
