@@ -542,7 +542,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		);
 
 		// DQ_CNV = EMP107(...)
-		float convergenceDiameter = getState().estimators.estimateQuadMeanDiameterYield(
+		float convergenceDiameter = getState().getEstimators().estimateQuadMeanDiameterYield(
 				dominantHeight, getState().getConvergenceAge().orElseThrow(), getState().getBaseAreaVeteran(),
 				primaryLayer.getOrderedSpecies(), primarySpeciesGroupId, bec,
 				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
@@ -550,14 +550,14 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		getState().setConvergenceQuadraticMeanDiameter(convergenceDiameter);
 
 		// HLPL1 = EMP051(...)
-		float primaryLoreyHeight = getState().estimators
+		float primaryLoreyHeight = getState().getEstimators()
 				.primaryHeightFromLeadHeightInitial(dominantHeight, primarySpeciesGroupId, bec.getRegion());
 		primarySpecies.getLoreyHeightByUtilization().setAll(primaryLoreyHeight);
 
 		// Lorey height for non-primary species
 		for (var species : primaryLayer.getOrderedSpecies()) {
 			// HLsp = EMP053(...)
-			var specHeight = getState().estimators
+			var specHeight = getState().getEstimators()
 					.estimateNonPrimaryLoreyHeight(species, primarySpecies, bec, dominantHeight, primaryLoreyHeight);
 			species.getLoreyHeightByUtilization().setAll(specHeight);
 		}

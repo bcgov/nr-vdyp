@@ -1,10 +1,12 @@
 package ca.bc.gov.nrs.vdyp.back;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypEasyMock.adapt;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecies;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.unboxedArrayCloseTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
@@ -26,7 +28,6 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -944,7 +945,6 @@ class BackProcessingEngineTest {
 
 	}
 
-	@Disabled
 	@Nested
 	class CalculateConvergenceYield {
 		@Test
@@ -984,24 +984,116 @@ class BackProcessingEngineTest {
 				});
 			});
 
+			final var primaryLayer = polygon.requirePrimaryLayer();
+			final var primarySite = primaryLayer.getPrimarySite().orElseThrow();
+
+			// Fill in utilization vectors
+			primaryLayer.setLoreyHeightByUtilization(Utils.heightVector(6.11998129f, 14.2882891f));
+			primaryLayer.setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0546229482f, 40.9836578f, 3.78800011f, 11.8987055f, 14.0205078f, 11.2764416f
+					)
+			);
+			primaryLayer.setTreesPerHectareByUtilization(
+					Utils.utilizationVector(20.5737705f, 1803.26233f, 466.262329f, 677.950806f, 464.049194f, 195f)
+			);
+			primaryLayer.setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.81501532f, 17.0110435f, 10.1703596f, 14.9486017f, 19.613493f, 27.1346054f)
+			);
+			primaryLayer.getOrderedSpecies().get(0)
+					.setLoreyHeightByUtilization(Utils.heightVector(5.72300005f, 12.8473997f));
+			primaryLayer.getOrderedSpecies().get(0).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.028147541f, 4.09836054f, 1.34257376f, 1.134377f, 0.789475381f, 0.831934452f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(11.0819674f, 284.67215f, 175.262299f, 68.0819626f, 26.8688507f, 14.4590158f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.6867857f, 13.5390329f, 9.87597275f, 14.5652428f, 19.3419304f, 27.0663853f)
+			);
+			primaryLayer.getOrderedSpecies().get(1)
+					.setLoreyHeightByUtilization(Utils.heightVector(7.18720007f, 13.8270998f));
+			primaryLayer.getOrderedSpecies().get(1).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0106229503f, 28.6885567f, 1.96814752f, 9.33654118f, 11.2569828f, 6.12688494f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(3.67213106f, 1250.31152f, 232.590164f, 528.704895f, 373.098358f, 115.91803f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(
+							6.06901979f, 17.0922909f, 10.3797817f, 14.9948254f, 19.5999241f, 25.9417591f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2)
+					.setLoreyHeightByUtilization(Utils.heightVector(6.1097002f, 16.6229f));
+			primaryLayer.getOrderedSpecies().get(2).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0158524588f, 8.19673729f, 0.47727865f, 1.42778683f, 1.97404909f, 4.31762266f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(
+							5.81967211f, 268.278687f, 58.4098358f, 81.1639328f, 64.0819626f, 64.6229477f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.88917017f, 19.7234325f, 10.1999512f, 14.9659815f, 19.8046036f, 29.166481f)
+			);
+
 			expect(state.getPrimaryLayerProcessingState()).andStubReturn(layerState);
 			expect(state.getCurrentStartingYear()).andStubReturn(2011);
 			expect(state.getCurrentPolygon()).andStubReturn(polygon);
 			expect(state.getControlMap()).andStubReturn(controlMap);
 			expect(state.getCurrentBecZone()).andStubReturn(polygon.getBiogeoclimaticZone());
 
-			state.setConvergenceBasalArea(eq(10.6703072f, 0.1f));
-			expectLastCall().once();
-			state.setConvergenceDominantHeight(eq(9.17361069f, 0.09f));
-			expectLastCall().once();
-			state.setConvergenceAge(eq(33.3f, 0.33f));
-			expectLastCall().once();
-			state.setConvergenceYear(eq(1967));
+			expect(state.getConvergenceBasalArea()).andStubReturn(Optional.of(10.6703072f));
+			expect(state.getConvergenceDominantHeight()).andStubReturn(Optional.of(9.17361069f));
+			expect(state.getConvergenceAge()).andStubReturn(Optional.of(33.3f));
+			expect(state.getConvergenceYear()).andStubReturn(Optional.of(1967));
+			expect(state.getBaseAreaVeteran()).andStubReturn(Optional.empty());
 
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum("B")).andStubReturn(12.8473997f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum("PL")).andStubReturn(13.8270998f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum("S")).andStubReturn(16.6229f);
+
+			expect(state.getConvergenceQuadraticMeanDiameter()).andStubReturn(Optional.of(10.202f));
+
+			expect(state.getLimits(1)).andStubReturn(new ComponentSizeLimits(32.4f, 38.4f, 0.744f, 1.541f));
+			expect(state.getLimits(2)).andStubReturn(new ComponentSizeLimits(32.0f, 40.7f, 0.757f, 1.705f));
+			expect(state.getLimits(3)).andStubReturn(new ComponentSizeLimits(39.1f, 57.2f, 0.796f, 1.809f));
+
+			// Check that state is updated
+
+			state.setSpeciesLoreyHeightBackupFactorMaximum(
+					// Exact float comparison should be safe as this should be an exact copy with no math done to it.
+					EasyMock.aryEq(new float[] { 0f, 12.8473997f, 13.8270998f, 16.6229f })
+			);
+			expectLastCall().once();
+			state.setConvergenceQuadraticMeanDiameter(eq(10.202f, 0.01f));
+			expectLastCall().once();
+			state.setSpeciesConvergenceLoreyHeight(
+					adapt(unboxedArrayCloseTo(0f, 8.26395798f, 7.30057955f, 7.28091431f))
+			);
+			expectLastCall().once();
+			state.setSpeciesConvergenceQuadraticMeanDiameter(
+					adapt(unboxedArrayCloseTo(0f, 9.88628769f, 10.3321753f, 9.93369484f))
+			);
+			expectLastCall().once();
+
+			// Run test
 			em.replay();
 			engine.calculateConvergenceYield();
 			em.verify();
-			polygon.requirePrimaryLayer().getPrimarySite().orElseThrow();
+
+			// Check that site values set to convergence
+			assertThat(primarySite, hasProperty("height", present(closeTo(9.17361069f))));
+			assertThat(primarySite, hasProperty("yearsAtBreastHeight", present(closeTo(33.3f))));
+			assertThat(primarySite, hasProperty("yearsToBreastHeight", present(closeTo(8.2f))));
+			assertThat(primarySite, hasProperty("ageTotal", present(closeTo(41.5f))));
 		}
 
 	}
