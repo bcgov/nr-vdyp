@@ -20,9 +20,6 @@ public class UserRolesAugmentor implements SecurityIdentityAugmentor {
 
 	private static final Logger logger = LoggerFactory.getLogger(UserRolesAugmentor.class);
 
-	public UserRolesAugmentor() {
-	}
-
 	@Override
 	public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {
 		return Uni.createFrom().item(build(identity));
@@ -36,6 +33,7 @@ public class UserRolesAugmentor implements SecurityIdentityAugmentor {
 		if (identityToken instanceof JsonWebToken jwt) {
 			String idp = jwt.getClaim("identity_provider");
 			if (IdentityProviderCodeLookup.isUserProvider(idp)) {
+				logger.debug("Adding USER role for identity provider: {}", idp);
 				builder.addRole("USER");
 			}
 		}
