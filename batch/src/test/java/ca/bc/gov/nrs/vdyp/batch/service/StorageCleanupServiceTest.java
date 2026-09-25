@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -207,7 +206,7 @@ class StorageCleanupServiceTest {
 		StorageCleanupService.StorageCleanupReport report = service.run(new StorageCleanupRequest(false, null));
 
 		assertEquals(2, report.scanned());
-		verify(jobExplorer, times(2)).findRunningJobExecutions(eq(BatchConstants.Job.JOB_NAME));
+		verify(jobExplorer, times(2)).findRunningJobExecutions(BatchConstants.Job.JOB_NAME);
 	}
 
 	@Test
