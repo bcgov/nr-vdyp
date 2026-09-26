@@ -1341,12 +1341,35 @@ class VdypStartApplicationTest {
 					pb.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 					pb.forestInventoryZone("Z");
 					pb.mode(PolygonMode.START);
+					pb.controlMap(controlMap);
 
+					pb.addLayer(lb -> {
+						lb.layerType(LayerType.PRIMARY);
+
+						lb.crownClosure(60f);
+
+						lb.addSpecies(sb -> {
+							sb.speciesGroup("L");
+							sb.percentGenus(10);
+							sb.addSite(ib -> {
+								ib.siteGenus("L");
+								ib.ageTotal(60f);
+								ib.height(15f);
+								ib.siteIndex(5f);
+								ib.yearsToBreastHeight(8.5f);
+								ib.yearsAtBreastHeightAuto();
+							});
+						});
+						lb.addSpecies(sb -> {
+							sb.speciesGroup("PL");
+							sb.percentGenus(90);
+						});
+					});
 					pb.percentAvailable(Optional.of(42f));
 
 				});
 
-				TestLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+				TestLayer primaryLayer = polygon.requirePrimaryLayer();
 				Optional<TestLayer> veteranLayer = Optional.empty();
 
 				var result = app.estimatePercentForestLand(polygon, veteranLayer, primaryLayer);
@@ -1393,7 +1416,7 @@ class VdypStartApplicationTest {
 					});
 				});
 
-				TestLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+				TestLayer primaryLayer = polygon.requirePrimaryLayer();
 				Optional<TestLayer> veteranLayer = Optional.empty();
 
 				var result = app.estimatePercentForestLand(polygon, veteranLayer, primaryLayer);
@@ -1473,7 +1496,7 @@ class VdypStartApplicationTest {
 					});
 				});
 
-				TestLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+				TestLayer primaryLayer = polygon.requirePrimaryLayer();
 				Optional<TestLayer> veteranLayer = Optional.of(polygon.getLayers().get(LayerType.VETERAN));
 
 				var result = app.estimatePercentForestLand(polygon, veteranLayer, primaryLayer);
@@ -1890,9 +1913,9 @@ class VdypStartApplicationTest {
 						});
 					});
 				});
-				var spec = poly.getLayers().get(LayerType.PRIMARY).getSpecies().get("B");
+				var spec = poly.requirePrimaryLayer().getSpecies().get("B");
 
-				app.applyGroups(poly, poly.getLayers().get(LayerType.PRIMARY).getSpecies().values());
+				app.applyGroups(poly, poly.requirePrimaryLayer().getSpecies().values());
 
 				assertThat(spec, hasProperty("volumeGroup", is(15)));
 				assertThat(spec, hasProperty("decayGroup", is(11)));
@@ -1973,7 +1996,7 @@ class VdypStartApplicationTest {
 			});
 
 			var result = assertDoesNotThrow(() -> VdypStartApplication.getPrimaryLayer(poly));
-			assertThat(result, sameInstance(poly.getLayers().get(LayerType.PRIMARY)));
+			assertThat(result, sameInstance(poly.requirePrimaryLayer()));
 		}
 
 		@Test

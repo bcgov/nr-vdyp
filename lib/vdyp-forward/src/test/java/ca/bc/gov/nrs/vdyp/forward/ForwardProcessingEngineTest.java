@@ -230,7 +230,7 @@ class ForwardProcessingEngineTest {
 
 			// FIXME, these are wrong, testing that we have replicated the bug
 			assertThat(
-					outputMap.get(1964).getLayers().get(LayerType.PRIMARY),
+					outputMap.get(1964).requirePrimaryLayer(),
 					hasProperty(
 							"treesPerHectareByUtilization",
 							VdypMatchers.utilization(
@@ -240,7 +240,7 @@ class ForwardProcessingEngineTest {
 					)
 			);
 			assertThat(
-					outputMap.get(2023).getLayers().get(LayerType.PRIMARY),
+					outputMap.get(2023).requirePrimaryLayer(),
 					hasProperty(
 							"treesPerHectareByUtilization",
 							VdypMatchers.utilization(

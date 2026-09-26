@@ -69,8 +69,7 @@ class ForwardReadPolygonTest {
 
 			assertThat(polygon.getPolygonIdentifier().toStringCompact(), is("01002 S000001 00(1970)"));
 			assertThat(
-					polygon.getLayers().get(LayerType.PRIMARY),
-					hasProperty("empiricalRelationshipParameterIndex", present(is(1)))
+					polygon.requirePrimaryLayer(), hasProperty("empiricalRelationshipParameterIndex", present(is(1)))
 			);
 
 			for (VdypLayer layer : polygon.getLayers().values()) {
