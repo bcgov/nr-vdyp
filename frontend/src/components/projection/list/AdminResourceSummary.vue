@@ -49,8 +49,8 @@
       <span>
         {{ formatBytes(storageUsedBytes) }} / {{ formatBytes(storageTotalBytes) }} used
         <template v-if="storageOutOfSpec">
-          <span class="tooltip-separator">&bull;</span>
-          <strong class="tooltip-alert">Out of Spec</strong>
+          <span class="tooltip-separator">-</span>
+          <strong class="tooltip-alert">{{ SYSTEM_STORAGE.ORPHANED_STORAGE_EXISTS }}</strong>
         </template>
       </span>
     </v-tooltip>
@@ -76,6 +76,7 @@
 <script setup lang="ts">
 import { ExclamationMarkIcon, RunningBadgeIcon14px, QueuedIcon14px } from '@/assets'
 import { formatBytes } from '@/utils/util'
+import { SYSTEM_STORAGE } from '@/constants/message'
 
 defineProps<{
   totalRunning: number
