@@ -272,7 +272,7 @@ class ProcessingEngineTest {
 			EasyMock.expect(siteCurveMap.isEmpty()).andStubReturn(true);
 			control.replay();
 
-			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			VdypLayer pLayer = polygon.requirePrimaryLayer();
 
 			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
 
@@ -314,7 +314,7 @@ class ProcessingEngineTest {
 			EasyMock.expect(siteCurveMap.isEmpty()).andStubReturn(true);
 			control.replay();
 
-			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			VdypLayer pLayer = polygon.requirePrimaryLayer();
 
 			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
 			bank.siteCurveNumbers[1] = SiteIndexEquation.SI_BA_DILUCCA.n();
@@ -357,7 +357,7 @@ class ProcessingEngineTest {
 			EasyMock.expect(siteCurveMap.get("BL", Region.COASTAL)).andStubReturn(SiteIndexEquation.SI_BL_CHEN);
 			control.replay();
 
-			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			VdypLayer pLayer = polygon.requirePrimaryLayer();
 
 			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
 
@@ -399,7 +399,7 @@ class ProcessingEngineTest {
 			});
 		});
 
-		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		VdypLayer pLayer = polygon.requirePrimaryLayer();
 
 		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
 

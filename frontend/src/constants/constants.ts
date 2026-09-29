@@ -357,8 +357,8 @@ export const PAGINATION = Object.freeze({
 
 export const REFRESH_INTERVAL_MS = Object.freeze({
   PROJECTION_DETAIL_CLOCK_TICK: 60_000, // 60sec, detail page Time Elapsed display tick
-  PROJECTION_DETAIL_DATA_POLL: 5_000, // 5sec, detail page status/polygon data poll
-  PROJECTION_LIST_DATA_POLL: 120_000, // 2min, my-projections list page running-projections status poll
+  PROJECTION_DETAIL_DATA_POLL: 30_000, // 30sec, detail page status/polygon data poll
+  PROJECTION_LIST_DATA_POLL: 30_000, // 30sec, my-projections list page full-list poll
   ADMIN_DASHBOARD_CLOCK_TICK: 1_000, // 1sec, admin dashboard Elapsed display tick
   ADMIN_DASHBOARD_DATA_POLL: 5_000, // 5sec, admin dashboard running-projections data poll
 })

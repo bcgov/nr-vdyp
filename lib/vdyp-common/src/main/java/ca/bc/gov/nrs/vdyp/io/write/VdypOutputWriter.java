@@ -302,8 +302,8 @@ public class VdypOutputWriter implements Closeable {
 				polygon.getForestInventoryZone(), //
 
 				polygon.getPercentAvailable().intValue(), //
-				polygon.getLayers().get(LayerType.PRIMARY).getInventoryTypeGroup().orElse(EMPTY_INT), //
-				polygon.getLayers().get(LayerType.PRIMARY).getEmpiricalRelationshipParameterIndex().orElse(EMPTY_INT), //
+				polygon.requirePrimaryLayer().getInventoryTypeGroup().orElse(EMPTY_INT), //
+				polygon.requirePrimaryLayer().getEmpiricalRelationshipParameterIndex().orElse(EMPTY_INT), //
 				polygon.getMode().orElse(PolygonMode.START).getCode()
 		);
 	}

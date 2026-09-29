@@ -455,8 +455,7 @@ const handlePrioritize = async (projectionGUID: string) => {
 const now = ref(Date.now())
 let clockTimer: ReturnType<typeof setInterval> | null = null
 
-// Poll running projections data (Threads/Progress/Polygons) so the dashboard stays in
-// sync with a single projection's detail progress bar, which polls every 5 seconds.
+// Poll running projections data (Threads/Progress/Polygons) so the dashboard stays current.
 let dataPollingTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(async () => {

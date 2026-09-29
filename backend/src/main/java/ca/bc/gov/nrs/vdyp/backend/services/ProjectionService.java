@@ -22,9 +22,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -454,8 +456,27 @@ public class ProjectionService {
 		UUID vdypUserGuid = UUID.fromString(vdypUserId);
 		List<ProjectionEntity> entities = repository.findByOwner(vdypUserGuid);
 		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
+		Set<UUID> fileSetsWithFiles = getFileSetsWithFiles(entities);
 
-		return entities.stream().map(e -> toRichModel(e, batchMappings)).toList();
+		return entities.stream().map(e -> {
+			var model = toRichModel(e, batchMappings);
+			// File presence is set only for this list, so the list can decide Run eligibility without extra calls
+			model.setFilePresence(
+					hasFile(e.getPolygonFileSet(), fileSetsWithFiles), hasFile(e.getLayerFileSet(), fileSetsWithFiles)
+			);
+			return model;
+		}).toList();
+	}
+
+	private Set<UUID> getFileSetsWithFiles(List<ProjectionEntity> entities) {
+		List<UUID> inputFileSetGUIDs = entities.stream()
+				.flatMap(e -> Stream.of(e.getPolygonFileSet(), e.getLayerFileSet())).filter(Objects::nonNull)
+				.map(ProjectionFileSetEntity::getProjectionFileSetGUID).toList();
+		return fileSetService.getFileSetGUIDsWithFiles(inputFileSetGUIDs);
+	}
+
+	private static boolean hasFile(ProjectionFileSetEntity fileSet, Set<UUID> fileSetsWithFiles) {
+		return fileSet != null && fileSetsWithFiles.contains(fileSet.getProjectionFileSetGUID());
 	}
 
 	public List<ProjectionModel> getAllRunningProjections() {

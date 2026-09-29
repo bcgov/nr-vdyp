@@ -117,7 +117,7 @@ class BankTest {
 	@Test
 	void testConstruction() throws ProcessingException, IOException {
 
-		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		VdypLayer pLayer = polygon.requirePrimaryLayer();
 		assertThat(pLayer, notNullValue());
 
 		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -174,7 +174,7 @@ class BankTest {
 	@Test
 	void testSetCopy() throws ProcessingException {
 
-		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		VdypLayer pLayer = polygon.requirePrimaryLayer();
 		assertThat(pLayer, notNullValue());
 
 		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -217,7 +217,7 @@ class BankTest {
 				});
 			});
 
-			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			VdypLayer pLayer = polygon.requirePrimaryLayer();
 			assertThat(pLayer, notNullValue());
 
 			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -250,7 +250,7 @@ class BankTest {
 				});
 			});
 
-			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			VdypLayer pLayer = polygon.requirePrimaryLayer();
 			assertThat(pLayer, notNullValue());
 
 			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -281,7 +281,7 @@ class BankTest {
 				});
 			});
 
-			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			VdypLayer pLayer = polygon.requirePrimaryLayer();
 			assertThat(pLayer, notNullValue());
 
 			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -313,7 +313,7 @@ class BankTest {
 				});
 			});
 
-			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			VdypLayer pLayer = polygon.requirePrimaryLayer();
 			assertThat(pLayer, notNullValue());
 
 			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -344,7 +344,7 @@ class BankTest {
 				});
 			});
 
-			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			VdypLayer pLayer = polygon.requirePrimaryLayer();
 			assertThat(pLayer, notNullValue());
 
 			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -370,7 +370,7 @@ class BankTest {
 				});
 			});
 
-			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			VdypLayer pLayer = polygon.requirePrimaryLayer();
 			assertThat(pLayer, notNullValue());
 
 			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -382,7 +382,7 @@ class BankTest {
 	@Test
 	void testRemoveSmallLayers() throws ProcessingException {
 
-		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		VdypLayer pLayer = polygon.requirePrimaryLayer();
 		assertThat(pLayer, notNullValue());
 
 		Bank bank1 = new Bank(
@@ -407,7 +407,7 @@ class BankTest {
 	@Test
 	void testCopyConstructor() throws ProcessingException {
 
-		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		VdypLayer pLayer = polygon.requirePrimaryLayer();
 		assertThat(pLayer, notNullValue());
 
 		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -421,7 +421,7 @@ class BankTest {
 	@Test
 	void testLayerUpdate() throws ProcessingException {
 
-		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		VdypLayer pLayer = polygon.requirePrimaryLayer();
 		assertThat(pLayer, notNullValue());
 
 		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
@@ -443,7 +443,7 @@ class BankTest {
 	@Test
 	void testBuildLayerFromBank() throws IOException, ResourceParseException, ProcessingException {
 
-		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		VdypLayer pLayer = polygon.requirePrimaryLayer();
 		assertThat(pLayer, notNullValue());
 
 		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);

@@ -456,7 +456,7 @@ class FipStartTest {
 			ApplicationTestUtils.setControlMap(app, controlMap);
 
 			app.checkPolygon(polygon);
-			var speciesList = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+			var speciesList = polygon.requirePrimaryLayer().getSpecies().values();
 			assertThat(
 					speciesList, containsInAnyOrder(
 							// Testing exact floating point equality is intentional
@@ -510,7 +510,7 @@ class FipStartTest {
 			ApplicationTestUtils.setControlMap(app, controlMap);
 
 			app.checkPolygon(polygon);
-			var speciesList = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+			var speciesList = polygon.requirePrimaryLayer().getSpecies().values();
 			assertThat(
 					speciesList, containsInAnyOrder(
 							//

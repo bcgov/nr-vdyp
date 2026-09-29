@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jboss.resteasy.reactive.multipart.FileUpload;
@@ -304,6 +305,47 @@ class ProjectionServiceTest {
 		assertThat(result.getReportDescription()).isEqualTo("Test Description");
 
 		verify(repository).findByOwner(doesNotExist);
+	}
+
+	@Test
+	void getAllProjectionsForUser_setsFilePresence_fromSingleFileSetLookup() {
+		UUID ownerId = UUID.randomUUID();
+		UUID polygonWithFileId = UUID.randomUUID();
+		UUID layerWithFileId = UUID.randomUUID();
+		UUID emptyPolygonId = UUID.randomUUID();
+		UUID emptyLayerId = UUID.randomUUID();
+
+		ProjectionEntity withFiles = new ProjectionEntity();
+		withFiles.setProjectionGUID(UUID.randomUUID());
+		withFiles.setPolygonFileSet(fileSetEntity(polygonWithFileId));
+		withFiles.setLayerFileSet(fileSetEntity(layerWithFileId));
+
+		ProjectionEntity withoutFiles = new ProjectionEntity();
+		withoutFiles.setProjectionGUID(UUID.randomUUID());
+		withoutFiles.setPolygonFileSet(fileSetEntity(emptyPolygonId));
+		withoutFiles.setLayerFileSet(fileSetEntity(emptyLayerId));
+
+		ProjectionEntity noFileSets = new ProjectionEntity();
+		noFileSets.setProjectionGUID(UUID.randomUUID());
+
+		when(repository.findByOwner(ownerId)).thenReturn(List.of(withFiles, withoutFiles, noFileSets));
+		when(fileSetService.getFileSetGUIDsWithFiles(any())).thenReturn(Set.of(polygonWithFileId, layerWithFileId));
+
+		List<ProjectionModel> results = service.getAllProjectionsForUser(ownerId.toString());
+
+		assertThat(results).hasSize(3);
+		assertThat(results.get(0).getHasPolygonFile()).isTrue();
+		assertThat(results.get(0).getHasLayerFile()).isTrue();
+		assertThat(results.get(1).getHasPolygonFile()).isFalse();
+		assertThat(results.get(1).getHasLayerFile()).isFalse();
+		assertThat(results.get(2).getHasPolygonFile()).isFalse();
+		assertThat(results.get(2).getHasLayerFile()).isFalse();
+		verify(fileSetService, times(1)).getFileSetGUIDsWithFiles(
+				argThat(
+						guids -> guids.size() == 4 && guids
+								.containsAll(List.of(polygonWithFileId, layerWithFileId, emptyPolygonId, emptyLayerId))
+				)
+		);
 	}
 
 	@Test

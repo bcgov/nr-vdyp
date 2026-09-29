@@ -332,7 +332,12 @@ export const STORAGE_CLEANUP_DIALOG = Object.freeze({
     failed > 0
       ? `Deleted ${deleted} item(s), freeing ${freed}. ${failed} item(s) failed to delete.`
       : `Deleted ${deleted} item(s), freeing ${freed}.`,
-  RESULT_NOTE: 'System Storage may still show "Out of Spec" if in-use projections hold files.',
+  RESULT_NOTE:
+    'System Storage may still show "Orphaned Storage Exists" if in-use projections hold files.',
+})
+
+export const SYSTEM_STORAGE = Object.freeze({
+  ORPHANED_STORAGE_EXISTS: 'Orphaned Storage Exists',
 })
 
 export const VALIDATION_WARN = Object.freeze({

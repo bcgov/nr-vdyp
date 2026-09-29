@@ -1,9 +1,11 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -242,6 +244,10 @@ public class ProjectionFileSetService {
 
 		// Ask file mapping service for the file
 		return fileMappingService.getFilesForFileSet(fileSetGUID, download);
+	}
+
+	public Set<UUID> getFileSetGUIDsWithFiles(Collection<UUID> fileSetGUIDs) {
+		return fileMappingService.getFileSetGUIDsWithFiles(fileSetGUIDs);
 	}
 
 	@Transactional(Transactional.TxType.NOT_SUPPORTED)

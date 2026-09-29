@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.easymock.EasyMock;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -134,7 +135,7 @@ class VdypPolygonTest {
 		assertThat(result, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
 		assertThat(result, hasProperty("percentAvailable", is(90f)));
 		assertThat(result, hasProperty("layers", hasEntry(is(LayerType.PRIMARY), anything())));
-		var resultLayer = result.getLayers().get(LayerType.PRIMARY);
+		var resultLayer = result.requirePrimaryLayer();
 
 		assertThat(resultLayer, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
 		assertThat(resultLayer, hasProperty("layerType", is(LayerType.PRIMARY)));
@@ -195,10 +196,76 @@ class VdypPolygonTest {
 		assertThat(result, hasProperty("forestInventoryZone", is("Z")));
 		assertThat(result, hasProperty("biogeoclimaticZone", hasProperty("alias", is("IDF"))));
 		assertThat(result, hasProperty("layers", hasEntry(is(LayerType.PRIMARY), anything())));
-		var resultLayer = result.getLayers().get(LayerType.PRIMARY);
+		var resultLayer = result.requirePrimaryLayer();
 
 		assertThat(resultLayer, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
 		assertThat(resultLayer, hasProperty("layerType", is(LayerType.PRIMARY)));
+	}
+
+	@Nested
+	class LayerAccessor {
+
+		Map<String, Object> rawControlMap = TestUtils.loadControlMap();
+
+		@Test
+		void getPrimary() {
+			var poly = VdypPolygon.build(builder -> {
+				builder.polygonIdentifier("Test", 2024);
+				builder.percentAvailable(90f);
+
+				builder.forestInventoryZone("Z");
+				builder.biogeoclimaticZone(Utils.getBec("IDF", rawControlMap));
+
+				builder.addLayer(layerBuilder -> {
+					layerBuilder.layerType(LayerType.PRIMARY);
+				});
+			});
+
+			assertThat(
+					poly, hasProperty("primaryLayer", present(sameInstance(poly.getLayers().get(LayerType.PRIMARY))))
+			);
+			assertThat(poly.requirePrimaryLayer(), sameInstance(poly.getLayers().get(LayerType.PRIMARY)));
+		}
+
+		@Test
+		void getPrimaryWithVeteran() {
+			var poly = VdypPolygon.build(builder -> {
+				builder.polygonIdentifier("Test", 2024);
+				builder.percentAvailable(90f);
+
+				builder.forestInventoryZone("Z");
+				builder.biogeoclimaticZone(Utils.getBec("IDF", rawControlMap));
+
+				builder.addLayer(layerBuilder -> {
+					layerBuilder.layerType(LayerType.PRIMARY);
+				});
+				builder.addLayer(layerBuilder -> {
+					layerBuilder.layerType(LayerType.VETERAN);
+				});
+			});
+
+			assertThat(
+					poly, hasProperty("primaryLayer", present(sameInstance(poly.getLayers().get(LayerType.PRIMARY))))
+			);
+			assertThat(poly.requirePrimaryLayer(), sameInstance(poly.getLayers().get(LayerType.PRIMARY)));
+		}
+
+		@Test
+		void getPrimaryMissing() {
+			var poly = VdypPolygon.build(builder -> {
+				builder.polygonIdentifier("Test", 2024);
+				builder.percentAvailable(90f);
+
+				builder.forestInventoryZone("Z");
+				builder.biogeoclimaticZone(Utils.getBec("IDF", rawControlMap));
+
+			});
+
+			assertThat(poly, hasProperty("primaryLayer", notPresent()));
+			var ex = assertThrows(IllegalStateException.class, () -> poly.requirePrimaryLayer());
+			assertThat(ex, hasMessage(containsString(poly.getPolygonIdentifier().toString())));
+			assertThat(ex, hasMessage(containsString("primary layer")));
+		}
 	}
 
 	@Test

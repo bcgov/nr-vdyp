@@ -29,6 +29,9 @@ public class ProjectionModel {
 	private String reportDescription;
 	private String adminCancelReason;
 	private ProjectionBatchMappingModel batchMapping;
+	// Only populated in the current user's projection list; null in all other responses
+	private Boolean hasPolygonFile;
+	private Boolean hasLayerFile;
 
 	public String getProjectionGUID() {
 		return projectionGUID;
@@ -172,6 +175,19 @@ public class ProjectionModel {
 
 	public ProjectionBatchMappingModel getBatchMapping() {
 		return batchMapping;
+	}
+
+	public Boolean getHasPolygonFile() {
+		return hasPolygonFile;
+	}
+
+	public Boolean getHasLayerFile() {
+		return hasLayerFile;
+	}
+
+	public void setFilePresence(boolean hasPolygonFile, boolean hasLayerFile) {
+		this.hasPolygonFile = hasPolygonFile;
+		this.hasLayerFile = hasLayerFile;
 	}
 
 }

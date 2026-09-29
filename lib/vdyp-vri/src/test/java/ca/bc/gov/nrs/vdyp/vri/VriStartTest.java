@@ -1828,7 +1828,7 @@ class VriStartTest {
 			assertThat(
 					result, hasProperty("layers", allOf(aMapWithSize(1), hasEntry(is(LayerType.PRIMARY), anything())))
 			);
-			var resultPrimaryLayer = result.getLayers().get(LayerType.PRIMARY);
+			var resultPrimaryLayer = result.requirePrimaryLayer();
 
 			assertThat(resultPrimaryLayer, forPrimeLayer);
 
@@ -2017,7 +2017,7 @@ class VriStartTest {
 			assertThat(
 					result, hasProperty("layers", allOf(aMapWithSize(1), hasEntry(is(LayerType.PRIMARY), anything())))
 			);
-			var resultPrimaryLayer = result.getLayers().get(LayerType.PRIMARY);
+			var resultPrimaryLayer = result.requirePrimaryLayer();
 
 			assertThat(resultPrimaryLayer, forPrimeLayer);
 
@@ -2204,7 +2204,7 @@ class VriStartTest {
 			assertThat(
 					result, hasProperty("layers", allOf(aMapWithSize(1), hasEntry(is(LayerType.PRIMARY), anything())))
 			);
-			var resultPrimaryLayer = result.getLayers().get(LayerType.PRIMARY);
+			var resultPrimaryLayer = result.requirePrimaryLayer();
 
 			assertThat(resultPrimaryLayer, forPrimeLayer);
 
@@ -2343,7 +2343,7 @@ class VriStartTest {
 				});
 				pb.yieldFactor(1.0f);
 			});
-			final var layer = poly.getLayers().get(LayerType.PRIMARY);
+			final var layer = poly.requirePrimaryLayer();
 			final var curve = SiteIndexEquation.SI_PLI_THROWER;
 
 			final float primaryBreastHeightAge0 = 38.0f;

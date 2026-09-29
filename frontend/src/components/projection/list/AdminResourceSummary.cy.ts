@@ -106,4 +106,25 @@ describe('AdminResourceSummary.vue', () => {
 
     cy.get('.summary-pill--storage-alert').should('not.exist')
   })
+
+  it('suffixes the storage tooltip with "- Orphaned Storage Exists" when out of spec', () => {
+    mountComponent({ storageOutOfSpec: true })
+
+    cy.get('.summary-pill--storage').trigger('mouseenter')
+    cy.get('.v-tooltip .v-overlay__content')
+      .should('contain', 'used')
+      .and('not.contain', 'Out of Spec')
+    cy.get('.v-tooltip .tooltip-separator').should('have.text', '-')
+    cy.get('.v-tooltip .tooltip-alert').should('have.text', 'Orphaned Storage Exists')
+  })
+
+  it('does not suffix the storage tooltip when within spec', () => {
+    mountComponent({ storageOutOfSpec: false })
+
+    cy.get('.summary-pill--storage').trigger('mouseenter')
+    cy.get('.v-tooltip .v-overlay__content')
+      .should('contain', 'used')
+      .and('not.contain', 'Orphaned Storage Exists')
+    cy.get('.v-tooltip .tooltip-separator').should('not.exist')
+  })
 })

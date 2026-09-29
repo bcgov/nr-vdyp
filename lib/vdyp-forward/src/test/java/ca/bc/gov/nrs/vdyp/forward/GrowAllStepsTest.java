@@ -123,7 +123,7 @@ class GrowAllStepsTest {
 
 			assertThat(a.getLayers().size(), is(b.getLayers().size()));
 
-			compareLayers(a.getLayers().get(LayerType.PRIMARY), b.getLayers().get(LayerType.PRIMARY));
+			compareLayers(a.requirePrimaryLayer(), b.requirePrimaryLayer());
 			// compareLayers(a.getLayers().get(LayerType.VETERAN), b.getLayers().get(LayerType.VETERAN));
 		} finally {
 			VdypMatchers.setEpsilon(originalEpsilon);

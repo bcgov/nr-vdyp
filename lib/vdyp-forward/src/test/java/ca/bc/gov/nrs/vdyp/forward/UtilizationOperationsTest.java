@@ -118,7 +118,7 @@ class UtilizationOperationsTest {
 			}));
 		});
 
-		var layer = polygon.getLayers().get(LayerType.PRIMARY);
+		var layer = polygon.requirePrimaryLayer();
 
 		VdypLayer originalLayer = VdypLayer.build(lb -> lb.copy(layer));
 

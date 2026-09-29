@@ -365,7 +365,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 				pBuilder.addLayer(lBuilder -> {
 					try {
-						lBuilder.adapt(preProcessedPolygon.getLayers().get(LayerType.PRIMARY));
+						lBuilder.adapt(preProcessedPolygon.requirePrimaryLayer());
 						processPrimaryLayer(preProcessedPolygon, lBuilder);
 					} catch (ProcessingException e) {
 						throw new RuntimeProcessingException(e);
@@ -408,7 +408,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	 */
 	void postProcessPolygon(VriPolygon sourcePoly, Float inputTph, VdypPolygon resultPoly) throws ProcessingException {
 
-		var resultPrimaryLayer = resultPoly.getLayers().get(LayerType.PRIMARY);
+		var resultPrimaryLayer = resultPoly.requirePrimaryLayer();
 		var resultVeteranLayer = resultPoly.getLayers().get(LayerType.VETERAN);
 		var bec = sourcePoly.getBiogeoclimaticZone();
 
@@ -451,7 +451,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	void processPrimaryLayer(VriPolygon polygon, VdypLayer.Builder lBuilder) throws FatalProcessingException {
-		var primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		var primaryLayer = polygon.requirePrimaryLayer();
 		var bec = polygon.getBiogeoclimaticZone();
 
 		// BA_L1
@@ -765,7 +765,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	static final String CROWN_CLOSURE_PROPERTY_NAME = "Crown closure";
 
 	protected PolygonMode checkPolygonForMode(VriPolygon polygon, BecDefinition bec) throws StandProcessingException {
-		VriLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		VriLayer primaryLayer = polygon.requirePrimaryLayer();
 		Optional<VriSite> calculationSite = primaryLayer.getCalculationSite();
 		var ageTotal = calculationSite.flatMap(VriSite::getAgeTotal);
 		var height = calculationSite.flatMap(VriSite::getHeight);
@@ -939,7 +939,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		var bec = poly.getBiogeoclimaticZone();
 
-		var primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
+		var primaryLayer = poly.requirePrimaryLayer();
 		var calculationSite = primaryLayer.getCalculationSite().orElseThrow();
 		try {
 			SiteIndexEquation siteCurve = getSiteCurveNumber(bec, calculationSite);
@@ -1148,7 +1148,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, StandProcessingException {
 
-		final VriLayer primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
+		final VriLayer primaryLayer = poly.requirePrimaryLayer();
 		final VriSite primarySite = primaryLayer.getPrimarySite().orElseThrow(
 				() -> new FatalProcessingException("Primary layer, " + primaryLayer + ", does not have a primary site")
 		);

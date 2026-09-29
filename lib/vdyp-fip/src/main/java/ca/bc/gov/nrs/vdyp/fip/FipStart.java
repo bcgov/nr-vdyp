@@ -223,9 +223,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			);
 		}
 		// FIPSTK
-		adjustForStocking(
-				resultPoly.getLayers().get(LayerType.PRIMARY), fipPrimeLayer, polygon.getBiogeoclimaticZone()
-		);
+		adjustForStocking(resultPoly.requirePrimaryLayer(), fipPrimeLayer, polygon.getBiogeoclimaticZone());
 		return Optional.of(resultPoly);
 	}
 
@@ -257,7 +255,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	VdypPolygon createVdypPolygon(FipPolygon fipPolygon, Map<LayerType, VdypLayer> processedLayers)
 			throws ProcessingException {
 		Optional<FipLayer> fipVetLayer = Utils.optSafe(fipPolygon.getLayers().get(LayerType.VETERAN));
-		FipLayerPrimary fipPrimaryLayer = (FipLayerPrimary) fipPolygon.getLayers().get(LayerType.PRIMARY);
+		FipLayerPrimary fipPrimaryLayer = (FipLayerPrimary) fipPolygon.requirePrimaryLayer();
 
 		float percentAvailable = estimatePercentForestLand(fipPolygon, fipVetLayer, fipPrimaryLayer);
 

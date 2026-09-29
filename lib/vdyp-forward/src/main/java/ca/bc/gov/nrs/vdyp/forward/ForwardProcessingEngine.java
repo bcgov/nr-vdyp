@@ -518,7 +518,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 
 		// (11) calculate All and the large component volumes to reflect the changes in growth
 
-		VdypLayer primaryLayer = getState().updatePolygon().getLayers().get(LayerType.PRIMARY);
+		VdypLayer primaryLayer = getState().updatePolygon().requirePrimaryLayer();
 
 		VolumeComputeMode volumeComputationMode = VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC;
 		int controlVariable3Value = getState().controlMap.getControlVariables()
@@ -2650,7 +2650,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 
 	private List<VdypSpecies> buildCoverageSpecies(LayerProcessingState<ForwardLayerProcessingState> lps) {
 		Bank bank = lps.getBank();
-		VdypLayer layer = getState().getCurrentPolygon().getLayers().get(LayerType.PRIMARY);
+		VdypLayer layer = getState().getCurrentPolygon().requirePrimaryLayer();
 
 		return Arrays.stream(lps.getIndices()).mapToObj(i -> {
 			var source = layer.getSpecies().get(bank.speciesNames[i]);
