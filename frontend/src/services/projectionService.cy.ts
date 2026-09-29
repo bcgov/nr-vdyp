@@ -183,6 +183,47 @@ describe('projectionService Unit Tests', () => {
       })
     })
 
+    describe('isRunnable (Draft File Upload)', () => {
+      const buildFileUploadModel = (hasPolygonFile: boolean | null, hasLayerFile: boolean | null) =>
+        ({
+          projectionGUID: 'guid-file-upload',
+          reportTitle: 'File Upload Title',
+          projectionStatusCode: { code: 'DRAFT', description: '', displayOrder: 0 },
+          projectionParameters: JSON.stringify({
+            selectedExecutionOptions: ['doIncludeProjectedMOFVolumes'],
+            utils: [{ s: 'AC', u: 'Excl' }],
+          }),
+          hasPolygonFile,
+          hasLayerFile,
+        }) as unknown as ProjectionModel
+
+      it('is true when both files are uploaded, without querying file sets', () => {
+        cy.stub(apiClient, 'getUserProjections').resolves({ data: [buildFileUploadModel(true, true)] })
+        const getFileSetFilesStub = cy.stub(apiClient, 'getFileSetFiles')
+
+        cy.wrap(fetchUserProjections()).then((result: any) => {
+          expect(result[0].isRunnable).to.equal(true)
+          expect(getFileSetFilesStub).not.to.have.been.called
+        })
+      })
+
+      it('is false when a file is missing', () => {
+        cy.stub(apiClient, 'getUserProjections').resolves({ data: [buildFileUploadModel(true, false)] })
+
+        cy.wrap(fetchUserProjections()).then((result: any) => {
+          expect(result[0].isRunnable).to.equal(false)
+        })
+      })
+
+      it('is false when the file presence flags are not populated', () => {
+        cy.stub(apiClient, 'getUserProjections').resolves({ data: [buildFileUploadModel(null, null)] })
+
+        cy.wrap(fetchUserProjections()).then((result: any) => {
+          expect(result[0].isRunnable).to.equal(false)
+        })
+      })
+    })
+
     it('should throw error when API fails', () => {
       const mockError = new Error('Fetch failed')
       cy.stub(apiClient, 'getUserProjections').rejects(mockError)

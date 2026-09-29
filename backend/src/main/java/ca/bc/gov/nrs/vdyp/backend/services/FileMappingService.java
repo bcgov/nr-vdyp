@@ -9,7 +9,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -152,6 +154,10 @@ public class FileMappingService {
 	public List<FileMappingModel> getFilesForFileSet(UUID fileSetGUID, boolean isDownload) {
 		List<FileMappingEntity> entities = repository.listForFileSet(fileSetGUID);
 		return entities.stream().map(e -> getFileDetails(e, isDownload)).toList();
+	}
+
+	public Set<UUID> getFileSetGUIDsWithFiles(Collection<UUID> fileSetGUIDs) {
+		return repository.findFileSetGUIDsWithFiles(fileSetGUIDs);
 	}
 
 	private FileMappingModel getFileDetails(FileMappingEntity entity, boolean isDownload) {

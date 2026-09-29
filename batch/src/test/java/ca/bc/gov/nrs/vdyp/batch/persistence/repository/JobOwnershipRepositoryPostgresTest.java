@@ -104,7 +104,7 @@ class JobOwnershipRepositoryPostgresTest {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobClaim first = repository.acquire(projectionGuid, "owner-a", UUID.randomUUID(), Duration.ofMillis(100))
 				.orElseThrow();
-		await().atMost(250, TimeUnit.MILLISECONDS).until(() -> true);
+		await().atMost(2, TimeUnit.SECONDS).until(() -> !repository.isCurrent(first));
 
 		JobClaim second = repository.acquire(projectionGuid, "owner-b", UUID.randomUUID(), Duration.ofMinutes(1))
 				.orElseThrow();
@@ -135,7 +135,7 @@ class JobOwnershipRepositoryPostgresTest {
 		String projectionGuid = UUID.randomUUID().toString();
 		JobClaim first = repository.acquire(projectionGuid, "owner-a", UUID.randomUUID(), Duration.ofMillis(100))
 				.orElseThrow();
-		await().atMost(250, TimeUnit.MILLISECONDS).until(() -> true);
+		await().atMost(2, TimeUnit.SECONDS).until(() -> !repository.isCurrent(first));
 		JobClaim second = repository.acquire(projectionGuid, "owner-b", UUID.randomUUID(), Duration.ofMinutes(1))
 				.orElseThrow();
 
