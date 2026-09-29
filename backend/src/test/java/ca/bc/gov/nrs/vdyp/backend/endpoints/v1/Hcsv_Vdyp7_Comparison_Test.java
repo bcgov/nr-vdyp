@@ -653,7 +653,6 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
-	@Disabled
 	void test1083() throws IOException, ResourceParseException, URISyntaxException, CsvException {
 		logger.info("Starting vdyp-1083");
 		Pattern ignorePattern = Pattern.compile("");
