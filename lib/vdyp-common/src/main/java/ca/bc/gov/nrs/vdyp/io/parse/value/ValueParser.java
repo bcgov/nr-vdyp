@@ -417,7 +417,7 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	);
 
 	public static final ValueParser<Float> ALLOW_NEG_FLOAT_WITH_DEFAULT = rangeSilentWithDefaulting(
-			FLOAT, -8.9f, true, Float.MAX_VALUE, true, -9.0f, VdypEntity.MISSING_FLOAT_VALUE, NON_NEGATIVE_FLOAT_MSG
+			FLOAT, -50f, true, Float.MAX_VALUE, true, -9.0f, VdypEntity.MISSING_FLOAT_VALUE, NON_NEGATIVE_FLOAT_MSG
 	);
 
 	/**
