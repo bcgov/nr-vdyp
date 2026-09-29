@@ -12,6 +12,7 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
+    "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts",
     "format": "prettier --write src/",
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build",
@@ -19,7 +20,7 @@
     "test:comp-open": "npx cypress open --component --browser chrome",
     "test:e2e-open": "npx cypress open --e2e --browser chrome",
     "test:comp": "npm run optimize && npx cypress run --component --spec \"src/components/**/*.cy.ts\"",
-    "test:unit": "npm run optimize && npx cypress run --component --spec \"src/services/**/*.cy.ts\",\"src/stores/**/*.cy.ts\",\"src/validation/*.cy.ts\",\"src/utils/*.cy.ts\""
+    "test:unit": "npm run optimize && npx cypress run --component --spec \"src/services/**/*.cy.ts\",\"src/stores/**/*.cy.ts\",\"src/composables/**/*.cy.ts\",\"src/validation/*.cy.ts\",\"src/utils/*.cy.ts\""
   },
   "keywords": [],
   "author": "Vivid Solutions Inc.",
@@ -58,7 +59,7 @@
     "@types/file-saver": "2.0.5",
     "@types/lodash": "4.17.19",
     "@types/node": "24.0.7",
-    "cypress": "16.0.0",
+    "cypress": "15.21.1",
     "eslint": "9.30.0",
     "eslint-config-prettier": "10.1.5",
     "eslint-plugin-cypress": "5.1.0",
