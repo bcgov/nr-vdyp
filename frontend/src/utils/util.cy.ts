@@ -171,7 +171,8 @@ describe('Util Functions Unit Tests', () => {
       cy.stub(document, 'createElement').as('createElement').callsFake((tagName: string) => {
         const element = originalCreateElement(tagName)
         if (tagName === 'a') {
-          cy.spy(element as HTMLAnchorElement, 'click').as('click')
+          // Stub instead of spy so the browser does not actually download the file
+          cy.stub(element as HTMLAnchorElement, 'click').as('click')
           cy.spy(element as HTMLAnchorElement, 'remove').as('remove')
         }
         return element

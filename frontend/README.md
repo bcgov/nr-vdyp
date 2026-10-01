@@ -37,6 +37,12 @@ Lint and Fix Files:
 npm run lint
 ```
 
+Lint Without Fixing (used by CI):
+
+```bash
+npm run lint:check
+```
+
 ### 3. Building the Project
 
 Prepare the project for production or preview.
@@ -93,7 +99,14 @@ Open E2E Tests (Interactive Mode):
 npm run test:e2e-open
 ```
 
-### 5. Storybook
+### 5. Continuous Integration
+
+Pull requests that change files under `frontend/` run the Frontend CI workflow
+(`.github/workflows/frontend-ci.yml`). It runs `npm run lint:check`,
+`npm run type-check`, `npm run test:unit` and `npm run test:comp`, and shows the
+result on the PR. Run the same commands locally before opening a PR.
+
+### 6. Storybook
 
 Develop and document UI components using Storybook.
 
