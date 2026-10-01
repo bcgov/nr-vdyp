@@ -287,6 +287,7 @@ export const ADMIN_CANCEL_REASON = Object.freeze({
 export const USER_TYPE_CODE = Object.freeze({
   IDIR: 'IDIR',
   BCEID: 'BCEID',
+  BCSC: 'BCSC',
 })
 
 export const USER_ROLE = Object.freeze({
