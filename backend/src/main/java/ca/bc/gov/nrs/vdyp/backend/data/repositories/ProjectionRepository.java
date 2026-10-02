@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.repositories;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,7 +42,7 @@ public class ProjectionRepository implements PanacheRepositoryBase<ProjectionEnt
 	}
 
 	public List<UUID> findExpiredIDs(int limit, int daysUntilExpiry) {
-		OffsetDateTime expiryTime = OffsetDateTime.now().minusDays(daysUntilExpiry);
+		OffsetDateTime expiryTime = OffsetDateTime.now(ZoneOffset.UTC).minusDays(daysUntilExpiry);
 		return find("updateDate < ?1 order by updateDate", expiryTime) //
 				.page(0, limit)//
 				.stream().map(ProjectionEntity::getProjectionGUID).toList();

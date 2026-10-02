@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.batch.persistence.repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,14 +28,14 @@ public class JobOwnershipRepository {
 				INSERT INTO batch_job_claim (
 				    projection_guid, owner_id, lease_token_guid, acquired_time, lease_expiry_time
 				)
-				VALUES (?::uuid, ?, ?::uuid, clock_timestamp(), clock_timestamp() + (? * interval '1 millisecond'))
+				VALUES (?::uuid, ?, ?::uuid, (clock_timestamp() AT TIME ZONE 'UTC'), (clock_timestamp() AT TIME ZONE 'UTC') + (? * interval '1 millisecond'))
 				ON CONFLICT (projection_guid) DO UPDATE
 				SET owner_id = EXCLUDED.owner_id,
 				    lease_token_guid = EXCLUDED.lease_token_guid,
-				    acquired_time = clock_timestamp(),
-				    lease_expiry_time = clock_timestamp() + (? * interval '1 millisecond'),
+				    acquired_time = (clock_timestamp() AT TIME ZONE 'UTC'),
+				    lease_expiry_time = (clock_timestamp() AT TIME ZONE 'UTC') + (? * interval '1 millisecond'),
 				    version = batch_job_claim.version + 1
-				WHERE batch_job_claim.lease_expiry_time <= clock_timestamp()
+				WHERE batch_job_claim.lease_expiry_time <= (clock_timestamp() AT TIME ZONE 'UTC')
 				    OR (batch_job_claim.owner_id = ? AND batch_job_claim.lease_token_guid = ?::uuid)
 				RETURNING projection_guid::text AS projection_guid, owner_id, lease_token_guid, acquired_time, lease_expiry_time
 				""";
@@ -47,7 +49,7 @@ public class JobOwnershipRepository {
 	public boolean renew(JobClaim claim, Duration leaseDuration) {
 		String sql = """
 				UPDATE batch_job_claim
-				SET lease_expiry_time = clock_timestamp() + (? * interval '1 millisecond'),
+				SET lease_expiry_time = (clock_timestamp() AT TIME ZONE 'UTC') + (? * interval '1 millisecond'),
 					version = version + 1
 				WHERE projection_guid = ?::uuid
 					AND owner_id = ?
@@ -75,7 +77,7 @@ public class JobOwnershipRepository {
 				WHERE projection_guid = ?::uuid
 					AND owner_id = ?
 					AND lease_token_guid = ?::uuid
-					AND lease_expiry_time > clock_timestamp()
+					AND lease_expiry_time > (clock_timestamp() AT TIME ZONE 'UTC')
 				""";
 		Integer count = jdbcTemplate
 				.queryForObject(sql, Integer.class, claim.projectionGuid(), claim.ownerId(), claim.leaseToken());
@@ -96,7 +98,7 @@ public class JobOwnershipRepository {
 		String sql = """
 				SELECT count(*)
 				FROM batch_job_claim
-				WHERE lease_expiry_time > clock_timestamp()
+				WHERE lease_expiry_time > (clock_timestamp() AT TIME ZONE 'UTC')
 				""";
 		Long count = jdbcTemplate.queryForObject(sql, Long.class);
 		return count == null ? 0 : count;
@@ -105,8 +107,9 @@ public class JobOwnershipRepository {
 	private JobClaim mapClaim(ResultSet rs, int rowNum) throws SQLException {
 		return new JobClaim(
 				rs.getString("projection_guid"), rs.getString("owner_id"),
-				UUID.fromString(rs.getString("lease_token_guid")), rs.getTimestamp("acquired_time").toInstant(),
-				rs.getTimestamp("lease_expiry_time").toInstant()
+				UUID.fromString(rs.getString("lease_token_guid")),
+				rs.getObject("acquired_time", LocalDateTime.class).toInstant(ZoneOffset.UTC),
+				rs.getObject("lease_expiry_time", LocalDateTime.class).toInstant(ZoneOffset.UTC)
 		);
 	}
 }

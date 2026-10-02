@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
@@ -334,7 +335,9 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 
 	@Override
 	public void writeTrailer() throws YieldTableGenerationException {
-		doWrite("Run completed: %s\n", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+		doWrite(
+				"Run completed: %s\n", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+		);
 	}
 
 	private void doWrite(String message, Object... args) throws YieldTableGenerationException {

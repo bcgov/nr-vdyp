@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.data.entities;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
@@ -81,16 +82,16 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 
 	@PrePersist
 	public void beforeInsert() {
-		setCreateDate(OffsetDateTime.now());
+		setCreateDate(OffsetDateTime.now(ZoneOffset.UTC));
 		setCreateUser(currentUser());
-		setUpdateDate(OffsetDateTime.now());
+		setUpdateDate(OffsetDateTime.now(ZoneOffset.UTC));
 		setUpdateUser(currentUser());
 		incrementRevisionCount();
 	}
 
 	@PreUpdate
 	public void beforeUpdate() {
-		setUpdateDate(OffsetDateTime.now());
+		setUpdateDate(OffsetDateTime.now(ZoneOffset.UTC));
 		setUpdateUser(currentUser());
 		incrementRevisionCount();
 	}

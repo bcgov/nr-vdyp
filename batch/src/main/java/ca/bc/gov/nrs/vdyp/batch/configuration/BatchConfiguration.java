@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -394,9 +394,9 @@ public class BatchConfiguration {
 			String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
 			String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 			LocalDateTime startTime = jobExecution.getStartTime();
-			ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
+			ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
 			Duration duration = Duration
-					.between(startTime == null ? now : startTime.atZone(ZoneId.systemDefault()), now);
+					.between(startTime == null ? now : startTime.atZone(ZoneOffset.UTC), now);
 
 			boolean cleanupEnabled = batchProperties.getPartition().getInterimDirsCleanupEnabled();
 

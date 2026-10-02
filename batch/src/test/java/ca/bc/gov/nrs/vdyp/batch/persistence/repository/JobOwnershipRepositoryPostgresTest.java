@@ -7,7 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -40,6 +43,9 @@ class JobOwnershipRepositoryPostgresTest {
 				POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword()
 		);
 		dataSource.setDriverClassName("org.postgresql.Driver");
+		Properties connectionProperties = new Properties();
+		connectionProperties.setProperty("options", "-c TimeZone=America/New_York");
+		dataSource.setConnectionProperties(connectionProperties);
 		jdbcTemplate = new JdbcTemplate(dataSource);
 		jdbcTemplate.execute("DROP TABLE IF EXISTS batch_job_claim");
 		jdbcTemplate.execute("""
@@ -47,12 +53,31 @@ class JobOwnershipRepositoryPostgresTest {
 					projection_guid UUID PRIMARY KEY,
 					owner_id VARCHAR(512) NOT NULL,
 					lease_token_guid UUID NOT NULL,
-					acquired_time TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-					lease_expiry_time TIMESTAMPTZ NOT NULL,
+					acquired_time TIMESTAMP NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'),
+					lease_expiry_time TIMESTAMP NOT NULL,
 					version BIGINT NOT NULL DEFAULT 0
 				)
 				""");
 		repository = new JobOwnershipRepository(jdbcTemplate);
+	}
+
+	@Test
+	void claimTimesAreUtcRegardlessOfDatabaseSessionZone() {
+		Instant before = databaseNow();
+		JobClaim claim = repository
+				.acquire(UUID.randomUUID().toString(), "owner-a", UUID.randomUUID(), Duration.ofMinutes(1))
+				.orElseThrow();
+		Instant after = databaseNow();
+		assertFalse(claim.acquiredTime().isBefore(before));
+		assertFalse(claim.acquiredTime().isAfter(after));
+		assertTrue(claim.leaseExpiryTime().isAfter(after));
+		assertEquals(claim, repository.findByProjectionGuid(claim.projectionGuid()).orElseThrow());
+	}
+
+	private Instant databaseNow() {
+		return jdbcTemplate.queryForObject(
+				"SELECT clock_timestamp()", (rs, rowNum) -> rs.getObject(1, OffsetDateTime.class).toInstant()
+		);
 	}
 
 	@Test

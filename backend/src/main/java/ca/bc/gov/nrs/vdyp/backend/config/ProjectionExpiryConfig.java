@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.config;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -22,7 +23,7 @@ public class ProjectionExpiryConfig {
 	}
 
 	public OffsetDateTime expiryFrom(OffsetDateTime lastUpdatedDate) {
-		var base = lastUpdatedDate == null ? OffsetDateTime.now() : lastUpdatedDate;
+		var base = lastUpdatedDate == null ? OffsetDateTime.now(ZoneOffset.UTC) : lastUpdatedDate;
 		return base.plusDays(daysUntilExpiry);
 	}
 }

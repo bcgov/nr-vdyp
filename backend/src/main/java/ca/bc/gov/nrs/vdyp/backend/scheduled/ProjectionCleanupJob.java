@@ -12,7 +12,7 @@ public class ProjectionCleanupJob {
 		this.projectionService = projectionService;
 	}
 
-	@Scheduled(cron = "0 0 2 * * ?")
+	@Scheduled(cron = "0 0 9 * * ?", timeZone = "UTC")
 	void run() {
 		projectionService.cleanupExpiredProjections();
 	}

@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -516,9 +517,9 @@ public class BatchController {
 		response.put(BatchConstants.Job.STATUS, jobExecution.getStatus().toString());
 
 		if (jobExecution.getStartTime() != null) {
-			response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime());
+			response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime().atOffset(ZoneOffset.UTC));
 		} else {
-			response.put(BatchConstants.Job.START_TIME, java.time.LocalDateTime.now());
+			response.put(BatchConstants.Job.START_TIME, java.time.OffsetDateTime.now(ZoneOffset.UTC));
 		}
 
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());

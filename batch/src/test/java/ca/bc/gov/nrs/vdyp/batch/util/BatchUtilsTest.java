@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
@@ -73,7 +74,9 @@ class BatchUtilsTest {
 
 	@Test
 	void testCreateJobTimestamp() {
+		LocalDateTime before = LocalDateTime.now(ZoneOffset.UTC);
 		String timestamp = BatchUtils.createJobTimestamp();
+		LocalDateTime after = LocalDateTime.now(ZoneOffset.UTC);
 
 		assertNotNull(timestamp);
 		// Verify format: yyyy_MM_dd_HH_mm_ss_SSSS
@@ -82,6 +85,9 @@ class BatchUtilsTest {
 		// Verify it can be parsed back using the expected format
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 		assertDoesNotThrow(() -> LocalDateTime.parse(timestamp, formatter));
+		LocalDateTime parsed = LocalDateTime.parse(timestamp, formatter);
+		assertFalse(parsed.isBefore(before.truncatedTo(java.time.temporal.ChronoUnit.MILLIS)));
+		assertFalse(parsed.isAfter(after));
 	}
 
 	@Test
