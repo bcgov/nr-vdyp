@@ -187,6 +187,7 @@ services:
     env_file:
       - backend/.env.vdypBackend
     environment:
+      TZ: "UTC"
       VDYP_ACCESS_LOG_ENABLED: "${VDYP_ACCESS_LOG_ENABLED:-true}"
       VDYP_ACCESS_LOG_DIRECTORY: /work/logs
       VDYP_ACCESS_LOG_BASE_FILE_NAME: access-security
@@ -210,6 +211,8 @@ services:
       - "8081:8081"
     env_file:
       - batch/.env.vdypBatch
+    environment:
+      TZ: "UTC"
     deploy:
       resources:
         limits:
