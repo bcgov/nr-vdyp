@@ -145,6 +145,7 @@ const userTypeFilterOptions = [
   { title: USER_TYPE_FILTER_ALL, value: USER_TYPE_FILTER_ALL },
   { title: 'IDIR', value: USER_TYPE_CODE.IDIR },
   { title: 'BCeID', value: USER_TYPE_CODE.BCEID },
+  { title: 'BCSC', value: USER_TYPE_CODE.BCSC },
 ]
 const selectedUserType = ref<UserTypeCode | string | null>(USER_TYPE_FILTER_ALL)
 
