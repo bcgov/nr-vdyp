@@ -62,6 +62,14 @@ public enum PolygonMessageKind {
 			"Not all CFS Biomass Proportions could be calculated. Proportions: Stemwood: {0}, Bark: {1}, Branches: {2}, Foliage: {3}"
 	), //
 	CFS_BIO_PROP_DO_NOT_SUM_TO_ONE("CFS Biomass Proportions sum to {} not 1.0."), //
+	BA_TPH_SUBSTITUTION_DISABLED("Substitution of Supplied BA/TPH as Projected values has been disabled."), //
+	FORWARD_GROW_DISABLED(
+			"FORWARD GROW has been disabled. No projection will occur after the Reference Year for any polygon."
+	), //
+	BACK_GROW_DISABLED(
+			"BACK GROW has been disabled. No projection will occur prior to Reference Year for any polygon."
+	), //
+	LAYER_NON_FOREST_DESC("Unable to project layer due to Non-Forest Descriptor: \"{0}\""), //
 	;
 
 	public enum Category {

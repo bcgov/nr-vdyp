@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -86,7 +87,7 @@ class StubHcsvProjectionEndpointTest {
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
 		String entry3Content = new String(TestHelper.readZipEntry(zipFile, entry3));
-		assertTrue(entry3Content.isBlank());
+		assertFalse(entry3Content.isBlank());
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());

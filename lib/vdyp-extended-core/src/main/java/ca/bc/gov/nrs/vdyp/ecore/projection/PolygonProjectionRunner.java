@@ -144,6 +144,8 @@ public class PolygonProjectionRunner {
 
 		buildPolygonProjectionExecutionStructure();
 
+		recordProcessingMessages();
+
 		performInitialProcessing();
 
 		// VRI ADJUST is not supported at this time, so this code doesn't need to be written:
@@ -156,6 +158,35 @@ public class PolygonProjectionRunner {
 		performProjection();
 
 		generateYieldTablesForPolygon();
+	}
+
+	private void recordProcessingMessages() {
+		ValidatedParameters params = context.getParams();
+		if (!params.containsOption(ExecutionOption.FORWARD_GROW_ENABLED)) {
+			polygon.addMessage(
+					new PolygonMessage.Builder().polygon(polygon)
+							.details(
+									ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+									PolygonMessageKind.FORWARD_GROW_DISABLED
+							).build()
+			);
+		}
+		if (!params.containsOption(ExecutionOption.BACK_GROW_ENABLED)) {
+			polygon.addMessage(
+					new PolygonMessage.Builder().polygon(polygon).details(
+							ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION, PolygonMessageKind.BACK_GROW_DISABLED
+					).build()
+			);
+		}
+		if (!params.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION)) {
+			polygon.addMessage(
+					new PolygonMessage.Builder().polygon(polygon)
+							.details(
+									ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+									PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED
+							).build()
+			);
+		}
 	}
 
 	void buildPolygonProjectionExecutionStructure() throws PolygonExecutionException {
@@ -231,6 +262,11 @@ public class PolygonProjectionRunner {
 
 				var doRetryUsingVriStart = false;
 
+				// FIP requires species in the layers
+				if (polygon.getLayerByProjectionType(projectionType).getSp0sAsSupplied().isEmpty()) {
+					// completely skip
+					break;
+				}
 				createFipInputData(projectionType, initialProcessingMode, state);
 
 				componentRunner.runFipStart(polygon, projectionType, state);
@@ -256,7 +292,8 @@ public class PolygonProjectionRunner {
 
 						doRetryUsingVriStart |= handleFipError(polygon, spe, layer);
 
-						// If a layer fails in FIP in a way that causes it to fail over to VRI, subsequent layers should
+						// If a layer fails in FIP in a way that causes it to fail over to VRI, subsequent layers
+						// should
 						// go straight to VRI
 						// This is a bit odd but it's what VDYP 7 does. See VDYP-1052
 						initialGrowthModel = GrowthModelCode.VRI;
@@ -271,7 +308,6 @@ public class PolygonProjectionRunner {
 						);
 					}
 				}
-
 				if (doRetryUsingVriStart) {
 					logger.debug("{}: falling through to VRI Model", polygon);
 					state.modifyAllProjectionTypeGrowthModels(GrowthModelCode.VRI, ProcessingModeCode.VRI_VriYoung);
@@ -293,7 +329,6 @@ public class PolygonProjectionRunner {
 			}
 
 			case VRI: {
-
 				createVriInputData(projectionType, state);
 
 				componentRunner.runVriStart(polygon, projectionType, state);
@@ -499,6 +534,25 @@ public class PolygonProjectionRunner {
 								.details(
 										ReturnCode.ERROR_POLYGONNONPRODUCTIVE, MessageSeverityCode.ERROR,
 										PolygonMessageKind.LAYER_NOT_COMPLETELY_DEFINED
+								).build()
+				);
+			}
+		}
+
+		if (primaryLayer.getNonForestDescriptor() != null) {
+			if (!primaryLayer.getSp0sAsSupplied().isEmpty()) {
+				logger.debug(
+						"{}: stand labelled with Non-Productive Code {}, but also contains a stand description.",
+						polygon, polygon.getNonProductiveDescriptor()
+				);
+			} else {
+				polygon.disableProjectionsOfType(primaryLayer.getAssignedProjectionType());
+
+				polygon.addMessage(
+						new PolygonMessage.Builder().layer(primaryLayer)
+								.details(
+										ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+										PolygonMessageKind.LAYER_NON_FOREST_DESC, primaryLayer.getNonForestDescriptor()
 								).build()
 				);
 			}

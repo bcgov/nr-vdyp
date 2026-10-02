@@ -198,7 +198,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
 		String entry3Content = new String(TestHelper.readZipEntry(zipFile, entry2));
-		assertTrue(entry3Content.length() == 0);
+		assertTrue(entry3Content.length() > 0);
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
@@ -351,6 +351,55 @@ class Hcsv_Vdyp7_Comparison_Test {
 							)
 					)
 			);
+		}
+	}
+
+	@Test
+	void test900() throws IOException, ResourceParseException {
+
+		logger.info("Starting test900");
+
+		Map<String, List<String>> paramMap = new HashMap<>();
+		var parameters = new Parameters();
+		try (
+				InputStream paramStream = MainTest.class.getResourceAsStream("f-record-test-02-noback/input/parms.txt");
+				InputStreamReader reader = new InputStreamReader(paramStream);
+				BufferedReader bufReader = new BufferedReader(reader); var lines = bufReader.lines();
+		) {
+			ParamsReader.parseParameters(paramMap, lines);
+			ParamsReader.parseParameters(parameters, paramMap);
+			parameters.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING);
+		}
+
+		try (
+				InputStream polyStream = MainTest.class
+						.getResourceAsStream("f-record-test-02-noback/input/VDYP7_INPUT_POLY.csv");
+				InputStream layerStream = MainTest.class
+						.getResourceAsStream("f-record-test-02-noback/input/VDYP7_INPUT_LAYER.csv");
+		) {
+
+			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
+					.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
+					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
+					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
+					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
+					.post("/projection/hcsv?trialRun=false") // {
+					.then().statusCode(201) //
+					.and().contentType("application/octet-stream") //
+					.and().header("content-disposition", Matchers.startsWith("attachment;filename=\"vdyp-output-")) //
+					.extract().body().asInputStream();
+
+			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
+			ZipEntry entry1 = zipFile.getNextEntry();
+			assertEquals("YieldTable.csv", entry1.getName());
+			String vdyp8YieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry1));
+			assertTrue(vdyp8YieldTableContent.isEmpty());
+
+			// the error log contains the NCBR error
+			ZipEntry errorLogEntry = zipFile.getNextEntry();
+			String Zip2Contents = new String(TestHelper.readZipEntry(zipFile, errorLogEntry));
+			assertTrue(Zip2Contents.contains("NCBR"));
 		}
 	}
 

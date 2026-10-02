@@ -30,7 +30,7 @@ class Hcsv_OneDeadLayerTest extends BaseHcsv_44GrpATest {
 		var zipEntries = runTest("19007816");
 
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
-		Assert.assertTrue(errorEntryContent.length() == 0);
+		Assert.assertTrue(errorEntryContent.length() > 0);
 		var csvEntryContent = zipEntries.get("YieldTable.csv");
 		Assert.assertTrue(csvEntryContent.length() > 0);
 	}
