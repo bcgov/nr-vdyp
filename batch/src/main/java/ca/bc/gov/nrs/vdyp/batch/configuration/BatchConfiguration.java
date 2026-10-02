@@ -395,8 +395,7 @@ public class BatchConfiguration {
 			String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 			LocalDateTime startTime = jobExecution.getStartTime();
 			ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
-			Duration duration = Duration
-					.between(startTime == null ? now : startTime.atZone(ZoneOffset.UTC), now);
+			Duration duration = Duration.between(startTime == null ? now : startTime.atZone(ZoneOffset.UTC), now);
 
 			boolean cleanupEnabled = batchProperties.getPartition().getInterimDirsCleanupEnabled();
 
