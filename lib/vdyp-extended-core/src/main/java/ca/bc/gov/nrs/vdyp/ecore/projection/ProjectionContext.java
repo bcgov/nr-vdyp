@@ -13,6 +13,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -237,7 +238,7 @@ public class ProjectionContext {
 		if (validatedParams.containsOption(ExecutionOption.DO_DELAY_EXECUTION_FOLDER_DELETION)) {
 			logger.info(
 					"Scheduling deletion of execution folder {} for {}m", executionFolder,
-					LocalDateTime.now().plusMinutes(EXECUTION_FOLDER_RETENTION_TIME_m)
+					LocalDateTime.now(ZoneOffset.UTC).plusMinutes(EXECUTION_FOLDER_RETENTION_TIME_m)
 			);
 
 			executorService.submit(

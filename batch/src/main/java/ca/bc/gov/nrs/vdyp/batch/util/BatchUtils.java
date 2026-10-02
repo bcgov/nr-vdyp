@@ -9,6 +9,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashMap;
@@ -80,7 +81,7 @@ public final class BatchUtils {
 	}
 
 	public static String createJobTimestamp() {
-		return dateTimeFormatterForFilenames.format(LocalDateTime.now());
+		return dateTimeFormatterForFilenames.format(LocalDateTime.now(ZoneOffset.UTC));
 	}
 
 	public static String createJobGuid() {
@@ -120,7 +121,7 @@ public final class BatchUtils {
 		sb.append(jobExecutionId).append("-");
 		sb.append(partitionName).append("-");
 		sb.append("projection-").append(projectionKind).append("-");
-		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now()));
+		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now(ZoneOffset.UTC)));
 		return sb.toString();
 	}
 
