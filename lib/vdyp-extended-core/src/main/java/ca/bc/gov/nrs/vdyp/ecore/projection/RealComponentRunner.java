@@ -161,7 +161,9 @@ public class RealComponentRunner implements ComponentRunner {
 	@Override
 	public void runAdjust(Polygon polygon, ProjectionTypeCode projectionType, PolygonProjectionState state)
 			throws PolygonExecutionException {
-
+		if (!polygon.doAllowProjectionOfType(projectionType)) {
+			return;
+		}
 		// ADJUST is currently not being run; we just copy the input to output.
 
 		logger.info("{} {}: ADJUST is operating as a pass-through", polygon, projectionType);
@@ -204,6 +206,9 @@ public class RealComponentRunner implements ComponentRunner {
 	@Override
 	public void runForward(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
+		if (!polygon.doAllowProjectionOfType(projectionTypeCode)) {
+			return;
+		}
 
 		runApp(
 				polygon, projectionTypeCode, state, VdypApplicationIdentifier.VDYP_FORWARD, //
@@ -217,7 +222,9 @@ public class RealComponentRunner implements ComponentRunner {
 	@Override
 	public void runBack(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
-
+		if (!polygon.doAllowProjectionOfType(projectionTypeCode)) {
+			return;
+		}
 		try {
 			// TODO: BACK is not supported yet.
 

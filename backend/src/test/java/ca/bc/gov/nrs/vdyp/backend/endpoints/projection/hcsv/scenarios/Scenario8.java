@@ -79,7 +79,7 @@ class Scenario8 extends Scenario {
 
 		assertProgressLogNext(zipFile, s -> s.contains("starting projection (type HCSV)"));
 
-		assertErrorLogNext(zipFile, s -> s.length() == 0);
+		assertErrorLogNext(zipFile, s -> s.length() > 0);
 
 		assertDebugLogNext(zipFile, s -> s.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 

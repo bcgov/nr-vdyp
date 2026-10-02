@@ -360,11 +360,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-junit-mockito</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-core</artifactId>
 			<version>9.11.0</version>

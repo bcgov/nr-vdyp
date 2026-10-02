@@ -217,7 +217,12 @@ public class YieldTable implements Closeable {
 	) throws YieldTableGenerationException {
 		writer.recordPolygonProjectionState(state);
 
-		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_CULMINATION_VALUES)) {
+		// In the event a polygon/layer has no species it is impossible to actually create records but we still
+		// potentially want logging
+		boolean hasSpeciesToDisplay = (layerReportingInfo == null || !layerReportingInfo.getOrderedSpecies().isEmpty());
+
+		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_CULMINATION_VALUES)
+				&& hasSpeciesToDisplay) {
 			YieldTableRowIterator culminationIterator = new YieldTableRowIterator(
 					context, polygon, state, layerReportingInfo, 1
 			);
@@ -232,6 +237,7 @@ public class YieldTable implements Closeable {
 						);
 						writer.recordCulminationValues(rowContext.getCurrentTableAge(), volume);
 					} catch (Exception ex) {
+						logger.error("Error occurred while recording culmination values", ex);
 					}
 				}
 			}
@@ -241,15 +247,16 @@ public class YieldTable implements Closeable {
 				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, nextYieldTableNumber
 		);
 
-		YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, polygon, state, layerReportingInfo);
-		while (rowIterator.hasNext()) {
+		if (hasSpeciesToDisplay) {
+			YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, polygon, state, layerReportingInfo);
+			while (rowIterator.hasNext()) {
 
-			YieldTableRowContext rowContext = rowIterator.next();
-			if (rowIsToBeGenerated(rowContext)) {
-				generateYieldTableRow(rowContext, projectionResults, writer);
+				YieldTableRowContext rowContext = rowIterator.next();
+				if (rowIsToBeGenerated(rowContext)) {
+					generateYieldTableRow(rowContext, projectionResults, writer);
+				}
 			}
 		}
-
 		writer.writePolygonTableTrailer(nextYieldTableNumber);
 
 		nextYieldTableNumber += 1;
