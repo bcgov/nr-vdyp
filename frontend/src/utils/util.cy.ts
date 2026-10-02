@@ -7,6 +7,7 @@ import {
   isZeroValue,
   isEmptyOrZero,
   parseNumberOrNull,
+  getDateTimeParts,
   formatDateTimeDisplay,
   formatDateDisplay,
   getStatusIcon,
@@ -87,17 +88,83 @@ describe('Util Functions Unit Tests', () => {
     })
   })
 
+  // Expected values for BC follow the browser's tzdata. BC's permanent Pacific Time (UTC-7 from
+  // 2026-11-01) needs tzdata 2026b or later, which is why these specs run in Chrome, not Electron.
+  const BC_TIME_ZONE = 'America/Vancouver'
+
+  describe('getDateTimeParts', () => {
+    it('should split a UTC timestamp into local parts', () => {
+      expect(getDateTimeParts('2026-01-10T22:30:00Z', BC_TIME_ZONE)).to.deep.equal({
+        month: 'Jan',
+        day: '10',
+        hour: '14',
+        minute: '30',
+      })
+    })
+
+    it('should use 00 for the midnight hour', () => {
+      expect(getDateTimeParts('2026-01-10T08:05:00Z', BC_TIME_ZONE)!.hour).to.equal('00')
+    })
+
+    it('should return null for an invalid timestamp', () => {
+      expect(getDateTimeParts('')).to.be.null
+      expect(getDateTimeParts('not a date')).to.be.null
+    })
+  })
+
   describe('formatDateTimeDisplay', () => {
-    it('should format ISO date string to display format', () => {
-      expect(formatDateTimeDisplay('2026-01-10T14:30:00')).to.equal('Jan 10 / 14:30')
-      expect(formatDateTimeDisplay('2026-12-31T23:59:00')).to.equal('Dec 31 / 23:59')
+    it('should format a UTC timestamp in the given time zone', () => {
+      expect(formatDateTimeDisplay('2026-07-10T21:30:00Z', 'UTC')).to.equal('Jul 10 / 21:30')
+      expect(formatDateTimeDisplay('2026-01-10T22:30:00Z', BC_TIME_ZONE)).to.equal('Jan 10 / 14:30')
+    })
+
+    it('should use the browser time zone when no time zone is given', () => {
+      const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      const timestamp = '2026-07-10T21:30:00Z'
+      expect(formatDateTimeDisplay(timestamp)).to.equal(formatDateTimeDisplay(timestamp, browserTimeZone))
+    })
+
+    it('should show historical BC timestamps with the rules of their date', () => {
+      // Winter 2025-2026: PST (UTC-8)
+      expect(formatDateTimeDisplay('2025-12-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Dec 15 / 12:00')
+      // Summer 2026: PDT (UTC-7)
+      expect(formatDateTimeDisplay('2026-07-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Jul 15 / 13:00')
+    })
+
+    it('should show the last BC fall-back transition in November 2025', () => {
+      // 2025-11-02 02:00 PDT fell back to 01:00 PST
+      expect(formatDateTimeDisplay('2025-11-02T08:30:00Z', BC_TIME_ZONE)).to.equal('Nov 02 / 01:30')
+      expect(formatDateTimeDisplay('2025-11-02T09:30:00Z', BC_TIME_ZONE)).to.equal('Nov 02 / 01:30')
+      expect(formatDateTimeDisplay('2025-11-02T10:30:00Z', BC_TIME_ZONE)).to.equal('Nov 02 / 02:30')
+    })
+
+    it('should not fall back one hour in BC after November 2026', () => {
+      // No fall-back on 2026-11-01: BC stays at UTC-7
+      expect(formatDateTimeDisplay('2026-11-01T08:30:00Z', BC_TIME_ZONE)).to.equal('Nov 01 / 01:30')
+      expect(formatDateTimeDisplay('2026-11-01T09:30:00Z', BC_TIME_ZONE)).to.equal('Nov 01 / 02:30')
+      expect(formatDateTimeDisplay('2026-11-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Nov 15 / 13:00')
+      expect(formatDateTimeDisplay('2027-01-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Jan 15 / 13:00')
+      expect(formatDateTimeDisplay('2027-07-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Jul 15 / 13:00')
+    })
+
+    it('should return an empty string for an invalid timestamp', () => {
+      expect(formatDateTimeDisplay('')).to.equal('')
     })
   })
 
   describe('formatDateDisplay', () => {
-    it('should format ISO date string to short display format', () => {
-      expect(formatDateDisplay('2026-01-15T12:00:00')).to.equal('Jan 15')
-      expect(formatDateDisplay('2024-02-29T12:00:00')).to.equal('Feb 29')
+    it('should format a UTC timestamp to a short date in the given time zone', () => {
+      expect(formatDateDisplay('2026-01-15T22:30:00Z', BC_TIME_ZONE)).to.equal('Jan 15')
+      expect(formatDateDisplay('2024-02-29T20:00:00Z', BC_TIME_ZONE)).to.equal('Feb 29')
+    })
+
+    it('should use the local date when it differs from the UTC date', () => {
+      expect(formatDateDisplay('2026-11-16T06:30:00Z', 'UTC')).to.equal('Nov 16')
+      expect(formatDateDisplay('2026-11-16T06:30:00Z', BC_TIME_ZONE)).to.equal('Nov 15')
+    })
+
+    it('should return an empty string for an invalid timestamp', () => {
+      expect(formatDateDisplay('')).to.equal('')
     })
   })
 

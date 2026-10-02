@@ -20,7 +20,7 @@ describe('AdminProjectionTable.vue', () => {
     title: 'Test Projection',
     ownerDisplayName: 'R. MacLeod',
     userType: 'IDIR',
-    startDate: '2026-01-10T14:30:00',
+    startDate: '2026-01-10T14:30:00Z',
     status: 'Running',
     workerCount: 16,
     completedPolygonCount: 184320,

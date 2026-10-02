@@ -291,6 +291,7 @@ import {
   downloadURL,
   sanitizeFileName,
   checkZipForErrors,
+  getDateTimeParts,
 } from '@/utils/util'
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 import { DownloadIcon, MenuIcon } from '@/assets/'
@@ -466,12 +467,9 @@ const onRevertCancel = async () => {
 const duplicatedFromText = computed(() => {
   const info = appStore.duplicatedFromInfo
   if (!info) return ''
-  const date = new Date(info.duplicatedAt)
-  const month = date.toLocaleString('en-US', { month: 'short' })
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `*This Projection was duplicated from ${info.originalName} on ${month} ${day} at ${hours}:${minutes}.`
+  const parts = getDateTimeParts(info.duplicatedAt)
+  if (!parts) return ''
+  return `*This Projection was duplicated from ${info.originalName} on ${parts.month} ${parts.day} at ${parts.hour}:${parts.minute}.`
 })
 
 const modelParamTabs = computed<Tab[]>(() => [

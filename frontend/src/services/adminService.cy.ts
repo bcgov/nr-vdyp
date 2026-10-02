@@ -16,7 +16,7 @@ describe('adminService Unit Tests', () => {
           displayName: null,
           identityProviderCode: { code: USER_TYPE_CODE.IDIR },
         },
-        startDate: '2024-01-01',
+        startDate: '2024-01-01T20:00:00Z',
         projectionStatusCode: { code: 'RUNNING' },
         batchMapping: {
           workerCount: 2,
@@ -33,7 +33,7 @@ describe('adminService Unit Tests', () => {
         title: 'Test Title',
         ownerDisplayName: 'J. Doe',
         userType: USER_TYPE_CODE.IDIR,
-        startDate: '2024-01-01',
+        startDate: '2024-01-01T20:00:00Z',
         status: PROJECTION_STATUS.RUNNING,
         workerCount: 2,
         completedPolygonCount: 5,
