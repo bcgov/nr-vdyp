@@ -15,6 +15,7 @@ import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Comparator;
@@ -339,7 +340,7 @@ public class ProjectionService {
 	public static String buildProjectionId(ProjectionRequestKind projectionKind) {
 		StringBuilder sb = new StringBuilder("projection-");
 		sb.append(projectionKind).append("-");
-		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now()));
+		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now(ZoneOffset.UTC)));
 		return sb.toString();
 	}
 
@@ -401,7 +402,7 @@ public class ProjectionService {
 
 			logger.info(">buildOutputZipFile");
 
-			var outputFileName = "vdyp-output-" + java.time.LocalDateTime.now().format(dateTimeFormatter) + ".zip";
+			var outputFileName = "vdyp-output-" + LocalDateTime.now(ZoneOffset.UTC).format(dateTimeFormatter) + ".zip";
 
 			return Response.ok(resultingByteArray).status(Status.CREATED)
 					.header("content-disposition", "attachment;filename=\"" + outputFileName + "\"")
@@ -659,7 +660,7 @@ public class ProjectionService {
 		// set the status to running
 		if (batchMappingModel != null && batchMappingModel.getBatchJobGUID() != null) {
 			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.RUNNING));
-			entity.setStartDate(OffsetDateTime.now());
+			entity.setStartDate(OffsetDateTime.now(ZoneOffset.UTC));
 		}
 
 		return toModelWithExpiry(entity);
@@ -846,10 +847,10 @@ public class ProjectionService {
 
 		// in the event we never received progress at all
 		if (entity.getStartDate() == null) {
-			entity.setStartDate(OffsetDateTime.now());
+			entity.setStartDate(OffsetDateTime.now(ZoneOffset.UTC));
 		}
 		entity.setProjectionStatusCode(status);
-		entity.setEndDate(OffsetDateTime.now());
+		entity.setEndDate(OffsetDateTime.now(ZoneOffset.UTC));
 		return toModelWithExpiry(entity);
 	}
 
@@ -871,7 +872,7 @@ public class ProjectionService {
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE_PROGRESS);
 		batchMappingService.updateProgress(entity, progressUpdate);
 		if (ProjectionStatusCodeModel.QUEUED.equals(entity.getProjectionStatusCode().getCode())) {
-			entity.setStartDate(OffsetDateTime.now());
+			entity.setStartDate(OffsetDateTime.now(ZoneOffset.UTC));
 			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.RUNNING));
 		}
 	}

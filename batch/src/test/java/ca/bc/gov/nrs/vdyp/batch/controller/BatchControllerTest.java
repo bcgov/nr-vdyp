@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
@@ -214,6 +216,9 @@ class BatchControllerTest {
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
+		OffsetDateTime startTime = (OffsetDateTime) response.getBody().get(BatchConstants.Job.START_TIME);
+		assertEquals(ZoneOffset.UTC, startTime.getOffset());
+		assertEquals(jobExecution.getStartTime(), startTime.toLocalDateTime());
 
 		verify(batchJobLaunchService).launchNewJob(projectionGUID, "{}");
 	}

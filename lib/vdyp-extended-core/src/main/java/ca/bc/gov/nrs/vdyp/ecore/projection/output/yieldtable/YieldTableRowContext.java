@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -250,7 +251,7 @@ class YieldTableRowContext {
 
 		yearToAgeDifference = measurementYear - measurementAge;
 
-		nowYear = LocalDate.now().getYear();
+		nowYear = LocalDate.now(ZoneOffset.UTC).getYear();
 		nowAge = nowYear - yearToAgeDifference;
 	}
 

@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
@@ -43,7 +44,7 @@ public class BatchRecoveryMetadataService {
 			return jobExecution;
 		}
 
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
 
 		for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
 			if (isRunningOrStopping(stepExecution.getStatus())) {

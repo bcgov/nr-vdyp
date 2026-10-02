@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -900,7 +901,7 @@ public class PolygonProjectionRunner {
 		if (context.getParams().getSelectedExecutionOptions()
 				.contains(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
-			Double standAgeAtCurrentYear = polygon.determineStandAgeAtYear(LocalDate.now().getYear());
+			Double standAgeAtCurrentYear = polygon.determineStandAgeAtYear(LocalDate.now(ZoneOffset.UTC).getYear());
 			if (startAge == null || standAgeAtCurrentYear < startAge) {
 				startAge = standAgeAtCurrentYear;
 			}

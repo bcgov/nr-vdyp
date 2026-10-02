@@ -69,7 +69,7 @@ export interface Projection {
   isRunnable: boolean
 }
 
-export type UserTypeCode = 'IDIR' | 'BCEID'
+export type UserTypeCode = 'IDIR' | 'BCEID' | 'BCSC'
 
 export interface AdminProjection {
   projectionGUID: string

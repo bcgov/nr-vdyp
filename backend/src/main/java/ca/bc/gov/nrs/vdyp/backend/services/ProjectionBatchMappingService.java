@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.services;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -230,7 +231,7 @@ public class ProjectionBatchMappingService {
 
 		if (newCompletedPolygonCount > previousCompletedPolygonCount
 				|| progressUpdate.projectionErrors() > previousErrorCount) {
-			entity.setLastProgressTime(OffsetDateTime.now());
+			entity.setLastProgressTime(OffsetDateTime.now(ZoneOffset.UTC));
 		}
 
 		entity.setPolygonCount(progressUpdate.totalPolygons());
