@@ -1419,6 +1419,10 @@ class BackProcessingEngineTest {
 			engine.calculateBackupFactors();
 			em.verify();
 
+			assertThat(primarySite, hasProperty("yearsAtBreastHeight", present(closeTo(77.3f))));
+			assertThat(primarySite, hasProperty("ageTotal", present(closeTo(85.0f))));
+			assertThat(primarySite, hasProperty("height", present(closeTo(16.0f))));
+
 		}
 	}
 }
