@@ -710,16 +710,13 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		// SITEHADJ
 		float siteHeight = heightFromSiteCurve(primarySite);
 
-		HeightLowException.check(
-				LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), 0f
-		);
-		HeightLowException.check(
-				LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), convergenceDominantHeight
-		);
+		HeightLowException.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), 0f);
+		HeightLowException
+				.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), convergenceDominantHeight);
 
 		// BFH
-		float backupFactorHeight = (dominantHeight - convergenceDominantHeight) / (siteHeight
-				- convergenceDominantHeight);
+		float backupFactorHeight = (dominantHeight - convergenceDominantHeight)
+				/ (siteHeight - convergenceDominantHeight);
 
 		state.setDominantHeightBackupFactor(backupFactorHeight);
 
@@ -749,7 +746,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		// BAP
 		float primaryBasalArea = bank.basalAreas[0][UC_ALL_INDEX];
 
-		//DQP
+		// DQP
 		float primaryQuadraticMeanDiameter = bank.quadMeanDiameters[0][UC_ALL_INDEX];
 
 		// BA_CNV
@@ -759,8 +756,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		);
 
 		// BFB
-		float backupFactorBasalArea = (primaryBasalArea - convergenceBasalArea) /
-				(basalAreaYield - convergenceBasalArea);
+		float backupFactorBasalArea = (primaryBasalArea - convergenceBasalArea)
+				/ (basalAreaYield - convergenceBasalArea);
 
 		state.setBasalAreaBackupFactor(backupFactorBasalArea);
 
@@ -806,14 +803,12 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		// Enforce upper limits that were set in calculateConvergenceYield
 		for (var species : primaryLayer.getOrderedSpecies()) {
-			species.getLoreyHeightByUtilization()
-					.scalarInPlace(
-							UtilizationClass.ALL, lh -> min(
-									lh, state.getSpeciesLoreyHeightBackupFactorMaximum(species.getGenus())
-							)
-					);
+			species.getLoreyHeightByUtilization().scalarInPlace(
+					UtilizationClass.ALL,
+					lh -> min(lh, state.getSpeciesLoreyHeightBackupFactorMaximum(species.getGenus()))
+			);
 		}
-		
+
 		// Calculate factors for lorey ht
 		// Then set ACTUAL values
 		mapTo1IndexedArray(primaryLayer.getOrderedSpecies(), (species, index) -> {
@@ -844,7 +839,10 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			}
 
 			// ROOTV01
-			getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(), getRootFinderLimits(primaryLayer));
+			// This seems to get ignored in VDYP7, possibly a bug because someone use the wrong set of global variables.
+
+			// getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(),
+			// getRootFinderLimits(primaryLayer));
 
 		}
 
@@ -854,8 +852,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			final float actualDiameter = bank.quadMeanDiameters[index][UC_ALL_INDEX];
 
 			final float convergenceDiameter = state.getSpeciesConvergenceQuadraticMeanDiameter(index);
-			final float speciesDiameter = species.getLoreyHeightByUtilization().getAll();
-			species.getQuadraticMeanDiameterByUtilization().setAll(actualDiameter);
+			final float speciesDiameter = species.getQuadraticMeanDiameterByUtilization().getAll();
 			final float backupFactor;
 			if (speciesDiameter > convergenceDiameter) {
 				backupFactor = (actualDiameter - convergenceDiameter) / (speciesDiameter - convergenceDiameter);
@@ -879,7 +876,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 	/**
 	 * Calculate the total lorey height across all species of a layer for the given utilization class
-	 * 
+	 *
 	 * @param primaryLayer
 	 * @param uc
 	 * @return
@@ -887,8 +884,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	static protected float totalLoreyHeight(final VdypLayer primaryLayer, final UtilizationClass uc) {
 		float sumBasalAreaLoreyHeight = 0;
 		for (var species : primaryLayer.getOrderedSpecies()) {
-			sumBasalAreaLoreyHeight += species.getLoreyHeightByUtilization().get(uc) * species
-					.getLoreyHeightByUtilization().get(uc);
+			sumBasalAreaLoreyHeight += species.getLoreyHeightByUtilization().get(uc)
+					* species.getLoreyHeightByUtilization().get(uc);
 		}
 		return sumBasalAreaLoreyHeight / primaryLayer.getBaseAreaByUtilization().get(uc);
 	}
