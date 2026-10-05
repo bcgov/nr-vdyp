@@ -6,8 +6,8 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -398,8 +398,8 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 			// the error log contains the NCBR error
 			ZipEntry errorLogEntry = zipFile.getNextEntry();
-			String Zip2Contents = new String(TestHelper.readZipEntry(zipFile, errorLogEntry));
-			assertTrue(Zip2Contents.contains("NCBR"));
+			String errorLog = new String(TestHelper.readZipEntry(zipFile, errorLogEntry));
+			assertTrue(errorLog.contains("NCBR"));
 		}
 	}
 
