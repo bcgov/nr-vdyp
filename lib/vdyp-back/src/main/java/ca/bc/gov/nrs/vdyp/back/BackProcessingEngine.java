@@ -5,13 +5,11 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.offsetMultiply;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.IntToDoubleFunction;
 import java.util.function.ToDoubleBiFunction;
 import java.util.function.ToDoubleFunction;
 
