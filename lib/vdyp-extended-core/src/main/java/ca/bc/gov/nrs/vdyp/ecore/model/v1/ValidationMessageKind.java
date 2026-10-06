@@ -48,7 +48,9 @@ public enum ValidationMessageKind {
 	UNRECOGNIZED_OUTPUT_FORMAT("{0} is not a recognized output format"),
 	UNRECOGNIZED_SPECIES("Polygon {0}: layer with id \"{1}\" contains an unrecognized species code \"{2}\""), //
 	UNRECOGNIZED_SPECIES_GROUP_NAME("Species group name \"{0}\" is not a known species group"),
-	UNRECOGNIZED_UTILIZATION_CLASS_NAME("Utilization class \"{0}\" is not a known utilization class name"), //
+	UNRECOGNIZED_UTILIZATION_CLASS_NAME(
+			"For species \"{1}\", the associated reporting utilization level is invalid: \"{0}\""
+	), //
 	;
 
 	public enum Category {
