@@ -441,6 +441,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	 * @return years of regression
 	 * @throws ProcessingException
 	 */
+	// BACKAGE
 	public int calculateConvergenceAge() throws ProcessingException {
 		int startYear = getState().getCurrentStartingYear(); // IYRFIRST
 		if (startYear <= 1600) {
@@ -515,6 +516,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	 * @return years of regression
 	 * @throws ProcessingException
 	 */
+	// BACKCNV
 	public void calculateConvergenceYield() throws ProcessingException {
 		final VdypPolygon polygon = getState().getCurrentPolygon();
 		final var primaryLayer = polygon.requirePrimaryLayer();
@@ -682,6 +684,12 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		plps.setFractionalCompatibilityVariables(fraction);
 	}
 
+	/**
+	 * Calculate the factors needed for backup as described in IPSJF164 and store them in the state object.
+	 *
+	 * @throws ProcessingException
+	 */
+	// BACKFACT
 	public void calculateBackupFactors() throws ProcessingException {
 		final var state = getState();
 		final var estimators = state.getEstimators();
@@ -837,7 +845,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			}
 
 			// ROOTV01
-			// FIXME: VDYP-1440 This seems to get ignored in VDYP7, possibly a bug because someone use the wrong set of global variables.
+			// FIXME: VDYP-1440 This seems to get ignored in VDYP7, possibly a bug because someone use the wrong set of
+			// global variables.
 
 			// getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(),
 			// getRootFinderLimits(primaryLayer));
