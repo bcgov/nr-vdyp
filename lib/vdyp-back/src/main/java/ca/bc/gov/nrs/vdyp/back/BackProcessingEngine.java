@@ -879,7 +879,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	 * @param uc
 	 * @return
 	 */
-	static protected float totalLoreyHeight(final VdypLayer primaryLayer, final UtilizationClass uc) {
+	protected static float totalLoreyHeight(final VdypLayer primaryLayer, final UtilizationClass uc) {
 		float sumBasalAreaLoreyHeight = 0;
 		for (var species : primaryLayer.getOrderedSpecies()) {
 			sumBasalAreaLoreyHeight += species.getLoreyHeightByUtilization().get(uc)
