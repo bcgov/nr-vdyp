@@ -1791,13 +1791,17 @@ public class Polygon implements Comparable<Polygon> {
 				}
 
 				if (veteranLayer != null) {
-					veteranLayer.setDoIncludeWithProjection(true);
-					veteranLayer.setVdyp7LayerCode(ProjectionTypeCode.VETERAN);
+					if (checkVeteranSpecies(veteranLayer)) {
+						veteranLayer.setDoIncludeWithProjection(true);
+						veteranLayer.setVdyp7LayerCode(ProjectionTypeCode.VETERAN);
 
-					logger.debug(
-							"{}: layer {} passes all criteria and will be processed as a veteran layer", this,
-							veteranLayer.getLayerId()
-					);
+						logger.debug(
+								"{}: layer {} passes all criteria and will be processed as a veteran layer", this,
+								veteranLayer.getLayerId()
+						);
+					} else {
+						veteranLayer = null;
+					}
 				} else {
 					logger.warn(
 							"{}: no layer with id \"1\" that is not the primary layer, has 0 <= CC <= 5.0, no rank code"
@@ -1883,8 +1887,32 @@ public class Polygon implements Comparable<Polygon> {
 					"{}: layer {} was already identified as a veteran layer: '{}'", this, getVeteranLayer().getLayerId()
 			);
 		}
+		if (!checkVeteranSpecies(selectedVeteranLayer)) {
+			return null;
+		}
 
 		return selectedVeteranLayer;
+	}
+
+	/**
+	 * checkVeteranSpecies If a Veteran layer was either targetted or chosen as a candidate but actually has not species
+	 * do not use that layer as a veteran layer. Add a Processing message to the polygon messages
+	 * 
+	 * @param selectedVeteranLayer - the candiadte veteran layer to check
+	 * @return true if it has species, false otherwise
+	 */
+	private boolean checkVeteranSpecies(Layer selectedVeteranLayer) {
+		if (selectedVeteranLayer != null && selectedVeteranLayer.getSp0sAsSupplied().isEmpty()) {
+			addCheckedMessage(
+					new PolygonMessage.Builder().layer(selectedVeteranLayer)
+							.details(
+									ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+									PolygonMessageKind.VETERAN_LAYER_NO_SPECIES, selectedVeteranLayer.getLayerId()
+							).build()
+			);
+			return false;
+		}
+		return true;
 	}
 
 	@Override
