@@ -954,14 +954,14 @@ public class YieldTable implements Closeable {
 			}
 
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						new PolygonMessage.Builder().layer(layer)
 								.details(
 										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
 										PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
 								).build()
 				);
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						new PolygonMessage.Builder().layer(layer)
 								.details(
 										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
@@ -969,7 +969,7 @@ public class YieldTable implements Closeable {
 								).build()
 				);
 			} else if (didCopyBasalArea) {
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						new PolygonMessage.Builder().layer(layer)
 								.details(
 										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
@@ -977,7 +977,7 @@ public class YieldTable implements Closeable {
 								).build()
 				);
 			} else if (didCopyTreesPerHectare) {
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						new PolygonMessage.Builder().layer(layer)
 								.details(
 										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
