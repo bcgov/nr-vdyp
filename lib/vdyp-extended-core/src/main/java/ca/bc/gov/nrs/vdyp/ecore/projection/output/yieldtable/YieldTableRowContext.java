@@ -16,8 +16,8 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.model.CommonConstants;
 
 class YieldTableRowContext {
 
@@ -547,7 +547,7 @@ class YieldTableRowContext {
 		}
 
 		if (yearAtDeath == null && ageAtEndYear != null) {
-			int maxAllowedAge = referenceAge + Vdyp7Constants.MAX_YEARS_BEYOND_REFERENCE_AGE;
+			int maxAllowedAge = referenceAge + CommonConstants.MAX_YEARS_BEYOND_REFERENCE_AGE;
 			if (ageAtEndYear > maxAllowedAge) {
 				ageAtEndYear = maxAllowedAge;
 				yearAtEndAge = ageAtEndYear + yearToAgeDifference;

@@ -47,12 +47,14 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
 import ca.bc.gov.nrs.vdyp.exceptions.PreprocessEstimatedBaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProjectMaxBeyondReferenceException;
 import ca.bc.gov.nrs.vdyp.exceptions.QuadraticMeanDiameterLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
+import ca.bc.gov.nrs.vdyp.model.CommonConstants;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 import ca.bc.gov.nrs.vdyp.sindex.Reference;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
@@ -768,6 +770,35 @@ public class PolygonProjectionRunner {
 					generateStandControlFile(executionFolder);
 
 					componentRunner.runForward(polygon, projectionType, state);
+
+					var forwardResult = state.getProcessingResults(ProjectionStageCode.Forward, projectionType);
+					if (forwardResult.isPresent()) {
+						// In the event something happens in Forward processing continue with poro
+						logger.error(
+								"{}: Forward projection resulted in a message for ", polygon, projectionType,
+								forwardResult.get().getMessage() != null ? ": " + forwardResult.get().getMessage() : ""
+						);
+						Throwable processingException = forwardResult.get();
+						if (processingException instanceof ProjectMaxBeyondReferenceException) {
+							polygon.addMessage(
+									new PolygonMessage.Builder().layer(layer)
+											.details(
+													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+													PolygonMessageKind.CANNOT_PROJECT_BEYOND_MAX,
+													CommonConstants.MAX_YEARS_BEYOND_REFERENCE_AGE
+											).build()
+							);
+						} else {
+							polygon.addMessage(
+									new PolygonMessage.Builder().layer(layer)
+											.details(
+													ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.ERROR,
+													PolygonMessageKind.ERROR_PROJECTING_FORWARD,
+													processingException.getMessage(), startYear, endYear
+											).build()
+							);
+						}
+					}
 
 					logger.debug(
 							"{}: performed Forward; result: {}", layer,

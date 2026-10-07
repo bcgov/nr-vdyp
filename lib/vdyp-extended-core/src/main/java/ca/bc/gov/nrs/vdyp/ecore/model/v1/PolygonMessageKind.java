@@ -62,6 +62,8 @@ public enum PolygonMessageKind {
 			"Not all CFS Biomass Proportions could be calculated. Proportions: Stemwood: {0}, Bark: {1}, Branches: {2}, Foliage: {3}"
 	), //
 	CFS_BIO_PROP_DO_NOT_SUM_TO_ONE("CFS Biomass Proportions sum to {} not 1.0."), //
+	CANNOT_PROJECT_BEYOND_MAX("Unable to Project Stand forward beyond \"{0}\" years from stand reference age."), //
+	ERROR_PROJECTING_FORWARD("Unable to Project Stand over age range: \"{1}\" to \"{2}\". Forward Exception: {0}}"), //
 	;
 
 	public enum Category {
