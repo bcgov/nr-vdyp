@@ -32,7 +32,6 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants;
@@ -962,34 +961,30 @@ public class YieldTable implements Closeable {
 
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
 				layer.getPolygon().addMessage(
-						new PolygonMessage.Builder().layer(layer)
-								.details(
-										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-										PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
-								).build()
+						builder -> builder.layer(layer).details(
+								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+								PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
+						)
 				);
 				layer.getPolygon().addMessage(
-						new PolygonMessage.Builder().layer(layer)
-								.details(
-										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-										PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
-								).build()
+						builder -> builder.layer(layer).details(
+								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+								PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
+						)
 				);
 			} else if (didCopyBasalArea) {
 				layer.getPolygon().addMessage(
-						new PolygonMessage.Builder().layer(layer)
-								.details(
-										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-										PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
-								).build()
+						builder -> builder.layer(layer).details(
+								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+								PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
+						)
 				);
 			} else if (didCopyTreesPerHectare) {
 				layer.getPolygon().addMessage(
-						new PolygonMessage.Builder().layer(layer)
-								.details(
-										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-										PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
-								).build()
+						builder -> builder.layer(layer).details(
+								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+								PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
+						)
 				);
 			}
 		}
@@ -1222,34 +1217,30 @@ public class YieldTable implements Closeable {
 
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
 				layer.getPolygon().addMessage(
-						new PolygonMessage.Builder().species(species)
-								.details(
-										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-										PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
-								).build()
+						builder -> builder.species(species).details(
+								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+								PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
+						)
 				);
 				layer.getPolygon().addMessage(
-						new PolygonMessage.Builder().species(species)
-								.details(
-										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-										PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
-								).build()
+						builder -> builder.species(species).details(
+								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+								PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
+						)
 				);
 			} else if (didCopyBasalArea) {
 				layer.getPolygon().addMessage(
-						new PolygonMessage.Builder().species(species)
-								.details(
-										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-										PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
-								).build()
+						builder -> builder.species(species).details(
+								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+								PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
+						)
 				);
 			} else if (didCopyTreesPerHectare) {
 				layer.getPolygon().addMessage(
-						new PolygonMessage.Builder().species(species)
-								.details(
-										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-										PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
-								).build()
+						builder -> builder.species(species).details(
+								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+								PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
+						)
 				);
 			}
 		}
@@ -1553,13 +1544,12 @@ public class YieldTable implements Closeable {
 			if (rowContext.getCurrentYearIsAgeRow()) {
 				kind = PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR;
 			}
-
+			final var reportKind = kind;
 			polygon.addCheckedMessage(
-					new PolygonMessage.Builder().layer(layer)
-							.details(
-									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING, kind,
-									sp0.getSpeciesCode(), ageToRequest, calendarYear
-							).build()
+					builder -> builder.layer(layer).details(
+							ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING, reportKind,
+							sp0.getSpeciesCode(), ageToRequest, calendarYear
+					)
 			);
 
 			layerYields = getUnprojectedStandYields(stand, calendarYear);

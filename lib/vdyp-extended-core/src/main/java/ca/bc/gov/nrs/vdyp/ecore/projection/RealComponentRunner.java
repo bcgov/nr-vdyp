@@ -27,7 +27,6 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
@@ -333,11 +332,10 @@ public class RealComponentRunner implements ComponentRunner {
 							logger.debug("{}: generated CFS biomass table", layer);
 						} else {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.NO_YIELD_TABLE_FOR_DEAD_LAYER
-											).build()
+									builder -> builder.layer(layer).details(
+											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+											PolygonMessageKind.NO_YIELD_TABLE_FOR_DEAD_LAYER
+									)
 							);
 						}
 					}
