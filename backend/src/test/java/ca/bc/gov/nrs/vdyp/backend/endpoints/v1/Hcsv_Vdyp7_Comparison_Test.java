@@ -4,6 +4,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecificEntry;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +45,7 @@ import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.ecore.io.read.ParamsReader;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.integration_tests.MainTest;
@@ -198,7 +200,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
 		String entry3Content = new String(TestHelper.readZipEntry(zipFile, entry2));
-		assertTrue(entry3Content.length() > 0);
+		assertThat(entry3Content, containsString(PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED.getTemplate()));
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());

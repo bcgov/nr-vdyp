@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.constraint.Assert;
 import jakarta.inject.Inject;
@@ -96,7 +97,7 @@ class Scenario4 extends Scenario {
 
 		assertProgressLogNext(zipFile, s -> s.contains("starting projection (type HCSV)"));
 
-		assertErrorLogNext(zipFile, s -> s.length() > 0);
+		assertErrorLogNext(zipFile, s -> s.contains(PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED.getTemplate()));
 
 		assertDebugLogNext(zipFile, s -> s.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 
