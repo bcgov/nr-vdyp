@@ -6,6 +6,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
@@ -43,6 +44,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.History;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.SpeciesReportingInfo;
@@ -141,59 +143,86 @@ public class PolygonProjectionRunnerTest {
 
 	}
 
-	static List<Arguments> nonForestDescriptors() {
-		return List.of(
-				Arguments.of(null, false), Arguments.of("NFD", false), Arguments.of(null, true),
-				Arguments.of("NFD", true)
-		);
+	@Test
+	void testInitialProcessingWithoutNonForestDescriptorOrSpecies() throws Exception {
+		var context = setupNonForestDescriptorLayer(null);
+		performInitialProcessing(context, EasyMock.createMock(ComponentRunner.class));
+
+		assertThat(nonForestDescriptorMessages(), empty());
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(false));
 	}
 
-	@ParameterizedTest
-	@MethodSource("nonForestDescriptors")
-	void testNonForestDescriptorInitialProcessing(String nonForestDescriptor, boolean hasSpecies) throws Exception {
+	@Test
+	void testInitialProcessingWithNonForestDescriptorWithoutSpecies() throws Exception {
+		var context = setupNonForestDescriptorLayer("NFD");
+		performInitialProcessing(context, EasyMock.createMock(ComponentRunner.class));
+
+		assertThat(
+				nonForestDescriptorMessages(),
+				contains(
+						allOf(
+								hasProperty("polygon", sameInstance(polygon)),
+								hasProperty("layer", sameInstance(layer)),
+								hasProperty("returnCode", is(ReturnCode.ERROR_INVALIDSITEINFO)),
+								hasProperty("severity", is(MessageSeverityCode.WARNING)),
+								hasProperty("simpleMessageText", containsString("NFD"))
+						)
+				)
+		);
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(false));
+	}
+
+	@Test
+	void testInitialProcessingWithoutNonForestDescriptorWithSpecies() throws Exception {
+		var context = setupNonForestDescriptorLayer(null);
+		performInitialProcessingWithSpecies(context);
+
+		assertThat(nonForestDescriptorMessages(), empty());
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(true));
+	}
+
+	@Test
+	void testInitialProcessingWithNonForestDescriptorAndSpecies() throws Exception {
+		var context = setupNonForestDescriptorLayer("NFD");
+		performInitialProcessingWithSpecies(context);
+
+		assertThat(nonForestDescriptorMessages(), empty());
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(true));
+	}
+
+	private ProjectionContext setupNonForestDescriptorLayer(String nonForestDescriptor) throws Exception {
 		layer = new Layer.Builder().layerId("1").polygon(polygon).doSuppressPerHAYields(false).crownClosure((short) 20)
 				.vdyp7LayerCode(ProjectionTypeCode.PRIMARY).nonForestDescriptor(nonForestDescriptor)
 				.estimatedSiteIndexSpecies("PL").estimatedSiteIndex(5.0).build();
 		polygon.getLayers().put(layer.getLayerId(), layer);
 		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
-		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
-		var em = EasyMock.createControl();
-		ComponentRunner componentRunner = em.mock(ComponentRunner.class);
-		if (hasSpecies) {
-			addStand("PL", 100.0, 8.0, 10.0);
-			polygon.doCompleteDefinition(context);
-			componentRunner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
-			EasyMock.expectLastCall().andAnswer(() -> {
-				PolygonProjectionState state = EasyMock.getCurrentArgument(2);
-				state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
-				return null;
-			});
-		}
-		em.replay();
+		return new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+	}
+
+	private void performInitialProcessingWithSpecies(ProjectionContext context) throws Exception {
+		addStand("PL", 100.0, 8.0, 10.0);
+		polygon.doCompleteDefinition(context);
+		ComponentRunner componentRunner = EasyMock.createMock(ComponentRunner.class);
+		componentRunner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andAnswer(() -> {
+			PolygonProjectionState state = EasyMock.getCurrentArgument(2);
+			state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			return null;
+		});
+		performInitialProcessing(context, componentRunner);
+	}
+
+	private void performInitialProcessing(ProjectionContext context, ComponentRunner componentRunner) throws Exception {
+		EasyMock.replay(componentRunner);
 		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
 		unit.buildPolygonProjectionExecutionStructure();
 		unit.performInitialProcessing();
-		em.verify();
+		EasyMock.verify(componentRunner);
+	}
 
-		var messages = polygon.getMessages().stream()
+	private List<PolygonMessage> nonForestDescriptorMessages() {
+		return polygon.getMessages().stream()
 				.filter(message -> message.getKind() == PolygonMessageKind.LAYER_NON_FOREST_DESC).toList();
-		if (nonForestDescriptor != null && !hasSpecies) {
-			assertThat(
-					messages,
-					contains(
-							allOf(
-									hasProperty("polygon", sameInstance(polygon)),
-									hasProperty("layer", sameInstance(layer)),
-									hasProperty("returnCode", is(ReturnCode.ERROR_INVALIDSITEINFO)),
-									hasProperty("severity", is(MessageSeverityCode.WARNING)),
-									hasProperty("simpleMessageText", containsString(nonForestDescriptor))
-							)
-					)
-			);
-		} else {
-			assertThat(messages.size(), is(0));
-		}
-		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(hasSpecies));
 	}
 
 	@ParameterizedTest
