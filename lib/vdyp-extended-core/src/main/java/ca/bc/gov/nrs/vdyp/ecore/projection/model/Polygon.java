@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -438,6 +439,13 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
+	public void addCheckedMessage(Consumer<PolygonMessage.Builder> lambda) {
+		final var builder = new PolygonMessage.Builder();
+		lambda.accept(builder);
+		builder.polygon(this);
+		addCheckedMessage(builder.build());
+	}
+
 	public boolean messageOkToAdd(PolygonMessage message) {
 		for (PolygonMessage m : getMessages()) {
 			if (m.getKind() == message.getKind()) {
@@ -445,6 +453,13 @@ public class Polygon implements Comparable<Polygon> {
 			}
 		}
 		return true;
+	}
+
+	public void addMessage(Consumer<PolygonMessage.Builder> lambda) {
+		final var builder = new PolygonMessage.Builder();
+		lambda.accept(builder);
+		builder.polygon(this);
+		addMessage(builder.build());
 	}
 
 	public void addMessage(PolygonMessage message) {
@@ -1732,13 +1747,13 @@ public class Polygon implements Comparable<Polygon> {
 			}
 
 			if (selectedPrimaryLayer != null) {
-				var message = new PolygonMessage.Builder().layer(selectedPrimaryLayer)
-						.details(
+				final var reportPrimaryLayer = selectedPrimaryLayer;
+				addMessage(
+						builder -> builder.layer(reportPrimaryLayer).details(
 								ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
-								PolygonMessageKind.NO_PRIMARY_LAYER_SUPPLIED, selectedPrimaryLayer.getLayerId()
-						).build();
-
-				addMessage(message);
+								PolygonMessageKind.NO_PRIMARY_LAYER_SUPPLIED, reportPrimaryLayer.getLayerId()
+						)
+				);
 			}
 		}
 

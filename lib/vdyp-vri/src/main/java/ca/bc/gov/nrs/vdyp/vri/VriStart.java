@@ -1164,12 +1164,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final float primaryHeight = primarySite.getHeight().orElseThrow(
 				() -> new FatalProcessingException("Primary site, " + primarySite + ", does not have a height")
 		);
-		final float primaryBreastHeightAge = primarySite.getYearsAtBreastHeight()
-				.or(calculationSite::getYearsAtBreastHeight).orElseThrow(
-						() -> new FatalProcessingException(
-								"Primary site, " + primarySite + ", does not have a breast height age"
-						)
-				);
+
+		final float primaryBreastHeightAge = calculationSite.getYearsAtBreastHeight().orElseThrow(
+				() -> new FatalProcessingException(
+						"Primary site, " + primarySite + ", does not have a breast height age"
+				)
+		);
+
 		final Optional<Float> veteranBaseArea = veteranLayer.flatMap(VriLayer::getBaseArea);
 
 		final int primaryEmpiricalRelationshipParameterIndex = primaryLayer.getEmpiricalRelationshipParameterIndex()

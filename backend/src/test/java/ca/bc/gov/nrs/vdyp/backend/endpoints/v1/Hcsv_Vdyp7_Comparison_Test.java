@@ -4,10 +4,11 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecificEntry;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,6 +45,7 @@ import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.ecore.io.read.ParamsReader;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.integration_tests.MainTest;
@@ -198,7 +200,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
 		String entry3Content = new String(TestHelper.readZipEntry(zipFile, entry2));
-		assertTrue(entry3Content.length() == 0);
+		assertThat(entry3Content, containsString(PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED.getTemplate()));
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
@@ -351,6 +353,55 @@ class Hcsv_Vdyp7_Comparison_Test {
 							)
 					)
 			);
+		}
+	}
+
+	@Test
+	void test900() throws IOException, ResourceParseException {
+
+		logger.info("Starting test900");
+
+		Map<String, List<String>> paramMap = new HashMap<>();
+		var parameters = new Parameters();
+		try (
+				InputStream paramStream = MainTest.class.getResourceAsStream("f-record-test-02-noback/input/parms.txt");
+				InputStreamReader reader = new InputStreamReader(paramStream);
+				BufferedReader bufReader = new BufferedReader(reader); var lines = bufReader.lines();
+		) {
+			ParamsReader.parseParameters(paramMap, lines);
+			ParamsReader.parseParameters(parameters, paramMap);
+			parameters.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING);
+		}
+
+		try (
+				InputStream polyStream = MainTest.class
+						.getResourceAsStream("f-record-test-02-noback/input/VDYP7_INPUT_POLY.csv");
+				InputStream layerStream = MainTest.class
+						.getResourceAsStream("f-record-test-02-noback/input/VDYP7_INPUT_LAYER.csv");
+		) {
+
+			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.header("X-Consumer-Username", "integration-test-user") //
+					.header(TestHelper.GATEWAY_JWT_HEADER, TestHelper.GATEWAY_JWT) //
+					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
+					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
+					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
+					.post("/projection/hcsv?trialRun=false") //
+					.then().statusCode(201) //
+					.and().contentType("application/octet-stream") //
+					.and().header("content-disposition", Matchers.startsWith("attachment;filename=\"vdyp-output-")) //
+					.extract().body().asInputStream();
+
+			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
+			ZipEntry entry1 = zipFile.getNextEntry();
+			assertEquals("YieldTable.csv", entry1.getName());
+			String vdyp8YieldTableContent = new String(TestHelper.readZipEntry(zipFile, entry1));
+			assertTrue(vdyp8YieldTableContent.isEmpty());
+
+			// the error log contains the NCBR error
+			ZipEntry errorLogEntry = zipFile.getNextEntry();
+			String errorLog = new String(TestHelper.readZipEntry(zipFile, errorLogEntry));
+			assertTrue(errorLog.contains("NCBR"));
 		}
 	}
 
@@ -646,6 +697,19 @@ class Hcsv_Vdyp7_Comparison_Test {
 		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1082/output/VDYP7YieldTable.csv")) {
 			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
 			runIntTestData("vdyp-1082", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
+	void test1083() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+		logger.info("Starting vdyp-1083");
+		Pattern ignorePattern = Pattern.compile("");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1083/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1083", result -> {
 				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
 				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
 			});
