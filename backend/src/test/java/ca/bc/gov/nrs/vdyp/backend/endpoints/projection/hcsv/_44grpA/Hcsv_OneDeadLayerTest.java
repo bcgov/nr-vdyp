@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv._44grpA;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
@@ -7,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.constraint.Assert;
 
@@ -30,7 +34,8 @@ class Hcsv_OneDeadLayerTest extends BaseHcsv_44GrpATest {
 		var zipEntries = runTest("19007816");
 
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
-		Assert.assertTrue(errorEntryContent.length() == 0);
+		assertThat(errorEntryContent, containsString(PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED.getTemplate()));
+
 		var csvEntryContent = zipEntries.get("YieldTable.csv");
 		Assert.assertTrue(csvEntryContent.length() > 0);
 	}

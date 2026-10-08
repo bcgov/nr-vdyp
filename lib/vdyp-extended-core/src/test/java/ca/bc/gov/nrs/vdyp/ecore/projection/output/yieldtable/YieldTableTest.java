@@ -38,7 +38,9 @@ import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.api.helpers.TestProjectionResultsReader;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.StandYieldCalculationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.StandYieldMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationClassSet;
@@ -50,9 +52,11 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -78,6 +82,184 @@ class YieldTableTest {
 	@BeforeAll
 	public static void startUp() {
 		testHelper = new TestHelper();
+	}
+
+	@Test
+	void testSuppliedBasalAreaAndTreesPerHectareAddLayerAndSpeciesMessages()
+			throws AbstractProjectionRequestException, IOException {
+		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "10", "300");
+
+		assertThat(result.messages().size(), is(4));
+		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
+		assertLayerCopyMessage(result, 1, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+		assertSpeciesCopyMessage(result, 2, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
+		assertSpeciesCopyMessage(result, 3, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+	}
+
+	@Test
+	void testSuppliedBasalAreaAddsLayerAndSpeciesMessages() throws AbstractProjectionRequestException, IOException {
+		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "10", "");
+
+		assertThat(result.messages().size(), is(2));
+		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
+		assertSpeciesCopyMessage(result, 1, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
+	}
+
+	@Test
+	void testSuppliedTreesPerHectareAddsLayerAndSpeciesMessages()
+			throws AbstractProjectionRequestException, IOException {
+		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "", "300");
+
+		assertThat(result.messages().size(), is(2));
+		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+		assertSpeciesCopyMessage(result, 1, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+	}
+
+	@Test
+	void testMissingSuppliedYieldValuesDoNotAddCopyMessages() throws AbstractProjectionRequestException, IOException {
+		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "", "");
+
+		assertThat(result.messages(), is(List.of()));
+	}
+
+	@Test
+	void testDisabledSuppliedYieldSubstitutionDoesNotAddCopyMessages()
+			throws AbstractProjectionRequestException, IOException {
+		var parameters = polygonMessageTestParameters().yearStart(2013).yearEnd(2013)
+				.addExcludedExecutionOptionsItem(Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
+		var result = generateSubstitutedYields(parameters, "10", "300");
+
+		assertThat(result.messages(), is(List.of()));
+	}
+
+	private Parameters suppliedYieldSubstitutionParameters() {
+		return polygonMessageTestParameters().yearStart(2013).yearEnd(2013)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
+	}
+
+	private record SuppliedYieldResult(Layer layer, List<PolygonMessage> messages) {
+	}
+
+	private SuppliedYieldResult
+			generateSubstitutedYields(Parameters parameters, String basalArea, String treesPerHectare)
+					throws AbstractProjectionRequestException, IOException {
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		var polygon = polygonForMessageTests(context, basalArea, treesPerHectare);
+		var layerInfo = polygon.getReportingInfo().getLayerReportingInfos().values().iterator().next();
+		var layer = layerInfo.getLayer();
+		// Suppressed per-hectare yields allow supplied values to be substituted at both levels.
+		layer.setDoSuppressPerHAYields(true);
+		var existingMessages = polygon.getMessages().size();
+		try (var yieldTable = YieldTable.of(context)) {
+			yieldTable.startGeneration();
+			yieldTable.generateYieldTableForPolygonLayer(
+					polygon, Map.of(), new PolygonProjectionState(), layerInfo, false
+			);
+			yieldTable.endGeneration();
+		}
+		return new SuppliedYieldResult(
+				layer, List.copyOf(polygon.getMessages().subList(existingMessages, polygon.getMessages().size()))
+		);
+	}
+
+	private void assertLayerCopyMessage(SuppliedYieldResult result, int index, PolygonMessageKind kind) {
+		assertCopyMessage(result, index, kind);
+		assertThat(result.messages().get(index).getStand(), Matchers.nullValue());
+	}
+
+	private void assertSpeciesCopyMessage(SuppliedYieldResult result, int index, PolygonMessageKind kind) {
+		assertCopyMessage(result, index, kind);
+		var secondarySpecies = result.layer().determineLeadingSp0(1).getSpeciesByPercent().get(0);
+		assertThat(result.messages().get(index).getStand(), is(secondarySpecies.getStand()));
+		assertThat(result.messages().get(index).toString(), containsString(secondarySpecies.toString()));
+	}
+
+	private void assertCopyMessage(SuppliedYieldResult result, int index, PolygonMessageKind kind) {
+		var message = result.messages().get(index);
+		assertThat(message.getKind(), is(kind));
+		assertThat(message.getPolygon(), is(result.layer().getPolygon()));
+		assertThat(message.getLayer(), is(result.layer()));
+		assertThat(message.getSeverity(), is(MessageSeverityCode.INFORMATION));
+		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_LAYERNOTPROCESSED));
+	}
+
+	static Stream<Arguments> missingProjectionMessageKinds() {
+		return Stream.of(
+				Arguments.of(
+						false, PolygonMessageKind.NO_PROJECTED_DATA,
+						"projected data for species PL was not generated at stand age 180 (Calendar year 2013)"
+				),
+				Arguments.of(
+						true, PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR,
+						"projected data for species PL was not generated at stand age 180"
+				)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("missingProjectionMessageKinds")
+	void testMissingProjectedDataAddsCheckedPolygonMessage(boolean ageRows, PolygonMessageKind kind, String text)
+			throws AbstractProjectionRequestException, IOException {
+		var parameters = polygonMessageTestParameters();
+		if (ageRows) {
+			parameters.ageStart(180).ageEnd(181).ageIncrement(1);
+		} else {
+			parameters.yearStart(2013).yearEnd(2014).ageIncrement(1);
+		}
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		var polygon = polygonForMessageTests(context, "10", "300");
+		var layerInfo = polygon.getReportingInfo().getLayerReportingInfos().values().iterator().next();
+		var state = new PolygonProjectionState();
+		state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+		state.setProcessingResults(ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY, Optional.empty());
+		var yieldTable = YieldTable.of(context);
+		try (yieldTable) {
+			yieldTable.startGeneration();
+			yieldTable.generateYieldTableForPolygonLayer(polygon, Map.of(), state, layerInfo, false);
+			yieldTable.endGeneration();
+		}
+		assertThat(new String(yieldTable.getAsStream().readAllBytes()), containsString("2014"));
+		var messages = polygon.getMessages().stream().filter(m -> m.getKind() == kind).toList();
+		// Layer growth, volume, secondary species and subsequent rows all request missing data.
+		assertThat(messages.size(), is(1));
+		var message = messages.get(0);
+		assertThat(message.getPolygon(), is(polygon));
+		assertThat(message.getLayer(), is(layerInfo.getLayer()));
+		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
+		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
+		assertThat(message.getSimpleMessageText(), is("WARN: " + text));
+		assertThat(
+				polygon.getMessages().stream()
+						.filter(
+								m -> m.getKind() == PolygonMessageKind.NO_PROJECTED_DATA
+										|| m.getKind() == PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR
+						).count(),
+				is(1L)
+		);
+	}
+
+	private Parameters polygonMessageTestParameters() {
+		return testHelper.addSelectedOptions(
+				new Parameters(), Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES,
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER,
+				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE,
+				Parameters.ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE,
+				Parameters.ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE
+		);
+	}
+
+	private Polygon polygonForMessageTests(ProjectionContext context, String basalArea, String treesPerHectare)
+			throws AbstractProjectionRequestException, IOException {
+		var polygonInput = TestUtils.makeInputStream(
+				POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layerInput = TestUtils.makeInputStream(
+				LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20," + basalArea + "," + treesPerHectare
+						+ ",PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+		return new HcsvPolygonStream(context, polygonInput, layerInput).getNextPolygon();
 	}
 
 	@Test

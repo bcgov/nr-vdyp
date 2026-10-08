@@ -147,6 +147,8 @@ public class ProjectionRunner implements Closeable {
 				} catch (PolygonValidationException e) {
 					logValidationMessages(e);
 
+				} finally {
+					// Log Error and warning messages even if they don't result in an exception being thrown
 					if (polygon != null) {
 						for (var message : polygon.getMessages()) {
 							context.logError(message.toString());

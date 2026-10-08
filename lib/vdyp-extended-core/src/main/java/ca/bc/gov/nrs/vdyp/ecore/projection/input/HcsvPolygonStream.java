@@ -26,7 +26,6 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.History;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.SpeciesReportingInfo;
@@ -342,26 +341,22 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		if (layer.getPercentStockable() != null && polygon.getPercentStockable() != null
 				&& layer.getPercentStockable() > polygon.getPercentStockable()) {
-
 			polygon.addMessage(
-					new PolygonMessage.Builder().layer(layer)
-							.details(
-									ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.ERROR,
-									PolygonMessageKind.LAYER_STOCKABILITY_EXCEEDS_POLYGON_STOCKABILITY,
-									layer.getPercentStockable(), polygon.getPercentStockable()
-							).build()
+					builder -> builder.layer(layer).details(
+							ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.ERROR,
+							PolygonMessageKind.LAYER_STOCKABILITY_EXCEEDS_POLYGON_STOCKABILITY,
+							layer.getPercentStockable(), polygon.getPercentStockable()
+					)
 			);
 		}
 
 		if ("1".equals(layer.getRankCode())) {
 			if (polygon.getRank1Layer() != null) {
-
 				polygon.addMessage(
-						new PolygonMessage.Builder().layer(layer)
-								.details(
-										ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-										PolygonMessageKind.POLYGON_ALREADY_HAS_RANK_ONE_LAYER
-								).build()
+						builder -> builder.layer(layer).details(
+								ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+								PolygonMessageKind.POLYGON_ALREADY_HAS_RANK_ONE_LAYER
+						)
 				);
 				logger.error("Polygon {} already has a rank one layer", polygon);
 			} else {
@@ -559,7 +554,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		boolean isNewStand;
 		var stand = layer.getSp0sByNameMap().get(sp0Code);
 		if (stand != null) {
-
+			final var reportingStand = stand;
 			isNewStand = false;
 
 			for (var possibleDuplicate : stand.getSpeciesByPercent()) {
@@ -568,12 +563,10 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 					// We have a duplicate species
 
 					layer.getPolygon().addMessage(
-							new PolygonMessage.Builder() //
-									.stand(stand) //
-									.details(
-											ReturnCode.ERROR_SPECIESALREADYEXISTS, MessageSeverityCode.WARNING,
-											PolygonMessageKind.DUPLICATE_SPECIES, sp64Details.speciesCode()
-									).build()
+							builder -> builder.stand(reportingStand).details(
+									ReturnCode.ERROR_SPECIESALREADYEXISTS, MessageSeverityCode.WARNING,
+									PolygonMessageKind.DUPLICATE_SPECIES, sp64Details.speciesCode()
+							)
 					);
 
 					logger.warn(
@@ -584,13 +577,10 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 					if (!possibleDuplicate.equivalentSiteInfo(sp64Details)) {
 
 						layer.getPolygon().addMessage(
-								new PolygonMessage.Builder() //
-										.stand(stand) //
-										.details(
-												ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
-												PolygonMessageKind.INCONSISTENT_SITE_INFO, sp64Details.speciesCode()
-										) //
-										.build()
+								builder -> builder.stand(reportingStand).details(
+										ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+										PolygonMessageKind.INCONSISTENT_SITE_INFO, sp64Details.speciesCode()
+								)
 						);
 
 						logger.warn(
