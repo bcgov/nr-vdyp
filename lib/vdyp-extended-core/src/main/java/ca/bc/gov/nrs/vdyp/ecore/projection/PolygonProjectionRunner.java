@@ -820,21 +820,19 @@ public class PolygonProjectionRunner {
 						Throwable processingException = forwardResult.get();
 						if (processingException instanceof ProjectMaxBeyondReferenceException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
+									builder -> builder.layer(layer).details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 													PolygonMessageKind.CANNOT_PROJECT_BEYOND_MAX,
 													CommonConstants.MAX_YEARS_BEYOND_REFERENCE_AGE
-											).build()
+									)
 							);
 						} else {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
+									builder -> builder.layer(layer).details(
 													ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.ERROR,
 													PolygonMessageKind.ERROR_PROJECTING_FORWARD,
 													processingException.getMessage(), startYear, endYear
-											).build()
+									)
 							);
 						}
 					}
