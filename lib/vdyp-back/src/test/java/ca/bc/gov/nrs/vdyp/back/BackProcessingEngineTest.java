@@ -8,6 +8,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.unboxedArrayCloseTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
+import static org.easymock.EasyMock.anyString;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -1096,5 +1097,332 @@ class BackProcessingEngineTest {
 			assertThat(primarySite, hasProperty("ageTotal", present(closeTo(41.5f))));
 		}
 
+	}
+
+	@Nested
+	class CalculateBackupFactors {
+		@Test
+		void test() throws ProcessingException {
+			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
+
+			var polygonInit = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("092P037  72999905UNK 2011");
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.percentAvailable(61f);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(10);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(12);
+						sb.percentGenus(70);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(45);
+							ib.yearsAtBreastHeight(77.3f);
+							ib.yearsToBreastHeight(8.2f);
+							ib.ageTotal(85f);
+							ib.siteIndex(12.39f);
+							ib.height(16f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(15);
+						sb.percentGenus(20);
+					});
+					lb.primaryGenus("PL");
+					lb.empiricalRelationshipParameterIndex(118);
+				});
+			});
+			var primaryLayerInit = polygonInit.requirePrimaryLayer();
+
+			// Fill in Utilization
+
+			primaryLayerInit.setLoreyHeightByUtilization(Utils.heightVector(6.11998129f, 14.2882891f));
+			primaryLayerInit.setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0546229482f, 40.9836578f, 3.78800011f, 11.8987055f, 14.0205078f, 11.2764416f
+					)
+			);
+			primaryLayerInit.setTreesPerHectareByUtilization(
+					Utils.utilizationVector(20.5737705f, 1803.26233f, 466.262329f, 677.950806f, 464.049194f, 195f)
+			);
+			primaryLayerInit.setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.81501532f, 17.0110435f, 10.1703596f, 14.9486017f, 19.613493f, 27.1346054f)
+			);
+			primaryLayerInit.setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.163934425f, 251.342957f, 15.7932787f, 65.5157318f, 88.3898392f, 81.6440964f
+					)
+			);
+			primaryLayerInit.setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 204.092285f, 2.0988524f, 48.9055748f, 77.6209793f, 75.4668808f)
+			);
+			primaryLayerInit.setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 199.286377f, 2.05327868f, 47.9527855f, 76.0255737f, 73.2547531f)
+			);
+			primaryLayerInit.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 197.866379f, 2.04245877f, 47.7080307f, 75.5704956f, 72.5454102f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(0)
+					.setLoreyHeightByUtilization(Utils.heightVector(5.72300005f, 12.8473997f));
+			primaryLayerInit.getOrderedSpecies().get(0).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.028147541f, 4.09836054f, 1.34257376f, 1.134377f, 0.789475381f, 0.831934452f
+					)
+			);
+			primaryLayerInit.getOrderedSpecies().get(0).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(
+							11.0819674f, 284.674377f, 175.262299f, 68.0819626f, 26.8688507f, 14.4590158f
+					)
+			);
+			primaryLayerInit.getOrderedSpecies().get(0).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.6867857f, 13.5389805f, 9.87597275f, 14.5652428f, 19.3419304f, 27.0663853f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(0).setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.0836065561f, 22.3908195f, 5.31590176f, 6.03557348f, 4.96803236f, 6.07131147f
+					)
+			);
+			primaryLayerInit.getOrderedSpecies().get(0).setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 14.2563934f, 0.357704908f, 4.15590143f, 4.18754101f, 5.55524588f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(0).setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 13.4095078f, 0.339508206f, 3.94229484f, 3.96098328f, 5.16672134f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(0).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 13.1586876f, 0.334262282f, 3.87737703f, 3.88999987f, 5.05704927f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(1)
+					.setLoreyHeightByUtilization(Utils.heightVector(7.18720007f, 13.8270998f));
+			primaryLayerInit.getOrderedSpecies().get(1).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0106229503f, 28.6885567f, 1.96814752f, 9.33654118f, 11.2569828f, 6.12688494f
+					)
+			);
+			primaryLayerInit.getOrderedSpecies().get(1).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(3.67213106f, 1250.29932f, 232.590164f, 528.704895f, 373.098358f, 115.91803f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(1).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(
+							6.06901979f, 17.0923748f, 10.3797817f, 14.9948254f, 19.5999241f, 25.9417591f
+					)
+			);
+			primaryLayerInit.getOrderedSpecies().get(1).setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.0390163921f, 174.294434f, 8.95180321f, 52.6093445f, 71.0681992f, 41.665081f
+					)
+			);
+			primaryLayerInit.getOrderedSpecies().get(1).setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 142.948029f, 1.6654098f, 39.9722939f, 62.7765579f, 38.5337677f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(1).setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 140.00705f, 1.63885248f, 39.2903252f, 61.5590134f, 37.5188522f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(1).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 139.179657f, 1.63344252f, 39.124752f, 61.2242622f, 37.1972122f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(2)
+					.setLoreyHeightByUtilization(Utils.heightVector(6.1097002f, 16.6229f));
+			primaryLayerInit.getOrderedSpecies().get(2).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0158524588f, 8.19673729f, 0.47727865f, 1.42778683f, 1.97404909f, 4.31762266f
+					)
+			);
+			primaryLayerInit.getOrderedSpecies().get(2).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(
+							5.81967211f, 268.288696f, 58.4098358f, 81.1639328f, 64.0819626f, 64.6229477f
+					)
+			);
+			primaryLayerInit.getOrderedSpecies().get(2).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.88917017f, 19.7230644f, 10.1999512f, 14.9659815f, 19.8046036f, 29.166481f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(2).setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.0413114727f, 54.6577034f, 1.52557373f, 6.87081909f, 12.3536062f, 33.9077034f
+					)
+			);
+			primaryLayerInit.getOrderedSpecies().get(2).setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 46.887867f, 0.0757376999f, 4.77737713f, 10.6568851f, 31.3778667f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(2).setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 45.8698349f, 0.0749180317f, 4.72016382f, 10.5055733f, 30.5691795f)
+			);
+			primaryLayerInit.getOrderedSpecies().get(2).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 45.5280304f, 0.0747540966f, 4.70590162f, 10.4562292f, 30.2911472f)
+			);
+
+			// Create bank
+			var bank = new Bank(primaryLayerInit, polygonInit.getBiogeoclimaticZone(), x -> true);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("092P037  72999905UNK 2011");
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.percentAvailable(61f);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(10);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(12);
+						sb.percentGenus(70);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(45);
+							ib.yearsAtBreastHeight(33.3f);
+							ib.yearsToBreastHeight(8.2f);
+							ib.ageTotal(41.5f);
+							ib.siteIndex(12.39f);
+							ib.height(9.17361069f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(15);
+						sb.percentGenus(20);
+					});
+					lb.primaryGenus("PL");
+					lb.empiricalRelationshipParameterIndex(118);
+				});
+			});
+
+			final var primaryLayer = polygon.requirePrimaryLayer();
+			final var primarySite = primaryLayer.getPrimarySite().orElseThrow();
+
+			// Fill in utilization vectors
+			primaryLayer.setLoreyHeightByUtilization(Utils.heightVector(6.11998129f, 14.2882891f));
+			primaryLayer.setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0546229482f, 40.9836578f, 3.78800011f, 11.8987055f, 14.0205078f, 11.2764416f
+					)
+			);
+			primaryLayer.setTreesPerHectareByUtilization(
+					Utils.utilizationVector(20.5737705f, 1803.26233f, 466.262329f, 677.950806f, 464.049194f, 195f)
+			);
+			primaryLayer.setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.81501532f, 17.0110435f, 10.1703596f, 14.9486017f, 19.613493f, 27.1346054f)
+			);
+			primaryLayer.getOrderedSpecies().get(0)
+					.setLoreyHeightByUtilization(Utils.heightVector(5.72300005f, 12.8473997f));
+			primaryLayer.getOrderedSpecies().get(0).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.028147541f, 4.09836054f, 1.34257376f, 1.134377f, 0.789475381f, 0.831934452f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(11.0819674f, 284.67215f, 175.262299f, 68.0819626f, 26.8688507f, 14.4590158f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.6867857f, 13.5390329f, 9.87597275f, 14.5652428f, 19.3419304f, 27.0663853f)
+			);
+			primaryLayer.getOrderedSpecies().get(1)
+					.setLoreyHeightByUtilization(Utils.heightVector(7.18720007f, 13.8270998f));
+			primaryLayer.getOrderedSpecies().get(1).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0106229503f, 28.6885567f, 1.96814752f, 9.33654118f, 11.2569828f, 6.12688494f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(3.67213106f, 1250.31152f, 232.590164f, 528.704895f, 373.098358f, 115.91803f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(
+							6.06901979f, 17.0922909f, 10.3797817f, 14.9948254f, 19.5999241f, 25.9417591f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2)
+					.setLoreyHeightByUtilization(Utils.heightVector(6.1097002f, 16.6229f));
+			primaryLayer.getOrderedSpecies().get(2).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0158524588f, 8.19673729f, 0.47727865f, 1.42778683f, 1.97404909f, 4.31762266f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(
+							5.81967211f, 268.278687f, 58.4098358f, 81.1639328f, 64.0819626f, 64.6229477f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.88917017f, 19.7234325f, 10.1999512f, 14.9659815f, 19.8046036f, 29.166481f)
+			);
+
+			expect(state.getPrimaryLayerProcessingState()).andStubReturn(layerState);
+			expect(state.getCurrentStartingYear()).andStubReturn(2011);
+			expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			expect(state.getControlMap()).andStubReturn(controlMap);
+			expect(state.getCurrentBecZone()).andStubReturn(polygon.getBiogeoclimaticZone());
+
+			ProcessingStateTestUtils.fill(bank.percentagesOfForestedLand, 0f, 10f, 70f, 20f);
+
+			expect(layerState.getBank()).andStubReturn(bank);
+
+			expect(state.getConvergenceDominantHeight()).andStubReturn(Optional.of(9.17361069f));
+
+			expect(layerState.getPrimarySpeciesIndex()).andStubReturn(2);
+			expect(layerState.getIndices()).andStubReturn(new int[] { 1, 2, 3 });
+			expect(layerState.getNSpecies()).andStubReturn(3);
+
+			expect(state.getBaseAreaVeteran()).andStubReturn(Optional.empty());
+
+			expect(state.getConvergenceBasalArea()).andStubReturn(Optional.of(10.6703072f));
+			expect(state.getConvergenceDominantHeight()).andStubReturn(Optional.of(9.17361069f));
+			expect(state.getConvergenceAge()).andStubReturn(Optional.of(33.3f));
+			expect(state.getConvergenceYear()).andStubReturn(Optional.of(1967));
+			expect(state.getBaseAreaVeteran()).andStubReturn(Optional.empty());
+			expect(state.getConvergenceQuadraticMeanDiameter()).andStubReturn(Optional.of(10.202f));
+
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(anyString())).andStubReturn(0f);
+
+			expect(state.getSpeciesConvergenceLoreyHeight(1)).andStubReturn(8.26395798f);
+			expect(state.getSpeciesConvergenceLoreyHeight(2)).andStubReturn(7.30057955f);
+			expect(state.getSpeciesConvergenceLoreyHeight(3)).andStubReturn(7.28091431f);
+
+			expect(state.getLimits(1)).andStubReturn(new ComponentSizeLimits(32.4f, 38.4f, 0.744f, 1.541f));
+			expect(state.getLimits(2)).andStubReturn(new ComponentSizeLimits(32.0f, 40.7f, 0.757f, 1.705f));
+			expect(state.getLimits(3)).andStubReturn(new ComponentSizeLimits(39.1f, 57.2f, 0.796f, 1.809f));
+
+			// DQI_CNV
+			expect(state.getSpeciesConvergenceQuadraticMeanDiameter(1)).andStubReturn(9.88628769f);
+			expect(state.getSpeciesConvergenceQuadraticMeanDiameter(2)).andStubReturn(10.3321753f);
+			expect(state.getSpeciesConvergenceQuadraticMeanDiameter(3)).andStubReturn(9.93369484f);
+
+			// Expected calls
+
+			state.setDominantHeightBackupFactor(eq(1.0008152f, 0.000001f));
+			expectLastCall().once();
+
+			state.setBasalAreaBackupFactor(eq(1.40641582f, 0.001f));
+			expectLastCall().once();
+
+			state.setQuadMeanDiameterBackupFactor(eq(1.86042416f, 0.001f));
+			expectLastCall().once();
+
+			state.setQuadMeanDiameterBackupFactorMinimum(eq(10.2024593f, 0.001f));
+			expectLastCall().once();
+
+			state.setSpeciesQuadMeanDiameterBackupFactor(
+					adapt(unboxedArrayCloseTo(0f, 1.00001431f, 0.999987602f, 1.00003755f))
+			);
+			expectLastCall().once();
+
+			state.setSpeciesQuadMeanDiameterBackupFactorMinimum(
+					adapt(unboxedArrayCloseTo(0f, 9.88628769f, 10.3321753f, 9.93369484f))
+			);
+			expectLastCall().once();
+			// Run test
+			em.replay();
+			engine.calculateBackupFactors();
+			em.verify();
+
+			assertThat(primarySite, hasProperty("yearsAtBreastHeight", present(closeTo(77.3f))));
+			assertThat(primarySite, hasProperty("ageTotal", present(closeTo(85.0f))));
+			assertThat(primarySite, hasProperty("height", present(closeTo(16.0f))));
+
+		}
 	}
 }

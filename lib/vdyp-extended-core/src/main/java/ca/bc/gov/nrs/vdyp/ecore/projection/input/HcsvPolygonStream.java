@@ -248,6 +248,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 					.otherVegetationTypes(otherVegetationMap) //
 					.percentStockable(nextPolygonRecord.getPercentStockable()) //
 					.percentStockableDead(nextPolygonRecord.getPercentDead()) //
+					.yieldFactor(nextPolygonRecord.getYieldFactor()) //
 					.polygonNumber(nextPolygonRecord.getPolygonNumber()) //
 					.referenceYear(nextPolygonRecord.getReferenceYear()) //
 					.reportingInfo(polygonReportingInfo) //

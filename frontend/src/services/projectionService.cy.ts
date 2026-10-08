@@ -23,8 +23,8 @@ describe('projectionService Unit Tests', () => {
     reportTitle: 'Test Title',
     reportDescription: 'Test Description',
     projectionStatusCode: { code: 'DRAFT', description: '', displayOrder: 0 },
-    lastUpdatedDate: '2024-01-01',
-    expiryDate: '2024-07-01',
+    lastUpdatedDate: '2024-01-01T20:00:00Z',
+    expiryDate: '2024-07-01T20:00:00Z',
     projectionParameters: null,
   } as unknown as ProjectionModel
 
@@ -98,8 +98,8 @@ describe('projectionService Unit Tests', () => {
         reportTitle: 'Test Title',
         reportDescription: 'Test Desc',
         projectionStatusCode: { code: 'READY', description: '', displayOrder: 0 },
-        lastUpdatedDate: '2024-01-15',
-        expiryDate: '2024-06-15',
+        lastUpdatedDate: '2024-01-15T20:00:00Z',
+        expiryDate: '2024-06-15T20:00:00Z',
         projectionParameters: '',
       } as unknown as ProjectionModel
       const result = transformProjection(model)
@@ -107,8 +107,8 @@ describe('projectionService Unit Tests', () => {
       expect(result.title).to.equal('Test Title')
       expect(result.description).to.equal('Test Desc')
       expect(result.status).to.equal(PROJECTION_STATUS.READY)
-      expect(result.lastUpdated).to.equal('2024-01-15')
-      expect(result.expiration).to.equal('2024-06-15')
+      expect(result.lastUpdated).to.equal('2024-01-15T20:00:00Z')
+      expect(result.expiration).to.equal('2024-06-15T20:00:00Z')
     })
 
     it('should handle missing optional fields', () => {

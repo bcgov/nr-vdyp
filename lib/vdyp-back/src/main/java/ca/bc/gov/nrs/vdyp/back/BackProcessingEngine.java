@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.ToDoubleBiFunction;
 import java.util.function.ToDoubleFunction;
 
 import org.slf4j.Logger;
@@ -21,8 +22,10 @@ import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
@@ -438,6 +441,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	 * @return years of regression
 	 * @throws ProcessingException
 	 */
+	// BACKAGE
 	public int calculateConvergenceAge() throws ProcessingException {
 		int startYear = getState().getCurrentStartingYear(); // IYRFIRST
 		if (startYear <= 1600) {
@@ -512,6 +516,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	 * @return years of regression
 	 * @throws ProcessingException
 	 */
+	// BACKCNV
 	public void calculateConvergenceYield() throws ProcessingException {
 		final VdypPolygon polygon = getState().getCurrentPolygon();
 		final var primaryLayer = polygon.requirePrimaryLayer();
@@ -638,11 +643,30 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	 * @return
 	 */
 	<T> float[] mapTo1IndexedArray(List<T> elements, ToDoubleFunction<T> func) {
+		return mapTo1IndexedArray(elements, (e, i) -> func.applyAsDouble(e));
+	}
+
+	/**
+	 *
+	 * @param <T>
+	 * @param elements
+	 * @param func
+	 * @return
+	 */
+	float[] mapTo1IndexedArray(float[] source, ToDoubleBiFunction<Float, Integer> func) {
+		float[] result = new float[source.length];
+		for (int i = 1; i < source.length; i++) {
+			result[i] = (float) func.applyAsDouble(source[i], i);
+		}
+		return result;
+	}
+
+	<T> float[] mapTo1IndexedArray(List<T> elements, ToDoubleBiFunction<T, Integer> func) {
 		float[] result = new float[elements.size() + 1];
 		int i = 0;
 		for (var element : elements) {
 			i++;
-			result[i] = (float) func.applyAsDouble(element);
+			result[i] = (float) func.applyAsDouble(element, i);
 		}
 		return result;
 	}
@@ -658,5 +682,218 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			fraction = 1.0f * (currentYear - convergenceYear) / (startYear - convergenceYear);
 		}
 		plps.setFractionalCompatibilityVariables(fraction);
+	}
+
+	/**
+	 * Calculate the factors needed for backup as described in IPSJF164 and store them in the state object.
+	 *
+	 * @throws ProcessingException
+	 */
+	// BACKFACT
+	public void calculateBackupFactors() throws ProcessingException {
+		final var state = getState();
+		final var estimators = state.getEstimators();
+		final var polygon = state.getCurrentPolygon();
+		final var primaryLayer = polygon.requirePrimaryLayer();
+		final var primarySpecies = primaryLayer.getPrimarySpeciesRecord().orElseThrow();
+		final var primarySite = primaryLayer.getPrimarySite().orElseThrow();
+		final var layerState = state.getPrimaryLayerProcessingState();
+		final var bank = layerState.getBank();
+		final var bec = polygon.getBiogeoclimaticZone();
+		final float convergenceDominantHeight = state.getConvergenceDominantHeight().orElseThrow();
+
+		final int primarySpeciesIndex = layerState.getPrimarySpeciesIndex();
+
+		// Fill in L1COM6 and L1COM3
+		primarySite.setYearsAtBreastHeight(bank.yearsAtBreastHeight[primarySpeciesIndex]);
+		primarySite.setAgeTotal(bank.ageTotals[primarySpeciesIndex]);
+		primarySite.setHeight(bank.dominantHeights[primarySpeciesIndex]);
+		final Float yearsAtBreastHeight = primaryLayer.getYearsAtBreastHeight().orElseThrow();
+
+		// HD
+		final float dominantHeight = primarySite.getHeight().orElseThrow();
+
+		// SITEHADJ
+		float siteHeight = heightFromSiteCurve(primarySite);
+
+		HeightLowException.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), 0f);
+		HeightLowException
+				.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), convergenceDominantHeight);
+
+		// BFH
+		float backupFactorHeight = (dominantHeight - convergenceDominantHeight)
+				/ (siteHeight - convergenceDominantHeight);
+
+		state.setDominantHeightBackupFactor(backupFactorHeight);
+
+		// BAYield = EMP106(...)
+		var basalAreaYield = estimators.estimateBaseAreaYield(
+				dominantHeight, //
+				yearsAtBreastHeight, //
+				getState().getBaseAreaVeteran(), //
+				true, //
+				primaryLayer.getSpecies().values(), //
+				primaryLayer.getPrimaryGenus().orElseThrow(), //
+				bec, //
+				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+		);
+
+		// DQYield = EMP107(...)
+		var quadraticMeanDiameterYield = estimators.estimateQuadMeanDiameterYield(
+				dominantHeight, //
+				yearsAtBreastHeight, //
+				getState().getBaseAreaVeteran(), //
+				primaryLayer.getSpecies().values(), //
+				primaryLayer.getPrimaryGenus().orElseThrow(), //
+				bec, //
+				primaryLayer.getEmpiricalRelationshipParameterIndex().orElseThrow()
+		);
+
+		// BAP
+		float primaryBasalArea = bank.basalAreas[0][UC_ALL_INDEX];
+
+		// DQP
+		float primaryQuadraticMeanDiameter = bank.quadMeanDiameters[0][UC_ALL_INDEX];
+
+		// BA_CNV
+		final float convergenceBasalArea = state.getConvergenceBasalArea().orElseThrow();
+		BaseAreaLowException.check(
+				LayerType.PRIMARY, "computed balsal area yeild", Optional.of(basalAreaYield), convergenceBasalArea
+		);
+
+		// BFB
+		float backupFactorBasalArea = (primaryBasalArea - convergenceBasalArea)
+				/ (basalAreaYield - convergenceBasalArea);
+
+		state.setBasalAreaBackupFactor(backupFactorBasalArea);
+
+		// DQ_CNV
+		final float convergenceQuadraticMeanDiameter = state.getConvergenceQuadraticMeanDiameter().orElseThrow();
+
+		// BFDQ
+		final float backupFactorQuadraticMeanDiameter;
+		if (quadraticMeanDiameterYield > convergenceQuadraticMeanDiameter
+				&& primaryQuadraticMeanDiameter > convergenceQuadraticMeanDiameter) {
+			backupFactorQuadraticMeanDiameter = (primaryQuadraticMeanDiameter - convergenceQuadraticMeanDiameter)
+					/ (quadraticMeanDiameterYield - convergenceQuadraticMeanDiameter);
+		} else {
+			backupFactorQuadraticMeanDiameter = 0f;
+		}
+		state.setQuadMeanDiameterBackupFactor(backupFactorQuadraticMeanDiameter);
+
+		// BFMINDQ
+		state.setQuadMeanDiameterBackupFactorMinimum(
+				min(convergenceQuadraticMeanDiameter, primaryQuadraticMeanDiameter)
+		);
+
+		// EMP051 estimate lorey height for primary/lead species
+		float hlpl1 = estimators.primaryHeightFromLeadHeightInitial(
+				dominantHeight, primaryLayer.getPrimaryGenus().orElseThrow(), bec.getRegion()
+		);
+		primarySpecies.getLoreyHeightByUtilization().set(UtilizationClass.ALL, hlpl1);
+
+		// Lorey Height for ALL UC. for non-primary species
+		for (var species : primaryLayer.getOrderedSpecies()) {
+			if (species == primarySpecies)
+				continue;
+			// EMP053
+
+			final float specLoreyHeight = estimators.estimateNonPrimaryLoreyHeight(
+					species, //
+					primarySpecies, //
+					bec, dominantHeight, //
+					hlpl1
+			);
+			species.getLoreyHeightByUtilization().setAll(specLoreyHeight);
+		}
+
+		// Enforce upper limits that were set in calculateConvergenceYield
+		for (var species : primaryLayer.getOrderedSpecies()) {
+			species.getLoreyHeightByUtilization().scalarInPlace(
+					UtilizationClass.ALL,
+					lh -> min(lh, state.getSpeciesLoreyHeightBackupFactorMaximum(species.getGenus()))
+			);
+		}
+
+		// Calculate factors for lorey ht
+		// Then set ACTUAL values
+		mapTo1IndexedArray(primaryLayer.getOrderedSpecies(), (species, index) -> {
+			final float actualLoreyHeight = bank.loreyHeights[index][UC_ALL_INDEX];
+
+			final float convergenceHeight = state.getSpeciesConvergenceLoreyHeight(index);
+			final float speciesHeight = species.getLoreyHeightByUtilization().getAll();
+			species.getLoreyHeightByUtilization().setAll(actualLoreyHeight);
+			if (speciesHeight > convergenceHeight) {
+				return (actualLoreyHeight - convergenceHeight) / (speciesHeight - convergenceHeight);
+			} else {
+				return 1.0;
+			}
+		});
+
+		// Overall lorey Height
+		primaryLayer.getLoreyHeightByUtilization().setAll(totalLoreyHeight(primaryLayer, UtilizationClass.ALL));
+
+		primaryLayer.getBaseAreaByUtilization().setAll(basalAreaYield);
+		primaryLayer.getQuadraticMeanDiameterByUtilization().setAll(quadraticMeanDiameterYield);
+		BaseAreaTreeDensityDiameter.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
+
+		// Assign BA and DQ by species
+		if (assignLayerValuesToSoleSpecies(primaryLayer)) {
+			float layerBasalArea = primaryLayer.getBaseAreaByUtilization().getAll();
+			for (var species : primaryLayer.getOrderedSpecies()) {
+				species.getBaseAreaByUtilization().setAll(layerBasalArea * species.getPercentGenus() / 100);
+			}
+
+			// ROOTV01
+			// FIXME: VDYP-1440 This seems to get ignored in VDYP7, possibly a bug because someone use the wrong set of
+			// global variables.
+
+			// getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(),
+			// getRootFinderLimits(primaryLayer));
+
+		}
+
+		// Calculate back-factors for DQ by species
+
+		var speciesBackupFactorsDiameter = mapTo1IndexedArray(primaryLayer.getOrderedSpecies(), (species, index) -> {
+			final float actualDiameter = bank.quadMeanDiameters[index][UC_ALL_INDEX];
+
+			final float convergenceDiameter = state.getSpeciesConvergenceQuadraticMeanDiameter(index);
+			final float speciesDiameter = species.getQuadraticMeanDiameterByUtilization().getAll();
+			final float backupFactor;
+			if (speciesDiameter > convergenceDiameter) {
+				backupFactor = (actualDiameter - convergenceDiameter) / (speciesDiameter - convergenceDiameter);
+			} else {
+				backupFactor = 0.0f;
+			}
+			return backupFactor;
+		});
+
+		state.setSpeciesQuadMeanDiameterBackupFactor(speciesBackupFactorsDiameter);
+		var speciesBackupFactorsMinimumDiameter = mapTo1IndexedArray(
+				primaryLayer.getOrderedSpecies(), (species, index) -> {
+					final float actualDiameter = species.getQuadraticMeanDiameterByUtilization().getAll();
+
+					return min(state.getSpeciesConvergenceQuadraticMeanDiameter(index), actualDiameter);
+				}
+		);
+		state.setSpeciesQuadMeanDiameterBackupFactorMinimum(speciesBackupFactorsMinimumDiameter);
+
+	}
+
+	/**
+	 * Calculate the total lorey height across all species of a layer for the given utilization class
+	 *
+	 * @param primaryLayer
+	 * @param uc
+	 * @return
+	 */
+	protected static float totalLoreyHeight(final VdypLayer primaryLayer, final UtilizationClass uc) {
+		float sumBasalAreaLoreyHeight = 0;
+		for (var species : primaryLayer.getOrderedSpecies()) {
+			sumBasalAreaLoreyHeight += species.getLoreyHeightByUtilization().get(uc)
+					* species.getLoreyHeightByUtilization().get(uc);
+		}
+		return sumBasalAreaLoreyHeight / primaryLayer.getBaseAreaByUtilization().get(uc);
 	}
 }

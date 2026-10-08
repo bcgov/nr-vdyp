@@ -853,6 +853,9 @@ public class YieldTable implements Closeable {
 		Double siteIndex = null;
 		if (leadingSpeciesSp0 != null) {
 			siteIndex = leadingSpeciesSp0.getSpeciesGroup().getSiteIndex();
+			if (siteIndex == null) {
+				siteIndex = layer.getSp0sAsSupplied().get(0).getSpeciesGroup().getSiteIndex();
+			}
 		}
 
 		var projectionYear = layer.determineYearAtAge(totalAge);
