@@ -18,7 +18,7 @@ public enum ValidationMessageKind {
 	INVALID_PROCESS_FREQUENCY_VALUE("{0} is not a recognized progress-frequency value"),
 	INVALID_INTEGER_VALUE("Field \"{1}\"''s value \"{0}\" is not an integer"),
 	MISMATCHED_INPUT_OUTPUT_TYPES("DCSV output format can be selected when, and only when, the input format is DCSV"),
-	MISSING_BEC_ZONE("Polygon {0}: bec zone missing"),
+	MISSING_BEC_ZONE("Polygon {0}: BEC Zone was not supplied"),
 	MISSING_END_CRITERIA("At least one of \"ageEnd\" or \"yearEnd\" must be given"),
 	MISSING_LAYER_CODE("Polygon {0}: layer with VDYP7 layer code \"{1}\" is missing the required layer level code"),
 	MISSING_SPECIES_NAME("Polygon {0}: layer with id \"{1}\", species #{2}, is missing a name"),
@@ -44,7 +44,7 @@ public enum ValidationMessageKind {
 	UNSUPPORTED_COMBINE_AGE_YEAR_RANGE_OPTION("only the INTERSECT combine-year-age-range option is supported"),
 	UNRECOGNIZED_DEBUG_OPTION("{0} is not a recognized debug option"),
 	UNRECOGNIZED_EXECUTION_OPTION("{0} is not a recognized execution option"),
-	UNRECOGNIZED_INVENTORY_STANDARD_CODE("Polygon {0}: inventory standard code {1} is not recognized"),
+	UNRECOGNIZED_INVENTORY_STANDARD_CODE("Polygon {0}: Invalid Inventory Standard code {1} provided"),
 	UNRECOGNIZED_OUTPUT_FORMAT("{0} is not a recognized output format"),
 	UNRECOGNIZED_SPECIES("Polygon {0}: layer with id \"{1}\" contains an unrecognized species code \"{2}\""), //
 	UNRECOGNIZED_SPECIES_GROUP_NAME("Species group name \"{0}\" is not a known species group"),
