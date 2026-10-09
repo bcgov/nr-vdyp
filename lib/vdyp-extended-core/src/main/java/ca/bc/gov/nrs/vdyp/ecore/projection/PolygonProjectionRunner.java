@@ -814,7 +814,7 @@ public class PolygonProjectionRunner {
 					if (forwardResult.isPresent()) {
 						// In the event something happens in Forward processing continue with poro
 						logger.error(
-								"{}: Forward projection resulted in a message for ", polygon, projectionType,
+								"{}: Forward projection of type {} resulted in a message {}", polygon, projectionType,
 								forwardResult.get().getMessage() != null ? ": " + forwardResult.get().getMessage() : ""
 						);
 						Throwable processingException = forwardResult.get();
