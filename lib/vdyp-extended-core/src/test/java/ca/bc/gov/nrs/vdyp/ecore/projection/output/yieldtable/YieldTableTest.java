@@ -132,7 +132,7 @@ class YieldTableTest {
 	}
 
 	private Parameters suppliedYieldSubstitutionParameters() {
-		return polygonMessageTestParameters().yearStart(2013).yearEnd(2013)
+		return polygonMessageTestParameters().yearStart(2013).yearEnd(2015).ageIncrement(1)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 	}
 
@@ -227,6 +227,19 @@ class YieldTableTest {
 		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
 		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
 		assertThat(message.getSimpleMessageText(), is("WARN: " + text));
+		var shortSpeciesMessages = polygon.getMessages().stream()
+				.filter(m -> m.getKind() == PolygonMessageKind.SPECIES_TOO_SHORT).toList();
+		assertThat(shortSpeciesMessages.size(), is(1));
+		var shortSpeciesMessage = shortSpeciesMessages.get(0);
+		assertThat(shortSpeciesMessage.getLayer(), is(layerInfo.getLayer()));
+		assertThat(shortSpeciesMessage.getSeverity(), is(MessageSeverityCode.WARNING));
+		assertThat(shortSpeciesMessage.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
+		assertThat(
+				shortSpeciesMessage.getSimpleMessageText(),
+				containsString("at stand age \"180\" is too short to generate yields for species \"PL\"")
+		);
+		assertTrue(layerInfo.getLayer().isAgeRequestedWithoutYields());
+		assertThat(layerInfo.getLayer().getFirstAgeWithYields(), is(0));
 		assertThat(
 				polygon.getMessages().stream()
 						.filter(
