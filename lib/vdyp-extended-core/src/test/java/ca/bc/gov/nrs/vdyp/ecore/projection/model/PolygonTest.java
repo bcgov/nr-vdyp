@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.iterableWithSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.EnumMap;
@@ -25,6 +26,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
@@ -36,10 +38,36 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.LayerSummarization
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.NonVegetationTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.OtherVegetationTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.SilviculturalBaseCode;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 
 public class PolygonTest {
+	@Test
+	void testTargetedVriVeteranWithoutSpeciesIsRejected() {
+		var polygon = new Polygon.Builder().featureId(1).inventoryStandard(InventoryStandard.VRI).build();
+		var primary = new Layer.Builder().layerId("2").polygon(polygon).crownClosure((short) 40).build();
+		var veteran = new Layer.Builder().layerId("1").polygon(polygon).crownClosure((short) 4).build();
+		polygon.getLayers().put("2", primary);
+		polygon.getLayers().put("1", veteran);
+		polygon.setTargetedPrimaryLayer(primary);
+		polygon.setTargetedVeteranLayer(veteran);
+		assertThat(polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.VETERAN), is(nullValue()));
+		assertThat(polygon.getVeteranLayer(), is(nullValue()));
+		var messages = polygon.getMessages().stream()
+				.filter(m -> m.getKind() == PolygonMessageKind.VETERAN_LAYER_NO_SPECIES).toList();
+		assertThat(messages.size(), is(1));
+		var message = messages.get(0);
+		assertThat(message.getLayer(), is(veteran));
+		assertThat(message.getSeverity(), is(MessageSeverityCode.INFORMATION));
+		assertThat(message.getReturnCode(), is(ReturnCode.SUCCESS));
+		assertThat(
+				message.getSimpleMessageText(),
+				is(
+						"INFO: Layer \"1\" was identified as the Veteran Layer but contains no species. No vet layer will be used."
+				)
+		);
+	}
 
 	@Test
 	void TestPolygonBuilder() {
