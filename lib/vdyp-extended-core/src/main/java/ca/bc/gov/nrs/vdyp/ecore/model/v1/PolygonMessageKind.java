@@ -76,6 +76,9 @@ public enum PolygonMessageKind {
 			"BACK GROW has been disabled. No projection will occur prior to Reference Year for any polygon."
 	), //
 	LAYER_NON_FOREST_DESC("Unable to project layer due to Non-Forest Descriptor: \"{0}\""), //
+	SECONDARY_SPECIES_SUPRESSED(
+			"Secondary species group {0} w/height {1} and age {2} suppressed next to tall leading species group"
+	), //
 	;
 
 	public enum Category {
