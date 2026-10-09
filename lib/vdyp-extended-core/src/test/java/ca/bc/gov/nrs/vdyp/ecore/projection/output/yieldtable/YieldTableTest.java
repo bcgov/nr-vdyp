@@ -106,8 +106,7 @@ class YieldTableTest {
 	}
 
 	@Test
-	void testSuppliedTreesPerHectareAddsLayerMessage()
-			throws AbstractProjectionRequestException, IOException {
+	void testSuppliedTreesPerHectareAddsLayerMessage() throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "", "300");
 		assertThat(
 				result.messages().stream().map(PolygonMessage::getKind).toList(),

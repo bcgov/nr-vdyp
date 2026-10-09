@@ -1912,7 +1912,7 @@ public class Polygon implements Comparable<Polygon> {
 	/**
 	 * checkVeteranSpecies If a Veteran layer was either targetted or chosen as a candidate but actually has not species
 	 * do not use that layer as a veteran layer. Add a Processing message to the polygon messages
-	 * 
+	 *
 	 * @param selectedVeteranLayer - the candiadte veteran layer to check
 	 * @return true if it has species, false otherwise
 	 */

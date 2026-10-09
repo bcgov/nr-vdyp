@@ -67,8 +67,7 @@ public enum PolygonMessageKind {
 	ERROR_PROJECTING_FORWARD("Unable to Project Stand over age range: \"{1}\" to \"{2}\". Forward Exception: {0}}"), //
 	VETERAN_LAYER_NO_SPECIES(
 			"Layer \"{0}\" was identified as the Veteran Layer but contains no species. No vet layer will be used."
-	),
-	BA_TPH_SUBSTITUTION_DISABLED("Substitution of Supplied BA/TPH as Projected values has been disabled."), //
+	), BA_TPH_SUBSTITUTION_DISABLED("Substitution of Supplied BA/TPH as Projected values has been disabled."), //
 	FORWARD_GROW_DISABLED(
 			"FORWARD GROW has been disabled. No projection will occur after the Reference Year for any polygon."
 	), //
