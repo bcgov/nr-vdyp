@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -30,11 +31,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.ecore.io.write.VriStartOutputWriter;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
@@ -60,6 +63,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.IncorrectLayerCodesException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProjectMaxBeyondReferenceException;
 import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
@@ -290,6 +294,134 @@ public class PolygonProjectionRunnerTest {
 					)
 			);
 		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = { 0, 1, 2 })
+	void testForwardProcessingResultMessages(int result) throws Exception {
+		layer = new Layer.Builder().layerId("1").polygon(polygon).doSuppressPerHAYields(false).crownClosure((short) 20)
+				.vdyp7LayerCode(ProjectionTypeCode.PRIMARY).estimatedSiteIndexSpecies("PL").estimatedSiteIndex(20.0)
+				.build();
+		polygon.getLayers().put("1", layer);
+		addStand("PL", 100.0, 80.0, 25.0);
+		params.ageStart(80).ageEnd(190);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		polygon.doCompleteDefinition(context);
+		ComponentRunner runner = EasyMock.createMock(ComponentRunner.class);
+		var realRunner = new RealComponentRunner();
+		runner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andAnswer(() -> {
+			realRunner.runFipStart(polygon, ProjectionTypeCode.PRIMARY, EasyMock.getCurrentArgument(2));
+			return null;
+		});
+		runner.runAdjust(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andAnswer(() -> {
+			realRunner.runAdjust(polygon, ProjectionTypeCode.PRIMARY, EasyMock.getCurrentArgument(2));
+			return null;
+		});
+		runner.runForward(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andAnswer(() -> {
+			PolygonProjectionState state = EasyMock.getCurrentArgument(2);
+			state.setProcessingResults(
+					ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY,
+					result == 0 ? Optional.empty()
+							: Optional.of(
+									result == 1 ? new ProjectMaxBeyondReferenceException()
+											: new IOException("forward failed")
+							)
+			);
+			return null;
+		});
+		// A forward processing message must still allow yield-table generation.
+		runner.generateYieldTables(same(context), same(polygon), EasyMock.anyObject());
+		EasyMock.replay(runner);
+		PolygonProjectionRunner.of(polygon, context, runner).project();
+		EasyMock.verify(runner);
+		var messages = polygon.getMessages().stream()
+				.filter(
+						m -> m.getKind() == PolygonMessageKind.CANNOT_PROJECT_BEYOND_MAX
+								|| m.getKind() == PolygonMessageKind.ERROR_PROJECTING_FORWARD
+				).toList();
+		assertThat(messages.size(), is(result == 0 ? 0 : 1));
+		if (result != 0) {
+			var message = messages.get(0);
+			assertThat(message.getLayer(), sameInstance(layer));
+			assertThat(message.getPolygon(), sameInstance(polygon));
+			assertThat(
+					message.getSeverity(), is(result == 1 ? MessageSeverityCode.WARNING : MessageSeverityCode.ERROR)
+			);
+			assertThat(message.getReturnCode(), is(result == 1 ? ReturnCode.SUCCESS : ReturnCode.ERROR_INTERNALERROR));
+			assertThat(
+					message.getKind(),
+					is(
+							result == 1 ? PolygonMessageKind.CANNOT_PROJECT_BEYOND_MAX
+									: PolygonMessageKind.ERROR_PROJECTING_FORWARD
+					)
+			);
+			assertThat(
+					message.getSimpleMessageText(),
+					is(
+							result == 1
+									? "WARN: Unable to Project Stand forward beyond \"400\" years from stand reference age."
+									: "ERR: Unable to Project Stand over age range: \"2,024\" to \"2,134\". Forward Exception: forward failed"
+					)
+			);
+		}
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "6.1, 1.3, true", "6.0, 1.3, false", "6.1, 1.31, false" })
+	void testSecondarySpeciesSuppressionMessage(double leadingHeight, double secondaryHeight, boolean suppressed)
+			throws Exception {
+		addStand("PL", 60.0, 80.0, 20.0);
+		addStand("SX", 40.0, 70.0, 18.0);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		polygon.doCompleteDefinition(context);
+		var leading = layer.getSp0sByPercent().get(0);
+		var secondary = layer.getSp0sByPercent().get(1);
+		leading.getSpeciesGroup().setDominantHeight(leadingHeight);
+		secondary.getSpeciesGroup().setDominantHeight(secondaryHeight);
+		var sites = new ByteArrayOutputStream();
+		try (
+				var writer = new VriStartOutputWriter(
+						new ByteArrayOutputStream(), new ByteArrayOutputStream(), new ByteArrayOutputStream(), sites
+				)
+		) {
+			writer.writePolygonLayer(layer);
+		}
+		var messages = polygon.getMessages().stream()
+				.filter(m -> m.getKind() == PolygonMessageKind.SECONDARY_SPECIES_SUPRESSED).toList();
+		assertThat(messages.size(), is(suppressed ? 1 : 0));
+		if (suppressed) {
+			var message = messages.get(0);
+			assertThat(message.getPolygon(), sameInstance(polygon));
+			assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
+			assertThat(message.getReturnCode(), is(ReturnCode.ERROR_INVALIDSITEINFO));
+			assertThat(message.getSimpleMessageText(), containsString("Secondary species group " + secondary));
+			assertThat(message.getSimpleMessageText(), containsString("w/height 6.1 and age 80 suppressed"));
+			assertThat(sites.toString(), containsString("-9.0"));
+		}
+		assertThat(secondary.getSpeciesGroup().getDominantHeight(), is(secondaryHeight));
+	}
+
+	@Test
+	void testMissingCrownClosureWithoutSpeciesDisablesProjectionWithMessage() throws Exception {
+		layer = new Layer.Builder().layerId("1").polygon(polygon).build();
+		polygon.setPrimaryLayer(layer);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.estimateCrownClosure(context);
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(false));
+		var message = polygon.getMessages().get(0);
+		assertThat(message.getKind(), is(PolygonMessageKind.NO_CC));
+		assertThat(message.getLayer(), sameInstance(layer));
+		assertThat(message.getSeverity(), is(MessageSeverityCode.ERROR));
+		assertThat(
+				message.getSimpleMessageText(),
+				containsString("Crown Closure was not supplied and there is no leading species")
+		);
 	}
 
 	@Test
