@@ -54,7 +54,7 @@ public enum PolygonMessageKind {
 	NO_PROJECTED_DATA("projected data for species {0} was not generated at stand age {1} (Calendar year {2,number,#})"), //
 	NO_PROJECTED_DATA_NO_YEAR("projected data for species {0} was not generated at stand age {1}"), //
 	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\""), //
-	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("Polygon {0}: Rank '1' Layer was already encountered (Layer: '{1}')"),
+	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("Polygon {0}: Rank ''1'' Layer was already encountered (Layer: ''{1}'')"),
 	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. VRISTART return code: {0}"), //
 	REASSIGNED_HEIGHT("based on estimated site index of {0}, recomputed input height at age {1} to be {2}"), //
 	UNRECOGNIZED_GROWTH_MODEL("attempt to process an unrecognized growth model {0}"), //
@@ -64,7 +64,7 @@ public enum PolygonMessageKind {
 	), //
 	CFS_BIO_PROP_DO_NOT_SUM_TO_ONE("CFS Biomass Proportions sum to {} not 1.0."), //
 	CANNOT_PROJECT_BEYOND_MAX("Unable to Project Stand forward beyond \"{0}\" years from stand reference age."), //
-	ERROR_PROJECTING_FORWARD("Unable to Project Stand over age range: \"{1}\" to \"{2}\". Forward Exception: {0}}"), //
+	ERROR_PROJECTING_FORWARD("Unable to Project Stand over age range: \"{1}\" to \"{2}\". Forward Exception: {0}"), //
 	VETERAN_LAYER_NO_SPECIES(
 			"Layer \"{0}\" was identified as the Veteran Layer but contains no species. No vet layer will be used."
 	), BA_TPH_SUBSTITUTION_DISABLED("Substitution of Supplied BA/TPH as Projected values has been disabled."), //
