@@ -254,7 +254,7 @@ public class ProjectionRequestParametersValidator {
 				try {
 					uc = UtilizationClassSet.fromValue(up.getUtilizationClass());
 				} catch (IllegalArgumentException e) {
-					recordValidationMessage(UNRECOGNIZED_UTILIZATION_CLASS_NAME, up.getUtilizationClass());
+					recordValidationMessage(UNRECOGNIZED_UTILIZATION_CLASS_NAME, up.getUtilizationClass(), sp0Name);
 					isValidUtilizationParameter = false;
 				}
 

@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
@@ -14,6 +16,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 
@@ -166,10 +169,13 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 
 			var standDominantHeight = stand.getSpeciesGroup().getDominantHeight();
 			if (leadingSiteDominantHeightExceeds6m && standDominantHeight != null && standDominantHeight <= 1.3) {
-				logger.warn(
-						"Secondary species group {} w/height {} and age {} suppressed next to tall leading species group",
-						stand, leadingSite.getSpeciesGroup().getDominantHeight(),
-						leadingSite.getSpeciesGroup().getTotalAge()
+				layer.getPolygon().addMessage(
+						builder -> builder.details(
+								ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+								PolygonMessageKind.SECONDARY_SPECIES_SUPRESSED, stand,
+								leadingSite.getSpeciesGroup().getDominantHeight(),
+								leadingSite.getSpeciesGroup().getTotalAge()
+						)
 				);
 				standDominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
 			}

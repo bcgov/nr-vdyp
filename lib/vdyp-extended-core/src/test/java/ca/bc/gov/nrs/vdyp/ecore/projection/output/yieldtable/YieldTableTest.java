@@ -7,6 +7,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.recordHasProperty;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -89,30 +90,28 @@ class YieldTableTest {
 			throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "10", "300");
 
-		assertThat(result.messages().size(), is(4));
+		assertThat(result.messages().size(), is(2));
 		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
 		assertLayerCopyMessage(result, 1, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
-		assertSpeciesCopyMessage(result, 2, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
-		assertSpeciesCopyMessage(result, 3, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
 	}
 
 	@Test
-	void testSuppliedBasalAreaAddsLayerAndSpeciesMessages() throws AbstractProjectionRequestException, IOException {
+	void testSuppliedBasalAreaAddsLayerMessage() throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "10", "");
 
-		assertThat(result.messages().size(), is(2));
-		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
-		assertSpeciesCopyMessage(result, 1, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
+		assertThat(
+				result.messages().stream().map(PolygonMessage::getKind).toList(),
+				hasItem(PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER)
+		);
 	}
 
 	@Test
-	void testSuppliedTreesPerHectareAddsLayerAndSpeciesMessages()
-			throws AbstractProjectionRequestException, IOException {
+	void testSuppliedTreesPerHectareAddsLayerMessage() throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "", "300");
-
-		assertThat(result.messages().size(), is(2));
-		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
-		assertSpeciesCopyMessage(result, 1, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+		assertThat(
+				result.messages().stream().map(PolygonMessage::getKind).toList(),
+				hasItem(PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER)
+		);
 	}
 
 	@Test
@@ -133,7 +132,7 @@ class YieldTableTest {
 	}
 
 	private Parameters suppliedYieldSubstitutionParameters() {
-		return polygonMessageTestParameters().yearStart(2013).yearEnd(2013)
+		return polygonMessageTestParameters().yearStart(2013).yearEnd(2015).ageIncrement(1)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 	}
 
@@ -165,13 +164,6 @@ class YieldTableTest {
 	private void assertLayerCopyMessage(SuppliedYieldResult result, int index, PolygonMessageKind kind) {
 		assertCopyMessage(result, index, kind);
 		assertThat(result.messages().get(index).getStand(), Matchers.nullValue());
-	}
-
-	private void assertSpeciesCopyMessage(SuppliedYieldResult result, int index, PolygonMessageKind kind) {
-		assertCopyMessage(result, index, kind);
-		var secondarySpecies = result.layer().determineLeadingSp0(1).getSpeciesByPercent().get(0);
-		assertThat(result.messages().get(index).getStand(), is(secondarySpecies.getStand()));
-		assertThat(result.messages().get(index).toString(), containsString(secondarySpecies.toString()));
 	}
 
 	private void assertCopyMessage(SuppliedYieldResult result, int index, PolygonMessageKind kind) {
@@ -228,6 +220,19 @@ class YieldTableTest {
 		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
 		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
 		assertThat(message.getSimpleMessageText(), is("WARN: " + text));
+		var shortSpeciesMessages = polygon.getMessages().stream()
+				.filter(m -> m.getKind() == PolygonMessageKind.SPECIES_TOO_SHORT).toList();
+		assertThat(shortSpeciesMessages.size(), is(1));
+		var shortSpeciesMessage = shortSpeciesMessages.get(0);
+		assertThat(shortSpeciesMessage.getLayer(), is(layerInfo.getLayer()));
+		assertThat(shortSpeciesMessage.getSeverity(), is(MessageSeverityCode.WARNING));
+		assertThat(shortSpeciesMessage.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
+		assertThat(
+				shortSpeciesMessage.getSimpleMessageText(),
+				containsString("at stand age \"180\" is too short to generate yields for species \"PL\"")
+		);
+		assertTrue(layerInfo.getLayer().isAgeRequestedWithoutYields());
+		assertThat(layerInfo.getLayer().getFirstAgeWithYields(), is(0));
 		assertThat(
 				polygon.getMessages().stream()
 						.filter(

@@ -549,7 +549,39 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			doWrite("%s\n", stockableAreaNote);
 		}
 
+		String defaultCCNote = buildDefaultCCNote(lastPolygonForTrailer);
+		if (defaultCCNote != null) {
+			doWrite("%s\n", defaultCCNote);
+		}
+
+		String yieldPredictedNote = buildYieldNotPredictedBeforeNote(lastPolygonForTrailer);
+		if (yieldPredictedNote != null) {
+			doWrite("%s\n", yieldPredictedNote);
+		}
+
 		doWrite("\n");
+	}
+
+	private String buildYieldNotPredictedBeforeNote(Polygon polygon) {
+		Layer layer = polygon.getPrimaryLayer();
+		if (layer.getFirstAgeWithYields() > 0) {
+			return String.format("NOTE: Yields are not predicted prior to age %d", layer.getFirstAgeWithYields());
+		} else if (layer.isAgeRequestedWithoutYields()) {
+			return "NOTE: No yields produced. Sufficient height was not achieved.";
+		}
+		return null;
+	}
+
+	private String buildDefaultCCNote(Polygon polygon) {
+		Layer layer = polygon.getPrimaryLayer();
+		if (polygon.getInventoryStandard() == InventoryStandard.FIP
+				&& (layer.getSuppliedCrownClosure() == null || layer.getSuppliedCrownClosure() <= 0)
+				&& layer.getCrownClosure() != null && layer.getCrownClosure() > 0) {
+			return String.format(
+					"NOTE: Basal Area and Trees per HA computed using Default CC of %d%%", layer.getCrownClosure()
+			);
+		}
+		return null;
 	}
 
 	/**
@@ -626,11 +658,13 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		entries.add(entry);
 
 		entry = "% Crown Closure Supplied. ";
-		if (lastPolygonForTrailer.getInventoryStandard() == InventoryStandard.VRI
-				|| lastPolygonForTrailer.getPrimaryLayer().getCrownClosure() <= 0) {
+		if (lastPolygonForTrailer.getInventoryStandard() == InventoryStandard.VRI) {
 			entry += "<Not Used>";
+		} else if (lastPolygonForTrailer.getPrimaryLayer().getSuppliedCrownClosure() == null
+				|| lastPolygonForTrailer.getPrimaryLayer().getSuppliedCrownClosure() < 0) {
+			entry += "<None>";
 		} else {
-			entry += lastPolygonForTrailer.getPrimaryLayer().getCrownClosure();
+			entry += lastPolygonForTrailer.getPrimaryLayer().getSuppliedCrownClosure();
 		}
 		entries.add(entry);
 

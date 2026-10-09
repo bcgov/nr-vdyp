@@ -963,27 +963,27 @@ public class YieldTable implements Closeable {
 			}
 
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						builder -> builder.layer(layer).details(
 								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
 								PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
 						)
 				);
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						builder -> builder.layer(layer).details(
 								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
 								PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
 						)
 				);
 			} else if (didCopyBasalArea) {
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						builder -> builder.layer(layer).details(
 								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
 								PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
 						)
 				);
 			} else if (didCopyTreesPerHectare) {
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						builder -> builder.layer(layer).details(
 								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
 								PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
@@ -1219,27 +1219,27 @@ public class YieldTable implements Closeable {
 			}
 
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						builder -> builder.species(species).details(
 								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
 								PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
 						)
 				);
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						builder -> builder.species(species).details(
 								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
 								PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
 						)
 				);
 			} else if (didCopyBasalArea) {
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						builder -> builder.species(species).details(
 								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
 								PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
 						)
 				);
 			} else if (didCopyTreesPerHectare) {
-				layer.getPolygon().addMessage(
+				layer.getPolygon().addCheckedMessage(
 						builder -> builder.species(species).details(
 								ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
 								PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
@@ -1508,6 +1508,7 @@ public class YieldTable implements Closeable {
 		}
 
 		LayerYields layerYields = null;
+		var polygon = layer.getPolygon();
 		Species sp0;
 		if (stand == null) {
 			sp0 = layer.getSp0sByPercent().get(0).getSpeciesGroup();
@@ -1537,11 +1538,28 @@ public class YieldTable implements Closeable {
 					layerYields = getYields(rowContext, calendarYear, projectedSp0);
 				}
 			}
-
 		}
 
 		if (layerYields == null) {
-			var polygon = layer.getPolygon();
+			if (sp0.getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION && sp0.getSiteIndex() != null
+					&& sp0.getYearsToBreastHeight() != null) {
+				try {
+					double ht = SiteIndex2Height.ageSiteIndexToHeight(
+							sp0.getSiteCurve(), ageToRequest, SiteIndexAgeType.SI_AT_TOTAL, sp0.getSiteIndex(),
+							sp0.getYearsToBreastHeight()
+					);
+					if (ht >= 0) {
+						polygon.addCheckedMessage(
+								builder -> builder.layer(layer).details(
+										ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING,
+										PolygonMessageKind.SPECIES_TOO_SHORT, ht, ageToRequest, sp0.getSpeciesCode()
+								)
+						);
+					}
+				} catch (CommonCalculatorException ex) {
+					// swallow calculator exception throw by the above
+				}
+			}
 
 			PolygonMessageKind kind = PolygonMessageKind.NO_PROJECTED_DATA;
 			if (rowContext.getCurrentYearIsAgeRow()) {
@@ -1554,8 +1572,13 @@ public class YieldTable implements Closeable {
 							sp0.getSpeciesCode(), ageToRequest, calendarYear
 					)
 			);
-
+			if (layer.getFirstAgeWithYields() == 0) {
+				layer.setAgeRequestedWithoutYields(true);
+			}
 			layerYields = getUnprojectedStandYields(stand, calendarYear);
+		} else if (layer.isAgeRequestedWithoutYields()) {
+			layer.setFirstAgeWithYields(ageToRequest);
+			layer.setAgeRequestedWithoutYields(false);
 		}
 
 		copyPredictedSIAndHeightIfNotInput(stand, layerYields);
