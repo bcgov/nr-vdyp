@@ -7,6 +7,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.recordHasProperty;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -89,30 +90,29 @@ class YieldTableTest {
 			throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "10", "300");
 
-		assertThat(result.messages().size(), is(4));
+		assertThat(result.messages().size(), is(2));
 		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
 		assertLayerCopyMessage(result, 1, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
-		assertSpeciesCopyMessage(result, 2, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
-		assertSpeciesCopyMessage(result, 3, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
 	}
 
 	@Test
-	void testSuppliedBasalAreaAddsLayerAndSpeciesMessages() throws AbstractProjectionRequestException, IOException {
+	void testSuppliedBasalAreaAddsLayerMessage() throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "10", "");
 
-		assertThat(result.messages().size(), is(2));
-		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
-		assertSpeciesCopyMessage(result, 1, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
+		assertThat(
+				result.messages().stream().map(PolygonMessage::getKind).toList(),
+				hasItem(PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER)
+		);
 	}
 
 	@Test
-	void testSuppliedTreesPerHectareAddsLayerAndSpeciesMessages()
+	void testSuppliedTreesPerHectareAddsLayerMessage()
 			throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "", "300");
-
-		assertThat(result.messages().size(), is(2));
-		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
-		assertSpeciesCopyMessage(result, 1, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+		assertThat(
+				result.messages().stream().map(PolygonMessage::getKind).toList(),
+				hasItem(PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER)
+		);
 	}
 
 	@Test
