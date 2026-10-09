@@ -166,13 +166,6 @@ class YieldTableTest {
 		assertThat(result.messages().get(index).getStand(), Matchers.nullValue());
 	}
 
-	private void assertSpeciesCopyMessage(SuppliedYieldResult result, int index, PolygonMessageKind kind) {
-		assertCopyMessage(result, index, kind);
-		var secondarySpecies = result.layer().determineLeadingSp0(1).getSpeciesByPercent().get(0);
-		assertThat(result.messages().get(index).getStand(), is(secondarySpecies.getStand()));
-		assertThat(result.messages().get(index).toString(), containsString(secondarySpecies.toString()));
-	}
-
 	private void assertCopyMessage(SuppliedYieldResult result, int index, PolygonMessageKind kind) {
 		var message = result.messages().get(index);
 		assertThat(message.getKind(), is(kind));
