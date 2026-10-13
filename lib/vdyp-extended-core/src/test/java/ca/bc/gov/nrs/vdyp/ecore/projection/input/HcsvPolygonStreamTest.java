@@ -18,7 +18,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
@@ -28,6 +30,27 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 
 class HcsvPolygonStreamTest {
+	@Test
+	void testDuplicateRankOneMessageIncludesPolygonAndLayer() throws Exception {
+		String layers = layerFileHeader + defaultLayerPrefix
+				+ "1,P,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n" + defaultLayerPrefix
+				+ "2,P,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n";
+		var polygon = new HcsvPolygonStream(
+				context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()),
+				new ByteArrayInputStream(layers.getBytes())
+		).getNextPolygon();
+		var messages = polygon.getMessages().stream()
+				.filter(m -> m.getKind() == PolygonMessageKind.POLYGON_ALREADY_HAS_RANK_ONE_LAYER).toList();
+		assertThat(messages.size(), is(1));
+		var message = messages.get(0);
+		assertThat(message.getLayer().getLayerId(), is("2"));
+		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
+		assertThat(
+				message.getSimpleMessageText(),
+				is("WARN: Polygon 13,919,428: Rank '1' Layer was already encountered (Layer: '2')")
+		);
+	}
+
 	Parameters p;
 	ProjectionContext context;
 	final String hcsvPolygonFileContents = POLYGON_CSV_HEADER_LINE + "\n"

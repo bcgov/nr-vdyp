@@ -20,12 +20,14 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProjectMaxBeyondReferenceException;
 import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.CommonConstants;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -285,8 +287,18 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 			int currentYear = startingYear + 1; // Note that this is NOT the same as iyrcur in vdyp7 That will often be
 												// 1 less than this
 
+			int maximumModelProjectionYear = getState().getCurrentPolygon().getPolygonIdentifier().getYear()
+					+ CommonConstants.MAX_YEARS_BEYOND_REFERENCE_AGE;
+			logger.info("Maximum Model Projection year");
 			// Loop for all but the first year.
 			while (currentYear <= stoppingYearInclusive) {
+				logger.info(
+						"Current year: {}, Stopping year: {}, Maximum model projection year: {}", currentYear,
+						stoppingYearInclusive, maximumModelProjectionYear
+				);
+				if (currentYear > maximumModelProjectionYear) {
+					throw new ProjectMaxBeyondReferenceException();
+				}
 
 				logger.info(
 						"Growing polygon {} Primary layer for year {}", getState().getCompactPolygonIdentifier(),

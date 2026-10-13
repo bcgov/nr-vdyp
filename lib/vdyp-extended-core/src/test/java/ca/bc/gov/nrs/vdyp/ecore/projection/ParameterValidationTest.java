@@ -401,6 +401,12 @@ class ParameterValidationTest {
 				() -> new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false)
 		);
 		TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_UTILIZATION_CLASS_NAME);
+		assertThat(
+				e.getValidationMessages().get(0).getMessage(),
+				is(
+						"For species \"D\", the associated reporting utilization level is invalid: \"bad utilization class\""
+				)
+		);
 
 	}
 
