@@ -20,6 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -28,6 +30,27 @@ import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 
 @ExtendWith(MockitoExtension.class)
 class BatchResultAggregationServiceTest {
+
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	void debugOutputIsAggregatedOnlyWhenPresent(boolean enabled) throws Exception {
+		for (int partition : new int[] { 1, 0 }) {
+			Path dir = Files.createDirectory(tempDir.resolve("output-partition" + partition));
+			Files.writeString(dir.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+			if (enabled) {
+				Files.writeString(dir.resolve("chunk0001_DebugLog.txt"), "partition " + partition + " debug");
+			}
+		}
+		Path result = aggregateResultsFromJobDir(tempDir.toString());
+		try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(result.toFile())) {
+			assertEquals(enabled, zip.getEntry("DebugLog.txt") != null);
+			if (enabled) {
+				try (var input = zip.getInputStream(zip.getEntry("DebugLog.txt"))) {
+					assertEquals("partition 0 debug\npartition 1 debug\n", new String(input.readAllBytes()));
+				}
+			}
+		}
+	}
 
 	@InjectMocks
 	private BatchResultAggregationService resultAggregationService;

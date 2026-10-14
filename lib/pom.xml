@@ -28,6 +28,7 @@
 	</properties>
 
 	<modules>
+		<module>vdyp-debug-logging</module>
 		<module>vdyp-common</module>
 		<module>vdyp-integration-tests</module>
 		<module>vdyp-fip</module>

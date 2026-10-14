@@ -8,6 +8,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -43,6 +44,9 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 	private Long jobExecutionId;
 	private String jobGuid;
 	private Parameters projectionParameters;
+
+	@Value("${batch.debug-logging.max-polygons:1}")
+	private int debugLoggingMaxPolygons = 1;
 	private JobExecution jobExecution;
 
 	// Protects against multiple beforeStep() calls
@@ -85,6 +89,19 @@ public class BatchItemWriter implements ItemWriter<BatchChunkMetadata>, StepExec
 
 		try {
 			this.projectionParameters = objectMapper.readValue(projectionParametersJson, Parameters.class);
+
+			if (this.projectionParameters != null && this.projectionParameters.getSelectedExecutionOptions()
+					.contains(ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString())) {
+				int totalPolygons = jobExecution.getExecutionContext().getInt(BatchConstants.Job.TOTAL_POLYGONS, 0);
+				if (totalPolygons <= 0 || totalPolygons > debugLoggingMaxPolygons) {
+					this.projectionParameters.getSelectedExecutionOptions()
+							.remove(ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString());
+					logger.warn(
+							"[GUID: {}] Debug logging disabled: job polygon count {} exceeds limit {} or is unknown",
+							jobGuid, totalPolygons, debugLoggingMaxPolygons
+					);
+				}
+			}
 
 			// Error logging must always be on so VDYP-841 skip/error reporting has data to work with,
 			// regardless of what the caller requested.
