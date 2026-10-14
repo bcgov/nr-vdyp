@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.logging;
 
+import static org.slf4j.Logger.ROOT_LOGGER_NAME;
+
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -38,7 +40,7 @@ public final class RequestDebugLog implements AutoCloseable {
 			MDC.put(RequestDebugLoggingFilter.MDC_KEY, "disabled");
 			return;
 		}
-		root = context.getLogger(Logger.ROOT_LOGGER_NAME);
+		root = context.getLogger(ROOT_LOGGER_NAME);
 		String id = UUID.randomUUID().toString();
 		appender = createAppender(context, path, id);
 		root.addAppender(appender);
@@ -50,26 +52,26 @@ public final class RequestDebugLog implements AutoCloseable {
 		encoder.setContext(context);
 		encoder.setPattern("%d [%thread] %-5level %logger: %msg%n");
 		encoder.start();
-		FileAppender<ILoggingEvent> appender = new FileAppender<>();
-		appender.setContext(context);
-		appender.setName("projection-debug-" + id);
-		appender.setFile(path.toString());
-		appender.setAppend(false);
-		appender.setEncoder(encoder);
-		appender.addFilter(new Filter<ILoggingEvent>() {
+		FileAppender<ILoggingEvent> debugLogAppender = new FileAppender<>();
+		debugLogAppender.setContext(context);
+		debugLogAppender.setName("projection-debug-" + id);
+		debugLogAppender.setFile(path.toString());
+		debugLogAppender.setAppend(false);
+		debugLogAppender.setEncoder(encoder);
+		debugLogAppender.addFilter(new Filter<ILoggingEvent>() {
 			@Override
 			public FilterReply decide(ILoggingEvent event) {
 				return id.equals(event.getMDCPropertyMap().get(RequestDebugLoggingFilter.MDC_KEY)) ? FilterReply.ACCEPT
 						: FilterReply.DENY;
 			}
 		});
-		appender.start();
-		if (!appender.isStarted()) {
-			appender.stop();
+		debugLogAppender.start();
+		if (!debugLogAppender.isStarted()) {
+			debugLogAppender.stop();
 			encoder.stop();
 			throw new IllegalStateException("Unable to open projection debug log: " + path);
 		}
-		return appender;
+		return debugLogAppender;
 	}
 
 	@Override

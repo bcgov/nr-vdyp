@@ -1,8 +1,9 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +14,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reflections.util.Utils;
@@ -164,7 +164,7 @@ class ProjectionResponseZipFileTests {
 		String entry1Content = new String(TestHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() > 0);
 
-		Assert.assertNull(zipFile.getNextEntry());
+		assertNull(zipFile.getNextEntry());
 
 		Utils.close(zipInputStream);
 	}
