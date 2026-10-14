@@ -355,7 +355,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				polygon.addMessage(
 						builder -> builder.layer(layer).details(
 								ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-								PolygonMessageKind.POLYGON_ALREADY_HAS_RANK_ONE_LAYER
+								PolygonMessageKind.POLYGON_ALREADY_HAS_RANK_ONE_LAYER, polygon.getFeatureId(),
+								layer.getLayerId()
 						)
 				);
 				logger.error("Polygon {} already has a rank one layer", polygon);

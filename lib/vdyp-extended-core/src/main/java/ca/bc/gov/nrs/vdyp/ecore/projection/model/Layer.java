@@ -86,6 +86,7 @@ public class Layer implements Comparable<Layer> {
 
 	/** Crown Closure. If not known, should be set to null */
 	private Short crownClosure;
+	private Short suppliedCrownClosure;
 
 	/** Basal Area. If not known, should be set to null */
 	private Double basalArea;
@@ -149,7 +150,26 @@ public class Layer implements Comparable<Layer> {
 
 	private History history;
 
+	private boolean ageRequestedWithoutYields = false;
+	private int firstAgeWithYields = 0;
+
 	private Layer() {
+	}
+
+	public boolean isAgeRequestedWithoutYields() {
+		return ageRequestedWithoutYields;
+	}
+
+	public void setAgeRequestedWithoutYields(boolean ageRequestedWithoutYields) {
+		this.ageRequestedWithoutYields = ageRequestedWithoutYields;
+	}
+
+	public int getFirstAgeWithYields() {
+		return firstAgeWithYields;
+	}
+
+	public void setFirstAgeWithYields(int firstAgeWithYields) {
+		this.firstAgeWithYields = firstAgeWithYields;
 	}
 
 	public String getLayerId() {
@@ -178,6 +198,10 @@ public class Layer implements Comparable<Layer> {
 
 	public Short getCrownClosure() {
 		return crownClosure;
+	}
+
+	public Short getSuppliedCrownClosure() {
+		return suppliedCrownClosure;
 	}
 
 	public Double getBasalArea() {
@@ -333,6 +357,7 @@ public class Layer implements Comparable<Layer> {
 
 		public Builder crownClosure(Short crownClosure) {
 			layer.crownClosure = crownClosure;
+			layer.suppliedCrownClosure = crownClosure;
 			return this;
 		}
 

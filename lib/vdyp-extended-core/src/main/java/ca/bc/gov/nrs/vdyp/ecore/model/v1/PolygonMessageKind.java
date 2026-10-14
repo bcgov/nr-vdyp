@@ -43,7 +43,7 @@ public enum PolygonMessageKind {
 	LOW_SITE_INDEX_WARNING_2("very low site index {0}. Site index not calculated"),
 	LOW_SITE_INDEX_WARNING_3("site index could not be calculated"),
 	NO_CC(
-			"crown closure was not supplied and there is no leading sp64 from which it can be"
+			"Crown Closure was not supplied and there is no leading species from which it can be"
 					+ " determined. Disabling projection of layer"
 	), //
 	NO_PRIMARY_LAYER_SUPPLIED("no primary layer supplied in the input; choosing layer \"{0}\""), //
@@ -53,7 +53,8 @@ public enum PolygonMessageKind {
 	NO_YIELD_TABLE_FOR_DEAD_LAYER("suppressing CFS Biomass output for dead layer. No yield table will be produced."), //
 	NO_PROJECTED_DATA("projected data for species {0} was not generated at stand age {1} (Calendar year {2,number,#})"), //
 	NO_PROJECTED_DATA_NO_YEAR("projected data for species {0} was not generated at stand age {1}"), //
-	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("polygon already has a rank 1 layer"),
+	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\""), //
+	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("Polygon {0}: Rank ''1'' Layer was already encountered (Layer: ''{1}'')"),
 	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. VRISTART return code: {0}"), //
 	REASSIGNED_HEIGHT("based on estimated site index of {0}, recomputed input height at age {1} to be {2}"), //
 	UNRECOGNIZED_GROWTH_MODEL("attempt to process an unrecognized growth model {0}"), //
@@ -62,7 +63,11 @@ public enum PolygonMessageKind {
 			"Not all CFS Biomass Proportions could be calculated. Proportions: Stemwood: {0}, Bark: {1}, Branches: {2}, Foliage: {3}"
 	), //
 	CFS_BIO_PROP_DO_NOT_SUM_TO_ONE("CFS Biomass Proportions sum to {} not 1.0."), //
-	BA_TPH_SUBSTITUTION_DISABLED("Substitution of Supplied BA/TPH as Projected values has been disabled."), //
+	CANNOT_PROJECT_BEYOND_MAX("Unable to Project Stand forward beyond \"{0}\" years from stand reference age."), //
+	ERROR_PROJECTING_FORWARD("Unable to Project Stand over age range: \"{1}\" to \"{2}\". Forward Exception: {0}"), //
+	VETERAN_LAYER_NO_SPECIES(
+			"Layer \"{0}\" was identified as the Veteran Layer but contains no species. No vet layer will be used."
+	), BA_TPH_SUBSTITUTION_DISABLED("Substitution of Supplied BA/TPH as Projected values has been disabled."), //
 	FORWARD_GROW_DISABLED(
 			"FORWARD GROW has been disabled. No projection will occur after the Reference Year for any polygon."
 	), //
@@ -70,6 +75,9 @@ public enum PolygonMessageKind {
 			"BACK GROW has been disabled. No projection will occur prior to Reference Year for any polygon."
 	), //
 	LAYER_NON_FOREST_DESC("Unable to project layer due to Non-Forest Descriptor: \"{0}\""), //
+	SECONDARY_SPECIES_SUPRESSED(
+			"Secondary species group {0} w/height {1} and age {2} suppressed next to tall leading species group"
+	), //
 	;
 
 	public enum Category {
