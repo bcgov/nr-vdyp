@@ -1,0 +1,11 @@
+[
+  {
+    "name": "ca.bc.gov.nrs.vdyp.logging.RequestDebugLoggingFilter",
+    "allPublicConstructors": true
+  },
+  {
+    "name": "ch.qos.logback.classic.filter.ThresholdFilter",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  }
+]

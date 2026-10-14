@@ -1,10 +1,7 @@
 
 package ca.bc.gov.nrs.vdyp.backend.services;
 
-import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
-
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +32,6 @@ import org.hibernate.boot.model.naming.IllegalIdentifierException;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -78,7 +74,6 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRequestParametersValidator;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
-import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -290,12 +285,6 @@ public class ProjectionService {
 			logger.warn(MessageFormat.format("{0}: unable to log parameters JSON", projectionId), e);
 		}
 
-		boolean debugLoggingEnabled = params.getSelectedExecutionOptions()
-				.contains(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString());
-		if (debugLoggingEnabled) {
-			MDC.put("projectionId", projectionId);
-		}
-
 		Response response;
 
 		try (
@@ -306,28 +295,10 @@ public class ProjectionService {
 			logger.info("Running {} projection {}", kind, projectionId);
 
 			runner.run(inputStreams);
-
-			InputStream debugLogStream = new ByteArrayInputStream(new byte[0]);
-			try {
-				if (debugLoggingEnabled) {
-					/* this is known from logback.xml */
-					Path debugLogPath = Path.of("logs", projectionId + ".log");
-
-					debugLogStream = FileHelper.getForReading(debugLogPath);
-				}
-			} catch (IOException e) {
-				String message = Exceptions.getMessage(e, "Projection, when opening input files,");
-				logger.warn(message);
-			}
-
-			response = buildOutputZipFile(runner, debugLogStream);
+			response = buildOutputZipFile(runner);
 
 		} finally {
-			logger.info(FINALIZE_SESSION_MARKER, ">runProjection {} {}", kind, projectionId);
-
-			if (debugLoggingEnabled) {
-				MDC.remove("projectionId");
-			}
+			logger.info(">runProjection {} {}", kind, projectionId);
 		}
 
 		return response;
@@ -344,7 +315,7 @@ public class ProjectionService {
 		return sb.toString();
 	}
 
-	private Response buildOutputZipFile(ProjectionRunner runner, InputStream debugLogStream) {
+	private Response buildOutputZipFile(ProjectionRunner runner) {
 		logger.info("<buildOutputZipFile");
 
 		InputStream yieldTableStream = null;
@@ -373,7 +344,9 @@ public class ProjectionService {
 				}
 
 				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
-					writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
+					try (InputStream debugLogStream = runner.getDebugStream()) {
+						writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
+					}
 				}
 
 				var projectionResultsIterator = runner.getProjectionResults();

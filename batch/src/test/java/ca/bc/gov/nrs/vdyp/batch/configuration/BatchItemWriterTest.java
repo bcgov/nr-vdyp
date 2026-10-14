@@ -14,10 +14,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -43,6 +47,35 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class BatchItemWriterTest {
+
+	static Stream<Arguments> debugLoggingThresholdCases() {
+		return Stream.of(Arguments.of(0, false), Arguments.of(1, true), Arguments.of(2, false));
+	}
+
+	@ParameterizedTest
+	@MethodSource("debugLoggingThresholdCases")
+	void debugLoggingUsesWholeJobPolygonCount(int totalPolygons, boolean expectedEnabled) throws Exception {
+		Parameters parameters = new Parameters()
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING);
+		when(objectMapper.readValue(VALID_PARAMETERS_JSON, Parameters.class)).thenReturn(parameters);
+		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", VALID_PARAMETERS_JSON)
+				.addString("jobGuid", TEST_JOB_GUID).toJobParameters();
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(params);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(stepExecution.getJobParameters()).thenReturn(params);
+		when(executionContext.getString("partitionName")).thenReturn(TEST_PARTITION_NAME);
+		ExecutionContext jobContext = new ExecutionContext();
+		jobContext.putInt(ca.bc.gov.nrs.vdyp.batch.util.BatchConstants.Job.TOTAL_POLYGONS, totalPolygons);
+		when(jobExecution.getExecutionContext()).thenReturn(jobContext);
+		writer.beforeStep(stepExecution);
+		assertEquals(
+				expectedEnabled,
+				parameters.getSelectedExecutionOptions()
+						.contains(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString())
+		);
+	}
 
 	private static final Long TEST_JOB_EXECUTION_ID = 12345L;
 	private static final String TEST_JOB_GUID = "7c26643a-50cb-497e-a539-afac6966ecea";
