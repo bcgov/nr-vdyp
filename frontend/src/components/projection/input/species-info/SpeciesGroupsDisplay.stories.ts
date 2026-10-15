@@ -19,10 +19,10 @@ export const Default: Story = {
     template: `<v-row><SpeciesGroupsDisplay v-bind="args" /></v-row>`,
   }),
   args: {
-    speciesGroups: [
-      { group: 'FD', percent: '50.0', siteSpecies: 'FD' },
-      { group: 'PL', percent: '30.0', siteSpecies: 'PLI' },
-      { group: 'HW', percent: '20.0', siteSpecies: 'HW' },
+    groupedSummary: [
+      { group: 'FD', percent: 50.0, siteSpecies: ['FD'] },
+      { group: 'PL', percent: 30.0, siteSpecies: ['PLI'] },
+      { group: 'HW', percent: 20.0, siteSpecies: ['HW'] },
     ],
   },
 }
@@ -36,7 +36,7 @@ export const SingleGroup: Story = {
     template: `<v-row><SpeciesGroupsDisplay v-bind="args" /></v-row>`,
   }),
   args: {
-    speciesGroups: [{ group: 'FD', percent: '100.0', siteSpecies: 'FD' }],
+    groupedSummary: [{ group: 'FD', percent: 100.0, siteSpecies: ['FD'] }],
   },
 }
 
@@ -49,10 +49,9 @@ export const MergedGroups: Story = {
     template: `<v-row><SpeciesGroupsDisplay v-bind="args" /></v-row>`,
   }),
   args: {
-    speciesGroups: [
-      { group: 'PL', percent: '40.0', siteSpecies: 'PLI' },
-      { group: 'PL', percent: '20.0', siteSpecies: 'PLC' },
-      { group: 'HW', percent: '40.0', siteSpecies: 'HW' },
+    groupedSummary: [
+      { group: 'PL', percent: 60.0, siteSpecies: ['PLI', 'PLC'] },
+      { group: 'HW', percent: 40.0, siteSpecies: ['HW'] },
     ],
   },
 }

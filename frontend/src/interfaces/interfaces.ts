@@ -31,6 +31,13 @@ export interface SpeciesGroup {
   minimumDBHLimit?: UtilizationClassSetEnum
 }
 
+export interface SpeciesGroupSummary {
+  group: string
+  siteSpecies: string[]
+  percent: number
+  minimumDBHLimit?: UtilizationClassSetEnum
+}
+
 export interface FileUploadSpeciesGroup {
   group: string
   minimumDBHLimit: UtilizationClassSetEnum

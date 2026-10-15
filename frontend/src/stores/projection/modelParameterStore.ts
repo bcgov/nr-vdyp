@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch, nextTick } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
-import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
+import type { SpeciesList, SpeciesGroup, SpeciesGroupSummary, ParsedProjectionParameters, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
 import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-api'
 import type { ModelParameters } from '@/services/vdyp-api'
@@ -146,6 +146,32 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       return acc + (Number.parseFloat(group.percent) || 0)
     }, 0)
   })
+
+  // Keep site-species entries intact while exposing one row per species group.
+  const groupedSummary = computed<SpeciesGroupSummary[]>(() => {
+    const groups = new Map<string, SpeciesGroupSummary>()
+    for (const item of speciesGroups.value) {
+      const existing = groups.get(item.group)
+      if (existing) {
+        existing.siteSpecies.push(item.siteSpecies)
+        existing.percent += Number.parseFloat(item.percent) || 0
+      } else {
+        groups.set(item.group, {
+          group: item.group,
+          siteSpecies: [item.siteSpecies],
+          percent: Number.parseFloat(item.percent) || 0,
+          minimumDBHLimit: item.minimumDBHLimit,
+        })
+      }
+    }
+    return Array.from(groups.values())
+  })
+
+  const setGroupMinimumDBH = (groupCode: string, limit: UtilizationClassSetEnum) => {
+    for (const item of speciesGroups.value) {
+      if (item.group === groupCode) item.minimumDBHLimit = limit
+    }
+  }
 
   const updateSpeciesGroup = () => {
     const groupMap: { [key: string]: number } = {}
@@ -765,6 +791,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     derivedBy,
     speciesList,
     speciesGroups,
+    groupedSummary,
+    setGroupMinimumDBH,
     highestPercentSpecies,
     selectedSiteSpecies,
     totalSpeciesPercent,

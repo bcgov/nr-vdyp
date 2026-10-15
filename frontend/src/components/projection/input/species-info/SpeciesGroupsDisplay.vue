@@ -1,6 +1,6 @@
 <template>
   <v-col
-    v-if="speciesGroups.length > 0"
+    v-if="groupedSummary.length > 0"
     cols="12"
     lg="4"
     class="species-summary-container d-flex flex-column"
@@ -23,9 +23,9 @@
           data-testid="species-group-row"
         >
           <td class="text-body-2" data-testid="species-group-column">{{ row.group }}</td>
-          <td class="text-body-2" data-testid="site-species-column">{{ row.siteSpecies }}</td>
+          <td class="text-body-2" data-testid="site-species-column">{{ row.siteSpecies.join(', ') }}</td>
           <td class="text-body-2 text-right" data-testid="species-group-percent-column">
-            {{ row.percent }}
+            {{ row.percent.toFixed(1) }}%
           </td>
         </tr>
       </tbody>
@@ -42,43 +42,24 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { SpeciesGroup } from '@/interfaces/interfaces'
+import type { SpeciesGroupSummary } from '@/interfaces/interfaces'
 
 const props = defineProps({
-  speciesGroups: {
-    type: Array as () => SpeciesGroup[],
+  groupedSummary: {
+    type: Array as () => SpeciesGroupSummary[],
     required: true,
   },
 })
 
-const groupedSummary = computed(() => {
-  const map = new Map<string, { siteSpeciesList: string[]; totalPercent: number }>()
-  for (const item of props.speciesGroups) {
-    const existing = map.get(item.group)
-    if (existing) {
-      existing.siteSpeciesList.push(item.siteSpecies)
-      existing.totalPercent += Number.parseFloat(item.percent) || 0
-    } else {
-      map.set(item.group, {
-        siteSpeciesList: [item.siteSpecies],
-        totalPercent: Number.parseFloat(item.percent) || 0,
-      })
-    }
-  }
-  return Array.from(map.entries()).map(([group, data]) => ({
-    group,
-    siteSpecies: data.siteSpeciesList.join(', '),
-    percent: data.totalPercent.toFixed(1) + '%',
-  }))
-})
+const groupCount = computed(() => props.groupedSummary.length)
 
-const groupCount = computed(() => groupedSummary.value.length)
-
-const siteSpeciesCount = computed(() => props.speciesGroups.length)
+const siteSpeciesCount = computed(() =>
+  props.groupedSummary.reduce((count, row) => count + row.siteSpecies.length, 0),
+)
 
 const totalPercent = computed(() => {
-  const total = props.speciesGroups.reduce(
-    (acc, item) => acc + (Number.parseFloat(item.percent) || 0),
+  const total = props.groupedSummary.reduce(
+    (acc, item) => acc + item.percent,
     0,
   )
   return total.toFixed(1) + '%'
