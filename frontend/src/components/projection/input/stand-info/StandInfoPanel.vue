@@ -116,7 +116,7 @@
                 />
               </v-col>
             </v-row>
-            <div v-if="minDBHLimit" class="mt-4" data-testid="min-dbh-limit">
+            <div class="mt-4" data-testid="min-dbh-limit">
               <div class="min-dbh-label">Min DBH Limit</div>
               <div class="min-dbh-value">{{ minDBHLimit }}</div>
             </div>
@@ -150,9 +150,8 @@ import {
   ActionPanel,
   PanelEditControl,
 } from '@/components/projection'
-import { CONSTANTS, DEFAULTS, MESSAGE, OPTIONS } from '@/constants'
+import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
-import type { SpeciesGroup } from '@/interfaces/interfaces'
 import { standInfoValidation } from '@/validation'
 import { isEmptyOrZero, isZeroValue } from '@/utils/util'
 import { saveProjectionOnPanelConfirm, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
@@ -179,7 +178,6 @@ const {
 
   derivedBy,
   becZone,
-  speciesGroups,
   selectedSiteSpecies,
   siteSpeciesValues,
   spzHeight,
@@ -216,7 +214,6 @@ watch(percentStockableArea, markDirty)
 watch(basalArea, markDirty)
 watch(treesPerHectare, markDirty)
 watch(crownClosure, markDirty)
-watch(minDBHLimit, markDirty)
 watch(currentDiameter, markDirty)
 
 const isCrownClosureDisabled = ref(false)
@@ -288,29 +285,6 @@ watch(
   [derivedBy, siteSpeciesValues],
   ([newDerivedBy, newSiteSpeciesValues]) => {
     updateStates(newDerivedBy, newSiteSpeciesValues)
-  },
-  { immediate: true },
-)
-
-// Auto-populate minDBHLimit based on selectedSiteSpecies (used in validation)
-watch(
-  selectedSiteSpecies,
-  (newSiteSpecies) => {
-    if (!newSiteSpecies) {
-      minDBHLimit.value = null
-      return
-    }
-
-    const group = speciesGroups.value.find(
-      (g: SpeciesGroup) => g.siteSpecies === newSiteSpecies
-    )
-
-    if (group?.minimumDBHLimit) {
-      const option = OPTIONS.utilizationClassOptions.find(
-        (opt) => opt.value === group.minimumDBHLimit
-      )
-      minDBHLimit.value = option?.label ?? null
-    }
   },
   { immediate: true },
 )
