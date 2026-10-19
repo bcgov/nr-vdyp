@@ -158,6 +158,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 			int iyrcur = startingYear; // represents the value of the current year as it would be in VDYP 7 to aid in
 										// parallel debugging.
 
+			// VTROL(1)
 			boolean doRecalculateGroupsPriorToOutput = getState().controlMap.getDebugSettings()
 					.getSpeciesDynamics() != SpeciesDynamics.PARTIAL && plps.getNSpecies() > 1;
 

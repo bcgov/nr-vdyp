@@ -44,6 +44,9 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings.SpeciesDynamics;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.sindex.Sindxdll;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
@@ -686,6 +689,13 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		return result;
 	}
 
+	/**
+	 * Calculate the CV's as a fraction of the final CV's, the fraction being the proportion of time elapsed since
+	 * convergence
+	 *
+	 * @param currentYear
+	 */
+	// BACKCV
 	public void calculateCompatibilityVariables(int currentYear /* IYRCUR */) {
 		final BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
 		int startYear = getState().getCurrentStartingYear(); // IYRFIRST
@@ -920,6 +930,80 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
 		Optional<VdypLayer> veteranLayer = getVeteranLayer();
 
+		// IYR_RGR = BACKAGE()
+		int regressionYears = calculateConvergenceAge();
+
+		if (regressionYears <= 0) {
+			logger.atWarn().addArgument(getState().getCompactPolygonIdentifier())
+					.setMessage("Polygon {0} skipped as it can not be regressed to a younger age.").log();
+			return;
+		}
+		logger.atInfo().addArgument(getState().getCompactPolygonIdentifier()).addArgument(regressionYears)
+				.setMessage("Polygon {0} regressing {1} years").log();
+
+		// BACK_CNV
+		calculateConvergenceYield();
+
+		// BACKFACT
+		calculateBackupFactors();
+		// TODO possibly catch and handle exceptions and skip to next polygon
+
+		final var years = getYears(
+				getState().controlMap.getControlVariables(), getState().getCurrentStartingYear(),
+				getState().getConvergenceYear().orElseThrow()
+		);
+
+		for (int currentYear = years.zero(); currentYear <= years.first(); currentYear += years.step()) {
+			// TODO IYRCUR=currentYear is a global in Fortran, might need to stash it somewhere
+
+			// BACKAPPL
+			applyBackupFactors(currentYear);
+
+			// BACKCV
+			calculateCompatibilityVariables(currentYear);
+
+		}
+
+	}
+
+	static record Years(int zero, int first, int step) {
+	};
+
+	protected static Years getYears(
+			final ProcessingControlVariables controlVariables, final int firstYear, final int convergenceYear
+	) {
+		// VTROL(1) Could be an offset if <=400 or an absolute year otherwise
+		final int targetYear = controlVariables.getControlVariable(ControlVariable.GROW_TARGET_1);
+
+		int year0 = getInitialYearZero(firstYear, targetYear, convergenceYear);
+
+		int yearStep = getYearStep(controlVariables, firstYear, year0);
+
+		year0 = getYearZero(year0, firstYear, convergenceYear);
+
+		return new Years(year0, firstYear, yearStep);
+	}
+
+	static protected int getYearStep(ProcessingControlVariables controlVariables, int firstYear, final int year0) {
+		return switch (controlVariables.getControlVariable(ControlVariable.OUTPUT_FILES_4)) {
+		case 4 -> 10;
+		case 5 -> max(firstYear - year0, 1);
+		default -> 1;
+		};
+	}
+
+	static protected int getInitialYearZero(final int firstYear, final int targetYear, final int convergenceYear) {
+		return max(convergenceYear, (targetYear <= 400) ? firstYear - targetYear : min(targetYear, firstYear));
+	}
+
+	static protected int getYearZero(final int initialYear0, final int firstYear, final int yearStep) {
+		if (yearStep > 1) {
+			int nYears = firstYear - initialYear0;
+			if (nYears > 0) {
+				return initialYear0 + nYears % yearStep;
+			}
+		}
+		return initialYear0;
 	}
 
 	public enum BackExecutionStep implements ProcessingEngine.ExecutionStep {
