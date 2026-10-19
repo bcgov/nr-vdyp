@@ -85,6 +85,7 @@ import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingStateTestUtils;
 import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.processing_state.TestLayerProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingEngine;
 import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
@@ -98,6 +99,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class ProcessingEngineTest {
+
 	@Nested
 	class CalculateMissingSiteCurve {
 		@Test
@@ -550,12 +552,12 @@ class ProcessingEngineTest {
 		@Nested
 		class Simple {
 
-			@SuppressWarnings({ "unchecked", "rawtypes" })
+			@SuppressWarnings({ "unchecked" })
 			@Test
 			void testPrimarySitePresent() throws Exception {
 				var em = EasyMock.createControl();
-				ProcessingState<?> ps = em.mock(ProcessingState.class);
-				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
+				TestProcessingState ps = em.mock(TestProcessingState.class);
+				TestLayerProcessingState lps = em.mock(TestLayerProcessingState.class);
 
 				var layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 1970);
@@ -611,7 +613,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				new ProcessingEngine(ps).estimateMissingSiteIndices(lps);
+				getTestEngine(ps).estimateMissingSiteIndices(lps);
 
 				assertThat(
 						bank.siteIndices,
@@ -622,12 +624,12 @@ class ProcessingEngineTest {
 
 			}
 
-			@SuppressWarnings({ "unchecked", "rawtypes" })
+			@SuppressWarnings({ "unchecked" })
 			@Test
 			void testPrimarySiteMissing() throws Exception {
 				var em = EasyMock.createControl();
-				ProcessingState<?> ps = em.mock(ProcessingState.class);
-				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
+				TestProcessingState ps = em.mock(TestProcessingState.class);
+				TestLayerProcessingState lps = em.mock(TestLayerProcessingState.class);
 
 				var layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 1970);
@@ -685,7 +687,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				new ProcessingEngine(ps).estimateMissingSiteIndices(lps);
+				getTestEngine(ps).estimateMissingSiteIndices(lps);
 
 				assertThat(
 						bank.siteIndices,
@@ -699,8 +701,8 @@ class ProcessingEngineTest {
 			@Test
 			void testPrimarySiteEstimateFailed() throws Exception {
 				var em = EasyMock.createControl();
-				ProcessingState<?> ps = em.mock(ProcessingState.class);
-				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
+				TestProcessingState ps = em.mock(TestProcessingState.class);
+				TestLayerProcessingState lps = em.mock(TestLayerProcessingState.class);
 
 				var layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 1970);
@@ -757,8 +759,8 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				@SuppressWarnings({ "unchecked", "rawtypes" })
-				Float result = new ProcessingEngine(ps).estimateMissingNonPrimarySiteIndices(lps, 2, null);
+				@SuppressWarnings({ "unchecked" })
+				Float result = getTestEngine(ps).estimateMissingNonPrimarySiteIndices(lps, 2, null);
 
 				assertThat(result, asFloat(notANumber()));
 
@@ -1239,9 +1241,9 @@ class ProcessingEngineTest {
 				}
 			}
 
-			@SuppressWarnings({ "unchecked", "rawtypes" })
+			@SuppressWarnings({ "unchecked" })
 			private void runEstimateExtended(LayerFixture fixture) throws ProcessingException {
-				new ProcessingEngine(null).estimateMissingSiteIndicesAndAgesExtended(fixture.lps, fds);
+				getTestEngine(null).estimateMissingSiteIndicesAndAgesExtended(fixture.lps, fds);
 			}
 
 			private float yearsToBreastHeight(SiteIndexEquation curve, float siteIndex) throws Exception {
@@ -2293,16 +2295,13 @@ class ProcessingEngineTest {
 
 		}
 
-		@SuppressWarnings("unchecked")
 		@Test
 		void test() throws ProcessingException {
 			final var em = EasyMock.createControl();
 			final BecDefinition bec = controlMap.getBecLookup().get("CWH").get();
 
-			@SuppressWarnings("rawtypes")
-			ProcessingState ps = em.createMock(ProcessingState.class);
-			@SuppressWarnings("rawtypes")
-			LayerProcessingState lps = em.createMock(LayerProcessingState.class);
+			TestProcessingState ps = em.mock(TestProcessingState.class);
+			TestLayerProcessingState lps = em.mock(TestLayerProcessingState.class);
 
 			EasyMock.expect(ps.getComputers()).andStubReturn(cmp);
 			EasyMock.expect(ps.getEstimators()).andStubReturn(emp);
@@ -2476,7 +2475,7 @@ class ProcessingEngineTest {
 			);
 			EasyMock.expectLastCall().once();
 
-			var unit = new ProcessingEngine<>(ps);
+			var unit = getTestEngine(ps);
 			em.replay();
 
 			unit.setCompatibilityVariables();
@@ -2778,4 +2777,10 @@ class ProcessingEngineTest {
 
 		}
 	}
+
+	@SuppressWarnings({ "rawtypes" })
+	protected ProcessingEngine getTestEngine(TestProcessingState ps) {
+		return new TestProcessingEngine(ps);
+	}
+
 }

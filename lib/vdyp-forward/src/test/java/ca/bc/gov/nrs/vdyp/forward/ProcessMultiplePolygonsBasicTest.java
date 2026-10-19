@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 
@@ -16,7 +17,9 @@ class ProcessMultiplePolygonsBasicTest extends AbstractForwardProcessingEngineTe
 	@Test
 	void test() throws IOException, ResourceParseException, ProcessingException {
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
+		);
 
 		assertThat(fpe.getState().controlMap.getBecLookup(), notNullValue());
 		assertThat(fpe.getState().controlMap.getGenusDefinitionMap(), notNullValue());

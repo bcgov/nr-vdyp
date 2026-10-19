@@ -28,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -55,6 +56,20 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 	public BackProcessingEngine(BackProcessingState processingState) {
 		super(processingState);
+	}
+
+	@Override
+	public void processPolygon(VdypPolygon polygon) throws ProcessingException {
+
+		logger.info("Starting processing of the primary layer of polygon {}", polygon.getPolygonIdentifier());
+
+		getState().setPolygon(polygon);
+
+		// All of BANKCHK1 that we need. Note that setting UC ALL (METH_CHK == 1) in BANKCHK1 is
+		// performed when the Bank instance is created in setPolygon, above.
+
+		validatePolygon(polygon);
+
 	}
 
 	/**
@@ -896,4 +911,31 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		}
 		return sumBasalAreaLoreyHeight / primaryLayer.getBaseAreaByUtilization().get(uc);
 	}
+
+	@Override
+	protected void executeAlgorithm(ExecutionStep lastStepInclusive, int stoppingYearInclusive)
+			throws ProcessingException {
+
+		super.executeAlgorithm(lastStepInclusive, stoppingYearInclusive);
+		BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
+		Optional<VdypLayer> veteranLayer = getVeteranLayer();
+
+	}
+
+	public enum BackExecutionStep implements ProcessingEngine.ExecutionStep {
+		;
+
+		@Override
+		public int compareTo(ExecutionStep o) {
+			if (o instanceof BackExecutionStep fes) {
+				return this.compareTo(fes);
+			}
+			if (o instanceof BaseExecutionStep bes) {
+				return -bes.compareTo(this);
+			}
+			throw new IllegalArgumentException("Cannot compare " + o.getClass() + " and " + this.getClass());
+		}
+
+	}
+
 }

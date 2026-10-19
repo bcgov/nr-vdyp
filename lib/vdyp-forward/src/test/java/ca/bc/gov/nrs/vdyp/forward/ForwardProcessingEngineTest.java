@@ -21,11 +21,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
@@ -47,7 +49,7 @@ class ForwardProcessingEngineTest {
 
 	@Nested
 	class ProcessPolygon {
-		ForwardProcessingEngine fpe;
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe;
 		Map<String, Object> controlMap;
 		IMocksControl em;
 		final Map<Integer, VdypPolygon> outputMap = new HashMap<>();
@@ -309,7 +311,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -354,7 +356,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -405,7 +407,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -453,7 +455,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -501,7 +503,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -537,7 +539,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 1, None
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.NONE
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.NONE
 			);
 
 			em.verify();
@@ -575,7 +577,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 0, full
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.FULL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.FULL
 			);
 
 			em.verify();
@@ -607,7 +609,7 @@ class ForwardProcessingEngineTest {
 
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
+			fpe.processPolygon(polygon, ForwardExecutionStep.GROW_5A_LH_EST);
 			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
@@ -630,7 +632,7 @@ class ForwardProcessingEngineTest {
 
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
+			fpe.processPolygon(polygon, ForwardExecutionStep.GROW_5A_LH_EST);
 			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
@@ -653,7 +655,7 @@ class ForwardProcessingEngineTest {
 
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
+			fpe.processPolygon(polygon, ForwardExecutionStep.GROW_5A_LH_EST);
 			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
@@ -758,7 +760,7 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.growSpecies(
-					EasyMock.anyObject(), EasyMock.anyInt(), EasyMock.eq(ExecutionStep.GROW_6_LAYER_TPH2),
+					EasyMock.anyObject(), EasyMock.anyInt(), EasyMock.eq(ForwardExecutionStep.GROW_6_LAYER_TPH2),
 					EasyMock.anyObject(), EasyMock.anyObject(), EasyMock.anyObject(), EasyMock.anyObject(),
 					EasyMock.anyObject(), EasyMock.anyFloat(), EasyMock.anyFloat(), EasyMock.anyFloat(),
 					EasyMock.anyObject()
@@ -773,7 +775,9 @@ class ForwardProcessingEngineTest {
 
 			em.replay();
 
-			assertThrows(ProcessingException.class, () -> fpe.processPolygon(polygon, ExecutionStep.GROW_6_LAYER_TPH2));
+			assertThrows(
+					ProcessingException.class, () -> fpe.processPolygon(polygon, ForwardExecutionStep.GROW_6_LAYER_TPH2)
+			);
 
 			em.verify();
 		}

@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
@@ -39,7 +41,9 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 	@Test
 	void test() throws ProcessingException {
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
+		);
 
 		assertThat(fpe.getState().controlMap.getBecLookup(), notNullValue());
 		assertThat(fpe.getState().controlMap.getGenusDefinitionMap(), notNullValue());
@@ -111,8 +115,10 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-		fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.DETERMINE_POLYGON_RANKINGS);
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
+		);
+		fpe.processPolygon(polygon, BaseExecutionStep.DETERMINE_POLYGON_RANKINGS);
 
 		assertThat(fpe.getState().getPrimaryLayerProcessingState().getPrimarySpeciesIndex(), is(1));
 		assertThat(
@@ -141,8 +147,10 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 			var polygon = reader.readNextPolygon().orElseThrow();
 
-			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-			fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.CALCULATE_MISSING_SITE_CURVES);
+			ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+					controlMap
+			);
+			fpe.processPolygon(polygon, BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES);
 
 			// Cannot check 0 since determinePolygonRankings has not been executed.
 			assertThat(fpe.getState().getPrimaryLayerProcessingState().getSiteCurveNumber(1), is(118));
@@ -178,8 +186,10 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 			var polygon = reader.readNextPolygon().orElseThrow();
 
-			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-			fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.CALCULATE_MISSING_SITE_CURVES);
+			ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+					controlMap
+			);
+			fpe.processPolygon(polygon, BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES);
 
 			// Cannot check 0 since determinePolygonRankings has not been executed.
 			assertThat(fpe.getState().getPrimaryLayerProcessingState().getSiteCurveNumber(1), is(118));
@@ -216,8 +226,10 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-		fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.ESTIMATE_MISSING_SITE_INDICES);
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
+		);
+		fpe.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES);
 
 		// Despite 13.40 being in the data stream, the change (2024/8/29) to ignore site information
 		// for all species of the layer except the primary means that method (1) will never be
@@ -264,8 +276,10 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-		fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.ESTIMATE_MISSING_SITE_INDICES);
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
+		);
+		fpe.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES);
 
 		var sourceSiteCurve = SiteIndexEquation.SI_CWC_BARKER;
 		var sourceSiteIndex = 13.4f;
@@ -293,10 +307,10 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		VdypPolygon polygon = ForwardTestUtils.readFirstPolygon(controlMap);
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-		fpe.processPolygon(
-				polygon, ForwardProcessingEngine.ExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
 		);
+		fpe.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES);
 
 		assertThat(
 				fpe.getState().getPrimaryLayerProcessingState().getBank().yearsToBreastHeight,
@@ -325,8 +339,10 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 			var polygon = reader.readNextPolygon().orElseThrow();
 
-			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-			fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX);
+			ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+					controlMap
+			);
+			fpe.processPolygon(polygon, BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX);
 			assertThat(
 					fpe.getState().getPrimaryLayerProcessingState().getPrimarySpeciesDominantHeight(), is(35.312016f)
 			);
@@ -370,8 +386,10 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 			var polygon = reader.readNextPolygon().orElseThrow();
 
-			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-			fpe.processPolygon(polygon, ForwardProcessingEngine.ExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX);
+			ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+					controlMap
+			);
+			fpe.processPolygon(polygon, BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX);
 
 			assertThat(
 					fpe.getState().getPrimaryLayerProcessingState().getPrimarySpeciesDominantHeight(), is(22.950302f)

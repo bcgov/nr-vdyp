@@ -5,9 +5,13 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.model.VdypEntity.MISSING_FLOAT_VALUE;
 
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.function.Predicate;
@@ -15,6 +19,8 @@ import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
+import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -22,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -30,13 +37,18 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.PrimarySpeciesDetails;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.Reference;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
@@ -47,7 +59,7 @@ import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
 
-public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProcessingState<L>> {
+public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProcessingState<L>> {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProcessingEngine.class);
 	protected static final int UC_ALL_INDEX = UtilizationClass.ALL.ordinal();
@@ -55,6 +67,7 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 	private static final float[] DEFAULT_QUAD_MEAN_DIAMETERS = new float[] { Float.NaN, 10.0f, 15.0f, 20.0f, 25.0f };
 	private static final float V_BASE_MIN = 0.1f;
 	private static final float B_BASE_MIN = 0.01f;
+	public static final float MIN_BASAL_AREA = 0.001f;
 
 	public ProcessingEngine(S processingState) {
 		this.state = processingState;
@@ -1378,8 +1391,389 @@ public class ProcessingEngine<S extends ProcessingState<L>, L extends LayerProce
 		return actualLogit - staticLogit;
 	}
 
+	/**
+	 * Validate that the given polygon is in good order for processing.
+	 *
+	 * @param polygon the subject polygon.
+	 * @returns if this method doesn't throw, all is good.
+	 * @throws ProcessingException if the polygon does not pass validation.
+	 */
+	protected static void validatePolygon(VdypPolygon polygon) throws ProcessingException {
+
+		if (polygon.getPolygonIdentifier().getYear() < 1900) {
+
+			throw new ProcessingException(
+					MessageFormat.format(
+							"Polygon {0}''s year value {1} is < 1900", polygon.getPolygonIdentifier().getName(),
+							polygon.getPolygonIdentifier().getYear()
+					)
+			);
+		}
+	}
+
 	public S getState() {
 		return state;
+	}
+
+	/**
+	 * Execution Step to do everything.
+	 *
+	 * @return
+	 */
+	protected ExecutionStep stepAll() {
+		return BaseExecutionStep.ALL;
+	}
+
+	/**
+	 * Run all steps of the engine on the given polygon.
+	 *
+	 * @param polygon the polygon on which to operate
+	 *
+	 * @throws ProcessingException should an error with the data occur during processing
+	 */
+	public void processPolygon(VdypPolygon polygon) throws ProcessingException {
+
+		processPolygon(polygon, BaseExecutionStep.ALL);
+	}
+
+	protected void executeAlgorithm(ExecutionStep lastStepInclusive, int stoppingYearInclusive)
+			throws ProcessingException {
+		LayerProcessingState<?> plps = getState().getPrimaryLayerProcessingState();
+
+		Optional<VdypLayer> veteranLayer = getVeteranLayer();
+
+		if (lastStepInclusive.ge(BaseExecutionStep.CHECK_FOR_WORK)) {
+			stopIfNoWork(getState());
+		}
+
+		// SCINXSET
+		if (lastStepInclusive.ge(BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES)) {
+			calculateMissingSiteCurves(plps, getState().controlMap.getSiteCurveMap());
+
+			getState().getVeteranLayerProcessingState().ifPresent(vlps -> {
+				assert veteranLayer.isPresent();
+				calculateMissingSiteCurves(vlps, getState().controlMap.getSiteCurveMap());
+			});
+		}
+
+		// VPRIME1, method == 1
+		if (lastStepInclusive.ge(BaseExecutionStep.CALCULATE_COVERAGES)) {
+			calculateCoverages(plps);
+		}
+
+		if (lastStepInclusive.ge(BaseExecutionStep.DETERMINE_POLYGON_RANKINGS)) {
+			determinePolygonRankings();
+		}
+
+		// SITEADD
+		if (lastStepInclusive.ge(BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES)) {
+			if (plps.getParent().controlMap.getDebugSettings().getValue(11) == 0) {
+				estimateMissingSiteIndices(plps);
+			} else {
+				estimateMissingSiteIndicesAndAgesExtended(plps, plps.getParent().controlMap.getDebugSettings());
+			}
+		}
+
+		if (lastStepInclusive.ge(BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES)) {
+			estimateMissingYearsToBreastHeightValues(plps);
+		}
+
+		// VHDOM1 METH_H = 2, METH_A = 2, METH_SI = 2
+		if (lastStepInclusive.ge(BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX)) {
+			calculateDominantHeightAgeSiteIndex(plps, getState().controlMap.getHl1Coefficients());
+		}
+
+		// CVSET1
+		if (lastStepInclusive.ge(BaseExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
+			setCompatibilityVariables();
+		}
+	}
+
+	protected Optional<VdypLayer> getVeteranLayer() {
+		return Optional.ofNullable(getState().getCurrentPolygon().getLayers().get(LayerType.VETERAN));
+	}
+
+	/**
+	 * Run all steps of the engine on the given polygon up to and including the given <code>lastStep</code>.
+	 *
+	 * @param polygon           the polygon on which to operate
+	 * @param lastStepInclusive execute up to and including this step
+	 *
+	 * @throws ProcessingException should an error with the data occur during processing
+	 */
+	public void processPolygon(VdypPolygon polygon, ExecutionStep lastStepInclusive) throws ProcessingException {
+
+		logger.info("Starting processing of the primary layer of polygon {}", polygon.getPolygonIdentifier());
+
+		getState().setPolygon(polygon);
+
+		// All of BANKCHK1 that we need. Note that setting UC ALL (METH_CHK == 1) in BANKCHK1 is
+		// performed when the Bank instance is created in setPolygon, above.
+
+		validatePolygon(polygon);
+
+		// Determine the target year of the growth
+		int targetYear = getTargetYear(polygon);
+
+		// Run the forward algorithm for this polygon
+
+		executeAlgorithm(lastStepInclusive, targetYear);
+	}
+
+	public int getTargetYear(VdypPolygon polygon) throws ProcessingException {
+		int targetYear;
+
+		int growTargetControlVariableValue = getState().controlMap.getControlVariables()
+				.getControlVariable(ControlVariable.GROW_TARGET_1);
+		if (growTargetControlVariableValue == -1) {
+			if (polygon.getTargetYear().isEmpty()) {
+				throw new ProcessingException(
+						"Control Variable 1 has the value -1, indicating that the grow-to years are"
+								+ " to be read from a grow-to-year file (at " + ControlKey.FORWARD_INPUT_GROWTO.name()
+								+ " in the control file), but no such file was specified."
+				);
+			}
+			targetYear = polygon.getTargetYear().get();
+		} else {
+			if (growTargetControlVariableValue <= 400) {
+				targetYear = polygon.getPolygonIdentifier().getYear() + growTargetControlVariableValue;
+			} else {
+				targetYear = growTargetControlVariableValue;
+			}
+		}
+		return targetYear;
+	}
+
+	public static enum BaseExecutionStep implements ExecutionStep {
+		// Must be first
+		NONE, //
+
+		CHECK_FOR_WORK, //
+		CALCULATE_MISSING_SITE_CURVES, //
+		CALCULATE_COVERAGES, //
+		DETERMINE_POLYGON_RANKINGS, //
+		ESTIMATE_MISSING_SITE_INDICES, //
+		ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES, //
+		CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX, //
+		SET_COMPATIBILITY_VARIABLES, //
+
+		ALL;
+
+		@Override
+		public int compareTo(ExecutionStep o) {
+
+			if (o instanceof BaseExecutionStep bse) {
+				return this.compareTo(bse);
+			}
+			return this == ALL ? +1 : -1;
+		}
+
+	}
+
+	public static interface ExecutionStep {
+
+		// Bit of a hack, we can't implement Comparable because Enum already does so with a different type parameter
+		public int compareTo(ExecutionStep o);
+
+		public default boolean lt(ExecutionStep that) {
+			return this.compareTo(that) < 0;
+		}
+
+		public default boolean le(ExecutionStep that) {
+			return this.compareTo(that) <= 0;
+		}
+
+		public default boolean eq(ExecutionStep that) {
+			return this.compareTo(that) == 0;
+		}
+
+		public default boolean ge(ExecutionStep that) {
+			return this.compareTo(that) >= 0;
+		}
+
+		public default boolean gt(ExecutionStep that) {
+			return this.compareTo(that) > 0;
+		}
+	}
+
+	private static void stopIfNoWork(ProcessingState<?> fps) throws ProcessingException {
+
+		// The following is extracted from BANKCHK1, simplified for the parameters
+		// METH_IN = 4, LayerI = 1, and INSTANCE = 1. So IR = 1, which is the first
+		// bank, numbered 0.
+
+		// => all that is done is that an exception is thrown if there are no species to
+		// process.
+
+		if (fps.getPrimaryLayerProcessingState().getNSpecies() == 0) {
+			throw new ProcessingException(
+					MessageFormat.format(
+							"Polygon {0} layer 0 has no species with basal area above {1}",
+							fps.getCompactPolygonIdentifier(), MIN_BASAL_AREA
+					)
+			);
+		}
+	}
+
+	// PRIMFIND
+	/**
+	 * Returns a {@code SpeciesRankingDetails} instance giving:
+	 * <ul>
+	 * <li>the index in {@code bank} of the primary species
+	 * <li>the index in {@code bank} of the secondary species, or Optional.empty() if none, and
+	 * <li>the percentage of forested land occupied by the primary species
+	 * </ul>
+	 *
+	 * @param lps the bank on which to operate
+	 * @return as described
+	 */
+	// TODO make package private and provide access via test utils when needed for tests if necessary after moving tests
+	// around
+	public void determinePolygonRankings() {
+
+		L lps = getState().getPrimaryLayerProcessingState();
+		Bank bank = lps.getBank();
+
+		if (lps.getNSpecies() == 0) {
+			throw new IllegalArgumentException("Can not find primary species as there are no species");
+		}
+
+		var primarySecondarySpecies = getState().computers.findPrimarySpecies(
+				buildCoverageSpecies(lps), getState().controlMap.getGenusDefinitionMap(),
+				getState().controlMap.getDebugSettings(), (toCopy, config) -> VdypSpecies.build(builder -> {
+					builder.copy(toCopy);
+					config.accept(builder);
+				})
+		);
+
+		var primarySpecies = primarySecondarySpecies.get(0);
+		int highestPercentageIndex = findBankSpeciesIndex(bank, primarySpecies.getGenus());
+
+		Optional<Integer> secondarySpeciesIndex = primarySecondarySpecies.size() > 1
+				? Optional.of(findBankSpeciesIndex(bank, primarySecondarySpecies.get(1).getGenus())) : Optional.empty();
+
+		try {
+			int inventoryTypeGroup = ComputationMethods.findItg(primarySecondarySpecies);
+
+			int basalAreaGroup1 = 0;
+
+			String primarySpeciesName = bank.speciesNames[highestPercentageIndex];
+			String becZoneAlias = bank.getBecZone().getAlias();
+
+			Integer defaultEquationGroup = getState().controlMap.getDefaultEquationGroup()
+					.get(primarySpeciesName, becZoneAlias);
+			Integer equationModifierGroup = getState().controlMap.getEquationModifierGroup()
+					.get(defaultEquationGroup, inventoryTypeGroup);
+			basalAreaGroup1 = equationModifierGroup > 0 ? equationModifierGroup : defaultEquationGroup;
+
+			int primarySpeciesIndex = bank.speciesIndices[highestPercentageIndex];
+			int basalAreaGroup3 = defaultEquationGroups[primarySpeciesIndex];
+			if (Region.INTERIOR.equals(bank.getBecZone().getRegion())
+					&& exceptedSpeciesIndicies.contains(basalAreaGroup3)) {
+				basalAreaGroup3 += 20;
+			}
+
+			lps.setSpeciesRankingDetails(
+					new SpeciesRankingDetails(
+							highestPercentageIndex, secondarySpeciesIndex, inventoryTypeGroup, basalAreaGroup1,
+							basalAreaGroup3
+					)
+			);
+		} catch (ProcessingException e) {
+			// This should never fail because the bank has already been validated and hence the genera
+			// are known to be valid.
+
+			throw new IllegalStateException(e);
+		}
+	}
+
+	/** Default Equation Group, by species. Indexed by the species number, a one-based value. */
+	private static final int[] defaultEquationGroups = { 0 /* placeholder */, 1, 2, 3, 4, 1, 2, 5, 6, 7, 1, 9, 8, 9, 9,
+			10, 4 };
+	private static final Set<Integer> exceptedSpeciesIndicies = new HashSet<>(List.of(3, 4, 5, 6, 10));
+
+	private List<VdypSpecies> buildCoverageSpecies(L lps) {
+		Bank bank = lps.getBank();
+		VdypLayer layer = getState().getCurrentPolygon().requirePrimaryLayer();
+
+		return Arrays.stream(lps.getIndices()).mapToObj(i -> {
+			var source = layer.getSpecies().get(bank.speciesNames[i]);
+			if (source == null) {
+				throw new IllegalStateException(
+						MessageFormat.format("Missing species {0} in primary layer", bank.speciesNames[i])
+				);
+			}
+
+			return VdypSpecies.build(builder -> {
+				builder.copy(source);
+				builder.percentGenus(bank.percentagesOfForestedLand[i]);
+			});
+		}).toList();
+	}
+
+	private static int findBankSpeciesIndex(Bank bank, String genus) {
+		for (int i : bank.getIndices()) {
+			if (genus.equals(bank.speciesNames[i])) {
+				return i;
+			}
+		}
+
+		throw new IllegalStateException(MessageFormat.format("Species {0} was not found in the bank", genus));
+	}
+
+	/**
+	 * For each species for which a years-to-breast-height value was not supplied, calculate it from the given
+	 * years-at-breast-height and age-total values if given or otherwise estimate it from the site curve and site index
+	 * values for the species.
+	 *
+	 * @param lps the current state of the processing of the polygon
+	 */
+	static void estimateMissingYearsToBreastHeightValues(LayerProcessingState<?> lps) {
+
+		Bank bank = lps.getBank();
+
+		int primarySpeciesIndex = lps.getPrimarySpeciesIndex();
+		float primarySpeciesSiteIndex = bank.siteIndices[primarySpeciesIndex];
+
+		// Determine the default site index by using the site index of the primary species unless
+		// it hasn't been set in which case pick any. Note that there may still not be a
+		// meaningful value after this for example when the value is not available for the primary
+		// species (see estimateMissingSiteIndices) and it's the only one.
+
+		float defaultSiteIndex = primarySpeciesSiteIndex;
+
+		if (Float.isNaN(defaultSiteIndex)) {
+			for (int i : lps.getIndices()) {
+				if (!Float.isNaN(bank.siteIndices[i])) {
+					defaultSiteIndex = bank.siteIndices[i];
+					break;
+				}
+			}
+		}
+
+		for (int i : lps.getIndices()) {
+			if (!Float.isNaN(bank.yearsToBreastHeight[i])) {
+				// was supplied
+				continue;
+			}
+
+			// Note: this block will normally never be executed because of the logic in
+			// the constructor of VdypLayerSpecies that computes missing values when the
+			// other two measurement values are present.
+			if (!Float.isNaN(bank.yearsAtBreastHeight[i]) && bank.ageTotals[i] > bank.yearsAtBreastHeight[i]) {
+				bank.yearsToBreastHeight[i] = bank.ageTotals[i] - bank.yearsAtBreastHeight[i];
+				continue;
+			}
+
+			float siteIndex = !Float.isNaN(bank.siteIndices[i]) ? bank.siteIndices[i] : defaultSiteIndex;
+			try {
+				SiteIndexEquation curve = SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(i));
+				double yearsToBreastHeight = SiteTool.yearsToBreastHeight(curve, siteIndex);
+				bank.yearsToBreastHeight[i] = (float) yearsToBreastHeight;
+			} catch (CommonCalculatorException e) {
+				logger.warn(MessageFormat.format("Unable to determine yearsToBreastHeight of species {0}", i), e);
+			}
+		}
 	}
 
 }
