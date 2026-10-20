@@ -47,6 +47,7 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
@@ -541,70 +542,9 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 *
 	 * @throws ProcessingException
 	 */
+	@Deprecated
 	public void estimateSmallComponents(P fPoly, VdypLayer layer) {
-		float loreyHeightSum = 0f;
-		float baseAreaSum = 0f;
-		float treesPerHectareSum = 0f;
-		float volumeSum = 0f;
-
-		Region region = fPoly.getBiogeoclimaticZone().getRegion();
-
-		for (VdypSpecies spec : layer.getSpecies().values()) {
-			@SuppressWarnings("unused")
-			float loreyHeightSpec = spec.getLoreyHeightByUtilization().getAll(); // HLsp
-			@SuppressWarnings("unused")
-			float quadMeanDiameterSpec = spec.getQuadraticMeanDiameterByUtilization().getAll(); // DQsp
-
-			// EMP080
-			float smallComponentProbability = estimationMethods.estimateSmallComponentProbability(layer, spec, region); // PROBsp
-
-			// this WHOLE operation on Actual BA's, not 100% occupancy.
-			float fractionAvailable = Utils.<Float>optSafe(fPoly.getPercentAvailable()).map(p -> p / 100f).orElse(1f);
-
-			// EMP081
-			float conditionalExpectedBaseArea = estimationMethods
-					.estimateSmallComponentConditionalExpectedBasalAreaNormalized(spec, fractionAvailable, region); // BACONDsp
-
-			float baseAreaSpecSmall = smallComponentProbability * conditionalExpectedBaseArea; // BASMsp
-
-			// EMP082
-			float quadMeanDiameterSpecSmall = estimationMethods.estimateSmallComponentQuadMeanDiameter(spec); // DQSMsp
-
-			// EMP085
-			float loreyHeightSpecSmall = estimationMethods
-					.estimateSmallComponentLoreyHeight(spec, quadMeanDiameterSpecSmall); // HLSMsp
-
-			// EMP086
-			float meanVolumeSmall = this.estimationMethods
-					.estimateMeanVolumeSmall(spec, loreyHeightSpecSmall, quadMeanDiameterSpecSmall); // VMEANSMs
-
-			// TODO Apply Compatibility Variables, not needed for FIPSTART or VRISTART
-
-			spec.getLoreyHeightByUtilization().setSmall(loreyHeightSpecSmall);
-			float treesPerHectareSpecSmall = BaseAreaTreeDensityDiameter
-					.treesPerHectare(baseAreaSpecSmall, quadMeanDiameterSpecSmall); // TPHSMsp
-			spec.getBaseAreaByUtilization().setSmall(baseAreaSpecSmall);
-			spec.getTreesPerHectareByUtilization().setSmall(treesPerHectareSpecSmall);
-			spec.getQuadraticMeanDiameterByUtilization().setSmall(quadMeanDiameterSpecSmall);
-			float wholeStemVolumeSpecSmall = treesPerHectareSpecSmall * meanVolumeSmall; // VOLWS(I,-1)
-			spec.getWholeStemVolumeByUtilization().setSmall(wholeStemVolumeSpecSmall);
-
-			loreyHeightSum += baseAreaSpecSmall * loreyHeightSpecSmall;
-			baseAreaSum += baseAreaSpecSmall;
-			treesPerHectareSum += treesPerHectareSpecSmall;
-			volumeSum += wholeStemVolumeSpecSmall;
-		}
-
-		if (baseAreaSum > 0f) {
-			layer.getLoreyHeightByUtilization().setSmall(loreyHeightSum / baseAreaSum);
-		} else {
-			layer.getLoreyHeightByUtilization().setSmall(0f);
-		}
-		layer.getBaseAreaByUtilization().setSmall(baseAreaSum);
-		layer.getTreesPerHectareByUtilization().setSmall(treesPerHectareSum);
-		layer.getQuadraticMeanDiameterByUtilization()
-				.setSmall(BaseAreaTreeDensityDiameter.quadMeanDiameter(baseAreaSum, treesPerHectareSum));
-		layer.getWholeStemVolumeByUtilization().setSmall(volumeSum);
+		this.computers.estimateSmallComponents(CompatibilityVariableMode.NONE, fPoly, layer);
 	}
 
 	/**

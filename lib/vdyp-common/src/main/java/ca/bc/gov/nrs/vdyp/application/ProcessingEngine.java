@@ -1493,6 +1493,11 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 		return Optional.ofNullable(getState().getCurrentPolygon().getLayers().get(LayerType.VETERAN));
 	}
 
+	protected VdypLayer getPrimaryLayer() {
+		return Optional.ofNullable(getState().getCurrentPolygon().getLayers().get(LayerType.PRIMARY))
+				.orElseThrow(() -> new IllegalStateException("No primary layer found"));
+	}
+
 	/**
 	 * Run all steps of the engine on the given polygon up to and including the given <code>lastStep</code>.
 	 *

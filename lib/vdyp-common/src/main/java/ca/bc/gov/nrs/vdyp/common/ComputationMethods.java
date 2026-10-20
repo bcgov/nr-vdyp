@@ -40,6 +40,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
@@ -52,6 +53,7 @@ import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
@@ -396,6 +398,95 @@ public class ComputationMethods {
 
 		}
 
+	}
+
+	// YSMALL
+	/**
+	 * Estimate small components for primary layer
+	 *
+	 * @throws ProcessingException
+	 */
+	public void estimateSmallComponents(
+			CompatibilityVariableMode cvmode, BaseVdypPolygon<?, ?, ?, ?> fPoly, VdypLayer layer
+	) {
+		float loreyHeightSum = 0f;
+		float baseAreaSum = 0f;
+		float treesPerHectareSum = 0f;
+		float volumeSum = 0f;
+
+		Region region = fPoly.getBiogeoclimaticZone().getRegion();
+
+		for (VdypSpecies spec : layer.getSpecies().values()) {
+			@SuppressWarnings("unused")
+			float loreyHeightSpec = spec.getLoreyHeightByUtilization().getAll(); // HLsp
+			@SuppressWarnings("unused")
+			float quadMeanDiameterSpec = spec.getQuadraticMeanDiameterByUtilization().getAll(); // DQsp
+
+			// EMP080
+			float smallComponentProbability = estimationMethods.estimateSmallComponentProbability(layer, spec, region); // PROBsp
+
+			// this WHOLE operation on Actual BA's, not 100% occupancy.
+			float fractionAvailable = Utils.<Float>optSafe(fPoly.getPercentAvailable()).map(p -> p / 100f).orElse(1f);
+
+			// EMP081
+			float conditionalExpectedBaseArea = estimationMethods
+					.estimateSmallComponentConditionalExpectedBasalAreaNormalized(spec, fractionAvailable, region); // BACONDsp
+
+			float baseAreaSpecSmall = smallComponentProbability * conditionalExpectedBaseArea; // BASMsp
+
+			// EMP082
+			float quadMeanDiameterSpecSmall = estimationMethods.estimateSmallComponentQuadMeanDiameter(spec); // DQSMsp
+
+			// EMP085
+			float loreyHeightSpecSmall = estimationMethods
+					.estimateSmallComponentLoreyHeight(spec, quadMeanDiameterSpecSmall); // HLSMsp
+
+			// EMP086
+			float meanVolumeSmall = this.estimationMethods
+					.estimateMeanVolumeSmall(spec, loreyHeightSpecSmall, quadMeanDiameterSpecSmall); // VMEANSMs
+
+			if (cvmode != CompatibilityVariableMode.NONE/* apply compatibility variables */) {
+				baseAreaSpecSmall += spec.getCvPrimaryLayerSmall(UtilizationClassVariable.BASAL_AREA);
+				if (baseAreaSpecSmall < 0.0f) {
+					baseAreaSpecSmall = 0.0f;
+				}
+				quadMeanDiameterSpecSmall += spec.getCvPrimaryLayerSmall(UtilizationClassVariable.QUAD_MEAN_DIAMETER);
+				FloatMath.clamp(quadMeanDiameterSpecSmall, 4.01f, 7.49f);
+
+				loreyHeightSpecSmall = 1.3f + (loreyHeightSpecSmall - 1.3f)
+						* FloatMath.exp(spec.getCvPrimaryLayerSmall(UtilizationClassVariable.LOREY_HEIGHT));
+
+				if (cvmode == CompatibilityVariableMode.ALL && meanVolumeSmall > 0.0f) {
+					meanVolumeSmall *= FloatMath
+							.exp(spec.getCvPrimaryLayerSmall(UtilizationClassVariable.WHOLE_STEM_VOLUME));
+				}
+			}
+
+			spec.getLoreyHeightByUtilization().setSmall(loreyHeightSpecSmall);
+			float treesPerHectareSpecSmall = BaseAreaTreeDensityDiameter
+					.treesPerHectare(baseAreaSpecSmall, quadMeanDiameterSpecSmall); // TPHSMsp
+			spec.getBaseAreaByUtilization().setSmall(baseAreaSpecSmall);
+			spec.getTreesPerHectareByUtilization().setSmall(treesPerHectareSpecSmall);
+			spec.getQuadraticMeanDiameterByUtilization().setSmall(quadMeanDiameterSpecSmall);
+			float wholeStemVolumeSpecSmall = treesPerHectareSpecSmall * meanVolumeSmall; // VOLWS(I,-1)
+			spec.getWholeStemVolumeByUtilization().setSmall(wholeStemVolumeSpecSmall);
+
+			loreyHeightSum += baseAreaSpecSmall * loreyHeightSpecSmall;
+			baseAreaSum += baseAreaSpecSmall;
+			treesPerHectareSum += treesPerHectareSpecSmall;
+			volumeSum += wholeStemVolumeSpecSmall;
+		}
+
+		if (baseAreaSum > 0f) {
+			layer.getLoreyHeightByUtilization().setSmall(loreyHeightSum / baseAreaSum);
+		} else {
+			layer.getLoreyHeightByUtilization().setSmall(0f);
+		}
+		layer.getBaseAreaByUtilization().setSmall(baseAreaSum);
+		layer.getTreesPerHectareByUtilization().setSmall(treesPerHectareSum);
+		layer.getQuadraticMeanDiameterByUtilization()
+				.setSmall(BaseAreaTreeDensityDiameter.quadMeanDiameter(baseAreaSum, treesPerHectareSum));
+		layer.getWholeStemVolumeByUtilization().setSmall(volumeSum);
 	}
 
 	/**

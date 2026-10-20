@@ -1577,6 +1577,7 @@ class VdypStartApplicationTest {
 		}
 	}
 
+	// TODO move this to computation method test suite
 	@Nested
 	class SmallComponents {
 		@Test
