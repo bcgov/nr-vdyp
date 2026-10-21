@@ -1017,9 +1017,11 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 				}
 
 				float trialDqLow = 7.5f + (spDqEndEsts[i] - 7.5f) * FloatMath.exp(rs1[i] + cjLow);
-				trialDqLow = FloatMath.clamp(trialDqLow, dqLowerBoundBySpecies[i], dqUpperBoundBySpecies[i]);
+				trialDqLow = FloatMath
+						.unverifiedMinMaxClamp(trialDqLow, dqLowerBoundBySpecies[i], dqUpperBoundBySpecies[i]);
 				float trialDqHigh = 7.5f + (spDqEndEsts[i] - 7.5f) * FloatMath.exp(rs1[i] + cjHigh);
-				trialDqHigh = FloatMath.clamp(trialDqHigh, dqLowerBoundBySpecies[i], dqUpperBoundBySpecies[i]);
+				trialDqHigh = FloatMath
+						.unverifiedMinMaxClamp(trialDqHigh, dqLowerBoundBySpecies[i], dqUpperBoundBySpecies[i]);
 
 				tphUpperBoundBySpecies[i] = BaseAreaTreeDensityDiameter.treesPerHectare(baEndAll[i], trialDqLow);
 				tphLowerBoundBySpecies[i] = BaseAreaTreeDensityDiameter.treesPerHectare(baEndAll[i], trialDqHigh);
@@ -1112,7 +1114,9 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 		spDqEsts[speciesIdx] = 7.5f
 				+ (spDqEndEsts[speciesIdx] - 7.5f) * ( (spDqStart - 7.5f) / (spDqStartEsts[speciesIdx] - 7.5f));
 		spDqEsts[speciesIdx] = FloatMath
-				.clamp(spDqEsts[speciesIdx], dqLowerBoundBySpecies[speciesIdx], dqUpperBoundBySpecies[speciesIdx]);
+				.unverifiedMinMaxClamp(
+						spDqEsts[speciesIdx], dqLowerBoundBySpecies[speciesIdx], dqUpperBoundBySpecies[speciesIdx]
+				);
 
 		rs1[speciesIdx] = FloatMath.log( (spDqStart - 7.5f) / (spDqStartEsts[speciesIdx] - 7.5f));
 

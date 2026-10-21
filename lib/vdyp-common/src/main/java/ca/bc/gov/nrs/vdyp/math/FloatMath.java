@@ -50,6 +50,10 @@ public class FloatMath {
 		return x;
 	}
 
+	public static float unverifiedMinMaxClamp(float x, float min, float max) {
+		return Math.min(Math.max(x, min), max);
+	}
+
 	public static float ratio(float arg, float radius) {
 		if (arg < -radius) {
 			return 0.0f;
