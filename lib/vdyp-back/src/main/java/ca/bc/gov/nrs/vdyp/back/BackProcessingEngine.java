@@ -929,10 +929,11 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		super.executeAlgorithm(lastStepInclusive, stoppingYearInclusive);
 		final ComputationMethods computers = this.getState().getComputers();
-		BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
-		Optional<VdypLayer> veteranLayer = getVeteranLayer();
-		VdypLayer primaryLayer = getPrimaryLayer();
+		final BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
+		final Optional<VdypLayer> veteranLayer = getVeteranLayer();
+		final VdypLayer primaryLayer = getPrimaryLayer();
 		final BecDefinition bec = getState().getCurrentBecZone();
+		final VdypPolygon polygon = getState().getCurrentPolygon();
 
 		// IYR_RGR = BACKAGE()
 		int regressionYears = calculateConvergenceAge();
@@ -971,6 +972,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 					bec, primaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC, CompatibilityVariableMode.ALL
 			);
 
+			// YSMALL(2)
+			computers.estimateSmallComponents(CompatibilityVariableMode.ALL, polygon, primaryLayer);
 		}
 
 	}
