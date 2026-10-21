@@ -1113,10 +1113,9 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 	) {
 		spDqEsts[speciesIdx] = 7.5f
 				+ (spDqEndEsts[speciesIdx] - 7.5f) * ( (spDqStart - 7.5f) / (spDqStartEsts[speciesIdx] - 7.5f));
-		spDqEsts[speciesIdx] = FloatMath
-				.unverifiedMinMaxClamp(
-						spDqEsts[speciesIdx], dqLowerBoundBySpecies[speciesIdx], dqUpperBoundBySpecies[speciesIdx]
-				);
+		spDqEsts[speciesIdx] = FloatMath.unverifiedMinMaxClamp(
+				spDqEsts[speciesIdx], dqLowerBoundBySpecies[speciesIdx], dqUpperBoundBySpecies[speciesIdx]
+		);
 
 		rs1[speciesIdx] = FloatMath.log( (spDqStart - 7.5f) / (spDqStartEsts[speciesIdx] - 7.5f));
 
