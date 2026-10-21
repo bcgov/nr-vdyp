@@ -78,7 +78,7 @@ class BackProcessingEngineTest {
 		em = EasyMock.createControl();
 		state = em.createMock(BackProcessingState.class);
 
-		engine = new BackProcessingEngine(state);
+		engine = new BackProcessingEngine(state, Optional.empty());
 
 		rawControlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
 

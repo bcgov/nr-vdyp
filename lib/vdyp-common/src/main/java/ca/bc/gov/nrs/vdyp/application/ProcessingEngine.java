@@ -26,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -69,8 +70,9 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 	private static final float B_BASE_MIN = 0.01f;
 	public static final float MIN_BASAL_AREA = 0.001f;
 
-	public ProcessingEngine(S processingState) {
+	public ProcessingEngine(S processingState, Optional<VdypOutputWriter> outputWriter) {
 		this.state = processingState;
+		this.outputWriter = outputWriter;
 	}
 
 	/**
@@ -400,6 +402,8 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 					assignPrimarySiteIndexByConversion(l, b, pi, n, psc);
 				}
 			} };
+	/** The entity to which result information is written */
+	protected Optional<VdypOutputWriter> outputWriter = Optional.empty();
 
 	/**
 	 * estimateMissingSiteIndicesAndAgesExtended (Formerly SITEADDU)
@@ -1696,6 +1700,8 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 	private static final int[] defaultEquationGroups = { 0 /* placeholder */, 1, 2, 3, 4, 1, 2, 5, 6, 7, 1, 9, 8, 9, 9,
 			10, 4 };
 	private static final Set<Integer> exceptedSpeciesIndicies = new HashSet<>(List.of(3, 4, 5, 6, 10));
+
+	protected abstract void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException;
 
 	private List<VdypSpecies> buildCoverageSpecies(L lps) {
 		Bank bank = lps.getBank();

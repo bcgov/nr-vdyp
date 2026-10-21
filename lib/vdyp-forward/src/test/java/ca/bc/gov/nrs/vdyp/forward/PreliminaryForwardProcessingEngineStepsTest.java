@@ -74,7 +74,9 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 		var polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		{
-			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+			ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+					controlMap
+			);
 			fpe.getState().setPolygon(polygon);
 
 			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();

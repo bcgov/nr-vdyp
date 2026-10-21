@@ -58,14 +58,10 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 	/** π/4/10⁴ */
 	public static final float PI_40K = (float) (Math.PI / 40_000);
 
-	/** The entity to which result information is written */
-	private Optional<VdypOutputWriter> outputWriter = Optional.empty();
-
 	private final boolean doCheckpoint;
 
 	public ForwardProcessingEngine(Map<String, Object> controlMap, Optional<VdypOutputWriter> outputWriter) {
-		super(new ForwardProcessingState(controlMap));
-		this.outputWriter = outputWriter;
+		super(new ForwardProcessingState(controlMap), outputWriter);
 
 		int cv7Value = this.getState().controlMap.getControlVariables()
 				.getControlVariable(ControlVariable.CHECKPOINT_7);
@@ -2308,8 +2304,9 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 		}
 	}
 
+	@Override
 	@SuppressWarnings("java:S128") // This is using case fall through. The lack of breaks is intentional.
-	private void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
+	protected void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
 
 		try {
 			outputWriter.ifPresent((o) -> {

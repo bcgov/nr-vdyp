@@ -29,6 +29,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
@@ -58,8 +59,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 	private static final Logger logger = LoggerFactory.getLogger(BackProcessingEngine.class);
 
-	public BackProcessingEngine(BackProcessingState processingState) {
-		super(processingState);
+	public BackProcessingEngine(BackProcessingState processingState, Optional<VdypOutputWriter> outputWriter) {
+		super(processingState, outputWriter);
 	}
 
 	@Override
@@ -975,6 +976,12 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			// YSMALL(2)
 			computers.estimateSmallComponents(CompatibilityVariableMode.ALL, polygon, primaryLayer);
 		}
+
+	}
+
+	@Override
+	protected void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
+		// TODO Auto-generated method stub
 
 	}
 

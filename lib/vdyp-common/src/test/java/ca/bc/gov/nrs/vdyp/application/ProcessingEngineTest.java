@@ -786,7 +786,7 @@ class ProcessingEngineTest {
 					ps = em.createMock(ProcessingState.class);
 					unit = EasyMock.partialMockBuilder(ProcessingEngine.class) //
 							.addMockedMethod("convertSiteIndexBetweenCurves")//
-							.withConstructor(ps)//
+							.withConstructor(ps, Optional.empty())//
 							.createMock(em);
 
 				}
@@ -1296,7 +1296,7 @@ class ProcessingEngineTest {
 						.addMockedMethod("getSiteIndexEquationByIndex") //
 						.addMockedMethod("yearsToBreastHeight") //
 						.addMockedMethod("heightAndSiteIndexToAge") //
-						.withConstructor(ps) //
+						.withConstructor(ps, Optional.empty()) //
 						.createMock(em);
 				lps = em.createMock(LayerProcessingState.class);
 
@@ -1797,7 +1797,7 @@ class ProcessingEngineTest {
 					.addMockedMethod("yearsToBreastHeight") //
 					.addMockedMethod("heightAndSiteIndexToAge") //
 					.addMockedMethod("convertSiteIndexBetweenCurves") //
-					.withConstructor(ps) //
+					.withConstructor(ps, Optional.empty()) //
 					.createMock(em);
 			lps = em.createMock(LayerProcessingState.class);
 
