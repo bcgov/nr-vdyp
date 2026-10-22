@@ -1731,7 +1731,7 @@ public class Polygon implements Comparable<Polygon> {
 
 				Stand leadSp0 = candidate.determineLeadingSp0(0);
 				if (leadSp0 != null) {
-					if (candidate.getCrownClosure() <= 10.0
+					if (candidate.getCrownClosure() != null && candidate.getCrownClosure() <= 10.0
 							&& leadSp0.getSpeciesGroup().getTotalAge() >= leadSp0.determineMaturityAge()) {
 						// candidate is really a veteran layer
 						continue;
