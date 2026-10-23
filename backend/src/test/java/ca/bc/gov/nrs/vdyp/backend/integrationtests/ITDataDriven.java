@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.backend.integrationtests;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,7 +71,7 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 		return list.get(list.size() - 1);
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "[{index}] dataset={0}")
 	@MethodSource("testNameProvider")
 	void testEndToEnd(String testName) throws IOException, ResourceParseException {
 
@@ -129,7 +130,10 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 			expectedYieldTable = new ResultYieldTable(reader);
 		}
 
-		ResultYieldTable.compareWithTolerance(expectedYieldTable, actualYieldTable, 0.01, IGNORE_COLUMNS);
+		assertAll(
+				"Dataset: " + testName,
+				() -> ResultYieldTable.compareWithTolerance(expectedYieldTable, actualYieldTable, 0.01, IGNORE_COLUMNS)
+		);
 	}
 
 	/**
