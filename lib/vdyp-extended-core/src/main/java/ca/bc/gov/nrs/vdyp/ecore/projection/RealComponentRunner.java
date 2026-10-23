@@ -297,9 +297,8 @@ public class RealComponentRunner implements ComponentRunner {
 
 				var sortedLayerInfos = ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST.stream()
 						.map(
-								type -> suppliedLayerInfos.stream().filter(
-										li -> li.getProcessedAsVDYP7Layer() == type
-								)
+								type -> suppliedLayerInfos.stream() //
+										.filter(li -> li.getProcessedAsVDYP7Layer() == type) //
 										.findFirst()
 						).filter(Optional::isPresent).map(Optional::get).sorted(suppliedLayerOrder).toList();
 
