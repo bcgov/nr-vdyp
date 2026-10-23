@@ -67,8 +67,9 @@ public class ExceptionsTest {
 
 		var validationMessages = new ArrayList<ValidationMessage>();
 		validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, "validation failure"));
-		var e1_1 = new LayerValidationException(validationMessages);
-		assertEquals("validation failure", e1_1.getMessage());
+		var e1_1 = new LayerValidationException(1L, validationMessages);
+		assertEquals(1L, e1_1.getFeatureID());
+		assertEquals("Polygon 1: validation failure", e1_1.getMessage());
 
 		var e2 = new LayerValidationException(789L, "L1", validationMessages);
 		assertEquals("Polygon 789 Layer L1: validation failure", e2.getMessage());

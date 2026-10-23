@@ -16,6 +16,7 @@ import com.opencsv.exceptions.CsvConstraintViolationException;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
@@ -82,8 +83,9 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		List<ValidationMessage> validationMessagesSeenDuringRead = new ArrayList<ValidationMessage>();
 		PolygonValidationException validationExceptionSeenDuringBuild = null;
 		try {
-			validationMessagesSeenDuringRead = collectExceptions();
+			long featureID = nextPolygonRecord.getFeatureId();
 			polygon = buildPolygon();
+			validationMessagesSeenDuringRead = collectExceptions(featureID);
 		} catch (PolygonValidationException e) {
 			validationExceptionSeenDuringBuild = e;
 		} finally {
@@ -104,24 +106,26 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		return polygon;
 	}
 
-	private List<ValidationMessage> collectExceptions() {
+	private List<ValidationMessage> collectExceptions(long featureID) {
 		var messages = new ArrayList<ValidationMessage>();
 
 		for (var e : hcsvPolygonStream.getCapturedExceptions()) {
-			collectMessages(messages, e);
+			collectMessages(messages, e, featureID);
 		}
 
 		for (var e : hcsvLayerStream.getCapturedExceptions()) {
-			collectMessages(messages, e);
+			collectMessages(messages, e, featureID);
 		}
 
 		return messages;
 	}
 
-	private void collectMessages(List<ValidationMessage> messages, Exception e) {
+	private void collectMessages(List<ValidationMessage> messages, Exception e, long featureID) {
 		if (e instanceof CsvConstraintViolationException cve) {
-			if (cve.getSourceObject() instanceof AbstractProjectionRequestException apre) {
-				messages.addAll(withContextPrefix(apre));
+			if (cve.getSourceObject() instanceof ProjectionValidationException apre) {
+				if (apre.getFeatureID() == featureID) {
+					messages.addAll(withContextPrefix(apre));
+				}
 			} else {
 				throw new IllegalStateException(
 						"Expecting instanceof AbstractProjectionRequestException; saw instead " + e.getClass().getName()

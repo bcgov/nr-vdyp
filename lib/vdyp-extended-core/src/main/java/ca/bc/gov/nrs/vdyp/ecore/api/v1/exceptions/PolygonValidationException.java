@@ -10,7 +10,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
  * Exceptions thrown during the validation of a Polygon read from an input CSV. These exceptions are used only to wrap
  * the list of validation errors and get passed into a {@link CsvConstraintViolationException}
  */
-public class PolygonValidationException extends AbstractProjectionRequestException {
+public class PolygonValidationException extends ProjectionValidationException {
 
 	private static final long serialVersionUID = 2651505762328626871L;
 
@@ -23,6 +23,6 @@ public class PolygonValidationException extends AbstractProjectionRequestExcepti
 	}
 
 	public PolygonValidationException(long featureId, ValidationMessage validationMessage) {
-		super(buildContextPrefix(featureId), List.of(validationMessage));
+		super(featureId, List.of(validationMessage));
 	}
 }

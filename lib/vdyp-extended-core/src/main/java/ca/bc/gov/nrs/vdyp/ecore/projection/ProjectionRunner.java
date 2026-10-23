@@ -63,6 +63,11 @@ public class ProjectionRunner implements Closeable {
 
 	public void run(Map<String, InputStream> streams)
 			throws ProjectionRequestValidationException, YieldTableGenerationException {
+		run(streams, context.isTrialRun() ? new StubComponentRunner() : new RealComponentRunner());
+	}
+
+	void run(Map<String, InputStream> streams, ComponentRunner componentRunner)
+			throws ProjectionRequestValidationException {
 
 		context.startRun();
 
@@ -71,13 +76,6 @@ public class ProjectionRunner implements Closeable {
 			logApplicationMetadata();
 
 			AbstractPolygonStream polygonStream = AbstractPolygonStream.build(context, streams);
-
-			ComponentRunner componentRunner;
-			if (context.isTrialRun()) {
-				componentRunner = new StubComponentRunner();
-			} else {
-				componentRunner = new RealComponentRunner();
-			}
 
 			Integer progressPeriod = context.getParams().getProgressFrequency().getIntValue();
 			boolean reportProgressByPeriod = progressPeriod != null;
@@ -137,12 +135,15 @@ public class ProjectionRunner implements Closeable {
 							logger.debug(message);
 						}
 
-					} catch (PolygonExecutionException e) {
+					} catch (YieldTableGenerationException e) {
+						// A failed polygon must not discard the other polygons' output in this chunk.
+						logger.error("{}: Yield Table generation failed", polygon, e);
 						logValidationMessages(e);
-
+					} catch (PolygonExecutionException e) {
 						if (e.getCause() instanceof PolygonValidationException pve) {
 							throw pve;
 						}
+						logValidationMessages(e);
 					}
 				} catch (PolygonValidationException e) {
 					logValidationMessages(e);
