@@ -43,6 +43,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.History;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
@@ -555,6 +556,77 @@ public class PolygonProjectionRunnerTest {
 
 		em.verify();
 
+	}
+
+	@Test
+	void testPrimaryYieldTableWithVeteranWithoutSpecies() throws Exception {
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		try (
+				var polygons = getClass().getResourceAsStream("/test-data/veteran-without-species-poly.csv");
+				var layers = getClass().getResourceAsStream("/test-data/veteran-without-species-layer.csv")
+		) {
+			var inputPolygon = new HcsvPolygonStream(context, polygons, layers).getNextPolygon();
+			context.startRun();
+			PolygonProjectionRunner.of(inputPolygon, context, new RealComponentRunner()).project();
+			context.endRun();
+
+			assertThat(inputPolygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(true));
+			assertThat(inputPolygon.doAllowProjectionOfType(ProjectionTypeCode.VETERAN), is(false));
+			var content = new String(context.getYieldTables().get(0).getAsStream().readAllBytes());
+			assertThat(content, containsString("4659097"));
+		}
+	}
+
+	@Test
+	void testFipFallthroughVriSkipsVeteranWithoutSpecies() throws Exception {
+		var veteran = new Layer.Builder().layerId("2").polygon(polygon).doSuppressPerHAYields(false)
+				.assignedProjectionType(ProjectionTypeCode.UNKNOWN).crownClosure((short) 5)
+				.vdyp7LayerCode(ProjectionTypeCode.VETERAN).build();
+		polygon.getLayers().put(veteran.getLayerId(), veteran);
+		polygon.setTargetedVeteranLayer(veteran);
+		addStand("PL", 100.0, 8.0, 1.0);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		polygon.doCompleteDefinition(context);
+
+		assertThat(polygon.getVeteranLayer(), nullValue());
+		assertThat(polygon.getLayerByProjectionType(ProjectionTypeCode.VETERAN), sameInstance(veteran));
+		assertThat(
+				polygon.getMessages().stream()
+						.filter(message -> message.getKind() == PolygonMessageKind.VETERAN_LAYER_NO_SPECIES).toList(),
+				contains(hasProperty("layer", sameInstance(veteran)))
+		);
+
+		var em = EasyMock.createControl();
+		ComponentRunner componentRunner = em.mock(ComponentRunner.class);
+		Capture<PolygonProjectionState> captureState = EasyMock.newCapture();
+		componentRunner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			captureState.getValue().setProcessingResults(
+					ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY,
+					Optional.of(new ResultBaseAreaLowException(LayerType.PRIMARY, Optional.of(0f), Optional.of(0.5f)))
+			);
+			return null;
+		});
+		componentRunner.runVriStart(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			captureState.getValue()
+					.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			return null;
+		});
+		em.replay();
+
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+		unit.buildPolygonProjectionExecutionStructure();
+		unit.performInitialProcessing();
+
+		em.verify();
+		assertThat(
+				Files.exists(
+						captureState.getValue().getExecutionFolder().resolve(ProjectionTypeCode.VETERAN.toString())
+								.resolve("virnp01.dat")
+				), is(false)
+		);
 	}
 
 	@Test
