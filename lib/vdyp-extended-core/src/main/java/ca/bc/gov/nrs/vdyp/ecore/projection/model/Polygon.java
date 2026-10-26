@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -438,6 +439,13 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
+	public void addCheckedMessage(Consumer<PolygonMessage.Builder> lambda) {
+		final var builder = new PolygonMessage.Builder();
+		lambda.accept(builder);
+		builder.polygon(this);
+		addCheckedMessage(builder.build());
+	}
+
 	public boolean messageOkToAdd(PolygonMessage message) {
 		for (PolygonMessage m : getMessages()) {
 			if (m.getKind() == message.getKind()) {
@@ -445,6 +453,13 @@ public class Polygon implements Comparable<Polygon> {
 			}
 		}
 		return true;
+	}
+
+	public void addMessage(Consumer<PolygonMessage.Builder> lambda) {
+		final var builder = new PolygonMessage.Builder();
+		lambda.accept(builder);
+		builder.polygon(this);
+		addMessage(builder.build());
 	}
 
 	public void addMessage(PolygonMessage message) {
@@ -682,10 +697,6 @@ public class Polygon implements Comparable<Polygon> {
 		mergeLayers();
 
 		for (Layer layer : getLayers().values()) {
-			layer.doCompleteDefinition();
-		}
-
-		for (Layer layer : getLayers().values()) {
 			layer.doBuildSiteSpecies();
 			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 		}
@@ -713,6 +724,10 @@ public class Polygon implements Comparable<Polygon> {
 		}
 
 		mergeLayers();
+
+		for (Layer layer : getLayers().values()) {
+			layer.doCompleteDefinition();
+		}
 
 		doAdjustAllLayersSpeciesPercents(context);
 
@@ -1732,13 +1747,13 @@ public class Polygon implements Comparable<Polygon> {
 			}
 
 			if (selectedPrimaryLayer != null) {
-				var message = new PolygonMessage.Builder().layer(selectedPrimaryLayer)
-						.details(
+				final var reportPrimaryLayer = selectedPrimaryLayer;
+				addMessage(
+						builder -> builder.layer(reportPrimaryLayer).details(
 								ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
-								PolygonMessageKind.NO_PRIMARY_LAYER_SUPPLIED, selectedPrimaryLayer.getLayerId()
-						).build();
-
-				addMessage(message);
+								PolygonMessageKind.NO_PRIMARY_LAYER_SUPPLIED, reportPrimaryLayer.getLayerId()
+						)
+				);
 			}
 		}
 
@@ -1790,15 +1805,7 @@ public class Polygon implements Comparable<Polygon> {
 					}
 				}
 
-				if (veteranLayer != null) {
-					veteranLayer.setDoIncludeWithProjection(true);
-					veteranLayer.setVdyp7LayerCode(ProjectionTypeCode.VETERAN);
-
-					logger.debug(
-							"{}: layer {} passes all criteria and will be processed as a veteran layer", this,
-							veteranLayer.getLayerId()
-					);
-				} else {
+				if (veteranLayer == null) {
 					logger.warn(
 							"{}: no layer with id \"1\" that is not the primary layer, has 0 <= CC <= 5.0, no rank code"
 									+ " and height at least {}m was found; hence, there is no identified veteran layer",
@@ -1807,8 +1814,17 @@ public class Polygon implements Comparable<Polygon> {
 				}
 			}
 		}
+		if (veteranLayer != null && checkVeteranSpecies(veteranLayer)) {
+			veteranLayer.setDoIncludeWithProjection(true);
+			veteranLayer.setVdyp7LayerCode(ProjectionTypeCode.VETERAN);
 
-		return veteranLayer;
+			logger.debug(
+					"{}: layer {} passes all criteria and will be processed as a veteran layer", this,
+					veteranLayer.getLayerId()
+			);
+			return veteranLayer;
+		}
+		return null;
 	}
 
 	/** vdyp7merge local function */
@@ -1883,8 +1899,32 @@ public class Polygon implements Comparable<Polygon> {
 					"{}: layer {} was already identified as a veteran layer: '{}'", this, getVeteranLayer().getLayerId()
 			);
 		}
+		if (!checkVeteranSpecies(selectedVeteranLayer)) {
+			return null;
+		}
 
 		return selectedVeteranLayer;
+	}
+
+	/**
+	 * checkVeteranSpecies If a Veteran layer was either targetted or chosen as a candidate but actually has not species
+	 * do not use that layer as a veteran layer. Add a Processing message to the polygon messages
+	 *
+	 * @param selectedVeteranLayer - the candiadte veteran layer to check
+	 * @return true if it has species, false otherwise
+	 */
+	private boolean checkVeteranSpecies(Layer selectedVeteranLayer) {
+		if (selectedVeteranLayer != null && selectedVeteranLayer.getSp0sAsSupplied().isEmpty()) {
+			addCheckedMessage(
+					new PolygonMessage.Builder().layer(selectedVeteranLayer)
+							.details(
+									ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+									PolygonMessageKind.VETERAN_LAYER_NO_SPECIES, selectedVeteranLayer.getLayerId()
+							).build()
+			);
+			return false;
+		}
+		return true;
 	}
 
 	@Override

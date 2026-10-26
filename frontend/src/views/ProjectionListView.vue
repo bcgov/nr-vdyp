@@ -396,7 +396,6 @@ const handleRun = async (projectionGUID: string) => {
   try {
     const runProjectionModel = await runProjectionFromList(projectionGUID)
     updateProjectionInList(runProjectionModel)
-    startPollingIfNeeded()
     notificationStore.showSuccessMessage(
       SUCCESS_MSG.BATCH_PROJECTION_STARTED,
       SUCCESS_MSG.BATCH_PROJECTION_STARTED_TITLE,
@@ -708,7 +707,6 @@ const handleBulkRun = async () => {
 
     clearSelection()
     await loadProjections()
-    startPollingIfNeeded()
   } finally {
     isProgressVisible.value = false
   }
@@ -905,10 +903,16 @@ const handleBulkDelete = async () => {
 }
 
 // ============================================================================
-// Running projections polling
+// Projection list polling
 // ============================================================================
 
+// Polls the whole list regardless of status (same approach as the admin dashboard), so every
+// status change made elsewhere (run progress, stuck detection, admin cancellation, etc.) shows
+// up without reloading the page.
 let pollingTimer: ReturnType<typeof setInterval> | null = null
+
+// Prevents overlapping polls when a refresh takes longer than the poll interval
+let isPolling = false
 
 const stopPolling = () => {
   if (pollingTimer !== null) {
@@ -917,41 +921,24 @@ const stopPolling = () => {
   }
 }
 
-const isActiveStatus = (status: string) =>
-  status === PROJECTION_STATUS.RUNNING || status === PROJECTION_STATUS.STUCK
-
-const pollRunningProjections = async () => {
-  const runningProjections = projections.value.filter(p => isActiveStatus(p.status))
-  if (runningProjections.length === 0) {
-    stopPolling()
-    return
-  }
-
-  for (const projection of runningProjections) {
-    try {
-      const latest = await getProjectionById(projection.projectionGUID)
-      const latestStatus = mapProjectionStatus(latest.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT)
-      if (!isActiveStatus(latestStatus)) {
-        updateProjectionInList(latest)
-      }
-    } catch (err) {
-      console.error(`Error polling projection ${projection.projectionGUID}:`, err)
-    }
-  }
-
-  // Stop polling if no more running projections after updates
-  if (!projections.value.some(p => isActiveStatus(p.status))) {
-    stopPolling()
+// Silent by design: a failed background refresh keeps the current list and is retried on the
+// next tick instead of showing an error. Skipped while a user action is in progress so the
+// refresh does not overwrite the list mid-action.
+const refreshProjections = async () => {
+  if (isPolling || isLoading.value || isProgressVisible.value) return
+  isPolling = true
+  try {
+    projections.value = await fetchUserProjections()
+  } catch (err) {
+    console.error('Error refreshing projections:', err)
+  } finally {
+    isPolling = false
   }
 }
 
-const startPollingIfNeeded = () => {
-  if (projections.value.some(p => isActiveStatus(p.status))) {
-    stopPolling()
-    pollingTimer = setInterval(pollRunningProjections, REFRESH_INTERVAL_MS.PROJECTION_LIST_DATA_POLL)
-  } else {
-    stopPolling()
-  }
+const startPolling = () => {
+  stopPolling()
+  pollingTimer = setInterval(refreshProjections, REFRESH_INTERVAL_MS.PROJECTION_LIST_DATA_POLL)
 }
 
 // Window resize handler
@@ -962,7 +949,7 @@ const handleResize = () => {
 onMounted(async () => {
   window.addEventListener('resize', handleResize)
   await loadProjections()
-  startPollingIfNeeded()
+  startPolling()
 })
 
 onUnmounted(() => {

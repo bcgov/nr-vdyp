@@ -8,6 +8,8 @@ import org.jboss.resteasy.reactive.RestForm;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchJobModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchStorageStatusModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.StorageCleanupReportModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.StorageCleanupRequestModel;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -53,5 +55,11 @@ public interface VDYPBatchClient {
 	@Path("/storage")
 	@Produces(MediaType.APPLICATION_JSON)
 	BatchStorageStatusModel storageStatus();
+
+	@POST
+	@Path("/storage/cleanup")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	StorageCleanupReportModel cleanupStorage(StorageCleanupRequestModel request);
 
 }

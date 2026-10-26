@@ -31,6 +31,13 @@ export interface SpeciesGroup {
   minimumDBHLimit?: UtilizationClassSetEnum
 }
 
+export interface SpeciesGroupSummary {
+  group: string
+  siteSpecies: string[]
+  percent: number
+  minimumDBHLimit?: UtilizationClassSetEnum
+}
+
 export interface FileUploadSpeciesGroup {
   group: string
   minimumDBHLimit: UtilizationClassSetEnum
@@ -69,7 +76,7 @@ export interface Projection {
   isRunnable: boolean
 }
 
-export type UserTypeCode = 'IDIR' | 'BCEID'
+export type UserTypeCode = 'IDIR' | 'BCEID' | 'BCSC'
 
 export interface AdminProjection {
   projectionGUID: string

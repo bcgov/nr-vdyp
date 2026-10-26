@@ -147,7 +147,7 @@ withDefaults(defineProps<Props>(), {
 
 const slots = useSlots()
 
-const currentYear = computed(() => new Date().getUTCFullYear())
+const currentYear = computed(() => new Date().getFullYear())
 
 const hasCustomContent = computed(() => !!slots.default)
 </script>

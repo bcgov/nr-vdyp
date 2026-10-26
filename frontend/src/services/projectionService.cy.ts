@@ -23,8 +23,8 @@ describe('projectionService Unit Tests', () => {
     reportTitle: 'Test Title',
     reportDescription: 'Test Description',
     projectionStatusCode: { code: 'DRAFT', description: '', displayOrder: 0 },
-    lastUpdatedDate: '2024-01-01',
-    expiryDate: '2024-07-01',
+    lastUpdatedDate: '2024-01-01T20:00:00Z',
+    expiryDate: '2024-07-01T20:00:00Z',
     projectionParameters: null,
   } as unknown as ProjectionModel
 
@@ -98,8 +98,8 @@ describe('projectionService Unit Tests', () => {
         reportTitle: 'Test Title',
         reportDescription: 'Test Desc',
         projectionStatusCode: { code: 'READY', description: '', displayOrder: 0 },
-        lastUpdatedDate: '2024-01-15',
-        expiryDate: '2024-06-15',
+        lastUpdatedDate: '2024-01-15T20:00:00Z',
+        expiryDate: '2024-06-15T20:00:00Z',
         projectionParameters: '',
       } as unknown as ProjectionModel
       const result = transformProjection(model)
@@ -107,8 +107,8 @@ describe('projectionService Unit Tests', () => {
       expect(result.title).to.equal('Test Title')
       expect(result.description).to.equal('Test Desc')
       expect(result.status).to.equal(PROJECTION_STATUS.READY)
-      expect(result.lastUpdated).to.equal('2024-01-15')
-      expect(result.expiration).to.equal('2024-06-15')
+      expect(result.lastUpdated).to.equal('2024-01-15T20:00:00Z')
+      expect(result.expiration).to.equal('2024-06-15T20:00:00Z')
     })
 
     it('should handle missing optional fields', () => {
@@ -180,6 +180,47 @@ describe('projectionService Unit Tests', () => {
 
       cy.wrap(fetchUserProjections()).then((result: any) => {
         expect(result).to.have.length(0)
+      })
+    })
+
+    describe('isRunnable (Draft File Upload)', () => {
+      const buildFileUploadModel = (hasPolygonFile: boolean | null, hasLayerFile: boolean | null) =>
+        ({
+          projectionGUID: 'guid-file-upload',
+          reportTitle: 'File Upload Title',
+          projectionStatusCode: { code: 'DRAFT', description: '', displayOrder: 0 },
+          projectionParameters: JSON.stringify({
+            selectedExecutionOptions: ['doIncludeProjectedMOFVolumes'],
+            utils: [{ s: 'AC', u: 'Excl' }],
+          }),
+          hasPolygonFile,
+          hasLayerFile,
+        }) as unknown as ProjectionModel
+
+      it('is true when both files are uploaded, without querying file sets', () => {
+        cy.stub(apiClient, 'getUserProjections').resolves({ data: [buildFileUploadModel(true, true)] })
+        const getFileSetFilesStub = cy.stub(apiClient, 'getFileSetFiles')
+
+        cy.wrap(fetchUserProjections()).then((result: any) => {
+          expect(result[0].isRunnable).to.equal(true)
+          expect(getFileSetFilesStub).not.to.have.been.called
+        })
+      })
+
+      it('is false when a file is missing', () => {
+        cy.stub(apiClient, 'getUserProjections').resolves({ data: [buildFileUploadModel(true, false)] })
+
+        cy.wrap(fetchUserProjections()).then((result: any) => {
+          expect(result[0].isRunnable).to.equal(false)
+        })
+      })
+
+      it('is false when the file presence flags are not populated', () => {
+        cy.stub(apiClient, 'getUserProjections').resolves({ data: [buildFileUploadModel(null, null)] })
+
+        cy.wrap(fetchUserProjections()).then((result: any) => {
+          expect(result[0].isRunnable).to.equal(false)
+        })
       })
     })
 

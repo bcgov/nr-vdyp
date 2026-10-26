@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
@@ -11,6 +12,8 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +42,7 @@ import org.springframework.http.ResponseEntity;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchOwnershipProperties;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.PrioritizeReplyMessage;
 import ca.bc.gov.nrs.vdyp.batch.messaging.message.StopReplyMessage;
+import ca.bc.gov.nrs.vdyp.batch.model.StorageCleanupRequest;
 import ca.bc.gov.nrs.vdyp.batch.ownership.JobOwnershipService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchJobLaunchService;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
@@ -50,6 +54,7 @@ import ca.bc.gov.nrs.vdyp.batch.service.JobExecutionLookupService;
 import ca.bc.gov.nrs.vdyp.batch.service.PrioritizeRemoteGateway;
 import ca.bc.gov.nrs.vdyp.batch.service.ServerCapacityService;
 import ca.bc.gov.nrs.vdyp.batch.service.StopRemoteGateway;
+import ca.bc.gov.nrs.vdyp.batch.service.StorageCleanupService;
 import ca.bc.gov.nrs.vdyp.batch.service.StorageEstimationService;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -79,6 +84,9 @@ class BatchControllerTest {
 	private StorageEstimationService storageEstimationService;
 
 	@Mock
+	private StorageCleanupService storageCleanupService;
+
+	@Mock
 	private JobOwnershipService ownershipService;
 
 	@Mock
@@ -106,9 +114,9 @@ class BatchControllerTest {
 		ownershipProperties.setHeartbeatInterval(Duration.of(300, ChronoUnit.SECONDS));
 
 		batchController = new BatchController(
-				metricsCollector, storageEstimationService, batchJobLaunchService, serverCapacityService,
-				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.of(remoteGateway),
-				stopService, Optional.of(remoteStopGateway)
+				metricsCollector, storageEstimationService, storageCleanupService, batchJobLaunchService,
+				serverCapacityService, ownershipProperties, ownershipService, lookupService, prioritizationService,
+				Optional.of(remoteGateway), stopService, Optional.of(remoteStopGateway)
 		);
 	}
 
@@ -163,6 +171,24 @@ class BatchControllerTest {
 	}
 
 	@Test
+	void testCleanupStorage_ReturnsReportFromCleanupService() {
+		StorageCleanupService.CleanupSetResult set = new StorageCleanupService.CleanupSetResult(
+				"job-guid", "vdyp-batch-job-guid", 123L, StorageCleanupService.Outcome.DELETABLE, null
+		);
+		StorageCleanupService.StorageCleanupReport report = new StorageCleanupService.StorageCleanupReport(
+				true, 1, 123L, List.of(set), List.of("skipped-name"), System.currentTimeMillis()
+		);
+		StorageCleanupRequest request = new StorageCleanupRequest(true);
+		when(storageCleanupService.run(request)).thenReturn(report);
+
+		ResponseEntity<StorageCleanupService.StorageCleanupReport> response = batchController.cleanupStorage(request);
+
+		assertEquals(200, response.getStatusCode().value());
+		assertSame(report, response.getBody());
+		verify(storageCleanupService).run(request);
+	}
+
+	@Test
 	void testHealth_ListsStorageEndpoint() {
 		ResponseEntity<Map<String, Object>> response = batchController.health();
 
@@ -190,6 +216,9 @@ class BatchControllerTest {
 		assertEquals(200, response.getStatusCode().value());
 		assertNotNull(response.getBody());
 		assertTrue(response.getBody().containsKey("jobExecutionId"));
+		OffsetDateTime startTime = (OffsetDateTime) response.getBody().get(BatchConstants.Job.START_TIME);
+		assertEquals(ZoneOffset.UTC, startTime.getOffset());
+		assertEquals(jobExecution.getStartTime(), startTime.toLocalDateTime());
 
 		verify(batchJobLaunchService).launchNewJob(projectionGUID, "{}");
 	}
@@ -582,9 +611,9 @@ class BatchControllerTest {
 		execution.setStatus(BatchStatus.STARTED);
 
 		BatchController controllerWithoutNats = new BatchController(
-				metricsCollector, storageEstimationService, batchJobLaunchService, serverCapacityService,
-				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.empty(),
-				stopService, Optional.empty()
+				metricsCollector, storageEstimationService, storageCleanupService, batchJobLaunchService,
+				serverCapacityService, ownershipProperties, ownershipService, lookupService, prioritizationService,
+				Optional.empty(), stopService, Optional.empty()
 		);
 
 		when(lookupService.findJobExecutionByJobParameter(BatchConstants.Job.GUID, jobGuid.toString(), true))
@@ -650,9 +679,9 @@ class BatchControllerTest {
 		UUID projectionGuid = UUID.randomUUID();
 
 		BatchController controllerWithoutNats = new BatchController(
-				metricsCollector, storageEstimationService, batchJobLaunchService, serverCapacityService,
-				ownershipProperties, ownershipService, lookupService, prioritizationService, Optional.empty(),
-				stopService, Optional.empty()
+				metricsCollector, storageEstimationService, storageCleanupService, batchJobLaunchService,
+				serverCapacityService, ownershipProperties, ownershipService, lookupService, prioritizationService,
+				Optional.empty(), stopService, Optional.empty()
 		);
 
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);

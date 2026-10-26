@@ -171,67 +171,75 @@ export const extractLeadingNumber = (input: string | null): number | null => {
 }
 
 /**
- * Formats an ISO date string into a display format "MMM DD / HH:MM".
- * Used for displaying last updated timestamps in tables and cards.
+ * Splits a UTC timestamp from the backend into local date and time parts for display.
+ * Conversion uses the browser's built-in time zone rules, so the rules that applied on the
+ * given date are used (including BC's change to permanent Pacific Time from November 2026).
  *
- * @param dateString - The ISO date string to format (e.g., "2026-01-10T14:30:00")
- * @returns {string} Formatted date-time string (e.g., "Jan 10 / 14:30")
+ * @param dateString - ISO-8601 timestamp with a time zone offset (e.g., "2026-01-10T22:30:00Z")
+ * @param timeZone - Time zone name to display in (e.g., "America/Vancouver", "UTC"). Omit to use the browser's time zone.
+ * @returns The month, day, hour (00-23) and minute as display strings, or null if the timestamp is invalid
  * @example
- *   formatDateTimeDisplay("2026-01-10T14:30:00") // "Jan 10 / 14:30"
+ *   getDateTimeParts("2026-01-10T22:30:00Z", "America/Vancouver") // { month: "Jan", day: "10", hour: "14", minute: "30" }
+ *   getDateTimeParts("not a date") // null
  */
-export const formatDateTimeDisplay = (dateString: string): string => {
+export const getDateTimeParts = (
+  dateString: string,
+  timeZone?: string,
+): { month: string; day: string; hour: string; minute: string } | null => {
   const date = new Date(dateString)
-  const monthNames = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ]
-  const month = monthNames[date.getMonth()]
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
 
-  return `${month} ${day} / ${hours}:${minutes}`
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? ''
+
+  return { month: part('month'), day: part('day'), hour: part('hour'), minute: part('minute') }
 }
 
 /**
- * Formats an ISO date string into a display format "MMM DD".
+ * Formats a UTC timestamp from the backend into a local display format "MMM DD / HH:MM".
+ * Used for displaying last updated timestamps in tables and cards.
+ *
+ * @param dateString - ISO-8601 timestamp with a time zone offset (e.g., "2026-01-10T22:30:00Z")
+ * @param timeZone - Time zone name to display in (e.g., "America/Vancouver", "UTC"). Omit to use the browser's time zone.
+ * @returns {string} Formatted date-time string (e.g., "Jan 10 / 14:30"), or an empty string if the timestamp is invalid
+ * @example
+ *   formatDateTimeDisplay("2026-01-10T22:30:00Z", "America/Vancouver") // "Jan 10 / 14:30"
+ */
+export const formatDateTimeDisplay = (dateString: string, timeZone?: string): string => {
+  const parts = getDateTimeParts(dateString, timeZone)
+  if (!parts) {
+    return ''
+  }
+
+  return `${parts.month} ${parts.day} / ${parts.hour}:${parts.minute}`
+}
+
+/**
+ * Formats a UTC timestamp from the backend into a local display format "MMM DD".
  * Used for displaying expiration dates in tables and cards.
  *
- * @param dateString - The ISO date string to format (e.g., "2026-01-15")
- * @returns {string} Formatted date string (e.g., "Jan 15")
+ * @param dateString - ISO-8601 timestamp with a time zone offset (e.g., "2026-01-15T22:30:00Z")
+ * @param timeZone - Time zone name to display in (e.g., "America/Vancouver", "UTC"). Omit to use the browser's time zone.
+ * @returns {string} Formatted date string (e.g., "Jan 15"), or an empty string if the timestamp is invalid
  * @example
- *   formatDateDisplay("2026-01-15") // "Jan 15"
+ *   formatDateDisplay("2026-01-15T22:30:00Z", "America/Vancouver") // "Jan 15"
  */
-export const formatDateDisplay = (dateString: string): string => {
-  const date = new Date(dateString)
-  const monthNames = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ]
-  const month = monthNames[date.getMonth()]
-  const day = String(date.getDate()).padStart(2, '0')
+export const formatDateDisplay = (dateString: string, timeZone?: string): string => {
+  const parts = getDateTimeParts(dateString, timeZone)
+  if (!parts) {
+    return ''
+  }
 
-  return `${month} ${day}`
+  return `${parts.month} ${parts.day}`
 }
 
 /**
@@ -606,6 +614,22 @@ export const strEq = (a: string | null | undefined, b: string | null | undefined
  */
 export const formatNumber = (value: number | null): string => {
   return (value ?? 0).toLocaleString()
+}
+
+const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
+
+/**
+ * Formats a byte count as a human-readable string, auto-scaling to the smallest unit
+ * that keeps at least one significant digit.
+ * @example
+ *   formatBytes(0)          // "0 B"
+ *   formatBytes(1536)       // "1.50 KB"
+ */
+export const formatBytes = (bytes: number): string => {
+  if (bytes <= 0) return '0 B'
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), BYTE_UNITS.length - 1)
+  const value = bytes / 1024 ** exponent
+  return `${exponent === 0 ? value : value.toFixed(2)} ${BYTE_UNITS[exponent]}`
 }
 
 /**

@@ -69,7 +69,7 @@ describe('App Store Unit Tests', () => {
     })
 
     it('setDuplicatedFromInfo should set and clear info', () => {
-      const info = { originalName: 'My Projection', duplicatedAt: '2024-01-15T10:00:00' }
+      const info = { originalName: 'My Projection', duplicatedAt: '2024-01-15T10:00:00Z' }
       appStore.setDuplicatedFromInfo(info)
       expect(appStore.duplicatedFromInfo).to.deep.equal(info)
       appStore.setDuplicatedFromInfo(null)
@@ -83,7 +83,7 @@ describe('App Store Unit Tests', () => {
       appStore.setCurrentProjectionGUID('guid-xyz')
       appStore.setCurrentProjectionStatus(PROJECTION_STATUS.FAILED)
       appStore.isSavingProjection = true
-      appStore.setDuplicatedFromInfo({ originalName: 'My Projection', duplicatedAt: '2024-01-15T10:00:00' })
+      appStore.setDuplicatedFromInfo({ originalName: 'My Projection', duplicatedAt: '2024-01-15T10:00:00Z' })
 
       appStore.resetForNewProjection()
 

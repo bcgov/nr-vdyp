@@ -55,8 +55,8 @@ const mockProjectionModel = {
   reportTitle: 'Test Report',
   reportDescription: null,
   projectionStatusCode: { code: 'DRAFT', description: '', displayOrder: 0 },
-  lastUpdatedDate: '2024-01-01',
-  expiryDate: '2024-07-01',
+  lastUpdatedDate: '2024-01-01T20:00:00Z',
+  expiryDate: '2024-07-01T20:00:00Z',
   projectionParameters: null,
 }
 

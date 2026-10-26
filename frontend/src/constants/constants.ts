@@ -4,6 +4,7 @@ export const KEYCLOAK = Object.freeze({
   CHECK_LOGIN_IFRAME: false,
   IDP_AZUR_IDIR: 'azureidir', // Identity Provider: IDIR with MFA
   IDP_AZUR_BBCEID: 'bceidbusiness',
+  IDP_AZUR_BCSC: 'vdyp-service-6216',
   MAX_SESSION_DURATION: 8 * 60 * 60 * 1000, // 8 hours (in milliseconds)
   UPDATE_TOKEN_MIN_VALIDITY: 120, // 2 min, in seconds
   IS_TOKEN_EXP_MIN_VALIDITY: 120, // 2 min, in seconds
@@ -286,6 +287,7 @@ export const ADMIN_CANCEL_REASON = Object.freeze({
 export const USER_TYPE_CODE = Object.freeze({
   IDIR: 'IDIR',
   BCEID: 'BCEID',
+  BCSC: 'BCSC',
 })
 
 export const USER_ROLE = Object.freeze({
@@ -356,8 +358,8 @@ export const PAGINATION = Object.freeze({
 
 export const REFRESH_INTERVAL_MS = Object.freeze({
   PROJECTION_DETAIL_CLOCK_TICK: 60_000, // 60sec, detail page Time Elapsed display tick
-  PROJECTION_DETAIL_DATA_POLL: 5_000, // 5sec, detail page status/polygon data poll
-  PROJECTION_LIST_DATA_POLL: 120_000, // 2min, my-projections list page running-projections status poll
+  PROJECTION_DETAIL_DATA_POLL: 30_000, // 30sec, detail page status/polygon data poll
+  PROJECTION_LIST_DATA_POLL: 30_000, // 30sec, my-projections list page full-list poll
   ADMIN_DASHBOARD_CLOCK_TICK: 1_000, // 1sec, admin dashboard Elapsed display tick
   ADMIN_DASHBOARD_DATA_POLL: 5_000, // 5sec, admin dashboard running-projections data poll
 })

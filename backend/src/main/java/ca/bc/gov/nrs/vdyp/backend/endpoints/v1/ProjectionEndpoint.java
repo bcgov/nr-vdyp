@@ -29,6 +29,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.BatchStorageStatusModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchThreadCapacityModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.StorageCleanupReportModel;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.mappers.ApiError;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.openapi.ProjectionRequestSchemas.DcsvProjectionRequest;
@@ -41,6 +42,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.CancelProjectionRequest;
 import ca.bc.gov.nrs.vdyp.backend.model.ModelParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
+import ca.bc.gov.nrs.vdyp.backend.services.StorageCleanupService;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
@@ -95,15 +97,31 @@ public class ProjectionEndpoint implements Endpoint {
 
 	private final Client client;
 
+	private final StorageCleanupService storageCleanupService;
+
 	@Inject
+	public ProjectionEndpoint(
+			ProjectionService service, CurrentVDYPUser currentUser, StorageCleanupService storageCleanupService
+	) {
+		this(service, currentUser, ClientBuilder.newBuilder().build(), storageCleanupService);
+	}
+
 	public ProjectionEndpoint(ProjectionService service, CurrentVDYPUser currentUser) {
-		this(service, currentUser, ClientBuilder.newBuilder().build());
+		this(service, currentUser, ClientBuilder.newBuilder().build(), null);
 	}
 
 	ProjectionEndpoint(ProjectionService service, CurrentVDYPUser currentUser, Client client) {
+		this(service, currentUser, client, null);
+	}
+
+	private ProjectionEndpoint(
+			ProjectionService service, CurrentVDYPUser currentUser, Client client,
+			StorageCleanupService storageCleanupService
+	) {
 		this.projectionService = service;
 		this.currentUser = currentUser;
 		this.client = client;
+		this.storageCleanupService = storageCleanupService;
 	}
 
 	@jakarta.ws.rs.POST
@@ -333,6 +351,29 @@ public class ProjectionEndpoint implements Endpoint {
 	public Response getStorageStatus() {
 		BatchStorageStatusModel storageStatus = projectionService.getStorageStatus();
 		return Response.ok(storageStatus).status(Response.Status.OK).build();
+	}
+
+	@POST
+	@RolesAllowed("ADMIN")
+	@Path("/storage-cleanup")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Operation(
+			operationId = "cleanupPvcStorage", summary = "Scan (and optionally delete) leftover batch PVC job folders", description = "Defaults to preview. With dryRun=false, permanently deletes job folders that are not currently active in the batch service. Requires the ADMIN role."
+	)
+	@APIResponse(
+			responseCode = "200", description = "The cleanup report.", content = @Content(
+					mediaType = MediaType.APPLICATION_JSON, schema = @Schema(
+							implementation = StorageCleanupReportModel.class
+					)
+			)
+	)
+	public Response cleanupStorage(
+			@Parameter(
+					description = "When true (the default), evaluates candidates without deleting anything."
+			) @QueryParam("dryRun") @DefaultValue("true") boolean dryRun
+	) {
+		StorageCleanupReportModel report = storageCleanupService.cleanup(currentUser.getUser(), dryRun);
+		return Response.status(Status.OK).entity(report).build();
 	}
 
 	@POST

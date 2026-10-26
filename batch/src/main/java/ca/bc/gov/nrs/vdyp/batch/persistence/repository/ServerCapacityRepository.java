@@ -17,11 +17,11 @@ public class ServerCapacityRepository {
 				INSERT INTO batch_worker_registry (
 					worker_id, num_max_threads, is_accepting_work, last_heartbeat_time
 				)
-				VALUES (?, ?, ?, clock_timestamp())
+				VALUES (?, ?, ?, (clock_timestamp() AT TIME ZONE 'UTC'))
 				ON CONFLICT (worker_id) DO UPDATE
 				SET num_max_threads = EXCLUDED.num_max_threads,
 					is_accepting_work = EXCLUDED.is_accepting_work,
-					last_heartbeat_time = clock_timestamp()
+					last_heartbeat_time = (clock_timestamp() AT TIME ZONE 'UTC')
 				""";
 		jdbcTemplate.update(sql, ownerId, threadCapacity, acceptingWork);
 	}
@@ -30,7 +30,7 @@ public class ServerCapacityRepository {
 		String sql = """
 				SELECT COALESCE(SUM(num_max_threads),0)
 				FROM batch_worker_registry
-				WHERE last_heartbeat_time >= clock_timestamp() - (? * interval '1 second')
+				WHERE last_heartbeat_time >= (clock_timestamp() AT TIME ZONE 'UTC') - (? * interval '1 second')
 				""";
 		return jdbcTemplate.queryForObject(sql, Long.class, heartbeatMaxAge);
 	}

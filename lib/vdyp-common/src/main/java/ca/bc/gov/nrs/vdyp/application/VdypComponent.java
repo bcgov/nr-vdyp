@@ -6,6 +6,7 @@ import java.text.DateFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.Properties;
 
 public class VdypComponent {
@@ -425,14 +426,14 @@ public class VdypComponent {
 	}
 
 	private String getRESOURCE_COMPILE_TIMESTAMP() {
-		return LocalDateTime.now().toString();
+		return LocalDateTime.now(ZoneOffset.UTC).toString();
 	}
 
 	private String getRESOURCE_COMPILE_DATE() {
-		return LocalDate.now().toString();
+		return LocalDate.now(ZoneOffset.UTC).toString();
 	}
 
 	private String getRESOURCE_COMPILE_TIME() {
-		return LocalTime.now().toString();
+		return LocalTime.now(ZoneOffset.UTC).toString();
 	}
 }

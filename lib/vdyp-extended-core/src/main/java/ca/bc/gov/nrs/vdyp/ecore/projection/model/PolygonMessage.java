@@ -110,9 +110,6 @@ public class PolygonMessage {
 			sb.append(polygon.toString());
 		}
 
-		sb.append(' ').append(severity.getText()).append(": ");
-
-		sb.append(MessageFormat.format(kind.getTemplate(), args));
 		sb.append(" ").append(getSimpleMessageText());
 
 		return sb.toString();

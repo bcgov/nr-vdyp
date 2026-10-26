@@ -37,12 +37,11 @@ instances:
   walVolumeClaimSpec:
     storage: #{DB_WAL_VOLUME_SIZE}#
     storageClassName: netapp-block-standard
-  # Note: using New York time zone to match existing deployment - otherwise, would use either local time or PST
   env:
     - name: PGTZ
-      value: America/New_York
+      value: UTC
     - name: TZ
-      value: America/New_York
+      value: UTC
   requests:
     cpu: 1m
     memory: 19Mi

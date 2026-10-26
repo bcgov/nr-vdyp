@@ -1,10 +1,7 @@
 
 package ca.bc.gov.nrs.vdyp.backend.services;
 
-import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
-
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +12,7 @@ import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,9 +20,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -32,7 +32,6 @@ import org.hibernate.boot.model.naming.IllegalIdentifierException;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,7 +74,6 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRequestParametersValidator;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
-import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -287,12 +285,6 @@ public class ProjectionService {
 			logger.warn(MessageFormat.format("{0}: unable to log parameters JSON", projectionId), e);
 		}
 
-		boolean debugLoggingEnabled = params.getSelectedExecutionOptions()
-				.contains(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString());
-		if (debugLoggingEnabled) {
-			MDC.put("projectionId", projectionId);
-		}
-
 		Response response;
 
 		try (
@@ -303,28 +295,10 @@ public class ProjectionService {
 			logger.info("Running {} projection {}", kind, projectionId);
 
 			runner.run(inputStreams);
-
-			InputStream debugLogStream = new ByteArrayInputStream(new byte[0]);
-			try {
-				if (debugLoggingEnabled) {
-					/* this is known from logback.xml */
-					Path debugLogPath = Path.of("logs", projectionId + ".log");
-
-					debugLogStream = FileHelper.getForReading(debugLogPath);
-				}
-			} catch (IOException e) {
-				String message = Exceptions.getMessage(e, "Projection, when opening input files,");
-				logger.warn(message);
-			}
-
-			response = buildOutputZipFile(runner, debugLogStream);
+			response = buildOutputZipFile(runner);
 
 		} finally {
-			logger.info(FINALIZE_SESSION_MARKER, ">runProjection {} {}", kind, projectionId);
-
-			if (debugLoggingEnabled) {
-				MDC.remove("projectionId");
-			}
+			logger.info(">runProjection {} {}", kind, projectionId);
 		}
 
 		return response;
@@ -337,11 +311,11 @@ public class ProjectionService {
 	public static String buildProjectionId(ProjectionRequestKind projectionKind) {
 		StringBuilder sb = new StringBuilder("projection-");
 		sb.append(projectionKind).append("-");
-		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now()));
+		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now(ZoneOffset.UTC)));
 		return sb.toString();
 	}
 
-	private Response buildOutputZipFile(ProjectionRunner runner, InputStream debugLogStream) {
+	private Response buildOutputZipFile(ProjectionRunner runner) {
 		logger.info("<buildOutputZipFile");
 
 		InputStream yieldTableStream = null;
@@ -370,7 +344,9 @@ public class ProjectionService {
 				}
 
 				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
-					writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
+					try (InputStream debugLogStream = runner.getDebugStream()) {
+						writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
+					}
 				}
 
 				var projectionResultsIterator = runner.getProjectionResults();
@@ -399,7 +375,7 @@ public class ProjectionService {
 
 			logger.info(">buildOutputZipFile");
 
-			var outputFileName = "vdyp-output-" + java.time.LocalDateTime.now().format(dateTimeFormatter) + ".zip";
+			var outputFileName = "vdyp-output-" + LocalDateTime.now(ZoneOffset.UTC).format(dateTimeFormatter) + ".zip";
 
 			return Response.ok(resultingByteArray).status(Status.CREATED)
 					.header("content-disposition", "attachment;filename=\"" + outputFileName + "\"")
@@ -454,8 +430,27 @@ public class ProjectionService {
 		UUID vdypUserGuid = UUID.fromString(vdypUserId);
 		List<ProjectionEntity> entities = repository.findByOwner(vdypUserGuid);
 		Map<UUID, ProjectionBatchMappingModel> batchMappings = this.getBatchMappingsForProjections(entities);
+		Set<UUID> fileSetsWithFiles = getFileSetsWithFiles(entities);
 
-		return entities.stream().map(e -> toRichModel(e, batchMappings)).toList();
+		return entities.stream().map(e -> {
+			var model = toRichModel(e, batchMappings);
+			// File presence is set only for this list, so the list can decide Run eligibility without extra calls
+			model.setFilePresence(
+					hasFile(e.getPolygonFileSet(), fileSetsWithFiles), hasFile(e.getLayerFileSet(), fileSetsWithFiles)
+			);
+			return model;
+		}).toList();
+	}
+
+	private Set<UUID> getFileSetsWithFiles(List<ProjectionEntity> entities) {
+		List<UUID> inputFileSetGUIDs = entities.stream()
+				.flatMap(e -> Stream.of(e.getPolygonFileSet(), e.getLayerFileSet())).filter(Objects::nonNull)
+				.map(ProjectionFileSetEntity::getProjectionFileSetGUID).toList();
+		return fileSetService.getFileSetGUIDsWithFiles(inputFileSetGUIDs);
+	}
+
+	private static boolean hasFile(ProjectionFileSetEntity fileSet, Set<UUID> fileSetsWithFiles) {
+		return fileSet != null && fileSetsWithFiles.contains(fileSet.getProjectionFileSetGUID());
 	}
 
 	public List<ProjectionModel> getAllRunningProjections() {
@@ -638,7 +633,7 @@ public class ProjectionService {
 		// set the status to running
 		if (batchMappingModel != null && batchMappingModel.getBatchJobGUID() != null) {
 			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.RUNNING));
-			entity.setStartDate(OffsetDateTime.now());
+			entity.setStartDate(OffsetDateTime.now(ZoneOffset.UTC));
 		}
 
 		return toModelWithExpiry(entity);
@@ -825,10 +820,10 @@ public class ProjectionService {
 
 		// in the event we never received progress at all
 		if (entity.getStartDate() == null) {
-			entity.setStartDate(OffsetDateTime.now());
+			entity.setStartDate(OffsetDateTime.now(ZoneOffset.UTC));
 		}
 		entity.setProjectionStatusCode(status);
-		entity.setEndDate(OffsetDateTime.now());
+		entity.setEndDate(OffsetDateTime.now(ZoneOffset.UTC));
 		return toModelWithExpiry(entity);
 	}
 
@@ -850,7 +845,7 @@ public class ProjectionService {
 		checkProjectionStatusPermitsAction(entity, ProjectionAction.UPDATE_PROGRESS);
 		batchMappingService.updateProgress(entity, progressUpdate);
 		if (ProjectionStatusCodeModel.QUEUED.equals(entity.getProjectionStatusCode().getCode())) {
-			entity.setStartDate(OffsetDateTime.now());
+			entity.setStartDate(OffsetDateTime.now(ZoneOffset.UTC));
 			entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.RUNNING));
 		}
 	}

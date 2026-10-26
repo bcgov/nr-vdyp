@@ -1,0 +1,59 @@
+name: Frontend CI with Node
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, type-check and test
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          # Keep in line with the Node version in frontend/Dockerfile.
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        id: install
+        run: |
+          npm ci --ignore-scripts
+          node ./node_modules/cypress/bin/cypress install
+          node ./node_modules/cypress/bin/cypress verify
+
+      # Each check runs even if an earlier one fails, so one PR run reports every problem.
+      - name: Lint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run lint:check
+
+      - name: Type-check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run type-check
+
+      - name: Unit tests
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run test:unit
+
+      - name: Component tests
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run test:comp

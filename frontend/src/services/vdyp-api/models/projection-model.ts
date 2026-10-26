@@ -83,6 +83,9 @@ export interface ProjectionModel {
   adminCancelReason: string | null
   expiryDate: string | null
   batchMapping: BatchMappingModel | null
+  // Only populated in the current user's projection list; null or absent in all other responses
+  hasPolygonFile?: boolean | null
+  hasLayerFile?: boolean | null
 }
 
 export interface CancelProjectionRequest {

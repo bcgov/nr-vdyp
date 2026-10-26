@@ -6,6 +6,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
@@ -14,6 +15,7 @@ import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -29,19 +31,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.ecore.io.write.VriStartOutputWriter;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.History;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.SpeciesReportingInfo;
@@ -57,6 +64,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.IncorrectLayerCodesException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProjectMaxBeyondReferenceException;
 import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
@@ -138,6 +146,283 @@ public class PolygonProjectionRunnerTest {
 
 		assertThrows(PolygonExecutionException.class, unit::project);
 
+	}
+
+	@Test
+	void testInitialProcessingWithoutNonForestDescriptorOrSpecies() throws Exception {
+		var context = setupNonForestDescriptorLayer(null);
+		performInitialProcessing(context, EasyMock.createMock(ComponentRunner.class));
+
+		assertThat(nonForestDescriptorMessages(), empty());
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(false));
+	}
+
+	@Test
+	void testInitialProcessingWithNonForestDescriptorWithoutSpecies() throws Exception {
+		var context = setupNonForestDescriptorLayer("NFD");
+		performInitialProcessing(context, EasyMock.createMock(ComponentRunner.class));
+
+		assertThat(
+				nonForestDescriptorMessages(),
+				contains(
+						allOf(
+								hasProperty("polygon", sameInstance(polygon)),
+								hasProperty("layer", sameInstance(layer)),
+								hasProperty("returnCode", is(ReturnCode.ERROR_INVALIDSITEINFO)),
+								hasProperty("severity", is(MessageSeverityCode.WARNING)),
+								hasProperty("simpleMessageText", containsString("NFD"))
+						)
+				)
+		);
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(false));
+	}
+
+	@Test
+	void testInitialProcessingWithoutNonForestDescriptorWithSpecies() throws Exception {
+		var context = setupNonForestDescriptorLayer(null);
+		performInitialProcessingWithSpecies(context);
+
+		assertThat(nonForestDescriptorMessages(), empty());
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(true));
+	}
+
+	@Test
+	void testInitialProcessingWithNonForestDescriptorAndSpecies() throws Exception {
+		var context = setupNonForestDescriptorLayer("NFD");
+		performInitialProcessingWithSpecies(context);
+
+		assertThat(nonForestDescriptorMessages(), empty());
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(true));
+	}
+
+	private ProjectionContext setupNonForestDescriptorLayer(String nonForestDescriptor) throws Exception {
+		layer = new Layer.Builder().layerId("1").polygon(polygon).doSuppressPerHAYields(false).crownClosure((short) 20)
+				.vdyp7LayerCode(ProjectionTypeCode.PRIMARY).nonForestDescriptor(nonForestDescriptor)
+				.estimatedSiteIndexSpecies("PL").estimatedSiteIndex(5.0).build();
+		polygon.getLayers().put(layer.getLayerId(), layer);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		return new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+	}
+
+	private void performInitialProcessingWithSpecies(ProjectionContext context) throws Exception {
+		addStand("PL", 100.0, 8.0, 10.0);
+		polygon.doCompleteDefinition(context);
+		ComponentRunner componentRunner = EasyMock.createMock(ComponentRunner.class);
+		componentRunner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andAnswer(() -> {
+			PolygonProjectionState state = EasyMock.getCurrentArgument(2);
+			state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			return null;
+		});
+		performInitialProcessing(context, componentRunner);
+	}
+
+	private void performInitialProcessing(ProjectionContext context, ComponentRunner componentRunner) throws Exception {
+		EasyMock.replay(componentRunner);
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+		unit.buildPolygonProjectionExecutionStructure();
+		unit.performInitialProcessing();
+		EasyMock.verify(componentRunner);
+	}
+
+	private List<PolygonMessage> nonForestDescriptorMessages() {
+		return polygon.getMessages().stream()
+				.filter(message -> message.getKind() == PolygonMessageKind.LAYER_NON_FOREST_DESC).toList();
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void testForwardGrowthOption(boolean forwardEnabled) throws Exception {
+		layer = new Layer.Builder().layerId("1").polygon(polygon).doSuppressPerHAYields(false).crownClosure((short) 20)
+				.vdyp7LayerCode(ProjectionTypeCode.PRIMARY).estimatedSiteIndexSpecies("PL").estimatedSiteIndex(20.0)
+				.build();
+		polygon.getLayers().put(layer.getLayerId(), layer);
+		addStand("PL", 100.0, 80.0, 25.0);
+		if (forwardEnabled) {
+			params.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.FORWARD_GROW_ENABLED);
+		} else {
+			params.addExcludedExecutionOptionsItem(Parameters.ExecutionOption.FORWARD_GROW_ENABLED);
+		}
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		polygon.doCompleteDefinition(context);
+		var em = EasyMock.createControl();
+		ComponentRunner componentRunner = em.mock(ComponentRunner.class);
+		var realComponentRunner = new RealComponentRunner();
+		Capture<PolygonProjectionState> captureState = EasyMock.newCapture();
+		componentRunner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			realComponentRunner.runFipStart(polygon, ProjectionTypeCode.PRIMARY, captureState.getValue());
+			return null;
+		});
+		componentRunner.runAdjust(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			realComponentRunner.runAdjust(polygon, ProjectionTypeCode.PRIMARY, captureState.getValue());
+			return null;
+		});
+		if (forwardEnabled) {
+			componentRunner.runForward(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(captureState));
+			EasyMock.expectLastCall().andAnswer(() -> {
+				realComponentRunner.runForward(polygon, ProjectionTypeCode.PRIMARY, captureState.getValue());
+				return null;
+			});
+		}
+		componentRunner.generateYieldTables(same(context), same(polygon), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			realComponentRunner.generateYieldTables(context, polygon, captureState.getValue());
+			return null;
+		});
+		em.replay();
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+		context.startRun();
+		unit.project();
+		context.endRun();
+		em.verify();
+
+		var messages = polygon.getMessages().stream()
+				.filter(message -> message.getKind() == PolygonMessageKind.FORWARD_GROW_DISABLED).toList();
+		if (forwardEnabled) {
+			assertThat(messages.size(), is(0));
+		} else {
+			assertThat(
+					messages,
+					contains(
+							allOf(
+									hasProperty("polygon", sameInstance(polygon)), hasProperty("layer", nullValue()),
+									hasProperty("returnCode", is(ReturnCode.SUCCESS)),
+									hasProperty("severity", is(MessageSeverityCode.INFORMATION))
+							)
+					)
+			);
+		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = { 0, 1, 2 })
+	void testForwardProcessingResultMessages(int result) throws Exception {
+		layer = new Layer.Builder().layerId("1").polygon(polygon).doSuppressPerHAYields(false).crownClosure((short) 20)
+				.vdyp7LayerCode(ProjectionTypeCode.PRIMARY).estimatedSiteIndexSpecies("PL").estimatedSiteIndex(20.0)
+				.build();
+		polygon.getLayers().put("1", layer);
+		addStand("PL", 100.0, 80.0, 25.0);
+		params.ageStart(80).ageEnd(190);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		polygon.doCompleteDefinition(context);
+		ComponentRunner runner = EasyMock.createMock(ComponentRunner.class);
+		var realRunner = new RealComponentRunner();
+		runner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andAnswer(() -> {
+			realRunner.runFipStart(polygon, ProjectionTypeCode.PRIMARY, EasyMock.getCurrentArgument(2));
+			return null;
+		});
+		runner.runAdjust(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andAnswer(() -> {
+			realRunner.runAdjust(polygon, ProjectionTypeCode.PRIMARY, EasyMock.getCurrentArgument(2));
+			return null;
+		});
+		runner.runForward(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andAnswer(() -> {
+			PolygonProjectionState state = EasyMock.getCurrentArgument(2);
+			state.setProcessingResults(
+					ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY,
+					result == 0 ? Optional.empty()
+							: Optional.of(
+									result == 1 ? new ProjectMaxBeyondReferenceException()
+											: new IOException("forward failed")
+							)
+			);
+			return null;
+		});
+		// A forward processing message must still allow yield-table generation.
+		runner.generateYieldTables(same(context), same(polygon), EasyMock.anyObject());
+		EasyMock.replay(runner);
+		PolygonProjectionRunner.of(polygon, context, runner).project();
+		EasyMock.verify(runner);
+		var messages = polygon.getMessages().stream()
+				.filter(
+						m -> m.getKind() == PolygonMessageKind.CANNOT_PROJECT_BEYOND_MAX
+								|| m.getKind() == PolygonMessageKind.ERROR_PROJECTING_FORWARD
+				).toList();
+		assertThat(messages.size(), is(result == 0 ? 0 : 1));
+		if (result != 0) {
+			var message = messages.get(0);
+			assertThat(message.getLayer(), sameInstance(layer));
+			assertThat(message.getPolygon(), sameInstance(polygon));
+			assertThat(
+					message.getSeverity(), is(result == 1 ? MessageSeverityCode.WARNING : MessageSeverityCode.ERROR)
+			);
+			assertThat(message.getReturnCode(), is(result == 1 ? ReturnCode.SUCCESS : ReturnCode.ERROR_INTERNALERROR));
+			assertThat(
+					message.getKind(),
+					is(
+							result == 1 ? PolygonMessageKind.CANNOT_PROJECT_BEYOND_MAX
+									: PolygonMessageKind.ERROR_PROJECTING_FORWARD
+					)
+			);
+			assertThat(
+					message.getSimpleMessageText(),
+					is(
+							result == 1
+									? "WARN: Unable to Project Stand forward beyond \"400\" years from stand reference age."
+									: "ERR: Unable to Project Stand over age range: \"2,024\" to \"2,134\". Forward Exception: forward failed"
+					)
+			);
+		}
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "6.1, 1.3, true", "6.0, 1.3, false", "6.1, 1.31, false" })
+	void testSecondarySpeciesSuppressionMessage(double leadingHeight, double secondaryHeight, boolean suppressed)
+			throws Exception {
+		addStand("PL", 60.0, 80.0, 20.0);
+		addStand("SX", 40.0, 70.0, 18.0);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		polygon.doCompleteDefinition(context);
+		var leading = layer.getSp0sByPercent().get(0);
+		var secondary = layer.getSp0sByPercent().get(1);
+		leading.getSpeciesGroup().setDominantHeight(leadingHeight);
+		secondary.getSpeciesGroup().setDominantHeight(secondaryHeight);
+		var sites = new ByteArrayOutputStream();
+		try (
+				var writer = new VriStartOutputWriter(
+						new ByteArrayOutputStream(), new ByteArrayOutputStream(), new ByteArrayOutputStream(), sites
+				)
+		) {
+			writer.writePolygonLayer(layer);
+		}
+		var messages = polygon.getMessages().stream()
+				.filter(m -> m.getKind() == PolygonMessageKind.SECONDARY_SPECIES_SUPRESSED).toList();
+		assertThat(messages.size(), is(suppressed ? 1 : 0));
+		if (suppressed) {
+			var message = messages.get(0);
+			assertThat(message.getPolygon(), sameInstance(polygon));
+			assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
+			assertThat(message.getReturnCode(), is(ReturnCode.ERROR_INVALIDSITEINFO));
+			assertThat(message.getSimpleMessageText(), containsString("Secondary species group " + secondary));
+			assertThat(message.getSimpleMessageText(), containsString("w/height 6.1 and age 80 suppressed"));
+			assertThat(sites.toString(), containsString("-9.0"));
+		}
+		assertThat(secondary.getSpeciesGroup().getDominantHeight(), is(secondaryHeight));
+	}
+
+	@Test
+	void testMissingCrownClosureWithoutSpeciesDisablesProjectionWithMessage() throws Exception {
+		layer = new Layer.Builder().layerId("1").polygon(polygon).build();
+		polygon.setPrimaryLayer(layer);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.estimateCrownClosure(context);
+		assertThat(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(false));
+		var message = polygon.getMessages().get(0);
+		assertThat(message.getKind(), is(PolygonMessageKind.NO_CC));
+		assertThat(message.getLayer(), sameInstance(layer));
+		assertThat(message.getSeverity(), is(MessageSeverityCode.ERROR));
+		assertThat(
+				message.getSimpleMessageText(),
+				containsString("Crown Closure was not supplied and there is no leading species")
+		);
 	}
 
 	@Test
@@ -271,6 +556,77 @@ public class PolygonProjectionRunnerTest {
 
 		em.verify();
 
+	}
+
+	@Test
+	void testPrimaryYieldTableWithVeteranWithoutSpecies() throws Exception {
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		try (
+				var polygons = getClass().getResourceAsStream("/test-data/veteran-without-species-poly.csv");
+				var layers = getClass().getResourceAsStream("/test-data/veteran-without-species-layer.csv")
+		) {
+			var inputPolygon = new HcsvPolygonStream(context, polygons, layers).getNextPolygon();
+			context.startRun();
+			PolygonProjectionRunner.of(inputPolygon, context, new RealComponentRunner()).project();
+			context.endRun();
+
+			assertThat(inputPolygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY), is(true));
+			assertThat(inputPolygon.doAllowProjectionOfType(ProjectionTypeCode.VETERAN), is(false));
+			var content = new String(context.getYieldTables().get(0).getAsStream().readAllBytes());
+			assertThat(content, containsString("4659097"));
+		}
+	}
+
+	@Test
+	void testFipFallthroughVriSkipsVeteranWithoutSpecies() throws Exception {
+		var veteran = new Layer.Builder().layerId("2").polygon(polygon).doSuppressPerHAYields(false)
+				.assignedProjectionType(ProjectionTypeCode.UNKNOWN).crownClosure((short) 5)
+				.vdyp7LayerCode(ProjectionTypeCode.VETERAN).build();
+		polygon.getLayers().put(veteran.getLayerId(), veteran);
+		polygon.setTargetedVeteranLayer(veteran);
+		addStand("PL", 100.0, 8.0, 1.0);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		polygon.doCompleteDefinition(context);
+
+		assertThat(polygon.getVeteranLayer(), nullValue());
+		assertThat(polygon.getLayerByProjectionType(ProjectionTypeCode.VETERAN), sameInstance(veteran));
+		assertThat(
+				polygon.getMessages().stream()
+						.filter(message -> message.getKind() == PolygonMessageKind.VETERAN_LAYER_NO_SPECIES).toList(),
+				contains(hasProperty("layer", sameInstance(veteran)))
+		);
+
+		var em = EasyMock.createControl();
+		ComponentRunner componentRunner = em.mock(ComponentRunner.class);
+		Capture<PolygonProjectionState> captureState = EasyMock.newCapture();
+		componentRunner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			captureState.getValue().setProcessingResults(
+					ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY,
+					Optional.of(new ResultBaseAreaLowException(LayerType.PRIMARY, Optional.of(0f), Optional.of(0.5f)))
+			);
+			return null;
+		});
+		componentRunner.runVriStart(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(captureState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			captureState.getValue()
+					.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			return null;
+		});
+		em.replay();
+
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+		unit.buildPolygonProjectionExecutionStructure();
+		unit.performInitialProcessing();
+
+		em.verify();
+		assertThat(
+				Files.exists(
+						captureState.getValue().getExecutionFolder().resolve(ProjectionTypeCode.VETERAN.toString())
+								.resolve("virnp01.dat")
+				), is(false)
+		);
 	}
 
 	@Test

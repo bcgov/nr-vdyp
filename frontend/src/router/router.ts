@@ -35,10 +35,6 @@ router.beforeEach(async (to, _from, next) => {
     await authReadyPromise
 
     const authStore = useAuthStore()
-    if (authStore.authenticated && authStore.getAllRoles().length === 0) {
-      next({ name: 'Unauthorized' })
-      return
-    }
 
     const requiredRole = to.meta.requiresRole as string | undefined
     if (requiredRole && !authStore.hasRole(requiredRole)) {

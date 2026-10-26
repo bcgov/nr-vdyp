@@ -28,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 
 class BatchProjectionServiceTest {
@@ -298,13 +299,15 @@ class BatchProjectionServiceTest {
 		Files.createDirectories(outputDir);
 
 		Method method = BatchProjectionService.class
-				.getDeclaredMethod("storeDebugLog", Path.class, String.class, int.class);
+				.getDeclaredMethod("storeDebugLog", ProjectionRunner.class, Path.class, String.class, int.class);
 		method.setAccessible(true);
 
-		method.invoke(batchProjectionService, outputDir, "projection1", 10);
+		ProjectionRunner runner = mock(ProjectionRunner.class);
+		when(runner.getDebugStream()).thenReturn(new ByteArrayInputStream("engine debug output".getBytes()));
+		method.invoke(batchProjectionService, runner, outputDir, "projection1", 10);
 
 		Path debugLogFile = outputDir.resolve("projection1_DebugLog.txt");
 		assertTrue(Files.exists(debugLogFile));
-		assertEquals(0L, Files.size(debugLogFile));
+		assertEquals("engine debug output", Files.readString(debugLogFile));
 	}
 }

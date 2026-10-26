@@ -365,6 +365,18 @@ class TestFileMappingService {
 	}
 
 	@Test
+	void getFileSetGUIDsWithFiles_delegatesToRepository() {
+		List<UUID> fileSetGUIDs = List.of(UUID.randomUUID(), UUID.randomUUID());
+		Set<UUID> expected = Set.of(fileSetGUIDs.get(0));
+		when(repository.findFileSetGUIDsWithFiles(fileSetGUIDs)).thenReturn(expected);
+
+		Set<UUID> result = service.getFileSetGUIDsWithFiles(fileSetGUIDs);
+
+		assertEquals(expected, result);
+		verify(repository).findFileSetGUIDsWithFiles(fileSetGUIDs);
+	}
+
+	@Test
 	void deleteFilesForSet_ok_deletesRepositoryEntities() throws Exception {
 		UUID fileMappingGuid1 = UUID.randomUUID();
 		UUID fileMappingGuid2 = UUID.randomUUID();

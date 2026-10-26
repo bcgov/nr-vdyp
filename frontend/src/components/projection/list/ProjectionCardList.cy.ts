@@ -28,8 +28,8 @@ describe('ProjectionCardList.vue', () => {
     description: 'Test description',
     method: 'FIPSTART',
     projectionType: 'Single Year',
-    lastUpdated: '2026-01-10T14:30:00',
-    expiration: '2026-06-15',
+    lastUpdated: '2026-01-10T14:30:00Z',
+    expiration: '2026-06-15T20:00:00Z',
     status: 'Draft',
     isRunnable: false,
     ...overrides,
@@ -84,8 +84,8 @@ describe('ProjectionCardList.vue', () => {
           projectionType: 'Year Range',
           description: 'My description',
           status: 'Ready',
-          lastUpdated: '2026-01-10T14:30:00',
-          expiration: '2026-06-15',
+          lastUpdated: '2026-01-10T14:30:00Z',
+          expiration: '2026-06-15T20:00:00Z',
         }),
       ])
 

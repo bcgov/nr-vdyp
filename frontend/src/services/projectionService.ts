@@ -152,25 +152,11 @@ export const transformProjection = (model: ProjectionModel): Projection => {
 }
 
 /**
- * Whether both the polygon and layer files are uploaded. The list payload has no file
- * information, so the file sets are queried. Any lookup failure is treated as not uploaded.
+ * Whether both the polygon and layer files are uploaded, from the file presence flags that
+ * only the user projection list response carries.
  */
-const hasUploadedFiles = async (model: ProjectionModel): Promise<boolean> => {
-  const polygonFileSetGUID = model.polygonFileSet?.projectionFileSetGUID
-  const layerFileSetGUID = model.layerFileSet?.projectionFileSetGUID
-  if (!polygonFileSetGUID || !layerFileSetGUID) {
-    return false
-  }
-  try {
-    const [polygonFiles, layerFiles] = await Promise.all([
-      getFileSetFiles(model.projectionGUID, polygonFileSetGUID),
-      getFileSetFiles(model.projectionGUID, layerFileSetGUID),
-    ])
-    return polygonFiles.length > 0 && layerFiles.length > 0
-  } catch {
-    return false
-  }
-}
+const hasUploadedFiles = (model: ProjectionModel): boolean =>
+  model.hasPolygonFile === true && model.hasLayerFile === true
 
 /**
  * Fetches all projections for the authenticated user and transforms them to frontend format.
@@ -197,18 +183,16 @@ export const fetchUserProjections = async (): Promise<Projection[]> => {
     // })
     // console.log('=== End fetchUserProjections ===')
 
-    return await Promise.all(
-      projectionModels.map(async (model) => {
-        const projection = transformProjection(model)
-        const needsFileCheck =
-          projection.isRunnable &&
-          projection.status === PROJECTION_STATUS.DRAFT &&
-          projection.method === METHOD_SELECTION.FILE_UPLOAD
-        return needsFileCheck
-          ? { ...projection, isRunnable: await hasUploadedFiles(model) }
-          : projection
-      }),
-    )
+    return projectionModels.map((model) => {
+      const projection = transformProjection(model)
+      const needsFileCheck =
+        projection.isRunnable &&
+        projection.status === PROJECTION_STATUS.DRAFT &&
+        projection.method === METHOD_SELECTION.FILE_UPLOAD
+      return needsFileCheck
+        ? { ...projection, isRunnable: hasUploadedFiles(model) }
+        : projection
+    })
   } catch (error) {
     console.error('Error fetching user projections:', error)
     throw error

@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -426,6 +427,18 @@ class ProjectionFileSetServiceTest {
 
 		assertNotNull(result);
 		verify(fileMappingService).getFileById(fileMappingGuid, false);
+	}
+
+	@Test
+	void getFileSetGUIDsWithFiles_delegatesToFileMappingService() {
+		List<UUID> fileSetGUIDs = List.of(UUID.randomUUID(), UUID.randomUUID());
+		Set<UUID> expected = Set.of(fileSetGUIDs.get(1));
+		when(fileMappingService.getFileSetGUIDsWithFiles(fileSetGUIDs)).thenReturn(expected);
+
+		Set<UUID> result = service.getFileSetGUIDsWithFiles(fileSetGUIDs);
+
+		assertEquals(expected, result);
+		verify(fileMappingService).getFileSetGUIDsWithFiles(fileSetGUIDs);
 	}
 
 	@Test

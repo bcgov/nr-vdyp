@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -73,15 +74,15 @@ class BatchRecoveryMetadataServiceTest {
 		StepExecution startedStep = stepExecution("startedStep", jobExecution, BatchStatus.STARTED);
 		StepExecution stoppingStep = stepExecution("stoppingStep", jobExecution, BatchStatus.STOPPING);
 		StepExecution completedStep = stepExecution("completedStep", jobExecution, BatchStatus.COMPLETED);
-		LocalDateTime completedStepEndTime = LocalDateTime.now().minusMinutes(1);
+		LocalDateTime completedStepEndTime = LocalDateTime.now(ZoneOffset.UTC).minusMinutes(1);
 		completedStep.setExitStatus(ExitStatus.COMPLETED);
 		completedStep.setEndTime(completedStepEndTime);
 		jobExecution.addStepExecutions(List.of(startedStep, stoppingStep, completedStep));
 		when(jobExplorer.getJobExecution(1L)).thenReturn(jobExecution);
 
-		LocalDateTime beforeCall = LocalDateTime.now();
+		LocalDateTime beforeCall = LocalDateTime.now(ZoneOffset.UTC);
 		JobExecution result = service.markStaleExecutionFailed(1L, "custom description");
-		LocalDateTime afterCall = LocalDateTime.now();
+		LocalDateTime afterCall = LocalDateTime.now(ZoneOffset.UTC);
 
 		assertSame(jobExecution, result);
 		assertFailed(jobExecution, "custom description", beforeCall, afterCall);

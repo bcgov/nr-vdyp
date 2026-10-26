@@ -41,6 +41,8 @@ spec:
             - secretRef:
                 name: {{.Release.Name}}
           env:
+            - name: TZ
+              value: "UTC"
             - name: LOG_LEVEL
               value: info
             - name: SPRING_PROFILES_ACTIVE

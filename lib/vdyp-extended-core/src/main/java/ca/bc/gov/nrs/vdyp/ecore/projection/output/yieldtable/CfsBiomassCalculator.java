@@ -7,7 +7,6 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsDetails;
@@ -204,22 +203,20 @@ public class CfsBiomassCalculator {
 					propBranches, propFoliage
 			);
 			polygon.addMessage(
-					new PolygonMessage.Builder().polygon(polygon)
-							.details(
-									ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-									PolygonMessageKind.CFS_BIO_NOT_ALL_PROP_CALCULATED, propStemwood, propBark,
-									propBranches, propFoliage
-							).build()
+					builder -> builder.details(
+							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+							PolygonMessageKind.CFS_BIO_NOT_ALL_PROP_CALCULATED, propStemwood, propBark, propBranches,
+							propFoliage
+					)
 			);
 
 		} else if (Math.abs(1.0 - sum) > 1.0E-5) {
 			logger.error(PolygonMessageKind.CFS_BIO_PROP_DO_NOT_SUM_TO_ONE.getTemplate(), sum);
 			polygon.addMessage(
-					new PolygonMessage.Builder().polygon(polygon)
-							.details(
-									ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-									PolygonMessageKind.CFS_BIO_PROP_DO_NOT_SUM_TO_ONE, sum
-							).build()
+					builder -> builder.details(
+							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+							PolygonMessageKind.CFS_BIO_PROP_DO_NOT_SUM_TO_ONE, sum
+					)
 			);
 		}
 

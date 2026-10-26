@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.config;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -22,6 +23,6 @@ public class ProjectionStuckConfig {
 	}
 
 	public OffsetDateTime threshold() {
-		return OffsetDateTime.now().minusMinutes(thresholdMinutes);
+		return OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(thresholdMinutes);
 	}
 }

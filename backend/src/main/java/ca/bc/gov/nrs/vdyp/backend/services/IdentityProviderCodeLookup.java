@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -22,7 +23,13 @@ public class IdentityProviderCodeLookup
 	IdentityProviderCodeRepository repository;
 	IdentityProviderCodeResourceAssembler assembler;
 
+	public static final String AZUREIDIR_IDP = "AZUREIDIR";
+	public static final String BCEIDBUSINESS_IDP = "BCEIDBUSINESS";
+	public static final String BCSC_IDP = "VDYP-SERVICE-6216";
+
 	private Map<String, String> mapClaimValueToIdentityProviderCode;
+
+	private static Set<String> idpWhitelist = Set.of(AZUREIDIR_IDP, BCEIDBUSINESS_IDP, BCSC_IDP);
 
 	public IdentityProviderCodeLookup(
 			IdentityProviderCodeRepository repository, IdentityProviderCodeResourceAssembler assembler
@@ -32,10 +39,18 @@ public class IdentityProviderCodeLookup
 		ensureClaimValueMap();
 	}
 
+	public static boolean isUserProvider(String idp) {
+		if (idp == null)
+			return false;
+
+		return idpWhitelist.contains(idp.toUpperCase());
+	}
+
 	private void ensureClaimValueMap() {
 		mapClaimValueToIdentityProviderCode = new HashMap<>();
-		mapClaimValueToIdentityProviderCode.put("AZUREIDIR", IdentityProviderCodeModel.IDIR);
-		mapClaimValueToIdentityProviderCode.put("BCEIDBUSINESS", IdentityProviderCodeModel.BCEID);
+		mapClaimValueToIdentityProviderCode.put(AZUREIDIR_IDP, IdentityProviderCodeModel.IDIR);
+		mapClaimValueToIdentityProviderCode.put(BCEIDBUSINESS_IDP, IdentityProviderCodeModel.BCEID);
+		mapClaimValueToIdentityProviderCode.put(BCSC_IDP, IdentityProviderCodeModel.BCSC);
 	}
 
 	@Override

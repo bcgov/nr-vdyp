@@ -16,7 +16,8 @@ public class IncomingSecurityConfiguration {
 						"/api/batch/startWithGUIDs", //
 						"/api/batch/stop/**", //
 						"/api/batch/status/**", //
-						"/api/batch/prioritize/**" //
+						"/api/batch/prioritize/**", //
+						"/api/batch/storage/cleanup" //
 				)
 		).authorizeHttpRequests(a -> a.anyRequest().permitAll())//
 				.oauth2Login(AbstractHttpConfigurer::disable)//

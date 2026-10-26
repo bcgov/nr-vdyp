@@ -36,16 +36,16 @@ spec:
           {{- end }}
           image: "{{.Values.global.registry}}/{{.Values.global.repository}}/backend:{{ .Values.global.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ default "Always" .Values.backend.imagePullPolicy }}
-          {{- if .Values.logs.enabled }}
           command: ["/app"]
           args:
             - "-Dquarkus.http.host=0.0.0.0"
-            - {{ printf "-Duser.timezone=%s" .Values.logs.export.timeZone | quote }}
-          {{- end }}
+            - "-Duser.timezone=UTC"
           envFrom:
             - secretRef:
                 name: {{.Release.Name}}
           env:
+            - name: TZ
+              value: "UTC"
             - name: VDYP_ACCESS_LOG_ENABLED
               value: {{ .Values.logs.enabled | quote }}
             {{- if .Values.logs.enabled }}

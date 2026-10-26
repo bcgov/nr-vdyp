@@ -2,8 +2,14 @@ import {
   getAllRunningProjections as apiGetAllRunningProjections,
   getThreadCapacity as apiGetThreadCapacity,
   getStorageStatus as apiGetStorageStatus,
+  cleanupPvcStorage as apiCleanupPvcStorage,
 } from '@/services/apiActions'
-import type { ProjectionModel, StorageStatusModel, VDYPUserModel } from '@/services/vdyp-api'
+import type {
+  ProjectionModel,
+  StorageStatusModel,
+  StorageCleanupReportModel,
+  VDYPUserModel,
+} from '@/services/vdyp-api'
 import type { AdminProjection, UserTypeCode } from '@/interfaces/interfaces'
 import { mapProjectionStatus } from '@/services/projectionService'
 import { PROJECTION_STATUS } from '@/constants/constants'
@@ -73,4 +79,15 @@ export const fetchThreadCapacity = async (): Promise<number> => {
  */
 export const fetchStorageStatus = async (): Promise<StorageStatusModel> => {
   return apiGetStorageStatus()
+}
+
+/**
+ * (Admin Only) Scans (and optionally deletes) leftover batch PVC job folders from the Admin Dashboard.
+ * @param dryRun When true (the default), evaluates candidates without deleting anything.
+ * @returns A promise that resolves to the cleanup report.
+ */
+export const cleanupPvcStorage = async (
+  dryRun: boolean,
+): Promise<StorageCleanupReportModel> => {
+  return apiCleanupPvcStorage(dryRun)
 }

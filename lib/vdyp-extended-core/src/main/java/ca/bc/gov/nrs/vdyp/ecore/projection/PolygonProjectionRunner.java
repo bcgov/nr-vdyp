@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,7 +33,6 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.ProjectionParameters;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants;
@@ -46,12 +46,14 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
 import ca.bc.gov.nrs.vdyp.exceptions.PreprocessEstimatedBaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProjectMaxBeyondReferenceException;
 import ca.bc.gov.nrs.vdyp.exceptions.QuadraticMeanDiameterLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
+import ca.bc.gov.nrs.vdyp.model.CommonConstants;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 import ca.bc.gov.nrs.vdyp.sindex.Reference;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
@@ -144,6 +146,8 @@ public class PolygonProjectionRunner {
 
 		buildPolygonProjectionExecutionStructure();
 
+		recordProcessingMessages();
+
 		performInitialProcessing();
 
 		// VRI ADJUST is not supported at this time, so this code doesn't need to be written:
@@ -156,6 +160,33 @@ public class PolygonProjectionRunner {
 		performProjection();
 
 		generateYieldTablesForPolygon();
+	}
+
+	private void recordProcessingMessages() {
+		ValidatedParameters params = context.getParams();
+		if (!params.containsOption(ExecutionOption.FORWARD_GROW_ENABLED)) {
+			polygon.addMessage(
+					builder -> builder.details(
+							ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+							PolygonMessageKind.FORWARD_GROW_DISABLED
+					)
+			);
+		}
+		if (!params.containsOption(ExecutionOption.BACK_GROW_ENABLED)) {
+			polygon.addMessage(
+					builder -> builder.details(
+							ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION, PolygonMessageKind.BACK_GROW_DISABLED
+					)
+			);
+		}
+		if (!params.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION)) {
+			polygon.addMessage(
+					builder -> builder.details(
+							ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+							PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED
+					)
+			);
+		}
 	}
 
 	void buildPolygonProjectionExecutionStructure() throws PolygonExecutionException {
@@ -221,6 +252,12 @@ public class PolygonProjectionRunner {
 				continue;
 			}
 
+			// Both start models require species; a rejected targeted veteran can still have a projection type.
+			if (polygon.getLayerByProjectionType(projectionType).getSp0sAsSupplied().isEmpty()) {
+				polygon.disableProjectionsOfType(projectionType);
+				continue;
+			}
+
 			logger.info(
 					"{}: layer exists for projection type {} (processing mode {}); {} processing will occur for this type",
 					polygon, projectionType, initialProcessingMode, initialGrowthModel
@@ -256,22 +293,21 @@ public class PolygonProjectionRunner {
 
 						doRetryUsingVriStart |= handleFipError(polygon, spe, layer);
 
-						// If a layer fails in FIP in a way that causes it to fail over to VRI, subsequent layers should
+						// If a layer fails in FIP in a way that causes it to fail over to VRI, subsequent layers
+						// should
 						// go straight to VRI
 						// This is a bit odd but it's what VDYP 7 does. See VDYP-1052
 						initialGrowthModel = GrowthModelCode.VRI;
 						initialProcessingMode = ProcessingModeCode.VRI_VriYoung;
 					} else {
 						polygon.addMessage(
-								new PolygonMessage.Builder().polygon(polygon)
-										.details(
-												ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-												PolygonMessageKind.BAD_STAND_DEFINITION
-										).build()
+								builder -> builder.details(
+										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.BAD_STAND_DEFINITION
+								)
 						);
 					}
 				}
-
 				if (doRetryUsingVriStart) {
 					logger.debug("{}: falling through to VRI Model", polygon);
 					state.modifyAllProjectionTypeGrowthModels(GrowthModelCode.VRI, ProcessingModeCode.VRI_VriYoung);
@@ -293,7 +329,6 @@ public class PolygonProjectionRunner {
 			}
 
 			case VRI: {
-
 				createVriInputData(projectionType, state);
 
 				componentRunner.runVriStart(polygon, projectionType, state);
@@ -331,34 +366,31 @@ public class PolygonProjectionRunner {
 						if (vriResult instanceof QuadraticMeanDiameterLowException) {
 
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
-													PolygonMessageKind.LAYER_DETAILS_MISSING
-											).build()
+									builder -> builder.layer(layer).details(
+											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+											PolygonMessageKind.LAYER_DETAILS_MISSING
+									)
 							);
 						} else if (vriResult instanceof PreprocessEstimatedBaseAreaLowException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, errorNumber
-											).build()
+									builder -> builder.layer(layer).details(
+											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+											PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, errorNumber
+									)
 							);
 						} else if (vriResult instanceof FailedToGrowYoungStandException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer).details(
+									builder -> builder.layer(layer).details(
 											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 											PolygonMessageKind.NO_VIABLE_STAND_DESCRIPTION, "VRISTART", errorNumber
-									).build()
+									)
 							);
 						} else {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-													PolygonMessageKind.GENERIC_VRISTART_ERROR, errorNumber
-											).build()
+									builder -> builder.layer(layer).details(
+											ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
+											PolygonMessageKind.GENERIC_VRISTART_ERROR, errorNumber
+									)
 							);
 						}
 					}
@@ -375,11 +407,10 @@ public class PolygonProjectionRunner {
 				var currentGrowthModel = state.getGrowthModel(projectionType);
 
 				polygon.addMessage(
-						new PolygonMessage.Builder().polygon(polygon)
-								.details(
-										ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.FATAL_ERROR,
-										PolygonMessageKind.UNRECOGNIZED_GROWTH_MODEL, currentGrowthModel
-								).build()
+						builder -> builder.details(
+								ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.FATAL_ERROR,
+								PolygonMessageKind.UNRECOGNIZED_GROWTH_MODEL, currentGrowthModel
+						)
 				);
 			}
 			}
@@ -392,47 +423,43 @@ public class PolygonProjectionRunner {
 
 		if (spe instanceof UnsupportedModeException) {
 			polygon.addMessage(
-					new PolygonMessage.Builder().layer(layer)
-							.details(
-									ReturnCode.SUCCESS, MessageSeverityCode.WARNING, PolygonMessageKind.LOW_SITE,
-									spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
-							).build()
+					builder -> builder.layer(layer).details(
+							ReturnCode.SUCCESS, MessageSeverityCode.WARNING, PolygonMessageKind.LOW_SITE,
+							spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
+					)
 			);
 			return false;
 		}
 
 		if (spe instanceof TotalAgeLowException) {
 			polygon.addMessage(
-					new PolygonMessage.Builder().layer(layer)
-							.details(
-									ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-									PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart",
-									spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
-							).build()
+					builder -> builder.layer(layer).details(
+							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+							PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart",
+							spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
+					)
 			);
 			return false;
 		}
 
 		if (spe instanceof BecMissingException || spe instanceof ResultBaseAreaLowException) {
 			polygon.addMessage(
-					new PolygonMessage.Builder().layer(layer)
-							.details(
-									ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-									PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
-									spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
-							).build()
+					builder -> builder.layer(layer).details(
+							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+							PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
+							spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
+					)
 			);
 			return true;
 		}
 
 		{
 			polygon.addMessage(
-					new PolygonMessage.Builder().layer(layer)
-							.details(
-									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-									PolygonMessageKind.GENERIC_FIPSTART_ERROR,
-									spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
-							).build()
+					builder -> builder.layer(layer).details(
+							ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
+							PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+							spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
+					)
 			);
 			return false;
 		}
@@ -495,11 +522,28 @@ public class PolygonProjectionRunner {
 				polygon.disableProjectionsOfType(primaryLayer.getAssignedProjectionType());
 
 				polygon.addMessage(
-						new PolygonMessage.Builder().layer(primaryLayer)
-								.details(
-										ReturnCode.ERROR_POLYGONNONPRODUCTIVE, MessageSeverityCode.ERROR,
-										PolygonMessageKind.LAYER_NOT_COMPLETELY_DEFINED
-								).build()
+						builder -> builder.layer(primaryLayer).details(
+								ReturnCode.ERROR_POLYGONNONPRODUCTIVE, MessageSeverityCode.ERROR,
+								PolygonMessageKind.LAYER_NOT_COMPLETELY_DEFINED
+						)
+				);
+			}
+		}
+
+		if (primaryLayer.getNonForestDescriptor() != null) {
+			if (!primaryLayer.getSp0sAsSupplied().isEmpty()) {
+				logger.debug(
+						"{}: stand labelled with Non-Productive Code {}, but also contains a stand description.",
+						polygon, polygon.getNonProductiveDescriptor()
+				);
+			} else {
+				polygon.disableProjectionsOfType(primaryLayer.getAssignedProjectionType());
+
+				polygon.addMessage(
+						builder -> builder.layer(primaryLayer).details(
+								ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+								PolygonMessageKind.LAYER_NON_FOREST_DESC, primaryLayer.getNonForestDescriptor()
+						)
 				);
 			}
 		}
@@ -509,11 +553,10 @@ public class PolygonProjectionRunner {
 			polygon.disableProjectionsOfType(primaryLayer.getAssignedProjectionType());
 
 			polygon.addMessage(
-					new PolygonMessage.Builder().layer(primaryLayer)
-							.details(
-									ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.ERROR,
-									PolygonMessageKind.NO_LEADING_SPECIES
-							).build()
+					builder -> builder.layer(primaryLayer).details(
+							ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.ERROR,
+							PolygonMessageKind.NO_LEADING_SPECIES
+					)
 			);
 		} else {
 			logger.debug(
@@ -738,10 +781,13 @@ public class PolygonProjectionRunner {
 			);
 			int endYear = adjustMeasurementYearAsNecessary(measurementYear, state.getEndAge(projectionType), standAge);
 
-			int yearsToGrowForward = Math.max(endYear - measurementYear, 0);
+			// If the year range includes measurement year use Forward to get the results Forward VDYP7 had a bunch of
+			// logic in storing and loading results, but by and large this will result in simply always using Forward
+			// results for Reference Year which involves no actual grow work anyway
+			int yearsToGrowForward = Math.max(endYear - measurementYear, -1);
 			int yearsToGrowBack = Math.max(measurementYear - startYear, 0);
 
-			if (yearsToGrowBack == 0 && yearsToGrowForward == 0) {
+			if (yearsToGrowBack == 0 && yearsToGrowForward <= 0) {
 				// vdyp7vdypmodel.for lines 278 - 282
 				doAllowForward = true;
 				yearsToGrowForward = 1;
@@ -755,7 +801,7 @@ public class PolygonProjectionRunner {
 			Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
 
 			if (doAllowForward) {
-				if (yearsToGrowForward > 0) {
+				if (yearsToGrowForward >= 0) {
 
 					// TODO: there is logic in VDYP7Console that will try the projection a second time
 					// if the first try failed AND adjustments were supplied that time - the second time,
@@ -768,6 +814,33 @@ public class PolygonProjectionRunner {
 
 					componentRunner.runForward(polygon, projectionType, state);
 
+					var forwardResult = state.getProcessingResults(ProjectionStageCode.Forward, projectionType);
+					if (forwardResult.isPresent()) {
+						// In the event something happens in Forward processing continue with poro
+						logger.error(
+								"{}: Forward projection of type {} resulted in a message {}", polygon, projectionType,
+								forwardResult.get().getMessage() != null ? ": " + forwardResult.get().getMessage() : ""
+						);
+						Throwable processingException = forwardResult.get();
+						if (processingException instanceof ProjectMaxBeyondReferenceException) {
+							polygon.addMessage(
+									builder -> builder.layer(layer).details(
+											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+											PolygonMessageKind.CANNOT_PROJECT_BEYOND_MAX,
+											CommonConstants.MAX_YEARS_BEYOND_REFERENCE_AGE
+									)
+							);
+						} else {
+							polygon.addMessage(
+									builder -> builder.layer(layer).details(
+											ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.ERROR,
+											PolygonMessageKind.ERROR_PROJECTING_FORWARD,
+											processingException.getMessage(), startYear, endYear
+									)
+							);
+						}
+					}
+
 					logger.debug(
 							"{}: performed Forward; result: {}", layer,
 							state.getProcessingResults(ProjectionStageCode.Forward, projectionType)
@@ -775,7 +848,7 @@ public class PolygonProjectionRunner {
 									.orElse("success")
 					);
 				} else {
-					logger.info("{}: forward projection skipped because yearsToGrowForward is 0", layer);
+					logger.info("{}: forward projection skipped because yearsToGrowForward is less than 0", layer);
 				}
 			} else {
 				logger.info("{}: forward projection required but disabled", layer);
@@ -846,7 +919,7 @@ public class PolygonProjectionRunner {
 		if (context.getParams().getSelectedExecutionOptions()
 				.contains(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
-			Double standAgeAtCurrentYear = polygon.determineStandAgeAtYear(LocalDate.now().getYear());
+			Double standAgeAtCurrentYear = polygon.determineStandAgeAtYear(LocalDate.now(ZoneOffset.UTC).getYear());
 			if (startAge == null || standAgeAtCurrentYear < startAge) {
 				startAge = standAgeAtCurrentYear;
 			}

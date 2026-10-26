@@ -76,7 +76,7 @@ describe('TheFooter.vue', () => {
   it('displays current year in copyright', () => {
     cy.mount(TheFooter)
 
-    const currentYear = new Date().getUTCFullYear()
+    const currentYear = new Date().getFullYear()
     cy.get('.bcds-footer--copyright').should('contain.text', `© ${currentYear}`)
   })
 })

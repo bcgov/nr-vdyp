@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
@@ -83,7 +83,7 @@ public class ClaimBoundJobLauncher {
 	private void failUnstartedExecution(JobExecution jobExecution, String exitDescription) {
 		jobExecution.upgradeStatus(BatchStatus.FAILED);
 		jobExecution.setExitStatus(ExitStatus.FAILED.addExitDescription(exitDescription));
-		jobExecution.setEndTime(LocalDateTime.now(ZoneId.systemDefault()));
+		jobExecution.setEndTime(LocalDateTime.now(ZoneOffset.UTC));
 		jobRepository.update(jobExecution);
 	}
 }

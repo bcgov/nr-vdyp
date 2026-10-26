@@ -92,7 +92,14 @@ jobs:
           distribution: temurin
       - name: Read application version
         id: version
-        run: echo "version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"
+        shell: bash
+        run: |
+          version_file=$(mktemp)
+          trap 'rm -f "$version_file"' EXIT
+          mvn -N help:evaluate -Dexpression=project.version -q -Doutput="$version_file"
+          version=$(cat "$version_file")
+          [[ "$version" =~ ^[[:alnum:]][[:alnum:].+_-]*$ ]] || { echo 'Invalid application version from Maven' >&2; exit 1; }
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
       - name: Build and publish commit image
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:

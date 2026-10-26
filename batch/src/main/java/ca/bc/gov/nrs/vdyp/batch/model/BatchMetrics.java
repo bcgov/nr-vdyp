@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.batch.model;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class BatchMetrics {
 	public BatchMetrics(Long jobExecutionId, String jobGuid) {
 		this.jobExecutionId = jobExecutionId;
 		this.jobGuid = jobGuid;
-		this.startTime = LocalDateTime.now();
+		this.startTime = LocalDateTime.now(ZoneOffset.UTC);
 		this.status = "STARTING";
 	}
 
@@ -58,7 +59,7 @@ public class BatchMetrics {
 		public RetryDetail(
 				int attemptNumber, String errorType, String errorMessage, boolean successful, String partitionName
 		) {
-			this(attemptNumber, errorType, errorMessage, LocalDateTime.now(), successful, partitionName);
+			this(attemptNumber, errorType, errorMessage, LocalDateTime.now(ZoneOffset.UTC), successful, partitionName);
 		}
 	}
 
@@ -69,7 +70,7 @@ public class BatchMetrics {
 			String featureId, String errorType, String errorMessage, LocalDateTime timestamp, String partitionName
 	) {
 		public SkipDetail(String featureId, String errorType, String errorMessage, String partitionName) {
-			this(featureId, errorType, errorMessage, LocalDateTime.now(), partitionName);
+			this(featureId, errorType, errorMessage, LocalDateTime.now(ZoneOffset.UTC), partitionName);
 		}
 	}
 
@@ -94,7 +95,7 @@ public class BatchMetrics {
 
 		public PartitionMetrics(String partitionName) {
 			this.partitionName = partitionName;
-			this.startTime = LocalDateTime.now();
+			this.startTime = LocalDateTime.now(ZoneOffset.UTC);
 		}
 
 		public String getPartitionName() {
@@ -157,7 +158,7 @@ public class BatchMetrics {
 				throw new IllegalStateException("Partition " + partitionName + " already completed at " + this.endTime);
 			}
 			this.recordsWritten = recordsWritten;
-			this.endTime = LocalDateTime.now();
+			this.endTime = LocalDateTime.now(ZoneOffset.UTC);
 			this.exitCode = exitCode;
 		}
 
@@ -217,7 +218,7 @@ public class BatchMetrics {
 					"Job " + jobGuid + " already finalized at " + this.endTime + " with status " + this.status
 			);
 		}
-		this.endTime = LocalDateTime.now();
+		this.endTime = LocalDateTime.now(ZoneOffset.UTC);
 		this.status = status;
 		this.totalRecordsRead.set(totalRecordsRead);
 		this.totalRecordsWritten.set(totalRecordsWritten);

@@ -9,6 +9,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
@@ -39,12 +43,45 @@ public final class BatchUtils {
 	private static final int FAILURE_MESSAGE_MAX_LENGTH = 200;
 	private static final String DEFAULT_FAILURE_MESSAGE = "Batch job failed";
 
+	// Matches exactly "vdyp-batch-{UUID}", the job base folder name built by createJobFolderName().
+	private static final Pattern JOB_FOLDER_NAME_PATTERN = Pattern.compile(
+			"^" + Pattern.quote(BatchConstants.Job.BASE_FOLDER_PREFIX)
+					+ "-([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+	);
+
 	public static String createJobFolderName(String prefix, String guid) {
 		return String.format("%s-%s", prefix, guid);
 	}
 
+	/**
+	 * Extracts the job GUID from a job base folder name (e.g. "vdyp-batch-{UUID}"), as created by
+	 * {@link #createJobFolderName}.
+	 *
+	 * @param folderName the folder's simple name (not a full path)
+	 * @return the job GUID, or empty if the name does not match the expected pattern exactly
+	 */
+	public static Optional<String> parseJobGuidFromFolderName(String folderName) {
+		Matcher matcher = JOB_FOLDER_NAME_PATTERN.matcher(folderName);
+		return matcher.matches() ? Optional.of(matcher.group(1)) : Optional.empty();
+	}
+
+	/**
+	 * Extracts the job GUID from a job base folder's warnings file name (e.g. "vdyp-batch-{UUID}warnings.txt").
+	 *
+	 * @param fileName the file's simple name (not a full path)
+	 * @return the job GUID, or empty if the name does not match the expected pattern exactly
+	 */
+	public static Optional<String> parseJobGuidFromWarningsFileName(String fileName) {
+		if (!fileName.endsWith(BatchConstants.Partition.WARNING_FILE_NAME)) {
+			return Optional.empty();
+		}
+		String folderName = fileName
+				.substring(0, fileName.length() - BatchConstants.Partition.WARNING_FILE_NAME.length());
+		return parseJobGuidFromFolderName(folderName);
+	}
+
 	public static String createJobTimestamp() {
-		return dateTimeFormatterForFilenames.format(LocalDateTime.now());
+		return dateTimeFormatterForFilenames.format(LocalDateTime.now(ZoneOffset.UTC));
 	}
 
 	public static String createJobGuid() {
@@ -84,7 +121,7 @@ public final class BatchUtils {
 		sb.append(jobExecutionId).append("-");
 		sb.append(partitionName).append("-");
 		sb.append("projection-").append(projectionKind).append("-");
-		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now()));
+		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now(ZoneOffset.UTC)));
 		return sb.toString();
 	}
 
@@ -478,6 +515,31 @@ public final class BatchUtils {
 				return FileVisitResult.CONTINUE;
 			}
 		});
+	}
+
+	/**
+	 * Recursively sums the size of all regular files under a directory. Returns 0 if the directory does not exist. A
+	 * file that disappears mid-walk (e.g. concurrent cleanup) is treated as 0 bytes rather than failing the walk.
+	 *
+	 * @param directory The directory to measure
+	 * @return The total size in bytes
+	 * @throws IOException if the directory cannot be listed
+	 */
+	public static long directorySizeBytes(Path directory) throws IOException {
+		if (Files.notExists(directory)) {
+			return 0;
+		}
+		try (Stream<Path> walk = Files.walk(directory)) {
+			return walk.filter(Files::isRegularFile).mapToLong(BatchUtils::sizeOrZero).sum();
+		}
+	}
+
+	private static long sizeOrZero(Path file) {
+		try {
+			return Files.size(file);
+		} catch (IOException e) {
+			return 0;
+		}
 	}
 
 	public static void confirmDirectoryExists(Path dirPath) throws IOException {
