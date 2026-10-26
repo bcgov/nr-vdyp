@@ -195,7 +195,7 @@
                 </span>
               </div>
               <v-container fluid class="min-dbh-container">
-                <v-row v-for="(group, index) in speciesGroups" :key="index" no-gutters class="form-fields-row min-dbh-row">
+                <v-row v-for="(group, index) in groupedSummary" :key="group.group" no-gutters class="form-fields-row min-dbh-row">
                   <v-col v-bind="mobile ? { cols: 'auto' } : {}" class="min-dbh-species-group-label" :class="{ 'min-dbh-disabled': isMinDBHDeactivated }">
                     {{ group.group }}
                   </v-col>
@@ -349,7 +349,7 @@ const yearIncrementError = ref<string>('')
 // MinimumDBH
 const utilizationSliderValues = ref<number[]>([])
 const utilizationClassOptions = OPTIONS.utilizationClassOptions
-const speciesGroups = computed(() => modelParameterStore.speciesGroups)
+const groupedSummary = computed(() => modelParameterStore.groupedSummary)
 
 
 const isCFOBiomassSelected = computed(() => {
@@ -398,9 +398,9 @@ const isMinDBHDeactivated = computed(() => {
   return isInputDisabled.value || isCFOBiomassSelected.value
 })
 
-// Watch speciesGroups for changes and sync utilization sliderValues
+// Watch groupedSummary for changes and sync utilization sliderValues
 watch(
-  speciesGroups,
+  groupedSummary,
   (newGroups) => {
     utilizationSliderValues.value = newGroups.map((group) =>
       utilizationClassOptions.findIndex(
@@ -416,13 +416,15 @@ watch(
   () => modelParameterStore.projectionType,
   (newVal) => {
     if (newVal === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS || newVal === CONSTANTS.PROJECTION_TYPE.BOTH) {
-      speciesGroups.value.forEach((group) => {
+      groupedSummary.value.forEach((group) => {
         if (BIZCONSTANTS.CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP[group.group]) {
-          group.minimumDBHLimit =
-            BIZCONSTANTS.CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP[group.group]
+          modelParameterStore.setGroupMinimumDBH(
+            group.group,
+            BIZCONSTANTS.CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP[group.group],
+          )
         }
       })
-      utilizationSliderValues.value = speciesGroups.value.map((group) =>
+      utilizationSliderValues.value = groupedSummary.value.map((group) =>
         utilizationClassOptions.findIndex(
           (opt) => opt.value === group.minimumDBHLimit,
         ),
@@ -563,10 +565,10 @@ const handleYearIncrementInput = (value: string | null) => {
 }
 
 const updateMinDBH = (index: number, value: number) => {
-  if (speciesGroups.value[index]) {
+  if (groupedSummary.value[index]) {
     const enumValue = utilizationClassOptions[value]?.value
     if (enumValue !== undefined) {
-      speciesGroups.value[index].minimumDBHLimit = enumValue
+      modelParameterStore.setGroupMinimumDBH(groupedSummary.value[index].group, enumValue)
       isDirty.value = true
     }
   }

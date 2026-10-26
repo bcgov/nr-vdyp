@@ -24,7 +24,7 @@ import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 import type { CSVRowType, PanelName } from '@/types/types'
-import type { SpeciesGroup, SpeciesList, ParsedProjectionParameters, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
+import type { SpeciesGroup, SpeciesGroupSummary, SpeciesList, ParsedProjectionParameters, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
 import { isBlank, addExecutionOptionsFromMappings, numEq, strEq } from '@/utils/util'
 
@@ -557,8 +557,8 @@ export const buildProjectionParameters = (
     selectedDebugOptions,
     excludedDebugOptions,
     metadataToOutput: MetadataToOutputEnum.NONE,
-    utils: modelParameterStore.speciesGroups.map(
-      (sg: SpeciesGroup) =>
+    utils: modelParameterStore.groupedSummary.map(
+      (sg: SpeciesGroupSummary) =>
         ({
           speciesName: sg.group,
           utilizationClass: sg.minimumDBHLimit,
@@ -828,7 +828,7 @@ const hasUtilizationChanges = (
     if (u.s && u.u) utilsMap[u.s] = u.u
   }
   const hasUtils = savedParams.utils.length > 0
-  return (store.speciesGroups as SpeciesGroup[]).some((sg) => {
+  return (store.groupedSummary as SpeciesGroupSummary[]).some((sg) => {
     const savedValue = hasUtils ? (utilsMap[sg.group] ?? defaultMap[sg.group]) : defaultMap[sg.group]
     return sg.minimumDBHLimit !== savedValue
   })
