@@ -26,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.AbstractPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.logging.RequestDebugLog;
 
 public class ProjectionRunner implements Closeable {
 
@@ -64,6 +65,18 @@ public class ProjectionRunner implements Closeable {
 	public void run(Map<String, InputStream> streams)
 			throws ProjectionRequestValidationException, YieldTableGenerationException {
 
+		try (
+				RequestDebugLog debugLog = new RequestDebugLog(
+						context.getParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)
+								? context.getExecutionFolder().resolve("DebugLog.txt") : null
+				)
+		) {
+			runProjection(streams);
+		}
+	}
+
+	private void runProjection(Map<String, InputStream> streams)
+			throws ProjectionRequestValidationException, YieldTableGenerationException {
 		context.startRun();
 
 		try {
@@ -254,6 +267,10 @@ public class ProjectionRunner implements Closeable {
 
 	public InputStream getErrorStream() {
 		return context.getErrorLogStream();
+	}
+
+	public InputStream getDebugStream() throws IOException {
+		return Files.newInputStream(context.getExecutionFolder().resolve("DebugLog.txt"));
 	}
 
 	public ProjectionContext getContext() {

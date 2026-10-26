@@ -183,6 +183,12 @@
     <dependency>
       <groupId>io.quarkus</groupId>
 			<artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+        <exclusions>
+          <exclusion>
+            <groupId>org.jboss.slf4j</groupId>
+            <artifactId>slf4j-jboss-logmanager</artifactId>
+          </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -224,6 +230,12 @@
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-scheduler</artifactId>
+        <exclusions>
+          <exclusion>
+            <groupId>org.jboss.slf4j</groupId>
+            <artifactId>slf4j-jboss-logmanager</artifactId>
+          </exclusion>
+        </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
@@ -431,6 +443,7 @@
             <configuration>
 							<includes>
 								<include>**/ITDataDriven.java</include>
+								<include>**/ITProjectionDebugLogging.java</include>
 							</includes>
 							<systemPropertyVariables>
 								<api.version>1.44</api.version>

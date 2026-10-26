@@ -1,0 +1,4 @@
+<configuration>
+  <turboFilter class="ca.bc.gov.nrs.vdyp.logging.RequestDebugLoggingFilter" />
+  <root level="INFO" />
+</configuration>
