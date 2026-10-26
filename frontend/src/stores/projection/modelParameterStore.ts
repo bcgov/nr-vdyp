@@ -365,7 +365,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const percentStockableArea = ref<string | null>(null)
   const basalArea = ref<string | null>(null)
   const treesPerHectare = ref<string | null>(null)
-  // minDBHLimit is always 7.c cm+ it is not related to utilization values for species
+  // minDBHLimit is always 7.5 cm+ it is not related to utilization values for species
   const minDBHLimit = ref<string>(CONSTANTS.MINIMUM_DBH_LIMITS.CM7_5)
   const currentDiameter = ref<string | null>(null)
   const crownClosure = ref<string | null>(null)
