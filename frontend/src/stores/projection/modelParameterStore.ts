@@ -148,6 +148,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   })
 
   // Keep site-species entries intact while exposing one row per species group.
+  // Unsorted because it sorted differently by different views
+  // minimumDBHLimit is synced and also stored for all species records when updated
   const groupedSummary = computed<SpeciesGroupSummary[]>(() => {
     const groups = new Map<string, SpeciesGroupSummary>()
     for (const item of speciesGroups.value) {
