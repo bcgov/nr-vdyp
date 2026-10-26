@@ -44,12 +44,12 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 	private static Logger logger = LoggerFactory.getLogger(HcsvPolygonStream.class);
 
-	private CsvToBean<HcsvPolygonRecordBean> hcsvPolygonStream;
-	private CsvStreamIterator<HcsvPolygonRecordBean> polygonRecordIterator;
+	private final CsvToBean<HcsvPolygonRecordBean> hcsvPolygonStream;
+	private final CsvStreamIterator<HcsvPolygonRecordBean> polygonRecordIterator;
 	private HcsvPolygonRecordBean nextPolygonRecord;
 
-	private CsvToBean<HcsvLayerRecordBean> hcsvLayerStream;
-	private CsvStreamIterator<HcsvLayerRecordBean> layerRecordIterator;
+	private final CsvToBean<HcsvLayerRecordBean> hcsvLayerStream;
+	private final CsvStreamIterator<HcsvLayerRecordBean> layerRecordIterator;
 	private HcsvLayerRecordBean nextLayerRecord;
 
 	public HcsvPolygonStream(ProjectionContext context, InputStream polygonStream, InputStream layersStream) {
@@ -83,7 +83,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		List<ValidationMessage> validationMessagesSeenDuringRead = new ArrayList<ValidationMessage>();
 		PolygonValidationException validationExceptionSeenDuringBuild = null;
 		try {
-			long featureID = nextPolygonRecord.getFeatureId();
+			Long featureIDo = nextPolygonRecord.getFeatureId();
+			long featureID = featureIDo == null ? 0 : featureIDo;
 			polygon = buildPolygon();
 			validationMessagesSeenDuringRead = collectExceptions(featureID);
 		} catch (PolygonValidationException e) {

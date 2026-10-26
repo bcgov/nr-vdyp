@@ -61,8 +61,7 @@ public class ProjectionRunner implements Closeable {
 	int nPolygonsProcessed = 0;
 	int nPolygonsSkipped = 0;
 
-	public void run(Map<String, InputStream> streams)
-			throws ProjectionRequestValidationException, YieldTableGenerationException {
+	public void run(Map<String, InputStream> streams) throws ProjectionRequestValidationException {
 		run(streams, context.isTrialRun() ? new StubComponentRunner() : new RealComponentRunner());
 	}
 

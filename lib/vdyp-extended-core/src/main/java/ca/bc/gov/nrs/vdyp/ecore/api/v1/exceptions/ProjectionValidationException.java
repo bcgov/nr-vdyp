@@ -7,18 +7,15 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 public class ProjectionValidationException extends AbstractProjectionRequestException {
 
 	private static final long serialVersionUID = 1L;
-	private long featureID;
+	private final long featureID;
 
 	public long getFeatureID() {
 		return featureID;
 	}
 
-	public ProjectionValidationException(ValidationMessage validationMessage) {
-		super(List.of(validationMessage));
-	}
-
 	public ProjectionValidationException(List<ValidationMessage> validationMessages) {
 		super(validationMessages);
+		featureID = 0;
 	}
 
 	public ProjectionValidationException(long featureId, List<ValidationMessage> validationMessages) {

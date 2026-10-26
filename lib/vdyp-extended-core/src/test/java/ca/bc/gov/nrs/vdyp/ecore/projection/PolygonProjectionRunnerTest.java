@@ -37,6 +37,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.io.write.VriStartOutputWriter;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
@@ -227,6 +228,115 @@ public class PolygonProjectionRunnerTest {
 	private List<PolygonMessage> nonForestDescriptorMessages() {
 		return polygon.getMessages().stream()
 				.filter(message -> message.getKind() == PolygonMessageKind.LAYER_NON_FOREST_DESC).toList();
+	}
+
+	static List<Arguments> yieldTableGenerationExceptions() {
+		return List.of(
+				Arguments.of(new YieldTableGenerationException("yield table generation failed")),
+				Arguments.of(new IllegalStateException("unexpected generation failure"))
+		);
+	}
+
+	@Test
+	void testGenerateYieldTablesForPolygon() throws Exception {
+		var context = setupYieldTableProjection();
+		ComponentRunner componentRunner = EasyMock.createStrictMock(ComponentRunner.class);
+		var initialState = expectSuccessfulProjection(componentRunner);
+		Capture<PolygonProjectionState> yieldTableState = EasyMock.newCapture();
+		componentRunner.generateYieldTables(same(context), same(polygon), capture(yieldTableState));
+		EasyMock.expectLastCall().once();
+		EasyMock.replay(componentRunner);
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+
+		unit.project();
+
+		verifyYieldTableGeneration(componentRunner, initialState, yieldTableState);
+	}
+
+	@ParameterizedTest
+	@MethodSource("yieldTableGenerationExceptions")
+	void testGenerateYieldTablesForPolygonException(Exception failure) throws Exception {
+		var context = setupYieldTableProjection();
+		ComponentRunner componentRunner = EasyMock.createStrictMock(ComponentRunner.class);
+		var initialState = expectSuccessfulProjection(componentRunner);
+		Capture<PolygonProjectionState> yieldTableState = EasyMock.newCapture();
+		componentRunner.generateYieldTables(same(context), same(polygon), capture(yieldTableState));
+		EasyMock.expectLastCall().andThrow(failure).once();
+		EasyMock.replay(componentRunner);
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+
+		var actual = assertThrows(YieldTableGenerationException.class, unit::project);
+
+		if (failure instanceof YieldTableGenerationException) {
+			assertThat(actual, sameInstance(failure));
+		} else {
+			assertThat(actual.getCause(), sameInstance(failure));
+			assertThat(actual.getMessage(), containsString("Polygon " + polygon.getFeatureId()));
+			assertThat(actual.getMessage(), containsString(failure.getMessage()));
+		}
+		verifyYieldTableGeneration(componentRunner, initialState, yieldTableState);
+	}
+
+	private Capture<PolygonProjectionState> expectSuccessfulProjection(ComponentRunner componentRunner)
+			throws PolygonExecutionException {
+		Capture<PolygonProjectionState> initialState = EasyMock.newCapture();
+		componentRunner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), capture(initialState));
+		EasyMock.expectLastCall().andAnswer(() -> {
+			initialState.getValue()
+					.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			return null;
+		});
+		componentRunner.runAdjust(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		componentRunner.runForward(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andAnswer(() -> {
+			PolygonProjectionState state = EasyMock.getCurrentArgument(2);
+			assertThat(state, sameInstance(initialState.getValue()));
+			state.setProcessingResults(ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY, Optional.empty());
+			return null;
+		});
+		return initialState;
+	}
+
+	private void verifyYieldTableGeneration(
+			ComponentRunner componentRunner, Capture<PolygonProjectionState> initialState,
+			Capture<PolygonProjectionState> yieldTableState
+	) {
+		EasyMock.verify(componentRunner);
+		assertThat(yieldTableState.getValue(), sameInstance(initialState.getValue()));
+		assertThat(yieldTableState.getValue().getStartAge(ProjectionTypeCode.PRIMARY), is(80.0));
+		assertThat(yieldTableState.getValue().getEndAge(ProjectionTypeCode.PRIMARY), is(190.0));
+	}
+
+	@Test
+	void testGenerateYieldTablesSkippedWhenInitialProcessingThrows() throws Exception {
+		var context = setupYieldTableProjection();
+		ComponentRunner componentRunner = EasyMock.createStrictMock(ComponentRunner.class);
+		var failure = new PolygonExecutionException(polygon.getFeatureId(), "initial processing failed");
+		componentRunner.runFipStart(same(polygon), same(ProjectionTypeCode.PRIMARY), EasyMock.anyObject());
+		EasyMock.expectLastCall().andThrow(failure).once();
+		// No yield-table generation (or other component call) is expected after the failure.
+		EasyMock.replay(componentRunner);
+		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+
+		var actual = assertThrows(PolygonExecutionException.class, unit::project);
+
+		assertThat(actual, sameInstance(failure));
+		EasyMock.verify(componentRunner);
+	}
+
+	private ProjectionContext setupYieldTableProjection() throws Exception {
+		layer = new Layer.Builder().layerId("1").polygon(polygon).doSuppressPerHAYields(false).crownClosure((short) 20)
+				.vdyp7LayerCode(ProjectionTypeCode.PRIMARY).estimatedSiteIndexSpecies("PL").estimatedSiteIndex(20.0)
+				.build();
+		polygon.getLayers().put(layer.getLayerId(), layer);
+		addStand("PL", 100.0, 80.0, 25.0);
+		params.ageStart(80).ageEnd(190);
+		params.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.FORWARD_GROW_ENABLED);
+		params.addExcludedExecutionOptionsItem(Parameters.ExecutionOption.BACK_GROW_ENABLED);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
+		polygon.doCompleteDefinition(context);
+		return context;
 	}
 
 	@ParameterizedTest
