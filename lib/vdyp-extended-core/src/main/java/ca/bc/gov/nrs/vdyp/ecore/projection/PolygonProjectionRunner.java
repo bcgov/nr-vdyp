@@ -252,6 +252,12 @@ public class PolygonProjectionRunner {
 				continue;
 			}
 
+			// Both start models require species; a rejected targeted veteran can still have a projection type.
+			if (polygon.getLayerByProjectionType(projectionType).getSp0sAsSupplied().isEmpty()) {
+				polygon.disableProjectionsOfType(projectionType);
+				continue;
+			}
+
 			logger.info(
 					"{}: layer exists for projection type {} (processing mode {}); {} processing will occur for this type",
 					polygon, projectionType, initialProcessingMode, initialGrowthModel
@@ -262,11 +268,6 @@ public class PolygonProjectionRunner {
 
 				var doRetryUsingVriStart = false;
 
-				// FIP requires species in the layers
-				if (polygon.getLayerByProjectionType(projectionType).getSp0sAsSupplied().isEmpty()) {
-					// completely skip
-					break;
-				}
 				createFipInputData(projectionType, initialProcessingMode, state);
 
 				componentRunner.runFipStart(polygon, projectionType, state);

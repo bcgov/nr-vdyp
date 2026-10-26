@@ -87,6 +87,28 @@ describe('Model Parameter Store', () => {
     store = useModelParameterStore()
   })
 
+  it('summarizes shared groups without removing site species and updates their DBH together', () => {
+    store.speciesList = [
+      { species: 'BA', percent: '30.0' },
+      { species: 'BL', percent: '20.0' },
+      { species: 'PL', percent: '50.0' },
+    ]
+    store.updateSpeciesGroup()
+
+    expect(store.speciesGroups).to.have.length(3)
+    expect(store.siteIndexRows).to.have.length(3)
+    expect(store.groupedSummary).to.have.length(2)
+    const summary = store.groupedSummary.find((row) => row.group === 'B')!
+    expect(summary.siteSpecies).to.deep.equal(['BA', 'BL'])
+    expect(summary.percent).to.equal(50)
+
+    const limit = UtilizationClassSetEnum._225
+    store.setGroupMinimumDBH('B', limit)
+    expect(store.speciesGroups.filter((row) => row.group === 'B')
+      .every((row) => row.minimumDBHLimit === limit)).to.be.true
+    expect(store.groupedSummary.find((row) => row.group === 'B')!.minimumDBHLimit).to.equal(limit)
+  })
+
   it('should initialize panel states and key defaults', () => {
     expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
     expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })

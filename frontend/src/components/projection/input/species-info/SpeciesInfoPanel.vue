@@ -77,7 +77,7 @@
                     @request-add="openModal"
                   />
                 </v-col>
-                <SpeciesGroupsDisplay v-if="hasSpecies" :speciesGroups="speciesGroups" />
+                <SpeciesGroupsDisplay v-if="hasSpecies" :groupedSummary="groupedSummary" />
               </v-row>
             </div>
 
@@ -157,7 +157,7 @@ const {
   panelOpenStates,
   derivedBy,
   speciesList,
-  speciesGroups,
+  groupedSummary,
   totalSpeciesPercent,
   totalSpeciesGroupPercent,
 } = storeToRefs(modelParameterStore)

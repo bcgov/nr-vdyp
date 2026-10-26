@@ -53,6 +53,7 @@ const createMockModelParameterStore = (overrides: Record<string, unknown> = {}) 
     percentStockableArea: 55,
     referenceYear: 2023,
     speciesGroups: [],
+    groupedSummary: [],
     speciesList: [],
     highestPercentSpecies: 'FD',
     selectedSiteSpecies: null,
@@ -179,6 +180,23 @@ describe('flattenSpeciesData', () => {
 // ─ Parameter builders
 
 describe('buildProjectionParameters', () => {
+  it('sends one utilization entry for site species sharing a group', () => {
+    setActivePinia(createPinia())
+    const store = useModelParameterStore()
+    store.speciesList = [
+      { species: 'BA', percent: '60.0' },
+      { species: 'BL', percent: '40.0' },
+    ]
+    store.updateSpeciesGroup()
+
+    const params = buildProjectionParameters(store)
+    expect(store.speciesGroups).to.have.length(2)
+    expect(params.utils).to.deep.equal([{
+      speciesName: 'B',
+      utilizationClass: store.groupedSummary[0].minimumDBHLimit,
+    }])
+  })
+
   it('should parse ages as integers and default to null with fixed output format when omitted', () => {
     const withAges = buildProjectionParameters(createMockModelParameterStore({ startingAge: '10', finishingAge: '200', ageIncrement: '5' }))
     expect(withAges.ageStart).to.equal(10)
@@ -220,8 +238,8 @@ describe('buildProjectionParameters', () => {
     expect(both.selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
   })
 
-  it('should map speciesGroups to utils and include all four debug options', () => {
-    const store = createMockModelParameterStore({ speciesGroups: [{ group: 'F', minimumDBHLimit: '4.0 cm+' }] })
+  it('should map groupedSummary to utils and include all four debug options', () => {
+    const store = createMockModelParameterStore({ groupedSummary: [{ group: 'F', minimumDBHLimit: '4.0 cm+' }] })
     const params = buildProjectionParameters(store)
 
     expect(params.utils).to.have.length(1)
