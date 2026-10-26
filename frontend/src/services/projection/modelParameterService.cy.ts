@@ -287,7 +287,7 @@ describe('buildModelParameters', () => {
       crownClosure: 60,
       basalArea: '25.0',
       treesPerHectare: '800',
-      minDBHLimit: '12.5 cm+',
+      minDBHLimit: CONSTANTS.MINIMUM_DBH_LIMITS.CM7_5,
       currentDiameter: '10',
     })
     const params = buildModelParameters(store)
@@ -306,7 +306,7 @@ describe('buildModelParameters', () => {
     expect(params.cc).to.equal(60)
     expect(params.BA).to.equal('25.0')
     expect(params.TPH).to.equal('800')
-    expect(params.minDBHLimit).to.equal('12.5 cm+')
+    expect(params.minDBHLimit).to.equal('7.5 cm+')
     expect(params.currentDiameter).to.equal('10')
   })
 
