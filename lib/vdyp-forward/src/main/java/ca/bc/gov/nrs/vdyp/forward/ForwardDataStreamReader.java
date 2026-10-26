@@ -67,7 +67,7 @@ public class ForwardDataStreamReader implements AutoCloseable {
 
 			boolean growthTargetSpecified = Utils.parsedControl(
 					resolvedControlMap.getControlMap(), ControlKey.VTROL, ProcessingControlVariables.class
-			).map(vtrol -> vtrol.getControlVariable(ControlVariable.GROW_TARGET_1) >= 0).orElse(false);
+			).map(vtrol -> vtrol.getTargetYear().isSpecified()).orElse(false);
 
 			polygonDescriptionStream = Optional.empty();
 			if (controlMap.containsKey(ControlKey.FORWARD_INPUT_GROWTO.name()) // Growth file specified

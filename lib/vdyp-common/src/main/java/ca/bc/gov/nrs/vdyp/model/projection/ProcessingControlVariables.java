@@ -4,6 +4,8 @@ import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
+import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.TargetYear;
 
 /**
  * Control Variable values
@@ -160,5 +162,25 @@ public class ProcessingControlVariables extends ControlVariables {
 	public void setControlVariable(ControlVariable controlVariable, int value) throws ValueParseException {
 		setControlVariable(controlVariable.variableNumber, value);
 		validate();
+	}
+
+	/**
+	 * Get the target growth year.
+	 * 
+	 * @return
+	 */
+	public TargetYear getTargetYear() {
+		return TargetYear.fromControlVariable(this.getControlVariable(ControlVariable.GROW_TARGET_1));
+	}
+
+	/**
+	 * Get the mode for applying compatibility variables.
+	 * 
+	 * @return
+	 */
+	public CompatibilityVariableMode getCompatibilityVariableMode() {
+		return CompatibilityVariableMode.getByInteger(
+				this.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3)
+		);
 	}
 }

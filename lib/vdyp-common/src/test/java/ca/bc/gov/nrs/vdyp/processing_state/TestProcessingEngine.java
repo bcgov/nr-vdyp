@@ -35,10 +35,4 @@ public class TestProcessingEngine extends ProcessingEngine<TestProcessingState, 
 
 	}
 
-	@Override
-	protected void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
-		// TODO Auto-generated method stub
-
-	}
-
 }

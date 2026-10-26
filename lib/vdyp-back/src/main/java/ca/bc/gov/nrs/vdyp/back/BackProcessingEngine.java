@@ -5,6 +5,7 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.offsetMultiply;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import java.io.IOException;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.TargetYear;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -930,8 +932,6 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		super.executeAlgorithm(lastStepInclusive, stoppingYearInclusive);
 		final ComputationMethods computers = this.getState().getComputers();
-		final BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
-		final Optional<VdypLayer> veteranLayer = getVeteranLayer();
 		final VdypLayer primaryLayer = getPrimaryLayer();
 		final BecDefinition bec = getState().getCurrentBecZone();
 		final VdypPolygon polygon = getState().getCurrentPolygon();
@@ -960,8 +960,6 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		);
 
 		for (int currentYear = years.zero(); currentYear <= years.first(); currentYear += years.step()) {
-			// TODO IYRCUR=currentYear is a global in Fortran, might need to stash it somewhere
-
 			// BACKAPPL
 			applyBackupFactors(currentYear);
 
@@ -975,13 +973,16 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 			// YSMALL(2)
 			computers.estimateSmallComponents(CompatibilityVariableMode.ALL, polygon, primaryLayer);
+
+			if (outputWriter.isPresent()) {
+				try {
+					outputWriter.get().writePolygonWithSpeciesAndUtilizationForYear(polygon, currentYear);
+				} catch (IOException e) {
+					throw new ProcessingException(e);
+				}
+			}
+
 		}
-
-	}
-
-	@Override
-	protected void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -991,8 +992,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	protected static Years getYears(
 			final ProcessingControlVariables controlVariables, final int firstYear, final int convergenceYear
 	) {
-		// VTROL(1) Could be an offset if <=400 or an absolute year otherwise
-		final int targetYear = controlVariables.getControlVariable(ControlVariable.GROW_TARGET_1);
+		final var targetYear = controlVariables.getTargetYear();
 
 		int year0 = getInitialYearZero(firstYear, targetYear, convergenceYear);
 
@@ -1011,8 +1011,17 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		};
 	}
 
-	static protected int getInitialYearZero(final int firstYear, final int targetYear, final int convergenceYear) {
-		return max(convergenceYear, (targetYear <= 400) ? firstYear - targetYear : min(targetYear, firstYear));
+	static protected int getInitialYearZero(
+			final int firstYear, final TargetYear targetYear, final int convergenceYear
+	) {
+		int year;
+		if (targetYear.isRelative()) {
+			year = targetYear.relativeTo(firstYear);
+		} else {
+			year = min(targetYear.getValue(), firstYear);
+		}
+		year = max(convergenceYear, year);
+		return year;
 	}
 
 	static protected int getYearZero(final int initialYear0, final int firstYear, final int yearStep) {

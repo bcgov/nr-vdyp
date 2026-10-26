@@ -403,10 +403,8 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 		VdypLayer primaryLayer = getState().updatePolygon().requirePrimaryLayer();
 
 		VolumeComputeMode volumeComputationMode = VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC;
-		int controlVariable3Value = getState().controlMap.getControlVariables()
-				.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3);
-		CompatibilityVariableMode compatibilityVariableMode = CompatibilityVariableMode
-				.getByInteger(controlVariable3Value);
+		CompatibilityVariableMode compatibilityVariableMode = getState().controlMap.getControlVariables()
+				.getCompatibilityVariableMode();
 		lps.getParent().computers.computeUtilizationComponentsPrimary(
 				lps.getBecZone(), primaryLayer, volumeComputationMode, compatibilityVariableMode
 		);
@@ -1519,10 +1517,14 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 			// EMP086
 			float meanVolumeSmall = getState().estimators.estimateMeanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
 
-			int controlVar3Value = getState().controlMap.getControlVariables()
-					.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3);
-
-			if (controlVar3Value >= 1 /* apply compatibility variables */) {
+			switch (getState().controlMap.getControlVariables().getCompatibilityVariableMode()) {
+			case ALL:
+				if (meanVolumeSmall > 0.0f) {
+					meanVolumeSmall *= FloatMath
+							.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.WHOLE_STEM_VOLUME));
+				}
+				// Fall through is intentional
+			case ALL_BUT_VOLUME:
 				spBaSmall += lps.getCVSmall(speciesIndex, UtilizationClassVariable.BASAL_AREA);
 				if (spBaSmall < 0.0f) {
 					spBaSmall = 0.0f;
@@ -1532,11 +1534,8 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 
 				spLhSmall = 1.3f + (spLhSmall - 1.3f)
 						* FloatMath.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.LOREY_HEIGHT));
-
-				if (controlVar3Value >= 2 && meanVolumeSmall > 0.0f) {
-					meanVolumeSmall *= FloatMath
-							.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.WHOLE_STEM_VOLUME));
-				}
+			case NONE:
+				// Do nothing
 			}
 
 			float spTphSmall = BaseAreaTreeDensityDiameter.treesPerHectare(spBaSmall, spDqSmall);
@@ -2304,7 +2303,6 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 		}
 	}
 
-	@Override
 	@SuppressWarnings("java:S128") // This is using case fall through. The lack of breaks is intentional.
 	protected void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
 

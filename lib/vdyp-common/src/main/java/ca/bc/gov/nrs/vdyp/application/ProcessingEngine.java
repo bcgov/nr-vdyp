@@ -34,6 +34,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
+import ca.bc.gov.nrs.vdyp.model.TargetYear;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -1532,9 +1533,9 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 	public int getTargetYear(VdypPolygon polygon) throws ProcessingException {
 		int targetYear;
 
-		int growTargetControlVariableValue = getState().controlMap.getControlVariables()
-				.getControlVariable(ControlVariable.GROW_TARGET_1);
-		if (growTargetControlVariableValue == -1) {
+		var growTargetControlVariableValue = getState().controlMap.getControlVariables()
+				.getTargetYear();
+		if (growTargetControlVariableValue == TargetYear.PER_POLYGON) {
 			if (polygon.getTargetYear().isEmpty()) {
 				throw new ProcessingException(
 						"Control Variable 1 has the value -1, indicating that the grow-to years are"
@@ -1544,11 +1545,7 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 			}
 			targetYear = polygon.getTargetYear().get();
 		} else {
-			if (growTargetControlVariableValue <= 400) {
-				targetYear = polygon.getPolygonIdentifier().getYear() + growTargetControlVariableValue;
-			} else {
-				targetYear = growTargetControlVariableValue;
-			}
+			targetYear = growTargetControlVariableValue.relativeTo(polygon.getPolygonIdentifier().getYear());
 		}
 		return targetYear;
 	}
@@ -1700,8 +1697,6 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 	private static final int[] defaultEquationGroups = { 0 /* placeholder */, 1, 2, 3, 4, 1, 2, 5, 6, 7, 1, 9, 8, 9, 9,
 			10, 4 };
 	private static final Set<Integer> exceptedSpeciesIndicies = new HashSet<>(List.of(3, 4, 5, 6, 10));
-
-	protected abstract void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException;
 
 	private List<VdypSpecies> buildCoverageSpecies(L lps) {
 		Bank bank = lps.getBank();
