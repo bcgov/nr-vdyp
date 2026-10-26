@@ -780,9 +780,9 @@ public class PolygonProjectionRunner {
 			);
 			int endYear = adjustMeasurementYearAsNecessary(measurementYear, state.getEndAge(projectionType), standAge);
 
-			// If the year range includes measurement year use Forward to get the results Forwawrd VDYP7 had a bunch of
+			// If the year range includes measurement year use Forward to get the results Forward VDYP7 had a bunch of
 			// logic in storing and loading results, but by and large this will result in simply always using Forward
-			// results for Reference Year which involves ono actual grow work anyways
+			// results for Reference Year which involves no actual grow work anyway
 			int yearsToGrowForward = Math.max(endYear - measurementYear, -1);
 			int yearsToGrowBack = Math.max(measurementYear - startYear, 0);
 
