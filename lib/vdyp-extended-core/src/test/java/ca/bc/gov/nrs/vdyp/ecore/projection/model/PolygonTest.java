@@ -64,7 +64,7 @@ public class PolygonTest {
 		assertThat(
 				message.getSimpleMessageText(),
 				is(
-						"INFO: Layer \"1\" was identified as the Veteran Layer but contains no species. No vet layer will be used."
+						"INFO - Layer \"1\" was identified as the Veteran Layer but contains no species. No vet layer will be used."
 				)
 		);
 	}

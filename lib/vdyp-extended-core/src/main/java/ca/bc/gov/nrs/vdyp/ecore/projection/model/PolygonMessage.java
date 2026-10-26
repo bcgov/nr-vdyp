@@ -100,7 +100,7 @@ public class PolygonMessage {
 			sb.append(polygon.toString());
 		}
 
-		sb.append(" ").append(getSimpleMessageText(true));
+		sb.append(" - ").append(getSimpleMessageText(true));
 
 		return sb.toString();
 	}
@@ -111,7 +111,7 @@ public class PolygonMessage {
 
 	public String getSimpleMessageText(boolean shortSeverity) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(shortSeverity ? severity.getShortText() : severity.getText()).append(": ");
+		sb.append(shortSeverity ? severity.getShortText() : severity.getText()).append(" - ");
 
 		sb.append(MessageFormat.format(kind.getTemplate(), args));
 

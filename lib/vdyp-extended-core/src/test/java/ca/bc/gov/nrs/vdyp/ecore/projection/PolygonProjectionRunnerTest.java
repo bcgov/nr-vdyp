@@ -364,8 +364,8 @@ public class PolygonProjectionRunnerTest {
 					message.getSimpleMessageText(),
 					is(
 							result == 1
-									? "WARN: Unable to Project Stand forward beyond \"400\" years from stand reference age."
-									: "ERR: Unable to Project Stand over age range: \"2,024\" to \"2,134\". Forward Exception: forward failed"
+									? "WARN - Unable to Project Stand forward beyond \"400\" years from stand reference age."
+									: "ERR - Unable to Project Stand over age range: \"2,024\" to \"2,134\". Forward Exception: forward failed"
 					)
 			);
 		}
@@ -425,7 +425,7 @@ public class PolygonProjectionRunnerTest {
 		);
 		assertThat(
 				message.getSimpleMessageText(true),
-				containsString("-E: Crown Closure was not supplied and there is no leading species")
+				containsString("E - Crown Closure was not supplied and there is no leading species")
 		);
 	}
 

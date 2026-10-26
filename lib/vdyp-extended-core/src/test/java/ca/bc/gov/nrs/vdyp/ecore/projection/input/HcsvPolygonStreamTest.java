@@ -47,7 +47,7 @@ class HcsvPolygonStreamTest {
 		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
 		assertThat(
 				message.getSimpleMessageText(),
-				is("WARN: Polygon 13,919,428: Rank '1' Layer was already encountered (Layer: '2')")
+				is("WARN - Polygon 13,919,428: Rank '1' Layer was already encountered (Layer: '2')")
 		);
 	}
 

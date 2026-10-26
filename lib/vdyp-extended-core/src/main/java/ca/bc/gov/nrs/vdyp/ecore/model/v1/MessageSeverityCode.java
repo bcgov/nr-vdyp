@@ -20,15 +20,15 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public enum MessageSeverityCode {
 
-	INFORMATION("INFO", "-I"),
+	INFORMATION("INFO", "I"),
 
-	STATUS("STAT", "-S"),
+	STATUS("STAT", "S"),
 
-	WARNING("WARN", "-W"),
+	WARNING("WARN", "W"),
 
-	ERROR("ERR", "-E"),
+	ERROR("ERR", "E"),
 
-	FATAL_ERROR("FATAL", "-F");
+	FATAL_ERROR("FATAL", "F");
 
 	private String text;
 	private String shortText;

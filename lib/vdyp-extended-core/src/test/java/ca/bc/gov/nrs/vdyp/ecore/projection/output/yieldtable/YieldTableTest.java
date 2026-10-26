@@ -219,7 +219,7 @@ class YieldTableTest {
 		assertThat(message.getLayer(), is(layerInfo.getLayer()));
 		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
 		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
-		assertThat(message.getSimpleMessageText(), is("WARN: " + text));
+		assertThat(message.getSimpleMessageText(), is("WARN - " + text));
 		var shortSpeciesMessages = polygon.getMessages().stream()
 				.filter(m -> m.getKind() == PolygonMessageKind.SPECIES_TOO_SHORT).toList();
 		assertThat(shortSpeciesMessages.size(), is(1));
