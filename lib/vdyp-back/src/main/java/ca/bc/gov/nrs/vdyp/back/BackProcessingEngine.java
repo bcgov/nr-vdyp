@@ -1011,9 +1011,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		};
 	}
 
-	static protected int getInitialYearZero(
-			final int firstYear, final TargetYear targetYear, final int convergenceYear
-	) {
+	static protected int
+			getInitialYearZero(final int firstYear, final TargetYear targetYear, final int convergenceYear) {
 		int year;
 		if (targetYear.isRelative()) {
 			year = targetYear.relativeTo(firstYear);

@@ -1533,8 +1533,7 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 	public int getTargetYear(VdypPolygon polygon) throws ProcessingException {
 		int targetYear;
 
-		var growTargetControlVariableValue = getState().controlMap.getControlVariables()
-				.getTargetYear();
+		var growTargetControlVariableValue = getState().controlMap.getControlVariables().getTargetYear();
 		if (growTargetControlVariableValue == TargetYear.PER_POLYGON) {
 			if (polygon.getTargetYear().isEmpty()) {
 				throw new ProcessingException(

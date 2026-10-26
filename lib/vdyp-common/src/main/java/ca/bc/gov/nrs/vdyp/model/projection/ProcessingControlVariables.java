@@ -166,7 +166,7 @@ public class ProcessingControlVariables extends ControlVariables {
 
 	/**
 	 * Get the target growth year.
-	 * 
+	 *
 	 * @return
 	 */
 	public TargetYear getTargetYear() {
@@ -175,12 +175,11 @@ public class ProcessingControlVariables extends ControlVariables {
 
 	/**
 	 * Get the mode for applying compatibility variables.
-	 * 
+	 *
 	 * @return
 	 */
 	public CompatibilityVariableMode getCompatibilityVariableMode() {
-		return CompatibilityVariableMode.getByInteger(
-				this.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3)
-		);
+		return CompatibilityVariableMode
+				.getByInteger(this.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3));
 	}
 }

@@ -69,7 +69,7 @@ public class TargetYear {
 	/**
 	 * If this is a relative target, return the absolute year from the given base year. If this is an absolute target,
 	 * simply return it.
-	 * 
+	 *
 	 * @param baseYear Proleptic Gregorian base year.
 	 * @return Proleptic Gregorian year number of the target year
 	 */
@@ -83,7 +83,7 @@ public class TargetYear {
 	@Override
 	public String toString() {
 		if (relative) {
-			return MessageFormat.format("{}{}", value < 0 ? "-" : "+", Math.abs(value));
+			return MessageFormat.format("{0}{1}", value < 0 ? "-" : "+", Math.abs(value));
 		}
 		int year = value;
 		String era = "CE";
@@ -91,12 +91,12 @@ public class TargetYear {
 			year = 1 - year;
 			era = "BCE";
 		}
-		return MessageFormat.format("{} {}", year, era);
+		return MessageFormat.format("{0,number,####} {1}", year, era);
 	}
 
 	/**
 	 * Create a relative target year
-	 * 
+	 *
 	 * @param offset Offset in years from the base year.
 	 */
 	public static TargetYear relative(int offset) {
@@ -105,7 +105,7 @@ public class TargetYear {
 
 	/**
 	 * Create a TargetYear for an absolute year.
-	 * 
+	 *
 	 * @param year Proleptic Gregorian year number for the target year.
 	 */
 	public static TargetYear absolute(int year) {
@@ -114,7 +114,7 @@ public class TargetYear {
 
 	/**
 	 * Assume numbers <=400 are offsets and larger numbers are absolute. Returns NO_GROWTH for 0 and PER_POLYGON for -1.
-	 * 
+	 *
 	 * @param offset Offset in years from the base year.
 	 */
 	public static TargetYear fromControlVariable(int value) {
