@@ -354,7 +354,6 @@ const groupedSummary = computed(() =>
   [...modelParameterStore.groupedSummary].sort((a, b) => a.group.localeCompare(b.group)),
 )
 
-
 const isCFOBiomassSelected = computed(() => {
   return (
     modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
