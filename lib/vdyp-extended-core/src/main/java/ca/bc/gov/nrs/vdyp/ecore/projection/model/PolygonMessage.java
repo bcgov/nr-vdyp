@@ -86,16 +86,6 @@ public class PolygonMessage {
 		return kind;
 	}
 
-	public String getSimpleMessageText() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(severity.getText()).append(": ");
-
-		sb.append(MessageFormat.format(kind.getTemplate(), args));
-
-		return sb.toString();
-
-	}
-
 	@Override
 	public String toString() {
 
@@ -110,9 +100,23 @@ public class PolygonMessage {
 			sb.append(polygon.toString());
 		}
 
-		sb.append(" ").append(getSimpleMessageText());
+		sb.append(" ").append(getSimpleMessageText(true));
 
 		return sb.toString();
+	}
+
+	public String getSimpleMessageText() {
+		return getSimpleMessageText(false);
+	}
+
+	public String getSimpleMessageText(boolean shortSeverity) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(shortSeverity ? severity.getShortText() : severity.getText()).append(": ");
+
+		sb.append(MessageFormat.format(kind.getTemplate(), args));
+
+		return sb.toString();
+
 	}
 
 	public static class Builder {

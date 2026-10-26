@@ -20,25 +20,31 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public enum MessageSeverityCode {
 
-	INFORMATION("INFO"),
+	INFORMATION("INFO", "-I"),
 
-	STATUS("STAT"),
+	STATUS("STAT", "-S"),
 
-	WARNING("WARN"),
+	WARNING("WARN", "-W"),
 
-	ERROR("ERR"),
+	ERROR("ERR", "-E"),
 
-	FATAL_ERROR("FATAL");
+	FATAL_ERROR("FATAL", "-F");
 
 	private String text;
+	private String shortText;
 
-	MessageSeverityCode(String text) {
+	MessageSeverityCode(String text, String shortText) {
 		this.text = text;
+		this.shortText = shortText;
 	}
 
 	@JsonValue
 	public String getText() {
 		return text;
+	}
+
+	public String getShortText() {
+		return shortText;
 	}
 
 	@Override

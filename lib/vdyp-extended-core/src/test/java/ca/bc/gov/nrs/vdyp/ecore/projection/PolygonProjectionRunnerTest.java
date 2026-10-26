@@ -423,6 +423,10 @@ public class PolygonProjectionRunnerTest {
 				message.getSimpleMessageText(),
 				containsString("Crown Closure was not supplied and there is no leading species")
 		);
+		assertThat(
+				message.getSimpleMessageText(true),
+				containsString("-E: Crown Closure was not supplied and there is no leading species")
+		);
 	}
 
 	@Test
