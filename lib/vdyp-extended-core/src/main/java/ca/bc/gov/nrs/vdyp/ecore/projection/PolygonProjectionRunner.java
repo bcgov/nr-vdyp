@@ -781,10 +781,13 @@ public class PolygonProjectionRunner {
 			);
 			int endYear = adjustMeasurementYearAsNecessary(measurementYear, state.getEndAge(projectionType), standAge);
 
-			int yearsToGrowForward = Math.max(endYear - measurementYear, 0);
+			// If the year range includes measurement year use Forward to get the results Forward VDYP7 had a bunch of
+			// logic in storing and loading results, but by and large this will result in simply always using Forward
+			// results for Reference Year which involves no actual grow work anyway
+			int yearsToGrowForward = Math.max(endYear - measurementYear, -1);
 			int yearsToGrowBack = Math.max(measurementYear - startYear, 0);
 
-			if (yearsToGrowBack == 0 && yearsToGrowForward == 0) {
+			if (yearsToGrowBack == 0 && yearsToGrowForward <= 0) {
 				// vdyp7vdypmodel.for lines 278 - 282
 				doAllowForward = true;
 				yearsToGrowForward = 1;
@@ -798,7 +801,7 @@ public class PolygonProjectionRunner {
 			Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
 
 			if (doAllowForward) {
-				if (yearsToGrowForward > 0) {
+				if (yearsToGrowForward >= 0) {
 
 					// TODO: there is logic in VDYP7Console that will try the projection a second time
 					// if the first try failed AND adjustments were supplied that time - the second time,
@@ -845,7 +848,7 @@ public class PolygonProjectionRunner {
 									.orElse("success")
 					);
 				} else {
-					logger.info("{}: forward projection skipped because yearsToGrowForward is 0", layer);
+					logger.info("{}: forward projection skipped because yearsToGrowForward is less than 0", layer);
 				}
 			} else {
 				logger.info("{}: forward projection required but disabled", layer);
