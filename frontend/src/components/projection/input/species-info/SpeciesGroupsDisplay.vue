@@ -18,7 +18,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="row in groupedSummary"
+          v-for="row in sortedGroupedSummary"
           :key="row.group"
           data-testid="species-group-row"
         >
@@ -50,6 +50,11 @@ const props = defineProps({
     required: true,
   },
 })
+
+// Species group should be sorted by total percentage and then by species group name in cae ofa tie
+const sortedGroupedSummary = computed(() =>
+  [...props.groupedSummary].sort((a, b) => b.percent - a.percent || a.group.localeCompare(b.group)),
+)
 
 const groupCount = computed(() => props.groupedSummary.length)
 

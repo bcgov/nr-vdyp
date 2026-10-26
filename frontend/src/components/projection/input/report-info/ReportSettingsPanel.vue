@@ -349,7 +349,10 @@ const yearIncrementError = ref<string>('')
 // MinimumDBH
 const utilizationSliderValues = ref<number[]>([])
 const utilizationClassOptions = OPTIONS.utilizationClassOptions
-const groupedSummary = computed(() => modelParameterStore.groupedSummary)
+// Minimum BDH list is expected to be in Species group alphabetical order
+const groupedSummary = computed(() =>
+  [...modelParameterStore.groupedSummary].sort((a, b) => a.group.localeCompare(b.group)),
+)
 
 
 const isCFOBiomassSelected = computed(() => {
