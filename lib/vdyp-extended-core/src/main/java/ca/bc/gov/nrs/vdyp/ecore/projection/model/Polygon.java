@@ -1805,19 +1805,7 @@ public class Polygon implements Comparable<Polygon> {
 					}
 				}
 
-				if (veteranLayer != null) {
-					if (checkVeteranSpecies(veteranLayer)) {
-						veteranLayer.setDoIncludeWithProjection(true);
-						veteranLayer.setVdyp7LayerCode(ProjectionTypeCode.VETERAN);
-
-						logger.debug(
-								"{}: layer {} passes all criteria and will be processed as a veteran layer", this,
-								veteranLayer.getLayerId()
-						);
-					} else {
-						veteranLayer = null;
-					}
-				} else {
+				if (veteranLayer == null) {
 					logger.warn(
 							"{}: no layer with id \"1\" that is not the primary layer, has 0 <= CC <= 5.0, no rank code"
 									+ " and height at least {}m was found; hence, there is no identified veteran layer",
@@ -1826,8 +1814,17 @@ public class Polygon implements Comparable<Polygon> {
 				}
 			}
 		}
+		if (veteranLayer != null && checkVeteranSpecies(veteranLayer)) {
+			veteranLayer.setDoIncludeWithProjection(true);
+			veteranLayer.setVdyp7LayerCode(ProjectionTypeCode.VETERAN);
 
-		return veteranLayer;
+			logger.debug(
+					"{}: layer {} passes all criteria and will be processed as a veteran layer", this,
+					veteranLayer.getLayerId()
+			);
+			return veteranLayer;
+		}
+		return null;
 	}
 
 	/** vdyp7merge local function */
