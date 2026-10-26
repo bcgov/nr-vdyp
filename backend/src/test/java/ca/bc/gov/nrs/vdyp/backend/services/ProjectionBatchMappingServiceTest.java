@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.projectionEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -488,6 +489,7 @@ class ProjectionBatchMappingServiceTest {
 
 		ProjectionEntity staleProjectionEntity = projectionEntity(UUID.randomUUID(), UUID.randomUUID());
 		ProjectionBatchMappingEntity staleMapping = new ProjectionBatchMappingEntity();
+		staleMapping.setPrioritized(true);
 		staleMapping.setProjection(staleProjectionEntity);
 
 		ProjectionEntity recoveredProjectionEntity = projectionEntity(UUID.randomUUID(), UUID.randomUUID());
@@ -508,6 +510,9 @@ class ProjectionBatchMappingServiceTest {
 
 		assertEquals(stuckStatus, staleProjectionEntity.getProjectionStatusCode());
 		assertEquals(runningStatus, recoveredProjectionEntity.getProjectionStatusCode());
+
+		// Check that prioritized flag has been removed from the batch mapping
+		assertFalse(staleMapping.isPrioritized());
 	}
 
 	@Test

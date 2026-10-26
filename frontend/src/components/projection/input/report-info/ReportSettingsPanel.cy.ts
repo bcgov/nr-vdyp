@@ -5,7 +5,7 @@ import 'vuetify/styles'
 import ReportSettingsPanel from './ReportSettingsPanel.vue'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, OPTIONS } from '@/constants'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
 
 const vuetify = createVuetify()
@@ -35,6 +35,26 @@ const mountPanel = (
 }
 
 describe('<ReportSettingsPanel />', () => {
+  it('renders one DBH slider per group and updates every member species', () => {
+    const { modelStore } = mountPanel((store) => {
+      store.speciesList = [
+        { species: 'BA', percent: '60.0' },
+        { species: 'BL', percent: '40.0' },
+      ]
+      store.updateSpeciesGroup()
+    })
+
+    cy.get('.min-dbh-row').should('have.length', 1)
+    cy.get('.min-dbh-row .v-slider-thumb').focus()
+    cy.get('.min-dbh-row .v-slider-thumb').type('{end}')
+    cy.then(() => {
+      const summary = modelStore.groupedSummary[0]
+      expect(summary.minimumDBHLimit).to.equal(OPTIONS.utilizationClassOptions[4].value)
+      expect(modelStore.speciesGroups.every((row) =>
+        row.minimumDBHLimit === summary.minimumDBHLimit)).to.be.true
+    })
+  })
+
   it('renders title and content fields when panel is open', () => {
     mountPanel()
     cy.contains('.text-h6', 'Report Settings').should('exist')
