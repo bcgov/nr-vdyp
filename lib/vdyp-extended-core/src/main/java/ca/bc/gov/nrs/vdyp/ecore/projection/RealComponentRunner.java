@@ -290,7 +290,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 			if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
 
-				// order yield tables by supoplied layer order to match VDYP7
+				// order yield tables by supplied layer order to match VDYP7
 				var suppliedLayerOrder = Comparator.comparing(LayerReportingInfo::getSourceLayerID);
 				var suppliedLayerInfos = polygon.getReportingInfo().getLayerReportingInfos().values().stream()
 						.sorted(suppliedLayerOrder).toList();
