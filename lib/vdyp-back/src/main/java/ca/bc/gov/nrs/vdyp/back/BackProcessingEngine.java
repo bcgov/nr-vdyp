@@ -65,20 +65,6 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		super(processingState, outputWriter);
 	}
 
-	@Override
-	public void processPolygon(VdypPolygon polygon) throws ProcessingException {
-
-		logger.info("Starting processing of the primary layer of polygon {}", polygon.getPolygonIdentifier());
-
-		getState().setPolygon(polygon);
-
-		// All of BANKCHK1 that we need. Note that setting UC ALL (METH_CHK == 1) in BANKCHK1 is
-		// performed when the Bank instance is created in setPolygon, above.
-
-		validatePolygon(polygon);
-
-	}
-
 	/**
 	 *
 	 * @throws StandProcessingException
