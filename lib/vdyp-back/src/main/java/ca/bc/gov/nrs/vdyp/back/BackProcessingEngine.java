@@ -95,7 +95,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		for (int i = 0; i < primaryState.getNSpecies(); i++) {
 			final int specIndex = i + 1;
 			cvVolume[specIndex] = new MatrixMap2Impl<>(
-					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+					UtilizationClass.UTIL_CLASSES, List.of(VolumeVariable.values()),
 					(uc, vv) -> primaryState.getCVVolume(specIndex, uc, vv)
 			);
 
@@ -103,7 +103,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			cvQuadraticMeanDiameter[specIndex] = new EnumMap<>(UtilizationClass.class);
 			cvPrimaryLayerSmall[specIndex] = new EnumMap<>(UtilizationClassVariable.class);
 
-			for (var uc : UtilizationClass.values()) {
+			for (var uc : UtilizationClass.UTIL_CLASSES) {
 				cvBasalArea[specIndex].put(uc, primaryState.getCVBasalArea(specIndex, uc));
 				cvQuadraticMeanDiameter[specIndex].put(uc, primaryState.getCVQuadraticMeanDiameter(specIndex, uc));
 			}
@@ -922,16 +922,19 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		final BecDefinition bec = getState().getCurrentBecZone();
 		final VdypPolygon polygon = getState().getCurrentPolygon();
 
+		// BACKPREP
+		prepare(getState());
+
 		// IYR_RGR = BACKAGE()
 		int regressionYears = calculateConvergenceAge();
 
 		if (regressionYears <= 0) {
 			logger.atWarn().addArgument(getState().getCompactPolygonIdentifier())
-					.setMessage("Polygon {0} skipped as it can not be regressed to a younger age.").log();
+					.setMessage("Polygon {} skipped as it can not be regressed to a younger age.").log();
 			return;
 		}
 		logger.atInfo().addArgument(getState().getCompactPolygonIdentifier()).addArgument(regressionYears)
-				.setMessage("Polygon {0} regressing {1} years").log();
+				.setMessage("Polygon {} regressing {} years").log();
 
 		// BACK_CNV
 		calculateConvergenceYield();
@@ -1017,6 +1020,11 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			}
 		}
 		return initialYear0;
+	}
+
+	@Override
+	public int getTargetYear(VdypPolygon polygon) {
+		return 0; //  We don't need a target year for back projection.
 	}
 
 	public enum BackExecutionStep implements ProcessingEngine.ExecutionStep {
