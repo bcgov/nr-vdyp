@@ -1,5 +1,3 @@
-package ca.bc.gov.nrs.vdyp.math;
-
 import java.io.IOException;
 
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
@@ -54,7 +52,7 @@ public class FloatMath {
 	 * A method only included to produce behavior exhibited by unchecked min max functions in VDYP7. In such cases, the
 	 * min value is enforced and then the max without confirming if min is > max. The result in this narrow condition is
 	 * always that the max value is provided as the clamped value.
-	 * 
+	 *
 	 * @param x   - value for comparison
 	 * @param min - the minimum allowed value
 	 * @param max - the maximum allowed value
