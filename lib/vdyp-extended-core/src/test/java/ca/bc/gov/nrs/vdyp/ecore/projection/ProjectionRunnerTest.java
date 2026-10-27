@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
@@ -26,6 +28,35 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class ProjectionRunnerTest {
+
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	void debugLogIsCreatedOnlyWhenSelected(boolean enabled) throws Exception {
+		Parameters parameters = new Parameters().ageStart(0).ageEnd(10);
+		if (enabled) {
+			parameters.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING);
+		}
+		try (
+				ProjectionRunner runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, "DEBUG-TEST", parameters, true
+				); InputStream polygons = TestUtils.makeInputStream(TestUtils.POLYGON_CSV_HEADER_LINE);
+				InputStream layers = TestUtils.makeInputStream(TestUtils.LAYER_CSV_HEADER_LINE)
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA, polygons, ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							layers
+					)
+			);
+			assertEquals(enabled, Files.exists(runner.getContext().getExecutionFolder().resolve("DebugLog.txt")));
+			if (enabled) {
+				try (InputStream debug = runner.getDebugStream()) {
+					String debugContents = new String(debug.readAllBytes());
+					assertThat(debugContents, containsString("doEnableDebugLogging"));
+				}
+			}
+		}
+	}
 
 	static Stream<Arguments> nonProductiveAndStandData() {
 		return Stream.of(

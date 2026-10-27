@@ -462,7 +462,7 @@ public class BatchProjectionService {
 
 		// Store debug log if enabled
 		if (params.containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
-			storeDebugLog(partitionDir, filePrefix, recordCount);
+			storeDebugLog(runner, partitionDir, filePrefix, recordCount);
 		}
 	}
 
@@ -518,11 +518,14 @@ public class BatchProjectionService {
 		}
 	}
 
-	private void storeDebugLog(Path partitionDir, String filePrefix, int recordCount) throws IOException {
+	private void storeDebugLog(ProjectionRunner runner, Path partitionDir, String filePrefix, int recordCount)
+			throws IOException {
 		String debugLogFileName = String.format("%s_DebugLog.txt", filePrefix);
 		Path debugLogPath = partitionDir.resolve(debugLogFileName);
 
-		Files.write(debugLogPath, new byte[0], StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-		logger.trace("Created chunk debug log placeholder: {} for {} records", debugLogFileName, recordCount);
+		try (InputStream debugStream = runner.getDebugStream()) {
+			Files.copy(debugStream, debugLogPath, StandardCopyOption.REPLACE_EXISTING);
+		}
+		logger.trace("Stored chunk debug log: {} for {} records", debugLogFileName, recordCount);
 	}
 }

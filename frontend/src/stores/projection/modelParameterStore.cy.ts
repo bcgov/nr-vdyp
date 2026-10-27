@@ -87,6 +87,28 @@ describe('Model Parameter Store', () => {
     store = useModelParameterStore()
   })
 
+  it('summarizes shared groups without removing site species and updates their DBH together', () => {
+    store.speciesList = [
+      { species: 'BA', percent: '30.0' },
+      { species: 'BL', percent: '20.0' },
+      { species: 'PL', percent: '50.0' },
+    ]
+    store.updateSpeciesGroup()
+
+    expect(store.speciesGroups).to.have.length(3)
+    expect(store.siteIndexRows).to.have.length(3)
+    expect(store.groupedSummary).to.have.length(2)
+    const summary = store.groupedSummary.find((row) => row.group === 'B')!
+    expect(summary.siteSpecies).to.deep.equal(['BA', 'BL'])
+    expect(summary.percent).to.equal(50)
+
+    const limit = UtilizationClassSetEnum._225
+    store.setGroupMinimumDBH('B', limit)
+    expect(store.speciesGroups.filter((row) => row.group === 'B')
+      .every((row) => row.minimumDBHLimit === limit)).to.be.true
+    expect(store.groupedSummary.find((row) => row.group === 'B')!.minimumDBHLimit).to.equal(limit)
+  })
+
   it('should initialize panel states and key defaults', () => {
     expect(store.panelOpenStates.reportDetails).to.equal(CONSTANTS.PANEL.OPEN)
     expect(store.panelState.reportDetails).to.deep.equal({ confirmed: false, editable: true })
@@ -103,6 +125,7 @@ describe('Model Parameter Store', () => {
     expect(store.isBackwardGrowEnabled).to.be.true
     expect(store.isByLayerEnabled).to.be.true
     expect(store.isComputedMAIEnabled).to.be.false
+    expect(store.minDBHLimit).to.equal('7.5 cm+')
   })
 
   it('should progress panels on confirmPanel and enable runModelEnabled only when all confirmed', () => {
@@ -235,6 +258,7 @@ describe('Model Parameter Store', () => {
     store.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.YEAR
     store.reportTitle = 'Custom Title'
     store.ageType = 'SomeType'
+    store.minDBHLimit = '12.5 cm+'
     ;(['reportDetails', 'speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((p) =>
       store.confirmPanel(p),
     )
@@ -251,6 +275,7 @@ describe('Model Parameter Store', () => {
     expect(store.selectedAgeYearRange).to.equal(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
     expect(store.reportTitle).to.equal(DEFAULTS.DEFAULT_VALUES.REPORT_TITLE)
     expect(store.ageType).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_TYPE)
+    expect(store.minDBHLimit).to.equal('7.5 cm+')
   })
 
   it('should restore all fields and set all panels open+confirmed+non-editable in view mode', () => {
@@ -322,6 +347,13 @@ describe('Model Parameter Store', () => {
 
     const fGroup = store.speciesGroups.find((g) => g.group === 'F')
     expect(fGroup?.minimumDBHLimit).to.equal(UtilizationClassSetEnum._175)
+  })
+
+  ;(['12.5 cm+', null] as const).forEach((savedLimit) => {
+    it(`should normalize saved stand minDBHLimit ${savedLimit} to 7.5 cm+`, () => {
+      store.restoreFromModelParameters(makeModelParams({ minDBHLimit: savedLimit }))
+      expect(store.minDBHLimit).to.equal('7.5 cm+')
+    })
   })
 
   it('should restore all model parameter data fields and primary siteIndexRow for Supplied and Computed modes', () => {

@@ -7,6 +7,7 @@ import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useAppStore } from '@/stores/projection/appStore'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import { PROJECTION_VIEW_MODE } from '@/constants/constants'
+import { UtilizationClassSetEnum } from '@/services/vdyp-api'
 
 const vuetify = createVuetify()
 
@@ -126,10 +127,25 @@ describe('<StandInfoPanel />', () => {
       .should('exist')
   })
 
-  it('renders min-dbh-limit block when minDBHLimit is set', () => {
+  it('renders the fixed min-dbh-limit without a selected species', () => {
+    mountPanel((ms) => openPanel(ms))
+    cy.get('[data-testid="min-dbh-limit"]').should('be.visible')
+    cy.get('.min-dbh-value').should('have.text', '7.5 cm+')
+  })
+
+  it('keeps the stand limit at 7.5 cm+ when species and reporting limits change', () => {
     const { modelStore } = mountPanel((ms) => openPanel(ms))
-    cy.then(() => { modelStore.minDBHLimit = '12.5 cm' })
-    cy.get('[data-testid="min-dbh-limit"]').should('exist')
-    cy.get('.min-dbh-value').should('contain', '12.5 cm')
+    cy.then(() => {
+      modelStore.speciesList[0] = { species: 'FD', percent: '100' }
+      modelStore.updateSpeciesGroup()
+      modelStore.speciesGroups[0].minimumDBHLimit = UtilizationClassSetEnum._175
+    })
+    cy.get('.min-dbh-value').should('have.text', '7.5 cm+')
+    cy.then(() => {
+      expect(modelStore.minDBHLimit).to.equal('7.5 cm+')
+      expect(modelStore.speciesGroups[0].minimumDBHLimit).to.equal(UtilizationClassSetEnum._175)
+      modelStore.selectedSiteSpecies = null
+    })
+    cy.get('.min-dbh-value').should('have.text', '7.5 cm+')
   })
 })
