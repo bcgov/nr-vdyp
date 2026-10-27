@@ -1,5 +1,3 @@
-package ca.bc.gov.nrs.vdyp.math;
-
 import java.io.IOException;
 
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
