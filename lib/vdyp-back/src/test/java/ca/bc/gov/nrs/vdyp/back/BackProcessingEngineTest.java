@@ -17,8 +17,11 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.EnumMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
@@ -45,6 +49,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -63,6 +68,8 @@ class BackProcessingEngineTest {
 
 	BackProcessingEngine engine;
 
+	List<VdypPolygon> output;
+
 	Map<String, Object> rawControlMap;
 
 	BecLookup becLookup;
@@ -73,12 +80,64 @@ class BackProcessingEngineTest {
 
 	ProcessingResolvedControlMapImpl controlMap;
 
+	/**
+	 * Make a mock VdypOutputWriter that appends written polygon records to the provided list instead of writing them to
+	 * a file.
+	 * 
+	 * @param collectTo
+	 * @return
+	 */
+	VdypOutputWriter mockWriter(List<VdypPolygon> collectTo) {
+
+		VdypOutputWriter output = new VdypOutputWriter(
+				controlMap.getControlMap(), OutputStream.nullOutputStream(), OutputStream.nullOutputStream(),
+				OutputStream.nullOutputStream()
+		) {
+
+			@Override
+			public void writePolygonWithSpeciesAndUtilizationForYear(VdypPolygon polygon, int year)
+					throws IOException {
+				final var polyCopy = VdypPolygon.build(pb -> {
+					pb.copy(polygon);
+					// Replace the year in the polygon identifier with the provided year
+					pb.polygonIdentifier(polygon.getPolygonIdentifier().getBase(), year);
+					pb.copyLayers(polygon, (lb, l) -> {
+						lb.copySpecies(l, (sb, s) -> {
+							sb.copySiteFrom(s, (ib, i) -> {
+								// Do nothing
+							});
+						});
+					});
+				});
+				collectTo.add(polyCopy);
+			}
+
+			@Override
+			public void writePolygonWithSpeciesAndUtilization(VdypPolygon polygon) throws IOException {
+				final var polyCopy = VdypPolygon.build(pb -> {
+					pb.copy(polygon);
+					pb.copyLayers(polygon, (lb, l) -> {
+						lb.copySpecies(l, (sb, s) -> {
+							sb.copySiteFrom(s, (ib, i) -> {
+								// Do nothing
+							});
+						});
+					});
+				});
+				collectTo.add(polyCopy);
+			}
+
+		};
+		return output;
+	}
+
 	@BeforeEach
 	void setup() {
 		em = EasyMock.createControl();
 		state = em.createMock(BackProcessingState.class);
 
-		engine = new BackProcessingEngine(state, Optional.empty());
+		output = new LinkedList<>();
+		engine = new BackProcessingEngine(state, Optional.of(mockWriter(output)));
 
 		rawControlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
 

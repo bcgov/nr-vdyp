@@ -43,8 +43,6 @@ public class VdypOutputWriter implements Closeable {
 
 	private ResolvedControlMap controlMap;
 
-	private Optional<Integer> currentYear = Optional.empty();
-
 	static final String POLY_IDENTIFIER_FORMAT = "%-25s";
 	static final String LAYER_TYPE_FORMAT = "%-1s";
 	static final String SPEC_IDENTIFIER_FORMAT = "%-2s";
@@ -155,10 +153,6 @@ public class VdypOutputWriter implements Closeable {
 		);
 	}
 
-	public void setPolygonYear(int currentYear) {
-		this.currentYear = Optional.of(currentYear);
-	}
-
 	/**
 	 * Write the given polygon record for the given year to the polygon file.
 	 *
@@ -167,10 +161,10 @@ public class VdypOutputWriter implements Closeable {
 	 * @throws IOException
 	 */
 	public void writePolygonWithSpeciesAndUtilizationForYear(VdypPolygon polygon, int year) throws IOException {
-		setPolygonYear(year);
-		writePolygonWithSpeciesAndUtilization(polygon);
+		writePolygonWithSpeciesAndUtilization(
+				polygon, new PolygonIdentifier(polygon.getPolygonIdentifier().getBase(), year)
+		);
 	}
-
 	/**
 	 * Output a polygon and its children.
 	 *
@@ -179,8 +173,13 @@ public class VdypOutputWriter implements Closeable {
 	 */
 	// VDYP_OUT when JPROGRAM = 1 (FIPSTART) or 3 (VRISTART)
 	public void writePolygonWithSpeciesAndUtilization(VdypPolygon polygon) throws IOException {
+		writePolygonWithSpeciesAndUtilization(polygon, polygon.getPolygonIdentifier());
+	}
 
-		writePolygon(polygon);
+	void writePolygonWithSpeciesAndUtilization(VdypPolygon polygon, PolygonIdentifier polyIdOverride)
+			throws IOException {
+
+		writePolygon(polygon, polyIdOverride);
 
 		// Primary then Veteran (if present)
 		var sortedLayers = polygon.getLayers().values().stream()
@@ -194,14 +193,14 @@ public class VdypOutputWriter implements Closeable {
 		);
 
 		for (var layer : sortedLayers) {
-			writeUtilization(polygon, layer, layer);
+			writeUtilization(polygon, layer, layer, polyIdOverride);
 			for (var species : layer.getOrderedSpecies()) {
-				writeSpecies(layer, species);
-				writeUtilization(polygon, layer, species);
+				writeSpecies(layer, species, polyIdOverride);
+				writeUtilization(polygon, layer, species, polyIdOverride);
 			}
 		}
-		writeSpeciesEndRecord(polygon);
-		writeUtilizationEndRecord(polygon);
+		writeSpeciesEndRecord(polygon, polyIdOverride);
+		writeUtilizationEndRecord(polygon, polyIdOverride);
 	}
 
 	static void calculateCuVolumeLessDecayWastageBreakage(
@@ -277,27 +276,20 @@ public class VdypOutputWriter implements Closeable {
 		return Files.newOutputStream(outputFilePath);
 	}
 
-	private PolygonIdentifier getCurrentPolygonDescriptor(PolygonIdentifier originalIdentifier) {
-		if (currentYear.isPresent()) {
-			return new PolygonIdentifier(originalIdentifier.getBase(), currentYear.get());
-		} else {
-			return originalIdentifier;
-		}
-	}
-
 	/**
 	 * V7W_AIP - Write the given polygon record to the polygon file
 	 *
 	 * @param polygon
+	 * @param polyIdOverride
 	 * @throws IOException
 	 */
-	void writePolygon(VdypPolygon polygon) throws IOException {
+	void writePolygon(VdypPolygon polygon, PolygonIdentifier polyIdOverride) throws IOException {
 
 		writeFormat(
 				polygonFile, //
 				POLY_FORMAT, //
 
-				getCurrentPolygonDescriptor(polygon.getPolygonIdentifier()), //
+				polyIdOverride, //
 				polygon.getBiogeoclimaticZone().getAlias(), //
 				polygon.getForestInventoryZone(), //
 
@@ -313,9 +305,10 @@ public class VdypOutputWriter implements Closeable {
 	 *
 	 * @param layer
 	 * @param spec
+	 * @param polyIdOverride
 	 * @throws IOException
 	 */
-	void writeSpecies(VdypLayer layer, VdypSpecies spec) throws IOException {
+	void writeSpecies(VdypLayer layer, VdypSpecies spec, PolygonIdentifier polyIdOverride) throws IOException {
 
 		// Ensure we have a list of 4 distribution entries
 		var specDistributionEntries = Stream.concat(
@@ -327,7 +320,7 @@ public class VdypOutputWriter implements Closeable {
 				speciesFile, //
 				SPEC_FORMAT, //
 
-				getCurrentPolygonDescriptor(spec.getPolygonIdentifier()), //
+				polyIdOverride, //
 				spec.getLayerType().getAlias(), //
 
 				spec.getGenusIndex(), //
@@ -384,10 +377,13 @@ public class VdypOutputWriter implements Closeable {
 	 *
 	 * @param layer
 	 * @param utils
+	 * @param polyIdOverride
 	 * @throws IOException
 	 */
 	// V7W_AIU Internalized loop over utilization classes
-	void writeUtilization(VdypPolygon polygon, VdypLayer layer, VdypUtilizationHolder utils) throws IOException {
+	void writeUtilization(
+			VdypPolygon polygon, VdypLayer layer, VdypUtilizationHolder utils, PolygonIdentifier polyIdOverride
+	) throws IOException {
 		Optional<String> specId = Optional.empty();
 		Optional<Integer> specIndex = Optional.empty();
 		if (utils instanceof VdypSpecies spec) {
@@ -416,7 +412,7 @@ public class VdypOutputWriter implements Closeable {
 					utilizationFile, //
 					UTIL_FORMAT, //
 
-					getCurrentPolygonDescriptor(layer.getPolygonIdentifier()), //
+					polyIdOverride, //
 					layer.getLayerType().getAlias(), //
 
 					specIndex.orElse(0), //
@@ -444,16 +440,17 @@ public class VdypOutputWriter implements Closeable {
 		}
 	}
 
-	private void writeEndRecord(OutputStream os, VdypPolygon polygon) throws IOException {
-		writeFormat(os, END_RECORD_FORMAT, getCurrentPolygonDescriptor(polygon.getPolygonIdentifier()));
+	private void writeEndRecord(OutputStream os, VdypPolygon polygon, PolygonIdentifier polyIdOverride)
+			throws IOException {
+		writeFormat(os, END_RECORD_FORMAT, polyIdOverride);
 	}
 
-	private void writeUtilizationEndRecord(VdypPolygon polygon) throws IOException {
-		writeEndRecord(utilizationFile, polygon);
+	private void writeUtilizationEndRecord(VdypPolygon polygon, PolygonIdentifier polyIdOverride) throws IOException {
+		writeEndRecord(utilizationFile, polygon, polyIdOverride);
 	}
 
-	private void writeSpeciesEndRecord(VdypPolygon polygon) throws IOException {
-		writeEndRecord(speciesFile, polygon);
+	private void writeSpeciesEndRecord(VdypPolygon polygon, PolygonIdentifier polyIdOverride) throws IOException {
+		writeEndRecord(speciesFile, polygon, polyIdOverride);
 	}
 
 	void writeFormat(OutputStream os, String format, Object... params) throws IOException {

@@ -178,7 +178,7 @@ class VdypOutputWriterTest {
 			layer.setEmpiricalRelationshipParameterIndex(Optional.of(119));
 			layer.setInventoryTypeGroup(Optional.of(28));
 
-			unit.writePolygon(polygon);
+			unit.writePolygon(polygon, polygon.getPolygonIdentifier());
 		}
 
 		polyStream.assertContent(is("082E004    615       1988 IDF  D    90 28119  1\n"));
@@ -216,7 +216,7 @@ class VdypOutputWriterTest {
 				});
 			});
 
-			unit.writeSpecies(layer, layer.getSpecies().get("PL"));
+			unit.writeSpecies(layer, layer.getSpecies().get("PL"), layer.getPolygonIdentifier());
 		}
 		specStream.assertContent(
 				is(
@@ -301,7 +301,7 @@ class VdypOutputWriterTest {
 			// Should be ignored and computed from BA and TPH
 			layer.setQuadraticMeanDiameterByUtilization(Utils.utilizationVector(4f, 4f, 4f, 4f, 4f, 4f));
 
-			unit.writeUtilization(polygon, layer, layer);
+			unit.writeUtilization(polygon, layer, layer, polygon.getPolygonIdentifier());
 		}
 		utilStream.assertContent(
 				VdypMatchers.hasLines(
@@ -389,7 +389,7 @@ class VdypOutputWriterTest {
 			// Should be ignored and computed from BA and TPH
 			species.setQuadraticMeanDiameterByUtilization(Utils.utilizationVector(4f, 4f, 4f, 4f, 4f, 4f));
 
-			unit.writeUtilization(polygon, layer, species);
+			unit.writeUtilization(polygon, layer, species, polygon.getPolygonIdentifier());
 		}
 		utilStream.assertContent(
 				VdypMatchers.hasLines(
