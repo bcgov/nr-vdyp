@@ -110,6 +110,20 @@ class HcsvPolygonStreamTest {
 	}
 
 	@Test
+	void testRejectedPolygonExceptionRetainsFeatureId() {
+		var csv = HcsvPolygonRecordBean.createHcsvPolygonStream(
+				new ExceptionHandlerQueue(),
+				new ByteArrayInputStream(hcsvPolygonFileContents.replace(",UNK,V,UNK,", ",UNK,Z,UNK,").getBytes())
+		);
+		assertThat(csv.parse().isEmpty(), is(true));
+		assertThat(csv.getCapturedExceptions().size(), is(1));
+		var captured = (CsvConstraintViolationException) csv.getCapturedExceptions().get(0);
+		var validation = (PolygonValidationException) captured.getSourceObject();
+		assertThat(validation.getFeatureID(), is(13919428L));
+		assertThat(validation.getContextPrefix(), is("Polygon 13919428"));
+	}
+
+	@Test
 	void testToPolygonValidationExceptionIncludesFeatureIdWhenKnown() {
 		var message = new ValidationMessage(ValidationMessageKind.GENERIC, "boom");
 		var ex = HcsvPolygonStream.toPolygonValidationException(13919428L, message);
