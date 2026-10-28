@@ -1604,8 +1604,9 @@ class BackProcessingEngineTest {
 						sb.addSite(ib -> {
 							ib.siteCurveNumber(93);
 						});
-						sb.loreyHeight(0);
-						sb.baseArea(0, 0, 0, 0, 0);
+						sb.volumeGroup(17);
+						sb.decayGroup(11);
+						sb.breakageGroup(4);
 					});
 					lb.addSpecies(sb -> {
 						sb.speciesIndex(12);
@@ -1618,6 +1619,9 @@ class BackProcessingEngineTest {
 							ib.siteIndex(12.39f);
 							ib.height(16f);
 						});
+						sb.volumeGroup(55);
+						sb.decayGroup(46);
+						sb.breakageGroup(24);
 					});
 					lb.addSpecies(sb -> {
 						sb.speciesIndex(15);
@@ -1630,6 +1634,9 @@ class BackProcessingEngineTest {
 							ib.siteIndex(13.54f);
 							ib.height(18f);
 						});
+						sb.volumeGroup(70);
+						sb.decayGroup(58);
+						sb.breakageGroup(30);
 					});
 					lb.primaryGenus("PL");
 					lb.empiricalRelationshipParameterIndex(118);
