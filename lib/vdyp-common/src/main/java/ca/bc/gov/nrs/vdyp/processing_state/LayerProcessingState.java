@@ -44,7 +44,6 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
 	private static final String UNSET_CV = "unset compatibility variables";
-	private static final String UNSET_CV_BASAL_AREAS = "unset cvBasalAreas";
 
 	public static final String UNSET_SPECIES_RANKING_DETAILS = "SpeciesRankingDetails have not been set.  Cannot access {0}.";
 	public static final String UNSET_PRIMARY_SPECIES_DETAILS = "PrimarySpeciesDetails have not been set.  Cannot access {0}.";
@@ -180,8 +179,6 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 	public Bank getBank() {
 		return bank;
 	}
-
-	protected abstract void applyCompatibilityVariables(VdypSpecies species, int i);
 
 	public int getNSpecies() {
 		return getBank().getNSpecies();

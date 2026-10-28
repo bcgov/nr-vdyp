@@ -15,9 +15,6 @@ import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
 public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLayerProcessingState> {
 
-	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
-	private static final String UNSET_CV_VOLUMES = "unset cvVolumes";
-	private static final String UNSET_CV_BASAL_AREAS = "unset cvBasalAreas";
 	private static final Logger logger = LoggerFactory.getLogger(ForwardLayerProcessingState.class);
 
 	// L1COM2 - equation groups. From the configuration, narrowed to the
@@ -102,10 +99,4 @@ public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLay
 		return s -> s.getBaseAreaByUtilization().get(UtilizationClass.ALL) >= ForwardProcessingEngine.MIN_BASAL_AREA;
 	}
 
-	@Override
-	protected void applyCompatibilityVariables(VdypSpecies species, int i) {
-		// TODO Auto-generated method stub
-		// Added this to the parent during the initial 443 development but can't remember why. It will probably be
-		// important later. Making a note to remember to check at the end and delete it if it's not needed after all.
-	}
 }
