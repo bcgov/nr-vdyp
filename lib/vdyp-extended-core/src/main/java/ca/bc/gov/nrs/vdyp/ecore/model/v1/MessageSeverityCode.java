@@ -30,8 +30,8 @@ public enum MessageSeverityCode {
 
 	FATAL_ERROR("FATAL", "F");
 
-	private String text;
-	private String shortText;
+	private final String text;
+	private final String shortText;
 
 	MessageSeverityCode(String text, String shortText) {
 		this.text = text;
