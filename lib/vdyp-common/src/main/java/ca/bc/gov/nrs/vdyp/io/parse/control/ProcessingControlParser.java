@@ -286,7 +286,7 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 
 		// 101 - a literal value of type VdypGrowthDetails
 
-		controlParser.record(ControlKey.VTROL, new ProcessingControlVariableParser());
+		controlParser.record(ControlKey.VTROL, getControlVariableParser());
 		orderedControlKeys.add(ControlKey.VTROL);
 
 		// 199 - debug switches
@@ -296,6 +296,10 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 		orderedControlKeys.add(ControlKey.MAX_NUM_POLY);
 
 		super.initialize();
+	}
+
+	protected ProcessingControlVariableParser getControlVariableParser() {
+		return new ProcessingControlVariableParser();
 	}
 
 	@Override

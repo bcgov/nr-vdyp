@@ -975,7 +975,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 	}
 
-	static record Years(int zero, int first, int step) {
+	public static record Years(int zero, int first, int step) {
 	};
 
 	protected static Years getYears(
@@ -987,7 +987,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		int yearStep = getYearStep(controlVariables, firstYear, year0);
 
-		year0 = getYearZero(year0, firstYear, convergenceYear);
+		year0 = getYearZero(year0, firstYear, yearStep);
 
 		return new Years(year0, firstYear, yearStep);
 	}

@@ -6,6 +6,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecies;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.recordHasProperty;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.unboxedArrayCloseTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
 import static org.easymock.EasyMock.anyString;
@@ -14,6 +15,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 
@@ -38,6 +40,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.back.io.parse.BackControlParser;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
@@ -47,7 +50,6 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
@@ -138,7 +140,7 @@ class BackProcessingEngineTest {
 
 		output = new LinkedList<>();
 
-		rawControlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
+		rawControlMap = TestUtils.loadControlMap(new BackControlParser(), Path.of("VDYP.CTR"));
 
 		becLookup = Utils.parsedControl(rawControlMap, ControlKey.BEC_DEF, BecLookup.class).get();
 
@@ -214,7 +216,7 @@ class BackProcessingEngineTest {
 
 			cvVolume = new MatrixMap2[] { null,
 					new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
-							List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+							UtilizationClass.UTIL_CLASSES, List.of(VolumeVariable.values()),
 							(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
 					) };
 
@@ -360,13 +362,11 @@ class BackProcessingEngineTest {
 
 				final int specIndex = 1; // Only one species
 
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.ALL, is(16f)));
 				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.U75TO125, is(19f)));
 				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.U125TO175, is(22f)));
 				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.U175TO225, is(25f)));
 				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.OVER225, is(28f)));
 
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.ALL, is(20f)));
 				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U75TO125, is(23f)));
 				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U125TO175, is(26f)));
 				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U175TO225, is(29f)));
@@ -1538,6 +1538,27 @@ class BackProcessingEngineTest {
 	}
 
 	@Nested
+	class GetYears {
+
+		@BeforeEach()
+		void setup() {
+			setupMockState();
+		}
+
+		@Test
+		void test() throws ValueParseException {
+			var result = BackProcessingEngine.getYears(
+					new BackControlVariables(new Integer[] { 16, 0, 2, 3, 1 }), 2011, 1967
+			);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(1995)));
+			assertThat(result, recordHasProperty("step", is(1)));
+
+		}
+	}
+
+	@Nested
 	class ExecuteAlgorithm {
 
 		@BeforeEach
@@ -1598,8 +1619,7 @@ class BackProcessingEngineTest {
 					});
 					lb.primaryGenus("PL");
 					lb.empiricalRelationshipParameterIndex(118);
-					
-				
+
 				});
 			});
 
@@ -1724,6 +1744,27 @@ class BackProcessingEngineTest {
 
 			engine.processPolygon(polygon);
 
+			assertThat(
+					output, contains(
+							hasProperty("polygonIdentifier", hasProperty("year", is(1995))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(1996))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(1997))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(1998))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(1999))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2000))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2001))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2002))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2003))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2004))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2005))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2006))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2007))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2008))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2009))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2010))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2011)))
+					)
+			);
 		}
 	}
 }
