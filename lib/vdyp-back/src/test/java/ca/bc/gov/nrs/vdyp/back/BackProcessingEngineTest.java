@@ -1487,7 +1487,9 @@ class BackProcessingEngineTest {
 			expect(state.getBaseAreaVeteran()).andStubReturn(Optional.empty());
 			expect(state.getConvergenceQuadraticMeanDiameter()).andStubReturn(Optional.of(10.202f));
 
-			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(anyString())).andStubReturn(0f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum("B")).andStubReturn(12.8473997f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum("PL")).andStubReturn(13.8270998f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum("S")).andStubReturn(16.6229f);
 
 			expect(state.getSpeciesConvergenceLoreyHeight(1)).andStubReturn(8.26395798f);
 			expect(state.getSpeciesConvergenceLoreyHeight(2)).andStubReturn(7.30057955f);
@@ -1523,6 +1525,10 @@ class BackProcessingEngineTest {
 
 			state.setSpeciesQuadMeanDiameterBackupFactorMinimum(
 					adapt(unboxedArrayCloseTo(0f, 9.88628769f, 10.3321753f, 9.93369484f))
+			);
+			expectLastCall().once();
+			state.setSpeciesLoreyHeightBackupFactor(
+					adapt(unboxedArrayCloseTo(0f, 1f, 1.054f, 1.6561f))
 			);
 			expectLastCall().once();
 			// Run test

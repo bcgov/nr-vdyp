@@ -832,18 +832,20 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		// Calculate factors for lorey ht
 		// Then set ACTUAL values
-		mapTo1IndexedArray(primaryLayer.getOrderedSpecies(), (species, index) -> {
-			final float actualLoreyHeight = bank.loreyHeights[index][UC_ALL_INDEX];
+		state.setSpeciesLoreyHeightBackupFactor(
+				mapTo1IndexedArray(primaryLayer.getOrderedSpecies(), (species, index) -> {
+					final float actualLoreyHeight = bank.loreyHeights[index][UC_ALL_INDEX];
 
-			final float convergenceHeight = state.getSpeciesConvergenceLoreyHeight(index);
-			final float speciesHeight = species.getLoreyHeightByUtilization().getAll();
-			species.getLoreyHeightByUtilization().setAll(actualLoreyHeight);
-			if (speciesHeight > convergenceHeight) {
-				return (actualLoreyHeight - convergenceHeight) / (speciesHeight - convergenceHeight);
-			} else {
-				return 1.0;
-			}
-		});
+					final float convergenceHeight = state.getSpeciesConvergenceLoreyHeight(index);
+					final float speciesHeight = species.getLoreyHeightByUtilization().getAll();
+					species.getLoreyHeightByUtilization().setAll(actualLoreyHeight);
+					if (speciesHeight > convergenceHeight) {
+						return (actualLoreyHeight - convergenceHeight) / (speciesHeight - convergenceHeight);
+					} else {
+						return 1.0;
+					}
+				})
+		);
 
 		// Overall lorey Height
 		primaryLayer.getLoreyHeightByUtilization().setAll(totalLoreyHeight(primaryLayer, UtilizationClass.ALL));
