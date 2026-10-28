@@ -10,13 +10,7 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.exceptionhandler.ExceptionHandlerQueue;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-
-import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
@@ -44,11 +38,11 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 	private static Logger logger = LoggerFactory.getLogger(HcsvPolygonStream.class);
 
-	private final CsvToBean<HcsvPolygonRecordBean> hcsvPolygonStream;
 	private final CsvStreamIterator<HcsvPolygonRecordBean> polygonRecordIterator;
 	private HcsvPolygonRecordBean nextPolygonRecord;
+	private final CsvExceptionQueue polygonErrors = new CsvExceptionQueue("Polygon");
+	private final CsvExceptionQueue layerErrors = new CsvExceptionQueue("Layer");
 
-	private final CsvToBean<HcsvLayerRecordBean> hcsvLayerStream;
 	private final CsvStreamIterator<HcsvLayerRecordBean> layerRecordIterator;
 	private HcsvLayerRecordBean nextLayerRecord;
 
@@ -56,11 +50,11 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		super(context);
 
-		var exceptionHandler = new ExceptionHandlerQueue();
-
-		hcsvPolygonStream = HcsvPolygonRecordBean.createHcsvPolygonStream(exceptionHandler, polygonStream);
+		// Rejected rows never produce a bean. Keep them as stream results so the runner can log them,
+		// including when every row is invalid or the last rows are rejected during iterator read-ahead.
+		var hcsvPolygonStream = HcsvPolygonRecordBean.createHcsvPolygonStream(polygonErrors, polygonStream);
 		polygonRecordIterator = new CsvStreamIterator<>(hcsvPolygonStream.iterator());
-		hcsvLayerStream = HcsvLayerRecordBean.createHcsvLayerStream(exceptionHandler, layersStream);
+		var hcsvLayerStream = HcsvLayerRecordBean.createHcsvLayerStream(layerErrors, layersStream);
 		layerRecordIterator = new CsvStreamIterator<>(hcsvLayerStream.iterator());
 
 		advanceToFirstPolygon();
@@ -68,11 +62,19 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 	@Override
 	public boolean hasNextPolygon() {
-		return nextPolygonRecord != null;
+		return nextPolygonRecord != null || polygonErrors.peek() != null;
 	}
 
 	@Override
 	public Polygon getNextPolygon() throws PolygonValidationException, IllegalStateException {
+
+		var failure = polygonErrors.peek();
+		if (failure != null && (nextPolygonRecord == null || failure.featureId() == null
+				|| failure.featureId() <= nextPolygonRecord.getFeatureId())) {
+			var messages = new ArrayList<>(polygonErrors.poll().messages());
+			messages.addAll(consumeLayerErrors(failure.featureId()));
+			throw new PolygonValidationException(messages);
+		}
 
 		if (nextPolygonRecord == null) {
 			throw new IllegalStateException("Attempt to read past end of polygon input stream");
@@ -80,85 +82,43 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		Polygon polygon = null;
 
-		List<ValidationMessage> validationMessagesSeenDuringRead = new ArrayList<ValidationMessage>();
-		PolygonValidationException validationExceptionSeenDuringBuild = null;
+		var messages = new ArrayList<ValidationMessage>();
+		long featureId = nextPolygonRecord.getFeatureId();
 		try {
-			Long featureIDo = nextPolygonRecord.getFeatureId();
-			long featureID = featureIDo == null ? 0 : featureIDo;
 			polygon = buildPolygon();
-			validationMessagesSeenDuringRead = collectExceptions(featureID);
 		} catch (PolygonValidationException e) {
-			validationExceptionSeenDuringBuild = e;
+			messages.addAll(CsvExceptionQueue.contextualMessages(e));
 		} finally {
+			messages.addAll(consumeLayerErrors(featureId));
 			advanceToNextPolygon();
 		}
 
-		if (validationExceptionSeenDuringBuild != null) {
-			if (!validationMessagesSeenDuringRead.isEmpty()) {
-				validationMessagesSeenDuringRead.addAll(validationExceptionSeenDuringBuild.getValidationMessages());
-				throw new PolygonValidationException(validationMessagesSeenDuringRead);
-			} else {
-				throw validationExceptionSeenDuringBuild;
-			}
-		} else if (!validationMessagesSeenDuringRead.isEmpty()) {
-			throw new PolygonValidationException(validationMessagesSeenDuringRead);
+		if (!messages.isEmpty()) {
+			throw new PolygonValidationException(messages);
 		}
 
 		return polygon;
 	}
 
-	private List<ValidationMessage> collectExceptions(long featureID) {
-		var messages = new ArrayList<ValidationMessage>();
-
-		for (var e : hcsvPolygonStream.getCapturedExceptions()) {
-			collectMessages(messages, e, featureID);
+	private List<ValidationMessage> consumeLayerErrors(Long featureId) {
+		if (featureId == null) {
+			return List.of();
 		}
-
-		for (var e : hcsvLayerStream.getCapturedExceptions()) {
-			collectMessages(messages, e, featureID);
+		// A rejected polygon or failed build can leave unread layers. Read them before collecting errors.
+		while (nextLayerRecord != null && nextLayerRecord.getFeatureId() <= featureId) {
+			advanceToNextLayer();
 		}
-
-		return messages;
+		return layerErrors.drain(featureId);
 	}
 
-	private void collectMessages(List<ValidationMessage> messages, Exception e, long featureID) {
-		if (e instanceof CsvConstraintViolationException cve) {
-			if (cve.getSourceObject() instanceof ProjectionValidationException apre) {
-				if (apre.getFeatureID() == featureID) {
-					messages.addAll(withContextPrefix(apre));
-				}
-			} else {
-				throw new IllegalStateException(
-						"Expecting instanceof AbstractProjectionRequestException; saw instead " + e.getClass().getName()
-				);
-			}
-			System.out.println(e);
-		} else {
-			throw new IllegalStateException(
-					"Expecting instanceof CsvConstraintViolationException; saw instead " + e.getClass().getName()
-			);
+	@Override
+	public List<ValidationMessage> drainRemainingValidationMessages() {
+		Validate.isTrue(!hasNextPolygon(), "Polygon input must be exhausted before draining unmatched layer errors");
+		while (layerRecordIterator.hasNext()) {
+			layerRecordIterator.next();
 		}
-	}
-
-	/**
-	 * Multiple exceptions (e.g. from several layers of the same polygon) are merged into a single flat list of
-	 * ValidationMessages here, so any polygon/layer context captured by the given exception (see
-	 * AbstractProjectionRequestException.getContextPrefix()) must be baked into each individual message now, before
-	 * that context is lost - a single prefix on the merged, multi-source list wouldn't correctly represent messages
-	 * that came from different layers.
-	 */
-	private static List<ValidationMessage> withContextPrefix(AbstractProjectionRequestException apre) {
-		String contextPrefix = apre.getContextPrefix();
-		if (contextPrefix == null) {
-			return apre.getValidationMessages();
-		}
-		return apre.getValidationMessages().stream()
-				.map(
-						m -> new ValidationMessage(
-								ValidationMessageKind.GENERIC,
-								AbstractProjectionRequestException.prefixMessage(contextPrefix, m.getMessage())
-						)
-				).toList();
+		nextLayerRecord = null;
+		return layerErrors.drainAll();
 	}
 
 	private void advanceToFirstPolygon() {
@@ -168,16 +128,10 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		);
 		Validate.isTrue(nextLayerRecord == null, "HcsvPolygonStream.nextLayerRecord: nextPolygonRecord must be null");
 
-		if (polygonRecordIterator.hasNext()) {
-			nextPolygonRecord = polygonRecordIterator.next();
-
-			while (layerRecordIterator.hasNext()) {
-				nextLayerRecord = layerRecordIterator.next();
-				if (nextLayerRecord.getFeatureId() >= nextPolygonRecord.getFeatureId()) {
-					break;
-				}
-			}
+		if (layerRecordIterator.hasNext()) {
+			nextLayerRecord = layerRecordIterator.next();
 		}
+		advanceToNextPolygon();
 	}
 
 	private void advanceToNextPolygon() {
@@ -186,11 +140,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 			nextPolygonRecord = polygonRecordIterator.next();
 
 			while (nextLayerRecord != null && nextLayerRecord.getFeatureId() < nextPolygonRecord.getFeatureId()) {
-				if (layerRecordIterator.hasNext()) {
-					nextLayerRecord = layerRecordIterator.next();
-				} else {
-					nextLayerRecord = null;
-				}
+				advanceToNextLayer();
 			}
 		} else {
 			nextPolygonRecord = null;

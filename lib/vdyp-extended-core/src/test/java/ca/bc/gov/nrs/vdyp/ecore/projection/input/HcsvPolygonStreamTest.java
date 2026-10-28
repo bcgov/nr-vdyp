@@ -16,6 +16,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.opencsv.bean.exceptionhandler.ExceptionHandlerQueue;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
@@ -107,6 +110,35 @@ class HcsvPolygonStreamTest {
 
 		assertThat(poly.getMessages().size(), is(1));
 		assertThat(poly.getMessages().get(0).toString().contains("stockability"), is(true));
+	}
+
+	@Test
+	void testRejectedPolygonConsumesAllItsLayerErrors() {
+		String layers = layerFileHeader + defaultLayerPrefix
+				+ "1,P,,1,,,,20,10,300,,100.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n" + defaultLayerPrefix
+				+ "2,P,,,,,,20,10,300,,100.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n";
+		var stream = new HcsvPolygonStream(
+				context,
+				new ByteArrayInputStream(hcsvPolygonFileContents.replace(",UNK,V,UNK,", ",UNK,Z,UNK,").getBytes()),
+				new ByteArrayInputStream(layers.getBytes())
+		);
+		var error = assertThrows(PolygonValidationException.class, stream::getNextPolygon);
+		assertThat(error.getValidationMessages().size(), is(3));
+		assertThat(error.getMessage().contains("Layer 1:"), is(true));
+		assertThat(error.getMessage().contains("Layer 2:"), is(true));
+		assertThat(stream.hasNextPolygon(), is(false));
+		assertThat(stream.drainRemainingValidationMessages().isEmpty(), is(true));
+	}
+
+	@Test
+	void testUnmatchedLayerErrorsAreDrainedOnlyOnce() {
+		var stream = new HcsvPolygonStream(
+				context, new ByteArrayInputStream( (POLYGON_CSV_HEADER_LINE + "\n").getBytes()),
+				new ByteArrayInputStream( (layerFileHeader + "13919428\n").getBytes())
+		);
+		assertThat(stream.hasNextPolygon(), is(false));
+		assertThat(stream.drainRemainingValidationMessages().size(), is(1));
+		assertThat(stream.drainRemainingValidationMessages().isEmpty(), is(true));
 	}
 
 	@Test
@@ -207,8 +239,10 @@ class HcsvPolygonStreamTest {
 					new ByteArrayInputStream("".getBytes())
 			);
 
-			// No Polygon because polygon was invalid
-			assertThrows(IllegalStateException.class, () -> unit.getNextPolygon());
+			assertThat(unit.hasNextPolygon(), is(true));
+			var error = assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
+			assertThat(error.getMessage().contains("Polygon 13919428:"), is(true));
+			assertThat(unit.hasNextPolygon(), is(false));
 		}
 
 		@Test
@@ -222,8 +256,9 @@ class HcsvPolygonStreamTest {
 					new ByteArrayInputStream("".getBytes())
 			);
 
-			// No Polygon because polygon was invalid
-			assertThrows(IllegalStateException.class, () -> unit.getNextPolygon());
+			assertThat(unit.hasNextPolygon(), is(true));
+			assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
+			assertThat(unit.hasNextPolygon(), is(false));
 		}
 
 		@Test
@@ -237,8 +272,9 @@ class HcsvPolygonStreamTest {
 					new ByteArrayInputStream("".getBytes())
 			);
 
-			// No Polygon because polygon was invalid
-			assertThrows(IllegalStateException.class, () -> unit.getNextPolygon());
+			assertThat(unit.hasNextPolygon(), is(true));
+			assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
+			assertThat(unit.hasNextPolygon(), is(false));
 		}
 
 		@Test

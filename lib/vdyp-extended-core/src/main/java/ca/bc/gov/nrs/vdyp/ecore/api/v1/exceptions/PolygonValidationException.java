@@ -25,4 +25,8 @@ public class PolygonValidationException extends ProjectionValidationException {
 	public PolygonValidationException(long featureId, ValidationMessage validationMessage) {
 		super(featureId, List.of(validationMessage));
 	}
+
+	public PolygonValidationException(long featureId, List<ValidationMessage> validationMessages) {
+		super(featureId, validationMessages);
+	}
 }

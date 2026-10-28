@@ -14,6 +14,10 @@ public class LayerValidationException extends ProjectionValidationException {
 
 	private static final long serialVersionUID = 2651505762328626871L;
 
+	public LayerValidationException(List<ValidationMessage> validationMessages) {
+		super(validationMessages);
+	}
+
 	public LayerValidationException(long featureId, List<ValidationMessage> validationMessages) {
 		super(featureId, validationMessages);
 	}

@@ -87,6 +87,7 @@ public class ProjectionRunner implements Closeable {
 			nPolygonsSkipped = 0;
 
 			while (polygonStream.hasNextPolygon()) {
+				polygon = null;
 				try {
 					polygon = polygonStream.getNextPolygon();
 
@@ -160,6 +161,10 @@ public class ProjectionRunner implements Closeable {
 						nPolygonsSkipped += 1;
 					}
 				}
+			}
+
+			for (var message : polygonStream.drainRemainingValidationMessages()) {
+				context.logError(message.getMessage());
 			}
 
 			int nPolygonsSeen = nPolygonsProcessed + nPolygonsSkipped;
