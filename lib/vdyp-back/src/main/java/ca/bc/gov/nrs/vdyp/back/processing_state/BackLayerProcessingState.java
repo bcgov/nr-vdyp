@@ -16,6 +16,8 @@ public class BackLayerProcessingState extends LayerProcessingState<BackLayerProc
 
 	public static final int MAX_BANK_INSTANCES = 3;
 
+	// BACKCV*  
+	// These are the compatibility variables for the entire regression and the normal CVs will be set as a fraction of these at each step.
 	Optional<CompatibilityVariables[]> backCompatibilityVariables = Optional.empty();
 
 	protected BackLayerProcessingState(

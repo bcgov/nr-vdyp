@@ -9,6 +9,7 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.model.CompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -24,19 +25,8 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 
 	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
 
-	private static final Supplier<IllegalStateException> UNSET_CV_VOLUMES = unset("cvVolumes");
-	private static final Supplier<IllegalStateException> UNSET_CV_BASAL_AREAS = unset("cvBasalAreas");
-	private static final Supplier<IllegalStateException> UNSET_CV_QUAD_MEAN_DIAMETER = unset("cvQuadraticMeanDiameter");
-	private static final Supplier<IllegalStateException> UNSET_CV_SMALL = unset("cvSmall");
 	private static final Supplier<IllegalStateException> UNSET_LIMITS = unset("per species limits");
 
-	// Compatibility Variables - LCV1 & LCVS
-	private boolean areCompatibilityVariablesSet = false;
-
-	private MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume;
-	private Map<UtilizationClass, Float>[] cvBasalArea;
-	private Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter;
-	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
 
 	private Optional<Integer> convergenceYear = Optional.empty(); // BACK2/IYR_CNV
 	private Optional<Float> convergenceAge = Optional.empty(); // BACK2/AGE_CNV
@@ -90,53 +80,21 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 		return baseAreaVeteran;
 	}
 
+	@Deprecated
 	public void setCompatibilityVariableDetails(
 			MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume, Map<UtilizationClass, Float>[] cvBasalArea,
 			Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
 	) {
-		if (areCompatibilityVariablesSet) {
-			throw new IllegalStateException(COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY);
-		}
-
-		this.cvVolume = cvVolume;
-		this.cvBasalArea = cvBasalArea;
-		this.cvQuadraticMeanDiameter = cvQuadraticMeanDiameter;
-		this.cvPrimaryLayerSmall = cvPrimaryLayerSmall;
-
-		areCompatibilityVariablesSet = true;
+		setCompatibilityVariableDetails(
+				CompatibilityVariables.fromArrays(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvPrimaryLayerSmall)
+		);
 	}
 
-	public float getCVVolume(int speciesIndex, UtilizationClass uc, VolumeVariable volumeVariable) {
-		if (!areCompatibilityVariablesSet) {
-			throw UNSET_CV_VOLUMES.get();
-		}
+	@Deprecated
+	public void setCompatibilityVariableDetails(CompatibilityVariables[] details) {
 
-		return cvVolume[speciesIndex].get(uc, volumeVariable);
-	}
-
-	public float getCVBasalArea(int speciesIndex, UtilizationClass uc) {
-		if (!areCompatibilityVariablesSet) {
-			throw UNSET_CV_BASAL_AREAS.get();
-		}
-
-		return cvBasalArea[speciesIndex].get(uc);
-	}
-
-	public float getCVQuadraticMeanDiameter(int speciesIndex, UtilizationClass uc) {
-		if (!areCompatibilityVariablesSet) {
-			throw UNSET_CV_QUAD_MEAN_DIAMETER.get();
-		}
-
-		return cvQuadraticMeanDiameter[speciesIndex].get(uc);
-	}
-
-	public float getCVSmall(int speciesIndex, UtilizationClassVariable variable) {
-		if (!areCompatibilityVariablesSet) {
-			throw UNSET_CV_SMALL.get();
-		}
-
-		return cvPrimaryLayerSmall[speciesIndex].get(variable);
+		this.getPrimaryLayerProcessingState().setBackCompatibilityVariables(details);
 	}
 
 	public void setLimits(ComponentSizeLimits[] limits) {

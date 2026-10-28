@@ -361,16 +361,24 @@ class BackProcessingEngineTest {
 				engine.prepare(state);
 
 				final int specIndex = 1; // Only one species
+				var layerState = state.getPrimaryLayerProcessingState();
+				assertThat(layerState, backCV("getCVBasalArea", specIndex, UtilizationClass.U75TO125, is(19f)));
+				assertThat(layerState, backCV("getCVBasalArea", specIndex, UtilizationClass.U125TO175, is(22f)));
+				assertThat(layerState, backCV("getCVBasalArea", specIndex, UtilizationClass.U175TO225, is(25f)));
+				assertThat(layerState, backCV("getCVBasalArea", specIndex, UtilizationClass.OVER225, is(28f)));
 
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.U75TO125, is(19f)));
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.U125TO175, is(22f)));
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.U175TO225, is(25f)));
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.OVER225, is(28f)));
-
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U75TO125, is(23f)));
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U125TO175, is(26f)));
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U175TO225, is(29f)));
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.OVER225, is(32f)));
+				assertThat(
+						layerState, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U75TO125, is(23f))
+				);
+				assertThat(
+						layerState, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U125TO175, is(26f))
+				);
+				assertThat(
+						layerState, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U175TO225, is(29f))
+				);
+				assertThat(
+						layerState, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.OVER225, is(32f))
+				);
 
 				em.verify();
 
@@ -470,12 +478,12 @@ class BackProcessingEngineTest {
 		};
 	}
 
-	static Matcher<BackProcessingState> backCV(String name, Object p1, Object p2, Matcher<Float> expected) {
-		return compatibilityVariable(name, expected, BackProcessingState.class, p1, p2);
+	static Matcher<BackLayerProcessingState> backCV(String name, Object p1, Object p2, Matcher<Float> expected) {
+		return compatibilityVariable(name, expected, BackLayerProcessingState.class, p1, p2);
 	}
 
-	static Matcher<BackProcessingState> backCV(String name, Object p1, Matcher<Float> expected) {
-		return compatibilityVariable(name, expected, BackProcessingState.class, p1);
+	static Matcher<BackLayerProcessingState> backCV(String name, Object p1, Matcher<Float> expected) {
+		return compatibilityVariable(name, expected, BackLayerProcessingState.class, p1);
 	}
 
 	@Nested
