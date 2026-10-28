@@ -417,4 +417,17 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 		return breakageEquationGroups;
 	}
 
+	/**
+	 * Update the compatibility variables on the species model objects to match those of the state object
+	 */
+	protected void updateModelCompatibiltyVariables() {
+
+		VdypLayer layer = this.getPolygon().getLayers().get(this.getLayerType());
+
+		int i = 1;
+		for (var species : layer.getOrderedSpecies()) {
+			applyCompatibilityVariablesToSpecies(i, species);
+		}
+	}
+
 }

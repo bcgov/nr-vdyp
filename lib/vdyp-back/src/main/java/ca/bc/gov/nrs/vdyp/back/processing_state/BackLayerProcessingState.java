@@ -50,5 +50,6 @@ public class BackLayerProcessingState extends LayerProcessingState<BackLayerProc
 				(prev, uc, i) -> backCompatibilityVariables.get()[i].quadraticMeanDiameter().get(uc) * fraction,
 				(prev, uc, vv, i) -> backCompatibilityVariables.get()[i].volume().get(uc, vv) * fraction
 		);
+		updateModelCompatibiltyVariables();
 	}
 }
