@@ -36,13 +36,17 @@ class CsvExceptionQueueTest {
 		errors.handleException(layerError(10, "1", "first"));
 		errors.handleException(layerError(10, "2", "second"));
 		errors.handleException(layerError(20, "1", "future"));
-		assertEquals("Polygon 10 Layer 1: first", errors.poll().messages().get(0).getMessage());
 		assertEquals(
-				List.of("Polygon 10 Layer 2: second"),
+				"Polygon 10 Layer 1 - E ERROR_INVALIDSITEINFO - first", errors.poll().messages().get(0).getMessage()
+		);
+		assertEquals(
+				List.of("Polygon 10 Layer 2 - E ERROR_INVALIDSITEINFO - second"),
 				errors.drain(10).stream().map(ValidationMessage::getMessage).toList()
 		);
 		assertEquals(20L, errors.peek().featureId());
-		assertEquals("Polygon 20 Layer 1: future", errors.poll().messages().get(0).getMessage());
+		assertEquals(
+				"Polygon 20 Layer 1 - E ERROR_INVALIDSITEINFO - future", errors.poll().messages().get(0).getMessage()
+		);
 		assertNull(errors.peek());
 		assertNull(errors.poll());
 		assertEquals(List.of(), errors.drainAll());
@@ -56,12 +60,15 @@ class CsvExceptionQueueTest {
 		assertNull(errors.handleException(layerError(10, "2", "second")));
 		assertNull(errors.handleException(csvError(4, "unassignable")));
 		assertEquals(
-				List.of("Polygon 10 Layer 1: first", "Polygon 10 Layer 2: second"),
+				List.of(
+						"Polygon 10 Layer 1 - E ERROR_INVALIDSITEINFO - first",
+						"Polygon 10 Layer 2 - E ERROR_INVALIDSITEINFO - second"
+				),
 				errors.drain(10).stream().map(ValidationMessage::getMessage).toList()
 		);
 		assertEquals(List.of(), errors.drain(10));
 		assertEquals(
-				List.of("Polygon 20 Layer 1: future", "Layer CSV row 4: unassignable"),
+				List.of("Polygon 20 Layer 1 - E ERROR_INVALIDSITEINFO - future", "Layer CSV row 4: unassignable"),
 				errors.drainAll().stream().map(ValidationMessage::getMessage).toList()
 		);
 		assertEquals(List.of(), errors.drainAll());

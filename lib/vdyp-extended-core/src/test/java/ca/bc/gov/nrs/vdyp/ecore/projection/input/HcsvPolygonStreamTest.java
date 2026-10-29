@@ -127,8 +127,8 @@ class HcsvPolygonStreamTest {
 		);
 		var error = assertThrows(PolygonValidationException.class, stream::getNextPolygon);
 		assertThat(error.getValidationMessages().size(), is(3));
-		assertThat(error.getMessage().contains("Layer 1:"), is(true));
-		assertThat(error.getMessage().contains("Layer 2:"), is(true));
+		assertThat(error.getMessage().contains("Layer 1"), is(true));
+		assertThat(error.getMessage().contains("Layer 2"), is(true));
 		assertThat(stream.hasNextPolygon(), is(false));
 		assertThat(stream.drainRemainingValidationMessages().isEmpty(), is(true));
 	}
@@ -244,7 +244,7 @@ class HcsvPolygonStreamTest {
 
 			assertThat(unit.hasNextPolygon(), is(true));
 			var error = assertThrows(PolygonValidationException.class, unit::getNextPolygon);
-			assertThat(error.getMessage().contains("Polygon 13919428:"), is(true));
+			assertThat(error.getMessage().contains("Polygon 13919428"), is(true));
 			assertThat(unit.hasNextPolygon(), is(false));
 		}
 

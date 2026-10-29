@@ -81,14 +81,14 @@ public class ProjectionRunnerTest {
 			assertEquals(skipped, runner.getLastRunPolygonsSkipped(), errors);
 			assertEquals(processed, runner.getLastRunPolygonsProcessed(), errors);
 			for (int i = 0; i < layers.length(); i++) {
-				String prefix = "Polygon " + (13919428L + i) + " Layer 1:";
+				String prefix = "Polygon " + (13919428L + i) + " Layer 1";
 				assertEquals(
 						layers.charAt(i) == 'I' ? 1 : 0, errors.lines().filter(line -> line.contains(prefix)).count(),
 						errors
 				);
 			}
 			for (int i = 0; i < polygons.length(); i++) {
-				String prefix = "Polygon " + (13919428L + i) + ":";
+				String prefix = "Polygon " + (13919428L + i);
 				assertEquals(
 						polygons.charAt(i) == 'I' ? 1 : 0,
 						errors.lines().filter(line -> line.contains(prefix) && line.contains("Inventory Standard Code"))
@@ -142,7 +142,7 @@ public class ProjectionRunnerTest {
 			assertEquals(invalidCount, runner.getLastRunPolygonsSkipped());
 			assertEquals(rows.length() - invalidCount, runner.getLastRunPolygonsProcessed());
 			for (int i = 0; i < rows.length(); i++) {
-				String prefix = "Polygon " + (13919428L + i) + ":";
+				String prefix = "Polygon " + (13919428L + i);
 				assertEquals(
 						rows.charAt(i) == 'I' ? 1 : 0,
 						errors.lines().filter(line -> line.contains(prefix) && line.contains("Inventory Standard Code"))
@@ -177,7 +177,7 @@ public class ProjectionRunnerTest {
 					), new StubComponentRunner()
 			);
 			String errors = new String(runner.getErrorStream().readAllBytes());
-			assertThat(errors, containsString("Polygon 13919428 Layer 3:"));
+			assertThat(errors, containsString("Polygon 13919428 Layer 3"));
 			assertThat(errors, containsString("has already been supplied"));
 			assertEquals(2, runner.getErrorLogCount(), errors);
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
@@ -202,7 +202,7 @@ public class ProjectionRunnerTest {
 					), new StubComponentRunner()
 			);
 			String errors = new String(runner.getErrorStream().readAllBytes());
-			assertThat(errors, containsString("Polygon bad-id:"));
+			assertThat(errors, containsString("Polygon bad-id"));
 			assertThat(errors, containsString("Feature ID"));
 			assertEquals(1, runner.getErrorLogCount());
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
@@ -218,8 +218,8 @@ public class ProjectionRunnerTest {
 		return Stream.of(
 				Arguments.of(
 						"bad-id,14321066,093C090,94833422,1,P,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,",
-						"Polygon bad-id:"
-				), Arguments.of("13919428", "Polygon 13919428:")
+						"Polygon bad-id"
+				), Arguments.of("13919428", "Polygon 13919428")
 		);
 	}
 
@@ -463,8 +463,8 @@ public class ProjectionRunnerTest {
 
 		InputStream progressStream = unit.getProgressStream();
 		String progressLog = new String(progressStream.readAllBytes());
-		assertThat(progressLog.contains("Processing Polygon 13919428:"), is(true));
-		assertThat(progressLog.contains("Processing Polygon 13919429:"), is(true));
+		assertThat(progressLog.contains("Processing Polygon 13919428"), is(true));
+		assertThat(progressLog.contains("Processing Polygon 13919429"), is(true));
 	}
 
 	@Test

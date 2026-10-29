@@ -93,7 +93,7 @@ final class CsvExceptionQueue implements CsvExceptionHandler {
 				.map(
 						message -> new ValidationMessage(
 								ValidationMessageKind.GENERIC,
-								AbstractProjectionRequestException.prefixMessage(prefix, message.getMessage())
+								message.getErrorLogMessage(prefix)
 						)
 				).toList();
 	}
