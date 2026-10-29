@@ -66,6 +66,7 @@ import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingStateTestUtils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class BackProcessingEngineTest {
 
@@ -1780,6 +1781,18 @@ class BackProcessingEngineTest {
 							hasProperty("polygonIdentifier", hasProperty("year", is(2011)))
 					)
 			);
+
+			var primary1995 = output.get(0).getLayers().get(LayerType.PRIMARY);
+
+			assertThat(primary1995, VdypMatchers.hasUtilizationHeight(5.93502045f, 12.3255758f));
+			assertThat(
+					primary1995,
+					VdypMatchers.hasUtilization(
+							"closeUtilizationVolumeByUtilization", 0, 127.509117f, 3.07256603f, 50.4044571f, 46.458065f,
+							27.5740337f
+					)
+			);
+
 		}
 	}
 
