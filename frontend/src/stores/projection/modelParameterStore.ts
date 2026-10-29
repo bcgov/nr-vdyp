@@ -43,39 +43,38 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   // the other panels start with editable false because the previous panel has not been confirmed.
   // In this state, the user can modify the input fields within the panel, and the confirm button is enabled to confirm with validation.
 
+  const panelOrder: PanelName[] = [
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS,
+    CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
+    CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS,
+  ]
+
+  // Run Model is enabled only when every panel, including Report Settings, is confirmed
+  const updateRunModelEnabled = () => {
+    runModelEnabled.value = panelOrder.every(
+      (panel) => panelState.value[panel].confirmed,
+    )
+  }
+
   // Method to handle confirm action for each panel
   const confirmPanel = (panelName: PanelName) => {
     panelState.value[panelName].confirmed = true
     panelState.value[panelName].editable = false
 
-    // Enable the next panel's confirm and clear buttons
-    const panelOrder: PanelName[] = [
-      CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS,
-      CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS,
-    ]
     const currentIndex = panelOrder.indexOf(panelName)
-    if (currentIndex !== -1 && currentIndex < panelOrder.length - 1) {
-      // The current panel closes and the next panel opens automatically, switching to the editable.
+    if (currentIndex !== -1) {
+      // The current panel closes; if there is a next panel, it opens automatically, switching to the editable.
       panelOpenStates.value[panelName] = CONSTANTS.PANEL.CLOSE
-      const nextPanel = panelOrder[currentIndex + 1]
-      panelOpenStates.value[nextPanel] = CONSTANTS.PANEL.OPEN
-      panelState.value[nextPanel].editable = true
+      if (currentIndex < panelOrder.length - 1) {
+        const nextPanel = panelOrder[currentIndex + 1]
+        panelOpenStates.value[nextPanel] = CONSTANTS.PANEL.OPEN
+        panelState.value[nextPanel].editable = true
+      }
     }
 
-    // reportInfo (the last panel) has no Next button - only the first 4 panels are
-    // required to be confirmed before enabling Run Model. reportInfo is validated at run time.
-    const panelsForRunCheck: PanelName[] = [
-      CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS,
-      CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
-    ]
-    runModelEnabled.value = panelsForRunCheck.every(
-      (panel) => panelState.value[panel].confirmed,
-    )
+    updateRunModelEnabled()
   }
 
   // Method to handle edit action for each panel
@@ -85,13 +84,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     panelOpenStates.value[panelName] = CONSTANTS.PANEL.OPEN
 
     // Disable all subsequent panels
-    const panelOrder: PanelName[] = [
-      CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS,
-      CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS,
-    ]
     const currentIndex = panelOrder.indexOf(panelName)
     if (currentIndex !== -1) {
       for (let i = currentIndex + 1; i < panelOrder.length; i++) {
@@ -103,16 +95,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       }
     }
 
-    // Recalculate Run Model button state - only first 4 panels required
-    const panelsForRunCheck: PanelName[] = [
-      CONSTANTS.MANUAL_INPUT_PANEL.REPORT_DETAILS,
-      CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.SITE_INFO,
-      CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO,
-    ]
-    runModelEnabled.value = panelsForRunCheck.every(
-      (panel) => panelState.value[panel].confirmed,
-    )
+    updateRunModelEnabled()
   }
 
   // species info
@@ -545,7 +528,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       standInfo: { confirmed: sta, editable: staOpen },
       reportSettings: { confirmed: rep, editable: repOpen },
     }
-    runModelEnabled.value = sta
+    runModelEnabled.value = rep
   }
 
   /**
@@ -590,7 +573,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
         standInfo: { confirmed: true, editable: false },
         reportSettings: { confirmed: true, editable: false },
       }
-      // In view mode all first 4 panels are confirmed - run model is enabled
+      // In view mode all panels are confirmed - run model is enabled
       runModelEnabled.value = true
     } else {
       restoreEditModePanelState()

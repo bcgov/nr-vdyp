@@ -140,8 +140,27 @@ describe('Model Parameter Store', () => {
     store.confirmPanel('speciesInfo')
     store.confirmPanel('siteInfo')
     store.confirmPanel('standInfo')
+    expect(store.panelOpenStates.reportSettings).to.equal(CONSTANTS.PANEL.OPEN)
+    expect(store.panelState.reportSettings.editable).to.be.true
+    expect(store.runModelEnabled).to.be.false
+
     store.confirmPanel('reportSettings')
+    expect(store.panelState.reportSettings).to.deep.equal({ confirmed: true, editable: false })
+    expect(store.panelOpenStates.reportSettings).to.equal(CONSTANTS.PANEL.CLOSE)
     expect(store.runModelEnabled).to.be.true
+  })
+
+  it('should disable runModelEnabled when only reportSettings is reopened for edit', () => {
+    ;(['reportDetails', 'speciesInfo', 'siteInfo', 'standInfo', 'reportSettings'] as const).forEach((p) =>
+      store.confirmPanel(p),
+    )
+    expect(store.runModelEnabled).to.be.true
+
+    store.editPanel('reportSettings')
+
+    expect(store.panelState.reportSettings).to.deep.equal({ confirmed: false, editable: true })
+    expect(store.panelState.standInfo.confirmed).to.be.true
+    expect(store.runModelEnabled).to.be.false
   })
 
   it('should reopen panel unconfirmed, reset subsequent panels, and disable runModelEnabled on editPanel', () => {
@@ -334,6 +353,19 @@ describe('Model Parameter Store', () => {
     expect(store.panelState.reportDetails.confirmed).to.be.true
     expect(store.runModelEnabled).to.be.true
     expect(store.projectionType).to.equal(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
+  })
+
+  it('should keep runModelEnabled false in edit mode when reportSettings has not been saved', () => {
+    store.speciesList[0] = { species: 'PL', percent: '100' }
+    store.updateSpeciesGroup()
+    store.becZone = 'CWH'
+    store.percentStockableArea = '55'
+    store.restoreFromProjectionParams(makeParsedParams({ reportTitle: 'Title', ageStart: null }), false)
+
+    expect(store.panelState.standInfo.confirmed).to.be.true
+    expect(store.panelState.reportSettings).to.deep.equal({ confirmed: false, editable: true })
+    expect(store.panelOpenStates.reportSettings).to.equal(CONSTANTS.PANEL.OPEN)
+    expect(store.runModelEnabled).to.be.false
   })
 
   it('should override minimumDBHLimit for matching species group via utils', () => {

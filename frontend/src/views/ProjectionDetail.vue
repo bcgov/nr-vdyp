@@ -186,6 +186,7 @@
           :showCancelButton="isRunning || isStuck || isQueued"
           :showRevertCancelButton="!(isRunning||isStuck||isQueued)"
           :isRevertCancelDisabled="isCancelDisabled"
+          :disabledText="manualInputDisabledText"
           cardActionsClass="card-actions"
           @runModel="runModelHandler"
           @cancelRun="cancelRunHandler"
@@ -303,7 +304,7 @@ const { isLoading: isProjectionLoading, loadProjection } = useProjectionLoader()
 const alertDialogStore = useAlertDialogStore()
 const unsavedChangesStore = useUnsavedChangesStore()
 
-const reportSettingsPanelRef = ref<{ onConfirm: () => Promise<boolean>; isDirty: boolean; resetDirty: () => Promise<void> }>()
+const reportSettingsPanelRef = ref<{ isDirty: boolean; resetDirty: () => Promise<void> }>()
 
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
@@ -639,6 +640,16 @@ const fileUploadCompletedCount = computed(() => {
   if (fileUploadStore.panelState.minimumDBH.confirmed) count++
   if (fileUploadPrerequisitesDone.value && uploadedFilesCount.value === 2) count++
   return count
+})
+
+const manualInputDisabledText = computed(() => {
+  if (!isEditableProjectionStatus.value) {
+    return `This projection may not be run with a status of ${appStore.currentProjectionStatus}`
+  }
+  if (!modelParameterStore.runModelEnabled) {
+    return 'Complete and save all required sections above to run projection.'
+  }
+  return ''
 })
 
 const fileUploadDisabledText = computed(() => {
@@ -1008,13 +1019,6 @@ const runFileUploadProjection = async () => {
 }
 
 const runModelHandler = async () => {
-  // For Manual Input: validate and save ReportSettings before running
-  // (ReportSettingsPanel has no Next button, so validation happens at run time)
-  if (appStore.modelSelection === CONSTANTS.METHOD_SELECTION.MANUAL_INPUT) {
-    const isValid = await reportSettingsPanelRef.value?.onConfirm()
-    if (!isValid) return
-  }
-
   try {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_PROJECTION
