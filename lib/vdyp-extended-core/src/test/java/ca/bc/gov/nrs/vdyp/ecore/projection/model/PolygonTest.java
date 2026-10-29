@@ -62,7 +62,7 @@ public class PolygonTest {
 		assertThat(message.getSeverity(), is(MessageSeverityCode.INFORMATION));
 		assertThat(message.getReturnCode(), is(ReturnCode.SUCCESS));
 		assertThat(
-				message.getSimpleMessageText(),
+				message.getReportMessageText(),
 				is(
 						"INFO: Layer \"1\" was identified as the Veteran Layer but contains no species. No vet layer will be used."
 				)

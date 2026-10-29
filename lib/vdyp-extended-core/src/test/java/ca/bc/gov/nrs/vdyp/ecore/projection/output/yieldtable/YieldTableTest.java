@@ -219,7 +219,7 @@ class YieldTableTest {
 		assertThat(message.getLayer(), is(layerInfo.getLayer()));
 		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
 		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
-		assertThat(message.getSimpleMessageText(), is("WARN: " + text));
+		assertThat(message.getReportMessageText(), is("WARN: " + text));
 		var shortSpeciesMessages = polygon.getMessages().stream()
 				.filter(m -> m.getKind() == PolygonMessageKind.SPECIES_TOO_SHORT).toList();
 		assertThat(shortSpeciesMessages.size(), is(1));
@@ -228,7 +228,7 @@ class YieldTableTest {
 		assertThat(shortSpeciesMessage.getSeverity(), is(MessageSeverityCode.WARNING));
 		assertThat(shortSpeciesMessage.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
 		assertThat(
-				shortSpeciesMessage.getSimpleMessageText(),
+				shortSpeciesMessage.getReportMessageText(),
 				containsString("at stand age \"180\" is too short to generate yields for species \"PL\"")
 		);
 		assertTrue(layerInfo.getLayer().isAgeRequestedWithoutYields());

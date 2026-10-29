@@ -110,9 +110,26 @@ public class PolygonMessage {
 			sb.append(polygon.toString());
 		}
 
-		sb.append(" ").append(getSimpleMessageText());
+		sb.append(getErrorLogSeverityIndicator());
+		sb.append(getFormattedMessage());
 
 		return sb.toString();
+	}
+
+	public String getFormattedMessage() {
+		return MessageFormat.format(kind.getTemplate(), args);
+	}
+
+	public String getErrorLogSeverityIndicator() {
+		return " - " + severity.getShortText() + " " + returnCode.errorLogString + " - ";
+	}
+
+	public String getReportSeverityIndicator() {
+		return severity.getText() + ": ";
+	}
+
+	public String getReportMessageText() {
+		return getReportSeverityIndicator() + getFormattedMessage();
 	}
 
 	public static class Builder {

@@ -541,7 +541,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		}
 		List<PolygonMessage> messages = lastPolygonForTrailer.getMessages();
 		for (PolygonMessage message : messages) {
-			doWrite("%s\n", message.getSimpleMessageText());
+			doWrite("%s\n", message.getReportMessageText());
 		}
 
 		String stockableAreaNote = buildActualStockableAreaUsedNote(lastPolygonForTrailer);

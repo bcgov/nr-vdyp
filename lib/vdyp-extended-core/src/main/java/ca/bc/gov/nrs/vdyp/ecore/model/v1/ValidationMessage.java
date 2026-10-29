@@ -5,6 +5,7 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 
 public class ValidationMessage implements Comparable<ValidationMessage>, Serializable {
 
@@ -49,7 +50,8 @@ public class ValidationMessage implements Comparable<ValidationMessage>, Seriali
 
 	@Override
 	public String toString() {
-		return MessageFormat.format(message, args);
+		return "- " + MessageSeverityCode.ERROR + " " + ReturnCode.ERROR_INVALIDSITEINFO + " - "
+				+ MessageFormat.format(message, args);
 	}
 
 	@Override
@@ -85,5 +87,17 @@ public class ValidationMessage implements Comparable<ValidationMessage>, Seriali
 	@Override
 	public int hashCode() {
 		return kind.hashCode() * 17 + Arrays.hashCode(args);
+	}
+
+	public String getErrorLogMessage(String contextPrefix) {
+		String prefix = contextPrefix != null ? contextPrefix : "";
+		String formattedMessage = MessageFormat.format(kind.template, args);
+
+		if (!prefix.isEmpty() && formattedMessage.startsWith(prefix)) {
+			formattedMessage = formattedMessage.substring(prefix.length());
+		}
+
+		return prefix + " - " + MessageSeverityCode.ERROR.getShortText() + " " + ReturnCode.ERROR_INVALIDSITEINFO
+				+ " - " + formattedMessage;
 	}
 }
