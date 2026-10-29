@@ -89,12 +89,8 @@ final class CsvExceptionQueue implements CsvExceptionHandler {
 		if (prefix == null) {
 			return exception.getValidationMessages();
 		}
-		return exception.getValidationMessages().stream()
-				.map(
-						message -> new ValidationMessage(
-								ValidationMessageKind.GENERIC,
-								message.getErrorLogMessage(prefix)
-						)
-				).toList();
+		return exception.getValidationMessages().stream().map(
+				message -> new ValidationMessage(ValidationMessageKind.GENERIC, message.getErrorLogMessage(prefix))
+		).toList();
 	}
 }

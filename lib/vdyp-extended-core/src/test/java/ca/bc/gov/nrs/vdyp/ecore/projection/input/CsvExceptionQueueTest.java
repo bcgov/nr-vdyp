@@ -63,8 +63,7 @@ class CsvExceptionQueueTest {
 				List.of(
 						"Polygon 10 Layer 1 - E ERROR_INVALIDSITEINFO - first",
 						"Polygon 10 Layer 2 - E ERROR_INVALIDSITEINFO - second"
-				),
-				errors.drain(10).stream().map(ValidationMessage::getMessage).toList()
+				), errors.drain(10).stream().map(ValidationMessage::getMessage).toList()
 		);
 		assertEquals(List.of(), errors.drain(10));
 		assertEquals(
