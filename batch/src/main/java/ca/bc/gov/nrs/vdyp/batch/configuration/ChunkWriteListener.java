@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.ItemWriteListener;
 import org.springframework.batch.core.SkipListener;
@@ -8,6 +7,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
+import org.springframework.lang.NonNull;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
