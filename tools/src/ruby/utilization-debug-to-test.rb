@@ -1,4 +1,16 @@
 
+VARIABLE_TO_SETTER={
+  "hl"=>"LoreyHeight",
+  "ba"=>"BaseArea",
+  "tph"=>"TreesPerHectare",
+  "dq"=>"QuadraticMeanDiameter",
+  "volws"=>"WholeStemVolume",
+  "volcu"=>"CloseUtilizationVolume",
+  "vol_d"=>"CloseUtilizationVolumeNetOfDecay",
+  "vol_dw"=>"CloseUtilizationVolumeNetOfDecayAndWaste",
+  "vol_dwb"=>"CloseUtilizationVolumeNetOfDecayWasteAndBreakage"
+}
+
 results = {}
 $stdin.each_line do |line|
   next if line.chomp.empty?
@@ -22,7 +34,8 @@ $stdin.each_line do |line|
     end
     class_results
   end
-  
+
+  variable = VARIABLE_TO_SETTER[variable]||variable
   
   results[variable]= classes
   

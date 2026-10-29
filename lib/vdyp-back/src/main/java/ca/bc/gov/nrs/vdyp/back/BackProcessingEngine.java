@@ -174,20 +174,23 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 				.orElseThrow(() -> new ProcessingException("No site information in primary species"));
 		float regress = getState().getCurrentStartingYear() - currentYear;
 
-		// AGEBHP
-		final float yearsAtBreastHeight = primarySite.getYearsAtBreastHeight().map(y -> y - regress)
-				.orElseThrow(() -> new ProcessingException("Missing age information in primary species"));
+		int primarySpecIndex = plps.getPrimarySpeciesIndex();
+
+		// Update ages in model from bank using current regress period
+
+		// AGEBHP = AGEBHB(...) - REGRESS
+		final float yearsAtBreastHeight = bank.yearsAtBreastHeight[primarySpecIndex] - regress;
 		primarySite.setYearsAtBreastHeight(yearsAtBreastHeight);
-		// AGETOTP
-		final float ageTotal = primarySite.getAgeTotal().map(y -> y - regress)
-				.orElseThrow(() -> new ProcessingException("Missing age information in primary species"));
+
+		// AGETOTP = AGETOTPB(...) - REGRESS
+		final float ageTotal = bank.ageTotals[primarySpecIndex] - regress;
 		primarySite.setAgeTotal(ageTotal);
 
 		// SITEHADJ
 		final float dominantHeight = FloatMath.offsetMultiply(
-				heightFromSiteCurve(primarySite), //
-				getState().getConvergenceDominantHeight().get(), //
-				getState().getDominantHeightBackupFactor().get()
+				heightFromSiteCurve(primarySite), // SITEHADJ
+				getState().getConvergenceDominantHeight().get(), // HD_CNV
+				getState().getDominantHeightBackupFactor().get() // BFH
 		);
 		primarySite.setHeight(dominantHeight);
 
@@ -919,9 +922,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			throws ProcessingException {
 
 		super.executeAlgorithm(lastStepInclusive, stoppingYearInclusive);
-		final ComputationMethods computers = this.getState().getComputers();
-		final VdypLayer primaryLayer = getPrimaryLayer();
-		final BecDefinition bec = getState().getCurrentBecZone();
+
 		final VdypPolygon polygon = getState().getCurrentPolygon();
 
 		// BACKPREP
@@ -951,30 +952,45 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		);
 
 		for (int currentYear = years.zero(); currentYear <= years.first(); currentYear += years.step()) {
-			// BACKAPPL
-			applyBackupFactors(currentYear);
+			growthLoop(currentYear);
 
-			// BACKCV
-			calculateCompatibilityVariables(currentYear);
-
-			// YUC1(2,0,2)
-			computers.computeUtilizationComponentsPrimary(
-					bec, primaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC, CompatibilityVariableMode.ALL
-			);
-
-			// YSMALL(2)
-			computers.estimateSmallComponents(CompatibilityVariableMode.ALL, polygon, primaryLayer);
-
-			if (outputWriter.isPresent()) {
-				try {
-					outputWriter.get().writePolygonWithSpeciesAndUtilizationForYear(polygon, currentYear);
-				} catch (IOException e) {
-					throw new ProcessingException(e);
-				}
-			}
-
+			outputRecord(polygon, currentYear);
 		}
 
+	}
+
+
+	protected void growthLoop(
+			int currentYear
+	) throws ProcessingException {
+		final ComputationMethods computers = this.getState().getComputers();
+		final VdypLayer primaryLayer = getPrimaryLayer();
+		final BecDefinition bec = getState().getCurrentBecZone();
+		final VdypPolygon polygon = getState().getCurrentPolygon();
+
+		// BACKAPPL
+		applyBackupFactors(currentYear);
+
+		// BACKCV
+		calculateCompatibilityVariables(currentYear);
+
+		// YUC1(2,0,2)
+		computers.computeUtilizationComponentsPrimary(
+				bec, primaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC, CompatibilityVariableMode.ALL
+		);
+
+		// YSMALL(2)
+		computers.estimateSmallComponents(CompatibilityVariableMode.ALL, polygon, primaryLayer);
+	}
+
+	protected void outputRecord(final VdypPolygon polygon, int currentYear) throws ProcessingException {
+		if (outputWriter.isPresent()) {
+			try {
+				outputWriter.get().writePolygonWithSpeciesAndUtilizationForYear(polygon, currentYear);
+			} catch (IOException e) {
+				throw new ProcessingException(e);
+			}
+		}
 	}
 
 	public static record Years(int zero, int first, int step) {
