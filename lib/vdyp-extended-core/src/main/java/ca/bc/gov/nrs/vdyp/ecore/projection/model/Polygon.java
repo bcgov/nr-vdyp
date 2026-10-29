@@ -741,30 +741,42 @@ public class Polygon implements Comparable<Polygon> {
 			var primaryLayer = getPrimaryLayer();
 			if (primaryLayer != null) {
 				if (primaryLayer.getBasalArea() == null) {
-					context.logError(
-							"Layer {0} Warning: VRI Inventory Standard but basal area value missing on primary layer; will be estimated",
-							primaryLayer
+					addMessage(
+							new PolygonMessage.Builder().layer(primaryLayer).details(
+									ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+									PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING, "basal area", "primary"
+							).build()
 					);
 				}
 				if (primaryLayer.getTreesPerHectare() == null) {
-					context.logError(
-							"Layer {0} Warning: VRI Inventory Standard but trees-per-hectare value missing on primary layer; will be estimated",
-							primaryLayer
+					addMessage(
+							new PolygonMessage.Builder().layer(primaryLayer)
+									.details(
+											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+											PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING,
+											"trees-per-hectare", "primary"
+									).build()
 					);
 				}
 			}
 			var veteranLayer = getVeteranLayer();
 			if (veteranLayer != null) {
 				if (veteranLayer.getBasalArea() == null) {
-					context.logError(
-							"Layer {0} Warning: VRI Inventory Standard but basal area value missing on veteran layer; will be estimated",
-							veteranLayer
+					addMessage(
+							new PolygonMessage.Builder().layer(veteranLayer).details(
+									ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+									PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING, "basal area", "veteran"
+							).build()
 					);
 				}
 				if (veteranLayer.getTreesPerHectare() == null) {
-					context.logError(
-							"Layer {0} Warning: VRI Inventory Standard but trees-per-hectare value missing on veteran layer; will be estimated",
-							veteranLayer
+					addMessage(
+							new PolygonMessage.Builder().layer(veteranLayer)
+									.details(
+											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+											PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING,
+											"trees-per-hectare", "veteran"
+									).build()
 					);
 				}
 			}

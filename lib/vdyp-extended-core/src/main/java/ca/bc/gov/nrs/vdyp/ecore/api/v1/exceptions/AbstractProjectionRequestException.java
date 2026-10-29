@@ -69,18 +69,6 @@ public abstract class AbstractProjectionRequestException extends Exception {
 		return contextPrefix;
 	}
 
-	/**
-	 * Prepends contextPrefix to message, e.g. "Polygon 123: some problem". If message already starts with that same
-	 * prefix (some validation message templates already embed the polygon/layer identity on their own), the prefix is
-	 * not repeated.
-	 */
-	public static String prefixMessage(String contextPrefix, String message) {
-		if (message != null && message.startsWith(contextPrefix + ": ")) {
-			return message;
-		}
-		return contextPrefix + ": " + message;
-	}
-
 	protected static String buildContextPrefix(long featureId) {
 		return "Polygon " + featureId;
 	}

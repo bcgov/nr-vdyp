@@ -29,6 +29,9 @@ public enum PolygonMessageKind {
 	LAYER_NOT_COMPLETELY_DEFINED(
 			"layer is not completely, or is not consistently, defined; projection of layer disabled"
 	), //
+	VRI_INVENTORY_STANDARD_VALUE_MISSING(
+			"VRI Inventory Standard but {0} area value missing on {1} layer; will be estimated"
+	), //
 	LAYER_NOT_PROJECTED("both FORWARD and BACK not executed. A yield table will not be produced for this layer"), //
 	LAYER_PERCENTAGES_TOO_INACCURATE(
 			"total percent is different from 100% by more than 1%; can't project (percent = {0})"
@@ -78,6 +81,7 @@ public enum PolygonMessageKind {
 	SECONDARY_SPECIES_SUPRESSED(
 			"Secondary species group {0} w/height {1} and age {2} suppressed next to tall leading species group"
 	), //
+	ERROR_RUNNING_APPLICATION("Error in {0} when {1}: {2}"), //
 	;
 
 	public enum Category {

@@ -201,11 +201,7 @@ public class ProjectionRunner implements Closeable {
 	private void logValidationMessages(AbstractProjectionRequestException e) {
 		String contextPrefix = e.getContextPrefix();
 		for (ValidationMessage m : e.getValidationMessages()) {
-			if (contextPrefix != null) {
-				context.logError(AbstractProjectionRequestException.prefixMessage(contextPrefix, m.getMessage()));
-			} else {
-				context.logError(m.getKind().template, m.getArgs());
-			}
+			context.logError(m.getErrorLogMessage(contextPrefix));
 		}
 	}
 

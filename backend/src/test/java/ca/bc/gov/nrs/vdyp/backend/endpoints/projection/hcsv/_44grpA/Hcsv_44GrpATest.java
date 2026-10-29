@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv._44grpA;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.not;
@@ -91,9 +92,9 @@ class Hcsv_44GrpATest extends BaseHttpProjectionRequestTest {
 
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
 		assertThat(
-				errorEntryContent,
-				containsString(
-						"Polygon 8489341: encountered error in VRI_START when running polygon: Required Site index was missing\n"
+				errorEntryContent, allOf(
+						containsString("Error in VRI_START when running: "), //
+						containsString("Required Site index was missing") //
 				)
 		);
 		var csvEntryContent = zipEntries.get("YieldTable.csv");
