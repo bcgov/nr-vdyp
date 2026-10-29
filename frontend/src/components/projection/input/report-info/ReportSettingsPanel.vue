@@ -225,6 +225,18 @@
                 </v-row>
               </v-container>
             </div>
+            <ActionPanel
+              v-if="!isReadOnly"
+              class="action-panel"
+              :isConfirmEnabled="isConfirmEnabled"
+              :isConfirmed="isConfirmed"
+              :hideClearButton="true"
+              :hideEditButton="true"
+              :showCancelButton="true"
+              :isCancelEnabled="isDirty"
+              @confirm="onConfirm"
+              @cancel="onCancel"
+            />
           </v-form>
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -239,7 +251,7 @@ import { reportInfoValidation } from '@/validation'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { AppSpinField } from '@/components'
-import { PanelEditControl } from '@/components/projection'
+import { ActionPanel, PanelEditControl } from '@/components/projection'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { saveProjectionOnPanelConfirm as saveModelParamProjection, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
@@ -265,6 +277,7 @@ const isConfirmed = computed(
 const isInputDisabled = computed(
   () => isReadOnly.value || !modelParameterStore.panelState[panelName].editable,
 )
+const isConfirmEnabled = computed(() => !isInputDisabled.value)
 
 // Edit button in header
 const isHeaderEditActive = computed(() => {
@@ -713,9 +726,9 @@ const validateFields = (): boolean => {
   return isValid && rangeValid
 }
 
-const onConfirm = async (): Promise<boolean> => {
-  if (!validateTitle()) return false
-  if (!validateFields()) return false
+const onConfirm = async () => {
+  if (!validateTitle()) return
+  if (!validateFields()) return
 
   if (form.value) {
     form.value.validate()
@@ -729,7 +742,7 @@ const onConfirm = async (): Promise<boolean> => {
   } catch (error) {
     console.error(PROJECTION_ERR.SAVE_ERROR_LOG, error)
     notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
-    return false
+    return
   } finally {
     appStore.isSavingProjection = false
   }
@@ -738,12 +751,39 @@ const onConfirm = async (): Promise<boolean> => {
   if (!isConfirmed.value) {
     modelParameterStore.confirmPanel(panelName)
   }
-  return true
 }
 
-defineExpose({ onConfirm, isDirty, resetDirty })
+const onCancel = async () => {
+  if (isDirty.value) {
+    const proceed = await alertDialogStore.openDialog(
+      MESSAGE.UNSAVED_CHANGES_DIALOG.TITLE,
+      MESSAGE.UNSAVED_CHANGES_DIALOG.MESSAGE,
+      { variant: 'warning' },
+    )
+    if (!proceed) return
+  }
+  suppressDirtyTracking = true
+  appStore.isSavingProjection = true
+  try {
+    await revertPanelToSaved(panelName)
+    await nextTick()
+    isDirty.value = false
+  } catch (error) {
+    console.error(PROJECTION_ERR.REVERT_ERROR_LOG, error)
+    notificationStore.showErrorMessage(PROJECTION_ERR.LOAD_FAILED, PROJECTION_ERR.LOAD_FAILED_TITLE)
+  } finally {
+    appStore.isSavingProjection = false
+    suppressDirtyTracking = false
+  }
+}
+
+defineExpose({ isDirty, resetDirty })
 </script>
 <style scoped>
+.action-panel {
+  margin-top: 16px;
+}
+
 /* Top row: age/year fields + include in report section */
 .report-top-row {
   display: flex;

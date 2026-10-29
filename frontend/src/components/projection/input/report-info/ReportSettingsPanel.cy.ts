@@ -124,4 +124,30 @@ describe('<ReportSettingsPanel />', () => {
     })
     cy.get('.edit-button-col').should('not.exist')
   })
+
+  it('shows Cancel and Next buttons with Cancel disabled until a field changes', () => {
+    mountPanel()
+    cy.contains('button', 'Next').should('not.be.disabled')
+    cy.contains('button', 'Cancel').should('be.disabled')
+  })
+
+  it('hides Cancel and Next buttons in read-only mode', () => {
+    mountPanel((_, appStore) => {
+      appStore.setViewMode(PROJECTION_VIEW_MODE.VIEW)
+    })
+    cy.contains('button', 'Next').should('not.exist')
+    cy.contains('button', 'Cancel').should('not.exist')
+  })
+
+  it('highlights required fields and keeps the panel unconfirmed when Next is clicked with empty fields', () => {
+    const { modelStore } = mountPanel((store) => {
+      store.reportTitle = 'Title'
+    })
+    cy.contains('button', 'Next').click()
+    cy.get('.v-input--error').should('have.length.at.least', 1)
+    cy.then(() => {
+      expect(modelStore.panelState.reportSettings.confirmed).to.be.false
+      expect(modelStore.runModelEnabled).to.be.false
+    })
+  })
 })
