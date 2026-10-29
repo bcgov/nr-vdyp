@@ -427,6 +427,7 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 		int i = 1;
 		for (var species : layer.getOrderedSpecies()) {
 			applyCompatibilityVariablesToSpecies(i, species);
+			i++;
 		}
 	}
 
