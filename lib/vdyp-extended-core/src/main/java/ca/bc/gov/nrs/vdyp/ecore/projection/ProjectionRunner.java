@@ -75,12 +75,12 @@ public class ProjectionRunner implements Closeable {
 								? context.getExecutionFolder().resolve("DebugLog.txt") : null
 				)
 		) {
-			runProjection(streams);
+			runProjection(streams, componentRunner);
 		}
 	}
 
-	private void runProjection(Map<String, InputStream> streams)
-			throws ProjectionRequestValidationException, YieldTableGenerationException {
+	private void runProjection(Map<String, InputStream> streams, ComponentRunner componentRunner)
+			throws ProjectionRequestValidationException {
 		context.startRun();
 
 		try {
