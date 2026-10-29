@@ -202,7 +202,7 @@ class HcsvPolygonStreamTest {
 					new ByteArrayInputStream(hcsvLayerFileContents.getBytes())
 			);
 
-			assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
+			assertThrows(PolygonValidationException.class, unit::getNextPolygon);
 		}
 
 		static Stream<String> invalidLayerData() {
@@ -225,7 +225,7 @@ class HcsvPolygonStreamTest {
 					new ByteArrayInputStream(hcsvLayerFileContents.getBytes())
 			);
 
-			assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
+			assertThrows(PolygonValidationException.class, unit::getNextPolygon);
 		}
 
 		@Test
@@ -240,7 +240,7 @@ class HcsvPolygonStreamTest {
 			);
 
 			assertThat(unit.hasNextPolygon(), is(true));
-			var error = assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
+			var error = assertThrows(PolygonValidationException.class, unit::getNextPolygon);
 			assertThat(error.getMessage().contains("Polygon 13919428:"), is(true));
 			assertThat(unit.hasNextPolygon(), is(false));
 		}
