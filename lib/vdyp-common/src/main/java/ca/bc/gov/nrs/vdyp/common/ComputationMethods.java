@@ -423,7 +423,12 @@ public class ComputationMethods {
 			float quadMeanDiameterSpec = spec.getQuadraticMeanDiameterByUtilization().getAll(); // DQsp
 
 			// EMP080
-			float smallComponentProbability = estimationMethods.estimateSmallComponentProbability(layer, spec, region); // PROBsp
+			float smallComponentProbability = estimationMethods.estimateSmallComponentProbability(
+					spec.getGenus(), //
+					layer.getYearsAtBreastHeight().orElse(0f), //
+					spec.getLoreyHeightByUtilization().getAll(), //
+					region
+			); // PROBsp
 
 			// this WHOLE operation on Actual BA's, not 100% occupancy.
 			float fractionAvailable = Utils.<Float>optSafe(fPoly.getPercentAvailable()).map(p -> p / 100f).orElse(1f);
