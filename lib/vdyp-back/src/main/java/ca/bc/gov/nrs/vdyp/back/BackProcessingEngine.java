@@ -312,9 +312,9 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 					UtilizationClass.ALL, v -> max(v, getState().getSpeciesQuadMeanDiameterBackupFactorMinimum(i))
 			);
 			treesPerHectareSum += BaseAreaTreeDensityDiameter
-					.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
+					.reconcileTreesPerHectare(species, UtilizationClass.ALL);
 		}
-		var err = treesPerHectareSum = primaryLayer.getTreesPerHectareByUtilization().getAll();
+		var err = treesPerHectareSum - primaryLayer.getTreesPerHectareByUtilization().getAll();
 
 		if (Math.abs(err) > 0.5 && treesPerHectareSum > 0.5) {
 			logger.warn(
