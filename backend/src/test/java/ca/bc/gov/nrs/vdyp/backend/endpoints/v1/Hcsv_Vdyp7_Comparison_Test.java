@@ -1262,6 +1262,19 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
+	void test1452() throws IOException, ResourceParseException, URISyntaxException, CsvException {
+		logger.info("Starting vdyp-1452");
+		Pattern ignorePattern = Pattern.compile("");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("vdyp-1452/output/VDYP7YieldTable.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("vdyp-1452", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
+	@Test
 	void testTPHSumSpecies() throws ResourceParseException, IOException {
 
 		logger.info("Starting tph-sum-species");

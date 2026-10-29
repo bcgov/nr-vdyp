@@ -50,6 +50,20 @@ public class FloatMath {
 		return x;
 	}
 
+	/**
+	 * A method only included to produce behavior exhibited by unchecked min max functions in VDYP7. In such cases, the
+	 * min value is enforced and then the max without confirming if min is > max. The result in this narrow condition is
+	 * always that the max value is provided as the clamped value.
+	 *
+	 * @param x   - value for comparison
+	 * @param min - the minimum allowed value
+	 * @param max - the maximum allowed value
+	 * @return the clamped value (favor max if min > max)
+	 */
+	public static float unverifiedMinMaxClamp(float x, float min, float max) {
+		return Math.min(Math.max(x, min), max);
+	}
+
 	public static float ratio(float arg, float radius) {
 		if (arg < -radius) {
 			return 0.0f;

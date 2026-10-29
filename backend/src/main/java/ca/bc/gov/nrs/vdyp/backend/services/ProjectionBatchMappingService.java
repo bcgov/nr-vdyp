@@ -283,6 +283,7 @@ public class ProjectionBatchMappingService {
 		for (ProjectionBatchMappingEntity mapping : staleRunning) {
 			mapping.getProjection()
 					.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.STUCK));
+			mapping.setPrioritized(false); // clear prioritized marker on stuck projections
 		}
 		if (!staleRunning.isEmpty()) {
 			logger.info(

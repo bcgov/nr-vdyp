@@ -245,6 +245,35 @@ public class ProjectionRunnerTest {
 		}
 	}
 
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	void debugLogIsCreatedOnlyWhenSelected(boolean enabled) throws Exception {
+		Parameters parameters = new Parameters().ageStart(0).ageEnd(10);
+		if (enabled) {
+			parameters.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING);
+		}
+		try (
+				ProjectionRunner runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, "DEBUG-TEST", parameters, true
+				); InputStream polygons = TestUtils.makeInputStream(TestUtils.POLYGON_CSV_HEADER_LINE);
+				InputStream layers = TestUtils.makeInputStream(TestUtils.LAYER_CSV_HEADER_LINE)
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA, polygons, ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							layers
+					)
+			);
+			assertEquals(enabled, Files.exists(runner.getContext().getExecutionFolder().resolve("DebugLog.txt")));
+			if (enabled) {
+				try (InputStream debug = runner.getDebugStream()) {
+					String debugContents = new String(debug.readAllBytes());
+					assertThat(debugContents, containsString("doEnableDebugLogging"));
+				}
+			}
+		}
+	}
+
 	static Stream<Arguments> nonProductiveAndStandData() {
 		return Stream.of(
 				Arguments.of("NPD", "PLI,100.00,,,,,,,,,,,180,18.00", true), // Non Productive and stand data

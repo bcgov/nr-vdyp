@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch, nextTick } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
-import type { SpeciesList, SpeciesGroup, ParsedProjectionParameters, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
+import type { SpeciesList, SpeciesGroup, SpeciesGroupSummary, ParsedProjectionParameters, SiteIndexSpeciesRow } from '@/interfaces/interfaces'
 import { isEmptyOrZero } from '@/utils/util'
 import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-api'
 import type { ModelParameters } from '@/services/vdyp-api'
@@ -146,6 +146,34 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       return acc + (Number.parseFloat(group.percent) || 0)
     }, 0)
   })
+
+  // Keep site-species entries intact while exposing one row per species group.
+  // Unsorted because it sorted differently by different views
+  // minimumDBHLimit is synced and also stored for all species records when updated
+  const groupedSummary = computed<SpeciesGroupSummary[]>(() => {
+    const groups = new Map<string, SpeciesGroupSummary>()
+    for (const item of speciesGroups.value) {
+      const existing = groups.get(item.group)
+      if (existing) {
+        existing.siteSpecies.push(item.siteSpecies)
+        existing.percent += Number.parseFloat(item.percent) || 0
+      } else {
+        groups.set(item.group, {
+          group: item.group,
+          siteSpecies: [item.siteSpecies],
+          percent: Number.parseFloat(item.percent) || 0,
+          minimumDBHLimit: item.minimumDBHLimit,
+        })
+      }
+    }
+    return Array.from(groups.values())
+  })
+
+  const setGroupMinimumDBH = (groupCode: string, limit: UtilizationClassSetEnum) => {
+    for (const item of speciesGroups.value) {
+      if (item.group === groupCode) item.minimumDBHLimit = limit
+    }
+  }
 
   const updateSpeciesGroup = () => {
     const groupMap: { [key: string]: number } = {}
@@ -337,7 +365,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const percentStockableArea = ref<string | null>(null)
   const basalArea = ref<string | null>(null)
   const treesPerHectare = ref<string | null>(null)
-  const minDBHLimit = ref<string | null>(null)
+  // minDBHLimit is always 7.5 cm+ it is not related to utilization values for species
+  const minDBHLimit = ref<string>(CONSTANTS.MINIMUM_DBH_LIMITS.CM7_5)
   const currentDiameter = ref<string | null>(null)
   const crownClosure = ref<string | null>(null)
 
@@ -411,7 +440,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     percentStockableArea.value = null
     basalArea.value = null
     treesPerHectare.value = null
-    minDBHLimit.value = null
+    minDBHLimit.value = CONSTANTS.MINIMUM_DBH_LIMITS.CM7_5
     currentDiameter.value = null
     crownClosure.value = null
 
@@ -721,7 +750,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     crownClosure.value = toStringOrNull(params.cc)
     basalArea.value = toStringOrNull(params.BA)
     treesPerHectare.value = toStringOrNull(params.TPH)
-    minDBHLimit.value = params.minDBHLimit
+    minDBHLimit.value = CONSTANTS.MINIMUM_DBH_LIMITS.CM7_5
     currentDiameter.value = params.currentDiameter
   }
 
@@ -765,6 +794,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     derivedBy,
     speciesList,
     speciesGroups,
+    groupedSummary,
+    setGroupMinimumDBH,
     highestPercentSpecies,
     selectedSiteSpecies,
     totalSpeciesPercent,
