@@ -86,6 +86,16 @@ public class PolygonMessage {
 		return kind;
 	}
 
+	public String getSimpleMessageText() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(severity.getText()).append(": ");
+
+		sb.append(MessageFormat.format(kind.getTemplate(), args));
+
+		return sb.toString();
+
+	}
+
 	@Override
 	public String toString() {
 
@@ -100,23 +110,26 @@ public class PolygonMessage {
 			sb.append(polygon.toString());
 		}
 
-		sb.append(" - ").append(getSimpleMessageText(true));
+		sb.append(getErrorLogSeverityIndicator());
+		sb.append(getFormattedMessage());
 
 		return sb.toString();
 	}
 
-	public String getSimpleMessageText() {
-		return getSimpleMessageText(false);
+	public String getFormattedMessage() {
+		return MessageFormat.format(kind.getTemplate(), args);
 	}
 
-	public String getSimpleMessageText(boolean shortSeverity) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(shortSeverity ? severity.getShortText() : severity.getText()).append(" - ");
+	public String getErrorLogSeverityIndicator() {
+		return " - " + severity.getShortText() + " " + returnCode.errorLogString + " - ";
+	}
 
-		sb.append(MessageFormat.format(kind.getTemplate(), args));
+	public String getReportSeverityIndicator() {
+		return severity.getText() + ": ";
+	}
 
-		return sb.toString();
-
+	public String getReportMessageText() {
+		return getReportSeverityIndicator() + getFormattedMessage();
 	}
 
 	public static class Builder {

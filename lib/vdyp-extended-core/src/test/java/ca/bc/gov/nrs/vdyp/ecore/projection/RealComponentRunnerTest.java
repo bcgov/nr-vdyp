@@ -32,6 +32,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
@@ -319,6 +320,9 @@ class RealComponentRunnerTest {
 			app.close();
 			EasyMock.expectLastCall().once();
 
+			polygon.addMessage(EasyMock.<Consumer<PolygonMessage.Builder>>anyObject());
+			EasyMock.expectLastCall().once();
+
 			em.replay();
 
 			var ex = assertThrows(
@@ -368,6 +372,9 @@ class RealComponentRunnerTest {
 
 			// Store exception result
 			state.setProcessingResults(ProjectionStageCode.of(appToUse), projectionTypeCode, Optional.of(rootCause));
+			EasyMock.expectLastCall().once();
+
+			polygon.addMessage(EasyMock.<Consumer<PolygonMessage.Builder>>anyObject());
 			EasyMock.expectLastCall().once();
 
 			em.replay();

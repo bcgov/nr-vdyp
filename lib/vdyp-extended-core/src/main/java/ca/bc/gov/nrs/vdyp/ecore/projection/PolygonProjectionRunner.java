@@ -40,7 +40,6 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
-import ca.bc.gov.nrs.vdyp.ecore.utils.ErrorMessageUtils;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ProjectionUtils;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
@@ -316,12 +315,13 @@ public class PolygonProjectionRunner {
 				} else {
 					if (oFipResult.isPresent()) {
 						polygon.disableProjectionsOfType(projectionType);
-						context.logError(
-								ErrorMessageUtils.BuildVDYPApplicationErrorMessage(
-										VdypApplicationIdentifier.FIP_START, polygon, "running", oFipResult.get()
+						polygon.addMessage(
+								builder -> builder.details(
+										ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
+										PolygonMessageKind.ERROR_RUNNING_APPLICATION,
+										VdypApplicationIdentifier.FIP_START, "running", oFipResult.get()
 								)
 						);
-
 						throw new PolygonExecutionException(polygon.getFeatureId(), oFipResult.get());
 					}
 					break;
@@ -394,10 +394,11 @@ public class PolygonProjectionRunner {
 							);
 						}
 					}
-
-					context.logError(
-							ErrorMessageUtils.BuildVDYPApplicationErrorMessage(
-									VdypApplicationIdentifier.VRI_START, polygon, "running", oVriResult.get()
+					polygon.addMessage(
+							builder -> builder.details(
+									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
+									PolygonMessageKind.ERROR_RUNNING_APPLICATION, VdypApplicationIdentifier.VRI_START,
+									"running", oVriResult.get()
 							)
 					);
 				}

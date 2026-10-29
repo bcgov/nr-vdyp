@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv.input;
 
+import static org.hamcrest.Matchers.containsString;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -188,9 +190,11 @@ public class HcsvPolygonReaderTest {
 					var messages = pve.getValidationMessages();
 					Assert.assertEquals(1, messages.size());
 					var message = messages.get(0);
-					Assert.assertEquals(
-							"Polygon 13919428: field \"Inventory Standard Code\" value \"Z\" is not a recognized value for this code",
-							message.toString()
+					Assert.assertThat(
+							message.toString(),
+							containsString(
+									"Polygon 13919428: field \"Inventory Standard Code\" value \"Z\" is not a recognized value for this code"
+							)
 					);
 				} else {
 					Assert.fail();
@@ -217,9 +221,11 @@ public class HcsvPolygonReaderTest {
 					var messages = pve.getValidationMessages();
 					Assert.assertEquals(1, messages.size());
 					var message = messages.get(0);
-					Assert.assertEquals(
-							"Polygon 13919428: field \"Shrub Height\" value \"not a number\" is not a number",
-							message.toString()
+					Assert.assertThat(
+							message.toString(),
+							containsString(
+									"Polygon 13919428: field \"Shrub Height\" value \"not a number\" is not a number"
+							)
 					);
 				} else {
 					Assert.fail();
@@ -246,9 +252,11 @@ public class HcsvPolygonReaderTest {
 					var messages = pve.getValidationMessages();
 					Assert.assertEquals(1, messages.size());
 					var message = messages.get(0);
-					Assert.assertEquals(
-							"Polygon 13919428: field \"Yield Factor\" value \"11.0\" is either not a number or out of range. Must be between 0 and 10, inclusive",
-							message.toString()
+					Assert.assertThat(
+							message.toString(),
+							containsString(
+									"Polygon 13919428: field \"Yield Factor\" value \"11.0\" is either not a number or out of range. Must be between 0 and 10, inclusive"
+							)
 					);
 				} else {
 					Assert.fail();

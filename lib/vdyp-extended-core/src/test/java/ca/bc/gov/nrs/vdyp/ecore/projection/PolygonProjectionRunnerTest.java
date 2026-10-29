@@ -361,11 +361,11 @@ public class PolygonProjectionRunnerTest {
 					)
 			);
 			assertThat(
-					message.getSimpleMessageText(),
+					message.getReportMessageText(),
 					is(
 							result == 1
-									? "WARN - Unable to Project Stand forward beyond \"400\" years from stand reference age."
-									: "ERR - Unable to Project Stand over age range: \"2,024\" to \"2,134\". Forward Exception: forward failed"
+									? "WARN: Unable to Project Stand forward beyond \"400\" years from stand reference age."
+									: "ERR: Unable to Project Stand over age range: \"2,024\" to \"2,134\". Forward Exception: forward failed"
 					)
 			);
 		}
@@ -400,8 +400,8 @@ public class PolygonProjectionRunnerTest {
 			assertThat(message.getPolygon(), sameInstance(polygon));
 			assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
 			assertThat(message.getReturnCode(), is(ReturnCode.ERROR_INVALIDSITEINFO));
-			assertThat(message.getSimpleMessageText(), containsString("Secondary species group " + secondary));
-			assertThat(message.getSimpleMessageText(), containsString("w/height 6.1 and age 80 suppressed"));
+			assertThat(message.getReportMessageText(), containsString("Secondary species group " + secondary));
+			assertThat(message.getReportMessageText(), containsString("w/height 6.1 and age 80 suppressed"));
 			assertThat(sites.toString(), containsString("-9.0"));
 		}
 		assertThat(secondary.getSpeciesGroup().getDominantHeight(), is(secondaryHeight));
@@ -420,12 +420,12 @@ public class PolygonProjectionRunnerTest {
 		assertThat(message.getLayer(), sameInstance(layer));
 		assertThat(message.getSeverity(), is(MessageSeverityCode.ERROR));
 		assertThat(
-				message.getSimpleMessageText(),
+				message.getReportMessageText(),
 				containsString("Crown Closure was not supplied and there is no leading species")
 		);
 		assertThat(
-				message.getSimpleMessageText(true),
-				containsString("E - Crown Closure was not supplied and there is no leading species")
+				message.getReportMessageText(),
+				containsString("ERR: Crown Closure was not supplied and there is no leading species")
 		);
 	}
 

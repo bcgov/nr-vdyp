@@ -148,12 +148,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 			return apre.getValidationMessages();
 		}
 		return apre.getValidationMessages().stream()
-				.map(
-						m -> new ValidationMessage(
-								ValidationMessageKind.GENERIC,
-								AbstractProjectionRequestException.prefixMessage(contextPrefix, m.getMessage())
-						)
-				).toList();
+				.map(m -> new ValidationMessage(ValidationMessageKind.GENERIC, m.getErrorLogMessage(contextPrefix)))
+				.toList();
 	}
 
 	private void advanceToFirstPolygon() {

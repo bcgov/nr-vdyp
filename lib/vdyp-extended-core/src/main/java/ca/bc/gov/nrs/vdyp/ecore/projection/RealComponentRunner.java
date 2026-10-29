@@ -37,7 +37,6 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.ProjectionResultsBu
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.ProjectionResultsReader;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.RealProjectionResultsReader;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
-import ca.bc.gov.nrs.vdyp.ecore.utils.ErrorMessageUtils;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
@@ -84,8 +83,14 @@ public class RealComponentRunner implements ComponentRunner {
 				// they came from do not rethrow
 			} else {
 				state.setProcessingResults(ProjectionStageCode.of(appToUse), projectionTypeCode, Optional.of(t));
-				var message = ErrorMessageUtils.BuildVDYPApplicationErrorMessage(appToUse, polygon, "running", t);
-				throw new PolygonExecutionException(message, t);
+				polygon.addMessage(
+						builder -> builder.details(
+								ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
+								PolygonMessageKind.ERROR_RUNNING_APPLICATION, ProjectionStageCode.of(appToUse),
+								"running", t
+						)
+				);
+				throw new PolygonExecutionException("Core Library Error in " + ProjectionStageCode.of(appToUse), t);
 			}
 		}
 	}

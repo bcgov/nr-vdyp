@@ -1,36 +1,11 @@
 package ca.bc.gov.nrs.vdyp.ecore.utils;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
-import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
-
 public class ErrorMessageUtils {
-	public static String BuildVDYPApplicationErrorMessage(
-			VdypApplicationIdentifier appId, Polygon polygon, String verb, Throwable e
-	) {
-		return MessageFormat.format(
-				"Polygon {0}: encountered error in {1} when {2} polygon{3}", polygon, appId, verb, serializeCauses(e)
-		);
-	}
-
-	/**
-	 * Return the reasons of the cause chain of <code>e</code>, making every effort to remove duplication as well as
-	 * class names that prefix the individual exceptions.
-	 *
-	 * @param e the exception in question
-	 * @return as described
-	 */
-	private static String serializeCauses(Throwable e) {
-		var messageList = new ArrayList<String>();
-		return serializeCauses(new StringBuffer(), messageList, e).toString();
-	}
-
 	/**
 	 * A regular expression that allows us to extract the message from a string possibly prefixed with a Java class name
 	 * and possibly suffixed with a "." Group 3 applies if the message is suffixed with "." and group 4 otherwise. All
@@ -39,7 +14,7 @@ public class ErrorMessageUtils {
 	 */
 	private static final Pattern messagePattern = Pattern.compile("(^[a-zA-Z_0-9\\.]+: )?+((.+)\\.|(.*[^\\.]))$");
 
-	private static StringBuffer serializeCauses(StringBuffer s, List<String> messageList, Throwable e) {
+	public static StringBuffer serializeCauses(StringBuffer s, List<String> messageList, Throwable e) {
 
 		if (e.getMessage() != null) {
 			String message = e.getMessage();

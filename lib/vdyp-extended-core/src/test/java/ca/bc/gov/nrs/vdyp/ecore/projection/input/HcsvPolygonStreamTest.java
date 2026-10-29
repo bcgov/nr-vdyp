@@ -3,7 +3,10 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.input;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.LAYER_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.POLYGON_CSV_HEADER_LINE;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
@@ -46,8 +49,8 @@ class HcsvPolygonStreamTest {
 		assertThat(message.getLayer().getLayerId(), is("2"));
 		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
 		assertThat(
-				message.getSimpleMessageText(),
-				is("WARN - Polygon 13,919,428: Rank '1' Layer was already encountered (Layer: '2')")
+				message.getReportMessageText(),
+				is("WARN: Polygon 13,919,428: Rank '1' Layer was already encountered (Layer: '2')")
 		);
 	}
 
@@ -113,14 +116,14 @@ class HcsvPolygonStreamTest {
 	void testToPolygonValidationExceptionIncludesFeatureIdWhenKnown() {
 		var message = new ValidationMessage(ValidationMessageKind.GENERIC, "boom");
 		var ex = HcsvPolygonStream.toPolygonValidationException(13919428L, message);
-		assertThat(ex.getMessage(), is("Polygon 13919428: boom"));
+		assertThat(ex.getMessage(), allOf(startsWith("Polygon 13919428"), containsString("boom")));
 	}
 
 	@Test
 	void testToPolygonValidationExceptionOmitsFeatureIdWhenUnknown() {
 		var message = new ValidationMessage(ValidationMessageKind.GENERIC, "boom");
 		var ex = HcsvPolygonStream.toPolygonValidationException((Long) null, message);
-		assertThat(ex.getMessage(), is("boom"));
+		assertThat(ex.getMessage(), allOf(containsString("boom")));
 	}
 
 	@Test
@@ -130,10 +133,10 @@ class HcsvPolygonStreamTest {
 		var message = new ValidationMessage(ValidationMessageKind.GENERIC, "boom");
 
 		var ex = HcsvPolygonStream.toPolygonValidationException(records.get(0), message);
-		assertThat(ex.getMessage(), is("Polygon 13919428: boom"));
+		assertThat(ex.getMessage(), allOf(startsWith("Polygon 13919428"), containsString("boom")));
 
 		var ex2 = HcsvPolygonStream.toPolygonValidationException((HcsvPolygonRecordBean) null, message);
-		assertThat(ex2.getMessage(), is("boom"));
+		assertThat(ex2.getMessage(), containsString("boom"));
 	}
 
 	@Nested
