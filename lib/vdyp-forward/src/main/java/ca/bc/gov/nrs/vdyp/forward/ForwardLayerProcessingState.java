@@ -15,7 +15,6 @@ import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
 public class ForwardLayerProcessingState extends LayerProcessingState<ForwardLayerProcessingState> {
 
-
 	private static final Logger logger = LoggerFactory.getLogger(ForwardLayerProcessingState.class);
 
 	// L1COM2 - equation groups. From the configuration, narrowed to the

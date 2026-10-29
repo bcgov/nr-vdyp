@@ -86,7 +86,7 @@ class BackProcessingEngineTest {
 	/**
 	 * Make a mock VdypOutputWriter that appends written polygon records to the provided list instead of writing them to
 	 * a file.
-	 * 
+	 *
 	 * @param collectTo
 	 * @return
 	 */
@@ -98,8 +98,7 @@ class BackProcessingEngineTest {
 		) {
 
 			@Override
-			public void writePolygonWithSpeciesAndUtilizationForYear(VdypPolygon polygon, int year)
-					throws IOException {
+			public void writePolygonWithSpeciesAndUtilizationForYear(VdypPolygon polygon, int year) throws IOException {
 				final var polyCopy = VdypPolygon.build(pb -> {
 					pb.copy(polygon);
 					// Replace the year in the polygon identifier with the provided year
@@ -1535,9 +1534,7 @@ class BackProcessingEngineTest {
 					adapt(unboxedArrayCloseTo(0f, 9.88628769f, 10.3321753f, 9.93369484f))
 			);
 			expectLastCall().once();
-			state.setSpeciesLoreyHeightBackupFactor(
-					adapt(unboxedArrayCloseTo(0f, 1f, 1.054f, 1.6561f))
-			);
+			state.setSpeciesLoreyHeightBackupFactor(adapt(unboxedArrayCloseTo(0f, 1f, 1.054f, 1.6561f)));
 			expectLastCall().once();
 			// Run test
 			em.replay();
@@ -1561,9 +1558,8 @@ class BackProcessingEngineTest {
 
 		@Test
 		void test() throws ValueParseException {
-			var result = BackProcessingEngine.getYears(
-					new BackControlVariables(new Integer[] { 16, 0, 2, 3, 1 }), 2011, 1967
-			);
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 16, 0, 2, 3, 1 }), 2011, 1967);
 
 			assertThat(result, recordHasProperty("first", is(2011)));
 			assertThat(result, recordHasProperty("zero", is(1995)));
@@ -1672,9 +1668,8 @@ class BackProcessingEngineTest {
 			primaryLayer.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
 					Utils.utilizationVector(0f, 197.866379f, 2.04245877f, 47.7080307f, 75.5704956f, 72.5454102f)
 			);
-			primaryLayer.getOrderedSpecies().get(0).setLoreyHeightByUtilization(
-					Utils.heightVector(5.72300005f, 12.8473997f)
-			);
+			primaryLayer.getOrderedSpecies().get(0)
+					.setLoreyHeightByUtilization(Utils.heightVector(5.72300005f, 12.8473997f));
 			primaryLayer.getOrderedSpecies().get(0).setBaseAreaByUtilization(
 					Utils.utilizationVector(
 							0.028147541f, 4.09836054f, 1.34257376f, 1.134377f, 0.789475381f, 0.831934452f
@@ -1700,9 +1695,8 @@ class BackProcessingEngineTest {
 			primaryLayer.getOrderedSpecies().get(0).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
 					Utils.utilizationVector(0f, 13.1586876f, 0.334262282f, 3.87737703f, 3.88999987f, 5.05704927f)
 			);
-			primaryLayer.getOrderedSpecies().get(1).setLoreyHeightByUtilization(
-					Utils.heightVector(7.18720007f, 13.8270998f)
-			);
+			primaryLayer.getOrderedSpecies().get(1)
+					.setLoreyHeightByUtilization(Utils.heightVector(7.18720007f, 13.8270998f));
 			primaryLayer.getOrderedSpecies().get(1).setBaseAreaByUtilization(
 					Utils.utilizationVector(
 							0.0106229503f, 28.6885567f, 1.96814752f, 9.33654118f, 11.2569828f, 6.12688494f
@@ -1730,9 +1724,8 @@ class BackProcessingEngineTest {
 			primaryLayer.getOrderedSpecies().get(1).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
 					Utils.utilizationVector(0f, 139.179657f, 1.63344252f, 39.124752f, 61.2242622f, 37.1972122f)
 			);
-			primaryLayer.getOrderedSpecies().get(2).setLoreyHeightByUtilization(
-					Utils.heightVector(6.1097002f, 16.6229f)
-			);
+			primaryLayer.getOrderedSpecies().get(2)
+					.setLoreyHeightByUtilization(Utils.heightVector(6.1097002f, 16.6229f));
 			primaryLayer.getOrderedSpecies().get(2).setBaseAreaByUtilization(
 					Utils.utilizationVector(
 							0.0158524588f, 8.19673729f, 0.47727865f, 1.42778683f, 1.97404909f, 4.31762266f
@@ -1766,7 +1759,8 @@ class BackProcessingEngineTest {
 			engine.processPolygon(polygon);
 
 			assertThat(
-					output, contains(
+					output,
+					contains(
 							hasProperty("polygonIdentifier", hasProperty("year", is(1995))),
 							hasProperty("polygonIdentifier", hasProperty("year", is(1996))),
 							hasProperty("polygonIdentifier", hasProperty("year", is(1997))),

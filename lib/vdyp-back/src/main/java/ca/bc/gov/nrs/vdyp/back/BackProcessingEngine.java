@@ -959,10 +959,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 	}
 
-
-	protected void growthLoop(
-			int currentYear
-	) throws ProcessingException {
+	protected void growthLoop(int currentYear) throws ProcessingException {
 		final ComputationMethods computers = this.getState().getComputers();
 		final VdypLayer primaryLayer = getPrimaryLayer();
 		final BecDefinition bec = getState().getCurrentBecZone();
@@ -1042,7 +1039,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 	@Override
 	public int getTargetYear(VdypPolygon polygon) {
-		return 0; //  We don't need a target year for back projection.
+		return 0; // We don't need a target year for back projection.
 	}
 
 	public enum BackExecutionStep implements ProcessingEngine.ExecutionStep {

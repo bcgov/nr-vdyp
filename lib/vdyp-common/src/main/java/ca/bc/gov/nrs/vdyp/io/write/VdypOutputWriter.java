@@ -165,6 +165,7 @@ public class VdypOutputWriter implements Closeable {
 				polygon, new PolygonIdentifier(polygon.getPolygonIdentifier().getBase(), year)
 		);
 	}
+
 	/**
 	 * Output a polygon and its children.
 	 *

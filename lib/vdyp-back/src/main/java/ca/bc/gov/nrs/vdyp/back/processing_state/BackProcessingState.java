@@ -27,7 +27,6 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 
 	private static final Supplier<IllegalStateException> UNSET_LIMITS = unset("per species limits");
 
-
 	private Optional<Integer> convergenceYear = Optional.empty(); // BACK2/IYR_CNV
 	private Optional<Float> convergenceAge = Optional.empty(); // BACK2/AGE_CNV
 	private Optional<Float> convergenceDominantHeight = Optional.empty(); // BACK2/HD_CNV
