@@ -794,8 +794,8 @@ public class PolygonProjectionRunnerTest {
 						ReturnCode.SUCCESS, PolygonMessageKind.LAYER_HEIGHT_TOO_LOW, MessageSeverityCode.WARNING
 				),
 				Arguments.of(
-						new IncorrectLayerCodesException("X"), false, ReturnCode.ERROR_CORELIBRARYERROR,
-						PolygonMessageKind.GENERIC_FIPSTART_ERROR, MessageSeverityCode.ERROR
+						new IncorrectLayerCodesException("X"), false, ReturnCode.ERROR_LAYERNOTPROCESSED,
+						PolygonMessageKind.BAD_STAND_DEFINITION, MessageSeverityCode.INFORMATION
 				),
 				Arguments.of(
 						new LayerMissingException(LayerType.PRIMARY), false, ReturnCode.ERROR_CORELIBRARYERROR,

@@ -402,6 +402,17 @@ public class PolygonProjectionRunner {
 	static boolean handleFipError(Polygon polygon, StandProcessingException spe, Layer layer) {
 		Optional<Integer> errorCodeO = spe.getIpassCode(VdypApplicationIdentifier.FIP_START);
 		int errorCode = errorCodeO.orElse(0);
+		if (errorCode == -2) {
+			// Two exceptions results in this message
+			polygon.addMessage(
+					builder -> builder.layer(layer).details(
+							ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+							PolygonMessageKind.BAD_STAND_DEFINITION
+					)
+			);
+			return false;
+		}
+
 		if (spe instanceof UnsupportedModeException) {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
