@@ -405,7 +405,7 @@ public class PolygonProjectionRunner {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING, PolygonMessageKind.LOW_SITE,
-							errorCode
+							spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return false;
@@ -415,7 +415,7 @@ public class PolygonProjectionRunner {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-							PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart", errorCode
+							PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart", spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return false;
@@ -425,7 +425,7 @@ public class PolygonProjectionRunner {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING, PolygonMessageKind.LAYER_HEIGHT_TOO_LOW,
-							spe.getMessage(), errorCode
+							spe.getMessage(), spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return false;
@@ -436,7 +436,7 @@ public class PolygonProjectionRunner {
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 							PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
-							errorCode
+                            spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return true;
@@ -446,7 +446,7 @@ public class PolygonProjectionRunner {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-							PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, "FIPSTART", errorCode
+							PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, "FIPSTART", spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return true;
