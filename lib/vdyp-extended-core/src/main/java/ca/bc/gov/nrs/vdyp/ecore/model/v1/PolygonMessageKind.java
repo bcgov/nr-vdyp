@@ -50,6 +50,7 @@ public enum PolygonMessageKind {
 					+ " determined. Disabling projection of layer"
 	), //
 	NO_PRIMARY_LAYER_SUPPLIED("no primary layer supplied in the input; choosing layer \"{0}\""), //
+	PRIMARY_LAYER_NOT_FOUND("Unable to locate a Primary Layer. Perhaps the Layer 1 attribute is blank or missing."), //
 	NO_VIABLE_STAND_DESCRIPTION("stand description not possible after 80 years of projection. {0} return code: {1}"), //
 	MISSING_YEARS_TO_BREAST_HEIGHT("species missing years-to-breast-height value."), //
 	NO_LEADING_SPECIES("no leading site species could be found"), //

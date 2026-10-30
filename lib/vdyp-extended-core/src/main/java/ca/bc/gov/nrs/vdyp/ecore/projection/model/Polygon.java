@@ -973,6 +973,13 @@ public class Polygon implements Comparable<Polygon> {
 
 				// Process only the first Projection Type for which there is a Primary layer.
 				break;
+			} else {
+				addMessage(
+						builder -> builder.polygon(this).details(
+								ReturnCode.ERROR_LAYERNOTFOUND, MessageSeverityCode.ERROR,
+								PolygonMessageKind.PRIMARY_LAYER_NOT_FOUND
+						)
+				);
 			}
 		}
 	}
