@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -28,6 +29,222 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class ProjectionRunnerTest {
+
+	static Stream<Arguments> layerErrorInputs() {
+		// V = valid, I = invalid, - = absent. Each position identifies the same feature in both files.
+		return Stream.of(
+				Arguments.of("VV", "IV", 1, 1), // Layer failure with a valid parent
+				Arguments.of("IV", "IV", 1, 1), // Layer failure with a rejected parent
+				Arguments.of("III", "III", 3, 0), // Every parent and layer rejected
+				Arguments.of("-V", "IV", 0, 1), // Orphan before first polygon
+				Arguments.of("V--", "VVI", 0, 1), // Trailing invalid layer beyond iterator read-ahead
+				Arguments.of("---", "VVI", 0, 0), // No polygon rows
+				Arguments.of("VVV", "VII", 2, 1) // Future errors must not invalidate an earlier polygon
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("layerErrorInputs")
+	void testLayerErrorsAreConsumedOnce(String polygons, String layers, int skipped, int processed) throws Exception {
+		var polygonRows = new ArrayList<String>();
+		var layerRows = new ArrayList<String>();
+		polygonRows.add(TestUtils.POLYGON_CSV_HEADER_LINE);
+		layerRows.add(TestUtils.LAYER_CSV_HEADER_LINE);
+		for (int i = 0; i < polygons.length(); i++) {
+			if (polygons.charAt(i) != '-') {
+				polygonRows.add(
+						(13919428L + i) + ",093C090,94833422,DQU,UNK,UNK," + (polygons.charAt(i) == 'I' ? "Z" : "V")
+								+ ",UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+				);
+			}
+		}
+		for (int i = 0; i < layers.length(); i++) {
+			layerRows.add(
+					(13919428L + i) + ",14321066,093C090,94833422,1,P,,1,,,,20,10,300,"
+							+ (layers.charAt(i) == 'I' ? "" : "PLI") + ",100.00,,,,,,,,,,,180,18.00,,,,,,,,,,"
+			);
+		}
+		try (
+				var runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, "TEST", validationLoggingParameters(), false
+				)
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA,
+							TestUtils.makeInputStream(polygonRows.toArray(String[]::new)),
+							ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							TestUtils.makeInputStream(layerRows.toArray(String[]::new))
+					), new StubComponentRunner()
+			);
+			String errors = new String(runner.getErrorStream().readAllBytes());
+			assertEquals(skipped, runner.getLastRunPolygonsSkipped(), errors);
+			assertEquals(processed, runner.getLastRunPolygonsProcessed(), errors);
+			for (int i = 0; i < layers.length(); i++) {
+				String prefix = "Polygon " + (13919428L + i) + " Layer 1";
+				assertEquals(
+						layers.charAt(i) == 'I' ? 1 : 0, errors.lines().filter(line -> line.contains(prefix)).count(),
+						errors
+				);
+			}
+			for (int i = 0; i < polygons.length(); i++) {
+				String prefix = "Polygon " + (13919428L + i);
+				assertEquals(
+						polygons.charAt(i) == 'I' ? 1 : 0,
+						errors.lines().filter(line -> line.contains(prefix) && line.contains("Inventory Standard Code"))
+								.count(),
+						errors
+				);
+			}
+		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "IV", "VIV", "VI", "III", "IVIVI" })
+	void testRejectedPolygonRowsAreLoggedOnce(String rows) throws Exception {
+		var polygonRows = new ArrayList<String>();
+		var layerRows = new ArrayList<String>();
+		polygonRows.add(TestUtils.POLYGON_CSV_HEADER_LINE);
+		layerRows.add(TestUtils.LAYER_CSV_HEADER_LINE);
+		int invalidCount = 0;
+		for (int i = 0; i < rows.length(); i++) {
+			long featureId = 13919428L + i;
+			boolean invalid = rows.charAt(i) == 'I';
+			invalidCount += invalid ? 1 : 0;
+			polygonRows.add(
+					featureId + ",093C090,94833422,DQU,UNK,UNK," + (invalid ? "Z" : "V")
+							+ ",UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+			);
+			layerRows.add(
+					featureId
+							+ ",14321066,093C090,94833422,1,V,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+			);
+		}
+		try (
+				var runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, "TEST", validationLoggingParameters(), false
+				)
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA,
+							TestUtils.makeInputStream(polygonRows.toArray(String[]::new)),
+							ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							TestUtils.makeInputStream(layerRows.toArray(String[]::new))
+					), new StubComponentRunner()
+			);
+			String errors = new String(runner.getErrorStream().readAllBytes());
+			assertEquals(
+					invalidCount, errors.lines().filter(line -> line.contains("Inventory Standard Code")).count(),
+					errors
+			);
+			assertEquals(rows.length(), runner.getLastRunPolygonsSeen());
+			assertEquals(invalidCount, runner.getLastRunPolygonsSkipped());
+			assertEquals(rows.length() - invalidCount, runner.getLastRunPolygonsProcessed());
+			for (int i = 0; i < rows.length(); i++) {
+				String prefix = "Polygon " + (13919428L + i);
+				assertEquals(
+						rows.charAt(i) == 'I' ? 1 : 0,
+						errors.lines().filter(line -> line.contains(prefix) && line.contains("Inventory Standard Code"))
+								.count(),
+						errors
+				);
+			}
+		}
+	}
+
+	@Test
+	void testBuildFailureAlsoLogsUnreadLayerValidationErrors() throws Exception {
+		try (
+				var runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, "TEST", validationLoggingParameters(), false
+				)
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA,
+							TestUtils.makeInputStream(
+									TestUtils.POLYGON_CSV_HEADER_LINE,
+									"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+							), ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							TestUtils.makeInputStream(
+									TestUtils.LAYER_CSV_HEADER_LINE,
+									"13919428,14321066,093C090,94833422,1,V,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,",
+									"13919428,14321067,093C090,94833422,1,V,,,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,",
+									"13919428,14321068,093C090,94833422,2,V,,,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,",
+									"13919428,14321069,093C090,94833422,3,V,,,,,,20,10,300,,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,"
+							)
+					), new StubComponentRunner()
+			);
+			String errors = new String(runner.getErrorStream().readAllBytes());
+			assertThat(errors, containsString("Polygon 13919428 Layer 3"));
+			assertThat(errors, containsString("has already been supplied"));
+			assertEquals(2, runner.getErrorLogCount(), errors);
+			assertEquals(1, runner.getLastRunPolygonsSkipped());
+		}
+	}
+
+	@Test
+	void testInvalidFeatureIdIsLoggedWithOriginalIdentity() throws Exception {
+		try (
+				var runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, "TEST", validationLoggingParameters(), false
+				)
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA,
+							TestUtils.makeInputStream(
+									TestUtils.POLYGON_CSV_HEADER_LINE,
+									"bad-id,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+							), ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							TestUtils.makeInputStream(TestUtils.LAYER_CSV_HEADER_LINE)
+					), new StubComponentRunner()
+			);
+			String errors = new String(runner.getErrorStream().readAllBytes());
+			assertThat(errors, containsString("Polygon bad-id"));
+			assertThat(errors, containsString("Feature ID"));
+			assertEquals(1, runner.getErrorLogCount());
+			assertEquals(1, runner.getLastRunPolygonsSkipped());
+		}
+	}
+
+	private static Parameters validationLoggingParameters() {
+		return new Parameters().ageStart(0).ageEnd(100)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING);
+	}
+
+	static Stream<Arguments> unassignableLayerErrors() {
+		return Stream.of(
+				Arguments.of(
+						"bad-id,14321066,093C090,94833422,1,P,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,",
+						"Polygon bad-id"
+				), Arguments.of("13919428", "Polygon 13919428")
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("unassignableLayerErrors")
+	void testUnassignableLayerErrorsAreLogged(String layer, String expectedContext) throws Exception {
+		try (
+				var runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, "TEST", validationLoggingParameters(), false
+				)
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA,
+							TestUtils.makeInputStream(TestUtils.POLYGON_CSV_HEADER_LINE),
+							ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							TestUtils.makeInputStream(TestUtils.LAYER_CSV_HEADER_LINE, layer)
+					), new StubComponentRunner()
+			);
+			String errors = new String(runner.getErrorStream().readAllBytes());
+			assertThat(errors, containsString(expectedContext));
+			assertEquals(1, runner.getErrorLogCount(), errors);
+			assertEquals(0, runner.getLastRunPolygonsSeen());
+		}
+	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = { true, false })
@@ -246,8 +463,8 @@ public class ProjectionRunnerTest {
 
 		InputStream progressStream = unit.getProgressStream();
 		String progressLog = new String(progressStream.readAllBytes());
-		assertThat(progressLog.contains("Processing Polygon 13919428:"), is(true));
-		assertThat(progressLog.contains("Processing Polygon 13919429:"), is(true));
+		assertThat(progressLog.contains("Processing Polygon 13919428"), is(true));
+		assertThat(progressLog.contains("Processing Polygon 13919429"), is(true));
 	}
 
 	@Test

@@ -10,7 +10,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
  * Exceptions thrown during the validation of a Layer read from an input CSV. These exceptions are used only to wrap the
  * list of validation errors and get passed into a {@link CsvConstraintViolationException}
  */
-public class LayerValidationException extends AbstractProjectionRequestException {
+public class LayerValidationException extends ProjectionValidationException {
 
 	private static final long serialVersionUID = 2651505762328626871L;
 
@@ -18,7 +18,11 @@ public class LayerValidationException extends AbstractProjectionRequestException
 		super(validationMessages);
 	}
 
+	public LayerValidationException(long featureId, List<ValidationMessage> validationMessages) {
+		super(featureId, validationMessages);
+	}
+
 	public LayerValidationException(long featureId, String layerId, List<ValidationMessage> validationMessages) {
-		super(buildContextPrefix(featureId, layerId), validationMessages);
+		super(featureId, layerId, validationMessages);
 	}
 }

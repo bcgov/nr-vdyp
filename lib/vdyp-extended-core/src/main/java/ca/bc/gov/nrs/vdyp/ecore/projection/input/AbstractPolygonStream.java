@@ -6,6 +6,7 @@ import static ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind.UNEXPECTED
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -55,6 +56,14 @@ public abstract class AbstractPolygonStream {
 	}
 
 	public abstract boolean hasNextPolygon();
+
+	/**
+	 * Consume validation messages for input rows that could not be associated with a polygon. Call after polygon
+	 * iteration finishes, before closing the projection's logs.
+	 */
+	public List<ValidationMessage> drainRemainingValidationMessages() {
+		return List.of();
+	}
 
 	public static AbstractPolygonStream build(ProjectionContext context, Map<String, InputStream> streams)
 			throws ProjectionRequestValidationException {

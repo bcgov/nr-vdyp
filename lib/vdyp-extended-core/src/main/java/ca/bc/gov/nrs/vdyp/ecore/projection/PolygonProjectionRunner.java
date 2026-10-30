@@ -1082,9 +1082,14 @@ public class PolygonProjectionRunner {
 	}
 
 	private void generateYieldTablesForPolygon() throws YieldTableGenerationException {
-
 		logger.info("{}: performing Yield Table generation", polygon);
-
-		componentRunner.generateYieldTables(context, polygon, state);
+		try {
+			componentRunner.generateYieldTables(context, polygon, state);
+		} catch (YieldTableGenerationException e) {
+			// These can be rethrown directly... wrap other exceptions in YieldTableGenerationException
+			throw e;
+		} catch (Exception e) {
+			throw new YieldTableGenerationException(polygon.getFeatureId(), e);
+		}
 	}
 }

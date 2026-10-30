@@ -560,7 +560,8 @@ public class HcsvPolygonRecordBean {
 
 			BeanValidatorHelper bvh = new BeanValidatorHelper(bean.polyFeatureId);
 
-			bvh.validateNumber(bean.polyFeatureId, CsvRecordBeanHelper::parseLongAcceptNull, "Feature ID");
+			boolean validFeatureId = bvh
+					.validateNumber(bean.polyFeatureId, CsvRecordBeanHelper::parseLongAcceptNull, "Feature ID");
 
 			// lcl_CopyPolygonDataIntoSnapshot: 3156
 			bean.mapId = bvh.truncateString(bean.mapId, Vdyp7Constants.MAX_LEN_MAPSHEET);
@@ -689,8 +690,12 @@ public class HcsvPolygonRecordBean {
 
 			// Now, throw if there's been any validation errors.
 
-			if (bvh.getValidationMessages().size() > 0) {
-				throw new CsvConstraintViolationException(new PolygonValidationException(bvh.getValidationMessages()));
+			if (!bvh.getValidationMessages().isEmpty()) {
+				throw new CsvConstraintViolationException(
+						validFeatureId
+								? new PolygonValidationException(bean.getFeatureId(), bvh.getValidationMessages())
+								: new PolygonValidationException(bvh.getValidationMessages())
+				);
 			}
 
 			return true;

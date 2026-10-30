@@ -169,7 +169,7 @@ public class Polygon implements Comparable<Polygon> {
 	private Layer rank1Layer;
 
 	/** Messages generated during the definition of the polygon */
-	private ArrayList<PolygonMessage> messages;
+	private final ArrayList<PolygonMessage> messages;
 
 	/** If false, projection is turned off globally for this polygon */
 	private Boolean doAllowProjection;
@@ -539,7 +539,7 @@ public class Polygon implements Comparable<Polygon> {
 	}
 
 	public static class Builder {
-		private Polygon polygon = new Polygon();
+		private final Polygon polygon = new Polygon();
 
 		public Builder featureId(long value) {
 			polygon.featureId = value;
@@ -1743,7 +1743,7 @@ public class Polygon implements Comparable<Polygon> {
 
 				Stand leadSp0 = candidate.determineLeadingSp0(0);
 				if (leadSp0 != null) {
-					if (candidate.getCrownClosure() <= 10.0
+					if (candidate.getCrownClosure() != null && candidate.getCrownClosure() <= 10.0
 							&& leadSp0.getSpeciesGroup().getTotalAge() >= leadSp0.determineMaturityAge()) {
 						// candidate is really a veteran layer
 						continue;

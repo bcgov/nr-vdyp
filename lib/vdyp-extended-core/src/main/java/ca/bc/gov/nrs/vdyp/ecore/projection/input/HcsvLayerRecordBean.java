@@ -654,7 +654,8 @@ public class HcsvLayerRecordBean {
 					"Target VDYP7 Layer Code"
 			);
 
-			bvh.validateNumber(bean.featureId, CsvRecordBeanHelper::parseLongAcceptNull, "Feature Id");
+			boolean validFeatureId = bvh
+					.validateNumber(bean.featureId, CsvRecordBeanHelper::parseLongAcceptNull, "Feature Id");
 			bvh.validateNumber(bean.polygonNumber, n -> Long.parseLong(n), "Polygon Number");
 
 			// TREE_COVER_ID is not transferred from the CSV to the layer snapshot in VDYP7
@@ -837,7 +838,9 @@ public class HcsvLayerRecordBean {
 
 			if (!bvh.getValidationMessages().isEmpty()) {
 				throw new CsvConstraintViolationException(
-						new LayerValidationException(bean.getFeatureId(), bean.layerId, bvh.getValidationMessages())
+						validFeatureId ? new LayerValidationException(
+								bean.getFeatureId(), bean.layerId, bvh.getValidationMessages()
+						) : new LayerValidationException(bvh.getValidationMessages())
 				);
 			}
 
