@@ -300,22 +300,23 @@ public class RealComponentRunner implements ComponentRunner {
 				var suppliedLayerInfos = polygon.getReportingInfo().getLayerReportingInfos().values().stream()
 						.sorted(suppliedLayerOrder).toList();
 
-				var sortedLayerInfos = ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST.stream()
-						.map(
-								type -> suppliedLayerInfos.stream() //
-										.filter(li -> li.getProcessedAsVDYP7Layer() == type) //
-										.findFirst()
-						).filter(Optional::isPresent).map(Optional::get).sorted(suppliedLayerOrder).toList();
-
-				for (var layerReportingInfo : sortedLayerInfos) {
+				for (var layerReportingInfo : suppliedLayerInfos) {
 
 					var layer = layerReportingInfo.getLayer();
+					var projectionType = layerReportingInfo.getProcessedAsVDYP7Layer();
+					if (!ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST.contains(projectionType)) {
+						polygon.addMessage(
+								builder -> builder.layer(layer).details(
+										ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.NO_YIELD_TABLE_FOR_UNSELECTED_LAYER, layer.getLayerId()
+								)
+						);
+						continue;
+					}
 
 					doGenerateDetailedTableHeader = true;
 
-					var projectionResults = getProjectionResults(
-							polygon, layerReportingInfo.getProcessedAsVDYP7Layer(), state
-					);
+					var projectionResults = getProjectionResults(polygon, projectionType, state);
 					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
 							|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
 

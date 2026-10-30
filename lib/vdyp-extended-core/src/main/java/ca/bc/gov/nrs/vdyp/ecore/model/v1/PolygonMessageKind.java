@@ -54,6 +54,9 @@ public enum PolygonMessageKind {
 	MISSING_YEARS_TO_BREAST_HEIGHT("species missing years-to-breast-height value."), //
 	NO_LEADING_SPECIES("no leading site species could be found"), //
 	NO_YIELD_TABLE_FOR_DEAD_LAYER("suppressing CFS Biomass output for dead layer. No yield table will be produced."), //
+	NO_YIELD_TABLE_FOR_UNSELECTED_LAYER(
+			"Layer ''{0}'' is not the Primary, Veteran or a Targeted Layer. Yield Table will not be produced."
+	), //
 	NO_PROJECTED_DATA("projected data for species {0} was not generated at stand age {1} (Calendar year {2,number,#})"), //
 	NO_PROJECTED_DATA_NO_YEAR("projected data for species {0} was not generated at stand age {1}"), //
 	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\""), //
