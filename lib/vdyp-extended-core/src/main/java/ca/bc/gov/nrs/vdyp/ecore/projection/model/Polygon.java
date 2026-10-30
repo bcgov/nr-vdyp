@@ -743,7 +743,7 @@ public class Polygon implements Comparable<Polygon> {
 				if (primaryLayer.getBasalArea() == null) {
 					addMessage(
 							new PolygonMessage.Builder().layer(primaryLayer).details(
-									ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+									ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
 									PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING, "basal area", "primary"
 							).build()
 					);
@@ -752,7 +752,7 @@ public class Polygon implements Comparable<Polygon> {
 					addMessage(
 							new PolygonMessage.Builder().layer(primaryLayer)
 									.details(
-											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+											ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
 											PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING,
 											"trees-per-hectare", "primary"
 									).build()
@@ -764,7 +764,7 @@ public class Polygon implements Comparable<Polygon> {
 				if (veteranLayer.getBasalArea() == null) {
 					addMessage(
 							new PolygonMessage.Builder().layer(veteranLayer).details(
-									ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+									ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
 									PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING, "basal area", "veteran"
 							).build()
 					);
@@ -773,7 +773,7 @@ public class Polygon implements Comparable<Polygon> {
 					addMessage(
 							new PolygonMessage.Builder().layer(veteranLayer)
 									.details(
-											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+											ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
 											PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING,
 											"trees-per-hectare", "veteran"
 									).build()
@@ -1769,7 +1769,7 @@ public class Polygon implements Comparable<Polygon> {
 				final var reportPrimaryLayer = selectedPrimaryLayer;
 				addMessage(
 						builder -> builder.layer(reportPrimaryLayer).details(
-								ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+								ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 								PolygonMessageKind.NO_PRIMARY_LAYER_SUPPLIED, reportPrimaryLayer.getLayerId()
 						)
 				);
