@@ -782,8 +782,11 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		// BA_CNV
 		final float convergenceBasalArea = state.getConvergenceBasalArea().orElseThrow();
-		BaseAreaLowException.check(
-				LayerType.PRIMARY, "computed balsal area yeild", Optional.of(basalAreaYield), convergenceBasalArea
+		Utils.throwIfPresent(
+				BaseAreaLowException.check(
+						LayerType.PRIMARY, "computed balsal area yeild", Optional.of(basalAreaYield),
+						convergenceBasalArea
+				)
 		);
 
 		// BFB
