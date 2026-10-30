@@ -912,7 +912,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		float sumBasalAreaLoreyHeight = 0;
 		for (var species : primaryLayer.getOrderedSpecies()) {
 			sumBasalAreaLoreyHeight += species.getLoreyHeightByUtilization().get(uc)
-					* species.getLoreyHeightByUtilization().get(uc);
+					* species.getBaseAreaByUtilization().get(uc);
 		}
 		return sumBasalAreaLoreyHeight / primaryLayer.getBaseAreaByUtilization().get(uc);
 	}
