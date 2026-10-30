@@ -201,6 +201,11 @@ public class ProjectionRunner implements Closeable {
 
 	private void logRunProcessingMessages() {
 		ValidatedParameters params = context.getParams();
+		if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+			context.logInformation(
+					"CFS BIOMASS Output has been selected. Utilization Levels Pine and Hardwood - 12.5cm+; Others 17.5cm+ Processing Message"
+			);
+		}
 		if (!params.containsOption(ExecutionOption.FORWARD_GROW_ENABLED)) {
 			context.logInformation(
 					"FORWARD GROW has been disabled. No projection will occur after the Reference Year for any polygon."
