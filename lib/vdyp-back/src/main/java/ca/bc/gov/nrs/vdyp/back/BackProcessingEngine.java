@@ -575,6 +575,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		// Lorey height for non-primary species
 		for (var species : primaryLayer.getOrderedSpecies()) {
+			if (species == primarySpecies)
+				continue;
 			// HLsp = EMP053(...)
 			var specHeight = getState().getEstimators()
 					.estimateNonPrimaryLoreyHeight(species, primarySpecies, bec, dominantHeight, primaryLoreyHeight);
