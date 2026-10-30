@@ -734,9 +734,16 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		// SITEHADJ
 		float siteHeight = heightFromSiteCurve(primarySite);
 
-		HeightLowException.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), 0f);
-		HeightLowException
-				.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), convergenceDominantHeight);
+		Utils.throwIfPresent(
+				HeightLowException.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), 0f)
+		);
+		Utils.throwIfPresent(
+				HeightLowException
+						.check(
+								LayerType.PRIMARY, "computed site height", Optional.of(siteHeight),
+								convergenceDominantHeight
+						)
+		);
 
 		// BFH
 		float backupFactorHeight = (dominantHeight - convergenceDominantHeight)
