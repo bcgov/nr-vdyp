@@ -6,7 +6,10 @@ public enum PolygonMessageKind {
 	), //
 	BAD_STAND_DEFINITION("stand definition insufficient for FIPSTART Processing"), //
 	BREAST_HEIGHT_AGE_TOO_YOUNG(
-			"breast height age too young to generate a stand description. FIPSTART return code: {0}"
+			"breast height age too young to generate a stand description. {0} return code: {1}"
+	), //
+	LAYER_HEIGHT_TOO_LOW(
+			"primary layer height was too short to generate a stand description. VDYP7CORE return code: {0} {1}"
 	), //
 	COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER(
 			"starting values for basal area copied over for QA and alternative model used for layer"
@@ -62,7 +65,7 @@ public enum PolygonMessageKind {
 	NO_PROJECTED_DATA_NO_YEAR("projected data for species {0} was not generated at stand age {1}"), //
 	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\""), //
 	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("Polygon {0}: Rank ''1'' Layer was already encountered (Layer: ''{1}'')"),
-	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. VRISTART return code: {0}"), //
+	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. {0} return code: {1}"), //
 	REASSIGNED_HEIGHT("based on estimated site index of {0}, recomputed input height at age {1} to be {2}"), //
 	UNRECOGNIZED_GROWTH_MODEL("attempt to process an unrecognized growth model {0}"), //
 	USING_DEFAULT_CC("CC was not supplied. Using a default CC of {0}% for this (leading) species ({1})"),

@@ -775,7 +775,8 @@ public class PolygonProjectionRunnerTest {
 				),
 				Arguments.of(
 						new ResultBaseAreaLowException(LayerType.PRIMARY, Optional.of(10f), Optional.of(12f)), true,
-						ReturnCode.SUCCESS, PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, MessageSeverityCode.WARNING
+						ReturnCode.SUCCESS, PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL,
+						MessageSeverityCode.WARNING
 				),
 
 				Arguments.of(
@@ -790,8 +791,7 @@ public class PolygonProjectionRunnerTest {
 				),
 				Arguments.of(
 						new HeightLowException(LayerType.PRIMARY, Optional.of(0.5f), Optional.of(0.75f)), false,
-						ReturnCode.ERROR_CORELIBRARYERROR, PolygonMessageKind.GENERIC_FIPSTART_ERROR,
-						MessageSeverityCode.ERROR
+						ReturnCode.SUCCESS, PolygonMessageKind.LAYER_HEIGHT_TOO_LOW, MessageSeverityCode.WARNING
 				),
 				Arguments.of(
 						new IncorrectLayerCodesException("X"), false, ReturnCode.ERROR_CORELIBRARYERROR,
