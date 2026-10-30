@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -333,10 +334,11 @@ public class PolygonProjectionRunner {
 					if (vriResult instanceof StandProcessingException spe) {
 
 						var errorNumber = spe.getIpassCode(VdypApplicationIdentifier.VRI_START);
+						int errorNumberVal = errorNumber.orElse(0);
+
 						var layer = polygon.getLayerByProjectionType(projectionType);
 
 						if (vriResult instanceof QuadraticMeanDiameterLowException) {
-
 							polygon.addMessage(
 									builder -> builder.layer(layer).details(
 											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
@@ -347,32 +349,34 @@ public class PolygonProjectionRunner {
 							polygon.addMessage(
 									builder -> builder.layer(layer).details(
 											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-											PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, errorNumber
+											PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, errorNumberVal
 									)
 							);
 						} else if (vriResult instanceof FailedToGrowYoungStandException) {
 							polygon.addMessage(
 									builder -> builder.layer(layer).details(
 											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-											PolygonMessageKind.NO_VIABLE_STAND_DESCRIPTION, "VRISTART", errorNumber
+											PolygonMessageKind.NO_VIABLE_STAND_DESCRIPTION, "VRISTART", errorNumberVal
 									)
 							);
 						} else {
 							polygon.addMessage(
 									builder -> builder.layer(layer).details(
 											ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-											PolygonMessageKind.GENERIC_VRISTART_ERROR, errorNumber
+											PolygonMessageKind.GENERIC_VRISTART_ERROR,
+											vriResult.getMessage() + " [" + errorNumberVal + "]"
 									)
 							);
 						}
+					} else {
+						polygon.addMessage(
+								builder -> builder.details(
+										ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
+										PolygonMessageKind.ERROR_RUNNING_APPLICATION,
+										VdypApplicationIdentifier.VRI_START, "running", oVriResult.get()
+								)
+						);
 					}
-					polygon.addMessage(
-							builder -> builder.details(
-									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-									PolygonMessageKind.ERROR_RUNNING_APPLICATION, VdypApplicationIdentifier.VRI_START,
-									"running", oVriResult.get()
-							)
-					);
 				}
 				break;
 			}
