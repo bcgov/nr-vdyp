@@ -1551,7 +1551,7 @@ public class YieldTable implements Closeable {
 					if (ht >= 0) {
 						polygon.addCheckedMessage(
 								builder -> builder.layer(layer).details(
-										ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING,
+										ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.INFORMATION,
 										PolygonMessageKind.SPECIES_TOO_SHORT, ht, ageToRequest, sp0.getSpeciesCode()
 								)
 						);
@@ -1568,7 +1568,7 @@ public class YieldTable implements Closeable {
 			final var reportKind = kind;
 			polygon.addCheckedMessage(
 					builder -> builder.layer(layer).details(
-							ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING, reportKind,
+							ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.INFORMATION, reportKind,
 							sp0.getSpeciesCode(), ageToRequest, calendarYear
 					)
 			);

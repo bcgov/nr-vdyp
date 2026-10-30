@@ -217,16 +217,16 @@ class YieldTableTest {
 		var message = messages.get(0);
 		assertThat(message.getPolygon(), is(polygon));
 		assertThat(message.getLayer(), is(layerInfo.getLayer()));
-		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
-		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
-		assertThat(message.getReportMessageText(), is("WARN: " + text));
+		assertThat(message.getSeverity(), is(MessageSeverityCode.INFORMATION));
+		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_SPECIESNOTFOUND));
+		assertThat(message.getReportMessageText(), is("INFO: " + text));
 		var shortSpeciesMessages = polygon.getMessages().stream()
 				.filter(m -> m.getKind() == PolygonMessageKind.SPECIES_TOO_SHORT).toList();
 		assertThat(shortSpeciesMessages.size(), is(1));
 		var shortSpeciesMessage = shortSpeciesMessages.get(0);
 		assertThat(shortSpeciesMessage.getLayer(), is(layerInfo.getLayer()));
-		assertThat(shortSpeciesMessage.getSeverity(), is(MessageSeverityCode.WARNING));
-		assertThat(shortSpeciesMessage.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
+		assertThat(shortSpeciesMessage.getSeverity(), is(MessageSeverityCode.INFORMATION));
+		assertThat(shortSpeciesMessage.getReturnCode(), is(ReturnCode.ERROR_INVALIDSITEINFO));
 		assertThat(
 				shortSpeciesMessage.getReportMessageText(),
 				containsString("at stand age \"180\" is too short to generate yields for species \"PL\"")
