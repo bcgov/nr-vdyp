@@ -853,8 +853,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		// Overall lorey Height
 		primaryLayer.getLoreyHeightByUtilization().setAll(totalLoreyHeight(primaryLayer, UtilizationClass.ALL));
 
-		primaryLayer.getBaseAreaByUtilization().setAll(basalAreaYield);
-		primaryLayer.getQuadraticMeanDiameterByUtilization().setAll(quadraticMeanDiameterYield);
+		primaryLayer.getBaseAreaByUtilization().setAll(primaryBasalArea);
+		primaryLayer.getQuadraticMeanDiameterByUtilization().setAll(primaryQuadraticMeanDiameter);
 		BaseAreaTreeDensityDiameter.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
 
 		// Assign BA and DQ by species
