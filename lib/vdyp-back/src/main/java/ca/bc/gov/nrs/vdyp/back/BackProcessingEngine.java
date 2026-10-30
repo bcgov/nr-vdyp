@@ -243,7 +243,10 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 				);
 				species.getLoreyHeightByUtilization().setAll(speciesLoreyHeight);
 			} else {
-				speciesLoreyHeight = species.getLoreyHeightByUtilization().getAll();
+				speciesLoreyHeight = min(
+						species.getLoreyHeightByUtilization().getAll(), getState()
+								.getSpeciesLoreyHeightBackupFactorMaximum(i)
+				);
 			}
 			sumBaHl += speciesLoreyHeight * species.getBaseAreaByUtilization().getAll();
 		}
