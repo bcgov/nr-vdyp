@@ -351,14 +351,15 @@ public class PolygonProjectionRunner {
 									builder -> builder.layer(layer).details(
 											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 											PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, "VRISTART",
-											errorNumberVal
+											vriResult.getMessage() + " [" + errorNumberVal + "]"
 									)
 							);
 						} else if (vriResult instanceof FailedToGrowYoungStandException) {
 							polygon.addMessage(
 									builder -> builder.layer(layer).details(
 											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-											PolygonMessageKind.NO_VIABLE_STAND_DESCRIPTION, "VRISTART", errorNumberVal
+											PolygonMessageKind.NO_VIABLE_STAND_DESCRIPTION, "VRISTART",
+											vriResult.getMessage() + " [" + errorNumberVal + "]"
 									)
 							);
 						} else {
