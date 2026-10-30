@@ -179,7 +179,7 @@ public class ProjectionRunnerTest {
 			String errors = new String(runner.getErrorStream().readAllBytes());
 			assertThat(errors, containsString("Polygon 13919428 Layer 3"));
 			assertThat(errors, containsString("has already been supplied"));
-			assertEquals(2, runner.getErrorLogCount(), errors);
+			assertEquals(4, runner.getErrorLogCount(), errors);
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
 		}
 	}
@@ -204,7 +204,7 @@ public class ProjectionRunnerTest {
 			String errors = new String(runner.getErrorStream().readAllBytes());
 			assertThat(errors, containsString("Polygon bad-id"));
 			assertThat(errors, containsString("Feature ID"));
-			assertEquals(1, runner.getErrorLogCount());
+			assertEquals(3, runner.getErrorLogCount());
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
 		}
 	}
@@ -241,7 +241,7 @@ public class ProjectionRunnerTest {
 			);
 			String errors = new String(runner.getErrorStream().readAllBytes());
 			assertThat(errors, containsString(expectedContext));
-			assertEquals(1, runner.getErrorLogCount(), errors);
+			assertEquals(3, runner.getErrorLogCount(), errors);
 			assertEquals(0, runner.getLastRunPolygonsSeen());
 		}
 	}

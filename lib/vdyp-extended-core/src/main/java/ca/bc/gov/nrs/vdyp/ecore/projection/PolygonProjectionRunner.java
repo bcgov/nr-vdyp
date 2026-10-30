@@ -145,8 +145,6 @@ public class PolygonProjectionRunner {
 
 		buildPolygonProjectionExecutionStructure();
 
-		recordProcessingMessages();
-
 		performInitialProcessing();
 
 		// VRI ADJUST is not supported at this time, so this code doesn't need to be written:
@@ -161,32 +159,6 @@ public class PolygonProjectionRunner {
 		generateYieldTablesForPolygon();
 	}
 
-	private void recordProcessingMessages() {
-		ValidatedParameters params = context.getParams();
-		if (!params.containsOption(ExecutionOption.FORWARD_GROW_ENABLED)) {
-			polygon.addMessage(
-					builder -> builder.details(
-							ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
-							PolygonMessageKind.FORWARD_GROW_DISABLED
-					)
-			);
-		}
-		if (!params.containsOption(ExecutionOption.BACK_GROW_ENABLED)) {
-			polygon.addMessage(
-					builder -> builder.details(
-							ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION, PolygonMessageKind.BACK_GROW_DISABLED
-					)
-			);
-		}
-		if (!params.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION)) {
-			polygon.addMessage(
-					builder -> builder.details(
-							ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
-							PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED
-					)
-			);
-		}
-	}
 
 	void buildPolygonProjectionExecutionStructure() throws PolygonExecutionException {
 

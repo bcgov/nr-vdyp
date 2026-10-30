@@ -388,23 +388,6 @@ public class PolygonProjectionRunnerTest {
 		unit.project();
 		context.endRun();
 		em.verify();
-
-		var messages = polygon.getMessages().stream()
-				.filter(message -> message.getKind() == PolygonMessageKind.FORWARD_GROW_DISABLED).toList();
-		if (forwardEnabled) {
-			assertThat(messages.size(), is(0));
-		} else {
-			assertThat(
-					messages,
-					contains(
-							allOf(
-									hasProperty("polygon", sameInstance(polygon)), hasProperty("layer", nullValue()),
-									hasProperty("returnCode", is(ReturnCode.SUCCESS)),
-									hasProperty("severity", is(MessageSeverityCode.INFORMATION))
-							)
-					)
-			);
-		}
 	}
 
 	@ParameterizedTest

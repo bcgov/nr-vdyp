@@ -45,7 +45,6 @@ import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.ecore.io.read.ParamsReader;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.integration_tests.MainTest;
@@ -200,7 +199,9 @@ class Hcsv_Vdyp7_Comparison_Test {
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
 		String entry3Content = new String(TestHelper.readZipEntry(zipFile, entry2));
-		assertThat(entry3Content, containsString(PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED.getTemplate()));
+		assertThat(
+				entry3Content, containsString("Substitution of Supplied BA/TPH as Projected values has been disabled.")
+		);
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
