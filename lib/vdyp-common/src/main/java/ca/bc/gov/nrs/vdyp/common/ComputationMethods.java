@@ -400,6 +400,10 @@ public class ComputationMethods {
 
 	}
 
+	public static enum YearsAtBreastHeightMode {
+		STORED, COMPUTED
+	}
+
 	// YSMALL
 	/**
 	 * Estimate small components for primary layer
@@ -408,6 +412,19 @@ public class ComputationMethods {
 	 */
 	public void estimateSmallComponents(
 			CompatibilityVariableMode cvmode, BaseVdypPolygon<?, ?, ?, ?> fPoly, VdypLayer layer
+	) {
+		estimateSmallComponents(cvmode, fPoly, layer, YearsAtBreastHeightMode.COMPUTED);
+	}
+
+	// YSMALL
+	/**
+	 * Estimate small components for primary layer
+	 *
+	 * @throws ProcessingException
+	 */
+	public void estimateSmallComponents(
+			CompatibilityVariableMode cvmode, BaseVdypPolygon<?, ?, ?, ?> fPoly, VdypLayer layer,
+			YearsAtBreastHeightMode breastHeightAgeMode
 	) {
 		float loreyHeightSum = 0f;
 		float baseAreaSum = 0f;
@@ -422,10 +439,14 @@ public class ComputationMethods {
 			@SuppressWarnings("unused")
 			float quadMeanDiameterSpec = spec.getQuadraticMeanDiameterByUtilization().getAll(); // DQsp
 
+			float yearsAtBreastHeight = switch (breastHeightAgeMode) {
+			case STORED -> layer.getYearsAtBreastHeight().orElse(0f);
+			case COMPUTED -> layer.getComputedYearsAtBreastHeight().orElse(0f);
+			};
 			// EMP080
 			float smallComponentProbability = estimationMethods.estimateSmallComponentProbability(
 					spec.getGenus(), //
-					layer.getYearsAtBreastHeight().orElse(0f), //
+					yearsAtBreastHeight, //
 					spec.getLoreyHeightByUtilization().getAll(), //
 					region
 			); // PROBsp

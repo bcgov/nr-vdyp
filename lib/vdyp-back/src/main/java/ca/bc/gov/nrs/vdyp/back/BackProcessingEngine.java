@@ -21,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods.YearsAtBreastHeightMode;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
@@ -32,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -992,7 +994,9 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		);
 
 		// YSMALL(2)
-		computers.estimateSmallComponents(CompatibilityVariableMode.ALL, polygon, primaryLayer);
+		computers.estimateSmallComponents(
+				CompatibilityVariableMode.ALL, polygon, primaryLayer, YearsAtBreastHeightMode.STORED
+		);
 	}
 
 	protected void outputRecord(final VdypPolygon polygon, int currentYear) throws ProcessingException {
