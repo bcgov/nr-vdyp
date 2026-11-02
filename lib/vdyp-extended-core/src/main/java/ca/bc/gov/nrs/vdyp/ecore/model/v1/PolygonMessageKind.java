@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.model.v1;
 
+import java.util.List;
+
 public enum PolygonMessageKind {
 	ASSIGNING_ESTIMATED_SITE_INDEX(
 			"directly assigning estimated site index of {0} to species \"{1}\" and recomputing input height"
@@ -61,8 +63,8 @@ public enum PolygonMessageKind {
 	NO_YIELD_TABLE_FOR_UNSELECTED_LAYER(
 			"Layer ''{0}'' is not the Primary, Veteran or a Targeted Layer. Yield Table will not be produced."
 	), //
-	NO_PROJECTED_DATA("projected data for {0} was not generated at stand age {1} (Calendar year {2,number,#})"), //
-	NO_PROJECTED_DATA_NO_YEAR("projected data for {0} was not generated at stand age {1}"), //
+	NO_PROJECTED_DATA("projected data for {0} was not generated at stand age {1} (Calendar year {2,number,#})", 0), //
+	NO_PROJECTED_DATA_NO_YEAR("projected data for {0} was not generated at stand age {1}", 0), //
 	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\""), //
 	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("Polygon {0}: Rank ''1'' Layer was already encountered (Layer: ''{1}'')"),
 	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. {0} return code: {1}"), //
@@ -90,9 +92,16 @@ public enum PolygonMessageKind {
 	};
 
 	public final String template;
+	private final List<Integer> deduplicationArgumentIndexes;
 
-	PolygonMessageKind(String template) {
+	PolygonMessageKind(String template, Integer... deduplicationArgumentIndexes) {
 		this.template = template;
+		this.deduplicationArgumentIndexes = List.of(deduplicationArgumentIndexes);
+	}
+
+	/** Argument indexes compared in addition to the kind when checking for duplicate messages. */
+	public List<Integer> getDeduplicationArgumentIndexes() {
+		return deduplicationArgumentIndexes;
 	}
 
 	public String getTemplate() {

@@ -1562,21 +1562,15 @@ public class YieldTable implements Closeable {
 			}
 
 			PolygonMessageKind kind = PolygonMessageKind.NO_PROJECTED_DATA;
+			final String specText = stand == null ? "species " + sp0.getSpeciesCode() : "the layer";
 			if (rowContext.getCurrentYearIsAgeRow()) {
 				kind = PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR;
 			}
-			String specString = "species " + sp0.getSpeciesCode();
-			if (stand == null) {
-				specString = "the layer";
-			}
-
 			final var reportKind = kind;
-			final var reportSpecString = specString;
-
 			polygon.addCheckedMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.INFORMATION, reportKind,
-							reportSpecString, ageToRequest, calendarYear
+							specText, ageToRequest, calendarYear
 					)
 			);
 			if (layer.getFirstAgeWithYields() == 0) {

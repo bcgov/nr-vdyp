@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
@@ -43,6 +44,44 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.SilviculturalBaseC
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 
 public class PolygonTest {
+	@ParameterizedTest
+	@EnumSource(value = PolygonMessageKind.class, names = { "NO_PROJECTED_DATA", "NO_PROJECTED_DATA_NO_YEAR" })
+	void testCheckedMessagesCompareConfiguredArguments(PolygonMessageKind kind) {
+		var polygon = new Polygon.Builder().featureId(1).build();
+		for (String subject : List.of("the layer", "species PL", "species S")) {
+			polygon.addCheckedMessage(
+					builder -> builder.details(
+							ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.INFORMATION, kind, subject, 180, 2013
+					)
+			);
+			// A later age/year for the same subject is still a duplicate.
+			polygon.addCheckedMessage(
+					builder -> builder.details(
+							ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.INFORMATION, kind,
+							new String(subject), 181, 2014
+					)
+			);
+		}
+		assertThat(polygon.getMessages().size(), is(3));
+	}
+
+	@Test
+	void testCheckedMessagesDefaultToKindOnly() {
+		var polygon = new Polygon.Builder().featureId(1).build();
+		for (var kind : List.of(PolygonMessageKind.SPECIES_TOO_SHORT, PolygonMessageKind.LOW_SITE)) {
+			polygon.addCheckedMessage(
+					builder -> builder.details(
+							ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.INFORMATION, kind, 10, 180, "PL"
+					)
+			);
+			var duplicate = new PolygonMessage.Builder().polygon(polygon)
+					.details(ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.INFORMATION, kind, 20, 181, "S")
+					.build();
+			polygon.addCheckedMessage(duplicate);
+		}
+		assertThat(polygon.getMessages().size(), is(2));
+	}
+
 	@Test
 	void testTargetedVriVeteranWithoutSpeciesIsRejected() {
 		var polygon = new Polygon.Builder().featureId(1).inventoryStandard(InventoryStandard.VRI).build();

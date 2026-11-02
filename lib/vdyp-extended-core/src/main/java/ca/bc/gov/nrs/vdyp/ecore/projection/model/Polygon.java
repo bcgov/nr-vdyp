@@ -448,7 +448,7 @@ public class Polygon implements Comparable<Polygon> {
 
 	public boolean messageOkToAdd(PolygonMessage message) {
 		for (PolygonMessage m : getMessages()) {
-			if (m.getKind() == message.getKind()) {
+			if (m.isDuplicateOf(message)) {
 				return false;
 			}
 		}
