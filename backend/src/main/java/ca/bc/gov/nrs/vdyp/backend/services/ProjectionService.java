@@ -388,10 +388,10 @@ public class ProjectionService {
 			return Response.serverError().status(Status.INTERNAL_SERVER_ERROR).entity(message).build();
 		} finally {
 			if (errorLogStream != null) {
-				Utils.close(yieldTableStream, "ProjectionService.errorLog");
+				Utils.close(errorLogStream, "ProjectionService.errorLog");
 			}
 			if (progressLogStream != null) {
-				Utils.close(yieldTableStream, "ProjectionService.progressLog");
+				Utils.close(progressLogStream, "ProjectionService.progressLog");
 			}
 			if (yieldTableStream != null) {
 				Utils.close(yieldTableStream, "ProjectionService.yieldTable");
