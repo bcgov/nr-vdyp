@@ -134,9 +134,11 @@ import {
   getProjectionById,
   getFileSetFiles,
   deleteFileFromFileSet,
+  saveDebugModeSelection,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
 import { ensureProjectionExists } from '@/services/projection/fileUploadService'
+import type { UploadedFileInfo } from '@/interfaces/interfaces'
 
 const form = ref<HTMLFormElement>()
 const fileUploadStore = useFileUploadStore()
@@ -302,6 +304,20 @@ const validateLayerFile = async (file: File): Promise<boolean> => {
   return true
 }
 
+// Sets the polygon file info; when the new file switches Debug Mode Off, that is saved too
+// so the projection does not reopen with Debug Mode On for a file that does not allow it
+const applyPolygonFileInfo = async (
+  projectionGUID: string,
+  info: UploadedFileInfo | null,
+  count: number | null = null,
+) => {
+  const wasDebugModeEnabled = fileUploadStore.isDebugModeEnabled
+  fileUploadStore.setPolygonFileInfo(info, count)
+  if (wasDebugModeEnabled && !fileUploadStore.isDebugModeEnabled) {
+    await saveDebugModeSelection(projectionGUID, false)
+  }
+}
+
 // Upload polygon file immediately when selected
 const uploadPolygonFile = async (file: File) => {
   // Validate the file first
@@ -346,7 +362,8 @@ const uploadPolygonFile = async (file: File) => {
     const files = await getFileSetFiles(projectionGUID, polygonFileSetGUID)
     if (files.length > 0) {
       const uploadedFile = files[0]
-      fileUploadStore.setPolygonFileInfo(
+      await applyPolygonFileInfo(
+        projectionGUID,
         {
           filename: uploadedFile.filename || file.name,
           fileMappingGUID: uploadedFile.fileMappingGUID,
@@ -470,7 +487,7 @@ const removePolygonFile = async () => {
       fileUploadStore.polygonFileInfo.fileSetGUID,
       fileUploadStore.polygonFileInfo.fileMappingGUID,
     )
-    fileUploadStore.setPolygonFileInfo(null)
+    await applyPolygonFileInfo(projectionGUID, null)
   } catch (error) {
     console.error('Error removing polygon file:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.FILE_DELETE_FAILED, PROJECTION_ERR.FILE_DELETE_FAILED_TITLE)

@@ -225,10 +225,11 @@
                 </v-row>
               </v-container>
             </div>
-            <!-- Debug Mode is a run-time option, so it stays available outside the panel's edit state -->
+            <!-- Debug Mode is saved as soon as it changes, so it stays available outside the panel's edit state -->
             <DebugModeSelector
-              v-model="modelParameterStore.isDebugModeEnabled"
+              :model-value="modelParameterStore.isDebugModeEnabled"
               :disabled="isReadOnly"
+              @update:model-value="onDebugModeChange"
               class="debug-mode-selector"
             />
             <ActionPanel
@@ -260,6 +261,7 @@ import { AppSpinField } from '@/components'
 import { ActionPanel, DebugModeSelector, PanelEditControl } from '@/components/projection'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { saveProjectionOnPanelConfirm as saveModelParamProjection, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
+import { saveDebugModeSelection } from '@/services/projectionService'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
 import type { PanelName } from '@/types/types'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
@@ -780,6 +782,24 @@ const onCancel = async () => {
   } finally {
     appStore.isSavingProjection = false
     suppressDirtyTracking = false
+  }
+}
+
+const onDebugModeChange = async (enabled: boolean) => {
+  modelParameterStore.isDebugModeEnabled = enabled
+  // Without a projection yet, the selection is saved when the projection is created
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) return
+
+  appStore.isSavingProjection = true
+  try {
+    await saveDebugModeSelection(projectionGUID, enabled)
+  } catch (error) {
+    console.error(PROJECTION_ERR.SAVE_ERROR_LOG, error)
+    modelParameterStore.isDebugModeEnabled = !enabled
+    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
+  } finally {
+    appStore.isSavingProjection = false
   }
 }
 

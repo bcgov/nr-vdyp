@@ -1031,6 +1031,12 @@ public class ProjectionService {
 				parameters.setReportTitle(
 						parameters.getReportTitle() + " - COPY" + (numCopies > 0 ? "" + (numCopies + 1) : "")
 				);
+				// Debug Mode is chosen per projection, so a copy always starts with it Off
+				String debugLogging = ExecutionOption.DO_ENABLE_DEBUG_LOGGING.getValue();
+				if (parameters.getSelectedExecutionOptions().remove(debugLogging)
+						&& !parameters.getExcludedExecutionOptions().contains(debugLogging)) {
+					parameters.addExcludedExecutionOptionsItem(debugLogging);
+				}
 			}
 			if (entity.getModelParameters() != null) {
 				modelParameters = objectMapper.readValue(entity.getModelParameters(), ModelParameters.class);

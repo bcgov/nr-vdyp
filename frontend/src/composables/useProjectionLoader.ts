@@ -4,13 +4,13 @@ import {
   parseProjectionParams,
   mapProjectionStatus,
   getFileSetFiles,
-  isProjectionReadOnly,
   isDebugModeSaved,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import {
+  DEBUG_MODE_MAX_POLYGONS,
   METHOD_SELECTION,
   PROJECTION_STATUS,
   PROJECTION_VIEW_MODE
@@ -85,6 +85,7 @@ export function useProjectionLoader() {
     params: ReturnType<typeof parseProjectionParams>,
     isViewMode: boolean,
     collapseAllPanels: boolean,
+    isDebugModeOn: boolean,
   ) => {
     fileUploadStore.resetStore()
     fileUploadStore.restoreFromProjectionParams(params, isViewMode, collapseAllPanels)
@@ -92,9 +93,16 @@ export function useProjectionLoader() {
     const polygonFileSetGUID = projectionModel.polygonFileSet?.projectionFileSetGUID
     const layerFileSetGUID = projectionModel.layerFileSet?.projectionFileSetGUID
 
+    // The saved file cannot be re-read to count its polygons. Debug Mode can only have been
+    // saved On for a file within the limit (a file over it switches Debug Mode Off and saves that),
+    // so a saved On means the current file is within the limit.
+    const polygonCount = isDebugModeOn ? DEBUG_MODE_MAX_POLYGONS : null
+
     await Promise.all([
       polygonFileSetGUID
-        ? loadFileSetInfo(projectionGUID, polygonFileSetGUID, 'Polygon File', fileUploadStore.setPolygonFileInfo)
+        ? loadFileSetInfo(projectionGUID, polygonFileSetGUID, 'Polygon File', (info) =>
+            fileUploadStore.setPolygonFileInfo(info, polygonCount),
+          )
         : Promise.resolve(),
       layerFileSetGUID
         ? loadFileSetInfo(projectionGUID, layerFileSetGUID, 'Layer File', fileUploadStore.setLayerFileInfo)
@@ -141,19 +149,16 @@ export function useProjectionLoader() {
         appStore.setDuplicatedFromInfo(null)
       }
 
-      // Debug Mode is a per-run choice: show the saved value only for projections that are
-      // running or have run (read-only by status, regardless of the requested view mode).
-      const debugModeEnabled =
-        isProjectionReadOnly(projectionStatus) && isDebugModeSaved(projectionModel.projectionParameters)
+      const isDebugModeOn = isDebugModeSaved(projectionModel.projectionParameters)
 
       if (isInputModelParams) {
         restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode, collapseAllPanels)
         modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
-        modelParameterStore.isDebugModeEnabled = debugModeEnabled
+        modelParameterStore.isDebugModeEnabled = isDebugModeOn
       } else {
-        await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode, collapseAllPanels)
+        await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode, collapseAllPanels, isDebugModeOn)
         fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
-        fileUploadStore.isDebugModeEnabled = debugModeEnabled
+        fileUploadStore.isDebugModeEnabled = isDebugModeOn && fileUploadStore.isDebugModeAvailable
       }
 
       return true

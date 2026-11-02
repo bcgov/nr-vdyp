@@ -232,7 +232,7 @@ describe('File Upload Store Unit Tests', () => {
       expect(store.polygonCount).to.be.null
     })
 
-    it('should not restore Debug Mode from saved parameters (the loader decides by status)', () => {
+    it('should not restore Debug Mode from saved parameters (the loader restores it)', () => {
       const params = makeParsedParams({
         reportTitle: 'My Report',
         selectedExecutionOptions: [ExecutionOptionsEnum.DoEnableDebugLogging],

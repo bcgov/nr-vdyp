@@ -27,9 +27,10 @@
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
           <DebugModeSelector
-            v-model="fileUploadStore.isDebugModeEnabled"
+            :model-value="fileUploadStore.isDebugModeEnabled"
             :disabled="isDebugModeDisabled"
             :warning-message="warningMessage"
+            @update:model-value="onDebugModeChange"
           />
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -41,11 +42,15 @@
 import { computed } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
+import { useNotificationStore } from '@/stores/common/notificationStore'
 import { DebugModeSelector } from '@/components/projection'
+import { saveDebugModeSelection } from '@/services/projectionService'
 import { CONSTANTS, MESSAGE } from '@/constants'
+import { PROJECTION_ERR } from '@/constants/message'
 
 const appStore = useAppStore()
 const fileUploadStore = useFileUploadStore()
+const notificationStore = useNotificationStore()
 
 const isReadOnly = computed(() => appStore.isReadOnly)
 
@@ -62,6 +67,24 @@ const warningMessage = computed(() => {
   }
   return ''
 })
+
+const onDebugModeChange = async (enabled: boolean) => {
+  fileUploadStore.isDebugModeEnabled = enabled
+  // Without a projection yet, the selection is saved when the projection is created
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) return
+
+  appStore.isSavingProjection = true
+  try {
+    await saveDebugModeSelection(projectionGUID, enabled)
+  } catch (error) {
+    console.error(PROJECTION_ERR.SAVE_ERROR_LOG, error)
+    fileUploadStore.isDebugModeEnabled = !enabled
+    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
+  } finally {
+    appStore.isSavingProjection = false
+  }
+}
 </script>
 
 <style scoped>

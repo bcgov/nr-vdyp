@@ -383,8 +383,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   //
   const referenceYear = ref<number | null>(null)
 
-  // Debug Mode is not restored from saved parameters for editable projections, so it defaults
-  // to Off whenever one is (re)opened. Read-only projections show the saved value (set by the loader).
+  // Restored from the saved parameters by the loader (not by restoreFromProjectionParams,
+  // because it is saved on change rather than with a panel's Next button)
   const isDebugModeEnabled = ref<boolean>(false)
 
   // Reset store to initial state

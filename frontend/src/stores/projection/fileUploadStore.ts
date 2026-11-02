@@ -162,8 +162,8 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   // in an earlier session and is only known by its server-side info (it cannot be re-read).
   const polygonCount = ref<number | null>(null)
 
-  // Debug Mode is not restored from saved parameters for editable projections, so it defaults
-  // to Off whenever one is (re)opened. Read-only projections show the saved value (set by the loader).
+  // Restored from the saved parameters by the loader (not by restoreFromProjectionParams,
+  // because it is saved on change rather than with a panel's Next button)
   const isDebugModeEnabled = ref<boolean>(false)
   // Set when Debug Mode was switched Off automatically because a multi-polygon file replaced
   // a single-polygon one; drives the warning shown in the collapsed Report Settings header.
@@ -177,17 +177,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     () => polygonCount.value !== null && polygonCount.value > CONSTANTS.DEBUG_MODE_MAX_POLYGONS,
   )
 
-  watch(isDebugModeAvailable, (available) => {
-    if (available) {
-      isDebugModeAutoDisabled.value = false
-      return
-    }
-    if (isDebugModeEnabled.value) {
-      isDebugModeEnabled.value = false
-      isDebugModeAutoDisabled.value = hasTooManyPolygons.value
-    }
-  })
-
   // file upload state
   const isUploadingPolygon = ref<boolean>(false)
   const isUploadingLayer = ref<boolean>(false)
@@ -200,12 +189,21 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
 
   /**
    * Set uploaded polygon file info together with its polygon count.
+   * Debug Mode is switched Off at once when the new file does not allow it, so the caller
+   * can save that change right after this call.
    * @param info The uploaded file info, or null when the file is removed
    * @param count The polygon count of the file, or null when it is unknown
    */
   const setPolygonFileInfo = (info: UploadedFileInfo | null, count: number | null = null) => {
     polygonFileInfo.value = info
     polygonCount.value = info ? count : null
+
+    if (isDebugModeAvailable.value) {
+      isDebugModeAutoDisabled.value = false
+    } else if (isDebugModeEnabled.value) {
+      isDebugModeEnabled.value = false
+      isDebugModeAutoDisabled.value = hasTooManyPolygons.value
+    }
   }
 
   const setLayerFileInfo = (info: UploadedFileInfo | null) => {
