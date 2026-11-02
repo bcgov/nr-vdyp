@@ -1402,13 +1402,14 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 	 * @returns if this method doesn't throw, all is good.
 	 * @throws ProcessingException if the polygon does not pass validation.
 	 */
-	protected static void validatePolygon(VdypPolygon polygon) throws ProcessingException {
+	static void validatePolygon(VdypPolygon polygon) throws ProcessingException {
 
 		if (polygon.getPolygonIdentifier().getYear() < 1900) {
 
 			throw new ProcessingException(
 					MessageFormat.format(
-							"Polygon {0}''s year value {1} is < 1900", polygon.getPolygonIdentifier().getName(),
+							"Polygon {0}''s year value {1,number,####} is < 1900", polygon.getPolygonIdentifier()
+									.getName(),
 							polygon.getPolygonIdentifier().getYear()
 					)
 			);
