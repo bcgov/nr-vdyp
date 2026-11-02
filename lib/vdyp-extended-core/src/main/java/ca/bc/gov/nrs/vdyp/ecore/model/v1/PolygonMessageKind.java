@@ -61,8 +61,8 @@ public enum PolygonMessageKind {
 	NO_YIELD_TABLE_FOR_UNSELECTED_LAYER(
 			"Layer ''{0}'' is not the Primary, Veteran or a Targeted Layer. Yield Table will not be produced."
 	), //
-	NO_PROJECTED_DATA("projected data for species {0} was not generated at stand age {1} (Calendar year {2,number,#})"), //
-	NO_PROJECTED_DATA_NO_YEAR("projected data for species {0} was not generated at stand age {1}"), //
+	NO_PROJECTED_DATA("projected data for {0} was not generated at stand age {1} (Calendar year {2,number,#})"), //
+	NO_PROJECTED_DATA_NO_YEAR("projected data for {0} was not generated at stand age {1}"), //
 	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\""), //
 	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("Polygon {0}: Rank ''1'' Layer was already encountered (Layer: ''{1}'')"),
 	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. {0} return code: {1}"), //

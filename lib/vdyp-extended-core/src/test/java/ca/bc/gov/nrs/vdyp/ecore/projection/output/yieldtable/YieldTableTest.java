@@ -179,11 +179,11 @@ class YieldTableTest {
 		return Stream.of(
 				Arguments.of(
 						false, PolygonMessageKind.NO_PROJECTED_DATA,
-						"projected data for species PL was not generated at stand age 180 (Calendar year 2013)"
+						"projected data for the layer was not generated at stand age 180 (Calendar year 2013)"
 				),
 				Arguments.of(
 						true, PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR,
-						"projected data for species PL was not generated at stand age 180"
+						"projected data for the layer was not generated at stand age 180"
 				)
 		);
 	}
@@ -212,14 +212,15 @@ class YieldTableTest {
 		}
 		assertThat(new String(yieldTable.getAsStream().readAllBytes()), containsString("2014"));
 		var messages = polygon.getMessages().stream().filter(m -> m.getKind() == kind).toList();
-		// Layer growth, volume, secondary species and subsequent rows all request missing data.
-		assertThat(messages.size(), is(1));
+		// The layer and secondary species are retained; subsequent rows are duplicates.
+		assertThat(messages.size(), is(2));
 		var message = messages.get(0);
 		assertThat(message.getPolygon(), is(polygon));
 		assertThat(message.getLayer(), is(layerInfo.getLayer()));
 		assertThat(message.getSeverity(), is(MessageSeverityCode.INFORMATION));
 		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_SPECIESNOTFOUND));
 		assertThat(message.getReportMessageText(), is("INFO: " + text));
+		assertThat(messages.get(1).getReportMessageText(), is("INFO: " + text.replace("the layer", "species S")));
 		var shortSpeciesMessages = polygon.getMessages().stream()
 				.filter(m -> m.getKind() == PolygonMessageKind.SPECIES_TOO_SHORT).toList();
 		assertThat(shortSpeciesMessages.size(), is(1));
@@ -239,7 +240,7 @@ class YieldTableTest {
 								m -> m.getKind() == PolygonMessageKind.NO_PROJECTED_DATA
 										|| m.getKind() == PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR
 						).count(),
-				is(1L)
+				is(2L)
 		);
 	}
 
