@@ -173,7 +173,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const isDebugModeAvailable = computed(
     () => polygonCount.value !== null && polygonCount.value >= 1 && polygonCount.value <= CONSTANTS.DEBUG_MODE_MAX_POLYGONS,
   )
-  const hasMultiplePolygons = computed(
+  const hasTooManyPolygons = computed(
     () => polygonCount.value !== null && polygonCount.value > CONSTANTS.DEBUG_MODE_MAX_POLYGONS,
   )
 
@@ -184,7 +184,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     }
     if (isDebugModeEnabled.value) {
       isDebugModeEnabled.value = false
-      isDebugModeAutoDisabled.value = hasMultiplePolygons.value
+      isDebugModeAutoDisabled.value = hasTooManyPolygons.value
     }
   })
 
@@ -448,7 +448,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isDebugModeEnabled,
     isDebugModeAutoDisabled,
     isDebugModeAvailable,
-    hasMultiplePolygons,
+    hasTooManyPolygons,
     reportSettingsPanelOpenState,
     // restore functions
     resetStore,

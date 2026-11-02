@@ -165,7 +165,7 @@ describe('File Upload Store Unit Tests', () => {
     it('should default to Off and be unavailable without a polygon file', () => {
       assert.isFalse(store.isDebugModeEnabled)
       assert.isFalse(store.isDebugModeAvailable)
-      assert.isFalse(store.hasMultiplePolygons)
+      assert.isFalse(store.hasTooManyPolygons)
     })
 
     it('should be available only for a single-polygon file', () => {
@@ -174,12 +174,12 @@ describe('File Upload Store Unit Tests', () => {
 
       store.setPolygonFileInfo(polyInfo, 2)
       assert.isFalse(store.isDebugModeAvailable)
-      assert.isTrue(store.hasMultiplePolygons)
+      assert.isTrue(store.hasTooManyPolygons)
 
       // Count unknown (file restored from an earlier session)
       store.setPolygonFileInfo(polyInfo)
       assert.isFalse(store.isDebugModeAvailable)
-      assert.isFalse(store.hasMultiplePolygons)
+      assert.isFalse(store.hasTooManyPolygons)
     })
 
     it('should clear the polygon count when the polygon file is removed', () => {
