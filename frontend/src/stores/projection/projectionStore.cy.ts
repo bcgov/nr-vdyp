@@ -151,6 +151,12 @@ describe('Projection Store Unit Tests', () => {
       await store.handleZipResponse(blob, 'output.zip')
       expect(store.debugMessages).to.deep.equal([])
     })
+
+    it('should leave debugMessages empty when DebugLog.txt is blank', async () => {
+      const blob = await makeValidZip({ [CONSTANTS.FILE_NAME.DEBUG_TXT]: '\r\n  \n' })
+      await store.handleZipResponse(blob, 'output.zip')
+      expect(store.debugMessages).to.deep.equal([])
+    })
   })
 
   describe('handleZipResponse - YieldTable.txt (MANUAL_INPUT only)', () => {
