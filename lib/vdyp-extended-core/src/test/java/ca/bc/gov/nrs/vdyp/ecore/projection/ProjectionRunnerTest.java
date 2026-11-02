@@ -30,6 +30,28 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class ProjectionRunnerTest {
 
+	@Test
+	void chunkRunsDoNotLogProjectionWideInformation() throws Exception {
+		for (int chunk = 0; chunk < 2; chunk++) {
+			try (
+					var runner = new ProjectionRunner(
+							ProjectionRequestKind.HCSV, "TEST", validationLoggingParameters(), false
+					)
+			) {
+				runner.run(
+						Map.of(
+								ParameterNames.HCSV_POLYGON_INPUT_DATA,
+								TestUtils.makeInputStream(TestUtils.POLYGON_CSV_HEADER_LINE),
+								ParameterNames.HCSV_LAYERS_INPUT_DATA,
+								TestUtils.makeInputStream(TestUtils.LAYER_CSV_HEADER_LINE)
+						), new StubComponentRunner()
+				);
+				assertEquals("", new String(runner.getErrorStream().readAllBytes()));
+				assertEquals(0, runner.getErrorLogCount());
+			}
+		}
+	}
+
 	static Stream<Arguments> layerErrorInputs() {
 		// V = valid, I = invalid, - = absent. Each position identifies the same feature in both files.
 		return Stream.of(
@@ -179,7 +201,7 @@ public class ProjectionRunnerTest {
 			String errors = new String(runner.getErrorStream().readAllBytes());
 			assertThat(errors, containsString("Polygon 13919428 Layer 3"));
 			assertThat(errors, containsString("has already been supplied"));
-			assertEquals(4, runner.getErrorLogCount(), errors);
+			assertEquals(2, runner.getErrorLogCount(), errors);
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
 		}
 	}
@@ -204,7 +226,7 @@ public class ProjectionRunnerTest {
 			String errors = new String(runner.getErrorStream().readAllBytes());
 			assertThat(errors, containsString("Polygon bad-id"));
 			assertThat(errors, containsString("Feature ID"));
-			assertEquals(3, runner.getErrorLogCount());
+			assertEquals(1, runner.getErrorLogCount());
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
 		}
 	}
@@ -241,7 +263,7 @@ public class ProjectionRunnerTest {
 			);
 			String errors = new String(runner.getErrorStream().readAllBytes());
 			assertThat(errors, containsString(expectedContext));
-			assertEquals(3, runner.getErrorLogCount(), errors);
+			assertEquals(1, runner.getErrorLogCount(), errors);
 			assertEquals(0, runner.getLastRunPolygonsSeen());
 		}
 	}

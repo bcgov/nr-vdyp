@@ -84,8 +84,6 @@ public class ProjectionRunner implements Closeable {
 		context.startRun();
 
 		try {
-			logRunProcessingMessages();
-
 			logger.debug("{}", context.getParams().toString());
 			logApplicationMetadata();
 
@@ -199,27 +197,6 @@ public class ProjectionRunner implements Closeable {
 		}
 	}
 
-	private void logRunProcessingMessages() {
-		ValidatedParameters params = context.getParams();
-		if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-			context.logInformation(
-					"CFS BIOMASS Output has been selected. Utilization Levels Pine and Hardwood - 12.5cm+; Others 17.5cm+ Processing Message"
-			);
-		}
-		if (!params.containsOption(ExecutionOption.FORWARD_GROW_ENABLED)) {
-			context.logInformation(
-					"FORWARD GROW has been disabled. No projection will occur after the Reference Year for any polygon."
-			);
-		}
-		if (!params.containsOption(ExecutionOption.BACK_GROW_ENABLED)) {
-			context.logInformation(
-					"BACK GROW has been disabled. No projection will occur prior to Reference Year for any polygon."
-			);
-		}
-		if (!params.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION)) {
-			context.logInformation("Substitution of Supplied BA/TPH as Projected values has been disabled.");
-		}
-	}
 	/**
 	 * Logs each of the given exception's validation messages to the error log, one line per message. If the exception
 	 * carries a separate polygon/layer context prefix (see AbstractProjectionRequestException.getContextPrefix()), that
