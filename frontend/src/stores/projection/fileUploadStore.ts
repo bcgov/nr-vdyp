@@ -166,7 +166,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   // because it is saved on change rather than with a panel's Next button)
   const isDebugModeEnabled = ref<boolean>(false)
   // Set when Debug Mode was switched Off automatically because a multi-polygon file replaced
-  // a single-polygon one; drives the warning shown in the collapsed Report Settings header.
+  // a single-polygon one; drives the warning shown in the File Upload panel header.
   const isDebugModeAutoDisabled = ref<boolean>(false)
   const reportSettingsPanelOpenState = ref<PanelState>(CONSTANTS.PANEL.OPEN)
 

@@ -11,8 +11,17 @@
                   : 'mdi-chevron-down'
               }}</v-icon>
             </v-col>
-            <v-col>
+            <v-col cols="auto">
               <span class="text-h6">{{ CONSTANTS.FILE_UPLOAD_PANEL_LABEL.ATTACHMENTS }}</span>
+            </v-col>
+            <!-- Shown only while this panel is collapsed, so the automatic Debug Mode reset is not missed -->
+            <v-col
+              v-if="fileUploadStore.isDebugModeAutoDisabled && panelOpenStates[panelName] !== CONSTANTS.PANEL.OPEN"
+              class="attachments-header-warning"
+              data-testid="debug-mode-header-warning"
+            >
+              <v-icon size="small" class="attachments-header-warning-icon">mdi-alert-outline</v-icon>
+              <span>{{ MESSAGE.DEBUG_MODE.DISABLED_MULTIPLE_POLYGONS }}</span>
             </v-col>
           </v-row>
         </v-expansion-panel-title>
@@ -540,6 +549,37 @@ const removeLayerFile = async () => {
 /* Match collapsed height with other panels that have an Edit button */
 .attachments-panel-title {
   min-height: 48px !important;
+}
+
+.attachments-panel-title .expander-header {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.attachments-header-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  margin-left: var(--layout-margin-medium);
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-primary);
+  min-width: 0;
+}
+
+.attachments-header-warning-icon {
+  color: var(--typography-color-primary);
+}
+
+@media (max-width: 600px) {
+  .attachments-panel-title .expander-header {
+    flex-wrap: wrap;
+  }
+
+  .attachments-header-warning {
+    flex-basis: 100%;
+    margin-left: 0;
+    margin-top: var(--layout-margin-small);
+  }
 }
 
 /* File Input Label - BC Government Design Standards */

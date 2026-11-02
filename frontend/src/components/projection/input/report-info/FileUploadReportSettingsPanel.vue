@@ -11,17 +11,8 @@
                   : 'mdi-chevron-down'
               }}</v-icon>
             </v-col>
-            <v-col cols="auto">
+            <v-col>
               <span class="text-h6">{{ CONSTANTS.FILE_UPLOAD_PANEL_LABEL.REPORT_SETTINGS }}</span>
-            </v-col>
-            <!-- Shown in the header so the automatic reset is visible while the panel is collapsed -->
-            <v-col
-              v-if="fileUploadStore.isDebugModeAutoDisabled"
-              class="header-warning"
-              data-testid="debug-mode-header-warning"
-            >
-              <v-icon size="small" class="header-warning-icon">mdi-alert-outline</v-icon>
-              <span>{{ MESSAGE.DEBUG_MODE.DISABLED_MULTIPLE_POLYGONS }}</span>
             </v-col>
           </v-row>
         </v-expansion-panel-title>
@@ -105,32 +96,5 @@ const onDebugModeChange = async (enabled: boolean) => {
 
 .expander-header {
   align-items: center;
-  flex-wrap: nowrap;
-}
-
-.header-warning {
-  display: flex;
-  align-items: center;
-  gap: var(--layout-padding-xsmall);
-  margin-left: var(--layout-margin-medium);
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-primary);
-  min-width: 0;
-}
-
-.header-warning-icon {
-  color: var(--typography-color-primary);
-}
-
-@media (max-width: 600px) {
-  .expander-header {
-    flex-wrap: wrap;
-  }
-
-  .header-warning {
-    flex-basis: 100%;
-    margin-left: 0;
-    margin-top: var(--layout-margin-small);
-  }
 }
 </style>
