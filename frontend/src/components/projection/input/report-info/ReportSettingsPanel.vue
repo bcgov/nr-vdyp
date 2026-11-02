@@ -225,11 +225,9 @@
                 </v-row>
               </v-container>
             </div>
-            <!-- Debug Mode is saved as soon as it changes, so it stays available outside the panel's edit state -->
             <DebugModeSelector
-              :model-value="modelParameterStore.isDebugModeEnabled"
-              :disabled="isReadOnly"
-              @update:model-value="onDebugModeChange"
+              v-model="localIsDebugModeEnabled"
+              :disabled="isInputDisabled"
               class="debug-mode-selector"
             />
             <ActionPanel
@@ -261,7 +259,6 @@ import { AppSpinField } from '@/components'
 import { ActionPanel, DebugModeSelector, PanelEditControl } from '@/components/projection'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { saveProjectionOnPanelConfirm as saveModelParamProjection, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
-import { saveDebugModeSelection } from '@/services/projectionService'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
 import type { PanelName } from '@/types/types'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
@@ -358,6 +355,7 @@ const localIsComputedMAIEnabled = ref<boolean>(modelParameterStore.isComputedMAI
 const localIsCulminationValuesEnabled = ref<boolean>(modelParameterStore.isCulminationValuesEnabled)
 const localIsBySpeciesEnabled = ref<boolean>(modelParameterStore.isBySpeciesEnabled)
 const localIncSecondaryHeight = ref<boolean>(modelParameterStore.incSecondaryHeight)
+const localIsDebugModeEnabled = ref<boolean>(modelParameterStore.isDebugModeEnabled)
 
 // Validation error refs
 const startingAgeError = ref<string>('')
@@ -523,6 +521,11 @@ watch(() => modelParameterStore.incSecondaryHeight, (newVal) => {
     localIncSecondaryHeight.value = newVal
   }
 })
+watch(() => modelParameterStore.isDebugModeEnabled, (newVal) => {
+  if (newVal !== localIsDebugModeEnabled.value) {
+    localIsDebugModeEnabled.value = newVal
+  }
+})
 
 watch(selectedAgeYearRange, (newVal) => { modelParameterStore.selectedAgeYearRange = newVal; markDirty() })
 watch(localStartingAge, (newVal) => { modelParameterStore.startingAge = newVal; markDirty() })
@@ -553,6 +556,12 @@ watch(localIsBySpeciesEnabled, (newVal) => {
 watch(localIncSecondaryHeight, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.incSecondaryHeight)) {
     modelParameterStore.incSecondaryHeight = newVal
+    markDirty()
+  }
+})
+watch(localIsDebugModeEnabled, (newVal) => {
+  if (newVal !== modelParameterStore.isDebugModeEnabled) {
+    modelParameterStore.isDebugModeEnabled = newVal
     markDirty()
   }
 })
@@ -782,24 +791,6 @@ const onCancel = async () => {
   } finally {
     appStore.isSavingProjection = false
     suppressDirtyTracking = false
-  }
-}
-
-const onDebugModeChange = async (enabled: boolean) => {
-  modelParameterStore.isDebugModeEnabled = enabled
-  // Without a projection yet, the selection is saved when the projection is created
-  const projectionGUID = appStore.getCurrentProjectionGUID
-  if (!projectionGUID) return
-
-  appStore.isSavingProjection = true
-  try {
-    await saveDebugModeSelection(projectionGUID, enabled)
-  } catch (error) {
-    console.error(PROJECTION_ERR.SAVE_ERROR_LOG, error)
-    modelParameterStore.isDebugModeEnabled = !enabled
-    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
-  } finally {
-    appStore.isSavingProjection = false
   }
 }
 

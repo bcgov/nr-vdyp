@@ -383,8 +383,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   //
   const referenceYear = ref<number | null>(null)
 
-  // Restored from the saved parameters by the loader (not by restoreFromProjectionParams,
-  // because it is saved on change rather than with a panel's Next button)
+  // Restored from the saved parameters by the loader and by Report Settings Cancel
   const isDebugModeEnabled = ref<boolean>(false)
 
   // Reset store to initial state

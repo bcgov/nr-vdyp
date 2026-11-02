@@ -485,4 +485,25 @@ describe('revertPanelToSaved', () => {
       expect(modelStore.panelState.speciesInfo.editable).to.be.true
     })
   })
+
+  it('should restore the saved Debug Mode on Cancel', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: {
+        ...mockProjectionModel,
+        modelParameters: JSON.stringify(createSavedModelParams()),
+        projectionParameters: JSON.stringify({
+          selectedExecutionOptions: [ExecutionOptionsEnum.DoEnableProjectionReport],
+        }),
+        reportDescription: null,
+      },
+    })
+    const modelStore = useModelParameterStore()
+    modelStore.isDebugModeEnabled = true
+
+    cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS as any)).then(() => {
+      expect(modelStore.isDebugModeEnabled).to.be.false
+    })
+  })
 })

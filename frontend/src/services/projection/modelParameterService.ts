@@ -18,6 +18,7 @@ import {
   deleteAllFilesFromFileSet,
   parseProjectionParams,
   mapProjectionStatus,
+  isDebugModeSaved,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -871,6 +872,7 @@ const hasReportInfoChanges = (
   if (store.isCulminationValuesEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)) return true
   if (store.isBySpeciesEnabled !== opts.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)) return true
   if (store.incSecondaryHeight !== opts.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)) return true
+  if (store.isDebugModeEnabled !== opts.includes(ExecutionOptionsEnum.DoEnableDebugLogging)) return true
   const savedProjectionType = resolveProjectionType(opts)
   if (!strEq(store.projectionType, savedProjectionType)) return true
   if (hasUtilizationChanges(store, savedParams, savedProjectionType)) return true
@@ -974,6 +976,7 @@ export const revertPanelToSaved = async (panelName: PanelName): Promise<void> =>
   // which correctly marks prior panels as confirmed without setting runModelEnabled=true.
   modelParameterStore.restoreFromProjectionParams(params, false)
   modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
+  modelParameterStore.isDebugModeEnabled = isDebugModeSaved(projectionModel.projectionParameters)
 
   // editPanel resets the cancelled panel and all subsequent panels to unconfirmed/closed.
   // This prevents stale confirmed states from blocking confirmPanel calls when the user
