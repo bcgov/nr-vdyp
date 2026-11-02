@@ -1792,6 +1792,30 @@ class BackProcessingEngineTest {
 							27.5740337f
 					)
 			);
+			var primary1996 = output.get(1).getLayers().get(LayerType.PRIMARY);
+			assertThat(
+					primary1996,
+					VdypMatchers.hasUtilization(
+							"closeUtilizationVolumeByUtilization", 0, 132.650284f, 3.01714087f, 50.9979477f,
+							48.7706413f, 29.8645477f
+					)
+			);
+			var primary2010 = output.get(15).getLayers().get(LayerType.PRIMARY);
+			assertThat(
+					primary2010,
+					VdypMatchers.hasUtilization(
+							"closeUtilizationVolumeByUtilization", 0, 199.720917f, 2.15538573f, 49.500206f, 76.1947021f,
+							71.870636f
+					)
+			);
+			var primary2011 = output.get(16).getLayers().get(LayerType.PRIMARY);
+			assertThat(
+					primary2011,
+					VdypMatchers.hasUtilization(
+							"closeUtilizationVolumeByUtilization", 0, 204.0923f, 2.09885263f, 48.905571f, 77.6209869f,
+							75.4668884f
+					)
+			);
 
 		}
 	}

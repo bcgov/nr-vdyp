@@ -246,8 +246,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 				species.getLoreyHeightByUtilization().setAll(speciesLoreyHeight);
 			} else {
 				speciesLoreyHeight = min(
-						species.getLoreyHeightByUtilization().getAll(), getState()
-								.getSpeciesLoreyHeightBackupFactorMaximum(i)
+						species.getLoreyHeightByUtilization().getAll(),
+						getState().getSpeciesLoreyHeightBackupFactorMaximum(i)
 				);
 			}
 			sumBaHl += speciesLoreyHeight * species.getBaseAreaByUtilization().getAll();
@@ -316,8 +316,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
 					UtilizationClass.ALL, v -> max(v, getState().getSpeciesQuadMeanDiameterBackupFactorMinimum(i))
 			);
-			treesPerHectareSum += BaseAreaTreeDensityDiameter
-					.reconcileTreesPerHectare(species, UtilizationClass.ALL);
+			treesPerHectareSum += BaseAreaTreeDensityDiameter.reconcileTreesPerHectare(species, UtilizationClass.ALL);
 		}
 		var err = treesPerHectareSum - primaryLayer.getTreesPerHectareByUtilization().getAll();
 
@@ -745,11 +744,9 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 				HeightLowException.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), 0f)
 		);
 		Utils.throwIfPresent(
-				HeightLowException
-						.check(
-								LayerType.PRIMARY, "computed site height", Optional.of(siteHeight),
-								convergenceDominantHeight
-						)
+				HeightLowException.check(
+						LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), convergenceDominantHeight
+				)
 		);
 
 		// BFH
@@ -883,10 +880,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 			// ROOTV01
 
-			getState().getComputers().getDqBySpecies(
-					primaryLayer, bec.getRegion(),
-					getRootFinderLimits(primaryLayer)
-			);
+			getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(), getRootFinderLimits(primaryLayer));
 
 		}
 
