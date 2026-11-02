@@ -225,6 +225,12 @@
                 </v-row>
               </v-container>
             </div>
+            <!-- Debug Mode is a run-time option, so it stays available outside the panel's edit state -->
+            <DebugModeSelector
+              v-model="modelParameterStore.isDebugModeEnabled"
+              :disabled="isReadOnly"
+              class="debug-mode-selector"
+            />
             <ActionPanel
               v-if="!isReadOnly"
               class="action-panel"
@@ -251,7 +257,7 @@ import { reportInfoValidation } from '@/validation'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { AppSpinField } from '@/components'
-import { ActionPanel, PanelEditControl } from '@/components/projection'
+import { ActionPanel, DebugModeSelector, PanelEditControl } from '@/components/projection'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { saveProjectionOnPanelConfirm as saveModelParamProjection, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
@@ -781,6 +787,10 @@ defineExpose({ isDirty, resetDirty })
 </script>
 <style scoped>
 .action-panel {
+  margin-top: 16px;
+}
+
+.debug-mode-selector {
   margin-top: 16px;
 }
 

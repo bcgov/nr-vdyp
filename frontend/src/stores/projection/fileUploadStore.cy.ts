@@ -2,6 +2,7 @@
 
 import { assert } from 'chai'
 import { setActivePinia, createPinia } from 'pinia'
+import { nextTick } from 'vue'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import { ExecutionOptionsEnum, UtilizationClassSetEnum } from '@/services/vdyp-api'
@@ -155,6 +156,92 @@ describe('File Upload Store Unit Tests', () => {
       store.setLayerFileInfo(null)
       expect(store.polygonFileInfo).to.be.null
       expect(store.layerFileInfo).to.be.null
+    })
+  })
+
+  describe('Debug Mode', () => {
+    const polyInfo = { filename: 'poly.csv', fileMappingGUID: 'abc-guid', fileSetGUID: 'set-1' }
+
+    it('should default to Off and be unavailable without a polygon file', () => {
+      assert.isFalse(store.isDebugModeEnabled)
+      assert.isFalse(store.isDebugModeAvailable)
+      assert.isFalse(store.hasMultiplePolygons)
+    })
+
+    it('should be available only for a single-polygon file', () => {
+      store.setPolygonFileInfo(polyInfo, 1)
+      assert.isTrue(store.isDebugModeAvailable)
+
+      store.setPolygonFileInfo(polyInfo, 2)
+      assert.isFalse(store.isDebugModeAvailable)
+      assert.isTrue(store.hasMultiplePolygons)
+
+      // Count unknown (file restored from an earlier session)
+      store.setPolygonFileInfo(polyInfo)
+      assert.isFalse(store.isDebugModeAvailable)
+      assert.isFalse(store.hasMultiplePolygons)
+    })
+
+    it('should clear the polygon count when the polygon file is removed', () => {
+      store.setPolygonFileInfo(polyInfo, 1)
+      store.setPolygonFileInfo(null, 1)
+      expect(store.polygonCount).to.be.null
+    })
+
+    it('should switch Off and flag the header warning when a multi-polygon file replaces a single-polygon one', () => {
+      store.setPolygonFileInfo(polyInfo, 1)
+      return nextTick()
+        .then(() => {
+          store.isDebugModeEnabled = true
+          store.setPolygonFileInfo(polyInfo, 2)
+          return nextTick()
+        })
+        .then(() => {
+          assert.isFalse(store.isDebugModeEnabled)
+          assert.isTrue(store.isDebugModeAutoDisabled)
+
+          store.setPolygonFileInfo(polyInfo, 1)
+          return nextTick()
+        })
+        .then(() => {
+          assert.isFalse(store.isDebugModeEnabled)
+          assert.isFalse(store.isDebugModeAutoDisabled)
+        })
+    })
+
+    it('should switch Off without the header warning when the polygon file is removed', () => {
+      store.setPolygonFileInfo(polyInfo, 1)
+      return nextTick()
+        .then(() => {
+          store.isDebugModeEnabled = true
+          store.setPolygonFileInfo(null)
+          return nextTick()
+        })
+        .then(() => {
+          assert.isFalse(store.isDebugModeEnabled)
+          assert.isFalse(store.isDebugModeAutoDisabled)
+        })
+    })
+
+    it('should reset Debug Mode in resetStore', () => {
+      store.setPolygonFileInfo(polyInfo, 1)
+      store.isDebugModeEnabled = true
+      store.resetStore()
+      assert.isFalse(store.isDebugModeEnabled)
+      assert.isFalse(store.isDebugModeAutoDisabled)
+      expect(store.polygonCount).to.be.null
+    })
+
+    it('should not restore Debug Mode from saved parameters (the loader decides by status)', () => {
+      const params = makeParsedParams({
+        reportTitle: 'My Report',
+        selectedExecutionOptions: [ExecutionOptionsEnum.DoEnableDebugLogging],
+      })
+      store.restoreFromProjectionParams(params, true)
+      assert.isFalse(store.isDebugModeEnabled)
+
+      store.restoreFromProjectionParams(params, false)
+      assert.isFalse(store.isDebugModeEnabled)
     })
   })
 

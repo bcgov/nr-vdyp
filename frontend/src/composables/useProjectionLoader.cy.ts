@@ -3,6 +3,8 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { useProjectionLoader } from '@/composables/useProjectionLoader'
 import { useAppStore } from '@/stores/projection/appStore'
+import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
+import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { METHOD_SELECTION, PROJECTION_STATUS, PROJECTION_VIEW_MODE } from '@/constants/constants'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 import apiClient from '@/services/apiClient'
@@ -322,6 +324,50 @@ describe('useProjectionLoader Unit Tests', () => {
         .then(() => loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT))
         .then(() => loadError.value)
         .should('be.null')
+    })
+  })
+
+  describe('loadProjection - Debug Mode', () => {
+    const debugParams = (extra: string[] = []) =>
+      makeParamsJson([...extra, ExecutionOptionsEnum.DoEnableDebugLogging])
+
+    it('should show the saved Debug Mode for a read-only status even when EDIT is requested', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({
+          projectionStatusCode: { code: 'READY', description: 'Ready', displayOrder: 1 },
+          projectionParameters: debugParams(),
+        }),
+      })
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
+        expect(useFileUploadStore().isDebugModeEnabled).to.be.true
+      })
+    })
+
+    it('should show the saved Debug Mode for a read-only Manual Input projection', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({
+          projectionStatusCode: { code: 'RUNNING', description: 'Running', displayOrder: 1 },
+          projectionParameters: debugParams([ExecutionOptionsEnum.DoEnableProjectionReport]),
+        }),
+      })
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.VIEW)).then(() => {
+        expect(useModelParameterStore().isDebugModeEnabled).to.be.true
+      })
+    })
+
+    it('should default Debug Mode to Off for an editable projection', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({ projectionParameters: debugParams() }),
+      })
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.VIEW)).then(() => {
+        expect(useFileUploadStore().isDebugModeEnabled).to.be.false
+      })
     })
   })
 })

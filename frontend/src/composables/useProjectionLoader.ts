@@ -4,6 +4,8 @@ import {
   parseProjectionParams,
   mapProjectionStatus,
   getFileSetFiles,
+  isProjectionReadOnly,
+  isDebugModeSaved,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -139,12 +141,19 @@ export function useProjectionLoader() {
         appStore.setDuplicatedFromInfo(null)
       }
 
+      // Debug Mode is a per-run choice: show the saved value only for projections that are
+      // running or have run (read-only by status, regardless of the requested view mode).
+      const debugModeEnabled =
+        isProjectionReadOnly(projectionStatus) && isDebugModeSaved(projectionModel.projectionParameters)
+
       if (isInputModelParams) {
         restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode, collapseAllPanels)
         modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
+        modelParameterStore.isDebugModeEnabled = debugModeEnabled
       } else {
         await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode, collapseAllPanels)
         fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
+        fileUploadStore.isDebugModeEnabled = debugModeEnabled
       }
 
       return true

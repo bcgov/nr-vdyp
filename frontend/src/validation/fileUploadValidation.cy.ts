@@ -10,6 +10,7 @@ import {
   validateLayerHeader,
   validatePolygonDuplicateColumns,
   validateLayerDuplicateColumns,
+  countPolygonRecords,
 } from '@/validation/fileUploadValidation'
 import { CONSTANTS, CSVHEADERS } from '@/constants'
 
@@ -337,6 +338,35 @@ describe('File Upload Validation Unit Tests', () => {
       const result = await validateLayerDuplicateColumns(file)
       expect(result.isValid).to.be.true
       expect(result.duplicates).to.deep.equal([])
+    })
+  })
+
+  context('countPolygonRecords', () => {
+    const header = CSVHEADERS.POLYGON_HEADERS.join(',')
+
+    it('should skip the header row and blank lines', async () => {
+      const file = createFile(`${header}\r\n\r\n1001,MAP1,1\r\n\r\n`, 'polygon.csv', 'text/csv')
+      expect(await countPolygonRecords(file, 2)).to.equal(1)
+    })
+
+    it('should count every non-blank line of a headerless file', async () => {
+      const file = createFile('1001,MAP1,1\n1002,MAP1,2', 'polygon.csv', 'text/csv')
+      expect(await countPolygonRecords(file, 5)).to.equal(2)
+    })
+
+    it('should recognise a quoted header row', async () => {
+      const file = createFile(`"${CSVHEADERS.POLYGON_HEADERS[0]}",MAP_ID\n1001,MAP1`, 'polygon.csv', 'text/csv')
+      expect(await countPolygonRecords(file, 2)).to.equal(1)
+    })
+
+    it('should stop counting at the limit', async () => {
+      const file = createFile(`${header}\n1001\n1002\n1003\n1004`, 'polygon.csv', 'text/csv')
+      expect(await countPolygonRecords(file, 2)).to.equal(2)
+    })
+
+    it('should return 0 for a header-only file', async () => {
+      const file = createFile(`${header}\n`, 'polygon.csv', 'text/csv')
+      expect(await countPolygonRecords(file, 2)).to.equal(0)
     })
   })
 })

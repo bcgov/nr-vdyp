@@ -174,6 +174,56 @@ export class FileUploadValidator extends ValidationBase {
     return firstLine.length === 0
   }
 
+  /**
+   * Counts polygon records in a polygon CSV file using the same rule as the backend:
+   * blank lines are ignored and the first non-blank line is skipped when it is a header row.
+   * Streams the file and stops once `limit` records have been counted, so large files are not
+   * read in full.
+   * @param file The polygon CSV file
+   * @param limit The count at which reading stops
+   * @returns The number of polygon records, capped at `limit`
+   */
+  async countPolygonRecords(file: File, limit: number): Promise<number> {
+    const reader = file.stream().getReader()
+    const decoder = new TextDecoder()
+    let count = 0
+    let isFirstNonBlankLine = true
+    let line = ''
+
+    const processLine = (rawLine: string) => {
+      const trimmed = rawLine.replace(/\r$/, '')
+      if (trimmed.trim() === '') return
+      if (isFirstNonBlankLine) {
+        isFirstNonBlankLine = false
+        const firstField = this.parseCSVHeader(trimmed)[0] ?? ''
+        if (firstField.toUpperCase() === CSVHEADERS.POLYGON_HEADERS[0]) return
+      }
+      count++
+    }
+
+    try {
+      outer: while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        for (const char of chunk) {
+          if (char === '\n') {
+            processLine(line)
+            line = ''
+            if (count >= limit) break outer
+          } else {
+            line += char
+          }
+        }
+      }
+      if (count < limit) processLine(line)
+    } finally {
+      await reader.cancel()
+    }
+
+    return Math.min(count, limit)
+  }
+
   private async getFileHeaders(file: File): Promise<string[]> {
     const headerLine = await this.readFirstLine(file)
     return this.parseCSVHeader(headerLine)

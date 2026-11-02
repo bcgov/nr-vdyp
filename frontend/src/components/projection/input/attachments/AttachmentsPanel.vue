@@ -336,15 +336,24 @@ const uploadPolygonFile = async (file: File) => {
     // Upload new file
     await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, file)
 
+    // Counting stops just past the Debug Mode limit; only "within" or "over" matters
+    const polygonCount = await fileUploadValidation.countPolygonRecords(
+      file,
+      CONSTANTS.DEBUG_MODE_MAX_POLYGONS + 1,
+    )
+
     // Fetch the uploaded file info
     const files = await getFileSetFiles(projectionGUID, polygonFileSetGUID)
     if (files.length > 0) {
       const uploadedFile = files[0]
-      fileUploadStore.setPolygonFileInfo({
-        filename: uploadedFile.filename || file.name,
-        fileMappingGUID: uploadedFile.fileMappingGUID,
-        fileSetGUID: polygonFileSetGUID,
-      })
+      fileUploadStore.setPolygonFileInfo(
+        {
+          filename: uploadedFile.filename || file.name,
+          fileMappingGUID: uploadedFile.fileMappingGUID,
+          fileSetGUID: polygonFileSetGUID,
+        },
+        polygonCount,
+      )
     }
 
     // Clear the file input

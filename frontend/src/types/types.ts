@@ -38,6 +38,7 @@ export type ReportingTab =
   | typeof REPORTING_TAB.MODEL_REPORT
   | typeof REPORTING_TAB.VIEW_ERR_MSG
   | typeof REPORTING_TAB.VIEW_LOG_FILE
+  | typeof REPORTING_TAB.VIEW_DEBUG_LOG
 
 export type Density = 'default' | 'comfortable' | 'compact'
 

@@ -28,6 +28,8 @@ const data = computed(() => {
       return [...projectionStore.errorMessages]
     case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
       return [...projectionStore.logMessages]
+    case CONSTANTS.REPORTING_TAB.VIEW_DEBUG_LOG:
+      return [...projectionStore.debugMessages]
     default:
       return []
   }

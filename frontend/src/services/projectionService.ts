@@ -592,6 +592,17 @@ export const parseProjectionParams = (
 }
 
 /**
+ * Determines whether the saved projection parameters request debug logging (Debug Mode On).
+ * @param parametersJson The JSON string from ProjectionModel.projectionParameters
+ * @returns true if doEnableDebugLogging is among the selected execution options
+ */
+export const isDebugModeSaved = (parametersJson: string | null | undefined): boolean => {
+  return parseProjectionParams(parametersJson).selectedExecutionOptions.includes(
+    ExecutionOptionsEnum.DoEnableDebugLogging,
+  )
+}
+
+/**
  * Determines if the projection is read-only based on its status
  * @param status The projection status
  * @returns true if the projection should be read-only

@@ -435,7 +435,6 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
     ExecutionOptionsEnum.DoEnableProgressLogging,
     ExecutionOptionsEnum.DoEnableErrorLogging,
-    ExecutionOptionsEnum.DoEnableDebugLogging,
     ExecutionOptionsEnum.DoEnableProjectionReport,
     ExecutionOptionsEnum.AllowAggressiveValueEstimation,
     ExecutionOptionsEnum.DoIncludeFileHeader,
@@ -494,6 +493,10 @@ const buildExecutionOptions = (
       flag: modelParameterStore.incSecondaryHeight,
       option:
         ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    },
+    {
+      flag: modelParameterStore.isDebugModeEnabled,
+      option: ExecutionOptionsEnum.DoEnableDebugLogging,
     },
   ]
 
@@ -658,9 +661,11 @@ export const createProjection = async (
 /**
  * Runs the current projection by sending it to batch processing.
  * For Manual Input mode, this function:
- * 1. Creates CSV files (polygon and layer) from user selections
- * 2. Uploads these files to the backend
- * 3. Sends the projection to batch processing
+ * 1. Saves the projection parameters so the run uses the current Debug Mode selection,
+ *    which is not persisted when panels are confirmed
+ * 2. Creates CSV files (polygon and layer) from user selections
+ * 3. Uploads these files to the backend
+ * 4. Sends the projection to batch processing
  *
  * The projection must already be created and its GUID stored in the app store.
  *
@@ -681,15 +686,21 @@ export const runProjection = async (): Promise<ProjectionModel> => {
     modelParameterStore.referenceYear = new Date().getFullYear()
   }
 
-  // Step 1: Create CSV files from user selections
+  // Step 1: Save projection parameters with the current Debug Mode selection.
+  // Returns the refreshed projection, which also carries the fileSet GUIDs.
+  const projectionModel = await updateProjectionParamsWithModel(
+    projectionGUID,
+    buildProjectionParameters(modelParameterStore),
+    buildModelParameters(modelParameterStore),
+    modelParameterStore.reportDescription,
+  )
+
+  // Step 2: Create CSV files from user selections
   const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
 
   // Convert Blobs to Files
   const polygonFile = new File([blobPolygon], 'polygon.csv', { type: 'text/csv' })
   const layerFile = new File([blobLayer], 'layer.csv', { type: 'text/csv' })
-
-  // Step 2: Get projection to retrieve fileSet GUIDs
-  const projectionModel = await getProjectionById(projectionGUID)
 
   // Step 3: Upload polygon file
   if (projectionModel.polygonFileSet?.projectionFileSetGUID) {

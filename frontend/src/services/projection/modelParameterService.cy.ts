@@ -42,6 +42,7 @@ const createMockModelParameterStore = (overrides: Record<string, unknown> = {}) 
     isCulminationValuesEnabled: false,
     isBySpeciesEnabled: false,
     incSecondaryHeight: false,
+    isDebugModeEnabled: false,
     startingAge: null,
     finishingAge: null,
     ageIncrement: null,
@@ -217,13 +218,22 @@ describe('buildProjectionParameters', () => {
       ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
       ExecutionOptionsEnum.DoEnableProgressLogging,
       ExecutionOptionsEnum.DoEnableErrorLogging,
-      ExecutionOptionsEnum.DoEnableDebugLogging,
       ExecutionOptionsEnum.DoEnableProjectionReport,
       ExecutionOptionsEnum.AllowAggressiveValueEstimation,
       ExecutionOptionsEnum.DoIncludeFileHeader,
       ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
       ExecutionOptionsEnum.ForwardGrowEnabled,
     ].forEach((opt) => expect(selectedExecutionOptions).to.include(opt))
+  })
+
+  it('should select debug logging only when Debug Mode is enabled', () => {
+    const off = buildProjectionParameters(createMockModelParameterStore({ isDebugModeEnabled: false }))
+    expect(off.selectedExecutionOptions).to.not.include(ExecutionOptionsEnum.DoEnableDebugLogging)
+    expect(off.excludedExecutionOptions).to.include(ExecutionOptionsEnum.DoEnableDebugLogging)
+
+    const on = buildProjectionParameters(createMockModelParameterStore({ isDebugModeEnabled: true }))
+    expect(on.selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoEnableDebugLogging)
+    expect(on.excludedExecutionOptions).to.not.include(ExecutionOptionsEnum.DoEnableDebugLogging)
   })
 
   it('should add the projection-type-specific execution option', () => {

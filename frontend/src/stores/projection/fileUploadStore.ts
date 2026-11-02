@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { FileUploadPanelName, PanelState } from '@/types/types'
 import type { FileUploadSpeciesGroup, ParsedProjectionParameters, UploadedFileInfo } from '@/interfaces/interfaces'
@@ -157,6 +157,37 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const polygonFileInfo = ref<UploadedFileInfo | null>(null)
   const layerFileInfo = ref<UploadedFileInfo | null>(null)
 
+  // Number of polygon records in the uploaded polygon file, counted only up to
+  // DEBUG_MODE_MAX_POLYGONS + 1. Null when no file is uploaded, or when the file was uploaded
+  // in an earlier session and is only known by its server-side info (it cannot be re-read).
+  const polygonCount = ref<number | null>(null)
+
+  // Debug Mode is not restored from saved parameters for editable projections, so it defaults
+  // to Off whenever one is (re)opened. Read-only projections show the saved value (set by the loader).
+  const isDebugModeEnabled = ref<boolean>(false)
+  // Set when Debug Mode was switched Off automatically because a multi-polygon file replaced
+  // a single-polygon one; drives the warning shown in the collapsed Report Settings header.
+  const isDebugModeAutoDisabled = ref<boolean>(false)
+  const reportSettingsPanelOpenState = ref<PanelState>(CONSTANTS.PANEL.OPEN)
+
+  const isDebugModeAvailable = computed(
+    () => polygonCount.value !== null && polygonCount.value >= 1 && polygonCount.value <= CONSTANTS.DEBUG_MODE_MAX_POLYGONS,
+  )
+  const hasMultiplePolygons = computed(
+    () => polygonCount.value !== null && polygonCount.value > CONSTANTS.DEBUG_MODE_MAX_POLYGONS,
+  )
+
+  watch(isDebugModeAvailable, (available) => {
+    if (available) {
+      isDebugModeAutoDisabled.value = false
+      return
+    }
+    if (isDebugModeEnabled.value) {
+      isDebugModeEnabled.value = false
+      isDebugModeAutoDisabled.value = hasMultiplePolygons.value
+    }
+  })
+
   // file upload state
   const isUploadingPolygon = ref<boolean>(false)
   const isUploadingLayer = ref<boolean>(false)
@@ -167,9 +198,14 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     updateRunModelEnabled()
   })
 
-  // Set uploaded file info
-  const setPolygonFileInfo = (info: UploadedFileInfo | null) => {
+  /**
+   * Set uploaded polygon file info together with its polygon count.
+   * @param info The uploaded file info, or null when the file is removed
+   * @param count The polygon count of the file, or null when it is unknown
+   */
+  const setPolygonFileInfo = (info: UploadedFileInfo | null, count: number | null = null) => {
     polygonFileInfo.value = info
+    polygonCount.value = info ? count : null
   }
 
   const setLayerFileInfo = (info: UploadedFileInfo | null) => {
@@ -226,9 +262,15 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     // Reset uploaded file info
     polygonFileInfo.value = null
     layerFileInfo.value = null
+    polygonCount.value = null
     isUploadingPolygon.value = false
     isUploadingLayer.value = false
     isDeletingFile.value = false
+
+    // Reset debug mode
+    isDebugModeEnabled.value = false
+    isDebugModeAutoDisabled.value = false
+    reportSettingsPanelOpenState.value = CONSTANTS.PANEL.OPEN
   }
 
   const restoreAgeYearRange = (params: ParsedProjectionParameters) => {
@@ -341,6 +383,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
         minimumDBH: panelOpenState,
         attachments: panelOpenState,
       }
+      reportSettingsPanelOpenState.value = panelOpenState
       panelState.value = {
         reportConfig: { confirmed: true, editable: false },
         minimumDBH: { confirmed: true, editable: false },
@@ -400,6 +443,13 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isDeletingFile,
     setPolygonFileInfo,
     setLayerFileInfo,
+    // debug mode
+    polygonCount,
+    isDebugModeEnabled,
+    isDebugModeAutoDisabled,
+    isDebugModeAvailable,
+    hasMultiplePolygons,
+    reportSettingsPanelOpenState,
     // restore functions
     resetStore,
     restoreFromProjectionParams,

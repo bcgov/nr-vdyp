@@ -107,7 +107,11 @@ export const FILE_UPLOAD_PANEL_LABEL = Object.freeze({
   MINIMUM_DBH_PANEL_DESKTOP: 'Minimum DBH Limit by Species Group',
   MINIMUM_DBH_PANEL_MOBILE: 'Min DBH by Species Group (cm+)',
   ATTACHMENTS: 'File Upload',
+  REPORT_SETTINGS: 'Report Settings',
 })
+
+// Debug Mode can only be enabled for projections with at most this many polygons
+export const DEBUG_MODE_MAX_POLYGONS = 1
 
 export const NUM_INPUT_LIMITS = Object.freeze({
   SPECIES_PERCENT_MAX: 100,
@@ -208,6 +212,7 @@ export const MANUAL_INPUT_TAB_NAME = Object.freeze({
   MODEL_REPORT: 'Yield Table',
   VIEW_LOG_FILE: 'Progress Log',
   VIEW_ERROR_MESSAGES: 'Error Log',
+  VIEW_DEBUG_LOG: 'Debug Log',
 })
 
 export const MANUAL_INPUT_TAB_INDEX = {
@@ -215,6 +220,7 @@ export const MANUAL_INPUT_TAB_INDEX = {
   MODEL_REPORT: 1,
   VIEW_LOG_FILE: 2,
   VIEW_ERROR_MESSAGES: 3,
+  VIEW_DEBUG_LOG: 4,
 }
 
 export const FILE_NAME = Object.freeze({
@@ -238,6 +244,7 @@ export const REPORTING_TAB = Object.freeze({
   MODEL_REPORT: 'ModelReport',
   VIEW_ERR_MSG: 'ViewErrorMessages',
   VIEW_LOG_FILE: 'ViewLogFile',
+  VIEW_DEBUG_LOG: 'ViewDebugLog',
 })
 
 export const PROJECTION_STATUS = Object.freeze({
