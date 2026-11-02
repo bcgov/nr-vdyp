@@ -2,9 +2,7 @@ package ca.bc.gov.nrs.vdyp.processing_state;
 
 import java.util.Optional;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
-import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;;
 
 public class TestProcessingEngine extends ProcessingEngine<TestProcessingState, TestLayerProcessingState> {
 
@@ -26,12 +24,6 @@ public class TestProcessingEngine extends ProcessingEngine<TestProcessingState, 
 			throw new IllegalArgumentException("Cannot compare " + o.getClass() + " and " + this.getClass());
 
 		}
-
-	}
-
-	@Override
-	public void processPolygon(VdypPolygon polygon) throws ProcessingException {
-		// TODO Auto-generated method stub
 
 	}
 

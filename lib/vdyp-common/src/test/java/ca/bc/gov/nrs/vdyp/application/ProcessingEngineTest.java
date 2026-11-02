@@ -53,6 +53,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.AgeTriplet;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.SpeciesToApplyTo;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
@@ -76,6 +77,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
@@ -2775,6 +2777,131 @@ class ProcessingEngineTest {
 					)
 			);
 
+		}
+	}
+
+	@Nested
+	class ProcessPolygon {
+		ProcessingResolvedControlMap controlMap;
+		Map<String, Object> rawControlMap;
+		EstimationMethods emp;
+		ComputationMethods cmp;
+
+		IMocksControl em;
+		TestProcessingState ps;
+		TestLayerProcessingState lps;
+
+		@BeforeEach
+		void setup() throws IOException, ResourceParseException {
+			var parser = new ProcessingControlParser();
+			rawControlMap = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
+			controlMap = new ProcessingResolvedControlMapImpl(rawControlMap);
+			emp = new EstimationMethods(controlMap);
+			cmp = new ComputationMethods(emp, VdypApplicationIdentifier.VDYP_FORWARD);
+
+			em = EasyMock.createControl();
+
+			ps = em.mock(TestProcessingState.class);
+			lps = em.mock(TestLayerProcessingState.class);
+
+			EasyMock.expect(ps.getControlMap()).andStubReturn(controlMap);
+			EasyMock.expect(ps.getPrimaryLayerProcessingState()).andStubReturn(lps);
+		}
+
+		@Test
+		void testTargetYear() throws ProcessingException, ValueParseException {
+			controlMap.getControlVariables().setControlVariable(ControlVariable.GROW_TARGET_1, 16);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.COMPAT_VAR_OUTPUT_2, 0);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3, 2);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.OUTPUT_FILES_4, 3);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.ALLOW_COMPAT_VAR_CALCS_5, 1);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("092P037  72999905UNK", 2011);
+
+				pb.percentAvailable(61f);
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.controlMap(rawControlMap);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(93);
+						});
+						sb.volumeGroup(17);
+						sb.decayGroup(11);
+						sb.breakageGroup(4);
+					});
+					lb.primaryGenus("B");
+					lb.empiricalRelationshipParameterIndex(118);
+
+				});
+			});
+
+			EasyMock.expect(ps.getCurrentPolygon()).andStubReturn(polygon);
+
+			TestProcessingEngine unit = EasyMock.partialMockBuilder(TestProcessingEngine.class).withConstructor(ps)
+					.addMockedMethod("executeAlgorithm").createMock(em);
+
+			ps.setPolygon(polygon);
+			EasyMock.expectLastCall().once();
+
+			unit.executeAlgorithm(BaseExecutionStep.ALL, 2027);
+			EasyMock.expectLastCall();
+
+			em.replay();
+
+			unit.processPolygon(polygon);
+
+			em.verify();
+		}
+
+		@Test
+		void testToOld() throws ProcessingException {
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("092P037  72999905UNK", 1899);
+
+				pb.percentAvailable(61f);
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.controlMap(rawControlMap);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(93);
+						});
+						sb.volumeGroup(17);
+						sb.decayGroup(11);
+						sb.breakageGroup(4);
+					});
+					lb.primaryGenus("B");
+					lb.empiricalRelationshipParameterIndex(118);
+
+				});
+			});
+
+			EasyMock.expect(ps.getCurrentPolygon()).andStubReturn(polygon);
+
+			var unit = getTestEngine(ps);
+
+			ps.setPolygon(polygon);
+			EasyMock.expectLastCall().times(0, 1);
+
+			em.replay();
+
+			var ex = assertThrows(ProcessingException.class, () -> unit.processPolygon(polygon));
+
+			assertThat(ex, hasMessage(containsString("1899")));
+
+			em.verify();
 		}
 	}
 
