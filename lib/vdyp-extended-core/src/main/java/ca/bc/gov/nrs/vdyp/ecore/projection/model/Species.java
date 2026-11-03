@@ -928,7 +928,7 @@ public class Species implements Comparable<Species> {
 							).build();
 				}
 
-				polygon.addMessage(message);
+				polygon.addCheckedMessage(message);
 			}
 		}
 
