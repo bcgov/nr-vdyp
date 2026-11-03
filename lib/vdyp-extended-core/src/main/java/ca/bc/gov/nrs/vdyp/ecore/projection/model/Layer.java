@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection.model;
 
+import static ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants.MIN_SITEINDEX_AGE;
+
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -790,7 +792,7 @@ public class Layer implements Comparable<Layer> {
 						);
 					}
 
-					if (estimatedSiteIndex != null && estimatedAge != null) {
+					if (estimatedSiteIndex != null && (estimatedAge != null && estimatedAge >= MIN_SITEINDEX_AGE)) {
 						polygon.addMessage(
 								builder -> builder.layer(this).details(
 										ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
