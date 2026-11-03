@@ -65,7 +65,7 @@ public enum PolygonMessageKind {
 	), //
 	NO_PROJECTED_DATA("projected data for {0} was not generated at stand age {1} (Calendar year {2,number,#})", 0), //
 	NO_PROJECTED_DATA_NO_YEAR("projected data for {0} was not generated at stand age {1}", 0), //
-	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\""), //
+	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\"", 2), //
 	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("Polygon {0}: Rank ''1'' Layer was already encountered (Layer: ''{1}'')"),
 	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. {0} return code: {1}"), //
 	REASSIGNED_HEIGHT("based on estimated site index of {0}, recomputed input height at age {1} to be {2}"), //

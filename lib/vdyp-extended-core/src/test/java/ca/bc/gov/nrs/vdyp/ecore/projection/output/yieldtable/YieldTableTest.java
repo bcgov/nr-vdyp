@@ -175,27 +175,10 @@ class YieldTableTest {
 		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_LAYERNOTPROCESSED));
 	}
 
-	static Stream<Arguments> missingProjectionMessageKinds() {
-		return Stream.of(
-				Arguments.of(
-						false, PolygonMessageKind.NO_PROJECTED_DATA
-				),
-				Arguments.of(
-						true, PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR
-				)
-		);
-	}
-
-	@ParameterizedTest
-	@MethodSource("missingProjectionMessageKinds")
-	void testMissingProjectedDataAddsCheckedPolygonMessage(boolean ageRows, PolygonMessageKind kind)
+	@Test
+	void testShortSpeciesDataAddsCheckedPolygonMessage()
 			throws AbstractProjectionRequestException, IOException {
-		var parameters = polygonMessageTestParameters();
-		if (ageRows) {
-			parameters.ageStart(180).ageEnd(181).ageIncrement(1);
-		} else {
-			parameters.yearStart(2013).yearEnd(2014).ageIncrement(1);
-		}
+		var parameters = polygonMessageTestParameters().yearStart(2013).yearEnd(2014).ageIncrement(1);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
 		var polygon = polygonForMessageTests(context, "10", "300");
 		var layerInfo = polygon.getReportingInfo().getLayerReportingInfos().values().iterator().next();
@@ -209,17 +192,9 @@ class YieldTableTest {
 			yieldTable.endGeneration();
 		}
 		assertThat(new String(yieldTable.getAsStream().readAllBytes()), containsString("2014"));
-		var messages = polygon.getMessages().stream().filter(m -> m.getKind() == kind).toList();
-		// The layer and secondary species are retained; subsequent rows are duplicates.
-		assertThat(messages.size(), is(2));
-		var message = messages.get(0);
-		assertThat(message.getPolygon(), is(polygon));
-		assertThat(message.getLayer(), is(layerInfo.getLayer()));
-		assertThat(message.getSeverity(), is(MessageSeverityCode.INFORMATION));
-		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_SPECIESNOTFOUND));
 		var shortSpeciesMessages = polygon.getMessages().stream()
 				.filter(m -> m.getKind() == PolygonMessageKind.SPECIES_TOO_SHORT).toList();
-		assertThat(shortSpeciesMessages.size(), is(1));
+		assertThat(shortSpeciesMessages.size(), is(2));
 		var shortSpeciesMessage = shortSpeciesMessages.get(0);
 		assertThat(shortSpeciesMessage.getLayer(), is(layerInfo.getLayer()));
 		assertThat(shortSpeciesMessage.getSeverity(), is(MessageSeverityCode.INFORMATION));
@@ -230,14 +205,6 @@ class YieldTableTest {
 		);
 		assertTrue(layerInfo.getLayer().isAgeRequestedWithoutYields());
 		assertThat(layerInfo.getLayer().getFirstAgeWithYields(), is(0));
-		assertThat(
-				polygon.getMessages().stream()
-						.filter(
-								m -> m.getKind() == PolygonMessageKind.NO_PROJECTED_DATA
-										|| m.getKind() == PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR
-						).count(),
-				is(2L)
-		);
 	}
 
 	private Parameters polygonMessageTestParameters() {

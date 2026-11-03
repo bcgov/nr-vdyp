@@ -66,8 +66,9 @@ public class PolygonTest {
 	}
 
 	@Test
-	void testCheckedMessagesDefaultToKindOnly() {
+	void testCheckedMessagesAreAppropriatelyAdded() {
 		var polygon = new Polygon.Builder().featureId(1).build();
+		// Species too short can by added once for each species
 		for (var kind : List.of(PolygonMessageKind.SPECIES_TOO_SHORT, PolygonMessageKind.LOW_SITE)) {
 			polygon.addCheckedMessage(
 					builder -> builder.details(
@@ -79,7 +80,7 @@ public class PolygonTest {
 					.build();
 			polygon.addCheckedMessage(duplicate);
 		}
-		assertThat(polygon.getMessages().size(), is(2));
+		assertThat(polygon.getMessages().size(), is(3));
 	}
 
 	@Test

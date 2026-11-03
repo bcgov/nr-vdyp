@@ -1541,6 +1541,7 @@ public class YieldTable implements Closeable {
 		}
 
 		if (layerYields == null) {
+			boolean wasTooShort = false;
 			if (sp0.getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION && sp0.getSiteIndex() != null
 					&& sp0.getYearsToBreastHeight() != null) {
 				try {
@@ -1549,6 +1550,7 @@ public class YieldTable implements Closeable {
 							sp0.getYearsToBreastHeight()
 					);
 					if (ht >= 0) {
+						wasTooShort = true;
 						polygon.addCheckedMessage(
 								builder -> builder.layer(layer).details(
 										ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.INFORMATION,
@@ -1561,18 +1563,20 @@ public class YieldTable implements Closeable {
 				}
 			}
 
-			PolygonMessageKind kind = PolygonMessageKind.NO_PROJECTED_DATA;
-			final String specText = stand == null ? "species " + sp0.getSpeciesCode() : "the layer";
-			if (rowContext.getCurrentYearIsAgeRow()) {
-				kind = PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR;
+			if (!wasTooShort) {
+				PolygonMessageKind kind = PolygonMessageKind.NO_PROJECTED_DATA;
+				final String specText = stand != null ? "species " + sp0.getSpeciesCode() : "the layer";
+				if (rowContext.getCurrentYearIsAgeRow()) {
+					kind = PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR;
+				}
+				final var reportKind = kind;
+				polygon.addCheckedMessage(
+						builder -> builder.layer(layer).details(
+								ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.INFORMATION, reportKind, specText,
+								ageToRequest, calendarYear
+						)
+				);
 			}
-			final var reportKind = kind;
-			polygon.addCheckedMessage(
-					builder -> builder.layer(layer).details(
-							ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.INFORMATION, reportKind,
-							specText, ageToRequest, calendarYear
-					)
-			);
 			if (layer.getFirstAgeWithYields() == 0) {
 				layer.setAgeRequestedWithoutYields(true);
 			}
