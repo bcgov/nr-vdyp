@@ -1,5 +1,7 @@
-package ca.bc.gov.nrs.vdyp.application;
+package ca.bc.gov.nrs.vdyp.processing_state;
 
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.LAYER_CSV_HEADER_LINE;
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.POLYGON_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasMessage;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
@@ -160,12 +163,13 @@ class LayerProcessingStateTest {
 		Map<UtilizationClass, Float>[] cvBa;
 		Map<UtilizationClass, Float>[] cvDq;
 		Map<UtilizationClassVariable, Float>[] cvSm;
+		VdypPolygon polygon;
 
 		@BeforeEach
 		@SuppressWarnings("unchecked")
 		void setup() throws ProcessingException {
 
-			var polygon = VdypPolygon.build(pb -> {
+			polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Test", 2024);
 				pb.biogeoclimaticZone(becZone);
 				pb.forestInventoryZone("A");
@@ -231,10 +235,30 @@ class LayerProcessingStateTest {
 		@Test
 		void testSucceedAfterSet() throws ProcessingException {
 			unit.setCompatibilityVariableDetails(cvVolume, cvBa, cvDq, cvSm);
-			assertThat(unit, testCV("getCVVolume", 1, UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL, is(16f)));
-			assertThat(unit, testCV("getCVBasalArea", 1, UtilizationClass.ALL, is(16f)));
-			assertThat(unit, testCV("getCVQuadraticMeanDiameter", 1, UtilizationClass.U125TO175, is(26f)));
-			assertThat(unit, testCV("getCVSmall", 1, UtilizationClassVariable.QUAD_MEAN_DIAMETER, is(7f)));
+			assertThat(unit, stateCV("getCVVolume", 1, UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL, is(16f)));
+			assertThat(unit, stateCV("getCVBasalArea", 1, UtilizationClass.ALL, is(16f)));
+			assertThat(unit, stateCV("getCVQuadraticMeanDiameter", 1, UtilizationClass.U125TO175, is(26f)));
+			assertThat(unit, stateCV("getCVSmall", 1, UtilizationClassVariable.QUAD_MEAN_DIAMETER, is(7f)));
+
+			final VdypSpecies species = polygon.getLayers().get(LayerType.PRIMARY).getSpeciesBySp0("AT");
+			assertThrows(InitializationIncompleteException.class, () -> species.getCvBasalArea(UtilizationClass.ALL));
+		}
+
+		@Test
+		void testUpdateModel() throws ProcessingException {
+			unit.setCompatibilityVariableDetails(cvVolume, cvBa, cvDq, cvSm);
+			unit.updateModelCompatibiltyVariables();
+			assertThat(unit, stateCV("getCVVolume", 1, UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL, is(16f)));
+			assertThat(unit, stateCV("getCVBasalArea", 1, UtilizationClass.ALL, is(16f)));
+			assertThat(unit, stateCV("getCVQuadraticMeanDiameter", 1, UtilizationClass.U125TO175, is(26f)));
+			assertThat(unit, stateCV("getCVSmall", 1, UtilizationClassVariable.QUAD_MEAN_DIAMETER, is(7f)));
+
+			final VdypSpecies species = polygon.getLayers().get(LayerType.PRIMARY).getSpeciesBySp0("AT");
+			assertThat(species, specCV("getCvVolume", UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL, is(16f)));
+			assertThat(species, specCV("getCvBasalArea", UtilizationClass.ALL, is(16f)));
+			assertThat(species, specCV("getCvQuadraticMeanDiameter", UtilizationClass.U125TO175, is(26f)));
+			assertThat(species, specCV("getCvPrimaryLayerSmall", UtilizationClassVariable.QUAD_MEAN_DIAMETER, is(7f)));
+
 		}
 
 		@Test
@@ -247,18 +271,33 @@ class LayerProcessingStateTest {
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Matcher<LayerProcessingState<?>>
-				testCV(String name, Object p1, Object p2, Object p3, Object p4, Matcher<Float> match) {
+				stateCV(String name, int p1, Object p2, Object p3, Object p4, Matcher<Float> match) {
 			return (Matcher) compatibilityVariable(name, match, LayerProcessingState.class, p1, p2, p3, p4);
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Matcher<LayerProcessingState<?>> testCV(String name, Object p1, Object p2, Object p3, Matcher<Float> match) {
+		Matcher<LayerProcessingState<?>> stateCV(String name, int p1, Object p2, Object p3, Matcher<Float> match) {
 			return (Matcher) compatibilityVariable(name, match, LayerProcessingState.class, p1, p2, p3);
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Matcher<LayerProcessingState<?>> testCV(String name, Object p1, Object p2, Matcher<Float> match) {
+		Matcher<LayerProcessingState<?>> stateCV(String name, int p1, Object p2, Matcher<Float> match) {
 			return (Matcher) compatibilityVariable(name, match, LayerProcessingState.class, p1, p2);
+		}
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Matcher<VdypSpecies> specCV(String name, Object p1, Matcher<Float> match) {
+			return (Matcher) compatibilityVariable(name, match, VdypSpecies.class, p1);
+		}
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Matcher<VdypSpecies> specCV(String name, Object p1, Object p2, Object p3, Matcher<Float> match) {
+			return (Matcher) compatibilityVariable(name, match, VdypSpecies.class, p1, p2, p3);
+		}
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Matcher<VdypSpecies> specCV(String name, Object p1, Object p2, Matcher<Float> match) {
+			return (Matcher) compatibilityVariable(name, match, VdypSpecies.class, p1, p2);
 		}
 
 	}

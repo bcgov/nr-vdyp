@@ -1420,15 +1420,6 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 	}
 
 	/**
-	 * Execution Step to do everything.
-	 *
-	 * @return
-	 */
-	protected ExecutionStep stepAll() {
-		return BaseExecutionStep.ALL;
-	}
-
-	/**
 	 * Run all steps of the engine on the given polygon.
 	 *
 	 * @param polygon the polygon on which to operate
