@@ -69,9 +69,9 @@
                   @update:modelValue="handleCrownClosureUpdate"
                 />
                 <v-label
-                  v-show="isZeroValue(crownClosure) && !isCrownClosureDisabled && !crownClosureError"
+                  v-show="isBlank(crownClosure) && !isCrownClosureDisabled && !crownClosureError"
                   style="font-size: var(--typography-font-size-label)"
-                  >{{ MESSAGE.MDL_PRM_INPUT_HINT.DENSITY_PCC_APPLY_DFT }}</v-label
+                  >{{ MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED }}</v-label
                 >
               </v-col>
               <v-col class="stand-field-col">
@@ -153,7 +153,7 @@ import {
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
 import { standInfoValidation } from '@/validation'
-import { isEmptyOrZero, isZeroValue } from '@/utils/util'
+import { isBlank, isEmptyOrZero } from '@/utils/util'
 import { saveProjectionOnPanelConfirm, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import type { PanelName } from '@/types/types'
@@ -260,8 +260,9 @@ const updateCrownClosureState = (isVolume: boolean, isComputed: boolean, force: 
     crownClosure.value = null
   } else {
     crownClosurePlaceholder.value = ''
-    if (force || crownClosure.value === null) {
-      crownClosure.value = '0'
+    // Leave empty so the API computes a species-specific default crown closure
+    if (force) {
+      crownClosure.value = null
     }
   }
 }
@@ -450,6 +451,10 @@ const onConfirm = async () => {
 
   if (isEmptyOrZero(percentStockableArea.value)) {
     percentStockableArea.value = '0'
+  }
+
+  if (isBlank(crownClosure.value)) {
+    crownClosure.value = null
   }
 
   formattingValues()

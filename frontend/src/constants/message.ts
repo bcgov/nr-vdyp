@@ -80,7 +80,6 @@ export const MSG_DIALOG_TITLE = Object.freeze({
 export const MDL_PRM_INPUT_HINT = Object.freeze({
   SITE_ZERO_NOT_KNOW: 'A value of zero indicates not known.',
   SITE_DFT_COMPUTED: 'A default will be computed when the model is run.',
-  DENSITY_PCC_APPLY_DFT: 'Applying Default of 50%',
   DENSITY_WO_AGE: 'Density Measurements cannot be supplied without an Age.',
 })
 

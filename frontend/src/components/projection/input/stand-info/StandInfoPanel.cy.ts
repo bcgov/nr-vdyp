@@ -127,6 +127,43 @@ describe('<StandInfoPanel />', () => {
       .should('exist')
   })
 
+  describe('Crown Closure for Volume projection', () => {
+    const setupVolume = (ms: ReturnType<typeof useModelParameterStore>) => {
+      openPanel(ms)
+      makeEditable(ms)
+      ms.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+      ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      ms.crownClosure = null
+    }
+
+    it('keeps Crown Closure empty instead of defaulting to 0', () => {
+      const { modelStore } = mountPanel(setupVolume)
+      cy.get('[data-testid="crown-closure"]').find('input').should('have.value', '')
+      cy.then(() => {
+        expect(modelStore.crownClosure).to.equal(null)
+      })
+    })
+
+    it('shows default-computed hint when Crown Closure is empty', () => {
+      mountPanel(setupVolume)
+      cy.get('[data-testid="crown-closure"]')
+        .parent()
+        .contains(MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED)
+        .should('be.visible')
+    })
+
+    it('hides default-computed hint when Crown Closure is supplied', () => {
+      mountPanel((ms) => {
+        setupVolume(ms)
+        ms.crownClosure = '60'
+      })
+      cy.get('[data-testid="crown-closure"]')
+        .parent()
+        .contains(MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED)
+        .should('not.be.visible')
+    })
+  })
+
   it('renders the fixed min-dbh-limit without a selected species', () => {
     mountPanel((ms) => openPanel(ms))
     cy.get('[data-testid="min-dbh-limit"]').should('be.visible')
