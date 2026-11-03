@@ -1452,7 +1452,7 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 
 		// SCINXSET
 		if (lastStepInclusive.ge(BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES)) {
-			calculateMissingSiteCurves(plps, getState().controlMap.getSiteCurveMap());
+			calculateMissingSiteCurves(plps, getState().getControlMap().getSiteCurveMap());
 
 			getState().getVeteranLayerProcessingState().ifPresent(vlps -> {
 				assert veteranLayer.isPresent();
@@ -1471,7 +1471,7 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 
 		// SITEADD
 		if (lastStepInclusive.ge(BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES)) {
-			if (plps.getParent().controlMap.getDebugSettings().getValue(11) == 0) {
+			if (plps.getParent().getControlMap().getDebugSettings().getValue(11) == 0) {
 				estimateMissingSiteIndices(plps);
 			} else {
 				estimateMissingSiteIndicesAndAgesExtended(plps, plps.getParent().controlMap.getDebugSettings());

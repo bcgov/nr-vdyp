@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +76,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
@@ -2907,205 +2909,429 @@ class ProcessingEngineTest {
 		}
 	}
 
-	@Test
-	/** CALCULATE_COVERAGES */
-	void testFindPrimarySpecies() throws ProcessingException, ValueParseException {
-
-		// This tests ExecutionStep.CALCULATE_COVERAGES, but that code is stand-alone and can be
-		// tested independently.
-		var rawControlMap = ProcessingTestUtils.loadControlMap();
-		var state = new TestProcessingState(rawControlMap, null);
-		var controlMap = state.getControlMap();
-		controlMap.getControlVariables().setControlVariable(ControlVariable.GROW_TARGET_1, 16);
-
-		var polygon = VdypPolygon.build(pb -> {
-			pb.controlMap(rawControlMap);
-			pb.polygonIdentifier("01002 S000001 00", 1970);
-			pb.biogeoclimaticZone("CWH");
-			pb.forestInventoryZone("A");
-			pb.mode(PolygonMode.START);
-			pb.inventoryTypeGroup(37);
-			pb.percentAvailable(99f);
-
-			pb.addLayer(lb -> {
-				lb.layerType(LayerType.PRIMARY);
-				lb.inventoryTypeGroup(37);
-				lb.baseAreaByUtilization(45.38645f);
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("B");
-					sb.percentGenus(0.89672107f);
-					sb.fractionGenus(0.0089672107f);
-					sb.addSp64Distribution("B", 100f);
-					sb.volumeGroup(12);
-					sb.decayGroup(7);
-					sb.breakageGroup(5);
-					sb.baseArea(0.40698987f);
-				});
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("C");
-					sb.percentGenus(11.2300895f);
-					sb.fractionGenus(0.112300895f);
-					sb.addSp64Distribution("C", 100f);
-					sb.volumeGroup(20);
-					sb.decayGroup(14);
-					sb.breakageGroup(6);
-					sb.baseArea(5.096939f);
-				});
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("D");
-					sb.percentGenus(65.21433f);
-					sb.percentGenus(0.6521433f);
-					sb.addSp64Distribution("D", 100f);
-					sb.volumeGroup(25);
-					sb.decayGroup(19);
-					sb.breakageGroup(12);
-					sb.addSite(ib -> {
-						ib.siteCurveNumber(13);
-						ib.siteIndex(35f);
-						ib.ageTotal(55f);
-						ib.yearsToBreastHeight(1f);
-						ib.yearsAtBreastHeight(54f);
-						ib.height(35.3f);
-					});
-					sb.baseArea(29.598473f);
-				});
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("H");
-					sb.percentGenus(12.9306135f);
-					sb.fractionGenus(0.129306135f);
-					sb.addSp64Distribution("H", 100f);
-					sb.volumeGroup(37);
-					sb.decayGroup(31);
-					sb.breakageGroup(17);
-					sb.baseArea(5.868747f);
-				});
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("S");
-					sb.percentGenus(9.728239f);
-					sb.fractionGenus(0.09728239f);
-					sb.addSp64Distribution("S", 100f);
-					sb.volumeGroup(66);
-					sb.decayGroup(54);
-					sb.breakageGroup(28);
-					sb.baseArea(4.4153028f);
-				});
-			});
-		});
-		{
-
-			var unit = new TestProcessingEngine(state);
-			unit.getState().setPolygon(polygon);
-
-			var lps = unit.getState().getPrimaryLayerProcessingState();
-
-			ProcessingEngine.calculateCoverages(lps);
-			unit.determinePolygonRankings();
-
-			assertThat(lps.getPrimarySpeciesIndex(), is(3));
-			assertThat(lps.getSecondarySpeciesIndex(), present(is(4)));
-			assertThat(lps.getInventoryTypeGroup(), is(37));
-			assertThat(lps.getPrimarySpeciesGroupNumber(), is(1));
-			assertThat(lps.getPrimarySpeciesStratumNumber(), is(1));
-		}
-	}
-
 	@SuppressWarnings({ "rawtypes" })
 	protected ProcessingEngine getTestEngine(TestProcessingState ps) {
 		return new TestProcessingEngine(ps);
 	}
 
-	@Test
-	/** ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES */
-	void testEstimateMissingYearsToBreastHeightValues()
-			throws ProcessingException, IOException, ResourceParseException {
+	@Nested
+	class PreliminaryProcessingSteps {
 
-		var rawControlMap = ProcessingTestUtils.loadControlMap();
-		var state = new TestProcessingState(rawControlMap, null);
+		// These tests were adapted from PreliminaryForwardProcessingEngineStepsTest when generalizing processPolygon in
+		// common
 
-		var polygon = VdypPolygon.build(pb -> {
-			pb.controlMap(rawControlMap);
-			pb.polygonIdentifier("01002 S000001 00", 1970);
-			pb.biogeoclimaticZone("CWH");
-			pb.forestInventoryZone("A");
-			pb.mode(PolygonMode.START);
-			pb.inventoryTypeGroup(37);
-			pb.percentAvailable(99f);
+		Map<String, Object> rawControlMap;
+		TestProcessingState state;
+		ProcessingResolvedControlMap controlMap;
 
-			pb.targetYear(1990);
+		@BeforeEach
+		void setup() {
+			rawControlMap = ProcessingTestUtils.loadControlMap();
+			state = new TestProcessingState(rawControlMap, null);
+			controlMap = state.getControlMap();
+		}
 
-			pb.addLayer(lb -> {
-				lb.layerType(LayerType.PRIMARY);
-				lb.inventoryTypeGroup(37);
-				lb.baseAreaByUtilization(45.38645f);
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("B");
-					sb.percentGenus(0.89672107f);
-					sb.fractionGenus(0.0089672107f);
-					sb.addSp64Distribution("B", 100f);
-					sb.volumeGroup(12);
-					sb.decayGroup(7);
-					sb.breakageGroup(5);
-					sb.baseArea(0.40698987f);
-				});
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("C");
-					sb.percentGenus(11.2300895f);
-					sb.fractionGenus(0.112300895f);
-					sb.addSp64Distribution("C", 100f);
-					sb.volumeGroup(20);
-					sb.decayGroup(14);
-					sb.breakageGroup(6);
-					sb.baseArea(5.096939f);
-				});
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("D");
-					sb.percentGenus(65.21433f);
-					sb.percentGenus(0.6521433f);
-					sb.addSp64Distribution("D", 100f);
-					sb.volumeGroup(25);
-					sb.decayGroup(19);
-					sb.breakageGroup(12);
-					sb.addSite(ib -> {
-						ib.siteCurveNumber(13);
-						ib.siteIndex(35f);
-						ib.ageTotal(55f);
-						ib.yearsToBreastHeight(1f);
-						ib.yearsAtBreastHeight(54f);
-						ib.height(35.3f);
+		@Test
+		/** CALCULATE_COVERAGES */
+		void testFindPrimarySpecies() throws ProcessingException, ValueParseException {
+
+			// This tests ExecutionStep.CALCULATE_COVERAGES, but that code is stand-alone and can be
+			// tested independently.
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("01002 S000001 00", 1970);
+				pb.biogeoclimaticZone("CWH");
+				pb.forestInventoryZone("A");
+				pb.mode(PolygonMode.START);
+				pb.inventoryTypeGroup(37);
+				pb.percentAvailable(99f);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.inventoryTypeGroup(37);
+					lb.baseAreaByUtilization(45.38645f);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.fractionGenus(0.0089672107f);
+						sb.addSp64Distribution("B", 100f);
+						sb.volumeGroup(12);
+						sb.decayGroup(7);
+						sb.breakageGroup(5);
+						sb.baseArea(0.40698987f);
 					});
-					sb.baseArea(29.598473f);
-				});
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("H");
-					sb.percentGenus(12.9306135f);
-					sb.fractionGenus(0.129306135f);
-					sb.addSp64Distribution("H", 100f);
-					sb.volumeGroup(37);
-					sb.decayGroup(31);
-					sb.breakageGroup(17);
-					sb.baseArea(5.868747f);
-				});
-				lb.addSpecies(sb -> {
-					sb.speciesGroup("S");
-					sb.percentGenus(9.728239f);
-					sb.fractionGenus(0.09728239f);
-					sb.addSp64Distribution("S", 100f);
-					sb.volumeGroup(66);
-					sb.decayGroup(54);
-					sb.breakageGroup(28);
-					sb.baseArea(4.4153028f);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.2300895f);
+						sb.fractionGenus(0.112300895f);
+						sb.addSp64Distribution("C", 100f);
+						sb.volumeGroup(20);
+						sb.decayGroup(14);
+						sb.breakageGroup(6);
+						sb.baseArea(5.096939f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.percentGenus(0.6521433f);
+						sb.addSp64Distribution("D", 100f);
+						sb.volumeGroup(25);
+						sb.decayGroup(19);
+						sb.breakageGroup(12);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(13);
+							ib.siteIndex(35f);
+							ib.ageTotal(55f);
+							ib.yearsToBreastHeight(1f);
+							ib.yearsAtBreastHeight(54f);
+							ib.height(35.3f);
+						});
+						sb.baseArea(29.598473f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.fractionGenus(0.129306135f);
+						sb.addSp64Distribution("H", 100f);
+						sb.volumeGroup(37);
+						sb.decayGroup(31);
+						sb.breakageGroup(17);
+						sb.baseArea(5.868747f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.fractionGenus(0.09728239f);
+						sb.addSp64Distribution("S", 100f);
+						sb.volumeGroup(66);
+						sb.decayGroup(54);
+						sb.breakageGroup(28);
+						sb.baseArea(4.4153028f);
+					});
 				});
 			});
-		});
+			{
 
-		var unit = new TestProcessingEngine(state);
+				var unit = new TestProcessingEngine(state);
+				unit.getState().setPolygon(polygon);
 
-		// TODO Do this in a cleaner and more focused way.
-		unit.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES);
+				var lps = unit.getState().getPrimaryLayerProcessingState();
 
-		assertThat(
-				state.getPrimaryLayerProcessingState().getBank().yearsToBreastHeight,
-				is(new float[] { 0.0f, 5.0f, 7.5f, 1.0f, 4.5f, 5.2f })
-		);
+				ProcessingEngine.calculateCoverages(lps);
+				unit.determinePolygonRankings();
+
+				assertThat(lps.getPrimarySpeciesIndex(), is(3));
+				assertThat(lps.getSecondarySpeciesIndex(), present(is(4)));
+				assertThat(lps.getInventoryTypeGroup(), is(37));
+				assertThat(lps.getPrimarySpeciesGroupNumber(), is(1));
+				assertThat(lps.getPrimarySpeciesStratumNumber(), is(1));
+			}
+		}
+
+		@Test
+		/** ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES */
+		void testEstimateMissingYearsToBreastHeightValues()
+				throws ProcessingException, IOException, ResourceParseException {
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("01002 S000001 00", 1970);
+				pb.biogeoclimaticZone("CWH");
+				pb.forestInventoryZone("A");
+				pb.mode(PolygonMode.START);
+				pb.inventoryTypeGroup(37);
+				pb.percentAvailable(99f);
+
+				pb.targetYear(1990);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.inventoryTypeGroup(37);
+					lb.baseAreaByUtilization(45.38645f);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.fractionGenus(0.0089672107f);
+						sb.addSp64Distribution("B", 100f);
+						sb.volumeGroup(12);
+						sb.decayGroup(7);
+						sb.breakageGroup(5);
+						sb.baseArea(0.40698987f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.2300895f);
+						sb.fractionGenus(0.112300895f);
+						sb.addSp64Distribution("C", 100f);
+						sb.volumeGroup(20);
+						sb.decayGroup(14);
+						sb.breakageGroup(6);
+						sb.baseArea(5.096939f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.percentGenus(0.6521433f);
+						sb.addSp64Distribution("D", 100f);
+						sb.volumeGroup(25);
+						sb.decayGroup(19);
+						sb.breakageGroup(12);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(13);
+							ib.siteIndex(35f);
+							ib.ageTotal(55f);
+							ib.yearsToBreastHeight(1f);
+							ib.yearsAtBreastHeight(54f);
+							ib.height(35.3f);
+						});
+						sb.baseArea(29.598473f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.fractionGenus(0.129306135f);
+						sb.addSp64Distribution("H", 100f);
+						sb.volumeGroup(37);
+						sb.decayGroup(31);
+						sb.breakageGroup(17);
+						sb.baseArea(5.868747f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.fractionGenus(0.09728239f);
+						sb.addSp64Distribution("S", 100f);
+						sb.volumeGroup(66);
+						sb.decayGroup(54);
+						sb.breakageGroup(28);
+						sb.baseArea(4.4153028f);
+					});
+				});
+			});
+
+			var unit = new TestProcessingEngine(state);
+
+			// TODO Do this in a cleaner and more focused way.
+			unit.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES);
+
+			assertThat(
+					state.getPrimaryLayerProcessingState().getBank().yearsToBreastHeight,
+					is(new float[] { 0.0f, 5.0f, 7.5f, 1.0f, 4.5f, 5.2f })
+			);
+		}
+
+		@Test
+		/** ESTIMATE_MISSING_SITE_INDICES, step 1 */
+		void testEstimateMissingSiteIndicesStep1() throws ProcessingException, IOException, ResourceParseException {
+			var siteCurveMap = new MatrixMap2Impl<String, Region, SiteIndexEquation>(
+					new ArrayList<String>(), new ArrayList<Region>(), (k1, k2) -> SiteIndexEquation.SI_NO_EQUATION
+			);
+
+			rawControlMap.put(ControlKey.SITE_CURVE_NUMBERS.name(), siteCurveMap);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("01002 S000001 00", 1970);
+				pb.biogeoclimaticZone("CWH");
+				pb.forestInventoryZone("A");
+				pb.mode(PolygonMode.START);
+				pb.inventoryTypeGroup(37);
+				pb.percentAvailable(99f);
+
+				pb.targetYear(1990);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.inventoryTypeGroup(37);
+					lb.baseAreaByUtilization(45.38645f);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.fractionGenus(0.0089672107f);
+						sb.addSp64Distribution("B", 100f);
+						sb.volumeGroup(12);
+						sb.decayGroup(7);
+						sb.breakageGroup(5);
+						sb.baseArea(0.40698987f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.2300895f);
+						sb.fractionGenus(0.112300895f);
+						sb.addSp64Distribution("C", 100f);
+						sb.volumeGroup(20);
+						sb.decayGroup(14);
+						sb.breakageGroup(6);
+						sb.baseArea(5.096939f);
+						sb.addSite(ib -> {
+							ib.siteIndex(13.4f);
+							ib.siteCurveNumber(11);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.percentGenus(0.6521433f);
+						sb.addSp64Distribution("D", 100f);
+						sb.volumeGroup(25);
+						sb.decayGroup(19);
+						sb.breakageGroup(12);
+						sb.baseArea(29.598473f);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(99);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.fractionGenus(0.129306135f);
+						sb.addSp64Distribution("H", 100f);
+						sb.volumeGroup(37);
+						sb.decayGroup(31);
+						sb.breakageGroup(17);
+						sb.baseArea(5.868747f);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(99);
+							ib.ageTotal(265f);
+							ib.yearsToBreastHeight(11.1f);
+							ib.yearsAtBreastHeight(253.9f);
+							ib.height(28.9f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.fractionGenus(0.09728239f);
+						sb.addSp64Distribution("S", 100f);
+						sb.volumeGroup(66);
+						sb.decayGroup(54);
+						sb.breakageGroup(28);
+						sb.baseArea(4.4153028f);
+					});
+				});
+			});
+
+			var unit = new TestProcessingEngine(state);
+
+			unit.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES);
+
+			// Despite 13.40 being in the data stream, the change (2024/8/29) to ignore site information
+			// for all species of the layer except the primary means that method (1) will never be
+			// successful, since none of the non-primary species will have a site index value.
+
+			// var sourceSiteCurve = SiteIndexEquation.SI_CWC_KURUCZ;
+			// var sourceSiteIndex = 13.4;
+			// var targetSiteCurve = SiteIndexEquation.SI_HWC_WILEYAC;
+			// double expectedValue = SiteTool
+			// .convertSiteIndexBetweenCurves(sourceSiteCurve, sourceSiteIndex, targetSiteCurve);
+
+			assertThat(
+					state.getPrimaryLayerProcessingState().getBank().siteIndices[4], is(VdypEntity.MISSING_FLOAT_VALUE)
+			);
+		}
+
+		@Test
+		/** ESTIMATE_MISSING_SITE_INDICES, step 2 */
+		void testEstimateMissingSiteIndicesStep2() throws ProcessingException, IOException, ResourceParseException,
+				CurveErrorException, SpeciesErrorException, NoAnswerException {
+			var siteCurveMap = new MatrixMap2Impl<String, Region, SiteIndexEquation>(
+					new ArrayList<String>(), new ArrayList<Region>(), (k1, k2) -> SiteIndexEquation.SI_NO_EQUATION
+			);
+
+			rawControlMap.put(ControlKey.SITE_CURVE_NUMBERS.name(), siteCurveMap);
+			controlMap.getDebugSettings().setValue(11, 0);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("01002 S000001 00", 1970);
+				pb.biogeoclimaticZone("CWH");
+				pb.forestInventoryZone("A");
+				pb.mode(PolygonMode.START);
+				pb.inventoryTypeGroup(37);
+				pb.percentAvailable(99f);
+
+				pb.targetYear(1990);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.inventoryTypeGroup(37);
+					lb.baseAreaByUtilization(45.38645f);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.fractionGenus(0.0089672107f);
+						sb.addSp64Distribution("B", 100f);
+						sb.volumeGroup(12);
+						sb.decayGroup(7);
+						sb.breakageGroup(5);
+						sb.baseArea(0.40698987f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.2300895f);
+						sb.fractionGenus(0.112300895f);
+						sb.addSp64Distribution("C", 100f);
+						sb.volumeGroup(20);
+						sb.decayGroup(14);
+						sb.breakageGroup(6);
+						sb.baseArea(5.096939f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.percentGenus(0.6521433f);
+						sb.addSp64Distribution("D", 100f);
+						sb.volumeGroup(25);
+						sb.decayGroup(19);
+						sb.breakageGroup(12);
+						sb.baseArea(29.598473f);
+						sb.addSite(ib -> {
+							ib.siteIndex(13.4f);
+							ib.siteCurveNumber(12);
+							ib.ageTotal(265f);
+							ib.yearsToBreastHeight(11.1f);
+							ib.yearsAtBreastHeight(253.9f);
+							ib.height(28.9f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.fractionGenus(0.129306135f);
+						sb.addSp64Distribution("H", 100f);
+						sb.volumeGroup(37);
+						sb.decayGroup(31);
+						sb.breakageGroup(17);
+						sb.baseArea(5.868747f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.fractionGenus(0.09728239f);
+						sb.addSp64Distribution("S", 100f);
+						sb.volumeGroup(66);
+						sb.decayGroup(54);
+						sb.breakageGroup(28);
+						sb.baseArea(4.4153028f);
+					});
+				});
+			});
+
+			var unit = new TestProcessingEngine(state);
+
+			unit.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES);
+
+			var sourceSiteCurve = SiteIndexEquation.SI_CWC_BARKER;
+			var sourceSiteIndex = 13.4f;
+			var targetSiteCurve = SiteIndexEquation.SI_HWC_WILEYAC;
+			double expectedValue = SiteTool
+					.convertSiteIndexBetweenCurves(sourceSiteCurve, sourceSiteIndex, targetSiteCurve);
+
+			assertThat(
+					unit.getState().getPrimaryLayerProcessingState().getBank().siteIndices[4], is((float) expectedValue)
+			);
+		}
+
 	}
 }
