@@ -315,14 +315,14 @@ const createLayerData = (
   const row3 = siteIndexRows[3]
   const row4 = siteIndexRows[4]
   const row5 = siteIndexRows[5]
+  // Empty crown closure lets the API compute a species-specific default
   const crownClosure =
     modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME &&
     modelParameterStore.siteSpeciesValues ===
       CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
-    (isBlank(modelParameterStore.crownClosure) ||
-      modelParameterStore.crownClosure === 0)
-      ? DEFAULTS.DEFAULT_VALUES.CROWN_CLOSURE
-      : modelParameterStore.crownClosure
+    !isBlank(modelParameterStore.crownClosure)
+      ? modelParameterStore.crownClosure
+      : ''
 
   const basalArea =
     modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA &&
