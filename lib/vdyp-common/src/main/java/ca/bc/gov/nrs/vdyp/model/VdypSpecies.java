@@ -315,6 +315,10 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 			this.quadMeanDiameter = Utils.utilizationVector(small, uAll, u1, u2, u3, u4);
 		}
 
+		public void quadMeanDiameter(float small, float u1, float u2, float u3, float u4) {
+			this.quadMeanDiameter = Utils.utilizationVector(small, u1, u2, u3, u4);
+		}
+
 		public void quadMeanDiameter(float height) {
 			this.quadMeanDiameter = Utils.utilizationVector(height);
 		}

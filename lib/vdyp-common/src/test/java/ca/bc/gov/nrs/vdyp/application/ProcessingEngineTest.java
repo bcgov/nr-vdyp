@@ -70,6 +70,7 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
+import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -97,6 +98,7 @@ import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.LessThan13Exception;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
+import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
@@ -2902,6 +2904,106 @@ class ProcessingEngineTest {
 			assertThat(ex, hasMessage(containsString("1899")));
 
 			em.verify();
+		}
+	}
+
+	@Test
+	/** CALCULATE_COVERAGES */
+	void testFindPrimarySpecies() throws ProcessingException {
+
+		// This tests ExecutionStep.CALCULATE_COVERAGES, but that code is stand-alone and can be
+		// tested independently.
+		var rawControlMap = ProcessingTestUtils.loadControlMap();
+		var state = new TestProcessingState(rawControlMap, null);
+		var polygon = VdypPolygon.build(pb -> {
+			pb.controlMap(rawControlMap);
+			pb.polygonIdentifier("01002 S000001 00", 1970);
+			pb.biogeoclimaticZone("CWH");
+			pb.forestInventoryZone("A");
+			pb.mode(PolygonMode.START);
+			pb.inventoryTypeGroup(37);
+			pb.percentAvailable(99f);
+
+			pb.addLayer(lb -> {
+				lb.layerType(LayerType.PRIMARY);
+				lb.inventoryTypeGroup(37);
+				lb.baseAreaByUtilization(45.38645f);
+				lb.addSpecies(sb -> {
+					sb.speciesGroup("B");
+					sb.percentGenus(0.89672107f);
+					sb.fractionGenus(0.0089672107f);
+					sb.addSp64Distribution("B", 100f);
+					sb.volumeGroup(12);
+					sb.decayGroup(7);
+					sb.breakageGroup(5);
+					sb.baseArea(0.40698987f);
+				});
+				lb.addSpecies(sb -> {
+					sb.speciesGroup("C");
+					sb.percentGenus(11.2300895f);
+					sb.fractionGenus(0.112300895f);
+					sb.addSp64Distribution("C", 100f);
+					sb.volumeGroup(20);
+					sb.decayGroup(14);
+					sb.breakageGroup(6);
+					sb.baseArea(5.096939f);
+				});
+				lb.addSpecies(sb -> {
+					sb.speciesGroup("D");
+					sb.percentGenus(65.21433f);
+					sb.percentGenus(0.6521433f);
+					sb.addSp64Distribution("D", 100f);
+					sb.volumeGroup(25);
+					sb.decayGroup(19);
+					sb.breakageGroup(12);
+					sb.addSite(ib -> {
+						ib.siteCurveNumber(13);
+						ib.siteIndex(35f);
+						ib.ageTotal(55f);
+						ib.yearsToBreastHeight(1f);
+						ib.yearsAtBreastHeight(54f);
+						ib.height(35.3f);
+					});
+					sb.baseArea(29.598473f);
+				});
+				lb.addSpecies(sb -> {
+					sb.speciesGroup("H");
+					sb.percentGenus(12.9306135f);
+					sb.fractionGenus(0.129306135f);
+					sb.addSp64Distribution("H", 100f);
+					sb.volumeGroup(37);
+					sb.decayGroup(31);
+					sb.breakageGroup(17);
+					sb.baseArea(5.868747f);
+				});
+				lb.addSpecies(sb -> {
+					sb.speciesGroup("S");
+					sb.percentGenus(9.728239f);
+					sb.fractionGenus(0.09728239f);
+					sb.addSp64Distribution("S", 100f);
+					sb.volumeGroup(66);
+					sb.decayGroup(54);
+					sb.breakageGroup(28);
+					sb.baseArea(4.4153028f);
+				});
+			});
+		});
+
+		{
+
+			var unit = new TestProcessingEngine(state);
+			unit.getState().setPolygon(polygon);
+
+			var lps = unit.getState().getPrimaryLayerProcessingState();
+
+			ProcessingEngine.calculateCoverages(lps);
+			unit.determinePolygonRankings();
+
+			assertThat(lps.getPrimarySpeciesIndex(), is(3));
+			assertThat(lps.getSecondarySpeciesIndex(), present(is(4)));
+			assertThat(lps.getInventoryTypeGroup(), is(37));
+			assertThat(lps.getPrimarySpeciesGroupNumber(), is(1));
+			assertThat(lps.getPrimarySpeciesStratumNumber(), is(1));
 		}
 	}
 

@@ -1546,8 +1546,10 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 
 				spLhSmall = 1.3f + (spLhSmall - 1.3f)
 						* FloatMath.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.LOREY_HEIGHT));
+				break;
 			case NONE:
 				// Do nothing
+				break;
 			}
 
 			float spTphSmall = BaseAreaTreeDensityDiameter.treesPerHectare(spBaSmall, spDqSmall);
