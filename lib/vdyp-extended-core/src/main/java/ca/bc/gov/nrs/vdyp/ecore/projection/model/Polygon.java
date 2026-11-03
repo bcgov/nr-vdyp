@@ -740,7 +740,7 @@ public class Polygon implements Comparable<Polygon> {
 		if (getInventoryStandard().equals(InventoryStandard.VRI)) {
 			var primaryLayer = getPrimaryLayer();
 			if (primaryLayer != null) {
-				if (primaryLayer.getBasalArea() == null) {
+				if (primaryLayer.getBasalArea() == null || primaryLayer.getBasalArea() == 0.0) {
 					addMessage(
 							new PolygonMessage.Builder().layer(primaryLayer).details(
 									ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
@@ -748,7 +748,7 @@ public class Polygon implements Comparable<Polygon> {
 							).build()
 					);
 				}
-				if (primaryLayer.getTreesPerHectare() == null) {
+				if (primaryLayer.getTreesPerHectare() == null || primaryLayer.getTreesPerHectare() == 0.0) {
 					addMessage(
 							new PolygonMessage.Builder().layer(primaryLayer)
 									.details(
@@ -761,7 +761,7 @@ public class Polygon implements Comparable<Polygon> {
 			}
 			var veteranLayer = getVeteranLayer();
 			if (veteranLayer != null) {
-				if (veteranLayer.getBasalArea() == null) {
+				if (veteranLayer.getBasalArea() == null || veteranLayer.getBasalArea() == 0.0) {
 					addMessage(
 							new PolygonMessage.Builder().layer(veteranLayer).details(
 									ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
@@ -769,7 +769,7 @@ public class Polygon implements Comparable<Polygon> {
 							).build()
 					);
 				}
-				if (veteranLayer.getTreesPerHectare() == null) {
+				if (veteranLayer.getTreesPerHectare() == null || veteranLayer.getTreesPerHectare() == 0.0) {
 					addMessage(
 							new PolygonMessage.Builder().layer(veteranLayer)
 									.details(
