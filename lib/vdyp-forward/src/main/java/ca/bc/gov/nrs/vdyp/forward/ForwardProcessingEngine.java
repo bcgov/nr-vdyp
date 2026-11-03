@@ -1535,7 +1535,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 					meanVolumeSmall *= FloatMath
 							.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.WHOLE_STEM_VOLUME));
 				}
-				// Fall through is intentional
+				// fallthrough is intentional
 			case ALL_BUT_VOLUME:
 				spBaSmall += lps.getCVSmall(speciesIndex, UtilizationClassVariable.BASAL_AREA);
 				if (spBaSmall < 0.0f) {
@@ -1549,7 +1549,6 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 				break;
 			case NONE:
 				// Do nothing
-				break;
 			}
 
 			float spTphSmall = BaseAreaTreeDensityDiameter.treesPerHectare(spBaSmall, spDqSmall);
