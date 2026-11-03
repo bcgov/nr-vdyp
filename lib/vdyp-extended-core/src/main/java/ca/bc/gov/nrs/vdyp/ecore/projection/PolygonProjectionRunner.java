@@ -43,12 +43,12 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ProjectionUtils;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
 import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.PreprocessEstimatedBaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProjectMaxBeyondReferenceException;
-import ca.bc.gov.nrs.vdyp.exceptions.QuadraticMeanDiameterLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
@@ -339,7 +339,8 @@ public class PolygonProjectionRunner {
 
 						var layer = polygon.getLayerByProjectionType(projectionType);
 
-						if (vriResult instanceof QuadraticMeanDiameterLowException) {
+						// three unique exceptions use the same ipass code of -7 this captures all clearly
+						if (errorNumberVal == -7) {
 							polygon.addMessage(
 									builder -> builder.layer(layer).details(
 											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
@@ -454,7 +455,7 @@ public class PolygonProjectionRunner {
 			return true;
 		}
 
-		if (spe instanceof ResultBaseAreaLowException) {
+		if (spe instanceof ResultBaseAreaLowException || spe instanceof BaseAreaLowException) {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
