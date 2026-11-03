@@ -1485,12 +1485,11 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 	}
 
 	protected Optional<VdypLayer> getVeteranLayer() {
-		return Optional.ofNullable(getState().getCurrentPolygon().getLayers().get(LayerType.VETERAN));
+		return getState().getCurrentPolygon().getVeteranLayer();
 	}
 
 	protected VdypLayer getPrimaryLayer() {
-		return Optional.ofNullable(getState().getCurrentPolygon().getLayers().get(LayerType.PRIMARY))
-				.orElseThrow(() -> new IllegalStateException("No primary layer found"));
+		return getState().getCurrentPolygon().requirePrimaryLayer();
 	}
 
 	/**

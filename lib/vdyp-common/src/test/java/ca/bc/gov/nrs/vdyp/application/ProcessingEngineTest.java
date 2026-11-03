@@ -3334,4 +3334,86 @@ class ProcessingEngineTest {
 		}
 
 	}
+
+	@Nested
+	class LayerAccessors {
+		IMocksControl em;
+
+		@BeforeEach
+		void setup() {
+			em = EasyMock.createControl();
+		}
+
+		@Test
+		void testPrimaryPresent() {
+			VdypPolygon polygon = em.createMock(VdypPolygon.class);
+			VdypLayer primary = em.createMock(VdypLayer.class);
+			TestProcessingState state = em.createMock(TestProcessingState.class);
+
+			EasyMock.expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			EasyMock.expect(polygon.requirePrimaryLayer()).andStubReturn(primary);
+
+			em.replay();
+
+			var unit = new TestProcessingEngine(state);
+			var result = unit.getPrimaryLayer();
+			assertThat(result, sameInstance(primary));
+
+			em.verify();
+		}
+
+		@Test
+		void testPrimaryMissing() {
+			VdypPolygon polygon = em.createMock(VdypPolygon.class);
+			TestProcessingState state = em.createMock(TestProcessingState.class);
+
+			EasyMock.expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			final IllegalStateException expectedEx = new IllegalStateException();
+			EasyMock.expect(polygon.requirePrimaryLayer()).andStubThrow(expectedEx);
+
+			em.replay();
+
+			var unit = new TestProcessingEngine(state);
+			var result = assertThrows(IllegalStateException.class, () -> unit.getPrimaryLayer());
+			assertThat(result, sameInstance(expectedEx));
+
+			em.verify();
+		}
+
+		@Test
+		void testVeteranPresent() {
+			VdypPolygon polygon = em.createMock(VdypPolygon.class);
+			VdypLayer veteran = em.createMock(VdypLayer.class);
+			TestProcessingState state = em.createMock(TestProcessingState.class);
+
+			EasyMock.expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			EasyMock.expect(polygon.getVeteranLayer()).andStubReturn(Optional.of(veteran));
+
+			em.replay();
+
+			var unit = new TestProcessingEngine(state);
+			var result = unit.getVeteranLayer();
+			assertThat(result, present(sameInstance(veteran)));
+
+			em.verify();
+		}
+
+		@Test
+		void testVeteranMissing() {
+			VdypPolygon polygon = em.createMock(VdypPolygon.class);
+			TestProcessingState state = em.createMock(TestProcessingState.class);
+
+			EasyMock.expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			EasyMock.expect(polygon.getVeteranLayer()).andStubReturn(Optional.empty());
+
+			em.replay();
+
+			var unit = new TestProcessingEngine(state);
+			var result = unit.getVeteranLayer();
+			assertThat(result, notPresent());
+
+			em.verify();
+		}
+
+	}
 }
