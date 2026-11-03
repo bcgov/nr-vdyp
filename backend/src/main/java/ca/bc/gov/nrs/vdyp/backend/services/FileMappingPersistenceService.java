@@ -26,11 +26,13 @@ public class FileMappingPersistenceService {
 	}
 
 	@Transactional
-	public FileMappingModel persistFileMapping(UUID objectGUID, UUID fileSetGUID, String fileName) {
+	public FileMappingModel
+			persistFileMapping(UUID objectGUID, UUID fileSetGUID, String fileName, boolean debugModePermitted) {
 		FileMappingEntity entity = new FileMappingEntity();
 		entity.setComsObjectGUID(objectGUID);
 		entity.setProjectionFileSet(em.find(ProjectionFileSetEntity.class, fileSetGUID));
 		entity.setFilename(fileName);
+		entity.setDebugModePermitted(debugModePermitted);
 		repository.persist(entity);
 		return assembler.toModel(entity);
 	}

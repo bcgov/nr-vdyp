@@ -157,24 +157,25 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const polygonFileInfo = ref<UploadedFileInfo | null>(null)
   const layerFileInfo = ref<UploadedFileInfo | null>(null)
 
-  // Number of polygon records in the uploaded polygon file, counted only up to
-  // DEBUG_MODE_MAX_POLYGONS + 1. Null when no file is uploaded, or when the file was uploaded
-  // in an earlier session and is only known by its server-side info (it cannot be re-read).
-  const polygonCount = ref<number | null>(null)
+  // Whether the uploaded polygon file is within the Debug Mode polygon limit.
+  // The backend decides this when the file is uploaded and returns it with the file info.
+  const isPolygonFileDebugModePermitted = ref<boolean>(false)
 
   // Restored from the saved parameters by the loader (not by restoreFromProjectionParams,
   // because it is saved on change rather than with a panel's Next button)
   const isDebugModeEnabled = ref<boolean>(false)
-  // Set when Debug Mode was switched Off automatically because a multi-polygon file replaced
-  // a single-polygon one; drives the warning shown in the File Upload panel header.
+  // Set when Debug Mode was switched Off automatically because the polygon file was replaced or
+  // removed, and kept until a file that permits Debug Mode is set. Removing the file and then
+  // uploading a multi-polygon one is the same change as replacing it, so both must keep this set.
+  // Together with hasTooManyPolygons it drives the warning shown in the File Upload panel header.
   const isDebugModeAutoDisabled = ref<boolean>(false)
   const reportSettingsPanelOpenState = ref<PanelState>(CONSTANTS.PANEL.OPEN)
 
   const isDebugModeAvailable = computed(
-    () => polygonCount.value !== null && polygonCount.value >= 1 && polygonCount.value <= CONSTANTS.DEBUG_MODE_MAX_POLYGONS,
+    () => polygonFileInfo.value !== null && isPolygonFileDebugModePermitted.value,
   )
   const hasTooManyPolygons = computed(
-    () => polygonCount.value !== null && polygonCount.value > CONSTANTS.DEBUG_MODE_MAX_POLYGONS,
+    () => polygonFileInfo.value !== null && !isPolygonFileDebugModePermitted.value,
   )
 
   // file upload state
@@ -188,21 +189,21 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   })
 
   /**
-   * Set uploaded polygon file info together with its polygon count.
+   * Set uploaded polygon file info together with whether the file permits Debug Mode.
    * Debug Mode is switched Off at once when the new file does not allow it, so the caller
    * can save that change right after this call.
    * @param info The uploaded file info, or null when the file is removed
-   * @param count The polygon count of the file, or null when it is unknown
+   * @param debugModePermitted Whether the file is within the Debug Mode polygon limit
    */
-  const setPolygonFileInfo = (info: UploadedFileInfo | null, count: number | null = null) => {
+  const setPolygonFileInfo = (info: UploadedFileInfo | null, debugModePermitted = false) => {
     polygonFileInfo.value = info
-    polygonCount.value = info ? count : null
+    isPolygonFileDebugModePermitted.value = info !== null && debugModePermitted
 
     if (isDebugModeAvailable.value) {
       isDebugModeAutoDisabled.value = false
     } else if (isDebugModeEnabled.value) {
       isDebugModeEnabled.value = false
-      isDebugModeAutoDisabled.value = hasTooManyPolygons.value
+      isDebugModeAutoDisabled.value = true
     }
   }
 
@@ -260,7 +261,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     // Reset uploaded file info
     polygonFileInfo.value = null
     layerFileInfo.value = null
-    polygonCount.value = null
+    isPolygonFileDebugModePermitted.value = false
     isUploadingPolygon.value = false
     isUploadingLayer.value = false
     isDeletingFile.value = false
@@ -442,7 +443,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     setPolygonFileInfo,
     setLayerFileInfo,
     // debug mode
-    polygonCount,
+    isPolygonFileDebugModePermitted,
     isDebugModeEnabled,
     isDebugModeAutoDisabled,
     isDebugModeAvailable,

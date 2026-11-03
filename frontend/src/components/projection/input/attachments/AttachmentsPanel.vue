@@ -16,7 +16,7 @@
             </v-col>
             <!-- Shown only while this panel is collapsed, so the automatic Debug Mode reset is not missed -->
             <v-col
-              v-if="fileUploadStore.isDebugModeAutoDisabled && panelOpenStates[panelName] !== CONSTANTS.PANEL.OPEN"
+              v-if="isMultiPolygonWarningVisible"
               class="attachments-header-warning"
               data-testid="debug-mode-header-warning"
             >
@@ -173,6 +173,14 @@ const panelName = CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS
 
 const panelOpenStates = computed(() => fileUploadStore.panelOpenStates)
 
+// Debug Mode was On, the file then changed to one with multiple polygons, and the panel is collapsed
+const isMultiPolygonWarningVisible = computed(
+  () =>
+    fileUploadStore.isDebugModeAutoDisabled &&
+    fileUploadStore.hasTooManyPolygons &&
+    panelOpenStates.value[panelName] !== CONSTANTS.PANEL.OPEN,
+)
+
 // File Upload panel is always interactable - only disabled in read-only mode
 const isInputDisabled = computed(() => isReadOnly.value)
 
@@ -318,10 +326,10 @@ const validateLayerFile = async (file: File): Promise<boolean> => {
 const applyPolygonFileInfo = async (
   projectionGUID: string,
   info: UploadedFileInfo | null,
-  count: number | null = null,
+  debugModePermitted = false,
 ) => {
   const wasDebugModeEnabled = fileUploadStore.isDebugModeEnabled
-  fileUploadStore.setPolygonFileInfo(info, count)
+  fileUploadStore.setPolygonFileInfo(info, debugModePermitted)
   if (wasDebugModeEnabled && !fileUploadStore.isDebugModeEnabled) {
     await saveDebugModeSelection(projectionGUID, false)
   }
@@ -361,13 +369,7 @@ const uploadPolygonFile = async (file: File) => {
     // Upload new file
     await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, file)
 
-    // Counting stops just past the Debug Mode limit; only "within" or "over" matters
-    const polygonCount = await fileUploadValidation.countPolygonRecords(
-      file,
-      CONSTANTS.DEBUG_MODE_MAX_POLYGONS + 1,
-    )
-
-    // Fetch the uploaded file info
+    // Fetch the uploaded file info (the backend decided at upload whether it permits Debug Mode)
     const files = await getFileSetFiles(projectionGUID, polygonFileSetGUID)
     if (files.length > 0) {
       const uploadedFile = files[0]
@@ -378,7 +380,7 @@ const uploadPolygonFile = async (file: File) => {
           fileMappingGUID: uploadedFile.fileMappingGUID,
           fileSetGUID: polygonFileSetGUID,
         },
-        polygonCount,
+        uploadedFile.debugModePermitted,
       )
     }
 

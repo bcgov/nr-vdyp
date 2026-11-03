@@ -20,10 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.clients.COMSClient;
+import ca.bc.gov.nrs.vdyp.backend.config.DebugModeConfig;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.FileMappingResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileMappingEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.FileMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileUploadException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
@@ -32,6 +34,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.COMSObjectVersion;
 import ca.bc.gov.nrs.vdyp.backend.services.upload.CsvUploadValidator;
 import ca.bc.gov.nrs.vdyp.backend.services.upload.CsvUploadValidator.CsvUploadValidationIOException;
 import ca.bc.gov.nrs.vdyp.backend.services.upload.CsvUploadValidator.ValidatedUpload;
+import ca.bc.gov.nrs.vdyp.backend.services.upload.CsvUploadValidator.ValidatingInputStream;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -46,11 +49,12 @@ public class FileMappingService {
 	private final COMSClient comsClient;
 	private final FileMappingPersistenceService persistenceService;
 	private final CsvUploadValidator csvUploadValidator;
+	private final DebugModeConfig debugModeConfig;
 
 	public FileMappingService(
 			FileMappingRepository repository, FileMappingResourceAssembler assembler, @RestClient COMSClient comsClient,
 			HttpClient httpClient, FileMappingPersistenceService persistenceService,
-			CsvUploadValidator csvUploadValidator
+			CsvUploadValidator csvUploadValidator, DebugModeConfig debugModeConfig
 	) {
 		this.repository = repository;
 		this.assembler = assembler;
@@ -58,6 +62,7 @@ public class FileMappingService {
 		this.httpClient = httpClient;
 		this.persistenceService = persistenceService;
 		this.csvUploadValidator = csvUploadValidator;
+		this.debugModeConfig = debugModeConfig;
 	}
 
 	public FileMappingModel
@@ -70,12 +75,17 @@ public class FileMappingService {
 		String fileSetTypeCode = projectionFileSetEntity.getFileSetTypeCode() == null ? null
 				: projectionFileSetEntity.getFileSetTypeCode().getCode();
 		ValidatedUpload upload = csvUploadValidator.validateMetadata(file.fileName(), file.contentType(), file.size());
+		// Polygon rows are counted while the upload is validated, stopping just past the Debug Mode limit
+		// since only "within" or "over" matters
+		boolean isPolygonFile = FileSetTypeCodeModel.POLYGON.equals(fileSetTypeCode);
+		int debugModeMaximumPolygons = debugModeConfig.maximumPolygons();
 		UUID objectGUID = null;
 		try {
 			String contentDisposition = buildContentDisposition(upload.filename());
 			try (
 					InputStream source = Files.newInputStream(file.uploadedFile());
-					InputStream fileStream = csvUploadValidator.validatingStream(source, fileSetTypeCode)
+					ValidatingInputStream fileStream = csvUploadValidator
+							.validatingStream(source, fileSetTypeCode, isPolygonFile ? debugModeMaximumPolygons + 1 : 0)
 			) {
 				logger.debug(
 						"Data for object bucketId {}, contentDisposistion {}, contentLength {}, contentType {}",
@@ -87,9 +97,15 @@ public class FileMappingService {
 				);
 				objectGUID = UUID.fromString(createObjectResponse.id());
 
+				// The upload has read the whole stream, so the polygon count is complete
+				int polygonCount = fileStream.dataRowCount();
+				boolean debugModePermitted = isPolygonFile && polygonCount >= 1
+						&& polygonCount <= debugModeMaximumPolygons;
+
 				// persist a record here for the file
 				return persistenceService.persistFileMapping(
-						objectGUID, projectionFileSetEntity.getProjectionFileSetGUID(), upload.filename()
+						objectGUID, projectionFileSetEntity.getProjectionFileSetGUID(), upload.filename(),
+						debugModePermitted
 				);
 			}
 		} catch (CsvUploadValidationIOException e) {
@@ -238,8 +254,10 @@ public class FileMappingService {
 						in
 				);
 				objectGUID = UUID.fromString(comsObj.id());
-				return persistenceService
-						.persistFileMapping(objectGUID, fileSetEntity.getProjectionFileSetGUID(), file.getFilename());
+				return persistenceService.persistFileMapping(
+						objectGUID, fileSetEntity.getProjectionFileSetGUID(), file.getFilename(),
+						file.isDebugModePermitted()
+				);
 			}
 		} catch (ProjectionServiceException e) {
 			throw e;
@@ -266,8 +284,9 @@ public class FileMappingService {
 					placeholderStream
 			);
 			UUID objectGUID = UUID.fromString(createObjectResponse.id());
-			return persistenceService
-					.persistFileMapping(objectGUID, projectionFileSetEntity.getProjectionFileSetGUID(), filename);
+			return persistenceService.persistFileMapping(
+					objectGUID, projectionFileSetEntity.getProjectionFileSetGUID(), filename, false
+			);
 		} catch (Exception e) {
 			throw new ProjectionServiceException("Error creating placeholder file in COMS", e);
 		}

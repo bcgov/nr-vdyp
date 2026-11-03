@@ -110,9 +110,6 @@ export const FILE_UPLOAD_PANEL_LABEL = Object.freeze({
   REPORT_SETTINGS: 'Report Settings',
 })
 
-// Debug Mode can only be enabled for projections with at most this many polygons
-export const DEBUG_MODE_MAX_POLYGONS = 1
-
 export const NUM_INPUT_LIMITS = Object.freeze({
   SPECIES_PERCENT_MAX: 100,
   SPECIES_PERCENT_MIN: 0,

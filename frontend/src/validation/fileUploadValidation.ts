@@ -99,10 +99,6 @@ export const isFileEmpty = async (file: File) => {
   return fileUploadValidator.isFileEmpty(file)
 }
 
-export const countPolygonRecords = async (file: File, limit: number) => {
-  return fileUploadValidator.countPolygonRecords(file, limit)
-}
-
 export const validatePolygonHeader = async (file: File) => {
   return fileUploadValidator.validatePolygonHeader(file)
 }

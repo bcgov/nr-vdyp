@@ -52,10 +52,6 @@ const isDebugModeDisabled = computed(
 const warningMessage = computed(() => {
   if (isReadOnly.value) return ''
   if (fileUploadStore.hasTooManyPolygons) return MESSAGE.DEBUG_MODE.SINGLE_POLYGON_ONLY
-  // A polygon file restored from an earlier session cannot be re-read to count its polygons
-  if (fileUploadStore.polygonFileInfo !== null && fileUploadStore.polygonCount === null) {
-    return MESSAGE.DEBUG_MODE.POLYGON_COUNT_UNKNOWN
-  }
   return ''
 })
 

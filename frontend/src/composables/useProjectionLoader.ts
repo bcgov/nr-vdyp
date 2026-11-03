@@ -10,7 +10,6 @@ import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
 import {
-  DEBUG_MODE_MAX_POLYGONS,
   METHOD_SELECTION,
   PROJECTION_STATUS,
   PROJECTION_VIEW_MODE
@@ -36,17 +35,23 @@ export function useProjectionLoader() {
     projectionGUID: string,
     fileSetGUID: string,
     defaultName: string,
-    setFileInfo: (info: { filename: string; fileMappingGUID: string; fileSetGUID: string }) => void,
+    setFileInfo: (
+      info: { filename: string; fileMappingGUID: string; fileSetGUID: string },
+      debugModePermitted: boolean,
+    ) => void,
   ) => {
     try {
       const files = await getFileSetFiles(projectionGUID, fileSetGUID)
       if (files.length > 0) {
         const file = files[0]
-        setFileInfo({
-          filename: file.filename || defaultName,
-          fileMappingGUID: file.fileMappingGUID,
-          fileSetGUID,
-        })
+        setFileInfo(
+          {
+            filename: file.filename || defaultName,
+            fileMappingGUID: file.fileMappingGUID,
+            fileSetGUID,
+          },
+          file.debugModePermitted,
+        )
       }
     } catch (err) {
       console.error(`Error loading ${defaultName.toLowerCase()} info:`, err)
@@ -85,7 +90,6 @@ export function useProjectionLoader() {
     params: ReturnType<typeof parseProjectionParams>,
     isViewMode: boolean,
     collapseAllPanels: boolean,
-    isDebugModeOn: boolean,
   ) => {
     fileUploadStore.resetStore()
     fileUploadStore.restoreFromProjectionParams(params, isViewMode, collapseAllPanels)
@@ -93,16 +97,9 @@ export function useProjectionLoader() {
     const polygonFileSetGUID = projectionModel.polygonFileSet?.projectionFileSetGUID
     const layerFileSetGUID = projectionModel.layerFileSet?.projectionFileSetGUID
 
-    // The saved file cannot be re-read to count its polygons. Debug Mode can only have been
-    // saved On for a file within the limit (a file over it switches Debug Mode Off and saves that),
-    // so a saved On means the current file is within the limit.
-    const polygonCount = isDebugModeOn ? DEBUG_MODE_MAX_POLYGONS : null
-
     await Promise.all([
       polygonFileSetGUID
-        ? loadFileSetInfo(projectionGUID, polygonFileSetGUID, 'Polygon File', (info) =>
-            fileUploadStore.setPolygonFileInfo(info, polygonCount),
-          )
+        ? loadFileSetInfo(projectionGUID, polygonFileSetGUID, 'Polygon File', fileUploadStore.setPolygonFileInfo)
         : Promise.resolve(),
       layerFileSetGUID
         ? loadFileSetInfo(projectionGUID, layerFileSetGUID, 'Layer File', fileUploadStore.setLayerFileInfo)
@@ -156,7 +153,7 @@ export function useProjectionLoader() {
         modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
         modelParameterStore.isDebugModeEnabled = isDebugModeOn
       } else {
-        await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode, collapseAllPanels, isDebugModeOn)
+        await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode, collapseAllPanels)
         fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
         fileUploadStore.isDebugModeEnabled = isDebugModeOn && fileUploadStore.isDebugModeAvailable
       }
