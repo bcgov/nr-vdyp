@@ -31,7 +31,11 @@ import static org.hamcrest.Matchers.notANumber;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,6 +48,7 @@ import java.util.Optional;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -3415,5 +3420,112 @@ class ProcessingEngineTest {
 			em.verify();
 		}
 
+	}
+
+	@Nested
+	protected class ExecutionStep {
+
+		@ParameterizedTest
+		@MethodSource("allSteps")
+		void testSelf(ProcessingEngine.ExecutionStep current) {
+
+			assertSelf(current);
+
+		}
+
+		@ParameterizedTest
+		@MethodSource("consecutivePairs")
+		void testInOrder(ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep current) {
+
+			assertOrder(previous, current);
+
+		}
+
+		@ParameterizedTest
+		@MethodSource("triplets")
+		void testTransitive(
+				ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep mid,
+				ProcessingEngine.ExecutionStep next
+		) {
+			assumeTrue(Math.signum(previous.compareTo(mid)) + Math.signum(mid.compareTo(next)) < 0);
+
+			assertOrder(previous, next);
+		}
+
+		static List<ProcessingEngine.ExecutionStep> allSteps() {
+			var midSteps = baseMidSteps();
+			return allSteps(midSteps);
+		}
+
+		static List<Arguments> triplets() {
+			var midSteps = baseMidSteps();
+			var allSteps = allSteps(midSteps);
+			return triplets(allSteps);
+		}
+
+		static List<Arguments> consecutivePairs() {
+			var midSteps = baseMidSteps();
+			var allSteps = allSteps(midSteps);
+			return consecutivePairs(allSteps);
+		}
+
+		protected static List<Arguments>
+				consecutivePairs(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> allSteps) {
+			var it = allSteps.iterator();
+			var previous = it.next();
+			List<Arguments> result = new ArrayList<>(allSteps.size() - 1);
+			while (it.hasNext()) {
+				var current = it.next();
+				result.add(Arguments.of(previous, current));
+				previous = current;
+			}
+			return result;
+		}
+
+		static protected List<Arguments>
+				triplets(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> allSteps) {
+			return allSteps.stream()
+					.flatMap(a -> allSteps.stream().flatMap(b -> allSteps.stream().map(c -> Arguments.of(a, b, c))))
+					.toList();
+		}
+
+		static protected List<ProcessingEngine.ExecutionStep>
+				allSteps(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> steps) {
+			var allSteps = new ArrayList<ProcessingEngine.ExecutionStep>(steps.size() + 2);
+			allSteps.add(BaseExecutionStep.NONE);
+			allSteps.addAll(steps);
+			allSteps.add(BaseExecutionStep.ALL);
+			return allSteps;
+		}
+
+		static protected void assertSelf(ProcessingEngine.ExecutionStep current) {
+			assertFalse(current.lt(current));
+			assertFalse(current.gt(current));
+			assertTrue(current.le(current));
+			assertTrue(current.ge(current));
+		}
+
+		static protected void
+				assertOrder(ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep current) {
+			assertTrue(current.compareTo(previous) > 0);
+			assertTrue(previous.compareTo(current) < 0);
+			assertTrue(current.compareTo(current) == 0);
+
+			assertTrue(current.gt(previous));
+			assertTrue(current.ge(previous));
+			assertFalse(current.lt(previous));
+			assertFalse(current.le(previous));
+		}
+
+		static List<ProcessingEngine.ExecutionStep> baseMidSteps() {
+			return List.of(
+					BaseExecutionStep.CHECK_FOR_WORK, BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES,
+					BaseExecutionStep.CALCULATE_COVERAGES, BaseExecutionStep.DETERMINE_POLYGON_RANKINGS,
+					BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES,
+					BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES,
+					BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX,
+					BaseExecutionStep.SET_COMPATIBILITY_VARIABLES
+			);
+		}
 	}
 }
