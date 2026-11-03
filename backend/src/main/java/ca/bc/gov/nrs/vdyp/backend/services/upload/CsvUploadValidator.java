@@ -53,9 +53,9 @@ public class CsvUploadValidator {
 		return new ValidatedUpload(safeFilename, declaredContentLength, normalizedContentType);
 	}
 
-	public InputStream validatingStream(InputStream source, String fileSetTypeCode) {
+	public ValidatingInputStream validatingStream(InputStream source, String fileSetTypeCode, int dataRowCountLimit) {
 		CsvUploadSchemas.HeaderSchema headerSchema = CsvUploadSchemas.expectedHeaders(fileSetTypeCode).orElse(null);
-		UploadSniffer sniffer = new UploadSniffer(config.maxFileSizeBytes(), headerSchema);
+		UploadSniffer sniffer = new UploadSniffer(config.maxFileSizeBytes(), headerSchema, dataRowCountLimit);
 		return new ValidatingInputStream(source, sniffer);
 	}
 
@@ -134,13 +134,17 @@ public class CsvUploadValidator {
 		}
 	}
 
-	private static final class ValidatingInputStream extends FilterInputStream {
+	public static final class ValidatingInputStream extends FilterInputStream {
 		private final UploadSniffer sniffer;
 		private boolean finished;
 
 		private ValidatingInputStream(InputStream in, UploadSniffer sniffer) {
 			super(in);
 			this.sniffer = sniffer;
+		}
+
+		public int dataRowCount() {
+			return sniffer.dataRowCount;
 		}
 
 		@Override
@@ -193,6 +197,7 @@ public class CsvUploadValidator {
 	private static final class UploadSniffer {
 		private final long maxFileBytes;
 		private final CsvUploadSchemas.HeaderSchema headerSchema;
+		private final int dataRowCountLimit;
 		private final byte[] prefix = new byte[16];
 		private final byte[] headerBytes = new byte[MAX_HEADER_BYTES];
 
@@ -200,18 +205,17 @@ public class CsvUploadValidator {
 		private int headerLength;
 		private boolean headerComplete;
 		private boolean previousCarriageReturn;
+		private int dataRowCount;
+		private boolean dataRowHasContent;
 
-		private UploadSniffer(long maxFileBytes, CsvUploadSchemas.HeaderSchema headerSchema) {
+		private UploadSniffer(long maxFileBytes, CsvUploadSchemas.HeaderSchema headerSchema, int dataRowCountLimit) {
 			this.maxFileBytes = maxFileBytes;
 			this.headerSchema = headerSchema;
+			this.dataRowCountLimit = dataRowCountLimit;
 		}
 
 		void process(byte[] buffer, int offset, int length) throws ProjectionFileUploadException {
 			if (length <= 0) {
-				return;
-			}
-			if (headerComplete) {
-				countBytes(length);
 				return;
 			}
 
@@ -222,12 +226,18 @@ public class CsvUploadValidator {
 			}
 			if (i < end) {
 				countBytes(end - i);
+				for (; i < end && isCountingDataRows(); i++) {
+					countDataRow(buffer[i] & 0xFF);
+				}
 			}
 		}
 
 		private void processByte(int b) throws ProjectionFileUploadException {
 			countBytes(1);
 			if (headerComplete) {
+				if (isCountingDataRows()) {
+					countDataRow(b);
+				}
 				return;
 			}
 			if (b == 0) {
@@ -252,6 +262,27 @@ public class CsvUploadValidator {
 			}
 			headerBytes[headerLength++] = (byte) b;
 			previousCarriageReturn = b == '\r';
+		}
+
+		// Data rows only follow a validated header, so files without an expected header are not counted
+		private boolean isCountingDataRows() {
+			return headerSchema != null && dataRowCount < dataRowCountLimit;
+		}
+
+		// Blank lines (only spaces, tabs or a carriage return) are not counted as data rows
+		private void countDataRow(int b) {
+			if (b == '\n') {
+				endDataRow();
+			} else if (b != ' ' && b != '\t' && b != '\r') {
+				dataRowHasContent = true;
+			}
+		}
+
+		private void endDataRow() {
+			if (dataRowHasContent) {
+				dataRowCount++;
+			}
+			dataRowHasContent = false;
 		}
 
 		private void countBytes(int length) throws ProjectionFileUploadException {
@@ -315,6 +346,10 @@ public class CsvUploadValidator {
 			}
 			if (!headerComplete) {
 				validateHeader();
+			}
+			// The last data row may not end with a newline
+			if (isCountingDataRows()) {
+				endDataRow();
 			}
 		}
 

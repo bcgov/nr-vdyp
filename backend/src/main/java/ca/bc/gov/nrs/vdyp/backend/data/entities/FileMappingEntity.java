@@ -35,6 +35,9 @@ public class FileMappingEntity extends AuditableEntity {
 	@Column(name = "filename", nullable = false, updatable = true, length = 255)
 	private String filename;
 
+	@Column(name = "is_debug_mode_permitted", nullable = false)
+	private boolean isDebugModePermitted;
+
 	public UUID getFileMappingGUID() {
 		return fileMappingGUID;
 	}
@@ -65,5 +68,13 @@ public class FileMappingEntity extends AuditableEntity {
 
 	public void setComsObjectGUID(UUID comsObjectGUID) {
 		this.comsObjectGUID = comsObjectGUID;
+	}
+
+	public boolean isDebugModePermitted() {
+		return isDebugModePermitted;
+	}
+
+	public void setDebugModePermitted(boolean debugModePermitted) {
+		this.isDebugModePermitted = debugModePermitted;
 	}
 }

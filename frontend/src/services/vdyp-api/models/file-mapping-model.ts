@@ -6,4 +6,5 @@ export interface FileMappingModel {
   comsObjectGUID: string
   filename: string | null
   downloadURL: string | null
+  debugModePermitted: boolean
 }

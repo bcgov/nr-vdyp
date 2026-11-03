@@ -4,6 +4,7 @@ import {
   parseProjectionParams,
   mapProjectionStatus,
   getFileSetFiles,
+  isDebugModeSaved,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -34,17 +35,23 @@ export function useProjectionLoader() {
     projectionGUID: string,
     fileSetGUID: string,
     defaultName: string,
-    setFileInfo: (info: { filename: string; fileMappingGUID: string; fileSetGUID: string }) => void,
+    setFileInfo: (
+      info: { filename: string; fileMappingGUID: string; fileSetGUID: string },
+      debugModePermitted: boolean,
+    ) => void,
   ) => {
     try {
       const files = await getFileSetFiles(projectionGUID, fileSetGUID)
       if (files.length > 0) {
         const file = files[0]
-        setFileInfo({
-          filename: file.filename || defaultName,
-          fileMappingGUID: file.fileMappingGUID,
-          fileSetGUID,
-        })
+        setFileInfo(
+          {
+            filename: file.filename || defaultName,
+            fileMappingGUID: file.fileMappingGUID,
+            fileSetGUID,
+          },
+          file.debugModePermitted,
+        )
       }
     } catch (err) {
       console.error(`Error loading ${defaultName.toLowerCase()} info:`, err)
@@ -139,12 +146,16 @@ export function useProjectionLoader() {
         appStore.setDuplicatedFromInfo(null)
       }
 
+      const isDebugModeOn = isDebugModeSaved(projectionModel.projectionParameters)
+
       if (isInputModelParams) {
         restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode, collapseAllPanels)
         modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
+        modelParameterStore.isDebugModeEnabled = isDebugModeOn
       } else {
         await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode, collapseAllPanels)
         fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
+        fileUploadStore.isDebugModeEnabled = isDebugModeOn && fileUploadStore.isDebugModeAvailable
       }
 
       return true

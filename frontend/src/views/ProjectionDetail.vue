@@ -229,6 +229,7 @@
         <ReportConfigPanel class="panel-spacing" />
         <MinimumDBHPanel class="panel-spacing" />
         <AttachmentsPanel class="panel-spacing" />
+        <FileUploadReportSettingsPanel class="panel-spacing" />
         <RunProjectionButtonPanel
           v-if="isEditableProjectionStatus"
           :isDisabled="!fileUploadStore.runModelEnabled || !isEditableProjectionStatus"
@@ -269,6 +270,7 @@ import {
   ReportConfigPanel,
   ReportDetailsPanel,
   AttachmentsPanel,
+  FileUploadReportSettingsPanel,
   MinimumDBHPanel,
   ParameterSelectionProgressBar,
   ProjectionRunProgressBar,
@@ -278,7 +280,7 @@ import {
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import { loadProjectionSession, clearProjectionSession, saveExistingProjectionSession } from '@/utils/projectionSession'
-import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip, getResultsDownloadUrl, isProjectionReadOnly } from '@/services/projectionService'
+import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip, getResultsDownloadUrl, isProjectionReadOnly, isDebugModeSaved } from '@/services/projectionService'
 import { downloadTextFile, downloadCSVFile, printReport } from '@/services/reportService'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { useAlertDialogStore } from '@/stores/common/alertDialogStore'
@@ -473,6 +475,9 @@ const duplicatedFromText = computed(() => {
   return `*This Projection was duplicated from ${info.originalName} on ${parts.month} ${parts.day} at ${parts.hour}:${parts.minute}.`
 })
 
+// The Debug Log tab belongs to projections that were run with Debug Mode On
+const isDebugLogTabVisible = computed(() => isReady.value && modelParameterStore.isDebugModeEnabled)
+
 const modelParamTabs = computed<Tab[]>(() => [
   {
     label: CONSTANTS.MANUAL_INPUT_TAB_NAME.MODEL_PARAM_SELECTION,
@@ -497,6 +502,16 @@ const modelParamTabs = computed<Tab[]>(() => [
     tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
     disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
+  ...(isDebugLogTabVisible.value
+    ? [
+        {
+          label: CONSTANTS.MANUAL_INPUT_TAB_NAME.VIEW_DEBUG_LOG,
+          component: ReportingContainer,
+          tabname: CONSTANTS.REPORTING_TAB.VIEW_DEBUG_LOG,
+          disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
+        },
+      ]
+    : []),
 ])
 
 const activeReportingTab = computed(() => modelParamTabs.value[modelParamActiveTab.value])
@@ -514,6 +529,8 @@ const reportingDownloadData = computed(() => {
       return [...projectionStore.errorMessages]
     case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
       return [...projectionStore.logMessages]
+    case CONSTANTS.REPORTING_TAB.VIEW_DEBUG_LOG:
+      return [...projectionStore.debugMessages]
     default:
       return []
   }
@@ -544,6 +561,9 @@ const handleReportingDownloadTab = () => {
       break
     case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
       downloadTextFile(reportingDownloadData.value, CONSTANTS.FILE_NAME.LOG_TXT)
+      break
+    case CONSTANTS.REPORTING_TAB.VIEW_DEBUG_LOG:
+      downloadTextFile(reportingDownloadData.value, CONSTANTS.FILE_NAME.DEBUG_TXT)
       break
   }
 }
@@ -969,6 +989,8 @@ const runManualInputProjection = async () => {
       mapProjectionStatus(response.projectionStatusCode.code),
     )
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
+    // Show the Debug Mode the backend actually saved for this run
+    modelParameterStore.isDebugModeEnabled = isDebugModeSaved(response.projectionParameters)
     applyBatchMapping(response.batchMapping)
     if (response.startDate) runStartDate.value = response.startDate
     runEndDate.value = null // clear any stale endDate from a previous run
@@ -1003,6 +1025,8 @@ const runFileUploadProjection = async () => {
     )
     appStore.setViewMode(CONSTANTS.PROJECTION_VIEW_MODE.VIEW)
     fileUploadStore.panelOpenStates.attachments = CONSTANTS.PANEL.CLOSE
+    // Show the Debug Mode the backend actually saved for this run
+    fileUploadStore.isDebugModeEnabled = isDebugModeSaved(response.projectionParameters)
     applyBatchMapping(response.batchMapping)
     if (response.startDate) runStartDate.value = response.startDate
     runEndDate.value = null // clear any stale endDate from a previous run

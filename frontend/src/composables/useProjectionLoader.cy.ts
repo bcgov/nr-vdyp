@@ -3,6 +3,8 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { useProjectionLoader } from '@/composables/useProjectionLoader'
 import { useAppStore } from '@/stores/projection/appStore'
+import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
+import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { METHOD_SELECTION, PROJECTION_STATUS, PROJECTION_VIEW_MODE } from '@/constants/constants'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 import apiClient from '@/services/apiClient'
@@ -322,6 +324,91 @@ describe('useProjectionLoader Unit Tests', () => {
         .then(() => loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT))
         .then(() => loadError.value)
         .should('be.null')
+    })
+  })
+
+  describe('loadProjection - Debug Mode', () => {
+    const debugParams = (extra: string[] = []) =>
+      makeParamsJson([...extra, ExecutionOptionsEnum.DoEnableDebugLogging])
+
+    it('should restore the saved Debug Mode for an editable Manual Input projection', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({
+          projectionParameters: debugParams([ExecutionOptionsEnum.DoEnableProjectionReport]),
+        }),
+      })
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
+        expect(useModelParameterStore().isDebugModeEnabled).to.be.true
+      })
+    })
+
+    const stubPolygonFile = (debugModePermitted: boolean) =>
+      cy.stub(apiClient, 'getFileSetFiles').resolves({
+        data: [{ filename: 'polygon.csv', fileMappingGUID: 'poly-file-guid', debugModePermitted }],
+      })
+
+    it('should restore the saved Debug Mode for a File Upload projection whose file permits it', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({
+          projectionParameters: debugParams(),
+          polygonFileSet: { projectionFileSetGUID: 'poly-set-guid' },
+        }),
+      })
+      stubPolygonFile(true)
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
+        const store = useFileUploadStore()
+        expect(store.isDebugModeEnabled).to.be.true
+        expect(store.isDebugModeAvailable).to.be.true
+      })
+    })
+
+    it('should keep Debug Mode available when it was saved Off for a file that permits it', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({
+          projectionParameters: makeParamsJson([]),
+          polygonFileSet: { projectionFileSetGUID: 'poly-set-guid' },
+        }),
+      })
+      stubPolygonFile(true)
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
+        const store = useFileUploadStore()
+        expect(store.isDebugModeEnabled).to.be.false
+        expect(store.isDebugModeAvailable).to.be.true
+      })
+    })
+
+    it('should not turn Debug Mode On for a file that does not permit it', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({
+          projectionParameters: debugParams(),
+          polygonFileSet: { projectionFileSetGUID: 'poly-set-guid' },
+        }),
+      })
+      stubPolygonFile(false)
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
+        const store = useFileUploadStore()
+        expect(store.isDebugModeEnabled).to.be.false
+        expect(store.hasTooManyPolygons).to.be.true
+      })
+    })
+
+    it('should not turn Debug Mode On for a File Upload projection without a polygon file', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({ projectionParameters: debugParams() }),
+      })
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
+        expect(useFileUploadStore().isDebugModeEnabled).to.be.false
+      })
     })
   })
 })

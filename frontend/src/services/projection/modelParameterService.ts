@@ -18,6 +18,7 @@ import {
   deleteAllFilesFromFileSet,
   parseProjectionParams,
   mapProjectionStatus,
+  isDebugModeSaved,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -435,7 +436,6 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
     ExecutionOptionsEnum.DoEnableProgressLogging,
     ExecutionOptionsEnum.DoEnableErrorLogging,
-    ExecutionOptionsEnum.DoEnableDebugLogging,
     ExecutionOptionsEnum.DoEnableProjectionReport,
     ExecutionOptionsEnum.AllowAggressiveValueEstimation,
     ExecutionOptionsEnum.DoIncludeFileHeader,
@@ -494,6 +494,10 @@ const buildExecutionOptions = (
       flag: modelParameterStore.incSecondaryHeight,
       option:
         ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    },
+    {
+      flag: modelParameterStore.isDebugModeEnabled,
+      option: ExecutionOptionsEnum.DoEnableDebugLogging,
     },
   ]
 
@@ -658,9 +662,10 @@ export const createProjection = async (
 /**
  * Runs the current projection by sending it to batch processing.
  * For Manual Input mode, this function:
- * 1. Creates CSV files (polygon and layer) from user selections
- * 2. Uploads these files to the backend
- * 3. Sends the projection to batch processing
+ * 1. Saves the projection parameters so the run uses exactly what is shown on screen
+ * 2. Creates CSV files (polygon and layer) from user selections
+ * 3. Uploads these files to the backend
+ * 4. Sends the projection to batch processing
  *
  * The projection must already be created and its GUID stored in the app store.
  *
@@ -681,15 +686,21 @@ export const runProjection = async (): Promise<ProjectionModel> => {
     modelParameterStore.referenceYear = new Date().getFullYear()
   }
 
-  // Step 1: Create CSV files from user selections
+  // Step 1: Save projection parameters as shown on screen.
+  // Returns the refreshed projection, which also carries the fileSet GUIDs.
+  const projectionModel = await updateProjectionParamsWithModel(
+    projectionGUID,
+    buildProjectionParameters(modelParameterStore),
+    buildModelParameters(modelParameterStore),
+    modelParameterStore.reportDescription,
+  )
+
+  // Step 2: Create CSV files from user selections
   const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
 
   // Convert Blobs to Files
   const polygonFile = new File([blobPolygon], 'polygon.csv', { type: 'text/csv' })
   const layerFile = new File([blobLayer], 'layer.csv', { type: 'text/csv' })
-
-  // Step 2: Get projection to retrieve fileSet GUIDs
-  const projectionModel = await getProjectionById(projectionGUID)
 
   // Step 3: Upload polygon file
   if (projectionModel.polygonFileSet?.projectionFileSetGUID) {
@@ -861,6 +872,7 @@ const hasReportInfoChanges = (
   if (store.isCulminationValuesEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)) return true
   if (store.isBySpeciesEnabled !== opts.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)) return true
   if (store.incSecondaryHeight !== opts.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)) return true
+  if (store.isDebugModeEnabled !== opts.includes(ExecutionOptionsEnum.DoEnableDebugLogging)) return true
   const savedProjectionType = resolveProjectionType(opts)
   if (!strEq(store.projectionType, savedProjectionType)) return true
   if (hasUtilizationChanges(store, savedParams, savedProjectionType)) return true
@@ -964,6 +976,7 @@ export const revertPanelToSaved = async (panelName: PanelName): Promise<void> =>
   // which correctly marks prior panels as confirmed without setting runModelEnabled=true.
   modelParameterStore.restoreFromProjectionParams(params, false)
   modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
+  modelParameterStore.isDebugModeEnabled = isDebugModeSaved(projectionModel.projectionParameters)
 
   // editPanel resets the cancelled panel and all subsequent panels to unconfirmed/closed.
   // This prevents stale confirmed states from blocking confirmPanel calls when the user

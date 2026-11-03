@@ -372,7 +372,7 @@ class CsvUploadValidatorTest {
 	void singleByteReadPathFinishesIdempotently() throws IOException {
 		try (
 				InputStream validating = validator()
-						.validatingStream(new ByteArrayInputStream(CSV_BYTES), FileSetTypeCodeModel.RESULTS)
+						.validatingStream(new ByteArrayInputStream(CSV_BYTES), FileSetTypeCodeModel.RESULTS, 0)
 		) {
 			while (validating.read() >= 0) {
 				// read to the end
@@ -386,11 +386,68 @@ class CsvUploadValidatorTest {
 	void singleByteReadPathWrapsValidationFailures() throws IOException {
 		try (
 				InputStream validating = validator()
-						.validatingStream(new ByteArrayInputStream(new byte[] { 0 }), FileSetTypeCodeModel.RESULTS)
+						.validatingStream(new ByteArrayInputStream(new byte[] { 0 }), FileSetTypeCodeModel.RESULTS, 0)
 		) {
 			CsvUploadValidationIOException ex = assertThrows(CsvUploadValidationIOException.class, validating::read);
 
 			assertEquals(Response.Status.BAD_REQUEST, ex.validationException().getStatus());
+		}
+	}
+
+	private int polygonDataRowCount(String dataRows, int limit, boolean singleByteReads) throws IOException {
+		CsvUploadSchemas.HeaderSchema schema = CsvUploadSchemas.expectedHeaders(FileSetTypeCodeModel.POLYGON)
+				.orElseThrow();
+		String csv = String.join(",", schema.requiredPrefix()) + "\r\n" + dataRows;
+		try (
+				CsvUploadValidator.ValidatingInputStream validating = validator().validatingStream(
+						new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)), FileSetTypeCodeModel.POLYGON,
+						limit
+				)
+		) {
+			if (singleByteReads) {
+				while (validating.read() >= 0) {
+					// read to the end
+				}
+			} else {
+				validating.transferTo(OutputStream.nullOutputStream());
+			}
+			return validating.dataRowCount();
+		}
+	}
+
+	@Test
+	void dataRowsAfterThePolygonHeaderAreCountedSkippingBlankLines() throws IOException {
+		assertEquals(2, polygonDataRowCount("1,a\r\n\r\n  \n2,b\n", 10, false));
+	}
+
+	@Test
+	void lastDataRowWithoutNewlineIsCounted() throws IOException {
+		assertEquals(2, polygonDataRowCount("1,a\n2,b", 10, false));
+	}
+
+	@Test
+	void dataRowCountingStopsAtTheLimit() throws IOException {
+		assertEquals(2, polygonDataRowCount("1,a\n2,b\n3,c\n", 2, false));
+	}
+
+	@Test
+	void headerOnlyFileHasNoDataRows() throws IOException {
+		assertEquals(0, polygonDataRowCount("", 2, false));
+	}
+
+	@Test
+	void dataRowsAreCountedOnTheSingleByteReadPath() throws IOException {
+		assertEquals(2, polygonDataRowCount("1,a\n2,b", 10, true));
+	}
+
+	@Test
+	void dataRowsAreNotCountedForFileTypesWithoutAHeader() throws IOException {
+		try (
+				CsvUploadValidator.ValidatingInputStream validating = validator()
+						.validatingStream(new ByteArrayInputStream(CSV_BYTES), FileSetTypeCodeModel.RESULTS, 10)
+		) {
+			validating.transferTo(OutputStream.nullOutputStream());
+			assertEquals(0, validating.dataRowCount());
 		}
 	}
 
@@ -411,7 +468,7 @@ class CsvUploadValidatorTest {
 			long declaredLength
 	) throws ProjectionFileUploadException, IOException {
 		validator.validateMetadata(filename, contentType, declaredLength);
-		try (InputStream validating = validator.validatingStream(source, type)) {
+		try (InputStream validating = validator.validatingStream(source, type, 0)) {
 			validating.transferTo(OutputStream.nullOutputStream());
 		} catch (CsvUploadValidationIOException e) {
 			throw e.validationException();

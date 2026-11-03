@@ -43,7 +43,6 @@ export const buildExecutionOptions = (
     ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
     ExecutionOptionsEnum.DoEnableProgressLogging,
     ExecutionOptionsEnum.DoEnableErrorLogging,
-    ExecutionOptionsEnum.DoEnableDebugLogging,
     ExecutionOptionsEnum.ForwardGrowEnabled,
     ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
   ]
@@ -103,6 +102,10 @@ export const buildExecutionOptions = (
     {
       flag: fileUploadStore.incSecondaryHeight,
       option: ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    },
+    {
+      flag: fileUploadStore.isDebugModeEnabled,
+      option: ExecutionOptionsEnum.DoEnableDebugLogging,
     },
   ]
 
@@ -202,6 +205,7 @@ export const buildProjectionParameters = (
 /**
  * Runs the current projection by sending it to batch processing.
  * The projection must already be created and its GUID stored in the app store.
+ * The projection parameters are saved first so the run uses exactly what is shown on screen.
  *
  * @returns The updated ProjectionModel with RUNNING status.
  * @throws Error if the projection GUID is not available in the app store.
@@ -209,10 +213,16 @@ export const buildProjectionParameters = (
 export const runProjectionFileUpload = async (
 ): Promise<ProjectionModel> => {
   const appStore = useAppStore()
+  const fileUploadStore = useFileUploadStore()
   const projectionGUID = appStore.getCurrentProjectionGUID
   if (!projectionGUID) {
     throw new Error(PROJECTION_ERR.MISSING_GUID)
   }
+  await updateProjectionParams(
+    projectionGUID,
+    buildProjectionParameters(fileUploadStore),
+    fileUploadStore.reportDescription,
+  )
   return await projServiceRunProjection(projectionGUID)
 }
 

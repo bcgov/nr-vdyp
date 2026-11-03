@@ -14,6 +14,8 @@ export { default as StandInfoPanel } from './input/stand-info/StandInfoPanel.vue
 export { default as ReportConfigPanel } from './input/report-info/ReportConfigPanel.vue'
 export { default as ReportSettingsPanel } from './input/report-info/ReportSettingsPanel.vue'
 export { default as ReportDetailsPanel } from './input/report-info/ReportDetailsPanel.vue'
+export { default as DebugModeSelector } from './input/report-info/DebugModeSelector.vue'
+export { default as FileUploadReportSettingsPanel } from './input/report-info/FileUploadReportSettingsPanel.vue'
 export { default as AttachmentsPanel } from './input/attachments/AttachmentsPanel.vue'
 export { default as MinimumDBHPanel } from './input/minimum-dbh/MinimumDBHPanel.vue'
 export { default as ParameterSelectionProgressBar } from './input/ParameterSelectionProgressBar.vue'

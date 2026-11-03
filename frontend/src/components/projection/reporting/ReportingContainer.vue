@@ -9,7 +9,7 @@ import { computed } from 'vue'
 import type { PropType } from 'vue'
 import { ReportingOutput } from '@/components/projection'
 import { useProjectionStore } from '@/stores/projection/projectionStore'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, MESSAGE } from '@/constants'
 import type { ReportingTab } from '@/types/types'
 
 const props = defineProps({
@@ -28,6 +28,10 @@ const data = computed(() => {
       return [...projectionStore.errorMessages]
     case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
       return [...projectionStore.logMessages]
+    case CONSTANTS.REPORTING_TAB.VIEW_DEBUG_LOG:
+      return projectionStore.debugMessages.length > 0
+        ? [...projectionStore.debugMessages]
+        : [MESSAGE.DEBUG_MODE.DEBUG_LOG_EMPTY]
     default:
       return []
   }

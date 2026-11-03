@@ -344,6 +344,13 @@ export const VALIDATION_WARN = Object.freeze({
   FORM_REF_NULL: 'Form reference is null. Validation skipped.',
 })
 
+export const DEBUG_MODE = Object.freeze({
+  PROCESSING_TIME_HINT: 'Enabling Debug Mode will increase overall projection processing time',
+  SINGLE_POLYGON_ONLY: 'Debug Mode is only available for single-polygon file uploads.',
+  DISABLED_MULTIPLE_POLYGONS: 'Debug Mode is disabled because your file contains multiple polygons.',
+  DEBUG_LOG_EMPTY: 'No debug log was produced for this projection.',
+})
+
 export const EDIT_SECTION_TOOLTIP = Object.freeze({
   RESTRICTED_BY_STATUS: (status: string) => `This section may not be edited with a status of ${status}`,
   CLICK_TO_EDIT: 'Click Edit to make changes to this section',

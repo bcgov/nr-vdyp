@@ -86,7 +86,9 @@ export const useProjectionStore = defineStore('projectionStore', () => {
       // Optional
       const debugFile = zip.file(CONSTANTS.FILE_NAME.DEBUG_TXT)
       if (debugFile) {
-        debugMessages.value = (await debugFile.async('string')).split(/\r?\n/)
+        const debugText = await debugFile.async('string')
+        // A blank debug log is kept empty so it shows the empty-log message and cannot be printed or downloaded
+        debugMessages.value = debugText.trim() === '' ? [] : debugText.split(/\r?\n/)
       }
     } catch (error) {
       console.error('Error processing ZIP file:', error)

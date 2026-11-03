@@ -158,6 +158,96 @@ describe('File Upload Store Unit Tests', () => {
     })
   })
 
+  describe('Debug Mode', () => {
+    const polyInfo = { filename: 'poly.csv', fileMappingGUID: 'abc-guid', fileSetGUID: 'set-1' }
+
+    it('should default to Off and be unavailable without a polygon file', () => {
+      assert.isFalse(store.isDebugModeEnabled)
+      assert.isFalse(store.isDebugModeAvailable)
+      assert.isFalse(store.hasTooManyPolygons)
+    })
+
+    it('should be available only for a file the backend permits Debug Mode for', () => {
+      store.setPolygonFileInfo(polyInfo, true)
+      assert.isTrue(store.isDebugModeAvailable)
+      assert.isFalse(store.hasTooManyPolygons)
+
+      store.setPolygonFileInfo(polyInfo, false)
+      assert.isFalse(store.isDebugModeAvailable)
+      assert.isTrue(store.hasTooManyPolygons)
+    })
+
+    it('should clear the permission when the polygon file is removed', () => {
+      store.setPolygonFileInfo(polyInfo, true)
+      store.setPolygonFileInfo(null, true)
+      assert.isFalse(store.isPolygonFileDebugModePermitted)
+      assert.isFalse(store.hasTooManyPolygons)
+    })
+
+    it('should switch Off and flag the header warning when a multi-polygon file replaces a single-polygon one', () => {
+      store.setPolygonFileInfo(polyInfo, true)
+      store.isDebugModeEnabled = true
+
+      store.setPolygonFileInfo(polyInfo, false)
+      assert.isFalse(store.isDebugModeEnabled)
+      assert.isTrue(store.isDebugModeAutoDisabled)
+
+      store.setPolygonFileInfo(polyInfo, true)
+      assert.isFalse(store.isDebugModeEnabled)
+      assert.isFalse(store.isDebugModeAutoDisabled)
+    })
+
+    it('should switch Off when the polygon file is removed, with no multi-polygon file to warn about yet', () => {
+      store.setPolygonFileInfo(polyInfo, true)
+      store.isDebugModeEnabled = true
+
+      store.setPolygonFileInfo(null)
+      assert.isFalse(store.isDebugModeEnabled)
+      assert.isTrue(store.isDebugModeAutoDisabled)
+      assert.isFalse(store.hasTooManyPolygons)
+    })
+
+    it('should keep the auto-disable when the removed file is followed by a multi-polygon upload', () => {
+      store.setPolygonFileInfo(polyInfo, true)
+      store.isDebugModeEnabled = true
+
+      store.setPolygonFileInfo(null)
+      store.setPolygonFileInfo(polyInfo, false)
+      assert.isTrue(store.isDebugModeAutoDisabled)
+      assert.isTrue(store.hasTooManyPolygons)
+    })
+
+    it('should clear the auto-disable when the removed file is followed by a single-polygon upload', () => {
+      store.setPolygonFileInfo(polyInfo, true)
+      store.isDebugModeEnabled = true
+
+      store.setPolygonFileInfo(null)
+      store.setPolygonFileInfo(polyInfo, true)
+      assert.isFalse(store.isDebugModeAutoDisabled)
+    })
+
+    it('should reset Debug Mode in resetStore', () => {
+      store.setPolygonFileInfo(polyInfo, true)
+      store.isDebugModeEnabled = true
+      store.resetStore()
+      assert.isFalse(store.isDebugModeEnabled)
+      assert.isFalse(store.isDebugModeAutoDisabled)
+      assert.isFalse(store.isPolygonFileDebugModePermitted)
+    })
+
+    it('should not restore Debug Mode from saved parameters (the loader restores it)', () => {
+      const params = makeParsedParams({
+        reportTitle: 'My Report',
+        selectedExecutionOptions: [ExecutionOptionsEnum.DoEnableDebugLogging],
+      })
+      store.restoreFromProjectionParams(params, true)
+      assert.isFalse(store.isDebugModeEnabled)
+
+      store.restoreFromProjectionParams(params, false)
+      assert.isFalse(store.isDebugModeEnabled)
+    })
+  })
+
   describe('initializeSpeciesGroups', () => {
     it('should create groups matching BIZCONSTANTS with volume utilization defaults', () => {
       store.initializeSpeciesGroups()
