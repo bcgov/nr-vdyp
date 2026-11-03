@@ -18,6 +18,7 @@ import {
   deleteAllFilesFromFileSet,
   parseProjectionParams,
   mapProjectionStatus,
+  isDebugModeSaved,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
@@ -661,8 +662,7 @@ export const createProjection = async (
 /**
  * Runs the current projection by sending it to batch processing.
  * For Manual Input mode, this function:
- * 1. Saves the projection parameters so the run uses the current Debug Mode selection,
- *    which is not persisted when panels are confirmed
+ * 1. Saves the projection parameters so the run uses exactly what is shown on screen
  * 2. Creates CSV files (polygon and layer) from user selections
  * 3. Uploads these files to the backend
  * 4. Sends the projection to batch processing
@@ -686,7 +686,7 @@ export const runProjection = async (): Promise<ProjectionModel> => {
     modelParameterStore.referenceYear = new Date().getFullYear()
   }
 
-  // Step 1: Save projection parameters with the current Debug Mode selection.
+  // Step 1: Save projection parameters as shown on screen.
   // Returns the refreshed projection, which also carries the fileSet GUIDs.
   const projectionModel = await updateProjectionParamsWithModel(
     projectionGUID,
@@ -872,6 +872,7 @@ const hasReportInfoChanges = (
   if (store.isCulminationValuesEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)) return true
   if (store.isBySpeciesEnabled !== opts.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)) return true
   if (store.incSecondaryHeight !== opts.includes(ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable)) return true
+  if (store.isDebugModeEnabled !== opts.includes(ExecutionOptionsEnum.DoEnableDebugLogging)) return true
   const savedProjectionType = resolveProjectionType(opts)
   if (!strEq(store.projectionType, savedProjectionType)) return true
   if (hasUtilizationChanges(store, savedParams, savedProjectionType)) return true
@@ -975,6 +976,7 @@ export const revertPanelToSaved = async (panelName: PanelName): Promise<void> =>
   // which correctly marks prior panels as confirmed without setting runModelEnabled=true.
   modelParameterStore.restoreFromProjectionParams(params, false)
   modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
+  modelParameterStore.isDebugModeEnabled = isDebugModeSaved(projectionModel.projectionParameters)
 
   // editPanel resets the cancelled panel and all subsequent panels to unconfirmed/closed.
   // This prevents stale confirmed states from blocking confirmPanel calls when the user

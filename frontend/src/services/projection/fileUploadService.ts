@@ -205,8 +205,7 @@ export const buildProjectionParameters = (
 /**
  * Runs the current projection by sending it to batch processing.
  * The projection must already be created and its GUID stored in the app store.
- * The projection parameters are saved first so the run uses the current Debug Mode selection,
- * which is not persisted when panels are confirmed.
+ * The projection parameters are saved first so the run uses exactly what is shown on screen.
  *
  * @returns The updated ProjectionModel with RUNNING status.
  * @throws Error if the projection GUID is not available in the app store.

@@ -331,41 +331,82 @@ describe('useProjectionLoader Unit Tests', () => {
     const debugParams = (extra: string[] = []) =>
       makeParamsJson([...extra, ExecutionOptionsEnum.DoEnableDebugLogging])
 
-    it('should show the saved Debug Mode for a read-only status even when EDIT is requested', () => {
+    it('should restore the saved Debug Mode for an editable Manual Input projection', () => {
       cy.stub(apiClient, 'getProjection').resolves({
         data: makeProjectionModel({
-          projectionStatusCode: { code: 'READY', description: 'Ready', displayOrder: 1 },
-          projectionParameters: debugParams(),
-        }),
-      })
-
-      const { loadProjection } = useProjectionLoader()
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
-        expect(useFileUploadStore().isDebugModeEnabled).to.be.true
-      })
-    })
-
-    it('should show the saved Debug Mode for a read-only Manual Input projection', () => {
-      cy.stub(apiClient, 'getProjection').resolves({
-        data: makeProjectionModel({
-          projectionStatusCode: { code: 'RUNNING', description: 'Running', displayOrder: 1 },
           projectionParameters: debugParams([ExecutionOptionsEnum.DoEnableProjectionReport]),
         }),
       })
 
       const { loadProjection } = useProjectionLoader()
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.VIEW)).then(() => {
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
         expect(useModelParameterStore().isDebugModeEnabled).to.be.true
       })
     })
 
-    it('should default Debug Mode to Off for an editable projection', () => {
+    const stubPolygonFile = (debugModePermitted: boolean) =>
+      cy.stub(apiClient, 'getFileSetFiles').resolves({
+        data: [{ filename: 'polygon.csv', fileMappingGUID: 'poly-file-guid', debugModePermitted }],
+      })
+
+    it('should restore the saved Debug Mode for a File Upload projection whose file permits it', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({
+          projectionParameters: debugParams(),
+          polygonFileSet: { projectionFileSetGUID: 'poly-set-guid' },
+        }),
+      })
+      stubPolygonFile(true)
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
+        const store = useFileUploadStore()
+        expect(store.isDebugModeEnabled).to.be.true
+        expect(store.isDebugModeAvailable).to.be.true
+      })
+    })
+
+    it('should keep Debug Mode available when it was saved Off for a file that permits it', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({
+          projectionParameters: makeParamsJson([]),
+          polygonFileSet: { projectionFileSetGUID: 'poly-set-guid' },
+        }),
+      })
+      stubPolygonFile(true)
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
+        const store = useFileUploadStore()
+        expect(store.isDebugModeEnabled).to.be.false
+        expect(store.isDebugModeAvailable).to.be.true
+      })
+    })
+
+    it('should not turn Debug Mode On for a file that does not permit it', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: makeProjectionModel({
+          projectionParameters: debugParams(),
+          polygonFileSet: { projectionFileSetGUID: 'poly-set-guid' },
+        }),
+      })
+      stubPolygonFile(false)
+
+      const { loadProjection } = useProjectionLoader()
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
+        const store = useFileUploadStore()
+        expect(store.isDebugModeEnabled).to.be.false
+        expect(store.hasTooManyPolygons).to.be.true
+      })
+    })
+
+    it('should not turn Debug Mode On for a File Upload projection without a polygon file', () => {
       cy.stub(apiClient, 'getProjection').resolves({
         data: makeProjectionModel({ projectionParameters: debugParams() }),
       })
 
       const { loadProjection } = useProjectionLoader()
-      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.VIEW)).then(() => {
+      cy.wrap(loadProjection('test-guid', PROJECTION_VIEW_MODE.EDIT)).then(() => {
         expect(useFileUploadStore().isDebugModeEnabled).to.be.false
       })
     })

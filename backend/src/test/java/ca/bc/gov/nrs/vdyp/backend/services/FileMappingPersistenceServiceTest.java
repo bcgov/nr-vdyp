@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
@@ -54,12 +55,13 @@ class FileMappingPersistenceServiceTest {
 			return null;
 		}).when(repository).persist(any(FileMappingEntity.class));
 
-		FileMappingModel result = service.persistFileMapping(comsObjectGUID, fileSetGUID, filename);
+		FileMappingModel result = service.persistFileMapping(comsObjectGUID, fileSetGUID, filename, true);
 
 		assertNotNull(result);
 		assertEquals(fileMappingGUID.toString(), result.getFileMappingGUID());
 		assertEquals(comsObjectGUID.toString(), result.getComsObjectGUID());
 		assertEquals(filename, result.getFilename());
+		assertTrue(result.isDebugModePermitted());
 		assertEquals(fileSetGUID.toString(), result.getProjectionFileSet().getProjectionFileSetGUID());
 
 		ArgumentCaptor<FileMappingEntity> captor = ArgumentCaptor.forClass(FileMappingEntity.class);

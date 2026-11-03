@@ -11,8 +11,17 @@
                   : 'mdi-chevron-down'
               }}</v-icon>
             </v-col>
-            <v-col>
+            <v-col cols="auto">
               <span class="text-h6">{{ CONSTANTS.FILE_UPLOAD_PANEL_LABEL.ATTACHMENTS }}</span>
+            </v-col>
+            <!-- Shown only while this panel is collapsed, so the automatic Debug Mode reset is not missed -->
+            <v-col
+              v-if="isMultiPolygonWarningVisible"
+              class="attachments-header-warning"
+              data-testid="debug-mode-header-warning"
+            >
+              <v-icon size="small" class="attachments-header-warning-icon">mdi-alert-outline</v-icon>
+              <span>{{ MESSAGE.DEBUG_MODE.DISABLED_MULTIPLE_POLYGONS }}</span>
             </v-col>
           </v-row>
         </v-expansion-panel-title>
@@ -134,9 +143,11 @@ import {
   getProjectionById,
   getFileSetFiles,
   deleteFileFromFileSet,
+  saveDebugModeSelection,
 } from '@/services/projectionService'
 import { uploadFileToFileSet } from '@/services/apiActions'
 import { ensureProjectionExists } from '@/services/projection/fileUploadService'
+import type { UploadedFileInfo } from '@/interfaces/interfaces'
 
 const form = ref<HTMLFormElement>()
 const fileUploadStore = useFileUploadStore()
@@ -161,6 +172,14 @@ const layerFileError = ref<string>('')
 const panelName = CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS
 
 const panelOpenStates = computed(() => fileUploadStore.panelOpenStates)
+
+// Debug Mode was On, the file then changed to one with multiple polygons, and the panel is collapsed
+const isMultiPolygonWarningVisible = computed(
+  () =>
+    fileUploadStore.isDebugModeAutoDisabled &&
+    fileUploadStore.hasTooManyPolygons &&
+    panelOpenStates.value[panelName] !== CONSTANTS.PANEL.OPEN,
+)
 
 // File Upload panel is always interactable - only disabled in read-only mode
 const isInputDisabled = computed(() => isReadOnly.value)
@@ -302,6 +321,20 @@ const validateLayerFile = async (file: File): Promise<boolean> => {
   return true
 }
 
+// Sets the polygon file info; when the new file switches Debug Mode Off, that is saved too
+// so the projection does not reopen with Debug Mode On for a file that does not allow it
+const applyPolygonFileInfo = async (
+  projectionGUID: string,
+  info: UploadedFileInfo | null,
+  debugModePermitted = false,
+) => {
+  const wasDebugModeEnabled = fileUploadStore.isDebugModeEnabled
+  fileUploadStore.setPolygonFileInfo(info, debugModePermitted)
+  if (wasDebugModeEnabled && !fileUploadStore.isDebugModeEnabled) {
+    await saveDebugModeSelection(projectionGUID, false)
+  }
+}
+
 // Upload polygon file immediately when selected
 const uploadPolygonFile = async (file: File) => {
   // Validate the file first
@@ -336,23 +369,18 @@ const uploadPolygonFile = async (file: File) => {
     // Upload new file
     await uploadFileToFileSet(projectionGUID, polygonFileSetGUID, file)
 
-    // Counting stops just past the Debug Mode limit; only "within" or "over" matters
-    const polygonCount = await fileUploadValidation.countPolygonRecords(
-      file,
-      CONSTANTS.DEBUG_MODE_MAX_POLYGONS + 1,
-    )
-
-    // Fetch the uploaded file info
+    // Fetch the uploaded file info (the backend decided at upload whether it permits Debug Mode)
     const files = await getFileSetFiles(projectionGUID, polygonFileSetGUID)
     if (files.length > 0) {
       const uploadedFile = files[0]
-      fileUploadStore.setPolygonFileInfo(
+      await applyPolygonFileInfo(
+        projectionGUID,
         {
           filename: uploadedFile.filename || file.name,
           fileMappingGUID: uploadedFile.fileMappingGUID,
           fileSetGUID: polygonFileSetGUID,
         },
-        polygonCount,
+        uploadedFile.debugModePermitted,
       )
     }
 
@@ -470,7 +498,7 @@ const removePolygonFile = async () => {
       fileUploadStore.polygonFileInfo.fileSetGUID,
       fileUploadStore.polygonFileInfo.fileMappingGUID,
     )
-    fileUploadStore.setPolygonFileInfo(null)
+    await applyPolygonFileInfo(projectionGUID, null)
   } catch (error) {
     console.error('Error removing polygon file:', error)
     notificationStore.showErrorMessage(PROJECTION_ERR.FILE_DELETE_FAILED, PROJECTION_ERR.FILE_DELETE_FAILED_TITLE)
@@ -523,6 +551,37 @@ const removeLayerFile = async () => {
 /* Match collapsed height with other panels that have an Edit button */
 .attachments-panel-title {
   min-height: 48px !important;
+}
+
+.attachments-panel-title .expander-header {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.attachments-header-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--layout-padding-xsmall);
+  margin-left: var(--layout-margin-medium);
+  font: var(--typography-regular-small-body);
+  color: var(--typography-color-primary);
+  min-width: 0;
+}
+
+.attachments-header-warning-icon {
+  color: var(--typography-color-primary);
+}
+
+@media (max-width: 600px) {
+  .attachments-panel-title .expander-header {
+    flex-wrap: wrap;
+  }
+
+  .attachments-header-warning {
+    flex-basis: 100%;
+    margin-left: 0;
+    margin-top: var(--layout-margin-small);
+  }
 }
 
 /* File Input Label - BC Government Design Standards */

@@ -347,7 +347,7 @@ export const DEBUG_MODE = Object.freeze({
   PROCESSING_TIME_HINT: 'Enabling Debug Mode will increase overall projection processing time',
   SINGLE_POLYGON_ONLY: 'Debug Mode is only available for single-polygon file uploads.',
   DISABLED_MULTIPLE_POLYGONS: 'Debug Mode is disabled because your file contains multiple polygons.',
-  POLYGON_COUNT_UNKNOWN: 'Re-upload the polygon file to enable Debug Mode.',
+  DEBUG_LOG_EMPTY: 'No debug log was produced for this projection.',
 })
 
 export const EDIT_SECTION_TOOLTIP = Object.freeze({

@@ -11,25 +11,17 @@
                   : 'mdi-chevron-down'
               }}</v-icon>
             </v-col>
-            <v-col cols="auto">
+            <v-col>
               <span class="text-h6">{{ CONSTANTS.FILE_UPLOAD_PANEL_LABEL.REPORT_SETTINGS }}</span>
-            </v-col>
-            <!-- Shown in the header so the automatic reset is visible while the panel is collapsed -->
-            <v-col
-              v-if="fileUploadStore.isDebugModeAutoDisabled"
-              class="header-warning"
-              data-testid="debug-mode-header-warning"
-            >
-              <v-icon size="small" class="header-warning-icon">mdi-alert-outline</v-icon>
-              <span>{{ MESSAGE.DEBUG_MODE.DISABLED_MULTIPLE_POLYGONS }}</span>
             </v-col>
           </v-row>
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text">
           <DebugModeSelector
-            v-model="fileUploadStore.isDebugModeEnabled"
+            :model-value="fileUploadStore.isDebugModeEnabled"
             :disabled="isDebugModeDisabled"
             :warning-message="warningMessage"
+            @update:model-value="onDebugModeChange"
           />
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -41,11 +33,15 @@
 import { computed } from 'vue'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useFileUploadStore } from '@/stores/projection/fileUploadStore'
+import { useNotificationStore } from '@/stores/common/notificationStore'
 import { DebugModeSelector } from '@/components/projection'
+import { saveDebugModeSelection } from '@/services/projectionService'
 import { CONSTANTS, MESSAGE } from '@/constants'
+import { PROJECTION_ERR } from '@/constants/message'
 
 const appStore = useAppStore()
 const fileUploadStore = useFileUploadStore()
+const notificationStore = useNotificationStore()
 
 const isReadOnly = computed(() => appStore.isReadOnly)
 
@@ -55,13 +51,27 @@ const isDebugModeDisabled = computed(
 
 const warningMessage = computed(() => {
   if (isReadOnly.value) return ''
-  if (fileUploadStore.hasMultiplePolygons) return MESSAGE.DEBUG_MODE.SINGLE_POLYGON_ONLY
-  // A polygon file restored from an earlier session cannot be re-read to count its polygons
-  if (fileUploadStore.polygonFileInfo !== null && fileUploadStore.polygonCount === null) {
-    return MESSAGE.DEBUG_MODE.POLYGON_COUNT_UNKNOWN
-  }
+  if (fileUploadStore.hasTooManyPolygons) return MESSAGE.DEBUG_MODE.SINGLE_POLYGON_ONLY
   return ''
 })
+
+const onDebugModeChange = async (enabled: boolean) => {
+  fileUploadStore.isDebugModeEnabled = enabled
+  // Without a projection yet, the selection is saved when the projection is created
+  const projectionGUID = appStore.getCurrentProjectionGUID
+  if (!projectionGUID) return
+
+  appStore.isSavingProjection = true
+  try {
+    await saveDebugModeSelection(projectionGUID, enabled)
+  } catch (error) {
+    console.error(PROJECTION_ERR.SAVE_ERROR_LOG, error)
+    fileUploadStore.isDebugModeEnabled = !enabled
+    notificationStore.showErrorMessage(PROJECTION_ERR.SAVE_FAILED, PROJECTION_ERR.SAVE_FAILED_TITLE)
+  } finally {
+    appStore.isSavingProjection = false
+  }
+}
 </script>
 
 <style scoped>
@@ -82,32 +92,5 @@ const warningMessage = computed(() => {
 
 .expander-header {
   align-items: center;
-  flex-wrap: nowrap;
-}
-
-.header-warning {
-  display: flex;
-  align-items: center;
-  gap: var(--layout-padding-xsmall);
-  margin-left: var(--layout-margin-medium);
-  font: var(--typography-regular-small-body);
-  color: var(--typography-color-primary);
-  min-width: 0;
-}
-
-.header-warning-icon {
-  color: var(--typography-color-primary);
-}
-
-@media (max-width: 600px) {
-  .expander-header {
-    flex-wrap: wrap;
-  }
-
-  .header-warning {
-    flex-basis: 100%;
-    margin-left: 0;
-    margin-top: var(--layout-margin-small);
-  }
 }
 </style>

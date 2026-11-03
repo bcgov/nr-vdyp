@@ -225,10 +225,9 @@
                 </v-row>
               </v-container>
             </div>
-            <!-- Debug Mode is a run-time option, so it stays available outside the panel's edit state -->
             <DebugModeSelector
-              v-model="modelParameterStore.isDebugModeEnabled"
-              :disabled="isReadOnly"
+              v-model="localIsDebugModeEnabled"
+              :disabled="isInputDisabled"
               class="debug-mode-selector"
             />
             <ActionPanel
@@ -356,6 +355,7 @@ const localIsComputedMAIEnabled = ref<boolean>(modelParameterStore.isComputedMAI
 const localIsCulminationValuesEnabled = ref<boolean>(modelParameterStore.isCulminationValuesEnabled)
 const localIsBySpeciesEnabled = ref<boolean>(modelParameterStore.isBySpeciesEnabled)
 const localIncSecondaryHeight = ref<boolean>(modelParameterStore.incSecondaryHeight)
+const localIsDebugModeEnabled = ref<boolean>(modelParameterStore.isDebugModeEnabled)
 
 // Validation error refs
 const startingAgeError = ref<string>('')
@@ -521,6 +521,11 @@ watch(() => modelParameterStore.incSecondaryHeight, (newVal) => {
     localIncSecondaryHeight.value = newVal
   }
 })
+watch(() => modelParameterStore.isDebugModeEnabled, (newVal) => {
+  if (newVal !== localIsDebugModeEnabled.value) {
+    localIsDebugModeEnabled.value = newVal
+  }
+})
 
 watch(selectedAgeYearRange, (newVal) => { modelParameterStore.selectedAgeYearRange = newVal; markDirty() })
 watch(localStartingAge, (newVal) => { modelParameterStore.startingAge = newVal; markDirty() })
@@ -551,6 +556,12 @@ watch(localIsBySpeciesEnabled, (newVal) => {
 watch(localIncSecondaryHeight, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.incSecondaryHeight)) {
     modelParameterStore.incSecondaryHeight = newVal
+    markDirty()
+  }
+})
+watch(localIsDebugModeEnabled, (newVal) => {
+  if (newVal !== modelParameterStore.isDebugModeEnabled) {
+    modelParameterStore.isDebugModeEnabled = newVal
     markDirty()
   }
 })

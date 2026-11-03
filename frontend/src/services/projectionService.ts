@@ -398,6 +398,47 @@ export const updateProjectionParamsWithModel = async (
 }
 
 /**
+ * Saves only the Debug Mode selection, leaving every other saved setting as it is.
+ * Debug Mode is not tied to a panel's Next button, so it is saved as soon as it changes;
+ * unconfirmed edits in other panels must not be saved along with it.
+ * Does nothing when the saved selection already matches.
+ * @param projectionGUID The projection GUID
+ * @param enabled Whether Debug Mode is On
+ */
+export const saveDebugModeSelection = async (
+  projectionGUID: string,
+  enabled: boolean,
+): Promise<void> => {
+  const projectionModel = await apiGetProjection(projectionGUID)
+  if (isDebugModeSaved(projectionModel.projectionParameters) === enabled) return
+
+  const parameters: Parameters = JSON.parse(projectionModel.projectionParameters || '{}')
+  const debugLogging = ExecutionOptionsEnum.DoEnableDebugLogging
+  const selected: ExecutionOptionsEnum[] = (parameters.selectedExecutionOptions ?? []).filter(
+    (o) => o !== debugLogging,
+  )
+  const excluded: ExecutionOptionsEnum[] = (parameters.excludedExecutionOptions ?? []).filter(
+    (o) => o !== debugLogging,
+  )
+  if (enabled) {
+    selected.push(debugLogging)
+  } else {
+    excluded.push(debugLogging)
+  }
+
+  const modelParameters: ModelParameters | undefined = projectionModel.modelParameters
+    ? JSON.parse(projectionModel.modelParameters)
+    : undefined
+
+  await apiUpdateProjectionParams(
+    projectionGUID,
+    { ...parameters, selectedExecutionOptions: selected, excludedExecutionOptions: excluded },
+    modelParameters,
+    projectionModel.reportDescription ?? null,
+  )
+}
+
+/**
  * Deletes a file from a fileset
  * @param projectionGUID The projection GUID
  * @param fileSetGUID The fileset GUID

@@ -14,6 +14,7 @@ public class FileMappingModel {
 	private ProjectionFileSetModel projectionFileSet;
 	private String comsObjectGUID;
 	private URL downloadURL;
+	private boolean debugModePermitted;
 
 	public String getFileMappingGUID() {
 		return fileMappingGUID;
@@ -53,5 +54,13 @@ public class FileMappingModel {
 
 	public void setDownloadURL(URL downloadURL) {
 		this.downloadURL = downloadURL;
+	}
+
+	public boolean isDebugModePermitted() {
+		return debugModePermitted;
+	}
+
+	public void setDebugModePermitted(boolean debugModePermitted) {
+		this.debugModePermitted = debugModePermitted;
 	}
 }

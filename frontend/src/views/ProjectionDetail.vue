@@ -475,8 +475,8 @@ const duplicatedFromText = computed(() => {
   return `*This Projection was duplicated from ${info.originalName} on ${parts.month} ${parts.day} at ${parts.hour}:${parts.minute}.`
 })
 
-// debugMessages is non-empty only when the result zip contained a debug log file
-const hasDebugLog = computed(() => isReady.value && projectionStore.debugMessages.length > 0)
+// The Debug Log tab belongs to projections that were run with Debug Mode On
+const isDebugLogTabVisible = computed(() => isReady.value && modelParameterStore.isDebugModeEnabled)
 
 const modelParamTabs = computed<Tab[]>(() => [
   {
@@ -502,8 +502,7 @@ const modelParamTabs = computed<Tab[]>(() => [
     tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
     disabled: !isReady.value || !reportingStore.modelParamReportingTabsEnabled,
   },
-  // Only results of a Debug Mode run contain a debug log
-  ...(hasDebugLog.value
+  ...(isDebugLogTabVisible.value
     ? [
         {
           label: CONSTANTS.MANUAL_INPUT_TAB_NAME.VIEW_DEBUG_LOG,

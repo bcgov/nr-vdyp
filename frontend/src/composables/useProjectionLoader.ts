@@ -4,7 +4,6 @@ import {
   parseProjectionParams,
   mapProjectionStatus,
   getFileSetFiles,
-  isProjectionReadOnly,
   isDebugModeSaved,
 } from '@/services/projectionService'
 import { useAppStore } from '@/stores/projection/appStore'
@@ -36,17 +35,23 @@ export function useProjectionLoader() {
     projectionGUID: string,
     fileSetGUID: string,
     defaultName: string,
-    setFileInfo: (info: { filename: string; fileMappingGUID: string; fileSetGUID: string }) => void,
+    setFileInfo: (
+      info: { filename: string; fileMappingGUID: string; fileSetGUID: string },
+      debugModePermitted: boolean,
+    ) => void,
   ) => {
     try {
       const files = await getFileSetFiles(projectionGUID, fileSetGUID)
       if (files.length > 0) {
         const file = files[0]
-        setFileInfo({
-          filename: file.filename || defaultName,
-          fileMappingGUID: file.fileMappingGUID,
-          fileSetGUID,
-        })
+        setFileInfo(
+          {
+            filename: file.filename || defaultName,
+            fileMappingGUID: file.fileMappingGUID,
+            fileSetGUID,
+          },
+          file.debugModePermitted,
+        )
       }
     } catch (err) {
       console.error(`Error loading ${defaultName.toLowerCase()} info:`, err)
@@ -141,19 +146,16 @@ export function useProjectionLoader() {
         appStore.setDuplicatedFromInfo(null)
       }
 
-      // Debug Mode is a per-run choice: show the saved value only for projections that are
-      // running or have run (read-only by status, regardless of the requested view mode).
-      const debugModeEnabled =
-        isProjectionReadOnly(projectionStatus) && isDebugModeSaved(projectionModel.projectionParameters)
+      const isDebugModeOn = isDebugModeSaved(projectionModel.projectionParameters)
 
       if (isInputModelParams) {
         restoreInputModelParamsState(projectionModel.modelParameters, params, isViewMode, collapseAllPanels)
         modelParameterStore.reportDescription = projectionModel.reportDescription ?? null
-        modelParameterStore.isDebugModeEnabled = debugModeEnabled
+        modelParameterStore.isDebugModeEnabled = isDebugModeOn
       } else {
         await restoreFileUploadState(projectionGUID, projectionModel, params, isViewMode, collapseAllPanels)
         fileUploadStore.reportDescription = projectionModel.reportDescription ?? null
-        fileUploadStore.isDebugModeEnabled = debugModeEnabled
+        fileUploadStore.isDebugModeEnabled = isDebugModeOn && fileUploadStore.isDebugModeAvailable
       }
 
       return true
