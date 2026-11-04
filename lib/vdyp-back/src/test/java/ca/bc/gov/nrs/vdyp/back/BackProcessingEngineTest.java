@@ -37,6 +37,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -1565,15 +1566,72 @@ class BackProcessingEngineTest {
 		}
 
 		@Test
-		void test() throws ValueParseException {
+		void testRelative() throws ValueParseException {
 			var result = BackProcessingEngine
 					.getYears(new BackControlVariables(new Integer[] { 16, 0, 2, 3, 1 }), 2011, 1967);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(1995))); // Interpret offset as negative
+			assertThat(result, recordHasProperty("step", is(1)));
+
+		}
+
+		@Test
+		void testAbsolutePast() throws ValueParseException {
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 1995, 0, 2, 3, 1 }), 2011, 1967);
 
 			assertThat(result, recordHasProperty("first", is(2011)));
 			assertThat(result, recordHasProperty("zero", is(1995)));
 			assertThat(result, recordHasProperty("step", is(1)));
 
 		}
+
+		@Test
+		void testAbsoluteFuture() throws ValueParseException {
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 2026, 0, 2, 3, 1 }), 2011, 1967);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(2011)));
+			assertThat(result, recordHasProperty("step", is(1)));
+
+		}
+
+		@Test
+		void testBeforeConvergence() throws ValueParseException {
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 1967, 0, 2, 3, 1 }), 2011, 1980);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(1980)));
+			assertThat(result, recordHasProperty("step", is(1)));
+
+		}
+
+		@Test
+		void testByDecade() throws ValueParseException {
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 16, 0, 2, 4/* By Decade */, 1 }), 2011, 1967);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(2001))); // Offset from first by a multiple of 10
+			assertThat(result, recordHasProperty("step", is(10)));
+
+		}
+
+		@Disabled("VDYP-1461 control variable 4 with a value of 5 is impossible")
+		@Test
+		void testBySingleStep() throws ValueParseException {
+			// Based on documentation this makes more sense for 1 or 2 and 5 isn't documented.
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 16, 0, 2, 5/* Single Step */, 1 }), 2011, 1967);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(1995)));
+			assertThat(result, recordHasProperty("step", is(16)));
+		}
+
 	}
 
 	@Nested

@@ -1022,6 +1022,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	static protected int getYearStep(ProcessingControlVariables controlVariables, int firstYear, final int year0) {
 		return switch (controlVariables.getControlVariable(ControlVariable.OUTPUT_FILES_4)) {
 		case 4 -> 10;
+		// FIXME VDYP-1461 This is unreachable as validation will prevent this control variable from ever being 5
 		case 5 -> max(firstYear - year0, 1);
 		default -> 1;
 		};
@@ -1048,7 +1049,6 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		}
 		return initialYear0;
 	}
-
 
 	public enum BackExecutionStep implements ProcessingEngine.ExecutionStep {
 		;
