@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -254,6 +256,14 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	public int[] getIndices() {
 		return getBank().getIndices();
+	}
+
+	public <T> Stream<T> streamBySpecies(T[] values) {
+		return Arrays.stream(getIndices()).mapToObj(i -> values[i]);
+	}
+
+	public DoubleStream streamBySpecies(float[] values) {
+		return Arrays.stream(getIndices()).mapToDouble(i -> values[i]);
 	}
 
 	protected void applyCompatibilityVariablesToSpecies(int i, VdypSpecies species) {

@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.DoubleStream;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
@@ -3523,6 +3524,52 @@ class ProcessingEngineTest {
 					BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX,
 					BaseExecutionStep.SET_COMPATIBILITY_VARIABLES
 			);
+		}
+	}
+
+	@Nested
+	class GetDefaultSiteIndex {
+
+		@Test
+		void testExistingValueGiven() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(12.0), 42f);
+			assertThat(result, is(42f));
+		}
+
+		@Test
+		void testGetFromStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(12.0), Float.NaN);
+			assertThat(result, is(12f));
+		}
+
+		@Test
+		void testFirstFromStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(12.0, 42.0), Float.NaN);
+			assertThat(result, is(12f));
+		}
+
+		@Test
+		void testSkipNaNInStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(Double.NaN, 12.0), Float.NaN);
+			assertThat(result, is(12f));
+		}
+
+		@Test
+		void testEmptyStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(), Float.NaN);
+			assertThat(result, asFloat(notANumber()));
+		}
+
+		@Test
+		void testExistingValueGivenWithEmptyStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(), 42f);
+			assertThat(result, is(42f));
 		}
 	}
 }

@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.function.Predicate;
+import java.util.stream.DoubleStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1742,16 +1743,7 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 		// meaningful value after this for example when the value is not available for the primary
 		// species (see estimateMissingSiteIndices) and it's the only one.
 
-		float defaultSiteIndex = primarySpeciesSiteIndex;
-
-		if (Float.isNaN(defaultSiteIndex)) {
-			for (int i : lps.getIndices()) {
-				if (!Float.isNaN(bank.siteIndices[i])) {
-					defaultSiteIndex = bank.siteIndices[i];
-					break;
-				}
-			}
-		}
+		float defaultSiteIndex = getDefaultSiteIndex(lps.streamBySpecies(bank.siteIndices), primarySpeciesSiteIndex);
 
 		for (int i : lps.getIndices()) {
 			if (!Float.isNaN(bank.yearsToBreastHeight[i])) {
@@ -1776,6 +1768,15 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 				logger.warn(MessageFormat.format("Unable to determine yearsToBreastHeight of species {0}", i), e);
 			}
 		}
+	}
+
+	public static float getDefaultSiteIndex(DoubleStream speciesSiteIndices, float primarySpeciesSiteIndex) {
+		float defaultSiteIndex = primarySpeciesSiteIndex;
+
+		if (Float.isNaN(defaultSiteIndex)) {
+			defaultSiteIndex = (float) speciesSiteIndices.filter(x -> !Double.isNaN(x)).findFirst().orElse(Double.NaN);
+		}
+		return defaultSiteIndex;
 	}
 
 }

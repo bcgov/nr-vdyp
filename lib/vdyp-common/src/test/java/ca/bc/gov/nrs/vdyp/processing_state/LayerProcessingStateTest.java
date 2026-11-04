@@ -5,6 +5,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasMessage;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
@@ -657,6 +658,55 @@ class LayerProcessingStateTest {
 			unit.setSiteCurveNumbers(new int[] { 0, 118, 119 });
 			unit.setSpeciesRankingDetails(new SpeciesRankingDetails(1, Optional.of(2), 42, 42, 42));
 			assertThat("Site curve for \"species 0\"", unit.getSiteCurveNumber(0), is(118));
+		}
+	}
+
+	@Nested
+	class StreamBySpecies {
+		LayerProcessingState<?> unit;
+
+		@BeforeEach
+		void setup() throws Exception {
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2024);
+				pb.biogeoclimaticZone(becZone);
+				pb.forestInventoryZone("A");
+				pb.percentAvailable(90f);
+				pb.controlMap(realControlMap.getControlMap());
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("AT");
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+					});
+				});
+			});
+
+			EasyMock.expect(parent.getControlMap()).andStubReturn(controlMap);
+
+			em.replay();
+
+			unit = new TestLayerProcessingState(parent, polygon, LayerType.PRIMARY);
+
+			assertThat(unit, hasProperty("NSpecies", is(2)));
+
+		}
+
+		@Test
+		void testFloats() {
+			var result = unit.streamBySpecies(new float[] { 1, 2, 3, 4 }).mapToObj(x -> x).toArray();
+			assertThat(result, arrayContaining(2.0, 3.0));
+		}
+
+		@Test
+		void testStrings() {
+			var result = unit.streamBySpecies(new String[] { "1", "2", "3", "4" }).toArray();
+			assertThat(result, arrayContaining("2", "3"));
 		}
 	}
 }
