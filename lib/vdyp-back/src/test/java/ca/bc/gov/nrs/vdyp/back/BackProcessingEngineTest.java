@@ -101,7 +101,7 @@ class BackProcessingEngineTest {
 	 */
 	VdypOutputWriter mockWriter(List<VdypPolygon> collectTo) {
 
-		VdypOutputWriter output = new VdypOutputWriter(
+		VdypOutputWriter writer = new VdypOutputWriter(
 				controlMap.getControlMap(), OutputStream.nullOutputStream(), OutputStream.nullOutputStream(),
 				OutputStream.nullOutputStream()
 		) {
@@ -139,7 +139,7 @@ class BackProcessingEngineTest {
 			}
 
 		};
-		return output;
+		return writer;
 	}
 
 	@BeforeEach

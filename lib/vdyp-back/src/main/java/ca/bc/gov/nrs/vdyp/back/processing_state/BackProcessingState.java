@@ -23,8 +23,6 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 
 	Optional<Float> baseAreaVeteran = Optional.empty(); // BACK1/BAV
 
-	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
-
 	private static final Supplier<IllegalStateException> UNSET_LIMITS = unset("per species limits");
 
 	private Optional<Integer> convergenceYear = Optional.empty(); // BACK2/IYR_CNV

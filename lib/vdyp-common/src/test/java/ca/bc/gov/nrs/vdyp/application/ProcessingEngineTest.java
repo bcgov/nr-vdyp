@@ -3034,8 +3034,7 @@ class ProcessingEngineTest {
 
 		@Test
 		/** ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES */
-		void testEstimateMissingYearsToBreastHeightValues()
-				throws ProcessingException {
+		void testEstimateMissingYearsToBreastHeightValues() throws ProcessingException {
 
 			var polygon = VdypPolygon.build(pb -> {
 				pb.controlMap(rawControlMap);
@@ -3445,7 +3444,7 @@ class ProcessingEngineTest {
 				ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep mid,
 				ProcessingEngine.ExecutionStep next
 		) {
-			assumeTrue(Math.signum(previous.compareTo(mid)) + Math.signum(mid.compareTo(next)) < 0);
+			assumeTrue(Integer.signum(previous.compareTo(mid)) + Integer.signum(mid.compareTo(next)) < 0);
 
 			assertOrder(previous, next);
 		}

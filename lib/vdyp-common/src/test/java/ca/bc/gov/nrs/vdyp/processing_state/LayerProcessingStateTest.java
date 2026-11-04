@@ -1,7 +1,5 @@
 package ca.bc.gov.nrs.vdyp.processing_state;
 
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.LAYER_CSV_HEADER_LINE;
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.POLYGON_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasMessage;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
@@ -44,10 +42,6 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
-import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
-import ca.bc.gov.nrs.vdyp.processing_state.PrimarySpeciesDetails;
-import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
-import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
 
 class LayerProcessingStateTest {

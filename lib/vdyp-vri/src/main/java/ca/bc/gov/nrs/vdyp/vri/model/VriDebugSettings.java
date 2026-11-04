@@ -10,6 +10,7 @@ import ca.bc.gov.nrs.vdyp.model.NonFipDebugSettings;
 
 public class VriDebugSettings extends BaseDebugSettings implements NonFipDebugSettings {
 
+	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(VriDebugSettings.class);
 
 	public static final int MODE_1_ERRORS_FATAL = 1;

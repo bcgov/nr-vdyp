@@ -35,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.CompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -115,7 +116,9 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		}
 
-		state.setCompatibilityVariableDetails(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvPrimaryLayerSmall);
+		state.getPrimaryLayerProcessingState().setBackCompatibilityVariables(
+				CompatibilityVariables.fromArrays(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvPrimaryLayerSmall)
+		);
 
 		Bank primaryBank = state.getPrimaryLayerProcessingState().getBank();
 		Region polygonRegion = state.getCurrentBecZone().getRegion();
@@ -1003,7 +1006,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 	}
 
 	public static record Years(int zero, int first, int step) {
-	};
+	}
 
 	protected static Years getYears(
 			final ProcessingControlVariables controlVariables, final int firstYear, final int convergenceYear
@@ -1019,7 +1022,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		return new Years(year0, firstYear, yearStep);
 	}
 
-	static protected int getYearStep(ProcessingControlVariables controlVariables, int firstYear, final int year0) {
+	protected static int getYearStep(ProcessingControlVariables controlVariables, int firstYear, final int year0) {
 		return switch (controlVariables.getControlVariable(ControlVariable.OUTPUT_FILES_4)) {
 		case 4 -> 10;
 		// FIXME VDYP-1461 This is unreachable as validation will prevent this control variable from ever being 5
@@ -1028,7 +1031,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		};
 	}
 
-	static protected int
+	protected static int
 			getInitialYearZero(final int firstYear, final TargetYear targetYear, final int convergenceYear) {
 		int year;
 		if (targetYear.isRelative()) {
@@ -1040,7 +1043,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		return year;
 	}
 
-	static protected int getYearZero(final int initialYear0, final int firstYear, final int yearStep) {
+	protected static int getYearZero(final int initialYear0, final int firstYear, final int yearStep) {
 		if (yearStep > 1) {
 			int nYears = firstYear - initialYear0;
 			if (nYears > 0) {

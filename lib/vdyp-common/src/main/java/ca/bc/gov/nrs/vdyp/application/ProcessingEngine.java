@@ -29,7 +29,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
-import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -70,7 +69,7 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 	private static final float B_BASE_MIN = 0.01f;
 	public static final float MIN_BASAL_AREA = 0.001f;
 
-	public ProcessingEngine(S processingState, Optional<VdypOutputWriter> outputWriter) {
+	protected ProcessingEngine(S processingState, Optional<VdypOutputWriter> outputWriter) {
 		this.state = processingState;
 		this.outputWriter = outputWriter;
 	}
@@ -1768,7 +1767,7 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 				continue;
 			}
 
-			float siteIndex = !Float.isNaN(bank.siteIndices[i]) ? bank.siteIndices[i] : defaultSiteIndex;
+			float siteIndex = Float.isNaN(bank.siteIndices[i]) ? defaultSiteIndex : bank.siteIndices[i];
 			try {
 				SiteIndexEquation curve = SiteIndexEquation.getByIndex(lps.getSiteCurveNumber(i));
 				double yearsToBreastHeight = SiteTool.yearsToBreastHeight(curve, siteIndex);
