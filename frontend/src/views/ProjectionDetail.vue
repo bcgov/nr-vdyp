@@ -684,13 +684,16 @@ const fileUploadDisabledText = computed(() => {
 
 /**
  * Enables reporting tabs, navigates to the appropriate tab, and shows a result message.
- * Navigates to Error Messages tab if errors are found, otherwise Model Report tab.
+ * Navigates to Error Messages tab only if the yield table is empty (the projection actually failed),
+ * otherwise Model Report tab. A non-empty error log alone does not mean the projection failed.
  */
 const enableTabsAndNavigate = async (hasErrors: boolean, showMessage: boolean = true) => {
   reportingStore.modelParamEnableTabs()
   await nextTick()
+  // The first line of the yield table CSV is the header
+  const isYieldTableEmpty = projectionStore.csvYieldLines.length <= 1
   setTimeout(() => {
-    modelParamActiveTab.value = hasErrors
+    modelParamActiveTab.value = isYieldTableEmpty
       ? CONSTANTS.MANUAL_INPUT_TAB_INDEX.VIEW_ERROR_MESSAGES
       : CONSTANTS.MANUAL_INPUT_TAB_INDEX.MODEL_REPORT
   }, 100)
@@ -707,7 +710,7 @@ const enableTabsAndNavigate = async (hasErrors: boolean, showMessage: boolean = 
 /**
  * Fetches the result zip file for a READY projection, parses it,
  * populates the report tabs, and navigates to the appropriate tab.
- * Navigates to Error Messages tab if errors are found, otherwise Model Report tab.
+ * Navigates to Error Messages tab if the yield table is empty, otherwise Model Report tab.
  */
 const fetchAndPopulateResults = async (showMessage: boolean = true) => {
   const projectionGUID = appStore.currentProjectionGUID
