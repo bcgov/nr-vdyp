@@ -9,7 +9,6 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.recordHasProperty;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.unboxedArrayCloseTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
-import static org.easymock.EasyMock.anyString;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -31,7 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;

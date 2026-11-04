@@ -479,8 +479,9 @@ public class ComputationMethods {
 				quadMeanDiameterSpecSmall += spec.getCvPrimaryLayerSmall(UtilizationClassVariable.QUAD_MEAN_DIAMETER);
 				FloatMath.clamp(quadMeanDiameterSpecSmall, 4.01f, 7.49f);
 
-				loreyHeightSpecSmall = 1.3f + (loreyHeightSpecSmall - 1.3f)
-						* FloatMath.exp(spec.getCvPrimaryLayerSmall(UtilizationClassVariable.LOREY_HEIGHT));
+				loreyHeightSpecSmall = applyCvToLoreyHeight(
+						loreyHeightSpecSmall, spec.getCvPrimaryLayerSmall(UtilizationClassVariable.LOREY_HEIGHT)
+				);
 
 				if (cvmode == CompatibilityVariableMode.ALL && meanVolumeSmall > 0.0f) {
 					meanVolumeSmall *= FloatMath
@@ -513,6 +514,12 @@ public class ComputationMethods {
 		layer.getQuadraticMeanDiameterByUtilization()
 				.setSmall(BaseAreaTreeDensityDiameter.quadMeanDiameter(baseAreaSum, treesPerHectareSum));
 		layer.getWholeStemVolumeByUtilization().setSmall(volumeSum);
+	}
+
+	public static final float LOREY_OFFSET = 1.3f;
+
+	public static float applyCvToLoreyHeight(float loreyHeightSpecSmall, final float cvPrimaryLayerSmall) {
+		return LOREY_OFFSET + (loreyHeightSpecSmall - LOREY_OFFSET) * FloatMath.exp(cvPrimaryLayerSmall);
 	}
 
 	/**
