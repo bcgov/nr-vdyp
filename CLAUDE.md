@@ -106,6 +106,15 @@ Local full stack: `docker compose up` starts PostgreSQL, Liquibase migrations, M
 - Commit messages commonly reference Jira tickets in the form `VDYP-1234`. Include the ticket key when one is known.
 - Build, release, promotion, and rollback procedures are in `docs/deployment-runbook.md`. Consult it before changing workflows in `.github/workflows/` or Helm charts in `charts/`.
 
+## Architecture and conventions
+
+Read these before making design-level changes:
+
+- `docs/architecture/overview.md`: system context, containers, key flows, projection lifecycle, deployment.
+- `docs/architecture/data-model.md`: database schemas, code tables, computation model.
+- `docs/conventions/`: `java.md`, `vue.md`, `testing.md`, `api-design.md`, `security.md`.
+- `docs/domain/glossary.md`: domain terms. Use these terms consistently in code, comments and documentation.
+
 ## Subproject documentation
 
 Additional `CLAUDE.md` files are expected at the subproject level (for example `lib/`, `backend/`, `batch/`, `frontend/`). Existing READMEs that provide context:
