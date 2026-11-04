@@ -4,7 +4,7 @@
       <template v-if="totalItems === 0">No records to display</template>
       <template v-else>Showing {{ paginationStart }} to {{ paginationEnd }} of {{ totalItems }}</template>
     </div>
-    <div class="pagination-center">
+    <div v-if="totalItems > 0" class="pagination-center">
       <button
         class="pagination-arrow"
         :disabled="currentPage === 1"

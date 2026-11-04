@@ -55,11 +55,14 @@ describe('ProjectionPagination.vue', () => {
     cy.get('.pagination-arrow').last().should('be.disabled')
   })
 
-  it('disables both arrows when totalItems is 0', () => {
+  it('hides the page navigation when totalItems is 0', () => {
     mountComponent({ currentPage: 1, itemsPerPage: 10, totalItems: 0 })
 
-    cy.get('.pagination-arrow').first().should('be.disabled')
-    cy.get('.pagination-arrow').last().should('be.disabled')
+    cy.get('.pagination-center').should('not.exist')
+    cy.get('.pagination-arrow').should('not.exist')
+    cy.get('.pagination-number').should('not.exist')
+    cy.get('.pagination-info-left').should('be.visible')
+    cy.get('.pagination-controls').should('be.visible')
   })
 
   it('shows "No records to display" when totalItems is 0', () => {
