@@ -1437,51 +1437,60 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 
 		Optional<VdypLayer> veteranLayer = getVeteranLayer();
 
-		if (lastStepInclusive.ge(BaseExecutionStep.CHECK_FOR_WORK)) {
-			stopIfNoWork(getState());
-		}
+		if (lastStepInclusive.lt(BaseExecutionStep.CHECK_FOR_WORK))
+			return;
+
+		stopIfNoWork(getState());
+
+		if (lastStepInclusive.lt(BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES))
+			return;
+
+		calculateMissingSiteCurves(plps, getState().getControlMap().getSiteCurveMap());
 
 		// SCINXSET
-		if (lastStepInclusive.ge(BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES)) {
-			calculateMissingSiteCurves(plps, getState().getControlMap().getSiteCurveMap());
+		getState().getVeteranLayerProcessingState().ifPresent(vlps -> {
+			assert veteranLayer.isPresent();
+			calculateMissingSiteCurves(vlps, getState().controlMap.getSiteCurveMap());
+		});
 
-			getState().getVeteranLayerProcessingState().ifPresent(vlps -> {
-				assert veteranLayer.isPresent();
-				calculateMissingSiteCurves(vlps, getState().controlMap.getSiteCurveMap());
-			});
-		}
+		if (lastStepInclusive.lt(BaseExecutionStep.CALCULATE_COVERAGES))
+			return;
 
 		// VPRIME1, method == 1
-		if (lastStepInclusive.ge(BaseExecutionStep.CALCULATE_COVERAGES)) {
-			calculateCoverages(plps);
-		}
+		calculateCoverages(plps);
 
-		if (lastStepInclusive.ge(BaseExecutionStep.DETERMINE_POLYGON_RANKINGS)) {
-			determinePolygonRankings();
-		}
+		if (lastStepInclusive.lt(BaseExecutionStep.DETERMINE_POLYGON_RANKINGS))
+			return;
+
+		determinePolygonRankings();
+
+		if (lastStepInclusive.lt(BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES))
+			return;
 
 		// SITEADD
-		if (lastStepInclusive.ge(BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES)) {
-			if (plps.getParent().getControlMap().getDebugSettings().getValue(11) == 0) {
-				estimateMissingSiteIndices(plps);
-			} else {
-				estimateMissingSiteIndicesAndAgesExtended(plps, plps.getParent().controlMap.getDebugSettings());
-			}
+		if (plps.getParent().getControlMap().getDebugSettings().getValue(11) == 0) {
+			estimateMissingSiteIndices(plps);
+		} else {
+			estimateMissingSiteIndicesAndAgesExtended(plps, plps.getParent().controlMap.getDebugSettings());
 		}
 
-		if (lastStepInclusive.ge(BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES)) {
-			estimateMissingYearsToBreastHeightValues(plps);
-		}
+		if (lastStepInclusive.lt(BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES))
+			return;
+
+		estimateMissingYearsToBreastHeightValues(plps);
+
+		if (lastStepInclusive.lt(BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX))
+			return;
 
 		// VHDOM1 METH_H = 2, METH_A = 2, METH_SI = 2
-		if (lastStepInclusive.ge(BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX)) {
-			calculateDominantHeightAgeSiteIndex(plps, getState().controlMap.getHl1Coefficients());
-		}
+		calculateDominantHeightAgeSiteIndex(plps, getState().controlMap.getHl1Coefficients());
+
+		if (lastStepInclusive.lt(BaseExecutionStep.SET_COMPATIBILITY_VARIABLES))
+			return;
 
 		// CVSET1
-		if (lastStepInclusive.ge(BaseExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
-			setCompatibilityVariables();
-		}
+		setCompatibilityVariables();
+
 	}
 
 	protected Optional<VdypLayer> getVeteranLayer() {
