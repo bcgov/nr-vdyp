@@ -383,6 +383,9 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   //
   const referenceYear = ref<number | null>(null)
 
+  // Restored from the saved parameters by the loader and by Report Settings Cancel
+  const isDebugModeEnabled = ref<boolean>(false)
+
   // Reset store to initial state
   const resetStore = () => {
     // Reset panel states
@@ -452,6 +455,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     copyTitle.value = null
     reportDescription.value = null
     referenceYear.value = null
+    isDebugModeEnabled.value = false
   }
 
   /**
@@ -829,6 +833,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     reportDescription,
     //
     referenceYear,
+    // debug mode
+    isDebugModeEnabled,
     // restore functions
     isRestoringFromDB,
     resetStore,

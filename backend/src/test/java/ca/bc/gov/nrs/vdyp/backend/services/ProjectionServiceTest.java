@@ -2273,6 +2273,47 @@ class ProjectionServiceTest {
 		assertEquals(newProjectionId.toString(), model.getProjectionGUID());
 	}
 
+	@Test
+	void duplicateProjection_debugLoggingSelected_isNotCopied()
+			throws ProjectionServiceException, JsonProcessingException {
+		UUID projectionId = UUID.randomUUID();
+		UUID newProjectionId = UUID.randomUUID();
+
+		UUID ownerId = UUID.randomUUID();
+		VDYPUserEntity ownerEntity = userEntity(ownerId);
+		when(em.find(VDYPUserEntity.class, ownerId)).thenReturn(ownerEntity);
+
+		ProjectionEntity entity = projectionEntity(projectionId, ownerId);
+		Parameters parameters = new Parameters();
+		parameters.setReportTitle("Test Report");
+		parameters.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING);
+		entity.setProjectionParameters(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(parameters));
+		entity.setModelParameters("{\"species\":[{\"code\":\"AC\",\"percent\":100.0}]}");
+
+		ProjectionEntity newEntity = projectionEntity(newProjectionId, ownerId);
+
+		var statusEntity = new ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity();
+		statusEntity.setCode(ProjectionStatusCodeModel.READY);
+		entity.setProjectionStatusCode(statusEntity);
+
+		when(repository.findByIdOptional(projectionId)).thenReturn(Optional.of(entity));
+		when(repository.findByIdOptional(newProjectionId)).thenReturn(Optional.of(newEntity));
+
+		// Simulate DB-generated ID / app-assigned ID
+		doAnswer(inv -> {
+			ProjectionEntity e = inv.getArgument(0, ProjectionEntity.class);
+			e.setProjectionGUID(newProjectionId);
+			return null;
+		}).when(repository).persist(any(ProjectionEntity.class));
+
+		ProjectionModel model = service.duplicateProjection(projectionId, user(ownerId));
+
+		Parameters copied = mapper.readValue(model.getProjectionParameters(), Parameters.class);
+		String debugLogging = Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING.getValue();
+		assertThat(copied.getSelectedExecutionOptions()).doesNotContain(debugLogging);
+		assertThat(copied.getExcludedExecutionOptions()).contains(debugLogging);
+	}
+
 	// ==========================================================
 	// ProjectionEndpoint - projectionHcsvPost
 	// ==========================================================

@@ -36,6 +36,7 @@ const createMockFileUploadStore = (overrides: Record<string, unknown> = {}) =>
     isCurrentYearEnabled: false,
     isReferenceYearEnabled: false,
     incSecondaryHeight: false,
+    isDebugModeEnabled: false,
     selectedAgeYearRange: CONSTANTS.AGE_YEAR_RANGE.AGE,
     startingAge: null,
     finishingAge: null,
@@ -83,7 +84,6 @@ describe('buildExecutionOptions', () => {
       ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
       ExecutionOptionsEnum.DoEnableProgressLogging,
       ExecutionOptionsEnum.DoEnableErrorLogging,
-      ExecutionOptionsEnum.DoEnableDebugLogging,
       ExecutionOptionsEnum.ForwardGrowEnabled,
       ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
     ]
@@ -115,6 +115,16 @@ describe('buildExecutionOptions', () => {
     const { selectedExecutionOptions: bothSelected } = buildExecutionOptions(bothStore)
     expect(bothSelected).to.include(ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
     expect(bothSelected).to.include(ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+  })
+
+  it('should select debug logging only when Debug Mode is enabled', () => {
+    const off = buildExecutionOptions(createMockFileUploadStore({ isDebugModeEnabled: false }))
+    expect(off.selectedExecutionOptions).to.not.include(ExecutionOptionsEnum.DoEnableDebugLogging)
+    expect(off.excludedExecutionOptions).to.include(ExecutionOptionsEnum.DoEnableDebugLogging)
+
+    const on = buildExecutionOptions(createMockFileUploadStore({ isDebugModeEnabled: true }))
+    expect(on.selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoEnableDebugLogging)
+    expect(on.excludedExecutionOptions).to.not.include(ExecutionOptionsEnum.DoEnableDebugLogging)
   })
 })
 
@@ -191,6 +201,8 @@ describe('runProjectionFileUpload', () => {
   })
 
   it('should call apiClient.runProjection with the current GUID', () => {
+    cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+    cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
     cy.stub(apiClient, 'runProjection').resolves({ data: mockProjectionModel })
 
     const appStore = useAppStore()
@@ -199,6 +211,24 @@ describe('runProjectionFileUpload', () => {
     cy.wrap(runProjectionFileUpload()).then((result: any) => {
       expect(apiClient.runProjection).to.be.calledOnceWith('test-guid')
       expect(result.projectionGUID).to.equal('test-guid')
+    })
+  })
+
+  it('should save the current Debug Mode selection before running', () => {
+    cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+    cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
+    cy.stub(apiClient, 'runProjection').resolves({ data: mockProjectionModel })
+
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('test-guid')
+    const fileUploadStore = useFileUploadStore()
+    fileUploadStore.isDebugModeEnabled = true
+
+    cy.wrap(runProjectionFileUpload()).then(() => {
+      expect(apiClient.updateProjectionParams).to.be.calledOnce
+      const savedParams = (apiClient.updateProjectionParams as any).getCall(0).args[1]
+      expect(savedParams.selectedExecutionOptions).to.include(ExecutionOptionsEnum.DoEnableDebugLogging)
+      expect(apiClient.updateProjectionParams).to.be.calledBefore(apiClient.runProjection as any)
     })
   })
 })

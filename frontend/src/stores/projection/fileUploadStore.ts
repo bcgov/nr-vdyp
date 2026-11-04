@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { FileUploadPanelName, PanelState } from '@/types/types'
 import type { FileUploadSpeciesGroup, ParsedProjectionParameters, UploadedFileInfo } from '@/interfaces/interfaces'
@@ -157,6 +157,27 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const polygonFileInfo = ref<UploadedFileInfo | null>(null)
   const layerFileInfo = ref<UploadedFileInfo | null>(null)
 
+  // Whether the uploaded polygon file is within the Debug Mode polygon limit.
+  // The backend decides this when the file is uploaded and returns it with the file info.
+  const isPolygonFileDebugModePermitted = ref<boolean>(false)
+
+  // Restored from the saved parameters by the loader (not by restoreFromProjectionParams,
+  // because it is saved on change rather than with a panel's Next button)
+  const isDebugModeEnabled = ref<boolean>(false)
+  // Set when Debug Mode was switched Off automatically because the polygon file was replaced or
+  // removed, and kept until a file that permits Debug Mode is set. Removing the file and then
+  // uploading a multi-polygon one is the same change as replacing it, so both must keep this set.
+  // Together with hasTooManyPolygons it drives the warning shown in the File Upload panel header.
+  const isDebugModeAutoDisabled = ref<boolean>(false)
+  const reportSettingsPanelOpenState = ref<PanelState>(CONSTANTS.PANEL.OPEN)
+
+  const isDebugModeAvailable = computed(
+    () => polygonFileInfo.value !== null && isPolygonFileDebugModePermitted.value,
+  )
+  const hasTooManyPolygons = computed(
+    () => polygonFileInfo.value !== null && !isPolygonFileDebugModePermitted.value,
+  )
+
   // file upload state
   const isUploadingPolygon = ref<boolean>(false)
   const isUploadingLayer = ref<boolean>(false)
@@ -167,9 +188,23 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     updateRunModelEnabled()
   })
 
-  // Set uploaded file info
-  const setPolygonFileInfo = (info: UploadedFileInfo | null) => {
+  /**
+   * Set uploaded polygon file info together with whether the file permits Debug Mode.
+   * Debug Mode is switched Off at once when the new file does not allow it, so the caller
+   * can save that change right after this call.
+   * @param info The uploaded file info, or null when the file is removed
+   * @param debugModePermitted Whether the file is within the Debug Mode polygon limit
+   */
+  const setPolygonFileInfo = (info: UploadedFileInfo | null, debugModePermitted = false) => {
     polygonFileInfo.value = info
+    isPolygonFileDebugModePermitted.value = info !== null && debugModePermitted
+
+    if (isDebugModeAvailable.value) {
+      isDebugModeAutoDisabled.value = false
+    } else if (isDebugModeEnabled.value) {
+      isDebugModeEnabled.value = false
+      isDebugModeAutoDisabled.value = true
+    }
   }
 
   const setLayerFileInfo = (info: UploadedFileInfo | null) => {
@@ -226,9 +261,15 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     // Reset uploaded file info
     polygonFileInfo.value = null
     layerFileInfo.value = null
+    isPolygonFileDebugModePermitted.value = false
     isUploadingPolygon.value = false
     isUploadingLayer.value = false
     isDeletingFile.value = false
+
+    // Reset debug mode
+    isDebugModeEnabled.value = false
+    isDebugModeAutoDisabled.value = false
+    reportSettingsPanelOpenState.value = CONSTANTS.PANEL.OPEN
   }
 
   const restoreAgeYearRange = (params: ParsedProjectionParameters) => {
@@ -341,6 +382,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
         minimumDBH: panelOpenState,
         attachments: panelOpenState,
       }
+      reportSettingsPanelOpenState.value = panelOpenState
       panelState.value = {
         reportConfig: { confirmed: true, editable: false },
         minimumDBH: { confirmed: true, editable: false },
@@ -400,6 +442,13 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isDeletingFile,
     setPolygonFileInfo,
     setLayerFileInfo,
+    // debug mode
+    isPolygonFileDebugModePermitted,
+    isDebugModeEnabled,
+    isDebugModeAutoDisabled,
+    isDebugModeAvailable,
+    hasTooManyPolygons,
+    reportSettingsPanelOpenState,
     // restore functions
     resetStore,
     restoreFromProjectionParams,

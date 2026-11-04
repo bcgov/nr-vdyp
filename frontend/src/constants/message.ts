@@ -80,7 +80,6 @@ export const MSG_DIALOG_TITLE = Object.freeze({
 export const MDL_PRM_INPUT_HINT = Object.freeze({
   SITE_ZERO_NOT_KNOW: 'A value of zero indicates not known.',
   SITE_DFT_COMPUTED: 'A default will be computed when the model is run.',
-  DENSITY_PCC_APPLY_DFT: 'Applying Default of 50%',
   DENSITY_WO_AGE: 'Density Measurements cannot be supplied without an Age.',
 })
 
@@ -342,6 +341,13 @@ export const SYSTEM_STORAGE = Object.freeze({
 
 export const VALIDATION_WARN = Object.freeze({
   FORM_REF_NULL: 'Form reference is null. Validation skipped.',
+})
+
+export const DEBUG_MODE = Object.freeze({
+  PROCESSING_TIME_HINT: 'Enabling Debug Mode will increase overall projection processing time',
+  SINGLE_POLYGON_ONLY: 'Debug Mode is only available for single-polygon file uploads.',
+  DISABLED_MULTIPLE_POLYGONS: 'Debug Mode is disabled because your file contains multiple polygons.',
+  DEBUG_LOG_EMPTY: 'No debug log was produced for this projection.',
 })
 
 export const EDIT_SECTION_TOOLTIP = Object.freeze({

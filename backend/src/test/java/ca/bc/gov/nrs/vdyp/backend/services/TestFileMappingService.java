@@ -2,11 +2,13 @@ package ca.bc.gov.nrs.vdyp.backend.services;
 
 import static ca.bc.gov.nrs.vdyp.backend.test.TestUtils.fileSetEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -41,15 +43,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ca.bc.gov.nrs.vdyp.backend.clients.COMSClient;
 import ca.bc.gov.nrs.vdyp.backend.config.CsvUploadConfig;
+import ca.bc.gov.nrs.vdyp.backend.config.DebugModeConfig;
 import ca.bc.gov.nrs.vdyp.backend.data.assemblers.FileMappingResourceAssembler;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileMappingEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.FileSetTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.repositories.FileMappingRepository;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionFileUploadException;
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
@@ -85,8 +91,61 @@ class TestFileMappingService {
 		lenient().when(csvUploadConfig.maxFileSizeBytes()).thenReturn(1_000_000_000L);
 		service = new FileMappingService(
 				repository, assembler, comsClient, httpClient, persistenceService,
-				new CsvUploadValidator(csvUploadConfig)
+				new CsvUploadValidator(csvUploadConfig), new DebugModeConfig(1)
 		);
+	}
+
+	private boolean uploadPolygonFileAndGetDebugModePermitted(Path tempDir, int dataRowCount) throws Exception {
+		UUID fileSetGUID = UUID.randomUUID();
+		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
+		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
+		FileSetTypeCodeEntity typeCode = new FileSetTypeCodeEntity();
+		typeCode.setCode(FileSetTypeCodeModel.POLYGON);
+		fileSetEntity.setFileSetTypeCode(typeCode);
+
+		List<String> fixture = Files
+				.readAllLines(Path.of("src/test/resources/test-data/hcsv/common/VDYP7_INPUT_POLY.csv"));
+		StringBuilder content = new StringBuilder(fixture.get(0)).append('\n');
+		for (int i = 0; i < dataRowCount; i++) {
+			content.append(fixture.get(1)).append('\n');
+		}
+		Path uploaded = tempDir.resolve("polygon.csv");
+		Files.writeString(uploaded, content);
+
+		when(fileUpload.fileName()).thenReturn("polygon.csv");
+		when(fileUpload.contentType()).thenReturn("text/csv");
+		when(fileUpload.uploadedFile()).thenReturn(uploaded);
+		when(fileUpload.size()).thenReturn(Files.size(uploaded));
+
+		UUID objectGuid = UUID.randomUUID();
+		COMSObject createdObject = new COMSObject(
+				objectGuid.toString(), "vdyp/fileset/x/file", false, true, "bucket-guid-123", "polygon.csv", null, null,
+				null, null, null, null, Set.of("READ")
+		);
+		when(comsClient.createObject(eq("bucket-guid-123"), anyString(), anyLong(), anyString(), any()))
+				.thenAnswer(invocation -> {
+					InputStream in = invocation.getArgument(4);
+					in.transferTo(OutputStream.nullOutputStream());
+					return createdObject;
+				});
+		when(persistenceService.persistFileMapping(eq(objectGuid), eq(fileSetGUID), eq("polygon.csv"), anyBoolean()))
+				.thenReturn(new FileMappingModel());
+
+		service.createNewFile("bucket-guid-123", fileSetEntity, fileUpload);
+
+		ArgumentCaptor<Boolean> permitted = ArgumentCaptor.forClass(Boolean.class);
+		verify(persistenceService).persistFileMapping(any(), any(), any(), permitted.capture());
+		return permitted.getValue();
+	}
+
+	@Test
+	void createNewFile_singlePolygonFile_permitsDebugMode(@TempDir Path tempDir) throws Exception {
+		assertTrue(uploadPolygonFileAndGetDebugModePermitted(tempDir, 1));
+	}
+
+	@Test
+	void createNewFile_multiPolygonFile_doesNotPermitDebugMode(@TempDir Path tempDir) throws Exception {
+		assertFalse(uploadPolygonFileAndGetDebugModePermitted(tempDir, 2));
 	}
 
 	@Test
@@ -124,7 +183,8 @@ class TestFileMappingService {
 		FileMappingModel persistedModel = new FileMappingModel();
 		persistedModel.setComsObjectGUID(objectGuid.toString());
 		persistedModel.setFilename("input.csv");
-		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "input.csv")).thenReturn(persistedModel);
+		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "input.csv", false))
+				.thenReturn(persistedModel);
 
 		FileMappingModel result = service.createNewFile("bucket-guid-123", fileSetEntity, fileUpload);
 
@@ -132,7 +192,7 @@ class TestFileMappingService {
 		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
 		assertEquals("input.csv", result.getFilename());
 
-		verify(persistenceService).persistFileMapping(objectGuid, fileSetGUID, "input.csv");
+		verify(persistenceService).persistFileMapping(objectGuid, fileSetGUID, "input.csv", false);
 	}
 
 	@Test
@@ -146,7 +206,7 @@ class TestFileMappingService {
 		);
 
 		verify(repository, never()).persist(any(FileMappingEntity.class));
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
 	}
 
 	@Test
@@ -163,7 +223,7 @@ class TestFileMappingService {
 		);
 
 		verify(comsClient, never()).createObject(any(), any(), anyLong(), any(), any());
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
 	}
 
 	@Test
@@ -192,7 +252,7 @@ class TestFileMappingService {
 		);
 
 		verify(comsClient).createObject(eq("bucket-guid-123"), any(), eq(Files.size(uploaded)), eq("text/csv"), any());
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
 	}
 
 	@Test
@@ -223,7 +283,7 @@ class TestFileMappingService {
 
 		assertEquals(Response.Status.REQUEST_ENTITY_TOO_LARGE, ex.getStatus());
 		verify(comsClient).createObject(eq("bucket-guid-123"), any(), eq(7L), eq("text/csv"), any());
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
 	}
 
 	@Test
@@ -247,7 +307,7 @@ class TestFileMappingService {
 				() -> service.createNewFile("bucket-guid-123", fileSetEntity, fileUpload)
 		);
 
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
 	}
 
 	@Test
@@ -275,7 +335,7 @@ class TestFileMappingService {
 					in.transferTo(OutputStream.nullOutputStream());
 					return createdObject;
 				});
-		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "input.csv"))
+		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "input.csv", false))
 				.thenThrow(new RuntimeException("database down"));
 		COMSObjectVersion version = new COMSObjectVersion("v1", "s3v1", objectGuid.toString(), false);
 		when(comsClient.getObjectVersions(objectGuid.toString())).thenReturn(List.of(version));
@@ -494,7 +554,7 @@ class TestFileMappingService {
 		persistedModel.setFilename("file.bin");
 		when(
 				persistenceService.persistFileMapping(
-						UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin"
+						UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin", false
 				)
 		).thenReturn(persistedModel);
 
@@ -503,7 +563,7 @@ class TestFileMappingService {
 
 		// Assert
 		verify(persistenceService).persistFileMapping(
-				UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin"
+				UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin", false
 		);
 
 		verify(comsClient).createObject(
@@ -548,7 +608,7 @@ class TestFileMappingService {
 				)
 		);
 		var databaseFailure = new IllegalStateException("Database write failed");
-		when(persistenceService.persistFileMapping(objectId, fileSet.getProjectionFileSetGUID(), "file.bin"))
+		when(persistenceService.persistFileMapping(objectId, fileSet.getProjectionFileSetGUID(), "file.bin", false))
 				.thenThrow(databaseFailure);
 		when(comsClient.getObjectVersions(objectId.toString())).thenReturn(List.of());
 		when(comsClient.deleteObject(objectId.toString())).thenReturn(Response.noContent().build());
@@ -580,14 +640,15 @@ class TestFileMappingService {
 		FileMappingModel persistedModel = new FileMappingModel();
 		persistedModel.setComsObjectGUID(objectGuid.toString());
 		persistedModel.setFilename("result.zip");
-		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "result.zip")).thenReturn(persistedModel);
+		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "result.zip", false))
+				.thenReturn(persistedModel);
 
 		FileMappingModel result = service.createPlaceholderFile("bucket-id", fileSetEntity, "result.zip");
 
 		assertNotNull(result);
 		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
 		assertEquals("result.zip", result.getFilename());
-		verify(persistenceService).persistFileMapping(objectGuid, fileSetGUID, "result.zip");
+		verify(persistenceService).persistFileMapping(objectGuid, fileSetGUID, "result.zip", false);
 	}
 
 	@Test

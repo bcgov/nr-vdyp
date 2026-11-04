@@ -225,6 +225,11 @@
                 </v-row>
               </v-container>
             </div>
+            <DebugModeSelector
+              v-model="localIsDebugModeEnabled"
+              :disabled="isInputDisabled"
+              class="debug-mode-selector"
+            />
             <ActionPanel
               v-if="!isReadOnly"
               class="action-panel"
@@ -251,7 +256,7 @@ import { reportInfoValidation } from '@/validation'
 import { useAppStore } from '@/stores/projection/appStore'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { AppSpinField } from '@/components'
-import { ActionPanel, PanelEditControl } from '@/components/projection'
+import { ActionPanel, DebugModeSelector, PanelEditControl } from '@/components/projection'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { saveProjectionOnPanelConfirm as saveModelParamProjection, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
@@ -350,6 +355,7 @@ const localIsComputedMAIEnabled = ref<boolean>(modelParameterStore.isComputedMAI
 const localIsCulminationValuesEnabled = ref<boolean>(modelParameterStore.isCulminationValuesEnabled)
 const localIsBySpeciesEnabled = ref<boolean>(modelParameterStore.isBySpeciesEnabled)
 const localIncSecondaryHeight = ref<boolean>(modelParameterStore.incSecondaryHeight)
+const localIsDebugModeEnabled = ref<boolean>(modelParameterStore.isDebugModeEnabled)
 
 // Validation error refs
 const startingAgeError = ref<string>('')
@@ -515,6 +521,11 @@ watch(() => modelParameterStore.incSecondaryHeight, (newVal) => {
     localIncSecondaryHeight.value = newVal
   }
 })
+watch(() => modelParameterStore.isDebugModeEnabled, (newVal) => {
+  if (newVal !== localIsDebugModeEnabled.value) {
+    localIsDebugModeEnabled.value = newVal
+  }
+})
 
 watch(selectedAgeYearRange, (newVal) => { modelParameterStore.selectedAgeYearRange = newVal; markDirty() })
 watch(localStartingAge, (newVal) => { modelParameterStore.startingAge = newVal; markDirty() })
@@ -545,6 +556,12 @@ watch(localIsBySpeciesEnabled, (newVal) => {
 watch(localIncSecondaryHeight, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.incSecondaryHeight)) {
     modelParameterStore.incSecondaryHeight = newVal
+    markDirty()
+  }
+})
+watch(localIsDebugModeEnabled, (newVal) => {
+  if (newVal !== modelParameterStore.isDebugModeEnabled) {
+    modelParameterStore.isDebugModeEnabled = newVal
     markDirty()
   }
 })
@@ -781,6 +798,10 @@ defineExpose({ isDirty, resetDirty })
 </script>
 <style scoped>
 .action-panel {
+  margin-top: 16px;
+}
+
+.debug-mode-selector {
   margin-top: 16px;
 }
 

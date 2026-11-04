@@ -12,10 +12,11 @@ import {
   duplicateProjection,
   updateProjectionParams,
   updateProjectionParamsWithModel,
+  saveDebugModeSelection,
   fetchUserProjections,
 } from '@/services/projectionService'
 import apiClient from '@/services/apiClient'
-import type { ProjectionModel, Parameters } from '@/services/vdyp-api'
+import { ExecutionOptionsEnum, type ProjectionModel, type Parameters } from '@/services/vdyp-api'
 
 describe('projectionService Unit Tests', () => {
   const mockProjectionModel = {
@@ -378,6 +379,69 @@ describe('projectionService Unit Tests', () => {
         .catch((error: Error) => {
           expect(error).to.equal(mockError)
         })
+    })
+  })
+
+  describe('saveDebugModeSelection', () => {
+    const savedModel = (selected: string[], excluded: string[]) =>
+      ({
+        ...mockProjectionModel,
+        projectionParameters: JSON.stringify({
+          reportTitle: 'Saved Title',
+          selectedExecutionOptions: selected,
+          excludedExecutionOptions: excluded,
+        }),
+        modelParameters: JSON.stringify({ species: [] }),
+      }) as unknown as ProjectionModel
+
+    it('should save only the Debug Mode change and keep the other saved settings', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: savedModel(
+          [ExecutionOptionsEnum.DoEnableProgressLogging],
+          [ExecutionOptionsEnum.DoEnableDebugLogging],
+        ),
+      })
+      cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+
+      cy.wrap(saveDebugModeSelection('guid-test', true)).then(() => {
+        expect(apiClient.updateProjectionParams).to.be.calledWith(
+          'guid-test',
+          {
+            reportTitle: 'Saved Title',
+            selectedExecutionOptions: [
+              ExecutionOptionsEnum.DoEnableProgressLogging,
+              ExecutionOptionsEnum.DoEnableDebugLogging,
+            ],
+            excludedExecutionOptions: [],
+          },
+          { species: [] },
+          'Test Description',
+        )
+      })
+    })
+
+    it('should move Debug Mode to the excluded options when switched Off', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: savedModel([ExecutionOptionsEnum.DoEnableDebugLogging], []),
+      })
+      const updateStub = cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+
+      cy.wrap(saveDebugModeSelection('guid-test', false)).then(() => {
+        const params = updateStub.firstCall.args[1] as Parameters
+        expect(params.selectedExecutionOptions).to.deep.equal([])
+        expect(params.excludedExecutionOptions).to.deep.equal([ExecutionOptionsEnum.DoEnableDebugLogging])
+      })
+    })
+
+    it('should not save when the saved selection already matches', () => {
+      cy.stub(apiClient, 'getProjection').resolves({
+        data: savedModel([ExecutionOptionsEnum.DoEnableDebugLogging], []),
+      })
+      const updateStub = cy.stub(apiClient, 'updateProjectionParams')
+
+      cy.wrap(saveDebugModeSelection('guid-test', true))
+        .then(() => updateStub)
+        .should('not.have.been.called')
     })
   })
 
