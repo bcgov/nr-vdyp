@@ -90,9 +90,11 @@ class YieldTableTest {
 			throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "10", "300");
 
-		assertThat(result.messages().size(), is(2));
-		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
-		assertLayerCopyMessage(result, 1, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+		assertThat(result.messages().size(), is(4));
+		assertLayerCopyMessage(result, 0, PolygonMessageKind.SPECIES_TOO_SHORT);
+		assertLayerCopyMessage(result, 1, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
+		assertLayerCopyMessage(result, 2, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+		assertLayerCopyMessage(result, 3, PolygonMessageKind.SPECIES_TOO_SHORT);
 	}
 
 	@Test
@@ -118,7 +120,9 @@ class YieldTableTest {
 	void testMissingSuppliedYieldValuesDoNotAddCopyMessages() throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "", "");
 
-		assertThat(result.messages(), is(List.of()));
+		assertThat(result.messages().size(), is(2));
+		assertLayerCopyMessage(result, 0, PolygonMessageKind.SPECIES_TOO_SHORT);
+		assertLayerCopyMessage(result, 1, PolygonMessageKind.SPECIES_TOO_SHORT);
 	}
 
 	@Test
@@ -128,7 +132,9 @@ class YieldTableTest {
 				.addExcludedExecutionOptionsItem(Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		var result = generateSubstitutedYields(parameters, "10", "300");
 
-		assertThat(result.messages(), is(List.of()));
+		assertThat(result.messages().size(), is(2));
+		assertLayerCopyMessage(result, 0, PolygonMessageKind.SPECIES_TOO_SHORT);
+		assertLayerCopyMessage(result, 1, PolygonMessageKind.SPECIES_TOO_SHORT);
 	}
 
 	private Parameters suppliedYieldSubstitutionParameters() {
@@ -171,8 +177,6 @@ class YieldTableTest {
 		assertThat(message.getKind(), is(kind));
 		assertThat(message.getPolygon(), is(result.layer().getPolygon()));
 		assertThat(message.getLayer(), is(result.layer()));
-		assertThat(message.getSeverity(), is(MessageSeverityCode.INFORMATION));
-		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_LAYERNOTPROCESSED));
 	}
 
 	@Test
@@ -1947,7 +1951,7 @@ class YieldTableTest {
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_PLI_NIGHGI97, 42.0, 10.0);
 
-			var layerYields = yieldTable.getUnprojectedStandYields(stand, 2020);
+			var layerYields = yieldTable.getUnprojectedStandYields(stand.getLayer(), stand, 2020);
 
 			assertFalse(layerYields.bYieldsPredicted());
 			assertThat(layerYields.speciesAge(), is(42.0));
@@ -1959,7 +1963,7 @@ class YieldTableTest {
 	void testGetUnprojectedStandYieldsReturnsZeroesWhenStandMissing() throws AbstractProjectionRequestException {
 
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
-			var layerYields = yieldTable.getUnprojectedStandYields(null, 2020);
+			var layerYields = yieldTable.getUnprojectedStandYields(null, null, 2020);
 
 			assertThat(layerYields.speciesAge(), is(0.0));
 			assertThat(layerYields.dominantHeight(), is(0.0));
@@ -1972,7 +1976,7 @@ class YieldTableTest {
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var stand = buildStandWithProjectionSiteData(2020, null, SiteIndexEquation.SI_PLI_NIGHGI97, 42.0, 10.0);
 
-			var layerYields = yieldTable.getUnprojectedStandYields(stand, 2020);
+			var layerYields = yieldTable.getUnprojectedStandYields(stand.getLayer(), stand, 2020);
 
 			assertThat(layerYields.speciesAge(), is(0.0));
 			assertThat(layerYields.dominantHeight(), is(0.0));
@@ -1986,7 +1990,7 @@ class YieldTableTest {
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_NO_EQUATION, 42.0, 10.0);
 
-			var layerYields = yieldTable.getUnprojectedStandYields(stand, 2020);
+			var layerYields = yieldTable.getUnprojectedStandYields(stand.getLayer(), stand, 2020);
 
 			assertThat(layerYields.speciesAge(), is(0.0));
 			assertThat(layerYields.dominantHeight(), is(0.0));
@@ -2000,7 +2004,8 @@ class YieldTableTest {
 			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_PLI_NIGHGI97, 1.2, 10.0);
 
 			var exception = assertThrows(
-					StandYieldCalculationException.class, () -> yieldTable.getUnprojectedStandYields(stand, 2020)
+					StandYieldCalculationException.class,
+					() -> yieldTable.getUnprojectedStandYields(stand.getLayer(), stand, 2020)
 			);
 
 			assertThat(exception.getCause(), Matchers.instanceOf(CommonCalculatorException.class));

@@ -1461,10 +1461,11 @@ public class YieldTable implements Closeable {
 						"YieldTable.obtainStandYield(): ageToRequest value {0} must be at least one", ageToRequest
 				)
 		);
+		var polygon = layer.getPolygon();
 
 		Integer calendarYear = getCalendarYear(layer, ageToRequest);
 		if (!rowContext.getPolygonProjectionState().layerWasProjected(layer)) {
-			return getUnprojectedStandYields(stand, calendarYear);
+			return getUnprojectedStandYields(layer, stand, calendarYear);
 		}
 		var projectionType = layer.getAssignedProjectionType();
 		LayerType layerType = getLayerType(projectionType);
@@ -1508,7 +1509,6 @@ public class YieldTable implements Closeable {
 		}
 
 		LayerYields layerYields = null;
-		var polygon = layer.getPolygon();
 		Species sp0;
 		if (stand == null) {
 			sp0 = layer.getSp0sByPercent().get(0).getSpeciesGroup();
@@ -1519,9 +1519,8 @@ public class YieldTable implements Closeable {
 		// vdyp7core_requestyeardata
 		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
 		if (projectedPolygon != null && layerType != null) {
-
 			var projectedLayer = projectedPolygon.getLayers().get(layerType);
-			var projectedSp0 = projectedLayer.getSpeciesBySp0(sp0.getSpeciesCode());
+			var projectedSp0 = projectedLayer == null ? null : projectedLayer.getSpeciesBySp0(sp0.getSpeciesCode());
 
 			/*
 			 * If a stand has too small of a species percentage it can be dropped entirely from the projected data. This
@@ -1537,33 +1536,7 @@ public class YieldTable implements Closeable {
 				} else {
 					layerYields = getYields(rowContext, calendarYear, projectedSp0);
 				}
-			}
-		}
-
-		if (layerYields == null) {
-			boolean wasTooShort = false;
-			if (sp0.getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION && sp0.getSiteIndex() != null
-					&& sp0.getYearsToBreastHeight() != null) {
-				try {
-					double ht = SiteIndex2Height.ageSiteIndexToHeight(
-							sp0.getSiteCurve(), ageToRequest, SiteIndexAgeType.SI_AT_TOTAL, sp0.getSiteIndex(),
-							sp0.getYearsToBreastHeight()
-					);
-					if (ht >= 0) {
-						wasTooShort = true;
-						polygon.addCheckedMessage(
-								builder -> builder.layer(layer).details(
-										ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.INFORMATION,
-										PolygonMessageKind.SPECIES_TOO_SHORT, ht, ageToRequest, sp0.getSpeciesCode()
-								)
-						);
-					}
-				} catch (CommonCalculatorException ex) {
-					// swallow calculator exception throw by the above
-				}
-			}
-
-			if (!wasTooShort) {
+			} else if (stand == null || stand == layer.determineLeadingSp0(0)) {
 				PolygonMessageKind kind = PolygonMessageKind.NO_PROJECTED_DATA;
 				final String specText = stand != null ? "species " + sp0.getSpeciesCode() : "the layer";
 				if (rowContext.getCurrentYearIsAgeRow()) {
@@ -1577,10 +1550,14 @@ public class YieldTable implements Closeable {
 						)
 				);
 			}
+		}
+
+
+		if (layerYields == null) {
 			if (layer.getFirstAgeWithYields() == 0) {
 				layer.setAgeRequestedWithoutYields(true);
 			}
-			layerYields = getUnprojectedStandYields(stand, calendarYear);
+			layerYields = getUnprojectedStandYields(layer, stand, calendarYear);
 		} else if (layer.isAgeRequestedWithoutYields()) {
 			layer.setFirstAgeWithYields(ageToRequest);
 			layer.setAgeRequestedWithoutYields(false);
@@ -1593,10 +1570,16 @@ public class YieldTable implements Closeable {
 		return layerYields;
 	}
 
-	LayerYields getUnprojectedStandYields(Stand stand, int calendarYear) throws StandYieldCalculationException {
+	LayerYields getUnprojectedStandYields(Layer layer, Stand stand, int calendarYear)
+			throws StandYieldCalculationException {
 		double dominantHeight = 0.0;
 		double speciesAge = 0.0;
 		String sp0Name = null;
+		boolean standSpecific = true;
+		if (stand == null && layer != null) {
+			standSpecific = false;
+			stand = layer.determineLeadingSp0(0);
+		}
 		if (stand != null) {
 			sp0Name = stand.getSp0Code();
 			Integer standAge = stand.determineSpeciesAgeAtYear(calendarYear);
@@ -1610,6 +1593,20 @@ public class YieldTable implements Closeable {
 							stand.getSpeciesGroup().getSiteCurve(), speciesAge, SiteIndexAgeType.SI_AT_TOTAL,
 							stand.getSpeciesGroup().getSiteIndex(), stand.getSpeciesGroup().getYearsToBreastHeight()
 					);
+					if (dominantHeight >= 0) {
+						var reportHt = dominantHeight;
+						var reportAge = speciesAge;
+						var reportName = sp0Name;
+						Polygon polygon = layer.getPolygon();
+						if (polygon.getPrimaryLayer() == layer) {
+							polygon.addCheckedMessage(
+									builder -> builder.layer(layer).details(
+											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.INFORMATION,
+											PolygonMessageKind.SPECIES_TOO_SHORT, reportHt, reportAge, reportName
+									)
+							);
+						}
+					}
 				} catch (CommonCalculatorException ex) {
 					throw new StandYieldCalculationException(
 							stand.getLayer().getPolygon().getFeatureId(), stand.getLayer().getLayerId(), ex
