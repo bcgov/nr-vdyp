@@ -2936,7 +2936,7 @@ class ProcessingEngineTest {
 
 		@Test
 		/** CALCULATE_COVERAGES */
-		void testFindPrimarySpecies() throws ProcessingException, ValueParseException {
+		void testFindPrimarySpecies() throws ProcessingException {
 
 			// This tests ExecutionStep.CALCULATE_COVERAGES, but that code is stand-alone and can be
 			// tested independently.
@@ -3035,7 +3035,7 @@ class ProcessingEngineTest {
 		@Test
 		/** ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES */
 		void testEstimateMissingYearsToBreastHeightValues()
-				throws ProcessingException, IOException, ResourceParseException {
+				throws ProcessingException {
 
 			var polygon = VdypPolygon.build(pb -> {
 				pb.controlMap(rawControlMap);
