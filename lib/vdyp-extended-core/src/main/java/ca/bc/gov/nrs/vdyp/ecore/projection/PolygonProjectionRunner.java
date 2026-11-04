@@ -161,7 +161,6 @@ public class PolygonProjectionRunner {
 		generateYieldTablesForPolygon();
 	}
 
-
 	void buildPolygonProjectionExecutionStructure() throws PolygonExecutionException {
 
 		try {
@@ -428,7 +427,8 @@ public class PolygonProjectionRunner {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-							PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart", spe.getMessage() + " [" + errorCode + "]"
+							PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart",
+							spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return false;
@@ -449,7 +449,7 @@ public class PolygonProjectionRunner {
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 							PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
-                            spe.getMessage() + " [" + errorCode + "]"
+							spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return true;
@@ -459,7 +459,8 @@ public class PolygonProjectionRunner {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-							PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, "FIPSTART", spe.getMessage() + " [" + errorCode + "]"
+							PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, "FIPSTART",
+							spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return true;
@@ -469,8 +470,7 @@ public class PolygonProjectionRunner {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-							PolygonMessageKind.GENERIC_FIPSTART_ERROR,
-							spe.getMessage() + " [" + errorCode + "]"
+							PolygonMessageKind.GENERIC_FIPSTART_ERROR, spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return false;

@@ -180,8 +180,7 @@ class YieldTableTest {
 	}
 
 	@Test
-	void testShortSpeciesDataAddsCheckedPolygonMessage()
-			throws AbstractProjectionRequestException, IOException {
+	void testShortSpeciesDataAddsCheckedPolygonMessage() throws AbstractProjectionRequestException, IOException {
 		var parameters = polygonMessageTestParameters().yearStart(2013).yearEnd(2014).ageIncrement(1);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
 		var polygon = polygonForMessageTests(context, "10", "300");

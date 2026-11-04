@@ -7,9 +7,7 @@ public enum PolygonMessageKind {
 			"directly assigning estimated site index of {0} to species \"{1}\" and recomputing input height"
 	), //
 	BAD_STAND_DEFINITION("stand definition insufficient for FIPSTART Processing"), //
-	BREAST_HEIGHT_AGE_TOO_YOUNG(
-			"breast height age too young to generate a stand description. {0} return code: {1}"
-	), //
+	BREAST_HEIGHT_AGE_TOO_YOUNG("breast height age too young to generate a stand description. {0} return code: {1}"), //
 	LAYER_HEIGHT_TOO_LOW(
 			"primary layer height was too short to generate a stand description. VDYP7CORE return code: {0} {1}"
 	), //

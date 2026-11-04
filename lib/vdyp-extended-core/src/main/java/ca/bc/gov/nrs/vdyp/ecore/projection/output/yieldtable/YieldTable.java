@@ -1552,7 +1552,6 @@ public class YieldTable implements Closeable {
 			}
 		}
 
-
 		if (layerYields == null) {
 			if (layer.getFirstAgeWithYields() == 0) {
 				layer.setAgeRequestedWithoutYields(true);
