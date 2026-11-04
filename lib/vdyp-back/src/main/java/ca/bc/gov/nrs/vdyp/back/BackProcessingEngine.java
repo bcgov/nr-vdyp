@@ -1049,10 +1049,6 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		return initialYear0;
 	}
 
-	@Override
-	public int getTargetYear(VdypPolygon polygon) {
-		return 0; // We don't need a target year for back projection.
-	}
 
 	public enum BackExecutionStep implements ProcessingEngine.ExecutionStep {
 		;
