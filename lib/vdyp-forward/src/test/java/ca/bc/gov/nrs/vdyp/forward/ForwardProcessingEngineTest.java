@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,12 +22,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
@@ -47,7 +54,7 @@ class ForwardProcessingEngineTest {
 
 	@Nested
 	class ProcessPolygon {
-		ForwardProcessingEngine fpe;
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe;
 		Map<String, Object> controlMap;
 		IMocksControl em;
 		final Map<Integer, VdypPolygon> outputMap = new HashMap<>();
@@ -309,7 +316,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -354,7 +361,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -405,7 +412,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -453,7 +460,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -501,7 +508,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 2, Partial
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.PARTIAL
 			);
 
 			em.verify();
@@ -537,7 +544,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 1, None
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.NONE
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.NONE
 			);
 
 			em.verify();
@@ -575,7 +582,7 @@ class ForwardProcessingEngineTest {
 
 			// Dynamics mode 0, full
 			fpe.growSpecies(
-					lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.FULL
+					lps, 2025, BaseExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, SpeciesDynamics.FULL
 			);
 
 			em.verify();
@@ -607,7 +614,7 @@ class ForwardProcessingEngineTest {
 
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
+			fpe.processPolygon(polygon, ForwardExecutionStep.GROW_5A_LH_EST);
 			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
@@ -630,7 +637,7 @@ class ForwardProcessingEngineTest {
 
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
+			fpe.processPolygon(polygon, ForwardExecutionStep.GROW_5A_LH_EST);
 			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
@@ -653,7 +660,7 @@ class ForwardProcessingEngineTest {
 
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-			fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
+			fpe.processPolygon(polygon, ForwardExecutionStep.GROW_5A_LH_EST);
 			LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 			Bank bank = lps.getBank();
 
@@ -758,7 +765,7 @@ class ForwardProcessingEngineTest {
 			VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 			fpe.growSpecies(
-					EasyMock.anyObject(), EasyMock.anyInt(), EasyMock.eq(ExecutionStep.GROW_6_LAYER_TPH2),
+					EasyMock.anyObject(), EasyMock.anyInt(), EasyMock.eq(ForwardExecutionStep.GROW_6_LAYER_TPH2),
 					EasyMock.anyObject(), EasyMock.anyObject(), EasyMock.anyObject(), EasyMock.anyObject(),
 					EasyMock.anyObject(), EasyMock.anyFloat(), EasyMock.anyFloat(), EasyMock.anyFloat(),
 					EasyMock.anyObject()
@@ -773,10 +780,132 @@ class ForwardProcessingEngineTest {
 
 			em.replay();
 
-			assertThrows(ProcessingException.class, () -> fpe.processPolygon(polygon, ExecutionStep.GROW_6_LAYER_TPH2));
+			assertThrows(
+					ProcessingException.class, () -> fpe.processPolygon(polygon, ForwardExecutionStep.GROW_6_LAYER_TPH2)
+			);
 
 			em.verify();
 		}
 	}
 
+	@Nested
+	class BackExecutionStep {
+
+		@ParameterizedTest
+		@MethodSource("allSteps")
+		void testSelf(ProcessingEngine.ExecutionStep current) {
+
+			assertSelf(current);
+
+		}
+
+		@ParameterizedTest
+		@MethodSource("consecutivePairs")
+		void testInOrder(ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep current) {
+
+			assertOrder(previous, current);
+
+		}
+
+		@ParameterizedTest
+		@MethodSource("triplets")
+		void testTransitive(
+				ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep mid,
+				ProcessingEngine.ExecutionStep next
+		) {
+			assumeTrue(Math.signum(previous.compareTo(mid)) + Math.signum(mid.compareTo(next)) < 0);
+
+			assertOrder(previous, next);
+		}
+
+		static List<ProcessingEngine.ExecutionStep> allSteps() {
+			var midSteps = forwardMidSteps();
+			return allSteps(midSteps);
+		}
+
+		static List<Arguments> triplets() {
+			var midSteps = forwardMidSteps();
+			var allSteps = allSteps(midSteps);
+			return triplets(allSteps);
+		}
+
+		static List<Arguments> consecutivePairs() {
+			var midSteps = forwardMidSteps();
+			var allSteps = allSteps(midSteps);
+			return consecutivePairs(allSteps);
+		}
+
+		protected static List<Arguments>
+				consecutivePairs(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> allSteps) {
+			var it = allSteps.iterator();
+			var previous = it.next();
+			List<Arguments> result = new ArrayList<>(allSteps.size() - 1);
+			while (it.hasNext()) {
+				var current = it.next();
+				result.add(Arguments.of(previous, current));
+				previous = current;
+			}
+			return result;
+		}
+
+		static protected List<Arguments>
+				triplets(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> allSteps) {
+			return allSteps.stream()
+					.flatMap(a -> allSteps.stream().flatMap(b -> allSteps.stream().map(c -> Arguments.of(a, b, c))))
+					.toList();
+		}
+
+		static protected List<ProcessingEngine.ExecutionStep>
+				allSteps(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> steps) {
+			var allSteps = new ArrayList<ProcessingEngine.ExecutionStep>(steps.size() + 2);
+			allSteps.add(BaseExecutionStep.NONE);
+			allSteps.addAll(steps);
+			allSteps.add(BaseExecutionStep.ALL);
+			return allSteps;
+		}
+
+		static protected void assertSelf(ProcessingEngine.ExecutionStep current) {
+			assertFalse(current.lt(current));
+			assertFalse(current.gt(current));
+			assertTrue(current.le(current));
+			assertTrue(current.ge(current));
+		}
+
+		static protected void
+				assertOrder(ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep current) {
+			assertTrue(current.compareTo(previous) > 0);
+			assertTrue(previous.compareTo(current) < 0);
+			assertTrue(current.compareTo(current) == 0);
+
+			assertTrue(current.gt(previous));
+			assertTrue(current.ge(previous));
+			assertFalse(current.lt(previous));
+			assertFalse(current.le(previous));
+		}
+
+		static List<ProcessingEngine.ExecutionStep> forwardMidSteps() {
+			return List.of(
+					BaseExecutionStep.CHECK_FOR_WORK, BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES,
+					BaseExecutionStep.CALCULATE_COVERAGES, BaseExecutionStep.DETERMINE_POLYGON_RANKINGS,
+					BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES,
+					BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES,
+					BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX,
+					BaseExecutionStep.SET_COMPATIBILITY_VARIABLES, ForwardExecutionStep.GROW_1_LAYER_DHDELTA, //
+					ForwardExecutionStep.GROW_2_LAYER_BADELTA, //
+					ForwardExecutionStep.GROW_3_LAYER_DQDELTA, //
+					ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST, //
+					ForwardExecutionStep.GROW_5A_LH_EST, //
+					ForwardExecutionStep.GROW_5_SPECIES_BADQTPH, //
+					ForwardExecutionStep.GROW_6_LAYER_TPH2, //
+					ForwardExecutionStep.GROW_7_LAYER_DQ2, //
+					ForwardExecutionStep.GROW_8_SPECIES_LH, //
+					ForwardExecutionStep.GROW_9_SPECIES_PCT, //
+					ForwardExecutionStep.GROW_10_COMPATIBILITY_VARS, //
+					ForwardExecutionStep.GROW_11_SPECIES_UC, //
+					ForwardExecutionStep.GROW_12_SPECIES_UC_SMALL, //
+					ForwardExecutionStep.GROW_13_STORE_SPECIES_DETAILS, //
+					ForwardExecutionStep.GROW
+			);
+		}
+	}
 }

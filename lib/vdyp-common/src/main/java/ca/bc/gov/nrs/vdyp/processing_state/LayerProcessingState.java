@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +46,6 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	private static final String COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY = "CompatibilityVariablesSet can be set once only";
 	private static final String UNSET_CV = "unset compatibility variables";
-	private static final String UNSET_CV_BASAL_AREAS = "unset cvBasalAreas";
 
 	public static final String UNSET_SPECIES_RANKING_DETAILS = "SpeciesRankingDetails have not been set.  Cannot access {0}.";
 	public static final String UNSET_PRIMARY_SPECIES_DETAILS = "PrimarySpeciesDetails have not been set.  Cannot access {0}.";
@@ -181,8 +182,6 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 		return bank;
 	}
 
-	protected abstract void applyCompatibilityVariables(VdypSpecies species, int i);
-
 	public int getNSpecies() {
 		return getBank().getNSpecies();
 	}
@@ -257,6 +256,14 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	public int[] getIndices() {
 		return getBank().getIndices();
+	}
+
+	public <T> Stream<T> streamBySpecies(T[] values) {
+		return Arrays.stream(getIndices()).mapToObj(i -> values[i]);
+	}
+
+	public DoubleStream streamBySpecies(float[] values) {
+		return Arrays.stream(getIndices()).mapToDouble(i -> values[i]);
 	}
 
 	protected void applyCompatibilityVariablesToSpecies(int i, VdypSpecies species) {
@@ -418,6 +425,20 @@ public abstract class LayerProcessingState<Self extends LayerProcessingState<Sel
 
 	public int[] getBreakageEquationGroups() {
 		return breakageEquationGroups;
+	}
+
+	/**
+	 * Update the compatibility variables on the species model objects to match those of the state object
+	 */
+	protected void updateModelCompatibiltyVariables() {
+
+		VdypLayer layer = this.getPolygon().getLayers().get(this.getLayerType());
+
+		int i = 1;
+		for (var species : layer.getOrderedSpecies()) {
+			applyCompatibilityVariablesToSpecies(i, species);
+			i++;
+		}
 	}
 
 }

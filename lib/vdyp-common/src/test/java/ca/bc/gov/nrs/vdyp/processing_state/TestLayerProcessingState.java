@@ -22,11 +22,6 @@ public class TestLayerProcessingState extends LayerProcessingState<TestLayerProc
 	}
 
 	@Override
-	protected void applyCompatibilityVariables(VdypSpecies species, int i) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	protected VdypLayer updateLayerFromBank() {
 		throw new UnsupportedOperationException();
 	}
