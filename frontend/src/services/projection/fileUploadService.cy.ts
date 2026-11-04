@@ -84,7 +84,6 @@ describe('buildExecutionOptions', () => {
       ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
       ExecutionOptionsEnum.DoEnableProgressLogging,
       ExecutionOptionsEnum.DoEnableErrorLogging,
-      ExecutionOptionsEnum.ForwardGrowEnabled,
       ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
     ]
     alwaysSelected.forEach((opt) => expect(selectedExecutionOptions).to.include(opt))
@@ -94,10 +93,27 @@ describe('buildExecutionOptions', () => {
       ExecutionOptionsEnum.AllowAggressiveValueEstimation,
       ExecutionOptionsEnum.DoIncludeProjectionFiles,
       ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
-      ExecutionOptionsEnum.BackGrowEnabled,
       ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
     ]
     alwaysExcluded.forEach((opt) => expect(excludedExecutionOptions).to.include(opt))
+  })
+
+  it('should map Forward and Backward flags to their execution options', () => {
+    const cases = [
+      { forward: true, backward: false },
+      { forward: false, backward: true },
+      { forward: true, backward: true },
+      { forward: false, backward: false },
+    ]
+    cases.forEach(({ forward, backward }) => {
+      const { selectedExecutionOptions, excludedExecutionOptions } = buildExecutionOptions(
+        createMockFileUploadStore({ isForwardGrowEnabled: forward, isBackwardGrowEnabled: backward }),
+      )
+      expect(selectedExecutionOptions.includes(ExecutionOptionsEnum.ForwardGrowEnabled)).to.equal(forward)
+      expect(excludedExecutionOptions.includes(ExecutionOptionsEnum.ForwardGrowEnabled)).to.equal(!forward)
+      expect(selectedExecutionOptions.includes(ExecutionOptionsEnum.BackGrowEnabled)).to.equal(backward)
+      expect(excludedExecutionOptions.includes(ExecutionOptionsEnum.BackGrowEnabled)).to.equal(!backward)
+    })
   })
 
   it('should add the correct volume option to selected based on projectionType', () => {

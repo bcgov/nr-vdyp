@@ -88,6 +88,30 @@ describe('<ReportSettingsPanel />', () => {
     cy.get('[data-testid="finishing-age"]').should('not.exist')
   })
 
+  it('renders Forward checked and Backward unchecked by default', () => {
+    mountPanel()
+    cy.get('[data-testid="is-forward-grow-enabled"] input').should('be.checked')
+    cy.get('[data-testid="is-backward-grow-enabled"] input').should('not.be.checked')
+  })
+
+  it('updates the store when Forward and Backward checkboxes are toggled', () => {
+    const { modelStore } = mountPanel()
+    cy.get('[data-testid="is-backward-grow-enabled"] input').check()
+    cy.get('[data-testid="is-forward-grow-enabled"] input').uncheck()
+    cy.then(() => {
+      expect(modelStore.isForwardGrowEnabled).to.be.false
+      expect(modelStore.isBackwardGrowEnabled).to.be.true
+    })
+  })
+
+  it('disables Forward and Backward checkboxes when the panel is not editable', () => {
+    mountPanel((modelStore) => {
+      modelStore.panelState.reportSettings.editable = false
+    })
+    cy.get('[data-testid="is-forward-grow-enabled"] input').should('be.disabled')
+    cy.get('[data-testid="is-backward-grow-enabled"] input').should('be.disabled')
+  })
+
   it('disables Computed MAI and By Species checkboxes when CFS Biomass is selected', () => {
     mountPanel((modelStore) => {
       modelStore.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS

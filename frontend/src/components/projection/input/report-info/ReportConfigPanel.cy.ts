@@ -44,6 +44,8 @@ describe('<ReportConfigPanel />', () => {
   describe('Form fields', () => {
     it('renders all checkboxes in "Include following values in Report"', () => {
       mountPanel()
+      cy.get('[data-testid="is-forward-grow-enabled"]').should('exist')
+      cy.get('[data-testid="is-backward-grow-enabled"]').should('exist')
       cy.get('[data-testid="is-by-species-enabled"]').should('exist')
       cy.get('[data-testid="inc-secondary-height"]').should('exist')
       cy.get('[data-testid="is-projection-mode-enabled"]').should('exist')
@@ -78,6 +80,31 @@ describe('<ReportConfigPanel />', () => {
         fu.reportTitle = 'Stored Title'
       })
       cy.get('#reportTitle').should('have.value', 'Stored Title')
+    })
+
+    it('renders Forward checked and Backward unchecked by default', () => {
+      mountPanel()
+      cy.get('[data-testid="is-forward-grow-enabled"] input').should('be.checked')
+      cy.get('[data-testid="is-backward-grow-enabled"] input').should('not.be.checked')
+    })
+
+    it('updates the store when Forward and Backward checkboxes are toggled', () => {
+      const { fileUploadStore } = mountPanel()
+      cy.get('[data-testid="is-backward-grow-enabled"] input').check()
+      cy.get('[data-testid="is-forward-grow-enabled"] input').uncheck()
+      cy.then(() => {
+        expect(fileUploadStore.isForwardGrowEnabled).to.be.false
+        expect(fileUploadStore.isBackwardGrowEnabled).to.be.true
+      })
+    })
+
+    it('reflects restored Forward and Backward store values', () => {
+      mountPanel((fu) => {
+        fu.isForwardGrowEnabled = false
+        fu.isBackwardGrowEnabled = true
+      })
+      cy.get('[data-testid="is-forward-grow-enabled"] input').should('not.be.checked')
+      cy.get('[data-testid="is-backward-grow-enabled"] input').should('be.checked')
     })
 
     it('disables "By Species" checkbox when CFS Biomass projection type is selected', () => {

@@ -122,7 +122,7 @@ describe('Model Parameter Store', () => {
     expect(store.selectedAgeYearRange).to.equal(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
     expect(store.projectionType).to.equal(DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE)
     expect(store.isForwardGrowEnabled).to.be.true
-    expect(store.isBackwardGrowEnabled).to.be.true
+    expect(store.isBackwardGrowEnabled).to.be.false
     expect(store.isByLayerEnabled).to.be.true
     expect(store.isComputedMAIEnabled).to.be.false
     expect(store.minDBHLimit).to.equal('7.5 cm+')

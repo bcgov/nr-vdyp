@@ -361,8 +361,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const startYear = ref<string | null>(null)
   const endYear = ref<string | null>(null)
   const yearIncrement = ref<string | null>(null)
-  const isForwardGrowEnabled = ref<boolean>(true)
-  const isBackwardGrowEnabled = ref<boolean>(true)
+  const isForwardGrowEnabled = ref<boolean>(DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED)
+  const isBackwardGrowEnabled = ref<boolean>(DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED)
 
   const isComputedMAIEnabled = ref<boolean>(false)
   const isCulminationValuesEnabled = ref<boolean>(false)
@@ -438,8 +438,8 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     startYear.value = null
     endYear.value = null
     yearIncrement.value = null
-    isForwardGrowEnabled.value = true
-    isBackwardGrowEnabled.value = true
+    isForwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
+    isBackwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
     isComputedMAIEnabled.value = false
     isCulminationValuesEnabled.value = false
     isBySpeciesEnabled.value = false

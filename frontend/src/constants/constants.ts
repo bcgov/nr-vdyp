@@ -50,6 +50,8 @@ export const MINIMUM_DBH_LIMITS = Object.freeze({
 })
 
 export const INCLUDE_IN_REPORT = Object.freeze({
+  FORWARD: 'Forward',
+  BACKWARD: 'Backward',
   COMPUTED_MAI: 'Computed MAI',
   CULMINATION_VALUES: 'Culmination Values',
   BY_SPECIES: 'By Species',
