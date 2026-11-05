@@ -1,4 +1,16 @@
 
+VARIABLE_TO_SETTER={
+  "hl"=>"LoreyHeight",
+  "ba"=>"BaseArea",
+  "tph"=>"TreesPerHectare",
+  "dq"=>"QuadraticMeanDiameter",
+  "volws"=>"WholeStemVolume",
+  "volcu"=>"CloseUtilizationVolume",
+  "vol_d"=>"CloseUtilizationVolumeNetOfDecay",
+  "vol_dw"=>"CloseUtilizationVolumeNetOfDecayAndWaste",
+  "vol_dwb"=>"CloseUtilizationVolumeNetOfDecayWasteAndBreakage"
+}
+
 results = {}
 $stdin.each_line do |line|
   next if line.chomp.empty?
@@ -22,7 +34,8 @@ $stdin.each_line do |line|
     end
     class_results
   end
-  
+
+  variable = VARIABLE_TO_SETTER[variable]||variable
   
   results[variable]= classes
   
@@ -42,8 +55,10 @@ results2.each_pair do |spec, data|
   data.each_pair do |variable, values|
     next if values.all? {|v| v=="0"}
     print spec==0 ? "primaryLayer" : "primaryLayer.getOrderedSpecies().get(#{spec-1})"
+    #print spec==0 ? "lb" : "sb"
     params=values.map{|v| "#{v}f"}.join ", "
     print ".set#{variable}ByUtilization(Utils.utilizationVector(#{params}))"
+    #print ".#{variable}(#{params})"
     puts ";"
   end
 end

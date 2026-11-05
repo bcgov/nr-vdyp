@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.Pass;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -94,7 +95,9 @@ public class ForwardProcessor extends Processor {
 			try {
 				var outputWriter = Utils
 						.map(outputFileResolver, ofr -> new VdypOutputWriter(controlMap.getControlMap(), ofr));
-				var fpe = new ForwardProcessingEngine(controlMap.getControlMap(), outputWriter);
+				ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+						controlMap.getControlMap(), outputWriter
+				);
 
 				try (var forwardDataStreamReader = new ForwardDataStreamReader(fpe.getState().controlMap);) {
 					// Fetch the next polygon to process.

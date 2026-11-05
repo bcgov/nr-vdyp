@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
@@ -22,7 +23,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
-import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
@@ -74,7 +74,9 @@ class GrowAllStepsTest {
 	@Test
 	void testStandardPath() throws ProcessingException {
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
+		);
 
 		try {
 			var nextComparisonPolygonRef = comparisonDataStreamReader.readNextPolygon();

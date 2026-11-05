@@ -74,6 +74,10 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 		return Optional.ofNullable(getLayers().get(LayerType.PRIMARY));
 	}
 
+	public Optional<L> getVeteranLayer() {
+		return Optional.ofNullable(getLayers().get(LayerType.VETERAN));
+	}
+
 	public L requirePrimaryLayer() {
 		return getPrimaryLayer().orElseThrow(
 				() -> new IllegalStateException(

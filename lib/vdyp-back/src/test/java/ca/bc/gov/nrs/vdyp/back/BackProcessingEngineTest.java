@@ -6,19 +6,27 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecies;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.recordHasProperty;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.unboxedArrayCloseTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllOnly;
-import static org.easymock.EasyMock.anyString;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,12 +37,18 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.back.io.parse.BackControlParser;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
@@ -44,7 +58,8 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
+import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -55,13 +70,17 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingStateTestUtils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class BackProcessingEngineTest {
 
 	BackProcessingEngine engine;
+
+	List<VdypPolygon> output;
 
 	Map<String, Object> rawControlMap;
 
@@ -73,18 +92,74 @@ class BackProcessingEngineTest {
 
 	ProcessingResolvedControlMapImpl controlMap;
 
+	/**
+	 * Make a mock VdypOutputWriter that appends written polygon records to the provided list instead of writing them to
+	 * a file.
+	 *
+	 * @param collectTo
+	 * @return
+	 */
+	VdypOutputWriter mockWriter(List<VdypPolygon> collectTo) {
+
+		VdypOutputWriter writer = new VdypOutputWriter(
+				controlMap.getControlMap(), OutputStream.nullOutputStream(), OutputStream.nullOutputStream(),
+				OutputStream.nullOutputStream()
+		) {
+
+			@Override
+			public void writePolygonWithSpeciesAndUtilizationForYear(VdypPolygon polygon, int year) throws IOException {
+				final var polyCopy = VdypPolygon.build(pb -> {
+					pb.copy(polygon);
+					// Replace the year in the polygon identifier with the provided year
+					pb.polygonIdentifier(polygon.getPolygonIdentifier().getBase(), year);
+					pb.copyLayers(polygon, (lb, l) -> {
+						lb.copySpecies(l, (sb, s) -> {
+							sb.copySiteFrom(s, (ib, i) -> {
+								// Do nothing
+							});
+						});
+					});
+				});
+				collectTo.add(polyCopy);
+			}
+
+			@Override
+			public void writePolygonWithSpeciesAndUtilization(VdypPolygon polygon) throws IOException {
+				final var polyCopy = VdypPolygon.build(pb -> {
+					pb.copy(polygon);
+					pb.copyLayers(polygon, (lb, l) -> {
+						lb.copySpecies(l, (sb, s) -> {
+							sb.copySiteFrom(s, (ib, i) -> {
+								// Do nothing
+							});
+						});
+					});
+				});
+				collectTo.add(polyCopy);
+			}
+
+		};
+		return writer;
+	}
+
 	@BeforeEach
 	void setup() {
 		em = EasyMock.createControl();
-		state = em.createMock(BackProcessingState.class);
 
-		engine = new BackProcessingEngine(state);
+		output = new LinkedList<>();
 
-		rawControlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
+		rawControlMap = TestUtils.loadControlMap(new BackControlParser(), Path.of("VDYP.CTR"));
 
 		becLookup = Utils.parsedControl(rawControlMap, ControlKey.BEC_DEF, BecLookup.class).get();
 
 		controlMap = new ProcessingResolvedControlMapImpl(rawControlMap);
+	}
+
+	void setupMockState() {
+		state = em.createMock(BackProcessingState.class);
+
+		engine = new BackProcessingEngine(state, Optional.of(mockWriter(output)));
+
 		var emp = new EstimationMethods(controlMap);
 		var cmp = new ComputationMethods(emp, VdypApplicationIdentifier.VDYP_BACK);
 
@@ -92,8 +167,18 @@ class BackProcessingEngineTest {
 		expect(state.getComputers()).andStubReturn(cmp);
 	}
 
+	void setupRealState() throws ProcessingException {
+		state = new BackProcessingState(rawControlMap);
+		engine = new BackProcessingEngine(state, Optional.of(mockWriter(output)));
+	}
+
 	@Nested
 	class Prepare {
+
+		@BeforeEach
+		void setup() {
+			setupMockState();
+		}
 
 		@SuppressWarnings("unchecked")
 		public BackProcessingState primaryOnlyWithSingleSpecies() throws ProcessingException {
@@ -139,7 +224,7 @@ class BackProcessingEngineTest {
 
 			cvVolume = new MatrixMap2[] { null,
 					new MatrixMap2Impl<UtilizationClass, VolumeVariable, Float>(
-							List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+							UtilizationClass.UTIL_CLASSES, List.of(VolumeVariable.values()),
 							(uc, vv) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f
 					) };
 
@@ -284,18 +369,24 @@ class BackProcessingEngineTest {
 				engine.prepare(state);
 
 				final int specIndex = 1; // Only one species
+				var layerState = state.getPrimaryLayerProcessingState();
+				assertThat(layerState, backCV("getCVBasalArea", specIndex, UtilizationClass.U75TO125, is(19f)));
+				assertThat(layerState, backCV("getCVBasalArea", specIndex, UtilizationClass.U125TO175, is(22f)));
+				assertThat(layerState, backCV("getCVBasalArea", specIndex, UtilizationClass.U175TO225, is(25f)));
+				assertThat(layerState, backCV("getCVBasalArea", specIndex, UtilizationClass.OVER225, is(28f)));
 
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.ALL, is(16f)));
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.U75TO125, is(19f)));
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.U125TO175, is(22f)));
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.U175TO225, is(25f)));
-				assertThat(state, backCV("getCVBasalArea", specIndex, UtilizationClass.OVER225, is(28f)));
-
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.ALL, is(20f)));
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U75TO125, is(23f)));
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U125TO175, is(26f)));
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U175TO225, is(29f)));
-				assertThat(state, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.OVER225, is(32f)));
+				assertThat(
+						layerState, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U75TO125, is(23f))
+				);
+				assertThat(
+						layerState, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U125TO175, is(26f))
+				);
+				assertThat(
+						layerState, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.U175TO225, is(29f))
+				);
+				assertThat(
+						layerState, backCV("getCVQuadraticMeanDiameter", specIndex, UtilizationClass.OVER225, is(32f))
+				);
 
 				em.verify();
 
@@ -395,16 +486,22 @@ class BackProcessingEngineTest {
 		};
 	}
 
-	static Matcher<BackProcessingState> backCV(String name, Object p1, Object p2, Matcher<Float> expected) {
-		return compatibilityVariable(name, expected, BackProcessingState.class, p1, p2);
+	static Matcher<BackLayerProcessingState> backCV(String name, Object p1, Object p2, Matcher<Float> expected) {
+		return compatibilityVariable(name, expected, BackLayerProcessingState.class, p1, p2);
 	}
 
-	static Matcher<BackProcessingState> backCV(String name, Object p1, Matcher<Float> expected) {
-		return compatibilityVariable(name, expected, BackProcessingState.class, p1);
+	static Matcher<BackLayerProcessingState> backCV(String name, Object p1, Matcher<Float> expected) {
+		return compatibilityVariable(name, expected, BackLayerProcessingState.class, p1);
 	}
 
 	@Nested
 	class HeightFromSiteCurve {
+
+		@BeforeEach
+		void setup() {
+			setupMockState();
+		}
+
 		@Test
 		void testYoung() throws ProcessingException {
 
@@ -436,6 +533,12 @@ class BackProcessingEngineTest {
 
 	@Nested
 	class ApplyBackupFactors {
+
+		@BeforeEach
+		void setup() {
+			setupMockState();
+		}
+
 		@Test
 		void test() throws ProcessingException {
 
@@ -730,6 +833,12 @@ class BackProcessingEngineTest {
 
 	@Nested
 	class CalculateCompatibilityVariables {
+
+		@BeforeEach
+		void setup() {
+			setupMockState();
+		}
+
 		@ParameterizedTest
 		@CsvSource(
 			{ "1995, 2011, 1967, 0.636363626", "2006, 2011, 1967, 0.886363626", "1967, 2011, 1967, 0.0",
@@ -771,6 +880,12 @@ class BackProcessingEngineTest {
 
 	@Nested
 	class CalculateConvergenceAge {
+
+		@BeforeEach
+		void setup() {
+			setupMockState();
+		}
+
 		@Test
 		void testStandard() throws ProcessingException {
 			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
@@ -948,6 +1063,12 @@ class BackProcessingEngineTest {
 
 	@Nested
 	class CalculateConvergenceYield {
+
+		@BeforeEach
+		void setup() {
+			setupMockState();
+		}
+
 		@Test
 		void testStandard() throws ProcessingException {
 			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
@@ -1101,6 +1222,12 @@ class BackProcessingEngineTest {
 
 	@Nested
 	class CalculateBackupFactors {
+
+		@BeforeEach
+		void setup() {
+			setupMockState();
+		}
+
 		@Test
 		void test() throws ProcessingException {
 			BackLayerProcessingState layerState = em.createMock(BackLayerProcessingState.class);
@@ -1376,7 +1503,9 @@ class BackProcessingEngineTest {
 			expect(state.getBaseAreaVeteran()).andStubReturn(Optional.empty());
 			expect(state.getConvergenceQuadraticMeanDiameter()).andStubReturn(Optional.of(10.202f));
 
-			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(anyString())).andStubReturn(0f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum("B")).andStubReturn(12.8473997f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum("PL")).andStubReturn(13.8270998f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum("S")).andStubReturn(16.6229f);
 
 			expect(state.getSpeciesConvergenceLoreyHeight(1)).andStubReturn(8.26395798f);
 			expect(state.getSpeciesConvergenceLoreyHeight(2)).andStubReturn(7.30057955f);
@@ -1414,6 +1543,8 @@ class BackProcessingEngineTest {
 					adapt(unboxedArrayCloseTo(0f, 9.88628769f, 10.3321753f, 9.93369484f))
 			);
 			expectLastCall().once();
+			state.setSpeciesLoreyHeightBackupFactor(adapt(unboxedArrayCloseTo(0f, 1f, 1.054f, 1.6561f)));
+			expectLastCall().once();
 			// Run test
 			em.replay();
 			engine.calculateBackupFactors();
@@ -1423,6 +1554,441 @@ class BackProcessingEngineTest {
 			assertThat(primarySite, hasProperty("ageTotal", present(closeTo(85.0f))));
 			assertThat(primarySite, hasProperty("height", present(closeTo(16.0f))));
 
+		}
+	}
+
+	@Nested
+	class GetYears {
+
+		@BeforeEach()
+		void setup() {
+			setupMockState();
+		}
+
+		@Test
+		void testRelative() throws ValueParseException {
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 16, 0, 2, 3, 1 }), 2011, 1967);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(1995))); // Interpret offset as negative
+			assertThat(result, recordHasProperty("step", is(1)));
+
+		}
+
+		@Test
+		void testAbsolutePast() throws ValueParseException {
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 1995, 0, 2, 3, 1 }), 2011, 1967);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(1995)));
+			assertThat(result, recordHasProperty("step", is(1)));
+
+		}
+
+		@Test
+		void testAbsoluteFuture() throws ValueParseException {
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 2026, 0, 2, 3, 1 }), 2011, 1967);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(2011)));
+			assertThat(result, recordHasProperty("step", is(1)));
+
+		}
+
+		@Test
+		void testBeforeConvergence() throws ValueParseException {
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 1967, 0, 2, 3, 1 }), 2011, 1980);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(1980)));
+			assertThat(result, recordHasProperty("step", is(1)));
+
+		}
+
+		@Test
+		void testByDecade() throws ValueParseException {
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 16, 0, 2, 4/* By Decade */, 1 }), 2011, 1967);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(2001))); // Offset from first by a multiple of 10
+			assertThat(result, recordHasProperty("step", is(10)));
+
+		}
+
+		@Disabled("VDYP-1461 control variable 4 with a value of 5 is impossible")
+		@Test
+		void testBySingleStep() throws ValueParseException {
+			// Based on documentation this makes more sense for 1 or 2 and 5 isn't documented.
+			var result = BackProcessingEngine
+					.getYears(new BackControlVariables(new Integer[] { 16, 0, 2, 5/* Single Step */, 1 }), 2011, 1967);
+
+			assertThat(result, recordHasProperty("first", is(2011)));
+			assertThat(result, recordHasProperty("zero", is(1995)));
+			assertThat(result, recordHasProperty("step", is(16)));
+		}
+
+	}
+
+	@Nested
+	class ExecuteAlgorithm {
+
+		@BeforeEach
+		void setup() throws ProcessingException {
+			setupRealState();
+		}
+
+		@Test
+		public void test() throws ProcessingException, ValueParseException {
+			controlMap.getControlVariables().setControlVariable(ControlVariable.GROW_TARGET_1, 16);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.COMPAT_VAR_OUTPUT_2, 0);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3, 2);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.OUTPUT_FILES_4, 3);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.ALLOW_COMPAT_VAR_CALCS_5, 1);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("092P037  72999905UNK", 2011);
+
+				pb.percentAvailable(61f);
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.controlMap(rawControlMap);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(10);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(93);
+						});
+						sb.volumeGroup(17);
+						sb.decayGroup(11);
+						sb.breakageGroup(4);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(12);
+						sb.percentGenus(70);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(45);
+							ib.yearsAtBreastHeight(77.3f);
+							ib.yearsToBreastHeight(8.2f);
+							ib.ageTotal(85f);
+							ib.siteIndex(12.39f);
+							ib.height(16f);
+						});
+						sb.volumeGroup(55);
+						sb.decayGroup(46);
+						sb.breakageGroup(24);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(15);
+						sb.percentGenus(20);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(106);
+							ib.yearsAtBreastHeight(69.2f);
+							ib.yearsToBreastHeight(16.3f);
+							ib.ageTotal(85f);
+							ib.siteIndex(13.54f);
+							ib.height(18f);
+						});
+						sb.volumeGroup(70);
+						sb.decayGroup(58);
+						sb.breakageGroup(30);
+					});
+					lb.primaryGenus("PL");
+					lb.empiricalRelationshipParameterIndex(118);
+
+				});
+			});
+
+			var primaryLayer = polygon.getPrimaryLayer().get();
+
+			primaryLayer.setLoreyHeightByUtilization(Utils.heightVector(6.11998129f, 14.2882891f));
+			primaryLayer.setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0546229482f, 40.9836578f, 3.78800011f, 11.8987055f, 14.0205078f, 11.2764416f
+					)
+			);
+			primaryLayer.setTreesPerHectareByUtilization(
+					Utils.utilizationVector(20.5737705f, 1803.26233f, 466.262329f, 677.950806f, 464.049194f, 195f)
+			);
+			primaryLayer.setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.81501532f, 17.0110435f, 10.1703596f, 14.9486017f, 19.613493f, 27.1346054f)
+			);
+			primaryLayer.setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.163934425f, 251.342957f, 15.7932787f, 65.5157318f, 88.3898392f, 81.6440964f
+					)
+			);
+			primaryLayer.setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 204.092285f, 2.0988524f, 48.9055748f, 77.6209793f, 75.4668808f)
+			);
+			primaryLayer.setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 199.286377f, 2.05327868f, 47.9527855f, 76.0255737f, 73.2547531f)
+			);
+			primaryLayer.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 197.866379f, 2.04245877f, 47.7080307f, 75.5704956f, 72.5454102f)
+			);
+			primaryLayer.getOrderedSpecies().get(0)
+					.setLoreyHeightByUtilization(Utils.heightVector(5.72300005f, 12.8473997f));
+			primaryLayer.getOrderedSpecies().get(0).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.028147541f, 4.09836054f, 1.34257376f, 1.134377f, 0.789475381f, 0.831934452f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(11.0819674f, 284.67215f, 175.262299f, 68.0819626f, 26.8688507f, 14.4590158f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.6867857f, 13.5390329f, 9.87597275f, 14.5652428f, 19.3419304f, 27.0663853f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.0836065561f, 22.3908195f, 5.31590176f, 6.03557348f, 4.96803236f, 6.07131147f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 14.2563934f, 0.357704908f, 4.15590143f, 4.18754101f, 5.55524588f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 13.4095078f, 0.339508206f, 3.94229484f, 3.96098328f, 5.16672134f)
+			);
+			primaryLayer.getOrderedSpecies().get(0).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 13.1586876f, 0.334262282f, 3.87737703f, 3.88999987f, 5.05704927f)
+			);
+			primaryLayer.getOrderedSpecies().get(1)
+					.setLoreyHeightByUtilization(Utils.heightVector(7.18720007f, 13.8270998f));
+			primaryLayer.getOrderedSpecies().get(1).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0106229503f, 28.6885567f, 1.96814752f, 9.33654118f, 11.2569828f, 6.12688494f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(3.67213106f, 1250.31152f, 232.590164f, 528.704895f, 373.098358f, 115.91803f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(
+							6.06901979f, 17.0922909f, 10.3797817f, 14.9948254f, 19.5999241f, 25.9417591f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.0390163921f, 174.294434f, 8.95180321f, 52.6093445f, 71.0681992f, 41.665081f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 142.948029f, 1.6654098f, 39.9722939f, 62.7765579f, 38.5337677f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 140.00705f, 1.63885248f, 39.2903252f, 61.5590134f, 37.5188522f)
+			);
+			primaryLayer.getOrderedSpecies().get(1).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 139.179657f, 1.63344252f, 39.124752f, 61.2242622f, 37.1972122f)
+			);
+			primaryLayer.getOrderedSpecies().get(2)
+					.setLoreyHeightByUtilization(Utils.heightVector(6.1097002f, 16.6229f));
+			primaryLayer.getOrderedSpecies().get(2).setBaseAreaByUtilization(
+					Utils.utilizationVector(
+							0.0158524588f, 8.19673729f, 0.47727865f, 1.42778683f, 1.97404909f, 4.31762266f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setTreesPerHectareByUtilization(
+					Utils.utilizationVector(
+							5.81967211f, 268.278687f, 58.4098358f, 81.1639328f, 64.0819626f, 64.6229477f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setQuadraticMeanDiameterByUtilization(
+					Utils.utilizationVector(5.88917017f, 19.7234325f, 10.1999512f, 14.9659815f, 19.8046036f, 29.166481f)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setWholeStemVolumeByUtilization(
+					Utils.utilizationVector(
+							0.0413114727f, 54.6577034f, 1.52557373f, 6.87081909f, 12.3536062f, 33.9077034f
+					)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setCloseUtilizationVolumeByUtilization(
+					Utils.utilizationVector(0f, 46.887867f, 0.0757376999f, 4.77737713f, 10.6568851f, 31.3778667f)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setCloseUtilizationVolumeNetOfDecayByUtilization(
+					Utils.utilizationVector(0f, 45.8698349f, 0.0749180317f, 4.72016382f, 10.5055733f, 30.5691795f)
+			);
+			primaryLayer.getOrderedSpecies().get(2).setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					Utils.utilizationVector(0f, 45.5280304f, 0.0747540966f, 4.70590162f, 10.4562292f, 30.2911472f)
+			);
+
+			em.replay();
+
+			engine.processPolygon(polygon);
+
+			assertThat(
+					output,
+					contains(
+							hasProperty("polygonIdentifier", hasProperty("year", is(1995))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(1996))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(1997))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(1998))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(1999))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2000))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2001))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2002))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2003))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2004))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2005))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2006))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2007))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2008))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2009))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2010))),
+							hasProperty("polygonIdentifier", hasProperty("year", is(2011)))
+					)
+			);
+
+			var primary1995 = output.get(0).getLayers().get(LayerType.PRIMARY);
+
+			assertThat(primary1995, VdypMatchers.hasUtilizationHeight(5.93502045f, 12.3255758f));
+			assertThat(
+					primary1995,
+					VdypMatchers.hasUtilization(
+							"closeUtilizationVolumeByUtilization", 0, 127.509117f, 3.07256603f, 50.4044571f, 46.458065f,
+							27.5740337f
+					)
+			);
+			var primary1996 = output.get(1).getLayers().get(LayerType.PRIMARY);
+			assertThat(
+					primary1996,
+					VdypMatchers.hasUtilization(
+							"closeUtilizationVolumeByUtilization", 0, 132.650284f, 3.01714087f, 50.9979477f,
+							48.7706413f, 29.8645477f
+					)
+			);
+			var primary2010 = output.get(15).getLayers().get(LayerType.PRIMARY);
+			assertThat(
+					primary2010,
+					VdypMatchers.hasUtilization(
+							"closeUtilizationVolumeByUtilization", 0, 199.720917f, 2.15538573f, 49.500206f, 76.1947021f,
+							71.870636f
+					)
+			);
+			var primary2011 = output.get(16).getLayers().get(LayerType.PRIMARY);
+			assertThat(
+					primary2011,
+					VdypMatchers.hasUtilization(
+							"closeUtilizationVolumeByUtilization", 0, 204.0923f, 2.09885263f, 48.905571f, 77.6209869f,
+							75.4668884f
+					)
+			);
+
+		}
+	}
+
+	@Nested
+	class BackExecutionStep {
+
+		@ParameterizedTest
+		@MethodSource("allSteps")
+		void testSelf(ProcessingEngine.ExecutionStep current) {
+
+			assertSelf(current);
+
+		}
+
+		@ParameterizedTest
+		@MethodSource("consecutivePairs")
+		void testInOrder(ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep current) {
+
+			assertOrder(previous, current);
+
+		}
+
+		@ParameterizedTest
+		@MethodSource("triplets")
+		void testTransitive(
+				ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep mid,
+				ProcessingEngine.ExecutionStep next
+		) {
+			assumeTrue(Math.signum(previous.compareTo(mid)) + Math.signum(mid.compareTo(next)) < 0);
+
+			assertOrder(previous, next);
+		}
+
+		static List<ProcessingEngine.ExecutionStep> allSteps() {
+			var midSteps = backMidSteps();
+			return allSteps(midSteps);
+		}
+
+		static List<Arguments> triplets() {
+			var midSteps = backMidSteps();
+			var allSteps = allSteps(midSteps);
+			return triplets(allSteps);
+		}
+
+		static List<Arguments> consecutivePairs() {
+			var midSteps = backMidSteps();
+			var allSteps = allSteps(midSteps);
+			return consecutivePairs(allSteps);
+		}
+
+		protected static List<Arguments>
+				consecutivePairs(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> allSteps) {
+			var it = allSteps.iterator();
+			var previous = it.next();
+			List<Arguments> result = new ArrayList<>(allSteps.size() - 1);
+			while (it.hasNext()) {
+				var current = it.next();
+				result.add(Arguments.of(previous, current));
+				previous = current;
+			}
+			return result;
+		}
+
+		static protected List<Arguments>
+				triplets(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> allSteps) {
+			return allSteps.stream()
+					.flatMap(a -> allSteps.stream().flatMap(b -> allSteps.stream().map(c -> Arguments.of(a, b, c))))
+					.toList();
+		}
+
+		static protected List<ProcessingEngine.ExecutionStep>
+				allSteps(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> steps) {
+			var allSteps = new ArrayList<ProcessingEngine.ExecutionStep>(steps.size() + 2);
+			allSteps.add(BaseExecutionStep.NONE);
+			allSteps.addAll(steps);
+			allSteps.add(BaseExecutionStep.ALL);
+			return allSteps;
+		}
+
+		static protected void assertSelf(ProcessingEngine.ExecutionStep current) {
+			assertFalse(current.lt(current));
+			assertFalse(current.gt(current));
+			assertTrue(current.le(current));
+			assertTrue(current.ge(current));
+		}
+
+		static protected void
+				assertOrder(ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep current) {
+			assertTrue(current.compareTo(previous) > 0);
+			assertTrue(previous.compareTo(current) < 0);
+			assertTrue(current.compareTo(current) == 0);
+
+			assertTrue(current.gt(previous));
+			assertTrue(current.ge(previous));
+			assertFalse(current.lt(previous));
+			assertFalse(current.le(previous));
+		}
+
+		static List<ProcessingEngine.ExecutionStep> backMidSteps() {
+			return List.of(
+					BaseExecutionStep.CHECK_FOR_WORK, BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES,
+					BaseExecutionStep.CALCULATE_COVERAGES, BaseExecutionStep.DETERMINE_POLYGON_RANKINGS,
+					BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES,
+					BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES,
+					BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX,
+					BaseExecutionStep.SET_COMPATIBILITY_VARIABLES
+			);
 		}
 	}
 }

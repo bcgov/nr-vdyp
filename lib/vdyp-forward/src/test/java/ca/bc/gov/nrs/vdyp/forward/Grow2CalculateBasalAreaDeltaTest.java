@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
@@ -63,7 +63,7 @@ class Grow2CalculateBasalAreaDeltaTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_2_LAYER_BADELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_2_LAYER_BADELTA.predecessor());
 
 		float yabh = 54.0f;
 		float hd = 35.2999992f;
@@ -83,7 +83,7 @@ class Grow2CalculateBasalAreaDeltaTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_2_LAYER_BADELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_2_LAYER_BADELTA.predecessor());
 
 		float yabh = 30.0f;
 		float hd = 10.0f;
@@ -103,7 +103,7 @@ class Grow2CalculateBasalAreaDeltaTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_2_LAYER_BADELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_2_LAYER_BADELTA.predecessor());
 
 		float yabh = 54.0f;
 		float hd = 35.2999992f;
