@@ -67,6 +67,14 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		super(processingState, outputWriter);
 	}
 
+	public BackProcessingEngine(Map<String, Object> controlMap, Optional<VdypOutputWriter> outputWriter) {
+		this(new BackProcessingState(controlMap), outputWriter);
+	}
+
+	public BackProcessingEngine(Map<String, Object> controlMap) {
+		this(controlMap, Optional.empty());
+	}
+
 	/**
 	 *
 	 * @throws StandProcessingException
