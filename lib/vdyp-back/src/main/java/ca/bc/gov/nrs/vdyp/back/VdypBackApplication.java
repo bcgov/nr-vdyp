@@ -15,7 +15,7 @@ public class VdypBackApplication extends VdypProcessingApplication {
 
 	static final Logger logger = LoggerFactory.getLogger(VdypBackApplication.class);
 
-	public static final String DEFAULT_VDYP_CONTROL_FILE_NAME = "vdyp.ctr";
+	public static final String DEFAULT_VDYP_CONTROL_FILE_NAME = "vdypback.ctr";
 
 	public static void main(final String... args) {
 
@@ -24,7 +24,7 @@ public class VdypBackApplication extends VdypProcessingApplication {
 
 	@Override
 	protected BackProcessor getProcessor() {
-		return null; // TODO
+		return new BackProcessor();
 	}
 
 	@Override
