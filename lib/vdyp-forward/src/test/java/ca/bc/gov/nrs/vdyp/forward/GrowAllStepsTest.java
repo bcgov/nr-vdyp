@@ -21,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.forward.test.Vdyp7OutputControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -39,8 +40,8 @@ class GrowAllStepsTest {
 	protected static StreamingParserFactory<PolygonIdentifier> polygonDescriptionStreamFactory;
 	protected static StreamingParser<PolygonIdentifier> polygonDescriptionStream;
 
-	protected static ForwardDataStreamReader forwardDataStreamReader;
-	protected static ForwardDataStreamReader comparisonDataStreamReader;
+	protected static ProcessingDataStreamReader forwardDataStreamReader;
+	protected static ProcessingDataStreamReader comparisonDataStreamReader;
 
 	@SuppressWarnings("unchecked")
 	@BeforeEach
@@ -50,16 +51,16 @@ class GrowAllStepsTest {
 		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
-				.get(ControlKey.FORWARD_INPUT_GROWTO.name());
+				.get(ControlKey.VDYP_INPUT_GROWTO.name());
 		polygonDescriptionStream = polygonDescriptionStreamFactory.get();
 
-		forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
+		forwardDataStreamReader = new ProcessingDataStreamReader(controlMap);
 
 		var comparisonDataParser = new Vdyp7OutputControlParser();
 		var vdyp7OutputControlMap = ForwardTestUtils.parse(comparisonDataParser, "vdyp7/vdyp7_output_data.CTR");
 
 		ResolvedControlMap resolvedMap = TestUtils.resolveControlMap(vdyp7OutputControlMap);
-		comparisonDataStreamReader = new ForwardDataStreamReader(resolvedMap);
+		comparisonDataStreamReader = new ProcessingDataStreamReader(resolvedMap);
 	}
 
 	@AfterEach

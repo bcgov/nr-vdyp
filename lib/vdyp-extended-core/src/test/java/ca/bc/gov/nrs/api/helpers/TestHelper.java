@@ -45,11 +45,11 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.LayerYields;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class TestHelper {
@@ -241,7 +241,7 @@ public class TestHelper {
 		}
 	}
 
-	public ForwardDataStreamReader buildForwardDataStreamReader(
+	public ProcessingDataStreamReader buildForwardDataStreamReader(
 			InputStream polygonStream, InputStream speciesStream, InputStream utilizationsStream
 	) throws IOException {
 
@@ -256,24 +256,24 @@ public class TestHelper {
 
 		var absolutePathFileResolver = new FileSystemFileResolver();
 		readerControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
+				ControlKey.VDYP_INPUT_VDYP_POLY.name(),
 				new VdypPolygonParser().map(polygonFile.toString(), absolutePathFileResolver, readerControlMap)
 		);
 		readerControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SPECIES.name(),
 				new VdypSpeciesParser().map(speciesFile.toString(), absolutePathFileResolver, readerControlMap)
 		);
 		readerControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
 				new VdypUtilizationParser().map(utilizationsFile.toString(), absolutePathFileResolver, readerControlMap)
 		);
 
 		TestUtils.populateControlMapBecReal(readerControlMap);
 		TestUtils.populateControlMapGenusReal(readerControlMap);
 
-		ForwardDataStreamReader reader;
+		ProcessingDataStreamReader reader;
 		try {
-			reader = new ForwardDataStreamReader(readerControlMap);
+			reader = new ProcessingDataStreamReader(readerControlMap);
 		} catch (ProcessingException e) {
 			throw new IOException(e.getMessage(), e);
 		}

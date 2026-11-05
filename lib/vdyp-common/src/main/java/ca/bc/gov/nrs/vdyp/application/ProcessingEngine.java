@@ -1536,7 +1536,7 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 			if (polygon.getTargetYear().isEmpty()) {
 				throw new ProcessingException(
 						"Control Variable 1 has the value -1, indicating that the grow-to years are"
-								+ " to be read from a grow-to-year file (at " + ControlKey.FORWARD_INPUT_GROWTO.name()
+								+ " to be read from a grow-to-year file (at " + ControlKey.VDYP_INPUT_GROWTO.name()
 								+ " in the control file), but no such file was specified."
 				);
 			}

@@ -16,6 +16,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -32,7 +33,7 @@ abstract class AbstractForwardProcessingEngineTest {
 	protected static StreamingParserFactory<PolygonIdentifier> polygonDescriptionStreamFactory;
 	protected static StreamingParser<PolygonIdentifier> polygonDescriptionStream;
 
-	protected static ForwardDataStreamReader forwardDataStreamReader;
+	protected static ProcessingDataStreamReader forwardDataStreamReader;
 
 	@SuppressWarnings("unchecked")
 	@BeforeEach
@@ -41,10 +42,10 @@ abstract class AbstractForwardProcessingEngineTest {
 		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
-				.get(ControlKey.FORWARD_INPUT_GROWTO.name());
+				.get(ControlKey.VDYP_INPUT_GROWTO.name());
 		polygonDescriptionStream = polygonDescriptionStreamFactory.get();
 
-		forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
+		forwardDataStreamReader = new ProcessingDataStreamReader(controlMap);
 	}
 
 	@AfterEach
@@ -55,7 +56,7 @@ abstract class AbstractForwardProcessingEngineTest {
 	protected void buildPolygonParserForStream(String fileName, String... streamContent)
 			throws ResourceParseException, IOException {
 
-		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), fileName);
+		controlMap.put(ControlKey.VDYP_INPUT_VDYP_POLY.name(), fileName);
 		var polygonParser = new VdypPolygonParser();
 		var polygonFileResolver = TestUtils.fileResolverContext(fileName, TestUtils.makeInputStream(streamContent));
 
@@ -65,7 +66,7 @@ abstract class AbstractForwardProcessingEngineTest {
 	protected void buildSpeciesParserForStream(String fileName, String... streamContent)
 			throws ResourceParseException, IOException {
 
-		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), fileName);
+		controlMap.put(ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SPECIES.name(), fileName);
 		var speciesParser = new VdypSpeciesParser();
 		var speciesFileResolver = TestUtils.fileResolverContext(fileName, TestUtils.makeInputStream(streamContent));
 
@@ -75,7 +76,7 @@ abstract class AbstractForwardProcessingEngineTest {
 	protected void buildUtilizationParserForStream(String fileName, String... streamContent)
 			throws ResourceParseException, IOException {
 
-		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), fileName);
+		controlMap.put(ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), fileName);
 		var utilizationsParser = new VdypUtilizationParser();
 		var utilizationsFileResolver = TestUtils
 				.fileResolverContext(fileName, TestUtils.makeInputStream(streamContent));

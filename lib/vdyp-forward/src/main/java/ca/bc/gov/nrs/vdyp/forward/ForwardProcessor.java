@@ -18,6 +18,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
@@ -99,7 +100,7 @@ public class ForwardProcessor extends Processor {
 						controlMap.getControlMap(), outputWriter
 				);
 
-				try (var forwardDataStreamReader = new ForwardDataStreamReader(fpe.getState().controlMap);) {
+				try (var forwardDataStreamReader = new ProcessingDataStreamReader(fpe.getState().controlMap);) {
 					// Fetch the next polygon to process.
 					int nPolygonsProcessed = 0;
 					while (true) {

@@ -36,6 +36,7 @@ import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -593,13 +594,13 @@ class ForwardProcessingEngineTest {
 	@Nested
 	class Grow5SpeciesBaDqTph {
 		Map<String, Object> controlMap;
-		ForwardDataStreamReader forwardDataStreamReader;
+		ProcessingDataStreamReader forwardDataStreamReader;
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException, ProcessingException {
 			var parser = new ProcessingControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
-			forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
+			forwardDataStreamReader = new ProcessingDataStreamReader(controlMap);
 		}
 
 		@AfterEach
@@ -741,13 +742,13 @@ class ForwardProcessingEngineTest {
 	@Nested
 	class Grow6TreesPerHectare {
 		Map<String, Object> controlMap;
-		ForwardDataStreamReader forwardDataStreamReader;
+		ProcessingDataStreamReader forwardDataStreamReader;
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException, ProcessingException {
 			var parser = new ProcessingControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
-			forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
+			forwardDataStreamReader = new ProcessingDataStreamReader(controlMap);
 		}
 
 		@AfterEach
