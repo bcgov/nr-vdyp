@@ -1,12 +1,15 @@
 package ca.bc.gov.nrs.vdyp.ecore.model.v1;
 
+import java.util.List;
+
 public enum PolygonMessageKind {
 	ASSIGNING_ESTIMATED_SITE_INDEX(
 			"directly assigning estimated site index of {0} to species \"{1}\" and recomputing input height"
 	), //
 	BAD_STAND_DEFINITION("stand definition insufficient for FIPSTART Processing"), //
-	BREAST_HEIGHT_AGE_TOO_YOUNG(
-			"breast height age too young to generate a stand description. FIPSTART return code: {0}"
+	BREAST_HEIGHT_AGE_TOO_YOUNG("breast height age too young to generate a stand description. {0} return code: {1}"), //
+	LAYER_HEIGHT_TOO_LOW(
+			"primary layer height was too short to generate a stand description. VDYP7CORE return code: {0} {1}"
 	), //
 	COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER(
 			"starting values for basal area copied over for QA and alternative model used for layer"
@@ -19,8 +22,8 @@ public enum PolygonMessageKind {
 	ESTIMATED_SI_UNAVAILABLE(
 			"Estimated site index required but unavailable for species \"{0}\" at age {1}. Site index computed directly from age and height"
 	), //
-	GENERIC_FIPSTART_ERROR("an error occurred processing the FIPSTART model{0}"), //
-	GENERIC_VRISTART_ERROR("an error occurred processing the VRISTART model{0}"), //
+	GENERIC_FIPSTART_ERROR("an error occurred processing the FIPSTART model: {0}"), //
+	GENERIC_VRISTART_ERROR("an error occurred processing the VRISTART model: {0}"), //
 	INCONSISTENT_SITE_INFO("species definitions for species \"{0}\" have inconsistent site information"),
 	LAYER_DETAILS_MISSING(
 			"VRISTART reported that basal area or trees-per-hectare was not supplied or quad-mean-diameter"
@@ -50,15 +53,19 @@ public enum PolygonMessageKind {
 					+ " determined. Disabling projection of layer"
 	), //
 	NO_PRIMARY_LAYER_SUPPLIED("no primary layer supplied in the input; choosing layer \"{0}\""), //
+	PRIMARY_LAYER_NOT_FOUND("Unable to locate a Primary Layer. Perhaps the Layer 1 attribute is blank or missing."), //
 	NO_VIABLE_STAND_DESCRIPTION("stand description not possible after 80 years of projection. {0} return code: {1}"), //
 	MISSING_YEARS_TO_BREAST_HEIGHT("species missing years-to-breast-height value."), //
 	NO_LEADING_SPECIES("no leading site species could be found"), //
 	NO_YIELD_TABLE_FOR_DEAD_LAYER("suppressing CFS Biomass output for dead layer. No yield table will be produced."), //
-	NO_PROJECTED_DATA("projected data for species {0} was not generated at stand age {1} (Calendar year {2,number,#})"), //
-	NO_PROJECTED_DATA_NO_YEAR("projected data for species {0} was not generated at stand age {1}"), //
-	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\""), //
+	NO_YIELD_TABLE_FOR_UNSELECTED_LAYER(
+			"Layer ''{0}'' is not the Primary, Veteran or a Targeted Layer. Yield Table will not be produced."
+	), //
+	NO_PROJECTED_DATA("projected data for {0} was not generated at stand age {1} (Calendar year {2,number,#})", 0), //
+	NO_PROJECTED_DATA_NO_YEAR("projected data for {0} was not generated at stand age {1}", 0), //
+	SPECIES_TOO_SHORT("Height \"{0}\" at stand age \"{1}\" is too short to generate yields for species \"{2}\"", 2), //
 	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("Polygon {0}: Rank ''1'' Layer was already encountered (Layer: ''{1}'')"),
-	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. VRISTART return code: {0}"), //
+	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. {0} return code: {1}"), //
 	REASSIGNED_HEIGHT("based on estimated site index of {0}, recomputed input height at age {1} to be {2}"), //
 	UNRECOGNIZED_GROWTH_MODEL("attempt to process an unrecognized growth model {0}"), //
 	USING_DEFAULT_CC("CC was not supplied. Using a default CC of {0}% for this (leading) species ({1})"),
@@ -70,12 +77,6 @@ public enum PolygonMessageKind {
 	ERROR_PROJECTING_FORWARD("Unable to Project Stand over age range: \"{1}\" to \"{2}\". Forward Exception: {0}"), //
 	VETERAN_LAYER_NO_SPECIES(
 			"Layer \"{0}\" was identified as the Veteran Layer but contains no species. No vet layer will be used."
-	), BA_TPH_SUBSTITUTION_DISABLED("Substitution of Supplied BA/TPH as Projected values has been disabled."), //
-	FORWARD_GROW_DISABLED(
-			"FORWARD GROW has been disabled. No projection will occur after the Reference Year for any polygon."
-	), //
-	BACK_GROW_DISABLED(
-			"BACK GROW has been disabled. No projection will occur prior to Reference Year for any polygon."
 	), //
 	LAYER_NON_FOREST_DESC("Unable to project layer due to Non-Forest Descriptor: \"{0}\""), //
 	SECONDARY_SPECIES_SUPRESSED(
@@ -89,9 +90,16 @@ public enum PolygonMessageKind {
 	};
 
 	public final String template;
+	private final List<Integer> deduplicationArgumentIndexes;
 
-	PolygonMessageKind(String template) {
+	PolygonMessageKind(String template, Integer... deduplicationArgumentIndexes) {
 		this.template = template;
+		this.deduplicationArgumentIndexes = List.of(deduplicationArgumentIndexes);
+	}
+
+	/** Argument indexes compared in addition to the kind when checking for duplicate messages. */
+	public List<Integer> getDeduplicationArgumentIndexes() {
+		return deduplicationArgumentIndexes;
 	}
 
 	public String getTemplate() {

@@ -30,6 +30,28 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class ProjectionRunnerTest {
 
+	@Test
+	void chunkRunsDoNotLogProjectionWideInformation() throws Exception {
+		for (int chunk = 0; chunk < 2; chunk++) {
+			try (
+					var runner = new ProjectionRunner(
+							ProjectionRequestKind.HCSV, "TEST", validationLoggingParameters(), false
+					)
+			) {
+				runner.run(
+						Map.of(
+								ParameterNames.HCSV_POLYGON_INPUT_DATA,
+								TestUtils.makeInputStream(TestUtils.POLYGON_CSV_HEADER_LINE),
+								ParameterNames.HCSV_LAYERS_INPUT_DATA,
+								TestUtils.makeInputStream(TestUtils.LAYER_CSV_HEADER_LINE)
+						), new StubComponentRunner()
+				);
+				assertEquals("", new String(runner.getErrorStream().readAllBytes()));
+				assertEquals(0, runner.getErrorLogCount());
+			}
+		}
+	}
+
 	static Stream<Arguments> layerErrorInputs() {
 		// V = valid, I = invalid, - = absent. Each position identifies the same feature in both files.
 		return Stream.of(

@@ -336,6 +336,10 @@ public class ProjectionContext {
 		errorLog.addMessage(message, args);
 	}
 
+	public void logInformation(String message) {
+		logError("- I SUCCESS - {0}", message);
+	}
+
 	public InputStream getErrorLogStream() {
 		return errorLog.getAsStream();
 	}

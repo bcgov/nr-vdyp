@@ -20,14 +20,22 @@ import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRequestParametersValidator;
+import ca.bc.gov.nrs.vdyp.ecore.projection.RunProcessingMessages;
 
 /**
  * Service responsible for aggregating VDYP projection results from all partitions into a single consolidated output ZIP
@@ -37,6 +45,12 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 public class BatchResultAggregationService {
 
 	private static final Logger logger = LoggerFactory.getLogger(BatchResultAggregationService.class);
+
+	private final ObjectMapper objectMapper;
+
+	public BatchResultAggregationService(ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
+	}
 
 	@Value("${batch.partition.min-valid-file-size}")
 	private int minValidFileSize;
@@ -49,7 +63,7 @@ public class BatchResultAggregationService {
 	public Path aggregateResultsFromJobDir(
 			@NonNull Long jobExecutionId, @NonNull String jobGuid, @NonNull String jobBaseDir,
 			@NonNull String jobTimestamp, @NonNull VDYPProjectionProgressUpdate finalProgress,
-			@NonNull Duration duration
+			@NonNull Duration duration, @NonNull JobParameters jobParameters
 	) throws BatchResultAggregationException {
 		logger.info(
 				"[GUID: {}] Starting result aggregation for job execution: {} from job directory: {}", jobGuid,
@@ -77,14 +91,14 @@ public class BatchResultAggregationService {
 			// Aggregate results
 			try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(finalZipPath))) {
 				aggregateYieldTables(partitionOutputDirs, zipOut);
-				aggregateLogs(partitionOutputDirs, zipOut);
+				aggregateLogs(partitionOutputDirs, zipOut, jobParameters);
 				writeTotalProgress(zipOut, finalProgress, duration);
 				logger.info("Successfully created consolidated ZIP file: {}", finalZipPath);
 			}
 
 			return finalZipPath;
 
-		} catch (IOException e) {
+		} catch (IOException | ProjectionRequestValidationException e) {
 			throw BatchResultAggregationException
 					.handleResultAggregationFailure(e, "Failed to aggregate results", jobGuid, jobExecutionId, logger);
 		}
@@ -596,7 +610,8 @@ public class BatchResultAggregationService {
 	 *
 	 * @throws IOException if aggregation fails
 	 */
-	private void aggregateLogs(List<Path> partitionDirs, ZipOutputStream zipOut) throws IOException {
+	private void aggregateLogs(List<Path> partitionDirs, ZipOutputStream zipOut, JobParameters jobParameters)
+			throws IOException, ProjectionRequestValidationException {
 		logger.debug("Aggregating log files from {} partitions", partitionDirs.size());
 
 		Map<String, List<Path>> logsByType = new HashMap<>();
@@ -635,7 +650,7 @@ public class BatchResultAggregationService {
 			List<Path> logPaths = entry.getValue();
 
 			if (!logPaths.isEmpty()) {
-				mergeLogs(logType, logPaths, zipOut);
+				mergeLogs(logType, logPaths, zipOut, jobParameters);
 			}
 		}
 
@@ -689,11 +704,22 @@ public class BatchResultAggregationService {
 	/**
 	 * Merges multiple log files of the same type into a single file in the ZIP.
 	 */
-	private void mergeLogs(String logType, List<Path> logPaths, ZipOutputStream zipOut) throws IOException {
+	private void mergeLogs(String logType, List<Path> logPaths, ZipOutputStream zipOut, JobParameters jobParameters)
+			throws IOException, ProjectionRequestValidationException {
 		String mergedLogFileName = String.format("%sLog.txt", logType);
 
 		ZipEntry zipEntry = new ZipEntry(mergedLogFileName);
 		zipOut.putNextEntry(zipEntry);
+
+		if (BatchConstants.File.LOG_TYPE_ERROR.equals(logType)) {
+			Parameters parameters = objectMapper
+					.readValue(jobParameters.getString(BatchConstants.Projection.PARAMETERS_JSON), Parameters.class);
+			var validatedParameters = ProjectionRequestParametersValidator
+					.validate(parameters, ProjectionRequestKind.HCSV);
+			if (validatedParameters.containsOption(Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
+				zipOut.write(RunProcessingMessages.create(validatedParameters).getBytes(StandardCharsets.UTF_8));
+			}
+		}
 
 		int totalFiles = logPaths.size();
 		int failedFiles = 0;

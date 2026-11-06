@@ -418,7 +418,8 @@ public class BatchConfiguration {
 			VDYPProjectionProgressUpdate finalProgress = BatchUtils.buildFinalProgress(jobGuid, jobExecution);
 			// Execute aggregation
 			Path consolidatedZip = resultAggregationService.aggregateResultsFromJobDir(
-					jobExecutionId, jobGuid, jobBaseDir, jobTimestamp, finalProgress, duration
+					jobExecutionId, jobGuid, jobBaseDir, jobTimestamp, finalProgress, duration,
+					jobExecution.getJobParameters()
 			);
 
 			stepExecution.getExecutionContext().putString("consolidatedOutputPath", consolidatedZip.toString());

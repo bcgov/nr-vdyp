@@ -73,6 +73,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRequestParametersValidator;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
+import ca.bc.gov.nrs.vdyp.ecore.projection.RunProcessingMessages;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
@@ -340,7 +341,11 @@ public class ProjectionService {
 				}
 
 				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
-					writeZipEntry(zipOut, "ErrorLog.txt", runner.getErrorStream().readAllBytes());
+					writeZipEntry(
+							zipOut, "ErrorLog.txt", errorLogStream.readAllBytes(),
+							RunProcessingMessages.create(runner.getContext().getParams())
+									.getBytes(StandardCharsets.UTF_8)
+					);
 				}
 
 				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
@@ -388,10 +393,10 @@ public class ProjectionService {
 			return Response.serverError().status(Status.INTERNAL_SERVER_ERROR).entity(message).build();
 		} finally {
 			if (errorLogStream != null) {
-				Utils.close(yieldTableStream, "ProjectionService.errorLog");
+				Utils.close(errorLogStream, "ProjectionService.errorLog");
 			}
 			if (progressLogStream != null) {
-				Utils.close(yieldTableStream, "ProjectionService.progressLog");
+				Utils.close(progressLogStream, "ProjectionService.progressLog");
 			}
 			if (yieldTableStream != null) {
 				Utils.close(yieldTableStream, "ProjectionService.yieldTable");
@@ -400,8 +405,14 @@ public class ProjectionService {
 	}
 
 	private void writeZipEntry(ZipOutputStream zipOut, String entryName, byte[] entry) throws IOException {
+		writeZipEntry(zipOut, entryName, entry, new byte[0]);
+	}
+
+	private void writeZipEntry(ZipOutputStream zipOut, String entryName, byte[] entry, byte[] prepend)
+			throws IOException {
 		ZipEntry projectionResultsEntry = new ZipEntry(entryName);
 		zipOut.putNextEntry(projectionResultsEntry);
+		zipOut.write(prepend);
 		zipOut.write(entry);
 		zipOut.closeEntry();
 	}

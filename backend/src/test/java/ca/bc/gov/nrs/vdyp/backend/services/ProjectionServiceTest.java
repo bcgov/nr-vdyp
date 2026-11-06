@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -28,12 +29,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,6 +88,11 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
+import ca.bc.gov.nrs.vdyp.ecore.projection.RunProcessingMessages;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
+import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
@@ -91,6 +100,41 @@ import jakarta.ws.rs.core.SecurityContext;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectionServiceTest {
+
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	void finalOutputPreservesTextReportAndPrefixesOnlyErrorLog(boolean errorLogging) throws Exception {
+		var runner = mock(ProjectionRunner.class);
+		var context = mock(ProjectionContext.class);
+		var params = new ValidatedParameters().selectedExecutionOptions(
+				errorLogging ? EnumSet.of(Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING)
+						: EnumSet.noneOf(Parameters.ExecutionOption.class)
+		);
+		var table = mock(YieldTable.class);
+		when(runner.getContext()).thenReturn(context);
+		when(context.getParams()).thenReturn(params);
+		when(context.getYieldTables()).thenReturn(List.of(table));
+		when(table.getOutputFormat()).thenReturn(Parameters.OutputFormat.TEXT_REPORT);
+		when(table.getAsStream())
+				.thenReturn(new ByteArrayInputStream("single polygon report".getBytes(StandardCharsets.UTF_8)));
+		when(runner.getErrorStream())
+				.thenReturn(new ByteArrayInputStream("polygon error".getBytes(StandardCharsets.UTF_8)));
+		when(runner.getProjectionResults()).thenReturn(Collections.emptyIterator());
+		var method = ProjectionService.class.getDeclaredMethod("buildOutputZipFile", ProjectionRunner.class);
+		method.setAccessible(true);
+		Response response = (Response) method.invoke(service, runner);
+		assertEquals(201, response.getStatus());
+		String messages = RunProcessingMessages.create(params);
+		Map<String, String> entries = new HashMap<>();
+		try (var zip = new ZipInputStream(new ByteArrayInputStream((byte[]) response.getEntity()))) {
+			ZipEntry entry;
+			while ( (entry = zip.getNextEntry()) != null) {
+				entries.put(entry.getName(), new String(zip.readAllBytes(), StandardCharsets.UTF_8));
+			}
+		}
+		assertEquals("single polygon report", entries.get("YieldReport.txt"));
+		assertEquals(errorLogging ? messages + "polygon error" : null, entries.get("ErrorLog.txt"));
+	}
 
 	@Mock
 	EntityManager em;

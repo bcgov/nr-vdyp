@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
-import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.constraint.Assert;
 
@@ -34,7 +33,10 @@ class Hcsv_OneDeadLayerTest extends BaseHcsv_44GrpATest {
 		var zipEntries = runTest("19007816");
 
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
-		assertThat(errorEntryContent, containsString(PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED.getTemplate()));
+		assertThat(
+				errorEntryContent,
+				containsString("Substitution of Supplied BA/TPH as Projected values has been disabled.")
+		);
 
 		var csvEntryContent = zipEntries.get("YieldTable.csv");
 		Assert.assertTrue(csvEntryContent.length() > 0);
