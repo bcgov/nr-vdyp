@@ -1574,9 +1574,7 @@ public class YieldTable implements Closeable {
 		double dominantHeight = 0.0;
 		double speciesAge = 0.0;
 		String sp0Name = null;
-		boolean standSpecific = true;
 		if (stand == null && layer != null) {
-			standSpecific = false;
 			stand = layer.determineLeadingSp0(0);
 		}
 		if (stand != null) {
