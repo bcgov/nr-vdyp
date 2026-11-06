@@ -1241,10 +1241,10 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 			var passNumber = 0;
 			var bestScore = 1000.0;
 			var bestF = Float.NaN;
+			var f = 0.0f;
 
 			while (true) {
 
-				var f = 0.0f;
 				var nSkipped = 0;
 				var totalBasalAreaSkipped = 0.0f;
 
@@ -1282,7 +1282,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 					}
 
 					float spDqMinimum = Math.max(
-							UtilizationClass.U75TO125.lowBound + 1.0f,
+							UtilizationClass.U75TO125.lowBound + 0.1f,
 							csl.minQuadMeanDiameterLoreyHeightRatio() * spLhAllStart
 					);
 
@@ -1313,9 +1313,9 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 				float dqStartEstimate = BaseAreaTreeDensityDiameter.quadMeanDiameter(basalArea.start(), tphStart);
 				float dqWant = dqStartEstimate + quadMeanDiameter.delta();
 
-				var score = FloatMath.abs(dqWant - dqNewBar);
-				if (score < bestScore) {
-					bestScore = score;
+				var score = dqWant - dqNewBar;
+				if (FloatMath.abs(score) < bestScore) {
+					bestScore = FloatMath.abs(score);
 					bestF = f;
 				}
 
@@ -1323,7 +1323,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 					break;
 				}
 
-				if (totalBasalAreaSkipped > 0.7f) {
+				if (totalBasalAreaSkipped > 0.7f * basalArea.start()) {
 					totalBasalAreaSkipped = 0.7f * basalArea.start();
 				}
 

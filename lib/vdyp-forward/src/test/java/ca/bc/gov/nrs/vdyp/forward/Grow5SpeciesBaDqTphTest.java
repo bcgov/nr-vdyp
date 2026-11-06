@@ -184,16 +184,15 @@ class Grow5SpeciesBaDqTphTest {
 				// Results from VDYP7:
 				arrayCloseTo(45.7382965f, 0.40808472f, 5.28018427f, 29.444725f, 6.11862803f, 4.48667192f)
 		);
-		// TODO fix these tests See VDYP-808
-		// assertThat(
-		// slice(lps.getBank().treesPerHectare, UtilizationClass.ALL),
-		// // Results from VDYP7:
-		// arrayCloseTo(594.113831f, 5.07865763f, 82.9379883f, 288.292511f, 167.419479f, 50.3814774f)
-		// );
-		// assertThat(
-		// slice(lps.getBank().quadMeanDiameters, UtilizationClass.ALL),
-		// // Results from VDYP7:
-		// arrayCloseTo(31.3083534f, 31.985693f, 28.4710083f, 36.0613632f, 21.5714378f, 33.6729965f)
-		// );
+		assertThat(
+				slice(lps.getBank().treesPerHectare, UtilizationClass.ALL),
+				// Results from VDYP7:
+				arrayCloseTo(594.113831f, 5.07865763f, 82.9379883f, 288.292511f, 167.419479f, 50.3814774f)
+		);
+		assertThat(
+				slice(lps.getBank().quadMeanDiameters, UtilizationClass.ALL),
+				// Results from VDYP7:
+				arrayCloseTo(31.3083534f, 31.985693f, 28.4710083f, 36.0613632f, 21.5714378f, 33.6729965f)
+		);
 	}
 }
