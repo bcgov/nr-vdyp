@@ -246,6 +246,24 @@
                   <v-row no-gutters class="form-fields-row file-upload-checkboxes-row">
                     <v-col cols="auto">
                       <v-checkbox
+                        v-model="localIsForwardGrowEnabled"
+                        :label=CONSTANTS.INCLUDE_IN_REPORT.FORWARD
+                        hide-details
+                        :disabled="isInputDisabled"
+                        data-testid="is-forward-grow-enabled"
+                      ></v-checkbox>
+                    </v-col>
+                    <v-col cols="auto">
+                      <v-checkbox
+                        v-model="localIsBackwardGrowEnabled"
+                        :label=CONSTANTS.INCLUDE_IN_REPORT.BACKWARD
+                        hide-details
+                        :disabled="isInputDisabled"
+                        data-testid="is-backward-grow-enabled"
+                      ></v-checkbox>
+                    </v-col>
+                    <v-col cols="auto">
+                      <v-checkbox
                         v-model="localIsBySpeciesEnabled"
                         :label=CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES
                         hide-details
@@ -385,6 +403,8 @@ const localStartYear = ref<string | null>(fileUploadStore.startYear)
 const localEndYear = ref<string | null>(fileUploadStore.endYear)
 const localYearIncrement = ref<string | null>(fileUploadStore.yearIncrement)
 const localSpecificYear = ref<string | null>(fileUploadStore.specificYear)
+const localIsForwardGrowEnabled = ref<boolean>(fileUploadStore.isForwardGrowEnabled)
+const localIsBackwardGrowEnabled = ref<boolean>(fileUploadStore.isBackwardGrowEnabled)
 const localIsBySpeciesEnabled = ref<boolean>(fileUploadStore.isBySpeciesEnabled)
 const localIncSecondaryHeight = ref<boolean>(fileUploadStore.incSecondaryHeight)
 const localIsProjectionModeEnabled = ref<boolean>(fileUploadStore.isProjectionModeEnabled)
@@ -554,6 +574,8 @@ watch(() => fileUploadStore.startYear, (v) => { localStartYear.value = v })
 watch(() => fileUploadStore.endYear, (v) => { localEndYear.value = v })
 watch(() => fileUploadStore.yearIncrement, (v) => { localYearIncrement.value = v })
 watch(() => fileUploadStore.specificYear, (v) => { localSpecificYear.value = v })
+watch(() => fileUploadStore.isForwardGrowEnabled, (v) => { localIsForwardGrowEnabled.value = v })
+watch(() => fileUploadStore.isBackwardGrowEnabled, (v) => { localIsBackwardGrowEnabled.value = v })
 watch(() => fileUploadStore.isBySpeciesEnabled, (v) => { localIsBySpeciesEnabled.value = v })
 watch(() => fileUploadStore.incSecondaryHeight, (v) => { localIncSecondaryHeight.value = v })
 watch(() => fileUploadStore.isProjectionModeEnabled, (v) => { localIsProjectionModeEnabled.value = v })
@@ -578,6 +600,8 @@ watch(localStartYear, (v) => { fileUploadStore.startYear = v; markDirty() })
 watch(localEndYear, (v) => { fileUploadStore.endYear = v; markDirty() })
 watch(localYearIncrement, (v) => { fileUploadStore.yearIncrement = v; markDirty() })
 watch(localSpecificYear, (v) => { fileUploadStore.specificYear = v; markDirty() })
+watch(localIsForwardGrowEnabled, (v) => { fileUploadStore.isForwardGrowEnabled = v; markDirty() })
+watch(localIsBackwardGrowEnabled, (v) => { fileUploadStore.isBackwardGrowEnabled = v; markDirty() })
 watch(localIsBySpeciesEnabled, (v) => { fileUploadStore.isBySpeciesEnabled = v; markDirty() })
 watch(localIncSecondaryHeight, (v) => { fileUploadStore.incSecondaryHeight = v; markDirty() })
 watch(localIsProjectionModeEnabled, (v) => { fileUploadStore.isProjectionModeEnabled = v; markDirty() })

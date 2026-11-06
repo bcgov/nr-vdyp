@@ -149,6 +149,24 @@
                 <v-row no-gutters class="form-fields-row report-settings-checkboxes-row">
                   <v-col cols="auto">
                     <v-checkbox
+                      v-model="localIsForwardGrowEnabled"
+                      :label="CONSTANTS.INCLUDE_IN_REPORT.FORWARD"
+                      hide-details
+                      :disabled="isInputDisabled"
+                      data-testid="is-forward-grow-enabled"
+                    ></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto">
+                    <v-checkbox
+                      v-model="localIsBackwardGrowEnabled"
+                      :label="CONSTANTS.INCLUDE_IN_REPORT.BACKWARD"
+                      hide-details
+                      :disabled="isInputDisabled"
+                      data-testid="is-backward-grow-enabled"
+                    ></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto">
+                    <v-checkbox
                       v-model="localIsComputedMAIEnabled"
                       :label="CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI"
                       hide-details
@@ -351,6 +369,8 @@ const localAgeIncrement = ref<string | null>(modelParameterStore.ageIncrement)
 const localStartYear = ref<string | null>(modelParameterStore.startYear)
 const localEndYear = ref<string | null>(modelParameterStore.endYear)
 const localYearIncrement = ref<string | null>(modelParameterStore.yearIncrement)
+const localIsForwardGrowEnabled = ref<boolean>(modelParameterStore.isForwardGrowEnabled)
+const localIsBackwardGrowEnabled = ref<boolean>(modelParameterStore.isBackwardGrowEnabled)
 const localIsComputedMAIEnabled = ref<boolean>(modelParameterStore.isComputedMAIEnabled)
 const localIsCulminationValuesEnabled = ref<boolean>(modelParameterStore.isCulminationValuesEnabled)
 const localIsBySpeciesEnabled = ref<boolean>(modelParameterStore.isBySpeciesEnabled)
@@ -501,6 +521,16 @@ watch(() => modelParameterStore.startYear, (newVal) => { localStartYear.value = 
 watch(() => modelParameterStore.endYear, (newVal) => { localEndYear.value = newVal })
 watch(() => modelParameterStore.yearIncrement, (newVal) => { localYearIncrement.value = newVal })
 
+watch(() => modelParameterStore.isForwardGrowEnabled, (newVal) => {
+  if (newVal !== localIsForwardGrowEnabled.value) {
+    localIsForwardGrowEnabled.value = newVal
+  }
+})
+watch(() => modelParameterStore.isBackwardGrowEnabled, (newVal) => {
+  if (newVal !== localIsBackwardGrowEnabled.value) {
+    localIsBackwardGrowEnabled.value = newVal
+  }
+})
 watch(() => modelParameterStore.isComputedMAIEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(localIsComputedMAIEnabled.value)) {
     localIsComputedMAIEnabled.value = newVal
@@ -535,6 +565,18 @@ watch(localStartYear, (newVal) => { modelParameterStore.startYear = newVal; mark
 watch(localEndYear, (newVal) => { modelParameterStore.endYear = newVal; markDirty() })
 watch(localYearIncrement, (newVal) => { modelParameterStore.yearIncrement = newVal; markDirty() })
 
+watch(localIsForwardGrowEnabled, (newVal) => {
+  if (newVal !== modelParameterStore.isForwardGrowEnabled) {
+    modelParameterStore.isForwardGrowEnabled = newVal
+    markDirty()
+  }
+})
+watch(localIsBackwardGrowEnabled, (newVal) => {
+  if (newVal !== modelParameterStore.isBackwardGrowEnabled) {
+    modelParameterStore.isBackwardGrowEnabled = newVal
+    markDirty()
+  }
+})
 watch(localIsComputedMAIEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(modelParameterStore.isComputedMAIEnabled)) {
     modelParameterStore.isComputedMAIEnabled = newVal

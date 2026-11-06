@@ -99,8 +99,8 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const startYear = ref<string | null>(null)
   const endYear = ref<string | null>(null)
   const yearIncrement = ref<string | null>(null)
-  const isForwardGrowEnabled = ref<boolean>(false)
-  const isBackwardGrowEnabled = ref<boolean>(false)
+  const isForwardGrowEnabled = ref<boolean>(DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED)
+  const isBackwardGrowEnabled = ref<boolean>(DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED)
 
   const isComputedMAIEnabled = ref<boolean>(false)
   const isCulminationValuesEnabled = ref<boolean>(false)
@@ -234,8 +234,8 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     startYear.value = null
     endYear.value = null
     yearIncrement.value = null
-    isForwardGrowEnabled.value = false
-    isBackwardGrowEnabled.value = false
+    isForwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
+    isBackwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
     isComputedMAIEnabled.value = false
     isCulminationValuesEnabled.value = false
     isBySpeciesEnabled.value = false

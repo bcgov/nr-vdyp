@@ -14,6 +14,8 @@ export const DEFAULT_VALUES = Object.freeze({
   REPORT_TITLE: 'A Sample Report Title',
   PROJECTION_TYPE: CONSTANTS.PROJECTION_TYPE.VOLUME,
   METHOD_SELECTION: CONSTANTS.METHOD_SELECTION.FILE_UPLOAD,
+  IS_FORWARD_GROW_ENABLED: true,
+  IS_BACKWARD_GROW_ENABLED: false,
 })
 
 // Mapping Species Group to Default Utilization Level for Volume Projection
