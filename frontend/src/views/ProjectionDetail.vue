@@ -874,8 +874,10 @@ const hasCreateModeUnsavedChanges = (isManualInput: boolean): boolean => {
   ]
   if (falseDefaultFlags.some(Boolean)) return true
 
-  const fwdBwdDefault = isManualInput
-  return store.isForwardGrowEnabled !== fwdBwdDefault || store.isBackwardGrowEnabled !== fwdBwdDefault
+  return (
+    store.isForwardGrowEnabled !== DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED ||
+    store.isBackwardGrowEnabled !== DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
+  )
 }
 
 const hasEditModeManualInputChanges = async (): Promise<boolean> => {

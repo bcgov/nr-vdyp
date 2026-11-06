@@ -445,8 +445,6 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
     ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
     ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
-    // Manual Input projections are forward-only by nature
-    ExecutionOptionsEnum.ForwardGrowEnabled,
   ]
 
   const excludedExecutionOptions: ExecutionOptionsEnum[] = [
@@ -461,8 +459,6 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
     ExecutionOptionsEnum.DoIncludeProjectionFiles,
     ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
-    // Manual Input projections do not support backward growth
-    ExecutionOptionsEnum.BackGrowEnabled,
   ]
 
   const optionMappings = [
@@ -477,6 +473,14 @@ const buildExecutionOptions = (
         modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
         modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.BOTH,
       option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    },
+    {
+      flag: modelParameterStore.isForwardGrowEnabled,
+      option: ExecutionOptionsEnum.ForwardGrowEnabled,
+    },
+    {
+      flag: modelParameterStore.isBackwardGrowEnabled,
+      option: ExecutionOptionsEnum.BackGrowEnabled,
     },
     {
       flag: modelParameterStore.isComputedMAIEnabled,
@@ -868,6 +872,8 @@ const hasReportInfoChanges = (
   if (!strEq(store.reportTitle, savedParams.reportTitle)) return true
   if (!strEq(store.reportDescription || null, savedDescription || null)) return true
   const opts = savedParams.selectedExecutionOptions
+  if (store.isForwardGrowEnabled !== opts.includes(ExecutionOptionsEnum.ForwardGrowEnabled)) return true
+  if (store.isBackwardGrowEnabled !== opts.includes(ExecutionOptionsEnum.BackGrowEnabled)) return true
   if (store.isComputedMAIEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeVolumeMAI)) return true
   if (store.isCulminationValuesEnabled !== opts.includes(ExecutionOptionsEnum.ReportIncludeCulminationValues)) return true
   if (store.isBySpeciesEnabled !== opts.includes(ExecutionOptionsEnum.DoIncludeSpeciesProjection)) return true

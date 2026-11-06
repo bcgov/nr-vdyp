@@ -43,7 +43,6 @@ export const buildExecutionOptions = (
     ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
     ExecutionOptionsEnum.DoEnableProgressLogging,
     ExecutionOptionsEnum.DoEnableErrorLogging,
-    ExecutionOptionsEnum.ForwardGrowEnabled,
     ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
   ]
 
@@ -62,7 +61,6 @@ export const buildExecutionOptions = (
     ExecutionOptionsEnum.ReportIncludeVolumeMAI,
     ExecutionOptionsEnum.ReportIncludeSpeciesComp,
     ExecutionOptionsEnum.ReportIncludeCulminationValues,
-    ExecutionOptionsEnum.BackGrowEnabled,
     ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
   ]
 
@@ -78,6 +76,14 @@ export const buildExecutionOptions = (
         fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
         fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.BOTH,
       option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    },
+    {
+      flag: fileUploadStore.isForwardGrowEnabled,
+      option: ExecutionOptionsEnum.ForwardGrowEnabled,
+    },
+    {
+      flag: fileUploadStore.isBackwardGrowEnabled,
+      option: ExecutionOptionsEnum.BackGrowEnabled,
     },
     {
       flag: fileUploadStore.isBySpeciesEnabled,

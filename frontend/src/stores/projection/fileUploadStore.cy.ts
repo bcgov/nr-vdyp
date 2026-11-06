@@ -55,7 +55,7 @@ describe('File Upload Store Unit Tests', () => {
       expect(store.polygonFileInfo).to.be.null
       expect(store.layerFileInfo).to.be.null
       expect(store.fileUploadSpeciesGroup).to.deep.equal([])
-      expect(store.isForwardGrowEnabled).to.be.false
+      expect(store.isForwardGrowEnabled).to.be.true
       expect(store.isBackwardGrowEnabled).to.be.false
     })
   })
@@ -294,7 +294,8 @@ describe('File Upload Store Unit Tests', () => {
       store.setLayerFileInfo({ filename: 'l.csv', fileMappingGUID: 'l-guid', fileSetGUID: 'set-1' })
       store.confirmPanel('reportConfig')
       store.confirmPanel('minimumDBH')
-      store.isForwardGrowEnabled = true
+      store.isForwardGrowEnabled = false
+      store.isBackwardGrowEnabled = true
       store.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.YEAR
       store.initializeSpeciesGroups()
 
@@ -308,7 +309,8 @@ describe('File Upload Store Unit Tests', () => {
       expect(store.selectedAgeYearRange).to.equal(DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE)
       expect(store.polygonFileInfo).to.be.null
       expect(store.layerFileInfo).to.be.null
-      expect(store.isForwardGrowEnabled).to.be.false
+      expect(store.isForwardGrowEnabled).to.be.true
+      expect(store.isBackwardGrowEnabled).to.be.false
       expect(store.fileUploadSpeciesGroup).to.deep.equal([])
     })
   })

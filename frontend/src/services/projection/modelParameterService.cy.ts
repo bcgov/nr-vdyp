@@ -211,7 +211,7 @@ describe('buildProjectionParameters', () => {
     expect(defaults.metadataToOutput).to.equal(MetadataToOutputEnum.NONE)
   })
 
-  it('should always include the fixed execution options and ForwardGrowEnabled', () => {
+  it('should always include the fixed execution options', () => {
     const { selectedExecutionOptions } = buildProjectionParameters(createMockModelParameterStore())
     ;[
       ExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
@@ -222,8 +222,25 @@ describe('buildProjectionParameters', () => {
       ExecutionOptionsEnum.AllowAggressiveValueEstimation,
       ExecutionOptionsEnum.DoIncludeFileHeader,
       ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
-      ExecutionOptionsEnum.ForwardGrowEnabled,
     ].forEach((opt) => expect(selectedExecutionOptions).to.include(opt))
+  })
+
+  it('should map Forward and Backward flags to their execution options', () => {
+    const cases = [
+      { forward: true, backward: false },
+      { forward: false, backward: true },
+      { forward: true, backward: true },
+      { forward: false, backward: false },
+    ]
+    cases.forEach(({ forward, backward }) => {
+      const { selectedExecutionOptions, excludedExecutionOptions } = buildProjectionParameters(
+        createMockModelParameterStore({ isForwardGrowEnabled: forward, isBackwardGrowEnabled: backward }),
+      )
+      expect(selectedExecutionOptions?.includes(ExecutionOptionsEnum.ForwardGrowEnabled)).to.equal(forward)
+      expect(excludedExecutionOptions?.includes(ExecutionOptionsEnum.ForwardGrowEnabled)).to.equal(!forward)
+      expect(selectedExecutionOptions?.includes(ExecutionOptionsEnum.BackGrowEnabled)).to.equal(backward)
+      expect(excludedExecutionOptions?.includes(ExecutionOptionsEnum.BackGrowEnabled)).to.equal(!backward)
+    })
   })
 
   it('should select debug logging only when Debug Mode is enabled', () => {
