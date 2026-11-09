@@ -470,11 +470,17 @@ export const deleteAllFilesFromFileSet = async (
 ): Promise<void> => {
   try {
     const files = await apiGetFileSetFiles(projectionGUID, fileSetGUID)
-    for (const file of files) {
-      if (file.fileMappingGUID) {
-        await apiDeleteFileFromFileSet(projectionGUID, fileSetGUID, file.fileMappingGUID)
-      }
-    }
+    await Promise.all(
+      files
+        .filter((file) => file.fileMappingGUID)
+        .map((file) =>
+          apiDeleteFileFromFileSet(
+            projectionGUID,
+            fileSetGUID,
+            file.fileMappingGUID!,
+          ),
+        ),
+    )
   } catch (error) {
     console.error('Error deleting all files from fileset:', error)
     throw error
