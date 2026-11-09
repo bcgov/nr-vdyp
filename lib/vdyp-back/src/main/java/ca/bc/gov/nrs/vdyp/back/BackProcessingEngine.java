@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
@@ -935,6 +936,9 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			throws ProcessingException {
 
 		super.executeAlgorithm(lastStepInclusive, stoppingYearInclusive);
+
+		if (lastStepInclusive.lt(BaseExecutionStep.ALL))
+			return;
 
 		final VdypPolygon polygon = getState().getCurrentPolygon();
 

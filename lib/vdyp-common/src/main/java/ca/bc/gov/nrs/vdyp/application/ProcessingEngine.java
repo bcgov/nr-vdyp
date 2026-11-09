@@ -1523,7 +1523,7 @@ public abstract class ProcessingEngine<S extends ProcessingState<L>, L extends L
 		// Determine the target year of the growth
 		int targetYear = getTargetYear(polygon);
 
-		// Run the forward algorithm for this polygon
+		// Run the algorithm for this polygon
 
 		executeAlgorithm(lastStepInclusive, targetYear);
 	}

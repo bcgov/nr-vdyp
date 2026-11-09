@@ -1475,7 +1475,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingS
 	 *
 	 * @throws ProcessingException
 	 */
-	// TODO unify this with ComputationMethods.estimateSmallComponents
+	// TODO VDYP-1475 unify this with ComputationMethods.estimateSmallComponents
 	private void calculateSmallComponentYields(LayerProcessingState<ForwardLayerProcessingState> lps) {
 
 		Bank bank = lps.getBank();
