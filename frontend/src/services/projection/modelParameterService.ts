@@ -325,19 +325,21 @@ const createLayerData = (
       ? modelParameterStore.crownClosure
       : ''
 
-  const basalArea =
+  // Basal area and TPH are only submitted for Basal Area based projections.
+  // For all other cases they are N/A and must be submitted blank so the API
+  // can select the appropriate initial model (e.g. FIP for Volume based).
+  const isBasalAreaComputed =
     modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA &&
     modelParameterStore.siteSpeciesValues ===
       CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      ? modelParameterStore.basalArea
-      : DEFAULTS.DEFAULT_VALUES.BASAL_AREA
 
-  const treesPerHectare =
-    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA &&
-    modelParameterStore.siteSpeciesValues ===
-      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
-      ? modelParameterStore.treesPerHectare
-      : DEFAULTS.DEFAULT_VALUES.TPH
+  const basalArea = isBasalAreaComputed
+    ? (modelParameterStore.basalArea ?? '')
+    : ''
+
+  const treesPerHectare = isBasalAreaComputed
+    ? (modelParameterStore.treesPerHectare ?? '')
+    : ''
 
   const row = [
     featureId, // FEATURE_ID
