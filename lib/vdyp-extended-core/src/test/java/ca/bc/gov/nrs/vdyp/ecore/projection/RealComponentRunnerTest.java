@@ -205,7 +205,7 @@ class RealComponentRunnerTest {
 			return new HcsvPolygonStream(context, polygonInputStream, layersInputStream).getNextPolygon();
 		}
 
-		private PolygonProjectionState newState(ProjectionContext context) throws Exception {
+		private PolygonProjectionState newState(ProjectionContext context) {
 			var state = new PolygonProjectionState();
 			state.setExecutionFolder(context.getExecutionFolder());
 			return state;
@@ -322,7 +322,7 @@ class RealComponentRunnerTest {
 		}
 
 		@Test
-		void testMessageAddedWhenSuppliedLayerTypeIsUnknownButLayerWasProcessed() throws Exception {
+		void testMessageAddedWhenSuppliedLayerTypeIsUnknownButLayerWasProcessed() {
 
 			var polygon = buildSyntheticPolygon(ProjectionTypeCode.UNKNOWN, ProjectionTypeCode.PRIMARY, false, "NC");
 
@@ -332,7 +332,7 @@ class RealComponentRunnerTest {
 		}
 
 		@Test
-		void testNoMessageWhenSuppliedLayerTypeIsUnknownAndLayerWasNotProcessed() throws Exception {
+		void testNoMessageWhenSuppliedLayerTypeIsUnknownAndLayerWasNotProcessed() {
 
 			var polygon = buildSyntheticPolygon(ProjectionTypeCode.UNKNOWN, ProjectionTypeCode.UNKNOWN, true, "NSR");
 
@@ -342,7 +342,7 @@ class RealComponentRunnerTest {
 		}
 
 		@Test
-		void testNoMessageWhenNonForestDescriptorIsBlank() throws Exception {
+		void testNoMessageWhenNonForestDescriptorIsBlank() {
 
 			var polygon = buildSyntheticPolygon(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.PRIMARY, false, "  ");
 
