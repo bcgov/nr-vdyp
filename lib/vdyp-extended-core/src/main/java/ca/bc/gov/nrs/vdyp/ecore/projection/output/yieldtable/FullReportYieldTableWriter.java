@@ -16,9 +16,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.ecore.projection.RunProcessingMessages;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
@@ -533,11 +535,13 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 	}
 
 	private void writeNotes() throws YieldTableGenerationException {
-		// WHERE ARE THE NOTES STORED? DO WE STORE THEM?
 		doWrite("\n");
 
 		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)) {
 			doWrite("%s\n", "WARN: By Species values are only visible in the CSV version of the Yield Table");
+		}
+		for (String message : RunProcessingMessages.messages(context.getParams())) {
+			doWrite("%s: %s\n", MessageSeverityCode.INFORMATION.getText(), message);
 		}
 		List<PolygonMessage> messages = lastPolygonForTrailer.getMessages();
 		for (PolygonMessage message : messages) {

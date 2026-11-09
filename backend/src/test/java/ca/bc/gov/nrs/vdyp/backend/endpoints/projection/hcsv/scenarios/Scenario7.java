@@ -21,7 +21,6 @@ import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ValidationMessageResource;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.AgeYearRangeCombinationKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
-import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
@@ -81,7 +80,9 @@ class Scenario7 extends Scenario {
 
 		assertProgressLogNext(zipFile, s -> s.contains("starting projection (type HCSV)"));
 
-		assertErrorLogNext(zipFile, s -> s.contains(PolygonMessageKind.BA_TPH_SUBSTITUTION_DISABLED.getTemplate()));
+		assertErrorLogNext(
+				zipFile, s -> s.contains("Substitution of Supplied BA/TPH as Projected values has been disabled.")
+		);
 
 		assertDebugLogNext(zipFile, s -> s.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 

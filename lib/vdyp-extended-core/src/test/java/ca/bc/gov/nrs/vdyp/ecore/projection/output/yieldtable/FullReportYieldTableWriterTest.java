@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,10 +19,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.ecore.projection.RunProcessingMessages;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.History;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
@@ -30,8 +34,33 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 
 class FullReportYieldTableWriterTest {
+	@Test
+	void processingMessagesAreInformationNotesAlongsidePolygonMessages() throws Exception {
+		var polygon = new Polygon.Builder().featureId(1).inventoryStandard(InventoryStandard.FIP)
+				.percentStockable(100.0).build();
+		var layer = new Layer.Builder().layerId("1").polygon(polygon).percentStockable(100.0).crownClosure((short) 40)
+				.build();
+		polygon.setPrimaryLayer(layer);
+		polygon.addMessage(
+				builder -> builder.details(
+						ReturnCode.SUCCESS, MessageSeverityCode.WARNING, PolygonMessageKind.BAD_STAND_DEFINITION
+				)
+		);
+		var context = reportContext();
+		assertTrue(!context.getParams().containsOption(Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING));
+		String output = writeTrailer(context, polygon);
+		for (String message : RunProcessingMessages.messages(context.getParams())) {
+			String note = "INFO: " + message;
+			assertEquals(1, output.lines().filter(note::equals).count());
+			assertTrue(output.indexOf(note) < output.indexOf("WARN: stand definition insufficient"));
+		}
+		assertThat(output, containsString("WARN: stand definition insufficient for FIPSTART Processing\n"));
+		assertThat(output, not(containsString("- I SUCCESS -")));
+	}
+
 	@ParameterizedTest
 	@CsvSource({ "FIP, true", "VRI, false" })
 	void testDefaultCrownClosureNote(InventoryStandard inventory, boolean expected) throws Exception {

@@ -90,9 +90,11 @@ class YieldTableTest {
 			throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "10", "300");
 
-		assertThat(result.messages().size(), is(2));
-		assertLayerCopyMessage(result, 0, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
-		assertLayerCopyMessage(result, 1, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+		assertThat(result.messages().size(), is(4));
+		assertLayerCopyMessage(result, 0, PolygonMessageKind.SPECIES_TOO_SHORT);
+		assertLayerCopyMessage(result, 1, PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER);
+		assertLayerCopyMessage(result, 2, PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER);
+		assertLayerCopyMessage(result, 3, PolygonMessageKind.SPECIES_TOO_SHORT);
 	}
 
 	@Test
@@ -118,7 +120,9 @@ class YieldTableTest {
 	void testMissingSuppliedYieldValuesDoNotAddCopyMessages() throws AbstractProjectionRequestException, IOException {
 		var result = generateSubstitutedYields(suppliedYieldSubstitutionParameters(), "", "");
 
-		assertThat(result.messages(), is(List.of()));
+		assertThat(result.messages().size(), is(2));
+		assertLayerCopyMessage(result, 0, PolygonMessageKind.SPECIES_TOO_SHORT);
+		assertLayerCopyMessage(result, 1, PolygonMessageKind.SPECIES_TOO_SHORT);
 	}
 
 	@Test
@@ -128,7 +132,9 @@ class YieldTableTest {
 				.addExcludedExecutionOptionsItem(Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		var result = generateSubstitutedYields(parameters, "10", "300");
 
-		assertThat(result.messages(), is(List.of()));
+		assertThat(result.messages().size(), is(2));
+		assertLayerCopyMessage(result, 0, PolygonMessageKind.SPECIES_TOO_SHORT);
+		assertLayerCopyMessage(result, 1, PolygonMessageKind.SPECIES_TOO_SHORT);
 	}
 
 	private Parameters suppliedYieldSubstitutionParameters() {
@@ -171,33 +177,11 @@ class YieldTableTest {
 		assertThat(message.getKind(), is(kind));
 		assertThat(message.getPolygon(), is(result.layer().getPolygon()));
 		assertThat(message.getLayer(), is(result.layer()));
-		assertThat(message.getSeverity(), is(MessageSeverityCode.INFORMATION));
-		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_LAYERNOTPROCESSED));
 	}
 
-	static Stream<Arguments> missingProjectionMessageKinds() {
-		return Stream.of(
-				Arguments.of(
-						false, PolygonMessageKind.NO_PROJECTED_DATA,
-						"projected data for species PL was not generated at stand age 180 (Calendar year 2013)"
-				),
-				Arguments.of(
-						true, PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR,
-						"projected data for species PL was not generated at stand age 180"
-				)
-		);
-	}
-
-	@ParameterizedTest
-	@MethodSource("missingProjectionMessageKinds")
-	void testMissingProjectedDataAddsCheckedPolygonMessage(boolean ageRows, PolygonMessageKind kind, String text)
-			throws AbstractProjectionRequestException, IOException {
-		var parameters = polygonMessageTestParameters();
-		if (ageRows) {
-			parameters.ageStart(180).ageEnd(181).ageIncrement(1);
-		} else {
-			parameters.yearStart(2013).yearEnd(2014).ageIncrement(1);
-		}
+	@Test
+	void testShortSpeciesDataAddsCheckedPolygonMessage() throws AbstractProjectionRequestException, IOException {
+		var parameters = polygonMessageTestParameters().yearStart(2013).yearEnd(2014).ageIncrement(1);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
 		var polygon = polygonForMessageTests(context, "10", "300");
 		var layerInfo = polygon.getReportingInfo().getLayerReportingInfos().values().iterator().next();
@@ -211,36 +195,19 @@ class YieldTableTest {
 			yieldTable.endGeneration();
 		}
 		assertThat(new String(yieldTable.getAsStream().readAllBytes()), containsString("2014"));
-		var messages = polygon.getMessages().stream().filter(m -> m.getKind() == kind).toList();
-		// Layer growth, volume, secondary species and subsequent rows all request missing data.
-		assertThat(messages.size(), is(1));
-		var message = messages.get(0);
-		assertThat(message.getPolygon(), is(polygon));
-		assertThat(message.getLayer(), is(layerInfo.getLayer()));
-		assertThat(message.getSeverity(), is(MessageSeverityCode.WARNING));
-		assertThat(message.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
-		assertThat(message.getReportMessageText(), is("WARN: " + text));
 		var shortSpeciesMessages = polygon.getMessages().stream()
 				.filter(m -> m.getKind() == PolygonMessageKind.SPECIES_TOO_SHORT).toList();
-		assertThat(shortSpeciesMessages.size(), is(1));
+		assertThat(shortSpeciesMessages.size(), is(2));
 		var shortSpeciesMessage = shortSpeciesMessages.get(0);
 		assertThat(shortSpeciesMessage.getLayer(), is(layerInfo.getLayer()));
-		assertThat(shortSpeciesMessage.getSeverity(), is(MessageSeverityCode.WARNING));
-		assertThat(shortSpeciesMessage.getReturnCode(), is(ReturnCode.ERROR_CORELIBRARYERROR));
+		assertThat(shortSpeciesMessage.getSeverity(), is(MessageSeverityCode.INFORMATION));
+		assertThat(shortSpeciesMessage.getReturnCode(), is(ReturnCode.ERROR_INVALIDSITEINFO));
 		assertThat(
 				shortSpeciesMessage.getReportMessageText(),
 				containsString("at stand age \"180\" is too short to generate yields for species \"PL\"")
 		);
 		assertTrue(layerInfo.getLayer().isAgeRequestedWithoutYields());
 		assertThat(layerInfo.getLayer().getFirstAgeWithYields(), is(0));
-		assertThat(
-				polygon.getMessages().stream()
-						.filter(
-								m -> m.getKind() == PolygonMessageKind.NO_PROJECTED_DATA
-										|| m.getKind() == PolygonMessageKind.NO_PROJECTED_DATA_NO_YEAR
-						).count(),
-				is(1L)
-		);
 	}
 
 	private Parameters polygonMessageTestParameters() {
@@ -1983,7 +1950,7 @@ class YieldTableTest {
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_PLI_NIGHGI97, 42.0, 10.0);
 
-			var layerYields = yieldTable.getUnprojectedStandYields(stand, 2020);
+			var layerYields = yieldTable.getUnprojectedStandYields(stand.getLayer(), stand, 2020);
 
 			assertFalse(layerYields.bYieldsPredicted());
 			assertThat(layerYields.speciesAge(), is(42.0));
@@ -1995,7 +1962,7 @@ class YieldTableTest {
 	void testGetUnprojectedStandYieldsReturnsZeroesWhenStandMissing() throws AbstractProjectionRequestException {
 
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
-			var layerYields = yieldTable.getUnprojectedStandYields(null, 2020);
+			var layerYields = yieldTable.getUnprojectedStandYields(null, null, 2020);
 
 			assertThat(layerYields.speciesAge(), is(0.0));
 			assertThat(layerYields.dominantHeight(), is(0.0));
@@ -2008,7 +1975,7 @@ class YieldTableTest {
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var stand = buildStandWithProjectionSiteData(2020, null, SiteIndexEquation.SI_PLI_NIGHGI97, 42.0, 10.0);
 
-			var layerYields = yieldTable.getUnprojectedStandYields(stand, 2020);
+			var layerYields = yieldTable.getUnprojectedStandYields(stand.getLayer(), stand, 2020);
 
 			assertThat(layerYields.speciesAge(), is(0.0));
 			assertThat(layerYields.dominantHeight(), is(0.0));
@@ -2022,7 +1989,7 @@ class YieldTableTest {
 		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
 			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_NO_EQUATION, 42.0, 10.0);
 
-			var layerYields = yieldTable.getUnprojectedStandYields(stand, 2020);
+			var layerYields = yieldTable.getUnprojectedStandYields(stand.getLayer(), stand, 2020);
 
 			assertThat(layerYields.speciesAge(), is(0.0));
 			assertThat(layerYields.dominantHeight(), is(0.0));
@@ -2036,7 +2003,8 @@ class YieldTableTest {
 			var stand = buildStandWithProjectionSiteData(2020, 42.0, SiteIndexEquation.SI_PLI_NIGHGI97, 1.2, 10.0);
 
 			var exception = assertThrows(
-					StandYieldCalculationException.class, () -> yieldTable.getUnprojectedStandYields(stand, 2020)
+					StandYieldCalculationException.class,
+					() -> yieldTable.getUnprojectedStandYields(stand.getLayer(), stand, 2020)
 			);
 
 			assertThat(exception.getCause(), Matchers.instanceOf(CommonCalculatorException.class));
