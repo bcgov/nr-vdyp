@@ -32,7 +32,9 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 
@@ -147,6 +149,25 @@ class FullReportYieldTableWriterTest {
 		assertThat(output, containsString("Measured Basal Area...... 25.0"));
 	}
 
+	@Test
+	void testBasalAreaAndTreesPerHectareSuppressedForFipVriYoung() throws Exception {
+		var polygon = new Polygon.Builder().featureId(1).inventoryStandard(InventoryStandard.FIP)
+				.percentStockable(100.0).build();
+		var layer = new Layer.Builder().layerId("1").polygon(polygon).percentStockable(100.0).treesPerHectare(800.0)
+				.build();
+		polygon.setPrimaryLayer(layer);
+		var stand = new Stand.Builder().layer(layer).sp0Code("PL").build();
+		layer.addSp64(
+				new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100.0).dominantHeight(5.0)
+						.totalAge(10.0).siteIndex(16.0).build()
+		);
+		var state = new PolygonProjectionState();
+		state.setGrowthModel(ProjectionTypeCode.PRIMARY, GrowthModelCode.FIP, ProcessingModeCode.VRI_VriYoung);
+		var output = writeTrailer(reportContext(), polygon, state);
+		assertThat(output, containsString("Trees Per Hectare........ <Not Used>"));
+		assertThat(output, containsString("Measured Basal Area...... <Not Used>"));
+	}
+
 	private ProjectionContext reportContext() throws Exception {
 		return new ProjectionContext(
 				ProjectionRequestKind.HCSV, "TEST",
@@ -155,9 +176,14 @@ class FullReportYieldTableWriterTest {
 	}
 
 	private String writeTrailer(ProjectionContext context, Polygon polygon) throws Exception {
+		return writeTrailer(context, polygon, new PolygonProjectionState());
+	}
+
+	private String writeTrailer(ProjectionContext context, Polygon polygon, PolygonProjectionState state)
+			throws Exception {
 		try (var writer = FullReportYieldTableWriter.of(context)) {
 			writer.lastPolygonForTrailer = polygon;
-			writer.recordPolygonProjectionState(new PolygonProjectionState());
+			writer.recordPolygonProjectionState(state);
 			writer.writeTrailer();
 		}
 		return Files.readString(context.getExecutionFolder().resolve(FullReportYieldTableWriter.YIELD_TABLE_FILE_NAME));
