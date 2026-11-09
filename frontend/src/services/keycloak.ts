@@ -99,7 +99,7 @@ const initializeWithFreshAuth = async (): Promise<Keycloak | undefined> => {
     !keycloakInstance!.refreshToken ||
     !keycloakInstance!.idToken
   ) {
-    keycloakInstance!.login(loginOptions)
+    await keycloakInstance!.login(loginOptions)
     return undefined
   }
 

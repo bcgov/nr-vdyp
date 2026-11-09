@@ -11,6 +11,7 @@ computeBclcsLevel1,
   determineBclcsLevel5,
   getSpeciesData,
   flattenSpeciesData,
+  createCSVFiles,
   buildProjectionParameters,
   buildModelParameters,
   createProjection,
@@ -82,8 +83,6 @@ const mockProjectionModel = {
   modelParameters: null,
 }
 
-// ─ ID generators
-
 describe('generateFeatureId', () => {
   it('should return a positive number and differ across calls', () => {
     expect(generateFeatureId()).to.be.a('number').and.be.greaterThan(0)
@@ -104,9 +103,6 @@ describe('generateRandomNumber', () => {
     expect(() => generateRandomNumber(5, 3)).to.throw('minDigits must be less than or equal to maxDigits')
   })
 })
-
-
-// ─ BCLCS level computations
 
 describe('computeBclcsLevel1', () => {
   it('should return "N" below threshold and "V" at or above (including undefined)', () => {
@@ -157,8 +153,6 @@ describe('determineBclcsLevel5', () => {
   })
 })
 
-// ─ Species helpers
-
 describe('getSpeciesData', () => {
   it('should convert percent to string and return empty string for missing or zero values', () => {
     expect(getSpeciesData([{ species: 'FD', percent: 60 }, { species: 'PL', percent: 40 }])).to.deep.equal([
@@ -178,7 +172,52 @@ describe('flattenSpeciesData', () => {
   })
 })
 
-// ─ Parameter builders
+describe('createCSVFiles', () => {
+  const readLayerColumns = async (store: any) => {
+    const { blobLayer } = createCSVFiles(store)
+    const [headerLine, dataLine] = (await blobLayer.text()).split('\n')
+    const headers = headerLine.split(',')
+    const values = dataLine.split(',')
+    return {
+      basalArea: values[headers.indexOf('BASAL_AREA_75')],
+      treesPerHectare: values[headers.indexOf('STEMS_PER_HA_75')],
+    }
+  }
+
+  it('should submit blank BA and TPH for Volume based projections', async () => {
+    const store = createMockModelParameterStore({
+      derivedBy: CONSTANTS.DERIVED_BY.VOLUME,
+      siteSpeciesValues: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+    })
+    const layer = await readLayerColumns(store)
+    expect(layer.basalArea).to.equal('')
+    expect(layer.treesPerHectare).to.equal('')
+  })
+
+  it('should submit blank BA and TPH when site species values are not Computed', async () => {
+    const store = createMockModelParameterStore({
+      derivedBy: CONSTANTS.DERIVED_BY.BASAL_AREA,
+      siteSpeciesValues: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
+      basalArea: '25.0000',
+      treesPerHectare: '800.00',
+    })
+    const layer = await readLayerColumns(store)
+    expect(layer.basalArea).to.equal('')
+    expect(layer.treesPerHectare).to.equal('')
+  })
+
+  it('should submit the entered BA and TPH for Basal Area based Computed projections', async () => {
+    const store = createMockModelParameterStore({
+      derivedBy: CONSTANTS.DERIVED_BY.BASAL_AREA,
+      siteSpeciesValues: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+      basalArea: '25.0000',
+      treesPerHectare: '800.00',
+    })
+    const layer = await readLayerColumns(store)
+    expect(layer.basalArea).to.equal('25.0000')
+    expect(layer.treesPerHectare).to.equal('800.00')
+  })
+})
 
 describe('buildProjectionParameters', () => {
   it('sends one utilization entry for site species sharing a group', () => {
@@ -358,8 +397,6 @@ describe('buildModelParameters', () => {
   })
 })
 
-// ─ Projection lifecycle
-
 describe('createProjection', () => {
   it('should call createProjectionFunc once and pass reportDescription', () => {
     const mockResult = { ...mockProjectionModel, projectionGUID: 'new-proj-guid' }
@@ -519,8 +556,8 @@ describe('revertPanelToSaved', () => {
     const modelStore = useModelParameterStore()
     modelStore.isDebugModeEnabled = true
 
-    cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS as any)).then(() => {
-      expect(modelStore.isDebugModeEnabled).to.be.false
-    })
+    cy.wrap(revertPanelToSaved(CONSTANTS.MANUAL_INPUT_PANEL.REPORT_SETTINGS as any))
+      .then(() => modelStore.isDebugModeEnabled)
+      .should('be.false')
   })
 })

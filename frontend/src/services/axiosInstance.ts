@@ -54,7 +54,7 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
     if (error.response?.status === 403) {
-      router.replace(ROUTE_PATH.UNAUTHORIZED)
+      await router.replace(ROUTE_PATH.UNAUTHORIZED)
       return
     }
 
