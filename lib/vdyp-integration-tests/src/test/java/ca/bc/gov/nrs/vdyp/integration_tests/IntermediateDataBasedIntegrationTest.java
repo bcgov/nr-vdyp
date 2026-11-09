@@ -39,8 +39,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 
 	protected static enum State {
 		FipInput("FIP", "fipInput"), VriInput("VRI", "vriInput"), ForwardInput("7INP", "forwardInput"),
-		ForwardOutput("7OUT", "forwardOutput"), BackInput("BINP", "backInput"),
-		BackOutput("BOUT", "backOutput");
+		ForwardOutput("7OUT", "forwardOutput"), BackInput("BINP", "backInput"), BackOutput("BOUT", "backOutput");
 
 		public final String prefix;
 		public final Path dir;
