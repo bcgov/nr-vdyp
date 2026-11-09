@@ -265,7 +265,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class), any(JobParameters.class)
 				)
 		).thenReturn(mockPath);
 
@@ -274,7 +274,7 @@ class BatchConfigurationTest {
 		assertEquals(RepeatStatus.FINISHED, result);
 		verify(resultAggregationService).aggregateResultsFromJobDir(
 				eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-				any(VDYPProjectionProgressUpdate.class), any(Duration.class)
+				any(VDYPProjectionProgressUpdate.class), any(Duration.class), eq(jobParameters)
 		);
 		verify(executionContext).putString("consolidatedOutputPath", "/tmp/consolidated.zip");
 	}
@@ -313,7 +313,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class), any(JobParameters.class)
 				)
 		)
 				.thenReturn(mockPath);
@@ -365,7 +365,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class), any(JobParameters.class)
 				)
 		)
 				.thenReturn(mockPath);
@@ -413,7 +413,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class), any(JobParameters.class)
 				)
 		).thenThrow(wrappedException);
 
@@ -458,7 +458,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class), any(JobParameters.class)
 				)
 		).thenThrow(testException);
 
@@ -501,7 +501,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class), any(JobParameters.class)
 				)
 		).thenThrow(testException);
 
@@ -546,7 +546,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString(),
-						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class), any(JobParameters.class)
 				)
 		).thenReturn(mockPath);
 
@@ -591,7 +591,7 @@ class BatchConfigurationTest {
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), eq(null), anyString(),
-						any(VDYPProjectionProgressUpdate.class), any(Duration.class)
+						any(VDYPProjectionProgressUpdate.class), any(Duration.class), any(JobParameters.class)
 				)
 		).thenThrow(testException);
 

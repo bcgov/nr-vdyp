@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection.model;
 
 import java.text.MessageFormat;
+import java.util.Objects;
 
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
@@ -84,6 +85,22 @@ public class PolygonMessage {
 
 	public PolygonMessageKind getKind() {
 		return kind;
+	}
+
+	boolean isDuplicateOf(PolygonMessage other) {
+		if (kind != other.kind) {
+			return false;
+		}
+		for (int index : kind.getDeduplicationArgumentIndexes()) {
+			if (!Objects.equals(getArgument(index), other.getArgument(index))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private Object getArgument(int index) {
+		return args != null && index < args.length ? args[index] : null;
 	}
 
 	public String getSimpleMessageText() {

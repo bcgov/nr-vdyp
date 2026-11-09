@@ -93,7 +93,7 @@ class Hcsv_44GrpATest extends BaseHttpProjectionRequestTest {
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
 		assertThat(
 				errorEntryContent, allOf(
-						containsString("Error in VRI_START when running: "), //
+						containsString("an error occurred processing the VRISTART model: "), //
 						containsString("Required Site index was missing") //
 				)
 		);

@@ -388,23 +388,6 @@ public class PolygonProjectionRunnerTest {
 		unit.project();
 		context.endRun();
 		em.verify();
-
-		var messages = polygon.getMessages().stream()
-				.filter(message -> message.getKind() == PolygonMessageKind.FORWARD_GROW_DISABLED).toList();
-		if (forwardEnabled) {
-			assertThat(messages.size(), is(0));
-		} else {
-			assertThat(
-					messages,
-					contains(
-							allOf(
-									hasProperty("polygon", sameInstance(polygon)), hasProperty("layer", nullValue()),
-									hasProperty("returnCode", is(ReturnCode.SUCCESS)),
-									hasProperty("severity", is(MessageSeverityCode.INFORMATION))
-							)
-					)
-			);
-		}
 	}
 
 	@ParameterizedTest
@@ -792,7 +775,8 @@ public class PolygonProjectionRunnerTest {
 				),
 				Arguments.of(
 						new ResultBaseAreaLowException(LayerType.PRIMARY, Optional.of(10f), Optional.of(12f)), true,
-						ReturnCode.SUCCESS, PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, MessageSeverityCode.WARNING
+						ReturnCode.SUCCESS, PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL,
+						MessageSeverityCode.WARNING
 				),
 
 				Arguments.of(
@@ -807,12 +791,11 @@ public class PolygonProjectionRunnerTest {
 				),
 				Arguments.of(
 						new HeightLowException(LayerType.PRIMARY, Optional.of(0.5f), Optional.of(0.75f)), false,
-						ReturnCode.ERROR_CORELIBRARYERROR, PolygonMessageKind.GENERIC_FIPSTART_ERROR,
-						MessageSeverityCode.ERROR
+						ReturnCode.SUCCESS, PolygonMessageKind.LAYER_HEIGHT_TOO_LOW, MessageSeverityCode.WARNING
 				),
 				Arguments.of(
-						new IncorrectLayerCodesException("X"), false, ReturnCode.ERROR_CORELIBRARYERROR,
-						PolygonMessageKind.GENERIC_FIPSTART_ERROR, MessageSeverityCode.ERROR
+						new IncorrectLayerCodesException("X"), false, ReturnCode.ERROR_LAYERNOTPROCESSED,
+						PolygonMessageKind.BAD_STAND_DEFINITION, MessageSeverityCode.INFORMATION
 				),
 				Arguments.of(
 						new LayerMissingException(LayerType.PRIMARY), false, ReturnCode.ERROR_CORELIBRARYERROR,

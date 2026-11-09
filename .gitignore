@@ -261,3 +261,6 @@ backend/src/test/resources/test-data/hcsv/44grpa/polyids.txt
 .Rhistory
 R/VDYPinR_1.0/VDYPinR/man/*
 R/VDYPinR_1.0/VDYPinR/inst/doc/*
+
+# Claude Code local settings
+.claude/settings.local.json

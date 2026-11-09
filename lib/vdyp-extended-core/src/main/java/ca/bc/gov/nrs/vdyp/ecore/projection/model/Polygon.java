@@ -448,7 +448,7 @@ public class Polygon implements Comparable<Polygon> {
 
 	public boolean messageOkToAdd(PolygonMessage message) {
 		for (PolygonMessage m : getMessages()) {
-			if (m.getKind() == message.getKind()) {
+			if (m.isDuplicateOf(message)) {
 				return false;
 			}
 		}
@@ -740,19 +740,19 @@ public class Polygon implements Comparable<Polygon> {
 		if (getInventoryStandard().equals(InventoryStandard.VRI)) {
 			var primaryLayer = getPrimaryLayer();
 			if (primaryLayer != null) {
-				if (primaryLayer.getBasalArea() == null) {
+				if (primaryLayer.getBasalArea() == null || primaryLayer.getBasalArea() == 0.0) {
 					addMessage(
 							new PolygonMessage.Builder().layer(primaryLayer).details(
-									ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+									ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
 									PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING, "basal area", "primary"
 							).build()
 					);
 				}
-				if (primaryLayer.getTreesPerHectare() == null) {
+				if (primaryLayer.getTreesPerHectare() == null || primaryLayer.getTreesPerHectare() == 0.0) {
 					addMessage(
 							new PolygonMessage.Builder().layer(primaryLayer)
 									.details(
-											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+											ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
 											PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING,
 											"trees-per-hectare", "primary"
 									).build()
@@ -761,19 +761,19 @@ public class Polygon implements Comparable<Polygon> {
 			}
 			var veteranLayer = getVeteranLayer();
 			if (veteranLayer != null) {
-				if (veteranLayer.getBasalArea() == null) {
+				if (veteranLayer.getBasalArea() == null || veteranLayer.getBasalArea() == 0.0) {
 					addMessage(
 							new PolygonMessage.Builder().layer(veteranLayer).details(
-									ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+									ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
 									PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING, "basal area", "veteran"
 							).build()
 					);
 				}
-				if (veteranLayer.getTreesPerHectare() == null) {
+				if (veteranLayer.getTreesPerHectare() == null || veteranLayer.getTreesPerHectare() == 0.0) {
 					addMessage(
 							new PolygonMessage.Builder().layer(veteranLayer)
 									.details(
-											ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+											ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.WARNING,
 											PolygonMessageKind.VRI_INVENTORY_STANDARD_VALUE_MISSING,
 											"trees-per-hectare", "veteran"
 									).build()
@@ -929,6 +929,7 @@ public class Polygon implements Comparable<Polygon> {
 		rGrowthModel.set(GrowthModelCode.getDefault());
 		rProcessingMode.set(ProcessingModeCode.getDefault());
 
+		boolean foundAtLeastOnePrimaryLayer = false;
 		for (ProjectionTypeCode pt : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 
 			// Iterate until we find a projection type with a primary layer; that will determine
@@ -937,6 +938,7 @@ public class Polygon implements Comparable<Polygon> {
 			// Determine the primary layer of the stand.
 			Layer ptPrimaryLayer = findPrimaryLayerByProjectionType(pt);
 			if (ptPrimaryLayer != null) {
+				foundAtLeastOnePrimaryLayer = true;
 
 				rPrimaryLayer.set(ptPrimaryLayer);
 				rProjectionType.set(pt);
@@ -970,10 +972,17 @@ public class Polygon implements Comparable<Polygon> {
 					rGrowthModel.set(GrowthModelCode.VRI);
 					rProcessingMode.set(ProcessingModeCode.VRI_Default);
 				}
-
 				// Process only the first Projection Type for which there is a Primary layer.
 				break;
 			}
+		}
+		if (!foundAtLeastOnePrimaryLayer) {
+			addMessage(
+					builder -> builder.polygon(this).details(
+							ReturnCode.ERROR_LAYERNOTFOUND, MessageSeverityCode.ERROR,
+							PolygonMessageKind.PRIMARY_LAYER_NOT_FOUND
+					)
+			);
 		}
 	}
 
@@ -1762,7 +1771,7 @@ public class Polygon implements Comparable<Polygon> {
 				final var reportPrimaryLayer = selectedPrimaryLayer;
 				addMessage(
 						builder -> builder.layer(reportPrimaryLayer).details(
-								ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+								ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 								PolygonMessageKind.NO_PRIMARY_LAYER_SUPPLIED, reportPrimaryLayer.getLayerId()
 						)
 				);

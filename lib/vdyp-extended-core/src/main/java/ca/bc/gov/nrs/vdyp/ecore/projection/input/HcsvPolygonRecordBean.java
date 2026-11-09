@@ -496,7 +496,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getNonVegCoverPercent2() {
-		return CsvRecordBeanHelper.parseIntegerAcceptNull(nonVegCoverPercent1);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(nonVegCoverPercent2);
 	}
 
 	public String getNonVegCoverPattern2() {

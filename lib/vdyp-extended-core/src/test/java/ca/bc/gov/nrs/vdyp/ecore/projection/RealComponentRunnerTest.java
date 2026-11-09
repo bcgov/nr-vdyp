@@ -21,6 +21,8 @@ import java.util.function.Supplier;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
@@ -28,12 +30,16 @@ import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class RealComponentRunnerTest {
@@ -166,6 +172,46 @@ class RealComponentRunnerTest {
 		long reportTitleCount = content.lines().filter(line -> line.contains("VDYP Yield Table")).count();
 		assertThat(reportTitleCount, is(1L));
 		assertThat(content, containsString("CFS Biomass"));
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = ProjectionTypeCode.class, names = { "DO_NOT_PROJECT", "UNKNOWN" })
+	void testGenerateYieldTablesReportsUnselectedLayer(ProjectionTypeCode projectionType) throws Exception {
+		var params = new Parameters().ageStart(180).ageEnd(181)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+		var polygon = buildTestPolygon(context);
+		var layerInfos = polygon.getReportingInfo().getLayerReportingInfos();
+		var layer = layerInfos.values().iterator().next().getLayer();
+		LayerReportingInfo layerInfo = EasyMock.createMock(LayerReportingInfo.class);
+		EasyMock.expect(layerInfo.getSourceLayerID()).andStubReturn(1);
+		EasyMock.expect(layerInfo.getLayer()).andStubReturn(layer);
+		EasyMock.expect(layerInfo.getProcessedAsVDYP7Layer()).andStubReturn(projectionType);
+		EasyMock.replay(layerInfo);
+		layerInfos.clear();
+		layerInfos.put(layer.getLayerId(), layerInfo);
+		context.createYieldTables();
+		int originalMessageCount = polygon.getMessages().size();
+
+		// No execution folder: attempting to read projection results for this layer would fail.
+		assertDoesNotThrow(() -> unit.generateYieldTables(context, polygon, new PolygonProjectionState()));
+
+		var messages = polygon.getMessages().subList(originalMessageCount, polygon.getMessages().size());
+		assertThat(messages.size(), is(1));
+		var message = messages.get(0);
+		assertThat(message.getKind(), is(PolygonMessageKind.NO_YIELD_TABLE_FOR_UNSELECTED_LAYER));
+		assertThat(message.getSeverity(), is(MessageSeverityCode.INFORMATION));
+		assertThat(message.getReturnCode(), is(ReturnCode.SUCCESS));
+		assertThat(message.getLayer(), sameInstance(layer));
+		assertThat(
+				message.getFormattedMessage(),
+				is("Layer '1' is not the Primary, Veteran or a Targeted Layer. Yield Table will not be produced.")
+		);
+		EasyMock.verify(layerInfo);
+		for (var yieldTable : context.getYieldTables()) {
+			yieldTable.close();
+		}
 	}
 
 	@Nested
