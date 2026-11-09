@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
@@ -65,7 +65,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
 		ProcessingDebugSettings debugSettings = fpe.getState().controlMap.getDebugSettings();
 		debugSettings.setValue(ProcessingDebugSettings.DQ_GROWTH_MODEL, 2);
@@ -96,7 +96,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
 		ProcessingDebugSettings debugSettings = fpe.getState().controlMap.getDebugSettings();
 		debugSettings.setValue(
@@ -129,7 +129,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
 		ProcessingDebugSettings debugSettings = fpe.getState().controlMap.getDebugSettings();
 		debugSettings.setValue(
@@ -162,7 +162,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
 		ProcessingDebugSettings debugSettings = fpe.getState().controlMap.getDebugSettings();
 		debugSettings.setValue(ProcessingDebugSettings.DQ_GROWTH_MODEL, 2);
@@ -193,7 +193,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
 		ProcessingDebugSettings debugSettings = fpe.getState().controlMap.getDebugSettings();
 		debugSettings.setValue(ProcessingDebugSettings.DQ_GROWTH_MODEL, 0);
@@ -224,7 +224,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
 		ProcessingDebugSettings debugSettings = fpe.getState().controlMap.getDebugSettings();
 		debugSettings.setValue(ProcessingDebugSettings.DQ_GROWTH_MODEL, 0);

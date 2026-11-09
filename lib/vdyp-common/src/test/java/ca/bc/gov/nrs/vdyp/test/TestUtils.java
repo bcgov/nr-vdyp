@@ -895,6 +895,7 @@ public class TestUtils {
 	 * @param value
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public static String javaLiteral(Object value) {
 		if (value == null) {
 			return "null";

@@ -12,9 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
@@ -59,13 +60,15 @@ class Grow8PerSpeciesLoreyHeightTest {
 	@Test
 	void testStandardPath() throws ProcessingException {
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
+		);
 
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.getState().controlMap.getDebugSettings().setValue(ProcessingDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 0);
-		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_8_SPECIES_LH);
 
 		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 
@@ -78,13 +81,15 @@ class Grow8PerSpeciesLoreyHeightTest {
 	@Test
 	void testDebug8Setting2() throws ProcessingException {
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
+		);
 
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.getState().controlMap.getDebugSettings().setValue(ProcessingDebugSettings.LOREY_HEIGHT_CHANGE_STRATEGY, 2);
-		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_8_SPECIES_LH);
 
 		LayerProcessingState<ForwardLayerProcessingState> lps = fpe.getState().getPrimaryLayerProcessingState();
 

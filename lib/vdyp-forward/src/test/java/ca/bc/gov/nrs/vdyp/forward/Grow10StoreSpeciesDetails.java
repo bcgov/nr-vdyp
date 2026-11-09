@@ -13,9 +13,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
@@ -59,12 +60,14 @@ class Grow10StoreSpeciesDetails {
 	@Test
 	void testStandardPath() throws ProcessingException {
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
+		ProcessingEngine<ForwardProcessingState, ForwardLayerProcessingState> fpe = new ForwardProcessingEngine(
+				controlMap
+		);
 
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_13_STORE_SPECIES_DETAILS);
+		fpe.processPolygon(polygon, ForwardExecutionStep.GROW_13_STORE_SPECIES_DETAILS);
 
 		// VDYP7 reports [], -9, -9, 35.473381, -9, -9)
 		Bank bank = fpe.getState().getPrimaryLayerProcessingState().getBank();

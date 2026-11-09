@@ -16,6 +16,9 @@ public class BackLayerProcessingState extends LayerProcessingState<BackLayerProc
 
 	public static final int MAX_BANK_INSTANCES = 3;
 
+	// BACKCV*
+	// These are the compatibility variables for the entire regression and the normal CVs will be set as a fraction of
+	// these at each step.
 	Optional<CompatibilityVariables[]> backCompatibilityVariables = Optional.empty();
 
 	protected BackLayerProcessingState(
@@ -28,12 +31,6 @@ public class BackLayerProcessingState extends LayerProcessingState<BackLayerProc
 	protected Predicate<VdypSpecies> getBankFilter() {
 		// TODO Auto-generated method stub
 		return x -> true;
-	}
-
-	@Override
-	protected void applyCompatibilityVariables(VdypSpecies species, int i) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -54,5 +51,6 @@ public class BackLayerProcessingState extends LayerProcessingState<BackLayerProc
 				(prev, uc, i) -> backCompatibilityVariables.get()[i].quadraticMeanDiameter().get(uc) * fraction,
 				(prev, uc, vv, i) -> backCompatibilityVariables.get()[i].volume().get(uc, vv) * fraction
 		);
+		updateModelCompatibiltyVariables();
 	}
 }

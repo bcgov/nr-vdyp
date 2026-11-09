@@ -32,7 +32,6 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilization;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
-import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 
 public class ForwardDataStreamReader implements AutoCloseable {
@@ -67,7 +66,7 @@ public class ForwardDataStreamReader implements AutoCloseable {
 
 			boolean growthTargetSpecified = Utils.parsedControl(
 					resolvedControlMap.getControlMap(), ControlKey.VTROL, ProcessingControlVariables.class
-			).map(vtrol -> vtrol.getControlVariable(ControlVariable.GROW_TARGET_1) >= 0).orElse(false);
+			).map(vtrol -> vtrol.getTargetYear().isSpecified()).orElse(false);
 
 			polygonDescriptionStream = Optional.empty();
 			if (controlMap.containsKey(ControlKey.FORWARD_INPUT_GROWTO.name()) // Growth file specified

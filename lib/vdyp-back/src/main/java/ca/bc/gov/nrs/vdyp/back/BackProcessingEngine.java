@@ -5,6 +5,7 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.offsetMultiply;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import java.io.IOException;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods.YearsAtBreastHeightMode;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
@@ -28,13 +32,17 @@ import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
+import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.CompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.TargetYear;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -42,7 +50,10 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.sindex.Sindxdll;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
@@ -53,8 +64,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 	private static final Logger logger = LoggerFactory.getLogger(BackProcessingEngine.class);
 
-	public BackProcessingEngine(BackProcessingState processingState) {
-		super(processingState);
+	public BackProcessingEngine(BackProcessingState processingState, Optional<VdypOutputWriter> outputWriter) {
+		super(processingState, outputWriter);
 	}
 
 	/**
@@ -87,7 +98,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		for (int i = 0; i < primaryState.getNSpecies(); i++) {
 			final int specIndex = i + 1;
 			cvVolume[specIndex] = new MatrixMap2Impl<>(
-					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+					UtilizationClass.UTIL_CLASSES, List.of(VolumeVariable.values()),
 					(uc, vv) -> primaryState.getCVVolume(specIndex, uc, vv)
 			);
 
@@ -95,7 +106,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			cvQuadraticMeanDiameter[specIndex] = new EnumMap<>(UtilizationClass.class);
 			cvPrimaryLayerSmall[specIndex] = new EnumMap<>(UtilizationClassVariable.class);
 
-			for (var uc : UtilizationClass.values()) {
+			for (var uc : UtilizationClass.UTIL_CLASSES) {
 				cvBasalArea[specIndex].put(uc, primaryState.getCVBasalArea(specIndex, uc));
 				cvQuadraticMeanDiameter[specIndex].put(uc, primaryState.getCVQuadraticMeanDiameter(specIndex, uc));
 			}
@@ -106,7 +117,9 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		}
 
-		state.setCompatibilityVariableDetails(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvPrimaryLayerSmall);
+		state.getPrimaryLayerProcessingState().setBackCompatibilityVariables(
+				CompatibilityVariables.fromArrays(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvPrimaryLayerSmall)
+		);
 
 		Bank primaryBank = state.getPrimaryLayerProcessingState().getBank();
 		Region polygonRegion = state.getCurrentBecZone().getRegion();
@@ -166,20 +179,23 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 				.orElseThrow(() -> new ProcessingException("No site information in primary species"));
 		float regress = getState().getCurrentStartingYear() - currentYear;
 
-		// AGEBHP
-		final float yearsAtBreastHeight = primarySite.getYearsAtBreastHeight().map(y -> y - regress)
-				.orElseThrow(() -> new ProcessingException("Missing age information in primary species"));
+		int primarySpecIndex = plps.getPrimarySpeciesIndex();
+
+		// Update ages in model from bank using current regress period
+
+		// AGEBHP = AGEBHB(...) - REGRESS
+		final float yearsAtBreastHeight = bank.yearsAtBreastHeight[primarySpecIndex] - regress;
 		primarySite.setYearsAtBreastHeight(yearsAtBreastHeight);
-		// AGETOTP
-		final float ageTotal = primarySite.getAgeTotal().map(y -> y - regress)
-				.orElseThrow(() -> new ProcessingException("Missing age information in primary species"));
+
+		// AGETOTP = AGETOTPB(...) - REGRESS
+		final float ageTotal = bank.ageTotals[primarySpecIndex] - regress;
 		primarySite.setAgeTotal(ageTotal);
 
 		// SITEHADJ
 		final float dominantHeight = FloatMath.offsetMultiply(
-				heightFromSiteCurve(primarySite), //
-				getState().getConvergenceDominantHeight().get(), //
-				getState().getDominantHeightBackupFactor().get()
+				heightFromSiteCurve(primarySite), // SITEHADJ
+				getState().getConvergenceDominantHeight().get(), // HD_CNV
+				getState().getDominantHeightBackupFactor().get() // BFH
 		);
 		primarySite.setHeight(dominantHeight);
 
@@ -232,7 +248,10 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 				);
 				species.getLoreyHeightByUtilization().setAll(speciesLoreyHeight);
 			} else {
-				speciesLoreyHeight = species.getLoreyHeightByUtilization().getAll();
+				speciesLoreyHeight = min(
+						species.getLoreyHeightByUtilization().getAll(),
+						getState().getSpeciesLoreyHeightBackupFactorMaximum(i)
+				);
 			}
 			sumBaHl += speciesLoreyHeight * species.getBaseAreaByUtilization().getAll();
 		}
@@ -300,10 +319,9 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			species.getQuadraticMeanDiameterByUtilization().scalarInPlace(
 					UtilizationClass.ALL, v -> max(v, getState().getSpeciesQuadMeanDiameterBackupFactorMinimum(i))
 			);
-			treesPerHectareSum += BaseAreaTreeDensityDiameter
-					.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
+			treesPerHectareSum += BaseAreaTreeDensityDiameter.reconcileTreesPerHectare(species, UtilizationClass.ALL);
 		}
-		var err = treesPerHectareSum = primaryLayer.getTreesPerHectareByUtilization().getAll();
+		var err = treesPerHectareSum - primaryLayer.getTreesPerHectareByUtilization().getAll();
 
 		if (Math.abs(err) > 0.5 && treesPerHectareSum > 0.5) {
 			logger.warn(
@@ -561,6 +579,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		// Lorey height for non-primary species
 		for (var species : primaryLayer.getOrderedSpecies()) {
+			if (species == primarySpecies)
+				continue;
 			// HLsp = EMP053(...)
 			var specHeight = getState().getEstimators()
 					.estimateNonPrimaryLoreyHeight(species, primarySpecies, bec, dominantHeight, primaryLoreyHeight);
@@ -671,6 +691,13 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		return result;
 	}
 
+	/**
+	 * Calculate the CV's as a fraction of the final CV's, the fraction being the proportion of time elapsed since
+	 * convergence
+	 *
+	 * @param currentYear
+	 */
+	// BACKCV
 	public void calculateCompatibilityVariables(int currentYear /* IYRCUR */) {
 		final BackLayerProcessingState plps = getState().getPrimaryLayerProcessingState();
 		int startYear = getState().getCurrentStartingYear(); // IYRFIRST
@@ -716,9 +743,14 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		// SITEHADJ
 		float siteHeight = heightFromSiteCurve(primarySite);
 
-		HeightLowException.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), 0f);
-		HeightLowException
-				.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), convergenceDominantHeight);
+		Utils.throwIfPresent(
+				HeightLowException.check(LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), 0f)
+		);
+		Utils.throwIfPresent(
+				HeightLowException.check(
+						LayerType.PRIMARY, "computed site height", Optional.of(siteHeight), convergenceDominantHeight
+				)
+		);
 
 		// BFH
 		float backupFactorHeight = (dominantHeight - convergenceDominantHeight)
@@ -757,8 +789,11 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		// BA_CNV
 		final float convergenceBasalArea = state.getConvergenceBasalArea().orElseThrow();
-		BaseAreaLowException.check(
-				LayerType.PRIMARY, "computed balsal area yeild", Optional.of(basalAreaYield), convergenceBasalArea
+		Utils.throwIfPresent(
+				BaseAreaLowException.check(
+						LayerType.PRIMARY, "computed balsal area yeild", Optional.of(basalAreaYield),
+						convergenceBasalArea
+				)
 		);
 
 		// BFB
@@ -817,24 +852,26 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 
 		// Calculate factors for lorey ht
 		// Then set ACTUAL values
-		mapTo1IndexedArray(primaryLayer.getOrderedSpecies(), (species, index) -> {
-			final float actualLoreyHeight = bank.loreyHeights[index][UC_ALL_INDEX];
+		state.setSpeciesLoreyHeightBackupFactor(
+				mapTo1IndexedArray(primaryLayer.getOrderedSpecies(), (species, index) -> {
+					final float actualLoreyHeight = bank.loreyHeights[index][UC_ALL_INDEX];
 
-			final float convergenceHeight = state.getSpeciesConvergenceLoreyHeight(index);
-			final float speciesHeight = species.getLoreyHeightByUtilization().getAll();
-			species.getLoreyHeightByUtilization().setAll(actualLoreyHeight);
-			if (speciesHeight > convergenceHeight) {
-				return (actualLoreyHeight - convergenceHeight) / (speciesHeight - convergenceHeight);
-			} else {
-				return 1.0;
-			}
-		});
+					final float convergenceHeight = state.getSpeciesConvergenceLoreyHeight(index);
+					final float speciesHeight = species.getLoreyHeightByUtilization().getAll();
+					species.getLoreyHeightByUtilization().setAll(actualLoreyHeight);
+					if (speciesHeight > convergenceHeight) {
+						return (actualLoreyHeight - convergenceHeight) / (speciesHeight - convergenceHeight);
+					} else {
+						return 1.0;
+					}
+				})
+		);
 
 		// Overall lorey Height
 		primaryLayer.getLoreyHeightByUtilization().setAll(totalLoreyHeight(primaryLayer, UtilizationClass.ALL));
 
-		primaryLayer.getBaseAreaByUtilization().setAll(basalAreaYield);
-		primaryLayer.getQuadraticMeanDiameterByUtilization().setAll(quadraticMeanDiameterYield);
+		primaryLayer.getBaseAreaByUtilization().setAll(primaryBasalArea);
+		primaryLayer.getQuadraticMeanDiameterByUtilization().setAll(primaryQuadraticMeanDiameter);
 		BaseAreaTreeDensityDiameter.reconcileTreesPerHectare(primaryLayer, UtilizationClass.ALL);
 
 		// Assign BA and DQ by species
@@ -845,11 +882,8 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 			}
 
 			// ROOTV01
-			// FIXME: VDYP-1440 This seems to get ignored in VDYP7, possibly a bug because someone use the wrong set of
-			// global variables.
 
-			// getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(),
-			// getRootFinderLimits(primaryLayer));
+			getState().getComputers().getDqBySpecies(primaryLayer, bec.getRegion(), getRootFinderLimits(primaryLayer));
 
 		}
 
@@ -892,8 +926,151 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 		float sumBasalAreaLoreyHeight = 0;
 		for (var species : primaryLayer.getOrderedSpecies()) {
 			sumBasalAreaLoreyHeight += species.getLoreyHeightByUtilization().get(uc)
-					* species.getLoreyHeightByUtilization().get(uc);
+					* species.getBaseAreaByUtilization().get(uc);
 		}
 		return sumBasalAreaLoreyHeight / primaryLayer.getBaseAreaByUtilization().get(uc);
 	}
+
+	@Override
+	protected void executeAlgorithm(ExecutionStep lastStepInclusive, int stoppingYearInclusive)
+			throws ProcessingException {
+
+		super.executeAlgorithm(lastStepInclusive, stoppingYearInclusive);
+
+		if (lastStepInclusive.lt(BaseExecutionStep.ALL))
+			return;
+
+		final VdypPolygon polygon = getState().getCurrentPolygon();
+
+		// BACKPREP
+		prepare(getState());
+
+		// IYR_RGR = BACKAGE()
+		int regressionYears = calculateConvergenceAge();
+
+		if (regressionYears <= 0) {
+			logger.atWarn().addArgument(getState().getCompactPolygonIdentifier())
+					.setMessage("Polygon {} skipped as it can not be regressed to a younger age.").log();
+			return;
+		}
+		logger.atInfo().addArgument(getState().getCompactPolygonIdentifier()).addArgument(regressionYears)
+				.setMessage("Polygon {} regressing {} years").log();
+
+		// BACK_CNV
+		calculateConvergenceYield();
+
+		// BACKFACT
+		calculateBackupFactors();
+		// TODO possibly catch and handle exceptions and skip to next polygon
+
+		final var years = getYears(
+				getState().controlMap.getControlVariables(), getState().getCurrentStartingYear(),
+				getState().getConvergenceYear().orElseThrow()
+		);
+
+		for (int currentYear = years.zero(); currentYear <= years.first(); currentYear += years.step()) {
+			growthLoop(currentYear);
+
+			outputRecord(polygon, currentYear);
+		}
+
+	}
+
+	protected void growthLoop(int currentYear) throws ProcessingException {
+		final ComputationMethods computers = this.getState().getComputers();
+		final VdypLayer primaryLayer = getPrimaryLayer();
+		final BecDefinition bec = getState().getCurrentBecZone();
+		final VdypPolygon polygon = getState().getCurrentPolygon();
+
+		// BACKAPPL
+		applyBackupFactors(currentYear);
+
+		// BACKCV
+		calculateCompatibilityVariables(currentYear);
+
+		// YUC1(2,0,2)
+		computers.computeUtilizationComponentsPrimary(
+				bec, primaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC, CompatibilityVariableMode.ALL
+		);
+
+		// YSMALL(2)
+		computers.estimateSmallComponents(
+				CompatibilityVariableMode.ALL, polygon, primaryLayer, YearsAtBreastHeightMode.STORED
+		);
+	}
+
+	protected void outputRecord(final VdypPolygon polygon, int currentYear) throws ProcessingException {
+		if (outputWriter.isPresent()) {
+			try {
+				outputWriter.get().writePolygonWithSpeciesAndUtilizationForYear(polygon, currentYear);
+			} catch (IOException e) {
+				throw new ProcessingException(e);
+			}
+		}
+	}
+
+	public static record Years(int zero, int first, int step) {
+	}
+
+	protected static Years getYears(
+			final ProcessingControlVariables controlVariables, final int firstYear, final int convergenceYear
+	) {
+		final var targetYear = controlVariables.getTargetYear();
+
+		int year0 = getInitialYearZero(firstYear, targetYear, convergenceYear);
+
+		int yearStep = getYearStep(controlVariables, firstYear, year0);
+
+		year0 = getYearZero(year0, firstYear, yearStep);
+
+		return new Years(year0, firstYear, yearStep);
+	}
+
+	protected static int getYearStep(ProcessingControlVariables controlVariables, int firstYear, final int year0) {
+		return switch (controlVariables.getControlVariable(ControlVariable.OUTPUT_FILES_4)) {
+		case 4 -> 10;
+		// FIXME VDYP-1461 This is unreachable as validation will prevent this control variable from ever being 5
+		case 5 -> max(firstYear - year0, 1);
+		default -> 1;
+		};
+	}
+
+	protected static int
+			getInitialYearZero(final int firstYear, final TargetYear targetYear, final int convergenceYear) {
+		int year;
+		if (targetYear.isRelative()) {
+			year = targetYear.relativeTo(firstYear);
+		} else {
+			year = min(targetYear.getValue(), firstYear);
+		}
+		year = max(convergenceYear, year);
+		return year;
+	}
+
+	protected static int getYearZero(final int initialYear0, final int firstYear, final int yearStep) {
+		if (yearStep > 1) {
+			int nYears = firstYear - initialYear0;
+			if (nYears > 0) {
+				return initialYear0 + nYears % yearStep;
+			}
+		}
+		return initialYear0;
+	}
+
+	public enum BackExecutionStep implements ProcessingEngine.ExecutionStep {
+		;
+
+		@Override
+		public int compareTo(ExecutionStep o) {
+			if (o instanceof BackExecutionStep fes) {
+				return this.compareTo(fes);
+			}
+			if (o instanceof BaseExecutionStep bes) {
+				return -bes.compareTo(this);
+			}
+			throw new IllegalArgumentException("Cannot compare " + o.getClass() + " and " + this.getClass());
+		}
+
+	}
+
 }

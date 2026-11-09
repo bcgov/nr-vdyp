@@ -29,6 +29,10 @@ public class ProcessingControlVariableParser implements ValueParser<ProcessingCo
 			);
 		}
 
-		return new ProcessingControlVariables(controlVariableValues.toArray(new Integer[controlVariableValues.size()]));
+		return create(controlVariableValues.toArray(new Integer[controlVariableValues.size()]));
+	}
+
+	protected ProcessingControlVariables create(Integer[] controlVariableValues) throws ValueParseException {
+		return new ProcessingControlVariables(controlVariableValues);
 	}
 }

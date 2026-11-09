@@ -239,7 +239,7 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpabl
 			return this;
 		}
 
-		protected Builder<T, I, IB> fractionGenus(float fractionGenus) {
+		public Builder<T, I, IB> fractionGenus(float fractionGenus) {
 			this.fractionGenus = Optional.of(fractionGenus);
 			return this;
 		}

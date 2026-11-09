@@ -31,14 +31,19 @@ import static org.hamcrest.Matchers.notANumber;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.DoubleStream;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
@@ -53,6 +58,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.AgeTriplet;
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.SpeciesToApplyTo;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
@@ -69,13 +75,16 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
+import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
@@ -85,6 +94,7 @@ import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingStateTestUtils;
 import ca.bc.gov.nrs.vdyp.processing_state.SpeciesRankingDetails;
 import ca.bc.gov.nrs.vdyp.processing_state.TestLayerProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingEngine;
 import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
@@ -94,10 +104,12 @@ import ca.bc.gov.nrs.vdyp.sindex.exceptions.CurveErrorException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.LessThan13Exception;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.SpeciesErrorException;
+import ca.bc.gov.nrs.vdyp.test.ProcessingTestUtils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class ProcessingEngineTest {
+
 	@Nested
 	class CalculateMissingSiteCurve {
 		@Test
@@ -550,12 +562,12 @@ class ProcessingEngineTest {
 		@Nested
 		class Simple {
 
-			@SuppressWarnings({ "unchecked", "rawtypes" })
+			@SuppressWarnings({ "unchecked" })
 			@Test
 			void testPrimarySitePresent() throws Exception {
 				var em = EasyMock.createControl();
-				ProcessingState<?> ps = em.mock(ProcessingState.class);
-				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
+				TestProcessingState ps = em.mock(TestProcessingState.class);
+				TestLayerProcessingState lps = em.mock(TestLayerProcessingState.class);
 
 				var layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 1970);
@@ -611,7 +623,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				new ProcessingEngine(ps).estimateMissingSiteIndices(lps);
+				getTestEngine(ps).estimateMissingSiteIndices(lps);
 
 				assertThat(
 						bank.siteIndices,
@@ -622,12 +634,12 @@ class ProcessingEngineTest {
 
 			}
 
-			@SuppressWarnings({ "unchecked", "rawtypes" })
+			@SuppressWarnings({ "unchecked" })
 			@Test
 			void testPrimarySiteMissing() throws Exception {
 				var em = EasyMock.createControl();
-				ProcessingState<?> ps = em.mock(ProcessingState.class);
-				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
+				TestProcessingState ps = em.mock(TestProcessingState.class);
+				TestLayerProcessingState lps = em.mock(TestLayerProcessingState.class);
 
 				var layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 1970);
@@ -685,7 +697,7 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				new ProcessingEngine(ps).estimateMissingSiteIndices(lps);
+				getTestEngine(ps).estimateMissingSiteIndices(lps);
 
 				assertThat(
 						bank.siteIndices,
@@ -699,8 +711,8 @@ class ProcessingEngineTest {
 			@Test
 			void testPrimarySiteEstimateFailed() throws Exception {
 				var em = EasyMock.createControl();
-				ProcessingState<?> ps = em.mock(ProcessingState.class);
-				LayerProcessingState<?> lps = em.mock(LayerProcessingState.class);
+				TestProcessingState ps = em.mock(TestProcessingState.class);
+				TestLayerProcessingState lps = em.mock(TestLayerProcessingState.class);
 
 				var layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 1970);
@@ -757,8 +769,8 @@ class ProcessingEngineTest {
 
 				em.replay();
 
-				@SuppressWarnings({ "unchecked", "rawtypes" })
-				Float result = new ProcessingEngine(ps).estimateMissingNonPrimarySiteIndices(lps, 2, null);
+				@SuppressWarnings({ "unchecked" })
+				Float result = getTestEngine(ps).estimateMissingNonPrimarySiteIndices(lps, 2, null);
 
 				assertThat(result, asFloat(notANumber()));
 
@@ -784,7 +796,7 @@ class ProcessingEngineTest {
 					ps = em.createMock(ProcessingState.class);
 					unit = EasyMock.partialMockBuilder(ProcessingEngine.class) //
 							.addMockedMethod("convertSiteIndexBetweenCurves")//
-							.withConstructor(ps)//
+							.withConstructor(ps, Optional.empty())//
 							.createMock(em);
 
 				}
@@ -1239,9 +1251,9 @@ class ProcessingEngineTest {
 				}
 			}
 
-			@SuppressWarnings({ "unchecked", "rawtypes" })
+			@SuppressWarnings({ "unchecked" })
 			private void runEstimateExtended(LayerFixture fixture) throws ProcessingException {
-				new ProcessingEngine(null).estimateMissingSiteIndicesAndAgesExtended(fixture.lps, fds);
+				getTestEngine(null).estimateMissingSiteIndicesAndAgesExtended(fixture.lps, fds);
 			}
 
 			private float yearsToBreastHeight(SiteIndexEquation curve, float siteIndex) throws Exception {
@@ -1294,7 +1306,7 @@ class ProcessingEngineTest {
 						.addMockedMethod("getSiteIndexEquationByIndex") //
 						.addMockedMethod("yearsToBreastHeight") //
 						.addMockedMethod("heightAndSiteIndexToAge") //
-						.withConstructor(ps) //
+						.withConstructor(ps, Optional.empty()) //
 						.createMock(em);
 				lps = em.createMock(LayerProcessingState.class);
 
@@ -1795,7 +1807,7 @@ class ProcessingEngineTest {
 					.addMockedMethod("yearsToBreastHeight") //
 					.addMockedMethod("heightAndSiteIndexToAge") //
 					.addMockedMethod("convertSiteIndexBetweenCurves") //
-					.withConstructor(ps) //
+					.withConstructor(ps, Optional.empty()) //
 					.createMock(em);
 			lps = em.createMock(LayerProcessingState.class);
 
@@ -2293,16 +2305,13 @@ class ProcessingEngineTest {
 
 		}
 
-		@SuppressWarnings("unchecked")
 		@Test
 		void test() throws ProcessingException {
 			final var em = EasyMock.createControl();
 			final BecDefinition bec = controlMap.getBecLookup().get("CWH").get();
 
-			@SuppressWarnings("rawtypes")
-			ProcessingState ps = em.createMock(ProcessingState.class);
-			@SuppressWarnings("rawtypes")
-			LayerProcessingState lps = em.createMock(LayerProcessingState.class);
+			TestProcessingState ps = em.mock(TestProcessingState.class);
+			TestLayerProcessingState lps = em.mock(TestLayerProcessingState.class);
 
 			EasyMock.expect(ps.getComputers()).andStubReturn(cmp);
 			EasyMock.expect(ps.getEstimators()).andStubReturn(emp);
@@ -2476,7 +2485,7 @@ class ProcessingEngineTest {
 			);
 			EasyMock.expectLastCall().once();
 
-			var unit = new ProcessingEngine<>(ps);
+			var unit = getTestEngine(ps);
 			em.replay();
 
 			unit.setCompatibilityVariables();
@@ -2776,6 +2785,791 @@ class ProcessingEngineTest {
 					)
 			);
 
+		}
+	}
+
+	@Nested
+	class ProcessPolygon {
+		ProcessingResolvedControlMap controlMap;
+		Map<String, Object> rawControlMap;
+		EstimationMethods emp;
+		ComputationMethods cmp;
+
+		IMocksControl em;
+		TestProcessingState ps;
+		TestLayerProcessingState lps;
+
+		@BeforeEach
+		void setup() throws IOException, ResourceParseException {
+			var parser = new ProcessingControlParser();
+			rawControlMap = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
+			controlMap = new ProcessingResolvedControlMapImpl(rawControlMap);
+			emp = new EstimationMethods(controlMap);
+			cmp = new ComputationMethods(emp, VdypApplicationIdentifier.VDYP_FORWARD);
+
+			em = EasyMock.createControl();
+
+			ps = em.mock(TestProcessingState.class);
+			lps = em.mock(TestLayerProcessingState.class);
+
+			EasyMock.expect(ps.getControlMap()).andStubReturn(controlMap);
+			EasyMock.expect(ps.getPrimaryLayerProcessingState()).andStubReturn(lps);
+		}
+
+		@Test
+		void testTargetYear() throws ProcessingException, ValueParseException {
+			controlMap.getControlVariables().setControlVariable(ControlVariable.GROW_TARGET_1, 16);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.COMPAT_VAR_OUTPUT_2, 0);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3, 2);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.OUTPUT_FILES_4, 3);
+			controlMap.getControlVariables().setControlVariable(ControlVariable.ALLOW_COMPAT_VAR_CALCS_5, 1);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("092P037  72999905UNK", 2011);
+
+				pb.percentAvailable(61f);
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.controlMap(rawControlMap);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(93);
+						});
+						sb.volumeGroup(17);
+						sb.decayGroup(11);
+						sb.breakageGroup(4);
+					});
+					lb.primaryGenus("B");
+					lb.empiricalRelationshipParameterIndex(118);
+
+				});
+			});
+
+			EasyMock.expect(ps.getCurrentPolygon()).andStubReturn(polygon);
+
+			TestProcessingEngine unit = EasyMock.partialMockBuilder(TestProcessingEngine.class).withConstructor(ps)
+					.addMockedMethod("executeAlgorithm").createMock(em);
+
+			ps.setPolygon(polygon);
+			EasyMock.expectLastCall().once();
+
+			unit.executeAlgorithm(BaseExecutionStep.ALL, 2027);
+			EasyMock.expectLastCall();
+
+			em.replay();
+
+			unit.processPolygon(polygon);
+
+			em.verify();
+		}
+
+		@Test
+		void testToOld() throws ProcessingException {
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("092P037  72999905UNK", 1899);
+
+				pb.percentAvailable(61f);
+				pb.biogeoclimaticZone("MS");
+				pb.forestInventoryZone("");
+				pb.controlMap(rawControlMap);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.addSpecies(sb -> {
+						sb.speciesIndex(3);
+						sb.percentGenus(100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(93);
+						});
+						sb.volumeGroup(17);
+						sb.decayGroup(11);
+						sb.breakageGroup(4);
+					});
+					lb.primaryGenus("B");
+					lb.empiricalRelationshipParameterIndex(118);
+
+				});
+			});
+
+			EasyMock.expect(ps.getCurrentPolygon()).andStubReturn(polygon);
+
+			var unit = getTestEngine(ps);
+
+			ps.setPolygon(polygon);
+			EasyMock.expectLastCall().times(0, 1);
+
+			em.replay();
+
+			var ex = assertThrows(ProcessingException.class, () -> unit.processPolygon(polygon));
+
+			assertThat(ex, hasMessage(containsString("1899")));
+
+			em.verify();
+		}
+	}
+
+	@SuppressWarnings({ "rawtypes" })
+	protected ProcessingEngine getTestEngine(TestProcessingState ps) {
+		return new TestProcessingEngine(ps);
+	}
+
+	@Nested
+	class PreliminaryProcessingSteps {
+
+		// These tests were adapted from PreliminaryForwardProcessingEngineStepsTest when generalizing processPolygon in
+		// common
+
+		Map<String, Object> rawControlMap;
+		TestProcessingState state;
+		ProcessingResolvedControlMap controlMap;
+
+		@BeforeEach
+		void setup() {
+			rawControlMap = ProcessingTestUtils.loadControlMap();
+			state = new TestProcessingState(rawControlMap, null);
+			controlMap = state.getControlMap();
+		}
+
+		@Test
+		/** CALCULATE_COVERAGES */
+		void testFindPrimarySpecies() throws ProcessingException {
+
+			// This tests ExecutionStep.CALCULATE_COVERAGES, but that code is stand-alone and can be
+			// tested independently.
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("01002 S000001 00", 1970);
+				pb.biogeoclimaticZone("CWH");
+				pb.forestInventoryZone("A");
+				pb.mode(PolygonMode.START);
+				pb.inventoryTypeGroup(37);
+				pb.percentAvailable(99f);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.inventoryTypeGroup(37);
+					lb.baseAreaByUtilization(45.38645f);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.fractionGenus(0.0089672107f);
+						sb.addSp64Distribution("B", 100f);
+						sb.volumeGroup(12);
+						sb.decayGroup(7);
+						sb.breakageGroup(5);
+						sb.baseArea(0.40698987f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.2300895f);
+						sb.fractionGenus(0.112300895f);
+						sb.addSp64Distribution("C", 100f);
+						sb.volumeGroup(20);
+						sb.decayGroup(14);
+						sb.breakageGroup(6);
+						sb.baseArea(5.096939f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.percentGenus(0.6521433f);
+						sb.addSp64Distribution("D", 100f);
+						sb.volumeGroup(25);
+						sb.decayGroup(19);
+						sb.breakageGroup(12);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(13);
+							ib.siteIndex(35f);
+							ib.ageTotal(55f);
+							ib.yearsToBreastHeight(1f);
+							ib.yearsAtBreastHeight(54f);
+							ib.height(35.3f);
+						});
+						sb.baseArea(29.598473f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.fractionGenus(0.129306135f);
+						sb.addSp64Distribution("H", 100f);
+						sb.volumeGroup(37);
+						sb.decayGroup(31);
+						sb.breakageGroup(17);
+						sb.baseArea(5.868747f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.fractionGenus(0.09728239f);
+						sb.addSp64Distribution("S", 100f);
+						sb.volumeGroup(66);
+						sb.decayGroup(54);
+						sb.breakageGroup(28);
+						sb.baseArea(4.4153028f);
+					});
+				});
+			});
+			{
+
+				var unit = new TestProcessingEngine(state);
+				unit.getState().setPolygon(polygon);
+
+				var lps = unit.getState().getPrimaryLayerProcessingState();
+
+				ProcessingEngine.calculateCoverages(lps);
+				unit.determinePolygonRankings();
+
+				assertThat(lps.getPrimarySpeciesIndex(), is(3));
+				assertThat(lps.getSecondarySpeciesIndex(), present(is(4)));
+				assertThat(lps.getInventoryTypeGroup(), is(37));
+				assertThat(lps.getPrimarySpeciesGroupNumber(), is(1));
+				assertThat(lps.getPrimarySpeciesStratumNumber(), is(1));
+			}
+		}
+
+		@Test
+		/** ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES */
+		void testEstimateMissingYearsToBreastHeightValues() throws ProcessingException {
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("01002 S000001 00", 1970);
+				pb.biogeoclimaticZone("CWH");
+				pb.forestInventoryZone("A");
+				pb.mode(PolygonMode.START);
+				pb.inventoryTypeGroup(37);
+				pb.percentAvailable(99f);
+
+				pb.targetYear(1990);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.inventoryTypeGroup(37);
+					lb.baseAreaByUtilization(45.38645f);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.fractionGenus(0.0089672107f);
+						sb.addSp64Distribution("B", 100f);
+						sb.volumeGroup(12);
+						sb.decayGroup(7);
+						sb.breakageGroup(5);
+						sb.baseArea(0.40698987f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.2300895f);
+						sb.fractionGenus(0.112300895f);
+						sb.addSp64Distribution("C", 100f);
+						sb.volumeGroup(20);
+						sb.decayGroup(14);
+						sb.breakageGroup(6);
+						sb.baseArea(5.096939f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.percentGenus(0.6521433f);
+						sb.addSp64Distribution("D", 100f);
+						sb.volumeGroup(25);
+						sb.decayGroup(19);
+						sb.breakageGroup(12);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(13);
+							ib.siteIndex(35f);
+							ib.ageTotal(55f);
+							ib.yearsToBreastHeight(1f);
+							ib.yearsAtBreastHeight(54f);
+							ib.height(35.3f);
+						});
+						sb.baseArea(29.598473f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.fractionGenus(0.129306135f);
+						sb.addSp64Distribution("H", 100f);
+						sb.volumeGroup(37);
+						sb.decayGroup(31);
+						sb.breakageGroup(17);
+						sb.baseArea(5.868747f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.fractionGenus(0.09728239f);
+						sb.addSp64Distribution("S", 100f);
+						sb.volumeGroup(66);
+						sb.decayGroup(54);
+						sb.breakageGroup(28);
+						sb.baseArea(4.4153028f);
+					});
+				});
+			});
+
+			var unit = new TestProcessingEngine(state);
+
+			// TODO Do this in a cleaner and more focused way.
+			unit.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES);
+
+			assertThat(
+					state.getPrimaryLayerProcessingState().getBank().yearsToBreastHeight,
+					is(new float[] { 0.0f, 5.0f, 7.5f, 1.0f, 4.5f, 5.2f })
+			);
+		}
+
+		@Test
+		/** ESTIMATE_MISSING_SITE_INDICES, step 1 */
+		void testEstimateMissingSiteIndicesStep1() throws ProcessingException, IOException, ResourceParseException {
+			var siteCurveMap = new MatrixMap2Impl<String, Region, SiteIndexEquation>(
+					new ArrayList<String>(), new ArrayList<Region>(), (k1, k2) -> SiteIndexEquation.SI_NO_EQUATION
+			);
+
+			rawControlMap.put(ControlKey.SITE_CURVE_NUMBERS.name(), siteCurveMap);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("01002 S000001 00", 1970);
+				pb.biogeoclimaticZone("CWH");
+				pb.forestInventoryZone("A");
+				pb.mode(PolygonMode.START);
+				pb.inventoryTypeGroup(37);
+				pb.percentAvailable(99f);
+
+				pb.targetYear(1990);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.inventoryTypeGroup(37);
+					lb.baseAreaByUtilization(45.38645f);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.fractionGenus(0.0089672107f);
+						sb.addSp64Distribution("B", 100f);
+						sb.volumeGroup(12);
+						sb.decayGroup(7);
+						sb.breakageGroup(5);
+						sb.baseArea(0.40698987f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.2300895f);
+						sb.fractionGenus(0.112300895f);
+						sb.addSp64Distribution("C", 100f);
+						sb.volumeGroup(20);
+						sb.decayGroup(14);
+						sb.breakageGroup(6);
+						sb.baseArea(5.096939f);
+						sb.addSite(ib -> {
+							ib.siteIndex(13.4f);
+							ib.siteCurveNumber(11);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.percentGenus(0.6521433f);
+						sb.addSp64Distribution("D", 100f);
+						sb.volumeGroup(25);
+						sb.decayGroup(19);
+						sb.breakageGroup(12);
+						sb.baseArea(29.598473f);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(99);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.fractionGenus(0.129306135f);
+						sb.addSp64Distribution("H", 100f);
+						sb.volumeGroup(37);
+						sb.decayGroup(31);
+						sb.breakageGroup(17);
+						sb.baseArea(5.868747f);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(99);
+							ib.ageTotal(265f);
+							ib.yearsToBreastHeight(11.1f);
+							ib.yearsAtBreastHeight(253.9f);
+							ib.height(28.9f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.fractionGenus(0.09728239f);
+						sb.addSp64Distribution("S", 100f);
+						sb.volumeGroup(66);
+						sb.decayGroup(54);
+						sb.breakageGroup(28);
+						sb.baseArea(4.4153028f);
+					});
+				});
+			});
+
+			var unit = new TestProcessingEngine(state);
+
+			unit.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES);
+
+			// Despite 13.40 being in the data stream, the change (2024/8/29) to ignore site information
+			// for all species of the layer except the primary means that method (1) will never be
+			// successful, since none of the non-primary species will have a site index value.
+
+			// var sourceSiteCurve = SiteIndexEquation.SI_CWC_KURUCZ;
+			// var sourceSiteIndex = 13.4;
+			// var targetSiteCurve = SiteIndexEquation.SI_HWC_WILEYAC;
+			// double expectedValue = SiteTool
+			// .convertSiteIndexBetweenCurves(sourceSiteCurve, sourceSiteIndex, targetSiteCurve);
+
+			assertThat(
+					state.getPrimaryLayerProcessingState().getBank().siteIndices[4], is(VdypEntity.MISSING_FLOAT_VALUE)
+			);
+		}
+
+		@Test
+		/** ESTIMATE_MISSING_SITE_INDICES, step 2 */
+		void testEstimateMissingSiteIndicesStep2() throws ProcessingException, IOException, ResourceParseException,
+				CurveErrorException, SpeciesErrorException, NoAnswerException {
+			var siteCurveMap = new MatrixMap2Impl<String, Region, SiteIndexEquation>(
+					new ArrayList<String>(), new ArrayList<Region>(), (k1, k2) -> SiteIndexEquation.SI_NO_EQUATION
+			);
+
+			rawControlMap.put(ControlKey.SITE_CURVE_NUMBERS.name(), siteCurveMap);
+			controlMap.getDebugSettings().setValue(11, 0);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.controlMap(rawControlMap);
+				pb.polygonIdentifier("01002 S000001 00", 1970);
+				pb.biogeoclimaticZone("CWH");
+				pb.forestInventoryZone("A");
+				pb.mode(PolygonMode.START);
+				pb.inventoryTypeGroup(37);
+				pb.percentAvailable(99f);
+
+				pb.targetYear(1990);
+
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.inventoryTypeGroup(37);
+					lb.baseAreaByUtilization(45.38645f);
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("B");
+						sb.percentGenus(0.89672107f);
+						sb.fractionGenus(0.0089672107f);
+						sb.addSp64Distribution("B", 100f);
+						sb.volumeGroup(12);
+						sb.decayGroup(7);
+						sb.breakageGroup(5);
+						sb.baseArea(0.40698987f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("C");
+						sb.percentGenus(11.2300895f);
+						sb.fractionGenus(0.112300895f);
+						sb.addSp64Distribution("C", 100f);
+						sb.volumeGroup(20);
+						sb.decayGroup(14);
+						sb.breakageGroup(6);
+						sb.baseArea(5.096939f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("D");
+						sb.percentGenus(65.21433f);
+						sb.percentGenus(0.6521433f);
+						sb.addSp64Distribution("D", 100f);
+						sb.volumeGroup(25);
+						sb.decayGroup(19);
+						sb.breakageGroup(12);
+						sb.baseArea(29.598473f);
+						sb.addSite(ib -> {
+							ib.siteIndex(13.4f);
+							ib.siteCurveNumber(12);
+							ib.ageTotal(265f);
+							ib.yearsToBreastHeight(11.1f);
+							ib.yearsAtBreastHeight(253.9f);
+							ib.height(28.9f);
+						});
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("H");
+						sb.percentGenus(12.9306135f);
+						sb.fractionGenus(0.129306135f);
+						sb.addSp64Distribution("H", 100f);
+						sb.volumeGroup(37);
+						sb.decayGroup(31);
+						sb.breakageGroup(17);
+						sb.baseArea(5.868747f);
+					});
+					lb.addSpecies(sb -> {
+						sb.speciesGroup("S");
+						sb.percentGenus(9.728239f);
+						sb.fractionGenus(0.09728239f);
+						sb.addSp64Distribution("S", 100f);
+						sb.volumeGroup(66);
+						sb.decayGroup(54);
+						sb.breakageGroup(28);
+						sb.baseArea(4.4153028f);
+					});
+				});
+			});
+
+			var unit = new TestProcessingEngine(state);
+
+			unit.processPolygon(polygon, BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES);
+
+			var sourceSiteCurve = SiteIndexEquation.SI_CWC_BARKER;
+			var sourceSiteIndex = 13.4f;
+			var targetSiteCurve = SiteIndexEquation.SI_HWC_WILEYAC;
+			double expectedValue = SiteTool
+					.convertSiteIndexBetweenCurves(sourceSiteCurve, sourceSiteIndex, targetSiteCurve);
+
+			assertThat(
+					unit.getState().getPrimaryLayerProcessingState().getBank().siteIndices[4], is((float) expectedValue)
+			);
+		}
+
+	}
+
+	@Nested
+	class LayerAccessors {
+		IMocksControl em;
+
+		@BeforeEach
+		void setup() {
+			em = EasyMock.createControl();
+		}
+
+		@Test
+		void testPrimaryPresent() {
+			VdypPolygon polygon = em.createMock(VdypPolygon.class);
+			VdypLayer primary = em.createMock(VdypLayer.class);
+			TestProcessingState state = em.createMock(TestProcessingState.class);
+
+			EasyMock.expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			EasyMock.expect(polygon.requirePrimaryLayer()).andStubReturn(primary);
+
+			em.replay();
+
+			var unit = new TestProcessingEngine(state);
+			var result = unit.getPrimaryLayer();
+			assertThat(result, sameInstance(primary));
+
+			em.verify();
+		}
+
+		@Test
+		void testPrimaryMissing() {
+			VdypPolygon polygon = em.createMock(VdypPolygon.class);
+			TestProcessingState state = em.createMock(TestProcessingState.class);
+
+			EasyMock.expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			final IllegalStateException expectedEx = new IllegalStateException();
+			EasyMock.expect(polygon.requirePrimaryLayer()).andStubThrow(expectedEx);
+
+			em.replay();
+
+			var unit = new TestProcessingEngine(state);
+			var result = assertThrows(IllegalStateException.class, () -> unit.getPrimaryLayer());
+			assertThat(result, sameInstance(expectedEx));
+
+			em.verify();
+		}
+
+		@Test
+		void testVeteranPresent() {
+			VdypPolygon polygon = em.createMock(VdypPolygon.class);
+			VdypLayer veteran = em.createMock(VdypLayer.class);
+			TestProcessingState state = em.createMock(TestProcessingState.class);
+
+			EasyMock.expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			EasyMock.expect(polygon.getVeteranLayer()).andStubReturn(Optional.of(veteran));
+
+			em.replay();
+
+			var unit = new TestProcessingEngine(state);
+			var result = unit.getVeteranLayer();
+			assertThat(result, present(sameInstance(veteran)));
+
+			em.verify();
+		}
+
+		@Test
+		void testVeteranMissing() {
+			VdypPolygon polygon = em.createMock(VdypPolygon.class);
+			TestProcessingState state = em.createMock(TestProcessingState.class);
+
+			EasyMock.expect(state.getCurrentPolygon()).andStubReturn(polygon);
+			EasyMock.expect(polygon.getVeteranLayer()).andStubReturn(Optional.empty());
+
+			em.replay();
+
+			var unit = new TestProcessingEngine(state);
+			var result = unit.getVeteranLayer();
+			assertThat(result, notPresent());
+
+			em.verify();
+		}
+
+	}
+
+	@Nested
+	protected class ExecutionStep {
+
+		@ParameterizedTest
+		@MethodSource("allSteps")
+		void testSelf(ProcessingEngine.ExecutionStep current) {
+
+			assertSelf(current);
+
+		}
+
+		@ParameterizedTest
+		@MethodSource("consecutivePairs")
+		void testInOrder(ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep current) {
+
+			assertOrder(previous, current);
+
+		}
+
+		@ParameterizedTest
+		@MethodSource("triplets")
+		void testTransitive(
+				ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep mid,
+				ProcessingEngine.ExecutionStep next
+		) {
+			assumeTrue(Integer.signum(previous.compareTo(mid)) + Integer.signum(mid.compareTo(next)) < 0);
+
+			assertOrder(previous, next);
+		}
+
+		static List<ProcessingEngine.ExecutionStep> allSteps() {
+			var midSteps = baseMidSteps();
+			return allSteps(midSteps);
+		}
+
+		static List<Arguments> triplets() {
+			var midSteps = baseMidSteps();
+			var allSteps = allSteps(midSteps);
+			return triplets(allSteps);
+		}
+
+		static List<Arguments> consecutivePairs() {
+			var midSteps = baseMidSteps();
+			var allSteps = allSteps(midSteps);
+			return consecutivePairs(allSteps);
+		}
+
+		protected static List<Arguments>
+				consecutivePairs(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> allSteps) {
+			var it = allSteps.iterator();
+			var previous = it.next();
+			List<Arguments> result = new ArrayList<>(allSteps.size() - 1);
+			while (it.hasNext()) {
+				var current = it.next();
+				result.add(Arguments.of(previous, current));
+				previous = current;
+			}
+			return result;
+		}
+
+		static protected List<Arguments>
+				triplets(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> allSteps) {
+			return allSteps.stream()
+					.flatMap(a -> allSteps.stream().flatMap(b -> allSteps.stream().map(c -> Arguments.of(a, b, c))))
+					.toList();
+		}
+
+		static protected List<ProcessingEngine.ExecutionStep>
+				allSteps(List<ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep> steps) {
+			var allSteps = new ArrayList<ProcessingEngine.ExecutionStep>(steps.size() + 2);
+			allSteps.add(BaseExecutionStep.NONE);
+			allSteps.addAll(steps);
+			allSteps.add(BaseExecutionStep.ALL);
+			return allSteps;
+		}
+
+		static protected void assertSelf(ProcessingEngine.ExecutionStep current) {
+			assertFalse(current.lt(current));
+			assertFalse(current.gt(current));
+			assertTrue(current.le(current));
+			assertTrue(current.ge(current));
+		}
+
+		static protected void
+				assertOrder(ProcessingEngine.ExecutionStep previous, ProcessingEngine.ExecutionStep current) {
+			assertTrue(current.compareTo(previous) > 0);
+			assertTrue(previous.compareTo(current) < 0);
+			assertTrue(current.compareTo(current) == 0);
+
+			assertTrue(current.gt(previous));
+			assertTrue(current.ge(previous));
+			assertFalse(current.lt(previous));
+			assertFalse(current.le(previous));
+		}
+
+		static List<ProcessingEngine.ExecutionStep> baseMidSteps() {
+			return List.of(
+					BaseExecutionStep.CHECK_FOR_WORK, BaseExecutionStep.CALCULATE_MISSING_SITE_CURVES,
+					BaseExecutionStep.CALCULATE_COVERAGES, BaseExecutionStep.DETERMINE_POLYGON_RANKINGS,
+					BaseExecutionStep.ESTIMATE_MISSING_SITE_INDICES,
+					BaseExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES,
+					BaseExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX,
+					BaseExecutionStep.SET_COMPATIBILITY_VARIABLES
+			);
+		}
+	}
+
+	@Nested
+	class GetDefaultSiteIndex {
+
+		@Test
+		void testExistingValueGiven() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(12.0), 42f);
+			assertThat(result, is(42f));
+		}
+
+		@Test
+		void testGetFromStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(12.0), Float.NaN);
+			assertThat(result, is(12f));
+		}
+
+		@Test
+		void testFirstFromStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(12.0, 42.0), Float.NaN);
+			assertThat(result, is(12f));
+		}
+
+		@Test
+		void testSkipNaNInStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(Double.NaN, 12.0), Float.NaN);
+			assertThat(result, is(12f));
+		}
+
+		@Test
+		void testEmptyStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(), Float.NaN);
+			assertThat(result, asFloat(notANumber()));
+		}
+
+		@Test
+		void testExistingValueGivenWithEmptyStream() {
+
+			var result = ProcessingEngine.getDefaultSiteIndex(DoubleStream.of(), 42f);
+			assertThat(result, is(42f));
 		}
 	}
 }
