@@ -349,6 +349,57 @@ public class RealComponentRunner implements ComponentRunner {
 				}
 			}
 		}
+
+		addNonForestDescriptorMessages(polygon, state);
+	}
+
+	/**
+	 * Adapts the post yield table check in <code>lcl_ProcessCurrentPolygon</code> (vdyp7console.c): if a layer has a
+	 * Non-Forest Descriptor and no yield table row with projected information was displayed for it, a warning that the
+	 * layer could not be projected is added to the polygon.
+	 * <p>
+	 * In VDYP7 the "processed as" layer type of a layer is initialised from the layer type supplied in the input and is
+	 * replaced by the processing type once the layer has been processed. Therefore, the check applies to layers that
+	 * either supplied a VDYP7 layer type or were processed.
+	 *
+	 * @param polygon the polygon whose yield tables have been generated
+	 * @param state   the state of the polygon's projection
+	 */
+	// package-private for unit testing
+	void addNonForestDescriptorMessages(Polygon polygon, PolygonProjectionState state) {
+
+		var reportingInfo = polygon.getReportingInfo();
+		if (reportingInfo == null) {
+			return;
+		}
+
+		var suppliedLayerInfos = reportingInfo.getLayerReportingInfos().values().stream()
+				.sorted(Comparator.comparing(LayerReportingInfo::getSourceLayerID)).toList();
+
+		for (var layerReportingInfo : suppliedLayerInfos) {
+
+			var layer = layerReportingInfo.getLayer();
+			var firstYearYieldsDisplayed = state.getFirstYearYieldsDisplayed(layer);
+
+			var layerTypeSupplied = layer.getVdyp7LayerCode() != null
+					&& layer.getVdyp7LayerCode() != ProjectionTypeCode.UNKNOWN;
+			var layerProcessed = ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST
+					.contains(layerReportingInfo.getProcessedAsVDYP7Layer());
+
+			var nonForestDescriptor = layer.getNonForestDescriptor();
+
+			if ( (firstYearYieldsDisplayed == null || firstYearYieldsDisplayed <= 0)
+					&& (layerTypeSupplied || layerProcessed) && nonForestDescriptor != null
+					&& !nonForestDescriptor.isBlank()) {
+
+				polygon.addMessage(
+						builder -> builder.layer(layer).details(
+								ReturnCode.ERROR_INCONSISTENT_DATA, MessageSeverityCode.WARNING,
+								PolygonMessageKind.LAYER_NON_FOREST_DESC, nonForestDescriptor
+						)
+				);
+			}
+		}
 	}
 
 	private Map<Integer, VdypPolygon>

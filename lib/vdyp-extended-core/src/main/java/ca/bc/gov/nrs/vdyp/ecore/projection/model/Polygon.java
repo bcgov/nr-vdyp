@@ -372,8 +372,30 @@ public class Polygon implements Comparable<Polygon> {
 		return layers;
 	}
 
+	/**
+	 * Get the layer to be processed for the given projection type.
+	 * <p>
+	 * Adapts <code>V7Int_GetNumLayersOfProjectionType</code> (vdyp7intpolystats.c), which counts every layer of the
+	 * polygon, other than the dead, residual and regeneration layers, as a layer of the Primary projection type. A
+	 * layer whose per-hectare yields are suppressed (for example, because of a Non-Forest Descriptor of NSR) is not
+	 * assigned a projection type of its own (see {@link Layer#doCompleteDefinition()}) but, if it is the polygon's
+	 * primary layer, it is still subjected to initial processing and projection as the Primary layer.
+	 *
+	 * @param projectionTypeCode the projection type
+	 * @return the layer, or null if the polygon has no layer for the given projection type
+	 */
 	public Layer getLayerByProjectionType(ProjectionTypeCode projectionTypeCode) {
-		return layerByProjectionType.get(projectionTypeCode);
+		var layer = layerByProjectionType.get(projectionTypeCode);
+
+		if (layer == null && projectionTypeCode == ProjectionTypeCode.PRIMARY) {
+			var candidate = primaryLayer != null ? primaryLayer : targetedPrimaryLayer;
+			if (candidate != null && Boolean.TRUE.equals(candidate.getDoSuppressPerHAYields())
+					&& candidate.getAssignedProjectionType() == ProjectionTypeCode.UNKNOWN) {
+				layer = candidate;
+			}
+		}
+
+		return layer;
 	}
 
 	public Layer getTargetedPrimaryLayer() {
