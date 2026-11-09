@@ -477,7 +477,7 @@ public class ComputationMethods {
 					baseAreaSpecSmall = 0.0f;
 				}
 				quadMeanDiameterSpecSmall += spec.getCvPrimaryLayerSmall(UtilizationClassVariable.QUAD_MEAN_DIAMETER);
-				FloatMath.clamp(quadMeanDiameterSpecSmall, 4.01f, 7.49f);
+				quadMeanDiameterSpecSmall = FloatMath.clamp(quadMeanDiameterSpecSmall, 4.01f, 7.49f);
 
 				loreyHeightSpecSmall = applyCvToLoreyHeight(
 						loreyHeightSpecSmall, spec.getCvPrimaryLayerSmall(UtilizationClassVariable.LOREY_HEIGHT)
