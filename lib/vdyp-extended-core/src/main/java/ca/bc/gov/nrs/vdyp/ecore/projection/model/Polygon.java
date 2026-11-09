@@ -929,6 +929,7 @@ public class Polygon implements Comparable<Polygon> {
 		rGrowthModel.set(GrowthModelCode.getDefault());
 		rProcessingMode.set(ProcessingModeCode.getDefault());
 
+		boolean foundAtLeastOnePrimaryLayer = false;
 		for (ProjectionTypeCode pt : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 
 			// Iterate until we find a projection type with a primary layer; that will determine
@@ -937,6 +938,7 @@ public class Polygon implements Comparable<Polygon> {
 			// Determine the primary layer of the stand.
 			Layer ptPrimaryLayer = findPrimaryLayerByProjectionType(pt);
 			if (ptPrimaryLayer != null) {
+				foundAtLeastOnePrimaryLayer = true;
 
 				rPrimaryLayer.set(ptPrimaryLayer);
 				rProjectionType.set(pt);
@@ -970,17 +972,17 @@ public class Polygon implements Comparable<Polygon> {
 					rGrowthModel.set(GrowthModelCode.VRI);
 					rProcessingMode.set(ProcessingModeCode.VRI_Default);
 				}
-
 				// Process only the first Projection Type for which there is a Primary layer.
 				break;
-			} else {
-				addMessage(
-						builder -> builder.polygon(this).details(
-								ReturnCode.ERROR_LAYERNOTFOUND, MessageSeverityCode.ERROR,
-								PolygonMessageKind.PRIMARY_LAYER_NOT_FOUND
-						)
-				);
 			}
+		}
+		if (!foundAtLeastOnePrimaryLayer) {
+			addMessage(
+					builder -> builder.polygon(this).details(
+							ReturnCode.ERROR_LAYERNOTFOUND, MessageSeverityCode.ERROR,
+							PolygonMessageKind.PRIMARY_LAYER_NOT_FOUND
+					)
+			);
 		}
 	}
 

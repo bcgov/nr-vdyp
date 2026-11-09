@@ -438,7 +438,7 @@ public class PolygonProjectionRunner {
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
 							ReturnCode.SUCCESS, MessageSeverityCode.WARNING, PolygonMessageKind.LAYER_HEIGHT_TOO_LOW,
-							spe.getMessage(), spe.getMessage() + " [" + errorCode + "]"
+							"FIPSTART", spe.getMessage() + " [" + errorCode + "]"
 					)
 			);
 			return false;
