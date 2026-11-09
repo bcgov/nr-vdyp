@@ -5,7 +5,10 @@ import static ca.bc.gov.nrs.vdyp.test.TestUtils.POLYGON_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,9 +38,11 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -172,6 +177,190 @@ class RealComponentRunnerTest {
 		long reportTitleCount = content.lines().filter(line -> line.contains("VDYP Yield Table")).count();
 		assertThat(reportTitleCount, is(1L));
 		assertThat(content, containsString("CFS Biomass"));
+	}
+
+	@Nested
+	class AddNonForestDescriptorMessages {
+
+		private static final String POLYGON_ROW = "13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,";
+
+		private ProjectionContext newContext() throws Exception {
+			var params = new Parameters().ageStart(180).ageEnd(181);
+			var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+			context.createYieldTables();
+			return context;
+		}
+
+		/**
+		 * Build a polygon with a single rank 1 layer with the given VDYP7 layer type code and non-forest descriptor.
+		 */
+		private Polygon buildPolygon(ProjectionContext context, String layerTypeCode, String nonForestDescriptor)
+				throws Exception {
+			var polygonInputStream = TestUtils.makeInputStream(POLYGON_CSV_HEADER_LINE, POLYGON_ROW);
+			var layersInputStream = TestUtils.makeInputStream(
+					LAYER_CSV_HEADER_LINE,
+					"13919428,14321066,093C090,94833422,1," + layerTypeCode + ",,1," + nonForestDescriptor
+							+ ",,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+			);
+			return new HcsvPolygonStream(context, polygonInputStream, layersInputStream).getNextPolygon();
+		}
+
+		private PolygonProjectionState newState(ProjectionContext context) {
+			var state = new PolygonProjectionState();
+			state.setExecutionFolder(context.getExecutionFolder());
+			return state;
+		}
+
+		private List<PolygonMessage> nonForestMessages(Polygon polygon) {
+			return polygon.getMessages().stream().filter(m -> m.getKind() == PolygonMessageKind.LAYER_NON_FOREST_DESC)
+					.toList();
+		}
+
+		@Test
+		void testMessageAddedForSuppressedLayerWithSuppliedLayerType() throws Exception {
+
+			var context = newContext();
+			var polygon = buildPolygon(context, "P", "NSR");
+			var layer = polygon.getLayers().get("1");
+			assertThat(layer.getDoSuppressPerHAYields(), is(true));
+
+			unit.generateYieldTables(context, polygon, newState(context));
+
+			var messages = nonForestMessages(polygon);
+			assertThat(messages, hasSize(1));
+			assertThat(messages.get(0).getLayer(), sameInstance(layer));
+			assertThat(messages.get(0).getSeverity(), is(MessageSeverityCode.WARNING));
+			assertThat(messages.get(0).getReturnCode(), is(ReturnCode.ERROR_INCONSISTENT_DATA));
+			assertThat(messages.get(0).toString(), containsString("INCONSISTENT_DATA"));
+			assertThat(messages.get(0).toString(), containsString("NSR"));
+		}
+
+		@Test
+		void testNoMessageWhenLayerHasNoNonForestDescriptor() throws Exception {
+
+			var context = newContext();
+			var polygon = buildPolygon(context, "P", "");
+
+			unit.addNonForestDescriptorMessages(polygon, newState(context));
+
+			assertThat(nonForestMessages(polygon), is(empty()));
+		}
+
+		@Test
+		void testNoMessageWhenYieldsWereDisplayedForLayer() throws Exception {
+
+			var context = newContext();
+			var polygon = buildPolygon(context, "P", "NSR");
+			var state = newState(context);
+			state.setFirstYearYieldsDisplayed(polygon.getLayers().get("1"), 2013);
+
+			unit.addNonForestDescriptorMessages(polygon, state);
+
+			assertThat(nonForestMessages(polygon), is(empty()));
+		}
+
+		@Test
+		void testMessageAddedWhenFirstYearYieldsDisplayedIsNotPositive() throws Exception {
+
+			var context = newContext();
+			var polygon = buildPolygon(context, "P", "NSR");
+			var state = newState(context);
+			state.setFirstYearYieldsDisplayed(polygon.getLayers().get("1"), 0);
+
+			unit.addNonForestDescriptorMessages(polygon, state);
+
+			assertThat(nonForestMessages(polygon), hasSize(1));
+		}
+
+		@Test
+		void testNoMessageForSuppressedLayerWithoutSuppliedLayerType() throws Exception {
+
+			var context = newContext();
+			var polygon = buildPolygon(context, "", "NSR");
+			var layer = polygon.getLayers().get("1");
+			assertThat(layer.getDoSuppressPerHAYields(), is(true));
+			assertThat(layer.getVdyp7LayerCode(), is(nullValue()));
+
+			unit.addNonForestDescriptorMessages(polygon, newState(context));
+
+			// The layer was neither supplied with a VDYP7 layer type nor processed
+			assertThat(nonForestMessages(polygon), is(empty()));
+		}
+
+		@Test
+		void testMessageAddedForProcessedLayerWithNonSuppressingDescriptor() throws Exception {
+
+			var context = newContext();
+			var polygon = buildPolygon(context, "", "NC");
+			var layer = polygon.getLayers().get("1");
+			assertThat(layer.getDoSuppressPerHAYields(), is(false));
+			assertThat(layer.getVdyp7LayerCode(), is(nullValue()));
+
+			unit.addNonForestDescriptorMessages(polygon, newState(context));
+
+			// The layer was processed as the primary layer even though no layer type was supplied
+			var messages = nonForestMessages(polygon);
+			assertThat(messages, hasSize(1));
+			assertThat(messages.get(0).toString(), containsString("NC"));
+		}
+
+		/**
+		 * Build a polygon, without using an input stream, that has a single layer with the given characteristics.
+		 */
+		private Polygon buildSyntheticPolygon(
+				ProjectionTypeCode suppliedLayerType, ProjectionTypeCode assignedType, boolean doSuppressPerHAYields,
+				String nonForestDescriptor
+		) {
+			var reportingInfo = new PolygonReportingInfo.Builder().featureId(13919428L).build();
+			var polygon = new Polygon.Builder().featureId(13919428).reportingInfo(reportingInfo).build();
+			var layer = new Layer.Builder().layerId("1").polygon(polygon).vdyp7LayerCode(suppliedLayerType)
+					.assignedProjectionType(assignedType).doSuppressPerHAYields(doSuppressPerHAYields)
+					.nonForestDescriptor(nonForestDescriptor).build();
+			reportingInfo.getLayerReportingInfos()
+					.put("1", new LayerReportingInfo.Builder().layer(layer).sourceLayerID(1).build());
+			return polygon;
+		}
+
+		@Test
+		void testMessageAddedWhenSuppliedLayerTypeIsUnknownButLayerWasProcessed() {
+
+			var polygon = buildSyntheticPolygon(ProjectionTypeCode.UNKNOWN, ProjectionTypeCode.PRIMARY, false, "NC");
+
+			unit.addNonForestDescriptorMessages(polygon, new PolygonProjectionState());
+
+			assertThat(nonForestMessages(polygon), hasSize(1));
+		}
+
+		@Test
+		void testNoMessageWhenSuppliedLayerTypeIsUnknownAndLayerWasNotProcessed() {
+
+			var polygon = buildSyntheticPolygon(ProjectionTypeCode.UNKNOWN, ProjectionTypeCode.UNKNOWN, true, "NSR");
+
+			unit.addNonForestDescriptorMessages(polygon, new PolygonProjectionState());
+
+			assertThat(nonForestMessages(polygon), is(empty()));
+		}
+
+		@Test
+		void testNoMessageWhenNonForestDescriptorIsBlank() {
+
+			var polygon = buildSyntheticPolygon(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.PRIMARY, false, "  ");
+
+			unit.addNonForestDescriptorMessages(polygon, new PolygonProjectionState());
+
+			assertThat(nonForestMessages(polygon), is(empty()));
+		}
+
+		@Test
+		void testNoMessageWhenPolygonHasNoReportingInfo() throws Exception {
+
+			var context = newContext();
+			var polygon = new Polygon.Builder().featureId(13919428).build();
+
+			assertDoesNotThrow(() -> unit.addNonForestDescriptorMessages(polygon, newState(context)));
+
+			assertThat(polygon.getMessages(), is(empty()));
+		}
 	}
 
 	@ParameterizedTest

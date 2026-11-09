@@ -42,9 +42,23 @@ public class LayerReportingInfo {
 
 	private ProjectionTypeCode processedAsLayerType = null;
 
+	/**
+	 * Determine the projection type as which this layer was processed.
+	 * <p>
+	 * Adapts <code>V7Int_WasLayerProcessed</code> (vdyp7intperform.c): a layer whose per-hectare yields are suppressed
+	 * (for example, because of a Non-Forest Descriptor of NSR) is never assigned a projection type in VDYP7 and so is
+	 * treated as not processed. Such a layer must not be given a type by falling back to the polygon's primary layer,
+	 * because that would cause a yield table to be generated for it.
+	 *
+	 * @return the projection type, or {@link ProjectionTypeCode#UNKNOWN} if the layer was not processed.
+	 */
 	public ProjectionTypeCode getProcessedAsVDYP7Layer() {
 		if (processedAsLayerType == null) {
-			processedAsLayerType = layer.determineProjectionType(layer.getPolygon());
+			if (Boolean.TRUE.equals(layer.getDoSuppressPerHAYields())) {
+				processedAsLayerType = ProjectionTypeCode.UNKNOWN;
+			} else {
+				processedAsLayerType = layer.determineProjectionType(layer.getPolygon());
+			}
 		}
 		return processedAsLayerType;
 	}
