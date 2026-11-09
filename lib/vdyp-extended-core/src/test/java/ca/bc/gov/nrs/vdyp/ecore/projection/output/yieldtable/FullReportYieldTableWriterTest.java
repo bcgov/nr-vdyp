@@ -123,6 +123,30 @@ class FullReportYieldTableWriterTest {
 		assertThat(output, not(containsString("computed using Default CC")));
 	}
 
+	@Test
+	void testBasalAreaAndTreesPerHectareNotUsedWhenNotSupplied() throws Exception {
+		var polygon = new Polygon.Builder().featureId(1).inventoryStandard(InventoryStandard.FIP)
+				.percentStockable(100.0).build();
+		var layer = new Layer.Builder().layerId("1").polygon(polygon).percentStockable(100.0).build();
+		polygon.setPrimaryLayer(layer);
+		var output = writeTrailer(reportContext(), polygon);
+		assertThat(output, containsString("Trees Per Hectare........ <Not Used>"));
+		assertThat(output, containsString("Measured Basal Area...... <Not Used>"));
+		assertThat(output, not(containsString("null")));
+	}
+
+	@Test
+	void testBasalAreaAndTreesPerHectareShownWhenSupplied() throws Exception {
+		var polygon = new Polygon.Builder().featureId(1).inventoryStandard(InventoryStandard.VRI)
+				.percentStockable(100.0).build();
+		var layer = new Layer.Builder().layerId("1").polygon(polygon).percentStockable(100.0).basalArea(25.0)
+				.treesPerHectare(800.0).build();
+		polygon.setPrimaryLayer(layer);
+		var output = writeTrailer(reportContext(), polygon);
+		assertThat(output, containsString("Trees Per Hectare........ 800.0"));
+		assertThat(output, containsString("Measured Basal Area...... 25.0"));
+	}
+
 	private ProjectionContext reportContext() throws Exception {
 		return new ProjectionContext(
 				ProjectionRequestKind.HCSV, "TEST",

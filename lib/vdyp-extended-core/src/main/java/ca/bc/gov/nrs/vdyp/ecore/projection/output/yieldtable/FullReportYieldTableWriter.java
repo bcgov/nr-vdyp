@@ -45,6 +45,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 	public static final String YIELD_TABLE_FILE_NAME = "YieldReport.txt";
 	private static final Logger logger = LoggerFactory.getLogger(FullReportYieldTableWriter.class);
+	private static final String NOT_USED = "<Not Used>";
 
 	private final ProjectionContext context;
 
@@ -663,7 +664,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 		entry = "% Crown Closure Supplied. ";
 		if (lastPolygonForTrailer.getInventoryStandard() == InventoryStandard.VRI) {
-			entry += "<Not Used>";
+			entry += NOT_USED;
 		} else if (lastPolygonForTrailer.getPrimaryLayer().getSuppliedCrownClosure() == null
 				|| lastPolygonForTrailer.getPrimaryLayer().getSuppliedCrownClosure() < 0) {
 			entry += "<None>";
@@ -698,11 +699,12 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		String tphEntry = "Trees Per Hectare........ ";
 		String basalEntry = "Measured Basal Area...... ";
 		if (suppressVRIParamDisplay) {
-			tphEntry += "<Not Used>";
-			basalEntry += "<Not Used>";
+			tphEntry += NOT_USED;
+			basalEntry += NOT_USED;
 		} else {
-			tphEntry += layer.getTreesPerHectare();
-			basalEntry += layer.getBasalArea();
+			// BA and TPH are not supplied for Volume based input (e.g. FIP), so show them as not used rather than null
+			tphEntry += layer.getTreesPerHectare() != null ? layer.getTreesPerHectare() : NOT_USED;
+			basalEntry += layer.getBasalArea() != null ? layer.getBasalArea() : NOT_USED;
 		}
 
 		entries.add(tphEntry);
