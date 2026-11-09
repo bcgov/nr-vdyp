@@ -47,7 +47,7 @@ public class ForwardProcessor extends Processor<ForwardProcessingEngine> {
 
 	@Override
 	public ForwardProcessingEngine
-			getNewProcessingEngine(ProcessingResolvedControlMap controlMap, Optional<VdypOutputWriter> outputWriter) {
+			createProcessingEngine(ProcessingResolvedControlMap controlMap, Optional<VdypOutputWriter> outputWriter) {
 		return new ForwardProcessingEngine(controlMap.getControlMap(), outputWriter);
 	}
 

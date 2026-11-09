@@ -38,11 +38,12 @@ public class ProcessingResolvedControlMapImpl extends CachingResolvedControlMapI
 	private final Optional<MatrixMap2<String, Integer, Optional<Coefficients>>> nonPrimarySpeciesBasalAreaGrowthCoefficients;
 	private final Optional<Map<Integer, ModelCoefficients>> primaryQuadMeanDiameterGrowthCoefficients;
 	private final Optional<MatrixMap2<String, Integer, Optional<Coefficients>>> nonPrimaryQuadMeanDiameterGrowthCoefficients;
+	private final Optional<Integer> maximumPolygonCount;
 
 	public ProcessingResolvedControlMapImpl(Map<String, Object> controlMap) {
 
 		super(controlMap);
-
+		this.maximumPolygonCount = get(ControlKey.MAX_NUM_POLY, Integer.class);
 		this.debugSettings = get(ControlKey.DEBUG_SWITCHES, ProcessingDebugSettings.class);
 		this.forwardControlVariables = get(ControlKey.VTROL, ProcessingControlVariables.class);
 		this.siteCurveMap = get(ControlKey.SITE_CURVE_NUMBERS, MatrixMap2.class);
@@ -167,5 +168,10 @@ public class ProcessingResolvedControlMapImpl extends CachingResolvedControlMapI
 			getNonPrimarySpeciesQuadMeanDiameterGrowthCoefficients() {
 		return nonPrimaryQuadMeanDiameterGrowthCoefficients
 				.orElseThrow(() -> new NoSuchElementException("nonPrimaryQuadMeanDiameterGrowthCoefficients"));
+	}
+
+	@Override
+	public Optional<Integer> getMaximumPolygonCount() {
+		return maximumPolygonCount;
 	}
 }

@@ -88,10 +88,7 @@ public abstract class Processor<E extends ProcessingEngine<?, ?>> {
 
 		int maxPoly = 0;
 		if (vdypPassSet.contains(Pass.PASS_1)) {
-			Object maxPolyValue = controlMap.getControlMap().get(ControlKey.MAX_NUM_POLY.name());
-			if (maxPolyValue != null) {
-				maxPoly = (Integer) maxPolyValue;
-			}
+			maxPoly = initialize(controlMap, maxPoly);
 		}
 
 		logger.debug("MaxPoly: {}", maxPoly);
@@ -103,43 +100,64 @@ public abstract class Processor<E extends ProcessingEngine<?, ?>> {
 
 		if (vdypPassSet.contains(Pass.PASS_3)) {
 
-			try {
-				var outputWriter = Utils
-						.map(outputFileResolver, ofr -> new VdypOutputWriter(controlMap.getControlMap(), ofr));
-				E engine = getNewProcessingEngine(controlMap, outputWriter);
-
-				try (var reader = new ProcessingDataStreamReader(engine.getState().controlMap);) {
-					// Fetch the next polygon to process.
-					int nPolygonsProcessed = 0;
-					while (true) {
-
-						if (nPolygonsProcessed == maxPoly) {
-							logger.info(
-									"Prematurely terminating polygon processing since MAX_POLY ({}) polygons have been processed",
-									maxPoly
-							);
-						}
-
-						var polygonHolder = reader.readNextPolygon();
-						if (polygonHolder.isEmpty()) {
-							break;
-						}
-
-						var polygon = polygonHolder.get();
-
-						if (polygonFilter.test(polygon)) {
-							engine.processPolygon(polygon);
-							nPolygonsProcessed += 1;
-						}
-					}
-				} finally {
-					Utils.ifPresent(outputWriter, VdypOutputWriter::close);
-				}
-			} catch (IOException e) {
-				throw new ProcessingException(e);
-			}
+			processStands(controlMap, outputFileResolver, polygonFilter, maxPoly);
 
 		}
+	}
+
+	protected int initialize(ProcessingResolvedControlMap controlMap, int defaultMaxPoly) {
+		return controlMap.getMaximumPolygonCount().orElse(defaultMaxPoly);
+	}
+
+	protected void processStands(
+			ProcessingResolvedControlMap controlMap, Optional<FileResolver> outputFileResolver,
+			Predicate<VdypPolygon> polygonFilter, int maxPoly
+	) throws ProcessingException {
+		try {
+			var outputWriter = createWriter(controlMap, outputFileResolver);
+			E engine = createProcessingEngine(controlMap, outputWriter);
+
+			try (var reader = createDataStream(engine);) {
+				// Fetch the next polygon to process.
+				int nPolygonsProcessed = 0;
+				while (true) {
+
+					if (nPolygonsProcessed == maxPoly) {
+						logger.info(
+								"Prematurely terminating polygon processing since MAX_POLY ({}) polygons have been processed",
+								maxPoly
+						);
+						break;
+					}
+
+					var polygonHolder = reader.readNextPolygon();
+					if (polygonHolder.isEmpty()) {
+						break;
+					}
+
+					var polygon = polygonHolder.get();
+
+					if (polygonFilter.test(polygon)) {
+						engine.processPolygon(polygon);
+						nPolygonsProcessed += 1;
+					}
+				}
+			} finally {
+				Utils.ifPresent(outputWriter, VdypOutputWriter::close);
+			}
+		} catch (IOException e) {
+			throw new ProcessingException(e);
+		}
+	}
+
+	protected Optional<VdypOutputWriter>
+			createWriter(ProcessingResolvedControlMap controlMap, Optional<FileResolver> outputFileResolver)
+					throws IOException {
+		return Utils.map(outputFileResolver, ofr -> new VdypOutputWriter(controlMap.getControlMap(), ofr));
+	}
+
+	protected ProcessingDataStreamReader createDataStream(E engine) throws ProcessingException {
+		return new ProcessingDataStreamReader(engine.getState().getControlMap());
 	}
 
 	/**
@@ -150,5 +168,5 @@ public abstract class Processor<E extends ProcessingEngine<?, ?>> {
 	 * @return
 	 */
 	public abstract E
-			getNewProcessingEngine(ProcessingResolvedControlMap controlMap, Optional<VdypOutputWriter> outputWriter);
+			createProcessingEngine(ProcessingResolvedControlMap controlMap, Optional<VdypOutputWriter> outputWriter);
 }

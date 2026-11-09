@@ -28,7 +28,7 @@ public class BackProcessor extends Processor<BackProcessingEngine> {
 
 	@Override
 	public BackProcessingEngine
-			getNewProcessingEngine(ProcessingResolvedControlMap controlMap, Optional<VdypOutputWriter> outputWriter) {
+			createProcessingEngine(ProcessingResolvedControlMap controlMap, Optional<VdypOutputWriter> outputWriter) {
 		return new BackProcessingEngine(controlMap.getControlMap(), outputWriter);
 	}
 
