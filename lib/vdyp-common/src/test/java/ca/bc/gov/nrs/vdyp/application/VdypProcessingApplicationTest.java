@@ -36,7 +36,7 @@ class VdypProcessingApplicationTest {
 	class DoMain {
 
 		VdypProcessingApplication app;
-		Processor processor;
+		Processor<?> processor;
 
 		Optional<? extends IOException> initIoError = Optional.empty();
 		Optional<? extends ResourceParseException> initParseError = Optional.empty();
@@ -53,7 +53,7 @@ class VdypProcessingApplicationTest {
 				}
 
 				@Override
-				protected Processor getProcessor() {
+				protected Processor<?> getProcessor() {
 					return processor;
 				}
 

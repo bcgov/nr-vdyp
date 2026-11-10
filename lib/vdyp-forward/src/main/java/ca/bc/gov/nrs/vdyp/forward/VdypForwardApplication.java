@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.forward;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypProcessingApplication;
@@ -32,7 +31,7 @@ public class VdypForwardApplication extends VdypProcessingApplication {
 	}
 
 	@Override
-	protected Processor getProcessor() {
+	protected ForwardProcessor getProcessor() {
 		return new ForwardProcessor();
 	}
 }

@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward;
+package ca.bc.gov.nrs.vdyp.io.parse.projection;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.common_calculators.UtilizationOperations;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
@@ -34,9 +35,9 @@ import ca.bc.gov.nrs.vdyp.model.VdypUtilization;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 
-public class ForwardDataStreamReader implements AutoCloseable {
+public class ProcessingDataStreamReader implements AutoCloseable {
 
-	private static final Logger logger = LoggerFactory.getLogger(ForwardDataStreamReader.class);
+	private static final Logger logger = LoggerFactory.getLogger(ProcessingDataStreamReader.class);
 
 	private final ResolvedControlMap resolvedControlMap;
 
@@ -46,21 +47,21 @@ public class ForwardDataStreamReader implements AutoCloseable {
 	Optional<StreamingParser<PolygonIdentifier>> polygonDescriptionStream;
 
 	@SuppressWarnings("unchecked")
-	public ForwardDataStreamReader(ResolvedControlMap resolvedControlMap) throws ProcessingException {
+	public ProcessingDataStreamReader(ResolvedControlMap resolvedControlMap) throws ProcessingException {
 
 		try {
 			this.resolvedControlMap = resolvedControlMap;
 			Map<String, Object> controlMap = resolvedControlMap.getControlMap();
 
-			var polygonStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
+			var polygonStreamFactory = controlMap.get(ControlKey.VDYP_INPUT_VDYP_POLY.name());
 			polygonStream = (VdypPolygonStreamingParser) ((StreamingParserFactory<VdypPolygon>) polygonStreamFactory)
 					.get();
 
-			var layerSpeciesStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name());
+			var layerSpeciesStreamFactory = controlMap.get(ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SPECIES.name());
 			layerSpeciesStream = ((StreamingParserFactory<Collection<VdypSpecies>>) layerSpeciesStreamFactory).get();
 
 			var speciesUtilizationStreamFactory = controlMap
-					.get(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name());
+					.get(ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name());
 			speciesUtilizationStream = ((StreamingParserFactory<Collection<VdypUtilization>>) speciesUtilizationStreamFactory)
 					.get();
 
@@ -69,11 +70,11 @@ public class ForwardDataStreamReader implements AutoCloseable {
 			).map(vtrol -> vtrol.getTargetYear().isSpecified()).orElse(false);
 
 			polygonDescriptionStream = Optional.empty();
-			if (controlMap.containsKey(ControlKey.FORWARD_INPUT_GROWTO.name()) // Growth file specified
+			if (controlMap.containsKey(ControlKey.VDYP_INPUT_GROWTO.name()) // Growth file specified
 					&& !growthTargetSpecified) {
 				var polygonDescriptionStreamFactory = Utils
 						.<StreamingParserFactory<PolygonIdentifier>>expectParsedControl(
-								controlMap, ControlKey.FORWARD_INPUT_GROWTO, StreamingParserFactory.class
+								controlMap, ControlKey.VDYP_INPUT_GROWTO, StreamingParserFactory.class
 						);
 
 				polygonDescriptionStream = Optional.of(polygonDescriptionStreamFactory.get());
@@ -91,7 +92,7 @@ public class ForwardDataStreamReader implements AutoCloseable {
 	 * @param controlMap a raw (i.e., unresolved) control map
 	 * @throws ProcessingException
 	 */
-	public ForwardDataStreamReader(Map<String, Object> controlMap) throws ProcessingException {
+	public ProcessingDataStreamReader(Map<String, Object> controlMap) throws ProcessingException {
 
 		this(new ProcessingResolvedControlMapImpl(controlMap));
 	}
@@ -127,7 +128,7 @@ public class ForwardDataStreamReader implements AutoCloseable {
 								MessageFormat.format(
 										"Grow-to-year file at {0} in the control file does"
 												+ " not contain a record for {1} as expected, but instead the end-of-file was reached",
-										ControlKey.FORWARD_INPUT_GROWTO.name(), polygon.getPolygonIdentifier().getName()
+										ControlKey.VDYP_INPUT_GROWTO.name(), polygon.getPolygonIdentifier().getName()
 								)
 						);
 					}
@@ -137,8 +138,8 @@ public class ForwardDataStreamReader implements AutoCloseable {
 								MessageFormat.format(
 										"Grow-to-year file at {0} in the control file does"
 												+ " not contain a record for {1} as expected, but instead contains a record for {2}",
-										ControlKey.FORWARD_INPUT_GROWTO.name(),
-										polygon.getPolygonIdentifier().getName(), polygonDescription.getName()
+										ControlKey.VDYP_INPUT_GROWTO.name(), polygon.getPolygonIdentifier().getName(),
+										polygonDescription.getName()
 								)
 						);
 					}
@@ -174,7 +175,7 @@ public class ForwardDataStreamReader implements AutoCloseable {
 					} else {
 						throw new IllegalStateException(
 								MessageFormat.format(
-										"Unrecognized layer type {} for species {} of polygon {}", s.getLayerType(),
+										"Unrecognized layer type {1} for species {2} of polygon {3}", s.getLayerType(),
 										s.getGenusIndex(), polygon.getPolygonIdentifier()
 								)
 						);

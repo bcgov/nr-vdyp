@@ -10,7 +10,7 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.ProjectionResultsReader;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
@@ -42,7 +42,7 @@ public class TestProjectionResultsReader implements ProjectionResultsReader {
 		);
 
 		try (
-				ForwardDataStreamReader reader = testHelper
+				ProcessingDataStreamReader reader = testHelper
 						.buildForwardDataStreamReader(polygonStream, speciesStream, utilizationsStream);
 		) {
 

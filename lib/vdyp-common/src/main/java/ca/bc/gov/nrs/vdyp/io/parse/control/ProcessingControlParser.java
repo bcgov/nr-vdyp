@@ -313,13 +313,12 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 
 		// FORWARD_INPUT_GROWTO is optional; if missing, the polygon list is read from the
 		// polygon file itself.
-		Optional<String> source = Utils.optSafe(map.get(ControlKey.FORWARD_INPUT_GROWTO.name()));
+		Optional<String> source = Utils.optSafe(map.get(ControlKey.VDYP_INPUT_GROWTO.name()));
 		if (source.isEmpty()) {
-			String polyFileName = (String) map.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
-			map.put(ControlKey.FORWARD_INPUT_GROWTO.name(), polyFileName);
-			fileResolver.put(
-					ControlKey.FORWARD_INPUT_GROWTO.name(), fileResolver.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name())
-			);
+			String polyFileName = (String) map.get(ControlKey.VDYP_INPUT_VDYP_POLY.name());
+			map.put(ControlKey.VDYP_INPUT_GROWTO.name(), polyFileName);
+			fileResolver
+					.put(ControlKey.VDYP_INPUT_GROWTO.name(), fileResolver.get(ControlKey.VDYP_INPUT_VDYP_POLY.name()));
 		}
 
 		for (ControlKey key : orderedControlKeys) {

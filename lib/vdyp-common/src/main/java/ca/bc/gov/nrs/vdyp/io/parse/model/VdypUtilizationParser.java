@@ -41,7 +41,7 @@ public class VdypUtilizationParser implements ControlMapValueReplacer<Object, St
 
 	@Override
 	public ControlKey getControlKey() {
-		return ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL;
+		return ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL;
 	}
 
 	@Override

@@ -10,12 +10,12 @@ import org.opentest4j.AssertionFailedError;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingState;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
@@ -119,7 +119,7 @@ public class ForwardTestUtils {
 	 * @throws ProcessingException
 	 */
 	public static VdypPolygon readFirstPolygon(Map<String, Object> controlMap) throws ProcessingException {
-		try (ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);) {
+		try (ProcessingDataStreamReader reader = new ProcessingDataStreamReader(controlMap);) {
 			return reader.readNextPolygon().orElseThrow(() -> new AssertionError("No polygons defined"));
 		}
 	}

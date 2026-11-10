@@ -38,7 +38,7 @@ public class VdypPolygonParser implements ControlMapValueReplacer<Object, String
 
 	@Override
 	public ControlKey getControlKey() {
-		return ControlKey.FORWARD_INPUT_VDYP_POLY;
+		return ControlKey.VDYP_INPUT_VDYP_POLY;
 	}
 
 	@Override

@@ -20,7 +20,7 @@ public class VdypPolygonDescriptionParser implements ControlMapValueReplacer<Obj
 
 	@Override
 	public ControlKey getControlKey() {
-		return ControlKey.FORWARD_INPUT_GROWTO;
+		return ControlKey.VDYP_INPUT_GROWTO;
 	}
 
 	private static Pattern descriptionPattern = Pattern.compile("(.*)([\\d]{4}$)");

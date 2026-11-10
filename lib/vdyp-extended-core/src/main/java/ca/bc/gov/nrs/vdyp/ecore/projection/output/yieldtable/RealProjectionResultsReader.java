@@ -11,11 +11,11 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
@@ -46,23 +46,23 @@ public class RealProjectionResultsReader implements ProjectionResultsReader {
 
 		var absolutePathFileResolver = new FileSystemFileResolver();
 		readerControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
+				ControlKey.VDYP_INPUT_VDYP_POLY.name(),
 				new VdypPolygonParser().map(polygonFileLocation.toString(), absolutePathFileResolver, readerControlMap)
 		);
 		readerControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SPECIES.name(),
 				new VdypSpeciesParser().reportSIHeight()
 						.map(speciesFileLocation.toString(), absolutePathFileResolver, readerControlMap)
 		);
 		readerControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
 				new VdypUtilizationParser()
 						.map(utilizationsFileLocation.toString(), absolutePathFileResolver, readerControlMap)
 		);
 		readerControlMap.put(ControlKey.BEC_DEF.name(), controlMap.get(ControlKey.BEC_DEF.name()));
 		readerControlMap.put(ControlKey.SP0_DEF.name(), controlMap.get(ControlKey.SP0_DEF.name()));
 
-		try (ForwardDataStreamReader reader = new ForwardDataStreamReader(readerControlMap);) {
+		try (ProcessingDataStreamReader reader = new ProcessingDataStreamReader(readerControlMap);) {
 
 			var vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
 			while (vdypPolygon.isPresent()

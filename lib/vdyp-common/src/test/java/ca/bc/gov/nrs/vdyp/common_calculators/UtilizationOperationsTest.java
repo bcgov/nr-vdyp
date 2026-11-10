@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward;
+package ca.bc.gov.nrs.vdyp.common_calculators;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;

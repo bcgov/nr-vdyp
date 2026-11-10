@@ -21,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
@@ -145,7 +146,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 				"01002 S000001 00     1970"
 		);
 
-		try (var reader = new ForwardDataStreamReader(controlMap);) {
+		try (var reader = new ProcessingDataStreamReader(controlMap);) {
 
 			var polygon = reader.readNextPolygon().orElseThrow();
 
@@ -184,7 +185,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		controlMap.put(ControlKey.SITE_CURVE_NUMBERS.name(), siteCurveMap);
 
-		try (var reader = new ForwardDataStreamReader(controlMap);) {
+		try (var reader = new ProcessingDataStreamReader(controlMap);) {
 
 			var polygon = reader.readNextPolygon().orElseThrow();
 
@@ -337,7 +338,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		buildUtilizationParserForStandardStream("testUtilizations.dat");
 
-		try (var reader = new ForwardDataStreamReader(controlMap);) {
+		try (var reader = new ProcessingDataStreamReader(controlMap);) {
 
 			var polygon = reader.readNextPolygon().orElseThrow();
 
@@ -384,7 +385,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 		);
 
 		setSiteEstimationModeToSimple();
-		try (var reader = new ForwardDataStreamReader(controlMap);) {
+		try (var reader = new ProcessingDataStreamReader(controlMap);) {
 
 			var polygon = reader.readNextPolygon().orElseThrow();
 

@@ -17,6 +17,9 @@ import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 
 public interface ProcessingResolvedControlMap extends ResolvedControlMap {
 
+	/** 0 - MAX_NUM_POLY */
+	Optional<Integer> getMaximumPolygonCount();
+
 	/** 25 - SITE_CURVE_NUMBERS */
 	MatrixMap2<String, Region, SiteIndexEquation> getSiteCurveMap();
 

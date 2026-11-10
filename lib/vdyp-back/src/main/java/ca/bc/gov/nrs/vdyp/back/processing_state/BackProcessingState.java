@@ -50,7 +50,7 @@ public class BackProcessingState extends ProcessingState<BackLayerProcessingStat
 
 	private Optional<float[]> speciesLoreyHeightBackupFactorMaximum = Optional.empty(); // BACK5/BFMAXHLI
 
-	public BackProcessingState(Map<String, Object> controlMap) throws ProcessingException {
+	public BackProcessingState(Map<String, Object> controlMap) {
 		super(controlMap, VdypApplicationIdentifier.VDYP_BACK);
 	}
 

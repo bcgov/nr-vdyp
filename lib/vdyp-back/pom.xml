@@ -21,11 +21,6 @@
 			<artifactId>vdyp-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>ca.bc.gov.nrs.vdyp</groupId>
-			<artifactId>vdyp-forward</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 
 		<dependency>
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
@@ -34,14 +29,7 @@
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>ca.bc.gov.nrs.vdyp</groupId>
-			<artifactId>vdyp-forward</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-
+		
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -88,6 +76,19 @@
 			<artifactId>vdyp-si32</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-integration-tests</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.github.classgraph</groupId>
+			<artifactId>classgraph</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
