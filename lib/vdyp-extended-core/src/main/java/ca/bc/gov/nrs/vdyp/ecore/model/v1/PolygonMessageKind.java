@@ -44,7 +44,7 @@ public enum PolygonMessageKind {
 	), //
 	LOW_SITE("primary layer height was too short to generate a stand description. FIPSTART return code: {0}"), //
 	LOW_SITE_INDEX_WARNING(
-			"very low or null site index {0} for species \"{1}\". {2} set to species {2} value prior to projection"
+			"very low or null site index {0} for species \"{1}\". {2} set to species {2} value prior to projection", 1
 	), //
 	LOW_SITE_INDEX_WARNING_2("very low site index {0}. Site index not calculated"),
 	LOW_SITE_INDEX_WARNING_3("site index could not be calculated"),

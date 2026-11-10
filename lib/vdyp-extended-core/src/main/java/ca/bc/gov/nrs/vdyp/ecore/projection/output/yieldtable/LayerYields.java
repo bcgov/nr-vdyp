@@ -79,4 +79,26 @@ public record LayerYields(
 		 */
 		Integer siteIndexCurve
 ) {
+
+	/**
+	 * @param newSpeciesAge the species age of the copy
+	 * @return a copy of these yields with the species age replaced by <code>newSpeciesAge</code>
+	 */
+	public LayerYields withSpeciesAge(double newSpeciesAge) {
+		return withSpeciesAgeAndDominantHeight(newSpeciesAge, dominantHeight);
+	}
+
+	/**
+	 * @param newSpeciesAge     the species age of the copy
+	 * @param newDominantHeight the dominant height of the copy
+	 * @return a copy of these yields with the species age and dominant height replaced by the given values
+	 */
+	public LayerYields withSpeciesAgeAndDominantHeight(double newSpeciesAge, double newDominantHeight) {
+		return new LayerYields(
+				bYieldsPredicted, isDominantSp0, sp0Name, standYear, newSpeciesAge, newDominantHeight, loreyHeight,
+				siteIndex, diameter, treesPerHectare, wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay,
+				cuVolumeLessDecayWastage, cuVolumeLessDecayWastageBreakage, basalArea, basalArea75cm, basalArea125cm,
+				reportedStandPercent, siteIndexCurve
+		);
+	}
 }
