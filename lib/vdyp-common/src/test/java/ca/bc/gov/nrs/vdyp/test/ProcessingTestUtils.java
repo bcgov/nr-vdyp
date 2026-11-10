@@ -208,7 +208,7 @@ public class ProcessingTestUtils {
 	}
 
 	public static void runForwardProcessor(
-			Processor fp, FileResolver outputResolver, final String controlPath, EnumSet<Pass> vdypPassSet
+			Processor<?> fp, FileResolver outputResolver, final String controlPath, EnumSet<Pass> vdypPassSet
 	) throws ProcessingException {
 		var rawControlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of(controlPath));
 		var controlMap = new ProcessingResolvedControlMapImpl(rawControlMap);

@@ -1,0 +1,79 @@
+package ca.bc.gov.nrs.vdyp.back.integration;
+
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.assumeThat;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.exists;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
+import ca.bc.gov.nrs.vdyp.back.VdypBackApplication;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.integration_tests.IntermediateDataBasedIntegrationTest;
+import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
+
+class ITDataBased extends IntermediateDataBasedIntegrationTest {
+
+	@ParameterizedTest
+	@MethodSource("testNameAndLayerProvider")
+	void testVdypBack(String test, String layer) throws IOException, ResourceParseException, ProcessingException {
+		State inputState = State.BackInput;
+		State outputState = State.BackOutput;
+
+		Path testDir = testDataDir.resolve(test);
+		Path dataDir = testDir.resolve(inputState.dir).resolve(layer);
+		Path expectedDir = testDir.resolve(outputState.dir).resolve(layer);
+
+		assumeThat("No input data", dataDir, exists());
+		assumeThat("No expected output data", expectedDir, exists());
+
+		doSkip(testDir, "testVdypBack");
+
+		remapSiteCurves(testDir);
+
+		Path baseControlFile = copyResource(TestUtils.class, "VDYP.CTR", testConfigDir);
+
+		Path testControlFile = dataDir.resolve("control.ctl");
+
+		Path ioControlFile = createIoControlFile(
+				inputState, dataDir, true, Data.Polygon, Data.Species, Data.Utilization, Data.GrowTo
+		);
+
+		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile).filter(Files::exists)
+				.map(Object::toString).toList();
+
+		{
+
+			FileSystemFileResolver fileResolver = new FileSystemFileResolver(configDir);
+
+			VdypBackApplication app = new VdypBackApplication();
+			ApplicationTestUtils.runInit(app, fileResolver, null, null, controlFiles.toArray(String[]::new));
+			ApplicationTestUtils.runProcess(app);
+
+		}
+
+		assertOutputs(outputState, expectedDir);
+
+		assertFileExists(outputDir.resolve(COMPATIBILITY_OUTPUT_NAME));
+
+		if (Files.size(outputDir.resolve(COMPATIBILITY_OUTPUT_NAME)) > 0) {
+			assertFileMatches(
+					outputDir.resolve(COMPATIBILITY_OUTPUT_NAME),
+					expectedDir.resolve(fileName(outputState, Data.Compatibility)), String::equals
+			);
+		} else if (Files.size(expectedDir.resolve(fileName(outputState, Data.Compatibility))) >= 0) {
+			// FIXME VDYP-653 Forward isn't producing the Compatibility Variables file, which doesn't seem to break
+			// anything but is different from VDYP 7
+
+		}
+
+	}
+
+}

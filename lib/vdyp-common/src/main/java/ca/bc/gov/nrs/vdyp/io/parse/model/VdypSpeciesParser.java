@@ -64,7 +64,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 
 	@Override
 	public ControlKey getControlKey() {
-		return ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES;
+		return ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SPECIES;
 	}
 
 	@Override

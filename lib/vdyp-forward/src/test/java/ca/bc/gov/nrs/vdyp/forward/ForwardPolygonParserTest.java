@@ -27,14 +27,14 @@ class ForwardPolygonParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), "test.dat");
+		controlMap.put(ControlKey.VDYP_INPUT_VDYP_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolverContext("test.dat", TestUtils.makeInputStream(/* empty */));
 
 		parser.modify(controlMap, fileResolver);
 
-		var parserFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
+		var parserFactory = controlMap.get(ControlKey.VDYP_INPUT_VDYP_POLY.name());
 
 		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
 
@@ -53,7 +53,7 @@ class ForwardPolygonParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), "test.dat");
+		controlMap.put(ControlKey.VDYP_INPUT_VDYP_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolverContext(
@@ -62,7 +62,7 @@ class ForwardPolygonParserTest {
 
 		parser.modify(controlMap, fileResolver);
 
-		var parserFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
+		var parserFactory = controlMap.get(ControlKey.VDYP_INPUT_VDYP_POLY.name());
 
 		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
 
@@ -91,7 +91,7 @@ class ForwardPolygonParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), "test.dat");
+		controlMap.put(ControlKey.VDYP_INPUT_VDYP_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils
@@ -99,7 +99,7 @@ class ForwardPolygonParserTest {
 
 		parser.modify(controlMap, fileResolver);
 
-		var parserFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
+		var parserFactory = controlMap.get(ControlKey.VDYP_INPUT_VDYP_POLY.name());
 
 		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
 
@@ -128,7 +128,7 @@ class ForwardPolygonParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), "test.dat");
+		controlMap.put(ControlKey.VDYP_INPUT_VDYP_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolverContext(
@@ -149,7 +149,7 @@ class ForwardPolygonParserTest {
 
 		parser.modify(controlMap, fileResolver);
 
-		var parserFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
+		var parserFactory = controlMap.get(ControlKey.VDYP_INPUT_VDYP_POLY.name());
 
 		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
 
@@ -268,7 +268,7 @@ class ForwardPolygonParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), "test.dat");
+		controlMap.put(ControlKey.VDYP_INPUT_VDYP_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolverContext(
@@ -280,7 +280,7 @@ class ForwardPolygonParserTest {
 
 		parser.modify(controlMap, fileResolver);
 
-		var parserFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
+		var parserFactory = controlMap.get(ControlKey.VDYP_INPUT_VDYP_POLY.name());
 
 		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
 

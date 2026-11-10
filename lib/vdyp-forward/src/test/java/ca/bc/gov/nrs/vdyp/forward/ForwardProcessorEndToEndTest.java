@@ -32,6 +32,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -87,15 +88,15 @@ class ForwardProcessorEndToEndTest {
 
 		Map<String, Object> vdyp8ControlMap = new HashMap<>();
 		vdyp8ControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
+				ControlKey.VDYP_INPUT_VDYP_POLY.name(),
 				polygonParser.map("vp_grow2.dat", vdyp8InputResolver, vdyp8ControlMap)
 		);
 		vdyp8ControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SPECIES.name(),
 				speciesParser.map("vs_grow2.dat", vdyp8InputResolver, vdyp8ControlMap)
 		);
 		vdyp8ControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
 				utilizationParser.map("vu_grow2.dat", vdyp8InputResolver, vdyp8ControlMap)
 		);
 		vdyp8ControlMap.put(
@@ -126,15 +127,15 @@ class ForwardProcessorEndToEndTest {
 
 		Map<String, Object> vdyp7ControlMap = new HashMap<>();
 		vdyp7ControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
+				ControlKey.VDYP_INPUT_VDYP_POLY.name(),
 				polygonParser.map("../../vdyp7/vp_grow2.dat", vdyp7InputResolver, vdyp7ControlMap)
 		);
 		vdyp7ControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SPECIES.name(),
 				speciesParser.map("../../vdyp7/vs_grow2.dat", vdyp7InputResolver, vdyp7ControlMap)
 		);
 		vdyp7ControlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
 				utilizationParser.map("../../vdyp7/vu_grow2.dat", vdyp7InputResolver, vdyp7ControlMap)
 		);
 		vdyp7ControlMap.put(
@@ -162,8 +163,8 @@ class ForwardProcessorEndToEndTest {
 		vdyp7ControlMap.put(ControlKey.DEBUG_SWITCHES.name(), debugSwitches);
 
 		try (
-				var vdyp8Reader = new ForwardDataStreamReader(vdyp8ControlMap);
-				var vdyp7Reader = new ForwardDataStreamReader(vdyp7ControlMap);
+				var vdyp8Reader = new ProcessingDataStreamReader(vdyp8ControlMap);
+				var vdyp7Reader = new ProcessingDataStreamReader(vdyp7ControlMap);
 		) {
 
 			Optional<VdypPolygon> optPolygon8 = vdyp8Reader.readNextPolygon();

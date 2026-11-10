@@ -33,7 +33,7 @@ public abstract class VdypProcessingApplication extends VdypApplication<Processi
 
 	static final Logger logger = LoggerFactory.getLogger(VdypProcessingApplication.class);
 
-	protected abstract Processor getProcessor();
+	protected abstract Processor<?> getProcessor();
 
 	public static final int CONFIG_LOAD_ERROR_EXIT = 1;
 	public static final int PROCESSING_ERROR_EXIT = 2;
@@ -63,7 +63,7 @@ public abstract class VdypProcessingApplication extends VdypApplication<Processi
 
 	@Override
 	protected void process() throws ProcessingException {
-		Processor processor = getProcessor();
+		Processor<?> processor = getProcessor();
 
 		processor.process(
 				this.getDefaultPasses(), (ProcessingResolvedControlMap) this.resolvedControlMap,

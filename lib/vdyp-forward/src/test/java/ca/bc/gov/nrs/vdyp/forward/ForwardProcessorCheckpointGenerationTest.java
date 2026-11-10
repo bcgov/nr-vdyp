@@ -26,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
@@ -57,17 +58,17 @@ class ForwardProcessorCheckpointGenerationTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		var polygonParser = new VdypPolygonParser();
 		controlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
+				ControlKey.VDYP_INPUT_VDYP_POLY.name(),
 				polygonParser.map("vp_grow2.dat", vdyp8OutputResolver, controlMap)
 		);
 		var speciesParser = new VdypSpeciesParser();
 		controlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SPECIES.name(),
 				speciesParser.map("vs_grow2.dat", vdyp8OutputResolver, controlMap)
 		);
 		var utilizationParser = new VdypUtilizationParser();
 		controlMap.put(
-				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
+				ControlKey.VDYP_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
 				utilizationParser.map("vu_grow2.dat", vdyp8OutputResolver, controlMap)
 		);
 		var becDefinitionParser = new BecDefinitionParser();
@@ -82,7 +83,7 @@ class ForwardProcessorCheckpointGenerationTest {
 		);
 		controlMap.put(ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
-		try (var reader = new ForwardDataStreamReader(controlMap);) {
+		try (var reader = new ProcessingDataStreamReader(controlMap);) {
 			Optional<VdypPolygon> polygon = reader.readNextPolygon();
 			var polygonName = polygon.orElseThrow().getPolygonIdentifier().getBase();
 

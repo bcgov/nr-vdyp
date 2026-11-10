@@ -30,7 +30,6 @@
 
 030 coe/GRPBA1.DAT                                    Default Eq # BA=f(CC)     RD_GRBA1
 031 coe/GMODBA1.DAT                                   Eqn modifiers for above   RD_GMBA1 
-033 coe/FIPSTKR.PRM                                   Stocking class factors    RD_STK33
 
 043 coe/UPPERB02.COE                                  Upper BA, DQ by C/I SP0_P  RD_E043 IPSJF128
 
@@ -61,7 +60,7 @@
 096 coe/VETVOL1.DAT                                   Vet-layer volume adjust    RD_YVET                         
 097 coe/VETDQ2.DAT                                    DQ for Vet layer           RD_YDQV
 
-101   -1   1   2   2   1   1                          Contol variables (10I4)
+101   -1   1   2   3   1   1                          Control variables (10I4)
                                                         1st 4 col: IYR_CNTR =i   i=0 for NO GROWTH 
                                                               -1 to use SEQ014 (specifies end yr, each poly)
                                                             i =1 to 400  grow i yrs                               
@@ -103,7 +102,7 @@
 198 coe/mod19813.prm                                  Modifier file (IPSJF155, XII) RD_E198
 
 
-199  2 3 2 2 0 2 0 1 1 0 415 5 713 3 0 0 0 0 0 1 0 0 0Debug switches (25) 0=default See IPSJF155, App. IX
+199  2 3 2 2 0 2 0 1 1 0 015 5 713 3 0 0 0 0 0 1 0 0 0Debug switches (25) 0=default See IPSJF155, App. IX NOTE PM DISABLED SITEADDU TO ALLOW TEST TO ALLOW TEST SUCCESS FIXME VDYP-1051
                                                       (1) = 1 to DIASABLE species dynamics
                                                       (2) = n, maximum BH age in BA and DQ eqns = 100*n.
                                                       (3) = 0 Fiat BA growth model (approach to yield curves)

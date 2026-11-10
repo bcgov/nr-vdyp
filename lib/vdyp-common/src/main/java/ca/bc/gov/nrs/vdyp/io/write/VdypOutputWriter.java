@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.FloatUnaryOperator;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.CachingResolvedControlMapImpl;
@@ -25,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
@@ -336,11 +338,11 @@ public class VdypOutputWriter implements Closeable {
 				specDistributionEntries.get(3).getGenusAlias(), //
 				specDistributionEntries.get(3).getPercentage(), //
 
-				spec.getSite().flatMap(VdypSite::getSiteIndex).orElse(EMPTY_FLOAT), //
-				spec.getSite().flatMap(VdypSite::getHeight).orElse(EMPTY_FLOAT), //
-				spec.getSite().flatMap(VdypSite::getAgeTotal).orElse(EMPTY_FLOAT), //
-				spec.getSite().flatMap(VdypSite::getYearsAtBreastHeight).orElse(EMPTY_FLOAT), //
-				spec.getSite().flatMap(VdypSite::getYearsToBreastHeight).orElse(EMPTY_FLOAT), //
+				spec.getSite().flatMap(VdypSite::getSiteIndex).filter(Float::isFinite).orElse(EMPTY_FLOAT), //
+				spec.getSite().flatMap(VdypSite::getHeight).filter(Float::isFinite).orElse(EMPTY_FLOAT), //
+				spec.getSite().flatMap(VdypSite::getAgeTotal).filter(Float::isFinite).orElse(EMPTY_FLOAT), //
+				spec.getSite().flatMap(VdypSite::getYearsAtBreastHeight).filter(Float::isFinite).orElse(EMPTY_FLOAT), //
+				spec.getSite().flatMap(VdypSite::getYearsToBreastHeight).filter(Float::isFinite).orElse(EMPTY_FLOAT), //
 				layer.getPrimaryGenus().map(spec.getGenus()::equals).orElse(false) ? 1 : 0, //
 				spec.getSite().flatMap(VdypSite::getSiteCurveNumber).orElse(EMPTY_INT) //
 		);
@@ -371,6 +373,18 @@ public class VdypOutputWriter implements Closeable {
 		}
 
 		return value * factor;
+	}
+
+	static float utilValue(UtilizationVector vector, float fractionForest, UtilizationClass uc) {
+		return utilValue(vector, value -> value * fractionForest, uc);
+	}
+
+	static float utilValue(UtilizationVector vector, FloatUnaryOperator modify, UtilizationClass uc) {
+		float value = vector.get(uc);
+		if (Float.isNaN(value)) {
+			return EMPTY_FLOAT;
+		}
+		return modify.applyAsFloat(value);
 	}
 
 	/**
@@ -419,19 +433,17 @@ public class VdypOutputWriter implements Closeable {
 					specIndex.orElse(0), //
 					specId.orElse("  "), //
 
-					uc.index,
-
-					utils.getBaseAreaByUtilization().getCoe(uc.index) * fractionForest, //
-					utils.getTreesPerHectareByUtilization().getCoe(uc.index) * fractionForest, //
+					uc.index, utilValue(utils.getBaseAreaByUtilization(), fractionForest, uc), //
+					utilValue(utils.getTreesPerHectareByUtilization(), fractionForest, uc), //
 					height.orElse(EMPTY_FLOAT), //
 
-					utils.getWholeStemVolumeByUtilization().getCoe(uc.index) * fractionForest, //
-					utils.getCloseUtilizationVolumeByUtilization().getCoe(uc.index) * fractionForest, //
-					utils.getCloseUtilizationVolumeNetOfDecayByUtilization().getCoe(uc.index) * fractionForest, //
-					utils.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization().getCoe(uc.index) * fractionForest, //
-					safeMultiply(
-							utils.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization().getCoe(uc.index),
-							fractionForest
+					utilValue(utils.getWholeStemVolumeByUtilization(), fractionForest, uc), //
+					utilValue(utils.getCloseUtilizationVolumeByUtilization(), fractionForest, uc), //
+					utilValue(utils.getCloseUtilizationVolumeNetOfDecayByUtilization(), fractionForest, uc), //
+					utilValue(utils.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(), fractionForest, uc), //
+					utilValue(
+							utils.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(),
+							value -> safeMultiply(value, fractionForest), uc
 					), //
 
 					quadMeanDiameter.orElse(layer.getLayerType() == LayerType.PRIMARY ? //
