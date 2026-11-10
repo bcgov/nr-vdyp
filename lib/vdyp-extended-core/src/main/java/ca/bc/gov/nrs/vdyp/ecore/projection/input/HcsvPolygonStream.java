@@ -608,7 +608,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		var speciesCode = sp64Details.speciesCode();
 		var speciesPercent = sp64Details.percent();
-		var suppliedAges = determineSuppliedAges(layer, sp64Details);
 		var dominantHeight = sp64Details.estimatedHeight();
 		var siteIndex = sp64Details.estimatedSiteIndex();
 
@@ -629,6 +628,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 			throw new PolygonValidationException(validationMessage);
 		}
+
+		var suppliedAges = determineSuppliedAges(layer, sp64Details);
 
 		boolean isNewStand;
 		var stand = layer.getSp0sByNameMap().get(sp0Code);
