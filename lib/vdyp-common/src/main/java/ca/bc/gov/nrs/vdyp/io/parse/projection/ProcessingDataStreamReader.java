@@ -175,7 +175,7 @@ public class ProcessingDataStreamReader implements AutoCloseable {
 					} else {
 						throw new IllegalStateException(
 								MessageFormat.format(
-										"Unrecognized layer type {1} for species {2} of polygon {3}", s.getLayerType(),
+										"Unrecognized layer type {0} for species {1} of polygon {2}", s.getLayerType(),
 										s.getGenusIndex(), polygon.getPolygonIdentifier()
 								)
 						);
