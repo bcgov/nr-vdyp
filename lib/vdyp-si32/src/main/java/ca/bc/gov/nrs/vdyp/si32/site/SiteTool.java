@@ -704,6 +704,42 @@ public class SiteTool {
 	}
 
 	/**
+	 * Converts a breast height age into a total age, given the years to breast height, using {@link #fillInAgeTriplet}
+	 * (<code>Total Age = Breast Height Age + YTBH - 0.5</code>).
+	 *
+	 * @param ageAtBreastHeight   the breast height age
+	 * @param yearsToBreastHeight the years to breast height
+	 * @return the total age, or -9.0 (unknown) if it could not be computed, which is the case when
+	 *         <code>ageAtBreastHeight</code> is -9.0 or <code>yearsToBreastHeight</code> is negative.
+	 */
+	public static double breastHeightAgeToTotalAge(double ageAtBreastHeight, double yearsToBreastHeight) {
+
+		var rTotalAge = new Reference<Double>(-9.0);
+		var rBreastHeightAge = new Reference<Double>(ageAtBreastHeight);
+		var rYTBH = new Reference<Double>(yearsToBreastHeight);
+
+		fillInAgeTriplet(rTotalAge, rBreastHeightAge, rYTBH);
+
+		return rTotalAge.get();
+	}
+
+	/**
+	 * Converts a breast height age into a total age, computing the years to breast height from the given site curve and
+	 * site index (see {@link #yearsToBreastHeight} and {@link #breastHeightAgeToTotalAge(double, double)}).
+	 *
+	 * @param curve             the site index curve of the species
+	 * @param siteIndex         the site index of the species
+	 * @param ageAtBreastHeight the breast height age
+	 * @return the total age, or -9.0 (unknown) if it could not be computed
+	 * @throws CommonCalculatorException if the years to breast height could not be computed
+	 */
+	public static double breastHeightAgeToTotalAge(SiteIndexEquation curve, double siteIndex, double ageAtBreastHeight)
+			throws CommonCalculatorException {
+
+		return breastHeightAgeToTotalAge(ageAtBreastHeight, yearsToBreastHeight(curve, siteIndex));
+	}
+
+	/**
 	 * Lookup the live conversion parameters for the given Eco Zone and species code.
 	 *
 	 * @param ecoZone  a CFS Biomass Conversion supported Eco Zone

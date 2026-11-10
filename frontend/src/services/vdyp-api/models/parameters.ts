@@ -31,4 +31,5 @@ export interface Parameters {
   copyTitle?: string | null
   filters?: Filters
   utils?: Array<UtilizationParameter> // Species Utilization Level
+  breastHeightAgeSpecies?: Array<number> // Species numbers (1 to 6) whose age is a breast height age
 }

@@ -4,13 +4,17 @@ import static ca.bc.gov.nrs.vdyp.test.TestUtils.LAYER_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.POLYGON_CSV_HEADER_LINE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -32,10 +36,15 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean.SpeciesDetails;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.NonVegetationTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 
 class HcsvPolygonStreamTest {
 	@Test
@@ -676,6 +685,92 @@ class HcsvPolygonStreamTest {
 
 		Polygon poly = unit.getNextPolygon();
 		assertThat(poly.getMessages().size(), is(0));
+	}
+
+	@Nested
+	class TestBreastHeightAgeSpecies {
+		static final boolean IS_COASTAL = false;
+		static final String LAYER_FIELDS = "1,P,,1,,,,5,1.0,150,";
+		static final String SPECIES_FIELDS = "PLI,60.0,FD,40.0,,,,,,,,,";
+		static final String TRAILING_FIELDS = ",,,,,,,,";
+
+		private Polygon project(Parameters params, String layerFields, String ageAndHeightFields)
+				throws AbstractProjectionRequestException {
+			var myContext = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
+			String hcsvLayerFileContents = layerFileHeader + defaultLayerPrefix + layerFields + SPECIES_FIELDS
+					+ ageAndHeightFields + TRAILING_FIELDS + "\n";
+
+			return new HcsvPolygonStream(
+					myContext, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()),
+					new ByteArrayInputStream(hcsvLayerFileContents.getBytes())
+			).getNextPolygon();
+		}
+
+		private Species species(Polygon poly, int index) {
+			return poly.getRank1Layer().getSp64sAsSupplied().get(index);
+		}
+
+		private static double expectedTotalAge(String speciesCode, double siteIndex, double ageAtBreastHeight)
+				throws CommonCalculatorException {
+			var shortName = SiteTool.getSpeciesShortName(SiteTool.getSpeciesIndex(speciesCode));
+			var curve = SiteTool.getSICurve(shortName, IS_COASTAL);
+			var ytbh = SiteTool.yearsToBreastHeight(curve, siteIndex);
+			return ageAtBreastHeight + ytbh - 0.5;
+		}
+
+		@Test
+		void testBreastHeightAgeProducesDifferentTotalAgeThanTotalAge() throws Exception {
+			var totalAgePoly = project(new Parameters().ageStart(0).ageEnd(100), LAYER_FIELDS, "60,20.0,50,18.0");
+			var bhAgePoly = project(
+					new Parameters().ageStart(0).ageEnd(100).breastHeightAgeSpecies(List.of(1, 2)), LAYER_FIELDS,
+					"60,20.0,50,18.0"
+			);
+
+			assertThat(species(bhAgePoly, 0).getTotalAge(), not(species(totalAgePoly, 0).getTotalAge()));
+			assertThat(species(bhAgePoly, 1).getTotalAge(), not(species(totalAgePoly, 1).getTotalAge()));
+		}
+
+		private HcsvPolygonStream breastHeightAgeStream() throws AbstractProjectionRequestException {
+			return new HcsvPolygonStream(
+					new ProjectionContext(
+							ProjectionRequestKind.HCSV, "TEST",
+							new Parameters().ageStart(0).ageEnd(100).breastHeightAgeSpecies(List.of(1)), false
+					), new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()),
+					new ByteArrayInputStream("".getBytes())
+			);
+		}
+
+		@Test
+		void testBreastHeightAgeConvertedUsingSpeciesSiteIndex() throws Exception {
+			var unit = breastHeightAgeStream();
+			var layer = new Layer.Builder().layerId("1").polygon(new Polygon.Builder().build()).build();
+
+			var ages = unit.determineSuppliedAges(layer, new SpeciesDetails(1, "PLI", 60.0, (short) 60, null, 20.0));
+
+			assertThat(ages.totalAge(), closeTo(expectedTotalAge("PLI", 20.0, 60.0), 1e-9));
+			assertThat(ages.ageAtBreastHeight(), is(nullValue()));
+		}
+
+		@Test
+		void testBreastHeightAgeRetainedWhenConversionFails() throws Exception {
+			var unit = breastHeightAgeStream();
+			var layer = new Layer.Builder().layerId("1").polygon(new Polygon.Builder().build()).build();
+
+			var badSiteIndex = unit
+					.determineSuppliedAges(layer, new SpeciesDetails(1, "PLI", 60.0, (short) 60, null, 1.0));
+			assertThat(badSiteIndex.totalAge(), is(nullValue()));
+			assertThat(badSiteIndex.ageAtBreastHeight(), is(60.0));
+
+			var badHeight = unit
+					.determineSuppliedAges(layer, new SpeciesDetails(1, "PLI", 60.0, (short) 60, 1.0, null));
+			assertThat(badHeight.totalAge(), is(nullValue()));
+			assertThat(badHeight.ageAtBreastHeight(), is(60.0));
+
+			var unknownAge = unit
+					.determineSuppliedAges(layer, new SpeciesDetails(1, "PLI", 60.0, (short) -9, null, 20.0));
+			assertThat(unknownAge.totalAge(), is(nullValue()));
+			assertThat(unknownAge.ageAtBreastHeight(), is(-9.0));
+		}
 	}
 
 }

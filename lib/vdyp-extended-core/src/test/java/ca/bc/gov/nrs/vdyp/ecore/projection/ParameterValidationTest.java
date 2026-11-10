@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,42 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 import jakarta.ws.rs.WebApplicationException;
 
 class ParameterValidationTest {
+	@Test
+	void testValidBreastHeightAgeSpeciesSupplied() throws Exception {
+
+		Parameters p = new Parameters().ageStart(0).ageEnd(100).breastHeightAgeSpecies(List.of(1, 3, 6))
+				.addBreastHeightAgeSpeciesItem(3);
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+
+		assertThat(context.getParams().getBreastHeightAgeSpecies(), Matchers.contains(1, 3, 6));
+		assertTrue(context.getParams().isBreastHeightAge(1));
+		assertFalse(context.getParams().isBreastHeightAge(2));
+		assertTrue(context.getParams().isBreastHeightAge(3));
+		assertTrue(context.getParams().isBreastHeightAge(6));
+	}
+
+	@Test
+	void testBreastHeightAgeSpeciesTooLowSupplied() {
+
+		Parameters p = new Parameters().ageStart(0).ageEnd(100).breastHeightAgeSpecies(List.of(0));
+		AbstractProjectionRequestException e = assertThrows(
+				AbstractProjectionRequestException.class,
+				() -> new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false)
+		);
+		TestHelper.verifyMessageSetIs(e.getValidationMessages(), INTEGER_VALUE_TOO_LOW);
+	}
+
+	@Test
+	void testBreastHeightAgeSpeciesTooHighSupplied() {
+
+		Parameters p = new Parameters().ageStart(0).ageEnd(100).breastHeightAgeSpecies(List.of(7));
+		AbstractProjectionRequestException e = assertThrows(
+				AbstractProjectionRequestException.class,
+				() -> new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false)
+		);
+		TestHelper.verifyMessageSetIs(e.getValidationMessages(), INTEGER_VALUE_TOO_HIGH);
+	}
+
 	@Test
 	void testNoParametersSupplied() throws WebApplicationException {
 

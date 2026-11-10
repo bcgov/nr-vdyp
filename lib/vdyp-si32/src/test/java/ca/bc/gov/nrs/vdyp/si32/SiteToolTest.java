@@ -326,6 +326,20 @@ class SiteToolTest {
 		assertThat(rBreastHeightAge.get(), is(3.5));
 	}
 
+	@Test
+	void test_breastHeightAgeToTotalAge() {
+		assertThat(SiteTool.breastHeightAgeToTotalAge(5.0, 6.0), is(10.5));
+		assertThat(SiteTool.breastHeightAgeToTotalAge(50.0, 7.3), is(50.0 + 7.3 - 0.5));
+
+		assertThat(SiteTool.breastHeightAgeToTotalAge(-9.0, 6.0), is(-9.0));
+		assertThat(SiteTool.breastHeightAgeToTotalAge(5.0, -1.0), is(-9.0));
+	}
+
+	@Test
+	void test_breastHeightAgeToTotalAgeFromSiteCurve() throws CommonCalculatorException {
+		assertThat(SiteTool.breastHeightAgeToTotalAge(SI_FDI_THROWER, 30.0, 50.0), is(50.0 + 7.3 - 0.5));
+	}
+
 	private double round(double d, int precision) {
 		assert precision >= 0;
 		double factor = Math.pow(10.0, precision);

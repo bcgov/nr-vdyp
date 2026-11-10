@@ -13,6 +13,7 @@ computeBclcsLevel1,
   flattenSpeciesData,
   createCSVFiles,
   buildProjectionParameters,
+  buildBreastHeightAgeSpecies,
   buildModelParameters,
   createProjection,
   saveProjectionOnPanelConfirm,
@@ -317,6 +318,49 @@ describe('buildProjectionParameters', () => {
       DebugOptionsEnum.DoIncludeDebugRoutineNames,
     ].forEach((opt) => expect(params.selectedDebugOptions).to.include(opt))
     expect(params.excludedDebugOptions).to.have.length(0)
+  })
+
+  it('should send an empty breastHeightAgeSpecies list when all ages are total ages', () => {
+    const noRows = buildProjectionParameters(createMockModelParameterStore())
+    expect(noRows.breastHeightAgeSpecies).to.deep.equal([])
+
+    const allTotal = buildProjectionParameters(
+      createMockModelParameterStore({
+        siteIndexRows: [
+          { speciesCode: 'FD', ageType: CONSTANTS.AGE_TYPE.TOTAL },
+          { speciesCode: 'PL', ageType: CONSTANTS.AGE_TYPE.TOTAL },
+        ],
+      }),
+    )
+    expect(allTotal.breastHeightAgeSpecies).to.deep.equal([])
+  })
+
+  it('should send the 1-based species index of each site index row with a breast height age', () => {
+    const params = buildProjectionParameters(
+      createMockModelParameterStore({
+        siteIndexRows: [
+          { speciesCode: 'FD', ageType: CONSTANTS.AGE_TYPE.BREAST },
+          { speciesCode: 'PL', ageType: CONSTANTS.AGE_TYPE.TOTAL },
+          { speciesCode: 'CW', ageType: CONSTANTS.AGE_TYPE.BREAST },
+          { speciesCode: 'HW', ageType: null },
+          { speciesCode: 'BA', ageType: CONSTANTS.AGE_TYPE.TOTAL },
+          { speciesCode: 'SX', ageType: CONSTANTS.AGE_TYPE.BREAST },
+        ],
+      }),
+    )
+    expect(params.breastHeightAgeSpecies).to.deep.equal([1, 3, 6])
+  })
+})
+
+describe('buildBreastHeightAgeSpecies', () => {
+  it('should ignore rows beyond the sixth species and missing rows', () => {
+    const rows = Array.from({ length: 7 }, () => ({ ageType: CONSTANTS.AGE_TYPE.BREAST }))
+    rows[1] = undefined as any
+    expect(buildBreastHeightAgeSpecies(createMockModelParameterStore({ siteIndexRows: rows }))).to.deep.equal([1, 3, 4, 5, 6])
+  })
+
+  it('should return an empty list when siteIndexRows is undefined', () => {
+    expect(buildBreastHeightAgeSpecies(createMockModelParameterStore({ siteIndexRows: undefined }))).to.deep.equal([])
   })
 })
 
