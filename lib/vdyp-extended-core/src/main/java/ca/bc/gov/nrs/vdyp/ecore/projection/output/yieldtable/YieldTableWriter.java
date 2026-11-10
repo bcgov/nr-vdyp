@@ -107,11 +107,12 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 			currentRecord.setSiteIndex(siteIndex);
 		}
 
-		if (dominantHeight != null) {
+		// yldtable.c lcl_SetCSVFieldValue: VDYP7 reports a negative (unavailable) height as an empty field.
+		if (dominantHeight != null && dominantHeight >= 0.0) {
 			currentRecord.setDominantHeight(dominantHeight);
 		}
 
-		if (secondaryHeight != null) {
+		if (secondaryHeight != null && secondaryHeight >= 0.0) {
 			currentRecord.setSecondaryHeight(secondaryHeight);
 		}
 	}

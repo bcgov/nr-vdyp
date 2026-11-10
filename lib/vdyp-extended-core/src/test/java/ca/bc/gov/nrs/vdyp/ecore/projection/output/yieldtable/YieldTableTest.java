@@ -52,6 +52,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionStageCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.ModelTestAccess;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
@@ -60,10 +61,15 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
+import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
+import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -2020,8 +2026,564 @@ class YieldTableTest {
 		}
 	}
 
+	private static final SiteIndexEquation REPROJECT_CURVE = SiteIndexEquation.SI_PLI_NIGHGI97;
+	private static final double REPROJECT_SITE_INDEX = 42.0;
+	private static final double REPROJECT_YTBH = 10.0;
+	private static final double REPROJECT_HEIGHT_AT_42 = 34.94531;
+	private static final double PROJECTED_HEIGHT = 20.0;
+
+	@Test
+	void testReprojectHeightNullStandUsesLeadingSp0() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+			var result = yieldTable.reprojectHeight(stand.getLayer(), null, 2020, reprojectYields(42.0));
+
+			assertThat(result.speciesAge(), is(42.0));
+			assertThat(result.dominantHeight(), closeTo(REPROJECT_HEIGHT_AT_42, 0.00001));
+		}
+	}
+
+	@Test
+	void testReprojectHeightRecomputesNegativeSpeciesAge() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+			var result = yieldTable.reprojectHeight(stand.getLayer(), stand, 2030, reprojectYields(-9.0));
+
+			assertThat(result.speciesAge(), is(52.0));
+			assertThat(result.dominantHeight(), closeTo(expectedReprojectedHeight(52.0), 0.00001));
+		}
+	}
+
+	@Test
+	void testReprojectHeightKeepsValidSpeciesAge() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+			var result = yieldTable.reprojectHeight(stand.getLayer(), stand, 2030, reprojectYields(60.0));
+
+			assertThat(result.speciesAge(), is(60.0));
+			assertThat(result.dominantHeight(), closeTo(expectedReprojectedHeight(60.0), 0.00001));
+		}
+	}
+
+	@Test
+	void testReprojectHeightComputesAndStoresMissingYearsToBreastHeight() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			// Growth intercept curves cannot compute years to breast height, so use a conventional curve.
+			var curve = SiteIndexEquation.SI_PLI_THROWER;
+			var siteIndex = 20.0;
+			var stand = buildReprojectionStand(42.0, curve, siteIndex, null, 30.0);
+			var expectedYtbh = SiteTool.yearsToBreastHeight(curve, siteIndex);
+
+			var result = yieldTable.reprojectHeight(stand.getLayer(), stand, 2020, reprojectYields(42.0));
+
+			assertThat(stand.getSpeciesGroup().getYearsToBreastHeight(), is(expectedYtbh));
+			assertThat(
+					result.dominantHeight(),
+					closeTo(
+							SiteTool.ageAndSiteIndexToHeight(
+									curve, 42.0, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, expectedYtbh
+							), 0.00001
+					)
+			);
+		}
+	}
+
+	@Test
+	void testReprojectHeightWithoutSiteIndexReturnsEmptyHeight() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, null, REPROJECT_YTBH, 30.0);
+
+			var result = yieldTable.reprojectHeight(stand.getLayer(), stand, 2020, reprojectYields(42.0));
+
+			assertThat(result.speciesAge(), is(42.0));
+			assertThat(result.dominantHeight(), is(-9.0));
+		}
+	}
+
+	@Test
+	void testReprojectHeightWithoutSiteCurveReturnsEmptyHeight() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var noEquationStand = buildReprojectionStand(
+					42.0, SiteIndexEquation.SI_NO_EQUATION, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0
+			);
+			var nullCurveStand = buildReprojectionStand(42.0, null, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+			var noEquationResult = yieldTable
+					.reprojectHeight(noEquationStand.getLayer(), noEquationStand, 2020, reprojectYields(42.0));
+			var nullCurveResult = yieldTable
+					.reprojectHeight(nullCurveStand.getLayer(), nullCurveStand, 2020, reprojectYields(42.0));
+
+			assertThat(noEquationResult.dominantHeight(), is(-9.0));
+			assertThat(nullCurveResult.dominantHeight(), is(-9.0));
+		}
+	}
+
+	@Test
+	void testReprojectHeightWithoutAnyAgeReturnsEmptyHeight() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildReprojectionStand(null, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+			var result = yieldTable.reprojectHeight(stand.getLayer(), stand, 2020, reprojectYields(-9.0));
+
+			assertThat(result.speciesAge(), is(-9.0));
+			assertThat(result.dominantHeight(), is(-9.0));
+		}
+	}
+
+	@Test
+	void testReprojectHeightCopiesAllOtherYieldFields() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+			var original = new LayerYields(
+					true, true, "PL", 2020, 42.0, PROJECTED_HEIGHT, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+					13.0, 14.0, 15.0, 16
+			);
+
+			var result = yieldTable.reprojectHeight(stand.getLayer(), stand, 2020, original);
+
+			assertThat(
+					result,
+					is(
+							new LayerYields(
+									true, true, "PL", 2020, 42.0, result.dominantHeight(), 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+									9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16
+							)
+					)
+			);
+			assertThat(result.dominantHeight(), closeTo(REPROJECT_HEIGHT_AT_42, 0.00001));
+		}
+	}
+
+	@Test
+	void testCopyPredictedSIAndHeightIfNotInputReturnsTrueWhenFilledIn() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = testHelper.buildStandWithLeadingSpecies();
+			var leadingSpecies = stand.getSpeciesByPercent().get(0);
+
+			assertTrue(
+					yieldTable.copyPredictedSIAndHeightIfNotInput(
+							stand, testHelper.predictedLayerYields(75.0, 24.5, 18.2)
+					)
+			);
+
+			assertThat(stand.getSpeciesGroup().getTotalAge(), is(75.0));
+			assertThat(stand.getSpeciesGroup().getDominantHeight(), is(24.5));
+			assertThat(stand.getSpeciesGroup().getSiteIndex(), is(18.2));
+			assertThat(leadingSpecies.getTotalAge(), is(75.0));
+			assertThat(leadingSpecies.getDominantHeight(), is(24.5));
+			assertThat(leadingSpecies.getSiteIndex(), is(18.2));
+		}
+	}
+
+	@Test
+	void testCopyPredictedSIAndHeightIfNotInputReturnsFalseWhenHeightSupplied() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = testHelper.buildStandWithLeadingSpecies();
+			stand.getSpeciesGroup().setTotalAge(50.0);
+			stand.getSpeciesGroup().setDominantHeight(10.0);
+			stand.getSpeciesGroup().setSiteIndex(12.0);
+
+			assertFalse(
+					yieldTable.copyPredictedSIAndHeightIfNotInput(
+							stand, testHelper.predictedLayerYields(75.0, 24.5, 18.2)
+					)
+			);
+
+			assertThat(stand.getSpeciesGroup().getTotalAge(), is(50.0));
+			assertThat(stand.getSpeciesGroup().getDominantHeight(), is(10.0));
+			assertThat(stand.getSpeciesGroup().getSiteIndex(), is(12.0));
+		}
+	}
+
+	@Test
+	void testCopyPredictedSIAndHeightIfNotInputGuardsReturnFalse() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var unpredicted = new LayerYields(
+					false, false, "P", 2030, 75.0, 24.5, 0.0, 18.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+					100.0, 0
+			);
+
+			assertFalse(
+					yieldTable
+							.copyPredictedSIAndHeightIfNotInput(null, testHelper.predictedLayerYields(75.0, 24.5, 18.2))
+			);
+			assertFalse(
+					yieldTable
+							.copyPredictedSIAndHeightIfNotInput(testHelper.buildStandWithLeadingSpecies(), unpredicted)
+			);
+			assertFalse(
+					yieldTable.copyPredictedSIAndHeightIfNotInput(
+							testHelper.buildStandWithLeadingSpecies(), testHelper.predictedLayerYields(75.0, -9.0, 18.2)
+					)
+			);
+		}
+	}
+
+	@Test
+	void testCopyPredictedSIAndHeightIfNotInputAcceptsZeroHeight() throws Exception {
+
+		// vdyp7intpolystats.c line 4279: a projected height of zero is a valid height (fDomHeight >= 0.0).
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = testHelper.buildStandWithLeadingSpecies();
+
+			assertTrue(
+					yieldTable
+							.copyPredictedSIAndHeightIfNotInput(stand, testHelper.predictedLayerYields(75.0, 0.0, 18.2))
+			);
+			assertThat(stand.getSpeciesGroup().getDominantHeight(), is(0.0));
+		}
+	}
+
+	@Test
+	void testReprojectHeightWithLowSiteIndexKeepsInputHeightAndAddsMessage() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, 1.0, REPROJECT_YTBH, 5.0);
+			var polygon = stand.getLayer().getPolygon();
+
+			var result = yieldTable.reprojectHeight(stand.getLayer(), stand, 2020, reprojectYields(42.0));
+
+			assertThat(result.dominantHeight(), is(5.0));
+			assertThat(
+					polygon.getMessages().stream().map(PolygonMessage::getKind).toList(),
+					hasItem(PolygonMessageKind.LOW_SITE_INDEX_WARNING)
+			);
+		}
+	}
+
+	@Test
+	void testReprojectHeightWithLowSiteIndexAddsMessageOnce() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, 1.0, REPROJECT_YTBH, 5.0);
+			var polygon = stand.getLayer().getPolygon();
+
+			yieldTable.reprojectHeight(stand.getLayer(), stand, 2020, reprojectYields(42.0));
+			yieldTable.reprojectHeight(stand.getLayer(), stand, 2030, reprojectYields(52.0));
+
+			assertThat(
+					polygon.getMessages().stream().filter(m -> m.getKind() == PolygonMessageKind.LOW_SITE_INDEX_WARNING)
+							.count(),
+					is(1L)
+			);
+		}
+	}
+
+	@Test
+	void testReprojectHeightContinuesWhenYearsToBreastHeightCannotBeComputed() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			// Growth intercept curves cannot compute years to breast height.
+			var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, null, 30.0);
+
+			var result = yieldTable.reprojectHeight(stand.getLayer(), stand, 2020, reprojectYields(42.0));
+
+			assertThat(result.speciesAge(), is(42.0));
+			assertThat(result.dominantHeight(), is(-9.0));
+			assertThat(stand.getSpeciesGroup().getYearsToBreastHeight(), Matchers.nullValue());
+		}
+	}
+
+	@Test
+	void testProjectedHeightMissingButSupplied() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var suppliedStand = buildReprojectionStand(
+					42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0
+			);
+			var unsuppliedStand = buildReprojectionStand(
+					42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, null
+			);
+			var missingHeight = reprojectYields(42.0).withSpeciesAgeAndDominantHeight(42.0, -9.0);
+			var unpredicted = new LayerYields(
+					false, false, "PL", 2020, 42.0, -9.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+					100.0, 0
+			);
+
+			assertTrue(yieldTable.projectedHeightMissingButSupplied(suppliedStand, missingHeight));
+			assertFalse(yieldTable.projectedHeightMissingButSupplied(suppliedStand, reprojectYields(42.0)));
+			assertFalse(yieldTable.projectedHeightMissingButSupplied(unsuppliedStand, missingHeight));
+			assertFalse(yieldTable.projectedHeightMissingButSupplied(null, missingHeight));
+			assertFalse(yieldTable.projectedHeightMissingButSupplied(suppliedStand, unpredicted));
+		}
+	}
+
+	@Test
+	void testObtainStandYieldReprojectsPrimaryHeightWhenProjectedHeightMissing() throws Exception {
+
+		var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+		var result = obtainReprojectionStandYield(
+				ProjectionTypeCode.PRIMARY, stand, true, true, 42, buildProjectedPolygon(null)
+		);
+
+		assertTrue(result.bYieldsPredicted());
+		assertThat(result.dominantHeight(), closeTo(REPROJECT_HEIGHT_AT_42, 0.00001));
+	}
+
+	@Test
+	void testObtainStandYieldDoesNotReprojectMissingPrimaryHeightWithoutInputHeight() throws Exception {
+
+		var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, null);
+
+		var result = obtainReprojectionStandYield(
+				ProjectionTypeCode.PRIMARY, stand, true, true, 42, buildProjectedPolygon(null)
+		);
+
+		assertTrue(result.bYieldsPredicted());
+		assertThat(result.dominantHeight(), is(-9.0));
+	}
+
+	@Test
+	void testObtainStandYieldReprojectsVeteranHeight() throws Exception {
+
+		var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+		var result = obtainReprojectionStandYield(ProjectionTypeCode.VETERAN, stand, true);
+
+		assertTrue(result.bYieldsPredicted());
+		assertThat(result.dominantHeight(), closeTo(REPROJECT_HEIGHT_AT_42, 0.00001));
+	}
+
+	@Test
+	void testObtainStandYieldDoesNotReprojectPrimaryHeight() throws Exception {
+
+		var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+		var result = obtainReprojectionStandYield(ProjectionTypeCode.PRIMARY, stand, true);
+
+		assertTrue(result.bYieldsPredicted());
+		assertThat(result.dominantHeight(), is(PROJECTED_HEIGHT));
+	}
+
+	@Test
+	void testObtainStandYieldReprojectsPrimaryHeightAfterSiteFillIn() throws Exception {
+
+		var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, null);
+
+		var result = obtainReprojectionStandYield(ProjectionTypeCode.PRIMARY, stand, true);
+
+		assertTrue(result.bYieldsPredicted());
+		assertThat(stand.getSpeciesGroup().getDominantHeight(), is(PROJECTED_HEIGHT));
+		assertThat(result.dominantHeight(), closeTo(REPROJECT_HEIGHT_AT_42, 0.00001));
+	}
+
+	@Test
+	void testObtainStandYieldWithoutPredictedYieldsDoesNotReproject() throws Exception {
+
+		var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, null, 30.0);
+
+		var result = obtainReprojectionStandYield(ProjectionTypeCode.VETERAN, stand, false);
+
+		assertFalse(result.bYieldsPredicted());
+		// getUnprojectedStandYields cannot compute a height without years to breast height; reprojection would
+		// have computed and stored it.
+		assertThat(result.dominantHeight(), is(0.0));
+		assertThat(stand.getSpeciesGroup().getYearsToBreastHeight(), Matchers.nullValue());
+	}
+
+	@Test
+	void testAdjustYieldsForProjectionTypeSetsVeteranAgeToRequestedAge() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var original = new LayerYields(
+					true, true, "PL", 2020, 42.0, 20.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0,
+					15.0, 16
+			);
+
+			var result = yieldTable.adjustYieldsForProjectionType(ProjectionTypeCode.VETERAN, 75, original);
+
+			assertThat(
+					result,
+					is(
+							new LayerYields(
+									true, true, "PL", 2020, 75.0, 20.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0,
+									12.0, 13.0, 14.0, 15.0, 16
+							)
+					)
+			);
+		}
+	}
+
+	@Test
+	void testAdjustYieldsForProjectionTypeLeavesOtherProjectionTypesUnchanged() throws Exception {
+
+		try (var yieldTable = testHelper.buildUnitYieldTable(TEST_PROJECTION_ID)) {
+			var original = reprojectYields(42.0);
+
+			for (var projectionType : new ProjectionTypeCode[] { ProjectionTypeCode.PRIMARY, ProjectionTypeCode.DEAD,
+					ProjectionTypeCode.REGENERATION, ProjectionTypeCode.RESIDUAL, ProjectionTypeCode.DO_NOT_PROJECT,
+					ProjectionTypeCode.UNKNOWN, null }) {
+				assertThat(
+						yieldTable.adjustYieldsForProjectionType(projectionType, 75, original),
+						Matchers.sameInstance(original)
+				);
+			}
+		}
+	}
+
+	@Test
+	void testObtainStandYieldVeteranAgeMovesWithTimeWhileHeightStaysFrozen() throws Exception {
+
+		var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+		var result = obtainReprojectionStandYield(ProjectionTypeCode.VETERAN, stand, true, true, 60);
+
+		assertTrue(result.bYieldsPredicted());
+		assertThat(result.standYear(), is(2020));
+		assertThat(result.speciesAge(), is(60.0));
+		assertThat(result.dominantHeight(), closeTo(REPROJECT_HEIGHT_AT_42, 0.00001));
+	}
+
+	@Test
+	void testObtainStandYieldUnprojectedVeteranAgeMovesWithTime() throws Exception {
+
+		var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+		var result = obtainReprojectionStandYield(ProjectionTypeCode.VETERAN, stand, false, false, 60);
+
+		assertFalse(result.bYieldsPredicted());
+		assertThat(result.speciesAge(), is(60.0));
+		assertThat(result.dominantHeight(), closeTo(REPROJECT_HEIGHT_AT_42, 0.00001));
+	}
+
+	@Test
+	void testObtainStandYieldPrimaryAgeIsNotAdjusted() throws Exception {
+
+		var stand = buildReprojectionStand(42.0, REPROJECT_CURVE, REPROJECT_SITE_INDEX, REPROJECT_YTBH, 30.0);
+
+		var result = obtainReprojectionStandYield(ProjectionTypeCode.PRIMARY, stand, true, true, 42);
+
+		assertThat(result.speciesAge(), is(42.0));
+	}
+
+	private LayerYields obtainReprojectionStandYield(
+			ProjectionTypeCode projectionType, Stand stand, boolean includeProjectedPolygon
+	) throws AbstractProjectionRequestException {
+		return obtainReprojectionStandYield(projectionType, stand, true, includeProjectedPolygon, 42);
+	}
+
+	private LayerYields obtainReprojectionStandYield(
+			ProjectionTypeCode projectionType, Stand stand, boolean layerWasProjected, boolean includeProjectedPolygon,
+			int ageToRequest
+	) throws AbstractProjectionRequestException {
+		return obtainReprojectionStandYield(
+				projectionType, stand, layerWasProjected, includeProjectedPolygon, ageToRequest, buildProjectedPolygon()
+		);
+	}
+
+	private LayerYields obtainReprojectionStandYield(
+			ProjectionTypeCode projectionType, Stand stand, boolean layerWasProjected, boolean includeProjectedPolygon,
+			int ageToRequest, VdypPolygon projectedPolygon
+	) throws AbstractProjectionRequestException {
+
+		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+		context.getParams().setUtils(Map.of(SP0Name.PL, UtilizationClassSet._7_5));
+
+		var layer = stand.getLayer();
+		layer.setAssignedProjectionType(projectionType);
+
+		var state = new PolygonProjectionState();
+		state.setProcessingResults(ProjectionStageCode.Initial, projectionType, Optional.empty());
+		if (layerWasProjected) {
+			state.setProcessingResults(ProjectionStageCode.Forward, projectionType, Optional.empty());
+		}
+		var rowContext = YieldTableRowContext.of(context, layer.getPolygon(), state, null);
+
+		Map<Integer, VdypPolygon> projections = includeProjectedPolygon ? Map.of(2020, projectedPolygon) : Map.of();
+
+		try (var yieldTable = YieldTable.of(context)) {
+			return yieldTable.obtainStandYield(rowContext, projections, layer, stand, ageToRequest);
+		}
+	}
+
+	private VdypPolygon buildProjectedPolygon() {
+		return buildProjectedPolygon((float) PROJECTED_HEIGHT);
+	}
+
+	private VdypPolygon buildProjectedPolygon(Float projectedHeight) {
+		return VdypPolygon.build(pb -> {
+			pb.polygonIdentifier("Test", 2020);
+			pb.biogeoclimaticZone(new BecDefinition("CWH", Region.COASTAL, "Coastal Western Hemlock"));
+			pb.forestInventoryZone("A");
+			pb.percentAvailable(100.0f);
+
+			pb.addLayer(lb -> {
+				lb.layerType(LayerType.PRIMARY);
+
+				lb.addSpecies(sb -> {
+					sb.genus("PL", 1);
+					sb.percentGenus(100.0f);
+					sb.isPrimary(true);
+					sb.addSite(site -> {
+						site.ageTotal(42.0f);
+						if (projectedHeight != null) {
+							site.height(projectedHeight);
+						}
+						site.siteIndex((float) REPROJECT_SITE_INDEX);
+						site.siteCurveNumber(REPROJECT_CURVE.n());
+					});
+				});
+			});
+		});
+	}
+
+	private Stand buildReprojectionStand(
+			Double totalAge, SiteIndexEquation siteCurve, Double siteIndex, Double yearsToBreastHeight,
+			Double dominantHeight
+	) {
+		var stand = buildStandWithProjectionSiteData("PL", 2020, totalAge, siteCurve, siteIndex, yearsToBreastHeight);
+		if (dominantHeight != null) {
+			stand.getSpeciesGroup().setDominantHeight(dominantHeight);
+		}
+
+		var leadingSpecies = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100.0).build();
+		stand.addSp64(leadingSpecies);
+		stand.getLayer().addSp64(leadingSpecies);
+		ModelTestAccess.buildSiteSpecies(stand.getLayer());
+
+		return stand;
+	}
+
+	private LayerYields reprojectYields(double speciesAge) {
+		return new LayerYields(
+				true, true, "PL", 2020, speciesAge, PROJECTED_HEIGHT, 0.0, REPROJECT_SITE_INDEX, 0.0, 0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0, REPROJECT_CURVE.n()
+		);
+	}
+
+	private double expectedReprojectedHeight(double age) throws CommonCalculatorException {
+		return SiteTool.ageAndSiteIndexToHeight(
+				REPROJECT_CURVE, age, SiteIndexAgeType.SI_AT_TOTAL, REPROJECT_SITE_INDEX, REPROJECT_YTBH
+		);
+	}
+
 	private Stand buildStandWithProjectionSiteData(
 			Integer referenceYear, Double totalAge, SiteIndexEquation siteCurve, Double siteIndex,
+			Double yearsToBreastHeight
+	) {
+		return buildStandWithProjectionSiteData(
+				"P", referenceYear, totalAge, siteCurve, siteIndex, yearsToBreastHeight
+		);
+	}
+
+	private Stand buildStandWithProjectionSiteData(
+			String sp0Code, Integer referenceYear, Double totalAge, SiteIndexEquation siteCurve, Double siteIndex,
 			Double yearsToBreastHeight
 	) {
 		var polygonBuilder = new Polygon.Builder();
@@ -2031,7 +2593,7 @@ class YieldTableTest {
 
 		var polygon = polygonBuilder.build();
 		var layer = new Layer.Builder().polygon(polygon).layerId("Test").build();
-		var stand = new Stand.Builder().layer(layer).sp0Code("P").build();
+		var stand = new Stand.Builder().layer(layer).sp0Code(sp0Code).build();
 
 		var speciesGroupBuilder = new Species.Builder().stand(stand).speciesCode("PL").speciesPercent(100.0);
 		if (totalAge != null) {

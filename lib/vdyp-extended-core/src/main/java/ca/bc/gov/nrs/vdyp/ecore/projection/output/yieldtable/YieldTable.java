@@ -46,6 +46,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.si32.bec.BecZoneMethods;
+import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 import ca.bc.gov.nrs.vdyp.sindex.calculators.SiteIndex2Height;
 import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
@@ -1448,7 +1449,7 @@ public class YieldTable implements Closeable {
 	 * @param ageToRequest the layer total age for which yields are to be generated
 	 * @throws YieldTableGenerationException
 	 */
-	private LayerYields obtainStandYield(
+	LayerYields obtainStandYield(
 			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, Layer layer,
 			Stand stand, int ageToRequest
 	) throws StandYieldCalculationException {
@@ -1465,7 +1466,10 @@ public class YieldTable implements Closeable {
 
 		Integer calendarYear = getCalendarYear(layer, ageToRequest);
 		if (!rowContext.getPolygonProjectionState().layerWasProjected(layer)) {
-			return getUnprojectedStandYields(layer, stand, calendarYear);
+			return adjustYieldsForProjectionType(
+					layer.getAssignedProjectionType(), ageToRequest,
+					getUnprojectedStandYields(layer, stand, calendarYear)
+			);
 		}
 		var projectionType = layer.getAssignedProjectionType();
 		LayerType layerType = getLayerType(projectionType);
@@ -1481,7 +1485,6 @@ public class YieldTable implements Closeable {
 		// This is not an error. It indicates the stand lies on
 		// some very poor ground for growing trees.
 
-		@SuppressWarnings("unused")
 		boolean doReprojectHeight;
 
 		switch (projectionType) {
@@ -1562,9 +1565,45 @@ public class YieldTable implements Closeable {
 			layer.setAgeRequestedWithoutYields(false);
 		}
 
-		copyPredictedSIAndHeightIfNotInput(stand, layerYields);
+		if (projectedHeightMissingButSupplied(stand, layerYields)) {
+			doReprojectHeight = true;
+		}
 
-		// TODO: handle "doReprojectHeight".
+		if (copyPredictedSIAndHeightIfNotInput(stand, layerYields)) {
+			doReprojectHeight = true;
+		}
+
+		// vdyp7intpolystats.c lines 4501 - 4604: the height is only reprojected when VDYP7 predicted yields
+		// for the year. When it did not, getUnprojectedStandYields has already computed the height.
+		if (layerYields.bYieldsPredicted() && doReprojectHeight) {
+			layerYields = reprojectHeight(layer, stand, calendarYear, layerYields);
+		}
+
+		return adjustYieldsForProjectionType(projectionType, ageToRequest, layerYields);
+	}
+
+	/**
+	 * adjustYieldsForProjectionType vdyp7intpolystats.c lines 4608 - 4638
+	 * <p>
+	 * Massage growth and yield values based on Projection Type.
+	 * <p>
+	 * 00114: For Veteran layers, the requested age was frozen to the Reference Year when requesting growth and yield
+	 * values, but projected Veteran layer ages need to move with time. The reported species age is therefore set to the
+	 * requested age. All other values, including the dominant height, are left as obtained at the Reference Year.
+	 *
+	 * @param projectionType the projection type of the layer for which yields were obtained
+	 * @param ageToRequest   the layer total age that was requested
+	 * @param layerYields    the yields obtained for the layer
+	 * @return the adjusted yields; <code>layerYields</code> itself if no adjustment applies
+	 */
+	LayerYields adjustYieldsForProjectionType(
+			ProjectionTypeCode projectionType, int ageToRequest, LayerYields layerYields
+	) {
+		if (projectionType == ProjectionTypeCode.VETERAN) {
+			logger.debug("Setting Veteran Projected Age to Requested Age: {}", ageToRequest);
+
+			return layerYields.withSpeciesAge(ageToRequest);
+		}
 
 		return layerYields;
 	}
@@ -1630,6 +1669,25 @@ public class YieldTable implements Closeable {
 	}
 
 	/**
+	 * vdyp7intpolystats.c lines 4235 - 4250
+	 * <p>
+	 * 2006/03/17: Catch the problem of the projected species not having a projected height even though the
+	 * corresponding input species does. In that case the height must be reprojected.
+	 * <p>
+	 * In VDYP7 this check is only made when the yields of a previous request are reused. VDYP8 does not cache yields
+	 * between requests, so the check is made on every request.
+	 *
+	 * @param stand       the SP0 for which yields were obtained. If null, the check does not apply.
+	 * @param layerYields the yields obtained for the stand
+	 * @return <code>true</code> if the height must be reprojected, and <code>false</code> otherwise.
+	 */
+	boolean projectedHeightMissingButSupplied(Stand stand, LayerYields layerYields) {
+		return stand != null && layerYields.bYieldsPredicted() && layerYields.dominantHeight() < 0.0
+				&& stand.getSpeciesGroup().getDominantHeight() != null
+				&& stand.getSpeciesGroup().getDominantHeight() >= 0.0;
+	}
+
+	/**
 	 * copyPredictedSIAndHeightIfNotInput vdyp7intpolystats.c lines 4276 - 4303 2004/10/27: Based on e-mails from Cam,
 	 * we now check if the returned species information has site information while the input data does not.
 	 *
@@ -1646,9 +1704,12 @@ public class YieldTable implements Closeable {
 	 *
 	 * It seems IF we have projected yields we want to set this in the input data. The only reason I could see to do
 	 * this is to PREVENT the supression of this same data later.
+	 *
+	 * @return <code>true</code> if the site information was filled in, in which case the height must be reprojected
+	 *         (vdyp7intpolystats.c line 4291), and <code>false</code> otherwise.
 	 */
-	void copyPredictedSIAndHeightIfNotInput(Stand stand, LayerYields layerYields) {
-		if (stand != null && layerYields.bYieldsPredicted() && layerYields.dominantHeight() > 0
+	boolean copyPredictedSIAndHeightIfNotInput(Stand stand, LayerYields layerYields) {
+		if (stand != null && layerYields.bYieldsPredicted() && layerYields.dominantHeight() >= 0.0
 				&& stand.getSpeciesGroup().getDominantHeight() == null) {
 			stand.getSpeciesGroup().setTotalAge(layerYields.speciesAge());
 			stand.getSpeciesGroup().setDominantHeight(layerYields.dominantHeight());
@@ -1658,7 +1719,89 @@ public class YieldTable implements Closeable {
 			leadingSpecies.setTotalAge(layerYields.speciesAge());
 			leadingSpecies.setDominantHeight(layerYields.dominantHeight());
 			leadingSpecies.setSiteIndex(layerYields.siteIndex());
+
+			return true;
 		}
+
+		return false;
+	}
+
+	/**
+	 * reprojectHeight vdyp7intpolystats.c lines 4501 - 4604
+	 * <p>
+	 * 2004/09/10: Occasionally a projected species will generate yields and yet not receive a projected age even though
+	 * one was supplied on the input side. This is true apparently for Vet layer secondary species. This is also
+	 * apparently true when a leading species loses its site identity to a secondary identical species:
+	 *
+	 * <pre>
+	 *    e.g.  YC 30, HW 30, CW 30, BA 10 --> C (CW) 60, H (HW) 30, B (BA) 10
+	 * </pre>
+	 *
+	 * Fill in the missing age, if required, and explicitly recompute the stand height from the input site information
+	 * of the stand.
+	 *
+	 * @param layer        the layer for which yields were obtained
+	 * @param stand        the SP0 for which yields were obtained. If null, the leading site SP0 of the layer is used.
+	 * @param calendarYear the calendar year at which the yields apply
+	 * @param layerYields  the yields obtained from the projection
+	 * @return a copy of <code>layerYields</code> with the species age and dominant height recomputed. The dominant
+	 *         height is <code>EMPTY_DECIMAL</code> if it cannot be computed, including when the years to breast height
+	 *         is missing and cannot be computed.
+	 */
+	LayerYields reprojectHeight(Layer layer, Stand stand, int calendarYear, LayerYields layerYields) {
+
+		// V7Int_DetermineLeadingSiteSP0
+		if (stand == null) {
+			stand = layer.determineLeadingSp0(0);
+		}
+
+		double speciesAge = layerYields.speciesAge();
+		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
+
+		if (stand != null) {
+			Species sp0 = stand.getSpeciesGroup();
+
+			// The age of the SP64 of the leading SP0 was not reported, so recompute it.
+			if (speciesAge < 0.0 && sp0.getTotalAge() != null) {
+				Integer recomputedAge = stand.determineSpeciesAgeAtYear(calendarYear);
+				speciesAge = recomputedAge == null ? Vdyp7Constants.EMPTY_DECIMAL : recomputedAge;
+			}
+
+			// Check if we can compute a projected height.
+			if (speciesAge >= 0.0 && sp0.getSiteIndex() != null && sp0.getSiteCurve() != null
+					&& sp0.getSiteCurve() != SiteIndexEquation.SI_NO_EQUATION) {
+
+				if (sp0.getYearsToBreastHeight() == null) {
+					try {
+						sp0.setYearsToBreastHeight(
+								SiteTool.yearsToBreastHeight(sp0.getSiteCurve(), sp0.getSiteIndex())
+						);
+					} catch (CommonCalculatorException ex) {
+						// VDYP7 stores the SiteTool error code as the years to breast height and carries on.
+						logger.warn(
+								"{}: unable to compute years to breast height from site curve {} and site index {}{}",
+								stand, sp0.getSiteCurve(), sp0.getSiteIndex(),
+								ex.getMessage() == null ? "" : ": " + ex.getMessage()
+						);
+					}
+				}
+
+				if (sp0.getYearsToBreastHeight() == null
+						&& sp0.getSiteIndex() >= Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
+					// Without years to breast height, VDYP7 fails to compute the height. A low site index does not
+					// need years to breast height, since the input height is used instead.
+					logger.debug("{}: dominant height cannot be reprojected without years to breast height", stand);
+				} else {
+					// V7Int_AgeSIToHt
+					Double height = sp0.determineDominantHeightFromAgeAndSiteIndex(
+							speciesAge, sp0.getSiteIndex(), sp0.getYearsToBreastHeight(), sp0.getSiteCurve()
+					);
+					dominantHeight = height == null ? Vdyp7Constants.EMPTY_DECIMAL : height;
+				}
+			}
+		}
+
+		return layerYields.withSpeciesAgeAndDominantHeight(speciesAge, dominantHeight);
 	}
 
 	/**
