@@ -746,7 +746,8 @@ public class Species implements Comparable<Species> {
 							).build();
 				}
 
-				polygon.addMessage(message);
+				// V7Int_AddProcessingMessage only adds the message if it has not already been added.
+				polygon.addCheckedMessage(message);
 			}
 		}
 		return computedHeight;
@@ -846,7 +847,8 @@ public class Species implements Comparable<Species> {
 							).build();
 				}
 
-				polygon.addMessage(message);
+				// V7Int_AddProcessingMessage only adds the message if it has not already been added.
+				polygon.addCheckedMessage(message);
 			}
 		}
 		return computedAge;
