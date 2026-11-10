@@ -43,7 +43,8 @@ import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
  */
 public class ForwardProcessor extends Processor<ForwardProcessingEngine> {
 
-	public static final Logger logger = LoggerFactory.getLogger(ForwardProcessor.class);
+	@SuppressWarnings("unused")
+	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessor.class);
 
 	@Override
 	public ForwardProcessingEngine
