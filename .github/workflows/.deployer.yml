@@ -95,7 +95,7 @@ jobs:
       VALUES_FILE: ${{ inputs.values || format('values-{0}.yaml', inputs.environment) }}
     steps:
       - name: Checkout exact source and Helm chart
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref }}
       - name: Validate source and image tag
@@ -105,10 +105,10 @@ jobs:
           echo "CHART_VERSION=0.0.0-sha-${SOURCE_SHA:0:12}" >> "$GITHUB_ENV"
           [[ "$DISPLAY_TAG" =~ ^[a-f0-9]{12}$ || "$DISPLAY_TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || exit 1
           test "${#DISPLAY_TAG}" -le 63
-      - uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
         with:
           version: v3.19.0
-      - uses: redhat-actions/oc-installer@v1
+      - uses: redhat-actions/oc-installer@35b60c3f9757ae4301521556e1b75ff6f59f8d7c # v1.2
       ### tag and release
 
       # Variables      
@@ -135,16 +135,23 @@ jobs:
 
       # OC Login
       - name: OpenShift Login
+        env:
+          OC_TOKEN: ${{ secrets.oc_token }}
+          OC_SERVER: ${{ inputs.oc_server }}
+          OC_NAMESPACE: ${{ secrets.oc_namespace }}
         run: |
           # OC Login
-          oc login --token=${{ secrets.oc_token }} --server=${{ inputs.oc_server }}
-          oc project ${{ secrets.oc_namespace }} # Safeguard!
+          oc login --token="$OC_TOKEN" --server="$OC_SERVER"
+          oc project "$OC_NAMESPACE" # Safeguard!
 
       # Secrets Management
       - name: Create Secrets
+        env:
+          OC_NAMESPACE: ${{ secrets.oc_namespace }}
+          KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
         run: |
-          oc -n ${{ secrets.oc_namespace }} create secret generic "vdyp-oidc" \
-          --from-literal=client-secret='${{ secrets.KEYCLOAK_CLIENT_SECRET }}' \
+          oc -n "$OC_NAMESPACE" create secret generic "vdyp-oidc" \
+          --from-literal=client-secret="$KEYCLOAK_CLIENT_SECRET" \
           --dry-run=client -o yaml | oc apply -f -
 
       - name: Deploy NATS
@@ -179,6 +186,18 @@ jobs:
       # Deploy Helm chart as atomic, with timeout
       - name: Atomic Helm Deployment
         working-directory: ${{ inputs.directory }}
+        env:
+          COMS_KEYCLOAK_PUBLICKEY: ${{ secrets.COMS_KEYCLOAK_PUBLICKEY }}
+          COMS_SERVICE_PASSWORD: ${{ secrets.COMS_SERVICE_PASSWORD }}
+          OBJECTSTORAGE_SECRETACCESSKEY: ${{ secrets.OBJECTSTORAGE_SECRETACCESSKEY }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          VDYP_DB_PASSWORD: ${{ secrets.VDYP_DB_PASSWORD }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_SSO_AUTH_SERVER_URL: ${{ secrets.VITE_SSO_AUTH_SERVER_URL }}
+          VITE_SSO_CLIENT_ID: ${{ secrets.VITE_SSO_CLIENT_ID }}
+          VITE_SSO_REALM: ${{ secrets.VITE_SSO_REALM }}
+          VITE_SSO_REDIRECT_URI: ${{ secrets.VITE_SSO_REDIRECT_URI }}
+          VITE_SSO_TOKEN_ISSUER: ${{ secrets.VITE_SSO_TOKEN_ISSUER }}
         run: |
           # Helm upgrade/rollout - atomic, timeout
           helm upgrade \
@@ -188,12 +207,12 @@ jobs:
             ${{ inputs.params }} \
             --set global.secrets.databaseName=${{ vars.POSTGRES_DATABASE }} \
             --set global.secrets.databaseUser=${{ vars.POSTGRES_USER }} \
-            --set global.secrets.databasePassword=${{ secrets.POSTGRES_PASSWORD }} \
+            --set global.secrets.databasePassword="$POSTGRES_PASSWORD" \
             --set bitnami-pg.auth.username=${{ vars.POSTGRES_USER }} \
             --set bitnami-pg.auth.database=${{ vars.POSTGRES_DATABASE }} \
-            --set global.secrets.VDYP_DB_PASSWORD=${{ secrets.VDYP_DB_PASSWORD }} \
-            --set backend.env.QUARKUS_OIDC_AUTH_SERVER_URL=${{ secrets.VITE_SSO_TOKEN_ISSUER }}\
-            --set backend.env.QUARKUS_OIDC_PUBLIC_KEY=${{ secrets.COMS_KEYCLOAK_PUBLICKEY }} \
+            --set global.secrets.VDYP_DB_PASSWORD="$VDYP_DB_PASSWORD" \
+            --set backend.env.QUARKUS_OIDC_AUTH_SERVER_URL="$VITE_SSO_TOKEN_ISSUER" \
+            --set backend.env.QUARKUS_OIDC_PUBLIC_KEY="$COMS_KEYCLOAK_PUBLICKEY" \
             --set backend.env.VDYP_DB_USER=${{ vars.VDYP_DB_USER }} \
             --set backend.env.VDYP_DB_DATABASE=${{ vars.VDYP_DB_DATABASE }} \
             --set backend.env.COMS_BASE_URL=${{ vars.COMS_BASE_URL }} \
@@ -218,27 +237,27 @@ jobs:
             --set batch.env.BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS=${{ vars.BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS }} \
             --set batch.env.BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS=${{ vars.BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS }} \
             --set frontend.env.BACKEND_URL=${{ vars.BACKEND_URL }} \
-            --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
-            --set frontend.env.VITE_SSO_CLIENT_ID=${{ secrets.VITE_SSO_CLIENT_ID }} \
-            --set frontend.env.VITE_SSO_REALM=${{ secrets.VITE_SSO_REALM }} \
-            --set frontend.env.VITE_SSO_REDIRECT_URI=${{ secrets.VITE_SSO_REDIRECT_URI }} \
-            --set frontend.env.VITE_API_URL=${{ secrets.VITE_API_URL }} \
-            --set frontend.env.VITE_SSO_TOKEN_ISSUER=${{ secrets.VITE_SSO_TOKEN_ISSUER }} \
+            --set frontend.env.VITE_SSO_AUTH_SERVER_URL="$VITE_SSO_AUTH_SERVER_URL" \
+            --set frontend.env.VITE_SSO_CLIENT_ID="$VITE_SSO_CLIENT_ID" \
+            --set frontend.env.VITE_SSO_REALM="$VITE_SSO_REALM" \
+            --set frontend.env.VITE_SSO_REDIRECT_URI="$VITE_SSO_REDIRECT_URI" \
+            --set frontend.env.VITE_API_URL="$VITE_API_URL" \
+            --set frontend.env.VITE_SSO_TOKEN_ISSUER="$VITE_SSO_TOKEN_ISSUER" \
             --set frontend.env.VITE_SITE_INDICES_TABLE_ENABLED=${{ vars.VITE_SITE_INDICES_TABLE_ENABLED }} \
             --set-string coms.image.tag=${{ vars.COMS_TAG }} \
             --set-string coms.env.OBJECTSTORAGE_ENABLED=true \
             --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=${{ vars.OBJECTSTORAGE_ACCESSKEYID }} \
-            --set-string coms.env.OBJECTSTORAGE_SECRETACCESSKEY=${{ secrets.OBJECTSTORAGE_SECRETACCESSKEY }} \
+            --set-string coms.env.OBJECTSTORAGE_SECRETACCESSKEY="$OBJECTSTORAGE_SECRETACCESSKEY" \
             --set-string coms.env.OBJECTSTORAGE_BUCKET=${{ vars.OBJECTSTORAGE_BUCKET }} \
             --set-string coms.env.OBJECTSTORAGE_ENDPOINT=${{ vars.OBJECTSTORAGE_ENDPOINT }} \
             --set-string coms.env.OBJECTSTORAGE_KEY=${{ vars.OBJECTSTORAGE_KEY }} \
             --set-string coms.env.BASICAUTH_ENABLED=true \
             --set-string coms.env.BASICAUTH_USERNAME=${{ vars.COMS_SERVICE_USERNAME }} \
-            --set-string coms.env.BASICAUTH_PASSWORD=${{ secrets.COMS_SERVICE_PASSWORD }} \
+            --set-string coms.env.BASICAUTH_PASSWORD="$COMS_SERVICE_PASSWORD" \
             --set-string coms.env.KC_ENABLED=true \
-            --set-string coms.env.KC_PUBLICKEY=${{ secrets.COMS_KEYCLOAK_PUBLICKEY }} \
-            --set-string coms.env.KC_REALM=${{ secrets.VITE_SSO_REALM }} \
-            --set-string coms.env.KC_SERVERURL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
+            --set-string coms.env.KC_PUBLICKEY="$COMS_KEYCLOAK_PUBLICKEY" \
+            --set-string coms.env.KC_REALM="$VITE_SSO_REALM" \
+            --set-string coms.env.KC_SERVERURL="$VITE_SSO_AUTH_SERVER_URL" \
             --install --wait --atomic ${{ steps.vars.outputs.release }} \
             --timeout ${{ inputs.timeout-minutes }}m \
             "$RUNNER_TEMP/vdyp-chart/"*.tgz
