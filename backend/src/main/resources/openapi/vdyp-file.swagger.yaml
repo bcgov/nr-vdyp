@@ -264,6 +264,15 @@ components:
                   - "12.5"
                   - "17.5"
                   - "22.5"
+        breastHeightAgeSpecies:
+          description:
+            'Species numbers (1 to 6, matching EST_AGE_SPP1 to EST_AGE_SPP6) whose age is a breast height
+            age. Ages of species not listed are treated as total age.'
+          type: array
+          items:
+            type: integer
+            minimum: 1
+            maximum: 6
     executionOptions:
       type: array
       items:

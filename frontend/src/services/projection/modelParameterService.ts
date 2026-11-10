@@ -536,6 +536,27 @@ const buildDebugOptions = (): {
 }
 
 /**
+ * Returns the species numbers (1 to 6) whose age type is Breast Height.
+ * The first site index row is species 1, the second is species 2, and so on.
+ * Example: rows [Breast, Total, Breast] return [1, 3].
+ * @param modelParameterStore The store containing model parameters.
+ * @returns The species numbers whose age is a breast height age.
+ */
+export const buildBreastHeightAgeSpecies = (
+  modelParameterStore: any,
+): number[] => {
+  const siteIndexRows: SiteIndexSpeciesRow[] =
+    modelParameterStore.siteIndexRows ?? []
+  const breastHeightAgeSpecies: number[] = []
+  siteIndexRows.slice(0, 6).forEach((row, index) => {
+    if (row && strEq(row.ageType, CONSTANTS.AGE_TYPE.BREAST)) {
+      breastHeightAgeSpecies.push(index + 1)
+    }
+  })
+  return breastHeightAgeSpecies
+}
+
+/**
  * Builds projection parameters from the model parameter store.
  * @param modelParameterStore The store containing model parameters.
  * @returns The projection parameters object.
@@ -574,6 +595,7 @@ export const buildProjectionParameters = (
           utilizationClass: sg.minimumDBHLimit,
         }) as UtilizationParameter,
     ),
+    breastHeightAgeSpecies: buildBreastHeightAgeSpecies(modelParameterStore),
   }
 }
 

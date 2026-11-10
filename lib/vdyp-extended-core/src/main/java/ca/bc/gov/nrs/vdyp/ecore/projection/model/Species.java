@@ -550,13 +550,7 @@ public class Species implements Comparable<Species> {
 			if (!haveComputedTotalAge && totalAge == null && eval(ageAtBreastHeight) > 0.0
 					&& eval(yearsToBreastHeight) >= 0.0) {
 
-				var ageAtBreastHeightRef = new Reference<Double>(ageAtBreastHeight);
-				var yearsToBreastHeightRef = new Reference<Double>(yearsToBreastHeight);
-				var computedTotalAgeRef = new Reference<Double>(Vdyp7Constants.EMPTY_DECIMAL);
-
-				SiteTool.fillInAgeTriplet(computedTotalAgeRef, ageAtBreastHeightRef, yearsToBreastHeightRef);
-
-				setTotalAge(computedTotalAgeRef.get());
+				setTotalAge(SiteTool.breastHeightAgeToTotalAge(ageAtBreastHeight, yearsToBreastHeight));
 
 				keepTrying = true;
 				haveComputedTotalAge = true;

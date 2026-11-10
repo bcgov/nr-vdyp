@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 			Parameters.JSON_PROPERTY_AGE_END, Parameters.JSON_PROPERTY_YEAR_START, Parameters.JSON_PROPERTY_YEAR_END,
 			Parameters.JSON_PROPERTY_FORCE_YEAR, Parameters.JSON_PROPERTY_AGE_INCREMENT,
 			Parameters.JSON_PROPERTY_METADATA_TO_OUTPUT, Parameters.JSON_PROPERTY_FILTERS,
-			Parameters.JSON_PROPERTY_UTILS }
+			Parameters.JSON_PROPERTY_UTILS, Parameters.JSON_PROPERTY_BREAST_HEIGHT_AGE_SPECIES }
 )
 public class Parameters {
 
@@ -107,6 +107,10 @@ public class Parameters {
 	public static final String JSON_PROPERTY_UTILS = "utils";
 	@JsonProperty(JSON_PROPERTY_UTILS)
 	private List<UtilizationParameter> utils = new ArrayList<>();
+
+	public static final String JSON_PROPERTY_BREAST_HEIGHT_AGE_SPECIES = "breastHeightAgeSpecies";
+	@JsonProperty(JSON_PROPERTY_BREAST_HEIGHT_AGE_SPECIES)
+	private List<Integer> breastHeightAgeSpecies = new ArrayList<>();
 
 	public enum OutputFormat {
 		TEXT_REPORT("TextReport", "YieldReport.txt"),
@@ -880,6 +884,34 @@ public class Parameters {
 		return this;
 	}
 
+	/**
+	 * Species numbers (1 to 6, matching EST_AGE_SPP1 to EST_AGE_SPP6) whose age is a breast height age. Ages of species
+	 * not listed are treated as total age.
+	 */
+	@JsonProperty(value = JSON_PROPERTY_BREAST_HEIGHT_AGE_SPECIES)
+	public List<Integer> getBreastHeightAgeSpecies() {
+		return breastHeightAgeSpecies;
+	}
+
+	public Parameters breastHeightAgeSpecies(List<Integer> breastHeightAgeSpecies) {
+		setBreastHeightAgeSpecies(breastHeightAgeSpecies);
+		return this;
+	}
+
+	public void setBreastHeightAgeSpecies(List<Integer> breastHeightAgeSpecies) {
+		this.breastHeightAgeSpecies = breastHeightAgeSpecies == null ? null : new ArrayList<>(breastHeightAgeSpecies);
+	}
+
+	public Parameters addBreastHeightAgeSpeciesItem(Integer speciesIndex) {
+		if (speciesIndex != null) {
+			if (this.breastHeightAgeSpecies == null) {
+				this.breastHeightAgeSpecies = new ArrayList<>();
+			}
+			this.breastHeightAgeSpecies.add(speciesIndex);
+		}
+		return this;
+	}
+
 	public String getReportTitle() {
 		return reportTitle;
 	}
@@ -931,7 +963,8 @@ public class Parameters {
 				&& Objects.equals(this.combineAgeYearRange, parameters.combineAgeYearRange)
 				&& Objects.equals(this.progressFrequency, parameters.progressFrequency)
 				&& Objects.equals(this.metadataToOutput, parameters.metadataToOutput)
-				&& Objects.equals(this.filters, parameters.filters) && Objects.equals(this.utils, parameters.utils);
+				&& Objects.equals(this.filters, parameters.filters) && Objects.equals(this.utils, parameters.utils)
+				&& Objects.equals(this.breastHeightAgeSpecies, parameters.breastHeightAgeSpecies);
 	}
 
 	@Override
@@ -939,7 +972,7 @@ public class Parameters {
 		return Objects.hash(
 				outputFormat, selectedExecutionOptions, excludedExecutionOptions, selectedDebugOptions,
 				excludedDebugOptions, ageStart, ageEnd, yearStart, yearEnd, yearForcedIntoYieldTable, ageIncrement,
-				combineAgeYearRange, progressFrequency, metadataToOutput, filters, utils
+				combineAgeYearRange, progressFrequency, metadataToOutput, filters, utils, breastHeightAgeSpecies
 		);
 	}
 
@@ -964,6 +997,7 @@ public class Parameters {
 		sb.append("    metadataToOutput: ").append(toIndentedString(metadataToOutput)).append("\n");
 		sb.append("    filters: ").append(toIndentedString(filters)).append("\n");
 		sb.append("    utils: ").append(toIndentedString(utils)).append("\n");
+		sb.append("    breastHeightAgeSpecies: ").append(toIndentedString(breastHeightAgeSpecies)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

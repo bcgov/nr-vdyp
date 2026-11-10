@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -181,5 +182,22 @@ public class ParametersTest {
 		assertEquals("notimportant2", op.getMetadataToOutput());
 		assertNull(op.getUtils());
 
+	}
+
+	@Test
+	void testBreastHeightAgeSpecies() {
+		var p1 = new Parameters().breastHeightAgeSpecies(List.of(1, 3));
+		var p2 = new Parameters().addBreastHeightAgeSpeciesItem(1).addBreastHeightAgeSpeciesItem(null)
+				.addBreastHeightAgeSpeciesItem(3);
+
+		assertEquals(p1, p2);
+		assertEquals(p1.hashCode(), p2.hashCode());
+		assertTrue(p1.toString().contains("breastHeightAgeSpecies"));
+		assertNotEquals(p1, new Parameters().breastHeightAgeSpecies(List.of(1)));
+
+		p1.setBreastHeightAgeSpecies(null);
+		assertNull(p1.getBreastHeightAgeSpecies());
+		p1.addBreastHeightAgeSpeciesItem(2);
+		assertEquals(List.of(2), p1.getBreastHeightAgeSpecies());
 	}
 }

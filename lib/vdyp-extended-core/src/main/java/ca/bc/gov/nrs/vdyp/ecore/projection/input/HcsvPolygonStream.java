@@ -33,6 +33,10 @@ import ca.bc.gov.nrs.vdyp.si32.bec.BecZoneMethods;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexAgeType;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEstimationType;
+import ca.bc.gov.nrs.vdyp.sindex.exceptions.CommonCalculatorException;
 
 public class HcsvPolygonStream extends AbstractPolygonStream {
 
@@ -470,6 +474,125 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 	}
 
 	/**
+	 * The ages to set on a species.
+	 *
+	 * @param totalAge          the total age, or null if unknown
+	 * @param ageAtBreastHeight the breast height age, set only when it could not be converted to a total age
+	 */
+	record SuppliedAges(Double totalAge, Double ageAtBreastHeight) {
+	}
+
+	/**
+	 * Returns the ages to set on the species. A breast height age is converted to a total age. If that is not possible
+	 * (no site index), it is kept as the breast height age. Other ages are used as the total age.
+	 *
+	 * @param layer       the layer of the species
+	 * @param sp64Details the species details
+	 * @return the ages to set
+	 */
+	SuppliedAges determineSuppliedAges(Layer layer, SpeciesDetails sp64Details) {
+
+		var suppliedAge = sp64Details.estimatedAge() == null ? null : Double.valueOf(sp64Details.estimatedAge());
+
+		if (suppliedAge == null || !context.getParams().isBreastHeightAge(sp64Details.layerSpeciesIndex())) {
+			return new SuppliedAges(suppliedAge, null);
+		}
+
+		var totalAge = convertBreastHeightAgeToTotalAge(layer, sp64Details, suppliedAge);
+		if (totalAge == null) {
+			return new SuppliedAges(null, suppliedAge);
+		}
+
+		return new SuppliedAges(totalAge, null);
+	}
+
+	/**
+	 * Converts a breast height age to a total age using
+	 * {@link SiteTool#breastHeightAgeToTotalAge(SiteIndexEquation, double, double)}. The site index used is the first
+	 * one available of: the species' site index, the site index computed from height and breast height age, or the
+	 * layer's estimated site index if it is for this species.
+	 *
+	 * @param layer             the layer of the species
+	 * @param sp64Details       the species details
+	 * @param ageAtBreastHeight the breast height age
+	 * @return the total age, or null if it could not be computed
+	 */
+	private Double convertBreastHeightAgeToTotalAge(Layer layer, SpeciesDetails sp64Details, double ageAtBreastHeight) {
+
+		var speciesCode = sp64Details.speciesCode();
+		var shortName = SiteTool.getSpeciesShortName(SiteTool.getSpeciesIndex(speciesCode));
+		var siteCurve = SiteTool.getSICurve(shortName, layer.getPolygon().getIsCoastal());
+
+		var siteIndex = determineSiteIndexForBreastHeightAge(layer, sp64Details, siteCurve, ageAtBreastHeight);
+		if (siteIndex == null) {
+			logger.warn(
+					"{}: species {} (#{}) has a supplied breast height age of {} but no site index is available to convert it to a total age",
+					layer, speciesCode, sp64Details.layerSpeciesIndex(), ageAtBreastHeight
+			);
+			return null;
+		}
+
+		double totalAge;
+		try {
+			totalAge = SiteTool.breastHeightAgeToTotalAge(siteCurve, siteIndex, ageAtBreastHeight);
+		} catch (CommonCalculatorException e) {
+			logger.warn(
+					"{}: species {} (#{}): SiteTool.breastHeightAgeToTotalAge({}, {}, {}) failed{}; unable to convert breast height age to a total age",
+					layer, speciesCode, sp64Details.layerSpeciesIndex(), siteCurve, siteIndex, ageAtBreastHeight,
+					e.getMessage() != null ? ": reason " + e.getMessage() : ""
+			);
+			return null;
+		}
+
+		if (totalAge < 0.0) {
+			return null;
+		}
+
+		logger.debug(
+				"{}: species {} (#{}): converted breast height age {} to total age {} (site curve {}, site index {})",
+				layer, speciesCode, sp64Details.layerSpeciesIndex(), ageAtBreastHeight, totalAge, siteCurve, siteIndex
+		);
+
+		return totalAge;
+	}
+
+	private Double determineSiteIndexForBreastHeightAge(
+			Layer layer, SpeciesDetails sp64Details, SiteIndexEquation siteCurve, double ageAtBreastHeight
+	) {
+		if (sp64Details.estimatedSiteIndex() != null && sp64Details.estimatedSiteIndex() > 0.0) {
+			return sp64Details.estimatedSiteIndex();
+		}
+
+		var dominantHeight = sp64Details.estimatedHeight();
+		if (dominantHeight != null && dominantHeight > 0.0) {
+			try {
+				var siteIndex = SiteTool.heightAndAgeToSiteIndex(
+						siteCurve, ageAtBreastHeight, SiteIndexAgeType.SI_AT_BREAST, dominantHeight,
+						SiteIndexEstimationType.SI_EST_ITERATE
+				);
+				if (siteIndex > 0.0) {
+					return siteIndex;
+				}
+			} catch (CommonCalculatorException e) {
+				logger.debug(
+						"{}: species {} (#{}): SiteTool.heightAndAgeToSiteIndex({}, {}, {}, {}) failed{}", layer,
+						sp64Details.speciesCode(), sp64Details.layerSpeciesIndex(), siteCurve, ageAtBreastHeight,
+						SiteIndexAgeType.SI_AT_BREAST, dominantHeight,
+						e.getMessage() != null ? ": reason " + e.getMessage() : ""
+				);
+			}
+		}
+
+		var layerSiteIndex = layer.getEstimatedSiteIndex();
+		if (layerSiteIndex != null && layerSiteIndex > 0.0
+				&& sp64Details.speciesCode().equals(layer.getEstimatedSiteIndexSpecies())) {
+			return layerSiteIndex;
+		}
+
+		return null;
+	}
+
+	/**
 	 * <code>V7Ext_AddSpeciesComponent</code>
 	 * <p>
 	 * Add a Species with the given details to the given layer.
@@ -485,7 +608,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		var speciesCode = sp64Details.speciesCode();
 		var speciesPercent = sp64Details.percent();
-		var totalAge = sp64Details.estimatedAge() == null ? null : Double.valueOf(sp64Details.estimatedAge());
+		var suppliedAges = determineSuppliedAges(layer, sp64Details);
 		var dominantHeight = sp64Details.estimatedHeight();
 		var siteIndex = sp64Details.estimatedSiteIndex();
 
@@ -564,7 +687,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				.stand(stand) //
 				.speciesCode(speciesCode) //
 				.speciesPercent(speciesPercent) //
-				.totalAge(totalAge) //
+				.totalAge(suppliedAges.totalAge()) //
+				.ageAtBreastHeight(suppliedAges.ageAtBreastHeight()) //
 				.dominantHeight(dominantHeight) //
 				.siteIndex(siteIndex) //
 				.standSuppliedOrderIndex(stand.getSpecies().size()) //

@@ -14,11 +14,14 @@ package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption.*;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.FilterParameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.AgeYearRangeCombinationKind;
@@ -65,6 +68,7 @@ public class ValidatedParameters {
 	private FilterParameters filters;
 	private Map<SP0Name, UtilizationClassSet> utils = new HashMap<>();
 	private String reportTitle;
+	private SortedSet<Integer> breastHeightAgeSpecies = new TreeSet<>();
 
 	/**
 	 * Helper method that returns "true" iff the given option is in <code>selectedExecutionOptions</code>.
@@ -413,6 +417,32 @@ public class ValidatedParameters {
 		return reportTitle;
 	}
 
+	/**
+	 * @return the species numbers (1 to 6) whose age is a breast height age
+	 */
+	public SortedSet<Integer> getBreastHeightAgeSpecies() {
+		return Collections.unmodifiableSortedSet(breastHeightAgeSpecies);
+	}
+
+	public ValidatedParameters addBreastHeightAgeSpeciesItem(int speciesIndex) {
+		this.breastHeightAgeSpecies.add(speciesIndex);
+		return this;
+	}
+
+	public void setBreastHeightAgeSpecies(Collection<Integer> breastHeightAgeSpecies) {
+		this.breastHeightAgeSpecies = new TreeSet<>();
+		if (breastHeightAgeSpecies != null) {
+			this.breastHeightAgeSpecies.addAll(breastHeightAgeSpecies);
+		}
+	}
+
+	/**
+	 * Returns true if the age of the given species number (1 to 6) is a breast height age.
+	 */
+	public boolean isBreastHeightAge(int speciesIndex) {
+		return breastHeightAgeSpecies.contains(speciesIndex);
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -441,7 +471,8 @@ public class ValidatedParameters {
 				&& Objects.equals(this.progressFrequency, parameters.progressFrequency)
 				&& Objects.equals(this.metadataToOutput, parameters.metadataToOutput)
 				&& Objects.equals(this.filters, parameters.filters) //
-				&& Objects.equals(this.utils, parameters.utils);
+				&& Objects.equals(this.utils, parameters.utils)
+				&& Objects.equals(this.breastHeightAgeSpecies, parameters.breastHeightAgeSpecies);
 	}
 
 	@Override
@@ -449,7 +480,8 @@ public class ValidatedParameters {
 		return Objects.hash(
 				outputFormat, selectedExecutionOptions, selectedDebugOptions, ageStart, minAgeStart, maxAgeStart,
 				ageEnd, minAgeEnd, maxAgeEnd, yearStart, yearEnd, yearForcedIntoYieldTable, ageIncrement,
-				minAgeIncrement, maxAgeIncrement, combineAgeYearRange, progressFrequency, metadataToOutput, utils
+				minAgeIncrement, maxAgeIncrement, combineAgeYearRange, progressFrequency, metadataToOutput, utils,
+				breastHeightAgeSpecies
 		);
 	}
 
@@ -477,6 +509,7 @@ public class ValidatedParameters {
 		sb.append("    metadataToOutput: ").append(toIndentedString(metadataToOutput)).append("\n");
 		sb.append("    filters: ").append(toIndentedString(filters)).append("\n");
 		sb.append("    utils: ").append(toIndentedString(utils)).append("\n");
+		sb.append("    breastHeightAgeSpecies: ").append(toIndentedString(breastHeightAgeSpecies)).append("\n");
 
 		return sb.toString();
 	}
@@ -556,5 +589,7 @@ public class ValidatedParameters {
 		for (var sp0Name : SP0Name.values()) {
 			DEFAULT.utils.put(sp0Name, UtilizationClassSet._12_5);
 		}
+
+		DEFAULT.breastHeightAgeSpecies = new TreeSet<>();
 	}
 }

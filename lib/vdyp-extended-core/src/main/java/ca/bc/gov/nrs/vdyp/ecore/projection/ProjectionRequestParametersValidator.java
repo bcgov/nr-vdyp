@@ -27,6 +27,10 @@ public class ProjectionRequestParametersValidator {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionRequestParametersValidator.class);
 
+	/** Allowed species numbers: 1 to 6 (EST_AGE_SPP1 to EST_AGE_SPP6) */
+	private static final int MIN_LAYER_SPECIES_INDEX = 1;
+	private static final int MAX_LAYER_SPECIES_INDEX = 6;
+
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
 	public static ValidatedParameters validate(Parameters params, ProjectionRequestKind requestKind)
@@ -264,7 +268,42 @@ public class ProjectionRequestParametersValidator {
 			}
 		}
 
+		// Parameters.JSON_PROPERTY_BREAST_HEIGHT_AGE_SPECIES
+		validateBreastHeightAgeSpecies(params, vparams);
+
 		return vparams;
+	}
+
+	/**
+	 * Checks that each breast height age species number is between 1 and 6.
+	 */
+	private void validateBreastHeightAgeSpecies(Parameters params, ValidatedParameters vparams) {
+
+		vparams.setBreastHeightAgeSpecies(DEFAULT.getBreastHeightAgeSpecies());
+
+		if (params.getBreastHeightAgeSpecies() == null) {
+			return;
+		}
+
+		for (var speciesIndex : params.getBreastHeightAgeSpecies()) {
+			if (speciesIndex == null) {
+				continue;
+			}
+
+			if (speciesIndex < MIN_LAYER_SPECIES_INDEX) {
+				recordValidationMessage(
+						INTEGER_VALUE_TOO_LOW, speciesIndex, Parameters.JSON_PROPERTY_BREAST_HEIGHT_AGE_SPECIES,
+						MIN_LAYER_SPECIES_INDEX
+				);
+			} else if (speciesIndex > MAX_LAYER_SPECIES_INDEX) {
+				recordValidationMessage(
+						INTEGER_VALUE_TOO_HIGH, speciesIndex, Parameters.JSON_PROPERTY_BREAST_HEIGHT_AGE_SPECIES,
+						MAX_LAYER_SPECIES_INDEX
+				);
+			} else {
+				vparams.addBreastHeightAgeSpeciesItem(speciesIndex);
+			}
+		}
 	}
 
 	private void validateRequestParametersCollectively(ValidatedParameters vparams, ProjectionRequestKind requestKind) {
