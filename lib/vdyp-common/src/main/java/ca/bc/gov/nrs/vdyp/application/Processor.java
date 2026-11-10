@@ -87,18 +87,15 @@ public abstract class Processor<E extends ProcessingEngine<?, ?>> {
 		logger.info("Beginning processing with given configuration");
 
 		int maxPoly = 0;
-		if (vdypPassSet.contains(Pass.PASS_1)) {
+		if (vdypPassSet.contains(Pass.INITIALIZE)) {
 			maxPoly = initialize(controlMap, maxPoly);
 		}
 
 		logger.debug("MaxPoly: {}", maxPoly);
 
-		if (vdypPassSet.contains(Pass.PASS_2)) {
-			// input files are already opened
-			// TODO: open output files
-		}
+		// Pass 2, OPEN_FILES not used in VDYP8 That happens in processStands now.
 
-		if (vdypPassSet.contains(Pass.PASS_3)) {
+		if (vdypPassSet.contains(Pass.PROCESS_STANDS)) {
 
 			processStands(controlMap, outputFileResolver, polygonFilter, maxPoly);
 
