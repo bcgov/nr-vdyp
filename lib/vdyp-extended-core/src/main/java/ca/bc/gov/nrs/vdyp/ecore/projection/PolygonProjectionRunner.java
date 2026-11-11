@@ -898,7 +898,7 @@ public class PolygonProjectionRunner {
 			Throwable processingException = result.get();
 			for (var handler : handlers) {
 				// If one of the handlers succeeds, stop
-				if (!handler.test(processingException))
+				if (handler.test(processingException))
 					return;
 			}
 

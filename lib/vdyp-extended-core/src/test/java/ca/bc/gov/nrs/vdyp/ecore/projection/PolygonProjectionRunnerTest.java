@@ -458,7 +458,7 @@ public class PolygonProjectionRunnerTest {
 					is(
 							result == 1
 									? "WARN: Unable to Project Stand forward beyond \"400\" years from stand reference age."
-									: "ERR: Unable to Project Stand over age range: \"2,024\" to \"2,134\". Forward Exception: forward failed"
+									: "ERR: Unable to Project Stand over age range: \"2024\" to \"2134\". Forward Exception: forward failed"
 					)
 			);
 		}
