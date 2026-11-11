@@ -1334,4 +1334,18 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 	}
 
+	@Test
+	void testFullRunBack() throws IOException, ResourceParseException {
+
+		logger.info("Starting full-run-back");
+		Pattern ignorePattern = Pattern.compile("TABLE_NUM|PRJ_SCND_HT");
+		try (InputStream vdyp7Stream = MainTest.class.getResourceAsStream("full-run-back/output/Output_YldTbl.csv")) {
+			String vdyp7YieldTableContent = new String(vdyp7Stream.readAllBytes());
+			runIntTestData("full-run-back", result -> {
+				var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
+				ResultYieldTable.compareWithTolerance(vdyp7YieldTable, result, 0.01, ignorePattern.asMatchPredicate());
+			});
+		}
+	}
+
 }
