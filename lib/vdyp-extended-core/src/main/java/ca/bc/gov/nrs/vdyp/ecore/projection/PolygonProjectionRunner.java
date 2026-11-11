@@ -11,6 +11,7 @@ import java.time.ZoneOffset;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -826,15 +827,8 @@ public class PolygonProjectionRunner {
 
 					componentRunner.runForward(polygon, projectionType, state);
 
-					var forwardResult = state.getProcessingResults(ProjectionStageCode.Forward, projectionType);
-					if (forwardResult.isPresent()) {
-						// In the event something happens in Forward processing continue with poro
-						logger.error(
-								"{}: Forward projection of type {} resulted in a message {}", polygon, projectionType,
-								forwardResult.get().getMessage() != null ? ": " + forwardResult.get().getMessage() : ""
-						);
-						Throwable processingException = forwardResult.get();
-						if (processingException instanceof ProjectMaxBeyondReferenceException) {
+					handleProjection(ProjectionStageCode.Forward, projectionType, layer, startYear, endYear, ex -> {
+						if (ex instanceof ProjectMaxBeyondReferenceException) {
 							polygon.addMessage(
 									builder -> builder.layer(layer).details(
 											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
@@ -842,16 +836,10 @@ public class PolygonProjectionRunner {
 											CommonConstants.MAX_YEARS_BEYOND_REFERENCE_AGE
 									)
 							);
-						} else {
-							polygon.addMessage(
-									builder -> builder.layer(layer).details(
-											ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.ERROR,
-											PolygonMessageKind.ERROR_PROJECTING_FORWARD,
-											processingException.getMessage(), startYear, endYear
-									)
-							);
+							return true;
 						}
-					}
+						return false;
+					});
 
 					logger.debug(
 							"{}: performed Forward; result: {}", layer,
@@ -878,6 +866,8 @@ public class PolygonProjectionRunner {
 
 					componentRunner.runBack(polygon, projectionType, state);
 
+					handleProjection(ProjectionStageCode.Back, projectionType, layer, startYear, endYear);
+
 					logger.debug(
 							"{}: performed Back; result: {}", layer,
 							state.getProcessingResults(ProjectionStageCode.Back, projectionType)
@@ -890,6 +880,45 @@ public class PolygonProjectionRunner {
 			} else {
 				logger.info("{}: backwards projection required but disabled", layer);
 			}
+		}
+	}
+
+	@SafeVarargs
+	final protected void handleProjection(
+			ProjectionStageCode stage, ProjectionTypeCode projectionType, Layer layer, int startYear, int endYear,
+			Predicate<Throwable>... handlers
+	) {
+		var result = state.getProcessingResults(stage, projectionType);
+		if (result.isPresent()) {
+			// In the event something happens in Back processing continue with poro
+			logger.error(
+					"{}: {} projection of type {} resulted in a message {}", polygon, stage, projectionType,
+					result.get().getMessage() != null ? ": " + result.get().getMessage() : ""
+			);
+			Throwable processingException = result.get();
+			for (var handler : handlers) {
+				// If one of the handlers succeeds, stop
+				if (!handler.test(processingException))
+					return;
+			}
+
+			// Default handler if none could handle it
+
+			var messageKind = switch (stage) {
+			case Forward -> PolygonMessageKind.ERROR_PROJECTING_FORWARD;
+			case Back -> PolygonMessageKind.ERROR_PROJECTING_BACK;
+			default -> throw new IllegalStateException(
+					"handleProjection should only be called with a projection stage not " + stage
+			);
+			};
+			polygon.addMessage(
+					builder -> builder.layer(layer).details(
+							ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.ERROR,
+							messageKind,
+							processingException.getMessage(), startYear, endYear
+					)
+			);
+
 		}
 	}
 

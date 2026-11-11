@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.back.VdypBackApplication;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
@@ -230,25 +231,14 @@ public class RealComponentRunner implements ComponentRunner {
 		if (!polygon.doAllowProjectionOfType(projectionTypeCode)) {
 			return;
 		}
-		try {
-			// TODO: BACK is not supported yet.
 
-			@SuppressWarnings("unused")
-			Path controlFilePath = Path.of(
-					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
-					Vdyp7Constants.BACK_CONTROL_FILE_NAME
-			);
-
-			// VdypBackApplication app = new VdypBackApplication();
-			// app.doMain(controlFilePath.toAbsolutePath().toString());
-
-			state.setProcessingResults(ProjectionStageCode.Back, projectionTypeCode, Optional.empty());
-		} catch (Exception | Error e) {
-			throw new PolygonExecutionException(
-					polygon.getFeatureId(),
-					MessageFormat.format("Encountered {0} while running BACK", e.getClass().getSimpleName()), e
-			);
-		}
+		runApp(
+				polygon, projectionTypeCode, state, VdypApplicationIdentifier.VDYP_BACK, //
+				List.of(Vdyp7Constants.BACK_CONTROL_FILE_NAME, Vdyp7Constants.STAND_FORWARD_CONTROL_FILE_NAME),
+				VdypBackApplication::new, app -> {
+					// Nothing else to do
+				}
+		);
 	}
 
 	@Override
