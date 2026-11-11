@@ -92,7 +92,9 @@ public class RealComponentRunner implements ComponentRunner {
 								"running", t
 						)
 				);
-				throw new PolygonExecutionException("Core Library Error in " + ProjectionStageCode.of(appToUse), t);
+				throw new PolygonExecutionException(
+						polygon.getFeatureId(), "Core Library Error in " + ProjectionStageCode.of(appToUse), t
+				);
 			}
 		}
 	}

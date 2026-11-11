@@ -558,6 +558,8 @@ class RealComponentRunnerTest {
 			polygon.addMessage(EasyMock.<Consumer<PolygonMessage.Builder>>anyObject());
 			EasyMock.expectLastCall().once();
 
+			EasyMock.expect(polygon.getFeatureId()).andStubReturn(42l);
+
 			em.replay();
 
 			var ex = assertThrows(
@@ -611,6 +613,8 @@ class RealComponentRunnerTest {
 
 			polygon.addMessage(EasyMock.<Consumer<PolygonMessage.Builder>>anyObject());
 			EasyMock.expectLastCall().once();
+
+			EasyMock.expect(polygon.getFeatureId()).andStubReturn(42l);
 
 			em.replay();
 
