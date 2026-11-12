@@ -89,4 +89,10 @@
                                                       (5) MATH77 errors 0-suppress (recommended). (1,2)-show.
                                                       (11-20) Controls Ht/Age/SI fillin. See IPSJF174.doc
                                                       (22)   1: extra preference for preferred sp as primary
-                                                   
+                                                                                                      
+  0 The following lines are included to make the control file parser happy in VDYP8 because it expects these values even though Back does not use them
+  0 There may be others that are redundant as well
+121 coe/GROWBA27.COE
+123 coe/REGDQL2.coe
+019 vc_grow.dat
+
