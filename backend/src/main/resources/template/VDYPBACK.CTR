@@ -76,7 +76,7 @@
 108 coe/PCT_407.coe                                   Upper bounds (BA, DQ)  RD_E108  ipsjf160 (emp106, emp107)
 111 coe/EMP111A1.PRM                                  Growth in BA (Prim layer) Fiat Model (EMP111A) IPSJF162 
 117 coe/EMP117A1.prm                                  DQ GROWTH (PRI. L) IPSJF178, FIAT AND MIXED MODEL.
-121 coe/GROWBA11.coe                                  GROWTH IN BA (PRIM LAYER) EMP. Model (EMP121) IPSJF162 
+121 coe/GROWBA27.COE                                  GROWTH IN BA (PRIM LAYER) EMP. Model (EMP121) IPSJF162 
 122 coe/GD20.coe                                      DQ growth EMP122  IPSJF178, empirical model
 148 coe/BASP05.COE                                    BA growth Primary SP IPSJF148
 149 coe/BASP06.COE                                    BA growth NONPrimary SP IPSJF149
