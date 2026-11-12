@@ -40,7 +40,7 @@ jobs:
         run: |
           if [[ $TARGET_ENVIRONMENT == "prod" ]]
           then
-            echo "ENV_URL_COMPONENT=''" >> $GITHUB_OUTPUT
+            echo "ENV_URL_COMPONENT=" >> $GITHUB_OUTPUT
           else
             echo "ENV_URL_COMPONENT=.$TARGET_ENVIRONMENT" >> $GITHUB_OUTPUT
           fi
