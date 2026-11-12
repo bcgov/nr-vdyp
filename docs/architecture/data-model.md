@@ -178,7 +178,7 @@ erDiagram
 | --- | --- |
 | `BATCH_*` | Standard Spring Batch job repository tables (version `01_00_09`). Not auto-created by the application. |
 | `batch_job_claim` | Atomically tracks which batch replica has the right to process a job. The lease must be renewed by heartbeat before `lease_expiry_time`. `version` supports optimistic updates. |
-| `batch_worker_registry` | Registered batch replicas, their thread capacity, whether they accept work, and their last heartbeat. |
+| `batch_worker_registry` | Registered batch replicas, their thread capacity, whether they accept work, and their last heartbeat. Entries without a heartbeat for over a day are removed by a daily scheduled job in the batch service. |
 
 The relationship between `batch_job_claim.owner_id` and `batch_worker_registry.worker_id` is logical; no foreign key is defined. `batch_job_claim.projection_guid` refers to `app-vdyp.projection.projection_guid` in a different database, so it is also not enforced.
 

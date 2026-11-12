@@ -198,6 +198,10 @@ jobs:
           VITE_SSO_REALM: ${{ secrets.VITE_SSO_REALM }}
           VITE_SSO_REDIRECT_URI: ${{ secrets.VITE_SSO_REDIRECT_URI }}
           VITE_SSO_TOKEN_ISSUER: ${{ secrets.VITE_SSO_TOKEN_ISSUER }}
+          # Passed through env so the cron value's spaces and commas reach Helm intact (see --set-string below).
+          BATCH_WORKER_REGISTRY_CLEANUP_ENABLED: ${{ vars.BATCH_WORKER_REGISTRY_CLEANUP_ENABLED }}
+          BATCH_WORKER_REGISTRY_CLEANUP_RETENTION: ${{ vars.BATCH_WORKER_REGISTRY_CLEANUP_RETENTION }}
+          BATCH_WORKER_REGISTRY_CLEANUP_CRON: ${{ vars.BATCH_WORKER_REGISTRY_CLEANUP_CRON }}
         run: |
           # Helm upgrade/rollout - atomic, timeout
           helm upgrade \
@@ -236,6 +240,9 @@ jobs:
             --set batch.env.BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER=${{ vars.BATCH_STORAGE_UNKNOWN_POLYGON_COUNT_PLACEHOLDER }} \
             --set batch.env.BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS=${{ vars.BATCH_PRIORITIZE_STOP_WAIT_TIMEOUT_SECONDS }} \
             --set batch.env.BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS=${{ vars.BATCH_PRIORITIZE_STOP_POLL_INTERVAL_MILLIS }} \
+            --set-string batch.env.BATCH_WORKER_REGISTRY_CLEANUP_ENABLED="$BATCH_WORKER_REGISTRY_CLEANUP_ENABLED" \
+            --set-string batch.env.BATCH_WORKER_REGISTRY_CLEANUP_RETENTION="$BATCH_WORKER_REGISTRY_CLEANUP_RETENTION" \
+            --set-string batch.env.BATCH_WORKER_REGISTRY_CLEANUP_CRON="${BATCH_WORKER_REGISTRY_CLEANUP_CRON//,/\\,}" \
             --set frontend.env.BACKEND_URL=${{ vars.BACKEND_URL }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL="$VITE_SSO_AUTH_SERVER_URL" \
             --set frontend.env.VITE_SSO_CLIENT_ID="$VITE_SSO_CLIENT_ID" \

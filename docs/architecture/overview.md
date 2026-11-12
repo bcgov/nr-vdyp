@@ -192,7 +192,7 @@ sequenceDiagram
 - **Prioritize**: administrators can prioritize a job; the request is broadcast on `vdyp.batch.prioritize.request`.
 - **Stuck detection**: the backend `ProjectionStuckDetectionJob` marks `RUNNING` projections without recent progress as `STUCK`, and returns them to `RUNNING` when progress resumes.
 - **Recovery**: each batch replica registers in `batch_worker_registry` and holds a lease in `batch_job_claim` for each job. If a replica stops sending heartbeats, another replica can recover the job after the lease expires.
-- **Cleanup**: `ProjectionCleanupJob` removes expired projections. Administrators can run storage cleanup (batch PVC folders) and orphan file set cleanup (S3 objects without database references, see `backend/ORPHAN-FILE-CLEANUP.md`).
+- **Cleanup**: `ProjectionCleanupJob` removes expired projections. Administrators can run storage cleanup (batch PVC folders) and orphan file set cleanup (S3 objects without database references, see `backend/ORPHAN-FILE-CLEANUP.md`). In the batch service, `WorkerRegistryCleanupScheduler` runs daily (`batch.worker-registry-cleanup.cron`) and removes `batch_worker_registry` entries with no heartbeat within the retention period (one day by default).
 
 ## 6. Projection lifecycle
 

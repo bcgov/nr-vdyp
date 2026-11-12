@@ -94,6 +94,11 @@ tested; it relies on this tag discipline and the publisher's checks.
   settings, CORS and service URLs, API gateway JWT settings, and batch tuning values.
   A missing variable is passed to Helm as an empty value and does not fail the
   workflow, so compare a new environment against an existing one.
+- The batch worker registry cleanup variables must be set in each environment:
+  `BATCH_WORKER_REGISTRY_CLEANUP_ENABLED` (normally `true`), `BATCH_WORKER_REGISTRY_CLEANUP_RETENTION`
+  (Spring duration, normally `1d`) and `BATCH_WORKER_REGISTRY_CLEANUP_CRON` (Spring cron with seconds,
+  normally `0 0 3 * * *`, UTC). An empty value overrides the application default rather than falling
+  back to it, and prevents the batch service from starting or running the cleanup.
 - Existing environment protection rules still apply; the pipeline adds no approval job.
 - Retain the SHA and release image tags needed for promotion and rollback.
 - Restrict registry write access. A 12-character SHA collision or manually reassigned
