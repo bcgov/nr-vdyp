@@ -416,7 +416,10 @@ public class RealComponentRunner implements ComponentRunner {
 
 			ProjectionResultsReader backReader = new NullProjectionResultsReader();
 
-			if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)) {
+			// Only read BACK results when BACK succeeded; a failed BACK must not prevent the FORWARD results from
+			// being reported (the failure has already been recorded as a polygon message).
+			if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)
+					&& state.getProcessingResults(ProjectionStageCode.Back, projectionType).isEmpty()) {
 
 				try (var bis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.BACK_CONTROL_FILE_NAME)) {
 					var backwardsControlFileParser = new ProcessingControlParser();
