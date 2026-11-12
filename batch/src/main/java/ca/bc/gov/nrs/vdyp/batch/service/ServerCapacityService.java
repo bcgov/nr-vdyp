@@ -52,6 +52,15 @@ public class ServerCapacityService {
 		return repository.getAggregateCapacity(maxHeartBeatAgeSeconds);
 	}
 
+	/**
+	 * Removes worker registry entries whose last heartbeat is older than the given age.
+	 *
+	 * @return the number of entries removed
+	 */
+	public int removeStaleWorkers(long maxHeartbeatAgeSeconds) {
+		return repository.deleteStaleWorkers(maxHeartbeatAgeSeconds);
+	}
+
 	private ThreadPoolTaskExecutor taskExecutor() {
 		return taskExecutorProvider.getObject();
 	}

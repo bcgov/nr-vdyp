@@ -35,4 +35,18 @@ public class ServerCapacityRepository {
 		return jdbcTemplate.queryForObject(sql, Long.class, heartbeatMaxAge);
 	}
 
+	/**
+	 * Deletes registry rows for workers whose last heartbeat is older than the given age.
+	 *
+	 * @param maxHeartbeatAgeSeconds rows with a heartbeat older than this many seconds are removed
+	 * @return the number of rows deleted
+	 */
+	public int deleteStaleWorkers(long maxHeartbeatAgeSeconds) {
+		String sql = """
+				DELETE FROM batch_worker_registry
+				WHERE last_heartbeat_time < (clock_timestamp() AT TIME ZONE 'UTC') - (? * interval '1 second')
+				""";
+		return jdbcTemplate.update(sql, maxHeartbeatAgeSeconds);
+	}
+
 }
