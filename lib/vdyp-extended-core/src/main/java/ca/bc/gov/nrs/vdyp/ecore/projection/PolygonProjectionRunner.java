@@ -887,7 +887,7 @@ public class PolygonProjectionRunner {
 	) {
 		var result = state.getProcessingResults(stage, projectionType);
 		if (result.isPresent()) {
-			// In the event something happens in Back processing continue with poro
+			// In the event something happens in processing continue with projection
 			logger.error(
 					"{}: {} projection of type {} resulted in a message {}", polygon, stage, projectionType,
 					result.get().getMessage() != null ? ": " + result.get().getMessage() : ""
