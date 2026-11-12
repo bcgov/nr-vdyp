@@ -290,6 +290,21 @@ const createPolygonData = (
 }
 
 /**
+ * Returns the site index rows to submit.
+ * Volume based projections (FIP) accept site data for the primary species only, matching VDYP7.
+ */
+export const getSubmittableSiteIndexRows = (
+  modelParameterStore: any,
+): SiteIndexSpeciesRow[] => {
+  const siteIndexRows: SiteIndexSpeciesRow[] =
+    modelParameterStore.siteIndexRows ?? []
+  if (modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME) {
+    return siteIndexRows.slice(0, 1)
+  }
+  return siteIndexRows
+}
+
+/**
  * Creates CSV data for the layer file.
  * @param modelParameterStore The store containing model parameters.
  * @param featureId The generated feature ID.
@@ -310,7 +325,7 @@ const createLayerData = (
     speciesData.push({ species: null as any, percent: '' })
   }
   const speciesRow = flattenSpeciesData(speciesData, 6)
-  const siteIndexRows: SiteIndexSpeciesRow[] = modelParameterStore.siteIndexRows ?? []
+  const siteIndexRows = getSubmittableSiteIndexRows(modelParameterStore)
   const row1 = siteIndexRows[1]
   const row2 = siteIndexRows[2]
   const row3 = siteIndexRows[3]
@@ -545,8 +560,7 @@ const buildDebugOptions = (): {
 export const buildBreastHeightAgeSpecies = (
   modelParameterStore: any,
 ): number[] => {
-  const siteIndexRows: SiteIndexSpeciesRow[] =
-    modelParameterStore.siteIndexRows ?? []
+  const siteIndexRows = getSubmittableSiteIndexRows(modelParameterStore)
   const breastHeightAgeSpecies: number[] = []
   siteIndexRows.slice(0, 6).forEach((row, index) => {
     if (row && strEq(row.ageType, CONSTANTS.AGE_TYPE.BREAST)) {

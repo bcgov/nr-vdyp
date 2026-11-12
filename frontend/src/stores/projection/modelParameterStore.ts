@@ -231,24 +231,14 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       primaryRow.bhaSiteIndex = null
     }
 
-    // Watchers fire only on isVolumeComputed/isSupplied transitions, not when rows are added
+    // Watchers fire only on isVolume/isSupplied transitions, not when rows are added
     // while the mode is already active. Apply constraints here to cover that gap.
-    if (isVolumeComputed.value) {
-      siteIndexRows.value.slice(1).forEach((row) => {
-        row.computedValue = null
-        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
-        row.age = null
-        row.height = null
-        row.bhaSiteIndex = null
-      })
-    } else if (isSupplied.value) {
-      siteIndexRows.value.forEach((row) => {
-        row.computedValue = null
-        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
-        row.age = null
-        row.height = null
-        row.bhaSiteIndex = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
-      })
+    if (isSupplied.value) {
+      siteIndexRows.value.forEach((row) => applySiteIndexRowMode(row, SITE_INDEX_ROW_MODE.SUPPLIED))
+    }
+    if (isVolume.value) {
+      // Volume based projections only accept site data for the primary species.
+      siteIndexRows.value.slice(1).forEach((row) => applySiteIndexRowMode(row, SITE_INDEX_ROW_MODE.NA))
     }
   }
 
@@ -262,86 +252,72 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const bha50SiteIndex = ref<string | null>(null)
   const siteIndexRows = ref<SiteIndexSpeciesRow[]>([])
 
-  // VDYP-880: Cell enable/disable rules for the new Site Indices table (showNewSiteIndicesFeature).
+  // VDYP-880 / VDYP-1465: Cell enable/disable rules for the Site Indices table.
   //
   // Derived By \ Site Index |  Computed                                    |  Supplied
   // ----------------------- | -------------------------------------------- | ----------------------------------
-  // Volume                  | Primary row only; the field matching         | All rows: BHA Site Index only.
+  // Volume                  | Primary row only; the field matching         | Primary row only: BHA Site Index.
   //                         | Computed Value is disabled (calc.), the      | Age, Height, Computed Value: N/A.
-  //                         | other two (Age/Height/BHA SI) are enabled.   |
+  //                         | other two (Age/Height/BHA SI) are enabled.   | Non-primary rows: entirely N/A.
   //                         | Non-primary rows: entirely disabled (N/A).   |
   // ----------------------- | -------------------------------------------- | ----------------------------------
   // Basal Area              | All rows active; same Computed Value rule    | All rows: BHA Site Index only.
   //                         | applies per row as above.                    | Age, Height, Computed Value: N/A.
-  const isVolumeComputed = computed(
-    () =>
-      siteSpeciesValues.value !== CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED &&
-      derivedBy.value === CONSTANTS.DERIVED_BY.VOLUME,
-  )
+  //
+  // Volume based (FIP) projections only accept site data for the primary species, matching VDYP7.
+  const isVolume = computed(() => derivedBy.value === CONSTANTS.DERIVED_BY.VOLUME)
 
   const isSupplied = computed(
     () => siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED,
   )
 
-  // Why isVolumeComputed and isSupplied are watched here (not in SiteIndicesTable): transitions
+  const SITE_INDEX_ROW_MODE = {
+    NA: 'NA',
+    SUPPLIED: 'SUPPLIED',
+    COMPUTED: 'COMPUTED',
+  } as const
+  type SiteIndexRowMode = (typeof SITE_INDEX_ROW_MODE)[keyof typeof SITE_INDEX_ROW_MODE]
+
+  const getSiteIndexRowMode = (index: number, volume: boolean, supplied: boolean): SiteIndexRowMode => {
+    if (volume && index > 0) return SITE_INDEX_ROW_MODE.NA
+    if (supplied) return SITE_INDEX_ROW_MODE.SUPPLIED
+    return SITE_INDEX_ROW_MODE.COMPUTED
+  }
+
+  // Resets a row to the default values of the given mode.
+  // NA: every field is blank. SUPPLIED: only BHA Site Index is set. COMPUTED: BHA Site Index is computed.
+  const applySiteIndexRowMode = (row: SiteIndexSpeciesRow, mode: SiteIndexRowMode) => {
+    row.ageType = CONSTANTS.AGE_TYPE.TOTAL
+    if (mode === SITE_INDEX_ROW_MODE.COMPUTED) {
+      row.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
+      row.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+      row.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+      row.bhaSiteIndex = null
+    } else {
+      row.computedValue = null
+      row.age = null
+      row.height = null
+      row.bhaSiteIndex =
+        mode === SITE_INDEX_ROW_MODE.SUPPLIED ? DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX : null
+    }
+  }
+
+  // Why isVolume and isSupplied are watched here (not in SiteIndicesTable): transitions
   // must be tracked across component remounts. Vuetify expansion panels destroy and recreate
   // their content when collapsed/expanded, which would reset a component-level watcher's oldValue
   // to undefined and miss transitions that occurred while the panel was closed.
-  watch(isVolumeComputed, (nowVC, wasVC) => {
-    // The `if (isRestoringFromDB.value) return` below (also in the isSupplied watcher) prevents overwriting rows that
-    // restoreFromModelParameters() just restored from DB (e.g. Cancel button). Changing
-    // derivedBy/siteSpeciesValues during restore triggers these watchers before
-    // restorePerSpeciesRows() sets the correct values. isRestoringFromDB resets via nextTick.
+  // Each row is reset only when its own mode changes, so rows that stay in the same mode keep their values.
+  watch([isVolume, isSupplied], ([volume, supplied], [wasVolume, wasSupplied]) => {
+    // Skip during DB restore so the rows that restoreFromModelParameters() just restored
+    // (e.g. Cancel button) are not overwritten. Changing derivedBy/siteSpeciesValues during
+    // restore triggers this watcher before restorePerSpeciesRows() sets the correct values.
+    // isRestoringFromDB resets via nextTick.
     if (isRestoringFromDB.value) return
-    if (nowVC) {
-      // Volume+Computed: non-primary rows must be N/A - null out all their fields except ageType.
-      siteIndexRows.value.slice(1).forEach((row) => {
-        row.computedValue = null
-        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
-        row.age = null
-        row.height = null
-        row.bhaSiteIndex = null
-      })
-    } else if (wasVC) {
-      // Leaving Volume+Computed -> restore defaults so non-primary rows are editable again.
-      // If the destination is Supplied, the isSupplied watcher below will overwrite these
-      // immediately after, which is intentional - each watcher owns its own transition.
-      siteIndexRows.value.slice(1).forEach((row) => {
-        row.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
-        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
-        row.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
-        row.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
-        row.bhaSiteIndex = null
-      })
-    }
-  })
-
-  watch(isSupplied, (supplied) => {
-    // Same guard as above - skip during DB restore to preserve the restored row values.
-    if (isRestoringFromDB.value) return
-    if (supplied) {
-      // Supplied: only BHA Site Index is editable - null out all other fields for every row.
-      siteIndexRows.value.forEach((row) => {
-        row.computedValue = null
-        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
-        row.age = null
-        row.height = null
-        row.bhaSiteIndex = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
-      })
-    } else {
-      // Leaving Supplied -> restore Computed defaults.
-      // When also entering Volume+Computed, isVolumeComputed watcher (registered before this one)
-      // has already nulled non-primary rows. Skip them here so we don't overwrite those nulls
-      // with defaults.
-      siteIndexRows.value.forEach((row, index) => {
-        if (isVolumeComputed.value && index > 0) return
-        row.computedValue = CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX
-        row.ageType = CONSTANTS.AGE_TYPE.TOTAL
-        row.age = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
-        row.height = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
-        row.bhaSiteIndex = null
-      })
-    }
+    siteIndexRows.value.forEach((row, index) => {
+      const mode = getSiteIndexRowMode(index, volume, supplied)
+      if (mode === getSiteIndexRowMode(index, wasVolume, wasSupplied)) return
+      applySiteIndexRowMode(row, mode)
+    })
   })
 
   // stand information
@@ -664,7 +640,10 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     for (let i = 1; i < siteIndexRows.value.length; i++) {
       const row = siteIndexRows.value[i]
       const data = perSpeciesData[i - 1]
-      if (siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED) {
+      if (derivedBy.value === CONSTANTS.DERIVED_BY.VOLUME) {
+        // Volume based projections have no site data for non-primary species.
+        applySiteIndexRowMode(row, SITE_INDEX_ROW_MODE.NA)
+      } else if (siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED) {
         // Supplied mode: null out all fields except BHA site index and ageType (mirrors the isSupplied watcher).
         row.computedValue = null
         row.ageType = CONSTANTS.AGE_TYPE.TOTAL
@@ -789,7 +768,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     totalSpeciesGroupPercent,
     updateSpeciesGroup,
     // site info
-    isVolumeComputed,
+    isVolume,
     isSupplied,
     becZone,
     ecoZone,

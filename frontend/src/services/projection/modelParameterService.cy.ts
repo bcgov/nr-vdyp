@@ -218,6 +218,58 @@ describe('createCSVFiles', () => {
     expect(layer.basalArea).to.equal('25.0000')
     expect(layer.treesPerHectare).to.equal('800.00')
   })
+
+  describe('non-primary species site data (VDYP-1465)', () => {
+    const SECONDARY_SITE_COLUMNS = [2, 3, 4, 5, 6].flatMap((n) => [
+      `EST_AGE_SPP${n}`,
+      `EST_HEIGHT_SPP${n}`,
+      `EST_SITE_INDEX_SPP${n}`,
+    ])
+
+    const siteIndexRows = ['FD', 'PL', 'CW', 'HW', 'BA', 'SX'].map((speciesCode) => ({
+      speciesCode,
+      computedValue: CONSTANTS.COMPUTED_VALUE.HEIGHT,
+      ageType: CONSTANTS.AGE_TYPE.TOTAL,
+      age: '60',
+      height: '20.0',
+      bhaSiteIndex: '18.0',
+    }))
+
+    const readSecondarySiteColumns = async (store: any) => {
+      const { blobLayer } = createCSVFiles(store)
+      const [headerLine, dataLine] = (await blobLayer.text()).split('\n')
+      const headers = headerLine.split(',')
+      const values = dataLine.split(',')
+      return SECONDARY_SITE_COLUMNS.map((column) => {
+        expect(headers, column).to.include(column)
+        return values[headers.indexOf(column)]
+      })
+    }
+
+    ;[CONSTANTS.SITE_SPECIES_VALUES.COMPUTED, CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED].forEach((siteSpeciesValues) => {
+      it(`should submit blank site data for non-primary species for Volume ${siteSpeciesValues} projections`, async () => {
+        const store = createMockModelParameterStore({
+          derivedBy: CONSTANTS.DERIVED_BY.VOLUME,
+          siteSpeciesValues,
+          siteIndexRows,
+        })
+        const values = await readSecondarySiteColumns(store)
+        values.forEach((value) => expect(value).to.equal(''))
+      })
+
+      it(`should submit site data for every species for Basal Area ${siteSpeciesValues} projections`, async () => {
+        const store = createMockModelParameterStore({
+          derivedBy: CONSTANTS.DERIVED_BY.BASAL_AREA,
+          siteSpeciesValues,
+          siteIndexRows,
+        })
+        const values = await readSecondarySiteColumns(store)
+        expect(values).to.deep.equal(
+          [2, 3, 4, 5, 6].flatMap(() => ['60', '20.0', '18.0']),
+        )
+      })
+    })
+  })
 })
 
 describe('buildProjectionParameters', () => {
@@ -338,6 +390,7 @@ describe('buildProjectionParameters', () => {
   it('should send the 1-based species index of each site index row with a breast height age', () => {
     const params = buildProjectionParameters(
       createMockModelParameterStore({
+        derivedBy: CONSTANTS.DERIVED_BY.BASAL_AREA,
         siteIndexRows: [
           { speciesCode: 'FD', ageType: CONSTANTS.AGE_TYPE.BREAST },
           { speciesCode: 'PL', ageType: CONSTANTS.AGE_TYPE.TOTAL },
@@ -356,7 +409,20 @@ describe('buildBreastHeightAgeSpecies', () => {
   it('should ignore rows beyond the sixth species and missing rows', () => {
     const rows = Array.from({ length: 7 }, () => ({ ageType: CONSTANTS.AGE_TYPE.BREAST }))
     rows[1] = undefined as any
-    expect(buildBreastHeightAgeSpecies(createMockModelParameterStore({ siteIndexRows: rows }))).to.deep.equal([1, 3, 4, 5, 6])
+    expect(
+      buildBreastHeightAgeSpecies(
+        createMockModelParameterStore({ derivedBy: CONSTANTS.DERIVED_BY.BASAL_AREA, siteIndexRows: rows }),
+      ),
+    ).to.deep.equal([1, 3, 4, 5, 6])
+  })
+
+  it('should only consider the primary species for Volume based projections (VDYP-1465)', () => {
+    const rows = Array.from({ length: 6 }, () => ({ ageType: CONSTANTS.AGE_TYPE.BREAST }))
+    expect(
+      buildBreastHeightAgeSpecies(
+        createMockModelParameterStore({ derivedBy: CONSTANTS.DERIVED_BY.VOLUME, siteIndexRows: rows }),
+      ),
+    ).to.deep.equal([1])
   })
 
   it('should return an empty list when siteIndexRows is undefined', () => {

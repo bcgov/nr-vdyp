@@ -249,8 +249,10 @@ const { siteIndexRows, siteSpeciesValues, derivedBy, isSupplied } = storeToRefs(
 const isComputed = computed(() => siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED)
 const isVolume = computed(() => derivedBy.value === CONSTANTS.DERIVED_BY.VOLUME)
 
+// Volume based projections only accept site data for the primary species,
+// for both Computed and Supplied site index values.
 const isNonPrimaryRowDisabled = (index: number) =>
-  isComputed.value && isVolume.value && index > 0
+  isVolume.value && index > 0
 
 const isComputedValueNA = (index: number) =>
   isSupplied.value || isNonPrimaryRowDisabled(index)

@@ -99,6 +99,37 @@ describe('<SiteIndicesTable />', () => {
     })
   })
 
+  it('disables all non-primary row inputs with N/A placeholders when Supplied + Volume (VDYP-1465)', () => {
+    mountTable(true, (store) => {
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      store.siteIndexRows = [
+        makeRow('FD', { computedValue: null, age: null, height: null }),
+        makeRow('PL', { computedValue: null, age: null, height: null, bhaSiteIndex: null }),
+      ]
+    })
+    cy.get('tbody tr').eq(0).find('.site-spin-field').eq(2).find('input').should('not.be.disabled')
+    cy.get('tbody tr').eq(1).find('.v-select').should('have.class', 'v-input--disabled')
+    cy.get('tbody tr').eq(1).find('.site-spin-field input').each(($input) => {
+      cy.wrap($input).should('be.disabled')
+      cy.wrap($input).should('have.attr', 'placeholder', CONSTANTS.SPECIAL_INDICATORS.NA)
+    })
+  })
+
+  it('keeps non-primary row BHA Site Index editable when Supplied + Basal Area', () => {
+    mountTable(true, (store) => {
+      store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+    })
+    cy.then(() => {
+      useModelParameterStore().siteIndexRows = [
+        makeRow('FD', { computedValue: null, age: null, height: null }),
+        makeRow('PL', { computedValue: null, age: null, height: null }),
+      ]
+    })
+    cy.get('tbody tr').eq(1).find('.site-spin-field').eq(2).find('input').should('not.be.disabled')
+  })
+
   it('shows Calc. placeholder for the field matching the selected computedValue', () => {
     mountTable(true, (store) => {
       store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA

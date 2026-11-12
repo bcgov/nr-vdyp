@@ -474,10 +474,9 @@ const getPreConfirmErrorMessage = (): string | null => {
   return null
 }
 
+// Volume based projections only accept site data for the primary species.
 const isRowDisabledInNewUI = (index: number): boolean =>
-  siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
-  derivedBy.value === CONSTANTS.DERIVED_BY.VOLUME &&
-  index > 0
+  derivedBy.value === CONSTANTS.DERIVED_BY.VOLUME && index > 0
 
 const getRequiredPairError = (
   missingPrimary: boolean,
