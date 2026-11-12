@@ -857,12 +857,9 @@ public class PolygonProjectionRunner {
 			if (doAllowBack) {
 				if (yearsToGrowBack > 0) {
 
-					// BACK read the backwards growth target value from entry 101 in the
-					// control file. Adjust the control file to contain this value.
-					rewriteTargetYearToBackControlFile(
-							polygon.getFeatureId(), state.getExecutionFolder(), measurementYear, yearsToGrowBack,
-							projectionType
-					);
+					// BACK reads the backwards growth target value from entry 101 in the
+					// control file. Supply it in a per-stand control file.
+					generateBackStandControlFile(polygon.getFeatureId(), executionFolder, projectionStartYear);
 
 					componentRunner.runBack(polygon, projectionType, state);
 
@@ -913,8 +910,7 @@ public class PolygonProjectionRunner {
 			};
 			polygon.addMessage(
 					builder -> builder.layer(layer).details(
-							ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.ERROR,
-							messageKind,
+							ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.ERROR, messageKind,
 							processingException.getMessage(), startYear, endYear
 					)
 			);
@@ -1098,27 +1094,37 @@ public class PolygonProjectionRunner {
 		return path;
 	}
 
-	static void rewriteTargetYearToBackControlFile(
-			long featureId, Path executionFolder, int measurementYear, int yearsToGrowBack,
-			ProjectionTypeCode projectionType
-	) throws PolygonExecutionException {
-
-		Path controlFilePath = Path
-				.of(executionFolder.toString(), projectionType.toString(), Vdyp7Constants.BACK_CONTROL_FILE_NAME);
-		Path tempControlFilePath = Path.of(controlFilePath.toString() + ".tmp");
-
-		try {
-			var controlFileContents = Files.readString(controlFilePath);
-			// VDYP7 Back treats VTROL[1] values <=400 as relative years; writing an absolute start year
-			// (measurementYear - yearsToGrowBack, always >=1400) ensures correct interpretation.
-			var newControlFileContents = controlFileContents
-					.replace("%YR%", String.format("%4d", measurementYear - yearsToGrowBack));
-			Files.write(tempControlFilePath, newControlFileContents.getBytes());
-			Files.delete(controlFilePath);
-			Files.move(tempControlFilePath, controlFilePath);
+	/**
+	 * Write the per-stand BACK control file, the BACK counterpart of {@link #generateStandControlFile(Path)}. It is
+	 * passed to BACK after <code>VDYPBACK.CTR</code> so its entries override the template's. Adapted from
+	 * <code>CreateVDYP7BackControl</code> (vdyp7controlwrite.for), which writes control variables
+	 * <code>iYearsToBackGrow 0 2 3 1 0</code>.
+	 *
+	 * @param featureId       feature id of the polygon, for error reporting
+	 * @param executionFolder execution folder of the projection type being processed
+	 * @param startYear       the year BACK is to regress to
+	 * @return the path of the file written
+	 * @throws PolygonExecutionException if the file could not be written
+	 */
+	static Path generateBackStandControlFile(long featureId, Path executionFolder, int startYear)
+			throws PolygonExecutionException {
+		Path path = Path.of(executionFolder.toString(), Vdyp7Constants.STAND_BACK_CONTROL_FILE_NAME);
+		try (var os = new FileOutputStream(path.toFile()); var writer = new ControlFileWriter(os)) {
+			writer.writeComment("Automatically generated BACK control file for a specific stand");
+			// VTROL[1]: VDYP7 writes the number of years to regress. BACK treats values <=400 as relative years, so
+			// write the absolute start year instead to ensure correct interpretation. VTROL[4] = 3: output all years.
+			// VTROL[6] = 1 (VDYP7 writes 0): BACK does not grow, so in VDYP8 this value only controls whether the
+			// primary species details may be set more than once, which the shared initial processing does (SITEADD,
+			// then VHDOM1). With 0, BACK fails with "PrimarySpeciesDetails can be set once only".
+			writer.writeEntry(
+					ControlKey.VTROL.sequence.get(),
+					Stream.of(startYear, 0, 2, 3, 1, 1).map(i -> Integer.toString(i))
+							.map(s -> StringUtils.leftPad(s, 4)).collect(Collectors.joining(""))
+			);
 		} catch (IOException e) {
 			throw new PolygonExecutionException(featureId, e);
 		}
+		return path;
 	}
 
 	private void generateYieldTablesForPolygon() throws YieldTableGenerationException {

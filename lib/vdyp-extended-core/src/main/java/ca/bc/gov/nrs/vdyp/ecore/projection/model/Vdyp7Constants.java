@@ -10,6 +10,8 @@ public class Vdyp7Constants {
 																					// like P-VDYP_VDYP.CTL depending on
 																					// the layer
 	public static final String BACK_CONTROL_FILE_NAME = "VDYPBACK.CTR";
+	// Per-stand overrides for BACK; VDYP7 builds an equivalent file in CreateVDYP7BackControl (vdyp7controlwrite.for)
+	public static final String STAND_BACK_CONTROL_FILE_NAME = "VDYPBACK_STAND.CTR";
 
 	public static final double EMPTY_DECIMAL = -9.0f;
 	public static final String EMPTY_DECIMAL_TEXT = Double.toString(EMPTY_DECIMAL);

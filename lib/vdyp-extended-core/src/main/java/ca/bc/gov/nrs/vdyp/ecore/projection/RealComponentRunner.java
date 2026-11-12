@@ -236,7 +236,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 		runApp(
 				polygon, projectionTypeCode, state, VdypApplicationIdentifier.VDYP_BACK, //
-				List.of(Vdyp7Constants.BACK_CONTROL_FILE_NAME, Vdyp7Constants.STAND_FORWARD_CONTROL_FILE_NAME),
+				List.of(Vdyp7Constants.BACK_CONTROL_FILE_NAME, Vdyp7Constants.STAND_BACK_CONTROL_FILE_NAME),
 				VdypBackApplication::new, app -> {
 					// Nothing else to do
 				}
