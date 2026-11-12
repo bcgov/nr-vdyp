@@ -1,10 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.google.common.collect.Sets;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
@@ -30,16 +27,9 @@ public class ProjectionResultsBuilder {
 				polygon, projectionType, ProjectionStageCode.Back, backwardsReader, state
 		);
 
-		var yearsInBothSets = Sets.intersection(backResultsByYear.keySet(), resultsByYear.keySet());
-		if (!yearsInBothSets.isEmpty()) {
-			throw new IllegalStateException(
-					MessageFormat.format(
-							"{0}: contains both FORWARD and BACK results for the years {1}", polygon, yearsInBothSets
-					)
-			);
-		}
-
-		resultsByYear.putAll(backResultsByYear);
+		// BACK regresses from the reference year and so also reports it, as does FORWARD. FORWARD results take
+		// precedence for any year reported by both.
+		backResultsByYear.forEach(resultsByYear::putIfAbsent);
 
 		return resultsByYear;
 	}
