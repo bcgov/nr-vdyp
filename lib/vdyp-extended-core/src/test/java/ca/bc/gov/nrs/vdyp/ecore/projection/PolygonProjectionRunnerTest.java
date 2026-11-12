@@ -458,7 +458,7 @@ public class PolygonProjectionRunnerTest {
 					is(
 							result == 1
 									? "WARN: Unable to Project Stand forward beyond \"400\" years from stand reference age."
-									: "ERR: Unable to Project Stand over age range: \"2,024\" to \"2,134\". Forward Exception: forward failed"
+									: "ERR: Unable to Project Stand over age range: \"2024\" to \"2134\". Forward Exception: forward failed"
 					)
 			);
 		}
@@ -561,21 +561,6 @@ public class PolygonProjectionRunnerTest {
 
 		var ex = assertThrows(PolygonExecutionException.class, unit::performInitialProcessing);
 		assertTrue(ex.getMessage().startsWith("Polygon " + polygon.getFeatureId()));
-	}
-
-	@Test
-	void testRewriteTargetYearToBackControlFileFailsWhenControlFileMissing() throws IOException {
-
-		var executionFolder = Files.createTempDirectory("back-control-file-test");
-		Files.createDirectory(Path.of(executionFolder.toString(), ProjectionTypeCode.PRIMARY.toString()));
-
-		var ex = assertThrows(
-				PolygonExecutionException.class,
-				() -> PolygonProjectionRunner.rewriteTargetYearToBackControlFile(
-						13919428L, executionFolder, 1970, 100, ProjectionTypeCode.PRIMARY
-				)
-		);
-		assertTrue(ex.getMessage().startsWith("Polygon 13919428"));
 	}
 
 	@Test

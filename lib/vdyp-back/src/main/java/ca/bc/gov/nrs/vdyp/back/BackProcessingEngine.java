@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
-import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.BaseExecutionStep;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackLayerProcessingState;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
@@ -254,13 +253,14 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingState, 
 								getState().getSpeciesLoreyHeightBackupFactor(i)
 						), getState().getSpeciesLoreyHeightBackupFactorMaximum(i)
 				);
-				species.getLoreyHeightByUtilization().setAll(speciesLoreyHeight);
 			} else {
 				speciesLoreyHeight = min(
 						species.getLoreyHeightByUtilization().getAll(),
 						getState().getSpeciesLoreyHeightBackupFactorMaximum(i)
 				);
 			}
+			// VDYP7 stores the limited value for every species (BACKAPPL DO 62), not only those with a factor
+			species.getLoreyHeightByUtilization().setAll(speciesLoreyHeight);
 			sumBaHl += speciesLoreyHeight * species.getBaseAreaByUtilization().getAll();
 		}
 		primaryLayer.getLoreyHeightByUtilization().setAll(sumBaHl / primaryLayer.getBaseAreaByUtilization().getAll());

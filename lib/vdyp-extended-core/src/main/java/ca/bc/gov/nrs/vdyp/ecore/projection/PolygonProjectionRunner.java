@@ -11,6 +11,7 @@ import java.time.ZoneOffset;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -826,15 +827,8 @@ public class PolygonProjectionRunner {
 
 					componentRunner.runForward(polygon, projectionType, state);
 
-					var forwardResult = state.getProcessingResults(ProjectionStageCode.Forward, projectionType);
-					if (forwardResult.isPresent()) {
-						// In the event something happens in Forward processing continue with poro
-						logger.error(
-								"{}: Forward projection of type {} resulted in a message {}", polygon, projectionType,
-								forwardResult.get().getMessage() != null ? ": " + forwardResult.get().getMessage() : ""
-						);
-						Throwable processingException = forwardResult.get();
-						if (processingException instanceof ProjectMaxBeyondReferenceException) {
+					handleProjection(ProjectionStageCode.Forward, projectionType, layer, startYear, endYear, ex -> {
+						if (ex instanceof ProjectMaxBeyondReferenceException) {
 							polygon.addMessage(
 									builder -> builder.layer(layer).details(
 											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
@@ -842,16 +836,10 @@ public class PolygonProjectionRunner {
 											CommonConstants.MAX_YEARS_BEYOND_REFERENCE_AGE
 									)
 							);
-						} else {
-							polygon.addMessage(
-									builder -> builder.layer(layer).details(
-											ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.ERROR,
-											PolygonMessageKind.ERROR_PROJECTING_FORWARD,
-											processingException.getMessage(), startYear, endYear
-									)
-							);
+							return true;
 						}
-					}
+						return false;
+					});
 
 					logger.debug(
 							"{}: performed Forward; result: {}", layer,
@@ -869,14 +857,13 @@ public class PolygonProjectionRunner {
 			if (doAllowBack) {
 				if (yearsToGrowBack > 0) {
 
-					// BACK read the backwards growth target value from entry 101 in the
-					// control file. Adjust the control file to contain this value.
-					rewriteTargetYearToBackControlFile(
-							polygon.getFeatureId(), state.getExecutionFolder(), measurementYear, yearsToGrowBack,
-							projectionType
-					);
+					// BACK reads the backwards growth target value from entry 101 in the
+					// control file. Supply it in a per-stand control file.
+					generateBackStandControlFile(polygon.getFeatureId(), executionFolder, projectionStartYear);
 
 					componentRunner.runBack(polygon, projectionType, state);
+
+					handleProjection(ProjectionStageCode.Back, projectionType, layer, startYear, endYear);
 
 					logger.debug(
 							"{}: performed Back; result: {}", layer,
@@ -890,6 +877,44 @@ public class PolygonProjectionRunner {
 			} else {
 				logger.info("{}: backwards projection required but disabled", layer);
 			}
+		}
+	}
+
+	@SafeVarargs
+	final protected void handleProjection(
+			ProjectionStageCode stage, ProjectionTypeCode projectionType, Layer layer, int startYear, int endYear,
+			Predicate<Throwable>... handlers
+	) {
+		var result = state.getProcessingResults(stage, projectionType);
+		if (result.isPresent()) {
+			// In the event something happens in processing continue with projection
+			logger.error(
+					"{}: {} projection of type {} resulted in a message {}", polygon, stage, projectionType,
+					result.get().getMessage() != null ? ": " + result.get().getMessage() : ""
+			);
+			Throwable processingException = result.get();
+			for (var handler : handlers) {
+				// If one of the handlers succeeds, stop
+				if (handler.test(processingException))
+					return;
+			}
+
+			// Default handler if none could handle it
+
+			var messageKind = switch (stage) {
+			case Forward -> PolygonMessageKind.ERROR_PROJECTING_FORWARD;
+			case Back -> PolygonMessageKind.ERROR_PROJECTING_BACK;
+			default -> throw new IllegalStateException(
+					"handleProjection should only be called with a projection stage not " + stage
+			);
+			};
+			polygon.addMessage(
+					builder -> builder.layer(layer).details(
+							ReturnCode.ERROR_INTERNALERROR, MessageSeverityCode.ERROR, messageKind,
+							processingException.getMessage(), startYear, endYear
+					)
+			);
+
 		}
 	}
 
@@ -1041,7 +1066,7 @@ public class PolygonProjectionRunner {
 	private void generateYearToGrowFile(Path executionFolder, int measurementYear, int yearsToGrow)
 			throws PolygonExecutionException {
 		try {
-			Path growToYearFile = Path.of(executionFolder.toString(), "vin_y1.dat");
+			Path growToYearFile = Path.of(executionFolder.toString(), Vdyp7Constants.GROWTH_FILE_NAME);
 			FileOutputStream growToYearOutputStream = new FileOutputStream(growToYearFile.toFile());
 			try (var yearToGrowWriter = new VdypGrowToYearFileWriter(growToYearOutputStream)) {
 
@@ -1069,27 +1094,37 @@ public class PolygonProjectionRunner {
 		return path;
 	}
 
-	static void rewriteTargetYearToBackControlFile(
-			long featureId, Path executionFolder, int measurementYear, int yearsToGrowBack,
-			ProjectionTypeCode projectionType
-	) throws PolygonExecutionException {
-
-		Path controlFilePath = Path
-				.of(executionFolder.toString(), projectionType.toString(), Vdyp7Constants.BACK_CONTROL_FILE_NAME);
-		Path tempControlFilePath = Path.of(controlFilePath.toString() + ".tmp");
-
-		try {
-			var controlFileContents = Files.readString(controlFilePath);
-			// VDYP7 Back treats VTROL[1] values <=400 as relative years; writing an absolute start year
-			// (measurementYear - yearsToGrowBack, always >=1400) ensures correct interpretation.
-			var newControlFileContents = controlFileContents
-					.replace("%YR%", String.format("%4d", measurementYear - yearsToGrowBack));
-			Files.write(tempControlFilePath, newControlFileContents.getBytes());
-			Files.delete(controlFilePath);
-			Files.move(tempControlFilePath, controlFilePath);
+	/**
+	 * Write the per-stand BACK control file, the BACK counterpart of {@link #generateStandControlFile(Path)}. It is
+	 * passed to BACK after <code>VDYPBACK.CTR</code> so its entries override the template's. Adapted from
+	 * <code>CreateVDYP7BackControl</code> (vdyp7controlwrite.for), which writes control variables
+	 * <code>iYearsToBackGrow 0 2 3 1 0</code>.
+	 *
+	 * @param featureId       feature id of the polygon, for error reporting
+	 * @param executionFolder execution folder of the projection type being processed
+	 * @param startYear       the year BACK is to regress to
+	 * @return the path of the file written
+	 * @throws PolygonExecutionException if the file could not be written
+	 */
+	static Path generateBackStandControlFile(long featureId, Path executionFolder, int startYear)
+			throws PolygonExecutionException {
+		Path path = Path.of(executionFolder.toString(), Vdyp7Constants.STAND_BACK_CONTROL_FILE_NAME);
+		try (var os = new FileOutputStream(path.toFile()); var writer = new ControlFileWriter(os)) {
+			writer.writeComment("Automatically generated BACK control file for a specific stand");
+			// VTROL[1]: VDYP7 writes the number of years to regress. BACK treats values <=400 as relative years, so
+			// write the absolute start year instead to ensure correct interpretation. VTROL[4] = 3: output all years.
+			// VTROL[6] = 1 (VDYP7 writes 0): BACK does not grow, so in VDYP8 this value only controls whether the
+			// primary species details may be set more than once, which the shared initial processing does (SITEADD,
+			// then VHDOM1). With 0, BACK fails with "PrimarySpeciesDetails can be set once only".
+			writer.writeEntry(
+					ControlKey.VTROL.sequence.get(),
+					Stream.of(startYear, 0, 2, 3, 1, 1).map(i -> Integer.toString(i))
+							.map(s -> StringUtils.leftPad(s, 4)).collect(Collectors.joining(""))
+			);
 		} catch (IOException e) {
 			throw new PolygonExecutionException(featureId, e);
 		}
+		return path;
 	}
 
 	private void generateYieldTablesForPolygon() throws YieldTableGenerationException {

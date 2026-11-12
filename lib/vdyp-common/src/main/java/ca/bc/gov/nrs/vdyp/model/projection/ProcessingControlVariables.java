@@ -15,7 +15,7 @@ import ca.bc.gov.nrs.vdyp.model.TargetYear;
  * <li>0: NO GROWTH
  * <li>-1: SEQ014 (specifies end yr, each poly)
  * <li>1 to 400: grow i yrs
- * <li>1920 to 2400: grow to yr i (A.D.)
+ * <li>1520 to 2400: grow to yr i (A.D.)
  * </ul>
  * 2nd: Compatibility Variable output
  * <ul>
@@ -79,7 +79,7 @@ public class ProcessingControlVariables extends ControlVariables {
 		// Validate the control variable values.
 
 		var yearCounter = getControlVariable(ControlVariable.GROW_TARGET_1);
-		if (yearCounter != -1 && (yearCounter < 0 || yearCounter > 400 && yearCounter < 1920 || yearCounter > 2400)) {
+		if (yearCounter != -1 && (yearCounter < 0 || yearCounter > 400 && yearCounter < 1520 || yearCounter > 2400)) {
 			throw new ValueParseException(
 					Integer.toString(yearCounter),
 					"VdypControlVariableParser: year counter (1) value \"" + yearCounter + "\" is out of range"

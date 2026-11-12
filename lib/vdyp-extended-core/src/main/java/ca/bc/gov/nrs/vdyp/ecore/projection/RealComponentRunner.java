@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.back.VdypBackApplication;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
@@ -91,7 +92,9 @@ public class RealComponentRunner implements ComponentRunner {
 								"running", t
 						)
 				);
-				throw new PolygonExecutionException("Core Library Error in " + ProjectionStageCode.of(appToUse), t);
+				throw new PolygonExecutionException(
+						polygon.getFeatureId(), "Core Library Error in " + ProjectionStageCode.of(appToUse), t
+				);
 			}
 		}
 	}
@@ -230,25 +233,14 @@ public class RealComponentRunner implements ComponentRunner {
 		if (!polygon.doAllowProjectionOfType(projectionTypeCode)) {
 			return;
 		}
-		try {
-			// TODO: BACK is not supported yet.
 
-			@SuppressWarnings("unused")
-			Path controlFilePath = Path.of(
-					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
-					Vdyp7Constants.BACK_CONTROL_FILE_NAME
-			);
-
-			// VdypBackApplication app = new VdypBackApplication();
-			// app.doMain(controlFilePath.toAbsolutePath().toString());
-
-			state.setProcessingResults(ProjectionStageCode.Back, projectionTypeCode, Optional.empty());
-		} catch (Exception | Error e) {
-			throw new PolygonExecutionException(
-					polygon.getFeatureId(),
-					MessageFormat.format("Encountered {0} while running BACK", e.getClass().getSimpleName()), e
-			);
-		}
+		runApp(
+				polygon, projectionTypeCode, state, VdypApplicationIdentifier.VDYP_BACK, //
+				List.of(Vdyp7Constants.BACK_CONTROL_FILE_NAME, Vdyp7Constants.STAND_BACK_CONTROL_FILE_NAME),
+				VdypBackApplication::new, app -> {
+					// Nothing else to do
+				}
+		);
 	}
 
 	@Override
@@ -424,14 +416,16 @@ public class RealComponentRunner implements ComponentRunner {
 
 			ProjectionResultsReader backReader = new NullProjectionResultsReader();
 
-			if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)) {
+			// Only read BACK results when BACK succeeded; a failed BACK must not prevent the FORWARD results from
+			// being reported (the failure has already been recorded as a polygon message).
+			if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)
+					&& state.getProcessingResults(ProjectionStageCode.Back, projectionType).isEmpty()) {
 
 				try (var bis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.BACK_CONTROL_FILE_NAME)) {
-					// FIXME See VDYP-157
-					// var backwardsControlFileParser = new ForwardControlParser();
-					// Map<String, Object> backwardsControlMap = backwardsControlFileParser
-					// .parse(bis, vdypControlFileResolver, new HashMap<>());
-					// backReader = new RealProjectionResultsReader(backwardsControlMap);
+					var backwardsControlFileParser = new ProcessingControlParser();
+					Map<String, Object> backwardsControlMap = backwardsControlFileParser
+							.parse(bis, vdypControlFileResolver, new HashMap<>());
+					backReader = new RealProjectionResultsReader(backwardsControlMap);
 				}
 			}
 

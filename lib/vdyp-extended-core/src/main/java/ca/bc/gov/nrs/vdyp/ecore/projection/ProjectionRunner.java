@@ -47,9 +47,9 @@ public class ProjectionRunner implements Closeable {
 		entryNameToFileNameMap.put(FORWARD_SPECIES_ENTRY_NAME, "vs_grow.dat");
 		entryNameToFileNameMap.put(FORWARD_UTILIZATION_ENTRY_NAME, "vu_grow.dat");
 		entryNameToFileNameMap.put(FORWARD_COMPATIBILITY_ENTRY_NAME, "vc_grow.dat");
-		entryNameToFileNameMap.put(BACK_POLYGON_ENTRY_NAME, "vp_back_grow.dat");
-		entryNameToFileNameMap.put(BACK_SPECIES_ENTRY_NAME, "vs_back_grow.dat");
-		entryNameToFileNameMap.put(BACK_UTILIZATION_ENTRY_NAME, "vu_back_grow.dat");
+		entryNameToFileNameMap.put(BACK_POLYGON_ENTRY_NAME, "vp_back.dat");
+		entryNameToFileNameMap.put(BACK_SPECIES_ENTRY_NAME, "vs_back.dat");
+		entryNameToFileNameMap.put(BACK_UTILIZATION_ENTRY_NAME, "vu_back.dat");
 	}
 
 	private final ProjectionContext context;

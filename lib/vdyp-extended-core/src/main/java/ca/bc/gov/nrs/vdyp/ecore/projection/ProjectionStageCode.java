@@ -20,6 +20,8 @@ public enum ProjectionStageCode {
 			return Initial;
 		case VDYP_FORWARD:
 			return Forward;
+		case VDYP_BACK:
+			return Back;
 		default:
 			throw new IllegalStateException("Unrecognized application type " + app.getClass().getSimpleName());
 		}

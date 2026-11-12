@@ -68,6 +68,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.model.projection.ControlVariable;
@@ -539,8 +540,14 @@ class BackProcessingEngineTest {
 			setupMockState();
 		}
 
-		@Test
-		void test() throws ProcessingException {
+		/**
+		 * Run applyBackupFactors for 1995 on a three species polygon (B, PL, S) where B has no Lorey height backup
+		 * factor (BFHLI = 1).
+		 *
+		 * @param speciesOneLoreyHeightMaximum BFMAXHLI for species 1 (B)
+		 * @return the primary layer after the factors have been applied
+		 */
+		VdypLayer applyBackupFactorsToTestPolygon(float speciesOneLoreyHeightMaximum) throws ProcessingException {
 
 			expect(state.getControlMap()).andStubReturn(new ProcessingResolvedControlMapImpl(rawControlMap));
 			expect(state.getCurrentBecZone()).andStubReturn(becLookup.get("MS").get());
@@ -562,7 +569,7 @@ class BackProcessingEngineTest {
 			expect(state.getSpeciesConvergenceLoreyHeight(3)).andStubReturn(7.28091431f);
 
 			// BFMAXHLI
-			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(1)).andStubReturn(12.8473997f);
+			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(1)).andStubReturn(speciesOneLoreyHeightMaximum);
 			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(2)).andStubReturn(13.8270998f);
 			expect(state.getSpeciesLoreyHeightBackupFactorMaximum(3)).andStubReturn(16.6229f);
 
@@ -776,6 +783,14 @@ class BackProcessingEngineTest {
 
 			em.verify();
 
+			return primaryLayer;
+		}
+
+		@Test
+		void test() throws ProcessingException {
+
+			var primaryLayer = applyBackupFactorsToTestPolygon(12.8473997f);
+
 			var primarySite = primaryLayer.getPrimarySpeciesRecord().get().getSite().get();
 			assertThat(primarySite, hasProperty("height", present(closeTo(14.0952682f))));
 			assertThat(primarySite, hasProperty("ageTotal", present(closeTo(69f))));
@@ -827,6 +842,16 @@ class BackProcessingEngineTest {
 							)
 					)
 			);
+		}
+
+		@Test
+		void testLoreyHeightLimitIsStoredForSpeciesWithoutBackupFactor() throws ProcessingException {
+
+			// B has no Lorey height backup factor and its estimated Lorey height (11.62 in test()) exceeds this
+			// limit. VDYP7 BACKAPPL (DO 62) stores the limited value on the species, not only in the layer sum.
+			var primaryLayer = applyBackupFactorsToTestPolygon(10f);
+
+			assertThat(primaryLayer, hasSpecies("B", hasProperty("loreyHeightByUtilization", utilizationAllOnly(10f))));
 		}
 
 	}
