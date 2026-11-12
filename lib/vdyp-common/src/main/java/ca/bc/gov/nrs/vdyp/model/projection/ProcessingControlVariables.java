@@ -79,7 +79,7 @@ public class ProcessingControlVariables extends ControlVariables {
 		// Validate the control variable values.
 
 		var yearCounter = getControlVariable(ControlVariable.GROW_TARGET_1);
-		if (yearCounter != -1 && (yearCounter < 0 || yearCounter > 400 && yearCounter < 1920 || yearCounter > 2400)) {
+		if (yearCounter != -1 && (yearCounter < 0 || yearCounter > 400 && yearCounter < 1520 || yearCounter > 2400)) {
 			throw new ValueParseException(
 					Integer.toString(yearCounter),
 					"VdypControlVariableParser: year counter (1) value \"" + yearCounter + "\" is out of range"

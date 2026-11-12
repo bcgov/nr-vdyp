@@ -130,8 +130,8 @@ public class TargetYear {
 		if (value <= 400) {
 			return relative(value);
 		}
-		if (value < 1920) {
-			throw new IllegalArgumentException("Target year " + value + " may not be between 400 and 1920");
+		if (value < 1520) {
+			throw new IllegalArgumentException("Target year " + value + " may not be between 400 and 1520");
 		}
 		// TODO: might want to relax this
 		if (value > 2400) {

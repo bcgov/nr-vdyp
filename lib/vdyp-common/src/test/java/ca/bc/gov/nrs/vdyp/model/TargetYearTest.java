@@ -101,15 +101,16 @@ public class TargetYearTest {
 	static List<Arguments> normalControlVariableYears() {
 		return List.of(
 				Arguments.of(1, 1, true), Arguments.of(2, 2, true), Arguments.of(399, 399, true),
-				Arguments.of(400, 400, true), Arguments.of(1920, 1920, false), Arguments.of(1921, 1921, false),
-				Arguments.of(2026, 2026, false), Arguments.of(2399, 2399, false), Arguments.of(2400, 2400, false)
+				Arguments.of(400, 400, true), Arguments.of(1920, 1920, false), Arguments.of(1520, 1520, false),
+				Arguments.of(1521, 1521, false), Arguments.of(1921, 1921, false), Arguments.of(2026, 2026, false),
+				Arguments.of(2399, 2399, false), Arguments.of(2400, 2400, false)
 		);
 	}
 
 	static List<Arguments> badControlVariableYears() {
 		return List.of(
 				Arguments.of(-2, "negative"), Arguments.of(-3, "negative"), Arguments.of(-400, "negative"),
-				Arguments.of(401, "between 400 and 1920"), Arguments.of(1919, "between 400 and 1920"),
+				Arguments.of(401, "between 400 and 1520"), Arguments.of(1519, "between 400 and 1520"),
 				Arguments.of(2401, "later than 2400"), Arguments.of(3052, "later than 2400")
 		);
 	}

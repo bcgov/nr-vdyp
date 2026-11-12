@@ -61,7 +61,7 @@ class ProcessingControlVariablesTest {
 				ValueParseException.class, () -> new ProcessingControlVariables(new Integer[] { 401, 0, 0, 0, 0, 0 })
 		);
 		assertThrows(
-				ValueParseException.class, () -> new ProcessingControlVariables(new Integer[] { 1919, 0, 0, 0, 0, 0 })
+				ValueParseException.class, () -> new ProcessingControlVariables(new Integer[] { 1519, 0, 0, 0, 0, 0 })
 		);
 		new ProcessingControlVariables(new Integer[] { 1920, 0, 0, 0, 0, 0 });
 		new ProcessingControlVariables(new Integer[] { 2400, 0, 0, 0, 0, 0 });
