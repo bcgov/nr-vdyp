@@ -1066,7 +1066,7 @@ public class PolygonProjectionRunner {
 	private void generateYearToGrowFile(Path executionFolder, int measurementYear, int yearsToGrow)
 			throws PolygonExecutionException {
 		try {
-			Path growToYearFile = Path.of(executionFolder.toString(), "vin_y1.dat");
+			Path growToYearFile = Path.of(executionFolder.toString(), Vdyp7Constants.GROWTH_FILE_NAME);
 			FileOutputStream growToYearOutputStream = new FileOutputStream(growToYearFile.toFile());
 			try (var yearToGrowWriter = new VdypGrowToYearFileWriter(growToYearOutputStream)) {
 

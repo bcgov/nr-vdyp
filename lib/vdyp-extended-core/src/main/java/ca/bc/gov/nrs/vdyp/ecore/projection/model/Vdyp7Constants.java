@@ -13,6 +13,8 @@ public class Vdyp7Constants {
 	// Per-stand overrides for BACK; VDYP7 builds an equivalent file in CreateVDYP7BackControl (vdyp7controlwrite.for)
 	public static final String STAND_BACK_CONTROL_FILE_NAME = "VDYPBACK_STAND.CTR";
 
+	public static final String GROWTH_FILE_NAME = "vin_y1.dat";
+
 	public static final double EMPTY_DECIMAL = -9.0f;
 	public static final String EMPTY_DECIMAL_TEXT = Double.toString(EMPTY_DECIMAL);
 	public static final int EMPTY_INT = -9;
