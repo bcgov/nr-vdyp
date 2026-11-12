@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.batch.persistence.repository;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.jupiter.api.Assertions;
@@ -91,6 +92,21 @@ class ServerCapacityRepositoryPostgresTest {
 
 		Long aggregateCapacity = repository.getAggregateCapacity(10);
 		Assertions.assertEquals(threadCapacity + threadCapacity2, aggregateCapacity);
+	}
+
+	@Test
+	void deleteStaleWorkersRemovesOnlyEntriesOlderThanMaxAge() {
+		jdbcTemplate.update("""
+				INSERT INTO batch_worker_registry (worker_id, num_max_threads, is_accepting_work, last_heartbeat_time)
+				VALUES ('stale', 4, true, (clock_timestamp() AT TIME ZONE 'UTC') - interval '2 days')
+				""");
+		repository.recordCapacityHeartbeat("fresh", 5, true);
+
+		int deleted = repository.deleteStaleWorkers(86400);
+
+		Assertions.assertEquals(1, deleted);
+		List<String> remaining = jdbcTemplate.queryForList("SELECT worker_id FROM batch_worker_registry", String.class);
+		Assertions.assertEquals(List.of("fresh"), remaining);
 	}
 
 }

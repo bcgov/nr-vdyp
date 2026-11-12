@@ -75,4 +75,12 @@ class ServerCapacityServiceTest {
 		assertEquals(12L, service.getAllReplicaCapacity(45));
 		verify(repository).getAggregateCapacity(45);
 	}
+
+	@Test
+	void removeStaleWorkersDelegatesToRepository() {
+		when(repository.deleteStaleWorkers(86400)).thenReturn(3);
+
+		assertEquals(3, service.removeStaleWorkers(86400));
+		verify(repository).deleteStaleWorkers(86400);
+	}
 }
