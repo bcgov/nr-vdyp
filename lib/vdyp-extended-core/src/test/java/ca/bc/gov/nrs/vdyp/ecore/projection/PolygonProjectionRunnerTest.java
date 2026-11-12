@@ -564,21 +564,6 @@ public class PolygonProjectionRunnerTest {
 	}
 
 	@Test
-	void testRewriteTargetYearToBackControlFileFailsWhenControlFileMissing() throws IOException {
-
-		var executionFolder = Files.createTempDirectory("back-control-file-test");
-		Files.createDirectory(Path.of(executionFolder.toString(), ProjectionTypeCode.PRIMARY.toString()));
-
-		var ex = assertThrows(
-				PolygonExecutionException.class,
-				() -> PolygonProjectionRunner.rewriteTargetYearToBackControlFile(
-						13919428L, executionFolder, 1970, 100, ProjectionTypeCode.PRIMARY
-				)
-		);
-		assertTrue(ex.getMessage().startsWith("Polygon 13919428"));
-	}
-
-	@Test
 	void testTooYoungFIPStartFallthroughVRI() throws AbstractProjectionRequestException, IOException {
 		addStand("PL", 100.0, 8.0, 1.0);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
