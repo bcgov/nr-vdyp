@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.io.parse.control;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +18,6 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaGrowthFiatParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageEquationGroupParser;
@@ -29,8 +29,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.ComponentSizeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DefaultEquationNumberParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.DqGrowthEmpiricalParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.DqGrowthFiatParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLNonprimaryCoefficientParser;
@@ -38,10 +36,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.HLPrimarySpeciesEqnP1Parser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLPrimarySpeciesEqnP2Parser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLPrimarySpeciesEqnP3Parser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.NonPrimarySpeciesBasalAreaGrowthParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.NonPrimarySpeciesDqGrowthParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.PrimarySpeciesBasalAreaGrowthParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.PrimarySpeciesDqGrowthParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.QuadraticMeanDiameterYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.SiteCurveAgeMaximumParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.SiteCurveParser;
@@ -96,8 +90,7 @@ public abstract class ProcessingControlParser extends BaseControlParser<Processi
 		return List.of(
 				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_POLYGON), //
 				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES), //
-				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL), //
-				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES)
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL)
 		);
 	}
 
@@ -240,23 +233,6 @@ public abstract class ProcessingControlParser extends BaseControlParser<Processi
 		addConfigurationParser(new QuadraticMeanDiameterYieldParser());
 		// RD_E108
 		addConfigurationParser(new UpperBoundsParser());
-		// RD_E111
-		addConfigurationParser(new BasalAreaGrowthFiatParser());
-		// RD_E117
-		addConfigurationParser(new DqGrowthFiatParser());
-		// RD_E122
-		addConfigurationParser(new DqGrowthEmpiricalParser());
-		// RD_E148
-		addConfigurationParser(new PrimarySpeciesBasalAreaGrowthParser());
-		// RD_E149
-		addConfigurationParser(new NonPrimarySpeciesBasalAreaGrowthParser());
-		// RD_E150
-		addConfigurationParser(new PrimarySpeciesDqGrowthParser());
-		// RD_E151
-		addConfigurationParser(new NonPrimarySpeciesDqGrowthParser());
-
-		// RD_E198: Modifiers); IPSJF155-Appendix XII
-		addConfigurationParser(new ModifierParser(getProgramId()));
 
 		// V7O_VIP - 11
 		addInputParser(new VdypPolygonParser());
@@ -279,11 +255,16 @@ public abstract class ProcessingControlParser extends BaseControlParser<Processi
 		controlParser.record(ControlKey.VTROL, getControlVariableParser());
 		orderedControlKeys.add(ControlKey.VTROL);
 
+		// RD_E198: Modifiers); IPSJF155-Appendix XII
+		addConfigurationParser(new ModifierParser(getProgramId()));
+
 		// 199 - debug switches
 		orderedControlKeys.add(ControlKey.DEBUG_SWITCHES);
 
 		// 1 - MAX_NUM_POLY
 		orderedControlKeys.add(ControlKey.MAX_NUM_POLY);
+
+		orderedControlKeys.sort(Comparator.comparingInt((ControlKey key) -> key.sequence.orElse(100)));
 
 		super.initialize();
 	}

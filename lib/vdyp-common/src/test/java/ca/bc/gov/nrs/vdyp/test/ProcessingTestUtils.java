@@ -16,6 +16,7 @@ import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.TestProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -224,7 +225,7 @@ public class ProcessingTestUtils {
 	public static void runForwardProcessor(
 			Processor<?> fp, FileResolver outputResolver, final String controlPath, EnumSet<Pass> vdypPassSet
 	) throws ProcessingException {
-		var rawControlMap = TestUtils.loadControlMap(new TestProcessingControlParser(), Path.of(controlPath));
+		var rawControlMap = TestUtils.loadControlMap(new ForwardControlParser(), Path.of(controlPath));
 		var controlMap = new ProcessingResolvedControlMapImpl(rawControlMap);
 		fp.process(vdypPassSet, controlMap, Optional.of(outputResolver), p -> true);
 	}

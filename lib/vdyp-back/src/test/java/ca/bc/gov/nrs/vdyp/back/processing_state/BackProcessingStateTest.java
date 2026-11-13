@@ -18,14 +18,17 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.beanutils.ConvertUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.back.io.parse.BackControlParser;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class BackProcessingStateTest {
+
+	BackControlParser parser;
 
 	static List<Arguments> scalarAccessors() {
 		return List.of(
@@ -52,11 +55,15 @@ class BackProcessingStateTest {
 		);
 	}
 
+	@BeforeEach
+	void setup() {
+		parser = new BackControlParser();
+	}
+
 	@ParameterizedTest
 	@MethodSource("scalarAccessors")
 	void testScalarAccessors(String property, Class<? extends Number> type, Number value) throws Exception {
-		Map<String, Object> rawControlMap = TestUtils
-				.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
+		Map<String, Object> rawControlMap = TestUtils.loadControlMap(parser, Path.of("VDYP.CTR"));
 		var unit = new BackProcessingState(rawControlMap);
 
 		var pd = new PropertyDescriptor(property, BackProcessingState.class);
@@ -82,8 +89,7 @@ class BackProcessingStateTest {
 	@ParameterizedTest
 	@MethodSource("scalarAccessors")
 	void testConveninenceScalarSetter(String property, Class<? extends Number> type, Number value) throws Exception {
-		Map<String, Object> rawControlMap = TestUtils
-				.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
+		Map<String, Object> rawControlMap = TestUtils.loadControlMap(parser, Path.of("VDYP.CTR"));
 		var unit = new BackProcessingState(rawControlMap);
 
 		var pd = new PropertyDescriptor(property, BackProcessingState.class);
@@ -114,8 +120,7 @@ class BackProcessingStateTest {
 	@ParameterizedTest
 	@MethodSource("indexedAccessors")
 	void testScalarAccessors(String property, int from) throws Exception {
-		Map<String, Object> rawControlMap = TestUtils
-				.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
+		Map<String, Object> rawControlMap = TestUtils.loadControlMap(parser, Path.of("VDYP.CTR"));
 		var unit = new BackProcessingState(rawControlMap);
 
 		var upcaseProperty = property.substring(0, 1).toUpperCase(Locale.ENGLISH) + property.substring(1);

@@ -74,16 +74,6 @@
 106 coe/YLDBA407.COE                                  BA Yield (Primary layer)   RD_E106 ipsjf160
 107 coe/YLDDQ45.COE                                   DQ Yield (Primary layer)   RD_E107 ipsjf161
 108 coe/PCT_407.coe                                   Upper bounds (BA, DQ)  RD_E108  ipsjf160 (emp106, emp107)
-111 coe/EMP111A1.PRM                                  Growth in BA (Prim layer) Fiat Model (EMP111A) IPSJF162 
-117 coe/EMP117A1.prm                                  DQ GROWTH (PRI. L) IPSJF178, FIAT AND MIXED MODEL.
-121 coe/GROWBA11.COE                                  GROWTH IN BA (PRIM LAYER) EMP. Model (EMP121) IPSJF162 
-122 coe/GD20.coe                                      DQ growth EMP122  IPSJF178, empirical model
-148 coe/BASP05.COE                                    BA growth Primary SP IPSJF148
-149 coe/BASP06.COE                                    BA growth NONPrimary SP IPSJF149
-150 coe/DQSP05.COE                                    DQ growth Primary SP IPSJF150
-151 coe/DQSP06.COE                                    DQ GROWTH NONPRIMARY SP. IPSJF151
-
-198 coe/mod19813.prm                                  Modifier file (IPSJF155, XII) RD_E198
 
 199  0 0 0 0 0 0 0 0 0 0 415 5 713 3 0 0 0 0 0 1 0 0 0 Debug switches (0 by default) See IPSJF155  App IX                  Debug switches (25) 0=default  See IPSJF155  App IX.
                                                       (5) MATH77 errors 0-suppress (recommended). (1,2)-show.

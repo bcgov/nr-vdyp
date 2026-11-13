@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypProcessingApplication;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 
 public class VdypForwardApplication extends VdypProcessingApplication {
@@ -39,6 +39,6 @@ public class VdypForwardApplication extends VdypProcessingApplication {
 
 	@Override
 	protected ProcessingControlParser getControlFileParser() {
-		return new ForwardProcessingControlParser();
+		return new ForwardControlParser();
 	}
 }

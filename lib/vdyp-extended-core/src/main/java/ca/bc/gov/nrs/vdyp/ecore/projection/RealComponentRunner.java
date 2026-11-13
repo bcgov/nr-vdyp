@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.back.VdypBackApplication;
+import ca.bc.gov.nrs.vdyp.back.io.parse.BackControlParser;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
@@ -43,7 +44,7 @@ import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
 
@@ -407,7 +408,7 @@ public class RealComponentRunner implements ComponentRunner {
 			if (state.didRunProjectionStage(ProjectionStageCode.Forward, projectionType)) {
 
 				try (var fis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.FORWARD_CONTROL_FILE_NAME)) {
-					var forwardControlFileParser = new ForwardProcessingControlParser();
+					var forwardControlFileParser = new ForwardControlParser();
 					Map<String, Object> forwardControlMap = forwardControlFileParser
 							.parse(fis, vdypControlFileResolver, new HashMap<>());
 					forwardReader = new RealProjectionResultsReader(forwardControlMap);
@@ -422,7 +423,7 @@ public class RealComponentRunner implements ComponentRunner {
 					&& state.getProcessingResults(ProjectionStageCode.Back, projectionType).isEmpty()) {
 
 				try (var bis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.BACK_CONTROL_FILE_NAME)) {
-					var backwardsControlFileParser = new ProcessingControlParser();
+					var backwardsControlFileParser = new BackControlParser();
 					Map<String, Object> backwardsControlMap = backwardsControlFileParser
 							.parse(bis, vdypControlFileResolver, new HashMap<>());
 					backReader = new RealProjectionResultsReader(backwardsControlMap);
