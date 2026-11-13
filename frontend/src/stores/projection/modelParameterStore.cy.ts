@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { assert } from 'chai'
+import { nextTick } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 import { useModelParameterStore } from '@/stores/projection/modelParameterStore'
 import { CONSTANTS, DEFAULTS } from '@/constants'
@@ -244,6 +245,18 @@ describe('Model Parameter Store', () => {
     store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
     store.updateSpeciesGroup()
 
+    expect(store.siteIndexRows[0].bhaSiteIndex).to.equal(DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX)
+    expect(store.siteIndexRows[0].computedValue).to.be.null
+    expect(store.siteIndexRows[0].age).to.be.null
+    expect(store.siteIndexRows[0].height).to.be.null
+    expect(store.siteIndexRows[1].bhaSiteIndex).to.be.null
+    expect(store.siteIndexRows[1].computedValue).to.be.null
+    expect(store.siteIndexRows[1].age).to.be.null
+    expect(store.siteIndexRows[1].height).to.be.null
+
+    store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+    store.updateSpeciesGroup()
+
     store.siteIndexRows.forEach((row) => {
       expect(row.bhaSiteIndex).to.equal(DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX)
       expect(row.computedValue).to.be.null
@@ -252,17 +265,52 @@ describe('Model Parameter Store', () => {
     })
   })
 
-  it('should reflect computed conditions in isVolumeComputed and isSupplied', () => {
-    store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+  it('should blank non-primary siteIndexRows when switching to Volume and restore them when switching back (VDYP-1465)', () => {
+    cy.then(() => {
+      store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      return nextTick()
+    })
+    cy.then(() => {
+      store.speciesList[0] = { species: 'PL', percent: '60' }
+      store.speciesList[1] = { species: 'AC', percent: '40' }
+      store.updateSpeciesGroup()
+      store.siteIndexRows[0].bhaSiteIndex = '20.0'
+      store.siteIndexRows[1].bhaSiteIndex = '18.0'
+
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+      return nextTick()
+    })
+    cy.then(() => {
+      expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('20.0')
+      expect(store.siteIndexRows[1].bhaSiteIndex).to.be.null
+      expect(store.siteIndexRows[1].computedValue).to.be.null
+
+      store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+      return nextTick()
+    })
+    cy.then(() => {
+      expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('20.0')
+      expect(store.siteIndexRows[1].bhaSiteIndex).to.equal(DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX)
+
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      return nextTick()
+    })
+    cy.then(() => {
+      expect(store.siteIndexRows[0].computedValue).to.equal(CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX)
+      expect(store.siteIndexRows[0].age).to.equal(DEFAULTS.DEFAULT_VALUES.SPZ_AGE)
+      expect(store.siteIndexRows[1].computedValue).to.be.null
+      expect(store.siteIndexRows[1].bhaSiteIndex).to.be.null
+    })
+  })
+
+  it('should reflect computed conditions in isVolume and isSupplied', () => {
     store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-    assert.isTrue(store.isVolumeComputed)
+    assert.isTrue(store.isVolume)
 
     store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
-    assert.isFalse(store.isVolumeComputed)
-
-    store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
-    store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
-    assert.isFalse(store.isVolumeComputed)
+    assert.isFalse(store.isVolume)
 
     store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
     assert.isTrue(store.isSupplied)
@@ -424,9 +472,10 @@ describe('Model Parameter Store', () => {
     expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('16.3')
   })
 
-  it('should restore secondary siteIndexRows for Computed and Supplied modes', () => {
+  it('should restore secondary siteIndexRows for Basal Area Computed and Supplied modes', () => {
     store.restoreFromModelParameters(
       makeModelParams({
+        derivedBy: CONSTANTS.DERIVED_BY.BASAL_AREA,
         siteIndex: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
         compute: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
         compute2: CONSTANTS.COMPUTED_VALUE.HEIGHT,
@@ -443,11 +492,36 @@ describe('Model Parameter Store', () => {
     expect(store.siteIndexRows[1].height).to.be.null
     expect(store.siteIndexRows[1].bhaSiteIndex).to.equal('20.0')
 
-    store.restoreFromModelParameters(makeModelParams({ siteIndex: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED, si2: '22.5' }))
+    store.restoreFromModelParameters(
+      makeModelParams({ derivedBy: CONSTANTS.DERIVED_BY.BASAL_AREA, siteIndex: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED, si2: '22.5' }),
+    )
 
     expect(store.siteIndexRows[1].computedValue).to.be.null
     expect(store.siteIndexRows[1].bhaSiteIndex).to.equal('22.5')
     expect(store.siteIndexRows[1].age).to.be.null
     expect(store.siteIndexRows[1].height).to.be.null
+  })
+
+  ;[CONSTANTS.SITE_SPECIES_VALUES.COMPUTED, CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED].forEach((siteIndex) => {
+    it(`should restore blank secondary siteIndexRows for Volume ${siteIndex} mode (VDYP-1465)`, () => {
+      store.restoreFromModelParameters(
+        makeModelParams({
+          derivedBy: CONSTANTS.DERIVED_BY.VOLUME,
+          siteIndex,
+          compute: CONSTANTS.COMPUTED_VALUE.BHA_SITE_INDEX,
+          compute2: CONSTANTS.COMPUTED_VALUE.HEIGHT,
+          ageYears2: CONSTANTS.AGE_TYPE.BREAST,
+          age2: '50',
+          si2: '22.5',
+        }),
+      )
+
+      const row = store.siteIndexRows[1]
+      expect(row.computedValue).to.be.null
+      expect(row.ageType).to.equal(CONSTANTS.AGE_TYPE.TOTAL)
+      expect(row.age).to.be.null
+      expect(row.height).to.be.null
+      expect(row.bhaSiteIndex).to.be.null
+    })
   })
 })
