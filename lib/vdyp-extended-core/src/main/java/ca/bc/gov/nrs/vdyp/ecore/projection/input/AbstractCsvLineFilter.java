@@ -14,7 +14,6 @@ public class AbstractCsvLineFilter implements CsvToBeanFilter {
 	}
 
 	private Set<Feature> featureSet = new HashSet<>();
-	private int nLinesSeen = 0;
 	private String leadingHeader = null;
 
 	public AbstractCsvLineFilter(boolean doFilterBlankLines) {
@@ -50,7 +49,7 @@ public class AbstractCsvLineFilter implements CsvToBeanFilter {
 		var doFilterBlankLines = featureSet.contains(Feature.FILTER_BLANK_LINES);
 
 		if (cellsOfLine.length > 0) {
-			if (nLinesSeen == 0 && cellsOfLine[0].trim().equals(leadingHeader)) {
+			if (cellsOfLine[0].trim().equals(leadingHeader)) {
 				headerLine = true;
 				blankLine = false;
 			} else {
@@ -64,8 +63,6 @@ public class AbstractCsvLineFilter implements CsvToBeanFilter {
 				}
 			}
 		}
-
-		nLinesSeen += 1;
 
 		return false == (doFilterHeaderLines && headerLine || doFilterBlankLines && blankLine);
 	}
