@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
@@ -34,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.SiteCurveAgeMaximumParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.TestProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
@@ -50,10 +52,15 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 class ProcessingControlParserTest {
+	ProcessingControlParser parser;
+
+	@BeforeEach
+	void setup() {
+		parser = new TestProcessingControlParser();
+	}
 
 	@Test
 	void testParseBec_9() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -66,14 +73,12 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseSP0_10() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(result, (Matcher) controlMapHasEntry(ControlKey.SP0_DEF, instanceOf(GenusDefinitionMap.class)));
 	}
 
 	@Test
 	void testParseVGRP_20() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -85,7 +90,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseDGRP_21() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -97,7 +101,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseBGRP_22() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -109,7 +112,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseGRBA1_30() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -121,7 +123,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseGMBA1_31() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result, (Matcher) controlMapHasEntry(
@@ -135,7 +136,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE025() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = parseWithAppendix(parser, "025 coe/SIEQN.PRM");
 		assertThat(
 				result, (Matcher) controlMapHasEntry(
@@ -149,14 +149,12 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE025Empty() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(result, (Matcher) controlMapHasEntry(ControlKey.SITE_CURVE_NUMBERS, mmEmpty()));
 	}
 
 	@Test
 	void testParseE026() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result, (Matcher) controlMapHasEntry(
@@ -170,7 +168,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE026Empty() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = parseWithAppendix(parser, "026  ");
 		// Map is empty but gives appropriate default values
 		assertThat(result, (Matcher) controlMapHasEntry(ControlKey.SITE_CURVE_AGE_MAX, Matchers.anEmptyMap()));
@@ -182,7 +179,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE028() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result, (Matcher) controlMapHasEntry(ControlKey.PARAM_ADJUSTMENTS, allOf(isA(CompVarAdjustments.class)))
@@ -191,7 +187,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE028Empty() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = parseWithAppendix(parser, "028  ");
 
 		// Test that we got the appropriate default values
@@ -204,7 +199,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE043() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -216,7 +210,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE050() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -229,7 +222,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE051() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -242,7 +234,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE052() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -259,7 +250,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE053() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -272,7 +262,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE060() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -284,7 +273,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE061() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(result, (Matcher) controlMapHasEntry(ControlKey.SPECIES_COMPONENT_SIZE_LIMIT, Matchers.anything()));
 
@@ -300,7 +288,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseUBA1() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -313,7 +300,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseYVC1() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -326,7 +312,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseYVD1() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -339,7 +324,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseSBA1() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -352,7 +336,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseSBA2() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -365,7 +348,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseSDQ1() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -377,7 +359,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseSHL1() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -389,7 +370,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseSVT1() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -402,7 +382,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseYVT1() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -423,7 +402,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseYVT2() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -436,7 +414,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseYVW1() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -449,7 +426,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseE095() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -461,7 +437,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseYVVET() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -474,7 +449,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseYDQV() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -492,7 +466,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseMinima() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 
 		// VDYP Forward does not load MINIMA
@@ -501,7 +474,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseV7O_VIP() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -511,7 +483,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseV7O_VIU() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -523,7 +494,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseV7O_VIS() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,
@@ -535,7 +505,6 @@ class ProcessingControlParserTest {
 
 	@Test
 	void testParseV7O_VIY() throws Exception {
-		var parser = new ProcessingControlParser();
 		var result = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
 		assertThat(
 				result,

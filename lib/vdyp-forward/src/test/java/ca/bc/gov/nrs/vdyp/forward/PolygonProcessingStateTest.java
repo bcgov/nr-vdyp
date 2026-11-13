@@ -13,19 +13,19 @@ import org.junit.jupiter.api.BeforeEach;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 
 class PolygonProcessingStateTest {
 
-	private ProcessingControlParser parser;
+	private ForwardProcessingControlParser parser;
 	private Map<String, Object> controlMap;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@BeforeEach
 	void before() throws IOException, ResourceParseException {
 
-		parser = new ProcessingControlParser();
+		parser = new ForwardProcessingControlParser();
 		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 		assertThat(controlMap, (Matcher) controlMapHasEntry(ControlKey.SP0_DEF, instanceOf(GenusDefinitionMap.class)));
 	}

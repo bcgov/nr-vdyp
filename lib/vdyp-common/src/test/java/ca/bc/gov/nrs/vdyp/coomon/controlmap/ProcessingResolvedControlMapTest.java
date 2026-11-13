@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.TestProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.CompVarAdjustments;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
@@ -31,7 +31,7 @@ class ProcessingResolvedControlMapTest {
 	void testResolvedControlMap() throws IOException, ResourceParseException {
 		logger.info(this.getClass().getName() + ":testForwardResolvedControlMap running...");
 
-		var parser = new ProcessingControlParser();
+		var parser = new TestProcessingControlParser();
 		var rawControlMap = TestUtils.loadControlMap(parser, Path.of("VDYP.CTR"));
 		var resolvedControlMap = new ProcessingResolvedControlMapImpl(rawControlMap);
 

@@ -17,7 +17,6 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaGrowthEmpiricalParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaGrowthFiatParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
@@ -30,7 +29,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.ComponentSizeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DefaultEquationNumberParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.DqGrowthEmpiricalLimitsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DqGrowthEmpiricalParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DqGrowthFiatParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.EquationModifierParser;
@@ -77,7 +75,7 @@ import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
  *
  * @author Michael Junkin, Vivid Solutions
  */
-public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSettings> {
+public abstract class ProcessingControlParser extends BaseControlParser<ProcessingDebugSettings> {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProcessingControlParser.class);
 
@@ -86,13 +84,11 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 	}
 
 	@Override
-	protected VdypApplicationIdentifier getProgramId() {
-		return VdypApplicationIdentifier.VDYP_FORWARD;
-	}
+	protected abstract VdypApplicationIdentifier getProgramId();
 
 	@Override
 	protected List<ControlMapValueReplacer<Object, String>> inputFileParsers() {
-		return new ArrayList<>(vdypForwardInputParsers.values());
+		return new ArrayList<>(vdypProcessingInputParsers.values());
 	}
 
 	@Override
@@ -125,28 +121,28 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 
 	private final List<ControlKey> orderedControlKeys = new ArrayList<>();
 
-	private final Map<ControlKey, ControlMapValueReplacer<Object, String>> vdypForwardInputParsers = new EnumMap<>(
+	private final Map<ControlKey, ControlMapValueReplacer<Object, String>> vdypProcessingInputParsers = new EnumMap<>(
 			ControlKey.class
 	);
 
-	private final Set<ControlKey> vdypForwardOutputWriters = new HashSet<>();
+	private final Set<ControlKey> vdypProcessingOutputWriters = new HashSet<>();
 
-	private void addInputParser(ControlMapValueReplacer<Object, String> parser) {
-		vdypForwardInputParsers.put(parser.getControlKey(), parser);
+	protected void addInputParser(ControlMapValueReplacer<Object, String> parser) {
+		vdypProcessingInputParsers.put(parser.getControlKey(), parser);
 		orderedControlKeys.add(parser.getControlKey());
 	}
 
-	private void addOutputWriter(ControlKey key) {
-		vdypForwardOutputWriters.add(key);
+	protected void addOutputWriter(ControlKey key) {
+		vdypProcessingOutputWriters.add(key);
 		orderedControlKeys.add(key);
 	}
 
-	private final Map<ControlKey, ResourceControlMapModifier> vdypForwardConfigurationParsers = new EnumMap<>(
+	private final Map<ControlKey, ResourceControlMapModifier> vdypProcessingConfigurationParsers = new EnumMap<>(
 			ControlKey.class
 	);
 
-	private void addConfigurationParser(ResourceControlMapModifier parser) {
-		vdypForwardConfigurationParsers.put(parser.getControlKey(), parser);
+	protected void addConfigurationParser(ResourceControlMapModifier parser) {
+		vdypProcessingConfigurationParsers.put(parser.getControlKey(), parser);
 		orderedControlKeys.add(parser.getControlKey());
 	}
 
@@ -248,12 +244,8 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 		addConfigurationParser(new BasalAreaGrowthFiatParser());
 		// RD_E117
 		addConfigurationParser(new DqGrowthFiatParser());
-		// RD_E121
-		addConfigurationParser(new BasalAreaGrowthEmpiricalParser());
 		// RD_E122
 		addConfigurationParser(new DqGrowthEmpiricalParser());
-		// RD_E123
-		addConfigurationParser(new DqGrowthEmpiricalLimitsParser());
 		// RD_E148
 		addConfigurationParser(new PrimarySpeciesBasalAreaGrowthParser());
 		// RD_E149
@@ -264,7 +256,7 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 		addConfigurationParser(new NonPrimarySpeciesDqGrowthParser());
 
 		// RD_E198: Modifiers); IPSJF155-Appendix XII
-		addConfigurationParser(new ModifierParser(VdypApplicationIdentifier.VDYP_FORWARD));
+		addConfigurationParser(new ModifierParser(getProgramId()));
 
 		// V7O_VIP - 11
 		addInputParser(new VdypPolygonParser());
@@ -281,8 +273,6 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES);
 		// V7O_VOU - 18
 		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL);
-		// V7O_VOC - 19
-		addOutputWriter(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES);
 
 		// 101 - a literal value of type VdypGrowthDetails
 
@@ -304,7 +294,7 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 
 	@Override
 	protected List<ResourceControlMapModifier> configurationFileParsers() {
-		return new ArrayList<>(vdypForwardConfigurationParsers.values());
+		return new ArrayList<>(vdypProcessingConfigurationParsers.values());
 	}
 
 	@Override
@@ -323,7 +313,7 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 
 		for (ControlKey key : orderedControlKeys) {
 
-			ResourceControlMapModifier m = vdypForwardConfigurationParsers.get(key);
+			ResourceControlMapModifier m = vdypProcessingConfigurationParsers.get(key);
 			if (m != null) {
 				// m is a configuration file parser.
 				logger.trace(
@@ -333,7 +323,7 @@ public class ProcessingControlParser extends BaseControlParser<ProcessingDebugSe
 				m.modify(map, fileResolver);
 			}
 
-			ControlMapValueReplacer<?, ?> r = vdypForwardInputParsers.get(key);
+			ControlMapValueReplacer<?, ?> r = vdypProcessingInputParsers.get(key);
 			if (r != null) {
 				// r is an input file parser.
 				logger.trace(

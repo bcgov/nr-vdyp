@@ -72,9 +72,7 @@ public abstract class VdypProcessingApplication extends VdypApplication<Processi
 	}
 
 	@Override
-	protected ProcessingControlParser getControlFileParser() {
-		return new ProcessingControlParser();
-	}
+	protected abstract ProcessingControlParser getControlFileParser();
 
 	@Override
 	protected ResolvedControlMap resolveControlMap(Map<String, Object> rawControlMap) {
