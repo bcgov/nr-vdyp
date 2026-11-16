@@ -219,7 +219,7 @@ describe('createCSVFiles', () => {
     expect(layer.treesPerHectare).to.equal('800.00')
   })
 
-  describe('non-primary species site data (VDYP-1465)', () => {
+  describe('non-primary species site data', () => {
     const SECONDARY_SITE_COLUMNS = [2, 3, 4, 5, 6].flatMap((n) => [
       `EST_AGE_SPP${n}`,
       `EST_HEIGHT_SPP${n}`,
@@ -416,7 +416,7 @@ describe('buildBreastHeightAgeSpecies', () => {
     ).to.deep.equal([1, 3, 4, 5, 6])
   })
 
-  it('should only consider the primary species for Volume based projections (VDYP-1465)', () => {
+  it('should only consider the primary species for Volume based projections', () => {
     const rows = Array.from({ length: 6 }, () => ({ ageType: CONSTANTS.AGE_TYPE.BREAST }))
     expect(
       buildBreastHeightAgeSpecies(

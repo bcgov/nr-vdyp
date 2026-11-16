@@ -204,6 +204,12 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     highestPercentSpecies.value = selectedSiteSpecies.value =
       speciesGroups.value.length > 0 ? speciesGroups.value[0].siteSpecies : null
 
+    // Values kept for the Site Index toggle depend on each row's position
+    // (primary or not), so drop them when the species rows change.
+    const previousSpeciesCodes = siteIndexRows.value.map((r) => r.speciesCode).join(',')
+    const nextSpeciesCodes = speciesGroups.value.map((g) => g.siteSpecies).join(',')
+    if (previousSpeciesCodes !== nextSpeciesCodes) clearSiteIndexRowSnapshots()
+
     // Sync siteIndexRows with updated speciesGroups, preserving existing row data
     const existingRows = new Map(siteIndexRows.value.map((r) => [r.speciesCode, r]))
     siteIndexRows.value = speciesGroups.value.map((group) => {
@@ -302,6 +308,36 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     }
   }
 
+  // Unsaved row values per Site Index mode, so toggling Supplied/Computed and back
+  // restores what the user entered instead of resetting to defaults.
+  // Keyed by speciesCode, then by mode (COMPUTED or SUPPLIED; NA rows have nothing to keep).
+  // Kept in the store, not in SiteIndicesTable, for the same remount reason as the watcher below.
+  // Not reactive on purpose: it is never rendered and must not trigger the panel dirty tracking.
+  type SnapshotMode = Exclude<SiteIndexRowMode, typeof SITE_INDEX_ROW_MODE.NA>
+  const siteIndexRowSnapshots = new Map<string, Partial<Record<SnapshotMode, SiteIndexSpeciesRow>>>()
+
+  const clearSiteIndexRowSnapshots = () => siteIndexRowSnapshots.clear()
+
+  const saveSiteIndexRowSnapshot = (row: SiteIndexSpeciesRow, mode: SiteIndexRowMode) => {
+    if (mode === SITE_INDEX_ROW_MODE.NA) return
+    const snapshots = siteIndexRowSnapshots.get(row.speciesCode) ?? {}
+    snapshots[mode] = { ...row }
+    siteIndexRowSnapshots.set(row.speciesCode, snapshots)
+  }
+
+  // Returns false when there is no snapshot for the mode, so the caller can apply the defaults.
+  const restoreSiteIndexRowSnapshot = (row: SiteIndexSpeciesRow, mode: SiteIndexRowMode): boolean => {
+    if (mode === SITE_INDEX_ROW_MODE.NA) return false
+    const snapshot = siteIndexRowSnapshots.get(row.speciesCode)?.[mode]
+    if (!snapshot) return false
+    row.computedValue = snapshot.computedValue
+    row.ageType = snapshot.ageType
+    row.age = snapshot.age
+    row.height = snapshot.height
+    row.bhaSiteIndex = snapshot.bhaSiteIndex
+    return true
+  }
+
   // Why isVolume and isSupplied are watched here (not in SiteIndicesTable): transitions
   // must be tracked across component remounts. Vuetify expansion panels destroy and recreate
   // their content when collapsed/expanded, which would reset a component-level watcher's oldValue
@@ -313,9 +349,20 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     // restore triggers this watcher before restorePerSpeciesRows() sets the correct values.
     // isRestoringFromDB resets via nextTick.
     if (isRestoringFromDB.value) return
+
+    // A Derived By change resets the affected rows to defaults, so values kept
+    // for the previous Derived By no longer apply.
+    const isSiteIndexToggleOnly = volume === wasVolume
+    if (!isSiteIndexToggleOnly) clearSiteIndexRowSnapshots()
+
     siteIndexRows.value.forEach((row, index) => {
       const mode = getSiteIndexRowMode(index, volume, supplied)
-      if (mode === getSiteIndexRowMode(index, wasVolume, wasSupplied)) return
+      const previousMode = getSiteIndexRowMode(index, wasVolume, wasSupplied)
+      if (mode === previousMode) return
+      if (isSiteIndexToggleOnly) {
+        saveSiteIndexRowSnapshot(row, previousMode)
+        if (restoreSiteIndexRowSnapshot(row, mode)) return
+      }
       applySiteIndexRowMode(row, mode)
     })
   })
@@ -397,6 +444,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     spzHeight.value = null
     bha50SiteIndex.value = null
     siteIndexRows.value = []
+    clearSiteIndexRowSnapshots()
 
     // Reset stand info
     percentStockableArea.value = null
@@ -728,6 +776,9 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   const restoreFromModelParameters = (params: ModelParameters) => {
     isRestoringFromDB.value = true
+    // The saved parameters become the new baseline, so values kept for the
+    // Site Index toggle are discarded (e.g. Cancel button).
+    clearSiteIndexRowSnapshots()
     derivedBy.value = params.derivedBy
     restoreSpeciesListFromParams(params.species)
 
