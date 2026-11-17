@@ -265,7 +265,7 @@ describe('Model Parameter Store', () => {
     })
   })
 
-  it('should blank non-primary siteIndexRows when switching to Volume and restore them when switching back (VDYP-1465)', () => {
+  it('should blank non-primary siteIndexRows when switching to Volume and restore them when switching back', () => {
     cy.then(() => {
       store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
       store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
@@ -302,6 +302,158 @@ describe('Model Parameter Store', () => {
       expect(store.siteIndexRows[0].age).to.equal(DEFAULTS.DEFAULT_VALUES.SPZ_AGE)
       expect(store.siteIndexRows[1].computedValue).to.be.null
       expect(store.siteIndexRows[1].bhaSiteIndex).to.be.null
+    })
+  })
+
+  it('should keep user-entered siteIndexRows when toggling Supplied and Computed', () => {
+    cy.then(() => {
+      store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      return nextTick()
+    })
+    cy.then(() => {
+      store.speciesList[0] = { species: 'PL', percent: '60' }
+      store.speciesList[1] = { species: 'AC', percent: '40' }
+      store.updateSpeciesGroup()
+      Object.assign(store.siteIndexRows[0], {
+        computedValue: CONSTANTS.COMPUTED_VALUE.HEIGHT,
+        ageType: CONSTANTS.AGE_TYPE.BREAST,
+        age: '80',
+        height: null,
+        bhaSiteIndex: '18.50',
+      })
+      Object.assign(store.siteIndexRows[1], {
+        computedValue: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE,
+        ageType: CONSTANTS.AGE_TYPE.TOTAL,
+        age: null,
+        height: '19.00',
+        bhaSiteIndex: '15.00',
+      })
+
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      return nextTick()
+    })
+    cy.then(() => {
+      store.siteIndexRows.forEach((row) => {
+        expect(row.computedValue).to.be.null
+        expect(row.age).to.be.null
+        expect(row.height).to.be.null
+        expect(row.bhaSiteIndex).to.equal(DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX)
+      })
+      store.siteIndexRows[0].bhaSiteIndex = '21.00'
+
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      return nextTick()
+    })
+    cy.then(() => {
+      expect(store.siteIndexRows[0]).to.deep.equal({
+        speciesCode: 'PL',
+        computedValue: CONSTANTS.COMPUTED_VALUE.HEIGHT,
+        ageType: CONSTANTS.AGE_TYPE.BREAST,
+        age: '80',
+        height: null,
+        bhaSiteIndex: '18.50',
+      })
+      expect(store.siteIndexRows[1]).to.deep.equal({
+        speciesCode: 'AC',
+        computedValue: CONSTANTS.COMPUTED_VALUE.TOTAL_AGE,
+        ageType: CONSTANTS.AGE_TYPE.TOTAL,
+        age: null,
+        height: '19.00',
+        bhaSiteIndex: '15.00',
+      })
+
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      return nextTick()
+    })
+    cy.then(() => {
+      expect(store.siteIndexRows[0].bhaSiteIndex).to.equal('21.00')
+      expect(store.siteIndexRows[1].bhaSiteIndex).to.equal(DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX)
+    })
+  })
+
+  it('should keep the Volume primary row and leave non-primary rows N/A when toggling Supplied and Computed', () => {
+    cy.then(() => {
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      return nextTick()
+    })
+    cy.then(() => {
+      store.speciesList[0] = { species: 'PL', percent: '60' }
+      store.speciesList[1] = { species: 'AC', percent: '40' }
+      store.updateSpeciesGroup()
+      store.siteIndexRows[0].age = '75'
+      store.siteIndexRows[0].height = '22.00'
+
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      return nextTick()
+    })
+    cy.then(() => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      return nextTick()
+    })
+    cy.then(() => {
+      expect(store.siteIndexRows[0].age).to.equal('75')
+      expect(store.siteIndexRows[0].height).to.equal('22.00')
+      expect(store.siteIndexRows[1].computedValue).to.be.null
+      expect(store.siteIndexRows[1].age).to.be.null
+      expect(store.siteIndexRows[1].height).to.be.null
+      expect(store.siteIndexRows[1].bhaSiteIndex).to.be.null
+    })
+  })
+
+  it('should discard kept siteIndexRows values when Derived By changes', () => {
+    cy.then(() => {
+      store.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      return nextTick()
+    })
+    cy.then(() => {
+      store.speciesList[0] = { species: 'PL', percent: '100' }
+      store.updateSpeciesGroup()
+      store.siteIndexRows[0].age = '75'
+
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      return nextTick()
+    })
+    cy.then(() => {
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+      return nextTick()
+    })
+    cy.then(() => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      return nextTick()
+    })
+    cy.then(() => {
+      expect(store.siteIndexRows[0].age).to.equal(DEFAULTS.DEFAULT_VALUES.SPZ_AGE)
+    })
+  })
+
+  it('should discard kept siteIndexRows values on restoreFromModelParameters', () => {
+    cy.then(() => {
+      store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      return nextTick()
+    })
+    cy.then(() => {
+      store.speciesList[0] = { species: 'PL', percent: '70' }
+      store.speciesList[1] = { species: 'AC', percent: '30' }
+      store.updateSpeciesGroup()
+      store.siteIndexRows[0].age = '75'
+
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
+      return nextTick()
+    })
+    cy.then(() => {
+      store.restoreFromModelParameters(makeModelParams({ siteIndex: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED }))
+      return nextTick()
+    })
+    cy.then(() => {
+      store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      return nextTick()
+    })
+    cy.then(() => {
+      expect(store.siteIndexRows[0].age).to.equal(DEFAULTS.DEFAULT_VALUES.SPZ_AGE)
     })
   })
 
@@ -503,7 +655,7 @@ describe('Model Parameter Store', () => {
   })
 
   ;[CONSTANTS.SITE_SPECIES_VALUES.COMPUTED, CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED].forEach((siteIndex) => {
-    it(`should restore blank secondary siteIndexRows for Volume ${siteIndex} mode (VDYP-1465)`, () => {
+    it(`should restore blank secondary siteIndexRows for Volume ${siteIndex} mode`, () => {
       store.restoreFromModelParameters(
         makeModelParams({
           derivedBy: CONSTANTS.DERIVED_BY.VOLUME,

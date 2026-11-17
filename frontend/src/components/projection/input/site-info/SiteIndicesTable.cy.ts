@@ -99,7 +99,7 @@ describe('<SiteIndicesTable />', () => {
     })
   })
 
-  it('disables all non-primary row inputs with N/A placeholders when Supplied + Volume (VDYP-1465)', () => {
+  it('disables all non-primary row inputs with N/A placeholders when Supplied + Volume', () => {
     mountTable(true, (store) => {
       store.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
       store.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED
