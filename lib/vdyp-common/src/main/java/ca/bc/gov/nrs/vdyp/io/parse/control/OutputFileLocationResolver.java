@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.io.parse.control;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
@@ -31,6 +32,23 @@ public class OutputFileLocationResolver implements ControlMapValueReplacer<Strin
 			throws ResourceParseException, IOException {
 
 		return fileResolver.toPath(rawValue).toString();
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(controlKey);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		OutputFileLocationResolver other = (OutputFileLocationResolver) obj;
+		return controlKey == other.controlKey;
 	}
 
 }

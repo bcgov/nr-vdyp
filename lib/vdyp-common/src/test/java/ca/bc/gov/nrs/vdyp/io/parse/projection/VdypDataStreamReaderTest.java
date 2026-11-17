@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.TestProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -39,6 +41,13 @@ import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class VdypDataStreamReaderTest {
+	ProcessingControlParser parser;
+
+	@BeforeEach
+	void setup() {
+		parser = new TestProcessingControlParser();
+	}
+
 	@SuppressWarnings({ "unchecked" })
 	@Nested
 	class VdypReadPolygonTest {
@@ -46,7 +55,6 @@ class VdypDataStreamReaderTest {
 		@Test
 		void testReadPolygons() throws Exception {
 
-			var parser = new ProcessingControlParser();
 			Map<String, Object> controlMap = parse(parser, "VDYP.CTR");
 			controlMap.put(
 					ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 })
@@ -114,7 +122,6 @@ class VdypDataStreamReaderTest {
 		@Test
 		void testReadPolygonsWithControlSpecifiedGrowthYear() throws Exception {
 
-			var parser = new ProcessingControlParser();
 			Map<String, Object> controlMap = parse(parser, "VDYP.CTR");
 			controlMap.put(
 					ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] { 130, 1, 2, 2, 1, 1, 1 })
@@ -176,7 +183,6 @@ class VdypDataStreamReaderTest {
 		@Test
 		void testReadPolygonsWithNoGrowthFile() throws Exception {
 
-			var parser = new ProcessingControlParser();
 			Map<String, Object> controlMap = parse(parser, "VDYP.CTR");
 			controlMap.remove(ControlKey.VDYP_INPUT_GROWTO.name());
 			try {

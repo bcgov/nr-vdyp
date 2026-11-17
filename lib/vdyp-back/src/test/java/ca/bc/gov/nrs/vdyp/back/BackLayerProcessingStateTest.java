@@ -15,9 +15,9 @@ import java.util.Map;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import ca.bc.gov.nrs.vdyp.back.io.parse.BackControlParser;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -34,8 +34,7 @@ class BackLayerProcessingStateTest {
 	@ParameterizedTest
 	@ValueSource(floats = { 0.0f, 0.25f, 0.5f, 0.75f, 1.0f })
 	void testFractionalCompatibilityVariables(float fraction) throws ProcessingException {
-		Map<String, Object> rawControlMap = TestUtils
-				.loadControlMap(new ProcessingControlParser(), Path.of("VDYP.CTR"));
+		Map<String, Object> rawControlMap = TestUtils.loadControlMap(new BackControlParser(), Path.of("VDYP.CTR"));
 
 		var polygon = VdypPolygon.build(pb -> {
 			pb.controlMap(rawControlMap);

@@ -31,7 +31,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
@@ -42,7 +42,7 @@ class Grow1CalculateDominantHeightDeltaTest {
 
 	protected static final Logger logger = LoggerFactory.getLogger(Grow1CalculateDominantHeightDeltaTest.class);
 
-	protected static ProcessingControlParser parser;
+	protected static ForwardControlParser parser;
 	protected static Map<String, Object> controlMap;
 
 	protected static StreamingParserFactory<PolygonIdentifier> polygonDescriptionStreamFactory;
@@ -53,7 +53,7 @@ class Grow1CalculateDominantHeightDeltaTest {
 	@SuppressWarnings("unchecked")
 	@BeforeEach
 	void beforeTest() throws IOException, ResourceParseException, ProcessingException {
-		parser = new ProcessingControlParser();
+		parser = new ForwardControlParser();
 		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap

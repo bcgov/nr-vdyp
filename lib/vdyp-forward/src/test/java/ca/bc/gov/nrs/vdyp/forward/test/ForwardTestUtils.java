@@ -14,7 +14,7 @@ import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingState;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -64,9 +64,8 @@ public class ForwardTestUtils {
 
 	}
 
-	public static Map<String, Object>
-			loadControlMap(ProcessingControlParser parser, Class<?> klazz, String resourceName)
-					throws IOException, ResourceParseException {
+	public static Map<String, Object> loadControlMap(ForwardControlParser parser, Class<?> klazz, String resourceName)
+			throws IOException, ResourceParseException {
 		try (var is = klazz.getResourceAsStream(resourceName)) {
 
 			return parser.parse(is, TestUtils.fileResolver(klazz), new HashMap<>());
@@ -77,9 +76,9 @@ public class ForwardTestUtils {
 	 * Load the control map from resources in the test package using the full control map parser.
 	 */
 	public static Map<String, Object> loadControlMap() {
-		var parser = new ProcessingControlParser();
+		var parser = new ForwardControlParser();
 		try {
-			return loadControlMap(parser, ProcessingControlParser.class, "VDYP.CTR");
+			return loadControlMap(parser, ForwardControlParser.class, "VDYP.CTR");
 		} catch (IOException | ResourceParseException ex) {
 			throw new AssertionFailedError(null, ex);
 		}

@@ -68,7 +68,6 @@ import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -553,8 +552,7 @@ class ProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException {
-			var parser = new ProcessingControlParser();
-			controlMap = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
+			controlMap = ProcessingTestUtils.loadControlMap();
 			controlMap.put(ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] {}));
 			fds = new ProcessingDebugSettings(new Integer[25]);
 		}
@@ -1811,8 +1809,7 @@ class ProcessingEngineTest {
 					.createMock(em);
 			lps = em.createMock(LayerProcessingState.class);
 
-			var parser = new ProcessingControlParser();
-			controlMap = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
+			controlMap = ProcessingTestUtils.loadControlMap();
 
 			hl1Coefficients = new MatrixMap2Impl<>(
 					List.of("AC", "AT", "B", "C", "D", "E", "F", "H", "L", "MB", "PA", "PL", "PW", "PY", "S", "Y"),
@@ -2296,10 +2293,7 @@ class ProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException {
-			var parser = new ProcessingControlParser();
-			controlMap = new ProcessingResolvedControlMapImpl(
-					TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR")
-			);
+			controlMap = new ProcessingResolvedControlMapImpl(ProcessingTestUtils.loadControlMap());
 			emp = new EstimationMethods(controlMap);
 			cmp = new ComputationMethods(emp, VdypApplicationIdentifier.VDYP_FORWARD);
 
@@ -2801,8 +2795,7 @@ class ProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException {
-			var parser = new ProcessingControlParser();
-			rawControlMap = TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
+			rawControlMap = ProcessingTestUtils.loadControlMap();
 			controlMap = new ProcessingResolvedControlMapImpl(rawControlMap);
 			emp = new EstimationMethods(controlMap);
 			cmp = new ComputationMethods(emp, VdypApplicationIdentifier.VDYP_FORWARD);

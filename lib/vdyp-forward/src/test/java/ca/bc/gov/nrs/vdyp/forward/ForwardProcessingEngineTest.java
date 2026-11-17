@@ -35,7 +35,7 @@ import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingDataStreamReader;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
@@ -62,7 +62,7 @@ class ForwardProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException {
-			var parser = new ProcessingControlParser();
+			var parser = new ForwardControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 			controlMap.put(
 					ControlKey.VTROL.name(),
@@ -269,7 +269,7 @@ class ForwardProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException {
-			var parser = new ProcessingControlParser();
+			var parser = new ForwardControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 			controlMap.put(ControlKey.VTROL.name(), new ProcessingControlVariables(new Integer[] {}));
 			em = EasyMock.createControl();
@@ -598,7 +598,7 @@ class ForwardProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException, ProcessingException {
-			var parser = new ProcessingControlParser();
+			var parser = new ForwardControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 			forwardDataStreamReader = new ProcessingDataStreamReader(controlMap);
 		}
@@ -746,7 +746,7 @@ class ForwardProcessingEngineTest {
 
 		@BeforeEach
 		void setup() throws IOException, ResourceParseException, ValueParseException, ProcessingException {
-			var parser = new ProcessingControlParser();
+			var parser = new ForwardControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 			forwardDataStreamReader = new ProcessingDataStreamReader(controlMap);
 		}

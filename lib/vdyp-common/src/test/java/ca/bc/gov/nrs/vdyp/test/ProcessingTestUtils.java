@@ -16,7 +16,8 @@ import ca.bc.gov.nrs.vdyp.controlmap.ProcessingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ProcessingControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.TestProcessingControlParser;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
@@ -199,9 +200,23 @@ public class ProcessingTestUtils {
 	 * Load the control map from resources in the test package using the full control map parser.
 	 */
 	public static Map<String, Object> loadControlMap() {
-		var parser = new ProcessingControlParser();
+		return loadControlMap("VDYP.CTR");
+	}
+
+	/**
+	 * Load the control map from resources in the test package using the full control map parser.
+	 */
+	public static Map<String, Object> loadBackControlMap() {
+		return loadControlMap("VDYPBACK.CTR");
+	}
+
+	/**
+	 * Load the control map from resources in the test package using the full control map parser.
+	 */
+	public static Map<String, Object> loadControlMap(String fileName) {
+		var parser = new TestProcessingControlParser();
 		try {
-			return TestUtils.loadControlMap(parser, TestUtils.class, "VDYP.CTR");
+			return TestUtils.loadControlMap(parser, TestUtils.class, fileName);
 		} catch (IOException | ResourceParseException ex) {
 			throw new AssertionFailedError(null, ex);
 		}
@@ -210,7 +225,7 @@ public class ProcessingTestUtils {
 	public static void runForwardProcessor(
 			Processor<?> fp, FileResolver outputResolver, final String controlPath, EnumSet<Pass> vdypPassSet
 	) throws ProcessingException {
-		var rawControlMap = TestUtils.loadControlMap(new ProcessingControlParser(), Path.of(controlPath));
+		var rawControlMap = TestUtils.loadControlMap(new ForwardControlParser(), Path.of(controlPath));
 		var controlMap = new ProcessingResolvedControlMapImpl(rawControlMap);
 		fp.process(vdypPassSet, controlMap, Optional.of(outputResolver), p -> true);
 	}
