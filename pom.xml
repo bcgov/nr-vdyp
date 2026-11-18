@@ -289,11 +289,11 @@
 					</executions>
 				</plugin>
 				<plugin>
-					<groupId>co.aurasphere.maven.plugins</groupId>
-					<artifactId>zip-maven-plugin</artifactId>
-					<version>1.0.0</version>
-					<extensions>true</extensions>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.6</version>
 				</plugin>
+
 			</plugins>
 		</pluginManagement>
 

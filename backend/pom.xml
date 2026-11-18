@@ -456,12 +456,26 @@
         </executions>
       </plugin>
 			<plugin>
-				<groupId>co.aurasphere.maven.plugins</groupId>
-				<artifactId>zip-maven-plugin</artifactId>
-				<configuration>
-					<inputDirectory>${project.basedir}/src/main/resources/template</inputDirectory>
-					<zipName>ExecutionFolderTemplate</zipName>
-				</configuration>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>make-execution-folder-template</id>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>${basedir}/assembly-ExecutionFolderTemplate.xml</descriptor>
+							</descriptors>
+							<finalName>ExecutionFolderTemplate</finalName>
+							<outputDirectory>${project.build.directory}/classes</outputDirectory>
+							<attach>false</attach>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
     </plugins>
   </build>
